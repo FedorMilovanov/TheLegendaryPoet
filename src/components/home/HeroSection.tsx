@@ -1,0 +1,100 @@
+import { motion } from 'framer-motion';
+import MagneticButton from '../MagneticButton';
+import { BookMonogramIcon, RutubeIcon, YouTubeIcon } from '../ChannelIcons';
+
+const portraits = [
+  '/images/yesenin.jpg',
+  '/images/lermontov.jpg',
+  '/images/pushkin.jpg',
+  '/images/tyutchev.jpg',
+  '/images/mayakovsky.jpg',
+  '/images/fet.jpg',
+];
+
+export default function HeroSection() {
+  return (
+    <section className="relative min-h-[100vh] overflow-hidden bg-[#020811] pt-24">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_48%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/20 via-transparent to-[#050505]" />
+        <div className="absolute inset-x-0 top-24 mx-auto h-[460px] max-w-6xl rounded-full bg-cyan-500/10 blur-[90px]" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-6rem)] max-w-7xl flex-col items-center justify-center px-4 text-center sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full"
+        >
+          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-3 gap-3 opacity-70 sm:grid-cols-6">
+            {portraits.map((src, index) => (
+              <motion.div
+                key={src}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 * index, duration: 0.65 }}
+                className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]"
+              >
+                <img src={src} alt="Портрет русского поэта" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
+              </motion.div>
+            ))}
+          </div>
+
+          <h1 className="editorial-title mb-8 flex flex-col items-center overflow-hidden font-serif text-7xl font-bold leading-[0.86] md:text-[10rem]">
+            <motion.span
+              initial={{ y: 120, opacity: 0 }}
+              animate={{ y: 0, opacity: 0.72 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+              className="neon-blue-gradient neon-glow-text"
+            >
+              THE
+            </motion.span>
+            <motion.span
+              initial={{ y: 120, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.22 }}
+              className="neon-blue-gradient neon-glow-text italic"
+            >
+              LEGENDARY
+            </motion.span>
+            <motion.span
+              initial={{ y: 120, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.34 }}
+              className="neon-blue-gradient neon-glow-text"
+            >
+              POET
+            </motion.span>
+          </h1>
+
+          <p className="mx-auto mb-10 max-w-3xl font-serif text-xl italic tracking-wide text-cyan-100/70 md:text-2xl">
+            <span className="neon-blue-gradient neon-glow-text">"Я памятник себе воздвиг нерукотворный..."</span> — исследуем наследие, которое осталось в вечности.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 lg:gap-5">
+            <MagneticButton
+              to="/poets"
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:shadow-[0_0_50px_rgba(0,212,255,0.8)]"
+            >
+              <BookMonogramIcon className="h-5 w-5" /> ИССЛЕДОВАТЬ КАТАЛОГ
+            </MagneticButton>
+            <MagneticButton
+              href="https://youtube.com/@TheLegendaryPoet"
+              className="border border-cyan-400/40 text-cyan-300 font-bold hover:bg-cyan-950/30 hover:border-cyan-400/70 hover:shadow-[0_0_30px_rgba(0,212,255,0.3)]"
+            >
+              <YouTubeIcon className="h-5 w-5" /> YOUTUBE КАНАЛ
+            </MagneticButton>
+            <MagneticButton
+              href="https://rutube.ru/channel/74579453"
+              className="border border-cyan-400/30 text-cyan-200/80 font-bold hover:bg-cyan-950/20 hover:border-cyan-400/60 hover:shadow-[0_0_24px_rgba(0,212,255,0.2)]"
+            >
+              <RutubeIcon className="h-5 w-5" /> RUTUBE
+            </MagneticButton>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

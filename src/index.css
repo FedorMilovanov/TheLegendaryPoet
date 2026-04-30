@@ -1,0 +1,279 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+@theme {
+  --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --color-luxury-gold: #d4af37;
+  --color-luxury-gold-light: #f5e6a3;
+  --color-luxury-gold-dark: #b8941e;
+  --color-luxury-dark: #0a0a0a;
+  --color-luxury-dark-100: #111111;
+  --color-luxury-dark-200: #1a1a1a;
+  --color-luxury-dark-300: #222222;
+  --color-luxury-gray: #888888;
+  --color-luxury-gray-light: #aaaaaa;
+  --color-luxury-silver: #c0c0c0;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-luxury-gold-dark) var(--color-luxury-dark-200);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-luxury-dark-200);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-luxury-gold-dark);
+  border-radius: 4px;
+}
+
+body {
+  background-color: var(--color-luxury-dark);
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    cursor: none !important;
+  }
+}
+
+/* Ambient Background Glows */
+.ambient-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-glow-1 {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.35) 0%, transparent 70%);
+  top: -200px;
+  right: -100px;
+}
+
+.ambient-glow-2 {
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.14) 0%, transparent 70%);
+  bottom: -220px;
+  left: -120px;
+}
+
+.ambient-glow-3 {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Brand Text */
+.gold-gradient {
+  background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 50%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gold-glow-text {
+  text-shadow:
+    0 0 10px rgba(212, 175, 55, 0.6),
+    0 0 20px rgba(212, 175, 55, 0.35),
+    0 0 30px rgba(212, 175, 55, 0.15);
+}
+
+.gold-border-glow {
+  box-shadow:
+    0 0 10px rgba(212, 175, 55, 0.25),
+    0 0 20px rgba(212, 175, 55, 0.08);
+}
+
+.neon-blue-gradient {
+  background: linear-gradient(135deg, #d8fdff 0%, #2ed8ff 45%, #1f88ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.neon-glow-text {
+  text-shadow:
+    0 0 10px rgba(0, 212, 255, 0.75),
+    0 0 20px rgba(0, 212, 255, 0.5),
+    0 0 30px rgba(0, 153, 255, 0.28);
+}
+
+.neon-cyan-glow {
+  box-shadow:
+    0 0 6px rgba(0, 212, 255, 0.6),
+    0 0 16px rgba(0, 153, 255, 0.3);
+}
+
+/* Glass / Cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.luxury-card {
+  background: linear-gradient(145deg, rgba(20, 24, 30, 0.85) 0%, rgba(5, 7, 10, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  backdrop-filter: blur(24px) saturate(120%);
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.luxury-card:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 32px rgba(56, 189, 248, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+}
+
+.holographic-text {
+  background: linear-gradient(
+    110deg,
+    #7dd3fc 0%,
+    #d4af37 25%,
+    #fff7d6 50%,
+    #38bdf8 75%,
+    #0ea5e9 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holo-shine 6s linear infinite;
+}
+
+@keyframes holo-shine {
+  to { background-position: 200% center; }
+}
+
+.reveal-text-clip {
+  clip-path: inset(0 100% 0 0);
+  animation: reveal-clip 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+@keyframes reveal-clip {
+  0% { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+.tilt-card-wrapper {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-inner {
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.1s linear;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-inner > * {
+  transform: translateZ(30px);
+}
+
+.glow-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-hover:hover {
+  box-shadow:
+    0 0 26px rgba(0, 212, 255, 0.16),
+    0 18px 50px rgba(0, 0, 0, 0.4);
+}
+
+.hero-gradient {
+  background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.4) 50%, transparent 100%);
+}
+
+.poetry-text {
+  font-family: var(--font-serif);
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+.noise-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.02;
+  z-index: 100;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.editorial-title {
+  font-feature-settings: "ss01" on, "ss02" on;
+  letter-spacing: -0.02em;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
