@@ -1,4 +1,5 @@
 import { CommentEntry, FeedbackSnapshot, FeedbackTargetType, RatingEntry } from '../types/community';
+import { fetchAllRemote, remoteEnabled } from './communityRemote';
 
 const STORE_KEY = 'tlp-community-feedback-v1';
 const COOLDOWN_KEY = 'tlp-community-cooldowns-v1';
@@ -11,19 +12,104 @@ const emptySnapshot: FeedbackSnapshot = {
   comments: [],
 };
 
-export function loadFeedback(): FeedbackSnapshot {
+/**
+ * Safe localStorage write. Never throws (e.g. Safari private mode, quota
+ * exceeded) — returns false so callers can surface a soft message instead of
+ * dying inside a click handler.
+ */
+function safeWrite(key: string, value: unknown): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readRaw(): FeedbackSnapshot {
   if (typeof window === 'undefined') return emptySnapshot;
   try {
     const raw = window.localStorage.getItem(STORE_KEY);
-    return raw ? JSON.parse(raw) : emptySnapshot;
+    const parsed = raw ? (JSON.parse(raw) as FeedbackSnapshot) : emptySnapshot;
+    if (!parsed || !Array.isArray(parsed.ratings) || !Array.isArray(parsed.comments)) return emptySnapshot;
+    return parsed;
   } catch {
     return emptySnapshot;
   }
 }
 
-export function saveFeedback(snapshot: FeedbackSnapshot) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
+/* ------------------------------------------------------------------ *
+ * Reactive single-source store.
+ *
+ * Every panel on a page reads from ONE in-memory snapshot and subscribes
+ * to it, so concurrent panels can no longer clobber each other's writes
+ * (the previous bug) and every summary updates live after a vote. Backed
+ * by useSyncExternalStore in the hook; kept in sync across tabs via the
+ * `storage` event.
+ * ------------------------------------------------------------------ */
+let current: FeedbackSnapshot = readRaw();
+const listeners = new Set<() => void>();
+let storageBound = false;
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+function bindStorageListener() {
+  if (storageBound || typeof window === 'undefined') return;
+  storageBound = true;
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORE_KEY) return;
+    current = readRaw();
+    emit();
+  });
+}
+
+export function subscribeFeedback(listener: () => void): () => void {
+  bindStorageListener();
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function getFeedbackSnapshot(): FeedbackSnapshot {
+  return current;
+}
+
+/**
+ * When a shared backend is configured (see communityRemote), pull everyone's
+ * ratings/comments once at startup and make them the live snapshot. On any
+ * failure the local (per-device) data is kept untouched. No-op otherwise.
+ */
+export async function hydrateFromRemote(): Promise<void> {
+  if (!remoteEnabled) return;
+  const remote = await fetchAllRemote();
+  if (!remote) return;
+  current = remote;
+  safeWrite(STORE_KEY, current); // warm local cache for instant next load
+  emit();
+}
+
+/** True when ratings/comments are shared via a backend (not just local). */
+export const isFeedbackShared = remoteEnabled;
+
+/** Backwards-compatible reader (returns the live in-memory snapshot). */
+export function loadFeedback(): FeedbackSnapshot {
+  return current;
+}
+
+/**
+ * Apply an immutable update to the single shared snapshot, persist it, and
+ * notify every subscriber. Returns false if the write was rejected.
+ */
+export function mutateFeedback(update: (snapshot: FeedbackSnapshot) => FeedbackSnapshot): boolean {
+  const next = update(current);
+  const ok = safeWrite(STORE_KEY, next);
+  current = next;
+  emit();
+  return ok;
 }
 
 export function makeFeedbackId(prefix: string) {
@@ -47,7 +133,10 @@ export function averageScores(ratings: RatingEntry[]) {
     });
   });
   const dimensions = Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, value / ratings.length]));
-  const overall = Object.values(dimensions).reduce((sum, value) => sum + value, 0) / Object.values(dimensions).length;
+  const dimensionValues = Object.values(dimensions);
+  const overall = dimensionValues.length
+    ? dimensionValues.reduce((sum, value) => sum + value, 0) / dimensionValues.length
+    : 0;
   return { overall, dimensions };
 }
 
@@ -81,8 +170,7 @@ function loadCooldowns(): Record<string, number> {
 }
 
 function saveCooldowns(value: Record<string, number>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(COOLDOWN_KEY, JSON.stringify(value));
+  safeWrite(COOLDOWN_KEY, value);
 }
 
 export function checkCooldown(scope: string) {
@@ -109,8 +197,7 @@ function loadHelpfulVotes(): Record<string, true> {
 }
 
 function saveHelpfulVotes(value: Record<string, true>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(HELPFUL_KEY, JSON.stringify(value));
+  safeWrite(HELPFUL_KEY, value);
 }
 
 export function canMarkHelpful(scope: string) {
@@ -135,8 +222,7 @@ function loadRatedScopes(): Record<string, true> {
 }
 
 function saveRatedScopes(value: Record<string, true>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(RATED_KEY, JSON.stringify(value));
+  safeWrite(RATED_KEY, value);
 }
 
 export function hasRated(scope: string) {

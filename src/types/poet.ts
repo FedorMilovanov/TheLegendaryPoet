@@ -6,14 +6,12 @@ export interface Poet {
   deathYear?: number;
   nationality: string;
   photo: string;
-  coverImage?: string;
   shortBio: string;
   fullBio: string;
   rating: number;
   tags: string[];
   poems: Poem[];
   articles: Article[];
-  music?: MusicTrack[];
   historicalNote?: string;
   spiritualSearch?: string; // Заменяем высосанные из пальца анализы на объективные духовные искания (если они были)
   authorCommentary?: string; // Ремарка автора проекта (для вопиющих случаев богоборчества и т.д.)
@@ -54,7 +52,9 @@ export interface MusicTrack {
   title: string;
   poet: string;
   duration: string;
-  audioUrl: string;
-  videoUrl?: string;
+  /** Direct, playable audio file (e.g. /audio/track.mp3). When present the row shows a real player. */
+  audioUrl?: string;
+  /** Link to the full track/video on a channel (YouTube/Rutube). Used when there is no local audio file. */
+  externalUrl?: string;
   description?: string;
 }

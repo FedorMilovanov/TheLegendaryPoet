@@ -12,6 +12,9 @@ const CustomCursor = () => {
       return;
     }
     setIsVisible(true);
+    // Only now hide the native cursor — so if this component never mounts
+    // (or fails), the real pointer is preserved.
+    document.body.classList.add('has-custom-cursor');
 
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -37,6 +40,7 @@ const CustomCursor = () => {
     return () => {
       window.removeEventListener('mousemove', updateMousePosition);
       window.removeEventListener('mouseover', handleMouseOver);
+      document.body.classList.remove('has-custom-cursor');
     };
   }, []);
 

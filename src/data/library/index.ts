@@ -8,6 +8,7 @@ import { afanasyFet } from './afanasyFet';
 import { nikolayGumilev } from './nikolayGumilev';
 import { sergeiYesenin } from './sergeiYesenin';
 import { annaAkhmatova } from './annaAkhmatova';
+import { alexanderBlok } from './alexanderBlok';
 
 export const poets: Poet[] = [
   fyodorTyutchev,
@@ -19,6 +20,7 @@ export const poets: Poet[] = [
   nikolayGumilev,
   sergeiYesenin,
   annaAkhmatova,
+  alexanderBlok,
 ];
 
 export { articles } from './articles';

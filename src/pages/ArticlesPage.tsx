@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
 import { getAllArticles } from '../utils/articleLibrary';
 import ArticleCard from '../components/articles/ArticleCard';
+import { useSeo } from '../hooks/useSeo';
 
 const categories = [
   { value: '', label: 'Все статьи' },
@@ -23,6 +24,11 @@ const categoryLabels: Record<string, string> = {
 
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  useSeo({
+    title: 'Статьи и анализы — THE LEGENDARY POET',
+    description: 'Глубокие исследования поэзии, истории и литературы, а также отдельные тексты о вере, культуре и нравственной оценке.',
+    path: '/articles',
+  });
   const articles = getAllArticles();
 
   const filteredArticles = selectedCategory

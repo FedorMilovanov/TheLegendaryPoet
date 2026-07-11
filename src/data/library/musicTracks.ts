@@ -1,13 +1,16 @@
 import { MusicTrack } from '../../types/poet';
+import { siteConfig } from '../../config/site';
 
+// NOTE: when real recordings are ready, add `audioUrl: '/audio/<file>.mp3'`
+// (place the file in public/audio/) — the row then becomes a real player with
+// a working download. Until then each track honestly links out to the channel.
 export const musicTracks: MusicTrack[] = [
   {
     id: 'track-1',
-    title: 'Березы (музыка на стихи Есенина)',
+    title: 'Берёзы (музыка на стихи Есенина)',
     poet: 'Сергей Есенин',
     duration: '4:12',
-    audioUrl: 'https://rutube.ru/channel/74579453',
-    videoUrl: 'https://rutube.ru/channel/74579453',
+    externalUrl: siteConfig.channels.rutube,
     description: 'Трогательная композиция о русской природе',
   },
   {
@@ -15,8 +18,7 @@ export const musicTracks: MusicTrack[] = [
     title: 'Пророк (музыкальная декламация)',
     poet: 'Александр Пушкин',
     duration: '5:30',
-    audioUrl: 'https://rutube.ru/channel/74579453',
-    videoUrl: 'https://rutube.ru/channel/74579453',
+    externalUrl: siteConfig.channels.youtube,
     description: 'Мощное прочтение знаменитого стихотворения под музыку',
   },
 ];

@@ -9,10 +9,7 @@ export default function MusicIntro() {
         </div>
         <div className="flex-1">
           <h3 className="mb-2 font-serif text-2xl text-white">Музыкальный раздел</h3>
-          <p className="mb-4 text-cyan-100/55">Слушайте опубликованные композиции и переходите к полным записям на каналах проекта.</p>
-          <div className="h-1 overflow-hidden rounded-full bg-[#0c1822]">
-            <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(0,212,255,0.55)]" />
-          </div>
+          <p className="text-cyan-100/60">Музыкальные интерпретации и декламации стихов. Нажмите на трек, чтобы перейти к полной записи на канале проекта.</p>
         </div>
       </div>
     </div>

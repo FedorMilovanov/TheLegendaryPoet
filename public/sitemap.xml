@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/music</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/afanasy-fet</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/alexander-blok</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/alexander-pushkin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/anna-akhmatova</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/boris-pasternak</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/fyodor-tyutchev</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/mikhail-lermontov</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/nikolay-gumilev</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/sergei-yesenin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/poets/vladimir-mayakovsky</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles/article-1</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles/article-3</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles/article-2</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles/article-main-1</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fedormilovanov.github.io/TheLegendaryPoet/articles/article-main-2</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

@@ -8,6 +8,7 @@ import RelatedArticles from '../components/articles/article-detail/RelatedArticl
 import ArticleBody from '../components/articles/article-detail/ArticleBody';
 import ArticleHeader from '../components/articles/article-detail/ArticleHeader';
 import { getArticleById, getRelatedArticles } from '../utils/articleLibrary';
+import { useSeo } from '../hooks/useSeo';
 
 const categoryLabels: Record<string, string> = {
   biblical: 'Библейский анализ',
@@ -18,17 +19,24 @@ const categoryLabels: Record<string, string> = {
 };
 
 function buildParagraphs(content: string, excerpt: string) {
-  if (content.includes('\n\n')) return content.split('\n\n');
-  return [
-    excerpt,
-    content,
-    'Полная редакторская версия этой статьи будет расширяться и дополняться в следующих сессиях проекта.',
-  ];
+  const paragraphs = content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+  if (paragraphs.length > 1) return paragraphs;
+  // Fallback for a single short paragraph: lead with the excerpt for rhythm.
+  return excerpt && excerpt !== content ? [excerpt, ...paragraphs] : paragraphs;
 }
 
 export default function ArticleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const article = id ? getArticleById(id) : undefined;
+
+  useSeo({
+    title: article ? `${article.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
+    description: article ? article.excerpt : 'Статья не найдена.',
+    path: `/articles/${id ?? ''}`,
+  });
 
   if (!article) {
     return (

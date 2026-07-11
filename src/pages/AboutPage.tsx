@@ -4,8 +4,14 @@ import MissionSection from '../components/about/MissionSection';
 import OfferGrid from '../components/about/OfferGrid';
 import SocialLinks from '../components/about/SocialLinks';
 import YouTubeFeature from '../components/about/YouTubeFeature';
+import { useSeo } from '../hooks/useSeo';
 
 export default function AboutPage() {
+  useSeo({
+    title: 'О проекте — THE LEGENDARY POET',
+    description: 'THE LEGENDARY POET — независимый редакторский проект о поэзии, истории и культуре с осторожным христианским анализом.',
+    path: '/about',
+  });
   return (
     <div className="min-h-screen bg-[#050505] pb-20 pt-32">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">

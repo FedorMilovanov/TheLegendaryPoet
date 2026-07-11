@@ -1,12 +1,15 @@
 import { Star, Calendar, MapPin, BookOpen } from 'lucide-react';
 import { Poet } from '../../types/poet';
 import MagneticButton from '../MagneticButton';
+import { brandLinks } from '../../config/site';
 
 interface InfoCardProps {
   poet: Poet;
 }
 
 export default function InfoCard({ poet }: InfoCardProps) {
+  const youtubeUrl = poet.links?.youtube || brandLinks.youtube;
+  const rutubeUrl = poet.links?.rutube || brandLinks.rutube;
   return (
     <div className="luxury-card glow-hover p-8 rounded-3xl border border-luxury-gold/10 backdrop-blur-xl bg-[#0a0a0a]/90 shadow-2xl shadow-black/50">
       <div className="flex items-center justify-between mb-8 pb-6 border-b border-luxury-gold/20">
@@ -39,14 +42,14 @@ export default function InfoCard({ poet }: InfoCardProps) {
       </div>
 
       <div className="pt-10 flex flex-col gap-4">
-        <MagneticButton 
-          href="https://youtube.com/@TheLegendaryPoet"
+        <MagneticButton
+          href={youtubeUrl}
           className="bg-white/5 border border-white/10 text-cyan-100 hover:bg-white/10 w-full text-[10px] tracking-[0.2em]"
         >
           Канал YouTube
         </MagneticButton>
-        <MagneticButton 
-          href="https://rutube.ru/channel/74579453"
+        <MagneticButton
+          href={rutubeUrl}
           className="bg-luxury-gold/10 border border-luxury-gold/30 text-luxury-gold hover:bg-luxury-gold/20 w-full text-[10px] tracking-[0.2em] gold-border-glow"
         >
           Смотреть Rutube
