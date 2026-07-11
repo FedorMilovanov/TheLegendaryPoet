@@ -19,12 +19,14 @@ Restore THE LEGENDARY POET as a premium dark luxury editorial site, not as a gen
 - Main title must read: `THE LEGENDARY POET` in cyan-blue glowing style.
 - Current hero component: `src/components/home/HeroSection.tsx`.
 
-## LP Emblem
+## Emblem (hooded figure)
 
 - Current component: `src/components/BrandMark.tsx`.
-- The emblem must be SVG, frameless, clean, and readable as `LP`.
-- Letter order matters: left `L`, right `P`. Never allow a monogram that reads visually as `PL`.
-- Do not replace with emoji or bitmap-only logo.
+- The emblem is a **hooded, cloaked figure** — an anonymous "legendary poet"
+  silhouette (draped cloak, deep cowl, shadowed face, cyan neon rim).
+- It must stay SVG, frameless, clean. Do not replace with emoji or a bitmap-only logo.
+- Do NOT restore the old `LP` monogram — the brand deliberately moved away from it.
+- The same figure drives `public/favicon.svg` and the generated `public/og-image.jpg`.
 
 ## Channel Priority
 
