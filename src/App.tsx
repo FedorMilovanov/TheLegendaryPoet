@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
+import { hydrateFromRemote } from './utils/communityStore';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -57,6 +59,13 @@ function AnimatedRoutes() {
 function App() {
   // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+  // If a shared backend is configured, pull everyone's ratings/comments once.
+  // No-op (and no network) when it isn't — the app stays on the local store.
+  useEffect(() => {
+    void hydrateFromRemote();
+  }, []);
+
   return (
     <Router basename={basename}>
       <MotionConfig reducedMotion="user">

@@ -34,6 +34,12 @@ jobs:
         env:
           # Project-site base path. For a custom domain, set VITE_BASE to "/".
           VITE_BASE: /TheLegendaryPoet/
+          # Optional shared comments/ratings backend (Supabase). Leave the repo
+          # Variables unset to keep the local-only store. The anon key is public
+          # by design (protected by Row Level Security) — repo Variables, not
+          # Secrets, so Vite can inline it at build time. See docs/COMMENTS_SETUP.md.
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
       - name: SPA fallback (serve the app for deep links / refresh)
         run: cp dist/index.html dist/404.html

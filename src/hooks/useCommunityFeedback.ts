@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { CommentEntry, CommentKind, FeedbackTargetType, RatingEntry } from '../types/community';
 import { averageScores, canMarkHelpful, checkCooldown, distributionFromRatings, filterComments, filterRatings, getFeedbackSnapshot, hasRated, makeFeedbackId, mutateFeedback, rememberHelpful, rememberRated, setCooldown, subscribeFeedback, trustLabel } from '../utils/communityStore';
+import { bumpHelpfulRemote, insertCommentRemote, insertRatingRemote } from '../utils/communityRemote';
 
 export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: string) {
   // Single shared source of truth: every panel on the page reads the same
@@ -37,6 +38,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     }
     rememberRated(scope);
     setCooldown(scope);
+    void insertRatingRemote(entry); // share to backend if configured; local copy already saved
     return { ok: true as const, message: 'Оценка сохранена' };
   };
 
@@ -61,6 +63,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
       return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
     }
     setCooldown(scope);
+    void insertCommentRemote(entry); // share to backend if configured
     return { ok: true as const, message: 'Комментарий добавлен' };
   };
 
@@ -69,11 +72,17 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     if (!canMarkHelpful(scope)) {
       return { ok: false as const, message: 'Вы уже отметили этот комментарий' };
     }
+    let newHelpful = 0;
     mutateFeedback((prev) => ({
       ...prev,
-      comments: prev.comments.map((comment) => comment.id === commentId ? { ...comment, helpful: comment.helpful + 1 } : comment),
+      comments: prev.comments.map((comment) => {
+        if (comment.id !== commentId) return comment;
+        newHelpful = comment.helpful + 1;
+        return { ...comment, helpful: newHelpful };
+      }),
     }));
     rememberHelpful(scope);
+    void bumpHelpfulRemote(commentId, newHelpful); // share to backend if configured
     return { ok: true as const, message: 'Спасибо, мнение учтено' };
   };
 

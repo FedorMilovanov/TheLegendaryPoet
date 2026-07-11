@@ -1,4 +1,5 @@
 import { CommentEntry, FeedbackSnapshot, FeedbackTargetType, RatingEntry } from '../types/community';
+import { fetchAllRemote, remoteEnabled } from './communityRemote';
 
 const STORE_KEY = 'tlp-community-feedback-v1';
 const COOLDOWN_KEY = 'tlp-community-cooldowns-v1';
@@ -76,6 +77,23 @@ export function subscribeFeedback(listener: () => void): () => void {
 export function getFeedbackSnapshot(): FeedbackSnapshot {
   return current;
 }
+
+/**
+ * When a shared backend is configured (see communityRemote), pull everyone's
+ * ratings/comments once at startup and make them the live snapshot. On any
+ * failure the local (per-device) data is kept untouched. No-op otherwise.
+ */
+export async function hydrateFromRemote(): Promise<void> {
+  if (!remoteEnabled) return;
+  const remote = await fetchAllRemote();
+  if (!remote) return;
+  current = remote;
+  safeWrite(STORE_KEY, current); // warm local cache for instant next load
+  emit();
+}
+
+/** True when ratings/comments are shared via a backend (not just local). */
+export const isFeedbackShared = remoteEnabled;
 
 /** Backwards-compatible reader (returns the live in-memory snapshot). */
 export function loadFeedback(): FeedbackSnapshot {
