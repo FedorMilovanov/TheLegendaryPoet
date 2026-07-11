@@ -1,5 +1,4 @@
-// Hall of Poets 2.0 — v1.2 FPS walk mode
-// THE LEGENDARY POET
+// Hall of Poets 2.0 — v1.3 — Morph + Audio + PBR
 import * as THREE from 'three'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
@@ -19,7 +18,7 @@ if (USE_POSTPROCESSING) { try { PostFX = require('@react-three/postprocessing') 
 import { poets as allPoetsRaw } from '@/data/poets'
 import { asset } from '@/utils/asset'
 
-type Poet = { id: string; firstName?: string; lastName?: string; name: string; years?: string; birthYear?: number; deathYear?: number; portrait?: string }
+type Poet = { id: string; name: string; years?: string; birthYear?: number; deathYear?: number; portrait?: string }
 
 const POET_QUOTES: Record<string, string> = {
   pushkin: 'Я памятник себе воздвиг нерукотворный',
@@ -54,6 +53,22 @@ function HallScene({ fpsMode }: { fpsMode: boolean }) {
   const focusedIndex = focused ? poets.findIndex(p => p.id === focused) : null
   useHallNavigation(focusedIndex, poets.length, !fpsMode)
 
+  // FPS interact: E → открыть ближайшую нишу
+  useEffect(() => {
+    if (!fpsMode) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'KeyE') return
+      // very simple: open focused poet, or first
+      const id = focused || poets[0]?.id
+      if (id) {
+        try { sessionStorage.setItem('tlp_hall_last_poet', id) } catch {}
+        navigate(`/poets/${id}`)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [fpsMode, focused, navigate, poets])
+
   return (
     <>
       {fpsMode && <FirstPersonControls enabled={fpsMode} />}
@@ -70,7 +85,11 @@ function HallScene({ fpsMode }: { fpsMode: boolean }) {
             active={focused === poet.id}
             onFocus={setFocused}
             onSelect={() => {
-              try { sessionStorage.setItem('tlp_hall_last_poet', poet.id) } catch {}
+              try {
+                sessionStorage.setItem('tlp_hall_last_poet', poet.id)
+                // for Framer Motion shared layout in PoetDetailHeroTransition.tsx
+                sessionStorage.setItem('tlp_hall_transition', `poet-portrait-${poet.id}`)
+              } catch {}
               navigate(`/poets/${poet.id}`)
             }}
           />
@@ -98,23 +117,26 @@ function PostProcessing() {
 export default function HallOfPoets() {
   const [dpr, setDpr] = useState(RENDER.dpr[1])
   const [fpsMode, setFpsMode] = useState(false)
+  const [audioMuted, setAudioMuted] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === 'KeyF' && !(e.target as HTMLElement)?.matches('input,textarea')) {
-        setFpsMode(f => !f)
-      }
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.code === 'KeyF') setFpsMode(f => !f)
+      if (e.code === 'KeyM') setAudioMuted(m => !m)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // global audio mute flag for usePoetWhisper
+  useEffect(() => {
+    try { (window as any).__TLP_AUDIO_MUTED = audioMuted } catch {}
+  }, [audioMuted])
+
   return (
-    <section 
-      className="relative h-[100vh] w-full overflow-hidden bg-[#020811]" 
-      aria-label="Зал Поэтов — 3D"
-      data-lenis-prevent
-    >
+    <section className="relative h-[100vh] w-full overflow-hidden bg-[#020811]" aria-label="Зал Поэтов — 3D" data-lenis-prevent>
       <Canvas
         shadows={RENDER.shadows}
         dpr={dpr}
@@ -139,31 +161,33 @@ export default function HallOfPoets() {
       </Canvas>
 
       {/* UI Overlay */}
-      <div className="pointer-events-none absolute inset-x-0 top-20 z-20 text-center">
+      <div className="pointer-events-none absolute inset-x-0 top-20 z-20 text-center px-4">
         <div className="font-serif text-[11px] tracking-[0.38em] text-cyan-200/70">THE LEGENDARY POET</div>
-        <h1 className="mt-3 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#e9faff]"
-            style={{ textShadow: '0 0 32px rgba(0,212,255,0.28)' }}>
+        <h1 className="mt-3 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#e9faff]" style={{ textShadow: '0 0 32px rgba(0,212,255,0.28)' }}>
           Зал Поэтов
         </h1>
         <p className="mt-3 text-cyan-100/70 text-sm md:text-[15px]">
           {fpsMode 
-            ? 'WASD + мышь — ходить · Shift — бег · F — выйти из FPS · Клик по портрету — досье'
-            : 'Скролл / drag / ← → — пройти по нефу · F — режим ходьбы как в игре · Клик — досье · K — поиск'
+            ? 'WASD + мышь — ходить · Shift бег · E — открыть · F — выйти · M — звук'
+            : 'Скролл / drag / ← → — неф · F — FPS ходьба · Клик — досье · M — звук · K — поиск'
           }
         </p>
-        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-black/35 px-3 py-1 text-[11px] text-cyan-200/80 backdrop-blur">
+        <div className="mt-2 inline-flex items-center gap-3 rounded-full border border-cyan-400/25 bg-black/35 px-3 py-1 text-[11px] text-cyan-200/80 backdrop-blur pointer-events-auto">
           <span className={`h-1.5 w-1.5 rounded-full ${fpsMode ? 'bg-emerald-400' : 'bg-cyan-400'}`} />
-          {fpsMode ? 'FPS Walk — кликни чтобы захватить мышь' : 'Rail Dolly — нажми F для свободной ходьбы'}
+          <button onClick={() => setFpsMode(f => !f)} className="hover:text-white">
+            {fpsMode ? 'FPS Walk' : 'Rail Dolly'}
+          </button>
+          <span className="opacity-30">|</span>
+          <button onClick={() => setAudioMuted(m => !m)} className="hover:text-white">
+            {audioMuted ? '🔇 Звук выкл' : '🔊 Звук вкл'}
+          </button>
+          <span className="opacity-60 hidden sm:inline">F / M</span>
         </div>
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#020811] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#020811] to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#020811] to-transparent" />
-
-      <div className="sr-only" aria-live="polite">
-        Трёхмерный зал с 10 нишами русских поэтов.
-      </div>
     </section>
   )
 }

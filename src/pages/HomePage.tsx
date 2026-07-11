@@ -18,7 +18,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
-      <HeroSection />
+      <HallOfPoets />
       <StatsSection />
 
       {/* Featured Poets */}
@@ -78,3 +78,4 @@ export default function HomePage() {
     </div>
   );
 }
+
