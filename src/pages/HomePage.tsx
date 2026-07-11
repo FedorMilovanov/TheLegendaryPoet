@@ -5,9 +5,16 @@ import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
 import HeroSection from '../components/home/HeroSection';
 import StatsSection from '../components/home/StatsSection';
+import { useSeo } from '../hooks/useSeo';
+import { siteConfig } from '../config/site';
 
 export default function HomePage() {
   const featuredPoets = poets.slice(0, 3);
+  useSeo({
+    title: 'THE LEGENDARY POET | Поэзия, анализ, история',
+    description: siteConfig.description,
+    path: '/',
+  });
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">

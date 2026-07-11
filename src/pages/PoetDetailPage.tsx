@@ -10,10 +10,17 @@ import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
+import { useSeo } from '../hooks/useSeo';
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const poet = poets.find(p => p.id === id);
+
+  useSeo({
+    title: poet ? `${poet.name} — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
+    description: poet ? poet.shortBio : 'Страница не найдена.',
+    path: `/poets/${id ?? ''}`,
+  });
 
   if (!poet) {
     return (

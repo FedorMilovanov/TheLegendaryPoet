@@ -4,8 +4,14 @@ import PoetsEmptyState from '../components/poets/PoetsEmptyState';
 import PoetsFilters from '../components/poets/PoetsFilters';
 import PoetsGrid from '../components/poets/PoetsGrid';
 import PoetsHero from '../components/poets/PoetsHero';
+import { useSeo } from '../hooks/useSeo';
 
 export default function PoetsPage() {
+  useSeo({
+    title: 'Поэты — THE LEGENDARY POET',
+    description: 'Каталог великих русских поэтов: биографии, тексты, теги и рейтинги — от золотого века до серебряного.',
+    path: '/poets',
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'year'>('rating');
   const [selectedTag, setSelectedTag] = useState<string>('');
