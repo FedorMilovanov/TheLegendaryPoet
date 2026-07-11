@@ -1,12 +1,18 @@
 import { MessageSquare, Star } from 'lucide-react';
 import { Poem } from '../../types/poet';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
+import { scrollToId } from '../../utils/smoothScroll';
 
 function PoemQuickRow({ poem }: { poem: Poem }) {
   const feedback = useCommunityFeedback('poem', poem.id);
 
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    scrollToId(`poem-${poem.id}`);
+  };
+
   return (
-    <a href={`#poem-${poem.id}`} className="block rounded-2xl border border-cyan-400/10 bg-black/20 p-3 transition hover:border-cyan-400/25 hover:bg-cyan-400/5">
+    <a href={`#poem-${poem.id}`} onClick={handleClick} className="block rounded-2xl border border-cyan-400/10 bg-black/20 p-3 transition hover:border-cyan-400/25 hover:bg-cyan-400/5">
       <div className="mb-1 text-sm font-semibold text-white">{poem.title}</div>
       <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em] text-cyan-100/40">
         <span>{poem.year || 'год не указан'}</span>

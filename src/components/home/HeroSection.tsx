@@ -1,14 +1,18 @@
 import { motion } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon } from '../ChannelIcons';
+import { brandLinks } from '../../config/site';
 
 const portraits = [
-  '/images/yesenin.jpg',
-  '/images/lermontov.jpg',
-  '/images/pushkin.jpg',
-  '/images/tyutchev.jpg',
-  '/images/mayakovsky.jpg',
-  '/images/fet.jpg',
+  { src: '/images/pushkin.jpg', name: 'Александр Пушкин' },
+  { src: '/images/lermontov.jpg', name: 'Михаил Лермонтов' },
+  { src: '/images/tyutchev.jpg', name: 'Фёдор Тютчев' },
+  { src: '/images/fet.jpg', name: 'Афанасий Фет' },
+  { src: '/images/yesenin.jpg', name: 'Сергей Есенин' },
+  { src: '/images/mayakovsky.jpg', name: 'Владимир Маяковский' },
+  { src: '/images/akhmatova.jpg', name: 'Анна Ахматова' },
+  { src: '/images/gumilev.jpg', name: 'Николай Гумилёв' },
+  { src: '/images/pasternak.jpg', name: 'Борис Пастернак' },
 ];
 
 export default function HeroSection() {
@@ -27,16 +31,16 @@ export default function HeroSection() {
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
         >
-          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-3 gap-3 opacity-70 sm:grid-cols-6">
-            {portraits.map((src, index) => (
+          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-3 gap-3 opacity-70 sm:grid-cols-9">
+            {portraits.map((portrait, index) => (
               <motion.div
-                key={src}
+                key={portrait.src}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.12 * index, duration: 0.65 }}
+                transition={{ delay: 0.08 * index, duration: 0.65 }}
                 className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]"
               >
-                <img src={src} alt="Портрет русского поэта" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
+                <img src={portrait.src} alt={`Портрет: ${portrait.name}`} loading="lazy" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
               </motion.div>
             ))}
@@ -81,13 +85,13 @@ export default function HeroSection() {
               <BookMonogramIcon className="h-5 w-5" /> ИССЛЕДОВАТЬ КАТАЛОГ
             </MagneticButton>
             <MagneticButton
-              href="https://youtube.com/@TheLegendaryPoet"
+              href={brandLinks.youtube}
               className="border border-cyan-400/40 text-cyan-300 font-bold hover:bg-cyan-950/30 hover:border-cyan-400/70 hover:shadow-[0_0_30px_rgba(0,212,255,0.3)]"
             >
               <YouTubeIcon className="h-5 w-5" /> YOUTUBE КАНАЛ
             </MagneticButton>
             <MagneticButton
-              href="https://rutube.ru/channel/74579453"
+              href={brandLinks.rutube}
               className="border border-cyan-400/30 text-cyan-200/80 font-bold hover:bg-cyan-950/20 hover:border-cyan-400/60 hover:shadow-[0_0_24px_rgba(0,212,255,0.2)]"
             >
               <RutubeIcon className="h-5 w-5" /> RUTUBE

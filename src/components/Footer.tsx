@@ -1,6 +1,7 @@
 import { MessageCircle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RutubeIcon, YouTubeIcon } from './ChannelIcons';
+import { siteConfig } from '../config/site';
 
 const footerLinks = [
   { label: 'Поэты', path: '/poets' },
@@ -10,6 +11,7 @@ const footerLinks = [
 ];
 
 const Footer = () => {
+  const year = new Date().getFullYear();
   return (
     <footer className="bg-[#050505] border-t border-cyan-400/10 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -24,7 +26,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center space-x-4">
               <a
-                href="https://youtube.com/@TheLegendaryPoet"
+                href={siteConfig.channels.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-200/50 hover:text-red-500 transition-colors"
@@ -33,7 +35,7 @@ const Footer = () => {
                 <YouTubeIcon className="h-5 w-5" />
               </a>
               <a
-                href="https://rutube.ru/channel/74579453"
+                href={siteConfig.channels.rutube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-200/50 hover:text-cyan-300 transition-colors"
@@ -42,7 +44,7 @@ const Footer = () => {
                 <RutubeIcon className="h-5 w-5" />
               </a>
               <a
-                href="https://vk.com/thelegendarypoet"
+                href={siteConfig.channels.vk}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-200/50 hover:text-blue-400 transition-colors"
@@ -51,7 +53,7 @@ const Footer = () => {
                 <MessageCircle size={20} />
               </a>
               <a
-                href="mailto:contact@legendarypoet.com"
+                href={`mailto:${siteConfig.contactEmail}`}
                 className="text-cyan-200/50 hover:text-cyan-300 transition-colors"
                 aria-label="Email"
               >
@@ -81,7 +83,7 @@ const Footer = () => {
           <div>
             <h4 className="text-cyan-100 font-semibold mb-4">Информация</h4>
             <ul className="space-y-2 text-sm text-cyan-200/50">
-              <li>© 2024 THE LEGENDARY POET</li>
+              <li>© {year} THE LEGENDARY POET</li>
               <li>Все права защищены</li>
               <li>Редакторская сборка проекта</li>
             </ul>
@@ -90,7 +92,7 @@ const Footer = () => {
 
         <div className="h-[1px] bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent my-8" />
 
-        <div className="text-center text-sm text-cyan-200/30">
+        <div className="text-center text-sm text-cyan-200/45">
           <p>
             THE LEGENDARY POET — независимый редакторский проект о поэзии, истории и культурном контексте.
           </p>

@@ -1,10 +1,11 @@
 import { MessageCircle } from 'lucide-react';
 import { RutubeIcon, YouTubeIcon } from '../ChannelIcons';
+import { siteConfig } from '../../config/site';
 
 const socials = [
-  { icon: <YouTubeIcon className="h-7 w-7" />, label: 'YouTube', href: 'https://youtube.com/@TheLegendaryPoet', color: 'hover:text-red-500' },
-  { icon: <RutubeIcon className="h-7 w-7" />, label: 'Rutube', href: 'https://rutube.ru/channel/74579453', color: 'hover:text-cyan-300' },
-  { icon: <MessageCircle size={28} />, label: 'VK', href: 'https://vk.com/thelegendarypoet', color: 'hover:text-blue-400' },
+  { icon: <YouTubeIcon className="h-7 w-7" />, label: 'YouTube', href: siteConfig.channels.youtube, color: 'hover:text-red-500' },
+  { icon: <RutubeIcon className="h-7 w-7" />, label: 'Rutube', href: siteConfig.channels.rutube, color: 'hover:text-cyan-300' },
+  { icon: <MessageCircle size={28} />, label: 'VK', href: siteConfig.channels.vk, color: 'hover:text-blue-400' },
 ];
 
 export default function SocialLinks() {

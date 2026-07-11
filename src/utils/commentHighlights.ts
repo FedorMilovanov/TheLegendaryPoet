@@ -1,22 +1,14 @@
 import { CommentEntry } from '../types/community';
 
-const negativeHints = [
-  'не ',
-  'слаб',
-  'плохо',
-  'спорно',
-  'ошиб',
-  'сыр',
-  'перег',
-  'тяжел',
-  'лишн',
-  'хуже',
-  'мало',
-];
+// Whole-word negation markers (compared against tokens, so "мне"/"вне" no
+// longer falsely match the negation particle "не").
+const negativeWords = new Set(['не', 'нет', 'плохо', 'спорно', 'хуже', 'мало', 'слабо', 'скучно']);
+// Stems matched at the start of a word (catch inflected forms).
+const negativeStems = ['слаб', 'ошиб', 'сыр', 'перегру', 'тяжел', 'лишн', 'недо', 'разочар', 'провал'];
 
 function isCritical(text: string) {
-  const normalized = text.toLowerCase();
-  return negativeHints.some((hint) => normalized.includes(hint));
+  const words = text.toLowerCase().split(/[^а-яё]+/i).filter(Boolean);
+  return words.some((word) => negativeWords.has(word) || negativeStems.some((stem) => word.startsWith(stem)));
 }
 
 export function getPositiveComment(comments: CommentEntry[]) {

@@ -18,12 +18,13 @@ const categoryLabels: Record<string, string> = {
 };
 
 function buildParagraphs(content: string, excerpt: string) {
-  if (content.includes('\n\n')) return content.split('\n\n');
-  return [
-    excerpt,
-    content,
-    'Полная редакторская версия этой статьи будет расширяться и дополняться в следующих сессиях проекта.',
-  ];
+  const paragraphs = content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+  if (paragraphs.length > 1) return paragraphs;
+  // Fallback for a single short paragraph: lead with the excerpt for rhythm.
+  return excerpt && excerpt !== content ? [excerpt, ...paragraphs] : paragraphs;
 }
 
 export default function ArticleDetailPage() {

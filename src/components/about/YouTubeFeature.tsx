@@ -1,4 +1,5 @@
 import { YouTubeIcon } from '../ChannelIcons';
+import { siteConfig } from '../../config/site';
 
 export default function YouTubeFeature() {
   return (
@@ -15,7 +16,7 @@ export default function YouTubeFeature() {
             Видео о поэтах, их жизни, тревогах, трагических и лирических историях. Глубокие разборы стихов и судеб.
           </p>
           <a
-            href="https://youtube.com/@TheLegendaryPoet"
+            href={siteConfig.channels.youtube}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-red-700"

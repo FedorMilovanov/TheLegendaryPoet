@@ -1,20 +1,23 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 import { useLocation } from 'react-router-dom';
+import { setActiveLenis } from '../utils/smoothScroll';
 
 const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // easeOutExpo
       orientation: 'vertical',
       gestureOrientation: 'vertical',
-      smoothWheel: true,
+      smoothWheel: !prefersReduced,
       wheelMultiplier: 1,
       touchMultiplier: 2,
     });
+    setActiveLenis(lenis);
 
     let animationFrameId: number;
 
@@ -29,6 +32,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     lenis.scrollTo(0, { immediate: true });
 
     return () => {
+      setActiveLenis(null);
       lenis.destroy();
       cancelAnimationFrame(animationFrameId);
     };

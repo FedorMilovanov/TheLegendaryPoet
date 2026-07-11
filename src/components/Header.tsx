@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, MessageCircle, Search } from 'lucide-react';
 import BrandMark from './BrandMark';
 import { RutubeIcon, YouTubeIcon } from './ChannelIcons';
+import { siteConfig } from '../config/site';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -62,7 +63,7 @@ const Header = () => {
               <Search size={14} /> Ctrl K
             </button>
             <a
-              href="https://youtube.com/@TheLegendaryPoet"
+              href={siteConfig.channels.youtube}
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-200/50 hover:text-red-500 transition-colors"
@@ -71,7 +72,7 @@ const Header = () => {
               <YouTubeIcon className="h-5 w-5" />
             </a>
             <a
-              href="https://rutube.ru/channel/74579453"
+              href={siteConfig.channels.rutube}
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-200/50 hover:text-cyan-300 transition-colors"
@@ -80,7 +81,7 @@ const Header = () => {
               <RutubeIcon className="h-5 w-5" />
             </a>
             <a
-              href="https://vk.com/thelegendarypoet"
+              href={siteConfig.channels.vk}
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-200/50 hover:text-blue-400 transition-colors"
@@ -94,7 +95,8 @@ const Header = () => {
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden text-luxury-gray-light hover:text-white transition-colors"
-            aria-label="Toggle menu"
+            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -120,13 +122,13 @@ const Header = () => {
               </Link>
             ))}
             <div className="flex items-center space-x-4 pt-3 border-t border-cyan-400/10">
-              <a href="https://youtube.com/@TheLegendaryPoet" className="text-cyan-200/50 hover:text-red-500" aria-label="YouTube">
+              <a href={siteConfig.channels.youtube} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-red-500" aria-label="YouTube">
                 <YouTubeIcon className="h-5 w-5" />
               </a>
-              <a href="https://rutube.ru/channel/74579453" className="text-cyan-200/50 hover:text-cyan-400" aria-label="Rutube">
+              <a href={siteConfig.channels.rutube} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-cyan-400" aria-label="Rutube">
                 <RutubeIcon className="h-5 w-5" />
               </a>
-              <a href="https://vk.com/thelegendarypoet" className="text-cyan-200/50 hover:text-blue-400" aria-label="VK">
+              <a href={siteConfig.channels.vk} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-blue-400" aria-label="VK">
                 <MessageCircle size={20} />
               </a>
             </div>

@@ -14,7 +14,6 @@ export const articles: Article[] = [
     date: '2024-04-01',
     category: 'biblical',
     readTime: 20,
-    image: '/images/articles/russian-soul.jpg',
   },
   {
     id: 'article-main-2',
@@ -29,6 +28,5 @@ export const articles: Article[] = [
     date: '2024-04-10',
     category: 'history',
     readTime: 10,
-    image: '/images/articles/poetry-music.jpg',
   },
 ];
