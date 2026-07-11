@@ -24,16 +24,25 @@ node scripts/gen-sitemap.mjs   # пересобрать public/sitemap.xml из 
 - `src/docs/THEOLOGICAL_GUIDELINES.md` — обязательные редакционные правила для богословских разборов.
 - `docs/IMAGE_PROMPTS.md` — промты и инструкция по подстановке аутентичных изображений.
 
-## Перед публикацией — что настроить
+## Публикация на GitHub Pages
 
-1. **Ссылки и почта.** Проверьте значения в `src/config/site.ts` (YouTube/Rutube/VK/e‑mail) —
-   подтвердите, что каналы существуют и почта принимается. Там же `url` для canonical/OG.
-2. **Хостинг и base‑path.** Для корневого домена/Netlify/Vercel — готово (`_redirects`, `vercel.json`).
-   Для **GitHub Pages project‑страницы** задайте в `vite.config.ts` `base: '/<repo>/'` и используйте `public/.nojekyll`.
-3. **Изображения.** Замените портреты в `public/images/<slug>.jpg` на аутентичные — см. `docs/IMAGE_PROMPTS.md`.
-4. **Соцпревью.** `public/og-image.jpg` (1200×630) уже сгенерирован; при желании обновите.
-5. **Контент (по желанию).** Добавление новых стихотворений требует сверенных канонических
-   текстов из надёжного источника (Викитека/РВБ) — добавляйте отдельными записями в модуль поэта.
+Всё настроено под project‑страницу `https://<owner>.github.io/TheLegendaryPoet/`:
+
+1. В настройках репозитория: **Settings → Pages → Source: GitHub Actions** (включить один раз).
+2. Пуш в `main` (или ветку деплоя) запускает `.github/workflows/deploy.yml` — сборка и публикация.
+3. `vite.config.ts` `base` = `/TheLegendaryPoet/`; deep‑ссылки работают через `404.html`‑фолбэк.
+4. **Кастомный домен:** задайте `VITE_BASE=/` (в workflow), обновите `siteConfig.url` (`src/config/site.ts`)
+   и OG‑URL в `index.html`, добавьте `public/CNAME`.
+
+Готово к публикации и на Netlify/Vercel (`_redirects`, `vercel.json`).
+
+## Что ещё можно улучшить (по желанию)
+
+- **Изображения статей** — сейчас у карточек иконка книги (осознанно); можно вернуть поле `image` и промты в `docs/IMAGE_PROMPTS.md`.
+- **Музыка** — треки ведут на каналы; для реального плеера положите `.mp3` в `public/audio/` и укажите `audioUrl`.
+- **Контент** — новые стихи только из сверенных источников (Викитека/РВБ/ФЭБ), см. `docs/RESEARCH_SOURCES.md`.
+- **Шрифты** — сейчас Google Fonts; для офлайна/приватности можно самостоятельно разместить woff2.
+- **Оценки/комментарии** — прототип на localStorage; для реальных нужен бэкенд.
 
 ## Аудит
 
