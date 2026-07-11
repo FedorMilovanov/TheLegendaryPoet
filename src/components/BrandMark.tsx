@@ -9,25 +9,30 @@ const sizes = {
 };
 
 /**
- * Brand emblem: a hooded, cloaked figure — the "legendary poet" as an
- * anonymous, timeless silhouette. Pure SVG, frameless, cyan-neon on dark.
+ * Brand emblem: a cloaked, hooded figure — the "legendary poet" as an
+ * anonymous, timeless silhouette. Draped cloak, deep cowl, shadowed face and
+ * a cyan neon rim. Pure SVG, frameless.
  */
 export default function BrandMark({ size = 'sm' }: BrandMarkProps) {
   return (
     <svg className={`${sizes[size]} overflow-visible`} viewBox="0 0 96 96" role="img" aria-label="THE LEGENDARY POET">
       <defs>
-        <linearGradient id="hoodFill" x1="20" y1="8" x2="76" y2="88">
-          <stop offset="0%" stopColor="#d6fbff" />
-          <stop offset="46%" stopColor="#33d6ff" />
-          <stop offset="100%" stopColor="#2170ff" />
+        <linearGradient id="hoodFill" x1="18" y1="6" x2="78" y2="92">
+          <stop offset="0%" stopColor="#e2fdff" />
+          <stop offset="42%" stopColor="#41dcff" />
+          <stop offset="100%" stopColor="#1f66ff" />
         </linearGradient>
-        <radialGradient id="hoodVoid" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#03060c" />
-          <stop offset="70%" stopColor="#071019" />
-          <stop offset="100%" stopColor="#0b1826" />
+        <linearGradient id="hoodFold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0a3550" stopOpacity="0" />
+          <stop offset="100%" stopColor="#041a2b" stopOpacity="0.55" />
+        </linearGradient>
+        <radialGradient id="hoodVoid" cx="50%" cy="34%" r="62%">
+          <stop offset="0%" stopColor="#020509" />
+          <stop offset="62%" stopColor="#061019" />
+          <stop offset="100%" stopColor="#0c1c2e" />
         </radialGradient>
-        <filter id="hoodGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="1.3" result="blur" />
+        <filter id="hoodGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.1" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -35,9 +40,12 @@ export default function BrandMark({ size = 'sm' }: BrandMarkProps) {
         </filter>
       </defs>
       <g filter="url(#hoodGlow)">
-        <path d="M12 91 C12 77 18 67 30 62 C36 60 42 60 48 60 C54 60 60 60 66 62 C78 67 84 77 84 91 Z" fill="url(#hoodFill)" />
-        <path d="M48 7 C39 7 33 14 31 24 C29 33 30 45 34 54 C36 58 38 61 40 62 L56 62 C58 61 60 58 62 54 C66 45 67 33 65 24 C63 14 57 7 48 7 Z" fill="url(#hoodFill)" />
-        <path d="M48 17 C41 17 37 24 37 33 C37 44 42 53 48 55 C54 53 59 44 59 33 C59 24 55 17 48 17 Z" fill="url(#hoodVoid)" />
+        <path d="M48 22 C42 22 38 25 35 31 C28 44 18 55 13 74 C11 82 11 87 12 90 C24 87 33 88 48 88 C63 88 72 87 84 90 C85 87 85 82 83 74 C78 55 68 44 61 31 C58 25 54 22 48 22 Z" fill="url(#hoodFill)" />
+        <path d="M48 6 C40 6 34 11 31 19 C28 27 28 38 32 47 C34 52 38 56 44 58 C46 59 50 59 52 58 C58 56 62 52 64 47 C68 38 68 27 65 19 C62 11 56 6 48 6 Z" fill="url(#hoodFill)" />
+        <path d="M48 15 C42 15 38 21 38 30 C38 41 43 50 48 52 C53 50 58 41 58 30 C58 21 54 15 48 15 Z" fill="url(#hoodVoid)" />
+        <path d="M48 58 C40 66 34 78 33 88 C40 88 44 88 48 88 C52 88 56 88 63 88 C62 78 56 66 48 58 Z" fill="url(#hoodFold)" />
+        <path d="M35 31 C28 44 18 55 13 74" fill="none" stroke="#bff4ff" strokeWidth="1.3" strokeLinecap="round" opacity="0.6" />
+        <path d="M31 19 C28 27 28 38 32 47" fill="none" stroke="#bff4ff" strokeWidth="1.3" strokeLinecap="round" opacity="0.55" />
       </g>
     </svg>
   );

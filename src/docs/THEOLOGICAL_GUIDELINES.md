@@ -1,51 +1,80 @@
-# Theological And Editorial Guidelines
+# Редакционные и богословские стандарты — THE LEGENDARY POET
 
-These rules are mandatory for future AI or human editors of THE LEGENDARY POET.
+Обязательны для любого редактора — человека или ИИ-агента, — кто добавляет или
+правит биографии, разборы, «духовный путь» и авторские ремарки. Это то, к чему мы
+стремимся. Нарушение этих правил = регресс проекта.
 
-## Core Rule
+## Главный принцип
 
-Do not force Christian meaning into every poet, every poem, or every biography.
+Мы уважаем гений, но не поклоняемся ему. Мы даём христианскую нравственную и
+богословскую оптику — но трезво, факт­ически и сдержанно, ближе к серьёзному
+реформатскому/баптистскому анализу (в духе Сперджена, Кальвина, Макартура по
+серьёзности и заботе об истине), а не к романтической религиозной фантазии.
 
-The project may include a Christian moral and theological lens, but it must be careful, factual, and restrained. The tone should be closer to a sober Baptist/Reformed evaluator than to romantic speculation: think Spurgeon, Calvin, MacArthur in seriousness, clarity, and concern for truth.
+## Что ЗАПРЕЩЕНО (частые ошибки, которые нужно вычищать)
 
-## What Is Allowed
+1. **Не делать библейский разбор ради библейского разбора.** Если в тексте или
+   биографии нет реального основания — не выдумывать «скрытую духовность».
+2. **Не превращать поэтов в верующих христиан.** Талант, красивые образы, тоска по
+   свету, любовь к матери или природе — это НЕ доказательство личной веры.
+3. **Не делать из авторов «библейских писателей»,** выжимая из пальца смысл,
+   которого в тексте нет.
+4. **Не баптизировать сентиментальным языком трагическую или безбожную жизнь.**
+   Не писать так, будто талант оправдывает грех.
 
-- Comment on explicit biblical references, direct quotations, Christian symbols, prayers, church imagery, or openly theological themes.
-- Comment on explicit anti-Christian, blasphemous, nihilistic, occult, or revolutionary-bogoborchesky material when the text clearly contains it.
-- Comment on moral consequences when the biography gives clear grounds: addiction, suicide, pride, cruelty, persecution, repentance, endurance, fidelity, courage.
-- Use a separate section for Christian analysis instead of inserting it into every paragraph.
-- Admit uncertainty when evidence is weak.
+## Как работать с ПОДЛИННЫМ библейским образом
 
-## What Is Forbidden
+Когда поэт РЕАЛЬНО опирается на Писание (например, Пушкин, «Пророк» — на Исаию 6;
+Пастернак, «Гамлет» — на Гефсиманию и «Авва Отче», Мк. 14:36; Ахматова, «Распятие» —
+на Евангелие и богослужение), делаем так:
 
-- Do not call a poet Christian unless there is serious historical or textual basis.
-- Do not turn ordinary love for a mother, nature, or beauty into Christian doctrine.
-- Do not invent hidden biblical meanings where the poem does not support them.
-- Do not use sentimental language that baptizes a tragic or godless life.
-- Do not write as if talent excuses sin.
+- **Не объявляем поэта верующим** на основании того, что он использовал образ.
+- **Объясняем, ОТКУДА образ:** называем конкретное место Писания (книга, глава, стих)
+  и что там сказано — детально, точно, грамотно.
+- **Показываем, как поэт преломил образ:** совпадает ли он с библейским смыслом,
+  спорит с ним, эстетизирует его или переосмысляет.
+- Это **комментарий к образу и его источнику**, а не свидетельство о спасении автора.
 
-## Editorial Tone
+Пример правильной интонации (Пушкин, «Пророк»): «Образ взят из призвания пророка
+Исаии (Ис. 6:1–8): шестикрылый серафим, очищение уст горящим углём с жертвенника,
+посольство от Бога. В Библии это призвание пророка на служение, а не метафора
+поэзии; Пушкин переносит библейский сюжет на природу поэтического дара. Это
+осознанная работа с Писанием как с culture-forming текстом — но она не делает
+самого Пушкина пророком или образцом веры».
 
-- Respect genius, but do not worship genius.
-- Be compassionate about tragedy, but clear about sin and unbelief.
-- If a poet lived in despair, say so carefully.
-- If a poet used biblical language only as art, do not overstate faith.
-- If a poet clearly fought God or mocked God, say it plainly, without theatrical cruelty.
+## Нравственная оценка — честно и с библейской точки зрения
 
-## Examples
+О биографии и поступках говорим прямо. Жизнь многих поэтов была тяжёлой, полной
+греха, страстей, зависимостей и депрессии; «творческие души» часто не выдерживали
+и ломались. С библейской позиции у этого есть корень: **в первую очередь — потому,
+что они не знали Бога** и искали смысл, опору и вечность не там. Это говорится:
 
-- Pushkin, "Пророк": biblical analysis is valid because the poem is built on Isaiah 6.
-- Akhmatova, "Реквием / Распятие": biblical analysis is valid because it directly uses Gospel and liturgical imagery.
-- Pasternak, "Гамлет": biblical analysis is valid because of "Авва Отче" and the cup motif.
-- Yesenin, "Письмо матери": do not force Christian reading. The line "И молиться не учи меня. Не надо!" should be treated as spiritual refusal and crisis.
-- Mayakovsky, "Облако в штанах": comment as open blasphemous rebellion, not as hidden faith.
+- **прямо**, без эвфемизмов, когда есть ясные основания (алкоголизм, самоубийство,
+  гордость, богоборчество, отчаяние);
+- **с уважением к таланту** и состраданием к человеческой трагедии;
+- **без злорадства и театральной жестокости**, но и без сладкой сентиментальности;
+- **с признанием неопределённости** там, где данных мало.
 
-## Site Structure Recommendation
+## Оформление на сайте
 
-Keep Christian analysis in clearly marked sections:
+Держим христианский разбор в явно обозначенных секциях, отдельно от литературного:
+«Духовный путь и мировоззрение», «Авторская ремарка», поле `biblicalPerspective`
+у стихотворения. На обложке/главной христианских ярлыков нет — бренд подаётся как
+поэзия, анализ и история.
 
-- "Духовный путь и мировоззрение"
-- "Авторская ремарка"
-- "Отдельный богословский разбор"
+## Достоверность и источники
 
-Do not place Christian labels on the main cover. The cover should present the brand as poetry, analysis, and history.
+- **Только выверенные канонические тексты стихов.** Не выдумывать, не пересказывать
+  канон как оригинал. Каждый текст сверять минимум по двум надёжным источникам
+  (rustih.ru, slova.org.ru, culture.ru, ilibrary.ru, rvb.ru, feb-web.ru, викитека).
+- **Опираться на первоисточники**, а не на пересказ из «Википедии». Проект ведёт
+  список исследовательских ссылок в `docs/RESEARCH_SOURCES.md` (цель — 30+).
+- Библейские ссылки давать точно (книга, глава, стих) и проверять по тексту Писания.
+
+## Быстрый чек-лист перед публикацией разбора
+
+- [ ] Я не сделал поэта верующим без серьёзных оснований?
+- [ ] Библейский комментарий объясняет ИСТОЧНИК образа, а не приписывает автору веру?
+- [ ] Ссылки на Писание точны (книга/глава/стих)?
+- [ ] Нравственная оценка честная, но с уважением к таланту, без сентиментальности?
+- [ ] Текст стихотворения сверен по 2+ источникам?
