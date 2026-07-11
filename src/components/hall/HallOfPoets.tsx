@@ -1,0 +1,169 @@
+// Hall of Poets 2.0 — v1.2 FPS walk mode
+// THE LEGENDARY POET
+import * as THREE from 'three'
+import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { PerformanceMonitor, AdaptiveDpr, Preload, Environment, ContactShadows } from '@react-three/drei'
+import { useNavigate } from 'react-router-dom'
+
+import { HallEnvironment } from './HallEnvironment'
+import { PoetNiche } from './PoetNiche'
+import { useHallNavigation } from './useHallNavigation'
+import { FirstPersonControls } from './FirstPersonControls'
+import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
+
+const USE_POSTPROCESSING = false
+let PostFX: any = null
+if (USE_POSTPROCESSING) { try { PostFX = require('@react-three/postprocessing') } catch {} }
+
+import { poets as allPoetsRaw } from '@/data/poets'
+import { asset } from '@/utils/asset'
+
+type Poet = { id: string; firstName?: string; lastName?: string; name: string; years?: string; birthYear?: number; deathYear?: number; portrait?: string }
+
+const POET_QUOTES: Record<string, string> = {
+  pushkin: 'Я памятник себе воздвиг нерукотворный',
+  lermontov: 'Выхожу один я на дорогу',
+  tyutchev: 'Умом Россию не понять',
+  fet: 'Шёпот, робкое дыханье',
+  blok: 'Ночь, улица, фонарь, аптека',
+  gumilev: 'Ещё не раз вы вспомните меня',
+  akhmatova: 'Я научила женщин говорить',
+  mayakovsky: 'Светить всегда, светить везде',
+  yesenin: 'Не жалею, не зову, не плачу',
+  pasternak: 'Быть знаменитым некрасиво',
+}
+
+function normalizePoet(p: any) {
+  const name = p.name ?? `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
+  const years = p.years ?? (p.birthYear ? `${p.birthYear}—${p.deathYear ?? ''}` : '')
+  const portrait = asset(p.portrait || `/images/${p.id}.jpg`)
+  const quote = POET_QUOTES[p.id] || p.epigraph || p.poems?.[0]?.title || ''
+  return { id: p.id, name, years, portrait, quote }
+}
+
+function HallScene({ fpsMode }: { fpsMode: boolean }) {
+  const navigate = useNavigate()
+  const [focused, setFocused] = useState<string | null>(null)
+
+  const poets = useMemo(() => {
+    const map = new Map((allPoetsRaw as Poet[]).map(p => [p.id, p]))
+    return POET_ORDER.map(id => map.get(id)).filter(Boolean) as Poet[]
+  }, [])
+
+  const focusedIndex = focused ? poets.findIndex(p => p.id === focused) : null
+  useHallNavigation(focusedIndex, poets.length, !fpsMode)
+
+  return (
+    <>
+      {fpsMode && <FirstPersonControls enabled={fpsMode} />}
+      <HallEnvironment />
+      {poets.map((raw, i) => {
+        const poet = normalizePoet(raw)
+        const t = getNicheTransform(i)
+        return (
+          <PoetNiche
+            key={poet.id}
+            poet={poet}
+            position={t.position}
+            rotationY={t.rotationY}
+            active={focused === poet.id}
+            onFocus={setFocused}
+            onSelect={() => {
+              try { sessionStorage.setItem('tlp_hall_last_poet', poet.id) } catch {}
+              navigate(`/poets/${poet.id}`)
+            }}
+          />
+        )
+      })}
+      <ContactShadows position={[0, 0.01, 0]} opacity={0.52} scale={70} blur={2.4} far={18} color="#000814" />
+      <Environment preset="studio" environmentIntensity={0.28} />
+    </>
+  )
+}
+
+function PostProcessing() {
+  if (!USE_POSTPROCESSING || !PostFX) return null
+  const { EffectComposer, Bloom, SSAO, Vignette, DepthOfField } = PostFX
+  return (
+    <EffectComposer multisampling={0} enableNormalPass>
+      <SSAO intensity={12} radius={0.28} luminanceInfluence={0.45} />
+      <Bloom intensity={0.55} luminanceThreshold={0.82} mipmapBlur />
+      <DepthOfField focusDistance={0.012} focalLength={0.065} bokehScale={2.2} />
+      <Vignette offset={0.26} darkness={0.52} />
+    </EffectComposer>
+  )
+}
+
+export default function HallOfPoets() {
+  const [dpr, setDpr] = useState(RENDER.dpr[1])
+  const [fpsMode, setFpsMode] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'KeyF' && !(e.target as HTMLElement)?.matches('input,textarea')) {
+        setFpsMode(f => !f)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  return (
+    <section 
+      className="relative h-[100vh] w-full overflow-hidden bg-[#020811]" 
+      aria-label="Зал Поэтов — 3D"
+      data-lenis-prevent
+    >
+      <Canvas
+        shadows={RENDER.shadows}
+        dpr={dpr}
+        camera={{ fov: 55, position: [-20, 1.62, 0], near: 0.15, far: 120 }}
+        gl={{
+          antialias: true,
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: RENDER.toneMappingExposure,
+          outputColorSpace: THREE.SRGBColorSpace,
+        }}
+      >
+        <color attach="background" args={[PALETTE.bg]} />
+        <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(RENDER.dpr[1])}>
+          <Suspense fallback={null}>
+            <HallScene fpsMode={fpsMode} />
+            <Preload all />
+            <PostProcessing />
+          </Suspense>
+          <AdaptiveDpr pixelated />
+        </PerformanceMonitor>
+      </Canvas>
+
+      {/* UI Overlay */}
+      <div className="pointer-events-none absolute inset-x-0 top-20 z-20 text-center">
+        <div className="font-serif text-[11px] tracking-[0.38em] text-cyan-200/70">THE LEGENDARY POET</div>
+        <h1 className="mt-3 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#e9faff]"
+            style={{ textShadow: '0 0 32px rgba(0,212,255,0.28)' }}>
+          Зал Поэтов
+        </h1>
+        <p className="mt-3 text-cyan-100/70 text-sm md:text-[15px]">
+          {fpsMode 
+            ? 'WASD + мышь — ходить · Shift — бег · F — выйти из FPS · Клик по портрету — досье'
+            : 'Скролл / drag / ← → — пройти по нефу · F — режим ходьбы как в игре · Клик — досье · K — поиск'
+          }
+        </p>
+        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-black/35 px-3 py-1 text-[11px] text-cyan-200/80 backdrop-blur">
+          <span className={`h-1.5 w-1.5 rounded-full ${fpsMode ? 'bg-emerald-400' : 'bg-cyan-400'}`} />
+          {fpsMode ? 'FPS Walk — кликни чтобы захватить мышь' : 'Rail Dolly — нажми F для свободной ходьбы'}
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#020811] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#020811] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#020811] to-transparent" />
+
+      <div className="sr-only" aria-live="polite">
+        Трёхмерный зал с 10 нишами русских поэтов.
+      </div>
+    </section>
+  )
+}
