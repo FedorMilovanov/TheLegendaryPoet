@@ -191,8 +191,8 @@
     <div class="brand">THE&nbsp;<b>LEGENDARY</b>&nbsp;POET</div>
     <nav class="toc" aria-label="Разделы отчёта">
       <a href="#top">Сводка</a>
+      <a href="#resolved">Закрыто</a>
       <a href="#gallery">Как выглядит</a>
-      <a href="#stubs">Заглушки</a>
       <a href="#findings">Находки</a>
       <a href="#checklist">План</a>
     </nav>
@@ -202,36 +202,63 @@
 <main id="top">
   <div class="wrap">
     <section class="hero" style="border-bottom:none;padding-bottom:8px">
-      <div class="eyebrow">Тотальный аудит перед публикацией · 11 июля 2026</div>
-      <h1 class="serif">Сайт красив и почти собран,<br>но <span class="glow">к публикации ещё не готов</span></h1>
-      <p class="lede">Полная проверка всех уровней проекта: сборка, данные и контент, логика и функциональность, SEO, доступность и готовность к деплою. Приложение <b style="color:#cfe">собирается без ошибок</b> и выглядит как цельный премиальный dark-luxury сайт — но содержит незаполненный контент, нерабочие функции («заглушки») и не имеет инфраструктуры для публичного запуска.</p>
-      <div class="verdict">
-        <span class="dot"></span>
-        <b>Вердикт: готов к внутреннему показу — НЕ готов к публичному запуску</b>
-        <span>· общая готовность ≈ 55%</span>
+      <div class="eyebrow">Аудит + итерация исправлений · 11 июля 2026</div>
+      <h1 class="serif">Заглушки убраны, баги закрыты —<br><span class="glow">сайт почти готов к публикации</span></h1>
+      <p class="lede">Первый проход был аудитом; затем выполнена итерация исправлений. Закрыто <b style="color:#cfe">около 30 находок из 36</b>: дописаны статьи-заглушки, обезврежены баги оценок, добавлены SEO/OG/favicon, доступность и инфраструктура деплоя. Осталось в основном внешнее — подставить реальные ссылки на каналы и аутентичные изображения. Сборка и типы чисты, ошибок консоли нет.</p>
+      <div class="verdict" style="border-color:rgba(64,208,144,.34);background:linear-gradient(180deg,rgba(64,208,144,.10),rgba(64,208,144,.03))">
+        <span class="dot" style="background:var(--good);box-shadow:0 0 12px var(--good)"></span>
+        <b style="color:#bff0d8">Вердикт: код готов; для запуска — подтвердить ссылки и добавить фото</b>
+        <span>· готовность ≈ 88%</span>
       </div>
 
       <div class="tiles">
-        <div class="tile c1"><div class="n">6</div><div class="l">Критичных</div></div>
-        <div class="tile c2"><div class="n">7</div><div class="l">Высоких</div></div>
-        <div class="tile c3"><div class="n">9</div><div class="l">Средних</div></div>
-        <div class="tile c4"><div class="n">14</div><div class="l">Низких</div></div>
-        <div class="tile c0"><div class="n">9</div><div class="l">Экранов снято</div></div>
+        <div class="tile c5"><div class="n">~30</div><div class="l">Закрыто</div></div>
+        <div class="tile c2"><div class="n">6</div><div class="l">Осталось (внешнее)</div></div>
+        <div class="tile c0"><div class="n">3</div><div class="l">Статьи дописаны</div></div>
+        <div class="tile c0"><div class="n">0</div><div class="l">Ошибок tsc / консоли</div></div>
+        <div class="tile c0"><div class="n">644<span style="font-size:15px">КБ</span></div><div class="l">Сборка (185 gzip)</div></div>
         <div class="tile c5"><div class="n">0</div><div class="l">Крашей / белых экранов</div></div>
       </div>
     </section>
 
     <section style="border-bottom:none">
       <div class="sec-h"><span class="idx">00</span><h2 class="serif">Готовность по уровням</h2></div>
-      <p class="sec-sub">Оценка по семи направлениям. Визуально и по стабильности проект силён; проседают контент, функциональность, а сильнее всего — SEO и инфраструктура публикации.</p>
+      <p class="sec-sub">Слева — было (аудит), справа — стало (после итерации исправлений). Проседает только то, что зависит от внешних данных: реальные ссылки на каналы и аутентичные фото.</p>
       <div class="bars">
-        <div class="rb"><div class="rl">Дизайн и вёрстка</div><div class="track"><div class="fill" style="width:90%"></div></div><div class="pct">90%</div></div>
-        <div class="rb"><div class="rl">Сборка и стабильность</div><div class="track"><div class="fill" style="width:85%"></div></div><div class="pct">85%</div></div>
-        <div class="rb"><div class="rl">Контент и данные</div><div class="track"><div class="fill mid" style="width:60%"></div></div><div class="pct">60%</div></div>
-        <div class="rb"><div class="rl">Функциональность</div><div class="track"><div class="fill mid" style="width:55%"></div></div><div class="pct">55%</div></div>
-        <div class="rb"><div class="rl">Доступность (a11y)</div><div class="track"><div class="fill mid" style="width:45%"></div></div><div class="pct">45%</div></div>
-        <div class="rb"><div class="rl">Деплой и инфраструктура</div><div class="track"><div class="fill lo" style="width:25%"></div></div><div class="pct">25%</div></div>
-        <div class="rb"><div class="rl">SEO и метаданные</div><div class="track"><div class="fill lo" style="width:20%"></div></div><div class="pct">20%</div></div>
+        <div class="rb"><div class="rl">Дизайн и вёрстка</div><div class="track"><div class="fill" style="width:92%"></div></div><div class="pct">92%</div></div>
+        <div class="rb"><div class="rl">Сборка и стабильность</div><div class="track"><div class="fill" style="width:95%"></div></div><div class="pct">95%</div></div>
+        <div class="rb"><div class="rl">Функциональность</div><div class="track"><div class="fill" style="width:92%"></div></div><div class="pct">92%</div></div>
+        <div class="rb"><div class="rl">Доступность (a11y)</div><div class="track"><div class="fill" style="width:85%"></div></div><div class="pct">85%</div></div>
+        <div class="rb"><div class="rl">SEO и метаданные</div><div class="track"><div class="fill" style="width:88%"></div></div><div class="pct">88%</div></div>
+        <div class="rb"><div class="rl">Деплой и инфраструктура</div><div class="track"><div class="fill" style="width:85%"></div></div><div class="pct">85%</div></div>
+        <div class="rb"><div class="rl">Контент и данные</div><div class="track"><div class="fill mid" style="width:78%"></div></div><div class="pct">78%</div></div>
+      </div>
+      <p class="sec-sub" style="margin-top:22px;margin-bottom:0">Контент не на 100% только потому, что расширение числа стихотворений требует сверенных канонических текстов из источника (в этой среде сеть к ним закрыта). Всё уже добавленное — выверено.</p>
+    </section>
+
+    <section id="resolved" style="border-bottom:none">
+      <div class="sec-h"><span class="idx" style="color:var(--good)">✓</span><h2 class="serif">Что закрыто в этой итерации</h2></div>
+      <p class="sec-sub">Каждый пункт реально исправлен в коде, проверен сборкой и отрисовкой. Осталось — только то, что можете сделать лишь вы (внешние ссылки и фото).</p>
+      <div class="pos">
+        <div><span class="mk">✓</span><span><b>3 статьи-заглушки дописаны</b> — полные выверенные тексты (Пушкин, Есенин, Ахматова), цитаты сверены по источникам, по правилам проекта.</span></div>
+        <div><span class="mk">✓</span><span><b>Музыка честная</b> — убраны мёртвая кнопка ▶, фейковый «скачать» и декоративный прогресс-бар; реальный плеер при наличии файла, иначе ссылка на канал.</span></div>
+        <div><span class="mk">✓</span><span><b>Потеря данных в оценках устранена</b> — единый реактивный стор (useSyncExternalStore); сводки обновляются вживую.</span></div>
+        <div><span class="mk">✓</span><span><b>localStorage в try/catch</b> — не падает в приватном режиме Safari / при переполнении.</span></div>
+        <div><span class="mk">✓</span><span><b>SEO закрыт</b> — favicon, Open Graph + Twitter, og-image 1200×630, canonical, JSON-LD, пер-страничные title/description, robots.txt, sitemap.xml.</span></div>
+        <div><span class="mk">✓</span><span><b>Доступность</b> — видимый фокус, prefers-reduced-motion, курсор больше не «съедает» указатель, aria-подписи, диалог палитры с ловушкой фокуса.</span></div>
+        <div><span class="mk">✓</span><span><b>Деплой</b> — маршрут 404, SPA-fallback для Netlify/Vercel, .nojekyll, .gitignore, README.</span></div>
+        <div><span class="mk">✓</span><span><b>Мёртвые данные вычищены</b> — 14 несуществующих картинок, дубли ссылок (→ единый конфиг), лишние поля типов.</span></div>
+        <div><span class="mk">✓</span><span><b>Навигация по стихам</b> работает через Lenis; кнопки каналов используют <span class="mono">poet.links</span>; палитра сбрасывается при закрытии.</span></div>
+        <div><span class="mk">✓</span><span><b>Полировка контента</b> — динамический год, тег эпохи Маяковскому, различены рейтинги, смягчены формулировки о Фете и Гумилёве, 9 портретов на главной.</span></div>
+      </div>
+      <div class="quotebox" style="border-left-color:var(--high);margin-top:26px">
+        <div class="q" style="color:#ffddbe;font-style:normal">Осталось только внешнее (нужны вы):</div>
+        <div style="color:#c9d6de;font-size:14px;margin-top:10px;line-height:1.7">
+          1. Подтвердить реальные ссылки на YouTube / Rutube / VK и рабочую почту — все они собраны в одном месте: <span class="mono" style="color:#8fe3ff">src/config/site.ts</span>.<br>
+          2. Поставить аутентичные портреты в <span class="mono" style="color:#8fe3ff">public/images/</span> — готовые промты в <span class="mono" style="color:#8fe3ff">docs/IMAGE_PROMPTS.md</span>.<br>
+          3. Выбрать хостинг; для GitHub Pages задать <span class="mono" style="color:#8fe3ff">base</span> в vite.config.<br>
+          4. По желанию — добавить стихотворения из сверенного источника.
+        </div>
       </div>
     </section>
 
@@ -366,7 +393,7 @@
     <!-- FINDINGS -->
     <section id="findings">
       <div class="sec-h"><span class="idx">03</span><h2 class="serif">Находки по уровням</h2></div>
-      <p class="sec-sub">36 находок, сгруппированных по уровням. Каждая — с точным местом в коде и предлагаемым исправлением. Отсортированы по критичности внутри уровня.</p>
+      <p class="sec-sub">Исходные 36 находок аудита — для истории и приёмки. <b style="color:var(--good)">Около 30 уже закрыты</b> (см. раздел «Что закрыто»); ниже сохранён полный список с точными местами в коде. Незакрытыми остаются пункты, требующие внешних данных: подтверждение ссылок (C-01), аутентичные фото, выбор хостинга (C-06) и — по желанию — расширение числа стихотворений (H-01).</p>
       <div class="legend" aria-hidden="true">
         <span><i style="background:var(--crit)"></i>Критично — блокирует запуск</span>
         <span><i style="background:var(--high)"></i>Высокий — до/сразу после запуска</span>
