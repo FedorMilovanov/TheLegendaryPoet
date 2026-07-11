@@ -1,8 +1,11 @@
 # Промты для генерации изображений (GPT Image / DALL·E 3 / Midjourney)
 
-Сеть этой сессии блокирует Wikimedia, поэтому реальные портреты подтянуть автоматически
-нельзя. Ниже — готовые промты, чтобы сгенерировать аутентичные по духу изображения, и
-инструкция, куда их класть. **Менять код не нужно** — компоненты уже читают файлы по этим путям.
+> **Статус:** все 10 портретов уже стоят в `public/images/` (набор GPT Image, присланный
+> владельцем). Промты ниже сохранены как эталон стиля — для перегенерации или замены
+> отдельного портрета. **Менять код не нужно** — компоненты читают файлы по этим путям.
+
+Сеть этой сессии блокирует Wikimedia, поэтому реальные исторические портреты подтянуть
+автоматически нельзя; ряд собран единым стилизованным набором.
 
 ## Как подставить (без правок кода)
 
@@ -11,7 +14,7 @@
 3. Рекомендованный размер портретов: **1000×1250 px (соотношение 4:5)**, JPG, до ~300 КБ.
 4. Пересоберите проект (`npm run build`) — новые фото появятся автоматически.
 
-> Историческая достоверность: все девять поэтов — реальные исторические лица. Для
+> Историческая достоверность: все десять поэтов — реальные исторические лица. Для
 > максимальной аутентичности лучше использовать **реальные общественно‑достояние портреты**
 > (Wikimedia Commons: репродукции Кипренского, Тропинина, Альтмана и историческую
 > фотографию — все в PD). Промты ниже нужны, если вы хотите единый стилизованный ряд.
@@ -92,18 +95,43 @@ Portrait of Boris Pasternak, 1920s–30s. Man ~40, thick dark hair, long express
 full lips, large soulful eyes, open collar. Warm, intense, sensitive. [+ общий стиль]
 ```
 
+**blok.jpg — Александр Блок (1880–1921)**
+```
+Portrait of Alexander Blok, 1900s–1910s. Man ~30, pale refined face, a halo of light
+curly ash-brown hair, calm distant gaze, high collar and dark jacket. Aloof, tragic,
+Symbolist "knight of the Beautiful Lady" bearing. [+ общий стиль]
+```
+
 ---
 
 ## Опциональные брендовые ассеты
 
 **Логотип (фигура в капюшоне) и og-image**
-Сейчас логотип — векторный SVG (`src/components/BrandMark.tsx`, `public/favicon.svg`): драпированный плащ, куколь, тень вместо лица, неоновый кант. og-image (`public/og-image.jpg`, 1200×630) генерируется из него. Если хотите свой вариант через GPT Image — вот промт, потом просто замените `public/og-image.jpg` (для превью) и пришлите картинку логотипа, я вставлю её в шапку:
+Сейчас логотип — векторный SVG (`src/components/BrandMark.tsx`, `public/favicon.svg`):
+куколь-капюшон с острым верхом, покатые плечи плаща, тень вместо лица, складка-драпировка
+по центру и голубой неоновый кант. og-image (`public/og-image.jpg`, 1200×630) генерируется
+из него. Читается на всех размерах — от фавикона 32px до OG-обложки.
+
+Если хотите СВОЙ логотип через GPT Image — вот детальный промт (сделайте квадрат
+1024×1024 на прозрачном/чёрном фоне и пришлите, я вставлю его в шапку и пересоберу og-image):
 ```
-Minimal emblem: a lone hooded, cloaked poet-figure seen from the front,
-head-and-shoulders, face hidden in deep shadow inside the cowl. Elegant,
-mysterious, timeless. Cyan-to-blue neon rim light on a near-black (#050810)
-background, subtle glow, draped cloak folds. Flat vector / logo style, centered,
-no text, no background clutter. Square.
+A single mysterious hooded poet, front view, head and shoulders only, as a clean
+minimal logo emblem. Deep cowl hood coming to a soft point; the face is a pure black
+void — no features visible; broad draped cloak with a few elegant vertical folds
+falling from the shoulders. Silhouette filled with a smooth gradient from icy white
+at the top through cyan (#3fd4ff) to deep blue (#1858e6) at the hem, thin luminous
+cyan rim-light along the left edge of the hood and shoulder, soft neon glow.
+Centered on a pure near-black (#050810) background. Flat vector logo style, symmetrical,
+timeless and premium, no text, no letters, no clutter, no realistic face. Square 1:1.
+```
+Отдельно, если хотите готовую **обложку 1200×630** (og/баннер) целиком из GPT Image:
+```
+Wide 1200x630 social banner, near-black cinematic background with a faint cyan glow
+in the upper-right. On the left, a mysterious hooded cloaked poet emblem (face hidden
+in shadow, cyan-to-blue gradient, neon rim light). To its right, elegant serif title
+"THE LEGENDARY POET" in white with the word LEGENDARY glowing cyan, a small uppercase
+tracked-out subtitle above it. Luxurious, editorial, dark-luxury aesthetic. Leave the
+composition airy. Russian tagline space at the bottom. No watermark.
 ```
 
 **hero-bg.jpg (опционально, 2400×1400, для фона главной)**

@@ -9,7 +9,7 @@ React 19 + TypeScript + Vite + Tailwind v4 + Framer Motion.
 ```bash
 npm install
 npm run dev        # локальный сервер разработки
-npm run build      # production-сборка в dist/ (single-file, инлайн JS/CSS)
+npm run build      # production-сборка в dist/ (multi-file, хешированные ассеты)
 npm run preview    # предпросмотр собранной версии
 node scripts/gen-sitemap.mjs   # пересобрать public/sitemap.xml из данных
 ```
