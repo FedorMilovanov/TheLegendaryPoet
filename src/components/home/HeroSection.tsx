@@ -13,6 +13,7 @@ const portraits = [
   { src: '/images/mayakovsky.jpg', name: 'Владимир Маяковский' },
   { src: '/images/akhmatova.jpg', name: 'Анна Ахматова' },
   { src: '/images/gumilev.jpg', name: 'Николай Гумилёв' },
+  { src: '/images/blok.jpg', name: 'Александр Блок' },
   { src: '/images/pasternak.jpg', name: 'Борис Пастернак' },
 ];
 
@@ -32,7 +33,7 @@ export default function HeroSection() {
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
         >
-          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-3 gap-3 opacity-70 sm:grid-cols-9">
+          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-5 gap-3 opacity-70 sm:grid-cols-10">
             {portraits.map((portrait, index) => (
               <motion.div
                 key={portrait.src}
