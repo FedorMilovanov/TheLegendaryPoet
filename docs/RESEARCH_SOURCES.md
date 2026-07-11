@@ -59,6 +59,20 @@
 - https://www.prlib.ru/history/1927338 — Президентская библиотека: биография
 - https://polka.academy/articles/495 — «Полка»: разбор
 
+## Расширение библиотеки стихов (сверка текстов)
+
+- Пушкин «Я вас любил»: rvb.ru/pushkin/01text/01versus/0423_36/1829/0505.htm · ilibrary.ru/text/685 · culture.ru/poems/5695 · wikisource
+- Пушкин «Памятник»: rvb.ru/…/1836/0617.htm · feb-web.ru/feb/pushkin/texts/push17/vol03/y03-424-.htm · ilibrary.ru/text/797 · culture.ru/poems/5577
+- Лермонтов «Парус»: ilibrary.ru/text/998 · culture.ru/poems/36610 · wikisource · rustih.com
+- Тютчев «Умом Россию не понять»: ruthenia.ru/tiutcheviana/stihi/bp/281.html · culture.ru/poems/46430 · ilibrary.ru/text/1276
+- Тютчев «Я встретил вас»: ruthenia.ru/tiutcheviana/stihi/bp/324.html · culture.ru/poems/45542 · slova.org.ru · ilibrary.ru/text/1286
+- Ахматова «Сжала руки…»: slova.org.ru/ahmatova/szhalaruki/ · culture.ru/poems/10037 · ilibrary.ru/text/5337
+- Есенин «Гой ты, Русь…»: rvb.ru/20vek/esenin/pss7/vol1/poems/028.html · culture.ru/poems/44393 · wikisource · ilibrary.ru/text/1298
+- Фет «Я пришёл к тебе с приветом»: ilibrary.ru/text/1322 · culture.ru/poems/12683 · wikisource
+- Гумилёв «Капитаны»: culture.ru/poems/38572 · slova.org.ru/gumilev/napoljarnykhmorjakh1/ · wikisource · gumilev.ru/verses/241
+- Маяковский «Послушайте!»: feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-060-.htm · culture.ru/poems/21323 · wikisource · slova.org.ru
+- Пастернак «Февраль…», «Гамлет»: ilibrary.ru/text/1245 · slova.org.ru/pasternak/ · culture.ru/poems/14047 · culture.ru/poems/13847
+
 ## Общие библейские ссылки (проверка)
 
 Синодальный перевод (для сверки цитат): Ис. 6:1–8; Мк. 9:24; Мк. 14:36; Мф. 11:28;
