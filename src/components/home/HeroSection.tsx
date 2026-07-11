@@ -33,7 +33,7 @@ export default function HeroSection() {
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           className="w-full"
         >
-          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-5 gap-3 opacity-70 sm:grid-cols-10">
+          <div className="mx-auto mb-8 grid max-w-5xl grid-cols-5 gap-3 opacity-95 sm:grid-cols-10">
             {portraits.map((portrait, index) => (
               <motion.div
                 key={portrait.src}
@@ -42,7 +42,7 @@ export default function HeroSection() {
                 transition={{ delay: 0.08 * index, duration: 0.65 }}
                 className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]"
               >
-                <img src={asset(portrait.src)} alt={`Портрет: ${portrait.name}`} loading="lazy" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
+                <img src={asset(portrait.src)} alt={`Портрет: ${portrait.name}`} loading="lazy" className="h-full w-full object-cover object-[center_20%] contrast-[1.03] opacity-95" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
               </motion.div>
             ))}

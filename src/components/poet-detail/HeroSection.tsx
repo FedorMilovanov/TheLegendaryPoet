@@ -34,7 +34,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
         <img
           src={asset(poet.photo)}
           alt={poet.name}
-          className="w-full h-full object-cover object-top grayscale-[40%] contrast-110 opacity-60"
+          className="w-full h-full object-cover object-top contrast-[1.03] opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
       </motion.div>

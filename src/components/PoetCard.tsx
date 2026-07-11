@@ -27,7 +27,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
           <img
             src={asset(poet.photo)}
             alt={poet.name}
-            className="w-full h-full object-cover object-[center_18%] opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] filter grayscale-[30%] contrast-125 group-hover:grayscale-0"
+            className="w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
           />
 
           {/* Top Badges */}
