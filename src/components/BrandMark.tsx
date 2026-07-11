@@ -8,27 +8,36 @@ const sizes = {
   lg: 'h-20 w-20',
 };
 
+/**
+ * Brand emblem: a hooded, cloaked figure — the "legendary poet" as an
+ * anonymous, timeless silhouette. Pure SVG, frameless, cyan-neon on dark.
+ */
 export default function BrandMark({ size = 'sm' }: BrandMarkProps) {
   return (
-    <svg className={`${sizes[size]} overflow-visible`} viewBox="0 0 96 96" role="img" aria-label="LP emblem">
+    <svg className={`${sizes[size]} overflow-visible`} viewBox="0 0 96 96" role="img" aria-label="THE LEGENDARY POET">
       <defs>
-        <linearGradient id="lpStroke" x1="18" y1="10" x2="76" y2="84">
-          <stop offset="0%" stopColor="#c9fbff" />
-          <stop offset="50%" stopColor="#2ed8ff" />
-          <stop offset="100%" stopColor="#2a7fff" />
+        <linearGradient id="hoodFill" x1="20" y1="8" x2="76" y2="88">
+          <stop offset="0%" stopColor="#d6fbff" />
+          <stop offset="46%" stopColor="#33d6ff" />
+          <stop offset="100%" stopColor="#2170ff" />
         </linearGradient>
-        <filter id="lpGlow" x="-80%" y="-80%" width="260%" height="260%">
-          <feGaussianBlur stdDeviation="3.4" result="blur" />
+        <radialGradient id="hoodVoid" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#03060c" />
+          <stop offset="70%" stopColor="#071019" />
+          <stop offset="100%" stopColor="#0b1826" />
+        </radialGradient>
+        <filter id="hoodGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="1.3" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
       </defs>
-      <g filter="url(#lpGlow)">
-        <path d="M22 18V76H52" fill="none" stroke="url(#lpStroke)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M52 76V20H66C75 20 81 25.6 81 34.5C81 43.5 75 49 66 49H52" fill="none" stroke="url(#lpStroke)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M18 84C32 79 64 79 78 84" fill="none" stroke="#59d8ff" strokeWidth="2.2" strokeLinecap="round" opacity="0.8" />
+      <g filter="url(#hoodGlow)">
+        <path d="M12 91 C12 77 18 67 30 62 C36 60 42 60 48 60 C54 60 60 60 66 62 C78 67 84 77 84 91 Z" fill="url(#hoodFill)" />
+        <path d="M48 7 C39 7 33 14 31 24 C29 33 30 45 34 54 C36 58 38 61 40 62 L56 62 C58 61 60 58 62 54 C66 45 67 33 65 24 C63 14 57 7 48 7 Z" fill="url(#hoodFill)" />
+        <path d="M48 17 C41 17 37 24 37 33 C37 44 42 53 48 55 C54 53 59 44 59 33 C59 24 55 17 48 17 Z" fill="url(#hoodVoid)" />
       </g>
     </svg>
   );

@@ -17,7 +17,7 @@ export const siteConfig = {
     rutube: 'https://rutube.ru/channel/74579453',
     vk: 'https://vk.com/thelegendarypoet',
   },
-  contactEmail: 'contact@legendarypoet.com',
+  contactEmail: 'oldpoet2025@gmail.com',
 } as const;
 
 export const brandLinks = siteConfig.channels;
