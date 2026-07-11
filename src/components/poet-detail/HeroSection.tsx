@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Poet } from '../../types/poet';
+import { asset } from '../../utils/asset';
 
 interface HeroSectionProps {
   poet: Poet;
@@ -31,7 +32,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
         className="absolute inset-0 pointer-events-none"
       >
         <img
-          src={poet.photo}
+          src={asset(poet.photo)}
           alt={poet.name}
           className="w-full h-full object-cover object-top grayscale-[40%] contrast-110 opacity-60"
         />

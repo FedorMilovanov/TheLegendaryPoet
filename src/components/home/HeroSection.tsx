@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import MagneticButton from '../MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon } from '../ChannelIcons';
 import { brandLinks } from '../../config/site';
+import { asset } from '../../utils/asset';
 
 const portraits = [
   { src: '/images/pushkin.jpg', name: 'Александр Пушкин' },
@@ -40,7 +41,7 @@ export default function HeroSection() {
                 transition={{ delay: 0.08 * index, duration: 0.65 }}
                 className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]"
               >
-                <img src={portrait.src} alt={`Портрет: ${portrait.name}`} loading="lazy" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
+                <img src={asset(portrait.src)} alt={`Портрет: ${portrait.name}`} loading="lazy" className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
               </motion.div>
             ))}

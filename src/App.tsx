@@ -55,8 +55,10 @@ function AnimatedRoutes() {
 }
 
 function App() {
+  // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
   return (
-    <Router>
+    <Router basename={basename}>
       <MotionConfig reducedMotion="user">
         <SmoothScroll>
           <div className="min-h-screen bg-[#050505] selection:bg-luxury-gold/30 relative overflow-x-hidden">

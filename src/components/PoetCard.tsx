@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Star, Calendar, MapPin, ArrowRight } from 'lucide-react';
+import { asset } from '../utils/asset';
 import { Poet } from '../types/poet';
 import TiltCard from './TiltCard';
 import FeedbackMiniSummary from './community/FeedbackMiniSummary';
@@ -24,7 +25,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
           <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark-200/20 via-transparent to-black/30 z-10" />
           
           <img 
-            src={poet.photo} 
+            src={asset(poet.photo)} 
             alt={poet.name} 
             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] filter grayscale-[30%] contrast-125 group-hover:grayscale-0"
           />

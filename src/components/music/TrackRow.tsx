@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Clock, Download, ExternalLink, Pause, Play } from 'lucide-react';
 import { MusicTrack } from '../../types/poet';
+import { asset } from '../../utils/asset';
 
 interface TrackRowProps {
   track: MusicTrack;
@@ -80,14 +81,14 @@ export default function TrackRow({ track, index }: TrackRowProps) {
       <div className="flex flex-shrink-0 items-center gap-4">
         <span className="flex items-center gap-1 text-sm text-cyan-100/50"><Clock size={14} /> {track.duration}</span>
         {hasPlayableAudio && (
-          <a href={track.audioUrl} download className="text-cyan-100/60 transition-colors hover:text-cyan-300 focus-visible:text-cyan-300" aria-label={`Скачать «${track.title}»`}><Download size={18} /></a>
+          <a href={asset(track.audioUrl!)} download className="text-cyan-100/60 transition-colors hover:text-cyan-300 focus-visible:text-cyan-300" aria-label={`Скачать «${track.title}»`}><Download size={18} /></a>
         )}
         {track.externalUrl && (
           <a href={track.externalUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-100/60 transition-colors hover:text-cyan-300 focus-visible:text-cyan-300" aria-label={`Открыть «${track.title}» на канале`}><ExternalLink size={18} /></a>
         )}
       </div>
 
-      {hasPlayableAudio && <audio ref={audioRef} src={track.audioUrl} preload="none" />}
+      {hasPlayableAudio && <audio ref={audioRef} src={asset(track.audioUrl!)} preload="none" />}
     </div>
   );
 }

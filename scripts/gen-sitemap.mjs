@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const BASE = 'https://thelegendarypoet.ru';
+const BASE = 'https://fedormilovanov.github.io/TheLegendaryPoet';
 const libDir = path.resolve('src/data/library');
 const read = (f) => fs.readFileSync(path.join(libDir, f), 'utf8');
 

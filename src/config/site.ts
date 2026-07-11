@@ -10,7 +10,9 @@ export const siteConfig = {
   shortName: 'TLP',
   description:
     'Канал о великих поэтах: биографии, тексты, глубокий литературный и, где это оправдано, христианский разбор.',
-  url: 'https://thelegendarypoet.ru',
+  // Production URL (GitHub Pages project site). Change together with the OG
+  // tags in index.html and VITE_BASE if you move to a custom domain.
+  url: 'https://fedormilovanov.github.io/TheLegendaryPoet',
   locale: 'ru_RU',
   channels: {
     youtube: 'https://youtube.com/@TheLegendaryPoet',
