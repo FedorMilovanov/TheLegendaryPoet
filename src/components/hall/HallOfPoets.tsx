@@ -160,7 +160,7 @@ export default function HallOfPoets() {
       <Canvas
         shadows={RENDER.shadows}
         dpr={dpr}
-        camera={{ fov: 55, position: [-20, 1.62, 0], near: 0.15, far: 120 }}
+        camera={{ fov: 55, position: [-24, 1.62, 0], near: 0.15, far: 120 }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',

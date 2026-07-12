@@ -44,7 +44,11 @@ export function getNicheTransform(index: number) {
   const pair = Math.floor(index / 2)
   const x = -18 + pair * HALL.nicheSpacing // вдоль нефа
   const z = side * (HALL.width / 2 - 0.45)
-  const rotationY = side === -1 ? Math.PI / 2 : -Math.PI / 2
+  // Portraits must face ACROSS the nave toward the centre (not along it), so both
+  // walls show their fronts as you walk down. Plane normal is +z; left wall (z-)
+  // faces +z → rot 0; right wall (z+) faces -z → rot π. (Was ±π/2 = facing down
+  // the nave, which showed one wall's portraits and the other's dark backs.)
+  const rotationY = side === -1 ? 0 : Math.PI
   return { position: [x, 0, z] as [number, number, number], rotationY }
 }
 
@@ -53,7 +57,7 @@ export const CAMERA = {
   fov: 42,
   height: 1.62,
   zOffset: 0, // центр нефа
-  minX: -22,
+  minX: -24, // вход в зал (до первой ниши на x=-18)
   maxX: 18,
   dollySmoothing: 0.085,
   lookAtSmoothing: 0.1,
