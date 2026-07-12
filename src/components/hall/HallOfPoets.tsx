@@ -10,13 +10,10 @@ import { PoetNiche } from './PoetNiche'
 import { useHallNavigation } from './useHallNavigation'
 import { FirstPersonControls } from './FirstPersonControls'
 import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
+import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessing'
 
 import { poets as allPoetsRaw } from '@/data/poets'
 import { asset } from '@/utils/asset'
-
-// Postprocessing is loaded lazily where enabled; kept off by default for stability.
-const USE_POSTPROCESSING = false
-const PostFX: any = null
 
 type RawPoet = { id: string; name?: string; fullName?: string; birthYear?: number; deathYear?: number; photo?: string; epigraph?: string; poems?: { title: string }[] }
 type NormPoet = { id: string; shortKey: string; name: string; years: string; portrait: string; quote: string }
@@ -108,15 +105,20 @@ function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id:
   )
 }
 
+/**
+ * Cinematic grade (order matters): ambient occlusion grounds geometry, then
+ * selective bloom makes the brass frames / cyan accents / skylight glow, then a
+ * vignette frames attention on the lit niches. Renderer keeps ACES tone mapping,
+ * so we do NOT add a ToneMapping effect (avoids double tone-mapping). MSAA gives
+ * crisp edges. If the composer ever fails on a device, the outer error boundary
+ * falls back to the DOM hero.
+ */
 function PostProcessing() {
-  if (!USE_POSTPROCESSING || !PostFX) return null
-  const { EffectComposer, Bloom, SSAO, Vignette, DepthOfField } = PostFX
   return (
-    <EffectComposer multisampling={0} enableNormalPass>
-      <SSAO intensity={12} radius={0.28} luminanceInfluence={0.45} />
-      <Bloom intensity={0.55} luminanceThreshold={0.82} mipmapBlur />
-      <DepthOfField focusDistance={0.012} focalLength={0.065} bokehScale={2.2} />
-      <Vignette offset={0.26} darkness={0.52} />
+    <EffectComposer multisampling={4} enableNormalPass>
+      <N8AO halfRes aoRadius={1.6} distanceFalloff={1.0} intensity={2.4} />
+      <Bloom mipmapBlur luminanceThreshold={0.72} luminanceSmoothing={0.25} intensity={0.85} radius={0.72} />
+      <Vignette offset={0.3} darkness={0.55} />
     </EffectComposer>
   )
 }

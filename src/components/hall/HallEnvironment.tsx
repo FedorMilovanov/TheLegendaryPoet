@@ -50,7 +50,7 @@ export function HallEnvironment() {
       {[-1, 1].map(side => (
         <mesh key={side} rotation={[-Math.PI/2,0,0]} position={[0, 0.012, side * (HALL.width/2 - 1.55)]}>
           <planeGeometry args={[HALL.length, 0.045]} />
-          <meshBasicMaterial color={PALETTE.cyan} transparent opacity={0.28} />
+          <meshBasicMaterial color={PALETTE.cyan} transparent opacity={0.55} toneMapped={false} />
         </mesh>
       ))}
 
