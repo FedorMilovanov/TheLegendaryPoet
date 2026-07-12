@@ -90,7 +90,7 @@ export function PoetNiche({
         </mesh>
         <mesh position={[0, 0.01, 0.251]}>
           <boxGeometry args={[1.9, 0.045, 0.012]} />
-          <meshStandardMaterial color={PALETTE.cyan} emissive={PALETTE.cyan} emissiveIntensity={1.6} toneMapped={false} />
+          <meshStandardMaterial color="#f0c675" emissive="#f0b64a" emissiveIntensity={0.9} toneMapped={false} />
         </mesh>
         <Text fontSize={0.105} color="#f0e6c8" anchorX="center" anchorY="middle" position={[0, 0.38, 0.251]} maxWidth={1.7} textAlign="center">
           {poet.name}
