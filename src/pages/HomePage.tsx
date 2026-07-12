@@ -3,7 +3,7 @@ import { ArrowRight, Quote } from 'lucide-react';
 import { poets } from '../data/poets';
 import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
-import HallOrFallback from '../components/hall/HallOrFallback';
+import HeroSection from '../components/home/HeroSection';
 import StatsSection from '../components/home/StatsSection';
 import { useSeo } from '../hooks/useSeo';
 import { siteConfig } from '../config/site';
@@ -18,7 +18,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
-      <HallOrFallback />
+      <HeroSection />
       <StatsSection />
 
       {/* Featured Poets */}

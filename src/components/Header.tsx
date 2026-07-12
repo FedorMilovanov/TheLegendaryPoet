@@ -12,6 +12,7 @@ const Header = () => {
   const navigation = [
     { name: 'Главная', path: '/' },
     { name: 'Поэты', path: '/poets' },
+    { name: 'Зал 3D', path: '/hall' },
     { name: 'Статьи', path: '/articles' },
     { name: 'Музыка', path: '/music' },
     { name: 'О проекте', path: '/about' },

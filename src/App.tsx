@@ -5,6 +5,7 @@ import { hydrateFromRemote } from './utils/communityStore';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
+import HallPage from './pages/HallPage';
 import PoetsPage from './pages/PoetsPage';
 import PoetDetailPage from './pages/PoetDetailPage';
 import ArticlesPage from './pages/ArticlesPage';
@@ -44,6 +45,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
+        <Route path="/hall" element={<PageWrapper><HallPage /></PageWrapper>} />
         <Route path="/poets" element={<PageWrapper><PoetsPage /></PageWrapper>} />
         <Route path="/poets/:id" element={<PageWrapper><PoetDetailPage /></PageWrapper>} />
         <Route path="/articles" element={<PageWrapper><ArticlesPage /></PageWrapper>} />

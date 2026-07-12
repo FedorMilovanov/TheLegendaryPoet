@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Landmark } from 'lucide-react';
 import MagneticButton from '../MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon } from '../ChannelIcons';
 import { brandLinks } from '../../config/site';
@@ -85,6 +86,12 @@ export default function HeroSection() {
               className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:shadow-[0_0_50px_rgba(0,212,255,0.8)]"
             >
               <BookMonogramIcon className="h-5 w-5" /> ИССЛЕДОВАТЬ КАТАЛОГ
+            </MagneticButton>
+            <MagneticButton
+              to="/hall"
+              className="border border-luxury-gold/40 text-luxury-gold font-bold hover:bg-luxury-gold/10 hover:border-luxury-gold/70 hover:shadow-[0_0_28px_rgba(212,175,55,0.28)]"
+            >
+              <Landmark className="h-5 w-5" /> ЗАЛ ПОЭТОВ · 3D
             </MagneticButton>
             <MagneticButton
               href={brandLinks.youtube}
