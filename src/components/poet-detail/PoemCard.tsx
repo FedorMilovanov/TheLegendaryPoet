@@ -2,6 +2,7 @@ import { Star, Award } from 'lucide-react';
 import { Poem } from '../../types/poet';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
+import InteractivePoemText from './InteractivePoemText';
 
 interface PoemCardProps {
   poem: Poem;
@@ -27,9 +28,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
         </div>
       </div>
       
-      <div className="poetry-text text-2xl text-white whitespace-pre-line mb-12 leading-[2] tracking-wide font-serif py-8 bg-[#050505] rounded-[2rem] px-8 md:px-12 border border-luxury-gold/5 shadow-inner">
-        {poem.text}
-      </div>
+      <InteractivePoemText text={poem.text} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {poem.analysis && (
