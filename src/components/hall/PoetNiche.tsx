@@ -7,6 +7,7 @@ import { usePoetWhisper } from './usePoetWhisper'
 
 type PoetLite = {
   id: string
+  shortKey: string
   name: string
   years: string
   portrait: string
@@ -50,8 +51,8 @@ export function PoetNiche({
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 8
 
-  // audio whisper — looks for /audio/poet-{id}.mp3
-  usePoetWhisper(poet.id, hovered, position)
+  // audio whisper — looks for /audio/poet-{shortKey}.mp3 (silent if absent)
+  usePoetWhisper(poet.shortKey, hovered, position)
 
   useFrame((_, dt) => {
     if (!group.current) return
@@ -71,7 +72,7 @@ export function PoetNiche({
 
   const frameW = 1.58
   const frameH = 2.12
-  const autograph = AUTOGRAPHS[poet.id] || ''
+  const autograph = AUTOGRAPHS[poet.shortKey] || ''
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -109,7 +110,7 @@ export function PoetNiche({
             anchorY="middle"
             position={[0, -0.09, 0.251]}
             fontStyle="italic"
-            opacity={hovered ? 0.95 : 0.72}
+            fillOpacity={hovered ? 0.95 : 0.72}
           >
             {autograph}
           </Text>

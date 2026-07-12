@@ -1,8 +1,8 @@
 // Hall of Poets 2.0 — v1.3 — Morph + Audio + PBR
 import * as THREE from 'three'
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { PerformanceMonitor, AdaptiveDpr, Preload, Environment, ContactShadows } from '@react-three/drei'
+import { PerformanceMonitor, AdaptiveDpr, Preload, Environment, Lightformer, ContactShadows } from '@react-three/drei'
 import { useNavigate } from 'react-router-dom'
 
 import { HallEnvironment } from './HallEnvironment'
@@ -11,14 +11,15 @@ import { useHallNavigation } from './useHallNavigation'
 import { FirstPersonControls } from './FirstPersonControls'
 import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
 
-const USE_POSTPROCESSING = false
-let PostFX: any = null
-if (USE_POSTPROCESSING) { try { PostFX = require('@react-three/postprocessing') } catch {} }
-
 import { poets as allPoetsRaw } from '@/data/poets'
 import { asset } from '@/utils/asset'
 
-type Poet = { id: string; name: string; years?: string; birthYear?: number; deathYear?: number; portrait?: string }
+// Postprocessing is loaded lazily where enabled; kept off by default for stability.
+const USE_POSTPROCESSING = false
+const PostFX: any = null
+
+type RawPoet = { id: string; name?: string; fullName?: string; birthYear?: number; deathYear?: number; photo?: string; epigraph?: string; poems?: { title: string }[] }
+type NormPoet = { id: string; shortKey: string; name: string; years: string; portrait: string; quote: string }
 
 const POET_QUOTES: Record<string, string> = {
   pushkin: 'Я памятник себе воздвиг нерукотворный',
@@ -33,48 +34,54 @@ const POET_QUOTES: Record<string, string> = {
   pasternak: 'Быть знаменитым некрасиво',
 }
 
-function normalizePoet(p: any) {
-  const name = p.name ?? `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
-  const years = p.years ?? (p.birthYear ? `${p.birthYear}—${p.deathYear ?? ''}` : '')
-  const portrait = asset(p.portrait || `/images/${p.id}.jpg`)
-  const quote = POET_QUOTES[p.id] || p.epigraph || p.poems?.[0]?.title || ''
-  return { id: p.id, name, years, portrait, quote }
+function shortKeyFromPhoto(photo?: string): string {
+  return (photo || '').replace(/^.*\//, '').replace(/\.\w+$/, '')
 }
 
-function HallScene({ fpsMode }: { fpsMode: boolean }) {
-  const navigate = useNavigate()
+function normalizePoet(p: RawPoet, shortKey: string): NormPoet {
+  const name = p.name ?? p.fullName ?? ''
+  const years = p.birthYear ? `${p.birthYear}—${p.deathYear ?? 'н.в.'}` : ''
+  const portrait = asset(p.photo || `/images/${shortKey}.jpg`)
+  const quote = POET_QUOTES[shortKey] || p.epigraph || p.poems?.[0]?.title || ''
+  return { id: p.id, shortKey, name, years, portrait, quote }
+}
+
+function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id: string) => void }) {
   const [focused, setFocused] = useState<string | null>(null)
 
+  // Resolve POET_ORDER (short keys = portrait basename) against the real poet
+  // records (whose ids are like "alexander-pushkin" and portraits live in `photo`).
   const poets = useMemo(() => {
-    const map = new Map((allPoetsRaw as Poet[]).map(p => [p.id, p]))
-    return POET_ORDER.map(id => map.get(id)).filter(Boolean) as Poet[]
+    const byKey = new Map<string, RawPoet>()
+    for (const p of allPoetsRaw as unknown as RawPoet[]) {
+      const key = shortKeyFromPhoto(p.photo)
+      if (key) byKey.set(key, p)
+    }
+    return POET_ORDER
+      .map(key => { const raw = byKey.get(key); return raw ? normalizePoet(raw, key) : null })
+      .filter(Boolean) as NormPoet[]
   }, [])
 
   const focusedIndex = focused ? poets.findIndex(p => p.id === focused) : null
   useHallNavigation(focusedIndex, poets.length, !fpsMode)
 
-  // FPS interact: E → открыть ближайшую нишу
+  // FPS interact: E → открыть сфокусированную нишу
   useEffect(() => {
     if (!fpsMode) return
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'KeyE') return
-      // very simple: open focused poet, or first
       const id = focused || poets[0]?.id
-      if (id) {
-        try { sessionStorage.setItem('tlp_hall_last_poet', id) } catch {}
-        navigate(`/poets/${id}`)
-      }
+      if (id) onOpenPoet(id)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [fpsMode, focused, navigate, poets])
+  }, [fpsMode, focused, onOpenPoet, poets])
 
   return (
     <>
       {fpsMode && <FirstPersonControls enabled={fpsMode} />}
       <HallEnvironment />
-      {poets.map((raw, i) => {
-        const poet = normalizePoet(raw)
+      {poets.map((poet, i) => {
         const t = getNicheTransform(i)
         return (
           <PoetNiche
@@ -84,19 +91,19 @@ function HallScene({ fpsMode }: { fpsMode: boolean }) {
             rotationY={t.rotationY}
             active={focused === poet.id}
             onFocus={setFocused}
-            onSelect={() => {
-              try {
-                sessionStorage.setItem('tlp_hall_last_poet', poet.id)
-                // for Framer Motion shared layout in PoetDetailHeroTransition.tsx
-                sessionStorage.setItem('tlp_hall_transition', `poet-portrait-${poet.id}`)
-              } catch {}
-              navigate(`/poets/${poet.id}`)
-            }}
+            onSelect={() => onOpenPoet(poet.id)}
           />
         )
       })}
       <ContactShadows position={[0, 0.01, 0]} opacity={0.52} scale={70} blur={2.4} far={18} color="#000814" />
-      <Environment preset="studio" environmentIntensity={0.28} />
+      {/* Self-contained IBL via Lightformers — no external HDRI fetch (robust +
+          art-directed cyan/warm reflections on the marble & brass). */}
+      <Environment resolution={256} environmentIntensity={0.32}>
+        <Lightformer intensity={2.4} color="#eaf6ff" position={[0, 7, 0]} scale={[12, 2.4, 1]} rotation={[Math.PI / 2, 0, 0]} />
+        <Lightformer intensity={1.5} color="#00d4ff" position={[-9, 2.2, 7]} scale={[7, 4.5, 1]} rotation={[0, Math.PI / 2, 0]} />
+        <Lightformer intensity={1.15} color="#ffd7a0" position={[9, 2.2, -7]} scale={[7, 4.5, 1]} rotation={[0, -Math.PI / 2, 0]} />
+        <Lightformer intensity={0.8} color="#7ee7ff" position={[0, 1.2, -12]} scale={[10, 3, 1]} />
+      </Environment>
     </>
   )
 }
@@ -115,9 +122,20 @@ function PostProcessing() {
 }
 
 export default function HallOfPoets() {
+  // Router context does NOT cross the R3F <Canvas> reconciler boundary, so we
+  // resolve navigation HERE (outside the Canvas) and pass a callback down.
+  const navigate = useNavigate()
   const [dpr, setDpr] = useState(RENDER.dpr[1])
   const [fpsMode, setFpsMode] = useState(false)
   const [audioMuted, setAudioMuted] = useState(false)
+
+  const onOpenPoet = useCallback((id: string) => {
+    try {
+      sessionStorage.setItem('tlp_hall_last_poet', id)
+      sessionStorage.setItem('tlp_hall_transition', `poet-portrait-${id}`)
+    } catch { /* storage blocked */ }
+    navigate(`/poets/${id}`)
+  }, [navigate])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -152,7 +170,7 @@ export default function HallOfPoets() {
         <color attach="background" args={[PALETTE.bg]} />
         <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(RENDER.dpr[1])}>
           <Suspense fallback={null}>
-            <HallScene fpsMode={fpsMode} />
+            <HallScene fpsMode={fpsMode} onOpenPoet={onOpenPoet} />
             <Preload all />
             <PostProcessing />
           </Suspense>

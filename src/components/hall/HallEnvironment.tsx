@@ -18,7 +18,7 @@ export function HallEnvironment() {
     })
   ).current
 
-  useFrame((state, dt) => {
+  useFrame((_state, dt) => {
     if (dust.current) {
       dust.current.rotation.y += dt * 0.008
     }
