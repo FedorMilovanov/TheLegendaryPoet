@@ -60,11 +60,18 @@ export function HallEnvironment() {
         <meshStandardMaterial color="#1c2228" roughness={0.78} metalness={0.15} side={THREE.BackSide} />
       </mesh>
 
-      {/* Walls — dark veined marble */}
+      {/* Walls — dark veined marble. Rotated to face the nave so the portraits
+          read as mounted on a visible surface (a plain +z plane back-face-culls
+          on the +z wall). DoubleSide as a belt-and-braces guard. */}
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[0, HALL.height/2, side * HALL.width/2]} receiveShadow>
-          <planeGeometry args={[HALL.length+6, HALL.height]} />
-          <meshStandardMaterial color="#1a1f25" roughness={0.72} metalness={0.2} />
+        <mesh
+          key={side}
+          position={[0, HALL.height / 2, side * HALL.width / 2]}
+          rotation={[0, side === 1 ? Math.PI : 0, 0]}
+          receiveShadow
+        >
+          <planeGeometry args={[HALL.length + 6, HALL.height]} />
+          <meshStandardMaterial color="#242b34" roughness={0.6} metalness={0.32} side={THREE.DoubleSide} />
         </mesh>
       ))}
 
@@ -132,14 +139,14 @@ export function HallEnvironment() {
         <pointLight position={[0,0,1.2]} intensity={2.6} color="#ffe8b6" distance={7} />
       </group>
 
-      {/* Ambient */}
-      <hemisphereLight args={['#9ddfff', '#02070d', 0.34]} />
-      <ambientLight intensity={0.18} />
+      {/* Ambient — lifted so the marble walls/columns read (dark but visible). */}
+      <hemisphereLight args={['#9ddfff', '#0a1420', 0.55]} />
+      <ambientLight intensity={0.3} />
 
       {/* Main wash */}
       <directionalLight
         position={[8, 10, 0]}
-        intensity={0.58}
+        intensity={0.85}
         color="#d8f7ff"
         castShadow
         shadow-mapSize-width={2048}
