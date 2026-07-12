@@ -24,6 +24,8 @@ export interface Poet {
   historicalNote?: string;
   spiritualSearch?: string; // Заменяем высосанные из пальца анализы на объективные духовные искания (если они были)
   authorCommentary?: string; // Ремарка автора проекта (для вопиющих случаев богоборчества и т.д.)
+  /** Sourced quotes from people who knew the poet + named literary historians. */
+  testimonies?: Testimony[];
   famousWorks: string[];
   links?: {
     youtube?: string;
@@ -31,6 +33,20 @@ export interface Poet {
     rutube?: string;
     website?: string;
   };
+}
+
+export interface Testimony {
+  /** Full name of the person being quoted. */
+  author: string;
+  /** Their relation to the poet, e.g. "жена", "друг, поэт", "литературовед". */
+  role: string;
+  /** 'contemporary' knew the poet personally; 'historian' is a later scholarly assessment. */
+  kind: 'contemporary' | 'historian';
+  /** Quote in Russian. If not verbatim, the text notes it as a paraphrase. */
+  quote: string;
+  /** Citable source: book/memoir/article title + year. */
+  source: string;
+  sourceUrl?: string;
 }
 
 export interface Poem {
