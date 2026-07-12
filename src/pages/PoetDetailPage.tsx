@@ -9,6 +9,7 @@ import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
+import Testimonies from '../components/poet-detail/Testimonies';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -91,6 +92,10 @@ export default function PoetDetailPage() {
                   {poet.historicalNote}
                 </p>
               </div>
+            )}
+
+            {poet.testimonies && poet.testimonies.length > 0 && (
+              <Testimonies items={poet.testimonies} />
             )}
 
             <div className="pt-16">
