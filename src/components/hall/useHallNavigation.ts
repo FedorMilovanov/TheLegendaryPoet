@@ -11,8 +11,10 @@ export function useHallNavigation(
   enabled = true // false when FPS mode is on
 ) {
   const { camera, gl } = useThree()
-  const targetX = useRef(0)
-  const currentX = useRef(-18)
+  // Start at the entrance (CAMERA.minX), NOT the middle. targetX previously
+  // defaulted to 0, so on load the camera glided straight to the hall centre.
+  const targetX = useRef(CAMERA.minX)
+  const currentX = useRef(CAMERA.minX)
   const lookAt = useRef(new THREE.Vector3(0, 1.62, 0))
 
   // restore camera position
