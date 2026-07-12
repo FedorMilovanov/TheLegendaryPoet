@@ -35,7 +35,7 @@ export function useFloorMaterial() {
   try {
     if (USE_SCANS) {
       const tx = useTexture(TEXTURE_SETS.floor_marble_nero as any)
-      Object.entries(tx).forEach(([k, v]) => {
+      Object.values(tx).forEach((v) => {
         if (v instanceof THREE.Texture) configure(v, TEXTURE_SETS.floor_marble_nero.repeat)
       })
       maps = tx
@@ -50,7 +50,7 @@ export function useWallMaterial() {
   try {
     if (USE_SCANS) {
       const tx = useTexture(TEXTURE_SETS.wall_travertine as any)
-      Object.entries(tx).forEach(([k, v]) => {
+      Object.values(tx).forEach((v) => {
         if (v instanceof THREE.Texture) configure(v, TEXTURE_SETS.wall_travertine.repeat)
       })
       maps = tx
