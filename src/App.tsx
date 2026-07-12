@@ -12,49 +12,103 @@ import ArticlesPage from './pages/ArticlesPage';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import MusicPage from './pages/MusicPage';
 import AboutPage from './pages/AboutPage';
+import MyArchivePage from './pages/MyArchivePage';
 import NotFoundPage from './pages/NotFoundPage';
 import CommandPalette from './components/command/CommandPalette';
 import CustomCursor from './components/CustomCursor';
+import ErrorBoundary from './components/ErrorBoundary';
 import SmoothScroll from './components/SmoothScroll';
+import PoetryBackdrop from './components/PoetryBackdrop';
+import MobileDock from './components/MobileDock';
+import ScrollToTop from './components/ScrollToTop';
+import BrandMark from './components/BrandMark';
+
+const WipeOverlay = () => (
+  <motion.div
+    className="page-wipe fixed inset-0 z-[100] flex items-center justify-center"
+    style={{ originY: 1 }}
+    initial={{ scaleY: 1 }}
+    animate={{ scaleY: 0 }}
+    exit={{ scaleY: 1 }}
+    transition={{ duration: 0.72, ease: [0.76, 0, 0.24, 1] }}
+  >
+    <motion.div
+      initial={{ opacity: 0, scale: 0.78 }}
+      animate={{ opacity: [0, 1, 1, 0], scale: [0.78, 1, 1, 0.78] }}
+      transition={{ duration: 0.72, times: [0, 0.25, 0.75, 1] }}
+      className="pointer-events-none"
+    >
+      <BrandMark size="lg" />
+    </motion.div>
+  </motion.div>
+);
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <>
+    <WipeOverlay />
     <motion.div
-      initial={{ scaleY: 1 }}
-      animate={{ scaleY: 0 }}
-      exit={{ scaleY: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[100] bg-luxury-dark-100 origin-bottom pointer-events-none flex items-center justify-center"
-    >
-      <div className="neon-blue-gradient neon-glow-text font-serif text-4xl tracking-widest uppercase">THE LEGENDARY POET</div>
-    </motion.div>
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 22 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+      exit={{ opacity: 0, y: -18 }}
+      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
     >
       {children}
     </motion.div>
   </>
 );
 
+function SiteLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SmoothScroll>
+      <div className="relative min-h-screen overflow-x-hidden bg-[#050505] selection:bg-luxury-gold/30">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
+          Перейти к содержанию
+        </a>
+        <div className="ambient-glow ambient-glow-1" />
+        <div className="ambient-glow ambient-glow-2" />
+        <div className="ambient-glow ambient-glow-3" />
+        <PoetryBackdrop />
+        <div className="noise-bg" />
+        <CustomCursor />
+        <Header />
+        <CommandPalette />
+        <main id="main-content" className="relative z-10 pb-32 md:pb-0">
+          <AnimatePresence mode="wait">{children}</AnimatePresence>
+        </main>
+        <MobileDock />
+        <ScrollToTop />
+        <div className="relative z-10">
+          <Footer />
+        </div>
+      </div>
+    </SmoothScroll>
+  );
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
-        <Route path="/hall" element={<PageWrapper><HallPage /></PageWrapper>} />
-        <Route path="/poets" element={<PageWrapper><PoetsPage /></PageWrapper>} />
-        <Route path="/poets/:id" element={<PageWrapper><PoetDetailPage /></PageWrapper>} />
-        <Route path="/articles" element={<PageWrapper><ArticlesPage /></PageWrapper>} />
-        <Route path="/articles/:id" element={<PageWrapper><ArticleDetailPage /></PageWrapper>} />
-        <Route path="/music" element={<PageWrapper><MusicPage /></PageWrapper>} />
-        <Route path="/about" element={<PageWrapper><AboutPage /></PageWrapper>} />
-        <Route path="*" element={<PageWrapper><NotFoundPage /></PageWrapper>} />
-      </Routes>
-    </AnimatePresence>
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<SiteLayout><PageWrapper><HomePage /></PageWrapper></SiteLayout>} />
+      <Route path="/hall" element={<SiteLayout><PageWrapper><HallPage /></PageWrapper></SiteLayout>} />
+      <Route path="/poets" element={<SiteLayout><PageWrapper><PoetsPage /></PageWrapper></SiteLayout>} />
+      <Route path="/poets/:id" element={<SiteLayout><PageWrapper><PoetDetailPage /></PageWrapper></SiteLayout>} />
+      <Route path="/articles" element={<SiteLayout><PageWrapper><ArticlesPage /></PageWrapper></SiteLayout>} />
+      <Route path="/articles/:id" element={<SiteLayout><PageWrapper><ArticleDetailPage /></PageWrapper></SiteLayout>} />
+      <Route path="/music" element={<SiteLayout><PageWrapper><MusicPage /></PageWrapper></SiteLayout>} />
+      <Route path="/about" element={<SiteLayout><PageWrapper><AboutPage /></PageWrapper></SiteLayout>} />
+      <Route path="/archive" element={<SiteLayout><PageWrapper><MyArchivePage /></PageWrapper></SiteLayout>} />
+      <Route path="*" element={<SiteLayout><PageWrapper><NotFoundPage /></PageWrapper></SiteLayout>} />
+    </Routes>
+  );
+}
+
+function RoutedApp() {
+  const location = useLocation();
+  return (
+    <ErrorBoundary resetKey={location.pathname}>
+      <AnimatedRoutes />
+    </ErrorBoundary>
   );
 }
 
@@ -71,21 +125,7 @@ function App() {
   return (
     <Router basename={basename}>
       <MotionConfig reducedMotion="user">
-        <SmoothScroll>
-          <div className="min-h-screen bg-[#050505] selection:bg-luxury-gold/30 relative overflow-x-hidden">
-            {/* Ambient Background Glows */}
-            <div className="ambient-glow ambient-glow-1" />
-            <div className="ambient-glow ambient-glow-2" />
-            <div className="ambient-glow ambient-glow-3" />
-            <CustomCursor />
-            <Header />
-            <CommandPalette />
-            <main>
-              <AnimatedRoutes />
-            </main>
-            <Footer />
-          </div>
-        </SmoothScroll>
+        <RoutedApp />
       </MotionConfig>
     </Router>
   );

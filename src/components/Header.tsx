@@ -1,141 +1,105 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle, Search } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '../utils/cn';
 import BrandMark from './BrandMark';
-import { RutubeIcon, YouTubeIcon } from './ChannelIcons';
-import { siteConfig } from '../config/site';
+import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
+import { Search } from './PremiumIcons';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
-    { name: 'Главная', path: '/' },
-    { name: 'Поэты', path: '/poets' },
-    { name: 'Зал 3D', path: '/hall' },
-    { name: 'Статьи', path: '/articles' },
-    { name: 'Музыка', path: '/music' },
-    { name: 'О проекте', path: '/about' },
+    { name: 'Главная', path: '/', accent: false },
+    { name: 'Поэты', path: '/poets', accent: false },
+    { name: 'Зал', path: '/hall', accent: true },
+    { name: 'Статьи', path: '/articles', accent: false },
+    { name: 'Музыка', path: '/music', accent: false },
+    { name: 'Архив', path: '/archive', accent: false },
+    { name: 'О проекте', path: '/about', accent: false },
   ];
 
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#050505]/80 backdrop-blur-md border-b border-cyan-400/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group min-w-0">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 bg-[#050505]/85 backdrop-blur-xl transition-colors duration-500">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 items-center justify-between gap-4 lg:gap-8">
+          <Link to="/" className="group flex shrink-0 items-center gap-3">
             <BrandMark size="sm" />
-            <div className="hidden min-w-0 sm:block">
-              <h1 className="truncate text-xl font-serif font-semibold neon-blue-gradient neon-glow-text">
+            <div className="header-wordmark">
+              <span className="whitespace-nowrap font-serif text-sm font-semibold neon-blue-gradient neon-glow-text md:text-base lg:text-xl">
                 THE LEGENDARY POET
-              </h1>
-              <p className="-mt-1 truncate text-xs tracking-[0.14em] text-cyan-200/60">ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ</p>
+              </span>
+              <span className="whitespace-nowrap text-[8px] font-medium tracking-[0.18em] text-cyan-200/55 md:text-[9px] lg:text-[11px]">
+                ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
+          <nav className="header-nav flex-1 items-center justify-center gap-4 lg:gap-7 xl:gap-8">
+            {navigation.map(item => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative text-sm font-medium transition-colors hover:text-cyan-300 ${
-                  location.pathname === item.path
-                    ? 'text-cyan-300 neon-glow-text'
-                    : 'text-cyan-100/50'
-                }`}
+                className={cn(
+                  "relative shrink-0 text-sm font-medium transition-colors hover:text-cyan-300",
+                  isActive(item.path) ? "text-cyan-300 neon-glow-text" : "text-cyan-100/55",
+                  item.accent && !isActive(item.path) && "text-luxury-gold/70 hover:text-luxury-gold"
+                )}
               >
                 {item.name}
-                {location.pathname === item.path && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_8px_rgba(0,212,255,0.8)]" />
+                {isActive(item.path) && (
+                  <motion.span 
+                    layoutId="header-nav-indicator"
+                    className={cn(
+                      "absolute -bottom-1 inset-x-0 h-0.5 rounded-full",
+                      item.accent 
+                        ? "bg-luxury-gold shadow-[0_0_8px_rgba(212,175,55,0.8)]" 
+                        : "bg-cyan-400 shadow-[0_0_8px_rgba(0,212,255,0.8)]"
+                    )}
+                  />
                 )}
               </Link>
             ))}
           </nav>
 
-          {/* Social Links */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="header-controls ml-auto shrink-0 items-center gap-2.5 lg:gap-3">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event('tlp-open-command-palette'))}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-400/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/55 transition hover:border-cyan-400/35 hover:text-cyan-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-200/55 transition hover:border-cyan-400/35 hover:text-cyan-300"
               aria-label="Открыть поиск"
             >
-              <Search size={14} /> Ctrl K
+              <Search size={13} />
+              <span className="header-search-label">Ctrl K</span>
             </button>
-            <a
-              href={siteConfig.channels.youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-200/50 hover:text-red-500 transition-colors"
-              aria-label="YouTube"
-            >
-              <YouTubeIcon className="h-5 w-5" />
+            <a href="https://youtube.com/@TheLegendaryPoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-red-500/10" aria-label="YouTube">
+              <YouTubeIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(255,0,51,0.5)]" />
             </a>
-            <a
-              href={siteConfig.channels.rutube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-200/50 hover:text-cyan-300 transition-colors"
-              aria-label="Rutube"
-            >
-              <RutubeIcon className="h-5 w-5" />
+            <a href="https://rutube.ru/channel/74579453" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-sky-500/10" aria-label="Rutube">
+              <RutubeIcon className="h-[21px] w-[21px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(18,204,237,0.5)]" />
             </a>
-            <a
-              href={siteConfig.channels.vk}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-200/50 hover:text-blue-400 transition-colors"
-              aria-label="VK"
-            >
-              <MessageCircle size={20} />
+            <a href="https://vk.com/thelegendarypoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-blue-500/10" aria-label="VK">
+              <VKIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(7,119,255,0.5)]" />
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-luxury-gray-light hover:text-white transition-colors"
-            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="header-mobile-controls ml-auto shrink-0 items-center gap-4">
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('tlp-open-command-palette'))}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/15 bg-cyan-950/10 text-cyan-200/65 transition-colors hover:text-cyan-300 active:scale-95"
+              aria-label="Открыть поиск"
+            >
+              <Search size={18} />
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-[#050505] border-t border-cyan-400/10">
-          <div className="px-4 py-4 space-y-3">
-            {navigation.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsMenuOpen(false)}
-                className={`block py-2 text-sm font-medium transition-colors hover:text-cyan-400 ${
-                  location.pathname === item.path
-                    ? 'text-cyan-400'
-                    : 'text-cyan-100/50'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <div className="flex items-center space-x-4 pt-3 border-t border-cyan-400/10">
-              <a href={siteConfig.channels.youtube} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-red-500" aria-label="YouTube">
-                <YouTubeIcon className="h-5 w-5" />
-              </a>
-              <a href={siteConfig.channels.rutube} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-cyan-400" aria-label="Rutube">
-                <RutubeIcon className="h-5 w-5" />
-              </a>
-              <a href={siteConfig.channels.vk} target="_blank" rel="noopener noreferrer" className="text-cyan-200/50 hover:text-blue-400" aria-label="VK">
-                <MessageCircle size={20} />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
