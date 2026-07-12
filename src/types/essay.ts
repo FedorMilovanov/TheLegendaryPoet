@@ -1,0 +1,67 @@
+/**
+ * Longform essay model — a reusable, block-based content format.
+ *
+ * The point of this file is that authoring a new premium article means writing
+ * DATA (an array of typed blocks), never re-styling. The rendering engine
+ * (components/essay/*) maps each block type to a styled component once.
+ */
+
+export type EssayBlock =
+  /** Opening epigraph — a short line/quote that sets the tone. */
+  | { type: 'epigraph'; text: string; cite?: string }
+  /** Large lead paragraph that opens the body. */
+  | { type: 'lead'; text: string }
+  /** Section heading (creates an anchor for the meta-rail / TOC). */
+  | { type: 'section'; heading: string; anchor?: string }
+  /** A normal prose paragraph (supports \n\n splitting into multiple <p>). */
+  | { type: 'paragraph'; text: string }
+  /** A big pulled quote for emphasis (a dramatic line, often the poet's own). */
+  | { type: 'pullquote'; text: string; cite?: string }
+  /** An embedded poem / stanza, rendered in the serif poetry style. */
+  | { type: 'poem'; title?: string; lines: string; year?: string | number; note?: string }
+  /** A sourced voice: the poet himself, a friend, another poet, or a historian. */
+  | {
+      type: 'voice';
+      quote: string;
+      author: string;
+      role: string;
+      source: string;
+      sourceUrl?: string;
+      kind?: 'self' | 'friend' | 'poet' | 'historian';
+    }
+  /** An editorial remark from the project (the site's own sober commentary). */
+  | { type: 'note'; text: string }
+  /** A decorative divider between movements of the essay. */
+  | { type: 'divider' };
+
+export interface EssaySource {
+  title: string;
+  url?: string;
+}
+
+export interface Essay {
+  id: string;
+  slug: string;
+  /** Small eyebrow label above the title. */
+  kicker?: string;
+  title: string;
+  subtitle?: string;
+  /** Short summary for cards / SEO. */
+  excerpt: string;
+  author: string;
+  /** ISO-ish date string, e.g. "2026-07-12". */
+  date: string;
+  readTime: number;
+  /** Cover image path (public/…); has a graceful gradient fallback if missing. */
+  cover: string;
+  /** Optional separate image for the listing link-card (falls back to `cover`). */
+  cardCover?: string;
+  coverAlt?: string;
+  /** Optional accent colour for this essay's hero glow (defaults to gold). */
+  accent?: string;
+  tags: string[];
+  /** The poet this essay is primarily about, if any (links back to /poets/:id). */
+  poetId?: string;
+  blocks: EssayBlock[];
+  sources?: EssaySource[];
+}

@@ -10,6 +10,7 @@ import PoetsPage from './pages/PoetsPage';
 import PoetDetailPage from './pages/PoetDetailPage';
 import ArticlesPage from './pages/ArticlesPage';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import EssayPage from './pages/EssayPage';
 import MusicPage from './pages/MusicPage';
 import AboutPage from './pages/AboutPage';
 import MyArchivePage from './pages/MyArchivePage';
@@ -94,6 +95,7 @@ function AnimatedRoutes() {
       <Route path="/poets" element={<SiteLayout><PageWrapper><PoetsPage /></PageWrapper></SiteLayout>} />
       <Route path="/poets/:id" element={<SiteLayout><PageWrapper><PoetDetailPage /></PageWrapper></SiteLayout>} />
       <Route path="/articles" element={<SiteLayout><PageWrapper><ArticlesPage /></PageWrapper></SiteLayout>} />
+      <Route path="/essays/:slug" element={<SiteLayout><PageWrapper><EssayPage /></PageWrapper></SiteLayout>} />
       <Route path="/articles/:id" element={<SiteLayout><PageWrapper><ArticleDetailPage /></PageWrapper></SiteLayout>} />
       <Route path="/music" element={<SiteLayout><PageWrapper><MusicPage /></PageWrapper></SiteLayout>} />
       <Route path="/about" element={<SiteLayout><PageWrapper><AboutPage /></PageWrapper></SiteLayout>} />
