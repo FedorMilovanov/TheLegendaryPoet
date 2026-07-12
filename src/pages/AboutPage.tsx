@@ -1,5 +1,6 @@
 import AboutHero from '../components/about/AboutHero';
 import ContactBlock from '../components/about/ContactBlock';
+import HallFeature from '../components/about/HallFeature';
 import MissionSection from '../components/about/MissionSection';
 import OfferGrid from '../components/about/OfferGrid';
 import SocialLinks from '../components/about/SocialLinks';
@@ -17,6 +18,7 @@ export default function AboutPage() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <AboutHero />
         <MissionSection />
+        <HallFeature />
         <OfferGrid />
         <YouTubeFeature />
         <SocialLinks />

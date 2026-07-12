@@ -1,33 +1,28 @@
 import { Link } from 'react-router-dom';
-import { useSeo } from '../hooks/useSeo';
+import { ArrowLeft, Search, Sparkles } from '../components/PremiumIcons';
 
 export default function NotFoundPage() {
-  useSeo({
-    title: 'Страница не найдена — THE LEGENDARY POET',
-    description: 'Запрошенная страница не существует.',
-    path: '/404',
-  });
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#050505] px-4 text-center text-white">
-      <p className="neon-blue-gradient neon-glow-text font-serif text-7xl font-bold">404</p>
-      <h1 className="mt-6 font-serif text-3xl">Страница не найдена</h1>
-      <p className="mt-3 max-w-md text-cyan-100/60">
-        Возможно, ссылка устарела или страница была перемещена.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <Link
-          to="/"
-          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(0,212,255,0.35)] transition hover:scale-[1.02]"
-        >
-          На главную
-        </Link>
-        <Link
-          to="/poets"
-          className="rounded-full border border-cyan-400/30 px-6 py-3 text-sm font-bold text-cyan-200 transition hover:border-cyan-400/60"
-        >
-          К поэтам
-        </Link>
+    <div className="min-h-screen bg-[#050505] px-4 pb-24 pt-32 text-white">
+      <div className="mx-auto max-w-3xl text-center">
+        <div className="section-label">404</div>
+        <h1 className="mb-5 font-serif text-5xl font-bold sm:text-7xl">
+          Страница <span className="neon-blue-gradient neon-glow-text">не найдена</span>
+        </h1>
+        <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-cyan-100/55">
+          Возможно, ссылка устарела или раздел был перемещён. Вернитесь в каталог, откройте поиск или войдите в Зал Поэтов.
+        </p>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-cyan-400/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-cyan-300 transition hover:bg-cyan-400/15">
+            <ArrowLeft size={16} /> На главную
+          </Link>
+          <Link to="/poets" className="inline-flex items-center gap-2 rounded-full bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-cyan-100/70 transition hover:bg-white/8 hover:text-white">
+            <Search size={16} /> Каталог
+          </Link>
+          <Link to="/hall" className="inline-flex items-center gap-2 rounded-full bg-luxury-gold/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold/15">
+            <Sparkles size={16} /> Зал
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -6,12 +6,21 @@ export interface Poet {
   deathYear?: number;
   nationality: string;
   photo: string;
+  /** Optional wide/atmospheric cover used by the poet hero and cards. */
+  coverImage?: string;
   shortBio: string;
   fullBio: string;
   rating: number;
+  /** Monogram for museum/hall plaques. Falls back to name initials (getPoetInitials). */
+  initials?: string;
+  /** Epoch key (golden/philosophy/acmeism/futurism/postSymbolism). Derived from tags if absent (getPoetEpoch). */
+  epoch?: string;
+  epochLabel?: string;
   tags: string[];
   poems: Poem[];
   articles: Article[];
+  /** Poet-specific music, when available. */
+  music?: MusicTrack[];
   historicalNote?: string;
   spiritualSearch?: string; // Заменяем высосанные из пальца анализы на объективные духовные искания (если они были)
   authorCommentary?: string; // Ремарка автора проекта (для вопиющих случаев богоборчества и т.д.)
@@ -32,6 +41,8 @@ export interface Poem {
   year?: number;
   analysis?: string;
   biblicalPerspective?: string;
+  /** Optional emotional palette, used for subtle per-poem accenting. */
+  mood?: Array<'тоска' | 'тревога' | 'восторг' | 'покой' | 'гнев' | 'нежность' | 'пустота' | 'надежда'>;
   rating: number;
 }
 
@@ -56,5 +67,7 @@ export interface MusicTrack {
   audioUrl?: string;
   /** Link to the full track/video on a channel (YouTube/Rutube). Used when there is no local audio file. */
   externalUrl?: string;
+  /** Optional dedicated video URL (used by richer players). */
+  videoUrl?: string;
   description?: string;
 }

@@ -8,6 +8,7 @@ import SpiritualPath from '../components/poet-detail/SpiritualPath';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
+import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -44,6 +45,7 @@ export default function PoetDetailPage() {
           
           <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-10">
             <InfoCard poet={poet} />
+            <KindredSpirits poet={poet} />
             <PoetCommunitySummary poetId={poet.id} />
             <PoemQuickNav poems={poet.poems} />
             <FamousWorks works={poet.famousWorks} />

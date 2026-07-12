@@ -31,7 +31,12 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     // Reset scroll on route change
     lenis.scrollTo(0, { immediate: true });
 
+    // Let the ScrollToTop button drive Lenis (it dispatches this event).
+    const onScrollTop = () => lenis.scrollTo(0, { duration: 1 });
+    window.addEventListener('tlp-scroll-top', onScrollTop);
+
     return () => {
+      window.removeEventListener('tlp-scroll-top', onScrollTop);
       setActiveLenis(null);
       lenis.destroy();
       cancelAnimationFrame(animationFrameId);

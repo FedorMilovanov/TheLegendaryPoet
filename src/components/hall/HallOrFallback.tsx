@@ -1,9 +1,24 @@
 import { Component, lazy, ReactNode, Suspense, useMemo } from 'react';
-import HeroSection from '../home/HeroSection';
+
+// NOTE: this wrapper belongs to the deferred 3D Hall rebuild ("Hall v3"). It is
+// NOT currently routed — /hall renders the lightweight HallPage placeholder. It
+// is kept as scaffolding for the future immersive rebuild.
 
 // Code-split the whole 3D stack (three + R3F + drei ≈ 500KB gz) so it is only
 // downloaded for visitors who actually get the 3D hall — keeps homepage LCP fast.
 const HallOfPoets = lazy(() => import('./HallOfPoets'));
+
+// Minimal DOM fallback (used when WebGL is unavailable, reduced-motion is set,
+// or the 3D scene throws). Self-contained so it has no cross-module deps.
+function HallFallback() {
+  return (
+    <div className="flex min-h-[100svh] items-center justify-center bg-[#050505] px-6 text-center">
+      <p className="max-w-md font-serif text-xl italic text-luxury-gray-light">
+        Иммерсивный зал недоступен на этом устройстве.
+      </p>
+    </div>
+  );
+}
 
 function webglSupported(): boolean {
   if (typeof window === 'undefined') return false;
@@ -50,11 +65,11 @@ class HallErrorBoundary extends Component<{ fallback: ReactNode; children: React
 export default function HallOrFallback() {
   const canRender3D = useMemo(() => webglSupported() && !prefersReducedMotion(), []);
 
-  if (!canRender3D) return <HeroSection />;
+  if (!canRender3D) return <HallFallback />;
 
   return (
-    <HallErrorBoundary fallback={<HeroSection />}>
-      <Suspense fallback={<HeroSection />}>
+    <HallErrorBoundary fallback={<HallFallback />}>
+      <Suspense fallback={<HallFallback />}>
         <HallOfPoets />
       </Suspense>
     </HallErrorBoundary>
