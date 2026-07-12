@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
 import { getAllArticles } from '../utils/articleLibrary';
+import { getAllEssays } from '../data/essays';
 import ArticleCard from '../components/articles/ArticleCard';
+import EssayCard from '../components/essay/EssayCard';
+import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
 
 const categories = [
@@ -30,6 +33,7 @@ export default function ArticlesPage() {
     path: '/articles',
   });
   const articles = getAllArticles();
+  const essays = getAllEssays();
 
   const filteredArticles = selectedCategory
     ? articles.filter((article) => article.category === selectedCategory)
@@ -51,6 +55,19 @@ export default function ArticlesPage() {
             Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.
           </p>
         </motion.div>
+
+        {essays.length > 0 && !selectedCategory && (
+          <Reveal direction="up" className="mb-14">
+            <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+              <span className="h-px w-8 bg-luxury-gold/50" /> Большой материал
+            </div>
+            <div className="space-y-6">
+              {essays.map((essay) => (
+                <EssayCard key={essay.id} essay={essay} variant="feature" />
+              ))}
+            </div>
+          </Reveal>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
