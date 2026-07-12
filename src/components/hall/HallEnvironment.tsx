@@ -10,7 +10,7 @@ export function HallEnvironment() {
   const dust = useRef<THREE.Points>(null!)
 
   const dustPositions = useRef(
-    Float32Array.from({ length: 900 * 3 }, (_, i) => {
+    Float32Array.from({ length: 140 * 3 }, (_, i) => {
       const a = i % 3
       if (a === 0) return THREE.MathUtils.randFloatSpread(HALL.length)
       if (a === 1) return THREE.MathUtils.randFloat(0.4, HALL.height - 0.4)
@@ -45,14 +45,6 @@ export function HallEnvironment() {
           mirror={0.82}
         />
       </mesh>
-
-      {/* Floor cyan guide strips — like in reference */}
-      {[-1, 1].map(side => (
-        <mesh key={side} rotation={[-Math.PI/2,0,0]} position={[0, 0.012, side * (HALL.width/2 - 1.55)]}>
-          <planeGeometry args={[HALL.length, 0.045]} />
-          <meshBasicMaterial color={PALETTE.cyan} transparent opacity={0.55} toneMapped={false} />
-        </mesh>
-      ))}
 
       {/* Ceiling vault - darker marble, coffered */}
       <mesh position={[0, HALL.height, 0]} receiveShadow>
@@ -95,7 +87,7 @@ export function HallEnvironment() {
         <group key={i} position={[x, HALL.height-0.05, 0]}>
           <mesh>
             <cylinderGeometry args={[0.5, 2.1, HALL.height, 48, 1, true]} />
-            <meshBasicMaterial color="#9fdcea" transparent opacity={0.022} side={THREE.DoubleSide} depthWrite={false} />
+            <meshBasicMaterial color="#e6d6b0" transparent opacity={0.02} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
           {/* oculus rim */}
           <mesh position={[0, 0.02, 0]} rotation={[Math.PI/2,0,0]}>
@@ -113,7 +105,7 @@ export function HallEnvironment() {
         const x = -18 + pair * 5.8
         const z = side * (HALL.width/2 - 0.9)
         return (
-          <pointLight key={i} position={[x, 0.28, z]} intensity={2.8} distance={2.6} color={PALETTE.cyan} decay={2.2} />
+          <pointLight key={i} position={[x, 0.28, z]} intensity={1.5} distance={2.6} color="#ffc888" decay={2.2} />
         )
       })}
 
@@ -157,7 +149,7 @@ export function HallEnvironment() {
         shadow-camera-bottom={-10}
       />
 
-      {/* Floating dust */}
+      {/* Faint warm dust motes (museum air in the light), not a starfield */}
       <points ref={dust}>
         <bufferGeometry>
           <bufferAttribute
@@ -168,7 +160,7 @@ export function HallEnvironment() {
             args={[dustPositions, 3]}
           />
         </bufferGeometry>
-        <pointsMaterial size={0.032} color="#aeefff" transparent opacity={0.52} sizeAttenuation depthWrite={false} />
+        <pointsMaterial size={0.02} color="#cbb595" transparent opacity={0.18} sizeAttenuation depthWrite={false} />
       </points>
     </group>
   )

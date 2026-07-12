@@ -40,7 +40,9 @@ export function useHallNavigation(
 
     const step = () => 4.2
 
+    const modalOpen = () => Boolean((window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN)
     const onWheel = (e: WheelEvent) => {
+      if (modalOpen()) return // let the open palette/modal scroll, not the hall
       e.preventDefault()
       targetX.current = THREE.MathUtils.clamp(
         targetX.current + (e.deltaY > 0 ? 1 : -1) * 1.85,
@@ -48,6 +50,7 @@ export function useHallNavigation(
       )
     }
     const onKey = (e: KeyboardEvent) => {
+      if (modalOpen()) return
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
       // F is handled globally for FPS toggle
@@ -66,7 +69,7 @@ export function useHallNavigation(
         targetX.current = -18 + pair * 5.8
       }
     }
-    const onDown = (e: PointerEvent) => { dragging = true; lastX = e.clientX; (e.target as Element).setPointerCapture?.(e.pointerId) }
+    const onDown = (e: PointerEvent) => { if (modalOpen()) return; dragging = true; lastX = e.clientX; (e.target as Element).setPointerCapture?.(e.pointerId) }
     const onMove = (e: PointerEvent) => {
       if (!dragging) return
       const dx = e.clientX - lastX

@@ -59,6 +59,13 @@ export default function CommandPalette() {
     return () => previouslyFocused?.focus?.();
   }, [open]);
 
+  // While the palette is open, pause any full-screen background interaction
+  // (the 3D hall's wheel/drag rail camera) so scrolling drives the results.
+  useEffect(() => {
+    try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open; } catch { /* noop */ }
+    return () => { try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false; } catch { /* noop */ } };
+  }, [open]);
+
   const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
