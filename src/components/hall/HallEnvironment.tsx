@@ -94,8 +94,8 @@ export function HallEnvironment() {
       {[-12, 0, 12].map((x, i) => (
         <group key={i} position={[x, HALL.height-0.05, 0]}>
           <mesh>
-            <cylinderGeometry args={[0.62, 3.1, HALL.height, 48, 1, true]} />
-            <meshBasicMaterial color="#bff7ff" transparent opacity={0.045} side={THREE.DoubleSide} depthWrite={false} />
+            <cylinderGeometry args={[0.5, 2.1, HALL.height, 48, 1, true]} />
+            <meshBasicMaterial color="#9fdcea" transparent opacity={0.022} side={THREE.DoubleSide} depthWrite={false} />
           </mesh>
           {/* oculus rim */}
           <mesh position={[0, 0.02, 0]} rotation={[Math.PI/2,0,0]}>

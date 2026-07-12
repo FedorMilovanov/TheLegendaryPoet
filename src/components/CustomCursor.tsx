@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 const CustomCursor = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  // The immersive 3D hall uses the native pointer — a gold cursor dot floating
+  // in the scene reads as an artifact and fights the WebGL interaction.
+  const { pathname } = useLocation();
+  const onHall = pathname === '/hall';
 
   useEffect(() => {
-    // Determine if it's a touch device
-    if (window.matchMedia('(pointer: coarse)').matches) {
+    // Touch devices and the 3D hall keep the native pointer.
+    if (onHall || window.matchMedia('(pointer: coarse)').matches) {
+      setIsVisible(false);
+      document.body.classList.remove('has-custom-cursor');
       return;
     }
     setIsVisible(true);
@@ -42,7 +49,7 @@ const CustomCursor = () => {
       window.removeEventListener('mouseover', handleMouseOver);
       document.body.classList.remove('has-custom-cursor');
     };
-  }, []);
+  }, [onHall]);
 
   if (!isVisible) return null;
 

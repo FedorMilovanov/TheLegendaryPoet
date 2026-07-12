@@ -64,7 +64,7 @@ export function PoetNiche({
       const mat = frameRef.current.material as THREE.MeshStandardMaterial
       mat.emissiveIntensity = THREE.MathUtils.damp(
         mat.emissiveIntensity,
-        hovered ? 0.72 : 0.14,
+        hovered ? 0.34 : 0.05,
         5, dt
       )
     }
@@ -127,10 +127,10 @@ export function PoetNiche({
         userData={{ poetTransitionId: `poet-portrait-${poet.id}` }}
       >
         <RoundedBox args={[frameW + 0.22, frameH + 0.22, 0.09]} radius={0.022} smoothness={4} castShadow>
-          <meshStandardMaterial color="#b8892a" metalness={0.98} roughness={0.22} emissive={PALETTE.cyan} emissiveIntensity={0.1} />
+          <meshStandardMaterial color="#c9a24e" metalness={0.98} roughness={0.22} emissive={PALETTE.cyan} emissiveIntensity={0.04} />
         </RoundedBox>
         <RoundedBox ref={frameRef as any} args={[frameW, frameH, 0.075]} radius={0.018} smoothness={4}>
-          <meshStandardMaterial color={PALETTE.brass} metalness={0.96} roughness={0.26} emissive={PALETTE.cyan} emissiveIntensity={0.14} />
+          <meshStandardMaterial color={PALETTE.brass} metalness={0.96} roughness={0.26} emissive={PALETTE.cyan} emissiveIntensity={0.05} />
         </RoundedBox>
 
         <mesh position={[0, 0, 0.045]}>
@@ -147,10 +147,10 @@ export function PoetNiche({
         position={[0, 3.15, 1.35]}
         angle={0.40}
         penumbra={0.74}
-        intensity={hovered ? 38 : 22}
-        color={hovered ? '#ffffff' : '#d8f6ff'}
-        distance={6.4}
-        decay={1.8}
+        intensity={hovered ? 46 : 32}
+        color={hovered ? '#fff6ea' : '#ffe7c6'}
+        distance={6.6}
+        decay={1.7}
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
