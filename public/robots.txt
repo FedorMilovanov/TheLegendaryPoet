@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thelegendarypoet.ru/sitemap.xml
+# Sitemap (served under the GitHub Pages project path). If you connect a custom
+# domain later, update this line and the loc URLs in sitemap.xml to that domain.
+Sitemap: https://fedormilovanov.github.io/TheLegendaryPoet/sitemap.xml

@@ -11,6 +11,7 @@ import KineticText from '../components/KineticText';
 import Reveal from '../components/Reveal';
 import PoemOfDay from '../components/PoemOfDay';
 import { asset } from '../utils/asset';
+import { useSeo } from '../hooks/useSeo';
 
 const portraits = [
   { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
@@ -192,6 +193,11 @@ function StatsSection() {
 }
 
 export default function HomePage() {
+  useSeo({
+    title: 'THE LEGENDARY POET | Поэзия, анализ, история',
+    description: 'Великие русские поэты: биографии, тексты стихов, глубокий литературный и — где это оправдано — христианский разбор. Пушкин, Лермонтов, Ахматова, Есенин, Блок и другие.',
+    path: '/',
+  });
   const featuredPoets = useMemo(() => [...poets].sort((a, b) => b.rating - a.rating).slice(0, 3), []);
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
