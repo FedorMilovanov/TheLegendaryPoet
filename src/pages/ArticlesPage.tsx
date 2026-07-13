@@ -8,6 +8,7 @@ import EssayCard from '../components/essay/EssayCard';
 import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
+import { titleCase } from '../utils/titleCase';
 
 const categories = [
   { value: '', label: 'Все статьи' },
@@ -59,7 +60,7 @@ export default function ArticlesPage() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <h1 className="text-5xl font-serif font-bold mb-4">
-              <span className="neon-blue-gradient neon-glow-text">Статьи</span> и Анализы
+              <span className="neon-blue-gradient neon-glow-text">{titleCase('Статьи')}</span> {titleCase('и Анализы', { isHeadingStart: false })}
             </h1>
             <p className="text-xl text-cyan-100/55 max-w-3xl">
               Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.

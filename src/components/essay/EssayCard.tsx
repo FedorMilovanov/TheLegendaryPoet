@@ -4,6 +4,7 @@ import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
 import EssayCover from './EssayCover';
+import { titleCase } from '../../utils/titleCase';
 
 /**
  * Featured essay link card with a 3D-tilt cover, for the Articles listing.
@@ -32,7 +33,7 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
             <h3 className={`font-serif font-bold text-white transition-colors group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
-              {essay.title}
+              {titleCase(essay.title)}
             </h3>
             {essay.subtitle && feature && (
               <p className="mt-3 font-serif text-lg italic text-luxury-gray-light text-pretty">{essay.subtitle}</p>

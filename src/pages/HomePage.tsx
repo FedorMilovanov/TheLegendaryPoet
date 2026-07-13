@@ -12,6 +12,7 @@ import Reveal from '../components/Reveal';
 import PoemOfDay from '../components/PoemOfDay';
 import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
+import { titleCase } from '../utils/titleCase';
 
 const portraits = [
   { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
@@ -209,7 +210,7 @@ export default function HomePage() {
           <Reveal direction="up" className="flex items-end justify-between mb-16">
             <div>
               <span className="section-label">Избранные авторы</span>
-              <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-2">Лица{' '}<KineticText text="Эпохи" variant="wave" focusMode stagger={0.04} className="neon-blue-gradient neon-glow-text italic" /></h2>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-2">{titleCase('Лица')}{' '}<KineticText text={titleCase('Эпохи')} variant="wave" focusMode stagger={0.04} className="neon-blue-gradient neon-glow-text italic" /></h2>
               <p className="text-cyan-100/48 text-base">Те, кто менял мир одним словом</p>
             </div>
             <Link to="/poets" className="home-all-poets-link items-center gap-2 text-cyan-300 hover:text-cyan-200 transition-all font-semibold shrink-0">Все поэты <ArrowRight size={16} /></Link>
@@ -239,7 +240,7 @@ export default function HomePage() {
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-[#061018]/40" />
           <div className="relative z-10">
-            <h2 className="text-4xl font-serif font-bold text-white mb-6">Вера, культура и <KineticText text="трезвая оценка" variant="wave" focusMode stagger={0.025} className="neon-blue-gradient neon-glow-text" /></h2>
+            <h2 className="text-4xl font-serif font-bold text-white mb-6">{titleCase('Вера, культура и')} <KineticText text={titleCase('трезвая оценка')} variant="wave" focusMode stagger={0.025} className="neon-blue-gradient neon-glow-text" /></h2>
             <p className="text-xl text-cyan-100/55 mb-10 leading-relaxed font-light">Отдельные материалы рассматривают жизнь и тексты поэтов с христианской позиции трезво и ответственно: без натяжек и ложных сенсаций, без объявления поэтов верующими там, где нет оснований. Там же, где есть прямое богоборчество или очевидные библейские мотивы — даём ясный, аргументированный комментарий.</p>
             <div className="flex justify-center gap-6"><MagneticButton to="/articles" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_26px_rgba(0,212,255,0.35)]">Изучить статьи</MagneticButton></div>
           </div>

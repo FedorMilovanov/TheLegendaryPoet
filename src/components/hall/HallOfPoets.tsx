@@ -14,6 +14,7 @@ import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessi
 
 import { poets as allPoetsRaw } from '@/data/poets'
 import { asset } from '@/utils/asset'
+import { titleCase } from '@/utils/titleCase'
 
 type RawPoet = { id: string; name?: string; fullName?: string; birthYear?: number; deathYear?: number; photo?: string; epigraph?: string; poems?: { title: string }[] }
 type NormPoet = { id: string; shortKey: string; name: string; years: string; portrait: string; quote: string }
@@ -184,7 +185,7 @@ export default function HallOfPoets() {
       <div className="pointer-events-none absolute inset-x-0 top-20 z-20 text-center px-4">
         <div className="font-serif text-[11px] tracking-[0.38em] text-cyan-200/70">THE LEGENDARY POET</div>
         <h1 className="mt-3 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#e9faff]" style={{ textShadow: '0 0 32px rgba(0,212,255,0.28)' }}>
-          Зал Поэтов
+          {titleCase('Зал Поэтов')}
         </h1>
         <p className="mt-3 text-cyan-100/70 text-sm md:text-[15px]">
           {fpsMode 

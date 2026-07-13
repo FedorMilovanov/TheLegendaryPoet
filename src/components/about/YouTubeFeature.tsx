@@ -1,5 +1,6 @@
 import { YouTubeIcon } from '../ChannelIcons';
 import { siteConfig } from '../../config/site';
+import { titleCase } from '../../utils/titleCase';
 
 export default function YouTubeFeature() {
   return (
@@ -11,7 +12,7 @@ export default function YouTubeFeature() {
           </div>
         </div>
         <div className="flex-1 text-center md:text-left">
-          <h3 className="mb-2 font-serif text-2xl font-bold text-white">Смотрите нас на YouTube</h3>
+          <h3 className="mb-2 font-serif text-2xl font-bold text-white">{titleCase('Смотрите нас на YouTube')}</h3>
           <p className="mb-4 text-luxury-gray-light">
             Видео о поэтах, их жизни, тревогах, трагических и лирических историях. Глубокие разборы стихов и судеб.
           </p>

@@ -1,4 +1,5 @@
 import { Shield } from 'lucide-react';
+import { titleCase } from '../../utils/titleCase';
 
 interface SpiritualPathProps {
   content: string;
@@ -11,7 +12,7 @@ export default function SpiritualPath({ content }: SpiritualPathProps) {
         <Shield size={250} />
       </div>
       <h2 className="text-3xl font-serif font-bold gold-gradient gold-glow-text mb-8 flex items-center gap-3 relative z-10">
-        Духовный путь и мировоззрение
+        {titleCase('Духовный путь и мировоззрение')}
       </h2>
       <p className="poetry-text text-xl text-luxury-gray-light leading-[1.8] font-light relative z-10">
         {content}

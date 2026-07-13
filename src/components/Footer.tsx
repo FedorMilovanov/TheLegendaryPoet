@@ -3,6 +3,7 @@ import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Mail } from './PremiumIcons';
 import BrandMark from './BrandMark';
 import { getWordOfDay } from '../utils/dailyContent';
+import { titleCase } from '../utils/titleCase';
 
 const footerLinks = [
   { label: 'Поэты', path: '/poets' },
@@ -99,7 +100,7 @@ export default function Footer() {
                     className="group/link inline-flex items-center gap-1.5 text-sm text-cyan-200/50 transition-colors hover:text-cyan-300"
                   >
                     <span className="h-px w-0 bg-cyan-400 transition-all duration-300 group-hover/link:w-3" />
-                    {item.label}
+                    {titleCase(item.label)}
                   </Link>
                 </li>
               ))}

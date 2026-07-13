@@ -5,6 +5,7 @@ import { poets } from '../data/poets';
 import { Poem } from '../types/poet';
 import Reveal from '../components/Reveal';
 import { Star, Heart, BookOpen, ArrowRight } from '../components/PremiumIcons';
+import { titleCase } from '../utils/titleCase';
 
 export default function MyArchivePage() {
   const [version, setVersion] = useState(0);
@@ -49,7 +50,7 @@ export default function MyArchivePage() {
         <div className="max-w-3xl mx-auto px-4 text-center">
           <Reveal direction="up">
             <BookOpen size={64} className="mx-auto mb-6 text-cyan-400/20" />
-            <h1 className="mb-4 font-serif text-4xl font-bold text-white">Архив <span className="neon-blue-gradient neon-glow-text">пуст</span></h1>
+            <h1 className="mb-4 font-serif text-4xl font-bold text-white">{titleCase('Архив')} <span className="neon-blue-gradient neon-glow-text">{titleCase('пуст')}</span></h1>
             <p className="mb-8 text-base text-cyan-100/45 max-w-md mx-auto">
               Сохраняйте стихи, которые вас тронули. Нажмите «В архив» на странице любого стихотворения.
             </p>
@@ -67,7 +68,7 @@ export default function MyArchivePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <Reveal direction="up">
           <div className="section-label mb-2">Личная коллекция</div>
-          <h1 className="mb-4 font-serif text-5xl font-bold text-white">Мой <span className="neon-blue-gradient neon-glow-text">Архив</span></h1>
+          <h1 className="mb-4 font-serif text-5xl font-bold text-white">{titleCase('Мой')} <span className="neon-blue-gradient neon-glow-text">{titleCase('Архив')}</span></h1>
         </Reveal>
 
         {/* Stats */}

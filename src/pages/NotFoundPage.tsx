@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Search, Sparkles } from '../components/PremiumIcons';
+import { titleCase } from '../utils/titleCase';
 
 export default function NotFoundPage() {
   return (
@@ -7,7 +8,7 @@ export default function NotFoundPage() {
       <div className="mx-auto max-w-3xl text-center">
         <div className="section-label">404</div>
         <h1 className="mb-5 font-serif text-5xl font-bold sm:text-7xl">
-          Страница <span className="neon-blue-gradient neon-glow-text">не найдена</span>
+          {titleCase('Страница')} <span className="neon-blue-gradient neon-glow-text">{titleCase('не найдена')}</span>
         </h1>
         <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-cyan-100/55">
           Возможно, ссылка устарела или раздел был перемещён. Вернитесь в каталог, откройте поиск или войдите в Зал Поэтов.
