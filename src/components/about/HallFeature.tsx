@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight } from '../PremiumIcons';
 import Reveal from '../Reveal';
+import { titleCase } from '../../utils/titleCase';
 
 /**
  * About-page promo for the immersive Hall of Poets ("Храм Русской Поэзии").
@@ -20,7 +21,7 @@ export default function HallFeature() {
               <Sparkles size={13} /> В разработке
             </div>
             <h2 className="mb-4 font-serif text-3xl font-bold text-white md:text-4xl">
-              Храм Русской <span className="gold-gradient gold-glow-text">Поэзии</span>
+              {titleCase('Храм Русской')} <span className="gold-gradient gold-glow-text">{titleCase('Поэзии')}</span>
             </h2>
             <p className="mb-8 text-base leading-relaxed text-luxury-gray-light md:text-lg">
               Мы строим иммерсивный зал поэтов — купольный пантеон с залами разных эпох,

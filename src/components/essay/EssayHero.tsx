@@ -4,6 +4,7 @@ import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
 import EssayCover from './EssayCover';
+import { titleCase } from '../../utils/titleCase';
 
 /**
  * Essay hero: a 3D-tilt cover banner + a centred title block. The cover art has
@@ -41,7 +42,7 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         className="mx-auto mt-10 max-w-3xl text-center"
       >
         <h1 className="editorial-title font-serif text-4xl md:text-6xl font-bold leading-[1.02] text-white text-balance">
-          {essay.title}
+          {titleCase(essay.title)}
         </h1>
         {essay.subtitle && (
           <p className="mx-auto mt-5 max-w-2xl font-serif text-xl md:text-2xl italic text-luxury-gray-light text-pretty">

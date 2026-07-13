@@ -13,6 +13,7 @@ import Testimonies from '../components/poet-detail/Testimonies';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
+import { titleCase } from '../utils/titleCase';
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +51,7 @@ export default function PoetDetailPage() {
     return (
       <div className="min-h-screen pt-32 pb-20 flex items-center justify-center bg-[#050505]">
         <div className="text-center">
-          <h1 className="text-4xl font-serif text-white mb-4">Поэт не найден</h1>
+          <h1 className="text-4xl font-serif text-white mb-4">{titleCase('Поэт не найден')}</h1>
           <Link to="/poets" className="text-luxury-gold hover:text-luxury-gold-light transition-colors font-medium">
             ← Вернуться к списку поэтов
           </Link>
@@ -122,7 +123,7 @@ export default function PoetDetailPage() {
 
             <div className="pt-16">
               <h2 className="text-5xl font-serif font-bold text-white mb-12 flex items-center gap-4 editorial-title">
-                Избранная <span className="gold-gradient italic gold-glow-text">Лирика</span>
+                {titleCase('Избранная')} <span className="gold-gradient italic gold-glow-text">{titleCase('Лирика')}</span>
               </h2>
               
               <div className="space-y-16">

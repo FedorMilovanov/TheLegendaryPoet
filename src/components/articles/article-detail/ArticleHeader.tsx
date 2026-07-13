@@ -1,5 +1,6 @@
 import { Calendar, Clock, FileText } from 'lucide-react';
 import { Article } from '../../../types/poet';
+import { titleCase } from '../../../utils/titleCase';
 
 interface ArticleHeaderProps {
   article: Article;
@@ -13,7 +14,7 @@ export default function ArticleHeader({ article, categoryLabel }: ArticleHeaderP
         <FileText size={12} /> {categoryLabel}
       </div>
       <h1 className="mb-6 font-serif text-4xl font-bold leading-tight md:text-6xl">
-        <span className="neon-blue-gradient neon-glow-text">{article.title}</span>
+        <span className="neon-blue-gradient neon-glow-text">{titleCase(article.title)}</span>
       </h1>
       <div className="mb-8 flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.14em] text-cyan-100/38">
         <span className="inline-flex items-center gap-1"><Calendar size={13} /> {article.date}</span>

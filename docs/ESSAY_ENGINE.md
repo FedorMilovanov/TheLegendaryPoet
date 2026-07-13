@@ -21,6 +21,8 @@ and reused for every essay.
    - `reflection` — a reverent, candle-lit meditation (warm gold; `heading` + text)
    - `divider` — an ornamental separator
 2. Register it in `src/data/essays/index.ts` (`export const essays = [...]`).
+   Section headings run through `titleCase()` automatically — write them in
+   normal sentence case in the data file (see "Site heading rule" below).
 3. That's it — it automatically:
    - appears as a featured card on `/articles` (the "Большой материал" block),
    - gets its own page at `/essays/<slug>`,
@@ -68,3 +70,26 @@ automatically.
 
 Same as the rest of the site: every quote needs a real, citable source; mark
 paraphrases as «(пересказ)»; never invent. See `docs/RESEARCH_SOURCES.md`.
+
+## Site heading rule (Title Case)
+
+Structural headings site-wide — page titles, section headings, kickers, nav/
+footer labels — go through `titleCase()` (`src/utils/titleCase.ts`), an
+English-style Title Case adapted for Russian: every significant word is
+capitalized; short prepositions/conjunctions/particles (в, на, с, и, а, но,
+для, о, etc.) stay lowercase unless they open the heading or follow a
+colon/dash. Apply it at render time — write the underlying string in normal
+sentence case in data/JSX and call `titleCase(text)`.
+
+**Do not** apply it to: proper nouns with fixed casing (poet names), quoted
+verse/prose (must keep the author's exact capitalization), or any text
+already forced to caps via a CSS `uppercase` class (kickers/badges/pills —
+the transform is visual there, so title-casing the string underneath is a
+no-op and not worth the noise).
+
+If a heading is split across two JSX nodes for styling (e.g. a plain span +
+a highlighted span), title-case each fragment separately, but pass
+`{ isHeadingStart: false }` to the second fragment if it might start with a
+small word — otherwise that word gets force-capitalized as if it opened the
+whole heading (e.g. "Статьи и Анализы" split into "Статьи" + "и Анализы"
+would wrongly render "Статьи **И** Анализы" without the flag).

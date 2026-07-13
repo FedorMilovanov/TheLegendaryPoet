@@ -6,6 +6,7 @@ import PoetCard from '../components/PoetCard';
 import { Poet } from '../types/poet';
 import { Search, Filter, ArrowDownUp, X, ArrowRight, Sparkles } from '../components/PremiumIcons';
 import Reveal from '../components/Reveal';
+import { titleCase } from '../utils/titleCase';
 
 function PoetsHero() {
   return (
@@ -20,7 +21,7 @@ function PoetsHero() {
           Архив создателей
         </span>
         <h1 className="editorial-title font-serif text-5xl font-bold text-white md:text-7xl">
-          Лица <span className="gold-gradient italic gold-glow-text">Эпохи</span>
+          {titleCase('Лица')} <span className="gold-gradient italic gold-glow-text">{titleCase('Эпохи')}</span>
         </h1>
       </div>
       <p className="max-w-md border-l border-luxury-gold/20 pl-6 text-xl font-light leading-relaxed text-luxury-gray-light">

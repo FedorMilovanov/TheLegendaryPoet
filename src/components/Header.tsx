@@ -5,6 +5,7 @@ import BrandMark from './BrandMark';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Search } from './PremiumIcons';
 import ThemeToggle from './ThemeToggle';
+import { titleCase } from '../utils/titleCase';
 
 const Header = () => {
   const location = useLocation();
@@ -49,7 +50,7 @@ const Header = () => {
                   item.accent && !isActive(item.path) && "text-luxury-gold/70 hover:text-luxury-gold"
                 )}
               >
-                {item.name}
+                {titleCase(item.name)}
                 {isActive(item.path) && (
                   <motion.span 
                     layoutId="header-nav-indicator"

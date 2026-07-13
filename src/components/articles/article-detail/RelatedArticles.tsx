@@ -1,5 +1,6 @@
 import { Article } from '../../../types/poet';
 import ArticleCard from '../ArticleCard';
+import { titleCase } from '../../../utils/titleCase';
 
 interface RelatedArticlesProps {
   related: Article[];
@@ -12,7 +13,7 @@ export default function RelatedArticles({ related, categoryLabels }: RelatedArti
   return (
     <section className="mt-16">
       <h2 className="mb-8 font-serif text-3xl font-bold text-white">
-        Похожие <span className="neon-blue-gradient neon-glow-text">материалы</span>
+        {titleCase('Похожие')} <span className="neon-blue-gradient neon-glow-text">{titleCase('материалы')}</span>
       </h2>
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {related.map((item) => (

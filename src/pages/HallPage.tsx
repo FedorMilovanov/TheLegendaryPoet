@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
+import { titleCase } from '../utils/titleCase';
 
 /**
  * Hall of Poets — placeholder while the immersive version is rebuilt.
@@ -44,7 +45,7 @@ export default function HallPage() {
         </span>
 
         <h1 className="editorial-title mb-6 font-serif text-5xl font-bold leading-[0.95] text-white md:text-7xl">
-          <span className="gold-gradient gold-glow-text">Храм Русской Поэзии</span>
+          <span className="gold-gradient gold-glow-text">{titleCase('Храм русской поэзии')}</span>
         </h1>
 
         <p className="mx-auto mb-4 max-w-xl font-serif text-xl italic leading-relaxed text-luxury-gray-light md:text-2xl">

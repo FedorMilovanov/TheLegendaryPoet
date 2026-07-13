@@ -3,6 +3,7 @@ import type { EssayBlock } from '../../types/essay';
 import { withGold, splitParagraphs } from './richText';
 import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
+import { titleCase } from '../../utils/titleCase';
 
 /**
  * The essay rendering "engine": one styled component per block type, dispatched
@@ -49,7 +50,7 @@ function SectionBlock({ block, number }: { block: Block<'section'>; number?: num
         </span>
       )}
       <span className="h-px w-8 bg-luxury-gold/50" />
-      <span className="gold-gradient gold-glow-text">{block.heading}</span>
+      <span className="gold-gradient gold-glow-text">{titleCase(block.heading)}</span>
     </h2>
   );
 }
@@ -164,7 +165,7 @@ function ReflectionBlock({ block }: { block: Block<'reflection'> }) {
       <div className="relative z-10">
         <div className="mb-5 flex items-center justify-center gap-3 text-luxury-gold/70">
           <span className="h-px w-10 bg-luxury-gold/40" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em]">{block.heading || 'Библейская ремарка'}</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em]">{titleCase(block.heading || 'Библейская ремарка')}</span>
           <span className="h-px w-10 bg-luxury-gold/40" />
         </div>
         {splitParagraphs(block.text).map((p, i) => (

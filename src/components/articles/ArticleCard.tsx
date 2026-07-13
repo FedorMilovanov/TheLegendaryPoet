@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Article } from '../../types/poet';
 import TiltCard from '../TiltCard';
 import { BookOpen, Calendar, ArrowRight, Clock } from '../PremiumIcons';
+import { titleCase } from '../../utils/titleCase';
 
 interface ArticleCardProps {
   article: Article;
@@ -40,7 +41,7 @@ export default function ArticleCard({ article, categoryLabel }: ArticleCardProps
               </div>
 
               <h3 className="text-lg font-serif font-bold text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2 leading-snug sm:text-xl">
-                {article.title}
+                {titleCase(article.title)}
               </h3>
 
               <p className="text-sm text-cyan-100/45 line-clamp-3 font-light leading-relaxed">

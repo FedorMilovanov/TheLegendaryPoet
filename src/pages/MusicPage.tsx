@@ -6,6 +6,7 @@ import { MusicTrack } from '../types/poet';
 import { Clock, Download, ExternalLink, Play, Pause, AudioWaveform } from '../components/PremiumIcons';
 import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
+import { titleCase } from '../utils/titleCase';
 
 const AUDIO_EXT = /\.(mp3|ogg|wav|m4a|aac|flac)$/i;
 
@@ -37,7 +38,7 @@ function MusicHero() {
     <div className="mb-12 max-w-3xl">
       <div className="section-label mb-2">Аудиоархив</div>
       <h1 className="mb-4 font-serif text-4xl font-bold leading-tight sm:text-5xl">
-        <span className="neon-blue-gradient neon-glow-text">Музыка</span> и Аудио
+        <span className="neon-blue-gradient neon-glow-text">{titleCase('Музыка')}</span> {titleCase('и Аудио', { isHeadingStart: false })}
       </h1>
       <p className="text-base leading-relaxed text-cyan-100/55 sm:text-xl">
         Слушайте музыкальные интерпретации великих стихов. Треки доступны для прослушивания и перехода к полным публикациям.
@@ -54,7 +55,7 @@ function MusicIntro() {
           <AudioWaveform size={42} className="text-cyan-300/55" />
         </div>
         <div className="flex-1">
-          <h3 className="mb-2 font-serif text-2xl text-white">Музыкальный раздел</h3>
+          <h3 className="mb-2 font-serif text-2xl text-white">{titleCase('Музыкальный раздел')}</h3>
           <p className="mb-4 text-cyan-100/55">Слушайте опубликованные композиции и переходите к полным записям на каналах проекта.</p>
           <div className="h-1 overflow-hidden rounded-full bg-[#0c1822]"><div className="h-full w-1/3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(0,212,255,0.55)]" /></div>
         </div>
@@ -159,7 +160,7 @@ function TrackList({ tracks }: { tracks: MusicTrack[] }) {
 function TrackFeedbackSection({ tracks }: { tracks: MusicTrack[] }) {
   return (
     <section className="mt-12 space-y-6">
-      <h2 className="font-serif text-3xl font-bold text-white">Оценка <span className="neon-blue-gradient neon-glow-text">треков</span></h2>
+      <h2 className="font-serif text-3xl font-bold text-white">{titleCase('Оценка')} <span className="neon-blue-gradient neon-glow-text">{titleCase('треков')}</span></h2>
       <div className="space-y-6">{tracks.map((track) => <TrackFeedback key={track.id} track={track} />)}</div>
     </section>
   );
@@ -171,7 +172,7 @@ function MusicFutureNote() {
       <div className="flex items-start gap-4">
         <AudioWaveform className="mt-1 flex-shrink-0 text-cyan-300" size={24} />
         <div>
-          <h3 className="mb-2 text-lg font-semibold text-white">Раздел продолжит расти</h3>
+          <h3 className="mb-2 text-lg font-semibold text-white">{titleCase('Раздел продолжит расти')}</h3>
           <p className="text-sm leading-relaxed text-cyan-100/55">Со временем здесь появятся новые записи, чтения, музыкальные интерпретации и аккуратно оформленные переходы на полные публикации проекта.</p>
         </div>
       </div>

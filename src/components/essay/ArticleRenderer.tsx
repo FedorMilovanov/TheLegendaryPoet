@@ -1,6 +1,7 @@
 import type { EssayBlock } from '../../types/essay';
 import { EssayBlockView } from './blocks';
 import { sectionAnchor } from './anchor';
+import { titleCase } from '../../utils/titleCase';
 import Reveal from '../Reveal';
 
 export interface TocEntry {
@@ -15,7 +16,7 @@ export function getEssayToc(blocks: EssayBlock[]): TocEntry[] {
   return blocks
     .filter((b): b is Extract<EssayBlock, { type: 'section' }> => b.type === 'section')
     .map((b) => ({
-      heading: b.heading,
+      heading: titleCase(b.heading),
       anchor: sectionAnchor(b.heading, b.anchor),
       number: ++n,
     }));

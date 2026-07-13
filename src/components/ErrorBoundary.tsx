@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { titleCase } from '../utils/titleCase';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -33,7 +34,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
         <div className="flex min-h-screen items-center justify-center bg-[#050505] px-4 text-center text-white">
           <div className="max-w-xl">
             <div className="section-label">Ошибка</div>
-            <h1 className="mb-4 font-serif text-4xl font-bold">Что-то пошло не так</h1>
+            <h1 className="mb-4 font-serif text-4xl font-bold">{titleCase('Что-то пошло не так')}</h1>
             <p className="mb-8 text-sm leading-relaxed text-cyan-100/55">
               Страница не смогла отрисоваться. Попробуйте обновить сайт или вернуться на главную.
             </p>

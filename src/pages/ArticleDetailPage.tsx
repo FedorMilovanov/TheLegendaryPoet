@@ -9,6 +9,7 @@ import ArticleBody from '../components/articles/article-detail/ArticleBody';
 import ArticleHeader from '../components/articles/article-detail/ArticleHeader';
 import { getArticleById, getRelatedArticles } from '../utils/articleLibrary';
 import { useSeo } from '../hooks/useSeo';
+import { titleCase } from '../utils/titleCase';
 
 const categoryLabels: Record<string, string> = {
   biblical: 'Библейский анализ',
@@ -42,7 +43,7 @@ export default function ArticleDetailPage() {
     return (
       <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h1 className="mb-4 font-serif text-4xl">Статья не найдена</h1>
+          <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
           <Link to="/articles" className="text-cyan-300 hover:text-cyan-200">
             Вернуться к списку статей
           </Link>
