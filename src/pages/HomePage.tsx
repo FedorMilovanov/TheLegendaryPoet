@@ -10,6 +10,7 @@ import { ArrowRight, Quote, BookOpen, FileText, AudioWaveform, Star, Sparkles } 
 import KineticText from '../components/KineticText';
 import Reveal from '../components/Reveal';
 import PoemOfDay from '../components/PoemOfDay';
+import { asset } from '../utils/asset';
 
 const portraits = [
   { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
@@ -221,10 +222,21 @@ export default function HomePage() {
         </div>
       </section>
       <section className="py-24 relative overflow-hidden bg-[#0a0a0a]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center luxury-card p-12 md:p-16 rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-[#061018] to-[#050505] shadow-2xl">
-          <h2 className="text-4xl font-serif font-bold text-white mb-6">Вера, культура и <KineticText text="трезвая оценка" variant="wave" focusMode stagger={0.025} className="neon-blue-gradient neon-glow-text" /></h2>
-          <p className="text-xl text-cyan-100/55 mb-10 leading-relaxed font-light">Отдельные материалы рассматривают жизнь и тексты поэтов с христианской позиции трезво и ответственно: без натяжек и ложных сенсаций, без объявления поэтов верующими там, где нет оснований. Там же, где есть прямое богоборчество или очевидные библейские мотивы — даём ясный, аргументированный комментарий.</p>
-          <div className="flex justify-center gap-6"><MagneticButton to="/articles" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_26px_rgba(0,212,255,0.35)]">Изучить статьи</MagneticButton></div>
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center luxury-card overflow-hidden p-12 md:p-16 rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-[#061018] to-[#050505] shadow-2xl">
+          <img
+            src={asset('/images/sections/articles-cover.jpg')}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            className="absolute inset-0 h-full w-full object-cover opacity-25"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-[#061018]/40" />
+          <div className="relative z-10">
+            <h2 className="text-4xl font-serif font-bold text-white mb-6">Вера, культура и <KineticText text="трезвая оценка" variant="wave" focusMode stagger={0.025} className="neon-blue-gradient neon-glow-text" /></h2>
+            <p className="text-xl text-cyan-100/55 mb-10 leading-relaxed font-light">Отдельные материалы рассматривают жизнь и тексты поэтов с христианской позиции трезво и ответственно: без натяжек и ложных сенсаций, без объявления поэтов верующими там, где нет оснований. Там же, где есть прямое богоборчество или очевидные библейские мотивы — даём ясный, аргументированный комментарий.</p>
+            <div className="flex justify-center gap-6"><MagneticButton to="/articles" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_26px_rgba(0,212,255,0.35)]">Изучить статьи</MagneticButton></div>
+          </div>
         </div>
       </section>
     </div>
