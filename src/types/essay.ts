@@ -17,8 +17,10 @@ export type EssayBlock =
   | { type: 'paragraph'; text: string }
   /** A big pulled quote for emphasis (a dramatic line, often the poet's own). */
   | { type: 'pullquote'; text: string; cite?: string }
-  /** An embedded poem / stanza, rendered in the serif poetry style. */
-  | { type: 'poem'; title?: string; lines: string; year?: string | number; note?: string }
+  /** An embedded poem / stanza, rendered in the serif poetry style.
+   *  Wrap words in **double asterisks** to render them in glowing gold.
+   *  variant 'blood' tints the stanza red (for Yesenin's last poem, written in blood). */
+  | { type: 'poem'; title?: string; lines: string; year?: string | number; note?: string; variant?: 'default' | 'blood' }
   /** A sourced voice: the poet himself, a friend, another poet, or a historian. */
   | {
       type: 'voice';
@@ -31,6 +33,9 @@ export type EssayBlock =
     }
   /** An editorial remark from the project (the site's own sober commentary). */
   | { type: 'note'; text: string }
+  /** A reverent, candle-lit reflection — the site's careful spiritual/biblical
+   *  meditation. Distinct warm-gold styling. Supports **gold** emphasis. */
+  | { type: 'reflection'; heading?: string; text: string }
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
 
