@@ -22,6 +22,28 @@ export default function PoetDetailPage() {
     title: poet ? `${poet.name} — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
     description: poet ? poet.shortBio : 'Страница не найдена.',
     path: `/poets/${id ?? ''}`,
+    type: 'profile',
+    image: poet?.photo,
+    keywords: poet ? [poet.name, poet.fullName, ...poet.tags, 'стихи', 'биография'].join(', ') : undefined,
+    jsonLd: poet
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ProfilePage',
+          mainEntity: {
+            '@type': 'Person',
+            name: poet.name,
+            alternateName: poet.fullName,
+            description: poet.shortBio,
+            image: `${poet.photo.startsWith('http') ? '' : 'https://fedormilovanov.github.io/TheLegendaryPoet'}${poet.photo}`,
+            birthDate: String(poet.birthYear),
+            deathDate: poet.deathYear ? String(poet.deathYear) : undefined,
+            nationality: poet.nationality,
+            jobTitle: 'Поэт',
+            knowsAbout: poet.tags,
+          },
+          inLanguage: 'ru-RU',
+        }
+      : undefined,
   });
 
   if (!poet) {

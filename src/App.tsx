@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { hydrateFromRemote } from './utils/communityStore';
+import { initAnalytics } from './utils/analytics';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -122,6 +123,7 @@ function App() {
   // No-op (and no network) when it isn't — the app stays on the local store.
   useEffect(() => {
     void hydrateFromRemote();
+    initAnalytics();
   }, []);
 
   return (

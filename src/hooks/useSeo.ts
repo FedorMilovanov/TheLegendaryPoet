@@ -6,28 +6,116 @@ interface SeoOptions {
   description: string;
   /** Route path beginning with "/" (e.g. "/poets/alexander-pushkin"). */
   path: string;
+  /** OG type. Use 'article' for essays/articles, 'profile' for poets. */
+  type?: 'website' | 'article' | 'profile';
+  /** Site-root-relative image path (e.g. "/images/essays/x.jpg"). Absolutised for OG. */
+  image?: string;
+  /** ISO date for articles (sets article:published_time + JSON-LD datePublished). */
+  publishedTime?: string;
+  /** Author name for articles. */
+  author?: string;
+  /** Comma-joined keywords. */
+  keywords?: string;
+  /** Optional pre-built JSON-LD object; overrides the default WebPage/Article schema. */
+  jsonLd?: Record<string, unknown>;
 }
 
-function setAttr(selector: string, attr: string, value: string) {
-  const el = document.head.querySelector(selector);
-  if (el) el.setAttribute(attr, value);
+function absUrl(pathOrUrl: string) {
+  if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+  return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+/** Set an attribute on an existing head tag, creating a <meta> if it is missing. */
+function ensureMeta(key: string, value: string, kind: 'name' | 'property' = 'name') {
+  let el = document.head.querySelector(`meta[${kind}="${key}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(kind, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', value);
+}
+
+function ensureLink(rel: string, href: string) {
+  let el = document.head.querySelector(`link[rel="${rel}"]`);
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', rel);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', href);
 }
 
 /**
- * Per-route metadata for a client-rendered SPA. Updates the existing head
- * tags in place (no duplicates), so each route gets its own title, description,
- * canonical URL and social-preview text.
+ * Per-route metadata for a client-rendered SPA. Updates head tags in place —
+ * title, description, canonical, Open Graph, Twitter, article meta, and a
+ * per-route JSON-LD block (WebPage / Article) so Google & Yandex can build
+ * rich results. Both crawlers render JS, so client-side injection is indexed.
  */
-export function useSeo({ title, description, path }: SeoOptions) {
+export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
+    const img = absUrl(image || '/og-image.jpg');
+
     document.title = title;
-    setAttr('meta[name="description"]', 'content', description);
-    setAttr('link[rel="canonical"]', 'href', url);
-    setAttr('meta[property="og:title"]', 'content', title);
-    setAttr('meta[property="og:description"]', 'content', description);
-    setAttr('meta[property="og:url"]', 'content', url);
-    setAttr('meta[name="twitter:title"]', 'content', title);
-    setAttr('meta[name="twitter:description"]', 'content', description);
-  }, [title, description, path]);
+    ensureMeta('description', description);
+    ensureLink('canonical', url);
+    if (keywords) ensureMeta('keywords', keywords);
+
+    // Open Graph
+    ensureMeta('og:title', title, 'property');
+    ensureMeta('og:description', description, 'property');
+    ensureMeta('og:url', url, 'property');
+    ensureMeta('og:type', type, 'property');
+    ensureMeta('og:image', img, 'property');
+
+    // Twitter
+    ensureMeta('twitter:title', title);
+    ensureMeta('twitter:description', description);
+    ensureMeta('twitter:image', img);
+
+    // Article-specific
+    if (type === 'article' && publishedTime) ensureMeta('article:published_time', publishedTime, 'property');
+    if (type === 'article' && author) ensureMeta('article:author', author, 'property');
+
+    // Per-route JSON-LD (structured data)
+    const schema =
+      jsonLd ||
+      (type === 'article'
+        ? {
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: title,
+            description,
+            image: img,
+            url,
+            inLanguage: 'ru-RU',
+            datePublished: publishedTime,
+            author: { '@type': 'Organization', name: author || siteConfig.name },
+            publisher: {
+              '@type': 'Organization',
+              name: siteConfig.name,
+              logo: { '@type': 'ImageObject', url: `${siteConfig.url}/icon-512.png` },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+          }
+        : {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: title,
+            description,
+            url,
+            inLanguage: 'ru-RU',
+            isPartOf: { '@type': 'WebSite', name: siteConfig.name, url: `${siteConfig.url}/` },
+          });
+
+    let ld = document.getElementById('route-jsonld');
+    if (!ld) {
+      ld = document.createElement('script');
+      ld.id = 'route-jsonld';
+      (ld as HTMLScriptElement).type = 'application/ld+json';
+      document.head.appendChild(ld);
+    }
+    ld.textContent = JSON.stringify(schema);
+  }, [title, description, path, type, image, publishedTime, author, keywords, jsonLd]);
 }
