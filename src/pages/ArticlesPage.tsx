@@ -7,6 +7,7 @@ import ArticleCard from '../components/articles/ArticleCard';
 import EssayCard from '../components/essay/EssayCard';
 import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
+import { asset } from '../utils/asset';
 
 const categories = [
   { value: '', label: 'Все статьи' },
@@ -40,21 +41,34 @@ export default function ArticlesPage() {
     : articles;
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-32 pb-20">
+    <div className="min-h-screen bg-[#050505] pb-20">
+      <div className="relative overflow-hidden pt-40 pb-16">
+        <img
+          src={asset('/images/sections/articles-cover.jpg')}
+          alt=""
+          aria-hidden="true"
+          loading="eager"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          className="absolute inset-0 h-full w-full object-cover opacity-30"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-[#050505]" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1 className="text-5xl font-serif font-bold mb-4">
+              <span className="neon-blue-gradient neon-glow-text">Статьи</span> и Анализы
+            </h1>
+            <p className="text-xl text-cyan-100/55 max-w-3xl">
+              Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-12"
-        >
-          <h1 className="text-5xl font-serif font-bold mb-4">
-            <span className="neon-blue-gradient neon-glow-text">Статьи</span> и Анализы
-          </h1>
-          <p className="text-xl text-cyan-100/55 max-w-3xl">
-            Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.
-          </p>
-        </motion.div>
 
         {essays.length > 0 && !selectedCategory && (
           <Reveal direction="up" className="mb-14">
