@@ -32,7 +32,7 @@ body {
   min-height: 100svh;
   min-height: -webkit-fill-available;
   padding-bottom: env(safe-area-inset-bottom);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 h1, h2, h3, .editorial-title { 
