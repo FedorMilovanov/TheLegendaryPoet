@@ -1,18 +1,17 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, PenLine } from 'lucide-react';
-import { Essay } from '../../types/essay';
-import { asset } from '../../utils/asset';
+import type { Essay } from '../../types/essay';
+import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
+import EssayCover from './EssayCover';
 
 /**
- * Essay hero: a 3D-tilt cover banner + a centred title block. The cover has a
- * graceful themed fallback, so the hero looks intentional even before the real
- * artwork is dropped into public/images/essays/.
+ * Essay hero: a 3D-tilt cover banner + a centred title block. The cover art has
+ * a graceful themed fallback (shared EssayCover), so the hero looks intentional
+ * even before the real artwork is dropped into public/images/essays/.
  */
 export default function EssayHero({ essay }: { essay: Essay }) {
-  const [imgOk, setImgOk] = useState(true);
-  const accent = essay.accent || '#d4af37';
+  const accent = essay.accent || DEFAULT_ACCENT;
 
   return (
     <header className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -22,36 +21,16 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
         <TiltCard intensity={6}>
-          <div
-            className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
-            style={{ background: `radial-gradient(circle at 50% 20%, ${accent}22, transparent 60%), linear-gradient(160deg, #07131c 0%, #0a0a0a 70%)` }}
-          >
-            {imgOk && (
-              <img
-                src={asset(essay.cover)}
-                alt={essay.coverAlt || essay.title}
-                className="h-full w-full object-cover"
-                onError={() => setImgOk(false)}
-                loading="eager"
-                decoding="async"
-              />
-            )}
-            {/* Fallback ornament when no artwork yet */}
-            {!imgOk && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-serif text-[9rem] leading-none opacity-10" style={{ color: accent }}>«»</span>
-              </div>
-            )}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
-            {essay.kicker && (
-              <span
-                className="absolute left-5 top-5 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] backdrop-blur-md"
-                style={{ color: accent, borderColor: `${accent}55`, backgroundColor: `${accent}18` }}
-              >
-                {essay.kicker}
-              </span>
-            )}
-          </div>
+          <EssayCover
+            src={essay.cover}
+            alt={essay.coverAlt || essay.title}
+            accent={accent}
+            kicker={essay.kicker}
+            focusY="20%"
+            loading="eager"
+            ornamentClass="text-[9rem]"
+            className="aspect-[16/9] w-full rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+          />
         </TiltCard>
       </motion.div>
 
@@ -61,11 +40,11 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto mt-10 max-w-3xl text-center"
       >
-        <h1 className="editorial-title font-serif text-4xl md:text-6xl font-bold leading-[1.02] text-white">
+        <h1 className="editorial-title font-serif text-4xl md:text-6xl font-bold leading-[1.02] text-white text-balance">
           {essay.title}
         </h1>
         {essay.subtitle && (
-          <p className="mx-auto mt-5 max-w-2xl font-serif text-xl md:text-2xl italic text-luxury-gray-light">
+          <p className="mx-auto mt-5 max-w-2xl font-serif text-xl md:text-2xl italic text-luxury-gray-light text-pretty">
             {essay.subtitle}
           </p>
         )}

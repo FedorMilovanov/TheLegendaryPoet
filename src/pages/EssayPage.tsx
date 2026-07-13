@@ -61,8 +61,9 @@ export default function EssayPage() {
                   <ul className="space-y-2">
                     {toc.map((s) => (
                       <li key={s.anchor}>
-                        <a href={`#${s.anchor}`} className="block text-sm text-luxury-gray-light/70 transition-colors hover:text-luxury-gold">
-                          {s.heading}
+                        <a href={`#${s.anchor}`} className="flex items-baseline gap-2.5 text-sm text-luxury-gray-light/70 transition-colors hover:text-luxury-gold">
+                          <span className="font-mono text-[10px] tabular-nums text-luxury-gold/40">{String(s.number).padStart(2, '0')}</span>
+                          <span>{s.heading}</span>
                         </a>
                       </li>
                     ))}
