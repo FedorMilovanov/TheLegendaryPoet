@@ -24,6 +24,7 @@ import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
+import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 
 const WipeOverlay = () => (
   <motion.div
@@ -60,6 +61,7 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 function SiteLayout({ children }: { children: React.ReactNode }) {
+  useAutoHideChrome();
   return (
     <SmoothScroll>
       <div className="relative min-h-screen overflow-x-clip bg-[#050505] selection:bg-luxury-gold/30">

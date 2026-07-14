@@ -49,6 +49,15 @@ data. When extending it, touch these — not the article files:
 | `EssayCover.tsx` | Shared cover surface (artwork + graceful «» fallback + kicker badge), used by both the hero and the listing card. |
 | `EssayHero.tsx` / `EssayCard.tsx` | Page hero and listing card; both read tokens from `theme.ts`. |
 | `ArticleRenderer.tsx` | Maps blocks → views, numbers the sections, and exposes `getEssayToc()`. |
+| `SectionChip.tsx` | Mobile long-read companion: current-chapter chip that appears only in reading mode (`html.chrome-hidden`) + a native Popover-API table of contents. Driven by `getEssayToc()`, so every essay gets it for free. |
+
+### Reading mode (site-wide)
+
+`useAutoHideChrome()` (mounted once in `App.tsx`) toggles `chrome-hidden` on
+`<html>` while the reader scrolls down; any upward scroll restores the chrome.
+Fixed UI opts in via one CSS rule each (`.site-header`, `.mobile-dock`,
+`.reading-progress`, `.scroll-top-btn`, `.palette-fab`, `.section-chip`) — to
+add future chrome, add one selector in `index.css`, not another scroll listener.
 
 **To add a block type:** extend the `EssayBlock` union in `src/types/essay.ts`,
 add a component + `case` in `blocks.tsx` (the compiler forces the case), and reach

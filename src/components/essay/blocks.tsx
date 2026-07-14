@@ -30,8 +30,10 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
 }
 
 function LeadBlock({ block }: { block: Block<'lead'> }) {
+  // Drop cap lives in CSS (.essay-lead): real `initial-letter` where supported,
+  // float fallback elsewhere — see index.css.
   return (
-    <p className="mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-7xl first-letter:font-bold first-letter:leading-[0.8] first-letter:text-luxury-gold">
+    <p className="essay-lead mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty">
       {block.text}
     </p>
   );
