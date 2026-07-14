@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
+import { Link } from './ui/Link';
 import { Star, Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { asset } from '../utils/asset';
+import { vtShared } from '../lib/viewTransition';
 import { Poet } from '../types/poet';
 import TiltCard from './TiltCard';
 import FeedbackMiniSummary from './community/FeedbackMiniSummary';
@@ -27,6 +28,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
           <img
             src={asset(poet.photo)}
             alt={poet.name}
+            style={vtShared(`poet-portrait-${poet.id}`)}
             className="w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
           />
 

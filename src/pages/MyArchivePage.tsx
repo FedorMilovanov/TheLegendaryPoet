@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
 import { getFavoritePoems, toggleFavoritePoem } from '../utils/myArchiveStore';
 import { poets } from '../data/poets';
 import { Poem } from '../types/poet';

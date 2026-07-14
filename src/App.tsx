@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
+import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
 import Header from './components/Header';
@@ -28,7 +29,7 @@ import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 
 const WipeOverlay = () => (
   <motion.div
-    className="page-wipe fixed inset-0 z-[100] flex items-center justify-center"
+    className="page-wipe pointer-events-none fixed inset-0 z-[100] flex items-center justify-center"
     style={{ originY: 1 }}
     initial={{ scaleY: 1 }}
     animate={{ scaleY: 0 }}
@@ -46,19 +47,40 @@ const WipeOverlay = () => (
   </motion.div>
 );
 
-const PageWrapper = ({ children }: { children: React.ReactNode }) => (
-  <>
-    <WipeOverlay />
-    <motion.div
-      initial={{ opacity: 0, y: 22 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -18 }}
-      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
-    >
-      {children}
-    </motion.div>
-  </>
-);
+// With View Transitions the brand wipe plays only once — as the site's opening
+// reveal. Route changes are handled by the browser (see lib/viewTransition.ts).
+let introPlayed = false;
+
+const PageWrapper = ({ children }: { children: React.ReactNode }) => {
+  const showIntro = useRef(!introPlayed).current;
+  useEffect(() => {
+    introPlayed = true;
+  }, []);
+
+  if (supportsViewTransitions) {
+    return (
+      <>
+        {showIntro && <WipeOverlay />}
+        {children}
+      </>
+    );
+  }
+  // Fallback for browsers without the View Transitions API: the classic
+  // framer wipe + fade on every navigation.
+  return (
+    <>
+      <WipeOverlay />
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -18 }}
+        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
+      >
+        {children}
+      </motion.div>
+    </>
+  );
+};
 
 function SiteLayout({ children }: { children: React.ReactNode }) {
   useAutoHideChrome();
@@ -77,7 +99,9 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
         <Header />
         <CommandPalette />
         <main id="main-content" className="relative z-10 pb-32 md:pb-0">
-          <AnimatePresence mode="wait">{children}</AnimatePresence>
+          {/* AnimatePresence would delay unmounts and break the View
+              Transition snapshot pairing, so it only wraps the fallback. */}
+          {supportsViewTransitions ? children : <AnimatePresence mode="wait">{children}</AnimatePresence>}
         </main>
         <MobileDock />
         <ScrollToTop />

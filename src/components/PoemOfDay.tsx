@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from './ui/Link';
 import { getPoemOfDay, getPoemPreview } from '../utils/dailyContent';
 import { ArrowRight, Quote } from './PremiumIcons';
 import Reveal from './Reveal';

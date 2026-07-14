@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from './ui/Link';
 import { titleCase } from '../utils/titleCase';
 
 interface ErrorBoundaryProps {

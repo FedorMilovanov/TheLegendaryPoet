@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
 import { motion, useInView, useSpring, useTransform } from 'framer-motion';
 import { poets, musicTracks, articles } from '../data/poets';
 import PoetCard from '../components/PoetCard';

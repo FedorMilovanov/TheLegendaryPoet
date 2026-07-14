@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
 import { ArrowLeft } from 'lucide-react';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import CommunityPanel from '../components/community/CommunityPanel';

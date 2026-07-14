@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '../ui/Link';
 import { Article } from '../../types/poet';
 import TiltCard from '../TiltCard';
 import { BookOpen, Calendar, ArrowRight, Clock } from '../PremiumIcons';

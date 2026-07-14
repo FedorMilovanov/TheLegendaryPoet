@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '../ui/Link';
 import { poets } from '../../data/poets';
 import { poetConnections, type PoetConnection } from '../../data/poetConnections';
 import { EPOCH_COLORS, EPOCH_LABELS } from '../../data/epochColors';

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
 import { ArrowLeft, Search, Sparkles } from '../components/PremiumIcons';
 import { titleCase } from '../utils/titleCase';
 

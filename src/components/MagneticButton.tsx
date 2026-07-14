@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link } from './ui/Link';
 
 interface MagneticButtonProps {
   children: React.ReactNode;
