@@ -82,23 +82,43 @@ h1, h2, h3, .editorial-title {
 
 .mobile-dock {
   position: fixed;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  bottom: calc(0.8rem + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
   display: none;
+  width: calc(100% - 1.25rem);
+  max-width: 440px;
+}
+/* The visible glass rail (kept separate from the fixed positioner so the
+   raised centre button can overflow without clipping). */
+.dock-rail {
+  position: relative;
+  display: flex;
   align-items: center;
-  justify-content: space-around;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(10, 12, 16, 0.85);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(0, 212, 255, 0.14);
-  border-radius: 2rem;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 30px rgba(0, 212, 255, 0.06);
-  width: calc(100% - 1.5rem);
-  max-width: 460px;
+  justify-content: space-between;
+  gap: 0.1rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 1.9rem;
+  background: linear-gradient(180deg, rgba(17, 19, 25, 0.92) 0%, rgba(8, 9, 12, 0.95) 100%);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 24px 55px rgba(0, 0, 0, 0.72),
+    0 0 42px rgba(0, 212, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+/* Faint gold hairline along the top edge — the "luxury" signature. */
+.dock-rail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24%;
+  right: 24%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.6), transparent);
+  pointer-events: none;
 }
 
 .hall-container {
@@ -179,27 +199,88 @@ h1, h2, h3, .editorial-title {
   box-shadow: 0 0 18px rgba(212, 175, 55, 0.55);
 }
 
-@media (max-width: 767px) { .mobile-dock { display: flex; } }
+@media (max-width: 767px) { .mobile-dock { display: block; } }
 
 @supports not (height: 100svh) { body { min-height: 100vh; } }
 
 .dock-item {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.6rem 0;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 46px;
+  padding: 0.3rem 0;
+  color: rgba(233, 240, 255, 0.5);
+  font-weight: 600;
+  transition: color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.dock-item .dock-ic {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dock-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.6rem;
+  letter-spacing: 0.055em;
+}
+.dock-item.active { color: #eaf6ff; }
+.dock-item.active .dock-ic { transform: translateY(-2px); filter: drop-shadow(0 0 10px rgba(46, 216, 255, 0.55)); }
+
+/* Sliding illuminated pill behind the active destination. */
+.dock-pill {
+  position: absolute;
+  inset: 3px 4px;
+  z-index: 0;
+  border-radius: 1.25rem;
+  background: linear-gradient(155deg, rgba(46, 216, 255, 0.16), rgba(212, 175, 55, 0.10));
+  border: 1px solid rgba(46, 216, 255, 0.22);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.14), inset 0 0 12px rgba(0, 212, 255, 0.06);
 }
 
-.dock-item.active { color: #2ed8ff; text-shadow: 0 0 12px rgba(46, 216, 255, 0.4); }
-.dock-indicator { position: absolute; top: 0.5rem; bottom: 0.5rem; background: rgba(46, 216, 255, 0.08); border-radius: 1.25rem; z-index: -1; }
+/* Raised centre "jewel" — opens the command palette. Dark glass with a
+   gold→cyan gradient ring (mask trick) so it reads premium, not loud. */
+.dock-fab {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: -1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.35rem;
+  width: 3.35rem;
+  border-radius: 9999px;
+  color: #eaf6ff;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(20, 26, 36, 0.98), rgba(7, 9, 13, 0.98));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.62), 0 0 26px rgba(0, 212, 255, 0.16);
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.dock-fab svg { filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5)); }
+.dock-fab:active { transform: scale(0.9); }
+.dock-fab-ring {
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background: linear-gradient(140deg, rgba(212, 175, 55, 0.95) 0%, rgba(46, 216, 255, 0.85) 55%, rgba(212, 175, 55, 0.5) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Premium touch feel on phones: kill the default grey/blue tap-flash so
+   taps feel like the app's own press animations, not the browser's. */
+@media (hover: none) and (pointer: coarse) {
+  a, button, [role="button"], summary, label { -webkit-tap-highlight-color: transparent; }
+}
 
 @media (pointer: fine) {
   body.custom-cursor-ready,
@@ -527,8 +608,8 @@ html.theme-light header {
   box-shadow: 0 12px 34px rgba(77, 59, 38, 0.08);
 }
 
-html.theme-light .mobile-dock {
-  background: rgba(255, 250, 240, 0.82);
+html.theme-light .dock-rail {
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.9), rgba(250, 244, 232, 0.92));
   border-color: rgba(13, 120, 150, 0.18);
   box-shadow: 0 24px 55px rgba(77, 59, 38, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
@@ -634,18 +715,24 @@ html.theme-light .gold-glow-text {
   text-shadow: 0 0 8px rgba(184, 148, 30, 0.3), 0 0 16px rgba(184, 148, 30, 0.15);
 }
 
-html.theme-light .mobile-dock {
-  background: rgba(255, 250, 240, 0.88);
-  border-color: rgba(13, 120, 150, 0.18);
-  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
 html.theme-light .dock-item {
-  color: rgba(31, 61, 71, 0.5);
+  color: rgba(31, 61, 71, 0.55);
 }
 
 html.theme-light .dock-item.active {
-  color: #087f9f;
+  color: #05627a;
+}
+
+html.theme-light .dock-fab {
+  color: #05627a;
+  background: radial-gradient(120% 120% at 50% 0%, #ffffff, #f4ecdb);
+  box-shadow: 0 14px 30px rgba(77, 59, 38, 0.2), 0 0 22px rgba(13, 120, 150, 0.12);
+}
+
+html.theme-light .dock-pill {
+  background: linear-gradient(155deg, rgba(13, 120, 150, 0.12), rgba(212, 175, 55, 0.12));
+  border-color: rgba(13, 120, 150, 0.28);
+  box-shadow: 0 0 16px rgba(13, 120, 150, 0.1);
 }
 
 html.theme-light .poetry-text {
