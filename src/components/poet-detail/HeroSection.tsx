@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link } from '../ui/Link';
 import { ArrowLeft } from 'lucide-react';
 import { Poet } from '../../types/poet';
 import { asset } from '../../utils/asset';
+import { vtShared } from '../../lib/viewTransition';
 
 interface HeroSectionProps {
   poet: Poet;
@@ -34,6 +35,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
         <img
           src={asset(poet.photo)}
           alt={poet.name}
+          style={vtShared(`poet-portrait-${poet.id}`)}
           className="w-full h-full object-cover object-top contrast-[1.03] opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />

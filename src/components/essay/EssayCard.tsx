@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '../ui/Link';
 import { ArrowRight, Clock } from 'lucide-react';
 import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
@@ -29,6 +29,7 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
             ornamentClass="text-8xl"
             imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-105"
             className={feature ? 'md:w-1/2 aspect-[16/10] md:aspect-auto' : 'aspect-[16/10]'}
+            sharedName={`essay-cover-${essay.id}`}
           />
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>

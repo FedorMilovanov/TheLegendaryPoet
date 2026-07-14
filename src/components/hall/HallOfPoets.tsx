@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PerformanceMonitor, AdaptiveDpr, Preload, Environment, Lightformer, ContactShadows } from '@react-three/drei'
-import { useNavigate } from 'react-router-dom'
+import { useAppNavigate } from '../ui/Link'
 
 import { HallEnvironment } from './HallEnvironment'
 import { PoetNiche } from './PoetNiche'
@@ -127,7 +127,7 @@ function PostProcessing() {
 export default function HallOfPoets() {
   // Router context does NOT cross the R3F <Canvas> reconciler boundary, so we
   // resolve navigation HERE (outside the Canvas) and pass a callback down.
-  const navigate = useNavigate()
+  const navigate = useAppNavigate()
   const [dpr, setDpr] = useState(RENDER.dpr[1])
   const [fpsMode, setFpsMode] = useState(false)
   const [audioMuted, setAudioMuted] = useState(false)

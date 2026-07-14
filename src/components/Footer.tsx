@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from './ui/Link';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Mail } from './PremiumIcons';
 import BrandMark from './BrandMark';

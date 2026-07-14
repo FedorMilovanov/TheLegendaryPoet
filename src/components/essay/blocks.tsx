@@ -44,14 +44,14 @@ function SectionBlock({ block, number }: { block: Block<'section'>; number?: num
   return (
     <h2
       id={anchor}
-      className="scroll-mt-28 mt-16 mb-8 flex items-center gap-4 font-serif text-3xl md:text-4xl font-bold text-white text-balance"
+      className="scroll-mt-28 mt-16 mb-8 flex items-baseline gap-4 font-serif text-3xl md:text-4xl font-bold text-white text-balance"
     >
       {number != null && (
-        <span className="font-mono text-sm font-normal tabular-nums text-luxury-gold/45">
+        <span className="essay-section-number" aria-hidden="true">
           {String(number).padStart(2, '0')}
         </span>
       )}
-      <span className="h-px w-8 bg-luxury-gold/50" />
+      <span className="h-px w-8 self-center bg-luxury-gold/50" />
       <span className="gold-gradient gold-glow-text">{titleCase(block.heading)}</span>
     </h2>
   );

@@ -1,4 +1,7 @@
-import { Link, useParams } from 'react-router-dom';
+import { useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
+import ShareLine from '../components/ui/ShareLine';
 import { ArrowLeft, BookOpen, ExternalLink } from 'lucide-react';
 import { getEssayBySlug } from '../data/essays';
 import { poets } from '../data/poets';
@@ -14,6 +17,7 @@ import { titleCase } from '../utils/titleCase';
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
   const essay = slug ? getEssayBySlug(slug) : undefined;
+  const articleRef = useRef<HTMLElement>(null);
 
   useSeo({
     title: essay ? `${essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
@@ -65,7 +69,7 @@ export default function EssayPage() {
                     {toc.map((s) => (
                       <li key={s.anchor}>
                         <a href={`#${s.anchor}`} className="flex items-baseline gap-2.5 text-sm text-luxury-gray-light/70 transition-colors hover:text-luxury-gold">
-                          <span className="font-mono text-[10px] tabular-nums text-luxury-gold/40">{String(s.number).padStart(2, '0')}</span>
+                          <span className="font-serif text-[12px] font-semibold tabular-nums text-luxury-gold/55">{String(s.number).padStart(2, '0')}</span>
                           <span>{s.heading}</span>
                         </a>
                       </li>
@@ -84,7 +88,8 @@ export default function EssayPage() {
             </div>
           </aside>
 
-          <article className="min-w-0 max-w-3xl">
+          <article ref={articleRef} className="min-w-0 max-w-3xl">
+            <ShareLine scopeRef={articleRef} />
             <ArticleRenderer blocks={essay.blocks} />
 
             {essay.sources && essay.sources.length > 0 && (

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../components/ui/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { poets } from '../data/poets';
 import PoetCard from '../components/PoetCard';

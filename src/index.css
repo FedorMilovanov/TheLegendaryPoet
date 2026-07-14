@@ -331,6 +331,103 @@ html.chrome-hidden .palette-fab { transform: translateY(140%); opacity: 0; point
   }
 }
 
+/* ===== View Transitions (site-wide navigation engine) =====
+   Route changes run through the browser View Transitions API (opted in by
+   components/ui/Link). The house move: quick fade-out, new page fades in with
+   a gentle rise. Persistent chrome (header, dock) gets its own name so it sits
+   rock-solid while the content underneath changes. Shared elements (poet
+   portraits, essay covers — class .vt-media via lib/viewTransition.ts) morph
+   between pages; their snapshots crop instead of stretching. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-page-out 0.26s ease both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-page-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  ::view-transition-group(*) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+@keyframes vt-page-out {
+  to { opacity: 0; }
+}
+@keyframes vt-page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+.site-header { view-transition-name: site-header; }
+.mobile-dock { view-transition-name: mobile-dock; }
+/* Imagery whose box changes shape between pages: crop, don't stretch. */
+::view-transition-old(.vt-media),
+::view-transition-new(.vt-media) {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+/* ===== «Поделиться строкой»: text-fragment deep links ===== */
+/* Incoming #:~:text= visitors: the browser-highlighted passage, in house gold. */
+::target-text {
+  background-color: rgba(212, 175, 55, 0.3);
+  color: #f8e3a1;
+}
+html.theme-light ::target-text {
+  background-color: rgba(146, 107, 10, 0.2);
+  color: #5c4300;
+}
+/* The floating copy-link chip (ui/ShareLine.tsx). */
+.share-line-chip {
+  position: fixed;
+  z-index: 80;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(10, 11, 15, 0.88);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: #f5d87f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 18px rgba(212, 175, 55, 0.12);
+  cursor: pointer;
+  animation: share-chip-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.share-line-chip:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  color: #ffe9a8;
+}
+@keyframes share-chip-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.94); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+html.theme-light .share-line-chip {
+  background: rgba(252, 249, 240, 0.92);
+  border-color: rgba(146, 107, 10, 0.35);
+  color: #7a5b00;
+  box-shadow: 0 10px 28px rgba(60, 45, 10, 0.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .share-line-chip { animation: none; }
+}
+
 /* ===== Editorial typography (engine-wide) ===== */
 /* Kill single-word orphans in body copy — cheap, universal, invisible-good. */
 p { text-wrap: pretty; }
@@ -360,6 +457,26 @@ p { text-wrap: pretty; }
     margin-right: 0.75rem;
     margin-top: 0.35rem;
   }
+}
+
+/* Section number beside essay headings: a proper editorial numeral — serif,
+   near heading-size, ghosted gold — instead of a tiny mono footnote. */
+.essay-section-number {
+  font-family: var(--font-serif);
+  font-size: 0.85em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: transparent;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.75), rgba(212, 175, 55, 0.28));
+  -webkit-background-clip: text;
+  background-clip: text;
+  letter-spacing: 0.04em;
+}
+html.theme-light .essay-section-number {
+  background: linear-gradient(180deg, rgba(146, 107, 10, 0.85), rgba(146, 107, 10, 0.4));
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* ===== Mobile long-read companion: current-chapter chip + TOC popover =====

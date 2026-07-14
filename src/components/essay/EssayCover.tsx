@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { asset } from '../../utils/asset';
+import { vtShared } from '../../lib/viewTransition';
 import { DEFAULT_ACCENT, coverBackground } from './theme';
 
 /**
@@ -27,6 +28,12 @@ interface EssayCoverProps {
   loading?: 'eager' | 'lazy';
   /** Size / rounding / border of the cover box itself. */
   className?: string;
+  /**
+   * View-transition shared-element name (e.g. `essay-cover-<id>`). Give the
+   * hero and the listing card the same name and the cover morphs between the
+   * two pages on navigation.
+   */
+  sharedName?: string;
   children?: ReactNode;
 }
 
@@ -41,12 +48,16 @@ export default function EssayCover({
   imgClassName = '',
   loading = 'lazy',
   className = '',
+  sharedName,
   children,
 }: EssayCoverProps) {
   const [imgOk, setImgOk] = useState(true);
 
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ background: coverBackground(accent, focusY) }}>
+    <div
+      className={`relative overflow-hidden ${className}`}
+      style={{ background: coverBackground(accent, focusY), ...(sharedName ? vtShared(sharedName) : undefined) }}
+    >
       {imgOk ? (
         <img
           src={asset(src)}

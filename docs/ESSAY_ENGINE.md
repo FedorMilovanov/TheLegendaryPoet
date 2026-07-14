@@ -59,6 +59,26 @@ Fixed UI opts in via one CSS rule each (`.site-header`, `.mobile-dock`,
 `.reading-progress`, `.scroll-top-btn`, `.palette-fab`, `.section-chip`) — to
 add future chrome, add one selector in `index.css`, not another scroll listener.
 
+### Navigation (site-wide): View Transitions
+
+Import `Link`/`NavLink` from `components/ui/Link` (never from
+react-router-dom directly) and navigate imperatively via its `useAppNavigate`.
+Every route change then runs through the browser View Transitions API: a fast
+fade-through defined once in `index.css` (`::view-transition-*`), with the
+old framer wipe kept as the no-support fallback and as the first-load intro.
+Shared elements morph between pages — mark both ends with
+`style={vtShared('some-unique-name')}` (see `lib/viewTransition.ts`); poet
+portraits (`PoetCard` ↔ poet hero) and essay covers (`EssayCard` ↔
+`EssayHero`, via `EssayCover`'s `sharedName` prop) already do.
+
+### «Поделиться строкой» (share a line)
+
+`components/ui/ShareLine.tsx`: mount `<ShareLine scopeRef={ref} />` inside any
+long-read container. Selecting text shows a gold chip that copies a
+`#:~:text=` deep link; incoming visitors see the passage highlighted gold
+(`::target-text` in `index.css`). Already wired on the essay page — new
+essays get it for free.
+
 **To add a block type:** extend the `EssayBlock` union in `src/types/essay.ts`,
 add a component + `case` in `blocks.tsx` (the compiler forces the case), and reach
 for tokens in `theme.ts` rather than hard-coding colours.

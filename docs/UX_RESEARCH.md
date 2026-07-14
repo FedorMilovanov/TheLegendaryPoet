@@ -17,17 +17,17 @@
 | `hanging-punctuation: first` для стихов (Safari-прогрессив) | `.poetry-text` | Chris Coyier hanging-punctuation |
 | Один поиск на мобилке (дубль в шапке убран — линза живёт в доке) | `Header.tsx` | Thumb-zone UX (Parachute) |
 | Без tap-highlight на тач-устройствах | `index.css` | luxury-минимализм |
+| View Transitions API: фейд-переходы страниц + shared-element морф (портрет поэта карточка→страница, обложка эссе карточка→герой); framer-wipe остался фолбэком и интро первого захода | `lib/viewTransition.ts`, `components/ui/Link.tsx`, `::view-transition-*` в `index.css` | MDN View Transition API; Chrome view-transitions-in-2025; DebugBear SPA guide |
+| «Поделиться строкой»: выделение → золотой чип «Ссылка на строку» → URL с `#:~:text=`; входящим — золотая подсветка `::target-text` | `components/ui/ShareLine.tsx` + `::target-text` в `index.css` | MDN ::target-text; T. Lasn |
 
 ## Очередь (по мере роста сайта)
 
-1. **View Transitions API** на смену framer-переходов между страницами +
-   shared-element портрет поэта (карточка → страница). Baseline 2025. (M)
-2. **Дисциплина шрифтов**: self-host сабсетов, срезать неиспользуемые веса
+1. **Дисциплина шрифтов**: self-host сабсетов, срезать неиспользуемые веса
    3 семейств, `size-adjust` фолбэк — главный резерв perceived-perf. (M)
-3. **«Поделиться строкой»**: ссылки с `#:~:text=` + золотой `::target-text`
-   — подсветка конкретной строки стихотворения. Фирменная фича для поэзии. (S)
-4. **Sidenotes по Тафти** для примечаний эссе (≥1280px на полях, на мобилке
+2. **Sidenotes по Тафти** для примечаний эссе (≥1280px на полях, на мобилке
    popover). Когда появятся сноски в контенте. (M)
+3. **ShareLine на страницы поэтов** — движок готов (`ui/ShareLine.tsx`),
+   осталось передать ref контейнера стихов. (S)
 
 ## Анти-паттерны (не делать)
 
