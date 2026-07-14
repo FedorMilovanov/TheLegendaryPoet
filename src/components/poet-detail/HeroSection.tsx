@@ -24,7 +24,11 @@ export default function HeroSection({ poet }: HeroSectionProps) {
   );
   const primaryTag = poet.tags[0];
   return (
-    <div className="relative w-full h-[90vh] overflow-hidden bg-[#050505] flex flex-col justify-end pb-12">
+    <div className="relative w-full h-[90vh] md:h-[56vw] md:max-h-[1100px] md:min-h-[620px] overflow-hidden bg-[#050505] flex flex-col justify-end pb-12">
+      {/* Height is width-driven (not vh) from md up: on short/wide desktop
+          windows a pure vh height crops the portrait down to hairline —
+          keying off vw holds the crop ratio steady regardless of window
+          height, so the face stays in frame. */}
       {/* Animated Background Image */}
       <motion.div 
         initial={{ scale: 1.1 }}
@@ -36,7 +40,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
           src={asset(poet.photo)}
           alt={poet.name}
           style={vtShared(`poet-portrait-${poet.id}`)}
-          className="w-full h-full object-cover object-top contrast-[1.03] opacity-90"
+          className="w-full h-full object-cover object-[center_18%] contrast-[1.03] opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
       </motion.div>
