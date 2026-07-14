@@ -1,7 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, FileText, Home, Search, Heart } from './PremiumIcons';
+import { titleCase } from '../utils/titleCase';
 
+/**
+ * Premium mobile bottom dock (shown < md). A single glass rail with four
+ * destinations, an illuminated active "pill" that slides between them
+ * (framer layoutId), and a raised gold→cyan jewel button that opens the
+ * command palette. Universal — lives at the app root, so every route gets it.
+ */
 const dockLinks = [
   { label: 'Главная', path: '/', icon: Home },
   { label: 'Поэты', path: '/poets', icon: BookOpen },
@@ -10,9 +17,32 @@ const dockLinks = [
 ];
 
 function hapticFeedback() {
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
-  }
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function DockLink({ link, active }: { link: (typeof dockLinks)[number]; active: boolean }) {
+  const Icon = link.icon;
+  return (
+    <Link
+      to={link.path}
+      aria-current={active ? 'page' : undefined}
+      aria-label={link.label}
+      onClick={hapticFeedback}
+      className={`dock-item ${active ? 'active' : ''}`}
+    >
+      {active && (
+        <motion.span
+          layoutId="dock-active-pill"
+          className="dock-pill"
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        />
+      )}
+      <span className="dock-ic">
+        <Icon size={21} />
+      </span>
+      <span className="dock-label">{titleCase(link.label)}</span>
+    </Link>
+  );
 }
 
 export default function MobileDock() {
@@ -27,58 +57,29 @@ export default function MobileDock() {
   };
 
   return (
+    // The fixed positioner stays a plain element so its CSS translateX(-50%)
+    // centering is never overridden by framer's inline transform. The entrance
+    // animation lives on the inner rail instead.
     <nav className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
-      {dockLinks.slice(0, 2).map((link) => {
-        const active = isActive(link.path);
-        return (
-          <Link 
-            key={link.path} 
-            to={link.path} 
-            aria-current={active ? 'page' : undefined} 
-            aria-label={link.label}
-            className={`dock-item relative flex flex-col items-center justify-center min-h-[44px] min-w-[44px] ${active ? 'active' : ''}`}
-            onClick={hapticFeedback}
-          >
-            <div className="relative">
-              <link.icon size={22} />
-              {active && (
-                <motion.div layoutId={`dock-glow-${link.path}`} className="absolute inset-0 -m-1 rounded-full bg-cyan-400/10" transition={{ type: 'spring', stiffness: 300, damping: 25 }} />
-              )}
-            </div>
-            <span className="mt-0.5 text-[9px] tracking-[0.5px]">{link.label}</span>
-          </Link>
-        );
-      })}
-
-      <button 
-        onClick={openPalette} 
-        className="relative -mt-5 flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border border-cyan-400/25 bg-[#061018]/95 text-cyan-300 shadow-[0_0_30px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:text-white active:scale-95" 
-        aria-label="Открыть поиск"
+      <motion.div
+        className="dock-rail"
+        initial={{ y: 90, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 30, delay: 0.15 }}
       >
-        <Search size={24} />
-      </button>
+        {dockLinks.slice(0, 2).map((link) => (
+          <DockLink key={link.path} link={link} active={isActive(link.path)} />
+        ))}
 
-      {dockLinks.slice(2).map((link) => {
-        const active = isActive(link.path);
-        return (
-          <Link 
-            key={link.path} 
-            to={link.path} 
-            aria-current={active ? 'page' : undefined}
-            aria-label={link.label}
-            className={`dock-item relative flex flex-col items-center justify-center min-h-[44px] min-w-[44px] ${active ? 'active' : ''}`}
-            onClick={hapticFeedback}
-          >
-            <div className="relative">
-              <link.icon size={22} />
-              {active && (
-                <motion.div layoutId={`dock-glow-${link.path}`} className="absolute inset-0 -m-1 rounded-full bg-cyan-400/10" transition={{ type: 'spring', stiffness: 300, damping: 25 }} />
-              )}
-            </div>
-            <span className="mt-0.5 text-[9px] tracking-[0.5px]">{link.label}</span>
-          </Link>
-        );
-      })}
+        <button onClick={openPalette} className="dock-fab" aria-label="Открыть поиск">
+          <span className="dock-fab-ring" aria-hidden="true" />
+          <Search size={22} />
+        </button>
+
+        {dockLinks.slice(2).map((link) => (
+          <DockLink key={link.path} link={link} active={isActive(link.path)} />
+        ))}
+      </motion.div>
     </nav>
   );
 }
