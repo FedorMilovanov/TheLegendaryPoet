@@ -23,5 +23,16 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    rollupOptions: {
+      output: {
+        // Long-term caching: framework code changes rarely — split it from
+        // app/content code so a content deploy doesn't re-download React,
+        // the router or the animation runtime.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['framer-motion'],
+        },
+      },
+    },
   },
 });
