@@ -1,10 +1,11 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 html { scroll-behavior: auto; height: -webkit-fill-available; }
 
 @theme {
-  --font-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, sans-serif;
   --color-luxury-gold: #d4af37;
   --color-luxury-gold-light: #f5e6a3;
   --color-luxury-gold-dark: #b8941e;

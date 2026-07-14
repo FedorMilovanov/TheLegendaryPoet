@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
+import ShareLine from '../components/ui/ShareLine';
 import { poets } from '../data/poets';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
@@ -19,6 +21,7 @@ import { titleCase } from '../utils/titleCase';
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const poet = poets.find(p => p.id === id);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useSeo({
     title: poet ? `${poet.name} — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
@@ -76,7 +79,9 @@ export default function PoetDetailPage() {
             <FamousWorks works={poet.famousWorks} />
           </div>
 
-          <div className="lg:col-span-8 space-y-16">
+          <div ref={contentRef} className="lg:col-span-8 space-y-16">
+            {/* Share-a-line: poem verses and bio passages are deep-linkable. */}
+            <ShareLine scopeRef={contentRef} />
             <p className="text-2xl md:text-3xl text-white font-serif leading-[1.6] italic border-l-4 border-luxury-gold pl-8 font-light">
               "{poet.shortBio}"
             </p>

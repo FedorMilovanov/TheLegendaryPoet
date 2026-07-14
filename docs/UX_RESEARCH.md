@@ -18,16 +18,16 @@
 | Один поиск на мобилке (дубль в шапке убран — линза живёт в доке) | `Header.tsx` | Thumb-zone UX (Parachute) |
 | Без tap-highlight на тач-устройствах | `index.css` | luxury-минимализм |
 | View Transitions API: фейд-переходы страниц + shared-element морф (портрет поэта карточка→страница, обложка эссе карточка→герой); framer-wipe остался фолбэком и интро первого захода | `lib/viewTransition.ts`, `components/ui/Link.tsx`, `::view-transition-*` в `index.css` | MDN View Transition API; Chrome view-transitions-in-2025; DebugBear SPA guide |
-| «Поделиться строкой»: выделение → золотой чип «Ссылка на строку» → URL с `#:~:text=`; входящим — золотая подсветка `::target-text` | `components/ui/ShareLine.tsx` + `::target-text` в `index.css` | MDN ::target-text; T. Lasn |
+| «Поделиться строкой»: выделение → золотой чип «Ссылка на строку» → URL с `#:~:text=`; входящим — золотая подсветка `::target-text` | `components/ui/ShareLine.tsx` + `::target-text` в `index.css` (эссе + страницы поэтов) | MDN ::target-text; T. Lasn |
+| Дисциплина шрифтов: self-host вариативных сабсетов (6 woff2 ≈ 186 KiB, cyrillic+latin), Playfair Display удалён (никогда не рендерился), метрический фолбэк Inter→Arial (`size-adjust` и overrides), ноль third-party запросов | `src/fonts.css` + `src/assets/fonts/` | web.dev font-best-practices; S. Hearne layout shifts; fontaine/Chrome font-fallbacks |
+| Vendor-чанки (`react`, `motion`) отдельно от контента — деплой статьи не сбрасывает кэш фреймворка | `vite.config.ts` manualChunks | web.dev optimize-lcp |
 
 ## Очередь (по мере роста сайта)
 
-1. **Дисциплина шрифтов**: self-host сабсетов, срезать неиспользуемые веса
-   3 семейств, `size-adjust` фолбэк — главный резерв perceived-perf. (M)
-2. **Sidenotes по Тафти** для примечаний эссе (≥1280px на полях, на мобилке
+1. **Sidenotes по Тафти** для примечаний эссе (≥1280px на полях, на мобилке
    popover). Когда появятся сноски в контенте. (M)
-3. **ShareLine на страницы поэтов** — движок готов (`ui/ShareLine.tsx`),
-   осталось передать ref контейнера стихов. (S)
+2. **Метрический фолбэк для Cormorant** (serif): вычислить overrides к Georgia
+   капсайз-методом, когда дойдут руки до пиксель-пёрфекта свопа. (S)
 
 ## Анти-паттерны (не делать)
 
