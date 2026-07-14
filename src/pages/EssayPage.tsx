@@ -5,6 +5,7 @@ import { poets } from '../data/poets';
 import ReadingProgress from '../components/articles/ReadingProgress';
 import EssayHero from '../components/essay/EssayHero';
 import ArticleRenderer, { getEssayToc } from '../components/essay/ArticleRenderer';
+import SectionChip from '../components/essay/SectionChip';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -42,6 +43,7 @@ export default function EssayPage() {
   return (
     <div className="min-h-screen bg-[#050505] pt-28 pb-24 text-white">
       <ReadingProgress />
+      <SectionChip toc={toc} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Link
           to="/articles"

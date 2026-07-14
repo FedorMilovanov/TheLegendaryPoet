@@ -24,7 +24,7 @@ const Header = () => {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 bg-[#050505]/85 backdrop-blur-xl transition-colors duration-500">
+    <header className="site-header fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 bg-[#050505]/85 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between gap-4 lg:gap-8">
           <Link to="/" className="group flex shrink-0 items-center gap-3">
@@ -88,16 +88,10 @@ const Header = () => {
             </a>
           </div>
 
+          {/* Mobile: theme toggle only — search lives in the dock's centre jewel,
+              a second search button here would duplicate it. */}
           <div className="header-mobile-controls ml-auto shrink-0 items-center gap-4">
             <ThemeToggle />
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new Event('tlp-open-command-palette'))}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/15 bg-cyan-950/10 text-cyan-200/65 transition-colors hover:text-cyan-300 active:scale-95"
-              aria-label="Открыть поиск"
-            >
-              <Search size={18} />
-            </button>
           </div>
         </div>
       </div>

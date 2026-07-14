@@ -282,6 +282,176 @@ h1, h2, h3, .editorial-title {
   a, button, [role="button"], summary, label { -webkit-tap-highlight-color: transparent; }
 }
 
+/* ===== Reading-mode chrome auto-hide =====
+   useAutoHideChrome() (mounted once at the app root) toggles `chrome-hidden`
+   on <html> while the reader scrolls down through content; any upward scroll
+   brings the chrome back. Each fixed element opts in here with one rule —
+   adding future chrome means one more selector, not another scroll listener. */
+.site-header {
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s ease;
+}
+html.chrome-hidden .site-header { transform: translateY(-100%); }
+
+.mobile-dock { transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+html.chrome-hidden .mobile-dock {
+  transform: translate(-50%, calc(100% + 1.6rem + env(safe-area-inset-bottom)));
+}
+
+/* Progress bar rides just under the header; when the header tucks away it
+   glides up to the very top edge — reading progress stays visible always. */
+.reading-progress { top: 5rem; transition: top 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+html.chrome-hidden .reading-progress { top: 0; }
+
+/* Scroll-top button sits above the dock on phones; when the dock hides it
+   settles into the freed corner. Desktop keeps its fixed corner. */
+.scroll-top-btn { bottom: 7rem; transition: bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, color 0.3s ease; }
+@media (min-width: 768px) { .scroll-top-btn { bottom: 2rem; } }
+@media (max-width: 767px) {
+  html.chrome-hidden .scroll-top-btn { bottom: calc(1.15rem + env(safe-area-inset-bottom)); }
+}
+
+/* Desktop floating "Ctrl K" pill joins reading mode too. */
+.palette-fab { transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; }
+html.chrome-hidden .palette-fab { transform: translateY(140%); opacity: 0; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header, .mobile-dock, .reading-progress, .scroll-top-btn, .palette-fab, .section-chip { transition: none !important; }
+}
+
+/* Compositor-driven reading progress (Chrome 115+/Safari 26+); the component
+   falls back to a JS listener where animation-timeline is unsupported. */
+@supports (animation-timeline: scroll()) {
+  .reading-progress-fill {
+    animation: reading-progress-grow linear both;
+    animation-timeline: scroll(root);
+  }
+  @keyframes reading-progress-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+}
+
+/* ===== Editorial typography (engine-wide) ===== */
+/* Kill single-word orphans in body copy — cheap, universal, invisible-good. */
+p { text-wrap: pretty; }
+/* Verse: let opening «guillemets» hang into the margin (Safari; harmless elsewhere). */
+.poetry-text { hanging-punctuation: first; }
+
+/* Real drop cap for essay leads: optically-aligned `initial-letter` where
+   supported, classic float elsewhere. Gold, serif, three lines deep. */
+.essay-lead::first-letter {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: #d4af37;
+  text-shadow: 0 0 24px rgba(212, 175, 55, 0.35);
+}
+@supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+  .essay-lead::first-letter {
+    -webkit-initial-letter: 3;
+    initial-letter: 3;
+    margin-right: 0.55rem;
+  }
+}
+@supports not ((initial-letter: 3) or (-webkit-initial-letter: 3)) {
+  .essay-lead::first-letter {
+    float: left;
+    font-size: 4.5rem;
+    line-height: 0.8;
+    margin-right: 0.75rem;
+    margin-top: 0.35rem;
+  }
+}
+
+/* ===== Mobile long-read companion: current-chapter chip + TOC popover =====
+   Appears only while the chrome is hidden (reading mode) — it borrows the
+   space the header vacated instead of adding UI. Hidden ≥1024px (desktop
+   keeps the sticky sidebar TOC). */
+.section-chip {
+  position: fixed;
+  top: calc(0.65rem + env(safe-area-inset-top));
+  left: 50%;
+  transform: translate(-50%, -10px);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: min(86vw, 340px);
+}
+html.chrome-hidden .section-chip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.section-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  background: rgba(10, 11, 15, 0.82);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+  color: rgba(240, 244, 255, 0.85);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.section-chip-num {
+  font-family: ui-monospace, monospace;
+  font-size: 0.62rem;
+  color: rgba(212, 175, 55, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+.section-chip-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.section-chip-pop {
+  position: fixed;
+  inset: auto;
+  top: calc(3.4rem + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88vw, 340px);
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  background: rgba(10, 11, 15, 0.94);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+.section-chip-pop::backdrop { background: rgba(3, 4, 6, 0.45); backdrop-filter: blur(2px); }
+.section-chip-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.42rem 0.2rem;
+  text-align: left;
+  font-size: 0.84rem;
+  color: rgba(233, 240, 255, 0.72);
+  border-radius: 0.5rem;
+}
+.section-chip-row.is-current { color: #f5d87f; }
+.section-chip-row:active { background: rgba(255, 255, 255, 0.05); }
+
+html.theme-light .section-chip-btn,
+html.theme-light .section-chip-pop {
+  background: rgba(255, 252, 245, 0.94);
+  border-color: rgba(146, 106, 20, 0.28);
+  color: #3a3324;
+  box-shadow: 0 18px 44px rgba(77, 59, 38, 0.18);
+}
+html.theme-light .section-chip-row { color: rgba(58, 51, 36, 0.78); }
+html.theme-light .section-chip-row.is-current { color: #8a6d1d; }
+
 @media (pointer: fine) {
   body.custom-cursor-ready,
   body.custom-cursor-ready a,
