@@ -52,11 +52,23 @@ Delivered:
 - Old `HallOfPoets` cyan-nave still **not** routed
 - Integrity: App shell free of three.js; HallPage free of direct three imports
 
-### Pass 4 — (next) Niches into portals
+### Pass 4 — Portraits in portals + camera focus (this pass)
 
-- Hang portraits inside arches or as wing-linked hotspots
-- Rail / look-at focused poet; keep museum DOM wings as source of truth
-- Sound and morph still later
+Delivered:
+
+- `PortalPortrait` — gold-framed textures via `asset()`, click → poet dossier
+- Up to 2 portraits per open arch from `hallWings` (Pushkin/Lermontov, Blok/Gumilev, …)
+- Modern arch remains **sealed** (no fake poets)
+- Camera eases toward focused wing; compass / scroll-spy / atrium share `activeWing`
+- Click arch void → focus + scroll to DOM wing; click empty space → clear focus
+- Central pedestal under oculus; corner pilasters; navigation **outside** Canvas
+- Stage copy updated; reset-camera control when a wing is focused
+
+### Pass 5 — (next) Depth & polish
+
+- Per-poet look-at / rail stop; plaque text in 3D optional
+- Stronger PBR / light baking research (still free CC0 path)
+- Sound still later; morph still later
 
 ## Hard rules
 
@@ -65,3 +77,4 @@ Delivered:
 3. three.js never enters the homepage shell (`index`/`react`/`motion` chunks);
    atrium only via lazy() on `/hall` after opt-in.
 4. Every pass ends with `npm run check` + `npm run check:hall` green.
+5. Router hooks never run inside `<Canvas>` — pass callbacks from Stage.

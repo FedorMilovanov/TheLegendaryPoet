@@ -8,15 +8,14 @@ import HallWingSection from './HallWingSection';
 import { scrollToId } from '../../../utils/smoothScroll';
 import './hallMuseum.css';
 
-// Pass 3: R3F atrium is a separate chunk — never in the homepage shell.
+// Pass 3–4: R3F atrium is a separate chunk — never in the homepage shell.
 const HallAtriumStage = lazy(() => import('../atrium/HallAtriumStage'));
 
 /**
- * Hall v3 Pass 1–3 — museum vestibule + optional warm R3F atrium.
+ * Hall v3 Pass 1–4 — museum vestibule + optional warm R3F atrium with portraits.
  *
- * DOM pantheon always ships. The 3D rotunda loads only after the visitor
- * opts in (and only on this route via lazy()). Old cyan-nave HallOfPoets
- * remains unrouted scaffolding.
+ * DOM pantheon always ships. The 3D rotunda loads only after opt-in (lazy).
+ * Active wing is shared: compass / scroll-spy / atrium camera focus.
  */
 export default function HallMuseum() {
   const [activeWing, setActiveWing] = useState<HallWingId | null>(null);
@@ -78,7 +77,7 @@ export default function HallMuseum() {
       </HallAtrium>
 
       <Suspense fallback={null}>
-        <HallAtriumStage />
+        <HallAtriumStage focusWing={activeWing} onFocusWing={setActiveWing} />
       </Suspense>
 
       <div className="hall-wings">
@@ -99,9 +98,9 @@ export default function HallMuseum() {
 
       <footer className="hall-museum-foot">
         <p>
-          Кураторские крылья — карта зала. Объём под куполом (проход III) открывается
-          по желанию и не подменяет ниши: портреты и цитаты остаются здесь, без
-          вымысла и без «космических» декораций.
+          Кураторские крылья — полная карта. В объёме под куполом (проходы III–IV) в
+          арках висят избранные портреты из той же карты; клик открывает досье или
+          ведёт к крылу. Без вымысла и без «космических» декораций.
         </p>
         <div className="hall-museum-foot-actions">
           <Link to="/poets" className="hall-btn-primary">

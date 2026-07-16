@@ -63,6 +63,8 @@ async function main() {
     'src/components/hall/atrium/Dome.tsx',
     'src/components/hall/atrium/MarbleFloor.tsx',
     'src/components/hall/atrium/ArchPortal.tsx',
+    'src/components/hall/atrium/PortalPortrait.tsx',
+    'src/components/hall/atrium/CentralPedestal.tsx',
     'src/components/hall/atrium/atriumTheme.ts',
     'src/pages/HallPage.tsx',
     'docs/HALL_V3_PASSES.md',

@@ -53,12 +53,14 @@ test.describe('Hall museum vestibule', () => {
 
   test('document title; canvas absent until atrium opt-in', async ({ page }) => {
     await expect(page).toHaveTitle(/Храм|Зал|LEGENDARY/i);
-    // Pass 3: canvas only after user clicks "Открыть объём атриума"
+    // Pass 3–4: canvas only after user clicks "Открыть объём атриума"
     await expect(page.locator('canvas')).toHaveCount(0);
     const cta = page.getByRole('button', { name: /Открыть объём атриума/i });
     if (await cta.count()) {
       await expect(cta).toBeVisible();
     }
+    // Stage explains portraits in arches
+    await expect(page.locator('.hall-atrium-stage')).toContainText(/портрет|арк|купол/i);
   });
 
   test('keyboard: compass buttons are focusable and activate', async ({ page }) => {

@@ -718,6 +718,29 @@ html.theme-light .hall-wing-sealed {
   outline: none;
 }
 
+.hall-atrium-stage-cta-ghost {
+  margin-left: 0.5rem;
+  background: transparent;
+  border-color: rgba(212, 175, 55, 0.28);
+  color: var(--hall-ink-muted);
+}
+
+.hall-atrium-stage-cta-ghost:hover,
+.hall-atrium-stage-cta-ghost:focus-visible {
+  color: var(--hall-gold);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.hall-atrium-stage-head .hall-atrium-stage-cta + .hall-atrium-stage-cta {
+  margin-top: 0.65rem;
+}
+
+@media (min-width: 520px) {
+  .hall-atrium-stage-head .hall-atrium-stage-cta + .hall-atrium-stage-cta {
+    margin-top: 0;
+  }
+}
+
 .hall-atrium-stage-canvas-wrap {
   position: relative;
   height: min(70vh, 36rem);
