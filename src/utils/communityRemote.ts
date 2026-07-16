@@ -12,8 +12,11 @@ import { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community'
  * long as Row Level Security is enabled (the setup SQL does this).
  * ------------------------------------------------------------------ */
 
-const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+// Vite inlines import.meta.env at build time. Guard for non-Vite runners
+// (tsx integrity scripts, unit smoke) where `env` may be undefined.
+const env = (typeof import.meta !== 'undefined' && import.meta.env) || ({} as ImportMetaEnv);
+const URL = (env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
+const KEY = env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 const RATINGS = 'tlp_ratings';
 const COMMENTS = 'tlp_comments';

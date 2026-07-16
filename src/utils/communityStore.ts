@@ -225,49 +225,45 @@ export function trustLabel(count: number) {
   return 'Пока мало данных';
 }
 
-function loadCooldowns(): Record<string, number> {
-  return safeReadObject<Record<string, number>>(COOLDOWN_KEY, {});
-}
+/* ------------------------------------------------------------------ *
+ * Session mirrors for vote guards.
+ *
+ * localStorage can be blocked (Safari private mode, quota). The primary
+ * snapshot already stays in memory; these maps keep "already rated" /
+ * "already helpful" / cooldown reliable for the current session even when
+ * storage writes fail. On a normal browser they stay in sync with storage.
+ * ------------------------------------------------------------------ */
+const cooldownsMem: Record<string, number> = safeReadObject(COOLDOWN_KEY, {});
+const helpfulMem: Record<string, true> = safeReadObject(HELPFUL_KEY, {});
+const ratedMem: Record<string, true> = safeReadObject(RATED_KEY, {});
 
 export function checkCooldown(scope: string) {
-  const cooldowns = loadCooldowns();
-  const until = cooldowns[scope] || 0;
+  const until = cooldownsMem[scope] || 0;
   const now = Date.now();
   return { allowed: until <= now, remainingMs: Math.max(0, until - now) };
 }
 
 export function setCooldown(scope: string) {
-  const cooldowns = loadCooldowns();
-  cooldowns[scope] = Date.now() + COOLDOWN_MS;
-  safeWrite(COOLDOWN_KEY, cooldowns);
-}
-
-function loadHelpfulVotes(): Record<string, true> {
-  return safeReadObject<Record<string, true>>(HELPFUL_KEY, {});
+  cooldownsMem[scope] = Date.now() + COOLDOWN_MS;
+  safeWrite(COOLDOWN_KEY, cooldownsMem);
 }
 
 export function canMarkHelpful(scope: string) {
-  return !loadHelpfulVotes()[scope];
+  return !helpfulMem[scope];
 }
 
 export function rememberHelpful(scope: string) {
-  const votes = loadHelpfulVotes();
-  votes[scope] = true;
-  safeWrite(HELPFUL_KEY, votes);
-}
-
-function loadRatedScopes(): Record<string, true> {
-  return safeReadObject<Record<string, true>>(RATED_KEY, {});
+  helpfulMem[scope] = true;
+  safeWrite(HELPFUL_KEY, helpfulMem);
 }
 
 export function hasRated(scope: string) {
-  return !!loadRatedScopes()[scope];
+  return !!ratedMem[scope];
 }
 
 export function rememberRated(scope: string) {
-  const rated = loadRatedScopes();
-  rated[scope] = true;
-  safeWrite(RATED_KEY, rated);
+  ratedMem[scope] = true;
+  safeWrite(RATED_KEY, ratedMem);
 }
 
 /** Scope keys — always build them through these helpers so UI and store never drift. */

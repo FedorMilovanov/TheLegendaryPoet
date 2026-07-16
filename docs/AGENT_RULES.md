@@ -110,12 +110,20 @@ If a rule conflicts with a short-term visual request, **keep the rule** and ask 
 ## 7. What agents must run before finishing
 
 ```bash
-npm run check          # typecheck + integrity + production build
+npm run check          # typecheck + integrity + deep smoke + production build
 # or at least:
 npm run typecheck
 npm run check:integrity
+npm run check:deep
 npm run build
 ```
+
+### Dead dependencies
+
+- Use the modern package name only. Example: smooth scroll is `lenis` — never re-add
+  the deprecated `@studio-freight/lenis` alias (same library, old org name).
+- Do not re-add `lucide-react` or `vite-plugin-singlefile` (removed; icons are house SVG,
+  build is multi-file for GitHub Pages base path).
 
 If you added routes, poets, essays, or articles:
 

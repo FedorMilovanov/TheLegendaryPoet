@@ -78,13 +78,18 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
       createdAt: new Date().toISOString(),
     };
 
-    const stored = mutateFeedback((prev) => ({ ...prev, ratings: [...prev.ratings, entry] }));
-    if (!stored) {
-      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
-    }
+    // Memory always updates (mutateFeedback); guards must follow so the user
+    // cannot double-vote even when localStorage is blocked (private mode).
+    const persisted = mutateFeedback((prev) => ({ ...prev, ratings: [...prev.ratings, entry] }));
     rememberRated(rateScope);
     setCooldown(rateScope);
     void insertRatingRemote(entry);
+    if (!persisted) {
+      return {
+        ok: true,
+        message: 'Оценка учтена в этой сессии (браузер блокирует постоянное хранилище)',
+      };
+    }
     return {
       ok: true,
       message: isFeedbackShared ? 'Оценка сохранена и видна всем' : 'Оценка сохранена на этом устройстве',
@@ -112,12 +117,15 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
       createdAt: new Date().toISOString(),
     };
 
-    const stored = mutateFeedback((prev) => ({ ...prev, comments: [entry, ...prev.comments] }));
-    if (!stored) {
-      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
-    }
+    const persisted = mutateFeedback((prev) => ({ ...prev, comments: [entry, ...prev.comments] }));
     setCooldown(scope);
     void insertCommentRemote(entry);
+    if (!persisted) {
+      return {
+        ok: true,
+        message: 'Комментарий учтён в этой сессии (браузер блокирует постоянное хранилище)',
+      };
+    }
     return {
       ok: true,
       message: isFeedbackShared ? 'Комментарий опубликован' : 'Комментарий сохранён на этом устройстве',
@@ -135,7 +143,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     }
 
     let newHelpful = 0;
-    const stored = mutateFeedback((prev) => ({
+    const persisted = mutateFeedback((prev) => ({
       ...prev,
       comments: prev.comments.map((comment) => {
         if (comment.id !== commentId) return comment;
@@ -143,11 +151,16 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
         return { ...comment, helpful: newHelpful };
       }),
     }));
-    if (!stored) {
-      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
-    }
+    // Always mark as voted locally so double-clicks cannot inflate the count
+    // even when storage is unavailable.
     rememberHelpful(scope);
     void bumpHelpfulRemote(commentId, newHelpful);
+    if (!persisted) {
+      return {
+        ok: true,
+        message: 'Учтено в этой сессии (браузер блокирует постоянное хранилище)',
+      };
+    }
     return { ok: true, message: 'Спасибо, мнение учтено' };
   };
 
