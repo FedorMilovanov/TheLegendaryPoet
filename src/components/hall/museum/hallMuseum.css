@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Hall museum vestibule — Pass 1
+   Hall museum vestibule — Pass 1 + Pass 2 material depth
    Warm stone / gold pantheon. No cyan-space language.
    ========================================================================== */
 
@@ -9,33 +9,47 @@
   --hall-stone-2: #1c1814;
   --hall-marble: #2a241c;
   --hall-gold: #d4af37;
+  --hall-gold-light: #f0d78c;
   --hall-gold-soft: rgba(212, 175, 55, 0.22);
   --hall-gold-dim: rgba(212, 175, 55, 0.08);
   --hall-ink: #f3ebe0;
   --hall-ink-muted: rgba(243, 235, 224, 0.58);
   --hall-ink-faint: rgba(243, 235, 224, 0.32);
-  --hall-frame: rgba(212, 175, 55, 0.35);
+  --hall-frame: rgba(212, 175, 55, 0.38);
   --hall-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
 
   position: relative;
   min-height: 100svh;
   background:
-    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(212, 175, 55, 0.09), transparent 55%),
-    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(80, 55, 20, 0.12), transparent 50%),
-    linear-gradient(180deg, #0b0907 0%, var(--hall-bg) 40%, #050403 100%);
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(212, 175, 55, 0.1), transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(80, 55, 20, 0.14), transparent 50%),
+    linear-gradient(180deg, #0c0a07 0%, var(--hall-bg) 38%, #040302 100%);
   color: var(--hall-ink);
   overflow-x: clip;
 }
 
-/* Subtle stone grain without a texture fetch */
+/* Layered stone grain — two scales for depth */
 .hall-museum::before {
   content: '';
   pointer-events: none;
   position: absolute;
   inset: 0;
-  opacity: 0.035;
+  opacity: 0.045;
   z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.hall-museum::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  z-index: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)'/%3E%3C/svg%3E");
 }
 
 .hall-museum > * {
@@ -54,18 +68,37 @@
   padding: 7.5rem 1.25rem 3.5rem;
 }
 
+/* Soft dome light — parallax via --hall-parallax (set in JS, 0 when reduced-motion) */
 .hall-atrium-dome {
   pointer-events: none;
   position: absolute;
   top: -4rem;
   left: 50%;
   width: min(52rem, 120vw);
-  height: 22rem;
+  height: 24rem;
+  transform: translate3d(calc(-50% + var(--hall-parallax-x, 0px)), var(--hall-parallax-y, 0px), 0);
+  will-change: transform;
+  background:
+    radial-gradient(ellipse 50% 65% at 50% 100%, rgba(255, 240, 200, 0.2), transparent 68%),
+    radial-gradient(ellipse 38% 48% at 50% 78%, rgba(212, 175, 55, 0.14), transparent 70%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(120, 90, 40, 0.08), transparent 75%);
+  filter: blur(1.5px);
+}
+
+/* Polished floor reflection under atrium content */
+.hall-atrium-floor {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(40rem, 92vw);
+  height: 7rem;
   transform: translateX(-50%);
   background:
-    radial-gradient(ellipse 55% 70% at 50% 100%, rgba(255, 236, 190, 0.16), transparent 70%),
-    radial-gradient(ellipse 40% 50% at 50% 80%, rgba(212, 175, 55, 0.12), transparent 72%);
-  filter: blur(2px);
+    radial-gradient(ellipse 70% 80% at 50% 0%, rgba(212, 175, 55, 0.09), transparent 70%),
+    linear-gradient(180deg, rgba(255, 240, 200, 0.04), transparent 80%);
+  opacity: 0.85;
+  mask-image: linear-gradient(180deg, black, transparent);
 }
 
 .hall-atrium-kicker {
@@ -112,19 +145,21 @@
   color: var(--hall-ink-faint);
 }
 
-/* ---------- Compass plate (floor direction board) ---------- */
+/* ---------- Compass plate ---------- */
 
 .hall-compass {
   width: min(36rem, 100%);
   margin: 0 auto 1rem;
-  padding: 1.15rem 1.25rem 1.25rem;
+  padding: 1.15rem 1.25rem 1.35rem;
   border-radius: 1.1rem;
-  border: 1px solid rgba(212, 175, 55, 0.28);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   background:
-    linear-gradient(160deg, rgba(42, 34, 22, 0.92), rgba(18, 14, 10, 0.96));
+    linear-gradient(145deg, rgba(55, 44, 28, 0.55) 0%, transparent 42%),
+    linear-gradient(160deg, rgba(42, 34, 22, 0.94), rgba(14, 11, 8, 0.98));
   box-shadow:
     var(--hall-shadow),
-    inset 0 1px 0 rgba(255, 240, 200, 0.06);
+    inset 0 1px 0 rgba(255, 240, 200, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .hall-compass-caption {
@@ -134,7 +169,7 @@
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--hall-gold);
-  opacity: 0.75;
+  opacity: 0.78;
 }
 
 .hall-compass-grid {
@@ -151,29 +186,34 @@
   padding: 0.75rem 0.85rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(212, 175, 55, 0.14);
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.28);
   color: var(--hall-ink-muted);
   text-align: left;
+  cursor: pointer;
   transition:
     border-color 0.35s ease,
     background 0.35s ease,
     color 0.35s ease,
-    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow 0.35s ease;
 }
 
 .hall-compass-btn:hover,
 .hall-compass-btn:focus-visible {
-  border-color: rgba(212, 175, 55, 0.45);
-  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.1);
   color: var(--hall-ink);
   outline: none;
 }
 
+.hall-compass-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35);
+}
+
 .hall-compass-btn.is-active {
-  border-color: rgba(212, 175, 55, 0.55);
-  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.14);
   color: var(--hall-ink);
-  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.12);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.14);
 }
 
 .hall-compass-num {
@@ -208,13 +248,45 @@
 }
 
 .hall-wing {
+  position: relative;
   scroll-margin-top: 6.5rem;
   padding: 1.75rem;
   border-radius: 1.6rem;
-  border: 1px solid rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.14);
   background:
-    linear-gradient(165deg, rgba(28, 24, 18, 0.72), rgba(10, 8, 6, 0.88));
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    linear-gradient(165deg, rgba(34, 28, 20, 0.78), rgba(10, 8, 6, 0.92));
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 240, 200, 0.04);
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Accent stone vein on the left edge of each wing */
+.hall-wing::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--wing-accent, var(--hall-gold)) 20%,
+    var(--wing-accent, var(--hall-gold)) 80%,
+    transparent
+  );
+  opacity: 0.55;
+}
+
+.hall-wing.is-active {
+  border-color: rgba(212, 175, 55, 0.38);
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(212, 175, 55, 0.1),
+    inset 0 1px 0 rgba(255, 240, 200, 0.06);
 }
 
 .hall-wing-head {
@@ -239,7 +311,7 @@
   font-size: 0.85rem;
   letter-spacing: 0.28em;
   color: var(--hall-gold);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .hall-wing-title {
@@ -270,76 +342,108 @@
 .hall-wing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
-  gap: 1.1rem;
+  gap: 1.15rem;
 }
 
-/* Empty wing (IV modern) — sealed door, not a blank void */
-.hall-wing-empty {
+/* ---------- Sealed door (wing IV) ---------- */
+
+.hall-wing-sealed {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  min-height: 14rem;
-  padding: 2rem 1.5rem;
-  border-radius: 1.1rem;
-  border: 1px dashed rgba(212, 175, 55, 0.22);
-  background: rgba(0, 0, 0, 0.2);
+  gap: 1rem;
+  min-height: 16rem;
+  padding: 2.5rem 1.75rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  background:
+    linear-gradient(180deg, rgba(30, 24, 16, 0.5) 0%, rgba(8, 6, 4, 0.85) 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      rgba(212, 175, 55, 0.03) 11px,
+      rgba(212, 175, 55, 0.03) 12px
+    );
   text-align: center;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.hall-wing-sealed-arch {
+  width: min(12rem, 70%);
+  height: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
+  opacity: 0.7;
+}
+
+.hall-wing-sealed-lock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.06);
+  color: var(--hall-gold);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
 }
 
 .hall-wing-empty-seal {
   font-family: var(--font-serif);
-  font-size: 0.75rem;
-  letter-spacing: 0.32em;
+  font-size: 0.78rem;
+  letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--hall-gold);
-  opacity: 0.7;
+  opacity: 0.78;
 }
 
 .hall-wing-empty-text {
-  max-width: 22rem;
+  max-width: 24rem;
   margin: 0;
   font-size: 0.9rem;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--hall-ink-faint);
 }
 
-/* ---------- Niche (portrait plaque) ---------- */
+/* ---------- Niche (double gold frame + bronze plaque) ---------- */
 
 .hall-niche {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 0.95rem;
+  border-radius: 0.7rem;
   border: 1px solid var(--hall-frame);
-  background: linear-gradient(180deg, #16120e 0%, #0c0a08 100%);
+  background: linear-gradient(180deg, #1a1510 0%, #0a0806 100%);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.08);
   transition:
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.35s ease,
     box-shadow 0.45s ease;
 }
 
-.hall-niche:hover,
-.hall-niche:focus-visible {
-  transform: translateY(-4px);
-  border-color: rgba(212, 175, 55, 0.55);
-  box-shadow:
-    0 22px 48px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(212, 175, 55, 0.12),
-    0 0 28px rgba(212, 175, 55, 0.08);
-  outline: none;
-}
-
+/* Outer museum frame rim */
 .hall-niche-frame {
   position: relative;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: #0a0806;
+  background: #080604;
+  margin: 0.45rem 0.45rem 0;
+  border-radius: 0.35rem;
+  box-shadow:
+    inset 0 0 0 1px rgba(212, 175, 55, 0.35),
+    inset 0 0 0 3px rgba(20, 14, 8, 0.9),
+    inset 0 0 0 4px rgba(212, 175, 55, 0.18);
 }
 
 .hall-niche-frame img {
@@ -347,57 +451,95 @@
   height: 100%;
   object-fit: cover;
   object-position: center 18%;
-  filter: grayscale(0.15) contrast(1.05) saturate(0.92);
+  filter: grayscale(0.18) contrast(1.06) saturate(0.9);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+}
+
+.hall-niche:hover,
+.hall-niche:focus-visible {
+  transform: translateY(-5px);
+  border-color: rgba(212, 175, 55, 0.62);
+  box-shadow:
+    0 24px 52px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(212, 175, 55, 0.14),
+    0 0 32px rgba(212, 175, 55, 0.1);
+  outline: none;
+}
+
+.hall-niche:focus-visible {
+  box-shadow:
+    0 24px 52px rgba(0, 0, 0, 0.52),
+    0 0 0 2px rgba(212, 175, 55, 0.45);
 }
 
 .hall-niche:hover .hall-niche-frame img,
 .hall-niche:focus-visible .hall-niche-frame img {
-  transform: scale(1.04);
-  filter: grayscale(0) contrast(1.06) saturate(1);
+  transform: scale(1.045);
+  filter: grayscale(0) contrast(1.07) saturate(1.02);
 }
 
 .hall-niche-frame::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 45%, rgba(8, 6, 4, 0.75) 100%);
+  background: linear-gradient(180deg, transparent 42%, rgba(8, 6, 4, 0.78) 100%);
   pointer-events: none;
 }
 
 .hall-niche-plaque {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.9rem 0.95rem 1.05rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.14);
-  background: linear-gradient(180deg, rgba(30, 24, 16, 0.9), rgba(12, 10, 8, 0.95));
+  gap: 0.3rem;
+  padding: 0.85rem 0.95rem 1.05rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.16);
+  background:
+    linear-gradient(180deg, rgba(48, 38, 24, 0.35) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(28, 22, 14, 0.95), rgba(12, 10, 8, 0.98));
 }
 
 .hall-niche-name {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: 0.01em;
   color: var(--hall-ink);
 }
 
 .hall-niche-years {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hall-gold-light);
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.hall-niche-material {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(212, 175, 55, 0.06);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--hall-gold);
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .hall-niche-quote {
-  margin: 0.25rem 0 0;
+  margin: 0.35rem 0 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
   font-family: var(--font-serif);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--hall-ink-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -405,7 +547,7 @@
   overflow: hidden;
 }
 
-/* ---------- Footer of hall page ---------- */
+/* ---------- Footer ---------- */
 
 .hall-museum-foot {
   max-width: 36rem;
@@ -487,11 +629,20 @@ html.theme-light .hall-niche-plaque {
   background: linear-gradient(180deg, rgba(255, 250, 240, 0.95), rgba(244, 235, 219, 0.98));
 }
 
+html.theme-light .hall-wing-sealed {
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.7), rgba(240, 230, 210, 0.9));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hall-niche,
   .hall-niche-frame img,
-  .hall-compass-btn {
+  .hall-compass-btn,
+  .hall-wing,
+  .hall-atrium-dome {
     transition: none !important;
+  }
+  .hall-atrium-dome {
+    transform: translate3d(-50%, 0, 0) !important;
   }
   .hall-niche:hover,
   .hall-niche:focus-visible {
@@ -509,10 +660,14 @@ html.theme-light .hall-niche-plaque {
     padding-bottom: 4rem;
   }
   .hall-wing {
-    padding: 2rem 2.25rem;
+    padding: 2rem 2.25rem 2rem 2.4rem;
   }
   .hall-wings {
     gap: 4rem;
     padding-bottom: 6rem;
+  }
+  .hall-wing-grid {
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 1.35rem;
   }
 }

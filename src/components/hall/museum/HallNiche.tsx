@@ -1,16 +1,24 @@
 import { Link } from '../../ui/Link';
 import PoetImage from '../../PoetImage';
 import type { Poet } from '../../../types/poet';
-import { poetMuseumMeta } from '../../../data/poetMuseumMeta';
+import { poetMuseumMeta, type MonumentMaterial } from '../../../data/poetMuseumMeta';
 import { vtShared } from '../../../lib/viewTransition';
 
 interface HallNicheProps {
   poet: Poet;
 }
 
+const MATERIAL_LABEL: Record<MonumentMaterial, string> = {
+  marble: 'Мрамор',
+  bronze: 'Бронза',
+  'black-stone': 'Чёрный камень',
+  glass: 'Стекло',
+  mixed: 'Смешанный',
+};
+
 /**
- * Museum niche: gold-framed portrait + bronze plaque.
- * Quote comes only from curated museum meta (or shortBio fallback) — never invented.
+ * Museum niche: double gold frame + bronze plaque.
+ * Quote / material only from curated museum meta — never invented.
  */
 export default function HallNiche({ poet }: HallNicheProps) {
   const meta = poetMuseumMeta[poet.id];
@@ -18,6 +26,7 @@ export default function HallNiche({ poet }: HallNicheProps) {
     ? `${poet.birthYear}–${poet.deathYear}`
     : `${poet.birthYear}–н.в.`;
   const quote = meta?.mainQuote || poet.shortBio;
+  const material = meta?.material ? MATERIAL_LABEL[meta.material] : null;
 
   return (
     <Link
@@ -36,6 +45,7 @@ export default function HallNiche({ poet }: HallNicheProps) {
       <div className="hall-niche-plaque">
         <h3 className="hall-niche-name">{poet.name}</h3>
         <div className="hall-niche-years">{years}</div>
+        {material && <span className="hall-niche-material">{material}</span>}
         {quote && <p className="hall-niche-quote">«{quote}»</p>}
       </div>
     </Link>

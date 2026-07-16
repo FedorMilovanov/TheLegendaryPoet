@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { HallWing } from '../../../data/hall';
 import type { Poet } from '../../../types/poet';
 import HallNiche from './HallNiche';
@@ -12,13 +13,20 @@ interface HallWingSectionProps {
 
 export default function HallWingSection({ wing, poets, active }: HallWingSectionProps) {
   const count = poets.length;
+  const isSealed = count === 0;
 
   return (
     <section
       id={`wing-${wing.id}`}
-      className={`hall-wing${active ? ' is-active' : ''}`}
+      className={`hall-wing${active ? ' is-active' : ''}${isSealed ? ' is-sealed' : ''}`}
       aria-labelledby={`wing-title-${wing.id}`}
-      style={{ borderColor: `${wing.accent}33` }}
+      style={
+        {
+          borderColor: `${wing.accent}40`,
+          ['--wing-accent' as string]: wing.accent,
+        } as CSSProperties
+      }
+      tabIndex={-1}
     >
       <header className="hall-wing-head">
         <div className="hall-wing-meta">
@@ -33,13 +41,17 @@ export default function HallWingSection({ wing, poets, active }: HallWingSection
         <p className="hall-wing-desc">{wing.description}</p>
       </header>
 
-      {count === 0 ? (
-        <div className="hall-wing-empty" role="status">
-          <div className="hall-wing-empty-seal">Запечатано</div>
+      {isSealed ? (
+        <div className="hall-wing-sealed" role="status">
+          <div className="hall-wing-sealed-arch" aria-hidden="true" />
+          <div className="hall-wing-sealed-lock" aria-hidden="true">
+            IV
+          </div>
+          <div className="hall-wing-empty-seal">Дверь запечатана</div>
           <p className="hall-wing-empty-text">
-            Крыло IV ждёт кураторских материалов. Мы не заполняем пустые ниши
-            вымыслом — когда появятся выверенные страницы современных поэтов,
-            они займут место здесь.
+            Крыло современных поэтов ждёт кураторских материалов. Пустые ниши
+            не заполняем вымыслом — когда появятся выверенные страницы, они
+            займут место за этой дверью.
           </p>
         </div>
       ) : (

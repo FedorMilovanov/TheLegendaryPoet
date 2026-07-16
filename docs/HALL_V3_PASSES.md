@@ -15,7 +15,7 @@ Target spirit: ancient museum pantheon (marble, gold, dome light) —
 
 ## Pass log
 
-### Pass 1 — Foundation + museum vestibule (this pass)
+### Pass 1 — Foundation + museum vestibule
 
 **Goal:** ship a *real* hall page that already feels like a museum entrance,
 without loading three.js. Establish data architecture that future 3D reuses.
@@ -25,19 +25,22 @@ Delivered:
 - `src/data/hall/wings.ts` — single source of wing layout + poet placement
 - `src/components/hall/museum/*` — atrium, compass, wings, niches (DOM)
 - `HallPage.tsx` — mounts museum vestibule (no R3F import)
-- Playwright visual + a11y smoke for `/hall`
+- Playwright suite + `check:hall` smoke
 - Old R3F scaffolding stays in `src/components/hall/*` root, **not routed**
 
-Deliberately **not** in this pass: 3D geometry, PBR textures, FPS walk.
+### Pass 2 — Material depth on vestibule (this pass)
 
-### Pass 2 — (next) Material depth on vestibule
+Delivered:
 
-- Richer marble/noise surfaces, better plaque typography
-- Soft parallax on atrium light, reduced-motion safe
-- Wing empty-state for Modern (IV) as a sealed door, not a blank card
-- Focus order + keyboard map for compass → wing → niche
+- Layered stone grain + polished floor wash under atrium
+- Double gold frame on niches; bronze plaque with material chip (from museum meta)
+- Soft dome-light parallax (pointer, reduced-motion / coarse off)
+- Wing IV as **sealed door** (arch + lock + copy), not a blank dashed box
+- Compass: arrow-key roving between directions; `aria-controls` → wing
+- Scroll-spy sets active wing on the compass while reading
+- Focus moves into the wing after compass activation
 
-### Pass 3 — (later) First R3F atrium only
+### Pass 3 — (next) First R3F atrium only
 
 - Dome + floor + four arch portals, no portraits yet
 - Warm IBL, no cyan fog, Lenis-prevent, WebGL gate

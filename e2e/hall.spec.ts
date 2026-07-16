@@ -17,8 +17,8 @@ test.describe('Hall museum vestibule', () => {
     await expect(page.locator('#wing-soviet')).toBeVisible();
     await expect(page.locator('#wing-modern')).toBeVisible();
 
-    // Modern wing is sealed / empty — honest, not fake poets
-    await expect(page.locator('#wing-modern')).toContainText(/Запечатано|куратор/i);
+    // Modern wing is a sealed door — honest, not fake poets
+    await expect(page.locator('#wing-modern')).toContainText(/запечатан|куратор/i);
   });
 
   test('compass has four directions and scrolls to a wing', async ({ page }) => {

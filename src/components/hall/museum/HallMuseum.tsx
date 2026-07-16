@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from '../../ui/Link';
 import { poets } from '../../../data/poets';
 import { hallWings, type HallWingId } from '../../../data/hall';
@@ -9,18 +9,16 @@ import { scrollToId } from '../../../utils/smoothScroll';
 import './hallMuseum.css';
 
 /**
- * Hall v3 Pass 1 — museum vestibule.
+ * Hall v3 Pass 1–2 — museum vestibule.
  *
  * DOM-only, warm pantheon palette, four wings from `data/hall/wings`.
+ * Pass 2: material depth, sealed door, parallax light, scroll-spy active wing.
  * No three.js. Future R3F atrium reuses the same wing data.
  */
 export default function HallMuseum() {
   const [activeWing, setActiveWing] = useState<HallWingId | null>(null);
 
-  const poetsById = useMemo(() => {
-    const map = new Map(poets.map((p) => [p.id, p]));
-    return map;
-  }, []);
+  const poetsById = useMemo(() => new Map(poets.map((p) => [p.id, p])), []);
 
   const poetCounts = useMemo(() => {
     const counts = {} as Record<HallWingId, number>;
@@ -33,6 +31,36 @@ export default function HallMuseum() {
   const onSelectWing = useCallback((id: HallWingId) => {
     setActiveWing(id);
     scrollToId(`wing-${id}`);
+    // Move focus into the wing for keyboard users after compass activation
+    requestAnimationFrame(() => {
+      document.getElementById(`wing-${id}`)?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  // Scroll-spy: which wing is in view (for compass active state)
+  useEffect(() => {
+    const nodes = hallWings
+      .map((w) => document.getElementById(`wing-${w.id}`))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (!nodes.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Pick the most visible intersecting wing
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible?.target?.id) return;
+        const id = visible.target.id.replace(/^wing-/, '') as HallWingId;
+        if (hallWings.some((w) => w.id === id)) {
+          setActiveWing(id);
+        }
+      },
+      { rootMargin: '-25% 0px -45% 0px', threshold: [0.15, 0.35, 0.55] },
+    );
+
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -64,9 +92,9 @@ export default function HallMuseum() {
 
       <footer className="hall-museum-foot">
         <p>
-          Следующие проходы добавят объём купола и прогулку по мрамору. Сейчас —
-          точная кураторская карта зала: кого где ждать, без вымысла и без пустых
-          обещаний «3D завтра».
+          Вестибюль наращивается проходами: материалы, свет, затем объём купола.
+          Сейчас — точная кураторская карта: кого где ждать, без вымысла и без
+          пустых обещаний «3D завтра».
         </p>
         <div className="hall-museum-foot-actions">
           <Link to="/poets" className="hall-btn-primary">
