@@ -9,13 +9,19 @@ React 19 + TypeScript + Vite + Tailwind v4 + Framer Motion.
 ```bash
 npm install
 npm run dev              # локальный сервер разработки
-npm run build            # production-сборка в dist/ (multi-file, хешированные ассеты)
+npm run build            # production-сборка в dist/
 npm run preview          # предпросмотр собранной версии
 npm run typecheck        # tsc --noEmit
 npm run sitemap          # пересобрать public/sitemap.xml из данных
 npm run check:integrity  # данные, бренд-ссылки, навигация, sitemap
-npm run check            # typecheck + integrity + build (гейт перед сдачей)
+npm run check:deep       # поведенческий smoke чистых утилит
+npm run check:smoke      # live HTTP против vite preview (нужен dist/)
+npm run check            # полный гейт: typecheck → integrity → deep → build → postbuild → live smoke
 ```
+
+**Live smoke** поднимает production-сборку и бьёт по маршрутам HTTP-запросами: ловит
+сломанный base path, отсутствие `404.html`, случайный three.js в shell-бандле — то, что
+typecheck не видит. Это полезно; `npm run check` гоняет его всегда.
 
 **Правила для ИИ-агентов и контрибьюторов:** [`docs/AGENT_RULES.md`](docs/AGENT_RULES.md).
 Краткий Arena-слой: [`ARENA_PROJECT_PROTOCOL.md`](ARENA_PROJECT_PROTOCOL.md).

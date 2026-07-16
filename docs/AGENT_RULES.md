@@ -110,13 +110,21 @@ If a rule conflicts with a short-term visual request, **keep the rule** and ask 
 ## 7. What agents must run before finishing
 
 ```bash
-npm run check          # typecheck + integrity + deep smoke + production build
-# or at least:
-npm run typecheck
-npm run check:integrity
-npm run check:deep
-npm run build
+npm run check
+# = typecheck + integrity + deep (pure logic) + build + postbuild + live smoke
 ```
+
+| Script | What it catches |
+| --- | --- |
+| `typecheck` | Type errors |
+| `check:integrity` | data, brand URLs, Link, emoji, lucide, sitemap |
+| `check:deep` | validation matrix, averages, highlights, session guards |
+| `build` + `postbuild` | bundle + OG prerender + `404.html` SPA fallback |
+| `check:smoke` | **live** HTTP against `vite preview`: routes return shell, three.js not in shell, assets exist |
+
+**Live smoke** is useful: it boots the real production build and hits routes over HTTP.
+Typecheck cannot see a broken base path, a missing `404.html`, or three.js accidentally
+shipping in the homepage chunk. Prefer `npm run check` over ad-hoc `build` alone.
 
 ### Dead dependencies
 

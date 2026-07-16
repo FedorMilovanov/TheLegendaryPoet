@@ -10,8 +10,9 @@
     "typecheck": "tsc --noEmit",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "check:integrity": "npx tsx scripts/check-integrity.ts",
-    "check": "npm run typecheck && npm run check:integrity && npm run check:deep && npm run build",
-    "check:deep": "npx tsx scripts/check-deep.ts"
+    "check": "npm run typecheck && npm run check:integrity && npm run check:deep && npm run build && node scripts/postbuild.mjs && npm run check:smoke",
+    "check:deep": "npx tsx scripts/check-deep.ts",
+    "check:smoke": "node scripts/check-smoke.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

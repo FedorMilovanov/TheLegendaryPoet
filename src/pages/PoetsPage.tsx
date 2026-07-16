@@ -146,14 +146,11 @@ export default function PoetsPage() {
   const allTags = useMemo(() => Array.from(new Set(poets.flatMap((poet) => poet.tags))), []);
 
   // Keep the address bar in sync for shareable searches (WebSite SearchAction uses ?q=).
-  // Deliberately omit searchParams from deps to avoid a replace loop.
   useEffect(() => {
     const next = searchTerm.trim();
     const current = new URLSearchParams(window.location.search).get('q') || '';
     if (next === current) return;
-    if (next) setSearchParams({ q: next }, { replace: true });
-    else setSearchParams({}, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSearchParams(next ? { q: next } : {}, { replace: true });
   }, [searchTerm, setSearchParams]);
 
   const filteredPoets = useMemo(() => {
