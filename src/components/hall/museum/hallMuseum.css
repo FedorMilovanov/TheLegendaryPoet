@@ -654,6 +654,108 @@ html.theme-light .hall-wing-sealed {
   }
 }
 
+/* ---------- Pass 3: R3F atrium stage ---------- */
+
+.hall-atrium-stage {
+  max-width: 72rem;
+  margin: 0 auto 2.5rem;
+  padding: 0 1.25rem;
+}
+
+.hall-atrium-stage-head {
+  max-width: 36rem;
+  margin: 0 auto 1.25rem;
+  text-align: center;
+}
+
+.hall-atrium-stage-kicker {
+  display: inline-block;
+  margin-bottom: 0.65rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--hall-gold);
+  opacity: 0.8;
+}
+
+.hall-atrium-stage-title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 700;
+  color: var(--hall-ink);
+}
+
+.hall-atrium-stage-note {
+  margin: 0 auto 1.1rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--hall-ink-faint);
+}
+
+.hall-atrium-stage-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--hall-gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hall-atrium-stage-cta:hover,
+.hall-atrium-stage-cta:focus-visible {
+  background: rgba(212, 175, 55, 0.18);
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.2);
+  outline: none;
+}
+
+.hall-atrium-stage-canvas-wrap {
+  position: relative;
+  height: min(70vh, 36rem);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  background: #070605;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.06);
+}
+
+.hall-atrium-stage-canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hall-atrium-stage-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.hall-atrium-stage-fallback p {
+  max-width: 28rem;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--hall-ink-muted);
+}
+
 @media (min-width: 768px) {
   .hall-atrium {
     padding-top: 8.5rem;
@@ -669,5 +771,8 @@ html.theme-light .hall-wing-sealed {
   .hall-wing-grid {
     grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
     gap: 1.35rem;
+  }
+  .hall-atrium-stage {
+    margin-bottom: 3.5rem;
   }
 }

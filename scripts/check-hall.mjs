@@ -58,6 +58,12 @@ async function main() {
     'src/components/hall/museum/HallWingSection.tsx',
     'src/components/hall/museum/HallNiche.tsx',
     'src/components/hall/museum/hallMuseum.css',
+    'src/components/hall/atrium/HallAtriumStage.tsx',
+    'src/components/hall/atrium/HallAtriumScene.tsx',
+    'src/components/hall/atrium/Dome.tsx',
+    'src/components/hall/atrium/MarbleFloor.tsx',
+    'src/components/hall/atrium/ArchPortal.tsx',
+    'src/components/hall/atrium/atriumTheme.ts',
     'src/pages/HallPage.tsx',
     'docs/HALL_V3_PASSES.md',
     'e2e/hall.spec.ts',
@@ -68,9 +74,24 @@ async function main() {
   }
 
   const hallPage = fs.readFileSync(path.join(root, 'src/pages/HallPage.tsx'), 'utf8');
-  if (/from ['"]three['"]|@react-three|HallOfPoets/.test(hallPage)) {
-    fail('HallPage must not import three.js / HallOfPoets');
-  } else ok('HallPage free of three.js');
+  if (
+    /import\s+.*from\s+['"]three['"]/.test(hallPage) ||
+    /import\s+.*from\s+['"]@react-three/.test(hallPage) ||
+    /import\s+.*HallOfPoets/.test(hallPage)
+  ) {
+    fail('HallPage must not import three / R3F / legacy nave');
+  } else ok('HallPage free of direct WebGL imports');
+
+  // R3F only via lazy in museum/stage — not eager in HallPage
+  if (!fs.readFileSync(path.join(root, 'src/components/hall/museum/HallMuseum.tsx'), 'utf8').includes('lazy(')) {
+    fail('HallMuseum must lazy-load atrium stage');
+  } else ok('HallMuseum lazy-loads atrium');
+
+  // Shell must not reference atrium scene
+  const appSrc = fs.readFileSync(path.join(root, 'src/App.tsx'), 'utf8');
+  if (/HallAtrium|HallOfPoets|@react-three|from ['"]three['"]/.test(appSrc)) {
+    fail('App.tsx must not import hall R3F');
+  } else ok('App shell free of hall R3F');
 
   // Data via tsx-compatible dynamic import
   const { pathToFileURL: toUrl } = await import('node:url');

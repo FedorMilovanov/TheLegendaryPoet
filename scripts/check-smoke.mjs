@@ -97,9 +97,12 @@ function assertDisk() {
     ok('dist/404.html');
   }
 
-  // three.js must not ship in the default bundle (Hall is not routed).
+  // three.js must not ship in the homepage shell (index/react/motion chunks).
+  // Hall atrium may live in a separate lazy chunk only loaded on /hall.
   const assets = fs.readdirSync(path.join(dist, 'assets')).filter((f) => f.endsWith('.js'));
-  const mainish = assets.filter((f) => f.startsWith('index-') || f.startsWith('react-'));
+  const mainish = assets.filter(
+    (f) => f.startsWith('index-') || f.startsWith('react-') || f.startsWith('motion-'),
+  );
   let threeInShell = false;
   for (const f of mainish) {
     const body = fs.readFileSync(path.join(dist, 'assets', f), 'utf8');
@@ -108,7 +111,7 @@ function assertDisk() {
       fail(`three.js symbols found in shell chunk ${f}`);
     }
   }
-  if (!threeInShell) ok('three.js not in shell chunks (Hall stays unshipped)');
+  if (!threeInShell) ok('three.js not in shell chunks (index/react/motion)');
 }
 
 async function assertHttp() {

@@ -51,9 +51,14 @@ test.describe('Hall museum vestibule', () => {
     await expect(page).toHaveURL(/\/poets\/alexander-pushkin/);
   });
 
-  test('document title and no WebGL canvas', async ({ page }) => {
+  test('document title; canvas absent until atrium opt-in', async ({ page }) => {
     await expect(page).toHaveTitle(/Храм|Зал|LEGENDARY/i);
+    // Pass 3: canvas only after user clicks "Открыть объём атриума"
     await expect(page.locator('canvas')).toHaveCount(0);
+    const cta = page.getByRole('button', { name: /Открыть объём атриума/i });
+    if (await cta.count()) {
+      await expect(cta).toBeVisible();
+    }
   });
 
   test('keyboard: compass buttons are focusable and activate', async ({ page }) => {

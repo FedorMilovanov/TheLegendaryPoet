@@ -40,21 +40,28 @@ Delivered:
 - Scroll-spy sets active wing on the compass while reading
 - Focus moves into the wing after compass activation
 
-### Pass 3 — (next) First R3F atrium only
+### Pass 3 — First R3F atrium (this pass)
 
-- Dome + floor + four arch portals, no portraits yet
-- Warm IBL, no cyan fog, Lenis-prevent, WebGL gate
-- Must match vestibule palette tokens
+Delivered:
 
-### Pass 4+ — niches, rail camera, sound, morph
+- `src/components/hall/atrium/*` — warm rotunda: marble floor, coffered dome,
+  four arch portals labelled I–IV from `hallWings` (no portraits yet)
+- Palette matches vestibule (`atriumTheme.ts` ↔ `hallMuseum.css` gold/stone)
+- Lazy load + **user opt-in** button; WebGL / reduced-motion → DOM fallback
+- `data-lenis-prevent` on canvas stage; gentle camera drift (off if reduced-motion)
+- Old `HallOfPoets` cyan-nave still **not** routed
+- Integrity: App shell free of three.js; HallPage free of direct three imports
 
-See `HALL_ROADMAP_6_MONTHS.md` and `docs/HALL_RESEARCH.md`. Roadmap stays
-valid; this file is the **execution journal**.
+### Pass 4 — (next) Niches into portals
+
+- Hang portraits inside arches or as wing-linked hotspots
+- Rail / look-at focused poet; keep museum DOM wings as source of truth
+- Sound and morph still later
 
 ## Hard rules
 
 1. Poet ids always full library ids (`alexander-pushkin`), never short keys.
 2. No invented quotes — only `poetMuseumMeta.mainQuote` or verified poem titles.
-3. three.js never enters the homepage bundle; Hall loads it only via lazy route
-   when/if R3F ships.
-4. Every pass ends with `npm run check` + Playwright hall suite green.
+3. three.js never enters the homepage shell (`index`/`react`/`motion` chunks);
+   atrium only via lazy() on `/hall` after opt-in.
+4. Every pass ends with `npm run check` + `npm run check:hall` green.

@@ -279,11 +279,23 @@ console.log('\n— Hall wings —');
   else ok('modern wing honestly empty');
   if (new Set(hung).size !== hung.length) fail('duplicate poet across wings');
   else ok('no duplicate poets across wings');
-  // Hall page must not import three.js
+  // HallPage must not *import* three / R3F / legacy nave (comments alone are fine).
   const hallPage = fs.readFileSync(path.join(srcRoot, 'pages', 'HallPage.tsx'), 'utf8');
-  if (/from ['"]three['"]|@react-three|HallOfPoets/.test(hallPage)) {
-    fail('HallPage must stay free of three.js / HallOfPoets until R3F pass');
-  } else ok('HallPage free of three.js');
+  if (
+    /import\s+.*from\s+['"]three['"]/.test(hallPage) ||
+    /import\s+.*from\s+['"]@react-three/.test(hallPage) ||
+    /import\s+.*HallOfPoets/.test(hallPage)
+  ) {
+    fail('HallPage must not import three / R3F / legacy nave');
+  } else ok('HallPage free of direct WebGL imports');
+  // Homepage / App must not import atrium or three
+  const appSrc = fs.readFileSync(path.join(srcRoot, 'App.tsx'), 'utf8');
+  if (/HallAtrium|HallOfPoets|from ['"]three['"]|@react-three/.test(appSrc)) {
+    fail('App.tsx must not pull hall R3F into the shell');
+  } else ok('App shell free of hall R3F');
+  const atriumEntry = path.join(srcRoot, 'components', 'hall', 'atrium', 'HallAtriumScene.tsx');
+  if (!fs.existsSync(atriumEntry)) fail('Pass 3 atrium scene missing');
+  else ok('Pass 3 atrium scene present');
 }
 
 // Library modularity
