@@ -18,6 +18,7 @@
  */
 import { poets, articles, musicTracks } from '../src/data/poets';
 import { essays } from '../src/data/essays/index';
+import { poetConnections } from '../src/data/poetConnections';
 import type { Poet } from '../src/types/poet';
 
 type Level = 'ERROR' | 'WARN';
@@ -223,6 +224,17 @@ essays.forEach((e, i) => {
   });
   if (!e.sources || e.sources.length < 5)
     warn(where, `essay has only ${e.sources?.length || 0} sources — deep essays should cite primary sources`);
+});
+
+/* ---- Poet connections (Kindred Spirits graph) ------------------------- */
+
+poetConnections.forEach((c, i) => {
+  const where = `poetConnections[${i}] (${c.source} → ${c.target})`;
+  if (!poetIds.has(c.source)) err(where, `source "${c.source}" is not a poet id — dangling link`);
+  if (!poetIds.has(c.target)) err(where, `target "${c.target}" is not a poet id — dangling link`);
+  if (c.source === c.target) err(where, 'self-connection');
+  if (!isNonEmptyString(c.label) || !isNonEmptyString(c.note))
+    err(where, 'missing label or note');
 });
 
 /* ---- Report ------------------------------------------------------------ */
