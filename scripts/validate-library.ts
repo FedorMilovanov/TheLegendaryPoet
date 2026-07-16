@@ -161,6 +161,11 @@ poets.forEach((poet: Poet, i) => {
     if (!t.kind || !['contemporary', 'historian'].includes(t.kind))
       err(twhere, `invalid kind "${t.kind}"`);
     if (!t.sourceUrl) warn(twhere, `testimony "${t.author}" has no sourceUrl`);
+    // Structural URL check (a live fetch is blocked by the sandbox proxy, but
+    // malformed sourceUrls — spaces, missing host, double slashes in path —
+    // are a real regression class and trivially caught here).
+    if (t.sourceUrl && !/^https?:\/\/[^\s/]+\.[^\s/]+/.test(t.sourceUrl))
+      err(twhere, `malformed sourceUrl: "${t.sourceUrl}"`);
   });
   // Sourcing standard: a serious portrait cites several voices, not one.
   if ((poet.testimonies || []).length < 2)
