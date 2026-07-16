@@ -85,6 +85,11 @@ poets.forEach((poet: Poet, i) => {
   if (typeof poet.rating !== 'number' || poet.rating < 0 || poet.rating > 10)
     err(where, `rating ${poet.rating} outside 0–10`);
 
+  // shortBio is the card/SEO blurb — keep it epigrammatic. Over-long blurbs
+  // break the 3-line card clamp and bloat meta description.
+  if (isNonEmptyString(poet.shortBio) && poet.shortBio.length > 520)
+    warn(where, `shortBio is ${poet.shortBio.length} chars — keep the card blurb under ~480–520`);
+
   // Placeholder scan on prose.
   [poet.shortBio, poet.fullBio, poet.historicalNote, poet.spiritualSearch, poet.authorCommentary, poet.moralPortrait]
     .filter(isNonEmptyString)
@@ -93,10 +98,18 @@ poets.forEach((poet: Poet, i) => {
     });
 
   // Poems.
+  const seenPoemTitles = new Set<string>();
   poet.poems.forEach((poem, j) => {
     const pwhere = `${where}.poems[${j}] (${poem.id || '?'})`;
     if (!isNonEmptyString(poem.id)) err(pwhere, 'missing id');
     if (!isNonEmptyString(poem.title)) err(pwhere, 'missing title');
+    // Analysis makes a poem a *study* entry, not just a quoted text.
+    if (!isNonEmptyString(poem.analysis)) warn(pwhere, `"${poem.title}" has no analysis`);
+    // Duplicate title within one poet confuses the reader / PoemQuickNav.
+    if (poem.title) {
+      if (seenPoemTitles.has(poem.title)) warn(pwhere, `duplicate poem title "${poem.title}" within this poet`);
+      seenPoemTitles.add(poem.title);
+    }
     if (!isNonEmptyString(poem.text)) {
       err(pwhere, 'empty poem text');
     } else if (poem.text.trim().length < 40) {
@@ -149,6 +162,9 @@ poets.forEach((poet: Poet, i) => {
       err(twhere, `invalid kind "${t.kind}"`);
     if (!t.sourceUrl) warn(twhere, `testimony "${t.author}" has no sourceUrl`);
   });
+  // Sourcing standard: a serious portrait cites several voices, not one.
+  if ((poet.testimonies || []).length < 2)
+    warn(where, `only ${(poet.testimonies || []).length} testimony — POET_AUTHORING_GUIDE targets 5–9`);
 });
 
 /* ---- Articles ---------------------------------------------------------- */
