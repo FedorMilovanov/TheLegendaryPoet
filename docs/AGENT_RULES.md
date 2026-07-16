@@ -115,19 +115,24 @@ If a rule conflicts with a short-term visual request, **keep the rule** and ask 
 ```bash
 npm run check
 # = typecheck + integrity + deep (pure logic) + build + postbuild + live smoke
+npm run check:hall   # after hall work
 ```
 
 | Script | What it catches |
 | --- | --- |
 | `typecheck` | Type errors |
-| `check:integrity` | data, brand URLs, Link, emoji, lucide, sitemap |
-| `check:deep` | validation matrix, averages, highlights, session guards |
+| `check:integrity` | data, brand URLs, Link, emoji, lucide, sitemap, hall wings |
+| `check:deep` | validation matrix, averages, highlights, session guards, hall |
 | `build` + `postbuild` | bundle + OG prerender + `404.html` SPA fallback |
-| `check:smoke` | **live** HTTP against `vite preview`: routes return shell, three.js not in shell, assets exist |
+| `check:smoke` | **live** HTTP against `vite preview` |
+| `check:hall` | Hall files, no three.js on route, `/hall` shell |
 
-**Live smoke** is useful: it boots the real production build and hits routes over HTTP.
-Typecheck cannot see a broken base path, a missing `404.html`, or three.js accidentally
-shipping in the homepage chunk. Prefer `npm run check` over ad-hoc `build` alone.
+**Live smoke** boots the production build and hits routes over HTTP — catches
+broken base path, missing `404.html`, three.js in the shell. Prefer `npm run check`.
+
+**Do not push workflow file changes** unless the token has `workflows` permission
+(Arena bot often does not). Document CI upgrades in `docs/CI_AND_DEPLOY.md` instead.
+Push only the session branch (`arena/…`); never force-push over another agent’s branch.
 
 ### Dead dependencies
 
