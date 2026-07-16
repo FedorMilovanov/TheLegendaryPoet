@@ -64,11 +64,20 @@ Delivered:
 - Central pedestal under oculus; corner pilasters; navigation **outside** Canvas
 - Stage copy updated; reset-camera control when a wing is focused
 
-### Pass 5 — (next) Depth & polish
+### Pass 5 — Depth & focus controls (this pass)
 
-- Per-poet look-at / rail stop; plaque text in 3D optional
-- Stronger PBR / light baking research (still free CC0 path)
-- Sound still later; morph still later
+Delivered:
+
+- Bronze name/years plaque under each 3D portrait
+- Emphasized frame glow when wing focused or arch hovered
+- DOM chip row (I–IV) under atrium stage to aim camera + scroll to wing
+- Merge of parallel content branch (moral portraits, Mayakovsky essay, library validation)
+
+### Pass 6 — (next)
+
+- Optional look-at single poet inside an arch
+- Stronger free PBR textures when assets land
+- Sound / morph still later
 
 ## Hard rules
 

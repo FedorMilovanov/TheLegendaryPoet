@@ -1,4 +1,4 @@
-import { Scale, AlertTriangle } from 'lucide-react';
+import { Scale, AlertTriangle } from '../PremiumIcons';
 import { titleCase } from '../../utils/titleCase';
 
 /**
@@ -21,7 +21,6 @@ export default function MoralPortrait({ content }: MoralPortraitProps) {
       aria-label="Моральный портрет"
       className="luxury-card relative overflow-hidden rounded-[2.5rem] border border-red-900/30 bg-gradient-to-br from-[#100808] via-[#0a0606] to-[#050505] p-10 shadow-xl md:p-12"
     >
-      {/* приглушённое тёмное свечение — намёк на серьёзность раздела */}
       <div className="pointer-events-none absolute -right-12 -top-12 text-red-900/10">
         <Scale size={240} />
       </div>
@@ -44,7 +43,7 @@ export default function MoralPortrait({ content }: MoralPortraitProps) {
           </p>
         </div>
 
-        <div className="poetry-text space-y-5 text-lg leading-[1.85] text-luxury-gray-light font-light md:text-xl">
+        <div className="poetry-text space-y-5 text-lg font-light leading-[1.85] text-luxury-gray-light md:text-xl">
           {content
             .split('\n\n')
             .map((p) => p.trim())

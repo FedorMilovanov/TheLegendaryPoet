@@ -719,10 +719,11 @@ html.theme-light .hall-wing-sealed {
 }
 
 .hall-atrium-stage-cta-ghost {
-  margin-left: 0.5rem;
   background: transparent;
   border-color: rgba(212, 175, 55, 0.28);
   color: var(--hall-ink-muted);
+  padding: 0.55rem 0.95rem;
+  font-size: 0.62rem;
 }
 
 .hall-atrium-stage-cta-ghost:hover,
@@ -731,14 +732,49 @@ html.theme-light .hall-wing-sealed {
   background: rgba(212, 175, 55, 0.08);
 }
 
-.hall-atrium-stage-head .hall-atrium-stage-cta + .hall-atrium-stage-cta {
-  margin-top: 0.65rem;
+.hall-atrium-stage-focus-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
 }
 
-@media (min-width: 520px) {
-  .hall-atrium-stage-head .hall-atrium-stage-cta + .hall-atrium-stage-cta {
-    margin-top: 0;
-  }
+.hall-atrium-stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--hall-ink-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.hall-atrium-stage-chip:hover,
+.hall-atrium-stage-chip:focus-visible {
+  border-color: rgba(212, 175, 55, 0.5);
+  color: var(--hall-ink);
+  outline: none;
+}
+
+.hall-atrium-stage-chip.is-active {
+  border-color: rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--hall-ink);
+}
+
+.hall-atrium-stage-chip-num {
+  font-family: var(--font-serif);
+  color: var(--hall-gold);
+  letter-spacing: 0.06em;
 }
 
 .hall-atrium-stage-canvas-wrap {

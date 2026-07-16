@@ -209,3 +209,16 @@ export function Feather(props: IconProps) {
     </IconShell>
   );
 }
+
+/** Balance scale — moral portrait / justice. */
+export function Scale(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <path d="M12 3v18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M5 21h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M6 7h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M6 7 3.5 12.5a2.5 2.5 0 1 0 5 0L6 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M18 7 15.5 12.5a2.5 2.5 0 1 0 5 0L18 7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </IconShell>
+  );
+}

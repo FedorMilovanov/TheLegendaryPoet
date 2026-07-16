@@ -164,10 +164,11 @@ export default function ArchPortal({
             <PortalPortrait
               key={poet.id}
               poet={poet}
-              position={[xOff, h * 0.42, 0.04]}
+              position={[xOff, h * 0.48, 0.04]}
               width={n === 1 ? 0.85 : 0.7}
-              height={n === 1 ? 1.1 : 0.92}
+              height={n === 1 ? 1.05 : 0.88}
               onOpen={onOpenPoet}
+              emphasized={focused || archHover}
             />
           );
         })}

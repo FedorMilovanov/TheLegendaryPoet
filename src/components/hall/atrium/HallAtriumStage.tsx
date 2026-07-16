@@ -170,12 +170,13 @@ export default function HallAtriumStage({
       data-lenis-prevent={shouldMount ? true : undefined}
     >
       <div className="hall-atrium-stage-head">
-        <span className="hall-atrium-stage-kicker">Проход III–IV · Объём и ниши</span>
+        <span className="hall-atrium-stage-kicker">Проход III–V · Объём, ниши, взгляд</span>
         <h2 className="hall-atrium-stage-title">Под куполом пантеона</h2>
         <p className="hall-atrium-stage-note">
-          Ротонда: мраморный пол, купол, четыре арки эпох. В проёмах — портреты из
-          кураторской карты ({hungCount} в арках; остальные — в крыльях ниже). Клик по
-          портрету открывает досье; клик по арке ведёт к крылу. Без «космического» тумана.
+          Ротонда: мраморный пол, купол, четыре арки эпох. В проёмах — портреты с
+          бронзовыми табличками из кураторской карты ({hungCount} в арках; остальные — в
+          крыльях ниже). Клик по портрету открывает досье; клик по арке или кнопке
+          эпохи ведёт взгляд камеры и скролл к крылу. Без «космического» тумана.
         </p>
         {can3d && !userEnabled && (
           <button
@@ -186,14 +187,30 @@ export default function HallAtriumStage({
             Открыть объём атриума
           </button>
         )}
-        {can3d && userEnabled && focusWing && (
-          <button
-            type="button"
-            className="hall-atrium-stage-cta hall-atrium-stage-cta-ghost"
-            onClick={() => onFocusWing(null)}
-          >
-            Сбросить взгляд камеры
-          </button>
+        {can3d && userEnabled && (
+          <div className="hall-atrium-stage-focus-row" role="group" aria-label="Взгляд на крыло">
+            {hallWings.map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                className={`hall-atrium-stage-chip${focusWing === w.id ? ' is-active' : ''}`}
+                onClick={() => onEnterWing(w.id)}
+                aria-pressed={focusWing === w.id}
+              >
+                <span className="hall-atrium-stage-chip-num">{w.numeral}</span>
+                {w.shortTitle}
+              </button>
+            ))}
+            {focusWing && (
+              <button
+                type="button"
+                className="hall-atrium-stage-cta hall-atrium-stage-cta-ghost"
+                onClick={() => onFocusWing(null)}
+              >
+                Сбросить взгляд
+              </button>
+            )}
+          </div>
         )}
         {!can3d && <AtriumFallback reason="unavailable" />}
       </div>
