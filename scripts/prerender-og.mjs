@@ -85,14 +85,18 @@ function write(routePath, html) {
 }
 
 async function main() {
-  const [{ getAllEssays }, { poets, articles }] = await Promise.all([
+  // Same sources the app uses — including poet-attached articles via getAllArticles().
+  const [{ getAllEssays }, { poets }, { getAllArticles }] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
+    import(path.resolve('src/utils/articleLibrary.ts')),
   ]);
 
+  const essays = getAllEssays();
+  const articles = getAllArticles();
   let count = 0;
 
-  for (const essay of getAllEssays()) {
+  for (const essay of essays) {
     const html = renderPage({
       title: `${essay.title} — THE LEGENDARY POET`,
       description: essay.excerpt,
@@ -132,7 +136,9 @@ async function main() {
     count++;
   }
 
-  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${articles.length} articles)`);
+  console.log(
+    `prerender-og: wrote ${count} static pages (${essays.length} essays, ${poets.length} poets, ${articles.length} articles)`,
+  );
 }
 
 main();

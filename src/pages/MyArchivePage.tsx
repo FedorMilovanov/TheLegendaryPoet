@@ -18,6 +18,8 @@ export default function MyArchivePage() {
     title: 'Мой Архив — THE LEGENDARY POET',
     description: 'Личная коллекция сохранённых стихов на этом устройстве.',
     path: '/archive',
+    // Per-device localStorage content — not a public indexable catalogue.
+    robots: 'noindex, nofollow',
   });
 
   const favorites = useSyncExternalStore(subscribeArchive, getFavoritePoems, getFavoritePoems);

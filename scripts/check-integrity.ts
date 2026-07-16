@@ -246,7 +246,21 @@ console.log('\n— Feedback validation —');
   if (errors === 0) ok('validateScores / validateCommentInput / pluralRu');
 }
 
+// Prerender coverage (source-level): must use getAllArticles, not only global articles.
+console.log('\n— Prerender source —');
+{
+  const prerender = fs.readFileSync(path.join(root, 'scripts', 'prerender-og.mjs'), 'utf8');
+  if (!prerender.includes('getAllArticles')) {
+    fail('scripts/prerender-og.mjs must prerender poet-attached articles via getAllArticles()');
+  } else {
+    ok('prerender-og uses getAllArticles()');
+  }
+  if (!prerender.includes('getAllEssays')) fail('prerender-og missing getAllEssays');
+  else ok('prerender-og uses getAllEssays()');
+}
+
 // Library modularity
+
 console.log('\n— Library modularity —');
 const poetsTs = fs.readFileSync(path.join(srcRoot, 'data', 'poets.ts'), 'utf8');
 if (!/export\s*\{[^}]*poets[^}]*\}\s*from\s*['"]\.\/library['"]/.test(poetsTs) && poetsTs.split('\n').length > 30) {

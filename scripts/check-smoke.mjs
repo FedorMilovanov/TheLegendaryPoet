@@ -151,6 +151,8 @@ async function assertHttp() {
   const ogCandidates = [
     { path: `${BASE}essays/yesenin-kutezhi/`, needle: 'Есенин' },
     { path: `${BASE}poets/alexander-pushkin/`, needle: 'Пушкин' },
+    // Poet-attached article (must be prerendered via getAllArticles, not only globals)
+    { path: `${BASE}articles/article-1/`, needle: 'Пушкин' },
   ];
   for (const { path: route, needle } of ogCandidates) {
     // Disk path: dist/essays/yesenin-kutezhi/index.html
