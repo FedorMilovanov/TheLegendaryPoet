@@ -1,7 +1,8 @@
 import { Essay } from '../../types/essay';
 import { yeseninKutezhi } from './yeseninKutezhi';
+import { mayakovskyGromovoy } from './mayakovskyGromovoy';
 
-export const essays: Essay[] = [yeseninKutezhi];
+export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy];
 
 export function getAllEssays(): Essay[] {
   return essays;

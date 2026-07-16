@@ -8,6 +8,7 @@ import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
 import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
+import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
@@ -113,9 +114,9 @@ export default function PoetDetailPage() {
               dimensions={poetRatingDimensions}
             />
 
-            {poet.spiritualSearch && <SpiritualPath content={poet.spiritualSearch} />}
+{poet.spiritualSearch && <SpiritualPath content={poet.spiritualSearch} />}
+            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
-
             {poet.historicalNote && (
               <div className="luxury-card rounded-[2.5rem] border border-luxury-gold/10 bg-[#0a0a0a]/50 p-8 md:p-10">
                 <h2 className="mb-6 border-b border-luxury-gold/10 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
