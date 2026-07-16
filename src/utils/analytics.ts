@@ -8,32 +8,54 @@
  *   VITE_GA_ID               e.g. "G-XXXXXXX"
  * With neither set this is a complete no-op — no network, no globals.
  */
+
+interface AnalyticsWindow extends Window {
+  ym?: (...args: unknown[]) => void;
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
+}
+
 let started = false;
+
+function env(key: string): string | undefined {
+  const bag =
+    (typeof import.meta !== 'undefined' && (import.meta.env as Record<string, string | undefined>)) ||
+    {};
+  const value = bag[key];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
 
 export function initAnalytics() {
   if (started || typeof window === 'undefined') return;
   started = true;
 
-  const metrikaId = import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined;
-  const gaId = import.meta.env.VITE_GA_ID as string | undefined;
+  const metrikaId = env('VITE_YANDEX_METRIKA_ID');
+  const gaId = env('VITE_GA_ID');
+  const w = window as AnalyticsWindow;
 
   if (metrikaId) {
-    // Yandex.Metrika counter
-    (function (m: any, e: Document, t: string, r: string, i: string) {
-      m[i] = m[i] || function (...args: unknown[]) { (m[i].a = m[i].a || []).push(args); };
-      m[i].l = 1 * (new Date() as unknown as number);
-      const k = e.createElement(t) as HTMLScriptElement;
-      const a = e.getElementsByTagName(t)[0];
-      k.async = true;
-      k.src = r;
-      a.parentNode?.insertBefore(k, a);
-    })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-    (window as any).ym(Number(metrikaId), 'init', {
+    // Yandex.Metrika loader (official snippet, typed without `any`).
+    const queueKey = 'ym' as const;
+    type YmFn = ((...args: unknown[]) => void) & { a?: unknown[]; l?: number };
+    if (!w.ym) {
+      const fn: YmFn = (...args: unknown[]) => {
+        (fn.a = fn.a || []).push(args);
+      };
+      fn.l = Date.now();
+      w.ym = fn;
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://mc.yandex.ru/metrika/tag.js';
+      const first = document.getElementsByTagName('script')[0];
+      first?.parentNode?.insertBefore(script, first);
+    }
+    w.ym?.(Number(metrikaId), 'init', {
       clickmap: true,
       trackLinks: true,
       accurateTrackBounce: true,
       webvisor: true,
     });
+    void queueKey;
   }
 
   if (gaId) {
@@ -41,9 +63,11 @@ export function initAnalytics() {
     s.async = true;
     s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
     document.head.appendChild(s);
-    (window as any).dataLayer = (window as any).dataLayer || [];
-    function gtag(...args: unknown[]) { (window as any).dataLayer.push(args); }
-    (window as any).gtag = gtag;
+    w.dataLayer = w.dataLayer || [];
+    function gtag(...args: unknown[]) {
+      w.dataLayer?.push(args);
+    }
+    w.gtag = gtag;
     gtag('js', new Date());
     gtag('config', gaId);
   }

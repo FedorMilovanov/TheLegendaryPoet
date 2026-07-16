@@ -1,7 +1,7 @@
 {
-  "name": "react-vite-tailwind",
+  "name": "the-legendary-poet",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -38,5 +38,6 @@
     "tsx": "^4.23.1",
     "typescript": "5.9.3",
     "vite": "7.2.4"
-  }
+  },
+  "description": "Dark luxury editorial site about great Russian poets"
 }

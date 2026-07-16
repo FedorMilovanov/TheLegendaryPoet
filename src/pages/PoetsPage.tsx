@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { poets } from '../data/poets';
 import PoetCard from '../components/PoetCard';
-import { Poet } from '../types/poet';
+import type { Poet } from '../types/poet';
 import { Search, Filter, ArrowDownUp, X, ArrowRight, Sparkles } from '../components/PremiumIcons';
 import Reveal from '../components/Reveal';
 import { titleCase } from '../utils/titleCase';
+import { useSeo } from '../hooks/useSeo';
 
 function PoetsHero() {
   return (
@@ -128,16 +130,41 @@ function PoetsGrid({ poets }: { poets: Poet[] }) {
 }
 
 export default function PoetsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  useSeo({
+    title: 'Каталог поэтов — THE LEGENDARY POET',
+    description:
+      'Архив великих русских поэтов: биографии, тексты, литературный и — где это оправдано — христианский разбор. Поиск и фильтры по эпохе и тегам.',
+    path: '/poets',
+    keywords: 'русские поэты, каталог, Пушкин, Лермонтов, Ахматова, Есенин, стихи',
+  });
+
+  // Honour ?q= from the WebSite SearchAction schema and shareable filter links.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'year'>('rating');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const allTags = useMemo(() => Array.from(new Set(poets.flatMap((poet) => poet.tags))), []);
+
+  // Keep the address bar in sync for shareable searches (WebSite SearchAction uses ?q=).
+  // Deliberately omit searchParams from deps to avoid a replace loop.
+  useEffect(() => {
+    const next = searchTerm.trim();
+    const current = new URLSearchParams(window.location.search).get('q') || '';
+    if (next === current) return;
+    if (next) setSearchParams({ q: next }, { replace: true });
+    else setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, setSearchParams]);
 
   const filteredPoets = useMemo(() => {
     return poets
       .filter((poet) => {
         const q = searchTerm.toLowerCase();
-        const matchesSearch = poet.name.toLowerCase().includes(q) || poet.fullName.toLowerCase().includes(q);
+        const matchesSearch =
+          !q ||
+          poet.name.toLowerCase().includes(q) ||
+          poet.fullName.toLowerCase().includes(q) ||
+          poet.tags.some((t) => t.toLowerCase().includes(q));
         const matchesTag = !selectedTag || poet.tags.includes(selectedTag);
         return matchesSearch && matchesTag;
       })

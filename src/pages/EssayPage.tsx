@@ -23,11 +23,12 @@ export default function EssayPage() {
     title: essay ? `${essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
     description: essay ? essay.excerpt : 'Статья не найдена.',
     path: `/essays/${slug ?? ''}`,
-    type: 'article',
+    type: essay ? 'article' : 'website',
     image: essay?.cover,
     publishedTime: essay?.date,
     author: essay?.author,
     keywords: essay?.tags.join(', '),
+    robots: essay ? undefined : 'noindex, nofollow',
   });
 
   if (!essay) {

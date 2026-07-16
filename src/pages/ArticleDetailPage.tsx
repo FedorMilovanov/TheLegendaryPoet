@@ -38,6 +38,11 @@ export default function ArticleDetailPage() {
     title: article ? `${article.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
     description: article ? article.excerpt : 'Статья не найдена.',
     path: `/articles/${id ?? ''}`,
+    type: article ? 'article' : 'website',
+    publishedTime: article?.date,
+    author: article?.author,
+    image: article?.image,
+    robots: article ? undefined : 'noindex, nofollow',
   });
 
   if (!article) {

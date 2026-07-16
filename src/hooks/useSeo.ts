@@ -16,6 +16,8 @@ interface SeoOptions {
   author?: string;
   /** Comma-joined keywords. */
   keywords?: string;
+  /** robots meta (e.g. "noindex, nofollow" for 404). Default: indexable. */
+  robots?: string;
   /** Optional pre-built JSON-LD object; overrides the default WebPage/Article schema. */
   jsonLd?: Record<string, unknown>;
 }
@@ -52,7 +54,7 @@ function ensureLink(rel: string, href: string) {
  * per-route JSON-LD block (WebPage / Article) so Google & Yandex can build
  * rich results. Both crawlers render JS, so client-side injection is indexed.
  */
-export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
+export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, robots, jsonLd }: SeoOptions) {
   useEffect(() => {
     // siteConfig.url has no trailing slash; path is "/..." or "/". Avoid a bare
     // origin without "/" for the homepage canonical (search engines prefer it).
@@ -63,6 +65,14 @@ export function useSeo({ title, description, path, type = 'website', image, publ
     ensureMeta('description', description);
     ensureLink('canonical', url);
     if (keywords) ensureMeta('keywords', keywords);
+    if (robots) ensureMeta('robots', robots);
+    else {
+      // Clear a previous noindex when navigating away from 404.
+      const existing = document.head.querySelector('meta[name="robots"]');
+      if (existing?.getAttribute('content')?.includes('noindex')) {
+        existing.setAttribute('content', 'index, follow');
+      }
+    }
 
     // Open Graph
     ensureMeta('og:title', title, 'property');
@@ -119,5 +129,5 @@ export function useSeo({ title, description, path, type = 'website', image, publ
       document.head.appendChild(ld);
     }
     ld.textContent = JSON.stringify(schema);
-  }, [title, description, path, type, image, publishedTime, author, keywords, jsonLd]);
+  }, [title, description, path, type, image, publishedTime, author, keywords, robots, jsonLd]);
 }

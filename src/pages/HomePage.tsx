@@ -17,14 +17,13 @@ import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
 import { siteConfig } from '../config/site';
 
-const portraits = [
-  { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
-  { name: 'Михаил Лермонтов', src: '/images/lermontov.jpg' },
-  { name: 'Александр Пушкин', src: '/images/pushkin.jpg' },
-  { name: 'Федор Тютчев', src: '/images/tyutchev.jpg' },
-  { name: 'Владимир Маяковский', src: '/images/mayakovsky.jpg' },
-  { name: 'Афанасий Фет', src: '/images/fet.jpg' },
-];
+/** Hero portrait row — derived from the library so new poets appear automatically. */
+function getHeroPortraits(count = 6) {
+  return [...poets]
+    .sort((a, b) => b.rating - a.rating || a.birthYear - b.birthYear)
+    .slice(0, count)
+    .map((p) => ({ name: p.name, src: p.photo, id: p.id }));
+}
 
 function HeroTitle() {
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
@@ -92,9 +91,11 @@ function HeroTitle() {
 }
 
 function HeroSection() {
+  const portraits = useMemo(() => getHeroPortraits(6), []);
+
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-[#020811] pt-24">
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_48%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/20 via-transparent to-[#050505]" />
         <div className="absolute inset-x-0 top-24 mx-auto h-[460px] max-w-6xl rounded-full bg-cyan-500/10 blur-[90px]" />
@@ -103,10 +104,27 @@ function HeroSection() {
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full">
           <div className="mx-auto mb-16 grid max-w-5xl grid-cols-3 gap-6 opacity-80 sm:grid-cols-6 lg:gap-8">
             {portraits.map((portrait, index) => (
-              <motion.div key={portrait.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 * index, duration: 0.65 }} className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]">
-                <PoetImage src={portrait.src} name={portrait.name} alt={`Портрет: ${portrait.name}`} className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
-              </motion.div>
+              <Link
+                key={portrait.id}
+                to={`/poets/${portrait.id}`}
+                className="group relative block aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)] transition hover:border-cyan-400/40 hover:shadow-[0_0_36px_rgba(0,212,255,0.22)]"
+                aria-label={`Открыть страницу: ${portrait.name}`}
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.12 * index, duration: 0.65 }}
+                  className="h-full w-full"
+                >
+                  <PoetImage
+                    src={portrait.src}
+                    name={portrait.name}
+                    alt={`Портрет: ${portrait.name}`}
+                    className="h-full w-full object-cover opacity-75 contrast-125 grayscale transition duration-700 group-hover:scale-105 group-hover:opacity-95 group-hover:grayscale-0"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
+                </motion.div>
+              </Link>
             ))}
           </div>
           <HeroTitle />
@@ -124,8 +142,8 @@ function HeroSection() {
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
               <Link to="/hall" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-luxury-gold/12 bg-gradient-to-br from-luxury-gold/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-luxury-gold/30 hover:shadow-[0_0_40px_rgba(212,175,55,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <Sparkles className="h-14 w-14 text-luxury-gold drop-shadow-[0_0_20px_rgba(212,175,55,0.42)] transition-transform duration-500 group-hover:scale-[1.1] group-hover:rotate-12" size={56} />
-                <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-luxury-gold-light/90 transition-colors group-hover:text-luxury-gold-light">Зал 3D</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Интерактивный</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-luxury-gold-light/90 transition-colors group-hover:text-luxury-gold-light">Зал</span>
+                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">В разработке</span>
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
