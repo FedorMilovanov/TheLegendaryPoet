@@ -143,7 +143,7 @@ function HeroSection() {
               <Link to="/hall" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-luxury-gold/12 bg-gradient-to-br from-luxury-gold/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-luxury-gold/30 hover:shadow-[0_0_40px_rgba(212,175,55,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <Sparkles className="h-14 w-14 text-luxury-gold drop-shadow-[0_0_20px_rgba(212,175,55,0.42)] transition-transform duration-500 group-hover:scale-[1.1] group-hover:rotate-12" size={56} />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-luxury-gold-light/90 transition-colors group-hover:text-luxury-gold-light">Зал</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">В разработке</span>
+                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Храм поэзии</span>
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>

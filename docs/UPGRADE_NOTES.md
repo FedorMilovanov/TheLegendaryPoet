@@ -64,7 +64,6 @@ future agents don't re-litigate it.
 
 ## Deferred (kept but intentionally not shipped)
 
-- **Hall v3 (`/hall`)**: now a lightweight placeholder (`HallPage.tsx`) showing a
-  blurred reference + "в разработке". The R3F components in `src/components/hall/*`
-  are **kept as scaffolding** for the future rebuild but are NOT routed, so
-  three.js does not ship in the bundle. See `docs/HALL_RESEARCH.md` for the plan.
+- **Hall v3 (`/hall`)**: museum vestibule (Pass 1) — see `docs/HALL_V3_PASSES.md`.
+  DOM pantheon with four era wings; R3F scaffolding under `src/components/hall/*`
+  root remains unrouted so three.js does not ship.

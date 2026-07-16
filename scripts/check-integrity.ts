@@ -259,8 +259,34 @@ console.log('\n— Prerender source —');
   else ok('prerender-og uses getAllEssays()');
 }
 
-// Library modularity
+// Hall wing layout — poet ids must resolve to library entries
+console.log('\n— Hall wings —');
+{
+  const { hallWings, getHallPoetIds } = await import('../src/data/hall/index.ts');
+  const { poets: hallPoets } = await import('../src/data/library/index.ts');
+  const ids = new Set(hallPoets.map((p: { id: string }) => p.id));
+  if (hallWings.length !== 4) fail(`expected 4 wings, got ${hallWings.length}`);
+  else ok('4 era wings');
+  const numerals = hallWings.map((w: { numeral: string }) => w.numeral).join(',');
+  if (numerals !== 'I,II,III,IV') fail(`wing numerals must be I–IV in order, got ${numerals}`);
+  else ok('wing numerals I–IV');
+  const hung = getHallPoetIds() as string[];
+  const missing = hung.filter((id) => !ids.has(id));
+  if (missing.length) fail(`hall wing references unknown poets: ${missing.join(', ')}`);
+  else ok(`${hung.length} hung poets resolve to library`);
+  const modern = hallWings.find((w: { id: string }) => w.id === 'modern');
+  if (!modern || modern.poetIds.length !== 0) fail('modern wing must stay empty until curated');
+  else ok('modern wing honestly empty');
+  if (new Set(hung).size !== hung.length) fail('duplicate poet across wings');
+  else ok('no duplicate poets across wings');
+  // Hall page must not import three.js
+  const hallPage = fs.readFileSync(path.join(srcRoot, 'pages', 'HallPage.tsx'), 'utf8');
+  if (/from ['"]three['"]|@react-three|HallOfPoets/.test(hallPage)) {
+    fail('HallPage must stay free of three.js / HallOfPoets until R3F pass');
+  } else ok('HallPage free of three.js');
+}
 
+// Library modularity
 console.log('\n— Library modularity —');
 const poetsTs = fs.readFileSync(path.join(srcRoot, 'data', 'poets.ts'), 'utf8');
 if (!/export\s*\{[^}]*poets[^}]*\}\s*from\s*['"]\.\/library['"]/.test(poetsTs) && poetsTs.split('\n').length > 30) {

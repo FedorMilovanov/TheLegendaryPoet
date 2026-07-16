@@ -17,7 +17,9 @@
     "check:integrity": "npx tsx scripts/check-integrity.ts",
     "check": "npm run typecheck && npm run check:integrity && npm run check:deep && npm run build && node scripts/postbuild.mjs && npm run check:smoke",
     "check:deep": "npx tsx scripts/check-deep.ts",
-    "check:smoke": "node scripts/check-smoke.mjs"
+    "check:smoke": "node scripts/check-smoke.mjs",
+    "test:hall": "npx playwright test e2e/hall.spec.ts",
+    "check:hall": "node scripts/check-hall.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -35,6 +37,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
     "@types/react": "19.2.7",

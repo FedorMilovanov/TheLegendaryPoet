@@ -155,6 +155,17 @@ ok('session vote guards (memory)');
 
 ok(`content: ${getAllArticles().length} articles, ${essays.length} essays`);
 
+// Hall wings
+{
+  const { hallWings, getHallPoetIds } = await import('../src/data/hall/index.ts');
+  const hung = getHallPoetIds();
+  const libIds = new Set(poets.map((p) => p.id));
+  if (hallWings.length !== 4) fail('hall wings count');
+  if (hung.some((id: string) => !libIds.has(id))) fail('hall poet id missing from library');
+  if (hallWings.find((w: { id: string }) => w.id === 'modern')?.poetIds.length) fail('modern wing not empty');
+  ok(`hall wings: ${hung.length} poets hung`);
+}
+
 console.log('\n— Result —');
 if (fails === 0) {
   console.log('PASS — deep checks clean.');

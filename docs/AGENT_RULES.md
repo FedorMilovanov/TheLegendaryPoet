@@ -71,10 +71,13 @@ If a rule conflicts with a short-term visual request, **keep the rule** and ask 
 - New block type = extend `EssayBlock` union + add a `case` in `blocks.tsx` (the `never` guard forces it) + tokens in `theme.ts`.
 - Full guide: `docs/ESSAY_ENGINE.md`.
 
-### Hall (3D)
+### Hall (museum → 3D)
 
-- `/hall` is a **placeholder** (`HallPage.tsx`). R3F stack in `src/components/hall/*` is scaffolding and is **not** imported on the live route — keep it that way until the rebuild is quality-ready.
-- Do not ship unfinished 3D as a visible feature. Remove rather than show a weak prototype (protocol rule).
+- Live `/hall` is the **museum vestibule**: `src/components/hall/museum/*` + `src/data/hall/wings.ts`.
+- Multi-pass journal: `docs/HALL_V3_PASSES.md`. Do not skip passes or rush R3F into the route.
+- Old R3F scaffolding under `src/components/hall/*` root is **not** routed. Never import `HallOfPoets` into `HallPage` until Pass 3+ criteria are met.
+- Wing poet ids are full library ids (`alexander-pushkin`). Quotes only from `poetMuseumMeta`.
+- After hall work: `npm run check` + `npm run check:hall` (+ `npm run test:hall` when Chromium is available).
 
 ### Community feedback
 
@@ -168,7 +171,7 @@ Before merging / finishing a session, confirm:
 - [ ] SVG gradient ids are unique per instance
 - [ ] SiteLayout still a layout route (shell not remounting)
 - [ ] Lenis not recreated on every pathname change
-- [ ] `/hall` still does not import three.js
+- [ ] `/hall` museum vestibule works; three.js still not imported on that route
 - [ ] `npm run check` is green
 - [ ] Sitemap regenerated if routes/content changed
 - [ ] Docs that you made false were updated
