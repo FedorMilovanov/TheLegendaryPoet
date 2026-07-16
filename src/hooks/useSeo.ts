@@ -54,7 +54,9 @@ function ensureLink(rel: string, href: string) {
  */
 export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
   useEffect(() => {
-    const url = `${siteConfig.url}${path}`;
+    // siteConfig.url has no trailing slash; path is "/..." or "/". Avoid a bare
+    // origin without "/" for the homepage canonical (search engines prefer it).
+    const url = path === '/' ? `${siteConfig.url}/` : `${siteConfig.url}${path}`;
     const img = absUrl(image || '/og-image.jpg');
 
     document.title = title;

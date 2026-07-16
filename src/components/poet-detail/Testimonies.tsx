@@ -1,4 +1,4 @@
-import { Quote, Award } from 'lucide-react';
+import { Quote, Award } from '../PremiumIcons';
 import { Testimony } from '../../types/poet';
 
 function TestimonyCard({ item }: { item: Testimony }) {

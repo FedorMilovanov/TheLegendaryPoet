@@ -840,14 +840,18 @@ html.theme-light body {
 
 html.theme-light [class*="bg-[#050505]"],
 html.theme-light [class*="bg-[#020811]"],
+html.theme-light [class*="bg-[#02060b]"],
 html.theme-light [class*="bg-[#0a0a0a]"],
 html.theme-light [class*="bg-[#080808]"],
+html.theme-light [class*="bg-[#060606]"],
 html.theme-light [class*="bg-[#061018]"],
 html.theme-light [class*="bg-[#040910]"],
 html.theme-light [class*="bg-[#03070d]"],
+html.theme-light [class*="bg-[#050b12]"],
 html.theme-light [class*="bg-[#07111a]"],
 html.theme-light [class*="bg-[#08131d]"],
 html.theme-light [class*="bg-[#0b1822]"],
+html.theme-light [class*="bg-[#0c1822]"],
 html.theme-light [class*="bg-[#111]"] {
   background-color: rgba(255, 250, 240, 0.86) !important;
 }

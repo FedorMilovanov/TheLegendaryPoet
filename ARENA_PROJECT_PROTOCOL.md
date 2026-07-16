@@ -2,6 +2,7 @@
 
 ## Arena Rules For This Project
 
+- **Full agent contract:** `docs/AGENT_RULES.md` — read it before editing. This file is the short Arena-specific layer on top of it.
 - Do not treat `150 lines` or `12 KB` as hard architecture laws. They are transfer/readability safeguards for LM Arena, not design rules.
 - Write clean, logical modules first. Split files when a file has multiple responsibilities, becomes hard to review, or risks Arena truncation.
 - Prefer small UI components, but do not create artificial fragmentation that makes the project harder to maintain.
@@ -9,9 +10,12 @@
 - Avoid large JSX files with long Cyrillic prose. Put long texts and poetry data into `src/data/`.
 - Poet data must stay modular in `src/data/library/*.ts`; do not rebuild one huge `poets.ts` file.
 - New poets must be added as separate files in `src/data/library/` and exported through `src/data/library/index.ts`.
-- Do not use emoji in UI. Use SVG icons via Lucide or custom SVG.
-- Do not use weak placeholder 3D sections. Remove unfinished gimmicks rather than shipping them.
-- Always run `build_project` before final response.
+- Do not use emoji in UI. Prefer `PremiumIcons` / `ChannelIcons`; Lucide is acceptable inside dense community panels.
+- Do not use weak placeholder 3D sections. `/hall` stays a lightweight placeholder until the R3F rebuild is quality-ready.
+- Brand links and contact email live only in `src/config/site.ts`. Never hard-code YouTube/Rutube/VK/email in components.
+- Internal navigation: import `Link` from `components/ui/Link`, never from `react-router-dom`.
+- SVG `<defs id=…>` must be unique per instance (`useId`) — BrandMark and BookMonogram already do this.
+- Before finishing: `npm run check` (typecheck + integrity + build). If routes/content changed, also `npm run sitemap`.
 
 ## Design Rules
 

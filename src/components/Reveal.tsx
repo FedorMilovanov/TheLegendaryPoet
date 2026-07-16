@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none';
 
 interface RevealProps {
-  children: React.ReactNode;
+  children: ReactNode;
   direction?: Direction;
   delay?: number;
   duration?: number;

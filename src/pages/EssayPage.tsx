@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
-import { ArrowLeft, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink } from '../components/PremiumIcons';
 import { getEssayBySlug } from '../data/essays';
 import { poets } from '../data/poets';
 import ReadingProgress from '../components/articles/ReadingProgress';
@@ -115,7 +115,7 @@ export default function EssayPage() {
 
         <section className="mx-auto mt-16 max-w-6xl">
           <CommunityPanel
-            targetType="article"
+            targetType="essay"
             targetId={essay.id}
             title={`Оценка материала: ${essay.title}`}
             dimensions={articleRatingDimensions}

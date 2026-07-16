@@ -41,11 +41,11 @@ export default function PoemOfDay() {
               </div>
 
               <div className="mt-10 flex justify-center">
-                <Link 
-                  to={`/poets/${poet.id}`}
+                <Link
+                  to={`/poets/${poet.id}#poem-${poem.id}`}
                   className="group inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-6 py-3 text-sm font-bold uppercase tracking-wider text-cyan-300 transition-all hover:bg-cyan-400/10 hover:shadow-[0_0_20px_rgba(0,212,255,0.15)]"
                 >
-                  Читать у поэта <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  Читать полностью <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
             </div>

@@ -29,10 +29,10 @@ THE LEGENDARY POET — React/Vite/Tailwind v4 single-page site for a dark luxury
 
 ## Critical Files
 
-- `src/components/home/HeroSection.tsx` — primary cover/hero; YouTube is the primary media channel, Rutube secondary.
+- `src/pages/HomePage.tsx` — primary cover/hero lives as local sections inside the page; YouTube is the primary media channel, Rutube secondary.
 - `src/components/command/CommandPalette.tsx` — global quick search and navigation via `Ctrl/Cmd + K`.
 - `src/components/articles/ReadingProgress.tsx` and `ArticleMetaRail.tsx` — article reading UX enhancements.
-- `src/components/BrandMark.tsx` — LP SVG emblem, no frame, must read as `LP` (never visually as `PL`).
+- `src/components/BrandMark.tsx` — hooded cloaked figure emblem (not the old LP monogram), pure SVG, frameless; gradient ids unique via `useId`.
 - `src/data/poets.ts` — thin re-export aggregator for library data.
 - `src/data/library/*.ts` — modular poet, article, and music data.
 - `src/pages/ArticleDetailPage.tsx` — real article detail route for `/articles/:id`.

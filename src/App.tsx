@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
@@ -7,16 +7,6 @@ import { initAnalytics } from './utils/analytics';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
-import HallPage from './pages/HallPage';
-import PoetsPage from './pages/PoetsPage';
-import PoetDetailPage from './pages/PoetDetailPage';
-import ArticlesPage from './pages/ArticlesPage';
-import ArticleDetailPage from './pages/ArticleDetailPage';
-import EssayPage from './pages/EssayPage';
-import MusicPage from './pages/MusicPage';
-import AboutPage from './pages/AboutPage';
-import MyArchivePage from './pages/MyArchivePage';
-import NotFoundPage from './pages/NotFoundPage';
 import CommandPalette from './components/command/CommandPalette';
 import CustomCursor from './components/CustomCursor';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -26,6 +16,33 @@ import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
+
+// Route-level code splitting: keep the shell + homepage lean. Secondary
+// sections download only when first visited. Essay data is especially heavy.
+const HallPage = lazy(() => import('./pages/HallPage'));
+const PoetsPage = lazy(() => import('./pages/PoetsPage'));
+const PoetDetailPage = lazy(() => import('./pages/PoetDetailPage'));
+const ArticlesPage = lazy(() => import('./pages/ArticlesPage'));
+const ArticleDetailPage = lazy(() => import('./pages/ArticleDetailPage'));
+const EssayPage = lazy(() => import('./pages/EssayPage'));
+const MusicPage = lazy(() => import('./pages/MusicPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const MyArchivePage = lazy(() => import('./pages/MyArchivePage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[50svh] items-center justify-center" aria-busy="true" aria-live="polite">
+      <div className="flex flex-col items-center gap-4">
+        <BrandMark size="md" />
+        <div className="h-px w-16 overflow-hidden rounded-full bg-cyan-400/15">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-cyan-400/50" />
+        </div>
+        <span className="sr-only">Загрузка раздела</span>
+      </div>
+    </div>
+  );
+}
 
 const WipeOverlay = () => (
   <motion.div
@@ -51,7 +68,7 @@ const WipeOverlay = () => (
 // reveal. Route changes are handled by the browser (see lib/viewTransition.ts).
 let introPlayed = false;
 
-const PageWrapper = ({ children }: { children: React.ReactNode }) => {
+const PageWrapper = ({ children }: { children: ReactNode }) => {
   const showIntro = useRef(!introPlayed).current;
   useEffect(() => {
     introPlayed = true;
@@ -65,8 +82,6 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
       </>
     );
   }
-  // Fallback for browsers without the View Transitions API: the classic
-  // framer wipe + fade on every navigation.
   return (
     <>
       <WipeOverlay />
@@ -82,8 +97,15 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-function SiteLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Persistent shell: header, footer, scroll, chrome.
+ * Mounted once via a layout route so navigation does not remount Lenis,
+ * the command palette, or the custom cursor on every page change.
+ */
+function SiteLayout() {
   useAutoHideChrome();
+  const location = useLocation();
+
   return (
     <SmoothScroll>
       <div className="relative min-h-screen overflow-x-clip bg-[#050505] selection:bg-luxury-gold/30">
@@ -99,9 +121,17 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
         <Header />
         <CommandPalette />
         <main id="main-content" className="relative z-10 pb-32 md:pb-0">
-          {/* AnimatePresence would delay unmounts and break the View
-              Transition snapshot pairing, so it only wraps the fallback. */}
-          {supportsViewTransitions ? children : <AnimatePresence mode="wait">{children}</AnimatePresence>}
+          <Suspense fallback={<RouteFallback />}>
+            {supportsViewTransitions ? (
+              <Outlet />
+            ) : (
+              <AnimatePresence mode="wait">
+                <PageWrapper key={location.pathname}>
+                  <Outlet />
+                </PageWrapper>
+              </AnimatePresence>
+            )}
+          </Suspense>
         </main>
         <MobileDock />
         <ScrollToTop />
@@ -113,21 +143,30 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Page element with optional one-shot intro (View Transitions path). */
+function Page({ children }: { children: ReactNode }) {
+  if (supportsViewTransitions) {
+    return <PageWrapper>{children}</PageWrapper>;
+  }
+  return <>{children}</>;
+}
+
 function AnimatedRoutes() {
-  const location = useLocation();
   return (
-    <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<SiteLayout><PageWrapper><HomePage /></PageWrapper></SiteLayout>} />
-      <Route path="/hall" element={<SiteLayout><PageWrapper><HallPage /></PageWrapper></SiteLayout>} />
-      <Route path="/poets" element={<SiteLayout><PageWrapper><PoetsPage /></PageWrapper></SiteLayout>} />
-      <Route path="/poets/:id" element={<SiteLayout><PageWrapper><PoetDetailPage /></PageWrapper></SiteLayout>} />
-      <Route path="/articles" element={<SiteLayout><PageWrapper><ArticlesPage /></PageWrapper></SiteLayout>} />
-      <Route path="/essays/:slug" element={<SiteLayout><PageWrapper><EssayPage /></PageWrapper></SiteLayout>} />
-      <Route path="/articles/:id" element={<SiteLayout><PageWrapper><ArticleDetailPage /></PageWrapper></SiteLayout>} />
-      <Route path="/music" element={<SiteLayout><PageWrapper><MusicPage /></PageWrapper></SiteLayout>} />
-      <Route path="/about" element={<SiteLayout><PageWrapper><AboutPage /></PageWrapper></SiteLayout>} />
-      <Route path="/archive" element={<SiteLayout><PageWrapper><MyArchivePage /></PageWrapper></SiteLayout>} />
-      <Route path="*" element={<SiteLayout><PageWrapper><NotFoundPage /></PageWrapper></SiteLayout>} />
+    <Routes>
+      <Route element={<SiteLayout />}>
+        <Route path="/" element={<Page><HomePage /></Page>} />
+        <Route path="/hall" element={<Page><HallPage /></Page>} />
+        <Route path="/poets" element={<Page><PoetsPage /></Page>} />
+        <Route path="/poets/:id" element={<Page><PoetDetailPage /></Page>} />
+        <Route path="/articles" element={<Page><ArticlesPage /></Page>} />
+        <Route path="/essays/:slug" element={<Page><EssayPage /></Page>} />
+        <Route path="/articles/:id" element={<Page><ArticleDetailPage /></Page>} />
+        <Route path="/music" element={<Page><MusicPage /></Page>} />
+        <Route path="/about" element={<Page><AboutPage /></Page>} />
+        <Route path="/archive" element={<Page><MyArchivePage /></Page>} />
+        <Route path="*" element={<Page><NotFoundPage /></Page>} />
+      </Route>
     </Routes>
   );
 }
@@ -142,11 +181,8 @@ function RoutedApp() {
 }
 
 function App() {
-  // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-  // If a shared backend is configured, pull everyone's ratings/comments once.
-  // No-op (and no network) when it isn't — the app stays on the local store.
   useEffect(() => {
     void hydrateFromRemote();
     initAnalytics();

@@ -33,11 +33,32 @@ function headers(extra: Record<string, string> = {}): Record<string, string> {
 interface RatingRow { id: string; target_type: string; target_id: string; scores: Record<string, number>; created_at: string }
 interface CommentRow { id: string; target_type: string; target_id: string; author: string; text: string; kind: string; helpful: number; created_at: string }
 
-function rowToRating(r: RatingRow): RatingEntry {
-  return { id: r.id, targetType: r.target_type as RatingEntry['targetType'], targetId: r.target_id, scores: r.scores || {}, createdAt: r.created_at };
+const VALID_TARGETS = new Set(['poet', 'poem', 'track', 'article', 'essay']);
+const VALID_KINDS = new Set(['literary', 'history', 'moral', 'performance']);
+
+function rowToRating(r: RatingRow): RatingEntry | null {
+  if (!r?.id || !VALID_TARGETS.has(r.target_type) || !r.target_id) return null;
+  return {
+    id: r.id,
+    targetType: r.target_type as RatingEntry['targetType'],
+    targetId: r.target_id,
+    scores: r.scores || {},
+    createdAt: r.created_at,
+  };
 }
-function rowToComment(r: CommentRow): CommentEntry {
-  return { id: r.id, targetType: r.target_type as CommentEntry['targetType'], targetId: r.target_id, author: r.author, text: r.text, kind: r.kind as CommentEntry['kind'], helpful: r.helpful ?? 0, createdAt: r.created_at };
+function rowToComment(r: CommentRow): CommentEntry | null {
+  if (!r?.id || !VALID_TARGETS.has(r.target_type) || !r.target_id || !r.text) return null;
+  const kind = VALID_KINDS.has(r.kind) ? (r.kind as CommentEntry['kind']) : 'literary';
+  return {
+    id: r.id,
+    targetType: r.target_type as CommentEntry['targetType'],
+    targetId: r.target_id,
+    author: r.author || 'Анонимный читатель',
+    text: r.text,
+    kind,
+    helpful: r.helpful ?? 0,
+    createdAt: r.created_at,
+  };
 }
 
 /** Pull the full shared snapshot. Returns null on any failure (caller keeps local data). */
@@ -49,8 +70,8 @@ export async function fetchAllRemote(): Promise<FeedbackSnapshot | null> {
       fetch(`${URL}/rest/v1/${COMMENTS}?select=*&order=created_at.desc`, { headers: headers() }),
     ]);
     if (!rRes.ok || !cRes.ok) return null;
-    const ratings = (await rRes.json() as RatingRow[]).map(rowToRating);
-    const comments = (await cRes.json() as CommentRow[]).map(rowToComment);
+    const ratings = (await rRes.json() as RatingRow[]).map(rowToRating).filter((r): r is RatingEntry => r !== null);
+    const comments = (await cRes.json() as CommentRow[]).map(rowToComment).filter((c): c is CommentEntry => c !== null);
     return { ratings, comments };
   } catch {
     return null;

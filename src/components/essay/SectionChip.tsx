@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '../PremiumIcons';
 import type { TocEntry } from './ArticleRenderer';
 import { scrollToId } from '../../utils/smoothScroll';
 

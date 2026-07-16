@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Check, Link2 } from 'lucide-react';
+import { Check, Link2 } from '../PremiumIcons';
 
 /**
  * «Поделиться строкой» — select any passage inside the scoped container and a

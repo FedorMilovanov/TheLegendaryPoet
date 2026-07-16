@@ -8,11 +8,17 @@ React 19 + TypeScript + Vite + Tailwind v4 + Framer Motion.
 
 ```bash
 npm install
-npm run dev        # локальный сервер разработки
-npm run build      # production-сборка в dist/ (multi-file, хешированные ассеты)
-npm run preview    # предпросмотр собранной версии
-node scripts/gen-sitemap.mjs   # пересобрать public/sitemap.xml из данных
+npm run dev              # локальный сервер разработки
+npm run build            # production-сборка в dist/ (multi-file, хешированные ассеты)
+npm run preview          # предпросмотр собранной версии
+npm run typecheck        # tsc --noEmit
+npm run sitemap          # пересобрать public/sitemap.xml из данных
+npm run check:integrity  # данные, бренд-ссылки, навигация, sitemap
+npm run check            # typecheck + integrity + build (гейт перед сдачей)
 ```
+
+**Правила для ИИ-агентов и контрибьюторов:** [`docs/AGENT_RULES.md`](docs/AGENT_RULES.md).
+Краткий Arena-слой: [`ARENA_PROJECT_PROTOCOL.md`](ARENA_PROJECT_PROTOCOL.md).
 
 ## Структура
 

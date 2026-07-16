@@ -1,9 +1,11 @@
+import type { ComponentType } from 'react';
 import { Link } from './ui/Link';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Mail } from './PremiumIcons';
 import BrandMark from './BrandMark';
 import { getWordOfDay } from '../utils/dailyContent';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 const footerLinks = [
   { label: 'Поэты', path: '/poets' },
@@ -15,16 +17,16 @@ const footerLinks = [
 ];
 
 interface SocialLink {
-  Icon: React.ComponentType<{ className?: string }>;
+  Icon: ComponentType<{ className?: string }>;
   href: string;
   label: string;
   hoverBg: string;
 }
 
 const socials: SocialLink[] = [
-  { Icon: YouTubeIcon, href: 'https://youtube.com/@TheLegendaryPoet', label: 'YouTube', hoverBg: 'hover:bg-red-500/10' },
-  { Icon: RutubeIcon, href: 'https://rutube.ru/channel/74579453', label: 'Rutube', hoverBg: 'hover:bg-sky-500/10' },
-  { Icon: VKIcon, href: 'https://vk.com/thelegendarypoet', label: 'VK', hoverBg: 'hover:bg-blue-500/10' },
+  { Icon: YouTubeIcon, href: siteConfig.channels.youtube, label: 'YouTube', hoverBg: 'hover:bg-red-500/10' },
+  { Icon: RutubeIcon, href: siteConfig.channels.rutube, label: 'Rutube', hoverBg: 'hover:bg-sky-500/10' },
+  { Icon: VKIcon, href: siteConfig.channels.vk, label: 'VK', hoverBg: 'hover:bg-blue-500/10' },
 ];
 
 export default function Footer() {
@@ -78,7 +80,7 @@ export default function Footer() {
                 </a>
               ))}
               <a
-                href="mailto:contact@legendarypoet.com"
+                href={`mailto:${siteConfig.contactEmail}`}
                 aria-label="Email"
                 className="group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-luxury-gold/10"
               >

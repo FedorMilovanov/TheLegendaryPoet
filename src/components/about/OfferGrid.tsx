@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Music } from 'lucide-react';
+import { BookOpen, FileText, Music } from '../PremiumIcons';
 import { titleCase } from '../../utils/titleCase';
 
 const offers = [

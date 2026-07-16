@@ -1,52 +1,68 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
+/**
+ * Desktop-only custom cursor.
+ *
+ * Position is written straight to DOM via rAF — never through React state —
+ * so mousemove does not thrash the React tree at 60–120 Hz. Visibility and
+ * hover-scale still use state (rare transitions). Touch devices and /hall
+ * keep the native pointer.
+ */
 const CustomCursor = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  // The immersive 3D hall uses the native pointer — a gold cursor dot floating
-  // in the scene reads as an artifact and fights the WebGL interaction.
   const { pathname } = useLocation();
   const onHall = pathname === '/hall';
 
+  const dotRef = useRef<HTMLDivElement | null>(null);
+  const ringRef = useRef<HTMLDivElement | null>(null);
+  const pos = useRef({ x: -100, y: -100 });
+  const raf = useRef(0);
+
   useEffect(() => {
-    // Touch devices and the 3D hall keep the native pointer.
     if (onHall || window.matchMedia('(pointer: coarse)').matches) {
       setIsVisible(false);
       document.body.classList.remove('has-custom-cursor');
       return;
     }
     setIsVisible(true);
-    // Only now hide the native cursor — so if this component never mounts
-    // (or fails), the real pointer is preserved.
     document.body.classList.add('has-custom-cursor');
 
-    const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName.toLowerCase() === 'a' ||
-        target.tagName.toLowerCase() === 'button' ||
-        target.closest('a') ||
-        target.closest('button')
-      ) {
-        setIsHovering(true);
-      } else {
-        setIsHovering(false);
+    const paint = () => {
+      const { x, y } = pos.current;
+      const dot = dotRef.current;
+      const ring = ringRef.current;
+      if (dot) {
+        dot.style.transform = `translate3d(${x - 8}px, ${y - 8}px, 0)`;
       }
+      if (ring) {
+        ring.style.transform = `translate3d(${x - 24}px, ${y - 24}px, 0)`;
+      }
+      raf.current = 0;
     };
 
-    window.addEventListener('mousemove', updateMousePosition);
-    window.addEventListener('mouseover', handleMouseOver);
+    const onMove = (e: MouseEvent) => {
+      pos.current = { x: e.clientX, y: e.clientY };
+      if (!raf.current) raf.current = requestAnimationFrame(paint);
+    };
+
+    const onOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const interactive = Boolean(
+        target.closest('a, button, [role="button"], input, textarea, select, label, summary'),
+      );
+      setIsHovering(interactive);
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mouseover', onOver, { passive: true });
 
     return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseover', onOver);
+      if (raf.current) cancelAnimationFrame(raf.current);
       document.body.classList.remove('has-custom-cursor');
     };
   }, [onHall]);
@@ -55,23 +71,31 @@ const CustomCursor = () => {
 
   return (
     <>
-      <motion.div
-        className="fixed top-0 left-0 w-4 h-4 bg-luxury-gold rounded-full pointer-events-none z-[9999] mix-blend-difference"
-        animate={{
-          x: mousePosition.x - 8,
-          y: mousePosition.y - 8,
-          scale: isHovering ? 2.5 : 1,
+      <div
+        ref={dotRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] h-4 w-4 rounded-full bg-luxury-gold mix-blend-difference will-change-transform"
+        style={{
+          transform: 'translate3d(-100px, -100px, 0)',
+          transition: 'width 0.2s ease, height 0.2s ease, margin 0.2s ease',
+          width: isHovering ? 20 : 16,
+          height: isHovering ? 20 : 16,
+          marginLeft: isHovering ? -2 : 0,
+          marginTop: isHovering ? -2 : 0,
         }}
-        transition={{ type: 'tween', ease: 'backOut', duration: 0.2 }}
       />
-      <motion.div
-        className="fixed top-0 left-0 w-12 h-12 border border-luxury-gold/30 rounded-full pointer-events-none z-[9998]"
-        animate={{
-          x: mousePosition.x - 24,
-          y: mousePosition.y - 24,
-          scale: isHovering ? 1.5 : 1,
+      <div
+        ref={ringRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-[9998] h-12 w-12 rounded-full border border-luxury-gold/30 will-change-transform"
+        style={{
+          transform: 'translate3d(-100px, -100px, 0) scale(1)',
+          transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease',
+          // scale applied via separate property on the element using CSS variable
+          // would fight translate3d; use box-shadow pulse instead for hover.
+          boxShadow: isHovering ? '0 0 0 6px rgba(212,175,55,0.08)' : 'none',
+          opacity: isHovering ? 0.85 : 0.55,
         }}
-        transition={{ type: 'tween', ease: 'backOut', duration: 0.6 }}
       />
     </>
   );

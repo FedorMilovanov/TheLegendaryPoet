@@ -1,158 +1,131 @@
 # COMPONENT_BLUEPRINTS.md
 
+Living map of the real component tree. Update this file when you add, move, or delete a module — stale blueprints are a regression vector for agents.
+
 ## Core App
 
-- `src/App.tsx` — router, page transitions, global layout.
-- `src/components/command/CommandPalette.tsx` — global quick navigation/search palette, opens via `Ctrl/Cmd + K`.
-- `src/components/Header.tsx` also exposes a visible desktop command trigger button.
-- `src/components/command/CommandResult.tsx` — individual palette result.
-- `src/components/command/commandItems.ts` — command/search item generation from sections, poets, articles, and tracks.
-- `src/components/SmoothScroll.tsx` — Lenis smooth scrolling wrapper.
+- `src/App.tsx` — router, layout route (`SiteLayout` + `<Outlet />`), intro wipe, analytics/community hydrate.
+- `src/components/SmoothScroll.tsx` — Lenis engine (created once; route changes only reset scroll).
 - `src/components/CustomCursor.tsx` — desktop-only custom cursor.
+- `src/components/ErrorBoundary.tsx` — recoverable full-page error with home link.
+- `src/components/ScrollToTop.tsx` — floating button; drives Lenis via `tlp-scroll-top`.
+- `src/components/MobileDock.tsx` — mobile bottom nav + command-palette jewel.
+- `src/components/PoetryBackdrop.tsx` — ambient poetic atmosphere layer.
+- `src/components/command/CommandPalette.tsx` — global search (`Ctrl/Cmd + K`).
+- `src/components/command/CommandResult.tsx` — individual palette result.
+- `src/components/command/commandItems.ts` — sections, poets, articles, essays, tracks.
 
 ## Brand
 
 - `src/components/BrandMark.tsx`
   - Props: `size?: 'sm' | 'md' | 'lg'`.
-  - Pure SVG LP monogram.
-  - Must clearly read as `LP`, not `PL`.
-  - No frame, no emoji, no bitmap dependency.
+  - Hooded cloaked figure (anonymous legendary poet). Pure SVG, frameless.
+  - **Not** the old LP monogram. Do not restore LP.
+  - Gradient ids are instance-unique via `useId`.
 - `src/components/ChannelIcons.tsx`
-  - Custom SVG icons for YouTube, Rutube, and book/catalog mark.
-  - Prefer these over generic icons in hero, header, and footer.
+  - `YouTubeIcon`, `RutubeIcon`, `VKIcon`, `BookMonogramIcon`.
+  - Prefer these over generic icons in hero, header, footer, about.
+- `src/components/PremiumIcons.tsx` — house icon set (stroke weight + hover motion).
+- `src/config/site.ts` — **single source** for channel URLs, contact email, site URL.
 
-## Home
+## Navigation / chrome
 
-- `src/components/home/HeroSection.tsx`
-  - Main cover section.
-  - Uses portrait row, cyan-blue title, YouTube/Rutube CTA area.
-- `src/components/home/StatsSection.tsx`
-  - Counts poets, poems, tracks, articles.
-- `src/pages/HomePage.tsx`
-  - Composes hero, stats, featured poets, quote, and careful faith/culture CTA.
+- `src/components/Header.tsx` — fixed top nav, theme toggle, command trigger, socials.
+- `src/components/Footer.tsx` — brand, word-of-day, sections, socials + mail.
+- `src/components/ThemeToggle.tsx` — `html.theme-light` toggle, persisted.
+- `src/components/ui/Link.tsx` — site-standard `Link` / `NavLink` / `useAppNavigate` (View Transitions).
+- `src/hooks/useAutoHideChrome.ts` — reading-mode chrome hide (one class on `<html>`).
+- `src/lib/viewTransition.ts` — `supportsViewTransitions`, `vtShared()`.
+
+## Home (`src/pages/HomePage.tsx`)
+
+Hero, stats, poem-of-day, featured poets, quote, faith/culture CTA are **local sections inside the page** (not a `components/home/` folder). Keep it that way unless a section grows a second consumer.
+
+Related:
+
+- `src/components/PoetCard.tsx` — catalog card (uses `PoetImage` + `TiltCard`).
+- `src/components/PoetImage.tsx` — base-aware image with branded monogram fallback.
+- `src/components/PoemOfDay.tsx`, `KineticText.tsx`, `Reveal.tsx`, `MagneticButton.tsx`, `TiltCard.tsx`.
+
+## Poets catalog (`src/pages/PoetsPage.tsx`)
+
+Filters/grid/empty-state are local to the page. Card is shared: `PoetCard`.
+
+## Poet detail
+
+- `src/pages/PoetDetailPage.tsx` — orchestrator.
+- `src/components/poet-detail/HeroSection.tsx` — full-screen portrait hero.
+- `src/components/poet-detail/InfoCard.tsx` — dates, nationality, media.
+- `src/components/poet-detail/FamousWorks.tsx`
+- `src/components/poet-detail/PoemCard.tsx` + `InteractivePoemText.tsx`
+- `src/components/poet-detail/SpiritualPath.tsx`, `AuthorCommentary.tsx`, `Testimonies.tsx`
+- `src/components/poet-detail/KindredSpirits.tsx` — connections from `poetConnections.ts`
+- `src/components/poet-detail/PoetCommunitySummary.tsx`, `PoemQuickNav.tsx`
 
 ## Articles
 
-- `src/pages/ArticlesPage.tsx`
-  - Article listing, category filter, uses `ArticleCard`.
-- `src/pages/ArticleDetailPage.tsx`
-  - Article detail route for `/articles/:id`.
-- `src/components/articles/ArticleCard.tsx`
-  - Reusable article preview card.
-- `src/components/articles/ArticleMetaRail.tsx`
-  - Sticky reading metadata rail for article detail pages.
-- `src/components/articles/ReadingProgress.tsx`
-  - Top reading progress indicator for long-form articles.
-- `src/components/articles/article-detail/ArticleHeader.tsx`
-  - Article title, meta and excerpt block.
-- `src/components/articles/article-detail/ArticleBody.tsx`
-  - Long-form article body renderer.
-- `src/components/articles/article-detail/RelatedArticles.tsx`
-  - Related article grid.
-- `src/utils/articleLibrary.ts`
-  - Collects global articles and poet-attached articles.
+- `src/pages/ArticlesPage.tsx`, `src/pages/ArticleDetailPage.tsx`
+- `src/components/articles/ArticleCard.tsx`, `ArticleMetaRail.tsx`, `ReadingProgress.tsx`
+- `src/components/articles/article-detail/{ArticleHeader,ArticleBody,RelatedArticles}.tsx`
+- `src/utils/articleLibrary.ts` — global + poet-attached articles.
+
+## Essays (long-form engine)
+
+- `src/pages/EssayPage.tsx`
+- `src/components/essay/*` — pure engine: `theme.ts`, `richText.tsx`, `anchor.ts`, `blocks.tsx`, `ArticleRenderer.tsx`, `EssayCover.tsx`, `EssayHero.tsx`, `EssayCard.tsx`, `SectionChip.tsx`
+- Data: `src/data/essays/*`, types: `src/types/essay.ts`
+- Guide: `docs/ESSAY_ENGINE.md`
+
+## Music (`src/pages/MusicPage.tsx`)
+
+Hero / intro / track row / feedback / future note are local sections on the page (hybrid of zip visuals + real audio / external links). Track data: `src/data/library/musicTracks.ts`.
 
 ## About
 
 - `src/pages/AboutPage.tsx`
-  - Composes the About page from small section components.
-- `src/components/about/AboutHero.tsx`
-  - About page heading.
-- `src/components/about/MissionSection.tsx`
-  - Mission and careful theological framing.
-- `src/components/about/OfferGrid.tsx`
-  - Three core project offerings.
-- `src/components/about/YouTubeFeature.tsx`
-  - Primary YouTube channel CTA.
-- `src/components/about/SocialLinks.tsx`
-  - YouTube, Rutube, VK links.
-- `src/components/about/ContactBlock.tsx`
-  - Contact CTA.
+- `src/components/about/{AboutHero,MissionSection,OfferGrid,YouTubeFeature,SocialLinks,ContactBlock,HallFeature}.tsx`
 
-## Music
+## Community ratings
 
-- `src/pages/MusicPage.tsx`
-  - Composes music page sections.
-- `src/components/music/MusicHero.tsx`
-  - Music page heading and introduction.
-- `src/components/music/MusicIntro.tsx`
-  - Editorial intro card for the music section.
-- `src/components/music/TrackList.tsx`
-  - Track list wrapper.
-- `src/components/music/TrackRow.tsx`
-  - Individual track row with playback/download/external actions.
-- `src/components/music/TrackFeedbackSection.tsx`
-  - Rating panels for music tracks.
-- `src/components/music/MusicFutureNote.tsx`
-  - Future growth note.
+- `src/components/community/CommunityPanel.tsx` — orchestrator (ratings + comments + analytics).
+- Forms/controls: `RatingForm`, `RatingStars` (hover + keyboard), `CommentComposer` (limits, Ctrl/⌘+Enter), `CommentList` (sort + paginate), `CommentCard` (relative time, helpful state).
+- Analytics: `CommunityInsights`, `RatingBars`, `RatingDistribution`, `FeedbackPair`, `FeedbackMiniSummary`.
+- `src/hooks/useCommunityFeedback.ts` — reactive API over the store.
+- `src/utils/communityStore.ts` — single in-memory snapshot + localStorage + cross-tab sync.
+- `src/utils/feedbackValidation.ts` — shared sanitize/validate/plural/relative-time.
+- `src/utils/communityRemote.ts` — optional Supabase REST (env-gated, row-validated).
+- `src/utils/commentHighlights.ts`, `src/utils/ratingInsights.ts`
+- Target types: `poet | poem | track | article | essay`.
 
-## Data Library
+## Hall (deferred 3D)
 
-- `src/data/poets.ts`
-  - Thin re-export aggregator.
-- `src/data/library/index.ts`
-  - Main data export hub.
-- `src/data/library/*.ts`
-  - Per-poet data modules plus articles and music tracks.
+- Live route: `src/pages/HallPage.tsx` — placeholder only (no three.js).
+- Scaffolding (not routed): `src/components/hall/*` (`HallOfPoets`, `HallEnvironment`, `PoetNiche`, controls, materials…).
+- Do not import the scaffolding into the live route until quality-ready.
 
-## Community Ratings
+## Data library
 
-- `src/components/community/CommunityPanel.tsx`
-  - Main orchestrator for ratings, comments, distribution, insights, and toasts.
-- `src/hooks/useCommunityFeedback.ts`
-  - LocalStorage-backed feedback hook.
-- `src/utils/communityStore.ts`
-  - Persistence, cooldown, one-vote guard, distribution helpers.
-- `src/components/community/RatingForm.tsx`
-  - Multi-dimensional rating form.
-- `src/components/community/CommentComposer.tsx`
-  - Comment form with category/kind selector.
-- `src/components/community/CommentList.tsx`
-  - Sortable comments list.
-- `src/components/community/FeedbackPair.tsx`
-  - Positive and critical highlighted comments.
-- `src/components/community/FeedbackMiniSummary.tsx`
-  - Small social-proof summary for cards.
+- `src/data/poets.ts` — thin re-export aggregator.
+- `src/data/library/index.ts` — hub.
+- `src/data/library/*.ts` — one module per poet + `articles.ts` + `musicTracks.ts`.
+- `src/data/essays/*` — long-form essays.
+- Supporting: `epochColors.ts`, `poetConnections.ts`, `poetMuseumMeta.ts`, `commentKinds.ts`, `ratingDimensions.ts`.
 
-## Poets Catalog
+## Archive / daily
 
-- `src/pages/PoetsPage.tsx`
-  - Small orchestrator for poet catalog.
-- `src/components/poets/PoetsHero.tsx`
-  - Catalog heading block.
-- `src/components/poets/PoetsFilters.tsx`
-  - Search, tag filter, sort controls.
-- `src/components/poets/PoetsGrid.tsx`
-  - Grid wrapper for poet cards.
-- `src/components/poets/PoetsEmptyState.tsx`
-  - Empty-state for zero matches.
-- `src/components/PoetCard.tsx`
-  - Poet preview card with image, tags, rating, CTA.
+- `src/pages/MyArchivePage.tsx` + `src/utils/myArchiveStore.ts`
+- `src/utils/dailyContent.ts` — poem/word of the day.
 
-## Poet Detail
+## Scripts / guards
 
-- `src/pages/PoetDetailPage.tsx`
-  - Small orchestrator page.
-- `src/components/poet-detail/HeroSection.tsx`
-  - Full-screen poet portrait hero.
-- `src/components/poet-detail/InfoCard.tsx`
-  - Dates, nationality, media buttons.
-- `src/components/poet-detail/FamousWorks.tsx`
-  - Known works list.
-- `src/components/poet-detail/PoemCard.tsx`
-  - Poem, literary analysis, optional explicit spiritual note.
-- `src/components/poet-detail/SpiritualPath.tsx`
-  - Separate spiritual/worldview commentary when evidence exists.
-- `src/components/poet-detail/AuthorCommentary.tsx`
-  - Project commentary for clear moral/theological cases.
+- `scripts/gen-sitemap.mjs` — rebuild `public/sitemap.xml` from data (`npm run sitemap`).
+- `scripts/check-integrity.ts` — data/brand/nav regression guard (`npm run check:integrity`).
+- `scripts/prerender-og.mjs` — OG pages at deploy time.
+- Full gate: `npm run check` = typecheck + integrity + build.
 
-## Removed Components
+## Modularity policy
 
-The former experimental 3D/map components were deleted. If a future session introduces a serious 3D department, it must be built as a separate documented feature branch and kept performance-safe.
-
-## Modularity Policy
-
-- Component size should follow responsibility, not a rigid line count.
-- A component around 120-180 lines can be acceptable if it is cohesive and readable.
-- Split components when there are separate concerns: layout, data display, interaction, animation, or repeated UI.
-- For Arena handoff, large files should be mirrored/chunked rather than distorted.
+- Component size follows responsibility, not a rigid line count.
+- 120–180 lines is fine when cohesive; split on separate concerns (layout / data / interaction / animation).
+- For Arena handoff, mirror/chunk large files rather than distorting source architecture.
+- See `docs/AGENT_RULES.md` for the full agent contract.

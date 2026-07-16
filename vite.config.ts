@@ -25,12 +25,19 @@ export default defineConfig({
     target: 'esnext',
     rollupOptions: {
       output: {
-        // Long-term caching: framework code changes rarely — split it from
-        // app/content code so a content deploy doesn't re-download React,
-        // the router or the animation runtime.
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          motion: ['framer-motion'],
+        // Long-term caching + lean first paint:
+        //  - react/router and motion change rarely
+        //  - essay data is heavy Cyrillic prose and only needed on essay routes
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router') || id.includes('node_modules/react/')) {
+            return 'react';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'motion';
+          }
+          if (id.includes('/src/data/essays/')) {
+            return 'essays';
+          }
         },
       },
     },

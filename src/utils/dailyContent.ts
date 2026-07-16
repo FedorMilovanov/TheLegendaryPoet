@@ -10,29 +10,10 @@ function getDayIndex() {
 
 export function getPoemOfDay(): { poem: Poem; poet: Poet } {
   const allPoems = poets.flatMap((poet) => poet.poems.map((poem) => ({ poem, poet })));
+  // Library is never empty in production (integrity guard). If it somehow is,
+  // fall through to the first real poet rather than inventing a fake author.
   if (!allPoems.length) {
-    const fallbackPoet: Poet = {
-      id: 'fallback',
-      name: 'Автор',
-      fullName: 'Неизвестный Автор',
-      birthYear: 1800,
-      nationality: 'Русский',
-      photo: '',
-      shortBio: '',
-      fullBio: '',
-      rating: 10,
-      tags: [],
-      poems: [],
-      articles: [],
-      famousWorks: [],
-    };
-    const fallbackPoem: Poem = {
-      id: 'fallback-poem',
-      title: 'Вдохновение',
-      text: 'Безмолвный стих...',
-      rating: 10,
-    };
-    return { poem: fallbackPoem, poet: fallbackPoet };
+    throw new Error('getPoemOfDay: no poems in library');
   }
   return allPoems[getDayIndex() % allPoems.length];
 }

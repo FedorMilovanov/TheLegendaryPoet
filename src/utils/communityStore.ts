@@ -1,11 +1,17 @@
-import { CommentEntry, FeedbackSnapshot, FeedbackTargetType, RatingEntry } from '../types/community';
+import {
+  FEEDBACK_LIMITS,
+  type CommentEntry,
+  type FeedbackSnapshot,
+  type FeedbackTargetType,
+  type RatingEntry,
+} from '../types/community';
 import { fetchAllRemote, remoteEnabled } from './communityRemote';
 
 const STORE_KEY = 'tlp-community-feedback-v1';
 const COOLDOWN_KEY = 'tlp-community-cooldowns-v1';
 const HELPFUL_KEY = 'tlp-community-helpful-v1';
 const RATED_KEY = 'tlp-community-rated-v1';
-const COOLDOWN_MS = 30 * 1000;
+const COOLDOWN_MS = FEEDBACK_LIMITS.cooldownMs;
 
 const emptySnapshot: FeedbackSnapshot = {
   ratings: [],
@@ -13,9 +19,8 @@ const emptySnapshot: FeedbackSnapshot = {
 };
 
 /**
- * Safe localStorage write. Never throws (e.g. Safari private mode, quota
- * exceeded) — returns false so callers can surface a soft message instead of
- * dying inside a click handler.
+ * Safe localStorage write. Never throws (Safari private mode, quota exceeded) —
+ * returns false so callers can surface a soft message instead of dying in a click handler.
  */
 function safeWrite(key: string, value: unknown): boolean {
   if (typeof window === 'undefined') return false;
@@ -27,13 +32,57 @@ function safeWrite(key: string, value: unknown): boolean {
   }
 }
 
+function safeReadObject<T extends object>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as T;
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function isTargetType(value: unknown): value is FeedbackTargetType {
+  return value === 'poet' || value === 'poem' || value === 'track' || value === 'article' || value === 'essay';
+}
+
+function sanitizeSnapshot(raw: unknown): FeedbackSnapshot {
+  if (!raw || typeof raw !== 'object') return emptySnapshot;
+  const src = raw as Partial<FeedbackSnapshot>;
+  const ratings: RatingEntry[] = Array.isArray(src.ratings)
+    ? src.ratings.filter(
+        (r): r is RatingEntry =>
+          !!r &&
+          typeof r === 'object' &&
+          typeof r.id === 'string' &&
+          isTargetType(r.targetType) &&
+          typeof r.targetId === 'string' &&
+          !!r.scores &&
+          typeof r.scores === 'object',
+      )
+    : [];
+  const comments: CommentEntry[] = Array.isArray(src.comments)
+    ? src.comments.filter(
+        (c): c is CommentEntry =>
+          !!c &&
+          typeof c === 'object' &&
+          typeof c.id === 'string' &&
+          isTargetType(c.targetType) &&
+          typeof c.targetId === 'string' &&
+          typeof c.text === 'string' &&
+          typeof c.author === 'string',
+      )
+    : [];
+  return { ratings, comments };
+}
+
 function readRaw(): FeedbackSnapshot {
   if (typeof window === 'undefined') return emptySnapshot;
   try {
     const raw = window.localStorage.getItem(STORE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as FeedbackSnapshot) : emptySnapshot;
-    if (!parsed || !Array.isArray(parsed.ratings) || !Array.isArray(parsed.comments)) return emptySnapshot;
-    return parsed;
+    return sanitizeSnapshot(raw ? JSON.parse(raw) : emptySnapshot);
   } catch {
     return emptySnapshot;
   }
@@ -44,9 +93,8 @@ function readRaw(): FeedbackSnapshot {
  *
  * Every panel on a page reads from ONE in-memory snapshot and subscribes
  * to it, so concurrent panels can no longer clobber each other's writes
- * (the previous bug) and every summary updates live after a vote. Backed
- * by useSyncExternalStore in the hook; kept in sync across tabs via the
- * `storage` event.
+ * and every summary updates live after a vote. Backed by
+ * useSyncExternalStore in the hook; kept in sync across tabs via `storage`.
  * ------------------------------------------------------------------ */
 let current: FeedbackSnapshot = readRaw();
 const listeners = new Set<() => void>();
@@ -79,16 +127,16 @@ export function getFeedbackSnapshot(): FeedbackSnapshot {
 }
 
 /**
- * When a shared backend is configured (see communityRemote), pull everyone's
- * ratings/comments once at startup and make them the live snapshot. On any
- * failure the local (per-device) data is kept untouched. No-op otherwise.
+ * When a shared backend is configured, pull everyone's ratings/comments once
+ * at startup and make them the live snapshot. On any failure the local
+ * (per-device) data is kept untouched. No-op otherwise.
  */
 export async function hydrateFromRemote(): Promise<void> {
   if (!remoteEnabled) return;
   const remote = await fetchAllRemote();
   if (!remote) return;
-  current = remote;
-  safeWrite(STORE_KEY, current); // warm local cache for instant next load
+  current = sanitizeSnapshot(remote);
+  safeWrite(STORE_KEY, current);
   emit();
 }
 
@@ -101,38 +149,56 @@ export function loadFeedback(): FeedbackSnapshot {
 }
 
 /**
- * Apply an immutable update to the single shared snapshot, persist it, and
- * notify every subscriber. Returns false if the write was rejected.
+ * Apply an immutable update to the shared snapshot, persist it, notify every
+ * subscriber. Returns false if the write was rejected by the browser.
  */
 export function mutateFeedback(update: (snapshot: FeedbackSnapshot) => FeedbackSnapshot): boolean {
   const next = update(current);
   const ok = safeWrite(STORE_KEY, next);
+  // Keep memory in sync even if storage is blocked so the current session still works.
   current = next;
   emit();
   return ok;
 }
 
 export function makeFeedbackId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  // crypto.randomUUID when available — better uniqueness across tabs/devices.
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function filterRatings(snapshot: FeedbackSnapshot, targetType: FeedbackTargetType, targetId: string): RatingEntry[] {
+export function filterRatings(
+  snapshot: FeedbackSnapshot,
+  targetType: FeedbackTargetType,
+  targetId: string,
+): RatingEntry[] {
   return snapshot.ratings.filter((item) => item.targetType === targetType && item.targetId === targetId);
 }
 
-export function filterComments(snapshot: FeedbackSnapshot, targetType: FeedbackTargetType, targetId: string): CommentEntry[] {
+export function filterComments(
+  snapshot: FeedbackSnapshot,
+  targetType: FeedbackTargetType,
+  targetId: string,
+): CommentEntry[] {
   return snapshot.comments.filter((item) => item.targetType === targetType && item.targetId === targetId);
 }
 
 export function averageScores(ratings: RatingEntry[]) {
   if (!ratings.length) return { overall: 0, dimensions: {} as Record<string, number> };
   const totals: Record<string, number> = {};
+  const counts: Record<string, number> = {};
   ratings.forEach((rating) => {
     Object.entries(rating.scores).forEach(([key, value]) => {
+      if (typeof value !== 'number' || !Number.isFinite(value)) return;
       totals[key] = (totals[key] || 0) + value;
+      counts[key] = (counts[key] || 0) + 1;
     });
   });
-  const dimensions = Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, value / ratings.length]));
+  const dimensions = Object.fromEntries(
+    Object.entries(totals).map(([key, value]) => [key, value / (counts[key] || 1)]),
+  );
   const dimensionValues = Object.values(dimensions);
   const overall = dimensionValues.length
     ? dimensionValues.reduce((sum, value) => sum + value, 0) / dimensionValues.length
@@ -143,7 +209,7 @@ export function averageScores(ratings: RatingEntry[]) {
 export function distributionFromRatings(ratings: RatingEntry[]) {
   const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   ratings.forEach((rating) => {
-    const values = Object.values(rating.scores);
+    const values = Object.values(rating.scores).filter((v) => typeof v === 'number' && Number.isFinite(v));
     if (!values.length) return;
     const average = values.reduce((sum, value) => sum + value, 0) / values.length;
     const bucket = Math.max(1, Math.min(5, Math.round(average)));
@@ -160,17 +226,7 @@ export function trustLabel(count: number) {
 }
 
 function loadCooldowns(): Record<string, number> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(COOLDOWN_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveCooldowns(value: Record<string, number>) {
-  safeWrite(COOLDOWN_KEY, value);
+  return safeReadObject<Record<string, number>>(COOLDOWN_KEY, {});
 }
 
 export function checkCooldown(scope: string) {
@@ -183,55 +239,46 @@ export function checkCooldown(scope: string) {
 export function setCooldown(scope: string) {
   const cooldowns = loadCooldowns();
   cooldowns[scope] = Date.now() + COOLDOWN_MS;
-  saveCooldowns(cooldowns);
+  safeWrite(COOLDOWN_KEY, cooldowns);
 }
 
 function loadHelpfulVotes(): Record<string, true> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(HELPFUL_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveHelpfulVotes(value: Record<string, true>) {
-  safeWrite(HELPFUL_KEY, value);
+  return safeReadObject<Record<string, true>>(HELPFUL_KEY, {});
 }
 
 export function canMarkHelpful(scope: string) {
-  const votes = loadHelpfulVotes();
-  return !votes[scope];
+  return !loadHelpfulVotes()[scope];
 }
 
 export function rememberHelpful(scope: string) {
   const votes = loadHelpfulVotes();
   votes[scope] = true;
-  saveHelpfulVotes(votes);
+  safeWrite(HELPFUL_KEY, votes);
 }
 
 function loadRatedScopes(): Record<string, true> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(RATED_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveRatedScopes(value: Record<string, true>) {
-  safeWrite(RATED_KEY, value);
+  return safeReadObject<Record<string, true>>(RATED_KEY, {});
 }
 
 export function hasRated(scope: string) {
-  const rated = loadRatedScopes();
-  return !!rated[scope];
+  return !!loadRatedScopes()[scope];
 }
 
 export function rememberRated(scope: string) {
   const rated = loadRatedScopes();
   rated[scope] = true;
-  saveRatedScopes(rated);
+  safeWrite(RATED_KEY, rated);
+}
+
+/** Scope keys — always build them through these helpers so UI and store never drift. */
+export function ratingScope(targetType: FeedbackTargetType, targetId: string) {
+  return `rating:${targetType}:${targetId}`;
+}
+
+export function commentScope(targetType: FeedbackTargetType, targetId: string) {
+  return `comment:${targetType}:${targetId}`;
+}
+
+export function helpfulScope(targetType: FeedbackTargetType, targetId: string, commentId: string) {
+  return `helpful:${targetType}:${targetId}:${commentId}`;
 }

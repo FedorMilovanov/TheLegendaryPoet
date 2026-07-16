@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+import { Mail } from '../PremiumIcons';
 import { siteConfig } from '../../config/site';
 import { titleCase } from '../../utils/titleCase';
 

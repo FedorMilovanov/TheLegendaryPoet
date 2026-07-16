@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { motion } from 'framer-motion';
 
 interface IconProps {
@@ -88,6 +89,10 @@ export function VKIcon({ className = 'h-5 w-5' }: IconProps) {
  * BookMonogram — premium catalog/book sign.
  */
 export function BookMonogramIcon({ className = 'h-5 w-5' }: IconProps) {
+  // Unique gradient id per instance — multiple icons on one page must not share
+  // a fixed #bookGrad or the SVG paint server resolves to the first definition.
+  const bookGrad = `bookGrad-${useId().replace(/:/g, '')}`;
+
   return (
     <motion.svg
       viewBox="0 0 72 72"
@@ -98,7 +103,7 @@ export function BookMonogramIcon({ className = 'h-5 w-5' }: IconProps) {
       initial="rest"
     >
       <defs>
-        <linearGradient id="bookGrad" x1="12" y1="10" x2="60" y2="62">
+        <linearGradient id={bookGrad} x1="12" y1="10" x2="60" y2="62">
           <stop offset="0" stopColor="#c9fbff" />
           <stop offset="0.48" stopColor="#2ed8ff" />
           <stop offset="1" stopColor="#1f88ff" />
@@ -107,18 +112,18 @@ export function BookMonogramIcon({ className = 'h-5 w-5' }: IconProps) {
       <motion.path
         variants={{ rest: { opacity: 0.48 }, hover: { opacity: 0.8, x: -2, y: -2 } }}
         d="M16 14h9.5c2.2 0 4 1.8 4 4v40H20c-2.2 0-4-1.8-4-4V14Z"
-        fill="url(#bookGrad)"
+        fill={`url(#${bookGrad})`}
       />
       <motion.path
         variants={{ rest: { opacity: 0.34 }, hover: { opacity: 0.6, x: 2, y: 2 } }}
         d="M42.5 14H56v40c0 2.2-1.8 4-4 4h-9.5V14Z"
-        fill="url(#bookGrad)"
+        fill={`url(#${bookGrad})`}
       />
       <motion.path
         variants={{ rest: { scale: 1 }, hover: { scale: 1.05 } }}
         style={{ transformOrigin: 'center' }}
         d="M31 13.5h10v45H31v-45Z"
-        fill="url(#bookGrad)"
+        fill={`url(#${bookGrad})`}
       />
       <motion.path
         variants={{ rest: { opacity: 0.72 }, hover: { opacity: 1 } }}

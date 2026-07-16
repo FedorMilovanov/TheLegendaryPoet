@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '../components/ui/Link';
 import { motion, useInView, useSpring, useTransform } from 'framer-motion';
-import { poets, musicTracks, articles } from '../data/poets';
+import { poets, musicTracks } from '../data/poets';
+import { getAllArticles } from '../utils/articleLibrary';
+import { getAllEssays } from '../data/essays';
 import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon, VKIcon } from '../components/ChannelIcons';
@@ -13,6 +15,7 @@ import PoemOfDay from '../components/PoemOfDay';
 import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 const portraits = [
   { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
@@ -126,21 +129,21 @@ function HeroSection() {
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
-              <a href="https://youtube.com/@TheLegendaryPoet" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-red-500/12 bg-gradient-to-br from-red-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-red-400/30 hover:shadow-[0_0_40px_rgba(255,0,51,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
+              <a href={siteConfig.channels.youtube} target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-red-500/12 bg-gradient-to-br from-red-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-red-400/30 hover:shadow-[0_0_40px_rgba(255,0,51,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <YouTubeIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(255,0,51,0.42)] transition-transform duration-500 group-hover:scale-[1.1]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-red-200/90 transition-colors group-hover:text-red-100">YouTube</span>
                 <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Смотреть видео</span>
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
-              <a href="https://rutube.ru/channel/74579453" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-sky-400/12 bg-gradient-to-br from-sky-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-sky-300/30 hover:shadow-[0_0_40px_rgba(18,204,237,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
+              <a href={siteConfig.channels.rutube} target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-sky-400/12 bg-gradient-to-br from-sky-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-sky-300/30 hover:shadow-[0_0_40px_rgba(18,204,237,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <RutubeIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(18,204,237,0.42)] transition-transform duration-500 group-hover:scale-[1.08]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-sky-200/90 transition-colors group-hover:text-sky-100">Rutube</span>
                 <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Канал проекта</span>
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
-              <a href="https://vk.com/thelegendarypoet" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-blue-500/12 bg-gradient-to-br from-blue-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-blue-400/30 hover:shadow-[0_0_40px_rgba(7,119,255,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
+              <a href={siteConfig.channels.vk} target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-blue-500/12 bg-gradient-to-br from-blue-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-blue-400/30 hover:shadow-[0_0_40px_rgba(7,119,255,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <VKIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(7,119,255,0.42)] transition-transform duration-500 group-hover:scale-[1.1]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-200/90 transition-colors group-hover:text-blue-100">ВКонтакте</span>
                 <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Сообщество</span>
@@ -171,7 +174,8 @@ const stats = [
   { icon: BookOpen, label: 'Поэтов в базе', getValue: () => poets.length },
   { icon: FileText, label: 'Текстов стихов', getValue: () => poets.reduce((acc, p) => acc + p.poems.length, 0) },
   { icon: AudioWaveform, label: 'Аудио-треков', getValue: () => musicTracks.length },
-  { icon: Star, label: 'Глубоких статей', getValue: () => articles.length },
+  // Count every published long-form piece: global articles, poet-attached ones, essays.
+  { icon: Star, label: 'Глубоких статей', getValue: () => getAllArticles().length + getAllEssays().length },
 ];
 
 function StatsSection() {

@@ -1,79 +1,141 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import { CommentEntry, CommentKind, FeedbackTargetType, RatingEntry } from '../types/community';
-import { averageScores, canMarkHelpful, checkCooldown, distributionFromRatings, filterComments, filterRatings, getFeedbackSnapshot, hasRated, makeFeedbackId, mutateFeedback, rememberHelpful, rememberRated, setCooldown, subscribeFeedback, trustLabel } from '../utils/communityStore';
+import {
+  type CommentEntry,
+  type CommentKind,
+  type FeedbackActionResult,
+  type FeedbackTargetType,
+  type RatingDimension,
+  type RatingEntry,
+} from '../types/community';
+import {
+  averageScores,
+  canMarkHelpful,
+  checkCooldown,
+  commentScope,
+  distributionFromRatings,
+  filterComments,
+  filterRatings,
+  getFeedbackSnapshot,
+  hasRated,
+  helpfulScope,
+  isFeedbackShared,
+  makeFeedbackId,
+  mutateFeedback,
+  ratingScope,
+  rememberHelpful,
+  rememberRated,
+  setCooldown,
+  subscribeFeedback,
+  trustLabel,
+} from '../utils/communityStore';
 import { bumpHelpfulRemote, insertCommentRemote, insertRatingRemote } from '../utils/communityRemote';
+import { validateCommentInput, validateScores } from '../utils/feedbackValidation';
 
 export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: string) {
   // Single shared source of truth: every panel on the page reads the same
-  // snapshot and re-renders when any panel writes (fixes cross-panel clobber
-  // and stale summaries).
+  // snapshot and re-renders when any panel writes.
   const snapshot = useSyncExternalStore(subscribeFeedback, getFeedbackSnapshot, getFeedbackSnapshot);
 
-  const ratings = useMemo(() => filterRatings(snapshot, targetType, targetId), [snapshot, targetType, targetId]);
-  const comments = useMemo(() => filterComments(snapshot, targetType, targetId), [snapshot, targetType, targetId]);
+  const ratings = useMemo(
+    () => filterRatings(snapshot, targetType, targetId),
+    [snapshot, targetType, targetId],
+  );
+  const comments = useMemo(
+    () => filterComments(snapshot, targetType, targetId),
+    [snapshot, targetType, targetId],
+  );
   const summary = useMemo(() => averageScores(ratings), [ratings]);
   const distribution = useMemo(() => distributionFromRatings(ratings), [ratings]);
-  const topComment = useMemo(() => comments.slice().sort((a, b) => b.helpful - a.helpful)[0], [comments]);
+  const topComment = useMemo(
+    () => comments.slice().sort((a, b) => b.helpful - a.helpful)[0],
+    [comments],
+  );
   const trust = useMemo(() => trustLabel(ratings.length), [ratings.length]);
 
-  const addRating = (scores: Record<string, number>) => {
-    const scope = `rating:${targetType}:${targetId}`;
-    if (hasRated(scope)) {
-      return { ok: false as const, message: 'Ваш голос уже учтён для этого объекта' };
+  const rateScope = ratingScope(targetType, targetId);
+  const alreadyRated = hasRated(rateScope);
+
+  const addRating = (
+    scores: Record<string, number>,
+    dimensions: RatingDimension[],
+  ): FeedbackActionResult => {
+    if (hasRated(rateScope)) {
+      return { ok: false, message: 'Ваш голос уже учтён для этого материала' };
     }
-    const cooldown = checkCooldown(scope);
+    const validated = validateScores(scores, dimensions);
+    if (!validated.ok) return validated;
+
+    const cooldown = checkCooldown(rateScope);
     if (!cooldown.allowed) {
-      return { ok: false as const, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
+      return { ok: false, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
     }
+
     const entry: RatingEntry = {
       id: makeFeedbackId('rating'),
       targetType,
       targetId,
-      scores,
+      scores: validated.scores,
       createdAt: new Date().toISOString(),
     };
+
     const stored = mutateFeedback((prev) => ({ ...prev, ratings: [...prev.ratings, entry] }));
     if (!stored) {
-      return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
+      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
     }
-    rememberRated(scope);
-    setCooldown(scope);
-    void insertRatingRemote(entry); // share to backend if configured; local copy already saved
-    return { ok: true as const, message: 'Оценка сохранена' };
+    rememberRated(rateScope);
+    setCooldown(rateScope);
+    void insertRatingRemote(entry);
+    return {
+      ok: true,
+      message: isFeedbackShared ? 'Оценка сохранена и видна всем' : 'Оценка сохранена на этом устройстве',
+    };
   };
 
-  const addComment = (author: string, text: string, kind: CommentKind) => {
-    const scope = `comment:${targetType}:${targetId}`;
+  const addComment = (author: string, text: string, kind: CommentKind): FeedbackActionResult => {
+    const scope = commentScope(targetType, targetId);
+    const validated = validateCommentInput(author, text, kind);
+    if (!validated.ok) return validated;
+
     const cooldown = checkCooldown(scope);
     if (!cooldown.allowed) {
-      return { ok: false as const, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
+      return { ok: false, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
     }
+
     const entry: CommentEntry = {
       id: makeFeedbackId('comment'),
       targetType,
       targetId,
-      author: author.trim() || 'Анонимный читатель',
-      text: text.trim(),
-      kind,
+      author: validated.author,
+      text: validated.text,
+      kind: validated.kind,
       helpful: 0,
       createdAt: new Date().toISOString(),
     };
+
     const stored = mutateFeedback((prev) => ({ ...prev, comments: [entry, ...prev.comments] }));
     if (!stored) {
-      return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
+      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
     }
     setCooldown(scope);
-    void insertCommentRemote(entry); // share to backend if configured
-    return { ok: true as const, message: 'Комментарий добавлен' };
+    void insertCommentRemote(entry);
+    return {
+      ok: true,
+      message: isFeedbackShared ? 'Комментарий опубликован' : 'Комментарий сохранён на этом устройстве',
+    };
   };
 
-  const markHelpful = (commentId: string) => {
-    const scope = `helpful:${targetType}:${targetId}:${commentId}`;
+  const markHelpful = (commentId: string): FeedbackActionResult => {
+    const scope = helpfulScope(targetType, targetId, commentId);
     if (!canMarkHelpful(scope)) {
-      return { ok: false as const, message: 'Вы уже отметили этот комментарий' };
+      return { ok: false, message: 'Вы уже отметили этот комментарий' };
     }
+    const exists = comments.some((c) => c.id === commentId);
+    if (!exists) {
+      return { ok: false, message: 'Комментарий не найден' };
+    }
+
     let newHelpful = 0;
-    mutateFeedback((prev) => ({
+    const stored = mutateFeedback((prev) => ({
       ...prev,
       comments: prev.comments.map((comment) => {
         if (comment.id !== commentId) return comment;
@@ -81,10 +143,25 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
         return { ...comment, helpful: newHelpful };
       }),
     }));
+    if (!stored) {
+      return { ok: false, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
+    }
     rememberHelpful(scope);
-    void bumpHelpfulRemote(commentId, newHelpful); // share to backend if configured
-    return { ok: true as const, message: 'Спасибо, мнение учтено' };
+    void bumpHelpfulRemote(commentId, newHelpful);
+    return { ok: true, message: 'Спасибо, мнение учтено' };
   };
 
-  return { ratings, comments, summary, distribution, topComment, trust, addRating, addComment, markHelpful };
+  return {
+    ratings,
+    comments,
+    summary,
+    distribution,
+    topComment,
+    trust,
+    alreadyRated,
+    isShared: isFeedbackShared,
+    addRating,
+    addComment,
+    markHelpful,
+  };
 }

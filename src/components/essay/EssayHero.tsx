@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, PenLine } from 'lucide-react';
+import { Calendar, Clock, PenLine } from '../PremiumIcons';
 import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';

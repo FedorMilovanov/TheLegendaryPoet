@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText } from 'lucide-react';
+import { Calendar, Clock, FileText } from '../../PremiumIcons';
 import { Article } from '../../../types/poet';
 import { titleCase } from '../../../utils/titleCase';
 

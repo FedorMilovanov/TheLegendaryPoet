@@ -1,17 +1,23 @@
-import { ArrowRight } from 'lucide-react';
-import { CommandItem } from './commandItems';
+import { ArrowRight } from '../PremiumIcons';
+import type { CommandItem } from './commandItems';
 
 interface CommandResultProps {
   item: CommandItem;
   active: boolean;
   onSelect: () => void;
+  onHover?: () => void;
+  id?: string;
 }
 
-export default function CommandResult({ item, active, onSelect }: CommandResultProps) {
+export default function CommandResult({ item, active, onSelect, onHover, id }: CommandResultProps) {
   return (
     <button
+      id={id}
       type="button"
+      role="option"
+      aria-selected={active}
       onClick={onSelect}
+      onMouseEnter={onHover}
       className={`w-full rounded-2xl border p-4 text-left transition ${
         active
           ? 'border-cyan-300/45 bg-cyan-400/10 shadow-[0_0_22px_rgba(0,212,255,0.14)]'
@@ -22,7 +28,9 @@ export default function CommandResult({ item, active, onSelect }: CommandResultP
         <div className="min-w-0">
           <div className="truncate font-serif text-lg font-bold text-white">{item.label}</div>
           <div className="line-clamp-1 text-xs text-cyan-100/45">{item.description}</div>
-          <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300/65">{item.group}</div>
+          <div className="mt-2 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300/65">
+            {item.group}
+          </div>
         </div>
         <ArrowRight size={16} className="mt-1 flex-shrink-0 text-cyan-300" />
       </div>

@@ -200,7 +200,7 @@ export default function HallOfPoets() {
           </button>
           <span className="opacity-30">|</span>
           <button onClick={() => setAudioMuted(m => !m)} className="hover:text-white">
-            {audioMuted ? '🔇 Звук выкл' : '🔊 Звук вкл'}
+            {audioMuted ? 'Звук выкл' : 'Звук вкл'}
           </button>
           <span className="opacity-60 hidden sm:inline">F / M</span>
         </div>

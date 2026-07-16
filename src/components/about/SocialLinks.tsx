@@ -1,12 +1,11 @@
-import { MessageCircle } from 'lucide-react';
-import { RutubeIcon, YouTubeIcon } from '../ChannelIcons';
+import { RutubeIcon, YouTubeIcon, VKIcon } from '../ChannelIcons';
 import { siteConfig } from '../../config/site';
 import { titleCase } from '../../utils/titleCase';
 
 const socials = [
   { icon: <YouTubeIcon className="h-7 w-7" />, label: 'YouTube', href: siteConfig.channels.youtube, color: 'hover:text-red-500' },
   { icon: <RutubeIcon className="h-7 w-7" />, label: 'Rutube', href: siteConfig.channels.rutube, color: 'hover:text-cyan-300' },
-  { icon: <MessageCircle size={28} />, label: 'VK', href: siteConfig.channels.vk, color: 'hover:text-blue-400' },
+  { icon: <VKIcon className="h-7 w-7" />, label: 'VK', href: siteConfig.channels.vk, color: 'hover:text-blue-400' },
 ];
 
 export default function SocialLinks() {

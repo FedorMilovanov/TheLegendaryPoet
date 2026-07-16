@@ -1,25 +1,36 @@
-import { useState } from 'react';
-import { Star, Award, Heart } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Poem } from '../../types/poet';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { Star, Award, Heart } from '../PremiumIcons';
+import { AnimatePresence, motion } from 'framer-motion';
+import type { Poem } from '../../types/poet';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
 import InteractivePoemText from './InteractivePoemText';
-import { isFavoritePoem, toggleFavoritePoem } from '../../utils/myArchiveStore';
+import {
+  getFavoritePoems,
+  isFavoritePoem,
+  subscribeArchive,
+  toggleFavoritePoem,
+} from '../../utils/myArchiveStore';
 
 interface PoemCardProps {
   poem: Poem;
 }
 
 export default function PoemCard({ poem }: PoemCardProps) {
-  const [favorite, setFavorite] = useState(() => isFavoritePoem(poem.id));
+  // Subscribe so multi-card pages and the archive stay in sync without prop drilling.
+  useSyncExternalStore(subscribeArchive, getFavoritePoems, getFavoritePoems);
+  const favorite = isFavoritePoem(poem.id);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 2000);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const toggleFavorite = () => {
     const next = toggleFavoritePoem(poem.id);
-    setFavorite(next);
     setToast(next ? 'Добавлено в архив' : 'Удалено из архива');
-    setTimeout(() => setToast(null), 2000);
   };
 
   return (
@@ -54,12 +65,12 @@ export default function PoemCard({ poem }: PoemCardProps) {
             aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
             className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'bg-[#111] text-luxury-gray-light hover:text-luxury-gold border border-luxury-gold/10'}`}
           >
-            <Heart size={14} className={favorite ? 'fill-luxury-gold' : ''} />
+            <Heart size={14} className={favorite ? 'text-luxury-gold' : ''} />
             {favorite ? 'В архиве' : 'В архив'}
           </button>
-          <div className="flex items-center gap-2 bg-[#111] px-4 py-2 rounded-full border border-luxury-gold/30 shadow-inner">
-            <Star size={14} className="text-luxury-gold fill-luxury-gold" />
-            <span className="text-sm font-bold text-luxury-gold gold-glow-text">{poem.rating}</span>
+          <div className="flex items-center gap-2 rounded-full border border-luxury-gold/30 bg-[#111] px-4 py-2 shadow-inner">
+            <Star size={14} className="text-luxury-gold" />
+            <span className="text-sm font-bold text-luxury-gold gold-glow-text tabular-nums">{poem.rating}</span>
           </div>
         </div>
       </div>

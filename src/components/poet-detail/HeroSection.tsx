@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from '../ui/Link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '../PremiumIcons';
 import { Poet } from '../../types/poet';
 import { asset } from '../../utils/asset';
 import { vtShared } from '../../lib/viewTransition';

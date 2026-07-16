@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { Search, X } from '../PremiumIcons';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
 
+/**
+ * Global quick navigation (Ctrl/Cmd + K).
+ * Combobox semantics, focus trap, scroll-into-view for the active option,
+ * body scroll lock while open, and a desktop FAB when closed.
+ */
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -12,6 +17,7 @@ export default function CommandPalette() {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listId = 'command-palette-results';
+  const activeOptionId = `command-option-${activeIndex}`;
 
   const items = useMemo(() => getCommandItems(), []);
   const results = useMemo(() => {
@@ -28,14 +34,17 @@ export default function CommandPalette() {
     setActiveIndex(0);
   }, []);
 
-  const select = useCallback((path: string) => {
-    navigate(path);
-    close();
-  }, [navigate, close]);
+  const select = useCallback(
+    (path: string) => {
+      navigate(path);
+      close();
+    },
+    [navigate, close],
+  );
 
   useEffect(() => {
     const openPalette = () => setOpen(true);
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setOpen((value) => !value);
@@ -51,22 +60,42 @@ export default function CommandPalette() {
 
   useEffect(() => setActiveIndex(0), [query]);
 
-  // Focus the input when the dialog opens, restore focus to the opener on close.
+  // Keep the active option visible when arrowing through a long list.
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, activeOptionId, open]);
+
+  // Focus input on open; restore previous focus on close. Lock body scroll.
   useEffect(() => {
     if (!open) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     inputRef.current?.focus();
-    return () => previouslyFocused?.focus?.();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
   }, [open]);
 
-  // While the palette is open, pause any full-screen background interaction
-  // (the 3D hall's wheel/drag rail camera) so scrolling drives the results.
+  // Signal immersive surfaces (future 3D hall) that a modal owns input.
   useEffect(() => {
-    try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open; } catch { /* noop */ }
-    return () => { try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false; } catch { /* noop */ } };
+    try {
+      (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open;
+    } catch {
+      /* noop */
+    }
+    return () => {
+      try {
+        (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false;
+      } catch {
+        /* noop */
+      }
+    };
   }, [open]);
 
-  const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const onDialogKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       close();
@@ -74,7 +103,7 @@ export default function CommandPalette() {
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((value) => Math.min(value + 1, results.length - 1));
+      setActiveIndex((value) => Math.min(value + 1, Math.max(results.length - 1, 0)));
       return;
     }
     if (event.key === 'ArrowUp') {
@@ -82,12 +111,21 @@ export default function CommandPalette() {
       setActiveIndex((value) => Math.max(value - 1, 0));
       return;
     }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      setActiveIndex(0);
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      setActiveIndex(Math.max(results.length - 1, 0));
+      return;
+    }
     if (event.key === 'Enter' && results[activeIndex]) {
       event.preventDefault();
       select(results[activeIndex].path);
       return;
     }
-    // Focus trap: keep Tab within the dialog.
     if (event.key === 'Tab') {
       const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
@@ -143,18 +181,41 @@ export default function CommandPalette() {
             aria-label="Поисковый запрос"
             aria-controls={listId}
             aria-expanded={results.length > 0}
+            aria-autocomplete="list"
+            aria-activedescendant={results[activeIndex] ? activeOptionId : undefined}
             role="combobox"
             className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="text-cyan-100/50 hover:text-cyan-200 focus-visible:text-cyan-200">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Закрыть поиск"
+            className="text-cyan-100/50 transition hover:text-cyan-200 focus-visible:text-cyan-200"
+          >
             <X size={20} />
           </button>
         </div>
-        <div id={listId} role="listbox" aria-label="Результаты поиска" className="max-h-[60vh] space-y-2 overflow-y-auto p-3">
+        <div
+          id={listId}
+          role="listbox"
+          aria-label="Результаты поиска"
+          className="max-h-[60vh] space-y-2 overflow-y-auto p-3"
+        >
           {results.map((item, index) => (
-            <CommandResult key={item.id} item={item} active={index === activeIndex} onSelect={() => select(item.path)} />
+            <CommandResult
+              key={item.id}
+              id={`command-option-${index}`}
+              item={item}
+              active={index === activeIndex}
+              onSelect={() => select(item.path)}
+              onHover={() => setActiveIndex(index)}
+            />
           ))}
-          {!results.length && <div className="p-8 text-center text-cyan-100/50">Ничего не найдено.</div>}
+          {!results.length && (
+            <div className="p-8 text-center text-cyan-100/50" role="status">
+              Ничего не найдено.
+            </div>
+          )}
         </div>
       </div>
     </div>

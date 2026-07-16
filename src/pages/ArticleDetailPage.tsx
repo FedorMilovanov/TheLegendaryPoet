@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '../components/PremiumIcons';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import CommunityPanel from '../components/community/CommunityPanel';
 import ArticleMetaRail from '../components/articles/ArticleMetaRail';

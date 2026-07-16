@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { asset } from '../utils/asset';
 
+import type { CSSProperties } from 'react';
+
 interface PoetImageProps {
   src?: string;
   name: string;
   alt?: string;
   className?: string;
+  /** Optional inline style (e.g. view-transition shared-element name). */
+  style?: CSSProperties;
 }
 
 function makePlaceholder(name: string) {
@@ -36,7 +40,7 @@ function makePlaceholder(name: string) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-export default function PoetImage({ src, name, alt, className = '' }: PoetImageProps) {
+export default function PoetImage({ src, name, alt, className = '', style }: PoetImageProps) {
   const fallbackSrc = useMemo(() => makePlaceholder(name), [name]);
   // Resolve real image paths against the app base ("/TheLegendaryPoet/" on
   // GitHub Pages) so bare "/images/..." paths don't 404. The generated
@@ -53,6 +57,7 @@ export default function PoetImage({ src, name, alt, className = '' }: PoetImageP
       src={currentSrc}
       alt={alt || name}
       className={className}
+      style={style}
       loading="lazy"
       decoding="async"
       draggable={false}

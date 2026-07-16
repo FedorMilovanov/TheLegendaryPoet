@@ -1,4 +1,4 @@
-import { Shield } from 'lucide-react';
+import { Shield } from '../PremiumIcons';
 import { titleCase } from '../../utils/titleCase';
 
 interface SpiritualPathProps {

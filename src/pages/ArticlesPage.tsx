@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Filter } from 'lucide-react';
+import { Filter } from '../components/PremiumIcons';
 import { getAllArticles } from '../utils/articleLibrary';
 import { getAllEssays } from '../data/essays';
 import ArticleCard from '../components/articles/ArticleCard';

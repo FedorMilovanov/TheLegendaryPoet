@@ -1,6 +1,7 @@
-import { AlertTriangle, Sparkles } from 'lucide-react';
-import { CommentEntry } from '../../types/community';
+import { AlertTriangle, Sparkles } from '../PremiumIcons';
+import type { CommentEntry } from '../../types/community';
 import { commentKindLabels } from '../../data/commentKinds';
+import ExpandableText from './ExpandableText';
 
 interface FeedbackPairProps {
   positive?: CommentEntry;
@@ -37,7 +38,7 @@ function Item({
           {commentKindLabels[comment.kind] || 'Комментарий'}
         </span>
       </div>
-      <p className="text-sm leading-relaxed text-cyan-50/72">{comment.text}</p>
+      <ExpandableText text={comment.text} collapsedChars={180} />
       <div className="mt-3 text-xs text-cyan-100/34">{comment.author}</div>
     </div>
   );

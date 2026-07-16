@@ -139,3 +139,73 @@ export function Volume2(props: IconProps) { return <IconShell {...props}><polygo
 export function VolumeX(props: IconProps) { return <IconShell {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></IconShell>; }
 export function SkipForward(props: IconProps) { return <IconShell {...props}><polygon points="5 4 15 12 5 20 5 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></IconShell>; }
 export function SkipBack(props: IconProps) { return <IconShell {...props}><polygon points="19 20 9 12 19 4 19 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></IconShell>; }
+
+/** Check mark — used by ShareLine confirmation and success states. */
+export function Check(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <motion.path
+        variants={{ hover: { scale: 1.12 } }}
+        style={{ transformOrigin: 'center' }}
+        d="m5.5 12.2 4 4 9-9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconShell>
+  );
+}
+
+/** Chain-link — text-fragment deep-link chip. */
+export function Link2(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l2-2a5 5 0 0 0-7.07-7.07l-1.2 1.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-2 2a5 5 0 0 0 7.07 7.07l1.2-1.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </IconShell>
+  );
+}
+
+export function ChevronDown(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <motion.path
+        variants={{ hover: { y: 2 } }}
+        d="m6 9 6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconShell>
+  );
+}
+
+/** Writing pen — essay hero / editorial mark. */
+export function PenLine(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <path d="M12 20h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <motion.path
+        variants={{ hover: { rotate: -6 } }}
+        style={{ transformOrigin: '10px 10px' }}
+        d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </IconShell>
+  );
+}
+
+/** Quill / feather — essay poem badges and reflections. */
+export function Feather(props: IconProps) {
+  return (
+    <IconShell {...props}>
+      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.76Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M16 8 2 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M17.5 15H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </IconShell>
+  );
+}

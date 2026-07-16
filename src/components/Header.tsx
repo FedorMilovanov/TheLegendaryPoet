@@ -7,6 +7,7 @@ import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Search } from './PremiumIcons';
 import ThemeToggle from './ThemeToggle';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 const Header = () => {
   const location = useLocation();
@@ -53,12 +54,12 @@ const Header = () => {
               >
                 {titleCase(item.name)}
                 {isActive(item.path) && (
-                  <motion.span 
+                  <motion.span
                     layoutId="header-nav-indicator"
                     className={cn(
                       "absolute -bottom-1 inset-x-0 h-0.5 rounded-full",
-                      item.accent 
-                        ? "bg-luxury-gold shadow-[0_0_8px_rgba(212,175,55,0.8)]" 
+                      item.accent
+                        ? "bg-luxury-gold shadow-[0_0_8px_rgba(212,175,55,0.8)]"
                         : "bg-cyan-400 shadow-[0_0_8px_rgba(0,212,255,0.8)]"
                     )}
                   />
@@ -78,13 +79,13 @@ const Header = () => {
               <Search size={13} />
               <span className="header-search-label">Ctrl K</span>
             </button>
-            <a href="https://youtube.com/@TheLegendaryPoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-red-500/10" aria-label="YouTube">
+            <a href={siteConfig.channels.youtube} target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-red-500/10" aria-label="YouTube">
               <YouTubeIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(255,0,51,0.5)]" />
             </a>
-            <a href="https://rutube.ru/channel/74579453" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-sky-500/10" aria-label="Rutube">
+            <a href={siteConfig.channels.rutube} target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-sky-500/10" aria-label="Rutube">
               <RutubeIcon className="h-[21px] w-[21px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(18,204,237,0.5)]" />
             </a>
-            <a href="https://vk.com/thelegendarypoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-blue-500/10" aria-label="VK">
+            <a href={siteConfig.channels.vk} target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-blue-500/10" aria-label="VK">
               <VKIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(7,119,255,0.5)]" />
             </a>
           </div>

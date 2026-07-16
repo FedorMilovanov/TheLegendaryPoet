@@ -1,5 +1,5 @@
 import { Link } from '../ui/Link';
-import { ArrowRight, Clock } from 'lucide-react';
+import { ArrowRight, Clock } from '../PremiumIcons';
 import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';

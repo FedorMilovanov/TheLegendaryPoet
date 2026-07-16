@@ -17,7 +17,9 @@ Restore THE LEGENDARY POET as a premium dark luxury editorial site, not as a gen
 - No Christian label on the cover.
 - Hero should show poets/atmosphere/brand clearly.
 - Main title must read: `THE LEGENDARY POET` in cyan-blue glowing style.
-- Current hero component: `src/components/home/HeroSection.tsx`.
+- Current hero lives **inside** `src/pages/HomePage.tsx` (local `HeroSection` /
+  `HeroTitle` functions). There is no `src/components/home/` folder — do not
+  recreate one unless a section gains a second consumer.
 
 ## Emblem (hooded figure)
 
@@ -27,6 +29,7 @@ Restore THE LEGENDARY POET as a premium dark luxury editorial site, not as a gen
 - It must stay SVG, frameless, clean. Do not replace with emoji or a bitmap-only logo.
 - Do NOT restore the old `LP` monogram — the brand deliberately moved away from it.
 - The same figure drives `public/favicon.svg` and the generated `public/og-image.jpg`.
+- Gradient/filter ids are instance-unique via `useId` (header + footer + wipe overlay).
 
 ## Channel Priority
 
