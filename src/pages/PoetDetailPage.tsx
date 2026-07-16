@@ -8,6 +8,7 @@ import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
 import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
+import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
@@ -106,6 +107,10 @@ export default function PoetDetailPage() {
 
             {poet.spiritualSearch && (
               <SpiritualPath content={poet.spiritualSearch} />
+            )}
+
+            {poet.moralPortrait && (
+              <MoralPortrait content={poet.moralPortrait} />
             )}
 
             {poet.authorCommentary && (

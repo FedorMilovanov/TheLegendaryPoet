@@ -128,6 +128,7 @@ export const nikolayGumilev: Poet = {
       kind: 'contemporary',
       quote: 'Чище смерть, солёнее беда, и земля правдивей и страшнее.',
       source: 'О. Мандельштам, «Умывался ночью на дворе...» (1921, Тифлис) — стихотворение, написанное по известии о расстреле Гумилёва',
+      sourceUrl: 'https://www.culture.ru/poems/41806/umyvalsya-nochyu-na-dvore',
     },
     {
       author: 'Екатерина Кардовская',
