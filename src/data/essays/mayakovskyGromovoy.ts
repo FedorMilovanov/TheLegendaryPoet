@@ -325,6 +325,7 @@ export const mayakovskyGromovoy: Essay = {
       author: 'Борис Пастернак',
       role: 'поэт, знал Маяковского с 1914 года',
       source: 'Б. Пастернак, «Люди и положения» (1956)',
+      sourceUrl: 'https://pasternak.niv.ru/pasternak/bio/lyudi-i-polozheniya.htm',
     },
 
     { type: 'section', heading: 'Что это было' },
@@ -339,6 +340,7 @@ export const mayakovskyGromovoy: Essay = {
       author: 'Борис Пастернак',
       role: 'поэт, близкий современник',
       source: 'Б. Пастернак, «Люди и положения» (1956)',
+      sourceUrl: 'https://pasternak.niv.ru/pasternak/bio/lyudi-i-polozheniya.htm',
     },
     {
       type: 'paragraph',

@@ -499,8 +499,8 @@ export const yeseninKutezhi: Essay = {
       quote: 'Я выплёвываю Причастие — не из кощунства, а не хочу страдания, смирения, сораспятия.',
       author: 'Сергей Есенин',
       role: 'в передаче А. Блока, дневниковая запись 4 января 1918',
-      source: 'Дневник А. Блока, 1918',
-      sourceUrl: 'https://ru.wikisource.org/wiki/Инония_(Есенин)',
+      source: 'Дневник А. Блока, запись 4 января 1918 (Летопись жизни и творчества Есенина, ФЭБ)',
+      sourceUrl: 'http://feb-web.ru/feb/esenin/el-abc/el2/el2-081-.htm',
     },
     {
       type: 'paragraph',
