@@ -7,6 +7,38 @@ import type { Essay, EssayBlock } from '../src/types/essay';
 const errors: string[] = [];
 const warnings: string[] = [];
 const institutionalSourcePattern = /музей|мемориаль|выставк|фильм|кино/i;
+const primarySourceUrlPattern = /feb-web\.ru|rvb\.ru|wikisource\.org/i;
+const scriptureReferencePattern = /\((?:[1-3]\s*)?[А-ЯЁ][А-Яа-яё. ]+\s+\d+:\d+(?:[–-]\d+)?\)/g;
+
+const requiredContentMarkers: Record<string, string[]> = {
+  'yesenin-kutezhi': [
+    '21 ноября 1923 года',
+    '26 ноября по 21 декабря 1925 года',
+    'под иконами умирать',
+  ],
+  'mayakovsky-gromovoy': [
+    'Зрители до смешного поделились',
+    'зал был переполнен молодёжью',
+    'поэта-агитатора и поэта-пропагандиста',
+  ],
+  'brik-case': [
+    'Так тяжело мне не было никогда',
+    'добровольное заключение',
+    'как дезертир',
+  ],
+};
+
+const forbiddenContentMarkers: Record<string, string[]> = {
+  'yesenin-kutezhi': [
+    'был отдан особый приказ: Есенина задерживать',
+  ],
+  'mayakovsky-gromovoy': [
+    'литературные организации и большинство известных писателей проигнорировали её открытие',
+  ],
+  'brik-case': [
+    'Государственный музей Маяковского употребляет другие, более точные слова',
+  ],
+};
 
 function error(essay: Essay, message: string) {
   errors.push(`${essay.slug}: ${message}`);
@@ -26,8 +58,30 @@ function validateImage(essay: Essay, field: 'cover' | 'cardCover', value?: strin
   }
 }
 
+function blockText(block: EssayBlock): string {
+  switch (block.type) {
+    case 'epigraph':
+    case 'lead':
+    case 'paragraph':
+    case 'pullquote':
+    case 'note':
+    case 'reflection':
+      return block.text;
+    case 'section':
+      return block.heading;
+    case 'poem':
+      return `${block.title ?? ''}\n${block.lines}\n${block.note ?? ''}`;
+    case 'voice':
+      return `${block.quote}\n${block.author}\n${block.role}\n${block.source}`;
+    case 'divider':
+      return '';
+  }
+}
+
 function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
   const anchors = new Set<string>();
+  let reflectionCount = 0;
+  let historicalBodyScriptureReferences = 0;
 
   blocks.forEach((block, index) => {
     if (block.type === 'section') {
@@ -72,7 +126,25 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
     if (block.type === 'poem' && !block.lines.trim()) {
       error(essay, `poem block ${index + 1} has no lines`);
     }
+
+    if (block.type === 'reflection') {
+      reflectionCount += 1;
+    } else if (block.type === 'paragraph' || block.type === 'note' || block.type === 'poem') {
+      const text = blockText(block);
+      historicalBodyScriptureReferences += text.match(scriptureReferencePattern)?.length ?? 0;
+    }
   });
+
+  if (reflectionCount > 1) {
+    warning(essay, `has ${reflectionCount} reflection blocks; keep the evangelical conclusion concentrated`);
+  }
+
+  if (historicalBodyScriptureReferences > 6) {
+    warning(
+      essay,
+      `has ${historicalBodyScriptureReferences} Scripture references outside the final reflection; review for mechanical insertion`,
+    );
+  }
 }
 
 function validateSources(essay: Essay) {
@@ -93,9 +165,35 @@ function validateSources(essay: Essay) {
     );
   }
 
+  const primarySources = sources.filter((source) =>
+    source.url ? primarySourceUrlPattern.test(source.url) : false,
+  );
+
+  if (primarySources.length < 2) {
+    warning(essay, `has only ${primarySources.length} linked FEB/RVB/Wikisource primary sources`);
+  }
+
   for (const source of sources) {
     if (source.url && !/^https?:\/\//.test(source.url)) {
       error(essay, `source has an invalid URL: ${source.title}`);
+    }
+  }
+}
+
+function validateEditorialRegressions(essay: Essay) {
+  const searchableText = [essay.title, essay.subtitle ?? '', essay.excerpt]
+    .concat(essay.blocks.map(blockText))
+    .join('\n');
+
+  for (const marker of requiredContentMarkers[essay.slug] ?? []) {
+    if (!searchableText.includes(marker)) {
+      error(essay, `required verified content marker is missing: “${marker}”`);
+    }
+  }
+
+  for (const marker of forbiddenContentMarkers[essay.slug] ?? []) {
+    if (searchableText.includes(marker)) {
+      error(essay, `superseded or misleading formulation returned: “${marker}”`);
     }
   }
 }
@@ -123,6 +221,7 @@ for (const essay of essays) {
   validateImage(essay, 'cardCover', essay.cardCover);
   validateBlocks(essay, essay.blocks);
   validateSources(essay);
+  validateEditorialRegressions(essay);
 }
 
 for (const message of warnings) console.warn(`WARN  ${message}`);
