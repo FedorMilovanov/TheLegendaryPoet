@@ -4,10 +4,12 @@ import { mayakovskyGromovoy } from './mayakovskyGromovoy';
 import { brikCase } from './brikCase';
 import { applyEditorialReview } from './editorialReview';
 import { applySourceDeepening } from './sourceDeepening';
+import { applySourceVerificationRound2 } from './sourceVerificationRound2';
 
 export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase]
   .map(applyEditorialReview)
-  .map(applySourceDeepening);
+  .map(applySourceDeepening)
+  .map(applySourceVerificationRound2);
 
 export function getAllEssays(): Essay[] {
   return essays;
