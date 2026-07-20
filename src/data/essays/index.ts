@@ -2,8 +2,11 @@ import { Essay } from '../../types/essay';
 import { yeseninKutezhi } from './yeseninKutezhi';
 import { mayakovskyGromovoy } from './mayakovskyGromovoy';
 import { brikCase } from './brikCase';
+import { applyEditorialReview } from './editorialReview';
 
-export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase];
+export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase].map(
+  applyEditorialReview,
+);
 
 export function getAllEssays(): Essay[] {
   return essays;
