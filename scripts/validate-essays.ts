@@ -6,6 +6,7 @@ import type { Essay, EssayBlock } from '../src/types/essay';
 
 const errors: string[] = [];
 const warnings: string[] = [];
+const institutionalSourcePattern = /музей|мемориаль|выставк|фильм|кино/i;
 
 function error(essay: Essay, message: string) {
   errors.push(`${essay.slug}: ${message}`);
@@ -40,9 +41,7 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
           heading.toLocaleLowerCase('ru-RU');
 
       if (isAdjacentDuplicate) {
-        // The renderer suppresses this defensively, so keep CI green while
-        // still surfacing the source-data cleanup to editors.
-        warning(essay, `adjacent duplicate section heading: “${heading}”`);
+        error(essay, `adjacent duplicate section heading: “${heading}”`);
         return;
       }
 
@@ -58,12 +57,47 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
       if (block.sourceUrl && !/^https?:\/\//.test(block.sourceUrl)) {
         error(essay, `voice block ${index + 1} has an invalid sourceUrl`);
       }
+
+      if (
+        block.kind === 'historian' &&
+        institutionalSourcePattern.test(`${block.author} ${block.source}`)
+      ) {
+        error(
+          essay,
+          `voice block ${index + 1} presents an institutional or museum source as a neutral historian`,
+        );
+      }
     }
 
     if (block.type === 'poem' && !block.lines.trim()) {
       error(essay, `poem block ${index + 1} has no lines`);
     }
   });
+}
+
+function validateSources(essay: Essay) {
+  const sources = essay.sources ?? [];
+  if (sources.length === 0) {
+    warning(essay, 'has no source list');
+    return;
+  }
+
+  const independentSources = sources.filter(
+    (source) => !institutionalSourcePattern.test(source.title),
+  );
+
+  if (independentSources.length === 0) {
+    error(
+      essay,
+      'relies only on museum, memorial, exhibition, or film sources; add primary or independent research',
+    );
+  }
+
+  for (const source of sources) {
+    if (source.url && !/^https?:\/\//.test(source.url)) {
+      error(essay, `source has an invalid URL: ${source.title}`);
+    }
+  }
 }
 
 const ids = new Set<string>();
@@ -79,7 +113,7 @@ for (const essay of essays) {
   if (!/^[a-z0-9-]+$/.test(essay.slug)) error(essay, `invalid slug: ${essay.slug}`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(essay.date)) error(essay, `invalid date: ${essay.date}`);
   if (!Number.isInteger(essay.readTime) || essay.readTime <= 0) {
-    error(essay, `readTime must be a positive integer`);
+    error(essay, 'readTime must be a positive integer');
   }
   if (!essay.title.trim()) error(essay, 'title is empty');
   if (!essay.excerpt.trim()) error(essay, 'excerpt is empty');
@@ -88,6 +122,7 @@ for (const essay of essays) {
   validateImage(essay, 'cover', essay.cover);
   validateImage(essay, 'cardCover', essay.cardCover);
   validateBlocks(essay, essay.blocks);
+  validateSources(essay);
 }
 
 for (const message of warnings) console.warn(`WARN  ${message}`);
