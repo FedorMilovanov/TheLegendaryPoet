@@ -142,7 +142,7 @@ function RoutedApp() {
 }
 
 function App() {
-  // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
+  // Router base follows Vite's configured deployment base ("/" in production).
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   // If a shared backend is configured, pull everyone's ratings/comments once.

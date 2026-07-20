@@ -17,6 +17,7 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +40,7 @@ export default function PoetDetailPage() {
             name: poet.name,
             alternateName: poet.fullName,
             description: poet.shortBio,
-            image: `${poet.photo.startsWith('http') ? '' : 'https://fedormilovanov.github.io/TheLegendaryPoet'}${poet.photo}`,
+            image: `${poet.photo.startsWith('http') ? '' : siteConfig.url}${poet.photo}`,
             birthDate: String(poet.birthYear),
             deathDate: poet.deathYear ? String(poet.deathYear) : undefined,
             nationality: poet.nationality,

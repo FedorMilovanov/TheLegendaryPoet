@@ -32,8 +32,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Project-site base path. For a custom domain, set VITE_BASE to "/".
-          VITE_BASE: /TheLegendaryPoet/
+          # The custom domain serves the Pages artifact from the site root.
+          VITE_BASE: /
           # Optional shared comments/ratings backend (Supabase). Leave the repo
           # Variables unset to keep the local-only store. The anon key is public
           # by design (protected by Row Level Security) — repo Variables, not

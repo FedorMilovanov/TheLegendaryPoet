@@ -2,8 +2,9 @@
 import fs from 'fs';
 import path from 'path';
 
-const BASE = 'https://fedormilovanov.github.io/TheLegendaryPoet';
+const BASE = 'https://thelegendarypoet.ru';
 const libDir = path.resolve('src/data/library');
+const essaysDir = path.resolve('src/data/essays');
 const read = (f) => fs.readFileSync(path.join(libDir, f), 'utf8');
 
 const poetFiles = fs.readdirSync(libDir).filter((f) => f.endsWith('.ts') && !['index.ts', 'articles.ts', 'musicTracks.ts'].includes(f));
@@ -14,9 +15,15 @@ for (const f of [...poetFiles, 'articles.ts']) {
   for (const m of read(f).matchAll(/id: '(article[a-z0-9-]*)'/g)) articleIds.add(m[1]);
 }
 
-const staticRoutes = ['/', '/poets', '/articles', '/music', '/about'];
+const essaySlugs = fs.readdirSync(essaysDir)
+  .filter((f) => f.endsWith('.ts') && f !== 'index.ts')
+  .map((f) => (fs.readFileSync(path.join(essaysDir, f), 'utf8').match(/^\s*slug:\s*['"]([a-z0-9-]+)['"]/m) || [])[1])
+  .filter(Boolean);
+
+const staticRoutes = ['/', '/hall', '/poets', '/articles', '/music', '/about'];
 const urls = [
   ...staticRoutes.map((u) => ({ loc: u, priority: u === '/' ? '1.0' : '0.8' })),
+  ...essaySlugs.map((slug) => ({ loc: `/essays/${slug}`, priority: '0.9' })),
   ...poetIds.map((id) => ({ loc: `/poets/${id}`, priority: '0.7' })),
   ...[...articleIds].map((id) => ({ loc: `/articles/${id}`, priority: '0.6' })),
 ];
@@ -28,4 +35,4 @@ ${urls.map((u) => `  <url><loc>${BASE}${u.loc}</loc><changefreq>monthly</changef
 `;
 
 fs.writeFileSync('public/sitemap.xml', xml);
-console.log(`sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${articleIds.size} articles)`);
+console.log(`sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${articleIds.size} articles)`);

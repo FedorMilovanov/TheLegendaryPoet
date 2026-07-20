@@ -18,9 +18,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// siteConfig.url already IS the base path (https://…/TheLegendaryPoet) — do
-// not prepend it again, or image URLs double up (…/TheLegendaryPoet/TheLegendaryPoet/…).
-const SITE_URL = 'https://fedormilovanov.github.io/TheLegendaryPoet';
+// Canonical custom-domain origin used in prerendered social cards.
+const SITE_URL = 'https://thelegendarypoet.ru';
 const DIST = path.resolve('dist');
 
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
