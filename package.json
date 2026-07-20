@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "validate:library": "tsx scripts/validate-library.ts",
+    "validate:essays": "tsx scripts/validate-essays.ts",
+    "check": "npm run validate:library && npm run validate:essays && npm run typecheck",
+    "sitemap": "node scripts/gen-sitemap.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
