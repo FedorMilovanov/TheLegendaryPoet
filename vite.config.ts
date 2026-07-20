@@ -8,13 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
-// base: for a GitHub Pages project site the app is served from /<repo>/.
-// Override with VITE_BASE=/ for a custom domain or user/org Pages site.
+// The production site is served from the root of the custom domain.
+// VITE_BASE remains overridable for previews on another path.
 // NOTE: a normal multi-file build (no vite-plugin-singlefile) is used so that
-// the base path, router basename and asset URLs all resolve correctly under
-// the /<repo>/ sub-path and on deep-link refresh.
+// the base path, router basename and asset URLs resolve correctly for deep links.
 export default defineConfig({
-  base: process.env.VITE_BASE || '/TheLegendaryPoet/',
+  base: process.env.VITE_BASE || '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
