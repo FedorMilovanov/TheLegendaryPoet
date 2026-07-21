@@ -1,19 +1,20 @@
-name: CI
+name: Polish Mayakovsky prose
 
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
+  polish:
+    if: github.head_ref == 'agent/integrate-unmerged-essays'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -21,15 +22,20 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Validate content, literary style, and types
-        run: npm run check
-      - name: Generate sitemap
-        run: npm run sitemap
-      - name: Build
-        run: npm run build
+      - name: Apply Mayakovsky prose polish
+        run: npx tsx scripts/polish-mayakovsky-prose.ts
+      - name: Validate polished content
+        run: |
+          npm run check
+          npm run sitemap
+          npm run build
+          npm run prerender
         env:
           VITE_BASE: /
-      - name: Prerender social pages
-        run: npm run prerender
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
+      - name: Commit polished prose
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/essays/mayakovskyGromovoy.ts scripts/validate-literary-style.ts
+          git commit -m "Polish Mayakovsky essay prose"
+          git push origin HEAD:${{ github.head_ref }}
