@@ -10,6 +10,7 @@ import { sergeiYesenin } from './sergeiYesenin';
 import { annaAkhmatova } from './annaAkhmatova';
 import { alexanderBlok } from './alexanderBlok';
 import { applyLibraryLiteraryPolish } from './libraryLiteraryPolish';
+import { applyLibraryLiteraryPolishRound2 } from './libraryLiteraryPolishRound2';
 
 export const poets: Poet[] = [
   fyodorTyutchev,
@@ -22,7 +23,9 @@ export const poets: Poet[] = [
   sergeiYesenin,
   annaAkhmatova,
   alexanderBlok,
-].map(applyLibraryLiteraryPolish);
+]
+  .map(applyLibraryLiteraryPolish)
+  .map(applyLibraryLiteraryPolishRound2);
 
 export { articles } from './articles';
 export { musicTracks } from './musicTracks';
