@@ -1,86 +1,144 @@
-# Integration status
+# Статус интеграции PR №31
 
-This branch consolidates the unmerged editorial work from PR #29 with the custom-domain work from PR #30.
+Ветка объединяет незавершённую редакционную работу бывшего PR №29 с настройкой домена из бывшего PR №30. `main` не изменён.
 
-## Included
+## Что включено
 
-- Long-form essays about Vladimir Mayakovsky and the Briks.
-- The expanded Yesenin essay and the verified poet-library changes.
-- Moral-portrait data and the accompanying reusable component.
-- Custom-domain canonical URLs for `https://thelegendarypoet.ru`.
-- Generated sitemap coverage for static pages, poets, essays, and legacy articles.
-- Pull-request CI, library validation, essay validation, type checking, build, and OG prerendering.
-- A defensive engine guard against adjacent duplicate section headings.
-- Safe default Open Graph artwork whenever an essay image is intentionally absent.
+- большие статьи о Есенине, Маяковском и Бриках;
+- проверенные данные десяти поэтов библиотеки;
+- моральные портреты и общий компонент отображения;
+- канонические адреса `https://thelegendarypoet.ru`;
+- sitemap для статических страниц, поэтов, эссе и старых материалов;
+- проверки библиотеки, эссе, литературного стиля, TypeScript, сборки и OG-пререндера;
+- защита движка от соседних повторяющихся заголовков;
+- безопасная общая OG-обложка, пока итоговые изображения эссе отсутствуют.
 
-## Editorial policy now enforced
+## Обязательные редакционные документы
 
-- `docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md` defines righteous judgment by confession and fruits, strong but compassionate spiritual conclusions, the difference between possible and documented deathbed repentance, and the source hierarchy.
-- `docs/HISTORICAL_NARRATIVE_STANDARD.md` requires history before conclusion: primary documents, chronology, literary analysis and humanly intelligible causation form the article body; biblical evaluation appears only where the evidence naturally requires it.
-- `PROJECT_CHARTER.md` gives both policies priority over the authoring guide.
-- Museums and memorial institutions may supply valuable documents but their commentary is treated as an interested interpretation, not as an automatically neutral authority.
-- The project formula is: **accuracy without whitewashing, directness without sensationalism, compassion without sentimental falsehood**.
+- `PROJECT_CHARTER.md` — высший уровень требований.
+- `docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md` — суждение по исповеданию и плодам, сила духовного вывода, предсмертное покаяние, конфликт интересов источников.
+- `docs/HISTORICAL_NARRATIVE_STANDARD.md` — история прежде вывода, понятность неверующему читателю и русский литературный стиль.
+- `POET_AUTHORING_GUIDE.md` — единая архитектура и порядок создания страницы поэта.
+- `src/docs/THEOLOGICAL_GUIDELINES.md` — богословская оптика без механического морализаторства.
+- `AGENT_ANTI_REGRESSION_PROTOCOL.md` — обязательные проверки и защита от откатов.
 
-## Primary-source deepening completed so far
+Формула проекта: **точность без обеления, прямота без сенсационности, сострадание без сентиментальной лжи**.
 
-### Yesenin
+## Большие статьи
 
-- The romanticizing title “drunken angel” was removed.
-- The duplicate “Moscow of Taverns” section was removed.
-- Police history now uses the signed interrogation protocol of 21 November 1923 and the January 1924 detention papers instead of the late story about a special order to detain and release him.
-- The final clinic stay is dated from academic commentary: 26 November to 21 December 1925.
-- “The Black Man” is treated as a work developed from 1923 to 14 November 1925, not as a one-night hallucination or a medical chart.
-- The full context of “I Have One Diversion Left” includes the request to die beneath icons and the admission of “unbelief in grace”; religious memory is distinguished from repentance.
-- The imagist public campaign is documented through Yesenin’s own autobiographical statement and the chronicle of the painting of the Strastnoy Monastery walls.
-- The “Stall of Pegasus” passage now uses the exact academic record of 52 signed café bills and Yesenin’s documented status as a co-owner.
-- The conclusion remains direct about the rejection of the Cross, unbelief, absence of documented repentance and the spiritually terrible end, but it is built from the history rather than repeated throughout every section.
+### Есенин
 
-### Mayakovsky
+- Убрано романтизирующее название «пьяный ангел».
+- Милицейская история строится по протоколу допроса 21 ноября 1923 года и материалам задержания 20 января 1924 года, а не по поздней легенде об особом приказе «задерживать и отпускать».
+- Последнее лечение датировано по академическому комментарию: 26 ноября — 21 декабря 1925 года.
+- «Чёрный человек» показан как текст, над которым Есенин работал с 1923 года до 14 ноября 1925-го, а не как запись одной ночной галлюцинации.
+- Контекст «Мне осталась одна забава» включает просьбу умереть под иконами и признание неверия; религиозная память отделена от покаяния.
+- Имажинистские акции подтверждены собственными словами Есенина и документальной летописью.
+- Для «Стойла Пегаса» указаны 52 подписанных поэтом счёта и его документированный статус совладельца.
+- Финал сохраняет прямой вывод о страшном конце неверующего человека, но не повторяет богословскую формулу после каждого раздела.
 
-- Museum commentary was removed from the role of a neutral historian.
-- The reception of “The Bathhouse” is shown through Mayakovsky’s own letter: the audience “split almost comically”.
-- The legend of a completely empty or universally boycotted “20 Years of Work” exhibition was corrected: the opening hall was crowded with young people and the exhibition later moved to the House of Komsomol in Krasnaya Presnya.
-- Mayakovsky’s own exhibition declarations document that he voluntarily presented himself as a poet-agitator and poet-propagandist.
-- The tension between the formula “the individual is zero” and his enormous lyrical “I” is shown through his own texts, not through a ready-made psychological verdict.
-- The final letter now cites the academic Complete Works publication rather than a museum retelling.
-- The funeral and the 1935 state canonization are described from the documentary chronicle and academic reference works.
-- The spiritual conclusion identifies Revolution and the titanic self as false final hopes without reducing the suicide to a single historical or medical cause.
+### Маяковский
 
-### The Briks
+- Музейный комментарий удалён из роли нейтрального историка.
+- Приём «Бани» показан через письмо самого Маяковского: зрители «до смешного поделились».
+- Исправлена легенда о пустой и всеобщим образом бойкотированной выставке «20 лет работы»: открытие собрало переполненный молодёжью зал, позднее выставку перенесли в Дом комсомола Красной Пресни.
+- Собственные декларации поэта подтверждают добровольно принятую роль агитатора и пропагандиста.
+- Противоречие между формулой «единица — ноль» и огромным лирическим «я» показано через тексты, а не готовый психологический диагноз.
+- Предсмертное письмо цитируется по академическому ПСС.
+- Финал не сводит самоубийство к одной духовной, любовной или политической причине, но прямо оценивает богохульство, прелюбодеяние и отсутствие известных плодов покаяния.
 
-- The two-month separation is described from the published correspondence and letter-diary.
-- Mayakovsky’s own words, “It has never been so hard for me,” are included.
-- “Voluntary confinement” is neither turned into a literal arrest nor softened into a calm literary experiment; prison imagery is documented in his own letters and poem.
-- The unsupported claim that he worked sixteen to twenty hours every day was removed.
-- Osip Brik’s state-security service is stated directly from archival research: 8 June 1920 to 1 January 1924, investigator and authorized officer of the secret department, dismissed “as a deserter”.
-- Letters document payments, household support and the 1928 automobile negotiations; they do not by themselves prove a secret financial motive.
-- Creative collaboration and archive preservation are separated from moral justification: usefulness is not righteousness.
-- Adultery is named directly; Osip’s consent did not turn the relationship into marriage.
-- The late Voznesensky kitchen story remains explicitly marked as late, singly transmitted testimony rather than a contemporary transcript.
+### Брики
 
-## Content regression protection
+- Двухмесячная разлука описана по опубликованной переписке и письму-дневнику.
+- Добавлены собственные слова Маяковского: «Так тяжело мне не было никогда».
+- «Добровольное заключение» не превращается ни в буквальный арест, ни в спокойный литературный эксперимент.
+- Удалена недоказанная формула о ежедневной работе по шестнадцать–двадцать часов.
+- Служба Осипа в органах названа по архивному исследованию с датами, должностями и формулировкой увольнения «как дезертир».
+- Письма подтверждают выплаты, общий быт и автомобильные переговоры; из них не выводится тайный финансовый заговор.
+- Творческое сотрудничество отделено от нравственного оправдания союза.
+- Связь с чужой женой названа прелюбодеянием; согласие Осипа не превращало её в брак.
+- История о закрытой кухне сохранена как позднее, единично переданное свидетельство Вознесенского.
 
-The essay validator now checks more than compilation:
+## Полировка библиотеки поэтов
 
-- required documentary facts and quotations must remain in the rendered essay data;
-- superseded legends and romanticizing formulations are forbidden from returning;
-- museum or institutional material cannot be presented as a neutral historian voice;
-- an essay cannot rely only on museum, exhibition or film sources;
-- repeated section headings fail validation;
-- excessive Scripture references outside the final reflection are flagged for possible mechanical insertion;
-- source URLs, essay structure, TypeScript, sitemap generation, production build and social prerendering are checked in CI.
+Все десять профилей прошли фактологический и литературный аудит.
 
-## Deliberately excluded
+### Есенин
 
-The unfinished Mayakovsky and Brik artwork from PR #29 is not present on this branch. The following paths remain reserved for final approved files:
+Удалены легенда о негласном милицейском приказе, недоказанная Библия с распятием и романтизация кабацкого образа. Уточнены милицейские документы, клиника, религиозное исповедание и пределы вывода о последнем покаянии.
+
+### Маяковский
+
+Исправлена история выставки; убрана прямая причинность между отдельной строкой и будущим самоубийством. «Послушайте!», «Облако в штанах» и «Лиличка!» получили литературный разбор без искусственного тайного христианства.
+
+### Гумилёв
+
+Казнь названа политической расправой, а не христианским мученичеством. Мужество перед смертью сохранено без агиографии; супружеская неверность названа прямо. Удалено смешение русского текста с английским словом `ledger`.
+
+### Ахматова
+
+Убрано недостаточно подтверждённое прямое обвинение в измене Гумилёву. Документированная связь с женатым Пуниным названа прелюбодеянием. Литургическая глубина «Реквиема» не превращена в доказательство безупречной церковной жизни.
+
+### Пастернак
+
+Исправлено «обвенчались» на регистрацию в ЗАГСе. Разделены первый арест Ивинской в 1949 году как средство давления на поэта и второй арест в августе 1960 года по делу о зарубежных гонорарах. Христианская тема поздней поэзии описана серьёзно, но без автоматического догматического исповедания автора.
+
+### Блок
+
+Убрана схема, будто революция буквально «пожрала» и наказала поэта. Добровольная поддержка революции, прелюбодеяние, пьянство и религиозная двусмысленность названы без превращения болезни в наглядную кару.
+
+### Тютчев
+
+Удалена недоказанная причинная фраза, будто роман с Эрнестиной «сломил» первую жену. Двойная жизнь с Денисьевой названа длительным прелюбодеянием; грубые формулы о «бездне похоти» заменены точной биографической и нравственной оценкой.
+
+### Пушкин
+
+Донжуанский список оставлен подлинным документом, но перестал изображаться протоколом тридцати семи доказанных связей. Карточная зависимость отделена от сребролюбия. История создания «Пророка» представлена как спорная, а поздняя религиозная серьёзность и предсмертное причастие — без нимба и без обесценивания.
+
+### Лермонтов
+
+Версия выстрела в воздух описана как серьёзно подтверждённая, но не абсолютно восстановленная. Ответственность за насмешки и дуэльный конфликт сохранена без формулы мистического возмездия. Молитвенная лирика не превращена в доказательство завершённого обращения.
+
+### Фет
+
+Отказ от Марии Лазич объяснён страхом бедности без прямой недоказанной связи с её смертью. Брак с Марией Боткиной не сводится к покупке приданого. Последняя попытка схватить оружие маркируется как рассказ одного близкого свидетеля. Эстетическая вера в искусство отделена от евангельской надежды.
+
+## Защита от содержательных и стилистических откатов
+
+CI проверяет:
+
+- обязательные документальные факты и цитаты в итоговых данных;
+- отсутствие уже опровергнутых легенд;
+- отсутствие романтизирующих и машинных формул;
+- запрет на музей как автоматически нейтральный голос историка;
+- наличие независимых и первичных источников;
+- повторяющиеся заголовки;
+- чрезмерное механическое внедрение библейских ссылок;
+- случайные английские слова в русской прозе;
+- повторяемые конструкции `не только…, но и…`, `нельзя свести…, но нельзя и…`;
+- структуру данных, TypeScript, sitemap, production build и социальный пререндер.
+
+## Технический долг перед слиянием
+
+Редакторские преобразования сейчас намеренно собраны в последовательных слоях, чтобы не потерять проверенную работу прежних агентов. После стабилизации содержания их нужно перенести в исходные файлы поэтов и эссе, удалить временные слои и оставить читаемую архитектуру. Это обязательный этап до слияния в `main`, а не повод откатывать содержание.
+
+## Изображения
+
+Незавершённые изображения из PR №29 исключены. Итоговые файлы пока не добавляются и не изменяются. Зарезервированы пути:
 
 - `public/images/essays/mayakovsky-gromovoy.jpg`
 - `public/images/essays/mayakovsky-gromovoy-card.jpg`
 - `public/images/essays/brik-case.jpg`
 - `public/images/essays/brik-case-card.jpg`
 
-Their absence is reported as a warning, not a build failure. Until final artwork is added, pages and social metadata use the site's existing graceful fallback.
+Их отсутствие даёт предупреждение, а не падение сборки. До добавления утверждённых изображений используется безопасная общая обложка.
 
-## Merge status
+## Слияние
 
-PR #31 remains a draft. Do not merge it into `main` until the final images are prepared and the rendered pages receive a separate visual and editorial inspection.
+PR №31 остаётся черновым. Не сливать в `main` до:
+
+1. консолидации временных редакторских слоёв;
+2. добавления и проверки итоговых изображений;
+3. отдельного визуального просмотра отрендеренных страниц;
+4. заключительной редакторской вычитки;
+5. зелёного полного CI.
