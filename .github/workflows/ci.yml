@@ -39,3 +39,11 @@ jobs:
         run: npx tsx scripts/prerender-og.mjs
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+      - name: Package source snapshot
+        run: tar --exclude=.git --exclude=node_modules --exclude=dist -czf repo-source.tgz .
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-source
+          path: repo-source.tgz
+          retention-days: 1
