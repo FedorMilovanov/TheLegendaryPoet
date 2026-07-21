@@ -29,7 +29,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Validate content and types
+      - name: Validate content, literary style, and types
         run: npm run check
 
       - name: Generate sitemap
@@ -48,7 +48,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
       - name: Prerender OG pages (essays, poets, articles)
-        run: npx tsx scripts/prerender-og.mjs
+        run: npm run prerender
 
       - name: SPA fallback (serve the app for deep links / refresh)
         run: cp dist/index.html dist/404.html
