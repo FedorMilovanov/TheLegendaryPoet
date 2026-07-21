@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "scripts/build_authentic_mayakovsky_collage.py"
+      - "scripts/run_authentic_collage_fast.py"
       - ".github/workflows/build-authentic-mayakovsky-collage.yml"
   workflow_dispatch:
 
@@ -27,13 +28,13 @@ jobs:
       - name: Install image tooling
         run: python -m pip install --disable-pip-version-check pillow requests
 
-      - name: Download verified originals and build collage
+      - name: Download verified archival photographs and build collage
         id: build
         shell: bash
         run: |
           set +e
           mkdir -p build/archive-collage
-          python scripts/build_authentic_mayakovsky_collage.py 2>&1 | tee build/archive-collage/build.log
+          python scripts/run_authentic_collage_fast.py 2>&1 | tee build/archive-collage/build.log
           code=${PIPESTATUS[0]}
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
@@ -43,7 +44,7 @@ jobs:
         shell: bash
         run: |
           ls -lah build/archive-collage || true
-          tail -n 120 build/archive-collage/build.log || true
+          tail -n 160 build/archive-collage/build.log || true
 
       - name: Upload authentic archive collage and diagnostics
         if: always()
