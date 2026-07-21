@@ -9,6 +9,7 @@ import { applySourceVerificationRound3 } from './sourceVerificationRound3';
 import { applySourceVerificationRound4 } from './sourceVerificationRound4';
 import { applySourceVerificationRound5 } from './sourceVerificationRound5';
 import { applySourceVerificationRound6 } from './sourceVerificationRound6';
+import { applySourceVerificationRound7 } from './sourceVerificationRound7';
 
 export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase]
   .map(applyEditorialReview)
@@ -17,7 +18,8 @@ export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase]
   .map(applySourceVerificationRound3)
   .map(applySourceVerificationRound4)
   .map(applySourceVerificationRound5)
-  .map(applySourceVerificationRound6);
+  .map(applySourceVerificationRound6)
+  .map(applySourceVerificationRound7);
 
 export function getAllEssays(): Essay[] {
   return essays;
