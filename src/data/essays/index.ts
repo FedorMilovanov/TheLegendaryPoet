@@ -5,11 +5,13 @@ import { brikCase } from './brikCase';
 import { applyEditorialReview } from './editorialReview';
 import { applySourceDeepening } from './sourceDeepening';
 import { applySourceVerificationRound2 } from './sourceVerificationRound2';
+import { applySourceVerificationRound3 } from './sourceVerificationRound3';
 
 export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase]
   .map(applyEditorialReview)
   .map(applySourceDeepening)
-  .map(applySourceVerificationRound2);
+  .map(applySourceVerificationRound2)
+  .map(applySourceVerificationRound3);
 
 export function getAllEssays(): Essay[] {
   return essays;
