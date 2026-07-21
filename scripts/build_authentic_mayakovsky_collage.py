@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Build a collage from verified, non-generated archival photographs.
 
-The script downloads original files returned by the Wikimedia Commons API,
-records their metadata and hashes, and uses Pillow only for grayscale conversion,
-cropping, sizing, borders, shadows and compositing.
+Identity, captions, dates, authors and licenses are verified through Wikimedia
+Commons metadata. The script first requests each original file; if Wikimedia
+rate-limits the shared GitHub runner, it falls back to the official Commons
+thumbnail and then to a transparent resize proxy of the same original URL.
+No image generation or face synthesis is used.
 """
 
 from __future__ import annotations
@@ -27,7 +29,7 @@ import requests
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 API = "https://commons.wikimedia.org/w/api.php"
-USER_AGENT = "TheLegendaryPoetArchiveCollage/1.1 (historical editorial project; contact via GitHub repository)"
+USER_AGENT = "TheLegendaryPoetArchiveCollage/1.2 (historical editorial project; GitHub)"
 OUTPUT_DIR = Path("build/archive-collage")
 DOWNLOAD_DIR = OUTPUT_DIR / "originals"
 
@@ -70,6 +72,8 @@ class ArchiveImage:
     filename: str
     page_url: str
     original_url: str
+    downloaded_from: str
+    download_kind: str
     description: str
     date: str
     author: str
@@ -100,119 +104,108 @@ def meta_value(metadata: dict[str, Any], *keys: str) -> str:
     return ""
 
 
-def normalized_title(value: str) -> str:
+def norm(value: str) -> str:
     return value.removeprefix("File:").replace("_", " ").strip().casefold()
 
 
-def request_with_backoff(
+def fetch(
     session: requests.Session,
     method: str,
     url: str,
     *,
-    timeout: int,
+    timeout: int = 90,
     params: dict[str, Any] | None = None,
     data: dict[str, Any] | None = None,
-    attempts: int = 9,
+    attempts: int = 4,
 ) -> requests.Response:
-    last_error: Exception | None = None
     for attempt in range(attempts):
+        response = session.request(method, url, params=params, data=data, timeout=timeout)
+        if response.status_code not in {429, 500, 502, 503, 504}:
+            response.raise_for_status()
+            return response
+        if attempt == attempts - 1:
+            response.raise_for_status()
+        retry_header = response.headers.get("retry-after", "")
         try:
-            response = session.request(method, url, params=params, data=data, timeout=timeout)
-            if response.status_code not in {429, 500, 502, 503, 504}:
-                response.raise_for_status()
-                return response
-            retry_header = response.headers.get("retry-after", "")
-            try:
-                retry_after = float(retry_header)
-            except ValueError:
-                retry_after = 0
-            delay = max(retry_after, min(75.0, 4.0 * (2**attempt)))
-            print(
-                f"rate limit/server response {response.status_code}; waiting {delay:.1f}s before retry {attempt + 2}/{attempts}",
-                file=sys.stderr,
-            )
-            time.sleep(delay)
-        except requests.RequestException as exc:
-            last_error = exc
-            if attempt == attempts - 1:
-                raise
-            delay = min(60.0, 3.0 * (2**attempt))
-            print(f"request error {exc}; waiting {delay:.1f}s", file=sys.stderr)
-            time.sleep(delay)
-    if last_error:
-        raise last_error
+            retry_after = float(retry_header)
+        except ValueError:
+            retry_after = 0
+        delay = max(retry_after, min(20.0, 3.0 * (2**attempt)))
+        print(f"HTTP {response.status_code}; retrying in {delay:.1f}s", file=sys.stderr)
+        time.sleep(delay)
     raise RuntimeError(f"Unable to fetch {url}")
 
 
-def fetch_all_metadata(session: requests.Session, filenames: list[str]) -> dict[str, dict[str, Any]]:
-    params = {
+def metadata_batch(session: requests.Session) -> dict[str, dict[str, Any]]:
+    data = {
         "action": "query",
         "format": "json",
         "formatversion": "2",
         "maxlag": "5",
         "prop": "imageinfo",
         "iiprop": "url|size|mime|sha1|extmetadata",
-        "titles": "|".join(f"File:{name}" for name in filenames),
+        "iiurlwidth": "1800",
+        "titles": "|".join(f"File:{name}" for name in FILES),
     }
-    # One POST request prevents the API request burst that can trigger 429s.
-    response = request_with_backoff(session, "POST", API, data=params, timeout=90)
-    payload = response.json()
+    payload = fetch(session, "POST", API, data=data, timeout=120, attempts=6).json()
     result: dict[str, dict[str, Any]] = {}
     for page in payload.get("query", {}).get("pages", []):
         if page.get("missing") or not page.get("imageinfo"):
             continue
         info = page["imageinfo"][0]
         info["canonicaltitle"] = page.get("title", "")
-        result[normalized_title(page.get("title", ""))] = info
+        result[norm(page.get("title", ""))] = info
     return result
 
 
-def download_verified(
-    session: requests.Session,
-    filename: str,
-    index: int,
-    info: dict[str, Any],
-) -> ArchiveImage:
+def download_image(session: requests.Session, info: dict[str, Any]) -> tuple[bytes, str, str]:
+    original = info["url"]
+    candidates: list[tuple[str, str, int]] = [(original, "original", 2)]
+    if info.get("thumburl"):
+        candidates.append((info["thumburl"], "official Commons thumbnail", 3))
+    proxy_target = original.removeprefix("https://").removeprefix("http://")
+    proxy = "https://images.weserv.nl/?url=" + quote(proxy_target, safe="/:._-") + "&w=1800&output=jpg&q=94"
+    candidates.append((proxy, "resized proxy of Commons original", 3))
+
+    errors: list[str] = []
+    for url, kind, attempts in candidates:
+        try:
+            response = fetch(session, "GET", url, timeout=120, attempts=attempts)
+            if not response.headers.get("content-type", "").startswith("image/"):
+                raise RuntimeError(f"unexpected content type {response.headers.get('content-type')}")
+            return response.content, url, kind
+        except Exception as exc:
+            errors.append(f"{kind}: {exc}")
+    raise RuntimeError("; ".join(errors))
+
+
+def verified_item(session: requests.Session, filename: str, index: int, info: dict[str, Any]) -> ArchiveImage:
     metadata = info.get("extmetadata", {})
-    original_url = info["url"]
     mime = info.get("mime", "")
     if not mime.startswith("image/"):
-        raise RuntimeError(f"Not an image: {filename} ({mime})")
-
-    response = request_with_backoff(session, "GET", original_url, timeout=120)
-    content_type = response.headers.get("content-type", "")
-    if not content_type.startswith("image/"):
-        raise RuntimeError(f"Unexpected response for {filename}: {content_type}")
-    raw = response.content
+        raise RuntimeError(f"not an image: {mime}")
+    raw, downloaded_from, download_kind = download_image(session, info)
     digest = hashlib.sha256(raw).hexdigest()
-
-    suffix = Path(filename).suffix.lower() or ".jpg"
-    local_path = DOWNLOAD_DIR / f"{index:02d}-{digest[:10]}{suffix}"
+    suffix = ".jpg" if "jpeg" in Image.open(io.BytesIO(raw)).get_format_mimetype() else Path(filename).suffix.lower()
+    local_path = DOWNLOAD_DIR / f"{index:02d}-{digest[:10]}{suffix or '.jpg'}"
     local_path.write_bytes(raw)
-
     with Image.open(io.BytesIO(raw)) as probe:
         width, height = probe.size
         probe.verify()
 
     title = info["canonicaltitle"].removeprefix("File:")
-    page_url = "https://commons.wikimedia.org/wiki/File:" + quote(
-        title.replace(" ", "_"), safe="_().,-"
-    )
-    description = meta_value(metadata, "ImageDescription", "ObjectName") or title
-    date = meta_value(metadata, "DateTimeOriginal", "DateTime", "Date")
-    author = meta_value(metadata, "Artist", "Credit") or "Unknown / see Commons file page"
-    license_name = meta_value(metadata, "LicenseShortName", "UsageTerms") or "See Commons file page"
-    license_url = meta_value(metadata, "LicenseUrl")
-
+    page_url = "https://commons.wikimedia.org/wiki/File:" + quote(title.replace(" ", "_"), safe="_().,-")
     return ArchiveImage(
         filename=title,
         page_url=page_url,
-        original_url=original_url,
-        description=description,
-        date=date,
-        author=author,
-        license_name=license_name,
-        license_url=license_url,
+        original_url=info["url"],
+        downloaded_from=downloaded_from,
+        download_kind=download_kind,
+        description=meta_value(metadata, "ImageDescription", "ObjectName") or title,
+        date=meta_value(metadata, "DateTimeOriginal", "DateTime", "Date"),
+        author=meta_value(metadata, "Artist", "Credit") or "Unknown / see Commons file page",
+        license_name=meta_value(metadata, "LicenseShortName", "UsageTerms") or "See Commons file page",
+        license_url=meta_value(metadata, "LicenseUrl"),
         sha256=digest,
         width=width,
         height=height,
@@ -220,179 +213,145 @@ def download_verified(
     )
 
 
-def load_font(size: int) -> ImageFont.ImageFont:
-    for candidate in (
+def font(size: int) -> ImageFont.ImageFont:
+    for path in (
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
     ):
         try:
-            return ImageFont.truetype(candidate, size=size)
+            return ImageFont.truetype(path, size=size)
         except OSError:
             pass
     return ImageFont.load_default()
 
 
-def fit_crop(image: Image.Image, size: tuple[int, int], focus_top: bool = False) -> Image.Image:
+def crop(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     image = ImageOps.exif_transpose(image).convert("L")
-    image = ImageOps.autocontrast(image, cutoff=0.6)
-    image = ImageEnhance.Contrast(image).enhance(1.04)
-    target_w, target_h = size
-    scale = max(target_w / image.width, target_h / image.height)
-    resized = image.resize(
-        (max(1, round(image.width * scale)), max(1, round(image.height * scale))),
-        Image.Resampling.LANCZOS,
-    )
-    left = max(0, (resized.width - target_w) // 2)
-    top_factor = 0.28 if focus_top else 0.5
-    top = max(0, round((resized.height - target_h) * top_factor))
-    return resized.crop((left, top, left + target_w, top + target_h))
+    image = ImageEnhance.Contrast(ImageOps.autocontrast(image, cutoff=0.5)).enhance(1.03)
+    tw, th = size
+    scale = max(tw / image.width, th / image.height)
+    resized = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
+    left = max(0, (resized.width - tw) // 2)
+    top_bias = 0.30 if resized.height > resized.width * 1.15 else 0.5
+    top = max(0, round((resized.height - th) * top_bias))
+    return resized.crop((left, top, left + tw, top + th))
 
 
-def photo_card(item: ArchiveImage, size: tuple[int, int], number: int) -> Image.Image:
-    border = 22
-    caption_h = 54
+def card(item: ArchiveImage, size: tuple[int, int], number: int) -> Image.Image:
+    border, caption_h = 20, 52
     with Image.open(item.local_path) as source:
-        photo = fit_crop(source, size, focus_top=source.height > source.width * 1.13)
-    card = Image.new("L", (size[0] + border * 2, size[1] + border * 2 + caption_h), 239)
-    card.paste(photo, (border, border))
-    draw = ImageDraw.Draw(card)
-    label = f"{number:02d}  {(item.date or 'date: see manifest')[:35]}"
-    draw.text((border, border + size[1] + 12), label, fill=35, font=load_font(23))
-    return card.convert("RGB")
+        photo = crop(source, size)
+    result = Image.new("L", (size[0] + border * 2, size[1] + border * 2 + caption_h), 241)
+    result.paste(photo, (border, border))
+    ImageDraw.Draw(result).text(
+        (border, border + size[1] + 10),
+        f"{number:02d}  {(item.date or 'date in manifest')[:36]}",
+        fill=32,
+        font=font(22),
+    )
+    return result.convert("RGB")
 
 
-def build_collage(items: list[ArchiveImage], output_path: Path) -> None:
-    if len(items) < 20:
-        raise RuntimeError(f"Only {len(items)} verified images available; expected at least 20")
-    canvas_w, canvas_h = 6000, 3600
-    background = Image.new("RGB", (canvas_w, canvas_h), (24, 23, 21))
-    background.paste(Image.new("RGB", (canvas_w - 120, canvas_h - 120), (63, 59, 53)), (60, 60))
-
+def collage(items: list[ArchiveImage], path: Path) -> None:
+    canvas = Image.new("RGB", (6000, 3600), (59, 55, 49))
     rng = random.Random(1928)
     cols, rows = 6, 5
-    cell_w = (canvas_w - 300) // cols
-    cell_h = (canvas_h - 280) // rows
-    photo_size = (cell_w - 72, cell_h - 112)
-
-    for idx, item in enumerate(items[: cols * rows]):
+    cell_w, cell_h = 950, 665
+    size = (870, 535)
+    for idx, item in enumerate(items[:30]):
         row, col = divmod(idx, cols)
-        card = photo_card(item, photo_size, idx + 1)
-        rotated = card.rotate(
-            rng.uniform(-2.2, 2.2),
-            resample=Image.Resampling.BICUBIC,
-            expand=True,
-            fillcolor=(239, 239, 239),
+        image = card(item, size, idx + 1).rotate(
+            rng.uniform(-2.0, 2.0), Image.Resampling.BICUBIC, expand=True, fillcolor=(241, 241, 241)
         )
-        shadow = Image.new("RGBA", rotated.size, (0, 0, 0, 0))
-        alpha = Image.new("L", rotated.size, 0)
-        ImageDraw.Draw(alpha).rounded_rectangle((12, 12, rotated.width - 4, rotated.height - 4), radius=8, fill=150)
+        shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        alpha = Image.new("L", image.size, 0)
+        ImageDraw.Draw(alpha).rectangle((15, 15, image.width - 5, image.height - 5), fill=145)
         shadow.putalpha(alpha.filter(ImageFilter.GaussianBlur(18)))
-        x = 105 + col * cell_w + rng.randint(-16, 16)
-        y = 90 + row * cell_h + rng.randint(-13, 13)
-        background.paste(shadow, (x + 18, y + 22), shadow)
-        background.paste(rotated, (x, y))
-    background.save(output_path, format="PNG", optimize=True)
+        x = 115 + col * cell_w + rng.randint(-15, 15)
+        y = 95 + row * cell_h + rng.randint(-12, 12)
+        canvas.paste(shadow, (x + 17, y + 20), shadow)
+        canvas.paste(image, (x, y))
+    canvas.save(path, "PNG", optimize=True)
 
 
-def build_contact_sheet(items: list[ArchiveImage], output_path: Path) -> None:
-    thumb_w, thumb_h = 440, 330
-    cols = 5
+def contact_sheet(items: list[ArchiveImage], path: Path) -> None:
+    tw, th, cols, gap = 440, 330, 5, 28
     rows = math.ceil(len(items) / cols)
-    margin = 30
-    canvas = Image.new(
-        "RGB",
-        (cols * thumb_w + (cols + 1) * margin, rows * (thumb_h + 72) + (rows + 1) * margin),
-        "white",
-    )
+    canvas = Image.new("RGB", (cols * tw + (cols + 1) * gap, rows * 410 + (rows + 1) * gap), "white")
     draw = ImageDraw.Draw(canvas)
-    font = load_font(20)
     for idx, item in enumerate(items):
         row, col = divmod(idx, cols)
-        x = margin + col * (thumb_w + margin)
-        y = margin + row * (thumb_h + 72 + margin)
+        x, y = gap + col * (tw + gap), gap + row * (410 + gap)
         with Image.open(item.local_path) as source:
-            thumb = fit_crop(source, (thumb_w, thumb_h), source.height > source.width * 1.13).convert("RGB")
-        canvas.paste(thumb, (x, y))
-        draw.text((x, y + thumb_h + 8), f"{idx + 1:02d}. {item.filename[:43]}", fill="black", font=font)
-        draw.text((x, y + thumb_h + 35), (item.date or "date in manifest")[:43], fill=(70, 70, 70), font=font)
-    canvas.save(output_path, format="PNG", optimize=True)
+            canvas.paste(crop(source, (tw, th)).convert("RGB"), (x, y))
+        draw.text((x, y + th + 8), f"{idx + 1:02d}. {item.filename[:43]}", fill="black", font=font(19))
+        draw.text((x, y + th + 35), (item.date or "date in manifest")[:43], fill=(70, 70, 70), font=font(19))
+    canvas.save(path, "PNG", optimize=True)
 
 
-def write_manifest(items: list[ArchiveImage], csv_path: Path, json_path: Path) -> None:
-    fieldnames = [
+def manifests(items: list[ArchiveImage]) -> None:
+    csv_path = OUTPUT_DIR / "mayakovsky-brik-authentic-manifest.csv"
+    fields = [
         "number", "filename", "description", "date", "author", "license", "license_url",
-        "commons_page", "original_file", "sha256", "width", "height",
+        "commons_page", "original_file", "downloaded_from", "download_kind", "sha256", "width", "height",
     ]
     with csv_path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for number, item in enumerate(items, 1):
             writer.writerow({
-                "number": number,
-                "filename": item.filename,
-                "description": item.description,
-                "date": item.date,
-                "author": item.author,
-                "license": item.license_name,
-                "license_url": item.license_url,
-                "commons_page": item.page_url,
-                "original_file": item.original_url,
-                "sha256": item.sha256,
-                "width": item.width,
-                "height": item.height,
+                "number": number, "filename": item.filename, "description": item.description,
+                "date": item.date, "author": item.author, "license": item.license_name,
+                "license_url": item.license_url, "commons_page": item.page_url,
+                "original_file": item.original_url, "downloaded_from": item.downloaded_from,
+                "download_kind": item.download_kind, "sha256": item.sha256,
+                "width": item.width, "height": item.height,
             })
-    serializable = []
+    rows = []
     for item in items:
         row = asdict(item)
         row["local_path"] = str(row["local_path"])
-        serializable.append(row)
-    json_path.write_text(json.dumps(serializable, ensure_ascii=False, indent=2), encoding="utf-8")
+        rows.append(row)
+    (OUTPUT_DIR / "mayakovsky-brik-authentic-manifest.json").write_text(
+        json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 
 def main() -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
     session = requests.Session()
-    session.headers.update({
-        "User-Agent": USER_AGENT,
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-    })
+    session.headers.update({"User-Agent": USER_AGENT, "Accept": "image/*,*/*;q=0.8"})
+    metadata = metadata_batch(session)
 
-    metadata_by_title = fetch_all_metadata(session, FILES)
-    verified: list[ArchiveImage] = []
-    seen_hashes: set[str] = set()
-    failures: list[str] = []
+    items: list[ArchiveImage] = []
+    seen: set[str] = set()
+    audit: list[str] = []
     for index, filename in enumerate(FILES, 1):
         try:
-            info = metadata_by_title.get(normalized_title(filename))
+            info = metadata.get(norm(filename))
             if not info:
-                raise RuntimeError("metadata missing from Commons batch response")
-            item = download_verified(session, filename, index, info)
-            if item.sha256 in seen_hashes:
-                failures.append(f"duplicate bytes skipped: {filename}")
+                raise RuntimeError("metadata missing")
+            item = verified_item(session, filename, index, info)
+            if item.sha256 in seen:
+                audit.append(f"duplicate skipped: {filename}")
                 continue
-            seen_hashes.add(item.sha256)
-            verified.append(item)
-            print(f"[{len(verified):02d}] verified {item.filename} — {item.date or 'date missing'}")
-            # Shared Wikimedia infrastructure is rate limited; deliberately stay gentle.
-            time.sleep(2.4)
+            seen.add(item.sha256)
+            items.append(item)
+            print(f"[{len(items):02d}] {item.filename} | {item.date or 'date missing'} | {item.download_kind}")
+            time.sleep(0.7)
         except Exception as exc:
-            failures.append(f"{filename}: {exc}")
-            print(f"WARNING: {filename}: {exc}", file=sys.stderr)
+            audit.append(f"{filename}: {exc}")
+            print(f"WARNING {filename}: {exc}", file=sys.stderr)
 
-    (OUTPUT_DIR / "download-audit.txt").write_text("\n".join(failures) + "\n", encoding="utf-8")
-    if len(verified) < 20:
-        raise RuntimeError(f"Verification failed: only {len(verified)} unique originals downloaded")
-
-    verified = verified[:30]
-    build_collage(verified, OUTPUT_DIR / "mayakovsky-brik-authentic-archive-collage.png")
-    build_contact_sheet(verified, OUTPUT_DIR / "mayakovsky-brik-authentic-contact-sheet.png")
-    write_manifest(
-        verified,
-        OUTPUT_DIR / "mayakovsky-brik-authentic-manifest.csv",
-        OUTPUT_DIR / "mayakovsky-brik-authentic-manifest.json",
-    )
-    print(f"Built collage from {len(verified)} unique original archival files")
+    (OUTPUT_DIR / "download-audit.txt").write_text("\n".join(audit) + "\n", encoding="utf-8")
+    if len(items) < 20:
+        raise RuntimeError(f"Only {len(items)} unique verified archival images were available")
+    items = items[:30]
+    collage(items, OUTPUT_DIR / "mayakovsky-brik-authentic-archive-collage.png")
+    contact_sheet(items, OUTPUT_DIR / "mayakovsky-brik-authentic-contact-sheet.png")
+    manifests(items)
+    print(f"Built from {len(items)} unique verified archival photographs; no generated imagery used")
     return 0
 
 
