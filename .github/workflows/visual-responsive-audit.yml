@@ -1,0 +1,322 @@
+name: Responsive browser audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/visual-responsive-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/integrate-unmerged-essays
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - name: Install Chromium audit runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Validate and build production site
+        run: |
+          npm run check
+          VITE_BASE=/ npm run build
+
+      - name: Start production preview
+        run: |
+          nohup npx vite preview --host 127.0.0.1 --port 4173 > /tmp/tlp-preview.log 2>&1 &
+          for i in {1..40}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/tlp-preview.log
+          exit 1
+
+      - name: Run viewport and interaction audit
+        run: |
+          mkdir -p responsive-audit/screenshots
+          cat > /tmp/responsive-audit.mjs <<'NODE'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs/promises';
+
+          const base = 'http://127.0.0.1:4173';
+          const viewports = [
+            { name: 'phone-360', width: 360, height: 800 },
+            { name: 'phone-390', width: 390, height: 844 },
+            { name: 'tablet-768', width: 768, height: 1024 },
+            { name: 'desktop-1440', width: 1440, height: 1000 },
+            { name: 'desktop-1920', width: 1920, height: 1080 },
+          ];
+
+          const coreRoutes = [
+            '/', '/hall', '/poets', '/articles', '/music', '/about', '/archive',
+            '/poets/sergei-yesenin', '/poets/vladimir-mayakovsky',
+            '/poets/alexander-pushkin', '/poets/mikhail-lermontov',
+            '/poets/alexander-blok', '/poets/nikolay-gumilev',
+            '/poets/anna-akhmatova', '/poets/boris-pasternak',
+            '/poets/fyodor-tyutchev', '/poets/afanasy-fet',
+            '/essays/yesenin-kutezhi', '/essays/mayakovsky-gromovoy', '/essays/brik-case',
+            '/audit-not-found',
+          ];
+          const screenshotRoutes = new Set([
+            '/', '/hall', '/poets', '/articles', '/music', '/about', '/archive',
+            '/poets/sergei-yesenin', '/poets/vladimir-mayakovsky',
+            '/essays/yesenin-kutezhi', '/essays/mayakovsky-gromovoy', '/essays/brik-case',
+          ]);
+
+          const browser = await chromium.launch({ headless: true });
+          const report = { generatedAt: new Date().toISOString(), base, viewports: [], summary: {} };
+
+          function slug(route) {
+            return route === '/' ? 'home' : route.replace(/^\//, '').replaceAll('/', '--').replace(/[^a-z0-9_-]/gi, '-');
+          }
+
+          for (const viewport of viewports) {
+            const context = await browser.newContext({
+              viewport: { width: viewport.width, height: viewport.height },
+              deviceScaleFactor: 1,
+              colorScheme: 'dark',
+              reducedMotion: 'reduce',
+            });
+            const page = await context.newPage();
+            const viewportResult = { ...viewport, pages: [], interactions: [] };
+            const discovered = new Set();
+
+            for (const route of coreRoutes) {
+              const consoleErrors = [];
+              const pageErrors = [];
+              const failedRequests = [];
+              const badResponses = [];
+
+              const onConsole = (message) => {
+                if (message.type() === 'error') consoleErrors.push(message.text());
+              };
+              const onPageError = (error) => pageErrors.push(String(error));
+              const onRequestFailed = (request) => failedRequests.push({ url: request.url(), error: request.failure()?.errorText ?? 'unknown' });
+              const onResponse = (response) => {
+                if (response.status() >= 400) badResponses.push({ url: response.url(), status: response.status() });
+              };
+              page.on('console', onConsole);
+              page.on('pageerror', onPageError);
+              page.on('requestfailed', onRequestFailed);
+              page.on('response', onResponse);
+
+              let navigationStatus = null;
+              let navigationError = null;
+              try {
+                const response = await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                navigationStatus = response?.status() ?? null;
+                await page.waitForTimeout(1800);
+                await page.addStyleTag({ content: `
+                  *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; caret-color: transparent !important; }
+                ` });
+                await page.waitForTimeout(100);
+              } catch (error) {
+                navigationError = String(error);
+              }
+
+              const metrics = navigationError ? null : await page.evaluate(() => {
+                const visible = (el) => {
+                  const style = getComputedStyle(el);
+                  const rect = el.getBoundingClientRect();
+                  return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0 && rect.width > 0 && rect.height > 0;
+                };
+                const describe = (el) => {
+                  const text = (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+                  const cls = typeof el.className === 'string' ? el.className.split(/\s+/).slice(0, 5).join('.') : '';
+                  return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls ? `.${cls}` : ''}${text ? ` :: ${text}` : ''}`;
+                };
+                const ignored = (el) => {
+                  const cls = typeof el.className === 'string' ? el.className : '';
+                  return el.getAttribute('aria-hidden') === 'true' || /ambient|noise-bg|backdrop|page-wipe|cursor|particle/i.test(cls);
+                };
+
+                const documentWidth = Math.max(document.documentElement.scrollWidth, document.body?.scrollWidth || 0);
+                const overflow = Math.max(0, documentWidth - window.innerWidth);
+                const offscreen = [];
+                for (const el of document.querySelectorAll('body *')) {
+                  if (ignored(el) || !visible(el)) continue;
+                  const rect = el.getBoundingClientRect();
+                  if (rect.right > window.innerWidth + 2 || rect.left < -2) {
+                    offscreen.push({ element: describe(el), left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) });
+                    if (offscreen.length >= 30) break;
+                  }
+                }
+
+                const brokenImages = [...document.images]
+                  .filter(img => img.complete && img.naturalWidth === 0 && visible(img))
+                  .map(img => ({ src: img.currentSrc || img.src, alt: img.alt }));
+
+                const clippedText = [...document.querySelectorAll('h1,h2,h3,p,blockquote,pre,code')]
+                  .filter(visible)
+                  .filter(el => el.scrollWidth > el.clientWidth + 2)
+                  .slice(0, 20)
+                  .map(el => ({ element: describe(el), clientWidth: el.clientWidth, scrollWidth: el.scrollWidth }));
+
+                const smallTargets = [...document.querySelectorAll('button, header a, nav a, [role="button"]')]
+                  .filter(visible)
+                  .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                  .filter(({ rect }) => rect.width < 36 || rect.height < 36)
+                  .slice(0, 30)
+                  .map(({ el, rect }) => ({ element: describe(el), width: Math.round(rect.width), height: Math.round(rect.height) }));
+
+                const dock = document.querySelector('.mobile-dock');
+                const headerNav = document.querySelector('.header-nav');
+                const footer = document.querySelector('footer');
+                const main = document.querySelector('#main-content');
+                return {
+                  title: document.title,
+                  pathname: location.pathname,
+                  viewport: { width: window.innerWidth, height: window.innerHeight },
+                  documentWidth,
+                  documentHeight: Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0),
+                  horizontalOverflow: overflow,
+                  offscreen,
+                  brokenImages,
+                  clippedText,
+                  smallTargets,
+                  bodyTextLength: (document.body?.innerText || '').trim().length,
+                  h1: [...document.querySelectorAll('h1')].filter(visible).map(el => (el.textContent || '').trim()),
+                  mobileDockVisible: !!dock && visible(dock),
+                  headerNavVisible: !!headerNav && visible(headerNav),
+                  footerVisibleInDocument: !!footer,
+                  mainPresent: !!main,
+                };
+              });
+
+              if (!navigationError && route === '/articles') {
+                const links = await page.$$eval('a[href]', els => els.map(el => el.getAttribute('href')).filter(Boolean));
+                for (const href of links) {
+                  if (href.startsWith('/articles/') && href !== '/articles/') discovered.add(href);
+                }
+              }
+
+              if (!navigationError && screenshotRoutes.has(route)) {
+                await page.screenshot({
+                  path: `responsive-audit/screenshots/${viewport.name}--${slug(route)}.jpg`,
+                  fullPage: true,
+                  type: 'jpeg',
+                  quality: 72,
+                });
+              }
+
+              viewportResult.pages.push({ route, navigationStatus, navigationError, metrics, consoleErrors, pageErrors, failedRequests, badResponses });
+              page.off('console', onConsole);
+              page.off('pageerror', onPageError);
+              page.off('requestfailed', onRequestFailed);
+              page.off('response', onResponse);
+            }
+
+            for (const route of [...discovered].slice(0, 4)) {
+              let navigationError = null;
+              let navigationStatus = null;
+              const consoleErrors = [];
+              page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
+              try {
+                const response = await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                navigationStatus = response?.status() ?? null;
+                await page.waitForTimeout(1200);
+              } catch (error) { navigationError = String(error); }
+              const metrics = navigationError ? null : await page.evaluate(() => ({
+                pathname: location.pathname,
+                title: document.title,
+                horizontalOverflow: Math.max(0, Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth),
+                bodyTextLength: document.body.innerText.trim().length,
+                h1: [...document.querySelectorAll('h1')].map(el => el.textContent?.trim()).filter(Boolean),
+              }));
+              viewportResult.pages.push({ route, discovered: true, navigationStatus, navigationError, metrics, consoleErrors });
+            }
+
+            try {
+              await page.goto(base, { waitUntil: 'domcontentloaded' });
+              await page.waitForTimeout(1200);
+              const searchButton = page.getByRole('button', { name: /открыть поиск/i }).last();
+              const buttonVisible = await searchButton.isVisible().catch(() => false);
+              if (buttonVisible) {
+                await searchButton.click();
+                await page.waitForTimeout(350);
+                const dialogVisible = await page.locator('[role="dialog"], [aria-modal="true"]').filter({ visible: true }).count().catch(() => 0);
+                viewportResult.interactions.push({ name: 'open-search', passed: dialogVisible > 0, dialogVisible });
+                await page.screenshot({ path: `responsive-audit/screenshots/${viewport.name}--search-open.jpg`, type: 'jpeg', quality: 75 });
+                await page.keyboard.press('Escape');
+              } else {
+                viewportResult.interactions.push({ name: 'open-search', passed: false, reason: 'button not visible' });
+              }
+            } catch (error) {
+              viewportResult.interactions.push({ name: 'open-search', passed: false, error: String(error) });
+            }
+
+            if (viewport.width < 768) {
+              try {
+                await page.goto(base, { waitUntil: 'domcontentloaded' });
+                await page.waitForTimeout(1000);
+                await page.getByRole('navigation', { name: 'Мобильная навигация' }).getByRole('link', { name: 'Статьи' }).click();
+                await page.waitForTimeout(700);
+                viewportResult.interactions.push({ name: 'mobile-dock-navigation', passed: page.url().includes('/articles'), url: page.url() });
+              } catch (error) {
+                viewportResult.interactions.push({ name: 'mobile-dock-navigation', passed: false, error: String(error) });
+              }
+            }
+
+            report.viewports.push(viewportResult);
+            await context.close();
+          }
+
+          const flat = report.viewports.flatMap(v => v.pages.map(p => ({ viewport: v.name, ...p })));
+          report.summary = {
+            pagesAudited: flat.length,
+            navigationErrors: flat.filter(p => p.navigationError).length,
+            horizontalOverflowPages: flat.filter(p => (p.metrics?.horizontalOverflow || 0) > 2).map(p => ({ viewport: p.viewport, route: p.route, pixels: p.metrics.horizontalOverflow })),
+            pagesWithOffscreenElements: flat.filter(p => (p.metrics?.offscreen?.length || 0) > 0).map(p => ({ viewport: p.viewport, route: p.route, offenders: p.metrics.offscreen.slice(0, 5) })),
+            pagesWithBrokenImages: flat.filter(p => (p.metrics?.brokenImages?.length || 0) > 0).map(p => ({ viewport: p.viewport, route: p.route, images: p.metrics.brokenImages })),
+            pagesWithConsoleErrors: flat.filter(p => (p.consoleErrors?.length || 0) > 0).map(p => ({ viewport: p.viewport, route: p.route, errors: p.consoleErrors.slice(0, 5) })),
+            pagesWithPageErrors: flat.filter(p => (p.pageErrors?.length || 0) > 0).map(p => ({ viewport: p.viewport, route: p.route, errors: p.pageErrors.slice(0, 5) })),
+            pagesWithBadResponses: flat.filter(p => (p.badResponses?.length || 0) > 0).map(p => ({ viewport: p.viewport, route: p.route, responses: p.badResponses.slice(0, 10) })),
+            chromeMismatches: flat.filter(p => p.metrics && ((p.metrics.viewport.width < 768 && (!p.metrics.mobileDockVisible || p.metrics.headerNavVisible)) || (p.metrics.viewport.width >= 768 && (p.metrics.mobileDockVisible || !p.metrics.headerNavVisible)))).map(p => ({ viewport: p.viewport, route: p.route, dock: p.metrics.mobileDockVisible, headerNav: p.metrics.headerNavVisible })),
+            failedInteractions: report.viewports.flatMap(v => v.interactions.filter(i => !i.passed).map(i => ({ viewport: v.name, ...i }))),
+          };
+
+          await fs.writeFile('responsive-audit/audit-report.json', JSON.stringify(report, null, 2));
+          const summary = [
+            '# Responsive audit summary',
+            '',
+            `Pages audited: ${report.summary.pagesAudited}`,
+            `Navigation errors: ${report.summary.navigationErrors}`,
+            `Horizontal overflow pages: ${report.summary.horizontalOverflowPages.length}`,
+            `Pages with offscreen elements: ${report.summary.pagesWithOffscreenElements.length}`,
+            `Pages with broken visible images: ${report.summary.pagesWithBrokenImages.length}`,
+            `Pages with console errors: ${report.summary.pagesWithConsoleErrors.length}`,
+            `Pages with page errors: ${report.summary.pagesWithPageErrors.length}`,
+            `Pages with HTTP >=400 responses: ${report.summary.pagesWithBadResponses.length}`,
+            `Responsive chrome mismatches: ${report.summary.chromeMismatches.length}`,
+            `Failed interactions: ${report.summary.failedInteractions.length}`,
+            '',
+            '## Machine findings',
+            '```json',
+            JSON.stringify(report.summary, null, 2),
+            '```',
+          ].join('\n');
+          await fs.writeFile('responsive-audit/audit-summary.md', summary);
+          console.log(summary);
+          await browser.close();
+          NODE
+          node /tmp/responsive-audit.mjs
+
+      - name: Upload screenshots and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-browser-audit
+          path: responsive-audit
+          retention-days: 7
