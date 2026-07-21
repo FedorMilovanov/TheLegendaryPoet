@@ -1,20 +1,19 @@
-name: Consolidate essays
+name: CI
 
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  consolidate:
-    if: github.head_ref == 'agent/integrate-unmerged-essays'
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -22,22 +21,21 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Consolidate final essay data
-        run: npx tsx scripts/consolidate-essays.ts
-      - name: Validate consolidated essays
-        run: |
-          npm run validate:library
-          npm run validate:essays
-          npx tsx scripts/validate-literary-style.ts
-          npm run typecheck
-          npm run sitemap
-          npm run build
+      - name: Validate poet library
+        run: npm run validate:library
+      - name: Validate essays
+        run: npm run validate:essays
+      - name: Validate literary style
+        run: npx tsx scripts/validate-literary-style.ts
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Generate sitemap
+        run: npm run sitemap
+      - name: Build
+        run: npm run build
         env:
           VITE_BASE: /
-      - name: Commit consolidated sources
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Consolidate verified essays into source modules"
-          git push origin HEAD:${{ github.head_ref }}
+      - name: Prerender social pages
+        run: npx tsx scripts/prerender-og.mjs
+      - name: Verify generated output is stable
+        run: git diff --exit-code -- public/sitemap.xml
