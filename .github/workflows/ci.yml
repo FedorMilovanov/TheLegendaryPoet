@@ -26,16 +26,7 @@ jobs:
       - name: Validate essays
         run: npm run validate:essays
       - name: Validate literary style
-        run: |
-          set -o pipefail
-          npx tsx scripts/validate-literary-style.ts 2>&1 | tee literary-style.log
-      - name: Upload literary validation report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: literary-style-report
-          path: literary-style.log
-          if-no-files-found: ignore
+        run: npx tsx scripts/validate-literary-style.ts
       - name: Typecheck
         run: npm run typecheck
       - name: Generate sitemap
