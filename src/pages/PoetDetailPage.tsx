@@ -134,7 +134,7 @@ export default function PoetDetailPage() {
             )}
 
             <div className="pt-16">
-              <h2 className="text-5xl font-serif font-bold text-white mb-12 flex items-center gap-4 editorial-title">
+              <h2 className="editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none text-white sm:mb-12 sm:text-5xl">
                 {titleCase('Избранная')} <span className="gold-gradient italic gold-glow-text">{titleCase('Лирика')}</span>
               </h2>
               
