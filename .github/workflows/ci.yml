@@ -1,19 +1,19 @@
-name: Audit poet profile conclusions
+name: CI
 
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: agent/integrate-unmerged-essays
 
       - uses: actions/setup-node@v4
         with:
@@ -21,40 +21,15 @@ jobs:
           cache: npm
 
       - run: npm ci
-
-      - name: Apply all-profile conclusion audit
-        run: |
-          npx tsx scripts/fix-profile-audit-script.ts
-          npx tsx scripts/fix-profile-audit-syntax.ts
-          npx tsx scripts/fix-profile-audit-loop.ts
-          npx tsx scripts/strengthen-profile-conclusions.ts
-
       - name: Validate content, literary style, and types
         run: npm run check
-
       - name: Generate sitemap
         run: npm run sitemap
-
       - name: Build
         run: npm run build
         env:
           VITE_BASE: /
-
       - name: Prerender social pages
         run: npm run prerender
-
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
-
-      - name: Commit profile conclusion audit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/library/alexanderBlok.ts \
-                  src/data/library/sergeiYesenin.ts \
-                  src/data/library/vladimirMayakovsky.ts \
-                  scripts/validate-literary-style.ts \
-                  docs/PRIMARY_SOURCE_REAUDIT_2026-07-21.md \
-                  docs/INTEGRATION_STATUS.md
-          git commit -m "Strengthen final poet profile conclusions"
-          git push origin HEAD:agent/integrate-unmerged-essays
