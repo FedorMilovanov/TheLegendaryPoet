@@ -11,6 +11,7 @@ import { annaAkhmatova } from './annaAkhmatova';
 import { alexanderBlok } from './alexanderBlok';
 import { applyLibraryLiteraryPolish } from './libraryLiteraryPolish';
 import { applyLibraryLiteraryPolishRound2 } from './libraryLiteraryPolishRound2';
+import { applyLibraryLiteraryPolishRound3 } from './libraryLiteraryPolishRound3';
 
 export const poets: Poet[] = [
   fyodorTyutchev,
@@ -25,7 +26,8 @@ export const poets: Poet[] = [
   alexanderBlok,
 ]
   .map(applyLibraryLiteraryPolish)
-  .map(applyLibraryLiteraryPolishRound2);
+  .map(applyLibraryLiteraryPolishRound2)
+  .map(applyLibraryLiteraryPolishRound3);
 
 export { articles } from './articles';
 export { musicTracks } from './musicTracks';
