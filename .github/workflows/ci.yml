@@ -21,14 +21,8 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Validate poet library
-        run: npm run validate:library
-      - name: Validate essays
-        run: npm run validate:essays
-      - name: Validate literary style
-        run: npx tsx scripts/validate-literary-style.ts
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Validate content, literary style, and types
+        run: npm run check
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
@@ -36,6 +30,6 @@ jobs:
         env:
           VITE_BASE: /
       - name: Prerender social pages
-        run: npx tsx scripts/prerender-og.mjs
+        run: npm run prerender
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
