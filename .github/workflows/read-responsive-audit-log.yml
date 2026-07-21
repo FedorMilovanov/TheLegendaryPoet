@@ -19,5 +19,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api repos/${GITHUB_REPOSITORY}/actions/jobs/88720037856/logs > /tmp/audit.log
-          echo '===== RESPONSIVE AUDIT LOG TAIL ====='
-          tail -n 140 /tmp/audit.log
+          echo '===== RESPONSIVE AUDIT FINAL 35 LINES ====='
+          tail -n 35 /tmp/audit.log
