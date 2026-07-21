@@ -1,4 +1,4 @@
-import { Poet } from '../../types/poet';
+import type { Poet } from '../../types/poet';
 import { fyodorTyutchev } from './fyodorTyutchev';
 import { vladimirMayakovsky } from './vladimirMayakovsky';
 import { alexanderPushkin } from './alexanderPushkin';
@@ -9,10 +9,6 @@ import { nikolayGumilev } from './nikolayGumilev';
 import { sergeiYesenin } from './sergeiYesenin';
 import { annaAkhmatova } from './annaAkhmatova';
 import { alexanderBlok } from './alexanderBlok';
-import { applyLibraryLiteraryPolish } from './libraryLiteraryPolish';
-import { applyLibraryLiteraryPolishRound2 } from './libraryLiteraryPolishRound2';
-import { applyLibraryLiteraryPolishRound3 } from './libraryLiteraryPolishRound3';
-import { applyLibraryLiteraryPolishRound4 } from './libraryLiteraryPolishRound4';
 
 export const poets: Poet[] = [
   fyodorTyutchev,
@@ -25,11 +21,7 @@ export const poets: Poet[] = [
   sergeiYesenin,
   annaAkhmatova,
   alexanderBlok,
-]
-  .map(applyLibraryLiteraryPolish)
-  .map(applyLibraryLiteraryPolishRound2)
-  .map(applyLibraryLiteraryPolishRound3)
-  .map(applyLibraryLiteraryPolishRound4);
+];
 
 export { articles } from './articles';
 export { musicTracks } from './musicTracks';
