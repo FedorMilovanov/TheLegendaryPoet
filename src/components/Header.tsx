@@ -30,11 +30,14 @@ const Header = () => {
         <div className="flex h-20 items-center justify-between gap-4 lg:gap-8">
           <Link to="/" className="group flex min-h-11 shrink-0 items-center gap-3">
             <BrandMark size="sm" />
-            <div className="header-wordmark">
-              <span className="whitespace-nowrap font-serif text-sm font-semibold neon-blue-gradient neon-glow-text md:text-base lg:text-xl">
+            {/* At tablet width the seven-item navigation needs the horizontal
+                space more than the repeated wordmark. The full lockup returns
+                on desktop, while the brand icon remains visible everywhere. */}
+            <div className="hidden flex-col leading-[1.2] lg:flex">
+              <span className="whitespace-nowrap font-serif text-xl font-semibold neon-blue-gradient neon-glow-text">
                 THE LEGENDARY POET
               </span>
-              <span className="whitespace-nowrap text-[8px] font-medium tracking-[0.18em] text-cyan-200/55 md:text-[9px] lg:text-[11px]">
+              <span className="whitespace-nowrap text-[11px] font-medium tracking-[0.18em] text-cyan-200/55">
                 ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ
               </span>
             </div>
