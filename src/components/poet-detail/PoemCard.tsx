@@ -52,12 +52,13 @@ export default function PoemCard({ poem }: PoemCardProps) {
             type="button"
             onClick={toggleFavorite}
             aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'bg-[#111] text-luxury-gray-light hover:text-luxury-gold border border-luxury-gold/10'}`}
+            aria-pressed={favorite}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'bg-[#111] text-luxury-gray-light hover:text-luxury-gold border border-luxury-gold/10'}`}
           >
             <Heart size={14} className={favorite ? 'fill-luxury-gold' : ''} />
             {favorite ? 'В архиве' : 'В архив'}
           </button>
-          <div className="flex items-center gap-2 bg-[#111] px-4 py-2 rounded-full border border-luxury-gold/30 shadow-inner">
+          <div className="flex min-h-11 items-center gap-2 bg-[#111] px-4 py-2 rounded-full border border-luxury-gold/30 shadow-inner">
             <Star size={14} className="text-luxury-gold fill-luxury-gold" />
             <span className="text-sm font-bold text-luxury-gold gold-glow-text">{poem.rating}</span>
           </div>
