@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit",
     "validate:library": "tsx scripts/validate-library.ts",
     "validate:essays": "tsx scripts/validate-essays.ts",
-    "check": "npm run validate:library && npm run validate:essays && npm run typecheck",
-    "sitemap": "node scripts/gen-sitemap.mjs"
+    "validate:style": "tsx scripts/validate-literary-style.ts",
+    "check": "npm run validate:library && npm run validate:essays && npm run validate:style && npm run typecheck",
+    "sitemap": "node scripts/gen-sitemap.mjs",
+    "prerender": "tsx scripts/prerender-og.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
