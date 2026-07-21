@@ -49,7 +49,7 @@ const Header = () => {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "relative inline-flex min-h-11 shrink-0 items-center text-sm font-medium transition-colors hover:text-cyan-300",
+                  "relative inline-flex min-h-11 min-w-9 shrink-0 items-center justify-center text-sm font-medium transition-colors hover:text-cyan-300",
                   isActive(item.path) ? "text-cyan-300 neon-glow-text" : "text-cyan-100/55",
                   item.accent && !isActive(item.path) && "text-luxury-gold/70 hover:text-luxury-gold"
                 )}
