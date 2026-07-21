@@ -14,10 +14,12 @@ jobs:
   read-log:
     runs-on: ubuntu-latest
     steps:
-      - name: Print failed audit job tail
+      - name: Extract failed audit errors
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api repos/${GITHUB_REPOSITORY}/actions/jobs/88720037856/logs > /tmp/audit.log
-          echo '===== RESPONSIVE AUDIT FINAL 35 LINES ====='
-          tail -n 35 /tmp/audit.log
+          echo '===== RESPONSIVE AUDIT ERROR MATCHES ====='
+          grep -n -E 'SyntaxError|ReferenceError|TypeError|Error:|ERR_|Process completed|not found|No such file|Unexpected token' /tmp/audit.log | tail -n 40 || true
+          echo '===== 90-TO-35 LINES FROM END ====='
+          tail -n 90 /tmp/audit.log | head -n 55
