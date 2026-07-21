@@ -15,9 +15,8 @@ from urllib.parse import quote
 
 import build_authentic_mayakovsky_collage as builder
 
-# A previous draft accidentally included a modern retouched reconstruction.
-# Replace it with the genuine public-domain 1915 photograph of Mayakovsky and
-# Lilya Brik recorded on its Commons file page.
+# Remove a modern retouched reconstruction and use the genuine public-domain
+# 1915 photograph of Mayakovsky and Lilya Brik instead.
 builder.FILES = [
     "Vladimir mayakovsky and lilya brik.jpg"
     if name == "Vladimir Mayakovsky & Lilya Brik 1918. Retouched.jpg"
@@ -29,19 +28,28 @@ builder.FILES = [
 def reliable_download(session, info):
     original = info["url"]
     proxy_target = original.removeprefix("https://").removeprefix("http://")
-    proxy = (
-        "https://images.weserv.nl/?url="
-        + quote(proxy_target, safe="/:._-")
-        + "&w=1800&output=jpg&q=95"
-    )
-    candidates = [(proxy, "transparent resize of Commons original", 1)]
+    # Preserve existing percent escapes in Wikimedia URLs. Re-encoding '%' made
+    # Cyrillic names and commas turn into %25xx paths and caused false 404s.
+    encoded_target = quote(proxy_target, safe="/:._-%")
+    candidates = [
+        (
+            f"https://images.weserv.nl/?url={encoded_target}&w=1800&output=jpg&q=95",
+            "transparent resize of Commons original",
+            2,
+        ),
+        (
+            f"https://wsrv.nl/?url={encoded_target}&w=1800&output=jpg&q=95",
+            "transparent resize of Commons original via alternate endpoint",
+            2,
+        ),
+    ]
     if info.get("thumburl"):
         candidates.append((info["thumburl"], "official Commons thumbnail", 1))
 
     errors = []
     for url, kind, attempts in candidates:
         try:
-            response = builder.fetch(session, "GET", url, timeout=45, attempts=attempts)
+            response = builder.fetch(session, "GET", url, timeout=60, attempts=attempts)
             if not response.headers.get("content-type", "").startswith("image/"):
                 raise RuntimeError(f"unexpected content type {response.headers.get('content-type')}")
             return response.content, url, kind
