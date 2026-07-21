@@ -18,16 +18,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// siteConfig.url already IS the base path (https://…/TheLegendaryPoet) — do
-// not prepend it again, or image URLs double up (…/TheLegendaryPoet/TheLegendaryPoet/…).
-const SITE_URL = 'https://fedormilovanov.github.io/TheLegendaryPoet';
+const SITE_URL = 'https://thelegendarypoet.ru';
 const DIST = path.resolve('dist');
+const PUBLIC = path.resolve('public');
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 
 function absUrl(pathOrUrl) {
-  if (!pathOrUrl) return `${SITE_URL}/og-image.jpg`;
+  if (!pathOrUrl) return DEFAULT_OG_IMAGE;
   if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+
+  const publicPath = path.resolve(PUBLIC, pathOrUrl.replace(/^\//, ''));
+  if (!fs.existsSync(publicPath)) {
+    console.warn(`prerender-og: missing image ${pathOrUrl}; using default OG image`);
+    return DEFAULT_OG_IMAGE;
+  }
+
   return `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 

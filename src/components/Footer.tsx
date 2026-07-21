@@ -38,7 +38,7 @@ export default function Footer() {
 
           {/* Brand + Word of Day */}
           <div className="sm:col-span-2">
-            <Link to="/" className="mb-5 inline-flex items-center gap-3 group">
+            <Link to="/" className="group mb-5 inline-flex min-h-11 items-center gap-3">
               <BrandMark size="sm" />
               <span className="flex flex-col leading-tight">
                 <span className="font-serif text-lg font-semibold neon-blue-gradient neon-glow-text">
@@ -72,7 +72,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${hoverBg}`}
+                  className={`group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 ${hoverBg}`}
                 >
                   <Icon className="h-5 w-5 transition-transform duration-300 group-hover/social:scale-110" />
                 </a>
@@ -80,7 +80,7 @@ export default function Footer() {
               <a
                 href="mailto:contact@legendarypoet.com"
                 aria-label="Email"
-                className="group/social flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 hover:bg-luxury-gold/10"
+                className="group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-luxury-gold/10"
               >
                 <Mail size={18} className="text-cyan-200/50 transition-transform duration-300 group-hover/social:scale-110 group-hover/social:text-luxury-gold" />
               </a>
@@ -92,12 +92,12 @@ export default function Footer() {
             <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">
               Разделы
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {footerLinks.map(item => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className="group/link inline-flex items-center gap-1.5 text-sm text-cyan-200/50 transition-colors hover:text-cyan-300"
+                    className="group/link inline-flex min-h-11 items-center gap-1.5 text-sm text-cyan-200/50 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
                   >
                     <span className="h-px w-0 bg-cyan-400 transition-all duration-300 group-hover/link:w-3" />
                     {titleCase(item.label)}

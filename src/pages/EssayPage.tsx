@@ -27,7 +27,7 @@ export default function EssayPage() {
     image: essay?.cover,
     publishedTime: essay?.date,
     author: essay?.author,
-    keywords: essay?.tags.join(', '),
+    keywords: essay?.tags.join(','),
   });
 
   if (!essay) {
@@ -35,7 +35,7 @@ export default function EssayPage() {
       <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
-          <Link to="/articles" className="text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
+          <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
         </div>
       </div>
     );
@@ -51,7 +51,7 @@ export default function EssayPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Link
           to="/articles"
-          className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70 transition-colors hover:text-cyan-300"
+          className="mb-8 inline-flex min-h-11 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
         >
           <ArrowLeft size={14} /> Все статьи
         </Link>
@@ -65,10 +65,10 @@ export default function EssayPage() {
               {toc.length > 0 && (
                 <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5">
                   <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70">Оглавление</div>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1">
                     {toc.map((s) => (
                       <li key={s.anchor}>
-                        <a href={`#${s.anchor}`} className="flex items-baseline gap-2.5 text-sm text-luxury-gray-light/70 transition-colors hover:text-luxury-gold">
+                        <a href={`#${s.anchor}`} className="flex min-h-9 items-center gap-2.5 rounded-lg py-1.5 text-sm text-luxury-gray-light/70 transition-colors hover:bg-white/[0.03] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60">
                           <span className="font-serif text-[12px] font-semibold tabular-nums text-luxury-gold/55">{String(s.number).padStart(2, '0')}</span>
                           <span>{s.heading}</span>
                         </a>
@@ -80,7 +80,7 @@ export default function EssayPage() {
               {poet && (
                 <Link
                   to={`/poets/${poet.id}`}
-                  className="mt-4 flex items-center gap-2 rounded-2xl border border-cyan-400/15 bg-[#061018]/60 p-4 text-sm text-cyan-100/70 transition hover:border-cyan-400/35 hover:text-cyan-200"
+                  className="mt-4 flex min-h-11 items-center gap-2 rounded-2xl border border-cyan-400/15 bg-[#061018]/60 p-4 text-sm text-cyan-100/70 transition hover:border-cyan-400/35 hover:text-cyan-200"
                 >
                   <BookOpen size={15} /> Страница поэта: {poet.name}
                 </Link>
@@ -99,7 +99,7 @@ export default function EssayPage() {
                   {essay.sources.map((s, i) => (
                     <li key={i} className="text-sm leading-relaxed text-luxury-gray-light/80">
                       {s.url ? (
-                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-1.5 text-luxury-gray-light/80 transition-colors hover:text-luxury-gold">
+                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-start gap-1.5 py-1 text-luxury-gray-light/80 transition-colors hover:text-luxury-gold">
                           {s.title} <ExternalLink size={12} className="mt-1 shrink-0 opacity-60" />
                         </a>
                       ) : (

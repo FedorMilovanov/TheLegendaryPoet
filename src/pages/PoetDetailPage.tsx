@@ -8,6 +8,7 @@ import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
 import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
+import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
@@ -17,6 +18,7 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +41,7 @@ export default function PoetDetailPage() {
             name: poet.name,
             alternateName: poet.fullName,
             description: poet.shortBio,
-            image: `${poet.photo.startsWith('http') ? '' : 'https://fedormilovanov.github.io/TheLegendaryPoet'}${poet.photo}`,
+            image: `${poet.photo.startsWith('http') ? '' : siteConfig.url}${poet.photo}`,
             birthDate: String(poet.birthYear),
             deathDate: poet.deathYear ? String(poet.deathYear) : undefined,
             nationality: poet.nationality,
@@ -108,6 +110,10 @@ export default function PoetDetailPage() {
               <SpiritualPath content={poet.spiritualSearch} />
             )}
 
+            {poet.moralPortrait && (
+              <MoralPortrait content={poet.moralPortrait} />
+            )}
+
             {poet.authorCommentary && (
               <AuthorCommentary content={poet.authorCommentary} />
             )}
@@ -128,7 +134,7 @@ export default function PoetDetailPage() {
             )}
 
             <div className="pt-16">
-              <h2 className="text-5xl font-serif font-bold text-white mb-12 flex items-center gap-4 editorial-title">
+              <h2 className="editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none text-white sm:mb-12 sm:text-5xl">
                 {titleCase('Избранная')} <span className="gold-gradient italic gold-glow-text">{titleCase('Лирика')}</span>
               </h2>
               

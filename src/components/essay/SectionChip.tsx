@@ -55,11 +55,11 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
   };
 
   return (
-    <div className="section-chip lg:hidden" aria-hidden={current ? undefined : true}>
+    <div className="section-chip lg:hidden">
       <button
         type="button"
         popoverTarget="essay-toc-popover"
-        className="section-chip-btn"
+        className="section-chip-btn min-h-11"
         aria-label="Оглавление статьи"
       >
         {current ? (
@@ -81,7 +81,7 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
               <button
                 type="button"
                 onClick={() => go(s.anchor)}
-                className={`section-chip-row ${current?.anchor === s.anchor ? 'is-current' : ''}`}
+                className={`section-chip-row min-h-11 ${current?.anchor === s.anchor ? 'is-current' : ''}`}
               >
                 <span className="section-chip-num">{String(s.number).padStart(2, '0')}</span>
                 <span>{s.heading}</span>

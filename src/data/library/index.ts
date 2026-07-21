@@ -1,4 +1,4 @@
-import { Poet } from '../../types/poet';
+import type { Poet } from '../../types/poet';
 import { fyodorTyutchev } from './fyodorTyutchev';
 import { vladimirMayakovsky } from './vladimirMayakovsky';
 import { alexanderPushkin } from './alexanderPushkin';
