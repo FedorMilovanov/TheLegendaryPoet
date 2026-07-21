@@ -55,7 +55,7 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
   };
 
   return (
-    <div className="section-chip lg:hidden" aria-hidden={current ? undefined : true}>
+    <div className="section-chip lg:hidden">
       <button
         type="button"
         popoverTarget="essay-toc-popover"
