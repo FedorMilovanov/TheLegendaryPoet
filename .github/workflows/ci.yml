@@ -21,10 +21,14 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Validate content, prose, and types
-        run: |
-          npm run check
-          npx tsx scripts/validate-literary-style.ts
+      - name: Validate poet library
+        run: npm run validate:library
+      - name: Validate essays
+        run: npm run validate:essays
+      - name: Validate literary style
+        run: npx tsx scripts/validate-literary-style.ts
+      - name: Typecheck
+        run: npm run typecheck
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
