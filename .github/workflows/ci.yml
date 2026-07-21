@@ -23,21 +23,36 @@ jobs:
       - run: npm ci
 
       - name: Apply 42-source conclusion audit
-        run: npx tsx scripts/strengthen-conclusions-audit.ts
-
-      - name: Capture validation report
         run: |
-          set +e
-          npm run check > validation-report.txt 2>&1
-          echo $? > validation-status.txt
-          set -e
+          npx tsx scripts/strengthen-conclusions-audit.ts
+          npx tsx scripts/fix-source-audit-marker.ts
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: conclusion-audit-validation
-          path: |
-            validation-report.txt
-            validation-status.txt
+      - name: Validate content, literary style, and types
+        run: npm run check
 
-      - name: Require successful validation
-        run: test "$(cat validation-status.txt)" = "0"
+      - name: Generate sitemap
+        run: npm run sitemap
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE: /
+
+      - name: Prerender social pages
+        run: npm run prerender
+
+      - name: Verify generated output is stable
+        run: git diff --exit-code -- public/sitemap.xml
+
+      - name: Commit strengthened conclusions
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/essays/yeseninKutezhi.ts \
+                  src/data/essays/mayakovskyGromovoy.ts \
+                  src/data/essays/brikCase.ts \
+                  scripts/validate-literary-style.ts \
+                  docs/INTEGRATION_STATUS.md \
+                  docs/PRIMARY_SOURCE_REAUDIT_2026-07-21.md
+          git commit -m "Strengthen conclusions from primary-source reaudit"
+          git push origin HEAD:agent/integrate-unmerged-essays
