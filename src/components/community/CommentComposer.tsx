@@ -38,26 +38,30 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
         className="w-full resize-none rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm leading-relaxed text-white outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-400/45"
       />
       <div className="grid grid-cols-2 gap-2">
-        {commentKindOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setKind(option.value)}
-            className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition ${
-              kind === option.value
-                ? 'border-cyan-300 bg-cyan-400/10 text-cyan-200'
-                : 'border-cyan-400/10 text-cyan-100/40 hover:text-cyan-200'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
+        {commentKindOptions.map((option) => {
+          const selected = kind === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setKind(option.value)}
+              aria-pressed={selected}
+              className={`min-h-11 rounded-full border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
+                selected
+                  ? 'border-cyan-300 bg-cyan-400/10 text-cyan-200'
+                  : 'border-cyan-400/10 text-cyan-100/40 hover:text-cyan-200'
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
       </div>
       <button
         type="button"
         onClick={send}
         disabled={text.trim().length < 8}
-        className="rounded-full border border-cyan-400/25 px-5 py-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 transition hover:bg-cyan-400/10 disabled:opacity-35"
+        className="min-h-11 rounded-full border border-cyan-400/25 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 transition hover:bg-cyan-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 disabled:opacity-35"
       >
         Добавить комментарий
       </button>
