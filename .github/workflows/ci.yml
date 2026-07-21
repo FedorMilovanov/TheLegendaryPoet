@@ -1,20 +1,19 @@
-name: Polish essay metadata
+name: CI
 
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  polish:
-    if: github.head_ref == 'agent/integrate-unmerged-essays'
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -22,20 +21,15 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Apply essay metadata polish
-        run: npx tsx scripts/polish-essay-metadata.ts
-      - name: Validate polished content
-        run: |
-          npm run check
-          npm run sitemap
-          npm run build
-          npm run prerender
+      - name: Validate content, literary style, and types
+        run: npm run check
+      - name: Generate sitemap
+        run: npm run sitemap
+      - name: Build
+        run: npm run build
         env:
           VITE_BASE: /
-      - name: Commit polished metadata
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/essays/yeseninKutezhi.ts src/data/essays/brikCase.ts scripts/validate-literary-style.ts public/sitemap.xml
-          git commit -m "Polish essay titles and summaries"
-          git push origin HEAD:${{ github.head_ref }}
+      - name: Prerender social pages
+        run: npm run prerender
+      - name: Verify generated output is stable
+        run: git diff --exit-code -- public/sitemap.xml
