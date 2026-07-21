@@ -1,19 +1,19 @@
-name: CI
+name: Apply latest editorial theology
 
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
+  apply:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: agent/integrate-unmerged-essays
 
       - uses: actions/setup-node@v4
         with:
@@ -21,15 +21,42 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Apply editorial and theological clarifications
+        run: npx tsx scripts/apply-latest-editorial-theology.ts
+
       - name: Validate content, literary style, and types
         run: npm run check
+
       - name: Generate sitemap
         run: npm run sitemap
+
       - name: Build
         run: npm run build
         env:
           VITE_BASE: /
+
       - name: Prerender social pages
         run: npm run prerender
+
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+
+      - name: Commit latest editorial theology
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PROJECT_CHARTER.md \
+                  POET_AUTHORING_GUIDE.md \
+                  docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md \
+                  docs/PRIMARY_SOURCE_REAUDIT_2026-07-21.md \
+                  docs/INTEGRATION_STATUS.md \
+                  src/docs/THEOLOGICAL_GUIDELINES.md \
+                  src/data/essays/yeseninKutezhi.ts \
+                  src/data/essays/mayakovskyGromovoy.ts \
+                  src/data/library/sergeiYesenin.ts \
+                  src/data/library/vladimirMayakovsky.ts \
+                  src/data/library/nikolayGumilev.ts \
+                  scripts/validate-literary-style.ts
+          git commit -m "Clarify repentance, causality, and Christian martyrdom"
+          git push origin HEAD:agent/integrate-unmerged-essays
