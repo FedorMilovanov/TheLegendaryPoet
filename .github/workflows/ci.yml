@@ -23,7 +23,9 @@ jobs:
       - run: npm ci
 
       - name: Apply all-profile conclusion audit
-        run: npx tsx scripts/strengthen-profile-conclusions.ts
+        run: |
+          npx tsx scripts/fix-profile-audit-script.ts
+          npx tsx scripts/strengthen-profile-conclusions.ts
 
       - name: Validate content, literary style, and types
         run: npm run check
