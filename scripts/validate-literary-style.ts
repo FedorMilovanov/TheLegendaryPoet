@@ -12,6 +12,14 @@ const error = (where: string, message: string) =>
 const warning = (where: string, message: string) =>
   problems.push({ level: 'WARN', where, message });
 
+const allowedLatinWords = new Set([
+  'Alter',
+  'Corpus',
+  'Exegi',
+  'Silentium',
+  'monumentum',
+]);
+
 const requiredPoetMarkers: Record<string, string[]> = {
   'sergei-yesenin': [
     '21 ноября 1923 года',
@@ -84,8 +92,9 @@ function blockText(block: EssayBlock): string {
     case 'paragraph':
     case 'pullquote':
     case 'note':
-    case 'reflection':
       return block.text;
+    case 'reflection':
+      return `${block.heading}\n${block.text}`;
     case 'section':
       return block.heading;
     case 'poem':
@@ -106,9 +115,15 @@ function count(text: string, pattern: RegExp): number {
 }
 
 function validateRhythm(where: string, text: string, mirroredLimit: number): void {
-  const latinWords = [...new Set(text.match(/\b[A-Za-z]{4,}\b/g) ?? [])];
+  const latinWords = [
+    ...new Set(
+      (text.match(/\b[A-Za-z]{4,}\b/g) ?? []).filter(
+        (word) => !allowedLatinWords.has(word) && !/^[IVXLCDM]+$/.test(word),
+      ),
+    ),
+  ];
   if (latinWords.length > 0) {
-    warning(where, `Latin words in Russian editorial prose: ${latinWords.join(', ')}`);
+    warning(where, `Unexplained Latin or English words in Russian prose: ${latinWords.join(', ')}`);
   }
 
   const mirroredConstructions =
