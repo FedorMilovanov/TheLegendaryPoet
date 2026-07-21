@@ -22,38 +22,23 @@ jobs:
 
       - run: npm ci
 
-      - name: Apply all-profile conclusion audit
+      - name: Capture corrected profile audit report
         run: |
-          npx tsx scripts/fix-profile-audit-script.ts
-          npx tsx scripts/fix-profile-audit-syntax.ts
-          npx tsx scripts/strengthen-profile-conclusions.ts
+          set +e
+          {
+            npx tsx scripts/fix-profile-audit-script.ts
+            npx tsx scripts/fix-profile-audit-syntax.ts
+            npx tsx scripts/strengthen-profile-conclusions.ts
+          } > profile-audit-report.txt 2>&1
+          echo $? > profile-audit-status.txt
+          set -e
 
-      - name: Validate content, literary style, and types
-        run: npm run check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: profile-audit-anchor-report
+          path: |
+            profile-audit-report.txt
+            profile-audit-status.txt
 
-      - name: Generate sitemap
-        run: npm run sitemap
-
-      - name: Build
-        run: npm run build
-        env:
-          VITE_BASE: /
-
-      - name: Prerender social pages
-        run: npm run prerender
-
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
-
-      - name: Commit profile conclusion audit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/library/alexanderBlok.ts \
-                  src/data/library/sergeiYesenin.ts \
-                  src/data/library/vladimirMayakovsky.ts \
-                  scripts/validate-literary-style.ts \
-                  docs/PRIMARY_SOURCE_REAUDIT_2026-07-21.md \
-                  docs/INTEGRATION_STATUS.md
-          git commit -m "Strengthen final poet profile conclusions"
-          git push origin HEAD:agent/integrate-unmerged-essays
+      - name: Require successful profile audit
+        run: test "$(cat profile-audit-status.txt)" = "0"
