@@ -1,0 +1,52 @@
+name: Build authentic Mayakovsky archive collage
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/build_authentic_mayakovsky_collage.py"
+      - ".github/workflows/build-authentic-mayakovsky-collage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-collage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install image tooling
+        run: python -m pip install --disable-pip-version-check pillow requests
+
+      - name: Download verified originals and build collage
+        run: python scripts/build_authentic_mayakovsky_collage.py
+
+      - name: Show verification summary
+        run: |
+          ls -lh build/archive-collage
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          path = Path('build/archive-collage/mayakovsky-brik-authentic-manifest.csv')
+          with path.open(encoding='utf-8-sig') as f:
+              rows = list(csv.DictReader(f))
+          print(f'Verified unique archival images: {len(rows)}')
+          assert len(rows) >= 20
+          PY
+
+      - name: Upload authentic archive collage
+        uses: actions/upload-artifact@v4
+        with:
+          name: mayakovsky-brik-authentic-archive-collage
+          path: build/archive-collage/
+          if-no-files-found: error
+          retention-days: 30
