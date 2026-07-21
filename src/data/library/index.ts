@@ -12,6 +12,7 @@ import { alexanderBlok } from './alexanderBlok';
 import { applyLibraryLiteraryPolish } from './libraryLiteraryPolish';
 import { applyLibraryLiteraryPolishRound2 } from './libraryLiteraryPolishRound2';
 import { applyLibraryLiteraryPolishRound3 } from './libraryLiteraryPolishRound3';
+import { applyLibraryLiteraryPolishRound4 } from './libraryLiteraryPolishRound4';
 
 export const poets: Poet[] = [
   fyodorTyutchev,
@@ -27,7 +28,8 @@ export const poets: Poet[] = [
 ]
   .map(applyLibraryLiteraryPolish)
   .map(applyLibraryLiteraryPolishRound2)
-  .map(applyLibraryLiteraryPolishRound3);
+  .map(applyLibraryLiteraryPolishRound3)
+  .map(applyLibraryLiteraryPolishRound4);
 
 export { articles } from './articles';
 export { musicTracks } from './musicTracks';
