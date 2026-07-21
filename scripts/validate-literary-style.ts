@@ -111,6 +111,7 @@ const forbiddenPoetMarkers: Record<string, string[]> = {
     'революция его сожрала',
     'Главный распад Блока — идолопоклонство',
     'умер сорока лет, задохнувшись, замолчав, в чёрном отчаянии',
+    'Его конец был человечески тяжёлым и духовно тревожным',
   ],
   'fyodor-tyutchev': [
     'был законченным прелюбодеем',
@@ -137,6 +138,20 @@ const forbiddenPoetMarkers: Record<string, string[]> = {
     'это был брак ради устройства и опоры',
     'за ним стоит сребролюбие и маловерие',
     'человек отвернулся от любимой ради денег и положения',
+  ],
+};
+
+const requiredPoetConclusionMarkers: Record<string, string[]> = {
+  'sergei-yesenin': [
+    'Я вовсе не религиозный человек и не мистик',
+    'по доступным историческим свидетельствам Есенин умер неверующим',
+  ],
+  'vladimir-mayakovsky': [
+    'Моя революция',
+    'По доступным историческим свидетельствам Маяковский умер неверующим',
+  ],
+  'alexander-blok': [
+    'По доступным историческим свидетельствам он умер человеком, не пришедшим к евангельской вере',
   ],
 };
 
@@ -279,6 +294,12 @@ function validateRhythm(where: string, text: string, mirroredLimit: number): voi
 
 for (const poet of poets) {
   const text = proseOfPoet(poet);
+
+  for (const marker of requiredPoetConclusionMarkers[poet.id] ?? []) {
+    if (!text.includes(marker)) {
+      error(poet.id, 'required strengthened conclusion is missing: “' + marker + '”');
+    }
+  }
 
   for (const marker of requiredPoetMarkers[poet.id] ?? []) {
     if (!text.includes(marker)) {
