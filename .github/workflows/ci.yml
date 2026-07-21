@@ -1,14 +1,14 @@
-name: Apply latest editorial theology
+name: Diagnose latest editorial theology
 
 on:
   pull_request:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply:
+  diagnose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,38 +25,20 @@ jobs:
       - name: Apply editorial and theological clarifications
         run: npx tsx scripts/apply-latest-editorial-theology.ts
 
-      - name: Validate content, literary style, and types
-        run: npm run check
-
-      - name: Generate sitemap
-        run: npm run sitemap
-
-      - name: Build
-        run: npm run build
-        env:
-          VITE_BASE: /
-
-      - name: Prerender social pages
-        run: npm run prerender
-
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
-
-      - name: Commit latest editorial theology
+      - name: Capture validation report
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add PROJECT_CHARTER.md \
-                  POET_AUTHORING_GUIDE.md \
-                  docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md \
-                  docs/PRIMARY_SOURCE_REAUDIT_2026-07-21.md \
-                  docs/INTEGRATION_STATUS.md \
-                  src/docs/THEOLOGICAL_GUIDELINES.md \
-                  src/data/essays/yeseninKutezhi.ts \
-                  src/data/essays/mayakovskyGromovoy.ts \
-                  src/data/library/sergeiYesenin.ts \
-                  src/data/library/vladimirMayakovsky.ts \
-                  src/data/library/nikolayGumilev.ts \
-                  scripts/validate-literary-style.ts
-          git commit -m "Clarify repentance, causality, and Christian martyrdom"
-          git push origin HEAD:agent/integrate-unmerged-essays
+          set +e
+          npm run check > validation-report.txt 2>&1
+          status=$?
+          echo "$status" > validation-status.txt
+          exit 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: latest-editorial-theology-validation
+          path: |
+            validation-report.txt
+            validation-status.txt
+
+      - name: Require successful validation
+        run: test "$(cat validation-status.txt)" = "0"
