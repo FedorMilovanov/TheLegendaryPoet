@@ -123,49 +123,4 @@ status = status.replace(
 );
 fs.writeFileSync(statusPath, status, 'utf8');
 
-const cleanWorkflow = `name: CI
-
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-permissions:
-  contents: read
-
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - run: npm ci
-      - name: Validate poet library
-        run: npm run validate:library
-      - name: Validate essays
-        run: npm run validate:essays
-      - name: Validate literary style
-        run: npx tsx scripts/validate-literary-style.ts
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Generate sitemap
-        run: npm run sitemap
-      - name: Build
-        run: npm run build
-        env:
-          VITE_BASE: /
-      - name: Prerender social pages
-        run: npx tsx scripts/prerender-og.mjs
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
-`;
-fs.writeFileSync(path.join(root, '.github/workflows/ci.yml'), cleanWorkflow, 'utf8');
-
-fs.rmSync(path.join(root, 'scripts/consolidate-library.ts'), { force: true });
 console.log(`Consolidated ${poets.length} poet modules and removed temporary polish layers.`);
