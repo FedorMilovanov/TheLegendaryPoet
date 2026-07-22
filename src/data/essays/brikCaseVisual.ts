@@ -3,7 +3,24 @@ import { brikCase as baseBrikCase } from './brikCase';
 import { expandBrikCase } from './brikCaseResearchExpansion';
 import { insertArchiveImages } from './visualArchive';
 
-const expandedBrikCase = expandBrikCase(baseBrikCase);
+const correctedBrikCase: Essay = {
+  ...baseBrikCase,
+  blocks: baseBrikCase.blocks.map((block) => {
+    if (
+      block.type === 'paragraph' &&
+      block.text.includes('Полный сохранившийся текст был впервые реконструирован')
+    ) {
+      return {
+        ...block,
+        text: 'История публикации письма-дневника требует отдельной оговорки — и она направлена не к смягчению, а к источниковой твёрдости. В корпусе Янгфельдта это документ № 113. Комментарий сообщает, что подлинник сохранился не полностью, печатный текст следует версии, подготовленной Лилей Брик для публикации в 1956 году, а само письмо не было отправлено. Поэтому перед нами не полный нейтральный автограф и не письмо, полученное Лилей во время разлуки. Точный объём редакционных купюр должен устанавливаться сравнением с сохранившейся рукописью и отдельными публикациями, а не предполагаться заранее.',
+      };
+    }
+
+    return block;
+  }),
+};
+
+const expandedBrikCase = expandBrikCase(correctedBrikCase);
 
 export const brikCaseVisual: Essay = {
   ...expandedBrikCase,
@@ -13,7 +30,7 @@ export const brikCaseVisual: Essay = {
   coverKind: 'archive',
   coverCredit: 'Осип Брик · 1929',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
-  readTime: 36,
+  readTime: 46,
   blocks: insertArchiveImages(expandedBrikCase.blocks, {
     'Жуковского, июль 1915-го': [
       {
