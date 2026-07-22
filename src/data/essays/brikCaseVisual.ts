@@ -59,19 +59,6 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 42%',
       },
     ],
-    'Два месяца и поэма «Про это»': [
-      {
-        type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/LilyaBrik_FotoOsipBrik.jpg',
-        alt: 'Портрет Лили Брик работы Осипа Брика, конец 1920-х годов',
-        caption: 'Лиля Брик. Фотография Осипа Брика.',
-        credit: 'Осип Брик; Wikimedia Commons',
-        sourceUrl: 'https://commons.wikimedia.org/wiki/File:LilyaBrik_FotoOsipBrik.jpg',
-        kind: 'archive',
-        layout: 'portrait',
-        objectPosition: '50% 24%',
-      },
-    ],
     'Осип: издатель, теоретик и сотрудник органов': [
       {
         type: 'image',
