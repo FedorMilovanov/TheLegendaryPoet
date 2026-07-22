@@ -115,7 +115,7 @@ export default function EssayPage() {
 
           <article ref={articleRef} className="min-w-0 max-w-3xl">
             <ShareLine scopeRef={articleRef} />
-            <ArticleRenderer blocks={essay.blocks} />
+            <ArticleRenderer blocks={essay.blocks} sources={essay.sources} />
 
             {seriesEntries.length > 1 && (
               <nav aria-label="Навигация по серии" className="mt-14 rounded-[2rem] border border-luxury-gold/10 bg-[#0a0a0a]/60 p-6 md:p-8">
