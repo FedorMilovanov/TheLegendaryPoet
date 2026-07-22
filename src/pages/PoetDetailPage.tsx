@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import { poets } from '../data/poets';
+import { getAllEssays } from '../data/essays';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
@@ -19,12 +20,17 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
-import { siteConfig } from '../config/site';
+import { poetStructuredData } from '../utils/structuredData';
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const poet = poets.find(p => p.id === id);
+  const poet = poets.find((entry) => entry.id === id);
   const contentRef = useRef<HTMLDivElement>(null);
+  const relatedEssays = poet
+    ? getAllEssays()
+        .filter((essay) => essay.poetId === poet.id)
+        .sort((a, b) => (a.cluster?.order ?? 999) - (b.cluster?.order ?? 999))
+    : [];
 
   useSeo({
     title: poet ? `${poet.name} — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
@@ -33,25 +39,7 @@ export default function PoetDetailPage() {
     type: 'profile',
     image: poet?.photo,
     keywords: poet ? [poet.name, poet.fullName, ...poet.tags, 'стихи', 'биография'].join(', ') : undefined,
-    jsonLd: poet
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'ProfilePage',
-          mainEntity: {
-            '@type': 'Person',
-            name: poet.name,
-            alternateName: poet.fullName,
-            description: poet.shortBio,
-            image: `${poet.photo.startsWith('http') ? '' : siteConfig.url}${poet.photo}`,
-            birthDate: String(poet.birthYear),
-            deathDate: poet.deathYear ? String(poet.deathYear) : undefined,
-            nationality: poet.nationality,
-            jobTitle: 'Поэт',
-            knowsAbout: poet.tags,
-          },
-          inLanguage: 'ru-RU',
-        }
-      : undefined,
+    jsonLd: poet ? poetStructuredData(poet, relatedEssays) : undefined,
   });
 
   if (!poet) {
@@ -73,7 +61,6 @@ export default function PoetDetailPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 pt-16 pb-32 border-t border-luxury-gold/10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          
           <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-10">
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
@@ -140,7 +127,7 @@ export default function PoetDetailPage() {
               <h2 className="editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none text-white sm:mb-12 sm:text-5xl">
                 {titleCase('Избранная')} <span className="gold-gradient italic gold-glow-text">{titleCase('Лирика')}</span>
               </h2>
-              
+
               <div className="space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />
