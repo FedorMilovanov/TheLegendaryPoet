@@ -1,5 +1,6 @@
 import type { Essay, EssaySource } from '../../types/essay';
-import { yeseninKutezhi } from './yeseninKutezhi';
+import { yeseninKutezhiVisual } from './yeseninVisual';
+import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -37,9 +38,12 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   });
 }
 
-const yeseninWithUniqueSources: Essay = {
-  ...yeseninKutezhi,
-  sources: uniqueSources(yeseninKutezhi.sources),
+const yeseninWithArchiveLayer: Essay = {
+  ...yeseninKutezhiVisual,
+  sources: uniqueSources([
+    ...(yeseninKutezhiVisual.sources ?? []),
+    ...yeseninArchiveSources,
+  ]),
 };
 
 const mayakovskyPartOneWithLocalCover: Essay = {
@@ -81,7 +85,7 @@ const brikCaseWithSourceLibrary: Essay = {
 };
 
 export const essays: Essay[] = [
-  yeseninWithUniqueSources,
+  yeseninWithArchiveLayer,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
   brikCaseWithSourceLibrary,
