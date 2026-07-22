@@ -68,18 +68,18 @@ export type EssayBlock =
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
 
-export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'context';
+export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'institutional' | 'context';
 
 export interface EssaySource {
   /** Stable optional identifier for future inline footnotes. */
   id?: string;
   title: string;
   url?: string;
-  /** Primary text, archive/catalogue, scholarly research, or wider context. */
+  /** Primary text, archive/catalogue, scholarship, institutional narrative, or wider context. */
   kind?: EssaySourceKind;
   institution?: string;
   year?: string | number;
-  /** One restrained sentence explaining why this source is used. */
+  /** One restrained sentence explaining why this source is used and what it cannot prove. */
   note?: string;
 }
 
