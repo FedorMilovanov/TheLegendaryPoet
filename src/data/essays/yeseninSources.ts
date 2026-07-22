@@ -1,6 +1,6 @@
 import type { EssaySource } from '../../types/essay';
 
-interface SourceAnnotation extends Omit<EssaySource, 'url'> {
+interface SourceAnnotation extends Omit<EssaySource, 'title' | 'url'> {
   url: string;
   /** When the source is absent from the old bibliography, append it explicitly. */
   title?: string;
