@@ -26,9 +26,35 @@ import {
   placeEssayImages,
 } from './essayVisualLayout';
 
+const museumNarrativeNote =
+  'Институциональный мемориальный пересказ: используется для навигации и музейного контекста, но не заменяет исходный документ, академическую публикацию или независимую проверку.';
+
+function normalizeSourceKind(source: EssaySource): EssaySource {
+  const url = source.url ?? '';
+  const isMayakovskyMuseum = /(?:www\.)?muzeimayakovskogo\.ru/i.test(url);
+  const isConcreteCollectionObject = /\/collection\//i.test(url);
+
+  // A museum domain can host both an archival object and a curatorial story.
+  // Only concrete collection cards retain archive status automatically. General
+  // biographies, virtual exhibitions, histories and interpretive pages are
+  // separated from primary/archival evidence even when the institution is
+  // authoritative or owns the underlying material.
+  if (isMayakovskyMuseum && !isConcreteCollectionObject) {
+    return {
+      ...source,
+      kind: 'institutional',
+      note: source.note
+        ? `${source.note} ${museumNarrativeNote}`
+        : museumNarrativeNote,
+    };
+  }
+
+  return source;
+}
+
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
-  return sources.filter((source) => {
+  return sources.map(normalizeSourceKind).filter((source) => {
     const key = source.url
       ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
       : `${source.id ?? ''}:${source.title}`;
@@ -58,7 +84,7 @@ const mayakovskyPartOneWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
     mayakovskyPartOnePlacements,
   ),
-  sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
+  sources: uniqueSources([...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources]),
 };
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
@@ -73,7 +99,7 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
   ),
-  sources: mayakovskyLateSources,
+  sources: uniqueSources(mayakovskyLateSources),
 };
 
 const brikCaseWithSourceLibrary: Essay = {
@@ -82,7 +108,7 @@ const brikCaseWithSourceLibrary: Essay = {
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
-  sources: [...brikDocumentSources, ...brikSupplementalSources],
+  sources: uniqueSources([...brikDocumentSources, ...brikSupplementalSources]),
 };
 
 export const essays: Essay[] = [
