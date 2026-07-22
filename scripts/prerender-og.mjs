@@ -1,20 +1,11 @@
 // Prerender real static HTML files (with per-page Open Graph tags) for the
 // site's shareable deep links: essays, poets, and legacy articles.
 //
-// Why this exists: GitHub Pages serves 404.html (a copy of index.html, see
-// deploy.yml's "SPA fallback" step) for any path that isn't a real file, and
-// it does so with an HTTP 404 status. Link-unfurl bots (Telegram, WhatsApp,
-// Slack, ...) don't run JavaScript and many of them refuse to build a
-// preview card at all when the response status isn't 200 — so a shared
-// article link showed no image/title, even though the OG tags were
-// technically present in the body via useSeo(). Writing a real
-// `dist/<route>/index.html` per shareable page fixes both problems: GitHub
-// Pages serves it directly with 200, and the tags are already correct in
-// the raw HTML the bot fetches. React still mounts on top and takes over
-// client-side routing once the page loads for real visitors.
-//
-// Run via `tsx` so it can import the same TS data modules the app uses —
-// no duplicated/hand-maintained content, so it can't drift from the site.
+// Why this exists:
+// GitHub Pages serves 404.html for paths that do not have a real static file.
+// Many preview bots neither run JavaScript nor accept a 404 response, so every
+// shareable route gets both `<route>/index.html` and `<route>.html`. The static
+// head uses the same SEO fields and JSON-LD builders as the hydrated React app.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -38,16 +29,41 @@ function absUrl(pathOrUrl) {
   return `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-/** Swap the static index.html's title/description/canonical/OG/Twitter tags for page-specific ones. */
-function renderPage({ title, description, routePath, image, type = 'website', publishedTime, author }) {
+function safeJsonLd(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function injectOrReplaceMeta(html, selectorPattern, tag) {
+  if (selectorPattern.test(html)) return html.replace(selectorPattern, tag);
+  return html.replace('</head>', `    ${tag}\n  </head>`);
+}
+
+/** Swap the static index.html head for page-specific SEO and structured data. */
+function renderPage({
+  title,
+  description,
+  routePath,
+  image,
+  imageAlt,
+  type = 'website',
+  publishedTime,
+  author,
+  keywords,
+  jsonLd,
+}) {
   const url = `${SITE_URL}${routePath}`;
   const img = absUrl(image);
   const t = escapeHtml(title);
   const d = escapeHtml(description);
+  const alt = escapeHtml(imageAlt || title);
 
   let html = template;
   html = html.replace(/<title>.*?<\/title>/, `<title>${t}</title>`);
@@ -59,10 +75,20 @@ function renderPage({ title, description, routePath, image, type = 'website', pu
   html = html.replace(/<meta property="og:description" content="[^"]*"\s*\/>/, `<meta property="og:description" content="${d}" />`);
   html = html.replace(/<meta property="og:url" content="[^"]*"\s*\/>/, `<meta property="og:url" content="${url}" />`);
   html = html.replace(/<meta property="og:image" content="[^"]*"\s*\/>/, `<meta property="og:image" content="${img}" />`);
+  html = html.replace(/<meta property="og:image:alt" content="[^"]*"\s*\/>/, `<meta property="og:image:alt" content="${alt}" />`);
 
   html = html.replace(/<meta name="twitter:title" content="[^"]*"\s*\/>/, `<meta name="twitter:title" content="${t}" />`);
   html = html.replace(/<meta name="twitter:description" content="[^"]*"\s*\/>/, `<meta name="twitter:description" content="${d}" />`);
   html = html.replace(/<meta name="twitter:image" content="[^"]*"\s*\/>/, `<meta name="twitter:image" content="${img}" />`);
+
+  if (keywords?.length) {
+    const content = escapeHtml(Array.isArray(keywords) ? keywords.join(', ') : keywords);
+    html = injectOrReplaceMeta(
+      html,
+      /<meta name="keywords" content="[^"]*"\s*\/>/,
+      `<meta name="keywords" content="${content}" />`,
+    );
+  }
 
   if (type === 'article') {
     const articleMeta = [
@@ -72,16 +98,17 @@ function renderPage({ title, description, routePath, image, type = 'website', pu
     if (articleMeta) html = html.replace('</head>', `    ${articleMeta}\n  </head>`);
   }
 
+  if (jsonLd) {
+    const block = `<script id="route-jsonld" type="application/ld+json">${safeJsonLd(jsonLd)}</script>`;
+    html = html.replace('</head>', `    ${block}\n  </head>`);
+  }
+
   return html;
 }
 
 /**
- * GitHub Pages resolves extensionless "pretty" URLs differently depending on
- * whether the request has a trailing slash, and that behaviour isn't worth
- * gambling on — so write BOTH forms: `<route>/index.html` (serves `/route/`,
- * and `/route` on hosts that do directory-index resolution without a slash)
- * and `<route>.html` (serves `/route` on hosts that try appending `.html`).
- * Belt and suspenders; the files are tiny text, so the duplication is free.
+ * Write BOTH pretty-URL forms. GitHub Pages and static hosts do not all resolve
+ * an extensionless path in exactly the same way.
  */
 function write(routePath, html) {
   const rel = routePath.replace(/^\//, '');
@@ -91,38 +118,89 @@ function write(routePath, html) {
   fs.writeFileSync(path.join(DIST, `${rel}.html`), html);
 }
 
+function legacyArticleJsonLd(article) {
+  const url = `${SITE_URL}/articles/${article.id}`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Article',
+        '@id': `${url}#article`,
+        headline: article.title,
+        description: article.excerpt,
+        image: absUrl(article.image),
+        url,
+        inLanguage: 'ru-RU',
+        datePublished: article.date,
+        dateModified: article.date,
+        author: { '@type': 'Organization', name: article.author || 'THE LEGENDARY POET' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'THE LEGENDARY POET',
+          url: SITE_URL,
+          logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'THE LEGENDARY POET', item: `${SITE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: 'Статьи', item: `${SITE_URL}/articles` },
+          { '@type': 'ListItem', position: 3, name: article.title, item: url },
+        ],
+      },
+    ],
+  };
+}
+
 async function main() {
-  const [{ getAllEssays }, { poets, articles }] = await Promise.all([
+  const [
+    { getAllEssays },
+    { poets, articles },
+    { essayStructuredData, poetStructuredData, relatedEssaysFor },
+  ] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
+    import(path.resolve('src/utils/structuredData.ts')),
   ]);
 
+  const essays = getAllEssays();
   let count = 0;
 
-  for (const essay of getAllEssays()) {
+  for (const essay of essays) {
+    const poet = essay.poetId ? poets.find((entry) => entry.id === essay.poetId) : undefined;
+    const related = relatedEssaysFor(essay, essays);
     const html = renderPage({
-      title: `${essay.title} — THE LEGENDARY POET`,
-      description: essay.excerpt,
+      title: `${essay.seoTitle ?? essay.title} — THE LEGENDARY POET`,
+      description: essay.seoDescription ?? essay.excerpt,
       routePath: `/essays/${essay.slug}`,
       image: essay.cover,
+      imageAlt: essay.coverAlt,
       type: 'article',
       publishedTime: essay.date,
       author: essay.author,
+      keywords: essay.seoKeywords ?? essay.tags,
+      jsonLd: essayStructuredData(essay, poet, related),
     });
     write(`/essays/${essay.slug}`, html);
-    count++;
+    count += 1;
   }
 
   for (const poet of poets) {
+    const related = essays.filter((essay) => essay.poetId === poet.id);
     const html = renderPage({
       title: `${poet.name} — THE LEGENDARY POET`,
       description: poet.shortBio,
       routePath: `/poets/${poet.id}`,
       image: poet.photo,
+      imageAlt: poet.name,
       type: 'profile',
+      keywords: [poet.name, poet.fullName, ...poet.tags, 'стихи', 'биография'],
+      jsonLd: poetStructuredData(poet, related),
     });
     write(`/poets/${poet.id}`, html);
-    count++;
+    count += 1;
   }
 
   for (const article of articles) {
@@ -131,15 +209,19 @@ async function main() {
       description: article.excerpt,
       routePath: `/articles/${article.id}`,
       image: article.image,
+      imageAlt: article.title,
       type: 'article',
       publishedTime: article.date,
       author: article.author,
+      jsonLd: legacyArticleJsonLd(article),
     });
     write(`/articles/${article.id}`, html);
-    count++;
+    count += 1;
   }
 
-  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${articles.length} articles)`);
+  console.log(
+    `prerender-og: wrote ${count} static pages (${essays.length} essays, ${poets.length} poets, ${articles.length} articles)`,
+  );
 }
 
 main();
