@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from './ui/Link';
 import { Star, Calendar, MapPin, ArrowRight, BookOpenText } from 'lucide-react';
 import { asset } from '../utils/asset';
@@ -21,81 +22,82 @@ function researchLabel(count: number): string {
 }
 
 const PoetCard = ({ poet }: PoetCardProps) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const researchCount = getAllEssays().filter((essay) => essay.poetId === poet.id).length;
 
   return (
-    <Link to={`/poets/${poet.id}`} className="group block h-full">
-      <TiltCard intensity={8}>
-        <div className="overflow-hidden h-full flex flex-col border border-cyan-400/15 bg-[#050505]/70 breath-hover relative z-10 rounded-2xl">
-          {/* Glowing Background Accent on hover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+    <Link to={`/poets/${poet.id}`} className="group block h-full" data-testid="poet-card-link">
+      <TiltCard intensity={5.5}>
+        <div
+          className="relative z-10 flex h-full flex-col overflow-hidden rounded-2xl border border-cyan-400/15 bg-[#050505]/70"
+          data-testid="poet-card"
+        >
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-          {/* Shine Effect */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1000" />
-
-          {/* Image Box */}
-          <div className="relative h-72 overflow-hidden bg-[#050505] flex-shrink-0">
-            <div className="absolute inset-0 bg-gradient-to-t from-luxury-dark-200/20 via-transparent to-black/30 z-10" />
+          <div className="relative h-72 flex-shrink-0 overflow-hidden bg-[#050505]">
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-luxury-dark-200/20 via-transparent to-black/30" />
 
             <img
               src={asset(poet.photo)}
               alt={poet.name}
               style={vtShared(`poet-portrait-${poet.id}`)}
-              className="w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)}
+              data-loaded={imageLoaded ? 'true' : 'false'}
+              data-testid="poet-card-image"
+              className={`poet-card-image h-full w-full object-cover object-[center_18%] contrast-[1.03] saturate-[1.02] ${imageLoaded ? 'is-loaded' : ''}`}
             />
 
-            {/* Top Badges */}
-            <div className="absolute top-4 right-4 z-20 bg-[#050505]/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-              <Star size={14} className="text-luxury-gold fill-luxury-gold animate-pulse" />
-              <span className="text-sm font-bold text-luxury-gold gold-glow-text">{poet.rating}</span>
+            <div className="absolute right-4 top-4 z-20 flex items-center gap-1.5 rounded-full border border-luxury-gold/30 bg-[#050505]/80 px-3 py-1.5 shadow-[0_0_10px_rgba(212,175,55,0.2)] backdrop-blur-md">
+              <Star size={14} className="fill-luxury-gold text-luxury-gold" />
+              <span className="gold-glow-text text-sm font-bold text-luxury-gold">{poet.rating}</span>
             </div>
 
-            <div className="absolute top-4 left-4 z-20 bg-[#050505]/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/10">
+            <div className="absolute left-4 top-4 z-20 flex items-center gap-1.5 rounded-full border border-luxury-gold/10 bg-[#050505]/80 px-3 py-1.5 backdrop-blur-md">
               <MapPin size={12} className="text-luxury-gray-light" />
-              <span className="text-xs text-luxury-gray-light font-medium tracking-wide">{poet.nationality}</span>
+              <span className="text-xs font-medium tracking-wide text-luxury-gray-light">{poet.nationality}</span>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-8 flex flex-col flex-grow relative z-20">
+          <div className="relative z-20 flex flex-grow flex-col p-8">
             <div className="mb-4 flex-grow">
-              <h3 className="text-2xl font-serif font-bold text-white group-hover:text-luxury-gold transition-colors duration-300 mb-1 leading-tight">
+              <h3 className="mb-1 font-serif text-2xl font-bold leading-tight text-white transition-colors duration-300 group-hover:text-luxury-gold">
                 {poet.name}
               </h3>
-              <p className="text-xs tracking-wider uppercase text-luxury-gold/60 font-semibold mb-3">{poet.fullName}</p>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-luxury-gold/60">{poet.fullName}</p>
               {researchCount > 0 && (
                 <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/15 bg-cyan-400/[0.045] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.13em] text-cyan-200/65">
                   <BookOpenText size={12} /> {researchLabel(researchCount)}
                 </div>
               )}
-              <p className="text-sm text-luxury-gray-light leading-relaxed font-light line-clamp-3">
+              <p className="line-clamp-3 text-sm font-light leading-relaxed text-luxury-gray-light">
                 {poet.shortBio}
               </p>
               <FeedbackMiniSummary targetType="poet" targetId={poet.id} />
             </div>
 
             <div className="space-y-4">
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="mb-4 flex flex-wrap gap-2">
                 {poet.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 text-xs bg-luxury-gold/5 text-luxury-gold/80 rounded border border-luxury-gold/20 font-medium tracking-wide"
+                    className="rounded border border-luxury-gold/20 bg-luxury-gold/5 px-2.5 py-1 text-xs font-medium tracking-wide text-luxury-gold/80"
                   >
                     {tag}
                   </span>
                 ))}
               </div>
 
-              {/* Dates / Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-cyan-400/10 text-cyan-100/50">
+              <div className="flex items-center justify-between border-t border-cyan-400/10 pt-4 text-cyan-100/50">
                 <div className="flex items-center gap-1.5 text-xs font-medium">
                   <Calendar size={14} className="text-cyan-400/50" />
                   <span>{poet.birthYear} — {poet.deathYear || 'н.в.'}</span>
                 </div>
-                <div className="flex items-center gap-1 text-cyan-400 text-sm font-semibold group-hover:text-cyan-300 transition-colors">
+                <div className="flex items-center gap-1 text-sm font-semibold text-cyan-400 transition-colors group-hover:text-cyan-300">
                   <span>Подробнее</span>
-                  <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform duration-300" />
+                  <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1.5" />
                 </div>
               </div>
             </div>
