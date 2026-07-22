@@ -7,9 +7,14 @@ import type { Essay, EssayBlock, EssaySourceKind } from '../src/types/essay';
 const errors: string[] = [];
 const warnings: string[] = [];
 const institutionalSourcePattern = /музей|мемориаль|выставк|фильм|кино/i;
-const primarySourceUrlPattern = /feb-web\.ru|rvb\.ru|wikisource\.org/i;
 const scriptureReferencePattern = /\((?:[1-3]\s*)?[А-ЯЁ][А-Яа-яё. ]+\s+\d+:\d+(?:[–-]\d+)?\)/g;
-const allowedSourceKinds = new Set<EssaySourceKind>(['primary', 'archive', 'research', 'context']);
+const allowedSourceKinds = new Set<EssaySourceKind>([
+  'primary',
+  'archive',
+  'research',
+  'institutional',
+  'context',
+]);
 
 const sourceMinimums: Record<string, { total: number; primary: number }> = {
   'mayakovsky-before-revolution': { total: 30, primary: 18 },
@@ -184,25 +189,21 @@ function validateSources(essay: Essay) {
     return;
   }
 
-  const independentSources = sources.filter(
-    (source) => source.kind === 'primary' || !institutionalSourcePattern.test(source.title),
-  );
-
+  const independentSources = sources.filter((source) => source.kind !== 'institutional');
   if (independentSources.length === 0) {
     error(
       essay,
-      'relies only on museum, memorial, exhibition, or film sources; add primary or independent research',
+      'relies only on institutional or memorial narratives; add primary documents, archives, or independent research',
     );
   }
 
-  const primarySources = sources.filter(
-    (source) =>
-      source.kind === 'primary' ||
-      Boolean(source.url && primarySourceUrlPattern.test(source.url)),
-  );
+  // Primary status is explicit. A FEB, museum, library, or archive domain does
+  // not make every hosted page a primary source: an authorial text can be
+  // primary, while a chronology or scholarly article on the same domain is not.
+  const primarySources = sources.filter((source) => source.kind === 'primary');
 
   if (primarySources.length < 2) {
-    warning(essay, `has only ${primarySources.length} linked primary sources`);
+    warning(essay, `has only ${primarySources.length} explicitly classified primary sources`);
   }
 
   const minimum = sourceMinimums[essay.slug];
@@ -210,7 +211,7 @@ function validateSources(essay: Essay) {
     error(essay, `requires at least ${minimum.total} sources; found ${sources.length}`);
   }
   if (minimum && primarySources.length < minimum.primary) {
-    error(essay, `requires at least ${minimum.primary} primary sources; found ${primarySources.length}`);
+    error(essay, `requires at least ${minimum.primary} explicitly classified primary sources; found ${primarySources.length}`);
   }
 
   const sourceIds = new Set<string>();
@@ -240,8 +241,11 @@ function validateSources(essay: Essay) {
     if ((source.kind === 'primary' || source.kind === 'archive') && !source.institution) {
       warning(essay, `${label} should name its institution or collection`);
     }
-    if ((source.kind === 'primary' || source.kind === 'archive') && !source.note) {
-      warning(essay, `${label} should explain its evidentiary role`);
+    if ((source.kind === 'primary' || source.kind === 'archive' || source.kind === 'institutional') && !source.note) {
+      warning(essay, `${label} should explain its evidentiary role and limitations`);
+    }
+    if (source.kind === 'institutional' && source.note && !/не замен|навигац|пересказ|огранич/i.test(source.note)) {
+      warning(essay, `${label} institutional narrative should state that it does not replace the underlying document`);
     }
   }
 }
