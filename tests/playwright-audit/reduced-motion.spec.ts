@@ -14,7 +14,16 @@ async function articleRoutes(page: import('@playwright/test').Page) {
   });
 }
 
-test('reduced motion never leaves article blocks transparent or blurred', async ({ page }) => {
+interface HiddenBlock {
+  index: number;
+  opacity: number;
+  blurPixels: number;
+  width: number;
+  height: number;
+  filter: string;
+}
+
+test('reduced motion leaves every article block immediately readable', async ({ page }) => {
   const routes = await articleRoutes(page);
 
   for (const route of routes) {
@@ -24,16 +33,36 @@ test('reduced motion never leaves article blocks transparent or blurred', async 
     await expect
       .poll(
         () =>
-          page.locator('.essay-body > *').evaluateAll((blocks) =>
-            blocks.filter((block) => {
+          page.locator('.essay-body > *').evaluateAll((blocks): HiddenBlock[] =>
+            blocks.flatMap((block, index) => {
               const style = getComputedStyle(block);
+              const rect = block.getBoundingClientRect();
               const opacity = Number(style.opacity || 1);
               const filter = style.filter || 'none';
-              return opacity < 0.99 || (/blur\(/.test(filter) && !/blur\(0(?:px)?\)/.test(filter));
-            }).length,
+              const blurMatch = filter.match(/blur\(\s*([0-9.]+)(?:px)?\s*\)/i);
+              const blurPixels = blurMatch ? Number(blurMatch[1]) : 0;
+              const hidden =
+                opacity < 0.99 ||
+                blurPixels > 0.01 ||
+                rect.width < 1 ||
+                rect.height < 1 ||
+                style.visibility === 'hidden' ||
+                style.display === 'none';
+
+              return hidden
+                ? [{
+                    index,
+                    opacity,
+                    blurPixels,
+                    width: rect.width,
+                    height: rect.height,
+                    filter,
+                  }]
+                : [];
+            }),
           ),
-        { message: `${route}: all reduced-motion blocks must be immediately readable` },
+        { message: `${route}: reduced-motion blocks must be visible without residual blur` },
       )
-      .toBe(0);
+      .toEqual([]);
   }
 });
