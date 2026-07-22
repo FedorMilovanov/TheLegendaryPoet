@@ -13,9 +13,25 @@
 - Бенгт Янгфельдт. **«Ставка — жизнь. Владимир Маяковский и его круг»**. Москва: КоЛибри, 2009.
 - Паспорт и карта глав: [`sources/jangfeldt-stavka-zhizn.md`](./sources/jangfeldt-stavka-zhizn.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
-- Реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
+- Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
+- Второй проход утверждений 1922–1930: [`verification/claim-ledger-pass2.md`](./verification/claim-ledger-pass2.md)
+- Очередь поиска первоисточников: [`verification/source-pursuit-queue.md`](./verification/source-pursuit-queue.md)
 - Визуальный реестр: [`media/visual-ledger.md`](./media/visual-ledger.md)
 - Ход обработки: [`WORKLOG.md`](./WORKLOG.md)
+
+## Глубокие конспекты Янгфельдта
+
+- [`notes/jangfeldt-pro-eto-1922-1923.md`](./notes/jangfeldt-pro-eto-1922-1923.md) — конфликт декабря 1922 года, двухмесячная разлука, письма, дневник и поэма «Про это»;
+- [`notes/jangfeldt-america-new-rules-1925-1927.md`](./notes/jangfeldt-america-new-rules-1925-1927.md) — Америка, Элли Джонс, дочь, изменение отношений с Лилей, Осип и Евгения, Гендриков переулок;
+- [`notes/jangfeldt-tatyana-final-crisis-1928-1930.md`](./notes/jangfeldt-tatyana-final-crisis-1928-1930.md) — Татьяна Яковлева, визовая версия, РАПП, выставка, Полонская и последние месяцы.
+
+Эти файлы не являются готовыми статьями. Они отделяют:
+
+1. документально опорные факты;
+2. свидетельства участников;
+3. поздние воспоминания;
+4. авторские выводы Янгфельдта;
+5. редакционные выводы проекта.
 
 ## Почему Янгфельдт важен
 
