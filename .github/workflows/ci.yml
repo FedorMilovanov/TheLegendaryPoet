@@ -13,15 +13,13 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          show-progress: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
+      - name: Quiet checkout
+        shell: bash
+        run: |
+          git init -q
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --depth=1 origin "${GITHUB_SHA}"
+          git checkout -q FETCH_HEAD
       - name: Install dependencies
         run: npm ci --silent
       - name: Validate content, media, types, and browser behavior
