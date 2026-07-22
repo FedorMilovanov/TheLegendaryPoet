@@ -28,15 +28,21 @@ for (const file of [...poetFiles, 'articles.ts']) {
   }
 }
 
-const essaySlugs = fs
-  .readdirSync(essaysDir)
-  .filter((file) => file.endsWith('.ts') && file !== 'index.ts')
-  .map((file) => {
-    const source = fs.readFileSync(path.join(essaysDir, file), 'utf8');
-    return (source.match(/^\s*slug:\s*['"]([a-z0-9-]+)['"]/m) || [])[1];
-  })
-  .filter(Boolean)
-  .sort();
+// Visual wrappers may intentionally retain the slug of the verified source
+// essay. De-duplicate extracted slugs so a compatibility wrapper cannot create
+// duplicate <url> entries in the generated sitemap.
+const essaySlugs = [
+  ...new Set(
+    fs
+      .readdirSync(essaysDir)
+      .filter((file) => file.endsWith('.ts') && file !== 'index.ts')
+      .map((file) => {
+        const source = fs.readFileSync(path.join(essaysDir, file), 'utf8');
+        return (source.match(/^\s*slug:\s*['"]([a-z0-9-]+)['"]/m) || [])[1];
+      })
+      .filter(Boolean),
+  ),
+].sort();
 
 const staticRoutes = ['/', '/hall', '/poets', '/articles', '/music', '/about'];
 const urls = [

@@ -59,13 +59,13 @@ function warning(essay: Essay, message: string) {
   warnings.push(`${essay.slug}: ${message}`);
 }
 
-function validateImage(essay: Essay, field: 'cover' | 'cardCover', value?: string) {
+function validateImagePath(essay: Essay, label: string, value?: string) {
   if (!value || /^https?:\/\//.test(value)) return;
 
   const relativePath = value.replace(/^\//, '');
   const absolutePath = path.resolve('public', relativePath);
   if (!fs.existsSync(absolutePath)) {
-    warning(essay, `${field} is not present yet: ${value}`);
+    warning(essay, `${label} is not present yet: ${value}`);
   }
 }
 
@@ -80,6 +80,8 @@ function blockText(block: EssayBlock): string {
       return block.text;
     case 'section':
       return block.heading;
+    case 'image':
+      return `${block.alt}\n${block.caption}\n${block.credit ?? ''}`;
     case 'poem':
       return `${block.title ?? ''}\n${block.lines}\n${block.note ?? ''}`;
     case 'voice':
@@ -132,6 +134,16 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
           `voice block ${index + 1} presents an institutional or museum source as a neutral historian`,
         );
       }
+    }
+
+    if (block.type === 'image') {
+      if (!block.src.trim()) error(essay, `image block ${index + 1} has no src`);
+      if (!block.alt.trim()) error(essay, `image block ${index + 1} has no alt`);
+      if (!block.caption.trim()) error(essay, `image block ${index + 1} has no caption`);
+      if (block.sourceUrl && !/^https?:\/\//.test(block.sourceUrl)) {
+        error(essay, `image block ${index + 1} has an invalid sourceUrl`);
+      }
+      validateImagePath(essay, `image block ${index + 1}`, block.src);
     }
 
     if (block.type === 'poem' && !block.lines.trim()) {
@@ -228,8 +240,8 @@ for (const essay of essays) {
   if (!essay.excerpt.trim()) error(essay, 'excerpt is empty');
   if (essay.blocks.length === 0) error(essay, 'has no content blocks');
 
-  validateImage(essay, 'cover', essay.cover);
-  validateImage(essay, 'cardCover', essay.cardCover);
+  validateImagePath(essay, 'cover', essay.cover);
+  validateImagePath(essay, 'cardCover', essay.cardCover);
   validateBlocks(essay, essay.blocks);
   validateSources(essay);
   validateEditorialRegressions(essay);

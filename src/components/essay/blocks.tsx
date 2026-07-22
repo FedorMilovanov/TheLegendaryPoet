@@ -1,9 +1,12 @@
-import { Quote, Feather } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { ExternalLink, Feather, Maximize2, Quote, X } from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
 import { withGold, splitParagraphs } from './richText';
 import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
+import { asset } from '../../utils/asset';
+import TiltCard from '../TiltCard';
 
 /**
  * The essay rendering "engine": one styled component per block type, dispatched
@@ -30,8 +33,6 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
 }
 
 function LeadBlock({ block }: { block: Block<'lead'> }) {
-  // Drop cap lives in CSS (.essay-lead): real `initial-letter` where supported,
-  // float fallback elsewhere — see index.css.
   return (
     <p className="essay-lead mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty">
       {block.text}
@@ -69,6 +70,147 @@ function ParagraphBlock({ block }: { block: Block<'paragraph'> }) {
   );
 }
 
+const kindLabels = {
+  archive: 'Архив',
+  restoration: 'Цифровая реставрация',
+  reconstruction: 'Художественная реконструкция',
+  document: 'Документ',
+} as const;
+
+function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit' | 'sourceUrl' | 'kind'> }) {
+  const kind = block.kind ?? 'archive';
+  return (
+    <figcaption className="mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed text-luxury-gray-light/55">
+      <span className="min-w-0 flex-1">
+        <span className="mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-luxury-gray-light/60">
+          {kindLabels[kind]}
+        </span>
+        {block.caption}
+        {block.credit ? <span className="text-luxury-gray-light/35"> · {block.credit}</span> : null}
+      </span>
+      {block.sourceUrl && (
+        <a
+          href={block.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-8 shrink-0 items-center gap-1 py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+        >
+          Источник <ExternalLink size={11} aria-hidden="true" />
+        </a>
+      )}
+    </figcaption>
+  );
+}
+
+function ImageBlock({ block }: { block: Block<'image'> }) {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const captionId = useId();
+  const layout = block.layout ?? 'wide';
+  const imageSrc = asset(block.src);
+  const frameClass =
+    layout === 'portrait'
+      ? 'mx-auto max-w-xl aspect-[4/5]'
+      : layout === 'cinematic'
+        ? 'aspect-[16/9]'
+        : 'aspect-[3/2]';
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus());
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+      }
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+      requestAnimationFrame(() => triggerRef.current?.focus());
+    };
+  }, [open]);
+
+  const image = (
+    <button
+      ref={triggerRef}
+      type="button"
+      onClick={() => setOpen(true)}
+      className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
+      aria-label={`Увеличить изображение: ${block.alt}`}
+      aria-haspopup="dialog"
+    >
+      <img
+        src={imageSrc}
+        alt={block.alt}
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover grayscale-[0.08] transition duration-700 ease-out group-hover:scale-[1.018] group-hover:contrast-[1.04]"
+        style={{ objectPosition: block.objectPosition || '50% 50%' }}
+      />
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/[0.03]" />
+      <span className="pointer-events-none absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/65 opacity-0 backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
+        <Maximize2 size={15} aria-hidden="true" />
+      </span>
+    </button>
+  );
+
+  return (
+    <>
+      <figure className="my-12">
+        {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
+        <ImageMeta block={block} />
+      </figure>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={block.alt}
+          aria-describedby={captionId}
+          className="fixed inset-0 z-[160] flex items-center justify-center bg-black/92 p-4 backdrop-blur-md"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) setOpen(false);
+          }}
+        >
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute right-4 top-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"
+            aria-label="Закрыть изображение"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+          <div className="max-h-[92vh] max-w-[94vw]">
+            <img
+              src={imageSrc}
+              alt={block.alt}
+              decoding="async"
+              className="max-h-[84vh] max-w-full rounded-xl object-contain shadow-2xl"
+            />
+            <p id={captionId} className="mx-auto mt-3 max-w-4xl text-center text-xs leading-relaxed text-white/55">
+              {block.caption}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function PullquoteBlock({ block }: { block: Block<'pullquote'> }) {
   return (
     <blockquote className="my-12 border-l-4 border-luxury-gold pl-8 md:pl-10">
@@ -89,7 +231,6 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
   const blood = block.variant === 'blood';
   return (
     <figure className={`group/poem relative my-12 overflow-hidden rounded-[2rem] border px-8 py-10 md:px-12 shadow-inner ${v.frame}`}>
-      {/* Illuminated left rule */}
       <span className={`absolute left-0 top-8 bottom-8 w-[3px] rounded-full ${v.rule}`} />
       {block.title && (
         <figcaption className="mb-5 flex flex-wrap items-baseline gap-3">
@@ -159,7 +300,6 @@ function NoteBlock({ block }: { block: Block<'note'> }) {
 function ReflectionBlock({ block }: { block: Block<'reflection'> }) {
   return (
     <aside className="relative my-14 overflow-hidden rounded-[2.5rem] border border-luxury-gold/25 bg-gradient-to-br from-[#12100a] via-[#0b0a07] to-[#050505] p-8 md:p-12 shadow-[0_0_60px_rgba(212,175,55,0.06)]">
-      {/* candle-glow */}
       <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-luxury-gold/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-10 -bottom-10 text-luxury-gold/5">
         <Feather size={200} />
@@ -200,6 +340,8 @@ export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; se
       return <SectionBlock block={block} number={sectionNumber} />;
     case 'paragraph':
       return <ParagraphBlock block={block} />;
+    case 'image':
+      return <ImageBlock block={block} />;
     case 'pullquote':
       return <PullquoteBlock block={block} />;
     case 'poem':
@@ -213,7 +355,6 @@ export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; se
     case 'divider':
       return <DividerBlock />;
     default: {
-      // Exhaustiveness guard: a new block type without a case fails to compile.
       const _exhaustive: never = block;
       return _exhaustive;
     }

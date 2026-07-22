@@ -6,6 +6,23 @@
  * (components/essay/*) maps each block type to a styled component once.
  */
 
+export type EssayImageKind = 'archive' | 'restoration' | 'reconstruction' | 'document';
+export type EssayImageLayout = 'wide' | 'portrait' | 'cinematic';
+
+export interface EssayImageData {
+  src: string;
+  alt: string;
+  /** Minimal museum-style caption. */
+  caption: string;
+  credit?: string;
+  sourceUrl?: string;
+  kind?: EssayImageKind;
+  layout?: EssayImageLayout;
+  objectPosition?: string;
+  /** Disable pointer tilt for fragile documents or already perspective-heavy art. */
+  tilt?: boolean;
+}
+
 export type EssayBlock =
   /** Opening epigraph — a short line/quote that sets the tone. */
   | { type: 'epigraph'; text: string; cite?: string }
@@ -15,6 +32,8 @@ export type EssayBlock =
   | { type: 'section'; heading: string; anchor?: string }
   /** A normal prose paragraph (supports \n\n splitting into multiple <p>). */
   | { type: 'paragraph'; text: string }
+  /** A sourced archival image or clearly labelled reconstruction. */
+  | ({ type: 'image' } & EssayImageData)
   /** A big pulled quote for emphasis (a dramatic line, often the poet's own). */
   | { type: 'pullquote'; text: string; cite?: string }
   /** An embedded poem / stanza, rendered in the serif poetry style.
@@ -44,6 +63,13 @@ export interface EssaySource {
   url?: string;
 }
 
+export interface EssaySeries {
+  id: string;
+  label: string;
+  part: number;
+  total: number;
+}
+
 export interface Essay {
   id: string;
   slug: string;
@@ -62,11 +88,17 @@ export interface Essay {
   /** Optional separate image for the listing link-card (falls back to `cover`). */
   cardCover?: string;
   coverAlt?: string;
+  /** Provenance label for covers derived from archival material. */
+  coverKind?: EssayImageKind;
+  coverCredit?: string;
+  coverSourceUrl?: string;
   /** Optional accent colour for this essay's hero glow (defaults to gold). */
   accent?: string;
   tags: string[];
   /** The poet this essay is primarily about, if any (links back to /poets/:id). */
   poetId?: string;
+  /** Optional sequence metadata for multi-part biographies. */
+  series?: EssaySeries;
   blocks: EssayBlock[];
   sources?: EssaySource[];
 }

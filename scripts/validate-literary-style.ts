@@ -236,6 +236,8 @@ function blockText(block: EssayBlock): string {
       return `${block.heading}\n${block.text}`;
     case 'section':
       return block.heading;
+    case 'image':
+      return block.caption;
     case 'poem':
       return `${block.title ?? ''}\n${block.lines}\n${block.note ?? ''}`;
     case 'voice':
