@@ -1,0 +1,57 @@
+name: Apply article polish patch
+
+on:
+  push:
+    branches:
+      - work/local-images-playwright-wtoc
+    paths:
+      - tools/polish-patch/**
+      - .github/workflows/apply-polish-patch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-article-polish
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: work/local-images-playwright-wtoc
+          fetch-depth: 0
+
+      - name: Reconstruct and verify patch
+        run: |
+          cat tools/polish-patch/part-* | base64 --decode | gzip --decompress > /tmp/polish.patch
+          git apply --check /tmp/polish.patch
+          git apply /tmp/polish.patch
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project and image tooling
+        run: |
+          npm ci
+          npm install --no-save sharp@0.35.3
+
+      - name: Download and optimize article media
+        run: npm run images:sync
+
+      - name: Commit polished article engine
+        run: |
+          rm -rf tools/polish-patch
+          rm -f .github/workflows/apply-polish-patch.yml
+          rm -f .github/workflows/export-worktree.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "feat: localize article media and add Playwright QA"
+          git push origin HEAD:work/local-images-playwright-wtoc
