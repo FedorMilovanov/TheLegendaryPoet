@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 
 interface TiltCardProps {
   children: ReactNode;
@@ -92,7 +92,7 @@ export default function TiltCard({
     ref.current.setAttribute('data-tilting', 'true');
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!canAnimateRef.current || !ref.current) return;
     const rect = rectRef.current ?? ref.current.getBoundingClientRect();
     rectRef.current = rect;
