@@ -12,6 +12,7 @@ export const yeseninKutezhiVisual: Essay = {
   blocks: insertArchiveImages(baseYesenin.blocks, {
     'yesenin-two-section': [
       {
+        id: 'yesenin-image-1914',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1914%20(2).jpg',
         alt: 'Сергей Есенин в 1914 году',
@@ -26,6 +27,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-bad-fame-section': [
       {
+        id: 'yesenin-image-1919',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20в%201919%20году.jpg',
         alt: 'Сергей Есенин в 1919 году',
@@ -40,6 +42,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-moscow-tavern-section': [
       {
+        id: 'yesenin-image-duncan-1922',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DuncanYesenin1922.jpg',
         alt: 'Айседора Дункан и Сергей Есенин в Берлине, 1922 год',
@@ -53,6 +56,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-iron-guest-section': [
       {
+        id: 'yesenin-image-klyuev-1916',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Eseninnikolaiklyeuv.jpg',
         alt: 'Сергей Есенин и Николай Клюев, 1916 год',
@@ -66,6 +70,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-persian-section': [
       {
+        id: 'yesenin-image-chagin-1924',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chagin%20and%20Esenin%201924.jpg',
         alt: 'Пётр Чагин и Сергей Есенин в Баку, 1924 год',
@@ -80,6 +85,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-black-man-section': [
       {
+        id: 'yesenin-image-1925',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1925.jpg',
         alt: 'Поздний портрет Сергея Есенина, 1925 год',
@@ -94,6 +100,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-tenderness-section': [
       {
+        id: 'yesenin-image-sisters',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20с%20сёстрами%20Катей%20и%20Шурой.jpg',
         alt: 'Сергей Есенин с сёстрами Екатериной и Александрой',
@@ -108,6 +115,7 @@ export const yeseninKutezhiVisual: Essay = {
     ],
     'yesenin-conclusion-section': [
       {
+        id: 'yesenin-image-boldovkin-1925',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/С.А.%20Есенин%20и%20В.И.%20Болдовкин.%201925.jpg',
         alt: 'Сергей Есенин и Василий Болдовкин в Баку, 24 мая 1925 года',
