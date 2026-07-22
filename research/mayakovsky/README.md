@@ -1,10 +1,11 @@
 # Владимир Маяковский — исследовательский индекс
 
-Рабочий корпус для трёх связанных материалов:
+Рабочий корпус для четырёх связанных материалов:
 
 1. **«Владимир Маяковский. Часть I: бунтарь, футурист, влюблённый — 1893–1918»**;
 2. **«Владимир Маяковский. Часть II: РОСТА, ЛЕФ и последний кризис — 1918–1930»**;
-3. **«Лиля и Осип Брик: любовь, издательство и лаборатория русского авангарда»**.
+3. **«Лиля и Осип Брик: любовь, издательство и лаборатория русского авангарда»**;
+4. **«„Про это“ Маяковского: два месяца разлуки и письма к Лиле Брик»**.
 
 Профиль поэта на сайте остаётся кратким хабом. Исследовательская полнота переносится в большие статьи и не должна снова разрастаться внутри `fullBio`.
 
@@ -27,6 +28,8 @@
   - [`verification/correspondence-081-113-ln65-pss13-collation-pass1.md`](./verification/correspondence-081-113-ln65-pss13-collation-pass1.md) — прямая поединичная колляция блока разлуки по трём изданиям;
   - [`verification/correspondence-081-084-101-109-ln65-cuts-pass1.md`](./verification/correspondence-081-084-101-109-ln65-cuts-pass1.md) — смысловые купюры ЛН-65 в четырёх письмах;
   - [`verification/correspondence-081-084-101-109-line-variants-pass2.md`](./verification/correspondence-081-084-101-109-line-variants-pass2.md) — построчный вариантный и графический аудит этих четырёх единиц;
+  - [`verification/correspondence-397-407-ln65-pss13-collation.md`](./verification/correspondence-397-407-ln65-pss13-collation.md) — поздний сокращённый случай № 397 и контрольный текст № 407 без смысловой купюры;
+  - [`verification/correspondence-soviet-cuts-consolidated-ledger-pass1.md`](./verification/correspondence-soviet-cuts-consolidated-ledger-pass1.md) — сводная типология проверенных купюр, контрольных случаев и порог готовности отдельной статьи;
   - [`verification/financial-ledger-1925-1927-pass1.md`](./verification/financial-ledger-1925-1927-pass1.md) — нейтральный ledger денежных операций 1925–1927 годов;
   - [`verification/financial-ledger-1928-1930-pass2.md`](./verification/financial-ledger-1928-1930-pass2.md) — автомобиль, валютные переводы, договоры и жилищный пай;
   - [`verification/late-professional-crisis-1930-document-ledger.md`](./verification/late-professional-crisis-1930-document-ledger.md) — выставка, `Баня`, РАПП/РЕФ, новые договоры и международные права без монокаузальной версии;
