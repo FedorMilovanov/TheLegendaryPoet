@@ -1,7 +1,9 @@
 import type { EssaySource } from '../../types/essay';
 
-interface SourceAnnotation extends Omit<EssaySource, 'title' | 'url'> {
+interface SourceAnnotation extends Omit<EssaySource, 'url'> {
   url: string;
+  /** When the source is absent from the old bibliography, append it explicitly. */
+  title?: string;
 }
 
 function normalizeUrl(url: string): string {
@@ -43,6 +45,7 @@ const annotations: SourceAnnotation[] = [
   },
   {
     id: 'yesenin-blok-diary',
+    title: 'А. Блок. Дневник, запись 4 января 1918 года — разъяснение Есениным смысла «Инонии»',
     url: 'http://feb-web.ru/feb/esenin/el-abc/el2/el2-081-.htm',
     kind: 'primary',
     institution: 'ФЭБ / Летопись жизни и творчества',
@@ -149,14 +152,18 @@ export function enrichYeseninSources(sources: EssaySource[]): EssaySource[] {
     const annotation = annotationMap.get(key);
     if (!annotation) return source;
     matched.add(key);
-    const { url: _annotationUrl, ...metadata } = annotation;
+    const { url: _annotationUrl, title: _annotationTitle, ...metadata } = annotation;
     return { ...source, ...metadata };
   });
 
   for (const [url, annotation] of annotationMap) {
-    if (!matched.has(url)) {
-      throw new Error(`Yesenin source annotation did not match the bibliography: ${annotation.id}`);
+    if (matched.has(url)) continue;
+    if (annotation.title) {
+      enriched.push({ ...annotation, title: annotation.title });
+      matched.add(url);
+      continue;
     }
+    throw new Error(`Yesenin source annotation did not match the bibliography: ${annotation.id}`);
   }
 
   return enriched;
