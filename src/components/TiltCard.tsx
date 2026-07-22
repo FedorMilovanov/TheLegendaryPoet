@@ -71,7 +71,7 @@ export default function TiltCard({
         onPointerMove={handlePointerMove}
         onPointerLeave={reset}
         onPointerCancel={reset}
-        className={`tilt-card-inner relative isolate h-full w-full will-change-transform ${className}`}
+        className={`group tilt-card-inner relative isolate h-full w-full will-change-transform ${className}`}
       >
         {children}
         {sheen && (
