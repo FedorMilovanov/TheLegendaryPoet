@@ -13,9 +13,12 @@
     "validate:citations": "tsx scripts/validate-citations.ts",
     "validate:yesenin-archive": "tsx scripts/validate-yesenin-archive.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
-    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:style && npm run typecheck",
+    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:media && npm run validate:style && npm run typecheck",
     "sitemap": "node scripts/gen-sitemap.mjs",
-    "prerender": "tsx scripts/prerender-og.mjs"
+    "prerender": "tsx scripts/prerender-og.mjs",
+    "images:sync": "node scripts/localize-essay-images.mjs",
+    "validate:media": "tsx scripts/validate-essay-media.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

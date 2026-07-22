@@ -12,6 +12,8 @@ export type EssayImagePlacement = 'full' | 'left' | 'right';
 
 export interface EssayImageData {
   src: string;
+  /** Key in the generated local AVIF/WebP manifest. */
+  mediaKey?: string;
   alt: string;
   /** Minimal museum-style caption. */
   caption: string;

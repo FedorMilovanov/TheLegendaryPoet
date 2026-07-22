@@ -13,7 +13,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Два Есенина': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1914%20(2).jpg',
+        src: '/images/essays/archive/yesenin-1914.webp',
+        mediaKey: 'yesenin-1914',
         alt: 'Сергей Есенин в 1914 году',
         caption: 'Сергей Есенин. 1914.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -27,7 +28,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Дурная слава': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20в%201919%20году.jpg',
+        src: '/images/essays/archive/yesenin-1919.webp',
+        mediaKey: 'yesenin-1919',
         alt: 'Сергей Есенин в 1919 году',
         caption: 'Есенин в год основания имажинистской группы. 1919.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -41,7 +43,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Москва кабацкая': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DuncanYesenin1922.jpg',
+        src: '/images/essays/archive/yesenin-duncan-1922.webp',
+        mediaKey: 'yesenin-duncan-1922',
         alt: 'Айседора Дункан и Сергей Есенин в Берлине, 1922 год',
         caption: 'Айседора Дункан и Сергей Есенин. Берлин, 1922.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -54,7 +57,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Железный гость': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Eseninnikolaiklyeuv.jpg',
+        src: '/images/essays/archive/yesenin-klyuev-1916.webp',
+        mediaKey: 'yesenin-klyuev-1916',
         alt: 'Сергей Есенин и Николай Клюев, 1916 год',
         caption: 'Сергей Есенин и Николай Клюев. 1916.',
         credit: 'Президентская библиотека; Wikimedia Commons',
@@ -67,7 +71,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Персидская передышка': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chagin%20and%20Esenin%201924.jpg',
+        src: '/images/essays/archive/yesenin-chagin-1924.webp',
+        mediaKey: 'yesenin-chagin-1924',
         alt: 'Пётр Чагин и Сергей Есенин в Баку, 1924 год',
         caption: 'Пётр Чагин и Сергей Есенин. Баку, сентябрь 1924.',
         credit: 'Лаврентий Брегадзе; Wikimedia Commons',
@@ -81,7 +86,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Чёрный человек': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1925.jpg',
+        src: '/images/essays/archive/yesenin-1925.webp',
+        mediaKey: 'yesenin-1925',
         alt: 'Поздний портрет Сергея Есенина, 1925 год',
         caption: 'Сергей Есенин. 1925.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -95,7 +101,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Под маской — нежность': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20с%20сёстрами%20Катей%20и%20Шурой.jpg',
+        src: '/images/essays/archive/yesenin-sisters.webp',
+        mediaKey: 'yesenin-sisters',
         alt: 'Сергей Есенин с сёстрами Екатериной и Александрой',
         caption: 'Сергей Есенин с сёстрами Катей и Шурой. Москва.',
         credit: 'С. Чижов; Wikimedia Commons',
@@ -109,7 +116,8 @@ export const yeseninKutezhiVisual: Essay = {
     'Что это было': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/С.А.%20Есенин%20и%20В.И.%20Болдовкин.%201925.jpg',
+        src: '/images/essays/archive/yesenin-boldovkin-1925.webp',
+        mediaKey: 'yesenin-boldovkin-1925',
         alt: 'Сергей Есенин и Василий Болдовкин в Баку, 24 мая 1925 года',
         caption: 'Сергей Есенин и Василий Болдовкин. Баку, 24 мая 1925.',
         credit: 'Wikimedia Commons, общественное достояние',

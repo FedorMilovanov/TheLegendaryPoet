@@ -21,7 +21,8 @@ const bridge: EssayBlock[] = [
   },
   {
     type: 'image',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Pasternak.jpg',
+    src: '/images/essays/archive/mayakovsky-circle-1924.webp',
+    mediaKey: 'mayakovsky-circle-1924',
     alt: 'Владимир Маяковский, Лиля Брик, Борис Пастернак, Сергей Эйзенштейн и литераторы, 1924 год',
     caption: 'Маяковский и художественный круг. 1924.',
     credit: 'Wikimedia Commons, общественное достояние',
@@ -37,7 +38,8 @@ const bridge: EssayBlock[] = [
   },
   {
     type: 'image',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maiakowski_1925.jpg',
+    src: '/images/essays/archive/mayakovsky-circle-1925.webp',
+    mediaKey: 'mayakovsky-circle-1925',
     alt: 'Маяковский, Брики, Пастернак, Шкловский, Эльза Триоле и друзья, 1925 год',
     caption: 'Круг Маяковского после возвращения из Америки. 1925.',
     credit: 'Wikimedia Commons, общественное достояние',
@@ -53,7 +55,8 @@ const bridge: EssayBlock[] = [
   },
   {
     type: 'image',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_and_Moreno_by_Modotti_1925.jpg',
+    src: '/images/essays/archive/mayakovsky-mexico-1925.webp',
+    mediaKey: 'mayakovsky-mexico-1925',
     alt: 'Владимир Маяковский и Франсиско Морено в Мехико, фотограф Тина Модотти, 1925 год',
     caption: 'Мехико. Фотография Тины Модотти, 1925.',
     credit: 'Тина Модотти; Wikimedia Commons',
@@ -64,7 +67,8 @@ const bridge: EssayBlock[] = [
   },
   {
     type: 'image',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_with_dog_Pushkino_1925.jpg',
+    src: '/images/essays/archive/mayakovsky-dog-1925.webp',
+    mediaKey: 'mayakovsky-dog-1925',
     alt: 'Владимир Маяковский с собакой Скотчиком в Пушкине, 1925 год',
     caption: 'Маяковский со Скотчиком. 1925.',
     credit: 'Wikimedia Commons, общественное достояние',
@@ -80,7 +84,8 @@ const bridge: EssayBlock[] = [
   },
   {
     type: 'image',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Brik_Crimea_1926.jpg',
+    src: '/images/essays/archive/mayakovsky-lilya-crimea-1926.webp',
+    mediaKey: 'mayakovsky-lilya-crimea-1926',
     alt: 'Владимир Маяковский и Лиля Брик в Крыму, 1926 год',
     caption: 'Маяковский и Лиля Брик в Крыму. 1926.',
     credit: 'Wikimedia Commons, общественное достояние',
@@ -95,7 +100,8 @@ const illustratedMovement = insertArchiveImages(movement, {
   'Революцией мобилизованный': [
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_1928_by_Osip_Brik.jpg',
+      src: '/images/essays/archive/mayakovsky-1928-osip.webp',
+      mediaKey: 'mayakovsky-1928-osip',
       alt: 'Портрет Владимира Маяковского, фотограф Осип Брик, 1928 год',
       caption: 'Маяковский. Фотография Осипа Брика, 1928.',
       credit: 'Осип Брик; Wikimedia Commons',
@@ -104,22 +110,12 @@ const illustratedMovement = insertArchiveImages(movement, {
       layout: 'portrait',
       objectPosition: '50% 18%',
     },
-    {
-      type: 'image',
-      src: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-      alt: 'Цифровая реставрация портрета Владимира Маяковского работы Осипа Брика, 1928 год',
-      caption: 'Тот же кадр после бережной цифровой реставрации.',
-      credit: 'Осип Брик; реставрация THE LEGENDARY POET',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
-      kind: 'restoration',
-      layout: 'portrait',
-      objectPosition: '50% 18%',
-    },
   ],
   '1930: несколько кризисов сразу': [
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_and_Fedor_Tarasov.jpg',
+      src: '/images/essays/archive/mayakovsky-tarasov-1930.webp',
+      mediaKey: 'mayakovsky-tarasov-1930',
       alt: 'Владимир Маяковский и Фёдор Тарасов, 1930 год',
       caption: 'Один из поздних кадров Маяковского. 1930.',
       credit: 'Wikimedia Commons, архив наследников',
@@ -132,7 +128,8 @@ const illustratedMovement = insertArchiveImages(movement, {
   'После выстрела — бронза': [
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/1927._Владимир_Маяковский_бреется.jpg',
+      src: '/images/essays/archive/mayakovsky-shaving-1927.webp',
+      mediaKey: 'mayakovsky-shaving-1927',
       alt: 'Владимир Маяковский бреется, фотограф Осип Брик, 1927 год',
       caption: 'Домашний Маяковский. Фотография Осипа Брика, 1927.',
       credit: 'Осип Брик; Wikimedia Commons',

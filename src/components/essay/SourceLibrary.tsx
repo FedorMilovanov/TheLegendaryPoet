@@ -92,6 +92,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
   return (
     <section
       id="sources"
+      data-testid="source-library"
       className="scroll-mt-28 mt-16 overflow-hidden rounded-[2.25rem] border border-luxury-gold/12 bg-[linear-gradient(145deg,rgba(15,14,11,0.94),rgba(7,7,7,0.96))] p-5 sm:p-7 md:p-9"
     >
       <div className="flex flex-col gap-5 border-b border-white/[0.06] pb-6 sm:flex-row sm:items-end sm:justify-between">
@@ -126,6 +127,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
               onClick={() => changeFilter(item)}
               className="relative isolate inline-flex min-h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border border-white/8 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-luxury-gray-light/55 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
               aria-pressed={active}
+              data-testid={`source-filter-${item}`}
             >
               {active && (
                 <motion.span
@@ -185,6 +187,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                data-testid="source-item"
                 className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-luxury-gold/65 target:ring-offset-4 target:ring-offset-[#090806]"
               >
                 {source.url ? (
@@ -216,6 +219,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
             transition={{ type: 'spring', stiffness: 420, damping: 24 }}
             className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-5 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/70 transition hover:border-luxury-gold/30 hover:bg-luxury-gold/[0.07] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
             aria-expanded={expanded}
+            data-testid="source-expand"
           >
             {expanded ? 'Свернуть список' : `Показать ещё ${hiddenCount}`}
             <ChevronDown

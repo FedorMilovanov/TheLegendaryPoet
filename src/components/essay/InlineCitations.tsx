@@ -30,6 +30,7 @@ export default function InlineCitations({
           href={`#source-${id}`}
           title={reference.source.title}
           aria-label={`Источник ${reference.number}: ${reference.source.title}`}
+          data-testid="inline-citation"
           className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums text-luxury-gold/70 transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
         >
           {reference.number}

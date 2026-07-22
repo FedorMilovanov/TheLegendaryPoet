@@ -4,8 +4,8 @@ import { insertArchiveImages } from './visualArchive';
 
 export const brikCaseVisual: Essay = {
   ...baseBrikCase,
-  cover: '/images/essays/briks/brik-archive-hero.webp',
-  cardCover: '/images/essays/briks/brik-archive-hero.webp',
+  cover: '/images/essays/archive/lilya-gendrikov-1929.webp',
+  cardCover: '/images/essays/archive/lilya-gendrikov-1929.webp',
   coverAlt: 'Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год',
   coverKind: 'archive',
   coverCredit: 'Осип Брик · 1929',
@@ -15,7 +15,8 @@ export const brikCaseVisual: Essay = {
     'Жуковского, июль 1915-го': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Vladimir_mayakovsky_and_lilya_brik.jpg',
+        src: '/images/essays/archive/mayakovsky-lilya-1915.webp',
+        mediaKey: 'mayakovsky-lilya-1915',
         alt: 'Владимир Маяковский и Лиля Брик, 1915 год',
         caption: 'Маяковский и Лиля Брик. 1915.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -28,7 +29,8 @@ export const brikCaseVisual: Essay = {
     'Не треугольник, а меняющийся союз': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Osip_LUB.jpg',
+        src: '/images/essays/archive/briks-honeymoon-1912.webp',
+        mediaKey: 'briks-honeymoon-1912',
         alt: 'Осип и Лиля Брик во время свадебного путешествия, 1912 год',
         caption: 'Лиля и Осип Брики. Свадебное путешествие, 1912.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -39,7 +41,8 @@ export const brikCaseVisual: Essay = {
       },
       {
         type: 'image',
-        src: '/images/essays/briks/lilya-brik-1914.webp',
+        src: '/images/essays/archive/lilya-brik-1914.webp',
+        mediaKey: 'lilya-brik-1914',
         alt: 'Портрет Лили Брик, 1914 год',
         caption: 'Лиля Брик. 1914.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -52,7 +55,8 @@ export const brikCaseVisual: Essay = {
     'Кольцо и язык привязанности': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lilya_Brik_with_friends%2C_1915.jpg',
+        src: '/images/essays/archive/lilya-friends-1915.webp',
+        mediaKey: 'lilya-friends-1915',
         alt: 'Лиля Брик с подругами в домашнем интерьере, 1915 год',
         caption: 'Лиля Брик и её круг. 1915.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -65,7 +69,8 @@ export const brikCaseVisual: Essay = {
     'Осип: издатель, теоретик и сотрудник органов': [
       {
         type: 'image',
-        src: '/images/essays/briks/osip-brik-1928.webp',
+        src: '/images/essays/archive/osip-brik-1928.webp',
+        mediaKey: 'osip-brik-1928',
         alt: 'Портрет Осипа Брика, 1928 год',
         caption: 'Осип Брик. 1928.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -78,7 +83,8 @@ export const brikCaseVisual: Essay = {
     'Деньги, работа и общий быт': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Pasternak.jpg',
+        src: '/images/essays/archive/mayakovsky-circle-1924.webp',
+        mediaKey: 'mayakovsky-circle-1924',
         alt: 'Маяковский, Лиля Брик, Пастернак, Эйзенштейн и представители художественного круга, 1924 год',
         caption: 'Художественный круг Бриков и Маяковского. 1924.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -89,7 +95,8 @@ export const brikCaseVisual: Essay = {
       },
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maiakowski_1925.jpg',
+        src: '/images/essays/archive/mayakovsky-circle-1925.webp',
+        mediaKey: 'mayakovsky-circle-1925',
         alt: 'Маяковский, Лиля и Осип Брики, Пастернак, Шкловский и друзья, 1925 год',
         caption: 'Круг ЛЕФа и Бриков. 1925.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -100,7 +107,8 @@ export const brikCaseVisual: Essay = {
       },
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/1928_LYuB_editing_film.jpg',
+        src: '/images/essays/archive/lilya-editing-1928.webp',
+        mediaKey: 'lilya-editing-1928',
         alt: 'Лиля Брик монтирует фильм, 1928 год',
         caption: 'Лиля Брик за монтажом фильма. 1928.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -111,7 +119,8 @@ export const brikCaseVisual: Essay = {
       },
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lilya_Brik_1929.jpg',
+        src: '/images/essays/archive/lilya-gendrikov-1929.webp',
+        mediaKey: 'lilya-gendrikov-1929',
         alt: 'Лиля Брик в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год',
         caption: 'Лиля Брик в квартире в Гендриковом переулке. 1929.',
         credit: 'Осип Брик; Wikimedia Commons',
@@ -124,7 +133,8 @@ export const brikCaseVisual: Essay = {
     'Поздняя история о закрытой двери': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Brik_Crimea_1926.jpg',
+        src: '/images/essays/archive/mayakovsky-lilya-crimea-1926.webp',
+        mediaKey: 'mayakovsky-lilya-crimea-1926',
         alt: 'Владимир Маяковский и Лиля Брик в Крыму, 1926 год',
         caption: 'Маяковский и Лиля Брик в Крыму. 1926.',
         credit: 'Wikimedia Commons, общественное достояние',

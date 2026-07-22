@@ -31,7 +31,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Багдади, смерть отца и Москва' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky-SN-001.jpg',
+      src: '/images/essays/archive/mayakovsky-family-1905.webp',
+      mediaKey: 'mayakovsky-family-1905',
       alt: 'Семья Маяковских в Кутаиси, Владимир Маяковский среди родных, 1905 год',
       caption: 'Семья Маяковских. Кутаиси, 1905.',
       credit: 'Wikimedia Commons, общественное достояние',
@@ -52,7 +53,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Подполье, аресты и камера № 103' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Reg_card.jpg',
+      src: '/images/essays/archive/mayakovsky-registration-1908.webp',
+      mediaKey: 'mayakovsky-registration-1908',
       alt: 'Регистрационная карточка Владимира Маяковского Московского охранного отделения, 1908 год',
       caption: 'Регистрационная карточка. Москва, 1908.',
       credit: 'Архивный документ; Wikimedia Commons',
@@ -82,7 +84,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Бурлюк и рождение футуриста' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_1910.jpg',
+      src: '/images/essays/archive/mayakovsky-1910.webp',
+      mediaKey: 'mayakovsky-1910',
       alt: 'Владимир Маяковский в годы учёбы, 1910 год',
       caption: 'Маяковский-ученик. 1910.',
       credit: 'Wikimedia Commons, общественное достояние',
@@ -97,7 +100,8 @@ export const mayakovskyPartOne: Essay = {
     },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_and_Futurists.jpg',
+      src: '/images/essays/archive/mayakovsky-futurists-1912.webp',
+      mediaKey: 'mayakovsky-futurists-1912',
       alt: 'Владимир Маяковский с русскими футуристами, 1912 год',
       caption: 'Маяковский и футуристы. 1912.',
       credit: 'Wikimedia Commons, общественное достояние',
@@ -114,7 +118,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Жёлтая кофта и театр публичного чтения' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Vladimir_Mayakovsky_1914.jpg',
+      src: '/images/essays/archive/mayakovsky-1914.webp',
+      mediaKey: 'mayakovsky-1914',
       alt: 'Молодой Владимир Маяковский, 1914 год',
       caption: 'Маяковский. 1914.',
       credit: 'Wikimedia Commons, общественное достояние',
@@ -168,7 +173,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Июль 1915-го: Лиля и Осип Брики' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Vladimir_mayakovsky_and_lilya_brik.jpg',
+      src: '/images/essays/archive/mayakovsky-lilya-1915.webp',
+      mediaKey: 'mayakovsky-lilya-1915',
       alt: 'Владимир Маяковский и Лиля Брик, 1915 год',
       caption: 'Маяковский и Лиля Брик. 1915.',
       credit: 'Wikimedia Commons, общественное достояние',
@@ -211,7 +217,8 @@ export const mayakovskyPartOne: Essay = {
     { type: 'section', heading: 'Кино, революция и конец первой эпохи' },
     {
       type: 'image',
-      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Baryshnya_i_khuligan_Vladimir_Mayakovsky%2C_Alexandra_Rebikova%29.jpg',
+      src: '/images/essays/archive/mayakovsky-film-1918.webp',
+      mediaKey: 'mayakovsky-film-1918',
       alt: 'Владимир Маяковский и Александра Ребикова в фильме «Барышня и хулиган», 1918 год',
       caption: '«Барышня и хулиган». 1918.',
       credit: 'Кадр немого фильма; Wikimedia Commons',

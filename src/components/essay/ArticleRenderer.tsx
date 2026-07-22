@@ -108,7 +108,7 @@ export default function ArticleRenderer({
             direction={layout.direction}
             distance={18}
             once
-            className={`${layout.className} will-change-transform`}
+            className={`${layout.className} essay-block-shell essay-block-${block.type} will-change-transform`}
           >
             <EssayBlockView
               block={block}

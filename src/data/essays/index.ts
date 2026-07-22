@@ -48,11 +48,12 @@ const yeseninWithArchiveLayer: Essay = {
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
-  cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
-  cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
-  coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
-  coverKind: 'reconstruction',
-  coverCredit: 'THE LEGENDARY POET',
+  cover: '/images/essays/archive/mayakovsky-1914.webp',
+  cardCover: '/images/essays/archive/mayakovsky-1914.webp',
+  coverAlt: 'Молодой Владимир Маяковский. Архивный портрет, 1914 год',
+  coverKind: 'archive',
+  coverCredit: 'Wikimedia Commons · 1914',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Vladimir_Mayakovsky_1914.jpg',
   blocks: placeEssayImages(
     attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
     mayakovskyPartOnePlacements,
@@ -62,11 +63,11 @@ const mayakovskyPartOneWithLocalCover: Essay = {
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
   ...mayakovskyPartTwo,
-  cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-  cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-  coverAlt: 'Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года',
-  coverKind: 'restoration',
-  coverCredit: 'Осип Брик · реставрация проекта',
+  cover: '/images/essays/archive/mayakovsky-1928-osip.webp',
+  cardCover: '/images/essays/archive/mayakovsky-1928-osip.webp',
+  coverAlt: 'Владимир Маяковский. Фотография Осипа Брика, 1928 год',
+  coverKind: 'archive',
+  coverCredit: 'Осип Брик · 1928',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
   blocks: placeEssayImages(
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),

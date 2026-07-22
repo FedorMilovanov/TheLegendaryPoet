@@ -17,6 +17,7 @@ import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
 import { asset } from '../../utils/asset';
 import TiltCard from '../TiltCard';
+import { resolveEssayMedia } from './media';
 
 /**
  * The essay rendering "engine": one styled component per block type, dispatched
@@ -120,11 +121,12 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const [zoomed, setZoomed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const captionId = useId();
   const layoutId = `essay-image-${useId().replace(/:/g, '')}`;
   const reduceMotion = useReducedMotion();
   const layout = block.layout ?? 'wide';
-  const imageSrc = asset(block.src);
+  const media = resolveEssayMedia(block);
   const frameClass =
     layout === 'portrait'
       ? 'mx-auto max-w-xl aspect-[4/5]'
@@ -144,10 +146,22 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       if (event.key === 'Escape') {
         event.preventDefault();
         setOpen(false);
+        return;
       }
-      if (event.key === 'Tab') {
+      if (event.key !== 'Tab') return;
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
-        closeRef.current?.focus();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -163,6 +177,28 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
     };
   }, [open]);
 
+  const picture = (
+    <picture className="block h-full w-full">
+      {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes={sizes} />}
+      {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes={sizes} />}
+      <img
+        src={media.fallback}
+        alt={block.alt}
+        loading="lazy"
+        decoding="async"
+        sizes={sizes}
+        width={media.width}
+        height={media.height}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        data-media-key={block.mediaKey}
+        data-testid="essay-image"
+        className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ objectPosition: block.objectPosition || '50% 50%' }}
+      />
+    </picture>
+  );
+
   const image = (
     <motion.button
       ref={triggerRef}
@@ -174,27 +210,20 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}`}
       aria-haspopup="dialog"
+      data-testid="essay-image-trigger"
     >
       <motion.span
         layoutId={layoutId}
         transition={{ type: 'spring', stiffness: 250, damping: 30, mass: 0.8 }}
         className="absolute inset-0"
+        style={media.placeholder ? { backgroundImage: `url(${media.placeholder})`, backgroundSize: 'cover' } : undefined}
       >
         {!loaded && (
-          <span className="absolute inset-0 overflow-hidden bg-[#0d0d0d]">
+          <span className="absolute inset-0 overflow-hidden bg-[#0d0d0d]/65 backdrop-blur-lg">
             <span className="absolute inset-y-0 -left-1/2 w-1/2 animate-[shimmer_1.7s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.055] to-transparent motion-reduce:animate-none" />
           </span>
         )}
-        <img
-          src={imageSrc}
-          alt={block.alt}
-          loading="lazy"
-          decoding="async"
-          sizes={sizes}
-          onLoad={() => setLoaded(true)}
-          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          style={{ objectPosition: block.objectPosition || '50% 50%' }}
-        />
+        {picture}
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-white/[0.035]" />
         <span className="pointer-events-none absolute -inset-12 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100 [background:radial-gradient(circle_at_72%_18%,rgba(212,175,55,0.12),transparent_38%)]" />
       </motion.span>
@@ -206,7 +235,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
 
   return (
     <>
-      <motion.figure layout className="my-12">
+      <motion.figure layout className="my-12" data-image-kind={block.kind ?? 'archive'}>
         {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
         <ImageMeta block={block} />
       </motion.figure>
@@ -214,6 +243,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={block.alt}
@@ -226,25 +256,38 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
             onMouseDown={(event) => {
               if (event.currentTarget === event.target) setOpen(false);
             }}
+            data-testid="essay-image-dialog"
           >
             <motion.div
               layoutId={layoutId}
+              drag={zoomed || reduceMotion ? false : 'y'}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.18}
+              onDragEnd={(_, info) => {
+                if (Math.abs(info.offset.y) > 110 || Math.abs(info.velocity.y) > 650) setOpen(false);
+              }}
               transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
               className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
             >
               <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
-                <motion.img
-                  src={imageSrc}
-                  alt={block.alt}
-                  decoding="async"
-                  drag={zoomed}
-                  dragMomentum={false}
-                  dragElastic={0.08}
-                  animate={{ scale: zoomed ? 1.65 : 1 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                  onDoubleClick={() => setZoomed((value) => !value)}
-                  className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                />
+                <picture>
+                  {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="94vw" />}
+                  {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes="94vw" />}
+                  <motion.img
+                    src={media.fallback}
+                    alt={block.alt}
+                    decoding="async"
+                    width={media.width}
+                    height={media.height}
+                    drag={zoomed}
+                    dragMomentum={false}
+                    dragElastic={0.08}
+                    animate={{ scale: zoomed ? 1.65 : 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                    onDoubleClick={() => setZoomed((value) => !value)}
+                    className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                  />
+                </picture>
                 <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
               </div>
 
@@ -260,6 +303,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                      data-testid="essay-image-source"
                     >
                       Источник <ExternalLink size={11} />
                     </a>
@@ -271,6 +315,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/60 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
                     aria-label={zoomed ? 'Уменьшить изображение' : 'Увеличить изображение'}
                     aria-pressed={zoomed}
+                    data-testid="essay-image-zoom"
                   >
                     {zoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
                   </motion.button>
@@ -286,6 +331,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
               whileTap={reduceMotion ? undefined : { scale: 0.92 }}
               className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
               aria-label="Закрыть изображение"
+              data-testid="essay-image-close"
             >
               <X size={20} aria-hidden="true" />
             </motion.button>
