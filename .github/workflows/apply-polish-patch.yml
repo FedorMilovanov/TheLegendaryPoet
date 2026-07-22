@@ -50,22 +50,11 @@ jobs:
 
           localizer = Path('scripts/localize-essay-images.mjs')
           localizer_text = localizer.read_text().replace('fetch(encodeURI(url), {', 'fetch(url, {')
-          old = """    for (const width of [640, 1600]) {
-              const suffix = width === 1600 ? '' : `-${width}`;
-              await encodeVariant(input, `${base}${suffix}.webp`, width, 'webp');
-              await encodeVariant(input, `${base}${suffix}.avif`, width, 'avif');
-            }
-          """
-          new = """    for (const width of [640, 1600]) {
-              const suffix = width === 1600 ? '' : `-${width}`;
-              const webpPath = `${base}${suffix}.webp`;
-              if (webpPath !== source) await encodeVariant(input, webpPath, width, 'webp');
-              await encodeVariant(input, `${base}${suffix}.avif`, width, 'avif');
-            }
-          """
-          if old not in localizer_text:
-              raise SystemExit('Expected local cover optimization loop was not found')
-          localizer.write_text(localizer_text.replace(old, new))
+          needle = "      await encodeVariant(input, `${base}${suffix}.webp`, width, 'webp');"
+          replacement = "      const webpPath = `${base}${suffix}.webp`;\n      if (webpPath !== source) await encodeVariant(input, webpPath, width, 'webp');"
+          if needle not in localizer_text:
+              raise SystemExit('Expected local WebP encoder line was not found')
+          localizer.write_text(localizer_text.replace(needle, replacement, 1))
           PY
 
       - uses: actions/setup-node@v4
