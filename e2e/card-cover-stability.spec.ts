@@ -46,9 +46,14 @@ async function assertStableCard(page: Page, card: Locator, image: Locator, deskt
     expect(active.height).toBeGreaterThan(original.height * 0.98);
   }
 
-  await page.mouse.move(2, 2);
+  // Pointer-down precedes both Router View Transitions and lightbox opening.
+  // The card must flatten in that same event, not drift home during the snapshot.
+  await card.dispatchEvent('pointerdown', { pointerType: 'mouse', button: 0, isPrimary: true });
   await expect(tilt).not.toHaveAttribute('data-tilting', 'true');
   await expect.poll(() => tilt.evaluate((node) => getComputedStyle(node).transform)).toBe('none');
+
+  await page.mouse.move(2, 2);
+  await expect(tilt).not.toHaveAttribute('data-tilting', 'true');
 }
 
 async function assertNoHorizontalOverflow(page: Page) {
