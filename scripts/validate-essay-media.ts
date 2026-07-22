@@ -1,10 +1,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { essays } from '../src/data/essays/index';
-import { essayMedia } from '../src/generated/essayMedia';
+import {
+  brikEssayPlacements,
+  mayakovskyPartOnePlacements,
+  mayakovskyPartTwoPlacements,
+  type PlacementRule,
+} from '../src/data/essays/essayVisualLayout';
+import { essayMedia, type EssayMediaEntry } from '../src/generated/essayMedia';
 
 const errors: string[] = [];
 const root = process.cwd();
+const mediaByFallback = new Map<string, EssayMediaEntry>(
+  Object.values(essayMedia).map((entry) => [entry.fallback, entry]),
+);
 
 function publicFile(assetPath: string): string {
   return path.join(root, 'public', assetPath.replace(/^\//, ''));
@@ -24,19 +33,37 @@ function optimizedSibling(assetPath: string, extension: 'avif' | 'webp', small =
   return assetPath.replace(/\.(?:jpe?g|png|webp)$/i, `${suffix}.${extension}`);
 }
 
+function validateManifestEntry(label: string, media: EssayMediaEntry) {
+  if (!(media.width > 0 && media.height > 0)) errors.push(`${label}: invalid dimensions`);
+  if (!media.placeholder.startsWith('data:image/webp;base64,')) errors.push(`${label}: missing WebP LQIP`);
+  if (media.avif.length === 0 || media.webp.length === 0) {
+    errors.push(`${label}: both AVIF and WebP variants are required`);
+  }
+  requireFile(`${label} fallback`, media.fallback);
+  for (const variant of [...media.avif, ...media.webp]) requireFile(`${label} variant`, variant.src);
+}
+
+function validateLocalSiblingSet(label: string, assetPath: string) {
+  requireFile(label, assetPath);
+  for (const extension of ['avif', 'webp'] as const) {
+    const full = optimizedSibling(assetPath, extension);
+    const small = optimizedSibling(assetPath, extension, true);
+    if (full) requireFile(`${label} ${extension}`, full);
+    if (small) requireFile(`${label} ${extension} 640`, small);
+  }
+}
+
 for (const essay of essays) {
   for (const [label, cover] of [['cover', essay.cover], ['cardCover', essay.cardCover ?? essay.cover]] as const) {
+    const coverLabel = `${essay.slug} ${label}`;
     if (/^https?:\/\//.test(cover)) {
-      errors.push(`${essay.slug} ${label}: remote runtime cover is forbidden: ${cover}`);
+      errors.push(`${coverLabel}: remote runtime cover is forbidden: ${cover}`);
       continue;
     }
-    requireFile(`${essay.slug} ${label}`, cover);
-    for (const extension of ['avif', 'webp'] as const) {
-      const full = optimizedSibling(cover, extension);
-      const small = optimizedSibling(cover, extension, true);
-      if (full) requireFile(`${essay.slug} ${label} ${extension}`, full);
-      if (small) requireFile(`${essay.slug} ${label} ${extension} 640`, small);
-    }
+
+    const manifestMedia = mediaByFallback.get(cover);
+    if (manifestMedia) validateManifestEntry(coverLabel, manifestMedia);
+    else validateLocalSiblingSet(coverLabel, cover);
   }
 
   for (const [index, block] of essay.blocks.entries()) {
@@ -44,13 +71,7 @@ for (const essay of essays) {
     const label = `${essay.slug} image ${index + 1}`;
     if (/^https?:\/\//.test(block.src)) errors.push(`${label}: remote runtime image is forbidden: ${block.src}`);
     if (!block.mediaKey) {
-      requireFile(`${label} local fallback`, block.src);
-      for (const extension of ['avif', 'webp'] as const) {
-        const full = optimizedSibling(block.src, extension);
-        const small = optimizedSibling(block.src, extension, true);
-        if (full) requireFile(`${label} local ${extension}`, full);
-        if (small) requireFile(`${label} local ${extension} 640`, small);
-      }
+      validateLocalSiblingSet(`${label} local`, block.src);
       continue;
     }
     const media = essayMedia[block.mediaKey];
@@ -61,11 +82,33 @@ for (const essay of essays) {
     if (block.src !== media.fallback) {
       errors.push(`${label}: src ${block.src} does not match manifest fallback ${media.fallback}`);
     }
-    if (!(media.width > 0 && media.height > 0)) errors.push(`${label}: invalid dimensions`);
-    if (!media.placeholder.startsWith('data:image/webp;base64,')) errors.push(`${label}: missing WebP LQIP`);
-    if (media.avif.length === 0 || media.webp.length === 0) errors.push(`${label}: both AVIF and WebP variants are required`);
-    requireFile(`${label} fallback`, media.fallback);
-    for (const variant of [...media.avif, ...media.webp]) requireFile(`${label} variant`, variant.src);
+    validateManifestEntry(label, media);
+  }
+}
+
+const placementRulesBySlug: Record<string, PlacementRule[]> = {
+  'mayakovsky-before-revolution': mayakovskyPartOnePlacements,
+  'mayakovsky-gromovoy': mayakovskyPartTwoPlacements,
+  'brik-case': brikEssayPlacements,
+};
+
+for (const [slug, rules] of Object.entries(placementRulesBySlug)) {
+  const essay = essays.find((entry) => entry.slug === slug);
+  if (!essay) {
+    errors.push(`${slug}: placement rules reference a missing essay`);
+    continue;
+  }
+  for (const rule of rules) {
+    const image = essay.blocks.find(
+      (block) => block.type === 'image' && block.mediaKey === rule.mediaKey,
+    );
+    if (!image || image.type !== 'image') {
+      errors.push(`${slug}: placement rule references missing mediaKey “${rule.mediaKey}”`);
+    } else if (image.placement !== rule.placement) {
+      errors.push(
+        `${slug}: mediaKey “${rule.mediaKey}” expected placement ${rule.placement}, got ${image.placement ?? 'full'}`,
+      );
+    }
   }
 }
 
@@ -75,4 +118,4 @@ if (errors.length > 0) {
 }
 
 const mediaCount = Object.keys(essayMedia).length;
-console.log(`Essay media validation: ${essays.length} essays, ${mediaCount} optimized archival originals, no runtime hotlinks.`);
+console.log(`Essay media validation: ${essays.length} essays, ${mediaCount} optimized archival originals, valid responsive covers and placements.`);
