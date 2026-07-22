@@ -37,6 +37,16 @@ jobs:
           cat tools/polish-patch/part-* | base64 --decode | gzip --decompress > /tmp/polish.patch
           git apply --check /tmp/polish.patch
           git apply /tmp/polish.patch
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/essay-image-catalog.mjs')
+          text = path.read_text()
+          text = text.replace(
+              'https://commons.wikimedia.org/wiki/Special:Redirect/file/Baryshnya_i_khuligan_Vladimir_Mayakovsky%2C_Alexandra_Rebikova%29.jpg',
+              'https://upload.wikimedia.org/wikipedia/commons/e/ed/Baryshnya_i_khuligan_Vladimir_Mayakovsky%2C_Alexandra_Rebikova%29.jpg',
+          )
+          path.write_text(text)
+          PY
 
       - uses: actions/setup-node@v4
         with:
