@@ -1,10 +1,17 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Layers3, PenLine } from 'lucide-react';
-import type { Essay } from '../../types/essay';
+import { Calendar, Clock, ExternalLink, Layers3, PenLine } from 'lucide-react';
+import type { Essay, EssayImageKind } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
 import EssayCover from './EssayCover';
 import { titleCase } from '../../utils/titleCase';
+
+const coverKindLabels: Record<EssayImageKind, string> = {
+  archive: 'Архив',
+  restoration: 'Цифровая реставрация',
+  reconstruction: 'Художественная реконструкция',
+  document: 'Документ',
+};
 
 /**
  * Essay hero: a restrained 3D-tilt cover banner + a centred title block. The
@@ -22,17 +29,42 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
         <TiltCard intensity={6}>
-          <EssayCover
-            src={essay.cover}
-            alt={essay.coverAlt || essay.title}
-            accent={accent}
-            kicker={essay.kicker}
-            focusY="20%"
-            loading="eager"
-            ornamentClass="text-[9rem]"
-            className="aspect-[16/9] w-full rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
-            sharedName={`essay-cover-${essay.id}`}
-          />
+          <div className="relative">
+            <EssayCover
+              src={essay.cover}
+              alt={essay.coverAlt || essay.title}
+              accent={accent}
+              kicker={essay.kicker}
+              focusY="20%"
+              loading="eager"
+              ornamentClass="text-[9rem]"
+              className="aspect-[16/9] w-full rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+              sharedName={`essay-cover-${essay.id}`}
+            />
+            {essay.coverKind && (
+              <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-end justify-between gap-2">
+                <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white/72 backdrop-blur-md">
+                  {coverKindLabels[essay.coverKind]}
+                </span>
+                {essay.coverCredit && (
+                  essay.coverSourceUrl ? (
+                    <a
+                      href={essay.coverSourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-8 items-center gap-1 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/55 backdrop-blur-md transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                    >
+                      {essay.coverCredit} <ExternalLink size={10} />
+                    </a>
+                  ) : (
+                    <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/55 backdrop-blur-md">
+                      {essay.coverCredit}
+                    </span>
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </TiltCard>
       </motion.div>
 
