@@ -118,7 +118,7 @@ test.describe('essay media engine', () => {
       await assertNoHorizontalOverflow(page);
       assertCleanRuntime();
       await page.screenshot({
-        path: testInfo.outputPath(`${slug}-desktop-integrated.webp`),
+        path: testInfo.outputPath(`${slug}-desktop-integrated.png`),
         fullPage: false,
       });
     });
@@ -143,7 +143,7 @@ test.describe('mobile essay reading', () => {
       await trigger.click();
       const dialog = page.getByTestId('mobile-toc-dialog');
       await expect(dialog).toBeVisible();
-      await page.screenshot({ path: testInfo.outputPath(`${slug}-mobile-wtoc.webp`) });
+      await page.screenshot({ path: testInfo.outputPath(`${slug}-mobile-wtoc.png`) });
 
       const rowCount = await page.getByTestId('mobile-toc-row').count();
       expect(rowCount).toBeGreaterThan(2);
@@ -215,6 +215,6 @@ test.describe('shared longform architecture', () => {
     await expect(page.locator(`[id="${targetId}"]`)).toBeVisible();
 
     assertCleanRuntime();
-    await page.screenshot({ path: testInfo.outputPath('brik-source-library.webp') });
+    await page.screenshot({ path: testInfo.outputPath('brik-source-library.png') });
   });
 });
