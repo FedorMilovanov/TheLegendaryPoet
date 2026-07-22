@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
@@ -232,111 +233,114 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
     </motion.button>
   );
 
+  const lightbox = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={block.alt}
+          aria-describedby={captionId}
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+          animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+          transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
+          className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 sm:p-5"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) setOpen(false);
+          }}
+          data-testid="essay-image-dialog"
+        >
+          <motion.div
+            layoutId={layoutId}
+            drag={zoomed || reduceMotion ? false : 'y'}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.18}
+            onDragEnd={(_, info) => {
+              if (Math.abs(info.offset.y) > 110 || Math.abs(info.velocity.y) > 650) setOpen(false);
+            }}
+            transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
+            className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+          >
+            <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
+              <picture>
+                {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="94vw" />}
+                {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes="94vw" />}
+                <motion.img
+                  src={media.fallback}
+                  alt={block.alt}
+                  decoding="async"
+                  width={media.width}
+                  height={media.height}
+                  drag={zoomed}
+                  dragMomentum={false}
+                  dragElastic={0.08}
+                  animate={{ scale: zoomed ? 1.65 : 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                  onDoubleClick={() => setZoomed((value) => !value)}
+                  className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                />
+              </picture>
+              <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
+            </div>
+
+            <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
+              <p id={captionId} className="min-w-0 flex-1 text-xs leading-relaxed text-white/58">
+                {block.caption}
+                {block.credit ? <span className="text-white/32"> · {block.credit}</span> : null}
+              </p>
+              <div className="flex items-center gap-2">
+                {block.sourceUrl && (
+                  <a
+                    href={block.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                    data-testid="essay-image-source"
+                  >
+                    Источник <ExternalLink size={11} />
+                  </a>
+                )}
+                <motion.button
+                  type="button"
+                  onClick={() => setZoomed((value) => !value)}
+                  whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/60 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                  aria-label={zoomed ? 'Уменьшить изображение' : 'Увеличить изображение'}
+                  aria-pressed={zoomed}
+                  data-testid="essay-image-zoom"
+                >
+                  {zoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.button
+            ref={closeRef}
+            type="button"
+            onClick={() => setOpen(false)}
+            whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+            className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
+            aria-label="Закрыть изображение"
+            data-testid="essay-image-close"
+          >
+            <X size={20} aria-hidden="true" />
+          </motion.button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <>
       <motion.figure layout className="my-12" data-image-kind={block.kind ?? 'archive'}>
         {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
         <ImageMeta block={block} />
       </motion.figure>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={block.alt}
-            aria-describedby={captionId}
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 sm:p-5"
-            onMouseDown={(event) => {
-              if (event.currentTarget === event.target) setOpen(false);
-            }}
-            data-testid="essay-image-dialog"
-          >
-            <motion.div
-              layoutId={layoutId}
-              drag={zoomed || reduceMotion ? false : 'y'}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.18}
-              onDragEnd={(_, info) => {
-                if (Math.abs(info.offset.y) > 110 || Math.abs(info.velocity.y) > 650) setOpen(false);
-              }}
-              transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
-              className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
-            >
-              <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
-                <picture>
-                  {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="94vw" />}
-                  {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes="94vw" />}
-                  <motion.img
-                    src={media.fallback}
-                    alt={block.alt}
-                    decoding="async"
-                    width={media.width}
-                    height={media.height}
-                    drag={zoomed}
-                    dragMomentum={false}
-                    dragElastic={0.08}
-                    animate={{ scale: zoomed ? 1.65 : 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                    onDoubleClick={() => setZoomed((value) => !value)}
-                    className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                  />
-                </picture>
-                <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
-              </div>
-
-              <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
-                <p id={captionId} className="min-w-0 flex-1 text-xs leading-relaxed text-white/58">
-                  {block.caption}
-                  {block.credit ? <span className="text-white/32"> · {block.credit}</span> : null}
-                </p>
-                <div className="flex items-center gap-2">
-                  {block.sourceUrl && (
-                    <a
-                      href={block.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-                      data-testid="essay-image-source"
-                    >
-                      Источник <ExternalLink size={11} />
-                    </a>
-                  )}
-                  <motion.button
-                    type="button"
-                    onClick={() => setZoomed((value) => !value)}
-                    whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/60 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-                    aria-label={zoomed ? 'Уменьшить изображение' : 'Увеличить изображение'}
-                    aria-pressed={zoomed}
-                    data-testid="essay-image-zoom"
-                  >
-                    {zoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.button
-              ref={closeRef}
-              type="button"
-              onClick={() => setOpen(false)}
-              whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
-              aria-label="Закрыть изображение"
-              data-testid="essay-image-close"
-            >
-              <X size={20} aria-hidden="true" />
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' ? createPortal(lightbox, document.body) : null}
     </>
   );
 }
