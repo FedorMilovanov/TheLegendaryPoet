@@ -1,14 +1,29 @@
 import type Lenis from 'lenis';
 
 /**
- * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation.
- * Plain `#hash` clicks don't work under Lenis because it runs its own scroll
- * loop, so in-page jumps must go through `lenis.scrollTo`.
+ * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation and
+ * body-level overlays. A modal must pause Lenis as well as locking body overflow;
+ * otherwise the RAF loop can finish a pending interpolation underneath the
+ * dialog and return the reader to a slightly different paragraph on close.
  */
 let activeLenis: Lenis | null = null;
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
+}
+
+export function pauseSmoothScroll() {
+  activeLenis?.stop();
+}
+
+export function resumeSmoothScroll(scrollY?: number) {
+  if (!activeLenis) {
+    if (scrollY != null) window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+    return;
+  }
+
+  activeLenis.start();
+  if (scrollY != null) activeLenis.scrollTo(scrollY, { immediate: true });
 }
 
 export function scrollToId(id: string) {
