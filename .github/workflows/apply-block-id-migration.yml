@@ -1,0 +1,33 @@
+name: Apply stable essay block ids
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.head_ref == 'audit/playwright-total-article-check'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Migrate fragile rules to stable block ids
+        run: python scripts/migrate-essay-rules-to-block-ids.py
+
+      - name: Commit migration
+        run: |
+          if git diff --quiet; then
+            echo "Migration already applied"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/essays
+          git commit -m "refactor: bind essay enrichment to stable block ids"
+          git push origin HEAD:${{ github.head_ref }}
