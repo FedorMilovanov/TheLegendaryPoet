@@ -16,9 +16,9 @@ const roleLabels: Record<EssayClusterRole, string> = {
 };
 
 /**
- * Featured essay link card with a 3D-tilt cover, for the Articles listing.
- * `variant="feature"` renders a large hero card; default is a compact card.
- * Cover art (with graceful fallback) comes from the shared EssayCover.
+ * Featured essay link card with a restrained pointer tilt. Cover motion stays on
+ * one raster plane; the global TiltCard supplies the depth rather than stacking
+ * a second aggressive zoom on top of it.
  */
 export default function EssayCard({ essay, variant = 'default' }: { essay: Essay; variant?: 'default' | 'feature' }) {
   const accent = essay.accent || DEFAULT_ACCENT;
@@ -26,9 +26,12 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
   const kicker = essay.cluster ? roleLabels[essay.cluster.role] : essay.kicker;
 
   return (
-    <Link to={`/essays/${essay.slug}`} className="group block h-full">
-      <TiltCard intensity={feature ? 5 : 7}>
-        <div className={`luxury-card relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-luxury-gold/15 bg-[#060606] ${feature ? 'md:flex-row' : ''}`}>
+    <Link to={`/essays/${essay.slug}`} className="group block h-full" data-testid="essay-card-link">
+      <TiltCard intensity={feature ? 4 : 5.5}>
+        <div
+          className={`luxury-card relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-luxury-gold/15 bg-[#060606] ${feature ? 'md:flex-row' : ''}`}
+          data-testid="essay-card"
+        >
           <EssayCover
             src={essay.cardCover || essay.cover}
             alt={essay.coverAlt || essay.title}
@@ -37,24 +40,24 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
             focusY="30%"
             overlayFrom="#060606"
             ornamentClass="text-8xl"
-            imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-105"
-            className={feature ? 'md:w-1/2 aspect-[16/10] md:aspect-auto' : 'aspect-[16/10]'}
+            imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-[1.025]"
+            className={feature ? 'aspect-[16/10] md:aspect-auto md:w-1/2' : 'aspect-[16/10]'}
             sharedName={`essay-cover-${essay.id}`}
           />
 
-          <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
+          <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:justify-center md:p-10' : ''}`}>
             {essay.cluster && (
               <div className="mb-3 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-300/45">
                 <Network size={11} /> {essay.cluster.label}
               </div>
             )}
-            <h3 className={`font-serif font-bold text-white transition-colors group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
+            <h3 className={`text-balance font-serif font-bold leading-snug text-white transition-colors group-hover:text-luxury-gold ${feature ? 'text-3xl leading-tight md:text-4xl' : 'line-clamp-2 text-xl'}`}>
               {titleCase(essay.title)}
             </h3>
             {essay.subtitle && feature && (
-              <p className="mt-3 font-serif text-lg italic text-luxury-gray-light text-pretty">{essay.subtitle}</p>
+              <p className="text-pretty mt-3 font-serif text-lg italic text-luxury-gray-light">{essay.subtitle}</p>
             )}
-            <p className={`mt-3 flex-grow text-sm leading-relaxed text-luxury-gray-light/80 font-light text-pretty ${feature ? 'line-clamp-4 md:text-base' : 'line-clamp-3'}`}>
+            <p className={`text-pretty mt-3 flex-grow text-sm font-light leading-relaxed text-luxury-gray-light/80 ${feature ? 'line-clamp-4 md:text-base' : 'line-clamp-3'}`}>
               {essay.excerpt}
             </p>
             <div className="mt-5 flex items-center justify-between border-t border-luxury-gold/10 pt-4">
