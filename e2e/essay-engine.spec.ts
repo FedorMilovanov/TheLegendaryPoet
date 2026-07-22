@@ -67,10 +67,9 @@ async function assertNoHorizontalOverflow(page: Page) {
 }
 
 test.describe('essay media engine', () => {
-  test.skip(({ project }) => project.name !== 'desktop-chromium', 'desktop interaction sweep');
-
   for (const slug of essays) {
     test(`${slug}: responsive media, lightbox and keyboard controls work`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop interaction sweep');
       const assertCleanRuntime = watchRuntime(page);
       await openEssay(page, slug);
       await assertLoadedLocalImage(page.getByTestId('essay-cover-image').first());
@@ -127,10 +126,9 @@ test.describe('essay media engine', () => {
 });
 
 test.describe('mobile essay reading', () => {
-  test.skip(({ project }) => project.name !== 'mobile-chromium', 'mobile navigation sweep');
-
   for (const slug of essays) {
     test(`${slug}: cover, inline media and all TOC chapters work`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'mobile-chromium', 'mobile navigation sweep');
       test.setTimeout(180_000);
       const assertCleanRuntime = watchRuntime(page);
       await openEssay(page, slug);
@@ -169,9 +167,8 @@ test.describe('mobile essay reading', () => {
 });
 
 test.describe('shared longform architecture', () => {
-  test.skip(({ project }) => project.name !== 'desktop-chromium', 'desktop architecture QA');
-
-  test('legacy /articles routes render through the common ArticleRenderer', async ({ page }) => {
+  test('legacy /articles routes render through the common ArticleRenderer', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop architecture QA');
     const assertCleanRuntime = watchRuntime(page);
     await page.goto('/articles');
     await expect(page.locator('h1')).toBeVisible();
@@ -189,6 +186,7 @@ test.describe('shared longform architecture', () => {
   });
 
   test('source filters, expansion and inline citations are connected', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop source QA');
     const assertCleanRuntime = watchRuntime(page);
     await openEssay(page, 'brik-case');
     const library = page.getByTestId('source-library');
