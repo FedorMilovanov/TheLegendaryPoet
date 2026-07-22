@@ -36,9 +36,23 @@ function optimizedSibling(assetPath: string, extension: 'avif' | 'webp', small =
 function validateManifestEntry(label: string, media: EssayMediaEntry) {
   if (!(media.width > 0 && media.height > 0)) errors.push(`${label}: invalid dimensions`);
   if (!media.placeholder.startsWith('data:image/webp;base64,')) errors.push(`${label}: missing WebP LQIP`);
+  if (!media.fallback.endsWith('.webp')) errors.push(`${label}: <img> fallback must be WebP, got ${media.fallback}`);
   if (media.avif.length === 0 || media.webp.length === 0) {
     errors.push(`${label}: both AVIF and WebP variants are required`);
   }
+
+  const avifWidths = media.avif.map((variant) => variant.width);
+  const webpWidths = media.webp.map((variant) => variant.width);
+  if (JSON.stringify(avifWidths) !== JSON.stringify(webpWidths)) {
+    errors.push(`${label}: AVIF and WebP responsive width sets differ (${avifWidths.join(', ')} vs ${webpWidths.join(', ')})`);
+  }
+  if (media.avif.some((variant) => !variant.src.endsWith('.avif'))) {
+    errors.push(`${label}: malformed AVIF variant path`);
+  }
+  if (media.webp.some((variant) => !variant.src.endsWith('.webp'))) {
+    errors.push(`${label}: malformed WebP variant path`);
+  }
+
   requireFile(`${label} fallback`, media.fallback);
   for (const variant of [...media.avif, ...media.webp]) requireFile(`${label} variant`, variant.src);
 }
@@ -118,4 +132,4 @@ if (errors.length > 0) {
 }
 
 const mediaCount = Object.keys(essayMedia).length;
-console.log(`Essay media validation: ${essays.length} essays, ${mediaCount} optimized archival originals, valid responsive covers and placements.`);
+console.log(`Essay media validation: ${essays.length} essays, ${mediaCount} optimized archival originals, AVIF-first responsive sets and valid placements.`);
