@@ -178,10 +178,10 @@ export default function LongformPage({
             {essay.sources && essay.sources.length > 0 && (
               <SourceLibrary sources={essay.sources} />
             )}
-
-            {afterArticle}
           </article>
         </div>
+
+        {afterArticle && <div className="mx-auto max-w-6xl">{afterArticle}</div>}
 
         <section className="mx-auto mt-16 max-w-6xl">
           <CommunityPanel
