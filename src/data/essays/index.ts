@@ -3,6 +3,7 @@ import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
+import { mayakovskyProEto } from './mayakovskyProEto';
 import { brikCaseVisual } from './brikCaseVisual';
 import {
   brikDocumentSources,
@@ -25,6 +26,11 @@ import {
   mayakovskyPartTwoPlacements,
   placeEssayImages,
 } from './essayVisualLayout';
+
+const MAYAKOVSKY_CLUSTER = {
+  id: 'mayakovsky-life-texts-archive',
+  label: 'Маяковский: жизнь, тексты, архив',
+} as const;
 
 const museumNarrativeNote =
   'Институциональный мемориальный пересказ: используется для навигации и музейного контекста, но не заменяет исходный документ, академическую публикацию или независимую проверку.';
@@ -74,6 +80,21 @@ const yeseninWithArchiveLayer: Essay = {
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
+  seoTitle: 'Владимир Маяковский до революции: детство, аресты, футуризм и «Облако в штанах»',
+  seoDescription: 'Документальная биография Маяковского до 1918 года: Багдади, смерть отца, Бутырка, Бурлюк, футуризм, ранняя поэзия и знакомство с Бриками.',
+  seoKeywords: [
+    'биография Маяковского',
+    'Маяковский до революции',
+    'Маяковский футуризм',
+    'Маяковский Бутырская тюрьма',
+    'Облако в штанах история',
+  ],
+  cluster: { ...MAYAKOVSKY_CLUSTER, role: 'biography', order: 10 },
+  relatedEssayIds: [
+    'essay-mayakovsky-gromovoy',
+    'essay-brik-case',
+    'essay-mayakovsky-pro-eto-separation',
+  ],
   cover: '/images/essays/archive/mayakovsky-1914.webp',
   cardCover: '/images/essays/archive/mayakovsky-1914.webp',
   coverAlt: 'Молодой Владимир Маяковский. Архивный портрет, 1914 год',
@@ -89,6 +110,21 @@ const mayakovskyPartOneWithLocalCover: Essay = {
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
   ...mayakovskyPartTwo,
+  seoTitle: 'Владимир Маяковский после революции: РОСТА, ЛЕФ, «Баня» и последний кризис',
+  seoDescription: 'Вторая часть биографии Маяковского: РОСТА, ЛЕФ, поездки, поздняя лирика, выставка 1930 года, «Баня», РАПП и документальная картина финала.',
+  seoKeywords: [
+    'Маяковский биография 1918 1930',
+    'Маяковский РОСТА ЛЕФ',
+    'Маяковский Баня',
+    'выставка 20 лет работы Маяковского',
+    'последние месяцы Маяковского',
+  ],
+  cluster: { ...MAYAKOVSKY_CLUSTER, role: 'biography', order: 20 },
+  relatedEssayIds: [
+    'essay-mayakovsky-before-revolution',
+    'essay-mayakovsky-pro-eto-separation',
+    'essay-brik-case',
+  ],
   cover: '/images/essays/archive/mayakovsky-1928-osip.webp',
   cardCover: '/images/essays/archive/mayakovsky-1928-osip.webp',
   coverAlt: 'Владимир Маяковский. Фотография Осипа Брика, 1928 год',
@@ -102,8 +138,28 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   sources: uniqueSources(mayakovskyLateSources),
 };
 
+const mayakovskyProEtoWithSources: Essay = {
+  ...mayakovskyProEto,
+  sources: uniqueSources(mayakovskyProEto.sources),
+};
+
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
+  seoTitle: 'Маяковский и Брики: любовь, общий быт, деньги и зависимость по документам',
+  seoDescription: 'Маяковский, Лиля и Осип Брики по письмам и архивам: любовь, общий дом, деньги, автомобиль, творческое сотрудничество и поздние спорные версии.',
+  seoKeywords: [
+    'Маяковский и Брики',
+    'Маяковский и Лиля Брик отношения',
+    'Осип Брик и Маяковский',
+    'Маяковский содержал Бриков',
+    'письма Маяковского Лиле Брик',
+  ],
+  cluster: { ...MAYAKOVSKY_CLUSTER, role: 'investigation', order: 40 },
+  relatedEssayIds: [
+    'essay-mayakovsky-pro-eto-separation',
+    'essay-mayakovsky-gromovoy',
+    'essay-mayakovsky-before-revolution',
+  ],
   blocks: placeEssayImages(
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
@@ -122,6 +178,7 @@ export const essays: Essay[] = [
   yeseninWithArchiveLayer,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
+  mayakovskyProEtoWithSources,
   brikCaseWithSourceLibrary,
 ];
 
