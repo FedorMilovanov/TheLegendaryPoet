@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
-import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3, Network } from 'lucide-react';
 import { getAllEssays, getEssayBySlug } from '../data/essays';
 import { poets } from '../data/poets';
 import ReadingProgress from '../components/articles/ReadingProgress';
@@ -10,6 +10,7 @@ import EssayHero from '../components/essay/EssayHero';
 import ArticleRenderer, { getEssayToc } from '../components/essay/ArticleRenderer';
 import SectionChip from '../components/essay/SectionChip';
 import SourceLibrary from '../components/essay/SourceLibrary';
+import RelatedClusterEssays from '../components/essay/RelatedClusterEssays';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -21,14 +22,14 @@ export default function EssayPage() {
   const articleRef = useRef<HTMLElement>(null);
 
   useSeo({
-    title: essay ? `${essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
-    description: essay ? essay.excerpt : 'Статья не найдена.',
+    title: essay ? `${essay.seoTitle ?? essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
+    description: essay ? essay.seoDescription ?? essay.excerpt : 'Статья не найдена.',
     path: `/essays/${slug ?? ''}`,
     type: 'article',
     image: essay?.cover,
     publishedTime: essay?.date,
     author: essay?.author,
-    keywords: essay?.tags.join(','),
+    keywords: essay ? (essay.seoKeywords ?? essay.tags).join(',') : undefined,
   });
 
   if (!essay) {
@@ -85,6 +86,15 @@ export default function EssayPage() {
                     ))}
                   </ul>
                 </nav>
+              )}
+              {essay.cluster && (
+                <div className="mt-4 flex items-start gap-3 rounded-2xl border border-cyan-400/12 bg-[#061018]/55 p-4 text-sm text-cyan-100/65">
+                  <Network size={15} className="mt-0.5 shrink-0 text-cyan-300/55" />
+                  <span>
+                    <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-300/40">Тематический кластер</span>
+                    <span className="mt-1 block leading-snug">{essay.cluster.label}</span>
+                  </span>
+                </div>
               )}
               {sourceCount > 0 && (
                 <a
@@ -145,6 +155,7 @@ export default function EssayPage() {
               </nav>
             )}
 
+            <RelatedClusterEssays essay={essay} />
             {essay.sources && essay.sources.length > 0 && <SourceLibrary sources={essay.sources} />}
           </article>
         </div>
