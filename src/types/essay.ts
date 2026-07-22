@@ -90,6 +90,25 @@ export interface EssaySeries {
   total: number;
 }
 
+export type EssayClusterRole =
+  | 'pillar'
+  | 'biography'
+  | 'investigation'
+  | 'work'
+  | 'archive'
+  | 'context';
+
+export interface EssayCluster {
+  /** Stable topical cluster id, shared by internally linked longreads. */
+  id: string;
+  /** Human-facing cluster label, e.g. “Маяковский: жизнь, тексты, архив”. */
+  label: string;
+  /** Editorial role inside the cluster; does not affect the visible H1. */
+  role: EssayClusterRole;
+  /** Stable order for cluster navigation and poet-profile cards. */
+  order?: number;
+}
+
 export interface Essay {
   id: string;
   slug: string;
@@ -97,8 +116,14 @@ export interface Essay {
   kicker?: string;
   title: string;
   subtitle?: string;
-  /** Short summary for cards / SEO. */
+  /** Short summary for cards / default SEO. */
   excerpt: string;
+  /** Search title can be more explicit than the literary page H1. */
+  seoTitle?: string;
+  /** Search description can differ from the on-site card excerpt. */
+  seoDescription?: string;
+  /** A restrained list of entities and stable search phrases. */
+  seoKeywords?: string[];
   author: string;
   /** ISO-ish date string, e.g. "2026-07-12". */
   date: string;
@@ -119,6 +144,10 @@ export interface Essay {
   poetId?: string;
   /** Optional sequence metadata for multi-part biographies. */
   series?: EssaySeries;
+  /** Optional broader SEO/editorial cluster spanning biographies and investigations. */
+  cluster?: EssayCluster;
+  /** Manual priority links when shared poet/cluster metadata is not sufficient. */
+  relatedEssayIds?: string[];
   blocks: EssayBlock[];
   sources?: EssaySource[];
 }
