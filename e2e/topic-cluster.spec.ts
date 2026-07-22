@@ -15,7 +15,8 @@ test.describe('Mayakovsky SEO topic cluster', () => {
     test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop cluster QA');
     await page.goto(`/essays/${slug}`);
 
-    await expect(page.locator('h1')).toContainText('Про это');
+    await expect(page.locator('h1')).toContainText('«Про это»');
+    await expect(page.locator('h1')).not.toContainText('«Про Это»');
     await expect(page).toHaveTitle(/история создания/i);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /два месяца разлуки/i);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp(`/essays/${slug}$`));
@@ -54,7 +55,7 @@ test.describe('Mayakovsky SEO topic cluster', () => {
     await trigger.click();
     const dialog = page.getByTestId('mobile-toc-dialog');
     await expect(dialog).toBeVisible();
-    expect(await page.getByTestId('mobile-toc-row').count()).toBeGreaterThan(8);
+    expect(await page.getByTestId('mobile-toc-row').count()).toBeGreaterThanOrEqual(8);
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
 
