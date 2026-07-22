@@ -1,0 +1,98 @@
+import type { EssaySource } from '../../types/essay';
+
+/** Extra primary and archival anchors that bring each flagship essay above thirty cited items. */
+export const mayakovskyEarlySupplementalSources: EssaySource[] = [
+  {
+    id: 'early-latest-russian-poetry',
+    title: 'В. В. Маяковский. «О новейшей русской поэзии»',
+    url: 'https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-3652.htm?cmd=2',
+    kind: 'primary',
+    institution: 'ФЭБ',
+    year: 1912,
+    note: 'Тезисы раннего доклада о слове, живописи и свободной поэзии.',
+  },
+  {
+    id: 'early-futurism-achievements',
+    title: 'В. В. Маяковский. «Достижения футуризма»',
+    url: 'https://feb-web.ru/feb/mayakovsky/texts/mp0/mp1/mp1-4062.htm?cmd=p',
+    kind: 'primary',
+    institution: 'ФЭБ',
+    year: 1913,
+    note: 'Авторская программа русского футуризма и его самостоятельности.',
+  },
+  {
+    id: 'early-theatre-cinema-futurism',
+    title: 'В. В. Маяковский. «Театр, кинематограф, футуризм»',
+    url: 'https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-275-.htm?cmd=p',
+    kind: 'primary',
+    institution: 'ФЭБ',
+    year: 1913,
+    note: 'Раннее выступление о театре будущего и кинематографе.',
+  },
+  {
+    id: 'early-theatre-cinema-art',
+    title: 'В. В. Маяковский. «Отношение сегодняшнего театра и кинематографа к искусству»',
+    url: 'https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-281-.htm?cmd=p',
+    kind: 'primary',
+    institution: 'ФЭБ',
+    year: 1913,
+    note: 'Продолжение полемики о театре, реализме и техническом воспроизводстве.',
+  },
+  {
+    id: 'early-today-lubok',
+    title: 'В. В. Маяковский. Тексты для издательства «Сегодняшний лубок»',
+    url: 'https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-355-.htm?cmd=p',
+    kind: 'primary',
+    institution: 'ФЭБ',
+    year: 1914,
+    note: 'Ранний опыт соединения короткого текста, изображения и массовой коммуникации.',
+  },
+  {
+    id: 'early-chronicle-1912',
+    title: '1912 год: хроника жизни и деятельности В. В. Маяковского',
+    url: 'https://feb-web.ru/feb/mayakovsky/kmh-abc/kmh-058-.htm?cmd=p&istext=1',
+    kind: 'research',
+    institution: 'ФЭБ',
+    year: 1985,
+    note: 'Дебют в «Пощёчине общественному вкусу» и формирование футуристического круга.',
+  },
+];
+
+export const brikSupplementalSources: EssaySource[] = [
+  {
+    id: 'brik-photo-mayakovsky-lilya-1915',
+    title: 'Владимир Маяковский и Лиля Брик. 1915 год',
+    url: 'https://commons.wikimedia.org/wiki/File:Vladimir_mayakovsky_and_lilya_brik.jpg',
+    kind: 'archive',
+    institution: 'Wikimedia Commons',
+    year: 1915,
+    note: 'Ранний совместный архивный снимок.',
+  },
+  {
+    id: 'brik-photo-circle-1924',
+    title: 'Маяковский, Лиля Брик, Пастернак, Эйзенштейн и литературный круг. 1924 год',
+    url: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_Pasternak.jpg',
+    kind: 'archive',
+    institution: 'Wikimedia Commons',
+    year: 1924,
+    note: 'Документ художественной и редакционной среды.',
+  },
+  {
+    id: 'brik-photo-circle-1925',
+    title: 'Маяковский и круг Бриков после возвращения из Америки. 1925 год',
+    url: 'https://commons.wikimedia.org/wiki/File:Maiakowski_1925.jpg',
+    kind: 'archive',
+    institution: 'Wikimedia Commons',
+    year: 1925,
+    note: 'Групповой домашний кадр.',
+  },
+  {
+    id: 'brik-photo-crimea-1926',
+    title: 'Владимир Маяковский и Лиля Брик в Крыму. 1926 год',
+    url: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_Brik_Crimea_1926.jpg',
+    kind: 'archive',
+    institution: 'Wikimedia Commons',
+    year: 1926,
+    note: 'Совместная фотография позднего периода отношений.',
+  },
+];

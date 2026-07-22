@@ -1,5 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ExternalLink, Feather, Maximize2, Quote, X } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import {
+  ExternalLink,
+  Feather,
+  Maximize2,
+  Quote,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
 import { withGold, splitParagraphs } from './richText';
 import { sectionAnchor } from './anchor';
@@ -32,10 +42,10 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
   );
 }
 
-function LeadBlock({ block }: { block: Block<'lead'> }) {
+function LeadBlock({ block, citations }: { block: Block<'lead'>; citations?: ReactNode }) {
   return (
     <p className="essay-lead mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty">
-      {block.text}
+      {block.text}{citations}
     </p>
   );
 }
@@ -58,12 +68,14 @@ function SectionBlock({ block, number }: { block: Block<'section'>; number?: num
   );
 }
 
-function ParagraphBlock({ block }: { block: Block<'paragraph'> }) {
+function ParagraphBlock({ block, citations }: { block: Block<'paragraph'>; citations?: ReactNode }) {
+  const paragraphs = splitParagraphs(block.text);
   return (
     <>
-      {splitParagraphs(block.text).map((p, i) => (
-        <p key={i} className="mb-6 text-lg md:text-xl leading-[1.9] text-luxury-gray-light font-light text-pretty">
-          {withGold(p)}
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="mb-6 text-lg md:text-xl leading-[1.9] text-luxury-gray-light font-light text-pretty">
+          {withGold(paragraph)}
+          {index === paragraphs.length - 1 ? citations : null}
         </p>
       ))}
     </>
@@ -93,7 +105,7 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
           href={block.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-8 shrink-0 items-center gap-1 py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+          className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
         >
           Источник <ExternalLink size={11} aria-hidden="true" />
         </a>
@@ -104,9 +116,13 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
 
 function ImageBlock({ block }: { block: Block<'image'> }) {
   const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const captionId = useId();
+  const layoutId = `essay-image-${useId().replace(/:/g, '')}`;
+  const reduceMotion = useReducedMotion();
   const layout = block.layout ?? 'wide';
   const imageSrc = asset(block.src);
   const frameClass =
@@ -115,6 +131,9 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       : layout === 'cinematic'
         ? 'aspect-[16/9]'
         : 'aspect-[3/2]';
+  const sizes = layout === 'portrait'
+    ? '(max-width: 768px) 92vw, 576px'
+    : '(max-width: 1024px) 92vw, 768px';
 
   useEffect(() => {
     if (!open) return;
@@ -139,74 +158,140 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
+      setZoomed(false);
       requestAnimationFrame(() => triggerRef.current?.focus());
     };
   }, [open]);
 
   const image = (
-    <button
+    <motion.button
       ref={triggerRef}
       type="button"
       onClick={() => setOpen(true)}
+      whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.992 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
       className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}`}
       aria-haspopup="dialog"
     >
-      <img
-        src={imageSrc}
-        alt={block.alt}
-        loading="lazy"
-        decoding="async"
-        className="h-full w-full object-cover grayscale-[0.08] transition duration-700 ease-out group-hover:scale-[1.018] group-hover:contrast-[1.04]"
-        style={{ objectPosition: block.objectPosition || '50% 50%' }}
-      />
-      <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/[0.03]" />
-      <span className="pointer-events-none absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/65 opacity-0 backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
+      <motion.span
+        layoutId={layoutId}
+        transition={{ type: 'spring', stiffness: 250, damping: 30, mass: 0.8 }}
+        className="absolute inset-0"
+      >
+        {!loaded && (
+          <span className="absolute inset-0 overflow-hidden bg-[#0d0d0d]">
+            <span className="absolute inset-y-0 -left-1/2 w-1/2 animate-[shimmer_1.7s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.055] to-transparent motion-reduce:animate-none" />
+          </span>
+        )}
+        <img
+          src={imageSrc}
+          alt={block.alt}
+          loading="lazy"
+          decoding="async"
+          sizes={sizes}
+          onLoad={() => setLoaded(true)}
+          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{ objectPosition: block.objectPosition || '50% 50%' }}
+        />
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-white/[0.035]" />
+        <span className="pointer-events-none absolute -inset-12 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100 [background:radial-gradient(circle_at_72%_18%,rgba(212,175,55,0.12),transparent_38%)]" />
+      </motion.span>
+      <span className="pointer-events-none absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/65 opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:opacity-100">
         <Maximize2 size={15} aria-hidden="true" />
       </span>
-    </button>
+    </motion.button>
   );
 
   return (
     <>
-      <figure className="my-12">
+      <motion.figure layout className="my-12">
         {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
         <ImageMeta block={block} />
-      </figure>
+      </motion.figure>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={block.alt}
-          aria-describedby={captionId}
-          className="fixed inset-0 z-[160] flex items-center justify-center bg-black/92 p-4 backdrop-blur-md"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) setOpen(false);
-          }}
-        >
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"
-            aria-label="Закрыть изображение"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={block.alt}
+            aria-describedby={captionId}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+            transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 sm:p-5"
+            onMouseDown={(event) => {
+              if (event.currentTarget === event.target) setOpen(false);
+            }}
           >
-            <X size={20} aria-hidden="true" />
-          </button>
-          <div className="max-h-[92vh] max-w-[94vw]">
-            <img
-              src={imageSrc}
-              alt={block.alt}
-              decoding="async"
-              className="max-h-[84vh] max-w-full rounded-xl object-contain shadow-2xl"
-            />
-            <p id={captionId} className="mx-auto mt-3 max-w-4xl text-center text-xs leading-relaxed text-white/55">
-              {block.caption}
-            </p>
-          </div>
-        </div>
-      )}
+            <motion.div
+              layoutId={layoutId}
+              transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
+              className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+            >
+              <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
+                <motion.img
+                  src={imageSrc}
+                  alt={block.alt}
+                  decoding="async"
+                  drag={zoomed}
+                  dragMomentum={false}
+                  dragElastic={0.08}
+                  animate={{ scale: zoomed ? 1.65 : 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                  onDoubleClick={() => setZoomed((value) => !value)}
+                  className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                />
+                <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
+              </div>
+
+              <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
+                <p id={captionId} className="min-w-0 flex-1 text-xs leading-relaxed text-white/58">
+                  {block.caption}
+                  {block.credit ? <span className="text-white/32"> · {block.credit}</span> : null}
+                </p>
+                <div className="flex items-center gap-2">
+                  {block.sourceUrl && (
+                    <a
+                      href={block.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                    >
+                      Источник <ExternalLink size={11} />
+                    </a>
+                  )}
+                  <motion.button
+                    type="button"
+                    onClick={() => setZoomed((value) => !value)}
+                    whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/60 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                    aria-label={zoomed ? 'Уменьшить изображение' : 'Увеличить изображение'}
+                    aria-pressed={zoomed}
+                  >
+                    {zoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.button
+              ref={closeRef}
+              type="button"
+              onClick={() => setOpen(false)}
+              whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
+              aria-label="Закрыть изображение"
+            >
+              <X size={20} aria-hidden="true" />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -286,13 +371,15 @@ function VoiceBlock({ block }: { block: Block<'voice'> }) {
   );
 }
 
-function NoteBlock({ block }: { block: Block<'note'> }) {
+function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: ReactNode }) {
   return (
     <aside className="my-10 rounded-[2rem] border-l-[6px] border-l-cyan-400/60 bg-[#061018]/60 p-6 md:p-8">
       <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
         THE LEGENDARY POET — ремарка
       </div>
-      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">{block.text}</p>
+      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
+        {block.text}{citations}
+      </p>
     </aside>
   );
 }
@@ -310,9 +397,9 @@ function ReflectionBlock({ block }: { block: Block<'reflection'> }) {
           <span className="text-[10px] font-bold uppercase tracking-[0.3em]">{titleCase(block.heading || 'Библейская ремарка')}</span>
           <span className="h-px w-10 bg-luxury-gold/40" />
         </div>
-        {splitParagraphs(block.text).map((p, i) => (
-          <p key={i} className="mx-auto mb-5 max-w-2xl text-center font-serif text-xl md:text-2xl leading-[1.7] text-luxury-gold-light/90 italic text-pretty">
-            {withGold(p)}
+        {splitParagraphs(block.text).map((paragraph, index) => (
+          <p key={index} className="mx-auto mb-5 max-w-2xl text-center font-serif text-xl md:text-2xl leading-[1.7] text-luxury-gold-light/90 italic text-pretty">
+            {withGold(paragraph)}
           </p>
         ))}
       </div>
@@ -330,16 +417,24 @@ function DividerBlock() {
   );
 }
 
-export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; sectionNumber?: number }) {
+export function EssayBlockView({
+  block,
+  sectionNumber,
+  citations,
+}: {
+  block: EssayBlock;
+  sectionNumber?: number;
+  citations?: ReactNode;
+}) {
   switch (block.type) {
     case 'epigraph':
       return <EpigraphBlock block={block} />;
     case 'lead':
-      return <LeadBlock block={block} />;
+      return <LeadBlock block={block} citations={citations} />;
     case 'section':
       return <SectionBlock block={block} number={sectionNumber} />;
     case 'paragraph':
-      return <ParagraphBlock block={block} />;
+      return <ParagraphBlock block={block} citations={citations} />;
     case 'image':
       return <ImageBlock block={block} />;
     case 'pullquote':
@@ -349,7 +444,7 @@ export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; se
     case 'voice':
       return <VoiceBlock block={block} />;
     case 'note':
-      return <NoteBlock block={block} />;
+      return <NoteBlock block={block} citations={citations} />;
     case 'reflection':
       return <ReflectionBlock block={block} />;
     case 'divider':

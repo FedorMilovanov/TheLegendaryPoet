@@ -2,13 +2,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { essays } from '../src/data/essays/index';
 import { sectionAnchor } from '../src/components/essay/anchor';
-import type { Essay, EssayBlock } from '../src/types/essay';
+import type { Essay, EssayBlock, EssaySourceKind } from '../src/types/essay';
 
 const errors: string[] = [];
 const warnings: string[] = [];
 const institutionalSourcePattern = /музей|мемориаль|выставк|фильм|кино/i;
 const primarySourceUrlPattern = /feb-web\.ru|rvb\.ru|wikisource\.org/i;
 const scriptureReferencePattern = /\((?:[1-3]\s*)?[А-ЯЁ][А-Яа-яё. ]+\s+\d+:\d+(?:[–-]\d+)?\)/g;
+const allowedSourceKinds = new Set<EssaySourceKind>(['primary', 'archive', 'research', 'context']);
+
+const sourceMinimums: Record<string, { total: number; primary: number }> = {
+  'mayakovsky-before-revolution': { total: 30, primary: 18 },
+  'mayakovsky-gromovoy': { total: 30, primary: 18 },
+  'brik-case': { total: 30, primary: 12 },
+};
 
 const requiredContentMarkers: Record<string, string[]> = {
   'yesenin-kutezhi': [
@@ -178,7 +185,7 @@ function validateSources(essay: Essay) {
   }
 
   const independentSources = sources.filter(
-    (source) => !institutionalSourcePattern.test(source.title),
+    (source) => source.kind === 'primary' || !institutionalSourcePattern.test(source.title),
   );
 
   if (independentSources.length === 0) {
@@ -188,17 +195,53 @@ function validateSources(essay: Essay) {
     );
   }
 
-  const primarySources = sources.filter((source) =>
-    source.url ? primarySourceUrlPattern.test(source.url) : false,
+  const primarySources = sources.filter(
+    (source) =>
+      source.kind === 'primary' ||
+      Boolean(source.url && primarySourceUrlPattern.test(source.url)),
   );
 
   if (primarySources.length < 2) {
-    warning(essay, `has only ${primarySources.length} linked FEB/RVB/Wikisource primary sources`);
+    warning(essay, `has only ${primarySources.length} linked primary sources`);
   }
 
-  for (const source of sources) {
+  const minimum = sourceMinimums[essay.slug];
+  if (minimum && sources.length < minimum.total) {
+    error(essay, `requires at least ${minimum.total} sources; found ${sources.length}`);
+  }
+  if (minimum && primarySources.length < minimum.primary) {
+    error(essay, `requires at least ${minimum.primary} primary sources; found ${primarySources.length}`);
+  }
+
+  const sourceIds = new Set<string>();
+  const sourceUrls = new Set<string>();
+
+  for (const [index, source] of sources.entries()) {
+    const label = `source ${index + 1}`;
+    if (!source.title.trim()) error(essay, `${label} has an empty title`);
     if (source.url && !/^https?:\/\//.test(source.url)) {
-      error(essay, `source has an invalid URL: ${source.title}`);
+      error(essay, `${label} has an invalid URL: ${source.title}`);
+    }
+    if (source.kind && !allowedSourceKinds.has(source.kind)) {
+      error(essay, `${label} has an invalid kind: ${source.kind}`);
+    }
+    if (source.id) {
+      if (!/^[a-z0-9-]+$/.test(source.id)) error(essay, `${label} has an invalid id: ${source.id}`);
+      if (sourceIds.has(source.id)) error(essay, `duplicate source id: ${source.id}`);
+      sourceIds.add(source.id);
+    } else if (minimum) {
+      warning(essay, `${label} has no stable id`);
+    }
+    if (source.url) {
+      const normalizedUrl = source.url.replace(/^http:/, 'https:').replace(/\/$/, '');
+      if (sourceUrls.has(normalizedUrl)) error(essay, `duplicate source URL: ${source.url}`);
+      sourceUrls.add(normalizedUrl);
+    }
+    if ((source.kind === 'primary' || source.kind === 'archive') && !source.institution) {
+      warning(essay, `${label} should name its institution or collection`);
+    }
+    if ((source.kind === 'primary' || source.kind === 'archive') && !source.note) {
+      warning(essay, `${label} should explain its evidentiary role`);
     }
   }
 }

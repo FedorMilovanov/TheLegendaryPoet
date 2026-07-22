@@ -1,0 +1,16 @@
+@keyframes shimmer {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(320%); }
+}
+
+/* The image viewer deliberately feels soft rather than mechanically modal. */
+.essay-body figure {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .essay-body figure {
+    content-visibility: visible;
+  }
+}
