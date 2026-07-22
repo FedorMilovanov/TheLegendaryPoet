@@ -64,5 +64,7 @@ jobs:
           VITE_BASE: /
       - name: Prerender social pages
         run: npm run prerender
+      - name: Validate prerendered SEO and JSON-LD
+        run: npm run validate:prerender-seo
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
