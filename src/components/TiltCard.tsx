@@ -28,6 +28,7 @@ export default function TiltCard({
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
+  const settleFrameRef = useRef<number | null>(null);
   const rectRef = useRef<DOMRect | null>(null);
   const pointerRef = useRef({ x: 0.5, y: 0.5 });
   const canAnimateRef = useRef(false);
@@ -39,17 +40,45 @@ export default function TiltCard({
     }
   };
 
-  const reset = () => {
+  const cancelSettleFrame = () => {
+    if (settleFrameRef.current != null) {
+      cancelAnimationFrame(settleFrameRef.current);
+      settleFrameRef.current = null;
+    }
+  };
+
+  const clearPointerState = () => {
     cancelFrame();
     rectRef.current = null;
     pointerRef.current = { x: 0.5, y: 0.5 };
 
     const node = ref.current;
-    if (!node) return;
+    if (!node) return null;
     node.removeAttribute('data-tilting');
-    node.style.removeProperty('transform');
     node.style.setProperty('--tilt-sheen-x', '50%');
     node.style.setProperty('--tilt-sheen-y', '50%');
+    return node;
+  };
+
+  const reset = () => {
+    const node = clearPointerState();
+    node?.style.removeProperty('transform');
+  };
+
+  /** Flatten synchronously before a click starts a shared View Transition or
+   * opens a portal. Otherwise Chromium can snapshot a half-tilted cover and then
+   * morph that raster into a flat hero, which reads as a flash or soft frame. */
+  const flattenForActivation = () => {
+    const node = clearPointerState();
+    if (!node) return;
+
+    cancelSettleFrame();
+    node.style.setProperty('transition', 'none');
+    node.style.removeProperty('transform');
+    settleFrameRef.current = requestAnimationFrame(() => {
+      node.style.removeProperty('transition');
+      settleFrameRef.current = null;
+    });
   };
 
   useEffect(() => {
@@ -67,6 +96,7 @@ export default function TiltCard({
 
     return () => {
       cancelFrame();
+      cancelSettleFrame();
       reducedMotion.removeEventListener?.('change', updateCapability);
       coarsePointer.removeEventListener?.('change', updateCapability);
     };
@@ -120,6 +150,7 @@ export default function TiltCard({
         onPointerMove={handlePointerMove}
         onPointerLeave={reset}
         onPointerCancel={reset}
+        onPointerDown={flattenForActivation}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         {children}
