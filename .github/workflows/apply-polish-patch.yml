@@ -50,7 +50,22 @@ jobs:
 
           localizer = Path('scripts/localize-essay-images.mjs')
           localizer_text = localizer.read_text().replace('fetch(encodeURI(url), {', 'fetch(url, {')
-          localizer.write_text(localizer_text)
+          old = """    for (const width of [640, 1600]) {
+              const suffix = width === 1600 ? '' : `-${width}`;
+              await encodeVariant(input, `${base}${suffix}.webp`, width, 'webp');
+              await encodeVariant(input, `${base}${suffix}.avif`, width, 'avif');
+            }
+          """
+          new = """    for (const width of [640, 1600]) {
+              const suffix = width === 1600 ? '' : `-${width}`;
+              const webpPath = `${base}${suffix}.webp`;
+              if (webpPath !== source) await encodeVariant(input, webpPath, width, 'webp');
+              await encodeVariant(input, `${base}${suffix}.avif`, width, 'avif');
+            }
+          """
+          if old not in localizer_text:
+              raise SystemExit('Expected local cover optimization loop was not found')
+          localizer.write_text(localizer_text.replace(old, new))
           PY
 
       - uses: actions/setup-node@v4
