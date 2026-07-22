@@ -5,6 +5,7 @@ interface RouteAudit {
   route: string;
   engine: 'essay' | 'legacy';
   imageCount: number;
+  lightboxCount: number;
   brokenImages: string[];
   consoleErrors: string[];
   pageErrors: string[];
@@ -85,13 +86,8 @@ async function captureVisualSlices(page: Page, route: string, testInfo: TestInfo
     if (count > 0) {
       await blocks.nth(blockIndex).scrollIntoViewIfNeeded();
       await expect(blocks.nth(blockIndex)).toBeVisible();
-    } else {
-      await page.evaluate((ratio) => {
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        window.scrollTo({ top: max * ratio, behavior: 'instant' });
-      }, sampleIndex / Math.max(1, samples.length - 1));
     }
-    await page.waitForTimeout(180);
+    await page.waitForTimeout(120);
     await page.screenshot({
       path: testInfo.outputPath(`${safeName || 'home'}-slice-${sampleIndex + 1}.png`),
       animations: 'disabled',
@@ -99,55 +95,79 @@ async function captureVisualSlices(page: Page, route: string, testInfo: TestInfo
   }
 }
 
-async function verifyLongformInteractions(page: Page) {
-  await expect(page.locator('.essay-body')).toBeVisible();
-  await expect(page.locator('.essay-body > *').first()).toBeVisible();
-
+async function verifyEveryLightbox(page: Page): Promise<number> {
   const imageTriggers = page.locator('button[aria-label^="Увеличить изображение"]');
-  if ((await imageTriggers.count()) > 0) {
-    const trigger = imageTriggers.first();
+  const count = await imageTriggers.count();
+
+  for (let index = 0; index < count; index += 1) {
+    const trigger = imageTriggers.nth(index);
     await trigger.scrollIntoViewIfNeeded();
     await trigger.click();
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+
     const viewport = page.viewportSize();
     const dialogBox = await dialog.boundingBox();
-    expect(dialogBox?.x ?? -1, 'Lightbox must start at the viewport left edge').toBeLessThanOrEqual(1);
-    expect(dialogBox?.y ?? -1, 'Lightbox must start at the viewport top edge').toBeLessThanOrEqual(1);
-    expect(dialogBox?.width ?? 0, 'Lightbox must cover the viewport width').toBeGreaterThanOrEqual(
+    expect(dialogBox?.x ?? -1, `image ${index + 1}: lightbox must start at viewport left`).toBeLessThanOrEqual(1);
+    expect(dialogBox?.y ?? -1, `image ${index + 1}: lightbox must start at viewport top`).toBeLessThanOrEqual(1);
+    expect(dialogBox?.width ?? 0, `image ${index + 1}: lightbox must cover viewport width`).toBeGreaterThanOrEqual(
       (viewport?.width ?? 0) - 2,
     );
-    expect(dialogBox?.height ?? 0, 'Lightbox must cover the viewport height').toBeGreaterThanOrEqual(
+    expect(dialogBox?.height ?? 0, `image ${index + 1}: lightbox must cover viewport height`).toBeGreaterThanOrEqual(
       (viewport?.height ?? 0) - 2,
     );
-    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
     const close = page.getByRole('button', { name: 'Закрыть изображение' });
     await expect(close).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(close, 'Tab must move through controls inside the lightbox').not.toBeFocused();
+    if (index === 0) {
+      await page.keyboard.press('Tab');
+      await expect(close, 'Tab must move through controls inside the lightbox').not.toBeFocused();
 
-    const zoom = page
-      .getByRole('button', { name: /Увеличить изображение|Уменьшить изображение/ })
-      .last();
-    await zoom.click();
-    await expect(zoom).toHaveAttribute('aria-pressed', 'true');
+      const zoom = page
+        .getByRole('button', { name: /Увеличить изображение|Уменьшить изображение/ })
+        .last();
+      await zoom.click();
+      await expect(zoom).toHaveAttribute('aria-pressed', 'true');
+    }
 
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
   }
 
-  const citation = page.locator('.essay-body sup a[href^="#source-"]').first();
-  if ((await citation.count()) > 0) {
-    const targetHash = await citation.getAttribute('href');
-    expect(targetHash).toBeTruthy();
-    await citation.click();
+  return count;
+}
+
+async function verifyEveryCitationTarget(page: Page): Promise<number> {
+  const citations = page.locator('.essay-body sup a[href^="#source-"]');
+  const count = await citations.count();
+  const targets = await citations.evaluateAll((links) =>
+    [...new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute('href')).filter(Boolean))] as string[],
+  );
+
+  for (const targetHash of targets) {
+    const citation = citations.filter({ has: page.locator(`[href="${targetHash}"]`) }).first();
+    const directCitation = page.locator(`.essay-body sup a[href="${targetHash}"]`).first();
+    await directCitation.scrollIntoViewIfNeeded();
+    await directCitation.click();
     await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(targetHash);
-    await expect(page.locator(targetHash!)).toBeVisible();
+    await expect(page.locator(targetHash)).toBeVisible();
+    expect(await citation.count()).toBeGreaterThanOrEqual(0);
   }
+
+  return count;
+}
+
+async function verifyLongformInteractions(page: Page) {
+  await expect(page.locator('.essay-body')).toBeVisible();
+  await expect(page.locator('.essay-body > *').first()).toBeVisible();
+
+  const lightboxCount = await verifyEveryLightbox(page);
+  const citationCount = await verifyEveryCitationTarget(page);
 
   const sourceLibrary = page.locator('#sources');
   if ((await sourceLibrary.count()) > 0) {
@@ -158,6 +178,8 @@ async function verifyLongformInteractions(page: Page) {
       await expect(primaryFilter).toHaveAttribute('aria-pressed', 'true');
     }
   }
+
+  return { lightboxCount, citationCount };
 }
 
 async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promise<RouteAudit> {
@@ -176,7 +198,10 @@ async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promis
 
   const engine: RouteAudit['engine'] =
     (await page.locator('.essay-body').count()) > 0 ? 'essay' : 'legacy';
-  if (engine === 'essay') await verifyLongformInteractions(page);
+  const interactions =
+    engine === 'essay'
+      ? await verifyLongformInteractions(page)
+      : { lightboxCount: 0, citationCount: 0 };
 
   await hydrateArticleMedia(page);
   const images = await auditImages(page);
@@ -202,15 +227,16 @@ async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promis
     route,
     engine,
     imageCount: images.length,
+    lightboxCount: interactions.lightboxCount,
     brokenImages,
     consoleErrors,
     pageErrors,
     horizontalOverflow,
-    inlineCitations: await page.locator('.essay-body sup a[href^="#source-"]').count(),
+    inlineCitations: interactions.citationCount,
   };
 }
 
-test('all article routes use one engine and pass media, source, and layout checks', async ({ page }, testInfo) => {
+test('all article routes use one engine and every media/source interaction works', async ({ page }, testInfo) => {
   const routes = await collectArticleRoutes(page);
   const audits: RouteAudit[] = [];
 
