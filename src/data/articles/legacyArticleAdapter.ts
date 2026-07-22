@@ -10,20 +10,16 @@ export const articleCategoryLabels: Record<Article['category'], string> = {
 };
 
 function articleBlocks(article: Article): EssayBlock[] {
-  const paragraphs = article.content
+  return article.content
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-
-  return [
-    { type: 'lead', text: article.excerpt },
-    ...paragraphs.map((text): EssayBlock => ({ type: 'paragraph', text })),
-  ];
+    .filter(Boolean)
+    .map((text): EssayBlock => ({ type: 'paragraph', text }));
 }
 
 /**
- * Temporary compatibility adapter: old records keep their compact authoring
- * shape, but every public article is rendered by the same typed longform engine.
+ * Compatibility adapter: compact records keep their authoring shape, while all
+ * public articles render through the shared typed longform engine.
  */
 export function legacyArticleToEssay(article: Article): Essay {
   const categoryLabel = articleCategoryLabels[article.category];
