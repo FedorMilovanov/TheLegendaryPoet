@@ -8,6 +8,9 @@ const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
   cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
+  coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET',
 };
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
@@ -15,6 +18,9 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   coverAlt: 'Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года',
+  coverKind: 'restoration',
+  coverCredit: 'Осип Брик · реставрация проекта',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
 };
 
 export const essays: Essay[] = [
