@@ -1,0 +1,213 @@
+/*
+ * Image interaction stability layer.
+ * Imported after the legacy global styles so it can retire the expensive
+ * preserve-3d/translateZ rules without rewriting unrelated design tokens.
+ */
+
+html {
+  scrollbar-gutter: stable;
+}
+
+.tilt-card-wrapper {
+  perspective: 1200px;
+  transform-style: flat;
+}
+
+.tilt-card-inner {
+  transform: none;
+  transform-style: flat;
+  backface-visibility: hidden;
+  will-change: auto;
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tilt-card-inner[data-tilting='true'] {
+  will-change: transform;
+  transition: none;
+}
+
+/* The old global rule translated every direct child towards the camera. That
+   multiplied raster planes and was the main source of shimmering image edges. */
+.tilt-card-inner > * {
+  transform: none;
+}
+
+.tilt-card-sheen {
+  transition: opacity 0.24s ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tilt-card-inner:hover > .tilt-card-sheen {
+    opacity: 1;
+  }
+
+  /* Tilt already supplies the spatial movement; a second scale/translation on
+     the card body creates competing transforms and softens text. */
+  .tilt-card-inner .luxury-card:hover {
+    transform: none;
+  }
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .tilt-card-wrapper {
+    perspective: none;
+  }
+
+  .tilt-card-inner,
+  .tilt-card-inner[data-tilting='true'] {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
+
+  .tilt-card-sheen {
+    display: none;
+  }
+}
+
+/* Inline essay images keep one stable raster surface. Opacity is the only load
+   transition; hover scale is restrained and only enabled for a precise mouse. */
+.essay-image-preview {
+  isolation: isolate;
+  contain: paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.essay-inline-image {
+  opacity: 0;
+  transform: scale(1.003);
+  backface-visibility: hidden;
+  transition:
+    opacity 0.28s ease-out,
+    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.essay-inline-image.is-loaded {
+  opacity: 1;
+}
+
+.essay-image-expand {
+  transform: scale(0.96);
+  transition:
+    opacity 0.22s ease-out,
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .essay-image-preview:hover .essay-inline-image.is-loaded {
+    transform: scale(1.016);
+  }
+
+  .essay-image-preview:hover .essay-image-expand,
+  .essay-image-preview:focus-visible .essay-image-expand {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The dialog does not animate backdrop-filter. It fades a precomposited glass
+   layer instead, avoiding the black flash seen during GPU-heavy blur ramps. */
+.essay-lightbox {
+  overscroll-behavior: contain;
+  touch-action: none;
+  -webkit-backdrop-filter: blur(12px) saturate(112%);
+  backdrop-filter: blur(12px) saturate(112%);
+}
+
+.essay-lightbox-panel {
+  min-width: 0;
+  touch-action: none;
+}
+
+.essay-lightbox-viewport {
+  width: fit-content;
+  height: fit-content;
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 9rem);
+  line-height: 0;
+  background: #020202;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.essay-lightbox-viewport > picture {
+  display: block;
+  width: fit-content;
+  height: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 0;
+}
+
+.essay-lightbox-image {
+  display: block;
+  object-fit: contain;
+  backface-visibility: hidden;
+  transform-origin: center;
+}
+
+.essay-lightbox-meta {
+  max-height: 6rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.essay-lightbox-close {
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+/* Short landscape phones devote the screen to the photograph and keep only
+   compact controls underneath. The full caption remains in the article. */
+@media (max-height: 620px) {
+  .essay-lightbox-panel {
+    max-height: calc(100dvh - 0.5rem);
+  }
+
+  .essay-lightbox-viewport {
+    max-height: calc(100dvh - 3.75rem);
+  }
+
+  .essay-lightbox-image {
+    max-height: calc(100dvh - 3.75rem) !important;
+  }
+
+  .essay-lightbox-meta {
+    margin-top: 0.35rem;
+    justify-content: flex-end;
+  }
+
+  .essay-lightbox-meta > p {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .essay-lightbox {
+    padding-left: max(0.35rem, env(safe-area-inset-left));
+    padding-right: max(0.35rem, env(safe-area-inset-right));
+  }
+
+  .essay-lightbox-viewport {
+    max-width: calc(100vw - 0.7rem);
+  }
+
+  .essay-lightbox-image {
+    max-width: calc(100vw - 0.7rem) !important;
+  }
+
+  .essay-lightbox-meta {
+    width: calc(100vw - 1rem);
+    padding-inline: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .essay-inline-image,
+  .essay-image-expand,
+  .essay-cover-image {
+    transition: none !important;
+  }
+}
