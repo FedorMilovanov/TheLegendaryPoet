@@ -8,6 +8,10 @@ import {
   mayakovskyEarlySources,
   mayakovskyLateSources,
 } from './mayakovskySources';
+import {
+  brikSupplementalSources,
+  mayakovskyEarlySupplementalSources,
+} from './mayakovskySupplementalSources';
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
@@ -16,7 +20,7 @@ const mayakovskyPartOneWithLocalCover: Essay = {
   coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
   coverKind: 'reconstruction',
   coverCredit: 'THE LEGENDARY POET',
-  sources: mayakovskyEarlySources,
+  sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
 };
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
@@ -32,7 +36,7 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
 
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
-  sources: brikDocumentSources,
+  sources: [...brikDocumentSources, ...brikSupplementalSources],
 };
 
 export const essays: Essay[] = [
