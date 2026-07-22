@@ -30,6 +30,25 @@ function makeVariants(direction: Direction, distance: number, blur: boolean): Va
   };
 }
 
+function useSystemReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false,
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
+
+  return reduced;
+}
+
 export default function Reveal({
   children,
   direction = 'up',
@@ -43,10 +62,12 @@ export default function Reveal({
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
-  const prefersReduced = useReducedMotion();
+  const framerReduced = useReducedMotion();
+  const systemReduced = useSystemReducedMotion();
+  const reduced = Boolean(framerReduced) || systemReduced;
 
   useEffect(() => {
-    if (prefersReduced) {
+    if (reduced) {
       setInView(true);
       return;
     }
@@ -68,23 +89,26 @@ export default function Reveal({
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [threshold, once, prefersReduced]);
+  }, [threshold, once, reduced]);
 
-  const reduced = Boolean(prefersReduced);
-  const variants = makeVariants(reduced ? 'none' : direction, distance, reduced ? false : blur);
+  // A plain element is safer than a zero-duration animation: no hidden variant
+  // can survive hydration or a delayed matchMedia update.
+  if (reduced) {
+    return (
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={reduced ? false : 'hidden'}
-      animate={reduced || inView ? 'visible' : 'hidden'}
-      variants={variants}
-      transition={{
-        duration: reduced ? 0 : duration,
-        delay: reduced ? 0 : delay,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={makeVariants(direction, distance, blur)}
+      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
