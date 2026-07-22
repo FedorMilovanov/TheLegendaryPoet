@@ -20,7 +20,10 @@
   - [`sources/mayakovsky-pss-volume-13-1961.md`](./sources/mayakovsky-pss-volume-13-1961.md) — ПСС Маяковского, т. 13, 1961;
   - [`verification/correspondence-editions-collation-pass1-2026-07-22.md`](./verification/correspondence-editions-collation-pass1-2026-07-22.md) — первый сравнительный проход по числам 125 / 33 / 92 / 416, источникам текста, купюрам и датировкам;
   - [`verification/correspondence-index-1-416-extraction-pass1.md`](./verification/correspondence-index-1-416-extraction-pass1.md) — полный контроль заголовков 1–416 без пропусков и дублей;
-  - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — источниковедческий аудит письма-дневника № 113, его неполного автографа и редакции Лили 1956 года.
+  - [`verification/correspondence-index-1-416-pass2-classification.md`](./verification/correspondence-index-1-416-pass2-classification.md) — первый полный жанровый и источниковедческий слой для всех 416 единиц;
+  - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — источниковедческий аудит письма-дневника № 113, его неполного автографа и редакции Лили 1956 года;
+  - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта всей опубликованной выборки разлуки 1922–1923 годов;
+  - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года без причинных домыслов.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
@@ -51,8 +54,10 @@
 ### Часть II и поздний период
 
 - [`notes/jangfeldt-pro-eto-1922-1923.md`](./notes/jangfeldt-pro-eto-1922-1923.md) — конфликт декабря 1922 года, двухмесячная разлука, письма, дневник и поэма «Про это»;
+- [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — поединичная источниковедческая карта опубликованного блока разлуки и его редакционных границ;
 - [`notes/jangfeldt-america-new-rules-1925-1927.md`](./notes/jangfeldt-america-new-rules-1925-1927.md) — Америка, Элли Джонс, дочь, изменение отношений с Лилей, Осип и Евгения, Гендриков переулок;
 - [`notes/jangfeldt-tatyana-final-crisis-1928-1930.md`](./notes/jangfeldt-tatyana-final-crisis-1928-1930.md) — Татьяна Яковлева, визовая версия, РАПП, выставка, Полонская и последние месяцы;
+- [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — поздняя переписка, рабочая и бытовая связь с Бриками, последние открытки и строгая граница между документом и причинным выводом;
 - [`notes/jangfeldt-canonization-archives-after-1930.md`](./notes/jangfeldt-canonization-archives-after-1930.md) — письмо Сталину, государственная канонизация, советская цензура, антибриковская контркампания, полный корпус переписки и поздняя судьба Лили и Осипа;
 - [`notes/jangfeldt-posthumous-canon-briks-1930-1978.md`](./notes/jangfeldt-posthumous-canon-briks-1930-1978.md) — контрольный постраничный проход с. 589–614: первые объяснения смерти, Примаков, Катанян, последние годы Лили и перечень документов, которые ещё требуется получить.
 
