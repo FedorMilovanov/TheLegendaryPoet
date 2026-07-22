@@ -8,6 +8,7 @@ const ROOT = process.cwd();
 const ARCHIVE_DIR = path.join(ROOT, 'public/images/essays/archive');
 const GENERATED_FILE = path.join(ROOT, 'src/generated/essayMedia.ts');
 const TARGET_WIDTHS = [480, 768, 1120, 1600];
+const FORMAT_PRIORITY = ['avif', 'webp'];
 const USER_AGENT = 'TheLegendaryPoet/1.0 (archival image localization; https://github.com/FedorMilovanov/TheLegendaryPoet)';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -59,6 +60,14 @@ async function encodeVariant(input, outputPath, width, format) {
   }
 }
 
+async function encodeFormatSet(input, base, suffix, width) {
+  // The physical generation order mirrors the runtime <picture> contract:
+  // AVIF is the preferred representation, WebP is the compatibility fallback.
+  for (const format of FORMAT_PRIORITY) {
+    await encodeVariant(input, `${base}${suffix}.${format}`, width, format);
+  }
+}
+
 async function processRemote(entry) {
   const input = await fetchImage(entry.url);
   const metadata = await sharp(input, { failOn: 'none' }).rotate().metadata();
@@ -70,7 +79,7 @@ async function processRemote(entry) {
 
   for (const width of widths) {
     const suffix = width === largestWidth ? '' : `-${width}`;
-    for (const format of ['avif', 'webp']) {
+    for (const format of FORMAT_PRIORITY) {
       const outputPath = path.join(ARCHIVE_DIR, `${entry.key}${suffix}.${format}`);
       await encodeVariant(input, outputPath, width, format);
       const actual = await sharp(outputPath).metadata();
@@ -119,9 +128,7 @@ async function optimizeLocalEssayMedia() {
     const input = await fs.readFile(source);
     for (const width of [640, 1600]) {
       const suffix = width === 1600 ? '' : `-${width}`;
-      const webpPath = `${base}${suffix}.webp`;
-      if (webpPath !== source) await encodeVariant(input, webpPath, width, 'webp');
-      await encodeVariant(input, `${base}${suffix}.avif`, width, 'avif');
+      await encodeFormatSet(input, base, suffix, width);
     }
   }
 }
@@ -132,6 +139,8 @@ function serializeManifest(entries) {
 
 await fs.mkdir(ARCHIVE_DIR, { recursive: true });
 await fs.mkdir(path.dirname(GENERATED_FILE), { recursive: true });
+
+console.log(`Essay image format priority: ${FORMAT_PRIORITY.join(' -> ')} -> <img> WebP fallback`);
 
 const manifest = {};
 for (const [index, entry] of essayImageCatalog.entries()) {
