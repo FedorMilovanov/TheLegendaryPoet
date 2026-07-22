@@ -22,12 +22,25 @@ export default function InlineCitations({
 
   if (resolved.length === 0) return null;
 
+  const openSource = (id: string) => {
+    const hash = `#source-${encodeURIComponent(id)}`;
+    window.history.replaceState(null, '', hash);
+    // replaceState does not emit hashchange. SourceLibrary listens for it so it
+    // can clear filters, expand a collapsed source and then perform a Lenis-aware
+    // jump only after the target row has entered the DOM.
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
+
   return (
     <sup className="ml-1 inline-flex translate-y-[-0.12em] flex-wrap items-center gap-1 align-baseline not-italic">
       {resolved.map(({ id, reference }) => (
         <a
           key={id}
           href={`#source-${id}`}
+          onClick={(event) => {
+            event.preventDefault();
+            openSource(id);
+          }}
           title={reference.source.title}
           aria-label={`Источник ${reference.number}: ${reference.source.title}`}
           data-testid="inline-citation"
