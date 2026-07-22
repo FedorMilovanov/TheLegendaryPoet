@@ -8,6 +8,8 @@
 
 Профиль поэта на сайте остаётся кратким хабом. Исследовательская полнота переносится в большие статьи и не должна снова разрастаться внутри `fullBio`.
 
+Общая иерархия первичных документов, архивных каталогов, мемуаров, исследований и музейных нарративов установлена в [`../SOURCE_POLICY.md`](../SOURCE_POLICY.md).
+
 ## Текущий основной источник
 
 - Бенгт Янгфельдт. **«Ставка — жизнь. Владимир Маяковский и его круг»**. Москва: КоЛибри, 2009.
@@ -17,7 +19,9 @@
 - Ранний период 1893–1918: [`verification/claim-ledger-pass3-1893-1918.md`](./verification/claim-ledger-pass3-1893-1918.md)
 - Переходный период 1918–1924: [`verification/claim-ledger-pass4-1918-1924.md`](./verification/claim-ledger-pass4-1918-1924.md)
 - Поздний период 1922–1930: [`verification/claim-ledger-pass2.md`](./verification/claim-ledger-pass2.md)
+- Канонизация и архив 1930–1978: [`verification/claim-ledger-pass5-canonization-archives.md`](./verification/claim-ledger-pass5-canonization-archives.md)
 - Очередь поиска первоисточников: [`verification/source-pursuit-queue.md`](./verification/source-pursuit-queue.md)
+- Проверенный веб-реестр 45 ссылок: [`verification/primary-source-web-audit-2026-07-22.md`](./verification/primary-source-web-audit-2026-07-22.md)
 - Визуальный реестр: [`media/visual-ledger.md`](./media/visual-ledger.md)
 - Ход обработки: [`WORKLOG.md`](./WORKLOG.md)
 
@@ -37,7 +41,8 @@
 
 - [`notes/jangfeldt-pro-eto-1922-1923.md`](./notes/jangfeldt-pro-eto-1922-1923.md) — конфликт декабря 1922 года, двухмесячная разлука, письма, дневник и поэма «Про это»;
 - [`notes/jangfeldt-america-new-rules-1925-1927.md`](./notes/jangfeldt-america-new-rules-1925-1927.md) — Америка, Элли Джонс, дочь, изменение отношений с Лилей, Осип и Евгения, Гендриков переулок;
-- [`notes/jangfeldt-tatyana-final-crisis-1928-1930.md`](./notes/jangfeldt-tatyana-final-crisis-1928-1930.md) — Татьяна Яковлева, визовая версия, РАПП, выставка, Полонская и последние месяцы.
+- [`notes/jangfeldt-tatyana-final-crisis-1928-1930.md`](./notes/jangfeldt-tatyana-final-crisis-1928-1930.md) — Татьяна Яковлева, визовая версия, РАПП, выставка, Полонская и последние месяцы;
+- [`notes/jangfeldt-canonization-archives-after-1930.md`](./notes/jangfeldt-canonization-archives-after-1930.md) — письмо Сталину, государственная канонизация, советская цензура, антибриковская контркампания, полный корпус переписки и поздняя судьба Лили и Осипа.
 
 Эти файлы не являются готовыми статьями. Они отделяют:
 
@@ -79,6 +84,8 @@
 - оценочные обобщения о революции, любви и характере.
 
 Для таких пунктов требуется второй независимый источник, а для ключевых дат и формулировок — первичный документ.
+
+Отдельно запрещено подменять первоисточник музейной биографической страницей. Карточка конкретного предмета может быть архивной опорой; виртуальная выставка, хроника или юбилейный очерк остаются институциональным нарративом и не входят в первичный минимум.
 
 ## Целевая глубина публикаций
 
