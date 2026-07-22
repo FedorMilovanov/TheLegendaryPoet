@@ -3,6 +3,11 @@ import { yeseninKutezhi } from './yeseninKutezhi';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
+import {
+  brikDocumentSources,
+  mayakovskyEarlySources,
+  mayakovskyLateSources,
+} from './mayakovskySources';
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
@@ -11,6 +16,7 @@ const mayakovskyPartOneWithLocalCover: Essay = {
   coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
   coverKind: 'reconstruction',
   coverCredit: 'THE LEGENDARY POET',
+  sources: mayakovskyEarlySources,
 };
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
@@ -21,13 +27,19 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   coverKind: 'restoration',
   coverCredit: 'Осип Брик · реставрация проекта',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
+  sources: mayakovskyLateSources,
+};
+
+const brikCaseWithSourceLibrary: Essay = {
+  ...brikCaseVisual,
+  sources: brikDocumentSources,
 };
 
 export const essays: Essay[] = [
   yeseninKutezhi,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
-  brikCaseVisual,
+  brikCaseWithSourceLibrary,
 ];
 
 export function getAllEssays(): Essay[] {
