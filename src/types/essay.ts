@@ -23,15 +23,20 @@ export interface EssayImageData {
   tilt?: boolean;
 }
 
+export interface EssayCitationData {
+  /** Stable ids from the essay bibliography, rendered as inline source markers. */
+  sourceIds?: string[];
+}
+
 export type EssayBlock =
   /** Opening epigraph — a short line/quote that sets the tone. */
   | { type: 'epigraph'; text: string; cite?: string }
   /** Large lead paragraph that opens the body. */
-  | { type: 'lead'; text: string }
+  | ({ type: 'lead'; text: string } & EssayCitationData)
   /** Section heading (creates an anchor for the meta-rail / TOC). */
   | { type: 'section'; heading: string; anchor?: string }
   /** A normal prose paragraph (supports \n\n splitting into multiple <p>). */
-  | { type: 'paragraph'; text: string }
+  | ({ type: 'paragraph'; text: string } & EssayCitationData)
   /** A sourced archival image or clearly labelled reconstruction. */
   | ({ type: 'image' } & EssayImageData)
   /** A big pulled quote for emphasis (a dramatic line, often the poet's own). */
@@ -51,7 +56,7 @@ export type EssayBlock =
       kind?: 'self' | 'friend' | 'poet' | 'historian';
     }
   /** An editorial remark from the project (the site's own sober commentary). */
-  | { type: 'note'; text: string }
+  | ({ type: 'note'; text: string } & EssayCitationData)
   /** A reverent, candle-lit reflection — the site's careful spiritual/biblical
    *  meditation. Distinct warm-gold styling. Supports **gold** emphasis. */
   | { type: 'reflection'; heading?: string; text: string }
