@@ -95,4 +95,12 @@ export const brikSupplementalSources: EssaySource[] = [
     year: 1926,
     note: 'Совместная фотография позднего периода отношений.',
   },
+  {
+    id: 'museum-brik-era-chronicle',
+    title: 'Музейная биографическая хроника 1915–1919 годов',
+    url: 'https://muzeimayakovskogo.ru/mayakovsky/biography/1915-1919/',
+    kind: 'institutional',
+    institution: 'Государственный музей В. В. Маяковского',
+    note: 'Используется только как навигационный мемориальный пересказ и не заменяет письма, автографы, архивные дела и академические комментарии.',
+  },
 ];
