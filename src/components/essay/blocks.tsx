@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ExternalLink, Feather, Maximize2, Quote, X } from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
 import { withGold, splitParagraphs } from './richText';
 import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
+import { asset } from '../../utils/asset';
 import TiltCard from '../TiltCard';
 
 /**
@@ -94,7 +95,7 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
           rel="noopener noreferrer"
           className="inline-flex min-h-8 shrink-0 items-center gap-1 py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
         >
-          Источник <ExternalLink size={11} />
+          Источник <ExternalLink size={11} aria-hidden="true" />
         </a>
       )}
     </figcaption>
@@ -103,7 +104,11 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
 
 function ImageBlock({ block }: { block: Block<'image'> }) {
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const captionId = useId();
   const layout = block.layout ?? 'wide';
+  const imageSrc = asset(block.src);
   const frameClass =
     layout === 'portrait'
       ? 'mx-auto max-w-xl aspect-[4/5]'
@@ -113,26 +118,42 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
 
   useEffect(() => {
     if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus());
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+      }
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
     };
+
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
+
     return () => {
+      cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
+      requestAnimationFrame(() => triggerRef.current?.focus());
     };
   }, [open]);
 
   const image = (
     <button
+      ref={triggerRef}
       type="button"
       onClick={() => setOpen(true)}
       className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}`}
+      aria-haspopup="dialog"
     >
       <img
-        src={block.src}
+        src={imageSrc}
         alt={block.alt}
         loading="lazy"
         decoding="async"
@@ -141,7 +162,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       />
       <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/[0.03]" />
       <span className="pointer-events-none absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/65 opacity-0 backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
-        <Maximize2 size={15} />
+        <Maximize2 size={15} aria-hidden="true" />
       </span>
     </button>
   );
@@ -158,22 +179,31 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
           role="dialog"
           aria-modal="true"
           aria-label={block.alt}
+          aria-describedby={captionId}
           className="fixed inset-0 z-[160] flex items-center justify-center bg-black/92 p-4 backdrop-blur-md"
           onMouseDown={(event) => {
             if (event.currentTarget === event.target) setOpen(false);
           }}
         >
           <button
+            ref={closeRef}
             type="button"
             onClick={() => setOpen(false)}
             className="absolute right-4 top-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"
             aria-label="Закрыть изображение"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
           <div className="max-h-[92vh] max-w-[94vw]">
-            <img src={block.src} alt={block.alt} className="max-h-[84vh] max-w-full rounded-xl object-contain shadow-2xl" />
-            <p className="mx-auto mt-3 max-w-4xl text-center text-xs leading-relaxed text-white/55">{block.caption}</p>
+            <img
+              src={imageSrc}
+              alt={block.alt}
+              decoding="async"
+              className="max-h-[84vh] max-w-full rounded-xl object-contain shadow-2xl"
+            />
+            <p id={captionId} className="mx-auto mt-3 max-w-4xl text-center text-xs leading-relaxed text-white/55">
+              {block.caption}
+            </p>
           </div>
         </div>
       )}
