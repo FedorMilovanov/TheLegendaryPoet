@@ -38,6 +38,7 @@ export default function EssayCover({
   children,
 }: EssayCoverProps) {
   const [imgOk, setImgOk] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const media = resolveEssayMedia({ src });
 
   return (
@@ -56,7 +57,7 @@ export default function EssayCover({
       }}
     >
       {imgOk ? (
-        <picture className="block h-full w-full">
+        <picture className="block h-full w-full leading-none">
           {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="(max-width: 768px) 94vw, 960px" />}
           {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes="(max-width: 768px) 94vw, 960px" />}
           <img
@@ -64,12 +65,17 @@ export default function EssayCover({
             alt={alt}
             width={media.width}
             height={media.height}
-            className={`h-full w-full object-cover ${imgClassName}`}
-            onError={() => setImgOk(false)}
+            className={`essay-cover-image block h-full w-full object-cover ${loaded ? 'is-loaded' : ''} ${imgClassName}`}
+            onLoad={() => setLoaded(true)}
+            onError={() => {
+              setLoaded(true);
+              setImgOk(false);
+            }}
             loading={loading}
             decoding="async"
             fetchPriority={loading === 'eager' ? 'high' : 'auto'}
             data-testid="essay-cover-image"
+            data-loaded={loaded ? 'true' : 'false'}
           />
         </picture>
       ) : (
