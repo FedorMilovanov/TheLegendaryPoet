@@ -30,32 +30,62 @@ function makeVariants(direction: Direction, distance: number, blur: boolean): Va
   };
 }
 
-export default function Reveal({ children, direction = 'up', delay = 0, duration = 0.78, distance = 30, threshold = 0.1, className = '', once = true, blur = true }: RevealProps) {
+export default function Reveal({
+  children,
+  direction = 'up',
+  delay = 0,
+  duration = 0.78,
+  distance = 30,
+  threshold = 0.1,
+  className = '',
+  once = true,
+  blur = true,
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
   const prefersReduced = useReducedMotion();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    if (prefersReduced) {
+      setInView(true);
+      return;
+    }
+
+    const element = ref.current;
+    if (!element) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); if (once) observer.disconnect(); }
-        else if (!once) { setInView(false); }
+        if (entry.isIntersecting) {
+          setInView(true);
+          if (once) observer.disconnect();
+        } else if (!once) {
+          setInView(false);
+        }
       },
       { threshold },
     );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold, once]);
 
-  const effectiveDir = prefersReduced ? 'none' : direction;
-  const effectiveBlur = prefersReduced ? false : blur;
-  const variants = makeVariants(effectiveDir, distance, effectiveBlur);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [threshold, once, prefersReduced]);
+
+  const reduced = Boolean(prefersReduced);
+  const variants = makeVariants(reduced ? 'none' : direction, distance, reduced ? false : blur);
 
   return (
-    <motion.div ref={ref} className={className} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={variants}
-      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={reduced ? false : 'hidden'}
+      animate={reduced || inView ? 'visible' : 'hidden'}
+      variants={variants}
+      transition={{
+        duration: reduced ? 0 : duration,
+        delay: reduced ? 0 : delay,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+    >
       {children}
     </motion.div>
   );
