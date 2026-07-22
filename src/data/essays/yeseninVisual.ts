@@ -10,7 +10,7 @@ export const yeseninKutezhiVisual: Essay = {
   ...baseYesenin,
   readTime: 26,
   blocks: insertArchiveImages(baseYesenin.blocks, {
-    'Два Есенина': [
+    'yesenin-two-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1914%20(2).jpg',
@@ -24,7 +24,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 22%',
       },
     ],
-    'Дурная слава': [
+    'yesenin-bad-fame-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20в%201919%20году.jpg',
@@ -38,7 +38,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 18%',
       },
     ],
-    'Москва кабацкая': [
+    'yesenin-moscow-tavern-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DuncanYesenin1922.jpg',
@@ -51,7 +51,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 35%',
       },
     ],
-    'Железный гость': [
+    'yesenin-iron-guest-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Eseninnikolaiklyeuv.jpg',
@@ -64,7 +64,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 42%',
       },
     ],
-    'Персидская передышка': [
+    'yesenin-persian-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chagin%20and%20Esenin%201924.jpg',
@@ -78,7 +78,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 25%',
       },
     ],
-    'Чёрный человек': [
+    'yesenin-black-man-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1925.jpg',
@@ -92,7 +92,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 17%',
       },
     ],
-    'Под маской — нежность': [
+    'yesenin-tenderness-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей%20Есенин%20с%20сёстрами%20Катей%20и%20Шурой.jpg',
@@ -106,7 +106,7 @@ export const yeseninKutezhiVisual: Essay = {
         objectPosition: '50% 25%',
       },
     ],
-    'Что это было': [
+    'yesenin-conclusion-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/С.А.%20Есенин%20и%20В.И.%20Болдовкин.%201925.jpg',

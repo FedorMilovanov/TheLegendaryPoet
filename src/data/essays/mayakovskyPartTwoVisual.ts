@@ -2,7 +2,7 @@ import type { Essay, EssayBlock } from '../../types/essay';
 import { mayakovskyGromovoy as baseMayakovsky } from './mayakovskyGromovoy';
 import { fromSection, insertArchiveImages } from './visualArchive';
 
-const movement = fromSection(baseMayakovsky.blocks, 'Революцией мобилизованный');
+const movement = fromSection(baseMayakovsky.blocks, 'late-revolution-section');
 
 const bridge: EssayBlock[] = [
   {
@@ -11,11 +11,13 @@ const bridge: EssayBlock[] = [
     cite: 'В. Маяковский, «Во весь голос», 1930',
   },
   {
+    id: 'late-lead',
     type: 'lead',
     text: 'Вторая часть начинается там, где футуристический бунт становится государственной работой. Маяковский принимает Октябрь как собственную революцию, создаёт плакаты РОСТА, организует ЛЕФ, путешествует и продолжает писать сильную любовную лирику. Одновременно общий дом Бриков, идеологическая роль и профессиональная среда всё сильнее связывают личный голос с внешней системой.',
   },
   { type: 'section', heading: 'РОСТА: рисунок, ритм и ежедневная работа' },
   {
+    id: 'late-rosta',
     type: 'paragraph',
     text: 'В 1919–1922 годах Маяковский работал над «Окнами сатиры РОСТА»: писал короткие подписи, придумывал композиции и участвовал в изготовлении плакатов. Это была не случайная подработка, а лаборатория его зрелого языка. Лозунг требовал предельной ясности, рисунок — мгновенного чтения, а серия — дисциплины ежедневного производства.',
   },
@@ -32,6 +34,7 @@ const bridge: EssayBlock[] = [
   },
   { type: 'section', heading: 'ЛЕФ и редакционный дом' },
   {
+    id: 'late-lef',
     type: 'paragraph',
     text: 'В 1922 году возник ЛЕФ — Левый фронт искусств. Вокруг журнала сошлись литература, фотография, кино, дизайн и теория производственного искусства. Осип Брик был редактором и критиком, Лиля участвовала в кино- и издательской работе, а квартира становилась местом встреч. Этот круг давал Маяковскому постоянную профессиональную среду, хотя не разрешал нравственных и эмоциональных противоречий общего быта.',
   },
@@ -48,6 +51,7 @@ const bridge: EssayBlock[] = [
   },
   { type: 'section', heading: 'Мексика, Америка и взгляд извне' },
   {
+    id: 'late-america',
     type: 'paragraph',
     text: 'В 1925 году Маяковский через Мексику приехал в Соединённые Штаты. Его путевые очерки соединяют наблюдательность с идеологическим спором: технический масштаб Америки восхищал, социальный порядок вызывал неприятие. В Нью-Йорке он познакомился с Элли Джонс; в 1926 году у неё родилась дочь Патрисия Томпсон, о существовании которой широкая публика узнала значительно позже.',
   },
@@ -75,10 +79,12 @@ const bridge: EssayBlock[] = [
   },
   { type: 'section', heading: 'Лиля, Татьяна и невозможность дома' },
   {
+    id: 'late-relationships',
     type: 'paragraph',
     text: 'Связь с Лилей Брик сохранялась, но не была единственной. В Париже Маяковский влюбился в Татьяну Яковлеву и надеялся на совместную жизнь; она не приехала в СССР. Позднее возникли отношения с актрисой Вероникой Полонской. Во всех случаях повторяется потребность в исключительном доме — именно том, которого многолетняя модель «свободной любви» не могла дать.',
   },
   {
+    id: 'image-crimea-1926',
     type: 'image',
     src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Brik_Crimea_1926.jpg',
     alt: 'Владимир Маяковский и Лиля Брик в Крыму, 1926 год',
@@ -92,7 +98,7 @@ const bridge: EssayBlock[] = [
 ];
 
 const illustratedMovement = insertArchiveImages(movement, {
-  'Революцией мобилизованный': [
+  'late-revolution-section': [
     {
       type: 'image',
       src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_1928_by_Osip_Brik.jpg',
@@ -116,7 +122,7 @@ const illustratedMovement = insertArchiveImages(movement, {
       objectPosition: '50% 18%',
     },
   ],
-  '1930: несколько кризисов сразу': [
+  'late-crises-section': [
     {
       type: 'image',
       src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_and_Fedor_Tarasov.jpg',
@@ -129,8 +135,9 @@ const illustratedMovement = insertArchiveImages(movement, {
       objectPosition: '50% 34%',
     },
   ],
-  'После выстрела — бронза': [
+  'late-after-shot-section': [
     {
+      id: 'image-shaving-1927',
       type: 'image',
       src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/1927._Владимир_Маяковский_бреется.jpg',
       alt: 'Владимир Маяковский бреется, фотограф Осип Брик, 1927 год',

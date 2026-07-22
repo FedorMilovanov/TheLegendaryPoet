@@ -12,7 +12,7 @@ export const brikCaseVisual: Essay = {
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
   readTime: 24,
   blocks: insertArchiveImages(baseBrikCase.blocks, {
-    'Жуковского, июль 1915-го': [
+    'brik-zhukovskogo-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Vladimir_mayakovsky_and_lilya_brik.jpg',
@@ -25,8 +25,9 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 42%',
       },
     ],
-    'Не треугольник, а меняющийся союз': [
+    'brik-union-section': [
       {
+        id: 'image-briks-honeymoon-1912',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Osip_LUB.jpg',
         alt: 'Осип и Лиля Брик во время свадебного путешествия, 1912 год',
@@ -49,7 +50,7 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 18%',
       },
     ],
-    'Кольцо и язык привязанности': [
+    'brik-ring-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lilya_Brik_with_friends%2C_1915.jpg',
@@ -62,8 +63,9 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 42%',
       },
     ],
-    'Осип: издатель, теоретик и сотрудник органов': [
+    'brik-osip-section': [
       {
+        id: 'image-osip-1928',
         type: 'image',
         src: '/images/essays/briks/osip-brik-1928.webp',
         alt: 'Портрет Осипа Брика, 1928 год',
@@ -75,7 +77,7 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 20%',
       },
     ],
-    'Деньги, работа и общий быт': [
+    'brik-money-section': [
       {
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Pasternak.jpg',
@@ -99,6 +101,7 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 45%',
       },
       {
+        id: 'image-lilya-editing-1928',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/1928_LYuB_editing_film.jpg',
         alt: 'Лиля Брик монтирует фильм, 1928 год',
@@ -121,8 +124,9 @@ export const brikCaseVisual: Essay = {
         objectPosition: '50% 50%',
       },
     ],
-    'Поздняя история о закрытой двери': [
+    'brik-closed-door-section': [
       {
+        id: 'image-brik-crimea-1926',
         type: 'image',
         src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mayakovsky_Brik_Crimea_1926.jpg',
         alt: 'Владимир Маяковский и Лиля Брик в Крыму, 1926 год',

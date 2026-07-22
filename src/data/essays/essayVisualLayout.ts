@@ -1,7 +1,7 @@
 import type { EssayBlock, EssayImagePlacement } from '../../types/essay';
 
 interface PlacementRule {
-  srcIncludes: string;
+  imageId: string;
   placement: EssayImagePlacement;
 }
 
@@ -9,29 +9,35 @@ export function placeEssayImages(
   blocks: EssayBlock[],
   rules: PlacementRule[],
 ): EssayBlock[] {
+  const blockIds = new Set(blocks.flatMap((block) => (block.id ? [block.id] : [])));
+  for (const rule of rules) {
+    if (!blockIds.has(rule.imageId)) {
+      throw new Error(`Image placement points to missing essay block: ${rule.imageId}`);
+    }
+  }
+
   return blocks.map((block) => {
     if (block.type !== 'image') return block;
-    const rule = rules.find(({ srcIncludes }) => block.src.includes(srcIncludes));
+    const rule = rules.find(({ imageId }) => block.id === imageId);
     return rule ? { ...block, placement: rule.placement } : block;
   });
 }
 
-/** One portrait per movement enters the prose column; group scenes stay full-width. */
 export const mayakovskyPartOnePlacements: PlacementRule[] = [
-  { srcIncludes: 'Mayakovsky-SN-001.jpg', placement: 'right' },
-  { srcIncludes: 'Mayakovsky_Reg_card.jpg', placement: 'left' },
-  { srcIncludes: 'Mayakovsky_1910.jpg', placement: 'right' },
-  { srcIncludes: 'Vladimir_Mayakovsky_1914.jpg', placement: 'left' },
+  { imageId: 'image-family-1905', placement: 'right' },
+  { imageId: 'image-reg-card-1908', placement: 'left' },
+  { imageId: 'image-student-1910', placement: 'right' },
+  { imageId: 'image-mayakovsky-1914', placement: 'left' },
 ];
 
 export const mayakovskyPartTwoPlacements: PlacementRule[] = [
-  { srcIncludes: 'Mayakovsky_Brik_Crimea_1926.jpg', placement: 'right' },
-  { srcIncludes: '1927._Владимир_Маяковский_бреется.jpg', placement: 'left' },
+  { imageId: 'image-crimea-1926', placement: 'right' },
+  { imageId: 'image-shaving-1927', placement: 'left' },
 ];
 
 export const brikEssayPlacements: PlacementRule[] = [
-  { srcIncludes: 'Osip_LUB.jpg', placement: 'left' },
-  { srcIncludes: 'Osip_Brik.jpg', placement: 'right' },
-  { srcIncludes: '1928_LYuB_editing_film.jpg', placement: 'left' },
-  { srcIncludes: 'Mayakovsky_Brik_Crimea_1926.jpg', placement: 'right' },
+  { imageId: 'image-briks-honeymoon-1912', placement: 'left' },
+  { imageId: 'image-osip-1928', placement: 'right' },
+  { imageId: 'image-lilya-editing-1928', placement: 'left' },
+  { imageId: 'image-brik-crimea-1926', placement: 'right' },
 ];
