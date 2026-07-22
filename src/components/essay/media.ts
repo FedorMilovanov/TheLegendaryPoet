@@ -12,6 +12,10 @@ export interface ResolvedEssayMedia {
   height?: number;
 }
 
+const essayMediaByFallback = new Map<string, EssayMediaEntry>(
+  Object.values(essayMedia).map((entry) => [entry.fallback, entry]),
+);
+
 function srcSet(variants: EssayMediaEntry['avif']): string | undefined {
   if (variants.length === 0) return undefined;
   return variants.map((variant) => `${asset(variant.src)} ${variant.width}w`).join(', ');
@@ -24,8 +28,14 @@ function localSrcSet(path: string, format: 'avif' | 'webp'): string | undefined 
   return `${asset(small)} 640w, ${asset(full)} 1600w`;
 }
 
+export function getEssayMediaEntry(
+  media: Pick<EssayImageData, 'src' | 'mediaKey'>,
+): EssayMediaEntry | undefined {
+  return (media.mediaKey ? essayMedia[media.mediaKey] : undefined) ?? essayMediaByFallback.get(media.src);
+}
+
 export function resolveEssayMedia(block: Pick<EssayImageData, 'src' | 'mediaKey'>): ResolvedEssayMedia {
-  const entry = block.mediaKey ? essayMedia[block.mediaKey] : undefined;
+  const entry = getEssayMediaEntry(block);
   if (!entry) {
     return {
       fallback: asset(block.src),
