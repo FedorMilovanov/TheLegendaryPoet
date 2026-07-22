@@ -12,6 +12,12 @@ import {
   brikSupplementalSources,
   mayakovskyEarlySupplementalSources,
 } from './mayakovskySupplementalSources';
+import {
+  attachEssayCitations,
+  brikCitationRules,
+  mayakovskyPartOneCitationRules,
+  mayakovskyPartTwoCitationRules,
+} from './essayCitations';
 
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
@@ -37,6 +43,7 @@ const mayakovskyPartOneWithLocalCover: Essay = {
   coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
   coverKind: 'reconstruction',
   coverCredit: 'THE LEGENDARY POET',
+  blocks: attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
   sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
 };
 
@@ -48,11 +55,13 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   coverKind: 'restoration',
   coverCredit: 'Осип Брик · реставрация проекта',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
+  blocks: attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
   sources: mayakovskyLateSources,
 };
 
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
+  blocks: attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
   sources: [...brikDocumentSources, ...brikSupplementalSources],
 };
 
