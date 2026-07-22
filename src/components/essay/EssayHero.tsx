@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, PenLine } from 'lucide-react';
+import { Calendar, Clock, Layers3, PenLine } from 'lucide-react';
 import type { Essay } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
@@ -7,9 +7,9 @@ import EssayCover from './EssayCover';
 import { titleCase } from '../../utils/titleCase';
 
 /**
- * Essay hero: a 3D-tilt cover banner + a centred title block. The cover art has
- * a graceful themed fallback (shared EssayCover), so the hero looks intentional
- * even before the real artwork is dropped into public/images/essays/.
+ * Essay hero: a restrained 3D-tilt cover banner + a centred title block. The
+ * cover art has a themed fallback, so the hero stays intentional before media
+ * is available. Series metadata is compact and editorial rather than app-like.
  */
 export default function EssayHero({ essay }: { essay: Essay }) {
   const accent = essay.accent || DEFAULT_ACCENT;
@@ -42,6 +42,11 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto mt-10 max-w-3xl text-center"
       >
+        {essay.series && (
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70">
+            <Layers3 size={12} /> {essay.series.label} · часть {essay.series.part} из {essay.series.total}
+          </div>
+        )}
         <h1 className="editorial-title font-serif text-4xl md:text-6xl font-bold leading-[1.02] text-white text-balance">
           {titleCase(essay.title)}
         </h1>
@@ -57,9 +62,9 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         </div>
         {essay.tags.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {essay.tags.map((t) => (
-              <span key={t} className="rounded-full border border-luxury-gold/15 bg-luxury-gold/5 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-luxury-gold/70">
-                {t}
+            {essay.tags.map((tag) => (
+              <span key={tag} className="rounded-full border border-luxury-gold/15 bg-luxury-gold/5 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-luxury-gold/70">
+                {tag}
               </span>
             ))}
           </div>
