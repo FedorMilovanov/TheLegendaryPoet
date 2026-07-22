@@ -108,3 +108,32 @@ test('all poet cards decode portraits without layered 3D flicker', async ({ page
   });
   await assertNoHorizontalOverflow(page);
 });
+
+test('custom cursor is compositor-driven on desktop and absent on touch', async ({ page }, testInfo: TestInfo) => {
+  await page.goto('/articles');
+  await expect(page.locator('h1')).toBeVisible();
+
+  const dot = page.getByTestId('custom-cursor-dot');
+  const ring = page.getByTestId('custom-cursor-ring');
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expect(dot).toHaveCount(0);
+    await expect(ring).toHaveCount(0);
+    return;
+  }
+
+  await expect(dot).toHaveCount(1);
+  await expect(ring).toHaveCount(1);
+  await page.mouse.move(320, 240, { steps: 5 });
+  await expect.poll(() => dot.evaluate((node) => Number.parseFloat(getComputedStyle(node).opacity))).toBeGreaterThan(0.9);
+  await expect.poll(() => ring.evaluate((node) => Number.parseFloat(getComputedStyle(node).opacity))).toBeGreaterThan(0.9);
+
+  const transforms = await Promise.all([
+    dot.evaluate((node) => getComputedStyle(node).transform),
+    ring.evaluate((node) => getComputedStyle(node).transform),
+  ]);
+  for (const transform of transforms) {
+    expect(transform).not.toBe('none');
+    expect(transform).not.toContain('NaN');
+  }
+  await assertNoHorizontalOverflow(page);
+});
