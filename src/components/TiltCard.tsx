@@ -1,83 +1,126 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 
 interface TiltCardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   intensity?: number;
   /** Subtle moving highlight; disabled automatically for reduced motion and touch pointers. */
   sheen?: boolean;
 }
 
+/**
+ * Pointer-driven tilt without React renders on every move.
+ *
+ * The former implementation queried two media features and measured the card on
+ * every pointer event, kept every card permanently promoted with will-change and
+ * pushed all children 28px towards the camera. On image-heavy pages that created
+ * many 3D compositor layers and could make AVIF/WebP surfaces shimmer while the
+ * pointer crossed the card. This version caches geometry for the duration of the
+ * hover, writes at most once per animation frame and only promotes the active
+ * card. Children remain in one raster plane.
+ */
 export default function TiltCard({
   children,
   className = '',
-  intensity = 12,
+  intensity = 6,
   sheen = true,
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
+  const rectRef = useRef<DOMRect | null>(null);
   const pointerRef = useRef({ x: 0.5, y: 0.5 });
+  const canAnimateRef = useRef(false);
 
-  useEffect(() => () => {
-    if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
+  const cancelFrame = () => {
+    if (frameRef.current != null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+  };
+
+  const reset = () => {
+    cancelFrame();
+    rectRef.current = null;
+    pointerRef.current = { x: 0.5, y: 0.5 };
+
+    const node = ref.current;
+    if (!node) return;
+    node.removeAttribute('data-tilting');
+    node.style.removeProperty('transform');
+    node.style.setProperty('--tilt-sheen-x', '50%');
+    node.style.setProperty('--tilt-sheen-y', '50%');
+  };
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+
+    const updateCapability = () => {
+      canAnimateRef.current = !reducedMotion.matches && !coarsePointer.matches;
+      if (!canAnimateRef.current) reset();
+    };
+
+    updateCapability();
+    reducedMotion.addEventListener?.('change', updateCapability);
+    coarsePointer.addEventListener?.('change', updateCapability);
+
+    return () => {
+      cancelFrame();
+      reducedMotion.removeEventListener?.('change', updateCapability);
+      coarsePointer.removeEventListener?.('change', updateCapability);
+    };
   }, []);
-
-  const canAnimate = () =>
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    !window.matchMedia('(pointer: coarse)').matches;
 
   const paint = () => {
     frameRef.current = null;
     const node = ref.current;
-    if (!node) return;
+    if (!node || !canAnimateRef.current) return;
 
     const { x, y } = pointerRef.current;
     const rotateY = (x - 0.5) * intensity;
     const rotateX = (0.5 - y) * intensity;
 
-    node.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);
-    node.style.setProperty('--tilt-y', `${rotateY.toFixed(2)}deg`);
+    node.style.transform = `perspective(1200px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
     node.style.setProperty('--tilt-sheen-x', `${(x * 100).toFixed(1)}%`);
     node.style.setProperty('--tilt-sheen-y', `${(y * 100).toFixed(1)}%`);
   };
 
+  const handlePointerEnter = () => {
+    if (!canAnimateRef.current || !ref.current) return;
+    rectRef.current = ref.current.getBoundingClientRect();
+    ref.current.setAttribute('data-tilting', 'true');
+  };
+
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!ref.current || !canAnimate()) return;
-    const rect = ref.current.getBoundingClientRect();
+    if (!canAnimateRef.current || !ref.current) return;
+    const rect = rectRef.current ?? ref.current.getBoundingClientRect();
+    rectRef.current = rect;
+    if (rect.width <= 0 || rect.height <= 0) return;
+
     pointerRef.current = {
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
-  };
 
-  const reset = () => {
-    if (frameRef.current != null) {
-      cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
-    const node = ref.current;
-    if (!node) return;
-    node.style.setProperty('--tilt-x', '0deg');
-    node.style.setProperty('--tilt-y', '0deg');
-    node.style.setProperty('--tilt-sheen-x', '50%');
-    node.style.setProperty('--tilt-sheen-y', '50%');
+    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
   return (
     <div className="tilt-card-wrapper relative h-full w-full">
       <div
         ref={ref}
+        onPointerEnter={handlePointerEnter}
         onPointerMove={handlePointerMove}
         onPointerLeave={reset}
         onPointerCancel={reset}
-        className={`group tilt-card-inner relative isolate h-full w-full will-change-transform ${className}`}
+        className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         {children}
         {sheen && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.12),transparent_38%)] group-hover:opacity-100"
+            className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_36%)]"
           />
         )}
       </div>
