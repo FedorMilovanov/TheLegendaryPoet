@@ -10,10 +10,13 @@ export function insertArchiveImages(
   blocks: EssayBlock[],
   imagesByHeading: Record<string, ArchiveImage[]>,
 ): EssayBlock[] {
-  return blocks.flatMap((block) => {
-    if (block.type !== 'section') return [block];
-    return [block, ...(imagesByHeading[block.heading] ?? [])];
-  });
+  return blocks.reduce<EssayBlock[]>((result, block) => {
+    result.push(block);
+    if (block.type === 'section') {
+      result.push(...(imagesByHeading[block.heading] ?? []));
+    }
+    return result;
+  }, []);
 }
 
 /** Return the essay movement beginning with the named section. */
