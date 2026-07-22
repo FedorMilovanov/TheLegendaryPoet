@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Pack repository worktree
         run: |
-          tar --exclude=.git --exclude=node_modules -czf worktree.tar.gz .
+          tar --exclude=.git --exclude=node_modules -czf /tmp/worktree.tar.gz .
       - uses: actions/upload-artifact@v4
         with:
           name: legendary-poet-worktree
-          path: worktree.tar.gz
+          path: /tmp/worktree.tar.gz
           retention-days: 1
