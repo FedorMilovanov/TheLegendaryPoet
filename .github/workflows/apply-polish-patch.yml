@@ -7,6 +7,12 @@ on:
     paths:
       - tools/polish-patch/**
       - .github/workflows/apply-polish-patch.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - tools/polish-patch/**
+      - .github/workflows/apply-polish-patch.yml
   workflow_dispatch:
 
 permissions:
