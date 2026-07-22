@@ -86,14 +86,20 @@ export default function TiltCard({
     node.style.setProperty('--tilt-sheen-y', `${(y * 100).toFixed(1)}%`);
   };
 
+  const activate = () => {
+    const node = ref.current;
+    if (!canAnimateRef.current || !node) return false;
+    if (!rectRef.current) rectRef.current = node.getBoundingClientRect();
+    node.setAttribute('data-tilting', 'true');
+    return true;
+  };
+
   const handlePointerEnter = () => {
-    if (!canAnimateRef.current || !ref.current) return;
-    rectRef.current = ref.current.getBoundingClientRect();
-    ref.current.setAttribute('data-tilting', 'true');
+    activate();
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!canAnimateRef.current || !ref.current) return;
+    if (!activate() || !ref.current) return;
     const rect = rectRef.current ?? ref.current.getBoundingClientRect();
     rectRef.current = rect;
     if (rect.width <= 0 || rect.height <= 0) return;
