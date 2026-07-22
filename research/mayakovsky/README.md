@@ -18,7 +18,9 @@
 - Полученный полный репринт Янгфельдта 1991 года сопоставляется с двумя академическими публикациями:
   - [`sources/literaturnoe-nasledstvo-65-1958.md`](./sources/literaturnoe-nasledstvo-65-1958.md) — «Литературное наследство», т. 65, 1958;
   - [`sources/mayakovsky-pss-volume-13-1961.md`](./sources/mayakovsky-pss-volume-13-1961.md) — ПСС Маяковского, т. 13, 1961;
-  - [`verification/correspondence-editions-collation-pass1-2026-07-22.md`](./verification/correspondence-editions-collation-pass1-2026-07-22.md) — первый сравнительный проход по числам 125 / 33 / 92 / 416, источникам текста, купюрам и датировкам.
+  - [`verification/correspondence-editions-collation-pass1-2026-07-22.md`](./verification/correspondence-editions-collation-pass1-2026-07-22.md) — первый сравнительный проход по числам 125 / 33 / 92 / 416, источникам текста, купюрам и датировкам;
+  - [`verification/correspondence-index-1-416-extraction-pass1.md`](./verification/correspondence-index-1-416-extraction-pass1.md) — полный контроль заголовков 1–416 без пропусков и дублей;
+  - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — источниковедческий аудит письма-дневника № 113, его неполного автографа и редакции Лили 1956 года.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
