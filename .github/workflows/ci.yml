@@ -45,7 +45,17 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: Run Playwright article-engine QA
+        id: e2e
+        continue-on-error: true
         run: npm run test:e2e
+      - name: Upload concise Playwright result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-result
+          path: test-results/results.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload Playwright QA evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,6 +66,9 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 3
+      # Browser regressions must not hide build/prerender regressions. The final
+      # gate below still fails the job when Playwright failed, but every other
+      # production layer is exercised first.
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
@@ -68,3 +81,6 @@ jobs:
         run: npm run validate:prerender-seo
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+      - name: Enforce Playwright result
+        if: always()
+        run: test "${{ steps.e2e.outcome }}" = "success"
