@@ -65,6 +65,23 @@ html {
   }
 }
 
+/* Covers retain their LQIP/gradient background until the selected AVIF/WebP is
+   decoded, then cross-fade on the same plane. This prevents a one-frame dark
+   flash during route transitions or when a lazy card first enters the viewport. */
+.essay-cover-image {
+  opacity: 0;
+  transform: scale(1.004);
+  backface-visibility: hidden;
+  transition:
+    opacity 0.32s ease-out,
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.essay-cover-image.is-loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* Inline essay images keep one stable raster surface. Opacity is the only load
    transition; hover scale is restrained and only enabled for a precise mouse. */
 .essay-image-preview {
