@@ -33,6 +33,17 @@ for (const route of ['/essays/:slug', '/articles/:id']) {
   }
 }
 
+const obsoleteFiles = [
+  'src/components/articles/article-detail/ArticleBody.tsx',
+  'src/components/articles/article-detail/ArticleHeader.tsx',
+  'src/components/articles/ArticleMetaRail.tsx',
+];
+for (const obsoleteFile of obsoleteFiles) {
+  if (fs.existsSync(path.join(root, obsoleteFile))) {
+    errors.push(`${obsoleteFile}: obsolete parallel article renderer must not exist`);
+  }
+}
+
 function walk(directory: string): string[] {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const target = path.join(directory, entry.name);
@@ -46,8 +57,7 @@ for (const absolutePath of walk(path.join(root, 'src'))) {
   const relativePath = path.relative(root, absolutePath).replaceAll(path.sep, '/');
   const source = fs.readFileSync(absolutePath, 'utf8');
   for (const legacyName of legacyNames) {
-    const ownFile = relativePath.endsWith(`/${legacyName}.tsx`);
-    if (!ownFile && new RegExp(`(?:import|require)[\\s\\S]{0,160}${legacyName}`).test(source)) {
+    if (new RegExp(`(?:import|require)[\\s\\S]{0,160}${legacyName}`).test(source)) {
       errors.push(`${relativePath}: imports obsolete renderer ${legacyName}`);
     }
   }
