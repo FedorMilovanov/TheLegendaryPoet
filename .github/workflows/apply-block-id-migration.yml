@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Migrate fragile rules to stable block ids
-        run: python scripts/migrate-essay-rules-to-block-ids.py
+        run: python scripts/run-fixed-block-id-migration.py
 
       - name: Commit migration
         run: |
