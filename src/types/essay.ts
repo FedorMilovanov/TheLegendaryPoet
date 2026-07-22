@@ -88,6 +88,10 @@ export interface Essay {
   /** Optional separate image for the listing link-card (falls back to `cover`). */
   cardCover?: string;
   coverAlt?: string;
+  /** Provenance label for covers derived from archival material. */
+  coverKind?: EssayImageKind;
+  coverCredit?: string;
+  coverSourceUrl?: string;
   /** Optional accent colour for this essay's hero glow (defaults to gold). */
   accent?: string;
   tags: string[];
