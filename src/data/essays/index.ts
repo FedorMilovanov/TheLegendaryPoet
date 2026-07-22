@@ -7,11 +7,12 @@ import { brikCaseVisual } from './brikCaseVisual';
 
 const yeseninPartOneWithCover: Essay = {
   ...yeseninPartOne,
-  cover: '/images/essays/yesenin-kutezhi-card.jpg',
-  cardCover: '/images/essays/yesenin-kutezhi-card.jpg',
-  coverAlt: 'Молодой Сергей Есенин — художественная реконструкция на основе архивных портретов',
-  coverKind: 'reconstruction',
-  coverCredit: 'THE LEGENDARY POET',
+  cover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1914 (2).jpg',
+  cardCover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1914 (2).jpg',
+  coverAlt: 'Молодой Сергей Есенин читает книгу, 1914 год',
+  coverKind: 'archive',
+  coverCredit: 'Архивная фотография · 1914',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Esenin1914_(2).jpg',
 };
 
 const yeseninPartTwoWithCover: Essay = {
