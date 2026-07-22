@@ -1,8 +1,27 @@
 import type { Essay } from '../../types/essay';
-import { yeseninKutezhi } from './yeseninKutezhi';
+import { yeseninPartOne } from './yeseninPartOne';
+import { yeseninPartTwo } from './yeseninPartTwoVisual';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
+
+const yeseninPartOneWithCover: Essay = {
+  ...yeseninPartOne,
+  cover: '/images/essays/yesenin-kutezhi-card.jpg',
+  cardCover: '/images/essays/yesenin-kutezhi-card.jpg',
+  coverAlt: 'Молодой Сергей Есенин — художественная реконструкция на основе архивных портретов',
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET',
+};
+
+const yeseninPartTwoWithCover: Essay = {
+  ...yeseninPartTwo,
+  cover: '/images/essays/yesenin-kutezhi.jpg',
+  cardCover: '/images/essays/yesenin-kutezhi-card.jpg',
+  coverAlt: 'Сергей Есенин в дыму кабака — художественная реконструкция',
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET',
+};
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
@@ -24,7 +43,8 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
 };
 
 export const essays: Essay[] = [
-  yeseninKutezhi,
+  yeseninPartOneWithCover,
+  yeseninPartTwoWithCover,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
   brikCaseVisual,
