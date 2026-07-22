@@ -106,13 +106,14 @@ export default function ArticleRenderer({
 
   return (
     <div className="essay-body flow-root">
-      {normalizedBlocks.map((block, i) => {
+      {normalizedBlocks.map((block, index) => {
         const sectionNumber = block.type === 'section' ? ++sectionCount : undefined;
         const sourceIds = 'sourceIds' in block ? block.sourceIds : undefined;
         const citations = sourceIds?.length ? (
           <InlineCitations sourceIds={sourceIds} references={references} />
         ) : undefined;
         const layout = blockLayout(block);
+        const renderKey = block.id ?? `${block.type}-${index}`;
         const content = (
           <EssayBlockView
             block={block}
@@ -123,7 +124,7 @@ export default function ArticleRenderer({
 
         if (!layout.reveal) {
           return (
-            <div key={`${block.type}-${i}`} className={layout.className}>
+            <div key={renderKey} className={layout.className}>
               {content}
             </div>
           );
@@ -131,7 +132,7 @@ export default function ArticleRenderer({
 
         return (
           <Reveal
-            key={`${block.type}-${i}`}
+            key={renderKey}
             direction={layout.direction}
             distance={18}
             once
