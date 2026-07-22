@@ -7,6 +7,7 @@ const checks = [
   'validate:essays',
   'validate:citations',
   'validate:clusters',
+  'validate:mayakovsky-correspondence',
   'validate:yesenin-archive',
   'validate:media',
   'validate:style',
