@@ -1,3 +1,5 @@
+import type { EssayBlock, EssaySource } from './essay';
+
 export interface Poet {
   id: string;
   name: string;
@@ -77,7 +79,11 @@ export interface Article {
   id: string;
   title: string;
   excerpt: string;
+  /** Legacy prose remains the compatibility fallback for existing short articles. */
   content: string;
+  /** New and upgraded articles use the same universal block engine as flagship essays. */
+  blocks?: EssayBlock[];
+  sources?: EssaySource[];
   author: string;
   date: string;
   category: 'analysis' | 'history' | 'moral' | 'biblical' | 'biography';
