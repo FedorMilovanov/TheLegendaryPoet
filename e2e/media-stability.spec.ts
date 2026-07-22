@@ -61,7 +61,6 @@ async function assertNoHorizontalOverflow(page: Page) {
 
 async function assertFittedLightbox(page: Page) {
   const dialog = page.getByTestId('essay-image-dialog');
-  const viewport = page.getByTestId('essay-image-viewport');
   const image = page.getByTestId('essay-image-dialog-image');
 
   await expect(dialog).toBeVisible();
@@ -231,12 +230,14 @@ for (const slug of essays) {
 
       await closeAndAssertRestored(page, trigger);
 
-      const afterClose = await page.evaluate(() => ({
-        clientWidth: document.documentElement.clientWidth,
-        scrollY: window.scrollY,
-      }));
-      expect(afterClose.clientWidth).toBe(beforeOpen.clientWidth);
-      expect(Math.abs(afterClose.scrollY - beforeOpen.scrollY)).toBeLessThanOrEqual(2);
+      await expect.poll(
+        () => page.evaluate(() => document.documentElement.clientWidth),
+        { timeout: 3_000 },
+      ).toBe(beforeOpen.clientWidth);
+      await expect.poll(
+        () => page.evaluate((expectedY) => Math.abs(window.scrollY - expectedY), beforeOpen.scrollY),
+        { timeout: 3_000 },
+      ).toBeLessThanOrEqual(2);
     }
 
     await assertNoHorizontalOverflow(page);
