@@ -10,10 +10,12 @@
 
 Общая иерархия первичных документов, архивных каталогов, мемуаров, исследований и музейных нарративов установлена в [`../SOURCE_POLICY.md`](../SOURCE_POLICY.md).
 
-## Текущий основной источник
+## Текущие основные источники и реестры
 
 - Бенгт Янгфельдт. **«Ставка — жизнь. Владимир Маяковский и его круг»**. Москва: КоЛибри, 2009.
 - Паспорт и карта глав: [`sources/jangfeldt-stavka-zhizn.md`](./sources/jangfeldt-stavka-zhizn.md)
+- Полный корпус переписки 1915–1930 годов, 416 документов: [`sources/jangfeldt-correspondence-1915-1930.md`](./sources/jangfeldt-correspondence-1915-1930.md)
+- Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
 - Ранний период 1893–1918: [`verification/claim-ledger-pass3-1893-1918.md`](./verification/claim-ledger-pass3-1893-1918.md)
