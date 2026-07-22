@@ -14,20 +14,27 @@
 
 - Бенгт Янгфельдт. **«Ставка — жизнь. Владимир Маяковский и его круг»**. Москва: КоЛибри, 2009.
 - Паспорт и карта глав: [`sources/jangfeldt-stavka-zhizn.md`](./sources/jangfeldt-stavka-zhizn.md)
-- Полный корпус переписки 1915–1930 годов, 416 документов: [`sources/jangfeldt-correspondence-1915-1930.md`](./sources/jangfeldt-correspondence-1915-1930.md)
+- Полный корпус переписки 1915–1930 годов, 416 нумерованных единиц: [`sources/jangfeldt-correspondence-1915-1930.md`](./sources/jangfeldt-correspondence-1915-1930.md)
 - Полученный полный репринт Янгфельдта 1991 года сопоставляется с двумя академическими публикациями:
   - [`sources/literaturnoe-nasledstvo-65-1958.md`](./sources/literaturnoe-nasledstvo-65-1958.md) — «Литературное наследство», т. 65, 1958;
   - [`sources/mayakovsky-pss-volume-13-1961.md`](./sources/mayakovsky-pss-volume-13-1961.md) — ПСС Маяковского, т. 13, 1961;
   - [`verification/correspondence-editions-collation-pass1-2026-07-22.md`](./verification/correspondence-editions-collation-pass1-2026-07-22.md) — первый сравнительный проход по числам 125 / 33 / 92 / 416, источникам текста, купюрам и датировкам;
   - [`verification/correspondence-index-1-416-extraction-pass1.md`](./verification/correspondence-index-1-416-extraction-pass1.md) — полный контроль заголовков 1–416 без пропусков и дублей;
-  - [`verification/correspondence-index-1-416-pass2-classification.md`](./verification/correspondence-index-1-416-pass2-classification.md) — первый полный жанровый и источниковедческий слой для всех 416 единиц;
+  - [`verification/correspondence-index-1-416-pass2-classification.md`](./verification/correspondence-index-1-416-pass2-classification.md) — предварительный жанровый и источниковедческий слой;
+  - [`verification/correspondence-index-1-416-pass3-complete-genre.md`](./verification/correspondence-index-1-416-pass3-complete-genre.md) — завершённая рабочая жанровая классификация всех 416 единиц;
+  - [`verification/correspondence-editorial-count-reconciliation-pass1.md`](./verification/correspondence-editorial-count-reconciliation-pass1.md) — локализация внутреннего расхождения `92/194 ↔ 93/193`;
+  - [`verification/correspondence-reply-side-lilya-osip-pass1.md`](./verification/correspondence-reply-side-lilya-osip-pass1.md) — карта ответной стороны Лили и Осипа;
   - [`verification/correspondence-081-113-ln65-pss13-collation-pass1.md`](./verification/correspondence-081-113-ln65-pss13-collation-pass1.md) — прямая поединичная колляция блока разлуки по трём изданиям;
   - [`verification/correspondence-081-084-101-109-ln65-cuts-pass1.md`](./verification/correspondence-081-084-101-109-ln65-cuts-pass1.md) — смысловые купюры ЛН-65 в четырёх письмах;
-  - [`verification/correspondence-reply-side-lilya-osip-pass1.md`](./verification/correspondence-reply-side-lilya-osip-pass1.md) — буквальная карта ответной стороны Лили и Осипа и нерешённое расхождение 193/194;
-  - [`verification/financial-ledger-1925-1927-pass1.md`](./verification/financial-ledger-1925-1927-pass1.md) — нейтральный ledger явных денежных операций без лозунга об одностороннем содержании;
-  - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — источниковедческий аудит письма-дневника № 113, его неполного автографа и редакции Лили 1956 года;
-  - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта всей опубликованной выборки разлуки 1922–1923 годов;
-  - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года без причинных домыслов.
+  - [`verification/correspondence-081-084-101-109-line-variants-pass2.md`](./verification/correspondence-081-084-101-109-line-variants-pass2.md) — построчный вариантный и графический аудит этих четырёх единиц;
+  - [`verification/financial-ledger-1925-1927-pass1.md`](./verification/financial-ledger-1925-1927-pass1.md) — нейтральный ledger денежных операций 1925–1927 годов;
+  - [`verification/financial-ledger-1928-1930-pass2.md`](./verification/financial-ledger-1928-1930-pass2.md) — автомобиль, валютные переводы, договоры и жилищный пай;
+  - [`verification/late-professional-crisis-1930-document-ledger.md`](./verification/late-professional-crisis-1930-document-ledger.md) — выставка, `Баня`, РАПП/РЕФ, новые договоры и международные права без монокаузальной версии;
+  - [`verification/maryanov-rights-authority-audit.md`](./verification/maryanov-rights-authority-audit.md) — две доверенности Марьянову и последующий отказ от его посредничества;
+  - [`verification/claim-ledger-pass6-correspondence-primary-corpus.md`](./verification/claim-ledger-pass6-correspondence-primary-corpus.md) — утверждения, уже повышенные до `READY`, и оставшиеся `VERIFY/HOLD`;
+  - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — аудит письма-дневника № 113, неполного подлинника и редакции Лили 1956 года;
+  - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта опубликованной выборки разлуки;
+  - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
@@ -47,7 +54,7 @@
 
 ### Часть I и ранняя биография Бриков
 
-- [`notes/jangfeldt-early-life-futurism-1893-1914.md`](./notes/jangfeldt-early-life-futurism-1893-1914.md) — Багдади, семья, голос, смерть отца, Москва, подполье, Бутырка, жёлтая кофта и футуристические турне;
+- [`notes/jangfeldt-early-life-futurism-1893-1914.md`](./notes/jangfeldt-early-life-futurism-1893-1914.md) — Багдади, семья, голос, смерть отца, Москва, подполье, Бутырка, Бурлюк, жёлтая кофта и футуристические турне;
 - [`notes/jangfeldt-lili-osip-before-1915.md`](./notes/jangfeldt-lili-osip-before-1915.md) — самостоятельные биографии Лили и Осипа, семейная и еврейская среда, помолвка, брак и ранний интеллектуальный союз;
 - [`notes/jangfeldt-cloud-cinema-revolution-1915-1918.md`](./notes/jangfeldt-cloud-cinema-revolution-1915-1918.md) — чтение «Облака в штанах», Осип как издатель, постепенное формирование союза, кино и революционный переход 1917–1918 годов.
 
