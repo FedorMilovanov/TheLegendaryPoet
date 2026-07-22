@@ -197,7 +197,7 @@ test.describe('shared longform architecture', () => {
     await library.scrollIntoViewIfNeeded();
     await expect(library).toBeVisible();
 
-    for (const filter of ['all', 'primary', 'archive', 'research', 'context']) {
+    for (const filter of ['all', 'primary', 'archive', 'research', 'institutional', 'context']) {
       const button = page.getByTestId(`source-filter-${filter}`);
       await button.click();
       await expect(button).toHaveAttribute('aria-pressed', 'true');
