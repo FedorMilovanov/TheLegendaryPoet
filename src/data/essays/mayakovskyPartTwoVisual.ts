@@ -104,6 +104,17 @@ const illustratedMovement = insertArchiveImages(movement, {
       layout: 'portrait',
       objectPosition: '50% 18%',
     },
+    {
+      type: 'image',
+      src: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
+      alt: 'Цифровая реставрация портрета Владимира Маяковского работы Осипа Брика, 1928 год',
+      caption: 'Тот же кадр после бережной цифровой реставрации.',
+      credit: 'Осип Брик; реставрация THE LEGENDARY POET',
+      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
+      kind: 'restoration',
+      layout: 'portrait',
+      objectPosition: '50% 18%',
+    },
   ],
   '1930: несколько кризисов сразу': [
     {
