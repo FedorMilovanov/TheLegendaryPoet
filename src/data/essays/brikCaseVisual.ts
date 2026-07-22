@@ -4,9 +4,12 @@ import { insertArchiveImages } from './visualArchive';
 
 export const brikCaseVisual: Essay = {
   ...baseBrikCase,
-  cover: '/images/essays/brik-case.jpg',
-  cardCover: '/images/essays/brik-case-card.jpg',
-  coverAlt: 'Маяковский, Лиля и Осип Брики в напряжённом камерном интерьере',
+  cover: '/images/essays/briks/brik-archive-hero.webp',
+  cardCover: '/images/essays/briks/brik-archive-hero.webp',
+  coverAlt: 'Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год',
+  coverKind: 'archive',
+  coverCredit: 'Осип Брик · 1929',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
   readTime: 24,
   blocks: insertArchiveImages(baseBrikCase.blocks, {
     'Жуковского, июль 1915-го': [
@@ -36,7 +39,7 @@ export const brikCaseVisual: Essay = {
       },
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lilya_Brik_in_1914.jpg',
+        src: '/images/essays/briks/lilya-brik-1914.webp',
         alt: 'Портрет Лили Брик, 1914 год',
         caption: 'Лиля Брик. 1914.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -62,7 +65,7 @@ export const brikCaseVisual: Essay = {
     'Осип: издатель, теоретик и сотрудник органов': [
       {
         type: 'image',
-        src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Osip_Brik.jpg',
+        src: '/images/essays/briks/osip-brik-1928.webp',
         alt: 'Портрет Осипа Брика, 1928 год',
         caption: 'Осип Брик. 1928.',
         credit: 'Wikimedia Commons, общественное достояние',
