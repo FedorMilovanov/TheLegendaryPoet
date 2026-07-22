@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
@@ -236,8 +237,10 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         <ImageMeta block={block} />
       </motion.figure>
 
-      <AnimatePresence>
-        {open && (
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <AnimatePresence>
+              {open && (
           <motion.div
             ref={dialogRef}
             role="dialog"
@@ -316,8 +319,11 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
               <X size={20} aria-hidden="true" />
             </motion.button>
           </motion.div>
-        )}
-      </AnimatePresence>
+              )}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
