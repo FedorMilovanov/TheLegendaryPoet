@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Filter } from 'lucide-react';
+import { BookOpenText, Filter, Network } from 'lucide-react';
 import { getAllArticles } from '../utils/articleLibrary';
 import { getAllEssays } from '../data/essays';
+import type { Essay } from '../types/essay';
 import ArticleCard from '../components/articles/ArticleCard';
 import EssayCard from '../components/essay/EssayCard';
 import Reveal from '../components/Reveal';
@@ -27,15 +28,55 @@ const categoryLabels: Record<string, string> = {
   biography: 'Биография',
 };
 
+type EssayGroup = {
+  id: string;
+  label: string;
+  essays: Essay[];
+  clustered: boolean;
+};
+
+function groupEssays(essays: Essay[]): EssayGroup[] {
+  const groups = new Map<string, EssayGroup>();
+
+  for (const essay of essays) {
+    const id = essay.cluster?.id ?? 'standalone';
+    const label = essay.cluster?.label ?? 'Отдельные исследования';
+    const group = groups.get(id) ?? { id, label, essays: [], clustered: Boolean(essay.cluster) };
+    group.essays.push(essay);
+    groups.set(id, group);
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      essays: [...group.essays].sort((a, b) => {
+        const order = (a.cluster?.order ?? 999) - (b.cluster?.order ?? 999);
+        if (order !== 0) return order;
+        return b.date.localeCompare(a.date);
+      }),
+    }))
+    .sort((a, b) => {
+      if (a.clustered !== b.clustered) return a.clustered ? -1 : 1;
+      return b.essays.length - a.essays.length || a.label.localeCompare(b.label, 'ru');
+    });
+}
+
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCluster, setSelectedCluster] = useState<string>('');
   useSeo({
-    title: 'Статьи и анализы — THE LEGENDARY POET',
-    description: 'Глубокие исследования поэзии, истории и литературы, а также отдельные тексты о вере, культуре и нравственной оценке.',
+    title: 'Статьи, биографии и литературные исследования — THE LEGENDARY POET',
+    description: 'Большие биографии поэтов, документальные расследования, история произведений, архивные источники и литературный анализ с внутренними тематическими связями.',
     path: '/articles',
+    keywords: 'биографии поэтов, литературные исследования, анализ стихотворений, Маяковский, Есенин, архивные документы',
   });
+
   const articles = getAllArticles();
   const essays = getAllEssays();
+  const essayGroups = useMemo(() => groupEssays(essays), [essays]);
+  const visibleEssayGroups = selectedCluster
+    ? essayGroups.filter((group) => group.id === selectedCluster)
+    : essayGroups;
 
   const filteredArticles = selectedCategory
     ? articles.filter((article) => article.category === selectedCategory)
@@ -63,23 +104,75 @@ export default function ArticlesPage() {
               <span className="neon-blue-gradient neon-glow-text">{titleCase('Статьи')}</span> {titleCase('и Анализы', { isHeadingStart: false })}
             </h1>
             <p className="text-xl text-cyan-100/55 max-w-3xl">
-              Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.
+              Большие биографии, история произведений и документальные расследования, собранные в связанные тематические кластеры.
             </p>
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {essays.length > 0 && !selectedCategory && (
           <Reveal direction="up" className="mb-14">
-            <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
-              <span className="h-px w-8 bg-luxury-gold/50" /> Большой материал
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-luxury-gold/10 pb-5">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+                  <BookOpenText size={15} /> Большие исследования · {essays.length}
+                </div>
+                <h2 className="font-serif text-3xl font-bold text-white md:text-4xl">
+                  {titleCase('Биографии, произведения и архив')}
+                </h2>
+              </div>
+              <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCluster('')}
+                  aria-pressed={!selectedCluster}
+                  className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition ${!selectedCluster ? 'bg-luxury-gold text-black' : 'border border-luxury-gold/15 text-luxury-gray-light/55 hover:text-luxury-gold'}`}
+                >
+                  Все кластеры
+                </button>
+                {essayGroups.map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedCluster(group.id === selectedCluster ? '' : group.id)}
+                    aria-pressed={selectedCluster === group.id}
+                    className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition ${selectedCluster === group.id ? 'bg-cyan-300 text-[#041014]' : 'border border-cyan-400/15 text-cyan-100/50 hover:text-cyan-200'}`}
+                  >
+                    {group.label} · {group.essays.length}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="space-y-6">
-              {essays.map((essay) => (
-                <EssayCard key={essay.id} essay={essay} variant="feature" />
-              ))}
+
+            <div className="space-y-14">
+              {visibleEssayGroups.map((group) => {
+                const [featured, ...rest] = group.essays;
+                return (
+                  <section key={group.id} aria-labelledby={`essay-group-${group.id}`} className="space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="mb-1 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/45">
+                          <Network size={12} /> {group.clustered ? 'Тематический кластер' : 'Самостоятельные материалы'}
+                        </div>
+                        <h3 id={`essay-group-${group.id}`} className="font-serif text-2xl font-bold text-white md:text-3xl">
+                          {group.label}
+                        </h3>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-luxury-gray-light/35">
+                        {group.essays.length} материалов
+                      </span>
+                    </div>
+
+                    {featured && <EssayCard essay={featured} variant="feature" />}
+                    {rest.length > 0 && (
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {rest.map((essay) => <EssayCard key={essay.id} essay={essay} />)}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
             </div>
           </Reveal>
         )}
