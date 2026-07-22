@@ -175,12 +175,18 @@ def normalize_route(route: str) -> str:
     route = (
         route.replace('Москаа', 'Москва')
         .replace('Мосйва', 'Москва')
+        .replace('МЬсква', 'Москва')
         .replace('Вёна', 'Вена')
+        .replace('Леницград', 'Ленинград')
+        .replace('Ныо-Йорк', 'Нью-Йорк')
+        .replace('Мехико-сиги', 'Мехико-Сити')
+        .replace('Мехико-сити', 'Мехико-Сити')
         .replace('Пароход «Эспаньв-Москва/', 'Пароход «Эспань»–Москва')
         .replace('Пароход «Эспань»-Москва>*', 'Пароход «Эспань»–Москва')
         .replace('Пароход «Эспань»-Москва', 'Пароход «Эспань»–Москва')
     )
-    return route.rstrip('/>* хг').replace('-', '–').strip()
+    route = route.rstrip('/>* хг^}').replace('-', '–').strip()
+    return route.replace('Нью–Йорк', 'Нью-Йорк').replace('Мехико–Сити', 'Мехико-Сити')
 
 
 def parse_header(entry: dict[str, object]) -> None:
