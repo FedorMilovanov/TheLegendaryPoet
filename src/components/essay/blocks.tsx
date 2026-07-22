@@ -120,6 +120,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const [zoomed, setZoomed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const captionId = useId();
   const layoutId = `essay-image-${useId().replace(/:/g, '')}`;
   const reduceMotion = useReducedMotion();
@@ -146,8 +147,32 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         setOpen(false);
       }
       if (event.key === 'Tab') {
-        event.preventDefault();
-        closeRef.current?.focus();
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ),
+        ).filter((element) => !element.hasAttribute('disabled') && element.offsetParent !== null);
+
+        if (focusable.length === 0) {
+          event.preventDefault();
+          closeRef.current?.focus();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+
+        if (event.shiftKey && (active === first || !dialog.contains(active))) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && active === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -214,6 +239,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={block.alt}
