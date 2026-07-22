@@ -108,7 +108,14 @@ const brikCaseWithSourceLibrary: Essay = {
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
-  sources: uniqueSources([...brikDocumentSources, ...brikSupplementalSources]),
+  // Preserve source records authored by the essay/expansion layer before adding
+  // the reusable documentary and supplemental registries. Otherwise inline
+  // citation ids can survive while their bibliography entries are silently lost.
+  sources: uniqueSources([
+    ...(brikCaseVisual.sources ?? []),
+    ...brikDocumentSources,
+    ...brikSupplementalSources,
+  ]),
 };
 
 export const essays: Essay[] = [
