@@ -15,7 +15,8 @@
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
 - Ранний период 1893–1918: [`verification/claim-ledger-pass3-1893-1918.md`](./verification/claim-ledger-pass3-1893-1918.md)
-- Второй проход утверждений 1922–1930: [`verification/claim-ledger-pass2.md`](./verification/claim-ledger-pass2.md)
+- Переходный период 1918–1924: [`verification/claim-ledger-pass4-1918-1924.md`](./verification/claim-ledger-pass4-1918-1924.md)
+- Поздний период 1922–1930: [`verification/claim-ledger-pass2.md`](./verification/claim-ledger-pass2.md)
 - Очередь поиска первоисточников: [`verification/source-pursuit-queue.md`](./verification/source-pursuit-queue.md)
 - Визуальный реестр: [`media/visual-ledger.md`](./media/visual-ledger.md)
 - Ход обработки: [`WORKLOG.md`](./WORKLOG.md)
@@ -27,6 +28,10 @@
 - [`notes/jangfeldt-early-life-futurism-1893-1914.md`](./notes/jangfeldt-early-life-futurism-1893-1914.md) — Багдади, семья, голос, смерть отца, Москва, подполье, Бутырка, Бурлюк, жёлтая кофта и футуристические турне;
 - [`notes/jangfeldt-lili-osip-before-1915.md`](./notes/jangfeldt-lili-osip-before-1915.md) — самостоятельные биографии Лили и Осипа, семейная и еврейская среда, помолвка, брак и ранний интеллектуальный союз;
 - [`notes/jangfeldt-cloud-cinema-revolution-1915-1918.md`](./notes/jangfeldt-cloud-cinema-revolution-1915-1918.md) — чтение «Облака в штанах», Осип как издатель, постепенное формирование союза, кино и революционный переход 1917–1918 годов.
+
+### Переход к советскому периоду
+
+- [`notes/jangfeldt-komfut-rosta-lef-1918-1924.md`](./notes/jangfeldt-komfut-rosta-lef-1918-1924.md) — ИЗО Наркомпроса, Комфут, «Мистерия-буфф», московский быт, РОСТА, «150 000 000», Рига, Берлин, ЛЕФ и рекламно-производственная работа.
 
 ### Часть II и поздний период
 
