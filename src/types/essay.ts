@@ -8,6 +8,7 @@
 
 export type EssayImageKind = 'archive' | 'restoration' | 'reconstruction' | 'document';
 export type EssayImageLayout = 'wide' | 'portrait' | 'cinematic';
+export type EssayImagePlacement = 'full' | 'left' | 'right';
 
 export interface EssayImageData {
   src: string;
@@ -18,6 +19,8 @@ export interface EssayImageData {
   sourceUrl?: string;
   kind?: EssayImageKind;
   layout?: EssayImageLayout;
+  /** On wide screens, selected portrait images can sit inside the prose column. */
+  placement?: EssayImagePlacement;
   objectPosition?: string;
   /** Disable pointer tilt for fragile documents or already perspective-heavy art. */
   tilt?: boolean;
