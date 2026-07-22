@@ -1,0 +1,10 @@
+/*
+ * Inline archive images already use native loading="lazy" plus responsive AVIF/WebP.
+ * Keeping content-visibility:auto on the same figure can starve a far-down image:
+ * Chromium may materialize the box without ever scheduling its image request.
+ * Other essay figures retain the long-page content-visibility optimization.
+ */
+.essay-block-image figure {
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+}
