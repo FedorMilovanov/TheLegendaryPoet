@@ -7,6 +7,7 @@ const minimumCitedBlocks: Record<string, number> = {
   'mayakovsky-before-revolution': 8,
   'mayakovsky-gromovoy': 8,
   'brik-case': 8,
+  'yesenin-kutezhi': 8,
 };
 
 for (const essay of essays) {
