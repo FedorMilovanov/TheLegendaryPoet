@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Archive,
   BookOpenText,
+  Building2,
   ChevronDown,
   ExternalLink,
   LibraryBig,
@@ -18,10 +19,12 @@ const sourceKinds: Record<
   primary: { label: 'Первоисточники', shortLabel: 'Первичные', icon: BookOpenText },
   archive: { label: 'Архивы и каталоги', shortLabel: 'Архивы', icon: Archive },
   research: { label: 'Исследования', shortLabel: 'Исследования', icon: Microscope },
+  institutional: { label: 'Институциональные нарративы', shortLabel: 'Музеи', icon: Building2 },
   context: { label: 'Контекст', shortLabel: 'Контекст', icon: Network },
 };
 
-type Filter = 'all' | EssaySourceKind;
+const filterOrder = ['all', 'primary', 'archive', 'research', 'institutional', 'context'] as const;
+type Filter = (typeof filterOrder)[number];
 
 function sourceKind(source: EssaySource): EssaySourceKind {
   return source.kind ?? 'research';
@@ -42,6 +45,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       primary: 0,
       archive: 0,
       research: 0,
+      institutional: 0,
       context: 0,
     };
     for (const source of sources) result[sourceKind(source)] += 1;
@@ -102,7 +106,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
           </div>
           <h2 className="font-serif text-3xl text-white">Документы, тексты и исследования</h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-luxury-gray-light/55">
-            Сначала показаны первичные тексты и архивы; интерпретации отделены от документов.
+            Первоисточники и архивы отделены от исследований и музейных биографических нарративов.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.14em] text-luxury-gray-light/55">
@@ -116,7 +120,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       </div>
 
       <div className="mt-6 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {(['all', 'primary', 'archive', 'research', 'context'] as Filter[]).map((item) => {
+        {filterOrder.map((item) => {
           const active = filter === item;
           const label = item === 'all' ? 'Все' : sourceKinds[item].shortLabel;
           const count = item === 'all' ? sources.length : counts[item];
