@@ -1,6 +1,7 @@
 import type { Essay, EssaySource } from '../../types/essay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
+import { enrichYeseninSources } from './yeseninSources';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -18,6 +19,7 @@ import {
   brikCitationRules,
   mayakovskyPartOneCitationRules,
   mayakovskyPartTwoCitationRules,
+  yeseninCitationRules,
 } from './essayCitations';
 import {
   brikEssayPlacements,
@@ -40,10 +42,13 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
 
 const yeseninWithArchiveLayer: Essay = {
   ...yeseninKutezhiVisual,
-  sources: uniqueSources([
-    ...(yeseninKutezhiVisual.sources ?? []),
-    ...yeseninArchiveSources,
-  ]),
+  blocks: attachEssayCitations(yeseninKutezhiVisual.blocks, yeseninCitationRules),
+  sources: enrichYeseninSources(
+    uniqueSources([
+      ...(yeseninKutezhiVisual.sources ?? []),
+      ...yeseninArchiveSources,
+    ]),
+  ),
 };
 
 const mayakovskyPartOneWithLocalCover: Essay = {
