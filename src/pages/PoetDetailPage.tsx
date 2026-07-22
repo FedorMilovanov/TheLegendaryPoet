@@ -14,6 +14,7 @@ import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
+import RelatedEssays from '../components/poet-detail/RelatedEssays';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -87,6 +88,8 @@ export default function PoetDetailPage() {
             <p className="text-2xl md:text-3xl text-white font-serif leading-[1.6] italic border-l-4 border-luxury-gold pl-8 font-light">
               "{poet.shortBio}"
             </p>
+
+            <RelatedEssays poetId={poet.id} />
 
             <div className="space-y-8">
               <h2 className="text-xs font-bold tracking-[0.2em] text-luxury-gold uppercase border-b border-luxury-dark-300 pb-4">
