@@ -1,10 +1,19 @@
 import { Link } from '../ui/Link';
-import { ArrowRight, Clock } from 'lucide-react';
-import type { Essay } from '../../types/essay';
+import { ArrowRight, Clock, Network } from 'lucide-react';
+import type { Essay, EssayClusterRole } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
 import EssayCover from './EssayCover';
 import { titleCase } from '../../utils/titleCase';
+
+const roleLabels: Record<EssayClusterRole, string> = {
+  pillar: 'Опорный материал',
+  biography: 'Большая биография',
+  investigation: 'Документальное расследование',
+  work: 'История произведения',
+  archive: 'Архив и источники',
+  context: 'Исторический контекст',
+};
 
 /**
  * Featured essay link card with a 3D-tilt cover, for the Articles listing.
@@ -14,6 +23,7 @@ import { titleCase } from '../../utils/titleCase';
 export default function EssayCard({ essay, variant = 'default' }: { essay: Essay; variant?: 'default' | 'feature' }) {
   const accent = essay.accent || DEFAULT_ACCENT;
   const feature = variant === 'feature';
+  const kicker = essay.cluster ? roleLabels[essay.cluster.role] : essay.kicker;
 
   return (
     <Link to={`/essays/${essay.slug}`} className="group block h-full">
@@ -23,7 +33,7 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
             src={essay.cardCover || essay.cover}
             alt={essay.coverAlt || essay.title}
             accent={accent}
-            kicker={essay.kicker}
+            kicker={kicker}
             focusY="30%"
             overlayFrom="#060606"
             ornamentClass="text-8xl"
@@ -33,6 +43,11 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
           />
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
+            {essay.cluster && (
+              <div className="mb-3 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-cyan-300/45">
+                <Network size={11} /> {essay.cluster.label}
+              </div>
+            )}
             <h3 className={`font-serif font-bold text-white transition-colors group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
               {titleCase(essay.title)}
             </h3>
