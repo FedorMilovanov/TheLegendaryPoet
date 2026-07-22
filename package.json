@@ -11,8 +11,9 @@
     "validate:library": "tsx scripts/validate-library.ts",
     "validate:essays": "tsx scripts/validate-essays.ts",
     "validate:citations": "tsx scripts/validate-citations.ts",
+    "validate:yesenin-archive": "tsx scripts/validate-yesenin-archive.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
-    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:style && npm run typecheck",
+    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:style && npm run typecheck",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "prerender": "tsx scripts/prerender-og.mjs"
   },
