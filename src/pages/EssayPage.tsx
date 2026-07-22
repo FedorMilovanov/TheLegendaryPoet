@@ -15,11 +15,15 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import { essayStructuredData, relatedEssaysFor } from '../utils/structuredData';
 
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
   const essay = slug ? getEssayBySlug(slug) : undefined;
   const articleRef = useRef<HTMLElement>(null);
+  const allEssays = getAllEssays();
+  const poet = essay?.poetId ? poets.find((entry) => entry.id === essay.poetId) : undefined;
+  const relatedEssays = essay ? relatedEssaysFor(essay, allEssays) : [];
 
   useSeo({
     title: essay ? `${essay.seoTitle ?? essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
@@ -30,6 +34,7 @@ export default function EssayPage() {
     publishedTime: essay?.date,
     author: essay?.author,
     keywords: essay ? (essay.seoKeywords ?? essay.tags).join(',') : undefined,
+    jsonLd: essay ? essayStructuredData(essay, poet, relatedEssays) : undefined,
   });
 
   if (!essay) {
@@ -44,9 +49,8 @@ export default function EssayPage() {
   }
 
   const toc = getEssayToc(essay.blocks);
-  const poet = essay.poetId ? poets.find((p) => p.id === essay.poetId) : undefined;
   const seriesEntries = essay.series
-    ? getAllEssays()
+    ? allEssays
         .filter((entry) => entry.series?.id === essay.series?.id)
         .sort((a, b) => (a.series?.part ?? 0) - (b.series?.part ?? 0))
     : [];
