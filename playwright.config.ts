@@ -9,13 +9,17 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [
     ['list'],
+    ['json', { outputFile: 'test-results/results.json' }],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
   ],
   use: {
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // CI traces and screenshots are enough to reproduce regressions. Keeping a
+    // video for every retry made the audit artifact exceed GitHub's practical
+    // download limit and hid the concise failure report we actually need.
+    video: process.env.CI ? 'off' : 'retain-on-failure',
     actionTimeout: 12_000,
     navigationTimeout: 30_000,
   },
