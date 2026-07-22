@@ -58,9 +58,19 @@ export type EssayBlock =
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
 
+export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'context';
+
 export interface EssaySource {
+  /** Stable optional identifier for future inline footnotes. */
+  id?: string;
   title: string;
   url?: string;
+  /** Primary text, archive/catalogue, scholarly research, or wider context. */
+  kind?: EssaySourceKind;
+  institution?: string;
+  year?: string | number;
+  /** One restrained sentence explaining why this source is used. */
+  note?: string;
 }
 
 export interface EssaySeries {
