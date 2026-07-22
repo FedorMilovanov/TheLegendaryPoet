@@ -1,16 +1,22 @@
+import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
+import ShareLine from '../components/ui/ShareLine';
 import { ArrowLeft } from 'lucide-react';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import CommunityPanel from '../components/community/CommunityPanel';
 import ArticleMetaRail from '../components/articles/ArticleMetaRail';
 import ReadingProgress from '../components/articles/ReadingProgress';
 import RelatedArticles from '../components/articles/article-detail/RelatedArticles';
-import ArticleBody from '../components/articles/article-detail/ArticleBody';
 import ArticleHeader from '../components/articles/article-detail/ArticleHeader';
+import ArticleRenderer, { getEssayToc } from '../components/essay/ArticleRenderer';
+import SectionChip from '../components/essay/SectionChip';
+import SourceLibrary from '../components/essay/SourceLibrary';
 import { getArticleById, getRelatedArticles } from '../utils/articleLibrary';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import type { EssayBlock } from '../types/essay';
+import type { Article } from '../types/poet';
 
 const categoryLabels: Record<string, string> = {
   biblical: 'Библейский анализ',
@@ -30,9 +36,19 @@ function buildParagraphs(content: string, excerpt: string) {
   return excerpt && excerpt !== content ? [excerpt, ...paragraphs] : paragraphs;
 }
 
+/** Compatibility adapter: every /articles route now renders through ArticleRenderer. */
+function buildArticleBlocks(article: Article): EssayBlock[] {
+  if (article.blocks?.length) return article.blocks;
+  return buildParagraphs(article.content, article.excerpt).map((text) => ({
+    type: 'paragraph' as const,
+    text,
+  }));
+}
+
 export default function ArticleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const article = id ? getArticleById(id) : undefined;
+  const articleRef = useRef<HTMLElement>(null);
 
   useSeo({
     title: article ? `${article.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
@@ -54,12 +70,14 @@ export default function ArticleDetailPage() {
   }
 
   const related = getRelatedArticles(article.id, article.category);
-  const paragraphs = buildParagraphs(article.content, article.excerpt);
+  const blocks = buildArticleBlocks(article);
+  const toc = getEssayToc(blocks);
   const categoryLabel = categoryLabels[article.category] || article.category;
 
   return (
     <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
       <ReadingProgress />
+      <SectionChip toc={toc} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Link
           to="/articles"
@@ -70,9 +88,11 @@ export default function ArticleDetailPage() {
 
         <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
           <ArticleMetaRail article={article} categoryLabel={categoryLabel} />
-          <article className="luxury-card rounded-[2rem] border border-cyan-400/15 bg-[#061018]/70 p-8 md:p-12">
+          <article ref={articleRef} className="luxury-card min-w-0 rounded-[2rem] border border-cyan-400/15 bg-[#061018]/70 p-8 md:p-12">
+            <ShareLine scopeRef={articleRef} />
             <ArticleHeader article={article} categoryLabel={categoryLabel} />
-            <ArticleBody paragraphs={paragraphs} />
+            <ArticleRenderer blocks={blocks} sources={article.sources} />
+            {article.sources?.length ? <SourceLibrary sources={article.sources} /> : null}
           </article>
         </div>
 
