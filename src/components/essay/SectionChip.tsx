@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { BookOpenText, ChevronDown, ChevronRight, ListTree, X } from 'lucide-react';
 import type { TocEntry } from './ArticleRenderer';
-import { scrollToId } from '../../utils/smoothScroll';
+import { pauseSmoothScroll, resumeSmoothScroll, scrollToId } from '../../utils/smoothScroll';
 
 /**
  * Premium mobile wTOC (working table of contents).
@@ -20,6 +20,7 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const jumpTargetRef = useRef<string | null>(null);
   const reduceMotion = useReducedMotion();
 
   const current = toc[currentIndex] ?? toc[0] ?? null;
@@ -65,9 +66,20 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
 
   useEffect(() => {
     if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus());
+
+    const body = document.body;
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    const scrollY = window.scrollY;
+    const clientWidthBefore = document.documentElement.clientWidth;
+    const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+
+    pauseSmoothScroll();
+    body.style.overflow = 'hidden';
+    const releasedWidth = Math.max(0, document.documentElement.clientWidth - clientWidthBefore);
+    if (releasedWidth > 0) body.style.paddingRight = `${currentPadding + releasedWidth}px`;
+
+    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
     const currentRow = listRef.current?.querySelector<HTMLElement>('[aria-current="location"]');
     currentRow?.scrollIntoView({ block: 'center' });
 
@@ -86,10 +98,10 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
       const last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
-        last.focus();
+        last.focus({ preventScroll: true });
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
-        first.focus();
+        first.focus({ preventScroll: true });
       }
     };
 
@@ -97,8 +109,18 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
     return () => {
       cancelAnimationFrame(focusFrame);
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-      requestAnimationFrame(() => triggerRef.current?.focus());
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+
+      const jumpTarget = jumpTargetRef.current;
+      jumpTargetRef.current = null;
+      if (jumpTarget) {
+        resumeSmoothScroll();
+        requestAnimationFrame(() => scrollToId(jumpTarget));
+      } else {
+        resumeSmoothScroll(scrollY);
+        requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
+      }
     };
   }, [open]);
 
@@ -107,9 +129,9 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
   if (toc.length === 0 || !current) return null;
 
   const go = (anchor: string) => {
-    setOpen(false);
+    jumpTargetRef.current = anchor;
     window.history.replaceState(null, '', `#${anchor}`);
-    requestAnimationFrame(() => scrollToId(anchor));
+    setOpen(false);
   };
 
   return (
@@ -157,7 +179,7 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
             aria-modal="true"
             aria-label="Оглавление статьи"
             className="wtoc-layer lg:hidden"
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reduceMotion ? 0.1 : 0.24 }}
