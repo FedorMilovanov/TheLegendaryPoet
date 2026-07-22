@@ -15,7 +15,6 @@ import { withGold, splitParagraphs } from './richText';
 import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
-import { asset } from '../../utils/asset';
 import TiltCard from '../TiltCard';
 import { resolveEssayMedia } from './media';
 
