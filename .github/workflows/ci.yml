@@ -26,8 +26,22 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --silent
-      - name: Validate content, media, types, and browser behavior
-        run: npm run check
+      - name: Validate library content
+        run: npm run validate:library
+      - name: Validate essay structure and source policy
+        run: npm run validate:essays
+      - name: Validate inline citations
+        run: npm run validate:citations
+      - name: Validate Yesenin archive records
+        run: npm run validate:yesenin-archive
+      - name: Validate responsive AVIF and WebP media
+        run: npm run validate:media
+      - name: Validate literary editorial rules
+        run: npm run validate:style
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: Run Playwright article-engine QA
+        run: npm run test:e2e
       - name: Upload Playwright QA evidence
         if: always()
         uses: actions/upload-artifact@v4
