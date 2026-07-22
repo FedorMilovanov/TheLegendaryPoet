@@ -24,6 +24,16 @@ jobs:
         run: npm ci --silent
       - name: Validate content, media, types, and browser behavior
         run: npm run check
+      - name: Upload Playwright QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-qa
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
