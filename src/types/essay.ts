@@ -31,7 +31,12 @@ export interface EssayCitationData {
   sourceIds?: string[];
 }
 
-export type EssayBlock =
+export interface EssayBlockIdentity {
+  /** Stable editorial identifier used by citations, visual placement, and CI. */
+  id?: string;
+}
+
+type EssayBlockContent =
   /** Opening epigraph — a short line/quote that sets the tone. */
   | { type: 'epigraph'; text: string; cite?: string }
   /** Large lead paragraph that opens the body. */
@@ -47,7 +52,14 @@ export type EssayBlock =
   /** An embedded poem / stanza, rendered in the serif poetry style.
    *  Wrap words in **double asterisks** to render them in glowing gold.
    *  variant 'blood' tints the stanza red (for Yesenin's last poem, written in blood). */
-  | { type: 'poem'; title?: string; lines: string; year?: string | number; note?: string; variant?: 'default' | 'blood' }
+  | {
+      type: 'poem';
+      title?: string;
+      lines: string;
+      year?: string | number;
+      note?: string;
+      variant?: 'default' | 'blood';
+    }
   /** A sourced voice: the poet himself, a friend, another poet, or a historian. */
   | {
       type: 'voice';
@@ -65,6 +77,8 @@ export type EssayBlock =
   | { type: 'reflection'; heading?: string; text: string }
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
+
+export type EssayBlock = EssayBlockContent & EssayBlockIdentity;
 
 export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'context';
 
