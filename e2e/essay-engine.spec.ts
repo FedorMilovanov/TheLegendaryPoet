@@ -55,7 +55,11 @@ async function assertLoadedLocalImage(image: Locator) {
   const source = await image.evaluate((node: HTMLImageElement) => node.currentSrc || node.src);
   const url = new URL(source);
   expect(url.origin).toBe('http://127.0.0.1:4173');
-  expect(url.pathname).toMatch(/\.(?:avif|webp)$/i);
+  // Both Playwright projects use Chromium, which supports AVIF. WebP remains the
+  // compatibility and <img> fallback, but a Chromium pass must prove that the
+  // browser actually selected the first AVIF <source> rather than silently
+  // falling through to WebP.
+  expect(url.pathname).toMatch(/\.avif$/i);
 }
 
 async function assertNoHorizontalOverflow(page: Page) {
