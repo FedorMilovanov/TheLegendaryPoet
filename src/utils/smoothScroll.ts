@@ -7,16 +7,23 @@ import type Lenis from 'lenis';
  * dialog and return the reader to a slightly different paragraph on close.
  */
 let activeLenis: Lenis | null = null;
+let pauseDepth = 0;
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
+  if (activeLenis && pauseDepth > 0) activeLenis.stop();
 }
 
+/** Ref-counted so one overlay cannot resume scrolling while another is open. */
 export function pauseSmoothScroll() {
-  activeLenis?.stop();
+  pauseDepth += 1;
+  if (pauseDepth === 1) activeLenis?.stop();
 }
 
 export function resumeSmoothScroll(scrollY?: number) {
+  pauseDepth = Math.max(0, pauseDepth - 1);
+  if (pauseDepth > 0) return;
+
   if (!activeLenis) {
     if (scrollY != null) window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
     return;
