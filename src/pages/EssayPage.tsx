@@ -15,6 +15,7 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+import { scrollToId } from '../utils/smoothScroll';
 import { essayStructuredData, relatedEssaysFor } from '../utils/structuredData';
 
 export default function EssayPage() {
@@ -59,6 +60,11 @@ export default function EssayPage() {
   const sourceCount = essay.sources?.length ?? 0;
   const primarySourceCount = essay.sources?.filter((source) => source.kind === 'primary').length ?? 0;
 
+  const goToAnchor = (anchor: string) => {
+    window.history.replaceState(null, '', `#${anchor}`);
+    requestAnimationFrame(() => scrollToId(anchor));
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] pt-28 pb-24 text-white">
       <ReadingProgress />
@@ -77,12 +83,20 @@ export default function EssayPage() {
           <aside className="hidden lg:block">
             <div className="sticky top-28">
               {toc.length > 0 && (
-                <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl">
+                <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl" aria-label="Оглавление статьи">
                   <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70">Оглавление</div>
                   <ul className="space-y-1">
                     {toc.map((section) => (
                       <li key={section.anchor}>
-                        <a href={`#${section.anchor}`} className="flex min-h-9 items-center gap-2.5 rounded-lg py-1.5 text-sm text-luxury-gray-light/70 transition-colors hover:bg-white/[0.03] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60">
+                        <a
+                          href={`#${section.anchor}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            goToAnchor(section.anchor);
+                          }}
+                          className="flex min-h-9 items-center gap-2.5 rounded-lg py-1.5 text-sm text-luxury-gray-light/70 transition-colors hover:bg-white/[0.03] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+                          data-testid="desktop-toc-link"
+                        >
                           <span className="font-serif text-[12px] font-semibold tabular-nums text-luxury-gold/55">{String(section.number).padStart(2, '0')}</span>
                           <span>{section.heading}</span>
                         </a>
@@ -103,7 +117,12 @@ export default function EssayPage() {
               {sourceCount > 0 && (
                 <a
                   href="#sources"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    goToAnchor('sources');
+                  }}
                   className="mt-4 flex min-h-11 items-center gap-3 rounded-2xl border border-luxury-gold/12 bg-luxury-gold/[0.025] p-4 text-sm text-luxury-gray-light/65 transition hover:-translate-y-0.5 hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+                  data-testid="desktop-sources-link"
                 >
                   <FileText size={15} className="shrink-0 text-luxury-gold/60" />
                   <span>
