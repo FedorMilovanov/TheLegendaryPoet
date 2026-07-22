@@ -39,13 +39,18 @@ jobs:
           git apply /tmp/polish.patch
           python - <<'PY'
           from pathlib import Path
-          path = Path('scripts/essay-image-catalog.mjs')
-          text = path.read_text()
-          text = text.replace(
+
+          catalog = Path('scripts/essay-image-catalog.mjs')
+          catalog_text = catalog.read_text()
+          catalog_text = catalog_text.replace(
               'https://commons.wikimedia.org/wiki/Special:Redirect/file/Baryshnya_i_khuligan_Vladimir_Mayakovsky%2C_Alexandra_Rebikova%29.jpg',
               'https://upload.wikimedia.org/wikipedia/commons/e/ed/Baryshnya_i_khuligan_Vladimir_Mayakovsky%2C_Alexandra_Rebikova%29.jpg',
           )
-          path.write_text(text)
+          catalog.write_text(catalog_text)
+
+          localizer = Path('scripts/localize-essay-images.mjs')
+          localizer_text = localizer.read_text().replace('fetch(encodeURI(url), {', 'fetch(url, {')
+          localizer.write_text(localizer_text)
           PY
 
       - uses: actions/setup-node@v4
