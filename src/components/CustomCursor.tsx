@@ -1,77 +1,96 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 
+/**
+ * Desktop cursor that never re-renders React on pointer movement.
+ *
+ * The previous version called setState for every mousemove and asked two Framer
+ * components to reconcile new animate props at pointer frequency. That competed
+ * directly with TiltCard's requestAnimationFrame work on image grids. Motion
+ * values now write to the compositor without entering React's render loop; only
+ * rare route/media-capability changes update component state.
+ */
 const CustomCursor = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  // The immersive 3D hall uses the native pointer — a gold cursor dot floating
-  // in the scene reads as an artifact and fights the WebGL interaction.
+  const [enabled, setEnabled] = useState(false);
   const { pathname } = useLocation();
   const onHall = pathname === '/hall';
 
+  const dotX = useMotionValue(-100);
+  const dotY = useMotionValue(-100);
+  const ringTargetX = useMotionValue(-100);
+  const ringTargetY = useMotionValue(-100);
+  const dotScale = useMotionValue(1);
+  const ringScale = useMotionValue(1);
+  const opacity = useMotionValue(0);
+  const ringX = useSpring(ringTargetX, { stiffness: 420, damping: 38, mass: 0.34 });
+  const ringY = useSpring(ringTargetY, { stiffness: 420, damping: 38, mass: 0.34 });
+
   useEffect(() => {
-    // Touch devices and the 3D hall keep the native pointer.
-    if (onHall || window.matchMedia('(pointer: coarse)').matches) {
-      setIsVisible(false);
+    const coarsePointer = window.matchMedia('(pointer: coarse)');
+    const updateCapability = () => setEnabled(!onHall && !coarsePointer.matches);
+    updateCapability();
+    coarsePointer.addEventListener?.('change', updateCapability);
+    return () => coarsePointer.removeEventListener?.('change', updateCapability);
+  }, [onHall]);
+
+  useEffect(() => {
+    if (!enabled) {
+      opacity.set(0);
       document.body.classList.remove('has-custom-cursor');
       return;
     }
-    setIsVisible(true);
-    // Only now hide the native cursor — so if this component never mounts
-    // (or fails), the real pointer is preserved.
+
     document.body.classList.add('has-custom-cursor');
 
-    const updateMousePosition = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    const move = (event: PointerEvent) => {
+      dotX.set(event.clientX - 8);
+      dotY.set(event.clientY - 8);
+      ringTargetX.set(event.clientX - 24);
+      ringTargetY.set(event.clientY - 24);
+      opacity.set(1);
     };
 
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName.toLowerCase() === 'a' ||
-        target.tagName.toLowerCase() === 'button' ||
-        target.closest('a') ||
-        target.closest('button')
-      ) {
-        setIsHovering(true);
-      } else {
-        setIsHovering(false);
-      }
+    const updateInteractiveState = (event: PointerEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const interactive = Boolean(target?.closest('a, button, input, select, textarea, [role="button"]'));
+      dotScale.set(interactive ? 2.15 : 1);
+      ringScale.set(interactive ? 1.32 : 1);
     };
 
-    window.addEventListener('mousemove', updateMousePosition);
-    window.addEventListener('mouseover', handleMouseOver);
+    const hide = () => opacity.set(0);
+    const show = () => opacity.set(1);
+
+    window.addEventListener('pointermove', move, { passive: true });
+    window.addEventListener('pointerover', updateInteractiveState, { passive: true });
+    document.documentElement.addEventListener('mouseleave', hide);
+    document.documentElement.addEventListener('mouseenter', show);
 
     return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-      window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerover', updateInteractiveState);
+      document.documentElement.removeEventListener('mouseleave', hide);
+      document.documentElement.removeEventListener('mouseenter', show);
       document.body.classList.remove('has-custom-cursor');
+      opacity.set(0);
     };
-  }, [onHall]);
+  }, [enabled, dotScale, dotX, dotY, opacity, ringScale, ringTargetX, ringTargetY]);
 
-  if (!isVisible) return null;
+  if (!enabled) return null;
 
   return (
     <>
       <motion.div
-        className="fixed top-0 left-0 w-4 h-4 bg-luxury-gold rounded-full pointer-events-none z-[9999] mix-blend-difference"
-        animate={{
-          x: mousePosition.x - 8,
-          y: mousePosition.y - 8,
-          scale: isHovering ? 2.5 : 1,
-        }}
-        transition={{ type: 'tween', ease: 'backOut', duration: 0.2 }}
+        aria-hidden="true"
+        data-testid="custom-cursor-dot"
+        className="fixed left-0 top-0 z-[9999] h-4 w-4 rounded-full bg-luxury-gold mix-blend-difference pointer-events-none"
+        style={{ x: dotX, y: dotY, scale: dotScale, opacity }}
       />
       <motion.div
-        className="fixed top-0 left-0 w-12 h-12 border border-luxury-gold/30 rounded-full pointer-events-none z-[9998]"
-        animate={{
-          x: mousePosition.x - 24,
-          y: mousePosition.y - 24,
-          scale: isHovering ? 1.5 : 1,
-        }}
-        transition={{ type: 'tween', ease: 'backOut', duration: 0.6 }}
+        aria-hidden="true"
+        data-testid="custom-cursor-ring"
+        className="fixed left-0 top-0 z-[9998] h-12 w-12 rounded-full border border-luxury-gold/30 pointer-events-none"
+        style={{ x: ringX, y: ringY, scale: ringScale, opacity }}
       />
     </>
   );
