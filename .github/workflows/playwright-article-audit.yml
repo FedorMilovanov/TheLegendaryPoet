@@ -1,0 +1,41 @@
+name: Playwright article audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright audit runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test
+          npx playwright install --with-deps chromium
+
+      - name: Run desktop and mobile article audit
+        run: npx playwright test -c playwright.audit.config.ts
+
+      - name: Upload audit report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-article-audit
+          path: |
+            playwright-report
+            test-results
+          retention-days: 3
