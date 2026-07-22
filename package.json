@@ -12,6 +12,7 @@
     "validate:essays": "tsx scripts/validate-essays.ts",
     "validate:citations": "tsx scripts/validate-citations.ts",
     "validate:clusters": "tsx scripts/validate-topic-clusters.ts",
+    "validate:mayakovsky-correspondence": "tsx scripts/validate-mayakovsky-correspondence-index.ts",
     "validate:yesenin-archive": "tsx scripts/validate-yesenin-archive.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
     "check": "node scripts/run-checks.mjs",
