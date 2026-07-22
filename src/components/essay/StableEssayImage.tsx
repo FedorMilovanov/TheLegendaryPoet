@@ -1,8 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ExternalLink, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
+import { pauseSmoothScroll, resumeSmoothScroll } from '../../utils/smoothScroll';
 import TiltCard from '../TiltCard';
 import { resolveEssayMedia } from './media';
 
@@ -40,27 +42,38 @@ function ImageMeta({ block }: { block: ImageBlock }) {
   );
 }
 
+interface PageLock {
+  overflow: string;
+  paddingRight: string;
+  scrollY: number;
+}
+
 /**
  * Stable image surface used by the common article renderer.
  *
- * The preview and the dialog deliberately do not share a Framer `layoutId`.
- * Morphing a portal image out of a transformed 3D card forced Chromium to
- * interpolate between unrelated aspect ratios and occasionally exposed the
- * black modal surface. A short independent panel spring is visually calmer and
- * keeps the image at its own intrinsic ratio throughout the transition.
+ * Preview and dialog deliberately do not share a Framer `layoutId`. Morphing a
+ * portal image out of a transformed 3D card forced Chromium to interpolate
+ * unrelated aspect ratios and occasionally exposed the black modal surface.
+ * The dialog instead calculates one intrinsic-ratio viewport and animates that
+ * independent panel, so portrait, landscape and document scans never stretch.
  */
 export default function StableEssayImage({ block }: { block: ImageBlock }) {
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const [viewerWidth, setViewerWidth] = useState<number | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const pageLockRef = useRef<PageLock | null>(null);
   const captionId = useId();
   const reduceMotion = useReducedMotion();
   const layout = block.layout ?? 'wide';
   const media = resolveEssayMedia(block);
+  const naturalWidth = Math.max(1, media.width ?? 1600);
+  const naturalHeight = Math.max(1, media.height ?? 1000);
+  const intrinsicRatio = naturalWidth / naturalHeight;
 
   const frameClass =
     layout === 'portrait'
@@ -73,20 +86,73 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
       ? '(max-width: 768px) 92vw, 576px'
       : '(max-width: 1024px) 92vw, 768px';
 
+  const measureViewer = () => {
+    const compactHeight = window.innerHeight <= 620;
+    const narrowWidth = window.innerWidth <= 520;
+    const sideGap = narrowWidth ? 12 : 24;
+    const reservedHeight = compactHeight ? 60 : 144;
+    const availableWidth = Math.max(80, window.innerWidth - sideGap);
+    const availableHeight = Math.max(80, window.innerHeight - reservedHeight);
+    setViewerWidth(Math.max(80, Math.min(naturalWidth, availableWidth, availableHeight * intrinsicRatio)));
+  };
+
+  const acquirePageLock = () => {
+    if (pageLockRef.current) return;
+
+    const body = document.body;
+    const lock: PageLock = {
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight,
+      scrollY: window.scrollY,
+    };
+    pageLockRef.current = lock;
+
+    pauseSmoothScroll();
+    const clientWidthBefore = document.documentElement.clientWidth;
+    const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+    body.style.overflow = 'hidden';
+    const releasedWidth = Math.max(0, document.documentElement.clientWidth - clientWidthBefore);
+    if (releasedWidth > 0) body.style.paddingRight = `${currentPadding + releasedWidth}px`;
+  };
+
+  const releasePageLock = (restoreFocus = true) => {
+    const lock = pageLockRef.current;
+    if (!lock) return;
+    pageLockRef.current = null;
+
+    const body = document.body;
+    body.style.overflow = lock.overflow;
+    body.style.paddingRight = lock.paddingRight;
+    resumeSmoothScroll(lock.scrollY);
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: lock.scrollY, left: 0, behavior: 'auto' });
+      if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
+    });
+  };
+
+  const openViewer = () => {
+    measureViewer();
+    acquirePageLock();
+    setOpen(true);
+  };
+
+  const closeViewer = () => {
+    setZoomed(false);
+    setOpen(false);
+  };
+
+  useEffect(() => () => releasePageLock(false), []);
+
   useEffect(() => {
     if (!open) return;
 
-    const body = document.body;
-    const previousOverflow = body.style.overflow;
-    const previousPaddingRight = body.style.paddingRight;
-    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
-    const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
-    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus());
-
+    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
+    const onResize = () => measureViewer();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        setOpen(false);
+        closeViewer();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -99,26 +165,29 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
       const last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
-        last.focus();
+        last.focus({ preventScroll: true });
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
-        first.focus();
+        first.focus({ preventScroll: true });
       }
     };
 
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
     window.addEventListener('keydown', onKey);
-    body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) body.style.paddingRight = `${currentPadding + scrollbarWidth}px`;
 
     return () => {
       cancelAnimationFrame(focusFrame);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
       window.removeEventListener('keydown', onKey);
-      body.style.overflow = previousOverflow;
-      body.style.paddingRight = previousPaddingRight;
-      setZoomed(false);
-      requestAnimationFrame(() => triggerRef.current?.focus());
     };
-  }, [open]);
+  }, [open, intrinsicRatio, naturalWidth]);
+
+  const viewportStyle = {
+    width: viewerWidth ? `${viewerWidth}px` : undefined,
+    aspectRatio: `${naturalWidth} / ${naturalHeight}`,
+  } as CSSProperties;
 
   const previewPicture = (
     <picture className="block h-full w-full leading-none">
@@ -146,7 +215,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
     <motion.button
       ref={triggerRef}
       type="button"
-      onClick={() => setOpen(true)}
+      onClick={openViewer}
       whileTap={reduceMotion ? undefined : { scale: 0.994 }}
       transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.55 }}
       className={`essay-image-preview group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
@@ -173,7 +242,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
   );
 
   const lightbox = (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={() => releasePageLock(true)}>
       {open && (
         <motion.div
           ref={dialogRef}
@@ -187,7 +256,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
           transition={{ duration: reduceMotion ? 0.1 : 0.22, ease: 'easeOut' }}
           className="essay-lightbox fixed inset-0 z-[190] flex items-center justify-center bg-black/88 p-2 sm:p-4"
           onPointerDown={(event) => {
-            if (event.currentTarget === event.target) setOpen(false);
+            if (event.currentTarget === event.target) closeViewer();
           }}
           data-testid="essay-image-dialog"
         >
@@ -196,21 +265,22 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.16}
             onDragEnd={(_, info) => {
-              if (Math.abs(info.offset.y) > 105 || Math.abs(info.velocity.y) > 650) setOpen(false);
+              if (Math.abs(info.offset.y) > 105 || Math.abs(info.velocity.y) > 650) closeViewer();
             }}
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.965 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.975 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 31, mass: 0.72 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 7, scale: 0.985 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 34, mass: 0.68 }}
             className="essay-lightbox-panel relative flex max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] flex-col items-center"
             data-testid="essay-image-panel"
           >
             <div
               ref={viewportRef}
-              className="essay-lightbox-viewport relative flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 shadow-[0_35px_120px_rgba(0,0,0,0.72)]"
+              className="essay-lightbox-viewport relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_35px_120px_rgba(0,0,0,0.72)]"
+              style={viewportStyle}
               data-testid="essay-image-viewport"
             >
-              <picture className="block max-h-full max-w-full leading-none">
+              <picture className="block h-full w-full leading-none">
                 {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="94vw" />}
                 {media.webpSrcSet && <source type="image/webp" srcSet={media.webpSrcSet} sizes="94vw" />}
                 <motion.img
@@ -226,7 +296,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
                   animate={{ scale: zoomed ? 1.58 : 1 }}
                   transition={{ type: 'spring', stiffness: 285, damping: 31, mass: 0.72 }}
                   onDoubleClick={() => setZoomed((value) => !value)}
-                  className={`essay-lightbox-image block h-auto w-auto max-h-[calc(100dvh-9rem)] max-w-[calc(100vw-1.5rem)] select-none ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                  className={`essay-lightbox-image block h-full w-full select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
                   data-testid="essay-image-dialog-image"
                 />
               </picture>
@@ -268,7 +338,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
           <motion.button
             ref={closeRef}
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={closeViewer}
             whileTap={reduceMotion ? undefined : { scale: 0.92 }}
             className="essay-lightbox-close absolute inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/62 text-white/75 backdrop-blur-md transition-colors hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:h-12 sm:w-12"
             aria-label="Закрыть изображение"
