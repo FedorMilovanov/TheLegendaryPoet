@@ -22,6 +22,8 @@
 - Канонизация и архив 1930–1978: [`verification/claim-ledger-pass5-canonization-archives.md`](./verification/claim-ledger-pass5-canonization-archives.md)
 - Очередь поиска первоисточников: [`verification/source-pursuit-queue.md`](./verification/source-pursuit-queue.md)
 - Проверенный веб-реестр 45 ссылок: [`verification/primary-source-web-audit-2026-07-22.md`](./verification/primary-source-web-audit-2026-07-22.md)
+- Карта приобретения 52 корпусов из библиографии Янгфельдта: [`verification/jangfeldt-bibliography-acquisition-map.md`](./verification/jangfeldt-bibliography-acquisition-map.md)
+- Первый проход точной библиографической проверки: [`verification/bibliographic-verification-pass1.md`](./verification/bibliographic-verification-pass1.md)
 - Визуальный реестр: [`media/visual-ledger.md`](./media/visual-ledger.md)
 - Ход обработки: [`WORKLOG.md`](./WORKLOG.md)
 
