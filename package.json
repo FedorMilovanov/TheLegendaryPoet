@@ -15,6 +15,7 @@
     "validate:mayakovsky-correspondence": "tsx scripts/validate-mayakovsky-correspondence-index.ts",
     "validate:yesenin-archive": "tsx scripts/validate-yesenin-archive.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
+    "validate:prerender-seo": "tsx scripts/validate-prerendered-seo.ts",
     "check": "node scripts/run-checks.mjs",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "prerender": "tsx scripts/prerender-og.mjs",
