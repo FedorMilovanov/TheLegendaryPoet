@@ -154,13 +154,28 @@ jobs:
         if: steps.media.outcome == 'failure'
         run: exit 1
 
-      - name: Commit polished article engine
+      - id: publish
+        name: Commit polished article engine
+        continue-on-error: true
+        shell: bash
         run: |
+          set -o pipefail
           rm -rf tools/polish-patch
-          rm -f .github/workflows/apply-polish-patch.yml
-          rm -f .github/workflows/export-worktree.yml
+          git checkout HEAD -- .github/workflows/ci.yml
+          rm -f .github/workflows/localize-essay-media.yml
           git add -A
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "feat: localize article media and add Playwright QA"
-          git push origin HEAD:work/local-images-playwright-wtoc
+          git push origin HEAD:work/local-images-playwright-wtoc 2>&1 | tee /tmp/publish.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: article-media-publish-log
+          path: /tmp/publish.log
+          retention-days: 1
+
+      - name: Stop after publish failure
+        if: steps.publish.outcome == 'failure'
+        run: exit 1
