@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - work/local-images-playwright-wtoc
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
