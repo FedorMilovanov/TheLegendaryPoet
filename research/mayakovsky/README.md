@@ -14,12 +14,21 @@
 - Паспорт и карта глав: [`sources/jangfeldt-stavka-zhizn.md`](./sources/jangfeldt-stavka-zhizn.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
+- Ранний период 1893–1918: [`verification/claim-ledger-pass3-1893-1918.md`](./verification/claim-ledger-pass3-1893-1918.md)
 - Второй проход утверждений 1922–1930: [`verification/claim-ledger-pass2.md`](./verification/claim-ledger-pass2.md)
 - Очередь поиска первоисточников: [`verification/source-pursuit-queue.md`](./verification/source-pursuit-queue.md)
 - Визуальный реестр: [`media/visual-ledger.md`](./media/visual-ledger.md)
 - Ход обработки: [`WORKLOG.md`](./WORKLOG.md)
 
 ## Глубокие конспекты Янгфельдта
+
+### Часть I и ранняя биография Бриков
+
+- [`notes/jangfeldt-early-life-futurism-1893-1914.md`](./notes/jangfeldt-early-life-futurism-1893-1914.md) — Багдади, семья, голос, смерть отца, Москва, подполье, Бутырка, Бурлюк, жёлтая кофта и футуристические турне;
+- [`notes/jangfeldt-lili-osip-before-1915.md`](./notes/jangfeldt-lili-osip-before-1915.md) — самостоятельные биографии Лили и Осипа, семейная и еврейская среда, помолвка, брак и ранний интеллектуальный союз;
+- [`notes/jangfeldt-cloud-cinema-revolution-1915-1918.md`](./notes/jangfeldt-cloud-cinema-revolution-1915-1918.md) — чтение «Облака в штанах», Осип как издатель, постепенное формирование союза, кино и революционный переход 1917–1918 годов.
+
+### Часть II и поздний период
 
 - [`notes/jangfeldt-pro-eto-1922-1923.md`](./notes/jangfeldt-pro-eto-1922-1923.md) — конфликт декабря 1922 года, двухмесячная разлука, письма, дневник и поэма «Про это»;
 - [`notes/jangfeldt-america-new-rules-1925-1927.md`](./notes/jangfeldt-america-new-rules-1925-1927.md) — Америка, Элли Джонс, дочь, изменение отношений с Лилей, Осип и Евгения, Гендриков переулок;
