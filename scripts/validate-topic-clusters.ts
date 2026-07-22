@@ -54,6 +54,22 @@ for (const essay of essays) {
   if (relatedIds.length < 2) {
     errors.push(`${essay.slug}: clustered essay requires at least 2 explicit relatedEssayIds`);
   }
+
+  const sources = essay.sources ?? [];
+  const primarySources = sources.filter((source) => source.kind === 'primary');
+  if (sources.length < 6) {
+    errors.push(`${essay.slug}: clustered essay requires at least 6 sources; found ${sources.length}`);
+  }
+  if (primarySources.length < 4) {
+    errors.push(`${essay.slug}: clustered essay requires at least 4 primary sources; found ${primarySources.length}`);
+  }
+
+  const citedBlocks = essay.blocks.filter(
+    (block) => 'sourceIds' in block && Boolean(block.sourceIds?.length),
+  ).length;
+  if (citedBlocks < 8) {
+    errors.push(`${essay.slug}: clustered essay requires at least 8 cited prose blocks; found ${citedBlocks}`);
+  }
 }
 
 for (const [clusterId, label] of clusterLabels) {
