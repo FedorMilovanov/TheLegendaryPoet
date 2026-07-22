@@ -34,16 +34,23 @@ async function collectArticleRoutes(page: Page): Promise<string[]> {
   return routes.sort();
 }
 
-async function hydrateLazyMedia(page: Page) {
-  const viewportHeight = page.viewportSize()?.height ?? 800;
-  let height = await page.evaluate(() => document.documentElement.scrollHeight);
-  for (let y = 0; y <= height; y += Math.max(480, Math.floor(viewportHeight * 0.72))) {
-    await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
-    await page.waitForTimeout(90);
-    height = Math.max(height, await page.evaluate(() => document.documentElement.scrollHeight));
+async function hydrateArticleMedia(page: Page) {
+  const lazyImages = page.locator('img[loading="lazy"]');
+  for (let index = 0; index < (await lazyImages.count()); index += 1) {
+    const image = lazyImages.nth(index);
+    await image.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => image.evaluate((node) => (node as HTMLImageElement).naturalWidth), {
+        timeout: 12_000,
+      })
+      .toBeGreaterThan(0);
   }
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await page.waitForTimeout(800);
+
+  const blocks = page.locator('.essay-body > *');
+  if ((await blocks.count()) > 0) {
+    await blocks.last().scrollIntoViewIfNeeded();
+    await expect(blocks.last()).toBeVisible();
+  }
 }
 
 async function auditImages(page: Page) {
@@ -68,9 +75,33 @@ async function auditImages(page: Page) {
   );
 }
 
-async function verifyEssayInteractions(page: Page) {
+async function captureVisualSlices(page: Page, route: string, testInfo: TestInfo) {
+  const safeName = route.replace(/^\//, '').replace(/[^a-zA-Z0-9_-]+/g, '-');
+  const blocks = page.locator('.essay-body > *');
+  const count = await blocks.count();
+  const samples = [...new Set([0, Math.max(0, Math.floor(count / 2)), Math.max(0, count - 1)])];
+
+  for (const [sampleIndex, blockIndex] of samples.entries()) {
+    if (count > 0) {
+      await blocks.nth(blockIndex).scrollIntoViewIfNeeded();
+      await expect(blocks.nth(blockIndex)).toBeVisible();
+    } else {
+      await page.evaluate((ratio) => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo({ top: max * ratio, behavior: 'instant' });
+      }, sampleIndex / Math.max(1, samples.length - 1));
+    }
+    await page.waitForTimeout(180);
+    await page.screenshot({
+      path: testInfo.outputPath(`${safeName || 'home'}-slice-${sampleIndex + 1}.png`),
+      animations: 'disabled',
+    });
+  }
+}
+
+async function verifyLongformInteractions(page: Page) {
   await expect(page.locator('.essay-body')).toBeVisible();
-  await expect(page.locator('#sources')).toBeVisible();
+  await expect(page.locator('.essay-body > *').first()).toBeVisible();
 
   const imageTriggers = page.locator('button[aria-label^="Увеличить изображение"]');
   if ((await imageTriggers.count()) > 0) {
@@ -80,17 +111,27 @@ async function verifyEssayInteractions(page: Page) {
 
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
+    const viewport = page.viewportSize();
+    const dialogBox = await dialog.boundingBox();
+    expect(dialogBox?.x ?? -1, 'Lightbox must start at the viewport left edge').toBeLessThanOrEqual(1);
+    expect(dialogBox?.y ?? -1, 'Lightbox must start at the viewport top edge').toBeLessThanOrEqual(1);
+    expect(dialogBox?.width ?? 0, 'Lightbox must cover the viewport width').toBeGreaterThanOrEqual(
+      (viewport?.width ?? 0) - 2,
+    );
+    expect(dialogBox?.height ?? 0, 'Lightbox must cover the viewport height').toBeGreaterThanOrEqual(
+      (viewport?.height ?? 0) - 2,
+    );
     await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
     const close = page.getByRole('button', { name: 'Закрыть изображение' });
     await expect(close).toBeFocused();
 
-    // A real modal focus trap must allow reaching its source and zoom controls,
-    // rather than pinning every Tab press to the close button.
     await page.keyboard.press('Tab');
     await expect(close, 'Tab must move through controls inside the lightbox').not.toBeFocused();
 
-    const zoom = page.getByRole('button', { name: /Увеличить изображение|Уменьшить изображение/ }).last();
+    const zoom = page
+      .getByRole('button', { name: /Увеличить изображение|Уменьшить изображение/ })
+      .last();
     await zoom.click();
     await expect(zoom).toHaveAttribute('aria-pressed', 'true');
 
@@ -108,10 +149,14 @@ async function verifyEssayInteractions(page: Page) {
     await expect(page.locator(targetHash!)).toBeVisible();
   }
 
-  const primaryFilter = page.getByRole('button', { name: /Первичные/ });
-  if ((await primaryFilter.count()) > 0) {
-    await primaryFilter.click();
-    await expect(primaryFilter).toHaveAttribute('aria-pressed', 'true');
+  const sourceLibrary = page.locator('#sources');
+  if ((await sourceLibrary.count()) > 0) {
+    await expect(sourceLibrary).toBeVisible();
+    const primaryFilter = page.getByRole('button', { name: /Первичные/ });
+    if ((await primaryFilter.count()) > 0) {
+      await primaryFilter.click();
+      await expect(primaryFilter).toHaveAttribute('aria-pressed', 'true');
+    }
   }
 }
 
@@ -128,15 +173,18 @@ async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promis
   await page.goto(route, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('h1').first()).toBeVisible();
   await expect(page.getByText('Статья не найдена')).toHaveCount(0);
-  await hydrateLazyMedia(page);
 
-  const engine: RouteAudit['engine'] = (await page.locator('.essay-body').count()) > 0 ? 'essay' : 'legacy';
-  if (engine === 'essay') await verifyEssayInteractions(page);
+  const engine: RouteAudit['engine'] =
+    (await page.locator('.essay-body').count()) > 0 ? 'essay' : 'legacy';
+  if (engine === 'essay') await verifyLongformInteractions(page);
 
-  await hydrateLazyMedia(page);
+  await hydrateArticleMedia(page);
   const images = await auditImages(page);
   const brokenImages = images
-    .filter((image) => image.visible && image.complete && (image.naturalWidth === 0 || image.naturalHeight === 0))
+    .filter(
+      (image) =>
+        image.visible && image.complete && (image.naturalWidth === 0 || image.naturalHeight === 0),
+    )
     .map((image) => image.src);
 
   const overflow = await page.evaluate(() => ({
@@ -145,12 +193,7 @@ async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promis
   }));
   const horizontalOverflow = Math.max(0, overflow.scrollWidth - overflow.clientWidth);
 
-  const safeName = route.replace(/^\//, '').replace(/[^a-zA-Z0-9_-]+/g, '-');
-  await page.screenshot({
-    path: testInfo.outputPath(`${safeName || 'home'}-full.png`),
-    fullPage: true,
-    animations: 'disabled',
-  });
+  await captureVisualSlices(page, route, testInfo);
 
   page.off('console', onConsole);
   page.off('pageerror', onPageError);
@@ -167,7 +210,7 @@ async function auditRoute(page: Page, route: string, testInfo: TestInfo): Promis
   };
 }
 
-test('all article routes render, media opens, sources work, and layouts stay stable', async ({ page }, testInfo) => {
+test('all article routes use one engine and pass media, source, and layout checks', async ({ page }, testInfo) => {
   const routes = await collectArticleRoutes(page);
   const audits: RouteAudit[] = [];
 
@@ -175,6 +218,9 @@ test('all article routes render, media opens, sources work, and layouts stay sta
     const audit = await auditRoute(page, route, testInfo);
     audits.push(audit);
 
+    expect(audit.engine, `${route}: every article route must use the universal longform engine`).toBe(
+      'essay',
+    );
     expect(audit.brokenImages, `${route}: visible broken images`).toEqual([]);
     expect(audit.pageErrors, `${route}: uncaught page errors`).toEqual([]);
     expect(audit.consoleErrors, `${route}: console errors`).toEqual([]);
@@ -186,8 +232,5 @@ test('all article routes render, media opens, sources work, and layouts stay sta
     JSON.stringify({ project: testInfo.project.name, routes: audits }, null, 2),
   );
 
-  const premium = audits.filter((audit) => audit.engine === 'essay');
-  const legacy = audits.filter((audit) => audit.engine === 'legacy');
-  expect(premium.length, 'Premium essay engine must be exercised').toBeGreaterThan(0);
-  expect(legacy.length, 'Legacy article engine is intentionally detected for architecture review').toBeGreaterThan(0);
+  expect(audits.some((audit) => audit.engine === 'legacy'), 'No legacy renderer may remain').toBe(false);
 });
