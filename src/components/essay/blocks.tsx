@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
@@ -41,10 +42,10 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
   );
 }
 
-function LeadBlock({ block }: { block: Block<'lead'> }) {
+function LeadBlock({ block, citations }: { block: Block<'lead'>; citations?: ReactNode }) {
   return (
     <p className="essay-lead mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty">
-      {block.text}
+      {block.text}{citations}
     </p>
   );
 }
@@ -67,12 +68,14 @@ function SectionBlock({ block, number }: { block: Block<'section'>; number?: num
   );
 }
 
-function ParagraphBlock({ block }: { block: Block<'paragraph'> }) {
+function ParagraphBlock({ block, citations }: { block: Block<'paragraph'>; citations?: ReactNode }) {
+  const paragraphs = splitParagraphs(block.text);
   return (
     <>
-      {splitParagraphs(block.text).map((p, i) => (
-        <p key={i} className="mb-6 text-lg md:text-xl leading-[1.9] text-luxury-gray-light font-light text-pretty">
-          {withGold(p)}
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="mb-6 text-lg md:text-xl leading-[1.9] text-luxury-gray-light font-light text-pretty">
+          {withGold(paragraph)}
+          {index === paragraphs.length - 1 ? citations : null}
         </p>
       ))}
     </>
@@ -368,13 +371,15 @@ function VoiceBlock({ block }: { block: Block<'voice'> }) {
   );
 }
 
-function NoteBlock({ block }: { block: Block<'note'> }) {
+function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: ReactNode }) {
   return (
     <aside className="my-10 rounded-[2rem] border-l-[6px] border-l-cyan-400/60 bg-[#061018]/60 p-6 md:p-8">
       <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
         THE LEGENDARY POET — ремарка
       </div>
-      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">{block.text}</p>
+      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
+        {block.text}{citations}
+      </p>
     </aside>
   );
 }
@@ -392,9 +397,9 @@ function ReflectionBlock({ block }: { block: Block<'reflection'> }) {
           <span className="text-[10px] font-bold uppercase tracking-[0.3em]">{titleCase(block.heading || 'Библейская ремарка')}</span>
           <span className="h-px w-10 bg-luxury-gold/40" />
         </div>
-        {splitParagraphs(block.text).map((p, i) => (
-          <p key={i} className="mx-auto mb-5 max-w-2xl text-center font-serif text-xl md:text-2xl leading-[1.7] text-luxury-gold-light/90 italic text-pretty">
-            {withGold(p)}
+        {splitParagraphs(block.text).map((paragraph, index) => (
+          <p key={index} className="mx-auto mb-5 max-w-2xl text-center font-serif text-xl md:text-2xl leading-[1.7] text-luxury-gold-light/90 italic text-pretty">
+            {withGold(paragraph)}
           </p>
         ))}
       </div>
@@ -412,16 +417,24 @@ function DividerBlock() {
   );
 }
 
-export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; sectionNumber?: number }) {
+export function EssayBlockView({
+  block,
+  sectionNumber,
+  citations,
+}: {
+  block: EssayBlock;
+  sectionNumber?: number;
+  citations?: ReactNode;
+}) {
   switch (block.type) {
     case 'epigraph':
       return <EpigraphBlock block={block} />;
     case 'lead':
-      return <LeadBlock block={block} />;
+      return <LeadBlock block={block} citations={citations} />;
     case 'section':
       return <SectionBlock block={block} number={sectionNumber} />;
     case 'paragraph':
-      return <ParagraphBlock block={block} />;
+      return <ParagraphBlock block={block} citations={citations} />;
     case 'image':
       return <ImageBlock block={block} />;
     case 'pullquote':
@@ -431,7 +444,7 @@ export function EssayBlockView({ block, sectionNumber }: { block: EssayBlock; se
     case 'voice':
       return <VoiceBlock block={block} />;
     case 'note':
-      return <NoteBlock block={block} />;
+      return <NoteBlock block={block} citations={citations} />;
     case 'reflection':
       return <ReflectionBlock block={block} />;
     case 'divider':
