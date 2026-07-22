@@ -51,17 +51,28 @@ function buildSourceReferences(sources: EssaySource[]): EssaySourceReferenceMap 
   );
 }
 
-function blockLayout(block: EssayBlock): { className: string; direction: 'up' | 'left' | 'right' } {
+interface BlockLayout {
+  className: string;
+  direction: 'up' | 'left' | 'right';
+  /** Floats must not live inside transformed wrappers: prose boxes then steal their hit area. */
+  reveal: boolean;
+}
+
+function blockLayout(block: EssayBlock): BlockLayout {
   if (block.type === 'image' && block.placement === 'left') {
     return {
-      className: 'lg:float-left lg:mr-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
+      className:
+        'relative z-10 lg:float-left lg:mr-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
       direction: 'right',
+      reveal: false,
     };
   }
   if (block.type === 'image' && block.placement === 'right') {
     return {
-      className: 'lg:float-right lg:ml-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
+      className:
+        'relative z-10 lg:float-right lg:ml-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
       direction: 'left',
+      reveal: false,
     };
   }
 
@@ -78,6 +89,7 @@ function blockLayout(block: EssayBlock): { className: string; direction: 'up' | 
   return {
     className: clearFloat ? 'clear-both' : '',
     direction: 'up',
+    reveal: true,
   };
 }
 
@@ -101,6 +113,21 @@ export default function ArticleRenderer({
           <InlineCitations sourceIds={sourceIds} references={references} />
         ) : undefined;
         const layout = blockLayout(block);
+        const content = (
+          <EssayBlockView
+            block={block}
+            sectionNumber={sectionNumber}
+            citations={citations}
+          />
+        );
+
+        if (!layout.reveal) {
+          return (
+            <div key={`${block.type}-${i}`} className={layout.className}>
+              {content}
+            </div>
+          );
+        }
 
         return (
           <Reveal
@@ -110,11 +137,7 @@ export default function ArticleRenderer({
             once
             className={`${layout.className} will-change-transform`}
           >
-            <EssayBlockView
-              block={block}
-              sectionNumber={sectionNumber}
-              citations={citations}
-            />
+            {content}
           </Reveal>
         );
       })}
