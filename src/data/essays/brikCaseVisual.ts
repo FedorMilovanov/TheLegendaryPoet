@@ -1,17 +1,20 @@
 import type { Essay } from '../../types/essay';
 import { brikCase as baseBrikCase } from './brikCase';
+import { expandBrikCase } from './brikCaseResearchExpansion';
 import { insertArchiveImages } from './visualArchive';
 
+const expandedBrikCase = expandBrikCase(baseBrikCase);
+
 export const brikCaseVisual: Essay = {
-  ...baseBrikCase,
+  ...expandedBrikCase,
   cover: '/images/essays/archive/lilya-gendrikov-1929.webp',
   cardCover: '/images/essays/archive/lilya-gendrikov-1929.webp',
   coverAlt: 'Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год',
   coverKind: 'archive',
   coverCredit: 'Осип Брик · 1929',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
-  readTime: 24,
-  blocks: insertArchiveImages(baseBrikCase.blocks, {
+  readTime: 36,
+  blocks: insertArchiveImages(expandedBrikCase.blocks, {
     'Жуковского, июль 1915-го': [
       {
         type: 'image',
