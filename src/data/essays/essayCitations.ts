@@ -60,3 +60,15 @@ export const brikCitationRules: CitationRule[] = [
   { blockId: 'brik-imprisonment', sourceIds: ['brik-correspondence', 'paperny-pro-eto'] },
   { blockId: 'brik-diary', sourceIds: ['parnis-diary', 'rgali-lilya-katanyan'] },
 ];
+
+export const yeseninCitationRules: CitationRule[] = [
+  { blockId: 'yesenin-imagism', sourceIds: ['yesenin-imagist-action-1919', 'yesenin-cafe-bills'] },
+  { blockId: 'yesenin-police-records', sourceIds: ['yesenin-interrogation-1923', 'yesenin-detention-1924'] },
+  { blockId: 'yesenin-black-man-dating', sourceIds: ['yesenin-black-man-text'] },
+  { blockId: 'yesenin-last-year', sourceIds: ['yesenin-marriage-1925', 'yesenin-clinic-1925'] },
+  { blockId: 'yesenin-clinic', sourceIds: ['yesenin-clinic-1925'] },
+  { blockId: 'yesenin-death-account', sourceIds: ['yesenin-last-days-archive', 'yesenin-forensic-study'] },
+  { blockId: 'yesenin-inonia-assessment', sourceIds: ['yesenin-inonia', 'yesenin-blok-diary'] },
+  { blockId: 'yesenin-religious-self-definition', sourceIds: ['yesenin-preface-1924', 'yesenin-inonia', 'yesenin-o-sebe'] },
+  { blockId: 'yesenin-death-documents', sourceIds: ['yesenin-prosecutor-conclusion', 'yesenin-forensic-study', 'yesenin-criminalistic-review'] },
+];
