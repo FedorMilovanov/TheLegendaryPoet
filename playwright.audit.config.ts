@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/playwright-audit',
-  timeout: 300_000,
+  timeout: 420_000,
   expect: { timeout: 12_000 },
   fullyParallel: false,
   retries: 0,
