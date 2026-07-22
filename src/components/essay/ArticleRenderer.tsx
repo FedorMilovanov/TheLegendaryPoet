@@ -67,15 +67,17 @@ export default function ArticleRenderer({
       {normalizedBlocks.map((block, i) => {
         const sectionNumber = block.type === 'section' ? ++sectionCount : undefined;
         const sourceIds = 'sourceIds' in block ? block.sourceIds : undefined;
+        const citations = sourceIds?.length ? (
+          <InlineCitations sourceIds={sourceIds} references={references} />
+        ) : undefined;
+
         return (
           <Reveal key={`${block.type}-${i}`} direction="up" distance={18} once className="will-change-transform">
-            <EssayBlockView block={block} sectionNumber={sectionNumber} />
-            {sourceIds?.length ? (
-              <div className="-mt-4 mb-6 flex items-center gap-2 pl-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-luxury-gray-light/30">
-                <span>Источники</span>
-                <InlineCitations sourceIds={sourceIds} references={references} />
-              </div>
-            ) : null}
+            <EssayBlockView
+              block={block}
+              sectionNumber={sectionNumber}
+              citations={citations}
+            />
           </Reveal>
         );
       })}
