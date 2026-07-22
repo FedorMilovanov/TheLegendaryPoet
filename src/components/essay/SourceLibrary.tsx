@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Archive,
@@ -64,6 +64,30 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
     setFilter(next);
     setExpanded(false);
   };
+
+  useEffect(() => {
+    const revealLinkedSource = () => {
+      const match = window.location.hash.match(/^#source-(.+)$/);
+      if (!match) return;
+      const sourceId = decodeURIComponent(match[1]);
+      if (!sources.some((source) => source.id === sourceId)) return;
+
+      setFilter('all');
+      setExpanded(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById(`source-${sourceId}`)?.scrollIntoView({
+            behavior: reduceMotion ? 'auto' : 'smooth',
+            block: 'center',
+          });
+        });
+      });
+    };
+
+    revealLinkedSource();
+    window.addEventListener('hashchange', revealLinkedSource);
+    return () => window.removeEventListener('hashchange', revealLinkedSource);
+  }, [reduceMotion, sources]);
 
   return (
     <section
@@ -154,12 +178,14 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
 
             return (
               <motion.li
+                id={source.id ? `source-${source.id}` : undefined}
                 key={source.id ?? source.url ?? `${index}-${source.title}`}
                 layout
                 initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-luxury-gold/65 target:ring-offset-4 target:ring-offset-[#090806]"
               >
                 {source.url ? (
                   <a
