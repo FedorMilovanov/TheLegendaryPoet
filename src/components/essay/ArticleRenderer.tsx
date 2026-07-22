@@ -101,6 +101,26 @@ export default function ArticleRenderer({
           <InlineCitations sourceIds={sourceIds} references={references} />
         ) : undefined;
         const layout = blockLayout(block);
+        const blockView = (
+          <EssayBlockView
+            block={block}
+            sectionNumber={sectionNumber}
+            citations={citations}
+          />
+        );
+        const className = `${layout.className} essay-block-shell essay-block-${block.type}`;
+
+        // A fixed lightbox must not be nested under a transformed Reveal node:
+        // transformed ancestors redefine the fixed containing block and can put
+        // the modal below surrounding article content. ImageBlock already owns
+        // its soft spring/tilt interactions, so its outer shell stays untransformed.
+        if (block.type === 'image') {
+          return (
+            <div key={`${block.type}-${i}`} className={className}>
+              {blockView}
+            </div>
+          );
+        }
 
         return (
           <Reveal
@@ -108,13 +128,9 @@ export default function ArticleRenderer({
             direction={layout.direction}
             distance={18}
             once
-            className={`${layout.className} essay-block-shell essay-block-${block.type} will-change-transform`}
+            className={className}
           >
-            <EssayBlockView
-              block={block}
-              sectionNumber={sectionNumber}
-              citations={citations}
-            />
+            {blockView}
           </Reveal>
         );
       })}
