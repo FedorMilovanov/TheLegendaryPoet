@@ -1,9 +1,9 @@
 name: PR diagnostics
 
 on:
-  push:
+  pull_request:
     branches:
-      - work/mayakovsky-visual-essays
+      - main
 
 permissions:
   contents: read
