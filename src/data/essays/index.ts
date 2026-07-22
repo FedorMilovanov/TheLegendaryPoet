@@ -108,13 +108,13 @@ const brikCaseWithSourceLibrary: Essay = {
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
-  // Preserve source records authored by the essay/expansion layer before adding
-  // the reusable documentary and supplemental registries. Otherwise inline
-  // citation ids can survive while their bibliography entries are silently lost.
+  // Canonical registries come first so their stable ids, evidence kinds, and
+  // limitations win over older essay-local cards that happen to reuse a URL.
+  // Unique sources authored by the expansion layer are then retained as well.
   sources: uniqueSources([
-    ...(brikCaseVisual.sources ?? []),
     ...brikDocumentSources,
     ...brikSupplementalSources,
+    ...(brikCaseVisual.sources ?? []),
   ]),
 };
 
