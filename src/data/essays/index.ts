@@ -1,4 +1,4 @@
-import type { Essay } from '../../types/essay';
+import type { Essay, EssaySource } from '../../types/essay';
 import { yeseninKutezhi } from './yeseninKutezhi';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
@@ -12,6 +12,23 @@ import {
   brikSupplementalSources,
   mayakovskyEarlySupplementalSources,
 } from './mayakovskySupplementalSources';
+
+function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
+  const seen = new Set<string>();
+  return sources.filter((source) => {
+    const key = source.url
+      ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
+      : `${source.id ?? ''}:${source.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const yeseninWithUniqueSources: Essay = {
+  ...yeseninKutezhi,
+  sources: uniqueSources(yeseninKutezhi.sources),
+};
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
@@ -40,7 +57,7 @@ const brikCaseWithSourceLibrary: Essay = {
 };
 
 export const essays: Essay[] = [
-  yeseninKutezhi,
+  yeseninWithUniqueSources,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
   brikCaseWithSourceLibrary,
