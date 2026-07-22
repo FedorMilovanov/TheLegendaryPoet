@@ -1,9 +1,15 @@
 import type { Essay } from '../../types/essay';
 import { yeseninKutezhi } from './yeseninKutezhi';
-import { mayakovskyGromovoy } from './mayakovskyGromovoy';
-import { brikCase } from './brikCase';
+import { mayakovskyPartOne } from './mayakovskyPartOne';
+import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
+import { brikCaseVisual } from './brikCaseVisual';
 
-export const essays: Essay[] = [yeseninKutezhi, mayakovskyGromovoy, brikCase];
+export const essays: Essay[] = [
+  yeseninKutezhi,
+  mayakovskyPartOne,
+  mayakovskyPartTwo,
+  brikCaseVisual,
+];
 
 export function getAllEssays(): Essay[] {
   return essays;
