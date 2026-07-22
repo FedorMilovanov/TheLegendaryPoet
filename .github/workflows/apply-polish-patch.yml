@@ -48,8 +48,24 @@ jobs:
           npm ci
           npm install --no-save sharp@0.35.3
 
-      - name: Download and optimize article media
-        run: npm run images:sync
+      - id: media
+        name: Download and optimize article media
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run images:sync 2>&1 | tee /tmp/images-sync.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: article-media-sync-log
+          path: /tmp/images-sync.log
+          retention-days: 1
+
+      - name: Stop after media failure
+        if: steps.media.outcome == 'failure'
+        run: exit 1
 
       - name: Commit polished article engine
         run: |
