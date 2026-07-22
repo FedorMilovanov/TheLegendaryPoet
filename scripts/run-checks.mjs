@@ -6,6 +6,7 @@ const checks = [
   'validate:library',
   'validate:essays',
   'validate:citations',
+  'validate:clusters',
   'validate:yesenin-archive',
   'validate:media',
   'validate:style',
