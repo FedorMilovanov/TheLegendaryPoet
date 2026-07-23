@@ -4,6 +4,7 @@ const essays = [
   'yesenin-kutezhi',
   'mayakovsky-before-revolution',
   'mayakovsky-gromovoy',
+  'mayakovsky-pro-eto-separation',
   'brik-case',
 ] as const;
 
