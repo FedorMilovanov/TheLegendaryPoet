@@ -82,6 +82,11 @@ export function useDialogSurface({
       if (closeOnEscape && event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
+        // Yield stack ownership immediately instead of waiting for React's
+        // effect cleanup. A rapid second Escape can then reach the dialog that
+        // was underneath this one rather than being swallowed by a stale top
+        // entry after the upper surface has already disappeared visually.
+        handle.release();
         closeRef.current();
         return;
       }
