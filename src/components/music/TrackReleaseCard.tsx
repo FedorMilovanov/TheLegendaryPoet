@@ -1,67 +1,112 @@
-import { ArrowRight, Clock3, Disc3, Play, Radio } from 'lucide-react';
-import { MusicTrack } from '../../types/poet';
+import { ArrowRight, CheckCircle2, Clock3, Disc3, Pause, Play } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
 import FeedbackMiniSummary from '../community/FeedbackMiniSummary';
 import { Link } from '../ui/Link';
+import { useAudioPlayer } from './AudioPlayerProvider';
+import { getTrackThemeStyle } from './trackTheme';
 
 export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
-  const waveform = track.waveform?.filter((_, index) => index % 3 === 0).slice(0, 34) ?? [];
+  const {
+    currentTrack,
+    playing,
+    currentTime,
+    duration,
+    completedTrackIds,
+    toggleTrack,
+    getSavedPosition,
+  } = useAudioPlayer();
+
+  const isActive = currentTrack?.id === track.id;
+  const trackPlaying = isActive && playing;
+  const position = isActive ? currentTime : getSavedPosition(track.id);
+  const totalDuration = isActive ? (duration || track.durationSeconds || 0) : (track.durationSeconds || 0);
+  const progress = totalDuration > 0 ? Math.min(1, position / totalDuration) : 0;
+  const completed = completedTrackIds.has(track.id);
+  const waveform = track.waveform?.filter((_, index) => index % 4 === 0).slice(0, 34) ?? [];
+  const coverTransition = { viewTransitionName: `track-cover-${track.id}` } as CSSProperties;
 
   return (
-    <Link
-      to={`/music/${track.id}`}
-      className="group relative isolate grid overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[#071018]/78 shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition duration-500 hover:-translate-y-1.5 hover:border-luxury-gold/32 hover:shadow-[0_34px_100px_rgba(0,0,0,0.48)] sm:grid-cols-[190px_1fr]"
+    <article
+      style={{
+        ...getTrackThemeStyle(track),
+        backgroundColor: 'var(--track-surface)',
+        backgroundImage: 'linear-gradient(145deg, color-mix(in srgb, var(--track-surface) 92%, black), rgba(5,5,5,.93))',
+      }}
+      className="group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition duration-500 hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
     >
-      {track.wideCoverUrl && (
-        <img src={asset(track.wideCoverUrl)} alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-[0.055] blur-xl saturate-150 transition duration-700 group-hover:opacity-[0.09]" />
-      )}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(5,14,20,0.88),rgba(5,8,12,0.97))]" />
-      <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+      <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[232px]">
+        <Link to={`/music/${track.id}`} className="block h-full w-full" aria-label={`Открыть публикацию «${track.title}»`}>
+          {track.coverUrl ? (
+            <img
+              src={asset(track.coverUrl)}
+              alt={`Обложка трека «${track.title}»`}
+              loading="lazy"
+              style={coverTransition}
+              className="h-full w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.045] group-hover:saturate-[1.08]"
+            />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_62%),#050505]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-white/[0.04] sm:bg-gradient-to-r sm:from-transparent sm:to-black/65" />
+        </Link>
 
-      <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[235px]">
-        {track.coverUrl ? (
-          <img
-            src={asset(track.coverUrl)}
-            alt={`Обложка трека «${track.title}»`}
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.055] group-hover:saturate-[1.08]"
-          />
-        ) : (
-          <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_62%),#050505]" />
+        <button
+          type="button"
+          onClick={() => { void toggleTrack(track); }}
+          aria-label={trackPlaying ? `Поставить «${track.title}» на паузу` : `Воспроизвести «${track.title}»`}
+          className="absolute bottom-4 left-4 z-10 inline-flex h-13 w-13 items-center justify-center rounded-full border border-white/25 text-black shadow-[0_0_28px_color-mix(in_srgb,var(--track-accent)_34%,transparent)] transition duration-300 hover:scale-110 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
+          style={{ backgroundColor: 'var(--track-accent)' }}
+        >
+          {trackPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+        </button>
+
+        {(completed || trackPlaying) && (
+          <div className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/48 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/68 backdrop-blur-xl">
+            {completed ? <CheckCircle2 size={12} style={{ color: 'var(--track-secondary)' }} /> : <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--track-secondary)' }} />}
+            {completed ? 'Прослушано' : 'Сейчас звучит'}
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-white/[0.05] sm:bg-gradient-to-r sm:from-transparent sm:via-transparent sm:to-[#071018]/75" />
-        <span className="absolute bottom-4 left-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-luxury-gold text-black shadow-[0_0_30px_rgba(212,175,55,0.35)] transition duration-300 group-hover:scale-110 group-hover:bg-[#f0d36d]">
-          <Play size={19} fill="currentColor" className="ml-0.5" />
-        </span>
-        <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/48 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/68 backdrop-blur-lg">
-          <Radio size={11} className="text-cyan-300" /> Аудиорелиз
-        </span>
       </div>
 
-      <div className="flex min-w-0 flex-col p-5 sm:p-6">
-        <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em]">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.035] px-2.5 py-1 text-luxury-gold/78"><Disc3 size={12} /> Релиз {track.releaseYear}</span>
-          <span className="inline-flex items-center gap-1.5 text-cyan-100/38"><Clock3 size={12} /> {track.duration}</span>
+      <div className="relative flex min-w-0 flex-col p-5 sm:p-6">
+        <div className="pointer-events-none absolute right-[-3rem] top-[-4rem] h-40 w-40 rounded-full blur-3xl" style={{ background: 'color-mix(in srgb, var(--track-secondary) 8%, transparent)' }} />
+        <div className="relative mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.09] px-2.5 py-1" style={{ color: 'var(--track-accent)' }}><Disc3 size={12} /> Релиз {track.releaseYear}</span>
+          <span className="inline-flex items-center gap-1.5 text-white/38"><Clock3 size={12} /> {track.duration}</span>
         </div>
 
-        <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition duration-300 group-hover:text-luxury-gold">{track.title}</h3>
-        <p className="mt-2 text-sm font-medium text-luxury-gold/62">{track.poet}</p>
-        {track.description && <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-cyan-100/48">{track.description}</p>}
+        <Link to={`/music/${track.id}`} className="relative block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+          <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition group-hover:text-[var(--track-accent)]">{track.title}</h3>
+          <p className="mt-2 text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--track-accent) 70%, white)' }}>{track.poet}</p>
+        </Link>
+        {track.description && <p className="relative mt-4 line-clamp-3 text-sm leading-relaxed text-white/46">{track.description}</p>}
 
         {waveform.length > 0 && (
-          <div className="mt-5 flex h-8 items-center gap-[2px] rounded-xl border border-cyan-300/[0.07] bg-black/20 px-2.5" aria-hidden="true">
-            {waveform.map((peak, index) => (
-              <span key={index} className="min-w-[2px] flex-1 rounded-full bg-cyan-100/16 transition duration-500 group-hover:bg-luxury-gold/55" style={{ height: `${Math.max(16, peak * 82)}%` }} />
-            ))}
+          <div className="relative mt-5 flex h-8 items-center gap-[2px] overflow-hidden rounded-xl border border-white/[0.06] bg-black/20 px-2" aria-hidden="true">
+            {waveform.map((peak, index) => {
+              const point = (index + 0.5) / Math.max(1, waveform.length);
+              return (
+                <span
+                  key={index}
+                  className="min-w-[2px] flex-1 rounded-full"
+                  style={{
+                    height: `${Math.max(18, peak * 88)}%`,
+                    backgroundColor: point <= progress ? 'var(--track-accent)' : 'rgba(255,255,255,.12)',
+                  }}
+                />
+              );
+            })}
           </div>
         )}
 
         <FeedbackMiniSummary targetType="track" targetId={track.id} />
-        <div className="mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100/45">
-          <span className="transition group-hover:text-cyan-100/70">Открыть публикацию</span>
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/10 text-cyan-300 transition duration-300 group-hover:translate-x-1 group-hover:border-luxury-gold/25 group-hover:text-luxury-gold"><ArrowRight size={17} /></span>
-        </div>
+        <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/45 transition hover:text-white">
+          <span>{position > 1 && !completed ? 'Продолжить публикацию' : 'Открыть публикацию'}</span>
+          <ArrowRight size={17} className="transition group-hover:translate-x-1" style={{ color: 'var(--track-secondary)' }} />
+        </Link>
       </div>
-    </Link>
+    </article>
   );
 }
