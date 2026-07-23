@@ -62,10 +62,35 @@ export function scrollToId(id: string) {
   const prefersReduced =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const target = Math.max(0, el.getBoundingClientRect().top + window.scrollY - 96);
 
   if (activeLenis) {
-    activeLenis.scrollTo(el, { offset: -96, duration: prefersReduced ? 0 : 1.1 });
+    // The persistent Lenis instance can outlive a much shorter previous route.
+    // Refresh its limit before resolving a deep anchor in a newly loaded essay.
+    activeLenis.resize();
+    const startY = window.scrollY;
+    activeLenis.scrollTo(target, { duration: prefersReduced ? 0 : 1.1, immediate: prefersReduced });
+
+    // If a stale route measurement still prevented the first command from
+    // starting, fall back after two paints to an exact, resized position. Normal
+    // smooth navigation is left untouched once any movement has begun.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (
+          Math.abs(window.scrollY - startY) <= 1 &&
+          Math.abs(el.getBoundingClientRect().top - 96) > 24
+        ) {
+          activeLenis?.resize();
+          window.scrollTo({ top: target, left: 0, behavior: 'auto' });
+          activeLenis?.scrollTo(target, { immediate: true });
+        }
+      });
+    });
   } else {
-    el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+    window.scrollTo({
+      top: target,
+      left: 0,
+      behavior: prefersReduced ? 'auto' : 'smooth',
+    });
   }
 }
