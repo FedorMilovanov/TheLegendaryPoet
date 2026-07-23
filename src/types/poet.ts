@@ -69,6 +69,24 @@ export interface Article {
   image?: string;
 }
 
+export interface MusicTrackTheme {
+  /** Primary interactive colour. Use an accessible six-digit hex value. */
+  accent: string;
+  /** Secondary atmosphere colour used for gradients and buffered waveform. */
+  secondary: string;
+  /** Deep page/player surface associated with the release. */
+  surface: string;
+  /** Optional object-position for wide artwork, for example `55% center`. */
+  heroPosition?: string;
+}
+
+export interface MusicTrackChapter {
+  /** Editorial label displayed on an optional timeline marker. */
+  label: string;
+  /** Exact start time in seconds. Chapters are optional until timings are verified. */
+  start: number;
+}
+
 export interface MusicTrack {
   id: string;
   title: string;
@@ -91,4 +109,8 @@ export interface MusicTrack {
   rightsNotice?: string;
   audioSha256?: string;
   waveform?: readonly number[];
+  /** Release-specific visual tokens applied through CSS custom properties. */
+  theme?: MusicTrackTheme;
+  /** Optional verified structural markers. Never populate with guessed timings. */
+  chapters?: readonly MusicTrackChapter[];
 }

@@ -4,6 +4,7 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
+import { musicTracks } from './data/poets';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -27,6 +28,9 @@ import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
+import GlobalMiniPlayer from './components/music/GlobalMiniPlayer';
+import ImmersivePlayer from './components/music/ImmersivePlayer';
+import { AudioPlayerProvider } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 
 const WipeOverlay = () => <motion.div className="page-wipe pointer-events-none fixed inset-0 z-[100] flex items-center justify-center" style={{ originY: 1 }} initial={{ scaleY: 1 }} animate={{ scaleY: 0 }} exit={{ scaleY: 1 }} transition={{ duration: 0.72, ease: [0.76, 0, 0.24, 1] }}><motion.div initial={{ opacity: 0, scale: 0.78 }} animate={{ opacity: [0, 1, 1, 0], scale: [0.78, 1, 1, 0.78] }} transition={{ duration: 0.72, times: [0, 0.25, 0.75, 1] }} className="pointer-events-none"><BrandMark size="lg" /></motion.div></motion.div>;
@@ -45,10 +49,13 @@ function AnimatedRoutes() {
   const location = useLocation();
   return <Routes location={location} key={location.pathname}><Route path="/" element={<SiteLayout><PageWrapper><HomePage /></PageWrapper></SiteLayout>} /><Route path="/hall" element={<SiteLayout><PageWrapper><HallPage /></PageWrapper></SiteLayout>} /><Route path="/poets" element={<SiteLayout><PageWrapper><PoetsPage /></PageWrapper></SiteLayout>} /><Route path="/poets/:id" element={<SiteLayout><PageWrapper><PoetDetailPage /></PageWrapper></SiteLayout>} /><Route path="/ratings" element={<SiteLayout><PageWrapper><RatingsPage /></PageWrapper></SiteLayout>} /><Route path="/articles" element={<SiteLayout><PageWrapper><ArticlesPage /></PageWrapper></SiteLayout>} /><Route path="/essays/:slug" element={<SiteLayout><PageWrapper><EssayPage /></PageWrapper></SiteLayout>} /><Route path="/articles/:id" element={<SiteLayout><PageWrapper><ArticleDetailPage /></PageWrapper></SiteLayout>} /><Route path="/music" element={<SiteLayout><PageWrapper><MusicPage /></PageWrapper></SiteLayout>} /><Route path="/music/:id" element={<SiteLayout><PageWrapper><TrackDetailPage /></PageWrapper></SiteLayout>} /><Route path="/about" element={<SiteLayout><PageWrapper><AboutPage /></PageWrapper></SiteLayout>} /><Route path="/archive" element={<SiteLayout><PageWrapper><MyArchivePage /></PageWrapper></SiteLayout>} /><Route path="*" element={<SiteLayout><PageWrapper><NotFoundPage /></PageWrapper></SiteLayout>} /></Routes>;
 }
-function RoutedApp() { const location = useLocation(); return <ErrorBoundary resetKey={location.pathname}><AnimatedRoutes /></ErrorBoundary>; }
+function RoutedApp() {
+  const location = useLocation();
+  return <ErrorBoundary resetKey={location.pathname}><AnimatedRoutes /><GlobalMiniPlayer /><ImmersivePlayer /></ErrorBoundary>;
+}
 function App() {
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
   useEffect(() => { void hydrateFromRemote(); initAnalytics(); }, []);
-  return <Router basename={basename}><MotionConfig reducedMotion="user"><RoutedApp /></MotionConfig></Router>;
+  return <AudioPlayerProvider tracks={musicTracks}><Router basename={basename}><MotionConfig reducedMotion="user"><RoutedApp /></MotionConfig></Router></AudioPlayerProvider>;
 }
 export default App;

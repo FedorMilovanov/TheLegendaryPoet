@@ -25,6 +25,12 @@ export const musicTracks: MusicTrack[] = [
     rightsNotice: standardRights,
     audioSha256: '2f5b7c0a9b83be4685d0d83728e5896c8adde78b75b46dad361eddfb28356381',
     waveform: yeseninYaUstalymWaveform,
+    theme: {
+      accent: '#d7a84b',
+      secondary: '#577f72',
+      surface: '#0b1210',
+      heroPosition: '50% center',
+    },
   },
   {
     id: 'pushkin-tucha',
@@ -46,6 +52,12 @@ export const musicTracks: MusicTrack[] = [
     rightsNotice: standardRights,
     audioSha256: '1d4f77fb01ccd31a4fe8934281fc7771157b7f9a0373529ca97ad0aafa86ff30',
     waveform: pushkinTuchaWaveform,
+    theme: {
+      accent: '#8e82ff',
+      secondary: '#39bde8',
+      surface: '#080a19',
+      heroPosition: '52% center',
+    },
   },
   {
     id: 'blok-rossiya',
@@ -67,5 +79,11 @@ export const musicTracks: MusicTrack[] = [
     rightsNotice: standardRights,
     audioSha256: 'feb6d1607278fce8621000a542e76e075cca5a6b44cf63c0a9db67603b943c9d',
     waveform: blokRossiyaWaveform,
+    theme: {
+      accent: '#87b9c8',
+      secondary: '#9d5d64',
+      surface: '#0b1115',
+      heroPosition: '50% center',
+    },
   },
 ];

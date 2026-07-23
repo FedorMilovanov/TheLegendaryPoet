@@ -1,0 +1,29 @@
+.global-audio-mini {
+  position: fixed;
+  z-index: 58;
+  left: 50%;
+  bottom: 1.25rem;
+  width: min(760px, calc(100% - 2rem));
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+@media (max-width: 767px) {
+  .global-audio-mini {
+    bottom: calc(6.35rem + env(safe-area-inset-bottom));
+    width: calc(100% - 1.25rem);
+  }
+
+  html.global-audio-active #main-content {
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .global-audio-mini *,
+  [role="dialog"][aria-label^="Режим погружения"] * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
