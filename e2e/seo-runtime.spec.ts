@@ -37,7 +37,9 @@ test.describe('runtime discovery and indexing state', () => {
       'index, follow, max-image-preview:large',
     );
     const types = await routeJsonTypes(page);
-    expect(types).toEqual(expect.objectContaining(new Set(['CollectionPage', 'ItemList', 'BreadcrumbList'])));
+    for (const type of ['CollectionPage', 'ItemList', 'BreadcrumbList']) {
+      expect(types.has(type), `/poets should contain ${type}`).toBe(true);
+    }
   });
 
   test('all public catalogues retain specialized JSON-LD after hydration', async ({ page }, testInfo) => {
