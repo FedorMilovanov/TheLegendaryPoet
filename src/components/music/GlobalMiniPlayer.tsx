@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Maximize2, Pause, Play, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
@@ -27,6 +28,11 @@ export default function GlobalMiniPlayer() {
     openImmersive,
     immersiveOpen,
   } = useAudioPlayer();
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('global-audio-active', Boolean(currentTrack));
+    return () => document.documentElement.classList.remove('global-audio-active');
+  }, [currentTrack]);
 
   const ownDetailOpen = currentTrack
     ? location.pathname === `/music/${currentTrack.id}`
