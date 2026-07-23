@@ -1,8 +1,9 @@
 import type { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
 
-const ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
-const URL = ENV?.VITE_SUPABASE_URL?.replace(/\/$/, '');
-const KEY = ENV?.VITE_SUPABASE_ANON_KEY;
+const VITE_ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+const NODE_ENV = typeof process !== 'undefined' ? process.env : undefined;
+const URL = (VITE_ENV?.VITE_SUPABASE_URL ?? NODE_ENV?.VITE_SUPABASE_URL)?.replace(/\/$/, '');
+const KEY = VITE_ENV?.VITE_SUPABASE_ANON_KEY ?? NODE_ENV?.VITE_SUPABASE_ANON_KEY;
 
 const RATINGS_VIEW = 'tlp_ratings_public';
 const COMMENTS_VIEW = 'tlp_comments_public';
