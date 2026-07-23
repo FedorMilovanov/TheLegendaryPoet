@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, LoaderCircle, Maximize2, Pause, Play, RotateCw, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { musicTracks } from '../../data/poets';
 import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
 import { formatAudioTime } from './audioPresentation';
+import { reconcileAudioSession } from './audioSessionStore';
 import { getTrackThemeStyle } from './trackTheme';
 
 export default function GlobalMiniPlayer() {
@@ -36,6 +38,10 @@ export default function GlobalMiniPlayer() {
   const totalDuration = duration || currentTrack?.durationSeconds || 0;
   const progress = totalDuration > 0 ? Math.min(1, currentTime / totalDuration) : 0;
   const busy = status === 'loading' || status === 'buffering';
+
+  useEffect(() => {
+    reconcileAudioSession(musicTracks.map((track) => track.id));
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('global-audio-active', visible);
