@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import {
   Check,
   Clock3,
@@ -21,12 +21,8 @@ import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer, type AudioStatus } from './AudioPlayerProvider';
+import { buildTrackMomentPath, formatAudioTime } from './audioPresentation';
 import { getTrackThemeStyle } from './trackTheme';
-
-const formatTime = (value: number) => {
-  const safe = Number.isFinite(value) && value > 0 ? value : 0;
-  return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
-};
 
 const copyText = async (value: string) => {
   if (navigator.clipboard?.writeText) {
@@ -54,6 +50,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
     currentTrack,
     playing,
     status,
+    failure,
     currentTime,
     duration,
     buffered,
@@ -62,6 +59,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
     resumeAt,
     loadTrack,
     toggleTrack,
+    retry,
     seekTo,
     seekBy,
     restart,
@@ -72,6 +70,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
   } = useAudioPlayer();
   const [shareLabel, setShareLabel] = useState('Поделиться');
   const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumeControlRef = useRef<HTMLDivElement>(null);
 
   const isActive = currentTrack?.id === track.id;
   const savedPosition = getSavedPosition(track.id);
@@ -82,7 +81,9 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
   const progress = totalDuration > 0 ? Math.min(1, position / totalDuration) : 0;
   const bufferedProgress = isActive && totalDuration > 0 ? Math.min(1, buffered / totalDuration) : 0;
   const restoredPosition = isActive ? resumeAt : savedPosition >= 8 ? savedPosition : null;
-  const unavailable = !track.audioUrl || (isActive && playerStatus === 'error');
+  const unavailable = !track.audioUrl;
+  const recoverableError = isActive && playerStatus === 'error';
+  const busy = playerStatus === 'loading' || playerStatus === 'buffering';
 
   const waveform = useMemo(
     () => track.waveform?.length
@@ -96,7 +97,26 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
     loadTrack(track, { startAt: initialTime, autoplay: false });
   }, [initialTime, loadTrack, track]);
 
-  const toggle = () => { void toggleTrack(track); };
+  useEffect(() => {
+    if (!volumeOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!volumeControlRef.current?.contains(event.target as Node)) setVolumeOpen(false);
+    };
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') setVolumeOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [volumeOpen]);
+
+  const toggle = () => {
+    if (recoverableError) retry();
+    else void toggleTrack(track);
+  };
 
   const seekToTrack = (next: number) => {
     if (isActive) seekTo(next);
@@ -116,23 +136,24 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
   const share = async () => {
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     const moment = position >= 5 ? Math.floor(position) : 0;
-    const suffix = moment > 0 ? `?t=${moment}` : '';
-    const url = `${window.location.origin}${base}/music/${track.id}${suffix}`;
+    const url = `${window.location.origin}${base}${buildTrackMomentPath(track.id, position)}`;
     try {
       if (navigator.share) {
         await navigator.share({
           title: `${track.title} — ${track.poet}`,
           text: moment > 0
-            ? `${track.poet} — «${track.title}», момент ${formatTime(moment)}`
+            ? `${track.poet} — «${track.title}», момент ${formatAudioTime(moment)}`
             : `${track.poet} — музыкальная версия The Legendary Poet`,
           url,
         });
       } else {
         await copyText(url);
       }
-      setShareLabel(moment > 0 ? `Скопировано с ${formatTime(moment)}` : 'Ссылка скопирована');
+      setShareLabel(moment > 0 ? `Скопировано с ${formatAudioTime(moment)}` : 'Ссылка скопирована');
       window.setTimeout(() => setShareLabel('Поделиться'), 2200);
-    } catch { /* sharing cancelled */ }
+    } catch {
+      // Native share was cancelled or clipboard access was denied.
+    }
   };
 
   const onPlayerKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -141,7 +162,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
       setVolumeOpen(false);
       return;
     }
-    if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.tagName === 'A') return;
+    if (target.matches('input, button, a, select, textarea, [contenteditable="true"]')) return;
     if (event.code === 'Space') {
       event.preventDefault();
       toggle();
@@ -158,31 +179,38 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
   const mainButtonLabel = unavailable
     ? 'Недоступно'
-    : (playerStatus === 'loading' || playerStatus === 'buffering') && !trackPlaying
-      ? 'Загрузка'
-      : trackPlaying
-        ? 'Пауза'
-        : position > 1
-          ? 'Продолжить'
-          : 'Слушать';
+    : recoverableError
+      ? 'Повторить'
+      : busy && !trackPlaying
+        ? 'Загрузка'
+        : trackPlaying
+          ? 'Пауза'
+          : position > 1
+            ? 'Продолжить'
+            : 'Слушать';
 
-  const statusLabel = playerStatus === 'buffering'
-    ? 'Буферизация'
-    : playerStatus === 'loading'
-      ? 'Подготовка аудио'
-      : trackPlaying
-        ? 'Сейчас звучит'
-        : isActive && playerStatus === 'ready'
-          ? 'Готово к воспроизведению'
-          : 'Мастер публикации';
+  const statusLabel = recoverableError
+    ? 'Нужна повторная загрузка'
+    : playerStatus === 'buffering'
+      ? 'Буферизация'
+      : playerStatus === 'loading'
+        ? 'Подготовка аудио'
+        : trackPlaying
+          ? 'Сейчас звучит'
+          : isActive && playerStatus === 'ready'
+            ? 'Готово к воспроизведению'
+            : 'Мастер публикации';
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
   const themeStyle = getTrackThemeStyle(track);
+  const coverTransition = compact
+    ? ({ viewTransitionName: `track-cover-${track.id}` } as CSSProperties)
+    : undefined;
 
   return (
     <article
       onKeyDown={onPlayerKeyDown}
-      aria-busy={playerStatus === 'loading' || playerStatus === 'buffering'}
+      aria-busy={busy}
       style={{
         ...themeStyle,
         backgroundColor: 'var(--track-surface)',
@@ -213,6 +241,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                 alt={`Обложка трека «${track.title}»`}
                 draggable={false}
                 loading={compact ? 'lazy' : 'eager'}
+                style={coverTransition}
                 className={`aspect-square w-full select-none object-cover transition duration-[1600ms] ease-out ${trackPlaying ? 'scale-[1.025] saturate-[1.08]' : 'scale-100'}`}
               />
             ) : (
@@ -221,10 +250,10 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-white/[0.07]" />
             <div className="pointer-events-none absolute inset-0 rounded-[1.8rem] ring-1 ring-inset ring-white/[0.06]" />
 
-            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/45 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white/70 backdrop-blur-xl">
+            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/45 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white/70 backdrop-blur-xl" aria-live="polite">
               <span
-                className={`h-1.5 w-1.5 rounded-full ${trackPlaying ? 'animate-pulse' : 'bg-white/30'}`}
-                style={trackPlaying ? { backgroundColor: 'var(--track-secondary)', boxShadow: '0 0 10px var(--track-secondary)' } : undefined}
+                className={`h-1.5 w-1.5 rounded-full ${trackPlaying ? 'animate-pulse' : ''}`}
+                style={{ backgroundColor: recoverableError ? '#fbbf24' : trackPlaying ? 'var(--track-secondary)' : 'rgba(255,255,255,.3)', boxShadow: trackPlaying ? '0 0 10px var(--track-secondary)' : undefined }}
               />
               {statusLabel}
             </div>
@@ -233,15 +262,17 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
               type="button"
               onClick={toggle}
               disabled={unavailable}
-              aria-label={unavailable ? 'Аудиофайл недоступен' : trackPlaying ? 'Поставить на паузу' : 'Воспроизвести трек'}
-              style={{ backgroundColor: unavailable ? undefined : 'var(--track-accent)' }}
+              aria-label={unavailable ? 'Аудиофайл недоступен' : recoverableError ? 'Повторить загрузку аудио' : trackPlaying ? 'Поставить на паузу' : 'Воспроизвести трек'}
+              style={{ backgroundColor: unavailable ? undefined : recoverableError ? '#fbbf24' : 'var(--track-accent)' }}
               className="absolute bottom-5 left-5 inline-flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full border border-white/30 text-black shadow-[0_0_38px_color-mix(in_srgb,var(--track-accent)_42%,transparent)] transition duration-300 hover:scale-105 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/35 disabled:shadow-none"
             >
-              {(playerStatus === 'loading' || playerStatus === 'buffering') && !trackPlaying
+              {busy && !trackPlaying
                 ? <LoaderCircle size={26} className="animate-spin" />
-                : trackPlaying
-                  ? <Pause size={26} fill="currentColor" />
-                  : <Play size={27} fill="currentColor" className="ml-1" />}
+                : recoverableError
+                  ? <RotateCw size={26} />
+                  : trackPlaying
+                    ? <Pause size={26} fill="currentColor" />
+                    : <Play size={27} fill="currentColor" className="ml-1" />}
             </button>
           </div>
         </div>
@@ -260,7 +291,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
           {restoredPosition !== null && restoredPosition > 0 && (
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-xs text-white/58">
               <Check size={15} style={{ color: 'var(--track-secondary)' }} />
-              <span>Продолжение с {formatTime(restoredPosition)}</span>
+              <span>Продолжение с {formatAudioTime(restoredPosition)}</span>
               <button type="button" onClick={restartTrack} className="font-bold transition hover:text-white" style={{ color: 'var(--track-accent)' }}>Начать сначала</button>
             </div>
           )}
@@ -295,8 +326,8 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                     key={`${chapter.label}-${chapter.start}`}
                     type="button"
                     onClick={() => seekToTrack(chapter.start)}
-                    aria-label={`${chapter.label}, ${formatTime(chapter.start)}`}
-                    title={`${chapter.label} · ${formatTime(chapter.start)}`}
+                    aria-label={`${chapter.label}, ${formatAudioTime(chapter.start)}`}
+                    title={`${chapter.label} · ${formatAudioTime(chapter.start)}`}
                     className="absolute bottom-0 top-0 z-10 w-px bg-white/25 transition hover:bg-white/75"
                     style={{ left: `${left}%` }}
                   />
@@ -309,44 +340,46 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                 max={totalDuration || 1}
                 step="0.1"
                 value={Math.min(position, totalDuration || 1)}
-                disabled={unavailable}
+                disabled={unavailable || recoverableError}
                 onInput={(event) => seekToTrack(Number(event.currentTarget.value))}
                 aria-label="Позиция воспроизведения"
-                aria-valuetext={`${formatTime(position)} из ${formatTime(totalDuration)}`}
+                aria-valuetext={`${formatAudioTime(position)} из ${formatAudioTime(totalDuration)}`}
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
             </div>
             <div className="mt-2.5 flex items-center justify-between text-xs tabular-nums text-white/40">
-              <span className="font-medium text-white/58">{formatTime(position)}</span>
-              <span>{playerStatus === 'buffering' ? 'буферизация…' : formatTime(totalDuration)}</span>
+              <span className="font-medium text-white/58">{formatAudioTime(position)}</span>
+              <span>{playerStatus === 'buffering' ? 'буферизация…' : formatAudioTime(totalDuration)}</span>
             </div>
           </div>
 
-          {playerStatus === 'error' && isActive && (
-            <p className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-xs leading-relaxed text-amber-100/68">
-              <TriangleAlert size={15} /> Аудиофайл не загрузился. Проверьте соединение и повторите попытку.
-            </p>
+          {recoverableError && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-xs leading-relaxed text-amber-100/72" role="alert">
+              <TriangleAlert size={15} />
+              <span className="min-w-0 flex-1">{failure?.message ?? 'Аудиофайл не загрузился.'}</span>
+              <button type="button" onClick={retry} className="inline-flex min-h-9 items-center gap-2 rounded-full bg-amber-300 px-3 font-bold text-black transition hover:brightness-110"><RotateCw size={14} /> Повторить</button>
+            </div>
           )}
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5">
-            <button type="button" onClick={() => seekTrackBy(-10)} disabled={unavailable} aria-label="Назад на 10 секунд" title="Назад на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"><RotateCcw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
+            <button type="button" onClick={() => seekTrackBy(-10)} disabled={unavailable || recoverableError} aria-label="Назад на 10 секунд" title="Назад на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"><RotateCcw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
 
             <button
               type="button"
               onClick={toggle}
               disabled={unavailable}
-              style={{ backgroundColor: unavailable ? undefined : 'var(--track-accent)' }}
+              style={{ backgroundColor: unavailable ? undefined : recoverableError ? '#fbbf24' : 'var(--track-accent)' }}
               className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-sm font-bold text-black shadow-[0_10px_32px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:translate-y-0 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
             >
-              {(playerStatus === 'loading' || playerStatus === 'buffering') && !trackPlaying ? <LoaderCircle size={18} className="animate-spin" /> : trackPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+              {busy && !trackPlaying ? <LoaderCircle size={18} className="animate-spin" /> : recoverableError ? <RotateCw size={18} /> : trackPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
               {mainButtonLabel}
             </button>
 
-            <button type="button" onClick={() => seekTrackBy(10)} disabled={unavailable} aria-label="Вперёд на 10 секунд" title="Вперёд на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"><RotateCw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
+            <button type="button" onClick={() => seekTrackBy(10)} disabled={unavailable || recoverableError} aria-label="Вперёд на 10 секунд" title="Вперёд на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"><RotateCw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
 
-            <div className="relative flex items-center">
+            <div ref={volumeControlRef} className="relative flex items-center">
               <button type="button" onClick={() => { toggleMute(); setVolumeOpen(true); }} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><VolumeIcon size={18} /></button>
-              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/35 transition hover:text-white sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
+              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/35 transition hover:text-white sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
               {volumeOpen && (
                 <div className="absolute bottom-14 left-0 z-30 flex w-48 items-center gap-3 rounded-2xl border border-white/12 bg-[#071018]/98 p-3 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:left-auto sm:right-0">
                   <Volume1 size={15} className="text-white/35" />
