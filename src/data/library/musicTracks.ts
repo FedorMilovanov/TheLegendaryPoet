@@ -4,7 +4,7 @@ import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform } f
 
 const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
 
-export const allMusicTracks = [
+export const allMusicTracks: readonly MusicTrack[] = [
   {
     id: 'yesenin-ya-ustalym-takim-eshche-ne-byl',
     title: 'Я усталым таким ещё не был',
@@ -96,7 +96,7 @@ export const allMusicTracks = [
       heroPosition: '50% center',
     },
   },
-] satisfies readonly MusicTrack[];
+];
 
 /** Published entries only. This is the list passed into the persistent audio runtime. */
 export const musicTracks = getPublishedMusicTracks(allMusicTracks);
