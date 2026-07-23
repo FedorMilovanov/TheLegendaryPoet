@@ -30,32 +30,66 @@ function makeVariants(direction: Direction, distance: number, blur: boolean): Va
   };
 }
 
-export default function Reveal({ children, direction = 'up', delay = 0, duration = 0.78, distance = 30, threshold = 0.1, className = '', once = true, blur = true }: RevealProps) {
+export default function Reveal({
+  children,
+  direction = 'up',
+  delay = 0,
+  duration = 0.78,
+  distance = 30,
+  threshold = 0.1,
+  className = '',
+  once = true,
+  blur = true,
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
   const prefersReduced = useReducedMotion();
+  // Reduced-motion users must never depend on an IntersectionObserver callback
+  // for basic readability. Starting visible also prevents below-the-fold legacy
+  // article blocks from remaining opacity:0 forever in print, screenshots or
+  // assistive browsing modes that do not drive normal viewport intersections.
+  const [inView, setInView] = useState(prefersReduced === true);
 
   useEffect(() => {
+    if (prefersReduced) {
+      setInView(true);
+      return;
+    }
+
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); if (once) observer.disconnect(); }
-        else if (!once) { setInView(false); }
+        if (entry.isIntersecting) {
+          setInView(true);
+          if (once) observer.disconnect();
+        } else if (!once) {
+          setInView(false);
+        }
       },
       { threshold },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [threshold, once]);
+  }, [threshold, once, prefersReduced]);
 
   const effectiveDir = prefersReduced ? 'none' : direction;
   const effectiveBlur = prefersReduced ? false : blur;
   const variants = makeVariants(effectiveDir, distance, effectiveBlur);
+  const visible = prefersReduced || inView;
 
   return (
-    <motion.div ref={ref} className={className} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={variants}
-      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={prefersReduced ? 'visible' : 'hidden'}
+      animate={visible ? 'visible' : 'hidden'}
+      variants={variants}
+      transition={{
+        duration: prefersReduced ? 0 : duration,
+        delay: prefersReduced ? 0 : delay,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+    >
       {children}
     </motion.div>
   );
