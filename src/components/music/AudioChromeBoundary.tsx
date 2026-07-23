@@ -41,7 +41,7 @@ export default class AudioChromeBoundary extends Component<AudioChromeBoundaryPr
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="fixed bottom-[calc(6.35rem+env(safe-area-inset-bottom))] left-1/2 z-[115] w-[min(520px,calc(100%-1.25rem))] -translate-x-1/2 rounded-[1.35rem] border border-amber-300/16 bg-[#11100d]/96 p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.68)] backdrop-blur-2xl md:bottom-5" role="alert">
+      <div className="fixed bottom-[calc(6.35rem_+_env(safe-area-inset-bottom))] left-1/2 z-[115] w-[min(520px,calc(100%_-_1.25rem))] -translate-x-1/2 rounded-[1.35rem] border border-amber-300/16 bg-[#11100d]/96 p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.68)] backdrop-blur-2xl md:bottom-5" role="alert">
         <div className="flex items-start gap-3">
           <TriangleAlert className="mt-0.5 flex-none text-amber-300" size={19} />
           <div className="min-w-0 flex-1">
