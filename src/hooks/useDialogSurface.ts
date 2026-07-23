@@ -1,0 +1,121 @@
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import { acquireOverlayLock, type OverlayLockHandle } from '../utils/overlayRuntime';
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'summary',
+  '[contenteditable="true"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function getFocusableElements(dialog: HTMLElement | null) {
+  if (!dialog) return [];
+  return [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
+    if (element.closest('[inert]')) return false;
+    if (element.getAttribute('aria-hidden') === 'true') return false;
+    return element.getClientRects().length > 0;
+  });
+}
+
+interface DialogSurfaceOptions {
+  open: boolean;
+  dialogRef: RefObject<HTMLElement | null>;
+  initialFocusRef?: RefObject<HTMLElement | null>;
+  onClose: () => void;
+  label?: string;
+  closeOnEscape?: boolean;
+  restoreFocus?: boolean;
+}
+
+/**
+ * Shared lifecycle for modal surfaces: stack-safe page locking, focus entry,
+ * focus containment, Escape handling and focus restoration. It intentionally
+ * owns no visual markup, so every surface keeps its own design.
+ */
+export function useDialogSurface({
+  open,
+  dialogRef,
+  initialFocusRef,
+  onClose,
+  label = 'dialog',
+  closeOnEscape = true,
+  restoreFocus = true,
+}: DialogSurfaceOptions) {
+  const closeRef = useRef(onClose);
+  const handleRef = useRef<OverlayLockHandle | null>(null);
+
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const handle = acquireOverlayLock(label);
+    handleRef.current = handle;
+    let focusFrame = window.requestAnimationFrame(() => {
+      const preferred = initialFocusRef?.current;
+      const fallback = getFocusableElements(dialogRef.current)[0] ?? dialogRef.current;
+      (preferred ?? fallback)?.focus({ preventScroll: true });
+    });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!handle.isTopmost()) return;
+
+      if (closeOnEscape && event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusableElements(dialogRef.current);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current?.focus({ preventScroll: true });
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const activeInside = active instanceof Node && Boolean(dialogRef.current?.contains(active));
+
+      if (!activeInside) {
+        event.preventDefault();
+        (event.shiftKey ? last : first)?.focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      focusFrame = 0;
+      document.removeEventListener('keydown', onKeyDown, true);
+      handle.release();
+      if (handleRef.current === handle) handleRef.current = null;
+
+      if (restoreFocus && previouslyFocused?.isConnected) {
+        window.requestAnimationFrame(() => previouslyFocused.focus({ preventScroll: true }));
+      }
+    };
+  }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus]);
+
+  return {
+    isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
+  };
+}
