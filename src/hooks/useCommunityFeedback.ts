@@ -8,26 +8,27 @@ import {
   commitHelpfulFeedback,
   commitRatingFeedback,
   distributionFromRatings,
-  filterComments,
-  filterRatings,
   flushCommunityOutbox,
   getCommunitySyncSnapshot,
-  getFeedbackSnapshot,
   getOwnRating,
   makeFeedbackId,
   subscribeCommunitySync,
-  subscribeFeedback,
   trustLabel,
 } from '../utils/communityStore';
+import { getFeedbackTargetSnapshot, subscribeFeedbackTarget } from '../utils/communityTargetStore';
 import { getCommunityDeviceId } from '../utils/communityIdentity';
 
 export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: string) {
-  const snapshot = useSyncExternalStore(subscribeFeedback, getFeedbackSnapshot, getFeedbackSnapshot);
+  const targetStore = useMemo(() => ({
+    subscribe: (listener: () => void) => subscribeFeedbackTarget(targetType, targetId, listener),
+    getSnapshot: () => getFeedbackTargetSnapshot(targetType, targetId),
+  }), [targetId, targetType]);
+  const snapshot = useSyncExternalStore(targetStore.subscribe, targetStore.getSnapshot, targetStore.getSnapshot);
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
   const ratingScope = `rating:${targetType}:${targetId}`;
 
-  const ratings = useMemo(() => filterRatings(snapshot, targetType, targetId), [snapshot, targetType, targetId]);
-  const comments = useMemo(() => filterComments(snapshot, targetType, targetId), [snapshot, targetType, targetId]);
+  const ratings = snapshot.ratings;
+  const comments = snapshot.comments;
   const summary = useMemo(() => averageScores(ratings), [ratings]);
   const distribution = useMemo(() => distributionFromRatings(ratings), [ratings]);
   const topComment = useMemo(() => comments
