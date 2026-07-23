@@ -29,8 +29,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Validate content, literary style, and types
+      - name: Validate content, source boundaries, stores, shell, literary style, and types
         run: npm run check
+
+      - name: Validate required physical audio assets
+        run: npm run validate:audio
 
       - name: Generate sitemap
         run: npm run sitemap
@@ -50,8 +53,17 @@ jobs:
       - name: Validate route code splitting
         run: npm run validate:route-chunks
 
+      - name: Validate production route and asset budgets
+        run: npm run validate:build-output
+
       - name: Prerender public routes and noindex fallback
         run: npm run prerender
+
+      - name: Validate prerendered SEO and JSON-LD
+        run: npm run validate:prerender-seo
+
+      - name: Verify generated sitemap is committed and stable
+        run: git diff --exit-code -- public/sitemap.xml
 
       - uses: actions/configure-pages@v5
 
