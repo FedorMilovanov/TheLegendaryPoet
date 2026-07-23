@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronDown, ListMusic, Search, SlidersHorizontal, UserRound, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import type { MusicTrack } from '../../types/poet';
 import {
   filterMusicTracks,
@@ -20,15 +21,20 @@ const sortOptions: Array<{ value: MusicCatalogSort; label: string }> = [
   { value: 'poet', label: 'По авторам' },
   { value: 'title', label: 'По названию' },
 ];
+const validSorts = new Set<MusicCatalogSort>(sortOptions.map((option) => option.value));
 
 export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps) {
-  const [query, setQuery] = useState('');
-  const [poetId, setPoetId] = useState('');
-  const [sort, setSort] = useState<MusicCatalogSort>('editorial');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
+  const poets = useMemo(() => getMusicCatalogPoets(tracks), [tracks]);
+
+  const query = (searchParams.get('q') ?? '').slice(0, 120);
+  const rawPoetId = searchParams.get('poet') ?? '';
+  const poetId = poets.some((poet) => poet.id === rawPoetId) ? rawPoetId : '';
+  const rawSort = searchParams.get('sort') as MusicCatalogSort | null;
+  const sort = rawSort && validSorts.has(rawSort) ? rawSort : 'editorial';
   const deferredQuery = useDeferredValue(query);
 
-  const poets = useMemo(() => getMusicCatalogPoets(tracks), [tracks]);
   const matchingTracks = useMemo(
     () => filterMusicTracks(tracks, { query: deferredQuery, poetId: poetId || undefined, sort }),
     [deferredQuery, poetId, sort, tracks],
@@ -42,10 +48,19 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
     setVisibleLimit(PAGE_SIZE);
   }, [deferredQuery, poetId, sort, tracks]);
 
+  const updateParam = (name: 'q' | 'poet' | 'sort', value: string, defaultValue = '') => {
+    const next = new URLSearchParams(searchParams);
+    if (!value || value === defaultValue) next.delete(name);
+    else next.set(name, value);
+    setSearchParams(next, { replace: true });
+  };
+
   const reset = () => {
-    setQuery('');
-    setPoetId('');
-    setSort('editorial');
+    const next = new URLSearchParams(searchParams);
+    next.delete('q');
+    next.delete('poet');
+    next.delete('sort');
+    setSearchParams(next, { replace: true });
     setVisibleLimit(PAGE_SIZE);
   };
 
@@ -60,7 +75,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => updateParam('q', event.target.value.slice(0, 120))}
               placeholder="Название, поэт или описание"
               autoComplete="off"
               spellCheck="false"
@@ -69,7 +84,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
             {query && (
               <button
                 type="button"
-                onClick={() => setQuery('')}
+                onClick={() => updateParam('q', '')}
                 aria-label="Очистить поиск"
                 className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-white/32 transition hover:bg-white/[0.06] hover:text-white"
               >
@@ -83,7 +98,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
             <span className="sr-only">Порядок релизов</span>
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as MusicCatalogSort)}
+              onChange={(event) => updateParam('sort', event.target.value, 'editorial')}
               className="min-w-0 flex-1 cursor-pointer appearance-none bg-transparent pr-7 font-bold text-white/68 outline-none"
             >
               {sortOptions.map((option) => <option key={option.value} value={option.value} className="bg-[#0a0d10] text-white">{option.label}</option>)}
@@ -96,7 +111,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
           <div className="relative mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Фильтр по поэту">
             <button
               type="button"
-              onClick={() => setPoetId('')}
+              onClick={() => updateParam('poet', '')}
               aria-pressed={!poetId}
               className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${!poetId ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100' : 'border-white/[0.08] text-white/38 hover:border-white/[0.18] hover:text-white/72'}`}
             >
@@ -106,7 +121,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
               <button
                 key={poet.id}
                 type="button"
-                onClick={() => setPoetId((current) => current === poet.id ? '' : poet.id)}
+                onClick={() => updateParam('poet', poetId === poet.id ? '' : poet.id)}
                 aria-pressed={poetId === poet.id}
                 className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${poetId === poet.id ? 'border-luxury-gold/35 bg-luxury-gold/10 text-luxury-gold' : 'border-white/[0.08] text-white/38 hover:border-white/[0.18] hover:text-white/72'}`}
               >
