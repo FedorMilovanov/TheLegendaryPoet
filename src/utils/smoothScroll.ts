@@ -9,6 +9,7 @@ import type Lenis from 'lenis';
 let activeLenis: Lenis | null = null;
 let pauseDepth = 0;
 let restorationEpoch = 0;
+let anchorEpoch = 0;
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
@@ -20,6 +21,7 @@ export function pauseSmoothScroll() {
   pauseDepth += 1;
   // Invalidate delayed restoration frames left by an overlay that just closed.
   restorationEpoch += 1;
+  anchorEpoch += 1;
   if (pauseDepth === 1) activeLenis?.stop();
 }
 
@@ -56,41 +58,69 @@ export function resumeSmoothScroll(scrollY?: number) {
   });
 }
 
+function anchorTarget(el: HTMLElement): number {
+  const rawTarget = el.getBoundingClientRect().top + window.scrollY - 96;
+  const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  return Math.min(limit, Math.max(0, rawTarget));
+}
+
 export function scrollToId(id: string) {
   const el = document.getElementById(id);
   if (!el) return;
+
   const prefersReduced =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const target = Math.max(0, el.getBoundingClientRect().top + window.scrollY - 96);
+  const epoch = ++anchorEpoch;
+
+  const forceSettledPosition = () => {
+    if (epoch !== anchorEpoch || pauseDepth > 0 || !el.isConnected) return;
+    activeLenis?.resize();
+    const target = anchorTarget(el);
+    window.scrollTo({ top: target, left: 0, behavior: 'auto' });
+    activeLenis?.scrollTo(target, { immediate: true });
+  };
 
   if (activeLenis) {
     // The persistent Lenis instance can outlive a much shorter previous route.
     // Refresh its limit before resolving a deep anchor in a newly loaded essay.
     activeLenis.resize();
-    const startY = window.scrollY;
-    activeLenis.scrollTo(target, { duration: prefersReduced ? 0 : 1.1, immediate: prefersReduced });
-
-    // If a stale route measurement still prevented the first command from
-    // starting, fall back after two paints to an exact, resized position. Normal
-    // smooth navigation is left untouched once any movement has begun.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (
-          Math.abs(window.scrollY - startY) <= 1 &&
-          Math.abs(el.getBoundingClientRect().top - 96) > 24
-        ) {
-          activeLenis?.resize();
-          window.scrollTo({ top: target, left: 0, behavior: 'auto' });
-          activeLenis?.scrollTo(target, { immediate: true });
-        }
-      });
+    const target = anchorTarget(el);
+    activeLenis.scrollTo(target, {
+      duration: prefersReduced ? 0 : 1.1,
+      immediate: prefersReduced,
     });
+
+    if (prefersReduced) {
+      forceSettledPosition();
+      return;
+    }
+
+    // A dynamic longread can continue expanding after Lenis accepted the command
+    // (responsive images, content-visibility, font metrics). Movement may begin
+    // and still stop hundreds of pixels short, so a “did it move?” check is not
+    // sufficient. Re-measure the actual heading and guarantee the final 96px
+    // landing only when the smooth command did not settle correctly.
+    window.setTimeout(() => {
+      if (epoch !== anchorEpoch || !el.isConnected) return;
+      if (Math.abs(el.getBoundingClientRect().top - 96) > 48) {
+        forceSettledPosition();
+        requestAnimationFrame(forceSettledPosition);
+      }
+    }, 1250);
   } else {
+    const target = anchorTarget(el);
     window.scrollTo({
       top: target,
       left: 0,
       behavior: prefersReduced ? 'auto' : 'smooth',
     });
+
+    if (!prefersReduced) {
+      window.setTimeout(() => {
+        if (epoch !== anchorEpoch || !el.isConnected) return;
+        if (Math.abs(el.getBoundingClientRect().top - 96) > 48) forceSettledPosition();
+      }, 1250);
+    }
   }
 }
