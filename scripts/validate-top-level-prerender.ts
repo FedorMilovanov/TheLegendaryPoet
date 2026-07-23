@@ -116,6 +116,26 @@ for (const route of routes) {
   }
 }
 
+const notFoundFile = path.resolve('dist', '404.html');
+if (!fs.existsSync(notFoundFile)) {
+  errors.push('/404.html: missing dedicated fallback artifact');
+} else {
+  const notFound = fs.readFileSync(notFoundFile, 'utf8');
+  const robots = extract(
+    notFound,
+    /<meta name="robots" content="([^"]*)"\s*\/>/,
+    'robots directive',
+    '/404.html',
+  );
+  if (robots !== 'noindex, nofollow') errors.push('/404.html: fallback must be noindex, nofollow');
+  if (/<link rel="canonical"/.test(notFound)) {
+    errors.push('/404.html: fallback must not claim one canonical URL for every missing path');
+  }
+  if (!/<title>Страница не найдена — THE LEGENDARY POET<\/title>/.test(notFound)) {
+    errors.push('/404.html: missing dedicated title');
+  }
+}
+
 for (const error of errors) console.error(`ERROR ${error}`);
-console.log(`Top-level prerender validation: ${routes.length} routes, ${errors.length} errors`);
+console.log(`Top-level prerender validation: ${routes.length} routes + 404, ${errors.length} errors`);
 if (errors.length > 0) process.exit(1);
