@@ -65,6 +65,10 @@ jobs:
         run: npm run validate:audio-session
       - name: Validate personal archive migrations
         run: npm run validate:archive-store
+      - name: Validate durable community storage and offline outbox
+        run: npm run validate:community-store
+      - name: Validate target-scoped community subscriptions
+        run: npm run validate:community-target-store
       - name: Validate literary editorial rules
         run: npm run validate:style
       - name: TypeScript typecheck
