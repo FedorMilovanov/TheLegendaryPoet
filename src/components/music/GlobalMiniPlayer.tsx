@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, LoaderCircle, Maximize2, Pause, Play, RotateCw, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { musicTracks } from '../../data/poets';
-import { asset } from '../../utils/asset';
+import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
 import { formatAudioTime } from './audioPresentation';
@@ -66,7 +66,7 @@ export default function GlobalMiniPlayer() {
             style={{ backgroundImage: 'linear-gradient(120deg, color-mix(in srgb, var(--track-surface) 94%, black), rgba(5,5,5,.96))' }}
           >
             {currentTrack.wideCoverUrl && (
-              <img src={asset(currentTrack.wideCoverUrl)} alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-[0.1] blur-xl saturate-150" />
+              <ResilientImage src={currentTrack.wideCoverUrl} alt="" aria-hidden="true" sizes="100vw" className="pointer-events-none absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-[0.1] blur-xl saturate-150" />
             )}
             <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: 'radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--track-accent) 16%, transparent), transparent 34%), radial-gradient(circle at 82% 30%, color-mix(in srgb, var(--track-secondary) 12%, transparent), transparent 38%)' }} />
 
@@ -90,7 +90,7 @@ export default function GlobalMiniPlayer() {
 
             <div className="flex min-w-0 items-center gap-3 p-2.5 pr-3 sm:gap-4 sm:p-3 sm:pr-4">
               <Link to={`/music/${currentTrack.id}`} className="relative h-14 w-14 flex-none overflow-hidden rounded-2xl border border-white/10 bg-black sm:h-16 sm:w-16" aria-label={`Открыть релиз «${currentTrack.title}»`}>
-                {currentTrack.coverUrl && <img src={asset(currentTrack.coverUrl)} alt="" className="h-full w-full object-cover" />}
+                {currentTrack.coverUrl && <ResilientImage src={currentTrack.coverUrl} alt="" sizes="64px" className="h-full w-full object-cover" />}
                 <span className={`absolute inset-0 transition ${playing ? 'bg-transparent' : 'bg-black/8'}`} />
               </Link>
 
