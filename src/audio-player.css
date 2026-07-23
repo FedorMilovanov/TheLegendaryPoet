@@ -6,6 +6,15 @@
   width: min(760px, calc(100% - 2rem));
   transform: translateX(-50%);
   pointer-events: auto;
+  contain: layout paint;
+}
+
+html.global-audio-active #main-content {
+  padding-bottom: 8.5rem;
+}
+
+html.global-audio-active footer {
+  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
 }
 
 @media (max-width: 767px) {
@@ -17,13 +26,23 @@
   html.global-audio-active #main-content {
     padding-bottom: calc(13rem + env(safe-area-inset-bottom));
   }
+
+  html.global-audio-active footer {
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .global-audio-mini *,
-  [role="dialog"][aria-label^="Режим погружения"] * {
+  [role="dialog"][aria-labelledby="immersive-track-title"] * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+::view-transition-old(track-cover),
+::view-transition-new(track-cover) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
