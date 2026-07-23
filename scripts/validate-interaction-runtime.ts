@@ -85,7 +85,7 @@ expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Le
 expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
 expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog keyboard containment must run in capture phase');
 expect(dialogSource.includes('handle.isTopmost()'), 'only the topmost dialog may process Escape and Tab');
-expect(dialogSource.includes("event.key === 'Tab'"), 'shared dialogs must trap keyboard focus');
+expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus');
 expect(dialogSource.includes('previouslyFocused.focus({ preventScroll: true })'), 'dialog close must restore focus without moving the page');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
