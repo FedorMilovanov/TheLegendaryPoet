@@ -44,15 +44,33 @@ function sizeOf(relativeFile: string) {
   return fs.existsSync(absolute) ? fs.statSync(absolute).size : 0;
 }
 
+function collectEagerImports(manifest: Manifest, entryKey: string) {
+  const visited = new Set<string>();
+  const queue = [entryKey];
+  while (queue.length) {
+    const key = queue.shift();
+    if (!key || visited.has(key)) continue;
+    visited.add(key);
+    for (const imported of manifest[key]?.imports ?? []) queue.push(imported);
+  }
+  return visited;
+}
+
 if (!fs.existsSync(manifestPath)) {
   failures.push('dist/.vite/manifest.json is missing; build.manifest must remain enabled');
 } else {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Manifest;
-  const mainKey = Object.keys(manifest).find((key) => key === 'src/main.tsx' || manifest[key]?.src === 'src/main.tsx');
-  const main = mainKey ? manifest[mainKey] : undefined;
-  expect(main?.isEntry, 'src/main.tsx must remain the production entry');
+  const entryRecords = Object.entries(manifest).filter(([, chunk]) => chunk.isEntry === true);
+  expect(entryRecords.length === 1, `production build must expose exactly one entry, found ${entryRecords.length}`);
 
-  const routeChunks = routeSources.map((source) => {
+  const [entryKey, main] = entryRecords[0] ?? [];
+  if (entryKey && main) {
+    expect(entryKey === 'index.html' || main.src === 'index.html', `unexpected production entry: ${entryKey}`);
+    const entryBytes = sizeOf(main.file);
+    expect(entryBytes <= 700_000, `entry chunk exceeds 700 KB raw budget: ${main.file} (${entryBytes} bytes)`);
+  }
+
+  const routeRecords = routeSources.map((source) => {
     const key = Object.keys(manifest).find((candidate) => candidate === source || manifest[candidate]?.src === source);
     const chunk = key ? manifest[key] : undefined;
     expect(Boolean(chunk), `route module is absent from the build manifest: ${source}`);
@@ -62,17 +80,16 @@ if (!fs.existsSync(manifestPath)) {
       expect(bytes > 0, `route chunk is empty: ${chunk.file}`);
       expect(bytes <= 1_300_000, `route chunk exceeds 1.3 MB raw budget: ${chunk.file} (${bytes} bytes)`);
     }
-    return chunk;
-  }).filter((chunk): chunk is ManifestChunk => Boolean(chunk));
+    return key && chunk ? { key, chunk } : null;
+  }).filter((record): record is { key: string; chunk: ManifestChunk } => Boolean(record));
 
-  const uniqueRouteFiles = new Set(routeChunks.map((chunk) => chunk.file));
+  const uniqueRouteFiles = new Set(routeRecords.map(({ chunk }) => chunk.file));
   expect(uniqueRouteFiles.size >= 10, `route splitting collapsed to only ${uniqueRouteFiles.size} distinct chunks`);
 
-  if (main) {
-    const entryBytes = sizeOf(main.file);
-    expect(entryBytes <= 700_000, `entry chunk exceeds 700 KB raw budget: ${main.file} (${entryBytes} bytes)`);
-    for (const source of routeSources) {
-      expect(!main.imports?.includes(source), `route was accidentally imported eagerly by the entry: ${source}`);
+  if (entryKey && main) {
+    const eagerImports = collectEagerImports(manifest, entryKey);
+    for (const { key } of routeRecords) {
+      expect(!eagerImports.has(key), `lazy route entered the eager dependency graph: ${key}`);
     }
   }
 
