@@ -45,9 +45,13 @@ test('command palette locks and restores the reading surface on desktop and mobi
 test('command index survives closing the palette while its lazy chunk is in flight', async ({ page }, testInfo: TestInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium', 'one delayed chunk test is sufficient');
 
-  let delayed = false;
-  await page.route(/commandItems[^/]*\.js(?:\?.*)?$/, async (route) => {
-    delayed = true;
+  let delayedUrl = '';
+  // Playwright runs against Vite's dev server, where the request ends in
+  // `commandItems.ts`; a production build emits `commandItems-<hash>.js`.
+  // Match both forms so this regression test actually delays the dynamic import
+  // in CI instead of silently waiting for a filename that only exists in dist/.
+  await page.route(/commandItems(?:\.ts|[^/]*\.js)(?:\?.*)?$/, async (route) => {
+    delayedUrl = route.request().url();
     await new Promise((resolve) => setTimeout(resolve, 700));
     await route.continue();
   });
@@ -64,7 +68,7 @@ test('command index survives closing the palette while its lazy chunk is in flig
   const input = page.getByTestId('command-palette-input');
   await input.fill('Про это');
   await expect(page.getByRole('option', { name: /Про это/ }).first()).toBeVisible({ timeout: 10_000 });
-  expect(delayed, 'the commandItems chunk should have been intercepted').toBe(true);
+  expect(delayedUrl, 'the commandItems module should have been intercepted').toMatch(/commandItems/);
 
   await page.keyboard.press('Escape');
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
