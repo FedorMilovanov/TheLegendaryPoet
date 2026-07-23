@@ -59,7 +59,7 @@ function write(routePath, html) {
 }
 
 async function main() {
-  const [{ getAllEssays }, { poets, articles, musicTracks }] = await Promise.all([
+  const [{ getAllEssays }, { poets, articles, allMusicTracks, musicTracks }] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
   ]);
@@ -77,16 +77,23 @@ async function main() {
     write(`/articles/${article.id}`, renderPage({ title: `${article.title} — THE LEGENDARY POET`, description: article.excerpt, routePath: `/articles/${article.id}`, image: article.image, type: 'article', publishedTime: article.date, author: article.author }));
     count++;
   }
-  for (const track of musicTracks) {
-    write(`/music/${track.id}`, renderPage({ title: `${track.title} — ${track.poet} — THE LEGENDARY POET`, description: track.description, routePath: `/music/${track.id}`, image: track.wideCoverUrl || track.coverUrl, type: 'music.song' }));
+  for (const track of allMusicTracks) {
+    write(`/music/${track.id}`, renderPage({
+      title: `${track.title} — ${track.poet} — THE LEGENDARY POET`,
+      description: track.description || 'Музыкальная публикация проекта The Legendary Poet.',
+      routePath: `/music/${track.id}`,
+      image: track.wideCoverUrl || track.coverUrl,
+      type: track.availability === 'published' ? 'music.song' : 'website',
+    }));
     count++;
   }
 
+  const featuredTrack = musicTracks.find((track) => track.featured) || musicTracks[0];
   write('/ratings', renderPage({ title: 'Рейтинг поэтов — THE LEGENDARY POET', description: 'Сводный читательский рейтинг русских поэтов: оценки, комментарии и прозрачная методика.', routePath: '/ratings', image: '/og-image.jpg' }));
-  write('/music', renderPage({ title: 'Музыка — THE LEGENDARY POET', description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet.', routePath: '/music', image: musicTracks[0]?.wideCoverUrl || musicTracks[0]?.coverUrl }));
+  write('/music', renderPage({ title: 'Музыка — THE LEGENDARY POET', description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet.', routePath: '/music', image: featuredTrack?.wideCoverUrl || featuredTrack?.coverUrl }));
   count += 2;
 
-  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${articles.length} articles, ${musicTracks.length} tracks, 2 hubs)`);
+  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${articles.length} articles, ${allMusicTracks.length} music registry entries, 2 hubs)`);
 }
 
 main();
