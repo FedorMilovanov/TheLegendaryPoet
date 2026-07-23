@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
+import { routeLoaders } from './lib/routeModules';
 import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
 import Header from './components/Header';
@@ -19,17 +20,17 @@ import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 // Route code and its large literary datasets are loaded only when requested.
 // The persistent shell remains in the entry chunk, so navigation, focus and the
 // one Lenis/RAF owner are not recreated while page bundles arrive.
-const HomePage = lazy(() => import('./pages/HomePage'));
-const HallPage = lazy(() => import('./pages/HallPage'));
-const PoetsPage = lazy(() => import('./pages/PoetsPage'));
-const PoetDetailPage = lazy(() => import('./pages/PoetDetailPage'));
-const ArticlesPage = lazy(() => import('./pages/ArticlesPage'));
-const ArticleDetailPage = lazy(() => import('./pages/ArticleDetailPage'));
-const EssayPage = lazy(() => import('./pages/EssayPage'));
-const MusicPage = lazy(() => import('./pages/MusicPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const MyArchivePage = lazy(() => import('./pages/MyArchivePage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const HomePage = lazy(routeLoaders.home);
+const HallPage = lazy(routeLoaders.hall);
+const PoetsPage = lazy(routeLoaders.poets);
+const PoetDetailPage = lazy(routeLoaders.poet);
+const ArticlesPage = lazy(routeLoaders.articles);
+const ArticleDetailPage = lazy(routeLoaders.article);
+const EssayPage = lazy(routeLoaders.essay);
+const MusicPage = lazy(routeLoaders.music);
+const AboutPage = lazy(routeLoaders.about);
+const MyArchivePage = lazy(routeLoaders.archive);
+const NotFoundPage = lazy(routeLoaders.notFound);
 
 const WipeOverlay = () => (
   <motion.div
