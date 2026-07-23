@@ -1,61 +1,87 @@
 import type Lenis from 'lenis';
 
 /**
- * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation and
- * body-level overlays. A modal must pause Lenis as well as locking body overflow;
- * otherwise the RAF loop can finish a pending interpolation underneath the
- * dialog and return the reader to a slightly different paragraph on close.
+ * Bridges the persistent Lenis instance to deep anchors and modal surfaces.
+ * Overlay pauses are tokenized so stacked dialogs cannot resume Lenis early,
+ * while legacy article lightboxes may continue using pause/resume pairs.
  */
 let activeLenis: Lenis | null = null;
-let pauseDepth = 0;
+const pauseTokens = new Set<symbol>();
+const legacyPauseTokens: symbol[] = [];
 let restorationEpoch = 0;
 let anchorEpoch = 0;
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
-  if (activeLenis && pauseDepth > 0) activeLenis.stop();
+  if (activeLenis && pauseTokens.size > 0) activeLenis.stop();
 }
 
-/** Ref-counted so one overlay cannot resume scrolling while another is open. */
-export function pauseSmoothScroll() {
-  pauseDepth += 1;
-  // Invalidate delayed restoration frames left by an overlay that just closed.
-  restorationEpoch += 1;
-  anchorEpoch += 1;
-  if (pauseDepth === 1) activeLenis?.stop();
+function removePauseToken(token: symbol) {
+  pauseTokens.delete(token);
+  const legacyIndex = legacyPauseTokens.lastIndexOf(token);
+  if (legacyIndex >= 0) legacyPauseTokens.splice(legacyIndex, 1);
+  if (pauseTokens.size === 0) activeLenis?.start();
 }
 
 /**
- * Resume scrolling and, when requested, restore one exact document position.
- *
- * Releasing `body { overflow:hidden }` or returning from a temporary landscape
- * viewport changes Lenis' dimensions after the first synchronous write. A single
- * `scrollTo` can therefore be overwritten by scroll anchoring or by the next
- * Lenis RAF. Re-apply over two animation frames, after `resize()`, while an epoch
- * token guarantees that a newly opened modal or route cannot inherit the old
- * restoration.
+ * Pause smooth scrolling and return an idempotent release handle.
+ * Calls without a reason remain compatible with the older pause/resume API.
  */
-export function resumeSmoothScroll(scrollY?: number) {
-  pauseDepth = Math.max(0, pauseDepth - 1);
-  if (pauseDepth > 0) return;
+export function pauseSmoothScroll(reason = 'legacy-scroll-lock') {
+  const token = Symbol(reason);
+  pauseTokens.add(token);
+  if (reason === 'legacy-scroll-lock') legacyPauseTokens.push(token);
+  restorationEpoch += 1;
+  anchorEpoch += 1;
+  if (pauseTokens.size === 1) activeLenis?.stop();
 
-  activeLenis?.start();
-  if (scrollY == null) return;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    removePauseToken(token);
+  };
+}
 
-  const target = Math.max(0, scrollY);
+export function isSmoothScrollPaused() {
+  return pauseTokens.size > 0;
+}
+
+/**
+ * Re-apply an exact document position after fixed-body overlay styles are
+ * released. Lenis dimensions and browser scroll anchoring can settle over more
+ * than one frame, so the position is written synchronously and twice more.
+ */
+export function restoreSmoothScrollPosition(scrollX: number, scrollY: number) {
+  if (pauseTokens.size > 0) return;
+
+  const x = Math.max(0, Number.isFinite(scrollX) ? scrollX : 0);
+  const y = Math.max(0, Number.isFinite(scrollY) ? scrollY : 0);
   const epoch = ++restorationEpoch;
   const restore = () => {
-    if (epoch !== restorationEpoch || pauseDepth > 0) return;
+    if (epoch !== restorationEpoch || pauseTokens.size > 0) return;
     activeLenis?.resize();
-    window.scrollTo({ top: target, left: 0, behavior: 'auto' });
-    activeLenis?.scrollTo(target, { immediate: true });
+    window.scrollTo(x, y);
+    activeLenis?.scrollTo(y, { immediate: true });
   };
 
   restore();
-  requestAnimationFrame(() => {
-    restore();
-    requestAnimationFrame(restore);
-  });
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => {
+      restore();
+      requestAnimationFrame(restore);
+    });
+  }
+}
+
+/** Legacy companion for article/lightbox code that does not retain a handle. */
+export function resumeSmoothScroll(scrollY?: number) {
+  const token = legacyPauseTokens.pop();
+  if (token) pauseTokens.delete(token);
+  if (pauseTokens.size > 0) return;
+
+  activeLenis?.start();
+  if (scrollY != null) restoreSmoothScrollPosition(0, scrollY);
 }
 
 function anchorTarget(el: HTMLElement): number {
@@ -74,7 +100,7 @@ export function scrollToId(id: string) {
   const epoch = ++anchorEpoch;
 
   const forceSettledPosition = () => {
-    if (epoch !== anchorEpoch || pauseDepth > 0 || !el.isConnected) return;
+    if (epoch !== anchorEpoch || pauseTokens.size > 0 || !el.isConnected) return;
     activeLenis?.resize();
     const target = anchorTarget(el);
     window.scrollTo({ top: target, left: 0, behavior: 'auto' });
@@ -96,10 +122,8 @@ export function scrollToId(id: string) {
       return;
     }
 
-    // A dynamic longread can continue expanding after Lenis accepted the command
-    // (responsive images, content-visibility, font metrics). Movement may begin
-    // and still stop hundreds of pixels short, so a “did it move?” check is not
-    // sufficient. Re-measure the actual heading and guarantee the final 96px
+    // Responsive media and content-visibility can keep changing the longread
+    // after Lenis accepted the command. Re-measure and guarantee the 96px
     // landing only when the smooth command did not settle correctly.
     window.setTimeout(() => {
       if (epoch !== anchorEpoch || !el.isConnected) return;
