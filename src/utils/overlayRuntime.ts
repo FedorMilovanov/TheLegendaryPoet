@@ -27,6 +27,7 @@ type OverlayEntry = {
 export interface OverlayLockHandle {
   release: () => void;
   isTopmost: () => boolean;
+  setRoot: (root: HTMLElement | null) => void;
 }
 
 const overlayStack: OverlayEntry[] = [];
@@ -123,20 +124,23 @@ function unlockDocument() {
  */
 export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null = null): OverlayLockHandle {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return { release: () => undefined, isTopmost: () => true };
+    return { release: () => undefined, isTopmost: () => true, setRoot: () => undefined };
   }
 
-  const token = Symbol(label);
-  overlayStack.push({ token, root });
+  const entry: OverlayEntry = { token: Symbol(label), root };
+  overlayStack.push(entry);
   if (overlayStack.length === 1) lockDocument();
   let released = false;
 
   return {
-    isTopmost: () => overlayStack[overlayStack.length - 1]?.token === token,
+    isTopmost: () => overlayStack[overlayStack.length - 1]?.token === entry.token,
+    setRoot: (nextRoot) => {
+      if (!released) entry.root = nextRoot;
+    },
     release: () => {
       if (released) return;
       released = true;
-      const index = overlayStack.findIndex((entry) => entry.token === token);
+      const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
       if (overlayStack.length === 0) unlockDocument();
     },
