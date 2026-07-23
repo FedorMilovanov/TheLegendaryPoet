@@ -56,6 +56,12 @@ export function useDialogSurface({
     closeRef.current = onClose;
   }, [onClose]);
 
+  // A keyed modal can replace its DOM node while staying logically open (for
+  // example when the active track changes). Keep the stack's focus root live.
+  useEffect(() => {
+    if (open) handleRef.current?.setRoot(dialogRef.current);
+  });
+
   useEffect(() => {
     if (!open) return;
 
