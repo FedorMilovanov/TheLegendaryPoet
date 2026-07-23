@@ -26,29 +26,23 @@ const requiredRoutes = [
   'src/pages/HallPage.tsx',
   'src/pages/PoetsPage.tsx',
   'src/pages/PoetDetailPage.tsx',
+  'src/pages/RatingsPage.tsx',
   'src/pages/ArticlesPage.tsx',
   'src/pages/ArticleDetailPage.tsx',
   'src/pages/EssayPage.tsx',
   'src/pages/MusicPage.tsx',
+  'src/pages/TrackDetailPage.tsx',
   'src/pages/AboutPage.tsx',
   'src/pages/MyArchivePage.tsx',
   'src/pages/NotFoundPage.tsx',
 ] as const;
 
-const deferredDataModules = [
-  'src/components/command/commandItems.ts',
-] as const;
+const deferredDataModules = ['src/components/command/commandItems.ts'] as const;
 
 function findEntry(source: string): [string, ManifestEntry] | undefined {
   return entries.find(([key, entry]) => key === source || entry.src === source);
 }
 
-/**
- * Vite's manifest key for an HTML application entry is version-dependent.
- * Older builds may expose `src/main.tsx`, while Vite 7 normally records the
- * actual Rollup input as `index.html`. Both describe the same persistent shell;
- * route splitting must not fail merely because the manifest key changed.
- */
 const shell =
   findEntry('src/main.tsx') ??
   entries.find(
@@ -76,21 +70,11 @@ for (const source of requiredRoutes) {
   }
 
   const [, entry] = found;
-  if (!entry.isDynamicEntry) {
-    errors.push(`${source}: route is not a dynamic entry`);
-  }
-  if (!entry.file.endsWith('.js')) {
-    errors.push(`${source}: route output is not JavaScript (${entry.file})`);
-  }
-  if (!fs.existsSync(path.resolve('dist', entry.file))) {
-    errors.push(`${source}: emitted file is missing (${entry.file})`);
-  }
-  if (routeFiles.has(entry.file)) {
-    errors.push(`${source}: unexpectedly shares the same facade file ${entry.file}`);
-  }
-  if (entry.file === shellFile) {
-    errors.push(`${source}: route collapsed back into the persistent shell`);
-  }
+  if (!entry.isDynamicEntry) errors.push(`${source}: route is not a dynamic entry`);
+  if (!entry.file.endsWith('.js')) errors.push(`${source}: route output is not JavaScript (${entry.file})`);
+  if (!fs.existsSync(path.resolve('dist', entry.file))) errors.push(`${source}: emitted file is missing (${entry.file})`);
+  if (routeFiles.has(entry.file)) errors.push(`${source}: unexpectedly shares the same facade file ${entry.file}`);
+  if (entry.file === shellFile) errors.push(`${source}: route collapsed back into the persistent shell`);
   routeFiles.add(entry.file);
 }
 
@@ -107,15 +91,9 @@ for (const source of deferredDataModules) {
   }
 
   const [, entry] = found;
-  if (!entry.isDynamicEntry) {
-    errors.push(`${source}: heavy data registry is not a dynamic entry`);
-  }
-  if (!fs.existsSync(path.resolve('dist', entry.file))) {
-    errors.push(`${source}: emitted deferred-data file is missing (${entry.file})`);
-  }
-  if (entry.file === shellFile) {
-    errors.push(`${source}: heavy data registry collapsed into the shell`);
-  }
+  if (!entry.isDynamicEntry) errors.push(`${source}: heavy data registry is not a dynamic entry`);
+  if (!fs.existsSync(path.resolve('dist', entry.file))) errors.push(`${source}: emitted deferred-data file is missing (${entry.file})`);
+  if (entry.file === shellFile) errors.push(`${source}: heavy data registry collapsed into the shell`);
   deferredFiles.add(entry.file);
 }
 
