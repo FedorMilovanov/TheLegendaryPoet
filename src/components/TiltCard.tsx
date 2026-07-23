@@ -32,7 +32,7 @@ export default function TiltCard({
   const rectRef = useRef<DOMRect | null>(null);
   const targetRef = useRef({ x: 0.5, y: 0.5 });
   const currentRef = useRef({ x: 0.5, y: 0.5 });
-  const canAnimateRef = useRef(false);
+  const reducedMotionRef = useRef(false);
 
   const cancelFrame = () => {
     if (frameRef.current != null) {
@@ -84,29 +84,26 @@ export default function TiltCard({
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const coarsePointer = window.matchMedia('(pointer: coarse)');
 
     const updateCapability = () => {
-      canAnimateRef.current = !reducedMotion.matches && !coarsePointer.matches;
-      if (!canAnimateRef.current) reset();
+      reducedMotionRef.current = reducedMotion.matches;
+      if (reducedMotionRef.current) reset();
     };
 
     updateCapability();
     reducedMotion.addEventListener?.('change', updateCapability);
-    coarsePointer.addEventListener?.('change', updateCapability);
 
     return () => {
       cancelFrame();
       cancelSettleFrame();
       reducedMotion.removeEventListener?.('change', updateCapability);
-      coarsePointer.removeEventListener?.('change', updateCapability);
     };
   }, []);
 
   const paint = () => {
     frameRef.current = null;
     const node = visualRef.current;
-    if (!node || !canAnimateRef.current || !node.hasAttribute('data-tilting')) return;
+    if (!node || reducedMotionRef.current || !node.hasAttribute('data-tilting')) return;
 
     const target = targetRef.current;
     const current = currentRef.current;
@@ -128,21 +125,24 @@ export default function TiltCard({
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
-  const activate = () => {
+  const activate = (pointerType: string) => {
     const node = visualRef.current;
     const hit = hitRef.current;
-    if (!canAnimateRef.current || !node || !hit) return false;
+    // `(pointer: coarse)` describes the primary device and incorrectly disables
+    // a real mouse on hybrid laptops. The event's own pointerType is the precise
+    // signal: touch stays flat, while mouse (and hover-capable pen) can tilt.
+    if (reducedMotionRef.current || pointerType === 'touch' || !node || !hit) return false;
     if (!rectRef.current) rectRef.current = hit.getBoundingClientRect();
     node.setAttribute('data-tilting', 'true');
     return true;
   };
 
-  const handlePointerEnter = () => {
-    activate();
+  const handlePointerEnter = (event: PointerEvent<HTMLDivElement>) => {
+    activate(event.pointerType);
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!activate()) return;
+    if (!activate(event.pointerType)) return;
     const hit = hitRef.current;
     const rect = rectRef.current ?? hit?.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) return;
