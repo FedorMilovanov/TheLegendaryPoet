@@ -11,6 +11,7 @@ import TrackReleaseCard from './TrackReleaseCard';
 
 interface MusicArchiveBrowserProps {
   tracks: readonly MusicTrack[];
+  featuredTrackId?: string;
 }
 
 const PAGE_SIZE = 8;
@@ -23,7 +24,7 @@ const sortOptions: Array<{ value: MusicCatalogSort; label: string }> = [
 ];
 const validSorts = new Set<MusicCatalogSort>(sortOptions.map((option) => option.value));
 
-export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps) {
+export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicArchiveBrowserProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const poets = useMemo(() => getMusicCatalogPoets(tracks), [tracks]);
@@ -34,14 +35,22 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
   const rawSort = searchParams.get('sort') as MusicCatalogSort | null;
   const sort = rawSort && validSorts.has(rawSort) ? rawSort : 'editorial';
   const deferredQuery = useDeferredValue(query);
+  const filtersActive = Boolean(query.trim() || poetId || sort !== 'editorial');
 
   const matchingTracks = useMemo(
     () => filterMusicTracks(tracks, { query: deferredQuery, poetId: poetId || undefined, sort }),
     [deferredQuery, poetId, sort, tracks],
   );
-  const renderedTracks = matchingTracks.slice(0, visibleLimit);
-  const remainingCount = Math.max(0, matchingTracks.length - renderedTracks.length);
-  const filtersActive = Boolean(query.trim() || poetId || sort !== 'editorial');
+  const archiveTracks = useMemo(
+    () => filtersActive || !featuredTrackId
+      ? matchingTracks
+      : matchingTracks.filter((track) => track.id !== featuredTrackId),
+    [featuredTrackId, filtersActive, matchingTracks],
+  );
+  const renderedTracks = archiveTracks.slice(0, visibleLimit);
+  const remainingCount = Math.max(0, archiveTracks.length - renderedTracks.length);
+  const defaultArchiveSize = tracks.filter((track) => track.id !== featuredTrackId).length;
+  const comparisonSize = filtersActive ? tracks.length : defaultArchiveSize;
   const searchPending = deferredQuery !== query;
 
   useEffect(() => {
@@ -135,8 +144,8 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
           <div aria-live="polite">
             {searchPending ? 'Обновляем результаты…' : (
               <>
-                Найдено: <strong className="font-bold text-white/66">{matchingTracks.length}</strong>
-                {matchingTracks.length !== tracks.length && <span> из {tracks.length}</span>}
+                Найдено: <strong className="font-bold text-white/66">{archiveTracks.length}</strong>
+                {archiveTracks.length !== comparisonSize && <span> из {comparisonSize}</span>}
               </>
             )}
           </div>
@@ -148,7 +157,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
         </div>
       </div>
 
-      {matchingTracks.length > 0 ? (
+      {archiveTracks.length > 0 ? (
         <>
           <div className={`mt-6 grid gap-6 transition-opacity xl:grid-cols-2 ${searchPending ? 'opacity-55' : 'opacity-100'}`}>
             {renderedTracks.map((track) => <TrackReleaseCard key={track.id} track={track} />)}
