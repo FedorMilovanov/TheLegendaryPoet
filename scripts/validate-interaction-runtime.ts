@@ -29,6 +29,7 @@ const htmlStyle: Record<string, string> = { overflow: '', overscrollBehavior: ''
 const bodyClasses = new TokenList();
 const htmlClasses = new TokenList();
 const scrollCalls: Array<[number, number]> = [];
+const documentListeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
 
 const fakeWindow = {
   scrollX: 7,
@@ -40,13 +41,34 @@ const fakeWindow = {
 const fakeDocument = {
   body: { style: bodyStyle, classList: bodyClasses },
   documentElement: { style: htmlStyle, classList: htmlClasses, clientWidth: 1180 },
+  addEventListener: (type: string, listener: (event: KeyboardEvent) => void) => {
+    const listeners = documentListeners.get(type) ?? new Set<(event: KeyboardEvent) => void>();
+    listeners.add(listener);
+    documentListeners.set(type, listeners);
+  },
+  removeEventListener: (type: string, listener: (event: KeyboardEvent) => void) => {
+    documentListeners.get(type)?.delete(listener);
+  },
 };
 
 Object.defineProperty(globalThis, 'window', { configurable: true, value: fakeWindow });
 Object.defineProperty(globalThis, 'document', { configurable: true, value: fakeDocument });
 
+const connectedRoot = () => ({ isConnected: true, contains: () => false }) as unknown as HTMLElement;
+const dispatchEscape = () => {
+  let prevented = false;
+  let stopped = false;
+  const event = {
+    key: 'Escape',
+    preventDefault: () => { prevented = true; },
+    stopPropagation: () => { stopped = true; },
+  } as unknown as KeyboardEvent;
+  for (const listener of documentListeners.get('keydown') ?? []) listener(event);
+  return { prevented, stopped };
+};
+
 const overlay = await import('../src/utils/overlayRuntime');
-const first = overlay.acquireOverlayLock('first');
+const first = overlay.acquireOverlayLock('first', connectedRoot());
 expect(bodyStyle.position === 'fixed', 'the first overlay must freeze the body');
 expect(bodyStyle.top === '-321px', 'the body lock must preserve the current vertical position');
 expect(bodyStyle.paddingRight === '24px', 'the body lock must compensate for the removed scrollbar');
@@ -54,7 +76,7 @@ expect(htmlClasses.contains('overlay-open') && bodyClasses.contains('overlay-ope
 expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'legacy modal integration flag must be enabled');
 expect(first.isTopmost(), 'the first overlay must initially be topmost');
 
-const second = overlay.acquireOverlayLock('second');
+const second = overlay.acquireOverlayLock('second', connectedRoot());
 expect(!first.isTopmost() && second.isTopmost(), 'stacked overlays must expose the correct topmost surface');
 first.release();
 expect(bodyStyle.position === 'fixed', 'closing a lower overlay must not unlock a higher overlay');
@@ -66,15 +88,16 @@ expect(bodyStyle.paddingRight === '4px', 'the final release must restore the ori
 expect(restoredScroll?.[0] === 7 && restoredScroll?.[1] === 321, 'the final release must restore both scroll axes');
 expect(!htmlClasses.contains('overlay-open') && !bodyClasses.contains('overlay-open'), 'overlay classes must be removed after the final release');
 expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === false, 'legacy modal integration flag must be cleared');
+expect((documentListeners.get('keydown')?.size ?? 0) === 0, 'the shared Escape listener must be removed after the final overlay');
 second.release();
 expect(scrollCalls.length === 1, 'overlay release must be idempotent');
 
 const lowerControl = {} as HTMLElement;
 const upperControl = {} as HTMLElement;
 const replacementControl = {} as HTMLElement;
-const lowerRoot = { contains: (candidate: Node) => candidate === lowerControl } as HTMLElement;
-const upperRoot = { contains: (candidate: Node) => candidate === upperControl } as HTMLElement;
-const replacementRoot = { contains: (candidate: Node) => candidate === replacementControl } as HTMLElement;
+const lowerRoot = { isConnected: true, contains: (candidate: Node) => candidate === lowerControl } as HTMLElement;
+const upperRoot = { isConnected: true, contains: (candidate: Node) => candidate === upperControl } as HTMLElement;
+const replacementRoot = { isConnected: true, contains: (candidate: Node) => candidate === replacementControl } as HTMLElement;
 const lower = overlay.acquireOverlayLock('lower', lowerRoot);
 const upper = overlay.acquireOverlayLock('upper', upperRoot);
 expect(overlay.canRestoreOverlayFocus(upperControl), 'focus may return to the current topmost dialog');
@@ -105,6 +128,26 @@ detached.release();
 surviving.release();
 expect(scrollCalls.length === 3, 'pruning a stale upper portal must still unlock the document exactly once');
 
+const escapeOrder: string[] = [];
+const escapeLower = overlay.acquireOverlayLock('escape-lower', connectedRoot());
+escapeLower.setEscapeHandler(() => {
+  escapeOrder.push('lower');
+  escapeLower.release();
+});
+const escapeUpper = overlay.acquireOverlayLock('escape-upper', connectedRoot());
+escapeUpper.setEscapeHandler(() => {
+  escapeOrder.push('upper');
+  escapeUpper.release();
+});
+const firstEscape = dispatchEscape();
+expect(firstEscape.prevented && firstEscape.stopped, 'handled Escape must cancel browser and background propagation');
+expect(escapeOrder.join(',') === 'upper', 'the first Escape must close only the topmost overlay');
+expect(escapeLower.isTopmost(), 'after closing the upper overlay the lower overlay must own the next Escape');
+dispatchEscape();
+expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close the revealed lower overlay');
+expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
+expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
@@ -122,13 +165,15 @@ expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Le
 expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
 expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must guard focus restoration ownership');
 expect(overlaySource.includes('pruneDetachedOverlays'), 'keyboard ownership must recover from detached portal entries');
-expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog keyboard containment must run in capture phase');
-expect(dialogSource.includes('handle.isTopmost()'), 'only the topmost dialog may process Escape and Tab');
-expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus');
+expect(overlaySource.includes('onOverlayKeyDown'), 'Escape must be dispatched by one shared stack listener');
+expect(overlaySource.includes('setEscapeHandler'), 'overlay handles must register their close behavior with the runtime');
+expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog focus containment must run in capture phase');
+expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus without competing for Escape');
+expect(dialogSource.includes('handle.setEscapeHandler'), 'dialogs must delegate Escape to the shared runtime');
 expect(dialogSource.includes('handleRef.current?.setRoot(dialogRef.current)'), 'keyed dialog replacements must refresh the overlay root');
 expect(dialogSource.includes('canRestoreOverlayFocus(previouslyFocused)'), 'dialog close must not restore focus beneath another surface');
-expect(dialogSource.includes('previouslyFocused.focus({ preventScroll: true })'), 'dialog close must restore focus without moving the page');
-expect(dialogSource.includes('handle.release();\n        closeRef.current();'), 'Escape must yield overlay ownership synchronously before React cleanup');
+expect(dialogSource.includes('restoreFocusRef?.current ?? restoreFocus'), 'navigation-triggered dialog closes must be able to preserve route focus');
+expect(commandSource.includes('restoreFocusRef.current = false'), 'command navigation must not refocus the old trigger over the new page');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
 expect(commandSource.includes('onPointerDown'), 'the command backdrop must support pointer and touch input');
@@ -156,4 +201,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Interaction runtime validation passed: stacked overlays, scroll restoration, rating draft safety, resilient images and bounded pointer effects.');
+console.log('Interaction runtime validation passed: centralized Escape, route focus, rating draft safety, resilient images and bounded pointer effects.');
