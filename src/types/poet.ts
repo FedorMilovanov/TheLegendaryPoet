@@ -22,19 +22,9 @@ export interface Poet {
   /** Poet-specific music, when available. */
   music?: MusicTrack[];
   historicalNote?: string;
-  spiritualSearch?: string; // Заменяем высосанные из пальца анализы на объективные духовные искания (если они были)
-  /**
-   * Честный, реалистичный моральный портрет: задокументированные грехи и
-   * разрушительные черты жизни поэта (прелюбодеяние, пьянство, дуэльный азарт,
-   * богоборчество и т.д.), о которых обычно молчит школьная программа. Даётся
-   * с библейской оценкой, но БЕЗ воспроизведения непечатной брани — грех
-   * называется по имени, без прославления и без умиления. См.
-   * POET_AUTHORING_GUIDE.md, раздел «Моральный реализм и цензура».
-   * Необязательно: для поэтов без выраженной нравственной проблематики поле
-   * можно опустить.
-   */
+  spiritualSearch?: string;
   moralPortrait?: string;
-  authorCommentary?: string; // Короткая итоговая ремарка автора проекта (для вопиющих случаев богоборчества и т.д.)
+  authorCommentary?: string;
   /** Sourced quotes from people who knew the poet + named literary historians. */
   testimonies?: Testimony[];
   famousWorks: string[];
@@ -47,15 +37,10 @@ export interface Poet {
 }
 
 export interface Testimony {
-  /** Full name of the person being quoted. */
   author: string;
-  /** Their relation to the poet, e.g. "жена", "друг, поэт", "литературовед". */
   role: string;
-  /** 'contemporary' knew the poet personally; 'historian' is a later scholarly assessment. */
   kind: 'contemporary' | 'historian';
-  /** Quote in Russian. If not verbatim, the text notes it as a paraphrase. */
   quote: string;
-  /** Citable source: book/memoir/article title + year. */
   source: string;
   sourceUrl?: string;
 }
@@ -68,7 +53,6 @@ export interface Poem {
   year?: number;
   analysis?: string;
   biblicalPerspective?: string;
-  /** Optional emotional palette, used for subtle per-poem accenting. */
   mood?: Array<'тоска' | 'тревога' | 'восторг' | 'покой' | 'гнев' | 'нежность' | 'пустота' | 'надежда'>;
   rating: number;
 }
@@ -89,12 +73,22 @@ export interface MusicTrack {
   id: string;
   title: string;
   poet: string;
+  poetId?: string;
   duration: string;
-  /** Direct, playable audio file (e.g. /audio/track.mp3). When present the row shows a real player. */
+  durationSeconds?: number;
+  /** Direct, playable audio file. */
   audioUrl?: string;
-  /** Link to the full track/video on a channel (YouTube/Rutube). Used when there is no local audio file. */
+  /** Square release artwork. */
+  coverUrl?: string;
+  /** Wide artwork for a dedicated publication page. */
+  wideCoverUrl?: string;
   externalUrl?: string;
-  /** Optional dedicated video URL (used by richer players). */
   videoUrl?: string;
   description?: string;
+  releaseYear?: number;
+  featured?: boolean;
+  credits?: string[];
+  rightsNotice?: string;
+  audioSha256?: string;
+  waveform?: readonly number[];
 }

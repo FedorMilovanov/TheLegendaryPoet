@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { MessageSquare, ShieldCheck } from 'lucide-react';
+import { MessageSquare, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 import { FeedbackTargetType, RatingDimension } from '../../types/community';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
+import { isFeedbackShared } from '../../utils/communityStore';
 import ActionToast from './ActionToast';
 import CommentComposer from './CommentComposer';
 import CommentList from './CommentList';
@@ -34,25 +35,22 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
 
   useEffect(() => {
     if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(null), 2200);
+    const timeout = window.setTimeout(() => setToast(null), 2600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
   return (
     <section className={`relative luxury-card border border-cyan-400/15 bg-[#061018]/70 ${shell}`}>
-      {toast && (
-        <div className="pointer-events-none absolute right-4 top-4 z-20 w-[min(320px,calc(100%-2rem))]">
-          <ActionToast message={toast.message} tone={toast.tone} />
-        </div>
-      )}
+      {toast && <div className="pointer-events-none absolute right-4 top-4 z-20 w-[min(320px,calc(100%-2rem))]"><ActionToast message={toast.message} tone={toast.tone} /></div>}
       <div className={topGrid}>
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
             <ShieldCheck size={13} /> Оценка сообщества
           </div>
           <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
-          <p className={`mt-2 leading-relaxed text-cyan-100/38 ${compact ? 'max-w-none text-[11px]' : 'max-w-xl text-xs'}`}>
-            Прототип локального голосования: данные сохраняются в браузере. После подключения аккаунтов оценки можно будет синхронизировать и модерировать.
+          <p className={`mt-2 flex items-center gap-2 leading-relaxed ${compact ? 'max-w-none text-[11px]' : 'max-w-xl text-xs'} ${isFeedbackShared ? 'text-emerald-200/55' : 'text-amber-100/45'}`}>
+            {isFeedbackShared ? <Wifi size={13} /> : <WifiOff size={13} />}
+            {isFeedbackShared ? 'Общая база: оценки и комментарии видны всем посетителям.' : 'Локальный режим: ответы пока сохраняются только в этом браузере.'}
           </p>
         </div>
         <div className="text-left md:text-right">
@@ -75,23 +73,15 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
         <div className="space-y-5">
           <RatingForm
             dimensions={dimensions}
+            initialScores={feedback.ownRating?.scores}
             onSubmit={feedback.addRating}
             onStatus={(message, tone) => setToast({ message, tone })}
           />
         </div>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-white">
-            <MessageSquare size={17} className="text-cyan-300" /> Комментарии
-          </div>
-          <CommentComposer
-            onSubmit={feedback.addComment}
-            onStatus={(message, tone) => setToast({ message, tone })}
-          />
-          <CommentList
-            comments={feedback.comments}
-            onHelpful={feedback.markHelpful}
-            onStatus={(message, tone) => setToast({ message, tone })}
-          />
+          <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} className="text-cyan-300" /> Комментарии</div>
+          <CommentComposer onSubmit={feedback.addComment} onStatus={(message, tone) => setToast({ message, tone })} />
+          <CommentList comments={feedback.comments} onHelpful={feedback.markHelpful} onStatus={(message, tone) => setToast({ message, tone })} />
         </div>
       </div>
     </section>
