@@ -30,10 +30,15 @@ export interface EssayImageData {
 
 export interface EssayCitationData {
   /** Stable ids from the essay bibliography, rendered as inline source markers. */
-  sourceIds?: string[];
+  sourceIds?: readonly string[];
 }
 
-export type EssayBlock =
+export interface EssayBlockIdentity {
+  /** Stable editorial identity used by citations, anchors and future migrations. */
+  id?: string;
+}
+
+type EssayBlockContent =
   /** Opening epigraph — a short line/quote that sets the tone. */
   | { type: 'epigraph'; text: string; cite?: string }
   /** Large lead paragraph that opens the body. */
@@ -67,6 +72,8 @@ export type EssayBlock =
   | { type: 'reflection'; heading?: string; text: string }
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
+
+export type EssayBlock = EssayBlockContent & EssayBlockIdentity;
 
 export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'institutional' | 'context';
 
