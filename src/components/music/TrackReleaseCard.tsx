@@ -7,6 +7,8 @@ import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
 import { getTrackThemeStyle } from './trackTheme';
 
+type CardPlaybackState = 'error' | 'playing' | 'completed' | null;
+
 export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
   const {
     currentTrack,
@@ -28,6 +30,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
   const totalDuration = isActive ? (duration || track.durationSeconds || 0) : (track.durationSeconds || 0);
   const progress = totalDuration > 0 ? Math.min(1, position / totalDuration) : 0;
   const completed = completedTrackIds.has(track.id);
+  const cardState: CardPlaybackState = trackError ? 'error' : trackPlaying ? 'playing' : completed ? 'completed' : null;
   const waveform = track.waveform?.filter((_, index) => index % 4 === 0).slice(0, 34) ?? [];
   const coverTransition = { viewTransitionName: `track-cover-${track.id}` } as CSSProperties;
   const unavailable = !track.audioUrl;
@@ -79,14 +82,14 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
                 : <Play size={20} fill="currentColor" className="ml-0.5" />}
         </button>
 
-        {(completed || trackPlaying || trackError) && (
+        {cardState && (
           <div className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/52 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur-xl" aria-live="polite">
-            {completed
-              ? <CheckCircle2 size={12} style={{ color: 'var(--track-secondary)' }} />
-              : trackError
-                ? <RotateCw size={12} className="text-amber-300" />
-                : <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--track-secondary)' }} />}
-            {completed ? 'Прослушано' : trackError ? 'Повторить' : 'Сейчас звучит'}
+            {cardState === 'error'
+              ? <RotateCw size={12} className="text-amber-300" />
+              : cardState === 'playing'
+                ? <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--track-secondary)' }} />
+                : <CheckCircle2 size={12} style={{ color: 'var(--track-secondary)' }} />}
+            {cardState === 'error' ? 'Повторить' : cardState === 'playing' ? 'Сейчас звучит' : 'Прослушано'}
           </div>
         )}
       </div>
