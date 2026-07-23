@@ -18,15 +18,6 @@ const baseItems: CommandItem[] = [
   { id: 'about', label: 'О проекте', description: 'Миссия и контакты', path: '/about', group: 'Разделы' },
 ];
 
-export function normalizeCommandText(value: string): string {
-  return value
-    .toLocaleLowerCase('ru-RU')
-    .replace(/ё/g, 'е')
-    .replace(/[«»„“”'’]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim();
-}
-
 export function getCommandItems(): CommandItem[] {
   const poetItems = poets.map((poet) => ({
     id: `poet-${poet.id}`,
