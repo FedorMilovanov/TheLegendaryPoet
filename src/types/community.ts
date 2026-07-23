@@ -30,3 +30,12 @@ export interface FeedbackSnapshot {
   ratings: RatingEntry[];
   comments: CommentEntry[];
 }
+
+export type CommunitySyncPhase = 'local' | 'idle' | 'syncing' | 'online' | 'offline';
+
+export interface CommunitySyncState {
+  phase: CommunitySyncPhase;
+  pendingCount: number;
+  lastSyncedAt: string | null;
+  message: string | null;
+}
