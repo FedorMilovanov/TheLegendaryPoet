@@ -16,7 +16,7 @@
     transform: translate3d(0, 0, 0) rotate(var(--fragment-rotate));
   }
   50% {
-    opacity: calc(var(--fragment-opacity) * 1.55);
+    opacity: var(--fragment-opacity-peak);
     transform: translate3d(var(--fragment-dx), var(--fragment-dy), 0) rotate(var(--fragment-rotate));
   }
 }
