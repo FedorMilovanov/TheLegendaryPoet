@@ -8,6 +8,12 @@ import {
   setStoredVolume,
   updateAudioSession,
 } from '../src/components/music/audioSessionStore';
+import {
+  buildTrackMomentPath,
+  formatAudioTime,
+  formatIsoDuration,
+  parseAudioMoment,
+} from '../src/components/music/audioPresentation';
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -73,6 +79,16 @@ storage.setItem(AUDIO_SESSION_STORAGE_KEY, '{broken json');
 const recovered = readAudioSession();
 expect(recovered.version === 2, 'corrupt JSON must recover to a valid v2 session');
 expect(Number.isFinite(recovered.volume), 'recovered volume must remain finite');
+
+expect(formatAudioTime(61.9) === '1:01', 'clock labels must use stable whole seconds');
+expect(formatAudioTime(Number.NaN) === '0:00', 'invalid clock values must be harmless');
+expect(formatIsoDuration(239.6) === 'PT4M0S', 'ISO durations must never emit sixty seconds');
+expect(parseAudioMoment(null, 100) === undefined, 'a missing t parameter must not implicitly load a track');
+expect(parseAudioMoment('', 100) === undefined, 'an empty t parameter must be rejected');
+expect(parseAudioMoment('not-a-time', 100) === undefined, 'invalid t parameters must be rejected');
+expect(parseAudioMoment('500', 100) === 99.9, 'shared moments must stay inside the release duration');
+expect(buildTrackMomentPath('pushkin-tucha', 4.9) === '/music/pushkin-tucha', 'tiny positions must not pollute shared links');
+expect(buildTrackMomentPath('pushkin-tucha', 128.8) === '/music/pushkin-tucha?t=128', 'shared links must use a stable whole-second moment');
 
 for (const failure of failures) console.error(`ERROR audio-session: ${failure}`);
 console.log(`Audio session validation: ${failures.length} error(s)`);
