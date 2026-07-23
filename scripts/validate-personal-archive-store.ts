@@ -11,13 +11,17 @@ import {
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
+  failWrites = false;
 
   get length() { return this.values.size; }
   clear() { this.values.clear(); }
   getItem(key: string) { return this.values.get(key) ?? null; }
   key(index: number) { return [...this.values.keys()][index] ?? null; }
   removeItem(key: string) { this.values.delete(key); }
-  setItem(key: string, value: string) { this.values.set(key, String(value)); }
+  setItem(key: string, value: string) {
+    if (this.failWrites) throw new Error('simulated storage quota failure');
+    this.values.set(key, String(value));
+  }
 }
 
 const storage = new MemoryStorage();
@@ -78,18 +82,33 @@ const unsubscribe = subscribeFavoritePoems(() => { notifications += 1; });
 const added = toggleFavoritePoem('blok-1');
 expect(added && isFavoritePoem('blok-1'), 'toggle must add a valid missing favorite');
 expect(notifications === 1, 'same-tab writes must notify archive subscribers once');
+testWindow.dispatchEvent({ type: 'storage', key: FAVORITES_STORAGE_KEY } as unknown as StorageEvent);
+expect(notifications === 2, 'matching storage events must notify cross-tab subscribers');
+testWindow.dispatchEvent({ type: 'storage', key: 'unrelated-key' } as unknown as StorageEvent);
+expect(notifications === 2, 'unrelated storage events must be ignored');
 const removedByToggle = toggleFavoritePoem('blok-1');
 expect(!removedByToggle && !isFavoritePoem('blok-1'), 'toggle must remove an existing favorite');
-expect(notifications === 2, 'same-tab removals must notify archive subscribers once');
+expect(notifications === 3, 'same-tab removals must notify archive subscribers once');
 unsubscribe();
 toggleFavoritePoem('blok-2');
-expect(notifications === 2, 'unsubscribed listeners must not receive later writes');
+expect(notifications === 3, 'unsubscribed listeners must not receive later writes');
 expect((listeners.get(FAVORITES_CHANGE_EVENT)?.size ?? 0) === 0, 'unsubscribe must release the custom-event listener');
+expect((listeners.get('storage')?.size ?? 0) === 0, 'unsubscribe must release the storage-event listener');
 
 expect(!toggleFavoritePoem('invalid favorite id'), 'invalid ids must be rejected without changing the archive');
 expect(!removeFavoritePoem('not-present'), 'removing an unknown favorite must report no change');
 expect(removeFavoritePoem('blok-2'), 'explicit removal must persist an existing favorite');
 expect(!isFavoritePoem('blok-2'), 'explicit removal must update subsequent reads');
+
+toggleFavoritePoem('kept-on-write-failure');
+storage.failWrites = true;
+expect(!toggleFavoritePoem('new-on-write-failure'), 'a failed add must return the actual unchanged false state');
+expect(!isFavoritePoem('new-on-write-failure'), 'a failed add must not appear in subsequent reads');
+expect(toggleFavoritePoem('kept-on-write-failure'), 'a failed removal must return the actual unchanged true state');
+expect(isFavoritePoem('kept-on-write-failure'), 'a failed removal must leave the stored favorite intact');
+expect(!removeFavoritePoem('kept-on-write-failure'), 'explicit removal must report failure when storage rejects the write');
+storage.failWrites = false;
+expect(removeFavoritePoem('kept-on-write-failure'), 'the same removal must succeed after storage recovers');
 
 for (const id of ['yesenin-2', 'pushkin-2', 'removed-poem']) toggleFavoritePoem(id);
 const reconciled = reconcileFavoritePoems(['yesenin-1', 'yesenin-2', 'pushkin-2']);
