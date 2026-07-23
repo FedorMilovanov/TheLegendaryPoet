@@ -122,7 +122,14 @@ function unlockDocument() {
   const release = releaseSmoothScroll;
   releaseSmoothScroll = null;
   release?.();
-  setLegacyModalFlag(false);
+
+  // A legacy essay lightbox can sit below a shared overlay. Its own body lock
+  // and Lenis token must remain authoritative after the upper surface closes.
+  const legacyLockStillOpen =
+    body.style.overflow === 'hidden' ||
+    html.style.overflow === 'hidden' ||
+    body.style.position === 'fixed';
+  setLegacyModalFlag(legacyLockStillOpen);
 
   // Browser layout and Lenis limits settle after fixed-body styles are removed.
   // Re-apply only in a real animation-frame environment; the synchronous write
