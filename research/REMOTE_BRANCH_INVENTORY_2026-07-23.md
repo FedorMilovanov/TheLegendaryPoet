@@ -1,68 +1,82 @@
 # Полный инвентарь активных REMOTE-веток
 
-Дата: 2026-07-23
+Дата актуализации: 2026-07-23
 
-Статус: `ACTIVE-BRANCHES-CLASSIFIED / NO-DELETIONS-PERFORMED`
+Статус: `ACTIVE-BRANCHES-CLASSIFIED / AUDIO-HARDENING-MERGED / NO-BULK-DELETIONS`
 
-Этот файл фиксирует все ветки, которым соответствует незакрытый PR. Ветки уже слитых PR не считаются альтернативными источниками истины: их содержимое живёт в `main`, а старые refs могут быть удалены позже отдельной уборкой после проверки branch protection.
+Этот файл фиксирует ветки, которым соответствует незакрытый PR, а также закрытые ветки, ещё важные для истории консолидации. Ветки merged-PR не являются альтернативными источниками истины: их содержимое берётся только из актуального `main`.
 
-## Открытые ветки
+## Актуальный `main`
 
-| PR | Ветка | Владелец работы | Роль | Действие |
-|---:|---|---|---|---|
-| #32 | `archive-collage-real-photos` | архивный visual experiment | воспроизводимый коллаж Маяковского/Бриков из Commons | Не сливать. Artifact проверен: 30 уникальных файлов и совпавшие SHA, но не настоящие Commons originals, пустые license URLs, повреждённые author strings и пустой audit log. Нужен repair pass. |
-| #34 | `work/yesenin-visual-series` | контентная ветка Есенина | первая часть биографии 1895–1921 и series contract | Не сливать целиком. Перенести материал вручную после claim-ledger, 40+ sources, PDF-проверки и локализации медиа. |
-| #37 | `work/local-images-playwright-wtoc` | основной исследовательский агент | source policy, пять лонгридов, локальные архивные изображения, SEO/prerender, Playwright и research corpus | Главная исследовательская ветка. Draft, конфликтует с новым audio-main. Не force-push; интегрировать после стабилизации PR #45. |
-| #38 | `audit/playwright-total-article-check` | прежний audit agent | альтернативный browser audit/renderer | Не сливать целиком. Reduced-motion test уже извлечён. Осталась отдельная идея stable block ids. После её переноса/issue — закрыть как superseded by #37. |
-| #44 | `validation/research-source-gates-20260723` | временная CI-ветка #37 | наблюдаемый Actions-run поверх исследовательской ветки | Не сливать. После завершения CI записать результаты и закрыть PR; marker-файл не должен попасть ни в #37, ни в `main`. |
-| #45 | `fix/audio-runtime-hardening` | активный аудиоагент | persistence, retry, cross-tab coordination, focus trap, safe-area и исправление глобального аудиодвижка | Чужая активная зона. Не редактировать audio runtime/community/binaries из #37. После merge #45 его версия становится канонической для интеграции. |
+Текущая проверенная вершина `main`: `43c65411a3fd695e65861f4939b891b5499c1d26` — **Harden the global audio runtime and repair integration regressions**.
+
+После слияния PR #45 канонический аудиослой включает:
+
+- постоянный `AudioPlayerProvider` над Router;
+- `GlobalMiniPlayer` и `ImmersivePlayer` через отдельный `AudioChromeBoundary`;
+- версионированное хранилище аудиосессии и миграции;
+- retry, pending seek, восстановление после ошибок и защиту от гонок смены трека;
+- BroadcastChannel/storage fallback и Media Session;
+- обязательный валидатор `validate:audio-session`.
+
+Исследовательская ветка #37 расходится с `main`: она существенно впереди по статьям и research-корпусу, но отстаёт на шесть main-коммитов аудио/рейтингов. При интеграции аудиореализация берётся из `main`, а не реконструируется по старым PR.
+
+## Открытые PR и ветки
+
+| PR | Ветка | Роль | Решение |
+|---:|---|---|---|
+| #32 | `archive-collage-real-photos` | воспроизводимый коллаж Маяковского/Бриков из Commons | Не сливать. Artifact технически воспроизводим, но 28 файлов — перекодированные derivatives, два — thumbnails; отсутствуют license URLs, повреждены author strings и пуст audit log. Нужен provenance repair либо документированный отказ. |
+| #34 | `work/yesenin-visual-series` | черновой каркас первой части биографии Есенина 1895–1921 | Не сливать целиком. Переносить текст вручную только после claim-ledger, PDF-проверки, 40+ classified sources и локализации медиа. |
+| #37 | `work/local-images-playwright-wtoc` | основной research/article-engine PR | Главная исследовательская ветка. Draft и non-mergeable до ручной интеграции актуального `main`, полного CI и редакционной вычитки. Аудиобинарники/runtime не переписывать. |
+| #44 | `validation/research-source-gates-20260723` | временная дочерняя CI-ветка #37 | Не сливать. Использовать только для наблюдаемого Actions-run; marker-файл не переносить. После фиксации доказательств закрыть PR и удалить ref. |
+
+## Закрытая диагностическая ветка
+
+| PR | Ветка | Статус |
+|---:|---|---|
+| #38 | `audit/playwright-total-article-check` | Закрыт без merge как superseded by #37. Reduced-motion проверка перенесена; миграция stable block IDs вынесена в issue #46. Старый renderer/workflow не возвращать. |
 
 ## Уже слитая аудиоцепочка
 
 Следующие PR закрыты как merged и не должны cherry-pick’аться повторно:
 
-| PR | Роль |
+| PR | Канонический слой в `main` |
 |---:|---|
 | #39 | рейтинги, музыкальный архив, release pages, MP3 manifest, Supabase/RPC |
 | #40 | удаление временных metadata/JPEG-дублей |
 | #41 | финальная раскладка Yesenin WebP в `public/images/music` |
 | #42 | premium player polish и release pages |
 | #43 | persistent global audio context, mini-player, immersion mode, waveform и Media Session |
+| #45 | hardening аудиосессии: миграции, retry, race guards, cross-tab, accessibility и `validate:audio-session` |
 
-Повторный перенос этих коммитов в #37 создаст дубли маршрутов, providers и storage migrations. При интеграции используется текущий `main`, а не отдельные старые ветки.
+Повторный перенос этих коммитов создаст дубли providers, маршрутов, storage migrations и Media Session handlers. Источник истины — текущий `main`.
 
 ## Исторические merged-ветки
 
-PR #1–#31, #33, #35–#36, #39–#43 уже представлены в истории `main`. Их refs не являются незавершённой работой, даже если физически остаются в REMOTE.
+PR #1–#31, #33, #35–#36 и #39–#45 представлены в истории `main`. Их refs могут быть удалены только после проверки branch protection и отсутствия зависимых открытых PR/Actions.
 
-Операция удаления refs сейчас не выполнялась по трём причинам:
+## Что можно удалить после завершения
 
-1. инструмент не дал надёжного полного списка refs с branch-protection metadata;
-2. часть старых refs может использоваться как база или ссылка в отчётах/Actions;
-3. удаление веток не улучшает код и должно идти только после закрытия всех зависимых PR.
-
-## Что можно будет удалить после завершения
-
-- `validation/research-source-gates-20260723` — сразу после закрытия #44;
-- `audit/playwright-total-article-check` — после extraction ledger и закрытия #38;
-- `work/yesenin-visual-series` — после публикации проверенной части I и закрытия #34;
+- `validation/research-source-gates-20260723` — после закрытия #44;
+- `audit/playwright-total-article-check` — PR #38 уже закрыт; ref удалить после завершения связанных Actions и проверки, что на него не ссылается automation;
+- `work/yesenin-visual-series` — после переноса проверенной части I и закрытия #34;
 - `archive-collage-real-photos` — после repair pass либо документированного отказа;
-- merged audio feature branches — после подтверждения, что #45 не использует их как base.
+- merged audio feature branches — после проверки branch protection и отсутствия зависимых workflow.
 
 ## Что нельзя удалять сейчас
 
 - `main`;
 - `work/local-images-playwright-wtoc`;
-- `fix/audio-runtime-hardening`;
-- любые ветки, на которые ещё открыт PR;
+- `validation/research-source-gates-20260723`, пока идёт validation run;
+- ветки #32 и #34, пока их уникальные материалы не извлечены;
 - любые refs, участвующие в текущем GitHub Actions run.
 
 ## Порядок безопасной уборки
 
-1. Закрыть временный #44 после CI.
-2. Закрыть #38 после переноса stable block-id идеи либо создания issue.
-3. Перенести и проверить часть I Есенина; закрыть #34.
-4. Решить судьбу #32 после provenance repair.
-5. Дождаться merge/закрытия #45.
-6. Интегрировать актуальный `main` в #37 и получить зелёный CI.
-7. Только затем удалить refs закрытых PR по одному, без массовой команды и без force-update.
+1. Получить полный validation run #44 и записать фактические результаты.
+2. Закрыть #44 без merge, затем удалить только его marker-ref.
+3. Интегрировать актуальный `main` в #37 по ручной conflict matrix, сохранив аудио из PR #45.
+4. Прогнать source/citation/media/TypeScript/Playwright/build/route chunks/prerender плюс `validate:audio` и `validate:audio-session`.
+5. Перенести проверенную часть I Есенина; закрыть #34.
+6. Решить судьбу #32 после provenance repair.
+7. Удалять refs закрытых PR по одному, без массовой команды и без force-update `main`.
