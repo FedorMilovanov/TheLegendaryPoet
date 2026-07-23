@@ -18,7 +18,7 @@
     "validate:prerender-seo": "tsx scripts/validate-prerendered-seo.ts && tsx scripts/validate-top-level-prerender.ts",
     "check": "node scripts/run-checks.mjs",
     "sitemap": "node scripts/gen-sitemap.mjs",
-    "prerender": "tsx scripts/prerender-og.mjs",
+    "prerender": "tsx scripts/prerender-og.mjs && node scripts/prerender-404.mjs",
     "images:sync": "node scripts/localize-essay-images.mjs",
     "validate:media": "tsx scripts/validate-essay-media.ts",
     "test:e2e": "node scripts/run-playwright-ci.mjs"
