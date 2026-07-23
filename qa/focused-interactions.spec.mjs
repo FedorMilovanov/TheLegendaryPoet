@@ -80,6 +80,64 @@ test.describe('focused community interactions', () => {
   });
 });
 
+test.describe('nested overlay ownership', () => {
+  test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
+
+  test('search stays above immersive mode and background media keys remain isolated', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+
+    await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    await page.evaluate(() => window.scrollTo(0, 420));
+    await page.waitForTimeout(250);
+    const scrollBefore = await page.evaluate(() => window.scrollY);
+
+    const primaryPlay = page.getByRole('button', { name: /Воспроизвести трек|Поставить на паузу/ }).first();
+    await primaryPlay.click();
+    await page.waitForTimeout(900);
+    await primaryPlay.click();
+    const audio = page.locator('audio');
+    await expect(audio).toHaveCount(1);
+    await expect.poll(() => audio.evaluate((element) => element.paused)).toBe(true);
+
+    const immersiveOpener = page.getByRole('button', { name: 'Погружение' }).first();
+    await immersiveOpener.click();
+    const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    await expect(immersive).toBeVisible();
+    await expect(immersive.getByRole('button', { name: 'Выйти' })).toBeFocused();
+    await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
+
+    const mediaBefore = await audio.evaluate((element) => ({ paused: element.paused, muted: element.muted, currentTime: element.currentTime }));
+    await page.keyboard.press('Control+K');
+    const search = page.getByRole('dialog', { name: 'Поиск по сайту' });
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    await expect(search).toBeVisible();
+    await expect(input).toBeFocused();
+    await input.fill('музыка');
+    await page.keyboard.press('Space');
+    await page.keyboard.press('KeyM');
+    await page.keyboard.press('ArrowRight');
+    const mediaDuringSearch = await audio.evaluate((element) => ({ paused: element.paused, muted: element.muted, currentTime: element.currentTime }));
+    expect(mediaDuringSearch.paused).toBe(mediaBefore.paused);
+    expect(mediaDuringSearch.muted).toBe(mediaBefore.muted);
+    expect(Math.abs(mediaDuringSearch.currentTime - mediaBefore.currentTime)).toBeLessThan(1.2);
+
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'desktop-nested-search-over-immersive.png'), fullPage: true });
+    await page.keyboard.press('Escape');
+    await expect(search).toBeHidden();
+    await expect(immersive).toBeVisible();
+    await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
+
+    await page.keyboard.press('Escape');
+    await expect(immersive).toBeHidden();
+    await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
+    await expect(immersiveOpener).toBeFocused();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollBefore, 0);
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe('settled slow-network visual', () => {
   test.use({ viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
 
