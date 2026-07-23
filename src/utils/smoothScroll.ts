@@ -8,6 +8,7 @@ import type Lenis from 'lenis';
  */
 let activeLenis: Lenis | null = null;
 let pauseDepth = 0;
+let restorationEpoch = 0;
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
@@ -17,20 +18,42 @@ export function setActiveLenis(lenis: Lenis | null) {
 /** Ref-counted so one overlay cannot resume scrolling while another is open. */
 export function pauseSmoothScroll() {
   pauseDepth += 1;
+  // Invalidate delayed restoration frames left by an overlay that just closed.
+  restorationEpoch += 1;
   if (pauseDepth === 1) activeLenis?.stop();
 }
 
+/**
+ * Resume scrolling and, when requested, restore one exact document position.
+ *
+ * Releasing `body { overflow:hidden }` or returning from a temporary landscape
+ * viewport changes Lenis' dimensions after the first synchronous write. A single
+ * `scrollTo` can therefore be overwritten by scroll anchoring or by the next
+ * Lenis RAF. Re-apply over two animation frames, after `resize()`, while an epoch
+ * token guarantees that a newly opened modal or route cannot inherit the old
+ * restoration.
+ */
 export function resumeSmoothScroll(scrollY?: number) {
   pauseDepth = Math.max(0, pauseDepth - 1);
   if (pauseDepth > 0) return;
 
-  if (!activeLenis) {
-    if (scrollY != null) window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
-    return;
-  }
+  activeLenis?.start();
+  if (scrollY == null) return;
 
-  activeLenis.start();
-  if (scrollY != null) activeLenis.scrollTo(scrollY, { immediate: true });
+  const target = Math.max(0, scrollY);
+  const epoch = ++restorationEpoch;
+  const restore = () => {
+    if (epoch !== restorationEpoch || pauseDepth > 0) return;
+    activeLenis?.resize();
+    window.scrollTo({ top: target, left: 0, behavior: 'auto' });
+    activeLenis?.scrollTo(target, { immediate: true });
+  };
+
+  restore();
+  requestAnimationFrame(() => {
+    restore();
+    requestAnimationFrame(restore);
+  });
 }
 
 export function scrollToId(id: string) {
