@@ -1,11 +1,11 @@
-// Prerender real static HTML files (with per-page Open Graph tags) for the
-// site's shareable deep links: essays, poets, and legacy articles.
+// Prerender real static HTML files (with per-page Open Graph tags) for every
+// public top-level route and every shareable deep link.
 //
 // Why this exists:
 // GitHub Pages serves 404.html for paths that do not have a real static file.
-// Many preview bots neither run JavaScript nor accept a 404 response, so every
-// shareable route gets both `<route>/index.html` and `<route>.html`. The static
-// head uses the same SEO fields and JSON-LD builders as the hydrated React app.
+// Many preview bots neither run JavaScript nor accept a 404 response, so public
+// routes get both `<route>/index.html` and `<route>.html`. The static head uses
+// the same canonical data and JSON-LD builders as the hydrated React app.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -130,16 +130,67 @@ function write(routePath, html) {
 async function main() {
   const [
     { getAllEssays },
-    { poets, articles },
+    { poets, articles, musicTracks },
     { essayStructuredData, legacyArticleStructuredData, poetStructuredData, relatedEssaysFor },
+    {
+      aboutPageStructuredData,
+      articlesCollectionStructuredData,
+      hallPageStructuredData,
+      musicCollectionStructuredData,
+      poetsCollectionStructuredData,
+    },
   ] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
     import(path.resolve('src/utils/structuredData.ts')),
+    import(path.resolve('src/utils/collectionStructuredData.ts')),
   ]);
 
   const essays = getAllEssays();
   let count = 0;
+
+  const publicTopLevelPages = [
+    {
+      routePath: '/poets',
+      title: 'Русские поэты: биографии, стихи и исследования — THE LEGENDARY POET',
+      description: 'Каталог русских поэтов: биографии, избранные стихи, свидетельства современников и документальные исследования.',
+      keywords: ['русские поэты', 'биографии поэтов', 'стихи', 'Пушкин', 'Лермонтов', 'Есенин', 'Маяковский'],
+      jsonLd: poetsCollectionStructuredData(poets),
+    },
+    {
+      routePath: '/articles',
+      title: 'Статьи, биографии и литературные исследования — THE LEGENDARY POET',
+      description: 'Большие биографии поэтов, документальные расследования, история произведений, архивные источники и литературный анализ.',
+      keywords: ['литературные статьи', 'биографии поэтов', 'литературный анализ', 'архивные источники'],
+      jsonLd: articlesCollectionStructuredData(essays, articles),
+    },
+    {
+      routePath: '/music',
+      title: 'Музыка поэзии — THE LEGENDARY POET',
+      description: 'Музыкальные интерпретации и декламации великих стихов на каналах проекта.',
+      keywords: ['музыка на стихи', 'поэзия в музыке', 'декламация стихов'],
+      jsonLd: musicCollectionStructuredData(musicTracks),
+    },
+    {
+      routePath: '/about',
+      title: 'О проекте — THE LEGENDARY POET',
+      description: 'Независимый редакторский проект о поэзии, истории и культуре с осторожным христианским анализом.',
+      keywords: ['THE LEGENDARY POET', 'проект о поэзии', 'литературный анализ'],
+      jsonLd: aboutPageStructuredData(),
+    },
+    {
+      routePath: '/hall',
+      title: 'Зал Поэтов — THE LEGENDARY POET',
+      description: 'Иммерсивный Храм Русской Поэзии сейчас в разработке.',
+      keywords: ['зал поэтов', 'русская поэзия', 'виртуальный музей поэтов'],
+      jsonLd: hallPageStructuredData(),
+    },
+  ];
+
+  for (const page of publicTopLevelPages) {
+    write(page.routePath, renderPage({ ...page, imageAlt: page.title }));
+    count += 1;
+  }
 
   for (const essay of essays) {
     const poet = essay.poetId ? poets.find((entry) => entry.id === essay.poetId) : undefined;
@@ -193,7 +244,7 @@ async function main() {
   }
 
   console.log(
-    `prerender-og: wrote ${count} static pages (${essays.length} essays, ${poets.length} poets, ${articles.length} articles)`,
+    `prerender-og: wrote ${count} static pages (${publicTopLevelPages.length} top-level, ${essays.length} essays, ${poets.length} poets, ${articles.length} articles)`,
   );
 }
 
