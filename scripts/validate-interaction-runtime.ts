@@ -87,10 +87,29 @@ expect(overlay.canRestoreOverlayFocus(lowerControl), 'closing the top dialog mus
 lower.release();
 expect(scrollCalls.length === 2, 'each complete overlay session must restore scroll exactly once');
 
+const survivingControl = {} as HTMLElement;
+const survivingRoot = {
+  isConnected: true,
+  contains: (candidate: Node) => candidate === survivingControl,
+} as HTMLElement;
+const detachedRoot = {
+  isConnected: false,
+  contains: () => false,
+} as unknown as HTMLElement;
+const surviving = overlay.acquireOverlayLock('surviving', survivingRoot);
+const detached = overlay.acquireOverlayLock('detached', detachedRoot);
+expect(surviving.isTopmost(), 'a disconnected stale portal must yield keyboard ownership to the visible dialog below');
+expect(!detached.isTopmost(), 'a disconnected overlay entry must not remain topmost');
+expect(overlay.canRestoreOverlayFocus(survivingControl), 'focus restoration must ignore a disconnected upper portal');
+detached.release();
+surviving.release();
+expect(scrollCalls.length === 3, 'pruning a stale upper portal must still unlock the document exactly once');
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
 const immersiveSource = read('src/components/music/ImmersivePlayer.tsx');
+const ratingFormSource = read('src/components/community/RatingForm.tsx');
 const imageSource = read('src/components/media/ResilientImage.tsx');
 const poetImageSource = read('src/components/PoetImage.tsx');
 const poetCardSource = read('src/components/PoetCard.tsx');
@@ -102,6 +121,7 @@ expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stac
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
 expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
 expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must guard focus restoration ownership');
+expect(overlaySource.includes('pruneDetachedOverlays'), 'keyboard ownership must recover from detached portal entries');
 expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog keyboard containment must run in capture phase');
 expect(dialogSource.includes('handle.isTopmost()'), 'only the topmost dialog may process Escape and Tab');
 expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus');
@@ -115,6 +135,8 @@ expect(commandSource.includes('onPointerDown'), 'the command backdrop must suppo
 expect(immersiveSource.includes('useDialogSurface'), 'immersive playback must use the shared dialog lifecycle');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');
+expect(ratingFormSource.includes('dirtyRef.current'), 'late community hydration must not erase an in-progress rating draft');
+expect(ratingFormSource.includes('initialChanged && !dirtyRef.current'), 'saved rating snapshots may refresh only a pristine form');
 expect(imageSource.includes('fallbackSrc'), 'resilient images must support a deterministic fallback source');
 expect(imageSource.includes("fetchPriority={priority ? 'high'"), 'priority imagery must advertise high fetch priority');
 expect(imageSource.includes('data-image-state'), 'image load state must remain inspectable for UI and QA');
@@ -134,4 +156,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Interaction runtime validation passed: stacked overlays, scroll restoration, resilient images and bounded pointer effects.');
+console.log('Interaction runtime validation passed: stacked overlays, scroll restoration, rating draft safety, resilient images and bounded pointer effects.');
