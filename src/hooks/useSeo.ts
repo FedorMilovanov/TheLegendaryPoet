@@ -1,14 +1,5 @@
 import { useEffect } from 'react';
 import { siteConfig } from '../config/site';
-import { getAllEssays } from '../data/essays';
-import { articles, musicTracks, poets } from '../data/poets';
-import {
-  aboutPageStructuredData,
-  articlesCollectionStructuredData,
-  hallPageStructuredData,
-  musicCollectionStructuredData,
-  poetsCollectionStructuredData,
-} from '../utils/collectionStructuredData';
 
 interface SeoOptions {
   title: string;
@@ -29,30 +20,13 @@ interface SeoOptions {
   keywords?: string;
   /** Prevent indexing for missing, private or user-specific routes. */
   noIndex?: boolean;
-  /** Optional pre-built JSON-LD object; overrides collection and fallback schemas. */
+  /** Optional pre-built JSON-LD object; route components own collection schemas. */
   jsonLd?: Record<string, unknown>;
 }
 
 function absUrl(pathOrUrl: string) {
   if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
-}
-
-function topLevelStructuredData(path: string): Record<string, unknown> | undefined {
-  switch (path) {
-    case '/poets':
-      return poetsCollectionStructuredData(poets);
-    case '/articles':
-      return articlesCollectionStructuredData(getAllEssays(), articles);
-    case '/music':
-      return musicCollectionStructuredData(musicTracks);
-    case '/about':
-      return aboutPageStructuredData();
-    case '/hall':
-      return hallPageStructuredData();
-    default:
-      return undefined;
-  }
 }
 
 /** Set an attribute on an existing head tag, creating a <meta> if it is missing. */
@@ -80,11 +54,15 @@ function ensureLink(rel: string, href: string) {
   el.setAttribute('href', href);
 }
 
+function removeLink(rel: string) {
+  document.head.querySelector(`link[rel="${rel}"]`)?.remove();
+}
+
 /**
  * Per-route metadata for the client-rendered SPA. Tags that no longer apply to
  * the active route are removed, so navigation from an article to a poet/profile
- * cannot leave stale article dates, authors, keywords or indexing directives in
- * the document head.
+ * cannot leave stale article dates, authors, dimensions, keywords or indexing
+ * directives in the document head.
  */
 export function useSeo({
   title,
@@ -101,6 +79,7 @@ export function useSeo({
 }: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
+    const usesDefaultImage = !image;
     const img = absUrl(image || '/og-image.jpg');
     const imgAlt = imageAlt || title;
 
@@ -110,7 +89,8 @@ export function useSeo({
       'robots',
       noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large',
     );
-    ensureLink('canonical', url);
+    if (noIndex) removeLink('canonical');
+    else ensureLink('canonical', url);
     if (keywords) ensureMeta('keywords', keywords);
     else removeMeta('keywords');
 
@@ -121,6 +101,13 @@ export function useSeo({
     ensureMeta('og:type', type, 'property');
     ensureMeta('og:image', img, 'property');
     ensureMeta('og:image:alt', imgAlt, 'property');
+    if (usesDefaultImage) {
+      ensureMeta('og:image:width', '1200', 'property');
+      ensureMeta('og:image:height', '630', 'property');
+    } else {
+      removeMeta('og:image:width', 'property');
+      removeMeta('og:image:height', 'property');
+    }
 
     // Twitter
     ensureMeta('twitter:title', title);
@@ -142,7 +129,6 @@ export function useSeo({
 
     const schema =
       jsonLd ||
-      topLevelStructuredData(path) ||
       (type === 'article'
         ? {
             '@context': 'https://schema.org',
