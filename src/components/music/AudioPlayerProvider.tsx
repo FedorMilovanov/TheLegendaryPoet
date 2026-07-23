@@ -87,8 +87,12 @@ function clearMediaSession() {
   for (const action of mediaActions) {
     try { navigator.mediaSession.setActionHandler(action, null); } catch { /* unsupported action */ }
   }
-  navigator.mediaSession.metadata = null;
-  navigator.mediaSession.playbackState = 'none';
+  try {
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.playbackState = 'none';
+  } catch {
+    // Some embedded browsers expose an incomplete Media Session implementation.
+  }
 }
 
 function failureFromMediaError(error: MediaError | null): AudioFailure {
@@ -107,7 +111,7 @@ function failureFromMediaError(error: MediaError | null): AudioFailure {
 }
 
 function failureFromPlayError(error: unknown): AudioFailure | null {
-  if (error instanceof DOMException) {
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException) {
     if (error.name === 'AbortError') return null;
     if (error.name === 'NotAllowedError') {
       return { reason: 'blocked', message: 'Браузер заблокировал запуск. Нажмите кнопку воспроизведения ещё раз.' };
@@ -134,6 +138,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const currentTrackRef = useRef<MusicTrack | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const pendingAutoplayRef = useRef(false);
+  const playAttemptRef = useRef(false);
   const sourceTransitionRef = useRef(false);
   const lastSavedRef = useRef(0);
   const restoredRef = useRef(false);
@@ -170,7 +175,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const track = currentTrackRef.current;
     if (!audio || !track) return;
 
-    const position = audio.currentTime;
+    const position = pendingSeekRef.current ?? audio.currentTime;
     const total = Number.isFinite(audio.duration) && audio.duration > 0
       ? audio.duration
       : track.durationSeconds ?? 0;
@@ -181,7 +186,13 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       return;
     }
 
-    if (position >= 4 && (force || Math.abs(position - lastSavedRef.current) >= 3)) {
+    if (position < 4) {
+      if (force) setStoredTrackPosition(track.id, null);
+      lastSavedRef.current = 0;
+      return;
+    }
+
+    if (force || Math.abs(position - lastSavedRef.current) >= 3) {
       setStoredTrackPosition(track.id, position);
       lastSavedRef.current = position;
     }
@@ -199,11 +210,46 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     lastSavedRef.current = safe;
   }, []);
 
+  const requestPosition = useCallback((seconds: number, showResume = false) => {
+    const audio = audioRef.current;
+    const track = currentTrackRef.current;
+    if (!audio || !track || !Number.isFinite(seconds)) return 0;
+
+    const metadataReady = audio.readyState > 0 && Number.isFinite(audio.duration) && audio.duration > 0;
+    const provisionalLimit = metadataReady ? audio.duration : track.durationSeconds ?? Math.max(0, seconds);
+    const safe = clamp(seconds, 0, Math.max(0, provisionalLimit - 0.1));
+
+    if (metadataReady) {
+      audio.currentTime = safe;
+      pendingSeekRef.current = null;
+    } else {
+      pendingSeekRef.current = safe;
+    }
+
+    setCurrentTime(safe);
+    setResumeAt(showResume && safe >= 8 ? safe : null);
+    setEnded(false);
+
+    if (safe >= 4) {
+      setStoredTrackPosition(track.id, safe);
+      lastSavedRef.current = safe;
+    } else {
+      setStoredTrackPosition(track.id, null);
+      lastSavedRef.current = 0;
+    }
+
+    return safe;
+  }, []);
+
   const requestPlayback = useCallback((audio: HTMLAudioElement) => {
     pendingAutoplayRef.current = true;
     setFailure(null);
     setStatus('loading');
+    if (playAttemptRef.current) return;
+
+    playAttemptRef.current = true;
     void audio.play().catch((error: unknown) => {
+      playAttemptRef.current = false;
       const nextFailure = failureFromPlayError(error);
       if (!nextFailure) return;
       pendingAutoplayRef.current = false;
@@ -219,6 +265,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
     persistCurrentPosition(true);
     sourceTransitionRef.current = true;
+    playAttemptRef.current = false;
     audio.pause();
 
     currentTrackRef.current = track;
@@ -252,20 +299,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       return;
     }
 
-    if (options.startAt !== undefined) {
-      const limit = Number.isFinite(audio.duration) && audio.duration > 0
-        ? audio.duration
-        : track.durationSeconds ?? options.startAt;
-      const safe = clamp(options.startAt, 0, Math.max(0, limit - 0.1));
-      audio.currentTime = safe;
-      setCurrentTime(safe);
-      setResumeAt(null);
-      setEnded(false);
-      if (safe >= 4) setStoredTrackPosition(track.id, safe);
-    }
-
+    if (options.startAt !== undefined) requestPosition(options.startAt);
     if (options.autoplay) requestPlayback(audio);
-  }, [requestPlayback, setTrackSource]);
+  }, [requestPlayback, requestPosition, setTrackSource]);
 
   const playTrack = useCallback(async (track: MusicTrack, options: Omit<LoadTrackOptions, 'autoplay'> = {}) => {
     if (!track.audioUrl || !audioRef.current) return;
@@ -276,9 +312,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const audio = audioRef.current;
     const track = currentTrackRef.current;
     if (!audio || !track?.audioUrl) return;
-    const retryAt = Number.isFinite(audio.currentTime) && audio.currentTime > 0
+    const retryAt = pendingSeekRef.current ?? (Number.isFinite(audio.currentTime) && audio.currentTime > 0
       ? audio.currentTime
-      : getSavedPosition(track.id);
+      : getSavedPosition(track.id));
     pendingAutoplayRef.current = true;
     if (setTrackSource(track, retryAt)) requestPlayback(audio);
   }, [getSavedPosition, requestPlayback, setTrackSource]);
@@ -298,35 +334,22 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   }, [playTrack, retry, status]);
 
   const pause = useCallback(() => audioRef.current?.pause(), []);
-
-  const seekTo = useCallback((seconds: number) => {
-    const audio = audioRef.current;
-    const track = currentTrackRef.current;
-    if (!audio || !track) return;
-    const limit = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.durationSeconds ?? seconds;
-    const safe = clamp(seconds, 0, Math.max(0, limit - 0.1));
-    audio.currentTime = safe;
-    setCurrentTime(safe);
-    setResumeAt(null);
-    setEnded(false);
-    if (safe >= 4) {
-      setStoredTrackPosition(track.id, safe);
-      lastSavedRef.current = safe;
-    }
-  }, []);
+  const seekTo = useCallback((seconds: number) => { requestPosition(seconds); }, [requestPosition]);
 
   const seekBy = useCallback((seconds: number) => {
     const audio = audioRef.current;
-    if (audio) seekTo(audio.currentTime + seconds);
-  }, [seekTo]);
+    if (!audio) return;
+    const base = pendingSeekRef.current ?? audio.currentTime;
+    requestPosition(base + seconds);
+  }, [requestPosition]);
 
   const restart = useCallback(() => {
     const track = currentTrackRef.current;
     if (!track) return;
-    seekTo(0);
+    requestPosition(0);
     setStoredTrackPosition(track.id, null);
     lastSavedRef.current = 0;
-  }, [seekTo]);
+  }, [requestPosition]);
 
   const setVolume = useCallback((value: number) => {
     const next = clamp(value, 0, 1);
@@ -369,6 +392,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const audio = audioRef.current;
     persistCurrentPosition(true);
     sourceTransitionRef.current = true;
+    playAttemptRef.current = false;
     if (audio) {
       audio.pause();
       audio.removeAttribute('src');
@@ -471,14 +495,18 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       const track = currentTrackRef.current;
       if (!track || !('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
 
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title,
-        artist: `${track.poet} · The Legendary Poet`,
-        album: 'Музыкальные интерпретации русской поэзии',
-        artwork: track.coverUrl
-          ? [{ src: asset(track.coverUrl), sizes: '1400x1400', type: 'image/webp' }]
-          : undefined,
-      });
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: `${track.poet} · The Legendary Poet`,
+          album: 'Музыкальные интерпретации русской поэзии',
+          artwork: track.coverUrl
+            ? [{ src: asset(track.coverUrl), sizes: '1400x1400', type: 'image/webp' }]
+            : undefined,
+        });
+      } catch {
+        // Metadata is an enhancement; playback must remain available without it.
+      }
 
       const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
         try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* unsupported action */ }
@@ -491,7 +519,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       setHandler('seekto', (details) => {
         if (details.seekTime === undefined) return;
         if (details.fastSeek && typeof audio.fastSeek === 'function') audio.fastSeek(details.seekTime);
-        else seekTo(details.seekTime);
+        else requestPosition(details.seekTime);
       });
       setHandler('nexttrack', () => { void adjacentPlaybackRef.current(1); });
       setHandler('previoustrack', () => { void adjacentPlaybackRef.current(-1); });
@@ -503,7 +531,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         navigator.mediaSession.setPositionState({
           duration: audio.duration,
           playbackRate: audio.playbackRate,
-          position: clamp(audio.currentTime, 0, audio.duration),
+          position: clamp(audio.currentTime, 0, Math.max(0, audio.duration - 0.001)),
         });
       } catch {
         // Position state may reject briefly while a source is changing.
@@ -542,6 +570,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const onError = () => {
       if (sourceTransitionRef.current || !currentTrackRef.current) return;
       pendingAutoplayRef.current = false;
+      playAttemptRef.current = false;
       setFailure(failureFromMediaError(audio.error));
       setStatus('error');
       setPlaying(false);
@@ -549,6 +578,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const onPlay = () => {
       const track = currentTrackRef.current;
       pendingAutoplayRef.current = false;
+      playAttemptRef.current = false;
       setPlaying(true);
       setEnded(false);
       setFailure(null);
@@ -558,6 +588,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     };
     const onPause = () => {
+      playAttemptRef.current = false;
       setPlaying(false);
       persistCurrentPosition(true);
       if (sourceTransitionRef.current || !currentTrackRef.current || audio.ended) return;
@@ -566,6 +597,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     };
     const onEnd = () => {
       const track = currentTrackRef.current;
+      playAttemptRef.current = false;
       setPlaying(false);
       setEnded(true);
       setCurrentTime(audio.duration || 0);
@@ -622,7 +654,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearMediaSession();
     };
-  }, [applyPendingSeek, closePlayer, persistCompleted, persistCurrentPosition, requestPlayback, seekBy, seekTo, setTrackSource, tracks]);
+  }, [applyPendingSeek, closePlayer, persistCompleted, persistCurrentPosition, requestPlayback, requestPosition, seekBy, setTrackSource, tracks]);
 
   const value = useMemo<AudioPlayerContextValue>(() => ({
     currentTrack,
