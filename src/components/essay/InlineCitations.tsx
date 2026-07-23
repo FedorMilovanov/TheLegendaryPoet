@@ -11,7 +11,7 @@ export default function InlineCitations({
   sourceIds,
   references,
 }: {
-  sourceIds?: string[];
+  sourceIds?: readonly string[];
   references?: EssaySourceReferenceMap;
 }) {
   if (!sourceIds?.length || !references) return null;
