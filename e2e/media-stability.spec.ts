@@ -136,17 +136,33 @@ async function exerciseTilt(page: Page, trigger: Locator) {
   );
   if (!(await tilt.count())) return;
 
+  // Portrait cards can be taller than the viewport. Locator.hover chooses a real,
+  // actionable point inside the visible intersection, unlike raw coordinates that
+  // may accidentally land above or below the browser and never dispatch pointerenter.
+  await trigger.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await trigger.hover();
+
   const box = await trigger.boundingBox();
   expect(box).not.toBeNull();
   if (!box) return;
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  if (!viewport) return;
+
+  const left = Math.max(3, box.x + 3);
+  const right = Math.min(viewport.width - 3, box.x + box.width - 3);
+  const top = Math.max(3, box.y + 3);
+  const bottom = Math.min(viewport.height - 3, box.y + box.height - 3);
+  expect(right - left).toBeGreaterThan(8);
+  expect(bottom - top).toBeGreaterThan(8);
 
   const initialCenter = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const points = [
-    { x: box.x + box.width * 0.18, y: box.y + box.height * 0.2 },
-    { x: box.x + box.width * 0.82, y: box.y + box.height * 0.24 },
-    { x: box.x + box.width * 0.78, y: box.y + box.height * 0.8 },
-    { x: box.x + box.width * 0.22, y: box.y + box.height * 0.76 },
-    initialCenter,
+    { x: left + (right - left) * 0.2, y: top + (bottom - top) * 0.22 },
+    { x: left + (right - left) * 0.8, y: top + (bottom - top) * 0.28 },
+    { x: left + (right - left) * 0.76, y: top + (bottom - top) * 0.78 },
+    { x: left + (right - left) * 0.24, y: top + (bottom - top) * 0.72 },
+    { x: left + (right - left) / 2, y: top + (bottom - top) / 2 },
   ];
 
   for (const point of points) {
@@ -208,6 +224,11 @@ for (const slug of essays) {
 
       if (desktop) await exerciseTilt(page, trigger);
 
+      // Playwright may perform one final actionability scroll while focusing a
+      // tall mobile trigger. Focus first, then record the true pre-modal reading
+      // position that the application is responsible for restoring.
+      await trigger.focus();
+      await expect(trigger).toBeFocused();
       const beforeOpen = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollY: window.scrollY,
