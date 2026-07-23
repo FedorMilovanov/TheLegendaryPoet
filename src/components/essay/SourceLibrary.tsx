@@ -11,6 +11,7 @@ import {
   Network,
 } from 'lucide-react';
 import type { EssaySource, EssaySourceKind } from '../../types/essay';
+import { scrollToId } from '../../utils/smoothScroll';
 
 const sourceKinds: Record<
   EssaySourceKind,
@@ -70,6 +71,9 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
   };
 
   useEffect(() => {
+    let firstFrame = 0;
+    let secondFrame = 0;
+
     const revealLinkedSource = () => {
       const match = window.location.hash.match(/^#source-(.+)$/);
       if (!match) return;
@@ -78,20 +82,23 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
 
       setFilter('all');
       setExpanded(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById(`source-${sourceId}`)?.scrollIntoView({
-            behavior: reduceMotion ? 'auto' : 'smooth',
-            block: 'center',
-          });
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          scrollToId(`source-${sourceId}`);
         });
       });
     };
 
     revealLinkedSource();
     window.addEventListener('hashchange', revealLinkedSource);
-    return () => window.removeEventListener('hashchange', revealLinkedSource);
-  }, [reduceMotion, sources]);
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      window.removeEventListener('hashchange', revealLinkedSource);
+    };
+  }, [sources]);
 
   return (
     <section
