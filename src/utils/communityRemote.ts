@@ -1,22 +1,15 @@
-import { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
+import type { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
 
-/* ------------------------------------------------------------------ *
- * Optional shared backend for ratings & comments (FREE, no server).
- *
- * Uses Supabase's built-in REST endpoint (PostgREST) via plain `fetch`
- * — no SDK, no build weight. Enabled only when both env vars are set at
- * build time; otherwise every function is a no-op and the app falls back
- * to the local (per-device) store. See docs/COMMENTS_SETUP.md.
- *
- * The anon key is designed to be public; it is safe in client code as
- * long as Row Level Security is enabled (the setup SQL does this).
- * ------------------------------------------------------------------ */
+const VITE_ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+const NODE_ENV = typeof process !== 'undefined' ? process.env : undefined;
+const URL = (VITE_ENV?.VITE_SUPABASE_URL ?? NODE_ENV?.VITE_SUPABASE_URL)?.replace(/\/$/, '');
+const KEY = VITE_ENV?.VITE_SUPABASE_ANON_KEY ?? NODE_ENV?.VITE_SUPABASE_ANON_KEY;
 
-const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-const RATINGS = 'tlp_ratings';
-const COMMENTS = 'tlp_comments';
+const RATINGS_VIEW = 'tlp_ratings_public';
+const COMMENTS_VIEW = 'tlp_comments_public';
+const PAGE_SIZE = 1000;
+const MAX_ROWS_PER_VIEW = 20_000;
+const REQUEST_TIMEOUT_MS = 12_000;
 
 export const remoteEnabled = Boolean(URL && KEY);
 
@@ -29,66 +22,119 @@ function headers(extra: Record<string, string> = {}): Record<string, string> {
   };
 }
 
-// DB rows use snake_case; the app uses camelCase.
 interface RatingRow { id: string; target_type: string; target_id: string; scores: Record<string, number>; created_at: string }
 interface CommentRow { id: string; target_type: string; target_id: string; author: string; text: string; kind: string; helpful: number; created_at: string }
 
-function rowToRating(r: RatingRow): RatingEntry {
-  return { id: r.id, targetType: r.target_type as RatingEntry['targetType'], targetId: r.target_id, scores: r.scores || {}, createdAt: r.created_at };
-}
-function rowToComment(r: CommentRow): CommentEntry {
-  return { id: r.id, targetType: r.target_type as CommentEntry['targetType'], targetId: r.target_id, author: r.author, text: r.text, kind: r.kind as CommentEntry['kind'], helpful: r.helpful ?? 0, createdAt: r.created_at };
+function rowToRating(row: RatingRow): RatingEntry {
+  return {
+    id: row.id,
+    targetType: row.target_type as RatingEntry['targetType'],
+    targetId: row.target_id,
+    scores: row.scores || {},
+    createdAt: row.created_at,
+  };
 }
 
-/** Pull the full shared snapshot. Returns null on any failure (caller keeps local data). */
+function rowToComment(row: CommentRow): CommentEntry {
+  return {
+    id: row.id,
+    targetType: row.target_type as CommentEntry['targetType'],
+    targetId: row.target_id,
+    author: row.author,
+    text: row.text,
+    kind: row.kind as CommentEntry['kind'],
+    helpful: row.helpful ?? 0,
+    createdAt: row.created_at,
+  };
+}
+
+async function fetchWithTimeout(input: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+}
+
+async function fetchRows<Row>(view: string): Promise<Row[] | null> {
+  const rows: Row[] = [];
+
+  for (let offset = 0; offset < MAX_ROWS_PER_VIEW; offset += PAGE_SIZE) {
+    const response = await fetchWithTimeout(
+      `${URL}/rest/v1/${view}?select=*&order=created_at.desc`,
+      {
+        headers: headers({
+          Range: `${offset}-${offset + PAGE_SIZE - 1}`,
+          Prefer: 'count=exact',
+        }),
+      },
+    );
+    if (!response.ok) return null;
+
+    const page = await response.json() as Row[];
+    if (!Array.isArray(page)) return null;
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+
+  return rows;
+}
+
 export async function fetchAllRemote(): Promise<FeedbackSnapshot | null> {
   if (!remoteEnabled) return null;
   try {
-    const [rRes, cRes] = await Promise.all([
-      fetch(`${URL}/rest/v1/${RATINGS}?select=*`, { headers: headers() }),
-      fetch(`${URL}/rest/v1/${COMMENTS}?select=*&order=created_at.desc`, { headers: headers() }),
+    const [ratingRows, commentRows] = await Promise.all([
+      fetchRows<RatingRow>(RATINGS_VIEW),
+      fetchRows<CommentRow>(COMMENTS_VIEW),
     ]);
-    if (!rRes.ok || !cRes.ok) return null;
-    const ratings = (await rRes.json() as RatingRow[]).map(rowToRating);
-    const comments = (await cRes.json() as CommentRow[]).map(rowToComment);
-    return { ratings, comments };
+    if (!ratingRows || !commentRows) return null;
+    return {
+      ratings: ratingRows.map(rowToRating),
+      comments: commentRows.map(rowToComment),
+    };
   } catch {
     return null;
   }
 }
 
-/** Fire-and-forget insert of a rating. Never throws. */
-export async function insertRatingRemote(entry: RatingEntry): Promise<void> {
-  if (!remoteEnabled) return;
+async function rpc(name: string, body: Record<string, unknown>): Promise<boolean> {
+  if (!remoteEnabled) return false;
   try {
-    await fetch(`${URL}/rest/v1/${RATINGS}`, {
+    const response = await fetchWithTimeout(`${URL}/rest/v1/rpc/${name}`, {
       method: 'POST',
       headers: headers({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ id: entry.id, target_type: entry.targetType, target_id: entry.targetId, scores: entry.scores, created_at: entry.createdAt }),
+      body: JSON.stringify(body),
     });
-  } catch { /* offline / blocked: local copy already saved */ }
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
-/** Fire-and-forget insert of a comment. Never throws. */
-export async function insertCommentRemote(entry: CommentEntry): Promise<void> {
-  if (!remoteEnabled) return;
-  try {
-    await fetch(`${URL}/rest/v1/${COMMENTS}`, {
-      method: 'POST',
-      headers: headers({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ id: entry.id, target_type: entry.targetType, target_id: entry.targetId, author: entry.author, text: entry.text, kind: entry.kind, helpful: entry.helpful, created_at: entry.createdAt }),
-    });
-  } catch { /* offline / blocked */ }
+export async function submitRatingRemote(entry: RatingEntry, voterId: string): Promise<boolean> {
+  return rpc('tlp_submit_rating', {
+    p_id: entry.id,
+    p_target_type: entry.targetType,
+    p_target_id: entry.targetId,
+    p_voter_id: voterId,
+    p_scores: entry.scores,
+  });
 }
 
-/** Best-effort update of a comment's helpful count. Never throws. */
-export async function bumpHelpfulRemote(id: string, helpful: number): Promise<void> {
-  if (!remoteEnabled) return;
-  try {
-    await fetch(`${URL}/rest/v1/${COMMENTS}?id=eq.${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: headers({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ helpful }),
-    });
-  } catch { /* offline / blocked */ }
+export async function submitCommentRemote(entry: CommentEntry, voterId: string): Promise<boolean> {
+  return rpc('tlp_submit_comment', {
+    p_id: entry.id,
+    p_target_type: entry.targetType,
+    p_target_id: entry.targetId,
+    p_voter_id: voterId,
+    p_author: entry.author,
+    p_text: entry.text,
+    p_kind: entry.kind,
+  });
+}
+
+export async function markHelpfulRemote(commentId: string, voterId: string): Promise<boolean> {
+  return rpc('tlp_mark_helpful', { p_comment_id: commentId, p_voter_id: voterId });
 }

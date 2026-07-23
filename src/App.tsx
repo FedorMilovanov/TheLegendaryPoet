@@ -1,10 +1,10 @@
-import { lazy, Suspense, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
-import { routeLoaders } from './lib/routeModules';
 import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
+import { musicTracks } from './data/poets';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CommandPalette from './components/command/CommandPalette';
@@ -15,22 +15,27 @@ import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
+import RouteLoadingShell from './components/RouteLoadingShell';
+import AudioChromeBoundary from './components/music/AudioChromeBoundary';
+import GlobalMiniPlayer from './components/music/GlobalMiniPlayer';
+import ImmersivePlayer from './components/music/ImmersivePlayer';
+import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
-
-// Route code and its large literary datasets are loaded only when requested.
-// The persistent shell remains in the entry chunk, so navigation, focus and the
-// one Lenis/RAF owner are not recreated while page bundles arrive.
-const HomePage = lazy(routeLoaders.home);
-const HallPage = lazy(routeLoaders.hall);
-const PoetsPage = lazy(routeLoaders.poets);
-const PoetDetailPage = lazy(routeLoaders.poet);
-const ArticlesPage = lazy(routeLoaders.articles);
-const ArticleDetailPage = lazy(routeLoaders.article);
-const EssayPage = lazy(routeLoaders.essay);
-const MusicPage = lazy(routeLoaders.music);
-const AboutPage = lazy(routeLoaders.about);
-const MyArchivePage = lazy(routeLoaders.archive);
-const NotFoundPage = lazy(routeLoaders.notFound);
+import {
+  AboutPage,
+  ArticleDetailPage,
+  ArticlesPage,
+  EssayPage,
+  HallPage,
+  HomePage,
+  MusicPage,
+  MyArchivePage,
+  NotFoundPage,
+  PoetDetailPage,
+  PoetsPage,
+  RatingsPage,
+  TrackDetailPage,
+} from './routes/routeModules';
 
 const WipeOverlay = () => (
   <motion.div
@@ -40,6 +45,7 @@ const WipeOverlay = () => (
     animate={{ scaleY: 0 }}
     exit={{ scaleY: 1 }}
     transition={{ duration: 0.72, ease: [0.76, 0, 0.24, 1] }}
+    aria-hidden="true"
   >
     <motion.div
       initial={{ opacity: 0, scale: 0.78 }}
@@ -52,71 +58,71 @@ const WipeOverlay = () => (
   </motion.div>
 );
 
-function RouteFallback() {
+let introPlayed = false;
+
+function RouteSettled({ pathname, onSettled, children }: { pathname: string; onSettled: () => void; children: ReactNode }) {
+  useEffect(() => {
+    // The effect belongs to the Suspense content tree, so it cannot run while
+    // the route skeleton is still visible. A zero-delay task lets page SEO
+    // effects update document.title before the announcement is read.
+    const timeout = window.setTimeout(onSettled, 0);
+    return () => window.clearTimeout(timeout);
+  }, [onSettled, pathname]);
+  return <>{children}</>;
+}
+
+function RouteContent() {
+  const location = useLocation();
+  const outlet = useOutlet();
+  const firstRouteRef = useRef(true);
+  const [announcement, setAnnouncement] = useState('');
+
+  const handleSettled = useCallback(() => {
+    const firstRoute = firstRouteRef.current;
+    firstRouteRef.current = false;
+    setAnnouncement(document.title || 'Страница открыта');
+    if (!firstRoute) document.getElementById('main-content')?.focus({ preventScroll: true });
+  }, []);
+
+  const page = (
+    <ErrorBoundary resetKey={location.pathname} variant="page">
+      <Suspense fallback={<RouteLoadingShell />}>
+        <RouteSettled pathname={location.pathname} onSettled={handleSettled}>
+          {outlet}
+        </RouteSettled>
+      </Suspense>
+    </ErrorBoundary>
+  );
+
   return (
-    <div
-      className="flex min-h-[70svh] items-center justify-center px-6 pt-28 text-center"
-      role="status"
-      aria-live="polite"
-      aria-label="Загрузка раздела"
-    >
-      <div className="flex flex-col items-center gap-4 text-luxury-gold/65">
-        <BrandMark size="md" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.24em]">Открываем раздел</span>
-      </div>
-    </div>
+    <>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">{announcement}</div>
+      {supportsViewTransitions ? page : (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            transition={{ duration: 0.46, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {page}
+          </motion.div>
+        </AnimatePresence>
+      )}
+    </>
   );
 }
 
-// With View Transitions the brand wipe plays only once — as the site's opening
-// reveal. Route changes are handled by the browser (see lib/viewTransition.ts).
-let introPlayed = false;
-
-const PageWrapper = ({ children }: { children: React.ReactNode }) => {
-  const showIntro = useRef(!introPlayed).current;
-  useEffect(() => {
-    introPlayed = true;
-  }, []);
-
-  if (supportsViewTransitions) {
-    return (
-      <>
-        {showIntro && <WipeOverlay />}
-        {children}
-      </>
-    );
-  }
-
-  // Fallback for browsers without the View Transitions API: the classic
-  // framer wipe + fade on every navigation.
-  return (
-    <>
-      <WipeOverlay />
-      <motion.div
-        initial={{ opacity: 0, y: 22 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -18 }}
-        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
-      >
-        {children}
-      </motion.div>
-    </>
-  );
-};
-
-/**
- * Persistent application shell.
- *
- * Header, command palette, cursor, ambient layers, footer and the Lenis owner
- * remain mounted while only the route page changes. Recreating the whole shell
- * on every navigation used to restart global listeners and RAF loops, reset
- * modal state and make browser View Transition snapshots less deterministic.
- */
-function SiteLayout({ children }: { children: React.ReactNode }) {
+function SiteLayout() {
   useAutoHideChrome();
+  const showIntro = useRef(!introPlayed).current;
+  useEffect(() => { introPlayed = true; }, []);
+
   return (
     <SmoothScroll>
       <div className="relative min-h-screen overflow-x-clip bg-[#050505] selection:bg-luxury-gold/30">
+        {showIntro && <WipeOverlay />}
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
           Перейти к содержанию
         </a>
@@ -128,72 +134,72 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
         <CustomCursor />
         <Header />
         <CommandPalette />
-        <main id="main-content" className="relative z-10 pb-32 md:pb-0">
-          {/* The keyed Routes element gives AnimatePresence one page child at a
-              time without unmounting the surrounding application shell. */}
-          {supportsViewTransitions ? children : <AnimatePresence mode="wait">{children}</AnimatePresence>}
+        <main id="main-content" tabIndex={-1} className="relative z-10 pb-32 outline-none md:pb-0">
+          <RouteContent />
         </main>
         <MobileDock />
         <ScrollToTop />
-        <div className="relative z-10">
-          <Footer />
-        </div>
+        <div className="relative z-10"><Footer /></div>
       </div>
     </SmoothScroll>
   );
 }
 
-function AnimatedRoutes() {
-  const location = useLocation();
-  const routes = (
-    <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
-      <Route path="/hall" element={<PageWrapper><HallPage /></PageWrapper>} />
-      <Route path="/poets" element={<PageWrapper><PoetsPage /></PageWrapper>} />
-      <Route path="/poets/:id" element={<PageWrapper><PoetDetailPage /></PageWrapper>} />
-      <Route path="/articles" element={<PageWrapper><ArticlesPage /></PageWrapper>} />
-      <Route path="/essays/:slug" element={<PageWrapper><EssayPage /></PageWrapper>} />
-      <Route path="/articles/:id" element={<PageWrapper><ArticleDetailPage /></PageWrapper>} />
-      <Route path="/music" element={<PageWrapper><MusicPage /></PageWrapper>} />
-      <Route path="/about" element={<PageWrapper><AboutPage /></PageWrapper>} />
-      <Route path="/archive" element={<PageWrapper><MyArchivePage /></PageWrapper>} />
-      <Route path="*" element={<PageWrapper><NotFoundPage /></PageWrapper>} />
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<SiteLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/hall" element={<HallPage />} />
+        <Route path="/poets" element={<PoetsPage />} />
+        <Route path="/poets/:id" element={<PoetDetailPage />} />
+        <Route path="/ratings" element={<RatingsPage />} />
+        <Route path="/articles" element={<ArticlesPage />} />
+        <Route path="/essays/:slug" element={<EssayPage />} />
+        <Route path="/articles/:id" element={<ArticleDetailPage />} />
+        <Route path="/music" element={<MusicPage />} />
+        <Route path="/music/:id" element={<TrackDetailPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/archive" element={<MyArchivePage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
     </Routes>
   );
+}
 
+function AudioChrome() {
+  const { currentTrack, closePlayer } = useAudioPlayer();
   return (
-    <SiteLayout>
-      <Suspense fallback={<RouteFallback />}>{routes}</Suspense>
-    </SiteLayout>
+    <AudioChromeBoundary resetKey={currentTrack?.id ?? 'idle'} onStop={closePlayer}>
+      <GlobalMiniPlayer />
+      <ImmersivePlayer />
+    </AudioChromeBoundary>
   );
 }
 
 function RoutedApp() {
   const location = useLocation();
   return (
-    <ErrorBoundary resetKey={location.pathname}>
-      <AnimatedRoutes />
-    </ErrorBoundary>
+    <>
+      <ErrorBoundary resetKey={location.pathname}>
+        <AppRoutes />
+      </ErrorBoundary>
+      <AudioChrome />
+    </>
   );
 }
 
 function App() {
-  // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-  // If a shared backend is configured, pull everyone's ratings/comments once.
-  // No-op (and no network) when it isn't — the app stays on the local store.
-  useEffect(() => {
-    void hydrateFromRemote();
-    initAnalytics();
-  }, []);
-
+  useEffect(() => { void hydrateFromRemote(); initAnalytics(); }, []);
   return (
-    <Router basename={basename}>
-      <MotionConfig reducedMotion="user">
-        <RoutedApp />
-      </MotionConfig>
-    </Router>
+    <AudioPlayerProvider tracks={musicTracks}>
+      <Router basename={basename}>
+        <MotionConfig reducedMotion="user">
+          <RoutedApp />
+        </MotionConfig>
+      </Router>
+    </AudioPlayerProvider>
   );
 }
 

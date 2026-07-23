@@ -2,14 +2,8 @@ name: CI
 
 on:
   pull_request:
-    # `work/local-images-playwright-wtoc` is temporarily included so a tiny child
-    # PR can expose full Actions results while PR #37 itself conflicts with the
-    # rapidly changing main branch. Remove this research base before final merge.
     branches: [main, work/local-images-playwright-wtoc]
   push:
-    # The temporary research-branch trigger keeps the large source/renderer
-    # integration testable even while current main has merge conflicts. Remove
-    # it when PR #37 is synchronized and ready for review.
     branches: [main, work/local-images-playwright-wtoc]
 
 concurrency:
@@ -61,6 +55,22 @@ jobs:
         run: npm run validate:yesenin-archive
       - name: Validate responsive AVIF and WebP media
         run: npm run validate:media
+      - name: Validate physical audio assets
+        run: npm run validate:audio
+      - name: Validate music catalog
+        run: npm run validate:music
+      - name: Validate music runtime invariants
+        run: npm run validate:music-runtime
+      - name: Validate audio session migrations
+        run: npm run validate:audio-session
+      - name: Validate personal archive migrations
+        run: npm run validate:archive-store
+      - name: Validate durable community storage and offline outbox
+        run: npm run validate:community-store
+      - name: Validate target-scoped community subscriptions
+        run: npm run validate:community-target-store
+      - name: Validate persistent app shell invariants
+        run: npm run validate:app-shell
       - name: Validate literary editorial rules
         run: npm run validate:style
       - name: TypeScript typecheck
@@ -87,9 +97,6 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 3
-      # Browser and citation regressions must not hide build/prerender regressions.
-      # The final gates below still fail the job when either validation failed,
-      # but every other production layer is exercised first.
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
@@ -98,6 +105,8 @@ jobs:
           VITE_BASE: /
       - name: Validate route code splitting
         run: npm run validate:route-chunks
+      - name: Validate production route and asset budgets
+        run: npm run validate:build-output
       - name: Prerender social pages
         run: npm run prerender
       - name: Validate prerendered SEO and JSON-LD

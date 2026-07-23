@@ -135,6 +135,16 @@ async function assertFittedLightbox(page: Page) {
     );
   }, { timeout: 4_000, intervals: [60, 90, 140, 220] }).toBeLessThanOrEqual(4);
 
+  // The fitted frame and image can settle on adjacent spring frames. Poll the
+  // intrinsic aspect ratio itself instead of taking one transient sample after
+  // the bounding-box poll has completed.
+  await expect.poll(async () => {
+    const geometry = await readLightboxGeometry(page);
+    const intrinsicRatio = geometry.naturalWidth / geometry.naturalHeight;
+    const renderedRatio = geometry.image.width / geometry.image.height;
+    return Math.abs(renderedRatio - intrinsicRatio) / intrinsicRatio;
+  }, { timeout: 4_000, intervals: [60, 90, 140, 220] }).toBeLessThan(0.025);
+
   const geometry = await readLightboxGeometry(page);
   expect(geometry.bodyOverflow).toBe('hidden');
   expect(geometry.image.width).toBeGreaterThan(24);
@@ -147,10 +157,6 @@ async function assertFittedLightbox(page: Page) {
   expect(geometry.viewport.top).toBeGreaterThanOrEqual(-1);
   expect(geometry.viewport.right).toBeLessThanOrEqual(geometry.viewportWidth + 1);
   expect(geometry.viewport.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
-
-  const intrinsicRatio = geometry.naturalWidth / geometry.naturalHeight;
-  const renderedRatio = geometry.image.width / geometry.image.height;
-  expect(Math.abs(renderedRatio - intrinsicRatio) / intrinsicRatio).toBeLessThan(0.025);
   expect(Math.abs(geometry.viewport.width - geometry.image.width)).toBeLessThanOrEqual(4);
   expect(Math.abs(geometry.viewport.height - geometry.image.height)).toBeLessThanOrEqual(4);
 }

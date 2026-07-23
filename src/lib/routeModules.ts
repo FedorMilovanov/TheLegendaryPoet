@@ -8,10 +8,12 @@ export const routeLoaders = {
   hall: () => import('../pages/HallPage'),
   poets: () => import('../pages/PoetsPage'),
   poet: () => import('../pages/PoetDetailPage'),
+  ratings: () => import('../pages/RatingsPage'),
   articles: () => import('../pages/ArticlesPage'),
   article: () => import('../pages/ArticleDetailPage'),
   essay: () => import('../pages/EssayPage'),
   music: () => import('../pages/MusicPage'),
+  track: () => import('../pages/TrackDetailPage'),
   about: () => import('../pages/AboutPage'),
   archive: () => import('../pages/MyArchivePage'),
   notFound: () => import('../pages/NotFoundPage'),
@@ -25,10 +27,12 @@ function loaderForPath(pathname: string): RouteLoader {
   if (path === '/hall') return routeLoaders.hall;
   if (path === '/poets') return routeLoaders.poets;
   if (path.startsWith('/poets/')) return routeLoaders.poet;
+  if (path === '/ratings') return routeLoaders.ratings;
   if (path === '/articles') return routeLoaders.articles;
   if (path.startsWith('/articles/')) return routeLoaders.article;
   if (path.startsWith('/essays/')) return routeLoaders.essay;
   if (path === '/music') return routeLoaders.music;
+  if (path.startsWith('/music/')) return routeLoaders.track;
   if (path === '/about') return routeLoaders.about;
   if (path === '/archive') return routeLoaders.archive;
   return routeLoaders.notFound;

@@ -6,6 +6,7 @@ import "./essay-media-runtime.css";
 import "./media-stability.css";
 import "./ambient-performance.css";
 import "./reduced-motion.css";
+import "./audio-player.css";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
