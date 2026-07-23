@@ -1,7 +1,8 @@
 import type { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
 
-const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+const URL = ENV?.VITE_SUPABASE_URL?.replace(/\/$/, '');
+const KEY = ENV?.VITE_SUPABASE_ANON_KEY;
 
 const RATINGS_VIEW = 'tlp_ratings_public';
 const COMMENTS_VIEW = 'tlp_comments_public';
@@ -48,11 +49,11 @@ function rowToComment(row: CommentRow): CommentEntry {
 
 async function fetchWithTimeout(input: string, init: RequestInit) {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     return await fetch(input, { ...init, signal: controller.signal });
   } finally {
-    window.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout);
   }
 }
 
