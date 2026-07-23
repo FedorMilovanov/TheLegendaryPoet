@@ -7,16 +7,20 @@ const HELPFUL_KEY = 'tlp-community-helpful-v1';
 const RATED_KEY = 'tlp-community-rated-v1';
 const COOLDOWN_MS = 30 * 1000;
 
+export interface OwnRatingRecord {
+  id: string;
+  scores: Record<string, number>;
+  updatedAt: string;
+}
+
+type RatedScopes = Record<string, OwnRatingRecord | true>;
+
 const emptySnapshot: FeedbackSnapshot = {
   ratings: [],
   comments: [],
 };
 
-/**
- * Safe localStorage write. Never throws (e.g. Safari private mode, quota
- * exceeded) — returns false so callers can surface a soft message instead of
- * dying inside a click handler.
- */
+/** Safe localStorage write: never throws in private mode or on quota errors. */
 function safeWrite(key: string, value: unknown): boolean {
   if (typeof window === 'undefined') return false;
   try {
@@ -39,21 +43,12 @@ function readRaw(): FeedbackSnapshot {
   }
 }
 
-/* ------------------------------------------------------------------ *
- * Reactive single-source store.
- *
- * Every panel on a page reads from ONE in-memory snapshot and subscribes
- * to it, so concurrent panels can no longer clobber each other's writes
- * (the previous bug) and every summary updates live after a vote. Backed
- * by useSyncExternalStore in the hook; kept in sync across tabs via the
- * `storage` event.
- * ------------------------------------------------------------------ */
 let current: FeedbackSnapshot = readRaw();
 const listeners = new Set<() => void>();
 let storageBound = false;
 
 function emit() {
-  listeners.forEach((l) => l());
+  listeners.forEach((listener) => listener());
 }
 
 function bindStorageListener() {
@@ -69,41 +64,29 @@ function bindStorageListener() {
 export function subscribeFeedback(listener: () => void): () => void {
   bindStorageListener();
   listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  return () => listeners.delete(listener);
 }
 
 export function getFeedbackSnapshot(): FeedbackSnapshot {
   return current;
 }
 
-/**
- * When a shared backend is configured (see communityRemote), pull everyone's
- * ratings/comments once at startup and make them the live snapshot. On any
- * failure the local (per-device) data is kept untouched. No-op otherwise.
- */
+/** Pull the shared snapshot once. The local cache remains the offline fallback. */
 export async function hydrateFromRemote(): Promise<void> {
   if (!remoteEnabled) return;
   const remote = await fetchAllRemote();
   if (!remote) return;
   current = remote;
-  safeWrite(STORE_KEY, current); // warm local cache for instant next load
+  safeWrite(STORE_KEY, current);
   emit();
 }
 
-/** True when ratings/comments are shared via a backend (not just local). */
 export const isFeedbackShared = remoteEnabled;
 
-/** Backwards-compatible reader (returns the live in-memory snapshot). */
 export function loadFeedback(): FeedbackSnapshot {
   return current;
 }
 
-/**
- * Apply an immutable update to the single shared snapshot, persist it, and
- * notify every subscriber. Returns false if the write was rejected.
- */
 export function mutateFeedback(update: (snapshot: FeedbackSnapshot) => FeedbackSnapshot): boolean {
   const next = update(current);
   const ok = safeWrite(STORE_KEY, next);
@@ -146,8 +129,7 @@ export function distributionFromRatings(ratings: RatingEntry[]) {
     const values = Object.values(rating.scores);
     if (!values.length) return;
     const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-    const bucket = Math.max(1, Math.min(5, Math.round(average)));
-    distribution[bucket] += 1;
+    distribution[Math.max(1, Math.min(5, Math.round(average)))] += 1;
   });
   return distribution;
 }
@@ -169,13 +151,8 @@ function loadCooldowns(): Record<string, number> {
   }
 }
 
-function saveCooldowns(value: Record<string, number>) {
-  safeWrite(COOLDOWN_KEY, value);
-}
-
 export function checkCooldown(scope: string) {
-  const cooldowns = loadCooldowns();
-  const until = cooldowns[scope] || 0;
+  const until = loadCooldowns()[scope] || 0;
   const now = Date.now();
   return { allowed: until <= now, remainingMs: Math.max(0, until - now) };
 }
@@ -183,7 +160,7 @@ export function checkCooldown(scope: string) {
 export function setCooldown(scope: string) {
   const cooldowns = loadCooldowns();
   cooldowns[scope] = Date.now() + COOLDOWN_MS;
-  saveCooldowns(cooldowns);
+  safeWrite(COOLDOWN_KEY, cooldowns);
 }
 
 function loadHelpfulVotes(): Record<string, true> {
@@ -196,22 +173,17 @@ function loadHelpfulVotes(): Record<string, true> {
   }
 }
 
-function saveHelpfulVotes(value: Record<string, true>) {
-  safeWrite(HELPFUL_KEY, value);
-}
-
 export function canMarkHelpful(scope: string) {
-  const votes = loadHelpfulVotes();
-  return !votes[scope];
+  return !loadHelpfulVotes()[scope];
 }
 
 export function rememberHelpful(scope: string) {
   const votes = loadHelpfulVotes();
   votes[scope] = true;
-  saveHelpfulVotes(votes);
+  safeWrite(HELPFUL_KEY, votes);
 }
 
-function loadRatedScopes(): Record<string, true> {
+function loadRatedScopes(): RatedScopes {
   if (typeof window === 'undefined') return {};
   try {
     const raw = window.localStorage.getItem(RATED_KEY);
@@ -221,17 +193,26 @@ function loadRatedScopes(): Record<string, true> {
   }
 }
 
-function saveRatedScopes(value: Record<string, true>) {
-  safeWrite(RATED_KEY, value);
+export function getOwnRating(scope: string): OwnRatingRecord | null {
+  const value = loadRatedScopes()[scope];
+  if (!value || value === true || typeof value !== 'object') return null;
+  if (typeof value.id !== 'string' || !value.id || !value.scores || typeof value.scores !== 'object') return null;
+  return value;
 }
 
 export function hasRated(scope: string) {
-  const rated = loadRatedScopes();
-  return !!rated[scope];
+  return Boolean(loadRatedScopes()[scope]);
 }
 
+export function rememberRating(scope: string, record: OwnRatingRecord) {
+  const rated = loadRatedScopes();
+  rated[scope] = record;
+  safeWrite(RATED_KEY, rated);
+}
+
+/** Compatibility for older callers and pre-update local data. */
 export function rememberRated(scope: string) {
   const rated = loadRatedScopes();
-  rated[scope] = true;
-  saveRatedScopes(rated);
+  if (!rated[scope]) rated[scope] = true;
+  safeWrite(RATED_KEY, rated);
 }
