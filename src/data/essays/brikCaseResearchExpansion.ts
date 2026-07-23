@@ -40,6 +40,14 @@ const correspondenceSources: EssaySource[] = [
     year: 1991,
     note: 'Подтверждает издательские данные; полный просмотр библиотечной копии ограничен условиями электронной читальной среды.',
   },
+  {
+    id: 'rgali-brik-katanyan-fund-2577',
+    title: 'РГАЛИ. Фонд 2577: Л. Ю. Брик и В. А. Катанян',
+    url: 'https://rgali.ru/fund/7124',
+    kind: 'archive',
+    institution: 'Российский государственный архив литературы и искусства',
+    note: 'Официальный путеводитель фонда отдельно учитывает 111 писем Лили Маяковскому, 197 писем Маяковского Лиле и 224 письма Осипа Лиле. Это числа конкретных архивных рубрик, а не состав всего редакционного корпуса Янгфельдта.',
+  },
 ];
 
 const expansionBlocks: EssayBlock[] = [
@@ -63,6 +71,11 @@ const expansionBlocks: EssayBlock[] = [
     type: 'paragraph',
     text: 'Полное издание переписки 1915–1930 годов включает 416 нумерованных единиц: письма, телеграммы, записки, открытки и две дарственные или иные надписи. Это не только обращения Маяковского к Лиле: внутри корпуса есть ответы Лили, совместные послания Лили и Осипа, самостоятельные телеграммы Осипа и документы, подписанные сразу несколькими участниками. Поэтому историю нельзя строить по одному голосу страдающего поэта, будто другая сторона никогда не отвечала.',
     sourceIds: ['jangfeldt-correspondence-1991', 'neb-jangfeldt-correspondence-1991'],
+  },
+  {
+    type: 'paragraph',
+    text: 'Официальный путеводитель фонда Лили Брик и Василия Катаняна в РГАЛИ даёт другие числа: 111 писем Лили Маяковскому и 197 писем Маяковского Лиле. Это не опровержение 416 единиц Янгфельдта. Архив считает документы в конкретных рубриках одного фонда; научное издание объединяет письма, телеграммы, записки, открытки, совместные документы и тексты, известные по копиям из неоднородных источников. Поэтому каждое число должно сопровождаться ответом на вопрос: что именно и где считается?',
+    sourceIds: ['jangfeldt-correspondence-1991', 'rgali-brik-katanyan-fund-2577'],
   },
   {
     type: 'paragraph',
@@ -228,7 +241,7 @@ export function expandBrikCase(base: Essay): Essay {
   if (insertionIndex < 0) {
     return {
       ...base,
-      readTime: Math.max(base.readTime, 46),
+      readTime: Math.max(base.readTime, 47),
       blocks: [...base.blocks, ...expansionBlocks],
       sources,
     };
@@ -236,7 +249,7 @@ export function expandBrikCase(base: Essay): Essay {
 
   return {
     ...base,
-    readTime: Math.max(base.readTime, 46),
+    readTime: Math.max(base.readTime, 47),
     blocks: [
       ...base.blocks.slice(0, insertionIndex),
       ...expansionBlocks,
