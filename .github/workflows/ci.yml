@@ -26,7 +26,15 @@ jobs:
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Typecheck
-        run: npm run typecheck
+        run: npm run typecheck 2>&1 | tee typecheck.log
+      - name: Upload typecheck diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-diagnostics
+          path: typecheck.log
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
