@@ -98,11 +98,14 @@ export interface MusicTrack {
   availability: MusicTrackAvailability;
   /** Stable editorial order. Lower values are shown and played first unless the user chooses another sort. */
   releaseOrder: number;
+  /** Calendar year associated with the publication or announced target date. */
+  releaseYear: number;
   /** Verified ISO publication date. Never use this for an unpublished announcement. */
   publishedAt?: string;
   /** Optional ISO target date for a coming-soon announcement. */
   scheduledFor?: string;
-  duration: string;
+  /** Human-readable duration. Required only after a master has been verified. */
+  duration?: string;
   durationSeconds?: number;
   /** Direct, playable audio file. Required for published releases. */
   audioUrl?: string;
@@ -113,7 +116,6 @@ export interface MusicTrack {
   externalUrl?: string;
   videoUrl?: string;
   description?: string;
-  releaseYear?: number;
   featured?: boolean;
   credits?: string[];
   rightsNotice?: string;
