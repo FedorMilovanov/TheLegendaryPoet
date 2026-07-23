@@ -45,7 +45,14 @@
 - Финальный документальный кластер:
   - [`sources/death-case-no50-2005.md`](./sources/death-case-no50-2005.md) — точный библиографический паспорт 672-страничного издания дела № 50 и границы его использования до получения полного тома;
   - [`verification/final-letter-vsem-provenance-pass1.md`](./verification/final-letter-vsem-provenance-pass1.md) — разделение подлинника, фотокопии РГАЛИ и позднего факсимиле письма «Всем»;
-  - [`verification/claim-ledger-pass7-death-case-and-final-letter.md`](./verification/claim-ledger-pass7-death-case-and-final-letter.md) — утверждения `READY/VERIFY` по делу № 50, письму и экспертизе.
+  - [`verification/claim-ledger-pass7-death-case-and-final-letter.md`](./verification/claim-ledger-pass7-death-case-and-final-letter.md) — утверждения `READY/VERIFY` по делу № 50, письму и экспертизе;
+  - [`sources/polonskaya-memoirs-1938-1987-1990.md`](./sources/polonskaya-memoirs-1938-1987-1990.md) — паспорт двух рукописных тетрадей Полонской, вставных листов, машинописи и редакций 1987/1990 годов;
+  - [`verification/polonskaya-publication-history-pass1.md`](./verification/polonskaya-publication-history-pass1.md) — карта текстовых свидетелей и подтверждённое противоречие `без купюр ↔ с восполнением купюр`;
+  - [`verification/polonskaya-final-days-12-14-april-pass1.md`](./verification/polonskaya-final-days-12-14-april-pass1.md) — разложение мемуарного рассказа о 12–14 апреля на события, поздние оценки и необходимые проверки;
+  - [`verification/polonskaya-protocol-14-april-1930-fragments-pass1.md`](./verification/polonskaya-protocol-14-april-1930-fragments-pass1.md) — карта доступных фрагментов протокола 1930 года без подмены полного документа;
+  - [`verification/claim-ledger-pass8-polonskaya.md`](./verification/claim-ledger-pass8-polonskaya.md) — утверждения по рукописи, публикациям и маргиналиям Лили;
+  - [`verification/claim-ledger-pass9-polonskaya-protocol.md`](./verification/claim-ledger-pass9-polonskaya-protocol.md) — статусы расхождений между протоколом и мемуаром;
+  - [`verification/archive-request-pack-death-case-polonskaya.md`](./verification/archive-request-pack-death-case-polonskaya.md) — готовый пакет запросов по музейным инвентарным номерам, делу № 50 и листам протоколов.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
