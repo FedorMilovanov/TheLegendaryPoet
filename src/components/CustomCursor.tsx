@@ -15,6 +15,7 @@ const CustomCursor = () => {
   const [insideWindow, setInsideWindow] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const hoverRef = useRef(false);
+  const activatedRef = useRef(false);
 
   useEffect(() => {
     const finePointer = window.matchMedia('(pointer: fine)');
@@ -37,6 +38,7 @@ const CustomCursor = () => {
   }, [onHall]);
 
   useEffect(() => {
+    activatedRef.current = false;
     if (!enabled) {
       setInsideWindow(false);
       setIsHovering(false);
@@ -44,8 +46,6 @@ const CustomCursor = () => {
       document.body.classList.remove('has-custom-cursor');
       return;
     }
-
-    document.body.classList.add('has-custom-cursor');
 
     const updateHover = (target: EventTarget | null) => {
       const element = target instanceof Element ? target : null;
@@ -59,12 +59,18 @@ const CustomCursor = () => {
       if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
       rawX.set(event.clientX);
       rawY.set(event.clientY);
-      setInsideWindow((current) => current || true);
+      if (!activatedRef.current) {
+        activatedRef.current = true;
+        document.body.classList.add('has-custom-cursor');
+      }
+      setInsideWindow(true);
       updateHover(event.target);
     };
     const onPointerOver = (event: PointerEvent) => updateHover(event.target);
     const onPointerLeave = () => setInsideWindow(false);
-    const onPointerEnter = () => setInsideWindow(true);
+    const onPointerEnter = () => {
+      if (activatedRef.current) setInsideWindow(true);
+    };
     const onBlur = () => setInsideWindow(false);
     const onVisibility = () => {
       if (document.visibilityState !== 'visible') setInsideWindow(false);
