@@ -20,8 +20,11 @@
     "validate:archive-store": "tsx scripts/validate-personal-archive-store.ts",
     "validate:community-store": "tsx scripts/validate-community-store.ts",
     "validate:community-target-store": "tsx scripts/validate-community-target-store.ts",
+    "validate:app-shell": "tsx scripts/validate-app-shell.ts",
+    "validate:build-output": "tsx scripts/validate-build-output.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
-    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style && npm run typecheck",
+    "check:content": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style",
+    "check": "npm run check:content && npm run validate:app-shell && npm run typecheck",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "prerender": "tsx scripts/prerender-og.mjs"
   },
