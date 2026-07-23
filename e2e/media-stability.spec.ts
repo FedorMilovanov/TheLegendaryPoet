@@ -59,6 +59,8 @@ async function assertNoHorizontalOverflow(page: Page) {
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 }
 
+type ReadingPosition = { clientWidth: number; scrollY: number };
+
 type LightboxGeometry = {
   viewport: { left: number; top: number; right: number; bottom: number; width: number; height: number };
   image: { left: number; top: number; right: number; bottom: number; width: number; height: number };
@@ -68,6 +70,24 @@ type LightboxGeometry = {
   viewportWidth: number;
   viewportHeight: number;
 };
+
+async function readPosition(page: Page): Promise<ReadingPosition> {
+  return page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollY: window.scrollY,
+  }));
+}
+
+async function assertPositionRestored(page: Page, expected: ReadingPosition) {
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.clientWidth),
+    { timeout: 3_000 },
+  ).toBe(expected.clientWidth);
+  await expect.poll(
+    () => page.evaluate((expectedY) => Math.abs(window.scrollY - expectedY), expected.scrollY),
+    { timeout: 3_000 },
+  ).toBeLessThanOrEqual(2);
+}
 
 async function readLightboxGeometry(page: Page): Promise<LightboxGeometry> {
   return page.evaluate(() => {
@@ -95,9 +115,6 @@ async function assertFittedLightbox(page: Page) {
   await expect(dialog).toBeVisible();
   await assertDecoded(image);
 
-  // Springs are intentionally soft, but the final fitted state must be exact.
-  // Polling the actual boxes distinguishes a transient animation frame from the
-  // persistent black-frame regression without padding every image with a fixed wait.
   await expect.poll(async () => {
     const geometry = await readLightboxGeometry(page);
     return Math.max(
@@ -136,9 +153,6 @@ async function exerciseTilt(page: Page, trigger: Locator) {
   );
   if (!(await tilt.count())) return;
 
-  // Portrait cards can be taller than the viewport. Locator.hover chooses a real,
-  // actionable point inside the visible intersection, unlike raw coordinates that
-  // may accidentally land above or below the browser and never dispatch pointerenter.
   await trigger.evaluate((node) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
   await trigger.hover();
 
@@ -224,15 +238,9 @@ for (const slug of essays) {
 
       if (desktop) await exerciseTilt(page, trigger);
 
-      // Playwright may perform one final actionability scroll while focusing a
-      // tall mobile trigger. Focus first, then record the true pre-modal reading
-      // position that the application is responsible for restoring.
       await trigger.focus();
       await expect(trigger).toBeFocused();
-      const beforeOpen = await page.evaluate(() => ({
-        clientWidth: document.documentElement.clientWidth,
-        scrollY: window.scrollY,
-      }));
+      let expectedAfterClose = await readPosition(page);
 
       await trigger.click();
       await assertFittedLightbox(page);
@@ -256,6 +264,15 @@ for (const slug of essays) {
         await page.keyboard.press('Escape');
         await expect(page.getByTestId('essay-image-dialog')).toBeHidden();
         await expect(trigger).toBeFocused();
+        await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
+        await assertPositionRestored(page, expectedAfterClose);
+
+        // A second open is a new modal session. Focusing/clicking after the first
+        // close may legitimately update the actionable mobile viewport position;
+        // the final assertion must therefore compare with this session's own
+        // captured coordinate, not with the previous modal's snapshot.
+        await trigger.focus();
+        expectedAfterClose = await readPosition(page);
         await trigger.click();
         await assertFittedLightbox(page);
 
@@ -271,15 +288,7 @@ for (const slug of essays) {
       }
 
       await closeAndAssertRestored(page, trigger);
-
-      await expect.poll(
-        () => page.evaluate(() => document.documentElement.clientWidth),
-        { timeout: 3_000 },
-      ).toBe(beforeOpen.clientWidth);
-      await expect.poll(
-        () => page.evaluate((expectedY) => Math.abs(window.scrollY - expectedY), beforeOpen.scrollY),
-        { timeout: 3_000 },
-      ).toBeLessThanOrEqual(2);
+      await assertPositionRestored(page, expectedAfterClose);
     }
 
     await assertNoHorizontalOverflow(page);
