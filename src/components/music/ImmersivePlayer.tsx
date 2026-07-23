@@ -14,20 +14,12 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { asset } from '../../utils/asset';
+import { useDialogSurface } from '../../hooks/useDialogSurface';
+import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
 import { formatAudioTime } from './audioPresentation';
 import { getTrackTheme, getTrackThemeStyle } from './trackTheme';
-
-const focusableSelector = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',');
 
 export default function ImmersivePlayer() {
   const {
@@ -55,6 +47,14 @@ export default function ImmersivePlayer() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const { isTopmost } = useDialogSurface({
+    open: immersiveOpen && Boolean(currentTrack),
+    dialogRef,
+    initialFocusRef: closeButtonRef,
+    onClose: closeImmersive,
+    label: 'immersive-player',
+  });
+
   const waveform = useMemo(
     () => currentTrack?.waveform?.length
       ? currentTrack.waveform
@@ -64,38 +64,11 @@ export default function ImmersivePlayer() {
 
   useEffect(() => {
     if (!immersiveOpen) return;
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    window.setTimeout(() => closeButtonRef.current?.focus(), 0);
 
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (!isTopmost()) return;
       const target = event.target as HTMLElement | null;
-      const interactive = target?.matches('input, button, a, select, textarea, [contenteditable="true"]') ?? false;
-
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeImmersive();
-        return;
-      }
-
-      if (event.key === 'Tab') {
-        const focusable = [...(dialogRef.current?.querySelectorAll<HTMLElement>(focusableSelector) ?? [])]
-          .filter((element) => !element.hasAttribute('disabled') && element.offsetParent !== null);
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
-        return;
-      }
+      const interactive = target?.matches('input, button, a, select, textarea, summary, [contenteditable="true"]') ?? false;
 
       if (!interactive && event.code === 'Space' && currentTrack) {
         event.preventDefault();
@@ -113,13 +86,8 @@ export default function ImmersivePlayer() {
     };
 
     window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-      previousFocus?.focus();
-    };
-  }, [closeImmersive, currentTrack, immersiveOpen, seekBy, toggleMute, toggleTrack]);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [currentTrack, immersiveOpen, isTopmost, seekBy, toggleMute, toggleTrack]);
 
   if (typeof document === 'undefined') return null;
 
@@ -141,25 +109,32 @@ export default function ImmersivePlayer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45 }}
-            className="fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white"
+            className="fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white outline-none"
             role="dialog"
             aria-modal="true"
             aria-labelledby="immersive-track-title"
             aria-describedby={currentTrack.description ? 'immersive-track-description' : undefined}
+            tabIndex={-1}
             style={getTrackThemeStyle(currentTrack)}
           >
             {currentTrack.wideCoverUrl && (
-              <motion.img
-                src={asset(currentTrack.wideCoverUrl)}
-                alt=""
-                aria-hidden="true"
+              <motion.div
                 initial={{ scale: 1.06, opacity: 0 }}
                 animate={{ scale: playing ? 1.025 : 1.04, opacity: 0.72 }}
                 exit={{ scale: 1.07, opacity: 0 }}
                 transition={{ scale: { duration: 8, ease: 'easeOut' }, opacity: { duration: 0.7 } }}
-                className="fixed inset-0 -z-30 h-full w-full object-cover"
-                style={{ objectPosition: theme.heroPosition }}
-              />
+                className="fixed inset-0 -z-30"
+              >
+                <ResilientImage
+                  src={currentTrack.wideCoverUrl}
+                  alt=""
+                  aria-hidden="true"
+                  priority
+                  sizes="100vw"
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: theme.heroPosition }}
+                />
+              </motion.div>
             )}
             <div className="fixed inset-0 -z-20 bg-[linear-gradient(90deg,rgba(3,4,5,.94)_0%,rgba(3,4,5,.64)_44%,rgba(3,4,5,.4)_70%,rgba(3,4,5,.8)_100%)]" />
             <div className="fixed inset-0 -z-20 bg-gradient-to-b from-black/20 via-transparent to-[#030405]" />
@@ -171,8 +146,16 @@ export default function ImmersivePlayer() {
             <div className="mx-auto grid min-h-[100svh] max-w-7xl items-center gap-8 px-5 pb-[calc(4rem_+_env(safe-area-inset-bottom))] pt-[calc(6.5rem_+_env(safe-area-inset-top))] sm:px-8 lg:grid-cols-[minmax(280px,420px)_1fr] lg:gap-16 lg:px-12">
               <motion.div initial={{ opacity: 0, x: -26 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }} className="relative mx-auto w-full max-w-[min(72vw,420px)] lg:max-w-[420px]">
                 <div className="absolute -inset-10 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--track-secondary) 20%, transparent), transparent 68%)' }} />
-                <div className="relative overflow-hidden rounded-[2rem] border border-white/16 bg-black shadow-[0_45px_130px_rgba(0,0,0,.72)]">
-                  {currentTrack.coverUrl && <img src={asset(currentTrack.coverUrl)} alt={`Обложка «${currentTrack.title}»`} className={`aspect-square w-full object-cover transition duration-[2400ms] ease-out ${playing ? 'scale-[1.03] saturate-[1.08]' : 'scale-100'}`} />}
+                <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-white/16 bg-black shadow-[0_45px_130px_rgba(0,0,0,.72)]">
+                  {currentTrack.coverUrl && (
+                    <ResilientImage
+                      src={currentTrack.coverUrl}
+                      alt={`Обложка «${currentTrack.title}»`}
+                      priority
+                      sizes="(min-width: 1024px) 420px, 72vw"
+                      className={`h-full w-full object-cover transition duration-[2400ms] ease-out ${playing ? 'scale-[1.03] saturate-[1.08]' : 'scale-100'}`}
+                    />
+                  )}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/48 via-transparent to-white/[0.06]" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/46 px-4 py-3 text-[9px] font-bold uppercase tracking-[0.16em] text-white/58 backdrop-blur-xl">
                     <span aria-live="polite">{status === 'error' ? 'Нужна повторная загрузка' : busy ? 'Подготовка аудио' : playing ? 'Сейчас звучит' : ended ? 'Прослушано' : 'Пауза'}</span>

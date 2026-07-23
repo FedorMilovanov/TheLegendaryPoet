@@ -6,10 +6,10 @@ import { getAllEssays } from '../data/essays';
 import type { Essay } from '../types/essay';
 import ArticleCard from '../components/articles/ArticleCard';
 import EssayCard from '../components/essay/EssayCard';
+import ResilientImage from '../components/media/ResilientImage';
 import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
 import { articlesCollectionStructuredData } from '../utils/collectionStructuredData';
-import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 const articles = getAllArticles();
@@ -40,10 +40,10 @@ type EssayGroup = {
   clustered: boolean;
 };
 
-function groupEssays(essays: Essay[]): EssayGroup[] {
+function groupEssays(sourceEssays: Essay[]): EssayGroup[] {
   const groups = new Map<string, EssayGroup>();
 
-  for (const essay of essays) {
+  for (const essay of sourceEssays) {
     const id = essay.cluster?.id ?? 'standalone';
     const label = essay.cluster?.label ?? 'Отдельные исследования';
     const group = groups.get(id) ?? { id, label, essays: [], clustered: Boolean(essay.cluster) };
@@ -90,12 +90,12 @@ export default function ArticlesPage() {
   return (
     <div className="min-h-screen bg-[#050505] pb-20">
       <div className="relative overflow-hidden pt-40 pb-16">
-        <img
-          src={asset('/images/sections/articles-cover.jpg')}
+        <ResilientImage
+          src="/images/sections/articles-cover.jpg"
           alt=""
           aria-hidden="true"
-          loading="eager"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          priority
+          sizes="100vw"
           className="absolute inset-0 h-full w-full object-cover opacity-30"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-[#050505]" />
@@ -127,7 +127,7 @@ export default function ArticlesPage() {
                   {titleCase('Биографии, произведения и архив')}
                 </h2>
               </div>
-              <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+              <div className="flex max-w-full gap-2 overflow-x-auto pb-1" aria-label="Фильтр тематических кластеров">
                 <button
                   type="button"
                   onClick={() => setSelectedCluster('')}
@@ -191,22 +191,25 @@ export default function ArticlesPage() {
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">
             <Filter size={14} /> Фильтр разделов
           </div>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                type="button"
-                onClick={() => setSelectedCategory(category.value)}
-                aria-pressed={selectedCategory === category.value}
-                className={`min-h-11 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
-                  selectedCategory === category.value
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
-                    : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-3" aria-label="Фильтр статей">
+            {categories.map((category) => {
+              const active = selectedCategory === category.value;
+              return (
+                <button
+                  key={category.value}
+                  type="button"
+                  onClick={() => setSelectedCategory(category.value)}
+                  aria-pressed={active}
+                  className={`min-h-11 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
+                    active
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
+                      : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
+                  }`}
+                >
+                  {category.label}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { useAppNavigate } from '../ui/Link';
-import { pauseSmoothScroll, resumeSmoothScroll } from '../../utils/smoothScroll';
 import { normalizeCommandText } from './commandSearch';
 import type { CommandItem } from './commandItems';
 import CommandResult from './CommandResult';
@@ -28,6 +29,8 @@ export default function CommandPalette() {
   const [items, setItems] = useState<CommandItem[]>([]);
   const [indexStatus, setIndexStatus] = useState<IndexStatus>('idle');
   const navigate = useAppNavigate();
+  const location = useLocation();
+  const previousPathRef = useRef(location.pathname);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const restoreOnCloseRef = useRef(true);
@@ -55,10 +58,18 @@ export default function CommandPalette() {
     setActiveIndex(0);
   }, []);
 
+  useDialogSurface({
+    open,
+    dialogRef,
+    initialFocusRef: inputRef,
+    onClose: close,
+    label: 'command-palette',
+    restoreOnCloseRef,
+  });
+
   const select = useCallback((path: string) => {
-    // Normal dismissal returns the reader to the exact paragraph. Navigation is
-    // different: restoring the old page's Y coordinate after the route changed
-    // would drop the reader halfway down the destination longread.
+    // Navigating differs from dismissing the modal: restoring the old article's
+    // Y coordinate or opener after the route changed would corrupt the target.
     restoreOnCloseRef.current = false;
     navigate(path);
     close();
@@ -66,9 +77,6 @@ export default function CommandPalette() {
 
   // The search index imports poet profiles, longreads, articles and music. Keep
   // that data out of the persistent shell until the user expresses search intent.
-  // Re-enter even while a shared promise is in flight: closing the palette only
-  // cancels this component subscription. A failed import retries on the next
-  // explicit open instead of spinning in an automatic error loop.
   useEffect(() => {
     if (!open || items.length > 0) return;
 
@@ -93,19 +101,11 @@ export default function CommandPalette() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
+        if (event.repeat) return;
         setOpen((value) => {
           if (!value) restoreOnCloseRef.current = true;
           return !value;
         });
-        return;
-      }
-
-      // The lazy index can still be loading when the dialog first paints, before
-      // its deferred focus frame reaches the input. Escape must nevertheless
-      // close the page-level modal from anywhere in the window.
-      if (event.key === 'Escape' && open) {
-        event.preventDefault();
-        close();
       }
     };
     window.addEventListener('tlp-open-command-palette', openPalette);
@@ -114,9 +114,12 @@ export default function CommandPalette() {
       window.removeEventListener('tlp-open-command-palette', openPalette);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [close, open, openPalette]);
+  }, [openPalette]);
 
   useEffect(() => setActiveIndex(0), [query]);
+  useEffect(() => {
+    setActiveIndex((index) => results.length > 0 ? Math.min(index, results.length - 1) : 0);
+  }, [results.length]);
 
   // Keep the keyboard-selected option visible inside the results scroller.
   useEffect(() => {
@@ -124,53 +127,18 @@ export default function CommandPalette() {
     document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
   }, [activeOptionId, open]);
 
-  // A real page-level modal: freeze both Lenis and native body scrolling, keep
-  // the viewport width stable, focus without scrolling, then restore the exact
-  // reading position and opener when the palette closes without navigation.
+  // A route may change through browser history or another persistent control.
+  // Close the old-route dialog without restoring coordinates into the new page.
   useEffect(() => {
-    if (!open) return;
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const body = document.body;
-    const previousOverflow = body.style.overflow;
-    const previousPaddingRight = body.style.paddingRight;
-    const scrollY = window.scrollY;
-    const clientWidthBefore = document.documentElement.clientWidth;
-    const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
-
-    pauseSmoothScroll();
-    body.style.overflow = 'hidden';
-    const releasedWidth = Math.max(0, document.documentElement.clientWidth - clientWidthBefore);
-    if (releasedWidth > 0) body.style.paddingRight = `${currentPadding + releasedWidth}px`;
-    const focusFrame = requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
-
-    return () => {
-      cancelAnimationFrame(focusFrame);
-      body.style.overflow = previousOverflow;
-      body.style.paddingRight = previousPaddingRight;
-
-      const shouldRestore = restoreOnCloseRef.current;
-      restoreOnCloseRef.current = true;
-      resumeSmoothScroll(shouldRestore ? scrollY : undefined);
-      if (shouldRestore) {
-        requestAnimationFrame(() => previouslyFocused?.focus?.({ preventScroll: true }));
-      }
-    };
-  }, [open]);
-
-  // While the palette is open, pause any full-screen background interaction
-  // (the 3D hall's wheel/drag rail camera) so scrolling drives the results.
-  useEffect(() => {
-    try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open; } catch { /* noop */ }
-    return () => { try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false; } catch { /* noop */ } };
-  }, [open]);
+    if (previousPathRef.current === location.pathname) return;
+    previousPathRef.current = location.pathname;
+    if (open) {
+      restoreOnCloseRef.current = false;
+      close();
+    }
+  }, [close, location.pathname, open]);
 
   const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      close();
-      return;
-    }
     if (event.key === 'ArrowDown') {
       if (results.length === 0) return;
       event.preventDefault();
@@ -186,22 +154,6 @@ export default function CommandPalette() {
     if (event.key === 'Enter' && results[activeIndex]) {
       event.preventDefault();
       select(results[activeIndex].path);
-      return;
-    }
-    if (event.key === 'Tab') {
-      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus({ preventScroll: true });
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus({ preventScroll: true });
-      }
     }
   };
 
@@ -223,7 +175,7 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-black/78 px-4 py-24 backdrop-blur-xl"
+      className="fixed inset-0 z-[200] overflow-y-auto overscroll-contain bg-black/78 px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
@@ -234,11 +186,12 @@ export default function CommandPalette() {
         role="dialog"
         aria-modal="true"
         aria-label="Поиск по сайту"
+        tabIndex={-1}
         onKeyDown={onDialogKeyDown}
-        className="mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)]"
+        className="mx-auto flex max-h-[min(78dvh,46rem)] max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)] outline-none"
         data-testid="command-palette-dialog"
       >
-        <div className="flex items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
+        <div className="flex flex-none items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
           <Search size={20} className="text-cyan-300" />
           <input
             ref={inputRef}
@@ -250,15 +203,18 @@ export default function CommandPalette() {
             aria-expanded={results.length > 0}
             aria-activedescendant={activeOptionId}
             aria-busy={indexStatus === 'loading'}
+            aria-autocomplete="list"
             role="combobox"
-            className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
+            autoComplete="off"
+            maxLength={120}
+            className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
             data-testid="command-palette-input"
           />
           <button
             type="button"
             onClick={close}
             aria-label="Закрыть поиск"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-cyan-100/50 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-cyan-100/50 transition hover:bg-white/[0.05] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
             data-testid="command-palette-close"
           >
             <X size={20} />
@@ -269,7 +225,7 @@ export default function CommandPalette() {
           role="listbox"
           aria-label="Результаты поиска"
           aria-busy={indexStatus === 'loading'}
-          className="max-h-[60vh] space-y-2 overflow-y-auto p-3"
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3"
         >
           {results.map((item, index) => (
             <CommandResult

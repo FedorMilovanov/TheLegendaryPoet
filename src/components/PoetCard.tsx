@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link } from './ui/Link';
 import { Star, Calendar, MapPin, ArrowRight, BookOpenText } from 'lucide-react';
-import { asset } from '../utils/asset';
 import { vtShared } from '../lib/viewTransition';
 import { Poet } from '../types/poet';
 import { getAllEssays } from '../data/essays';
 import TiltCard from './TiltCard';
+import PoetImage from './PoetImage';
 import FeedbackMiniSummary from './community/FeedbackMiniSummary';
+import type { ImageLoadState } from './media/ResilientImage';
 
 interface PoetCardProps {
   poet: Poet;
@@ -24,6 +25,7 @@ function researchLabel(count: number): string {
 const PoetCard = ({ poet }: PoetCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const researchCount = getAllEssays().filter((essay) => essay.poetId === poet.id).length;
+  const handleImageState = (state: ImageLoadState) => setImageLoaded(state !== 'loading');
 
   return (
     <Link to={`/poets/${poet.id}`} className="group block h-full" data-testid="poet-card-link">
@@ -37,14 +39,17 @@ const PoetCard = ({ poet }: PoetCardProps) => {
           <div className="relative h-72 flex-shrink-0 overflow-hidden bg-[#050505]">
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-luxury-dark-200/20 via-transparent to-black/30" />
 
-            <img
-              src={asset(poet.photo)}
+            <PoetImage
+              src={poet.photo}
+              name={poet.name}
               alt={poet.name}
+              width={800}
+              height={1000}
+              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
               style={vtShared(`poet-portrait-${poet.id}`)}
               loading="lazy"
               decoding="async"
-              onLoad={() => setImageLoaded(true)}
-              onError={() => setImageLoaded(true)}
+              onStateChange={handleImageState}
               data-loaded={imageLoaded ? 'true' : 'false'}
               data-testid="poet-card-image"
               className={`poet-card-image h-full w-full object-cover object-[center_18%] contrast-[1.03] saturate-[1.02] ${imageLoaded ? 'is-loaded' : ''}`}
