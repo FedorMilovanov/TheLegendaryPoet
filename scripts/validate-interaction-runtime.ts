@@ -69,6 +69,24 @@ expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_
 second.release();
 expect(scrollCalls.length === 1, 'overlay release must be idempotent');
 
+const lowerControl = {} as HTMLElement;
+const upperControl = {} as HTMLElement;
+const replacementControl = {} as HTMLElement;
+const lowerRoot = { contains: (candidate: Node) => candidate === lowerControl } as HTMLElement;
+const upperRoot = { contains: (candidate: Node) => candidate === upperControl } as HTMLElement;
+const replacementRoot = { contains: (candidate: Node) => candidate === replacementControl } as HTMLElement;
+const lower = overlay.acquireOverlayLock('lower', lowerRoot);
+const upper = overlay.acquireOverlayLock('upper', upperRoot);
+expect(overlay.canRestoreOverlayFocus(upperControl), 'focus may return to the current topmost dialog');
+expect(!overlay.canRestoreOverlayFocus(lowerControl), 'focus must not escape into a covered lower dialog');
+upper.setRoot(replacementRoot);
+expect(overlay.canRestoreOverlayFocus(replacementControl), 'a keyed dialog replacement must update the active focus root');
+expect(!overlay.canRestoreOverlayFocus(upperControl), 'a detached previous dialog root must stop owning focus');
+upper.release();
+expect(overlay.canRestoreOverlayFocus(lowerControl), 'closing the top dialog must return focus ownership to the lower dialog');
+lower.release();
+expect(scrollCalls.length === 2, 'each complete overlay session must restore scroll exactly once');
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
@@ -83,9 +101,12 @@ const smoothSource = read('src/utils/smoothScroll.ts');
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
 expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
+expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must guard focus restoration ownership');
 expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog keyboard containment must run in capture phase');
 expect(dialogSource.includes('handle.isTopmost()'), 'only the topmost dialog may process Escape and Tab');
 expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus');
+expect(dialogSource.includes('handleRef.current?.setRoot(dialogRef.current)'), 'keyed dialog replacements must refresh the overlay root');
+expect(dialogSource.includes('canRestoreOverlayFocus(previouslyFocused)'), 'dialog close must not restore focus beneath another surface');
 expect(dialogSource.includes('previouslyFocused.focus({ preventScroll: true })'), 'dialog close must restore focus without moving the page');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
