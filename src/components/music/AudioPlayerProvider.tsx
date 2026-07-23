@@ -102,13 +102,13 @@ function clearMediaSession() {
 
 function failureFromMediaError(error: MediaError | null): AudioFailure {
   switch (error?.code) {
-    case MediaError.MEDIA_ERR_ABORTED:
+    case 1:
       return { reason: 'aborted', message: 'Загрузка аудио была прервана.' };
-    case MediaError.MEDIA_ERR_NETWORK:
+    case 2:
       return { reason: 'network', message: 'Соединение прервалось во время загрузки аудио.' };
-    case MediaError.MEDIA_ERR_DECODE:
+    case 3:
       return { reason: 'decode', message: 'Браузер не смог декодировать аудиофайл.' };
-    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+    case 4:
       return { reason: 'source', message: 'Аудиофайл недоступен или не поддерживается браузером.' };
     default:
       return { reason: 'unknown', message: 'Не удалось подготовить аудио к воспроизведению.' };
@@ -278,6 +278,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     suppressPausePersistenceRef.current = !audio.paused || playAttemptVersionRef.current !== null;
     playAttemptVersionRef.current = null;
     audio.pause();
+    clearMediaSession();
 
     currentTrackRef.current = track;
     setCurrentTrack(track);
@@ -341,8 +342,13 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       audio.pause();
       return;
     }
+    if (currentTrackRef.current?.id === track.id && audio.ended) {
+      requestPosition(0);
+      requestPlayback(audio);
+      return;
+    }
     await playTrack(track);
-  }, [playTrack, retry, status]);
+  }, [playTrack, requestPlayback, requestPosition, retry, status]);
 
   const pause = useCallback(() => audioRef.current?.pause(), []);
   const seekTo = useCallback((seconds: number) => { requestPosition(seconds); }, [requestPosition]);
@@ -455,11 +461,15 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     };
 
     if ('BroadcastChannel' in window) {
-      const channel = new BroadcastChannel(AUDIO_COORDINATION_CHANNEL);
-      coordinationChannelRef.current = channel;
-      channel.addEventListener('message', (event: MessageEvent<unknown>) => {
-        if (isCoordinationMessage(event.data)) handleRemotePlayback(event.data);
-      });
+      try {
+        const channel = new BroadcastChannel(AUDIO_COORDINATION_CHANNEL);
+        coordinationChannelRef.current = channel;
+        channel.addEventListener('message', (event: MessageEvent<unknown>) => {
+          if (isCoordinationMessage(event.data)) handleRemotePlayback(event.data);
+        });
+      } catch {
+        coordinationChannelRef.current = null;
+      }
     }
 
     const onStorage = (event: StorageEvent) => {
@@ -475,7 +485,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     window.addEventListener('storage', onStorage);
     return () => {
       window.removeEventListener('storage', onStorage);
-      coordinationChannelRef.current?.close();
+      try { coordinationChannelRef.current?.close(); } catch { /* channel already unavailable */ }
       coordinationChannelRef.current = null;
     };
   }, []);
@@ -491,7 +501,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         trackId,
         timestamp: Date.now(),
       };
-      coordinationChannelRef.current?.postMessage(message);
+      try { coordinationChannelRef.current?.postMessage(message); } catch { /* restricted browsing context */ }
       try { window.localStorage.setItem(AUDIO_COORDINATION_STORAGE_KEY, JSON.stringify(message)); } catch { /* storage unavailable */ }
     };
 
