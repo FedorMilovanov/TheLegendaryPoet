@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Trophy } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { poets } from '../data/poets';
@@ -42,11 +43,10 @@ function PoetsHero() {
 
 function PoetsFilters({ searchTerm, selectedTag, sortBy, allTags, onSearch, onSelectTag, onSort }: { searchTerm: string; selectedTag: string; sortBy: 'name' | 'rating' | 'year'; allTags: string[]; onSearch: (v: string) => void; onSelectTag: (v: string) => void; onSort: (v: 'name' | 'rating' | 'year') => void }) {
   const sortOptions: Array<{ value: 'name' | 'rating' | 'year'; label: string }> = [
-    { value: 'rating', label: 'По рейтингу' },
+    { value: 'rating', label: 'Оценка редакции' },
     { value: 'name', label: 'По имени' },
     { value: 'year', label: 'По эпохе' },
   ];
-
   const tagButtonClass = (active: boolean) => `relative min-h-11 shrink-0 rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${active ? 'text-luxury-dark' : 'text-luxury-gray hover:text-white'}`;
 
   return (
@@ -178,9 +178,7 @@ export default function PoetsPage() {
     const query = normalizeSearch(searchTerm);
     return poets
       .filter((poet) => {
-        const matchesSearch =
-          normalizeSearch(poet.name).includes(query) ||
-          normalizeSearch(poet.fullName).includes(query);
+        const matchesSearch = normalizeSearch(poet.name).includes(query) || normalizeSearch(poet.fullName).includes(query);
         const matchesTag = !selectedTag || poet.tags.includes(selectedTag);
         return matchesSearch && matchesTag;
       })
@@ -198,14 +196,20 @@ export default function PoetsPage() {
 
         <div className="mb-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-200/40" aria-live="polite">
-            Найдено гениев <span className="mx-2 h-px w-8 inline-block align-middle bg-cyan-400/30"></span>
+            Найдено гениев <span className="mx-2 h-px w-8 inline-block align-middle bg-cyan-400/30" />
             <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,212,255,0.5)]">{filteredPoets.length}</span>
           </p>
-          <Link to="/hall" className="group flex min-h-11 items-center gap-3 rounded-full border border-luxury-gold/30 bg-luxury-gold/10 px-6 py-2.5 text-sm font-bold uppercase tracking-[0.15em] text-luxury-gold transition-all hover:bg-luxury-gold/20 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70">
-            <Sparkles size={16} className="animate-pulse" />
-            <span>Зал Поэтов</span>
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/ratings" className="group flex min-h-11 items-center gap-3 rounded-full bg-luxury-gold px-6 py-2.5 text-sm font-bold uppercase tracking-[0.15em] text-black transition hover:shadow-[0_0_25px_rgba(212,175,55,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70">
+              <Trophy size={16} />
+              <span>Рейтинг читателей</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link to="/hall" className="group flex min-h-11 items-center gap-3 rounded-full border border-luxury-gold/30 bg-luxury-gold/10 px-6 py-2.5 text-sm font-bold uppercase tracking-[0.15em] text-luxury-gold transition-all hover:bg-luxury-gold/20 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70">
+              <Sparkles size={16} className="animate-pulse" />
+              <span>Зал Поэтов</span>
+            </Link>
+          </div>
         </div>
 
         <PoetsFilters searchTerm={searchTerm} selectedTag={selectedTag} sortBy={sortBy} allTags={allTags} onSearch={updateSearch} onSelectTag={setSelectedTag} onSort={setSortBy} />
