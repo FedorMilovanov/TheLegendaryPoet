@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-async function routeJsonTypes(page: import('@playwright/test').Page): Promise<Set<string>> {
+async function routeJsonTypes(page: import('@playwright/test').Page): Promise<string[]> {
   return page.locator('script#route-jsonld').evaluate((node) => {
     const found = new Set<string>();
     const walk = (value: unknown) => {
@@ -16,7 +16,7 @@ async function routeJsonTypes(page: import('@playwright/test').Page): Promise<Se
       Object.values(record).forEach(walk);
     };
     walk(JSON.parse(node.textContent || '{}'));
-    return found;
+    return [...found];
   });
 }
 
@@ -38,7 +38,7 @@ test.describe('runtime discovery and indexing state', () => {
     );
     const types = await routeJsonTypes(page);
     for (const type of ['CollectionPage', 'ItemList', 'BreadcrumbList']) {
-      expect(types.has(type), `/poets should contain ${type}`).toBe(true);
+      expect(types.includes(type), `/poets should contain ${type}`).toBe(true);
     }
   });
 
@@ -56,7 +56,7 @@ test.describe('runtime discovery and indexing state', () => {
       await page.goto(path);
       await expect(page.locator('h1')).toBeVisible();
       const types = await routeJsonTypes(page);
-      for (const type of required) expect(types.has(type), `${path} should contain ${type}`).toBe(true);
+      for (const type of required) expect(types.includes(type), `${path} should contain ${type}`).toBe(true);
     }
   });
 
