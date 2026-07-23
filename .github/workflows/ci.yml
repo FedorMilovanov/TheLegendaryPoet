@@ -26,6 +26,7 @@ jobs:
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Typecheck
+        id: typecheck
         run: |
           set +e
           npm run typecheck > typecheck.log 2>&1
@@ -33,12 +34,12 @@ jobs:
           cat typecheck.log
           exit $status
       - name: Upload typecheck diagnostics
-        if: failure()
+        if: ${{ failure() && steps.typecheck.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: typecheck-diagnostics
           path: typecheck.log
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 3
       - name: Generate sitemap
         run: npm run sitemap
@@ -47,6 +48,7 @@ jobs:
         env:
           VITE_BASE: /
       - name: Validate route splitting and production asset budgets
+        id: build_audit
         run: |
           set +e
           npm run validate:build-output > build-output-audit.log 2>&1
@@ -54,12 +56,12 @@ jobs:
           cat build-output-audit.log
           exit $status
       - name: Upload build audit diagnostics
-        if: failure()
+        if: ${{ failure() && steps.build_audit.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: build-output-audit
           path: build-output-audit.log
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 3
       - name: Prerender social pages
         run: npm run prerender
