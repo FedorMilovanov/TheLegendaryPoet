@@ -208,13 +208,13 @@ export const mayakovskyPartTwoCitationRules: StableCitationRule[] = [
   {
     blockId: 'mayakovsky-late-crises-1930',
     sectionHeading: '1930: несколько кризисов сразу',
-    proseIndex: 0,
+    proseIndex: 5,
     sourceIds: ['bathhouse', 'letter-lilya-march-1930', 'opening-exhibition', 'red-presnya-speech'],
   },
   {
     blockId: 'mayakovsky-late-death-1930',
     sectionHeading: '1930: несколько кризисов сразу',
-    proseIndex: 3,
+    proseIndex: 8,
     sourceIds: ['letter-everyone', 'chronicle-1930'],
   },
   {
