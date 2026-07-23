@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "validate:library": "tsx scripts/validate-library.ts",
     "validate:essays": "tsx scripts/validate-essays.ts",
+    "report:sources": "tsx scripts/report-essay-source-coverage.ts",
     "validate:citations": "tsx scripts/validate-citations.ts",
     "validate:clusters": "tsx scripts/validate-topic-clusters.ts",
     "validate:mayakovsky-correspondence": "tsx scripts/validate-mayakovsky-correspondence-index.ts",
