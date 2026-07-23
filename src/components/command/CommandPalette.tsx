@@ -2,20 +2,24 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useAppNavigate } from '../ui/Link';
 import { pauseSmoothScroll, resumeSmoothScroll } from '../../utils/smoothScroll';
-import { getCommandItems, normalizeCommandText } from './commandItems';
+import { normalizeCommandText } from './commandSearch';
+import type { CommandItem } from './commandItems';
 import CommandResult from './CommandResult';
+
+type IndexStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [items, setItems] = useState<CommandItem[]>([]);
+  const [indexStatus, setIndexStatus] = useState<IndexStatus>('idle');
   const navigate = useAppNavigate();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const restoreOnCloseRef = useRef(true);
   const listId = 'command-palette-results';
 
-  const items = useMemo(() => getCommandItems(), []);
   const results = useMemo(() => {
     const normalizedQuery = normalizeCommandText(query);
     if (!normalizedQuery) return items.slice(0, 8);
@@ -46,6 +50,28 @@ export default function CommandPalette() {
     navigate(path);
     close();
   }, [navigate, close]);
+
+  // The search index imports poet profiles, longreads, articles and music. Keep
+  // that data out of the persistent shell until the user expresses search intent.
+  useEffect(() => {
+    if (!open || indexStatus === 'loading' || indexStatus === 'ready') return;
+
+    let active = true;
+    setIndexStatus('loading');
+    void import('./commandItems')
+      .then(({ getCommandItems }) => {
+        if (!active) return;
+        setItems(getCommandItems());
+        setIndexStatus('ready');
+      })
+      .catch(() => {
+        if (active) setIndexStatus('error');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [indexStatus, open]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -159,8 +185,10 @@ export default function CommandPalette() {
       <button
         type="button"
         onClick={openPalette}
+        onPointerEnter={() => { void import('./commandItems'); }}
+        onFocus={() => { void import('./commandItems'); }}
         aria-label="Открыть поиск по сайту (Ctrl + K)"
-        className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 lg:inline-flex"
+        className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 lg:inline-flex"
         data-testid="command-palette-trigger"
       >
         <Search size={15} className="mr-2" /> Ctrl K
@@ -196,15 +224,28 @@ export default function CommandPalette() {
             aria-controls={listId}
             aria-expanded={results.length > 0}
             aria-activedescendant={activeOptionId}
+            aria-busy={indexStatus === 'loading'}
             role="combobox"
             className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
             data-testid="command-palette-input"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="text-cyan-100/50 hover:text-cyan-200 focus-visible:text-cyan-200" data-testid="command-palette-close">
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Закрыть поиск"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-cyan-100/50 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+            data-testid="command-palette-close"
+          >
             <X size={20} />
           </button>
         </div>
-        <div id={listId} role="listbox" aria-label="Результаты поиска" className="max-h-[60vh] space-y-2 overflow-y-auto p-3">
+        <div
+          id={listId}
+          role="listbox"
+          aria-label="Результаты поиска"
+          aria-busy={indexStatus === 'loading'}
+          className="max-h-[60vh] space-y-2 overflow-y-auto p-3"
+        >
           {results.map((item, index) => (
             <CommandResult
               key={item.id}
@@ -214,7 +255,15 @@ export default function CommandPalette() {
               onSelect={() => select(item.path)}
             />
           ))}
-          {!results.length && <div className="p-8 text-center text-cyan-100/50">Ничего не найдено.</div>}
+          {indexStatus === 'loading' && (
+            <div className="p-8 text-center text-cyan-100/50">Загружаем поисковый индекс…</div>
+          )}
+          {indexStatus === 'error' && (
+            <div className="p-8 text-center text-red-200/65">Поисковый индекс временно недоступен.</div>
+          )}
+          {indexStatus === 'ready' && !results.length && (
+            <div className="p-8 text-center text-cyan-100/50">Ничего не найдено.</div>
+          )}
         </div>
       </div>
     </div>
