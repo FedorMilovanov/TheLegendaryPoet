@@ -75,6 +75,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /
+      - name: Validate route code splitting
+        run: npm run validate:route-chunks
       - name: Prerender social pages
         run: npm run prerender
       - name: Validate prerendered SEO and JSON-LD
