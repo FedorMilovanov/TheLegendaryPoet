@@ -47,11 +47,8 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
-      - name: Prerender OG pages (essays, poets, articles)
+      - name: Prerender public routes and noindex fallback
         run: npm run prerender
-
-      - name: SPA fallback (serve the app for deep links / refresh)
-        run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
 
