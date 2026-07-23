@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Star, Award, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
@@ -17,6 +17,10 @@ export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = favorites.some((entry) => entry.id === poem.id);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+  }, []);
 
   const toggleFavorite = () => {
     const next = toggleFavoritePoem(poem.id);
