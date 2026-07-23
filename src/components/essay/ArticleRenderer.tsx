@@ -45,11 +45,16 @@ export function getEssayToc(blocks: EssayBlock[]): TocEntry[] {
 }
 
 function buildSourceReferences(sources: EssaySource[]): EssaySourceReferenceMap {
-  return Object.fromEntries(
-    sources.flatMap((source, index) =>
-      source.id ? [[source.id, { number: index + 1, source }] as const] : [],
-    ),
-  );
+  const references: EssaySourceReferenceMap = {};
+
+  sources.forEach((source, index) => {
+    const reference = { number: index + 1, source };
+    for (const id of [source.id, ...(source.aliases ?? [])]) {
+      if (id) references[id] = reference;
+    }
+  });
+
+  return references;
 }
 
 function blockLayout(block: EssayBlock): { className: string; direction: 'up' | 'left' | 'right' } {
