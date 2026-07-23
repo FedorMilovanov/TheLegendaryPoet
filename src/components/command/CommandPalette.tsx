@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
@@ -9,6 +11,8 @@ export default function CommandPalette() {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useAppNavigate();
+  const location = useLocation();
+  const previousPathRef = useRef(location.pathname);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listId = 'command-palette-results';
@@ -28,6 +32,14 @@ export default function CommandPalette() {
     setActiveIndex(0);
   }, []);
 
+  useDialogSurface({
+    open,
+    dialogRef,
+    initialFocusRef: inputRef,
+    onClose: close,
+    label: 'command-palette',
+  });
+
   const select = useCallback((path: string) => {
     navigate(path);
     close();
@@ -38,7 +50,7 @@ export default function CommandPalette() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setOpen((value) => !value);
+        if (!event.repeat) setOpen((value) => !value);
       }
     };
     window.addEventListener('tlp-open-command-palette', openPalette);
@@ -50,58 +62,40 @@ export default function CommandPalette() {
   }, []);
 
   useEffect(() => setActiveIndex(0), [query]);
-
-  // Focus the input when the dialog opens, restore focus to the opener on close.
   useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    inputRef.current?.focus();
-    return () => previouslyFocused?.focus?.();
-  }, [open]);
+    setActiveIndex((index) => results.length > 0 ? Math.min(index, results.length - 1) : 0);
+  }, [results.length]);
 
-  // While the palette is open, pause any full-screen background interaction
-  // (the 3D hall's wheel/drag rail camera) so scrolling drives the results.
   useEffect(() => {
-    try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open; } catch { /* noop */ }
-    return () => { try { (window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false; } catch { /* noop */ } };
-  }, [open]);
+    if (previousPathRef.current === location.pathname) return;
+    previousPathRef.current = location.pathname;
+    close();
+  }, [close, location.pathname]);
 
   const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      close();
-      return;
-    }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((value) => Math.min(value + 1, results.length - 1));
+      if (results.length > 0) setActiveIndex((value) => Math.min(value + 1, results.length - 1));
       return;
     }
     if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActiveIndex((value) => Math.max(value - 1, 0));
+      if (results.length > 0) setActiveIndex((value) => Math.max(value - 1, 0));
+      return;
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      setActiveIndex(0);
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      setActiveIndex(Math.max(0, results.length - 1));
       return;
     }
     if (event.key === 'Enter' && results[activeIndex]) {
       event.preventDefault();
       select(results[activeIndex].path);
-      return;
-    }
-    // Focus trap: keep Tab within the dialog.
-    if (event.key === 'Tab') {
-      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
     }
   };
 
@@ -120,8 +114,8 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-black/70 px-4 py-24 backdrop-blur-xl"
-      onMouseDown={(event) => {
+      className="fixed inset-0 z-[90] overflow-y-auto overscroll-contain bg-black/70 px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
+      onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
     >
@@ -130,10 +124,11 @@ export default function CommandPalette() {
         role="dialog"
         aria-modal="true"
         aria-label="Поиск по сайту"
+        tabIndex={-1}
         onKeyDown={onDialogKeyDown}
-        className="mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)]"
+        className="mx-auto flex max-h-[min(78dvh,46rem)] max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)] outline-none"
       >
-        <div className="flex items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
+        <div className="flex flex-none items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
           <Search size={20} className="text-cyan-300" />
           <input
             ref={inputRef}
@@ -143,14 +138,17 @@ export default function CommandPalette() {
             aria-label="Поисковый запрос"
             aria-controls={listId}
             aria-expanded={results.length > 0}
+            aria-autocomplete="list"
             role="combobox"
-            className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
+            autoComplete="off"
+            maxLength={120}
+            className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="text-cyan-100/50 hover:text-cyan-200 focus-visible:text-cyan-200">
+          <button type="button" onClick={close} aria-label="Закрыть поиск" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-cyan-100/50 transition hover:bg-white/[0.05] hover:text-cyan-200 focus-visible:text-cyan-200">
             <X size={20} />
           </button>
         </div>
-        <div id={listId} role="listbox" aria-label="Результаты поиска" className="max-h-[60vh] space-y-2 overflow-y-auto p-3">
+        <div id={listId} role="listbox" aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
           {results.map((item, index) => (
             <CommandResult key={item.id} item={item} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
