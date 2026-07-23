@@ -82,6 +82,11 @@ function createInstanceId() {
   return `audio-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function setMediaPlaybackState(state: MediaSessionPlaybackState) {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+  try { navigator.mediaSession.playbackState = state; } catch { /* incomplete browser implementation */ }
+}
+
 function clearMediaSession() {
   if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
   for (const action of mediaActions) {
@@ -138,7 +143,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const currentTrackRef = useRef<MusicTrack | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const pendingAutoplayRef = useRef(false);
-  const playAttemptRef = useRef(false);
+  const sourceVersionRef = useRef(0);
+  const playAttemptVersionRef = useRef<number | null>(null);
+  const suppressPausePersistenceRef = useRef(false);
   const sourceTransitionRef = useRef(false);
   const lastSavedRef = useRef(0);
   const restoredRef = useRef(false);
@@ -242,14 +249,16 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   }, []);
 
   const requestPlayback = useCallback((audio: HTMLAudioElement) => {
+    const sourceVersion = sourceVersionRef.current;
     pendingAutoplayRef.current = true;
     setFailure(null);
     setStatus('loading');
-    if (playAttemptRef.current) return;
+    if (playAttemptVersionRef.current === sourceVersion) return;
 
-    playAttemptRef.current = true;
+    playAttemptVersionRef.current = sourceVersion;
     void audio.play().catch((error: unknown) => {
-      playAttemptRef.current = false;
+      if (sourceVersion !== sourceVersionRef.current) return;
+      playAttemptVersionRef.current = null;
       const nextFailure = failureFromPlayError(error);
       if (!nextFailure) return;
       pendingAutoplayRef.current = false;
@@ -264,8 +273,10 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     if (!audio || !track.audioUrl) return false;
 
     persistCurrentPosition(true);
+    sourceVersionRef.current += 1;
     sourceTransitionRef.current = true;
-    playAttemptRef.current = false;
+    suppressPausePersistenceRef.current = !audio.paused || playAttemptVersionRef.current !== null;
+    playAttemptVersionRef.current = null;
     audio.pause();
 
     currentTrackRef.current = track;
@@ -391,8 +402,10 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
     persistCurrentPosition(true);
+    sourceVersionRef.current += 1;
     sourceTransitionRef.current = true;
-    playAttemptRef.current = false;
+    suppressPausePersistenceRef.current = Boolean(audio && (!audio.paused || playAttemptVersionRef.current !== null));
+    playAttemptVersionRef.current = null;
     if (audio) {
       audio.pause();
       audio.removeAttribute('src');
@@ -413,7 +426,10 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     setImmersiveOpen(false);
     setStoredLastTrack(null);
     clearMediaSession();
-    window.setTimeout(() => { sourceTransitionRef.current = false; }, 0);
+    window.setTimeout(() => {
+      sourceTransitionRef.current = false;
+      suppressPausePersistenceRef.current = false;
+    }, 0);
   }, [persistCurrentPosition]);
 
   const openImmersive = useCallback((track?: MusicTrack) => {
@@ -570,7 +586,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const onError = () => {
       if (sourceTransitionRef.current || !currentTrackRef.current) return;
       pendingAutoplayRef.current = false;
-      playAttemptRef.current = false;
+      playAttemptVersionRef.current = null;
       setFailure(failureFromMediaError(audio.error));
       setStatus('error');
       setPlaying(false);
@@ -578,26 +594,29 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const onPlay = () => {
       const track = currentTrackRef.current;
       pendingAutoplayRef.current = false;
-      playAttemptRef.current = false;
+      playAttemptVersionRef.current = null;
+      suppressPausePersistenceRef.current = false;
       setPlaying(true);
       setEnded(false);
       setFailure(null);
       setStatus('ready');
       configureMediaSession();
       if (track) announcePlayback(track.id);
-      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+      setMediaPlaybackState('playing');
     };
     const onPause = () => {
-      playAttemptRef.current = false;
+      const suppressPersistence = suppressPausePersistenceRef.current;
+      suppressPausePersistenceRef.current = false;
+      playAttemptVersionRef.current = null;
       setPlaying(false);
+      if (suppressPersistence || sourceTransitionRef.current || !currentTrackRef.current || audio.ended) return;
       persistCurrentPosition(true);
-      if (sourceTransitionRef.current || !currentTrackRef.current || audio.ended) return;
       setStatus((value) => value === 'error' ? value : 'ready');
-      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+      setMediaPlaybackState('paused');
     };
     const onEnd = () => {
       const track = currentTrackRef.current;
-      playAttemptRef.current = false;
+      playAttemptVersionRef.current = null;
       setPlaying(false);
       setEnded(true);
       setCurrentTime(audio.duration || 0);
@@ -606,7 +625,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         persistCompleted(track.id);
         setStoredTrackPosition(track.id, null);
       }
-      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
+      setMediaPlaybackState('none');
     };
     const persistBeforeLeave = () => persistCurrentPosition(true);
     const onVisibilityChange = () => {
