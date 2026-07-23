@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type TestInfo } from '@playwright/test';
 
 async function assertNoHorizontalOverflow(page: import('@playwright/test').Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -40,6 +40,34 @@ test('command palette locks and restores the reading surface on desktop and mobi
   ).toBeLessThanOrEqual(2);
   await expect(opener).toBeFocused();
   await assertNoHorizontalOverflow(page);
+});
+
+test('command index survives closing the palette while its lazy chunk is in flight', async ({ page }, testInfo: TestInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'one delayed chunk test is sufficient');
+
+  let delayed = false;
+  await page.route(/commandItems[^/]*\.js(?:\?.*)?$/, async (route) => {
+    delayed = true;
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route.continue();
+  });
+
+  await page.goto('/articles');
+  await expect(page.locator('h1')).toBeVisible();
+
+  await page.keyboard.press('Control+K');
+  await expect(page.getByTestId('command-palette-dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('command-palette-dialog')).toBeHidden();
+
+  await page.keyboard.press('Control+K');
+  const input = page.getByTestId('command-palette-input');
+  await input.fill('Про это');
+  await expect(page.getByRole('option', { name: /Про это/ }).first()).toBeVisible({ timeout: 10_000 });
+  expect(delayed, 'the commandItems chunk should have been intercepted').toBe(true);
+
+  await page.keyboard.press('Escape');
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
 });
 
 test('command search reaches longreads without restoring the old route position', async ({ page }) => {
