@@ -41,3 +41,33 @@ test('command palette locks and restores the reading surface on desktop and mobi
   await expect(opener).toBeFocused();
   await assertNoHorizontalOverflow(page);
 });
+
+test('command search reaches longreads without restoring the old route position', async ({ page }) => {
+  await page.goto('/articles');
+  await expect(page.locator('h1')).toBeVisible();
+  await page.evaluate(() => {
+    (window as Window & { __tlpHeaderNode?: Element | null }).__tlpHeaderNode =
+      document.querySelector('header.site-header');
+    window.scrollTo({ top: 720, behavior: 'auto' });
+  });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(300);
+
+  await page.keyboard.press('Control+K');
+  const input = page.getByTestId('command-palette-input');
+  await expect(input).toBeFocused();
+  await input.fill('Про это');
+  await expect(page.getByRole('option', { name: /Про это/ }).first()).toBeVisible();
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/\/essays\/mayakovsky-pro-eto-separation$/);
+  await expect(page.locator('h1')).toContainText('Про это');
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 3_000 }).toBeLessThanOrEqual(2);
+  expect(
+    await page.evaluate(() =>
+      (window as Window & { __tlpHeaderNode?: Element | null }).__tlpHeaderNode ===
+      document.querySelector('header.site-header'),
+    ),
+  ).toBe(true);
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('');
+  await assertNoHorizontalOverflow(page);
+});
