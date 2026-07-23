@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useAppNavigate } from '../ui/Link';
+import { pauseSmoothScroll, resumeSmoothScroll } from '../../utils/smoothScroll';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
 
@@ -51,12 +52,33 @@ export default function CommandPalette() {
 
   useEffect(() => setActiveIndex(0), [query]);
 
-  // Focus the input when the dialog opens, restore focus to the opener on close.
+  // A real page-level modal: freeze both Lenis and native body scrolling, keep
+  // the viewport width stable, focus without scrolling, then restore the exact
+  // reading position and opener when the palette closes.
   useEffect(() => {
     if (!open) return;
+
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    inputRef.current?.focus();
-    return () => previouslyFocused?.focus?.();
+    const body = document.body;
+    const previousOverflow = body.style.overflow;
+    const previousPaddingRight = body.style.paddingRight;
+    const scrollY = window.scrollY;
+    const clientWidthBefore = document.documentElement.clientWidth;
+    const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+
+    pauseSmoothScroll();
+    body.style.overflow = 'hidden';
+    const releasedWidth = Math.max(0, document.documentElement.clientWidth - clientWidthBefore);
+    if (releasedWidth > 0) body.style.paddingRight = `${currentPadding + releasedWidth}px`;
+    const focusFrame = requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPaddingRight;
+      resumeSmoothScroll(scrollY);
+      requestAnimationFrame(() => previouslyFocused?.focus?.({ preventScroll: true }));
+    };
   }, [open]);
 
   // While the palette is open, pause any full-screen background interaction
@@ -87,7 +109,6 @@ export default function CommandPalette() {
       select(results[activeIndex].path);
       return;
     }
-    // Focus trap: keep Tab within the dialog.
     if (event.key === 'Tab') {
       const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
@@ -97,10 +118,10 @@ export default function CommandPalette() {
       const last = focusables[focusables.length - 1];
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
-        last.focus();
+        last.focus({ preventScroll: true });
       } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
-        first.focus();
+        first.focus({ preventScroll: true });
       }
     }
   };
@@ -112,6 +133,7 @@ export default function CommandPalette() {
         onClick={() => setOpen(true)}
         aria-label="Открыть поиск по сайту (Ctrl + K)"
         className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 lg:inline-flex"
+        data-testid="command-palette-trigger"
       >
         <Search size={15} className="mr-2" /> Ctrl K
       </button>
@@ -120,10 +142,11 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-black/70 px-4 py-24 backdrop-blur-xl"
-      onMouseDown={(event) => {
+      className="fixed inset-0 z-[200] bg-black/78 px-4 py-24 backdrop-blur-xl"
+      onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
+      data-testid="command-palette-layer"
     >
       <div
         ref={dialogRef}
@@ -132,6 +155,7 @@ export default function CommandPalette() {
         aria-label="Поиск по сайту"
         onKeyDown={onDialogKeyDown}
         className="mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)]"
+        data-testid="command-palette-dialog"
       >
         <div className="flex items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
           <Search size={20} className="text-cyan-300" />
@@ -145,8 +169,9 @@ export default function CommandPalette() {
             aria-expanded={results.length > 0}
             role="combobox"
             className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
+            data-testid="command-palette-input"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="text-cyan-100/50 hover:text-cyan-200 focus-visible:text-cyan-200">
+          <button type="button" onClick={close} aria-label="Закрыть поиск" className="text-cyan-100/50 hover:text-cyan-200 focus-visible:text-cyan-200" data-testid="command-palette-close">
             <X size={20} />
           </button>
         </div>
