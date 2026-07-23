@@ -1,9 +1,10 @@
-import { Headphones, ShieldCheck, Sparkles as SparklesIcon, Waves } from 'lucide-react';
+import { Headphones, Hourglass, ShieldCheck, Sparkles as SparklesIcon, Waves } from 'lucide-react';
 import { AudioWaveform, Sparkles } from '../components/PremiumIcons';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
 import MusicArchiveBrowser from '../components/music/MusicArchiveBrowser';
-import { musicTracks } from '../data/poets';
-import { getFeaturedMusicTrack, getMusicCatalogStats } from '../data/musicCatalog';
+import TrackAnnouncementCard from '../components/music/TrackAnnouncementCard';
+import { allMusicTracks, musicTracks } from '../data/poets';
+import { getFeaturedMusicTrack, getMusicCatalogStats, getUpcomingMusicTracks } from '../data/musicCatalog';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
@@ -11,7 +12,8 @@ import { titleCase } from '../utils/titleCase';
 export default function MusicPage() {
   const featured = getFeaturedMusicTrack(musicTracks);
   const remaining = musicTracks.filter((track) => track.id !== featured?.id);
-  const stats = getMusicCatalogStats(musicTracks);
+  const upcoming = getUpcomingMusicTracks(allMusicTracks);
+  const stats = getMusicCatalogStats(allMusicTracks);
   const archiveMinutes = Math.max(1, Math.round(stats.totalDurationSeconds / 60));
 
   useSeo({
@@ -90,6 +92,21 @@ export default function MusicPage() {
           <div className="rounded-3xl border border-cyan-400/10 p-12 text-center text-cyan-100/40">Первый релиз готовится.</div>
         )}
 
+        {upcoming.length > 0 && (
+          <section className="mt-16" aria-labelledby="upcoming-releases-title">
+            <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70"><Hourglass size={14} /> В производстве</div>
+                <h2 id="upcoming-releases-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Следующие публикации</h2>
+              </div>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Анонс не попадает в очередь воспроизведения, пока мастер, метаданные и контрольная сумма не проверены.</p>
+            </div>
+            <div className="grid gap-6 xl:grid-cols-2">
+              {upcoming.map((track) => <TrackAnnouncementCard key={track.id} track={track} />)}
+            </div>
+          </section>
+        )}
+
         {remaining.length > 0 && (
           <section className="mt-20" aria-labelledby="release-archive-title">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -97,7 +114,7 @@ export default function MusicPage() {
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/55">Аудиоархив</div>
                 <h2 id="release-archive-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Другие релизы</h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Поиск, фильтры и стабильная сортировка уже готовы к десяткам и сотням новых публикаций.</p>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Поиск, фильтры, постепенная отрисовка и стабильная сортировка готовы к десяткам и сотням новых публикаций.</p>
             </div>
             <MusicArchiveBrowser tracks={remaining} />
           </section>
