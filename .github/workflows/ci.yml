@@ -21,7 +21,7 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - name: Validate content, literary style, and types
+      - name: Validate content, runtime stores, app shell, literary style, and types
         run: npm run check
       - name: Generate sitemap
         run: npm run sitemap
@@ -29,6 +29,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /
+      - name: Validate route splitting and production asset budgets
+        run: npm run validate:build-output
       - name: Prerender social pages
         run: npm run prerender
       - name: Verify generated output is stable
