@@ -14,7 +14,6 @@ import RelatedClusterEssays from '../components/essay/RelatedClusterEssays';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
-import { titleCase } from '../utils/titleCase';
 import { scrollToId } from '../utils/smoothScroll';
 import { essayStructuredData, relatedEssaysFor } from '../utils/structuredData';
 
@@ -44,7 +43,7 @@ export default function EssayPage() {
     return (
       <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
+          <h1 className="mb-4 font-serif text-4xl">Статья не найдена</h1>
           <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
         </div>
       </div>
