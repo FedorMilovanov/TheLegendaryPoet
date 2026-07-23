@@ -13,6 +13,10 @@
     bottom: calc(6.35rem + env(safe-area-inset-bottom));
     width: calc(100% - 1.25rem);
   }
+
+  html.global-audio-active #main-content {
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -22,10 +26,4 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-}
-
-::view-transition-old(track-cover),
-::view-transition-new(track-cover) {
-  animation-duration: 520ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
