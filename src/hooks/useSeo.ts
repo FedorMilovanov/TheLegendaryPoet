@@ -1,5 +1,14 @@
 import { useEffect } from 'react';
 import { siteConfig } from '../config/site';
+import { getAllEssays } from '../data/essays';
+import { articles, musicTracks, poets } from '../data/poets';
+import {
+  aboutPageStructuredData,
+  articlesCollectionStructuredData,
+  hallPageStructuredData,
+  musicCollectionStructuredData,
+  poetsCollectionStructuredData,
+} from '../utils/collectionStructuredData';
 
 interface SeoOptions {
   title: string;
@@ -20,13 +29,30 @@ interface SeoOptions {
   keywords?: string;
   /** Prevent indexing for missing, private or user-specific routes. */
   noIndex?: boolean;
-  /** Optional pre-built JSON-LD object; overrides the default WebPage/Article schema. */
+  /** Optional pre-built JSON-LD object; overrides collection and fallback schemas. */
   jsonLd?: Record<string, unknown>;
 }
 
 function absUrl(pathOrUrl: string) {
   if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+function topLevelStructuredData(path: string): Record<string, unknown> | undefined {
+  switch (path) {
+    case '/poets':
+      return poetsCollectionStructuredData(poets);
+    case '/articles':
+      return articlesCollectionStructuredData(getAllEssays(), articles);
+    case '/music':
+      return musicCollectionStructuredData(musicTracks);
+    case '/about':
+      return aboutPageStructuredData();
+    case '/hall':
+      return hallPageStructuredData();
+    default:
+      return undefined;
+  }
 }
 
 /** Set an attribute on an existing head tag, creating a <meta> if it is missing. */
@@ -116,6 +142,7 @@ export function useSeo({
 
     const schema =
       jsonLd ||
+      topLevelStructuredData(path) ||
       (type === 'article'
         ? {
             '@context': 'https://schema.org',
