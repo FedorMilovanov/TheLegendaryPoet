@@ -66,41 +66,35 @@ html {
 }
 
 /* Covers retain their LQIP/gradient background until the selected AVIF/WebP is
-   decoded, then cross-fade on the same plane. This prevents a one-frame dark
-   flash during route transitions or when a lazy card first enters the viewport. */
+   decoded, then cross-fade on exactly the same raster plane. No load-scale and
+   no hover zoom: those extra resampling passes caused the visible edge shimmer. */
 .essay-cover-image {
   opacity: 0;
-  transform: scale(1.004);
   backface-visibility: hidden;
-  transition:
-    opacity 0.32s ease-out,
-    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease-out;
 }
 
 .essay-cover-image.is-loaded {
   opacity: 1;
-  transform: scale(1);
 }
 
 .poet-card-image {
   opacity: 0;
-  transform: scale(1.004);
   backface-visibility: hidden;
+  filter: brightness(0.985) contrast(1.01);
   transition:
-    opacity 0.32s ease-out,
-    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.5s ease-out;
+    opacity 0.3s ease-out,
+    filter 0.42s ease-out;
 }
 
 .poet-card-image.is-loaded {
   opacity: 0.96;
-  transform: scale(1);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .group:hover .poet-card-image.is-loaded {
     opacity: 1;
-    transform: scale(1.035);
+    filter: brightness(1.025) contrast(1.025);
   }
 }
 
@@ -113,20 +107,23 @@ html {
 }
 
 /* Inline essay images keep one stable raster surface. Opacity is the only load
-   transition; hover scale is restrained and only enabled for a precise mouse. */
+   transition; the outer TiltCard and sheen provide depth without a second zoom. */
 .essay-image-preview {
   isolation: isolate;
   contain: paint;
   backface-visibility: hidden;
+  transition:
+    border-color 0.3s ease-out,
+    box-shadow 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .essay-inline-image {
   opacity: 0;
-  transform: scale(1.003);
   backface-visibility: hidden;
+  filter: contrast(1);
   transition:
     opacity 0.28s ease-out,
-    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    filter 0.38s ease-out;
 }
 
 .essay-inline-image.is-loaded {
@@ -142,8 +139,13 @@ html {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .essay-image-preview:hover {
+    border-color: rgba(212, 175, 55, 0.2);
+    box-shadow: 0 28px 78px rgba(0, 0, 0, 0.5), 0 0 34px rgba(212, 175, 55, 0.035);
+  }
+
   .essay-image-preview:hover .essay-inline-image.is-loaded {
-    transform: scale(1.016);
+    filter: contrast(1.025);
   }
 
   .essay-image-preview:hover .essay-image-expand,
@@ -175,7 +177,10 @@ html {
   max-width: calc(100vw - 1.5rem);
   max-height: calc(100dvh - 9rem);
   line-height: 0;
-  background: #020202;
+  background-color: #020202;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
   backface-visibility: hidden;
 }
 
@@ -247,7 +252,8 @@ html {
   .essay-inline-image,
   .essay-image-expand,
   .essay-cover-image,
-  .poet-card-image {
+  .poet-card-image,
+  .essay-image-preview {
     transition: none !important;
   }
 }
