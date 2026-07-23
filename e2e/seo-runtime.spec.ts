@@ -60,13 +60,14 @@ test.describe('runtime discovery and indexing state', () => {
     }
   });
 
-  test('invalid routes are noindex and a later longread clears that state', async ({ page }, testInfo) => {
+  test('invalid routes are noindex and a later longread clears every stale head field', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop-chromium', 'one browser is enough for head-state QA');
 
     await page.goto('/essays/not-a-real-essay');
     await expect(page.locator('h1')).toContainText('Статья не найдена');
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
 
     await page.goto('/essays/mayakovsky-pro-eto-separation');
     await expect(page.locator('h1')).toContainText('Про это');
@@ -74,11 +75,24 @@ test.describe('runtime discovery and indexing state', () => {
       'content',
       'index, follow, max-image-preview:large',
     );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://thelegendarypoet.ru/essays/mayakovsky-pro-eto-separation',
+    );
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
     await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute(
       'content',
       '2026-07-23',
     );
+    // The longread cover is not the 1200×630 default image, so dimensions from
+    // the homepage head must be removed rather than reused as false metadata.
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveCount(0);
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveCount(0);
     await expect(page.locator('script#route-jsonld')).toContainText('BreadcrumbList');
+
+    await page.goto('/');
+    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute('content', '630');
   });
 });
