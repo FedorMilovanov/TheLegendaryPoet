@@ -65,6 +65,7 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
       </>
     );
   }
+
   // Fallback for browsers without the View Transitions API: the classic
   // framer wipe + fade on every navigation.
   return (
@@ -82,6 +83,14 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+/**
+ * Persistent application shell.
+ *
+ * Header, command palette, cursor, ambient layers, footer and the Lenis owner
+ * remain mounted while only the route page changes. Recreating the whole shell
+ * on every navigation used to restart global listeners and RAF loops, reset
+ * modal state and make browser View Transition snapshots less deterministic.
+ */
 function SiteLayout({ children }: { children: React.ReactNode }) {
   useAutoHideChrome();
   return (
@@ -99,8 +108,8 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
         <Header />
         <CommandPalette />
         <main id="main-content" className="relative z-10 pb-32 md:pb-0">
-          {/* AnimatePresence would delay unmounts and break the View
-              Transition snapshot pairing, so it only wraps the fallback. */}
+          {/* The keyed Routes element gives AnimatePresence one page child at a
+              time without unmounting the surrounding application shell. */}
           {supportsViewTransitions ? children : <AnimatePresence mode="wait">{children}</AnimatePresence>}
         </main>
         <MobileDock />
@@ -115,21 +124,23 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
 
 function AnimatedRoutes() {
   const location = useLocation();
-  return (
+  const routes = (
     <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<SiteLayout><PageWrapper><HomePage /></PageWrapper></SiteLayout>} />
-      <Route path="/hall" element={<SiteLayout><PageWrapper><HallPage /></PageWrapper></SiteLayout>} />
-      <Route path="/poets" element={<SiteLayout><PageWrapper><PoetsPage /></PageWrapper></SiteLayout>} />
-      <Route path="/poets/:id" element={<SiteLayout><PageWrapper><PoetDetailPage /></PageWrapper></SiteLayout>} />
-      <Route path="/articles" element={<SiteLayout><PageWrapper><ArticlesPage /></PageWrapper></SiteLayout>} />
-      <Route path="/essays/:slug" element={<SiteLayout><PageWrapper><EssayPage /></PageWrapper></SiteLayout>} />
-      <Route path="/articles/:id" element={<SiteLayout><PageWrapper><ArticleDetailPage /></PageWrapper></SiteLayout>} />
-      <Route path="/music" element={<SiteLayout><PageWrapper><MusicPage /></PageWrapper></SiteLayout>} />
-      <Route path="/about" element={<SiteLayout><PageWrapper><AboutPage /></PageWrapper></SiteLayout>} />
-      <Route path="/archive" element={<SiteLayout><PageWrapper><MyArchivePage /></PageWrapper></SiteLayout>} />
-      <Route path="*" element={<SiteLayout><PageWrapper><NotFoundPage /></PageWrapper></SiteLayout>} />
+      <Route path="/" element={<PageWrapper><HomePage /></PageWrapper>} />
+      <Route path="/hall" element={<PageWrapper><HallPage /></PageWrapper>} />
+      <Route path="/poets" element={<PageWrapper><PoetsPage /></PageWrapper>} />
+      <Route path="/poets/:id" element={<PageWrapper><PoetDetailPage /></PageWrapper>} />
+      <Route path="/articles" element={<PageWrapper><ArticlesPage /></PageWrapper>} />
+      <Route path="/essays/:slug" element={<PageWrapper><EssayPage /></PageWrapper>} />
+      <Route path="/articles/:id" element={<PageWrapper><ArticleDetailPage /></PageWrapper>} />
+      <Route path="/music" element={<PageWrapper><MusicPage /></PageWrapper>} />
+      <Route path="/about" element={<PageWrapper><AboutPage /></PageWrapper>} />
+      <Route path="/archive" element={<PageWrapper><MyArchivePage /></PageWrapper>} />
+      <Route path="*" element={<PageWrapper><NotFoundPage /></PageWrapper>} />
     </Routes>
   );
+
+  return <SiteLayout>{routes}</SiteLayout>;
 }
 
 function RoutedApp() {
