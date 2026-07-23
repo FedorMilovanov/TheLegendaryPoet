@@ -42,12 +42,27 @@ export default function Reveal({
   blur = true,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const prefersReduced = useReducedMotion();
-  // Reduced-motion users must never depend on an IntersectionObserver callback
-  // for basic readability. Starting visible also prevents below-the-fold legacy
-  // article blocks from remaining opacity:0 forever in print, screenshots or
-  // assistive browsing modes that do not drive normal viewport intersections.
-  const [inView, setInView] = useState(prefersReduced === true);
+  const framerReduced = useReducedMotion();
+  const [nativeReduced, setNativeReduced] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true,
+  );
+  const prefersReduced = framerReduced === true || nativeReduced;
+
+  // Framer's hook can resolve after the first paint in an emulated or newly
+  // changed media environment. Native matchMedia gives the initial render a
+  // synchronous answer, so below-the-fold prose never starts at opacity:0 for
+  // reduced-motion users.
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!media) return;
+    const update = () => setNativeReduced(media.matches);
+    update();
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, []);
+
+  const [inView, setInView] = useState(prefersReduced);
 
   useEffect(() => {
     if (prefersReduced) {
