@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { poets } from '../data/poets';
@@ -6,7 +7,12 @@ import PoetCard from '../components/PoetCard';
 import { Poet } from '../types/poet';
 import { Search, Filter, ArrowDownUp, X, ArrowRight, Sparkles } from '../components/PremiumIcons';
 import Reveal from '../components/Reveal';
+import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
+
+function normalizeSearch(value: string) {
+  return value.toLocaleLowerCase('ru-RU').replace(/ё/g, 'е').trim();
+}
 
 function PoetsHero() {
   return (
@@ -45,11 +51,11 @@ function PoetsFilters({ searchTerm, selectedTag, sortBy, allTags, onSearch, onSe
       <div className="relative">
         <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-luxury-gold/40" />
         <input
-          type="text"
+          type="search"
           aria-label="Поиск поэтов"
           placeholder="Поиск по имени или фамилии..."
           value={searchTerm}
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={(event) => onSearch(event.target.value)}
           className="w-full rounded-2xl border border-luxury-gold/15 bg-black/20 py-4 pl-14 pr-14 text-lg font-light text-white placeholder-luxury-gray/50 transition-all focus:border-luxury-gold/50 focus:bg-black/40 focus:shadow-[0_0_25px_rgba(212,175,55,0.08)] focus:outline-none font-sans"
         />
         <AnimatePresence>
@@ -98,18 +104,18 @@ function PoetsFilters({ searchTerm, selectedTag, sortBy, allTags, onSearch, onSe
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gray-light/60">Сортировка:</span>
           </div>
           <div className="relative flex overflow-hidden rounded-full bg-black/30 p-1">
-            {sortOptions.map((opt) => {
-              const isActive = sortBy === opt.value;
+            {sortOptions.map((option) => {
+              const isActive = sortBy === option.value;
               return (
                 <button
                   type="button"
-                  key={opt.value}
-                  onClick={() => onSort(opt.value)}
+                  key={option.value}
+                  onClick={() => onSort(option.value)}
                   aria-pressed={isActive}
                   className={`relative z-10 min-h-11 rounded-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 sm:px-4 ${isActive ? 'text-luxury-dark' : 'text-luxury-gray-light hover:text-white'}`}
                 >
                   {isActive && <motion.div layoutId="sort-active-indicator" className="absolute inset-0 bg-luxury-gold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.25)]" style={{ zIndex: -1 }} transition={{ type: 'spring', stiffness: 350, damping: 26 }} />}
-                  {opt.label}
+                  {option.label}
                 </button>
               );
             })}
@@ -129,11 +135,11 @@ function PoetsEmptyState() {
   );
 }
 
-function PoetsGrid({ poets }: { poets: Poet[] }) {
+function PoetsGrid({ poets: visiblePoets }: { poets: Poet[] }) {
   return (
     <motion.div layout className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence mode="popLayout">
-        {poets.map((poet) => (
+        {visiblePoets.map((poet) => (
           <motion.div key={poet.id} layout initial={{ opacity: 0, scale: 0.85, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.85, y: -30 }} transition={{ type: 'spring', stiffness: 220, damping: 20 }}>
             <PoetCard poet={poet} />
           </motion.div>
@@ -144,16 +150,33 @@ function PoetsGrid({ poets }: { poets: Poet[] }) {
 }
 
 export default function PoetsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchTerm = searchParams.get('q') ?? '';
   const [sortBy, setSortBy] = useState<'name' | 'rating' | 'year'>('rating');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const allTags = useMemo(() => Array.from(new Set(poets.flatMap((poet) => poet.tags))), []);
 
+  useSeo({
+    title: 'Русские поэты: биографии, стихи и исследования — THE LEGENDARY POET',
+    description: 'Каталог русских поэтов: биографии, избранные стихи, свидетельства современников и документальные исследования.',
+    path: '/poets',
+    keywords: 'русские поэты, биографии поэтов, стихи, Пушкин, Лермонтов, Есенин, Маяковский',
+  });
+
+  const updateSearch = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set('q', value);
+    else next.delete('q');
+    setSearchParams(next, { replace: true });
+  };
+
   const filteredPoets = useMemo(() => {
+    const query = normalizeSearch(searchTerm);
     return poets
       .filter((poet) => {
-        const q = searchTerm.toLowerCase();
-        const matchesSearch = poet.name.toLowerCase().includes(q) || poet.fullName.toLowerCase().includes(q);
+        const matchesSearch =
+          normalizeSearch(poet.name).includes(query) ||
+          normalizeSearch(poet.fullName).includes(query);
         const matchesTag = !selectedTag || poet.tags.includes(selectedTag);
         return matchesSearch && matchesTag;
       })
@@ -168,9 +191,9 @@ export default function PoetsPage() {
     <div className="min-h-screen bg-[#050505] pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal direction="up"><PoetsHero /></Reveal>
-        
+
         <div className="mb-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-xs font-bold uppercase tracking-widest text-cyan-200/40">
+          <p className="text-xs font-bold uppercase tracking-widest text-cyan-200/40" aria-live="polite">
             Найдено гениев <span className="mx-2 h-px w-8 inline-block align-middle bg-cyan-400/30"></span>
             <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,212,255,0.5)]">{filteredPoets.length}</span>
           </p>
@@ -181,7 +204,7 @@ export default function PoetsPage() {
           </Link>
         </div>
 
-        <PoetsFilters searchTerm={searchTerm} selectedTag={selectedTag} sortBy={sortBy} allTags={allTags} onSearch={setSearchTerm} onSelectTag={setSelectedTag} onSort={setSortBy} />
+        <PoetsFilters searchTerm={searchTerm} selectedTag={selectedTag} sortBy={sortBy} allTags={allTags} onSearch={updateSearch} onSelectTag={setSelectedTag} onSort={setSortBy} />
         {filteredPoets.length > 0 ? <PoetsGrid poets={filteredPoets} /> : <PoetsEmptyState />}
       </div>
     </div>
