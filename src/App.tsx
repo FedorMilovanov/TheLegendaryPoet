@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
@@ -6,17 +6,6 @@ import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import HomePage from './pages/HomePage';
-import HallPage from './pages/HallPage';
-import PoetsPage from './pages/PoetsPage';
-import PoetDetailPage from './pages/PoetDetailPage';
-import ArticlesPage from './pages/ArticlesPage';
-import ArticleDetailPage from './pages/ArticleDetailPage';
-import EssayPage from './pages/EssayPage';
-import MusicPage from './pages/MusicPage';
-import AboutPage from './pages/AboutPage';
-import MyArchivePage from './pages/MyArchivePage';
-import NotFoundPage from './pages/NotFoundPage';
 import CommandPalette from './components/command/CommandPalette';
 import CustomCursor from './components/CustomCursor';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -26,6 +15,21 @@ import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
+
+// Route code and its large literary datasets are loaded only when requested.
+// The persistent shell remains in the entry chunk, so navigation, focus and the
+// one Lenis/RAF owner are not recreated while page bundles arrive.
+const HomePage = lazy(() => import('./pages/HomePage'));
+const HallPage = lazy(() => import('./pages/HallPage'));
+const PoetsPage = lazy(() => import('./pages/PoetsPage'));
+const PoetDetailPage = lazy(() => import('./pages/PoetDetailPage'));
+const ArticlesPage = lazy(() => import('./pages/ArticlesPage'));
+const ArticleDetailPage = lazy(() => import('./pages/ArticleDetailPage'));
+const EssayPage = lazy(() => import('./pages/EssayPage'));
+const MusicPage = lazy(() => import('./pages/MusicPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const MyArchivePage = lazy(() => import('./pages/MyArchivePage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const WipeOverlay = () => (
   <motion.div
@@ -46,6 +50,22 @@ const WipeOverlay = () => (
     </motion.div>
   </motion.div>
 );
+
+function RouteFallback() {
+  return (
+    <div
+      className="flex min-h-[70svh] items-center justify-center px-6 pt-28 text-center"
+      role="status"
+      aria-live="polite"
+      aria-label="Загрузка раздела"
+    >
+      <div className="flex flex-col items-center gap-4 text-luxury-gold/65">
+        <BrandMark size="md" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.24em]">Открываем раздел</span>
+      </div>
+    </div>
+  );
+}
 
 // With View Transitions the brand wipe plays only once — as the site's opening
 // reveal. Route changes are handled by the browser (see lib/viewTransition.ts).
@@ -140,7 +160,11 @@ function AnimatedRoutes() {
     </Routes>
   );
 
-  return <SiteLayout>{routes}</SiteLayout>;
+  return (
+    <SiteLayout>
+      <Suspense fallback={<RouteFallback />}>{routes}</Suspense>
+    </SiteLayout>
+  );
 }
 
 function RoutedApp() {
