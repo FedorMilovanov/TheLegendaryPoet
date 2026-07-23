@@ -30,6 +30,7 @@
   - [`verification/correspondence-081-084-101-109-line-variants-pass2.md`](./verification/correspondence-081-084-101-109-line-variants-pass2.md) — построчный вариантный и графический аудит этих четырёх единиц;
   - [`verification/correspondence-397-407-ln65-pss13-collation.md`](./verification/correspondence-397-407-ln65-pss13-collation.md) — поздний сокращённый случай № 397 и контрольный текст № 407 без смысловой купюры;
   - [`verification/correspondence-soviet-cuts-consolidated-ledger-pass1.md`](./verification/correspondence-soviet-cuts-consolidated-ledger-pass1.md) — сводная типология проверенных купюр, контрольных случаев и порог готовности отдельной статьи;
+  - [`verification/correspondence-soviet-cuts-sampling-protocol-pass2.md`](./verification/correspondence-soviet-cuts-sampling-protocol-pass2.md) — замороженный сбалансированный протокол следующей выборки: восемь целевых документов, четыре контроля, стратификация и запрет выборочного сохранения только ярких купюр;
   - [`verification/financial-ledger-1925-1927-pass1.md`](./verification/financial-ledger-1925-1927-pass1.md) — нейтральный ledger денежных операций 1925–1927 годов;
   - [`verification/financial-ledger-1928-1930-pass2.md`](./verification/financial-ledger-1928-1930-pass2.md) — автомобиль, валютные переводы, договоры и жилищный пай;
   - [`verification/late-professional-crisis-1930-document-ledger.md`](./verification/late-professional-crisis-1930-document-ledger.md) — выставка, `Баня`, РАПП/РЕФ, новые договоры и международные права без монокаузальной версии;
