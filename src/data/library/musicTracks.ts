@@ -1,24 +1,27 @@
 import { MusicTrack } from '../../types/poet';
-import { siteConfig } from '../../config/site';
+import { yeseninYaUstalymWaveform } from '../musicWaveforms';
 
-// NOTE: when real recordings are ready, add `audioUrl: '/audio/<file>.mp3'`
-// (place the file in public/audio/) — the row then becomes a real player with
-// a working download. Until then each track honestly links out to the channel.
 export const musicTracks: MusicTrack[] = [
   {
-    id: 'track-1',
-    title: 'Берёзы (музыка на стихи Есенина)',
+    id: 'yesenin-ya-ustalym-takim-eshche-ne-byl',
+    title: 'Я усталым таким ещё не был',
     poet: 'Сергей Есенин',
-    duration: '4:12',
-    externalUrl: siteConfig.channels.rutube,
-    description: 'Трогательная композиция о русской природе',
-  },
-  {
-    id: 'track-2',
-    title: 'Пророк (музыкальная декламация)',
-    poet: 'Александр Пушкин',
-    duration: '5:30',
-    externalUrl: siteConfig.channels.youtube,
-    description: 'Мощное прочтение знаменитого стихотворения под музыку',
+    poetId: 'sergei-yesenin',
+    duration: '4:40',
+    durationSeconds: 280.241633,
+    audioUrl: '/audio/yesenin-ya-ustalym-takim-eshche-ne-byl.tlp-2026.mp3',
+    coverUrl: '/images/music/yesenin-ya-ustalym-cover.webp',
+    wideCoverUrl: '/images/music/yesenin-ya-ustalym-wide.webp',
+    description: 'Первая официальная музыкальная публикация проекта — тёмная кинематографическая интерпретация исповедальной лирики Сергея Есенина.',
+    releaseYear: 2026,
+    featured: true,
+    credits: [
+      'Слова — Сергей Есенин',
+      'Музыкальная интерпретация и мастер — The Legendary Poet',
+      'Создано с использованием генеративных музыкальных технологий',
+    ],
+    rightsNotice: '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Повторная загрузка и коммерческое распространение без разрешения запрещены.',
+    audioSha256: '2f5b7c0a9b83be4685d0d83728e5896c8adde78b75b46dad361eddfb28356381',
+    waveform: yeseninYaUstalymWaveform,
   },
 ];

@@ -1,91 +1,38 @@
-# Комментарии и оценки — бесплатное общее хранилище
+# Общие оценки и комментарии
 
-По умолчанию оценки и комментарии сохраняются **в браузере каждого посетителя**
-(`localStorage`) — они работают, но видны только на этом устройстве и не общие.
-Чтобы сделать их **настоящими и общими для всех**, подключите бесплатный бэкенд
-**Supabase** (Postgres + авто‑API). Денег не нужно, карта не нужна, сервер держать не надо.
+Интерфейс рейтингов работает сразу. Без backend данные сохраняются локально в браузере. Для общей базы всех посетителей используется бесплатный Supabase/Postgres через три строго ограниченные RPC-функции.
 
-Код уже готов: если заданы две переменные окружения — сайт автоматически читает и пишет
-в Supabase; если не заданы — работает как раньше (локально). Ничего в коде менять не нужно.
+## Подключение
 
-## Что такое Supabase и где хранятся данные
+1. Создайте проект на Supabase.
+2. Откройте **SQL Editor** и выполните целиком файл [`docs/community-schema.sql`](./community-schema.sql).
+3. В **Project Settings → API** скопируйте Project URL и публичный `anon` key.
+4. В GitHub-репозитории откройте **Settings → Secrets and variables → Actions → Variables** и добавьте:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+5. Запустите Deploy workflow или сделайте push в `main`.
 
-Данные лежат в вашей бесплатной базе Postgres на Supabase. Сайт (статический, на GitHub
-Pages) общается с ней напрямую по HTTPS через встроенный REST‑API. Публичный «anon»‑ключ
-можно смело держать в коде — доступ ограничен политиками Row Level Security (их создаёт
-SQL ниже: разрешены только чтение и добавление, без удаления/правки чужого).
+Публичный anon key в клиентском приложении является нормальной частью архитектуры Supabase. Таблицы не дают анонимным посетителям прямого `insert/update/delete`: запись идёт только через функции, которые проверяют тип объекта, диапазон оценок, длину текста и уникальность голоса браузера.
 
-> Нюанс бесплатного тарифа: проект Supabase «засыпает» после ~7 дней без обращений —
-> тогда зайдите в дашборд и нажмите Restore (одна кнопка). Для не‑ежедневного трафика это
-> единственное неудобство. Нужен вариант без «засыпания» — скажите, переключим на Firebase.
+## Защита и ограничения
 
-## Настройка за 5 минут
+- Один активный голос на объект с одной установки браузера: уникальный индекс `(target_type, target_id, voter_id)`.
+- Повторная отправка оценки обновляет прежнюю, а не создаёт накрутку.
+- Полезность комментария хранится отдельным голосом, поэтому клиент не может произвольно выставить счётчик.
+- Комментарии можно скрывать сменой `status` на `hidden` в Table Editor.
+- Клиентский идентификатор не является fingerprint: это случайный UUID без персональных данных.
+- Полная защита от намеренной накрутки требует входа в аккаунт или CAPTCHA/Turnstile. Текущая схема защищает от случайных дублей и прямой подмены счётчиков, сохраняя голосование без регистрации.
 
-1. **Регистрация:** зайдите на https://supabase.com → Start your project (через GitHub‑аккаунт).
-2. **Новый проект:** New project. Придумайте имя и **пароль базы** (сохраните его). Регион —
-   ближе к аудитории (напр. Frankfurt). Дождитесь создания (~1–2 мин).
-3. **Создайте таблицы:** слева **SQL Editor → New query**, вставьте весь блок ниже и нажмите **Run**:
+## Модерация
 
-   ```sql
-   -- Таблицы оценок и комментариев
-   create table if not exists tlp_ratings (
-     id          text primary key,
-     target_type text not null,
-     target_id   text not null,
-     scores      jsonb not null,
-     created_at  timestamptz not null default now()
-   );
-   create table if not exists tlp_comments (
-     id          text primary key,
-     target_type text not null,
-     target_id   text not null,
-     author      text not null,
-     text        text not null,
-     kind        text not null,
-     helpful     integer not null default 0,
-     created_at  timestamptz not null default now()
-   );
+Скрыть комментарий:
 
-   -- Включаем защиту и разрешаем всем читать и добавлять (без удаления чужого)
-   alter table tlp_ratings  enable row level security;
-   alter table tlp_comments enable row level security;
+```sql
+update public.tlp_comments set status='hidden' where id='comment-id';
+```
 
-   create policy "read ratings"    on tlp_ratings  for select using (true);
-   create policy "insert ratings"  on tlp_ratings  for insert with check (true);
-   create policy "read comments"   on tlp_comments for select using (true);
-   create policy "insert comments" on tlp_comments for insert with check (true);
-   create policy "update helpful"  on tlp_comments for update using (true) with check (true);
-   ```
+Вернуть:
 
-4. **Скопируйте ключи:** слева **Project Settings → API**. Понадобятся два значения:
-   - **Project URL** (вида `https://xxxxxxxx.supabase.co`)
-   - **anon public** ключ (длинная строка `eyJ...`)
-5. **Добавьте их в репозиторий GitHub:** в репозитории `TheLegendaryPoet` →
-   **Settings → Secrets and variables → Actions → вкладка `Variables` → New repository variable**.
-   Создайте ровно две переменные (именно Variables, не Secrets):
-   - `SUPABASE_URL` = ваш Project URL
-   - `SUPABASE_ANON_KEY` = ваш anon public ключ
-6. **Передеплой:** вкладка **Actions → Deploy to GitHub Pages → Run workflow** (или просто
-   сделайте любой пуш). Сборка подхватит переменные, и комментарии/оценки станут общими.
-
-Готово. Теперь оценка или комментарий, оставленные с любого устройства, видны всем.
-
-## Проверка
-
-- Откройте сайт, поставьте оценку/комментарий у любого поэта.
-- В Supabase: **Table Editor → tlp_comments / tlp_ratings** — там появится новая строка.
-- С другого устройства/браузера комментарий тоже виден.
-
-## Модерация и защита от спама (по желанию)
-
-- В коде уже есть анти‑дабл‑клик: кулдаун 30 сек и «один голос на объект» с устройства.
-- Удалить лишнее: **Table Editor** → выделить строку → Delete. Или SQL:
-  `delete from tlp_comments where id = '...';`
-- Захотите премодерацию (комментарий виден после одобрения) или капчу — это добавляется
-  политиками RLS и полем `approved`; скажите, настрою.
-
-## Альтернатива без «засыпания»
-
-Если не хотите изредка «будить» проект — используем **Firebase Firestore** (Spark, бесплатно,
-не засыпает, анонимный вход — посетителям тоже не нужен аккаунт). Адаптер меняется на
-firebase‑вариант; данные и UI те же. Дайте знать, если предпочитаете этот путь.
+```sql
+update public.tlp_comments set status='published' where id='comment-id';
+```
