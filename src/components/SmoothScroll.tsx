@@ -4,6 +4,13 @@ import { useLocation, useNavigationType } from 'react-router-dom';
 import { setActiveLenis } from '../utils/smoothScroll';
 
 const HASH_RETRY_LIMIT = 20;
+const FIXED_HEADER_OFFSET = 96;
+
+function decodeHash(hash: string) {
+  const raw = hash.replace(/^#/, '');
+  if (!raw) return '';
+  try { return decodeURIComponent(raw); } catch { return raw; }
+}
 
 const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -90,18 +97,27 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let attempts = 0;
 
     const scrollToNumber = (top: number) => {
-      if (lenisRef.current) lenisRef.current.scrollTo(top, { immediate: true });
-      else window.scrollTo(0, top);
+      const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
+      if (lenisRef.current) lenisRef.current.scrollTo(safeTop, { immediate: true });
+      else window.scrollTo(0, safeTop);
+    };
+
+    const scrollToHashTarget = (target: HTMLElement) => {
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(target, { offset: -FIXED_HEADER_OFFSET, duration: 0.8 });
+        return;
+      }
+      const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
     };
 
     const restore = () => {
       if (cancelled) return;
       if (location.hash) {
-        const id = decodeURIComponent(location.hash.slice(1));
-        const target = document.getElementById(id);
+        const id = decodeHash(location.hash);
+        const target = id ? document.getElementById(id) : null;
         if (target) {
-          if (lenisRef.current) lenisRef.current.scrollTo(target, { offset: -96, duration: 0.8 });
-          else target.scrollIntoView({ behavior: 'auto', block: 'start' });
+          scrollToHashTarget(target);
           return;
         }
         attempts += 1;
