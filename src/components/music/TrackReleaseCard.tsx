@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Clock3, Disc3, Pause, Play } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock3, Disc3, LoaderCircle, Pause, Play, RotateCw } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
@@ -11,21 +11,31 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
   const {
     currentTrack,
     playing,
+    status,
     currentTime,
     duration,
     completedTrackIds,
     toggleTrack,
+    retry,
     getSavedPosition,
   } = useAudioPlayer();
 
   const isActive = currentTrack?.id === track.id;
   const trackPlaying = isActive && playing;
+  const trackError = isActive && status === 'error';
+  const trackBusy = isActive && (status === 'loading' || status === 'buffering');
   const position = isActive ? currentTime : getSavedPosition(track.id);
   const totalDuration = isActive ? (duration || track.durationSeconds || 0) : (track.durationSeconds || 0);
   const progress = totalDuration > 0 ? Math.min(1, position / totalDuration) : 0;
   const completed = completedTrackIds.has(track.id);
   const waveform = track.waveform?.filter((_, index) => index % 4 === 0).slice(0, 34) ?? [];
   const coverTransition = { viewTransitionName: `track-cover-${track.id}` } as CSSProperties;
+  const unavailable = !track.audioUrl;
+
+  const toggle = () => {
+    if (trackError) retry();
+    else void toggleTrack(track);
+  };
 
   return (
     <article
@@ -54,18 +64,29 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
 
         <button
           type="button"
-          onClick={() => { void toggleTrack(track); }}
-          aria-label={trackPlaying ? `Поставить «${track.title}» на паузу` : `Воспроизвести «${track.title}»`}
-          className="absolute bottom-4 left-4 z-10 inline-flex h-13 w-13 items-center justify-center rounded-full border border-white/25 text-black shadow-[0_0_28px_color-mix(in_srgb,var(--track-accent)_34%,transparent)] transition duration-300 hover:scale-110 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
-          style={{ backgroundColor: 'var(--track-accent)' }}
+          onClick={toggle}
+          disabled={unavailable}
+          aria-label={unavailable ? `Аудиофайл «${track.title}» недоступен` : trackError ? `Повторить загрузку «${track.title}»` : trackPlaying ? `Поставить «${track.title}» на паузу` : `Воспроизвести «${track.title}»`}
+          className="absolute bottom-4 left-4 z-10 inline-flex h-13 w-13 items-center justify-center rounded-full border border-white/25 text-black shadow-[0_0_28px_color-mix(in_srgb,var(--track-accent)_34%,transparent)] transition duration-300 hover:scale-110 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/35 disabled:shadow-none"
+          style={{ backgroundColor: unavailable ? undefined : trackError ? '#fbbf24' : 'var(--track-accent)' }}
         >
-          {trackPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+          {trackBusy && !trackPlaying
+            ? <LoaderCircle size={20} className="animate-spin" />
+            : trackError
+              ? <RotateCw size={20} />
+              : trackPlaying
+                ? <Pause size={20} fill="currentColor" />
+                : <Play size={20} fill="currentColor" className="ml-0.5" />}
         </button>
 
-        {(completed || trackPlaying) && (
-          <div className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/48 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/68 backdrop-blur-xl">
-            {completed ? <CheckCircle2 size={12} style={{ color: 'var(--track-secondary)' }} /> : <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--track-secondary)' }} />}
-            {completed ? 'Прослушано' : 'Сейчас звучит'}
+        {(completed || trackPlaying || trackError) && (
+          <div className="absolute right-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-black/52 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white/72 backdrop-blur-xl" aria-live="polite">
+            {completed
+              ? <CheckCircle2 size={12} style={{ color: 'var(--track-secondary)' }} />
+              : trackError
+                ? <RotateCw size={12} className="text-amber-300" />
+                : <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ backgroundColor: 'var(--track-secondary)' }} />}
+            {completed ? 'Прослушано' : trackError ? 'Повторить' : 'Сейчас звучит'}
           </div>
         )}
       </div>
@@ -103,7 +124,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
 
         <FeedbackMiniSummary targetType="track" targetId={track.id} />
         <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/45 transition hover:text-white">
-          <span>{position > 1 && !completed ? 'Продолжить публикацию' : 'Открыть публикацию'}</span>
+          <span>{trackError ? 'Открыть и повторить' : position > 1 && !completed ? 'Продолжить публикацию' : 'Открыть публикацию'}</span>
           <ArrowRight size={17} className="transition group-hover:translate-x-1" style={{ color: 'var(--track-secondary)' }} />
         </Link>
       </div>
