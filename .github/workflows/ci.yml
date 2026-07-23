@@ -25,6 +25,8 @@ jobs:
         run: npm run check:content
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
+      - name: Validate overlays, images, and pointer interactions
+        run: npm run validate:interaction-runtime
       - name: Typecheck
         id: typecheck
         run: |
