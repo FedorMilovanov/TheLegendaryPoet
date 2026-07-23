@@ -26,7 +26,21 @@ jobs:
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Validate overlays, images, and pointer interactions
-        run: npm run validate:interaction-runtime
+        id: interaction_runtime
+        run: |
+          set +e
+          npm run validate:interaction-runtime > interaction-runtime.log 2>&1
+          status=$?
+          cat interaction-runtime.log
+          exit $status
+      - name: Upload interaction runtime diagnostics
+        if: ${{ failure() && steps.interaction_runtime.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-runtime-diagnostics
+          path: interaction-runtime.log
+          if-no-files-found: error
+          retention-days: 3
       - name: Typecheck
         id: typecheck
         run: |
