@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import {
   Check,
   Clock3,
@@ -29,7 +30,9 @@ const formatTime = (value: number) => {
 const readStoredVolume = () => {
   if (typeof window === 'undefined') return 0.9;
   try {
-    const value = Number(window.localStorage.getItem('tlp-audio-volume'));
+    const stored = window.localStorage.getItem('tlp-audio-volume');
+    if (stored === null) return 0.9;
+    const value = Number(stored);
     return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0.9;
   } catch {
     return 0.9;
@@ -107,6 +110,11 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
       setBuffered(audio.buffered.end(audio.buffered.length - 1));
     };
 
+    const setMediaHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      if (!('mediaSession' in navigator)) return;
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* action unsupported */ }
+    };
+
     const configureMediaSession = () => {
       if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
 
@@ -119,25 +127,21 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
           : undefined,
       });
 
-      const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
-        try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* action unsupported */ }
-      };
-
-      setHandler('play', () => { void audio.play(); });
-      setHandler('pause', () => audio.pause());
-      setHandler('stop', () => {
+      setMediaHandler('play', () => { void audio.play(); });
+      setMediaHandler('pause', () => audio.pause());
+      setMediaHandler('stop', () => {
         audio.pause();
         audio.currentTime = 0;
       });
-      setHandler('seekbackward', (details) => {
+      setMediaHandler('seekbackward', (details) => {
         audio.currentTime = Math.max(0, audio.currentTime - (details.seekOffset ?? 10));
       });
-      setHandler('seekforward', (details) => {
+      setMediaHandler('seekforward', (details) => {
         audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + (details.seekOffset ?? 10));
       });
-      setHandler('seekto', (details) => {
+      setMediaHandler('seekto', (details) => {
         if (details.seekTime === undefined) return;
-        if (details.fastSeek && 'fastSeek' in audio) audio.fastSeek(details.seekTime);
+        if (details.fastSeek && typeof audio.fastSeek === 'function') audio.fastSeek(details.seekTime);
         else audio.currentTime = Math.max(0, Math.min(audio.duration || 0, details.seekTime));
       });
     };
@@ -193,7 +197,7 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
     };
     const onPause = () => {
       setPlaying(false);
-      if (status !== 'error') setStatus('ready');
+      setStatus((value) => value === 'error' ? value : 'ready');
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     };
     const onEnd = () => {
@@ -223,6 +227,7 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
     window.addEventListener('tlp-audio-playing', onOther);
 
     return () => {
+      audio.pause();
       audio.removeEventListener('timeupdate', syncTime);
       audio.removeEventListener('loadedmetadata', syncDuration);
       audio.removeEventListener('durationchange', syncDuration);
@@ -237,6 +242,16 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnd);
       window.removeEventListener('tlp-audio-playing', onOther);
+      setMediaHandler('play', null);
+      setMediaHandler('pause', null);
+      setMediaHandler('stop', null);
+      setMediaHandler('seekbackward', null);
+      setMediaHandler('seekforward', null);
+      setMediaHandler('seekto', null);
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+      }
     };
   }, [progressKey, track.audioUrl, track.coverUrl, track.durationSeconds, track.id, track.poet, track.title]);
 
@@ -267,6 +282,16 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
     try { window.localStorage.removeItem(progressKey); } catch { /* storage unavailable */ }
   };
 
+  const toggleMute = () => {
+    if (muted || volume === 0) {
+      if (volume === 0) setVolume(0.75);
+      setMuted(false);
+    } else {
+      setMuted(true);
+    }
+    setVolumeOpen(true);
+  };
+
   const share = async () => {
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     const url = `${window.location.origin}${base}/music/${track.id}`;
@@ -285,8 +310,12 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
     } catch { /* sharing cancelled */ }
   };
 
-  const onPlayerKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+  const onPlayerKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
+    if (event.key === 'Escape') {
+      setVolumeOpen(false);
+      return;
+    }
     if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.tagName === 'A') return;
     if (event.code === 'Space') {
       event.preventDefault();
@@ -298,7 +327,7 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
       event.preventDefault();
       seekBy(10);
     } else if (event.key.toLowerCase() === 'm') {
-      setMuted((value) => !value);
+      toggleMute();
     }
   };
 
@@ -441,7 +470,7 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
           )}
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5">
-            <button type="button" onClick={() => seekBy(-10)} disabled={unavailable} aria-label="Назад на 10 секунд" title="Назад на 10 секунд" className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:opacity-30"><RotateCcw size={18} /><span className="sr-only">10 секунд назад</span></button>
+            <button type="button" onClick={() => seekBy(-10)} disabled={unavailable} aria-label="Назад на 10 секунд" title="Назад на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:opacity-30"><RotateCcw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
 
             <button
               type="button"
@@ -453,10 +482,10 @@ export default function FeaturedTrackPlayer({ track, compact = false }: { track:
               {mainButtonLabel}
             </button>
 
-            <button type="button" onClick={() => seekBy(10)} disabled={unavailable} aria-label="Вперёд на 10 секунд" title="Вперёд на 10 секунд" className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:opacity-30"><RotateCw size={18} /><span className="sr-only">10 секунд вперёд</span></button>
+            <button type="button" onClick={() => seekBy(10)} disabled={unavailable} aria-label="Вперёд на 10 секунд" title="Вперёд на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:opacity-30"><RotateCw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
 
             <div className="relative flex items-center">
-              <button type="button" onClick={() => { setMuted((value) => !value); setVolumeOpen(true); }} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200"><VolumeIcon size={18} /></button>
+              <button type="button" onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-cyan-400/14 bg-black/15 text-cyan-100/58 transition hover:border-cyan-300/30 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200"><VolumeIcon size={18} /></button>
               <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-cyan-100/35 transition hover:text-cyan-200 sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
               {volumeOpen && (
                 <div className="absolute bottom-14 left-0 z-30 flex w-48 items-center gap-3 rounded-2xl border border-cyan-300/15 bg-[#071018]/98 p-3 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:left-auto sm:right-0">
