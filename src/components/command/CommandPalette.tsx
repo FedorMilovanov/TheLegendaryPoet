@@ -8,6 +8,19 @@ import CommandResult from './CommandResult';
 
 type IndexStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+let commandItemsPromise: Promise<CommandItem[]> | null = null;
+
+function loadCommandItems(): Promise<CommandItem[]> {
+  commandItemsPromise ??= import('./commandItems')
+    .then(({ getCommandItems }) => getCommandItems())
+    .catch((error) => {
+      // A transient chunk failure must remain retryable on the next user action.
+      commandItemsPromise = null;
+      throw error;
+    });
+  return commandItemsPromise;
+}
+
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -53,15 +66,17 @@ export default function CommandPalette() {
 
   // The search index imports poet profiles, longreads, articles and music. Keep
   // that data out of the persistent shell until the user expresses search intent.
+  // Re-enter even from `loading`: closing the palette while the chunk was in
+  // flight cancels only this component subscription, not the shared module load.
   useEffect(() => {
-    if (!open || indexStatus === 'loading' || indexStatus === 'ready') return;
+    if (!open || indexStatus === 'ready') return;
 
     let active = true;
     setIndexStatus('loading');
-    void import('./commandItems')
-      .then(({ getCommandItems }) => {
+    void loadCommandItems()
+      .then((loadedItems) => {
         if (!active) return;
-        setItems(getCommandItems());
+        setItems(loadedItems);
         setIndexStatus('ready');
       })
       .catch(() => {
@@ -185,8 +200,8 @@ export default function CommandPalette() {
       <button
         type="button"
         onClick={openPalette}
-        onPointerEnter={() => { void import('./commandItems'); }}
-        onFocus={() => { void import('./commandItems'); }}
+        onPointerEnter={() => { void loadCommandItems(); }}
+        onFocus={() => { void loadCommandItems(); }}
         aria-label="Открыть поиск по сайту (Ctrl + K)"
         className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 lg:inline-flex"
         data-testid="command-palette-trigger"
