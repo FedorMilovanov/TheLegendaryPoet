@@ -30,7 +30,7 @@ export interface EssayImageData {
 
 export interface EssayCitationData {
   /** Stable ids from the essay bibliography, rendered as inline source markers. */
-  sourceIds?: string[];
+  sourceIds?: readonly string[];
 }
 
 export interface EssayBlockIdentity {
