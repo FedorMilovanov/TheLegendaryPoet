@@ -1,8 +1,8 @@
 import { ArrowRight, CheckCircle2, Clock3, Disc3, LoaderCircle, Pause, Play, RotateCw } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import type { MusicTrack } from '../../types/poet';
-import { asset } from '../../utils/asset';
 import FeedbackMiniSummary from '../community/FeedbackMiniSummary';
+import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
 import { getTrackThemeStyle } from './trackTheme';
@@ -51,16 +51,15 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
     >
       <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[232px]">
         <Link to={`/music/${track.id}`} className="block h-full w-full" aria-label={`Открыть публикацию «${track.title}»`}>
-          {track.coverUrl ? (
-            <img
-              src={asset(track.coverUrl)}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_62%),#050505]" />
+          {track.coverUrl && (
+            <ResilientImage
+              src={track.coverUrl}
               alt={`Обложка трека «${track.title}»`}
-              loading="lazy"
+              sizes="(min-width: 640px) 190px, 100vw"
               style={coverTransition}
-              className="h-full w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.045] group-hover:saturate-[1.08]"
+              className="relative h-full w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.045] group-hover:saturate-[1.08]"
             />
-          ) : (
-            <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(0,212,255,0.14),transparent_62%),#050505]" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-white/[0.04] sm:bg-gradient-to-r sm:from-transparent sm:to-black/65" />
         </Link>

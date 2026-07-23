@@ -1,179 +1,126 @@
-import { useEffect, useRef } from 'react';
-import type { PointerEvent, ReactNode } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 interface TiltCardProps {
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
   intensity?: number;
   /** Subtle moving highlight; disabled automatically for reduced motion and touch pointers. */
   sheen?: boolean;
 }
 
-/**
- * Pointer-driven tilt with a stable, non-transforming hit surface.
- *
- * Pointer events belong to the outer wrapper while only the inner visual plane
- * rotates. This matters at card edges: when the transformed element itself owns
- * pointerleave, its projected bounds can move out from under the cursor and
- * repeatedly reset/reactivate — the exact stutter that looks like a flickering
- * cover. Geometry is cached per hover, writes are RAF-batched, and a small lerp
- * filters high-frequency mouse noise without adding React renders.
- */
 export default function TiltCard({
   children,
   className = '',
-  intensity = 6,
+  intensity = 12,
   sheen = true,
 }: TiltCardProps) {
-  const hitRef = useRef<HTMLDivElement>(null);
-  const visualRef = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
-  const settleFrameRef = useRef<number | null>(null);
-  const rectRef = useRef<DOMRect | null>(null);
-  const targetRef = useRef({ x: 0.5, y: 0.5 });
-  const currentRef = useRef({ x: 0.5, y: 0.5 });
-  const reducedMotionRef = useRef(false);
+  const settleTimerRef = useRef<number | null>(null);
+  const pointerRef = useRef({ x: 0.5, y: 0.5 });
+  const enabledRef = useRef(false);
+  const visibleRef = useRef(true);
 
-  const cancelFrame = () => {
+  const reset = useCallback(() => {
     if (frameRef.current != null) {
       cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
     }
-  };
-
-  const cancelSettleFrame = () => {
-    if (settleFrameRef.current != null) {
-      cancelAnimationFrame(settleFrameRef.current);
-      settleFrameRef.current = null;
-    }
-  };
-
-  const clearPointerState = () => {
-    cancelFrame();
-    rectRef.current = null;
-    targetRef.current = { x: 0.5, y: 0.5 };
-    currentRef.current = { x: 0.5, y: 0.5 };
-
-    const node = visualRef.current;
-    if (!node) return null;
-    node.removeAttribute('data-tilting');
+    if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
+    const node = ref.current;
+    if (!node) return;
+    node.style.setProperty('--tilt-x', '0deg');
+    node.style.setProperty('--tilt-y', '0deg');
     node.style.setProperty('--tilt-sheen-x', '50%');
     node.style.setProperty('--tilt-sheen-y', '50%');
-    return node;
-  };
-
-  const reset = () => {
-    const node = clearPointerState();
-    node?.style.removeProperty('transform');
-  };
-
-  /** Flatten synchronously before a click starts a View Transition or opens a
-   * portal. Chromium then snapshots a flat decoded cover, never a tilted raster. */
-  const flattenForActivation = () => {
-    const node = clearPointerState();
-    if (!node) return;
-
-    cancelSettleFrame();
-    node.style.setProperty('transition', 'none');
-    node.style.removeProperty('transform');
-    settleFrameRef.current = requestAnimationFrame(() => {
-      node.style.removeProperty('transition');
-      settleFrameRef.current = null;
-    });
-  };
+    settleTimerRef.current = window.setTimeout(() => {
+      if (ref.current) ref.current.style.willChange = 'auto';
+      settleTimerRef.current = null;
+    }, 420);
+  }, []);
 
   useEffect(() => {
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const forcedColors = window.matchMedia('(forced-colors: active)');
 
     const updateCapability = () => {
-      reducedMotionRef.current = reducedMotion.matches;
-      if (reducedMotionRef.current) reset();
+      enabledRef.current = finePointer.matches && !reducedMotion.matches && !forcedColors.matches;
+      if (!enabledRef.current) reset();
     };
 
     updateCapability();
+    finePointer.addEventListener?.('change', updateCapability);
     reducedMotion.addEventListener?.('change', updateCapability);
+    forcedColors.addEventListener?.('change', updateCapability);
+
+    const observer = typeof IntersectionObserver === 'undefined'
+      ? null
+      : new IntersectionObserver(([entry]) => {
+          visibleRef.current = Boolean(entry?.isIntersecting);
+          if (!visibleRef.current) reset();
+        }, { rootMargin: '120px' });
+    if (ref.current) observer?.observe(ref.current);
 
     return () => {
-      cancelFrame();
-      cancelSettleFrame();
+      finePointer.removeEventListener?.('change', updateCapability);
       reducedMotion.removeEventListener?.('change', updateCapability);
+      forcedColors.removeEventListener?.('change', updateCapability);
+      observer?.disconnect();
+      if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
+      if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
     };
-  }, []);
+  }, [reset]);
 
   const paint = () => {
     frameRef.current = null;
-    const node = visualRef.current;
-    if (!node || reducedMotionRef.current || !node.hasAttribute('data-tilting')) return;
+    const node = ref.current;
+    if (!node || !enabledRef.current || !visibleRef.current) return;
 
-    const target = targetRef.current;
-    const current = currentRef.current;
-    const smoothing = 0.3;
-    current.x += (target.x - current.x) * smoothing;
-    current.y += (target.y - current.y) * smoothing;
+    const { x, y } = pointerRef.current;
+    const rotateY = (x - 0.5) * intensity;
+    const rotateX = (0.5 - y) * intensity;
 
-    const rotateY = (current.x - 0.5) * intensity;
-    const rotateX = (0.5 - current.y) * intensity;
-    node.style.transform = `rotateX(${rotateX.toFixed(3)}deg) rotateY(${rotateY.toFixed(3)}deg)`;
-    node.style.setProperty('--tilt-sheen-x', `${(current.x * 100).toFixed(1)}%`);
-    node.style.setProperty('--tilt-sheen-y', `${(current.y * 100).toFixed(1)}%`);
-
-    const unsettled = Math.abs(target.x - current.x) > 0.001 || Math.abs(target.y - current.y) > 0.001;
-    if (unsettled) frameRef.current = requestAnimationFrame(paint);
+    node.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);
+    node.style.setProperty('--tilt-y', `${rotateY.toFixed(2)}deg`);
+    node.style.setProperty('--tilt-sheen-x', `${(x * 100).toFixed(1)}%`);
+    node.style.setProperty('--tilt-sheen-y', `${(y * 100).toFixed(1)}%`);
   };
 
-  const schedulePaint = () => {
-    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
-  };
-
-  const activate = (pointerType: string) => {
-    const node = visualRef.current;
-    const hit = hitRef.current;
-    // `(pointer: coarse)` describes the primary device and incorrectly disables
-    // a real mouse on hybrid laptops. The event's own pointerType is the precise
-    // signal: touch stays flat, while mouse (and hover-capable pen) can tilt.
-    if (reducedMotionRef.current || pointerType === 'touch' || !node || !hit) return false;
-    if (!rectRef.current) rectRef.current = hit.getBoundingClientRect();
-    node.setAttribute('data-tilting', 'true');
-    return true;
-  };
-
-  const handlePointerEnter = (event: PointerEvent<HTMLDivElement>) => {
-    activate(event.pointerType);
-  };
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!activate(event.pointerType)) return;
-    const hit = hitRef.current;
-    const rect = rectRef.current ?? hit?.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || rect.height <= 0) return;
-    rectRef.current = rect;
-
-    targetRef.current = {
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!ref.current || !enabledRef.current || !visibleRef.current) return;
+    if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+    const rect = ref.current.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    pointerRef.current = {
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-    schedulePaint();
+    ref.current.style.willChange = 'transform';
+    if (settleTimerRef.current != null) {
+      window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
   return (
-    <div
-      ref={hitRef}
-      onPointerEnter={handlePointerEnter}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={reset}
-      onPointerCancel={reset}
-      onPointerDown={flattenForActivation}
-      className="tilt-card-wrapper relative h-full w-full"
-    >
+    <div className="tilt-card-wrapper relative h-full w-full">
       <div
-        ref={visualRef}
+        ref={ref}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={reset}
+        onPointerCancel={reset}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) reset();
+        }}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         {children}
         {sheen && (
           <span
             aria-hidden="true"
-            className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_36%)]"
+            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.12),transparent_38%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
           />
         )}
       </div>
