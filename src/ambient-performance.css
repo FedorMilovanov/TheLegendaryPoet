@@ -1,0 +1,50 @@
+/* Decorative ambient motion belongs to CSS, not React's render/animation loop. */
+.poetry-backdrop {
+  contain: strict;
+  opacity: 1;
+}
+
+.poetry-backdrop-fragment {
+  opacity: var(--fragment-opacity);
+  transform: translate3d(0, 0, 0) rotate(var(--fragment-rotate));
+  animation: poetry-fragment-drift var(--fragment-duration) ease-in-out var(--fragment-delay) infinite;
+}
+
+@keyframes poetry-fragment-drift {
+  0%, 100% {
+    opacity: var(--fragment-opacity);
+    transform: translate3d(0, 0, 0) rotate(var(--fragment-rotate));
+  }
+  50% {
+    opacity: calc(var(--fragment-opacity) * 1.55);
+    transform: translate3d(var(--fragment-dx), var(--fragment-dy), 0) rotate(var(--fragment-rotate));
+  }
+}
+
+/* Modern engines fade the decorative layer over the opening 800px entirely on
+   the compositor. Older engines simply retain the already very faint backdrop. */
+@supports (animation-timeline: scroll()) {
+  .poetry-backdrop {
+    animation: poetry-backdrop-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 800px;
+  }
+
+  @keyframes poetry-backdrop-fade {
+    from { opacity: 1; }
+    to { opacity: 0.2; }
+  }
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .poetry-backdrop-fragment {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poetry-backdrop {
+    animation: none;
+    opacity: 0.35;
+  }
+}
