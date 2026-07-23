@@ -24,6 +24,7 @@
   - [`verification/correspondence-index-1-416-pass2-classification.md`](./verification/correspondence-index-1-416-pass2-classification.md) — предварительный жанровый и источниковедческий слой;
   - [`verification/correspondence-index-1-416-pass3-complete-genre.md`](./verification/correspondence-index-1-416-pass3-complete-genre.md) — завершённая рабочая жанровая классификация всех 416 единиц;
   - [`verification/correspondence-editorial-count-reconciliation-pass1.md`](./verification/correspondence-editorial-count-reconciliation-pass1.md) — локализация внутреннего расхождения `92/194 ↔ 93/193`;
+  - [`verification/official-archive-edition-verification-pass4-2026-07-23.md`](./verification/official-archive-edition-verification-pass4-2026-07-23.md) — стокгольмское издание 1982 года, репринт 1991-го и официальные архивные числа РГАЛИ `111 / 197 / 224`;
   - [`verification/correspondence-reply-side-lilya-osip-pass1.md`](./verification/correspondence-reply-side-lilya-osip-pass1.md) — карта ответной стороны Лили и Осипа;
   - [`verification/correspondence-081-113-ln65-pss13-collation-pass1.md`](./verification/correspondence-081-113-ln65-pss13-collation-pass1.md) — прямая поединичная колляция блока разлуки по трём изданиям;
   - [`verification/correspondence-081-084-101-109-ln65-cuts-pass1.md`](./verification/correspondence-081-084-101-109-ln65-cuts-pass1.md) — смысловые купюры ЛН-65 в четырёх письмах;
@@ -36,6 +37,8 @@
   - [`verification/late-professional-crisis-1930-document-ledger.md`](./verification/late-professional-crisis-1930-document-ledger.md) — выставка, `Баня`, РАПП/РЕФ, новые договоры и международные права без монокаузальной версии;
   - [`verification/maryanov-rights-authority-audit.md`](./verification/maryanov-rights-authority-audit.md) — две доверенности Марьянову и последующий отказ от его посредничества;
   - [`verification/claim-ledger-pass6-correspondence-primary-corpus.md`](./verification/claim-ledger-pass6-correspondence-primary-corpus.md) — утверждения, уже повышенные до `READY`, и оставшиеся `VERIFY/HOLD`;
+  - [`verification/publication-transfer-matrix-correspondence-pass1.md`](./verification/publication-transfer-matrix-correspondence-pass1.md) — точная матрица `утверждение → допустимая публичная формула → запрещённое расширение → статья/глава`;
+  - [`verification/archive-request-pack-correspondence-1923-rgali.md`](./verification/archive-request-pack-correspondence-1923-rgali.md) — готовый запрос РГАЛИ по документам разлуки, № 113 и не вошедшим в книгу запискам;
   - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — аудит письма-дневника № 113, неполного подлинника и редакции Лили 1956 года;
   - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта опубликованной выборки разлуки;
   - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года.
