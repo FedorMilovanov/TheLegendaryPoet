@@ -69,6 +69,8 @@ jobs:
         run: npm run validate:community-store
       - name: Validate target-scoped community subscriptions
         run: npm run validate:community-target-store
+      - name: Validate persistent app shell invariants
+        run: npm run validate:app-shell
       - name: Validate literary editorial rules
         run: npm run validate:style
       - name: TypeScript typecheck
@@ -103,6 +105,8 @@ jobs:
           VITE_BASE: /
       - name: Validate route code splitting
         run: npm run validate:route-chunks
+      - name: Validate production route and asset budgets
+        run: npm run validate:build-output
       - name: Prerender social pages
         run: npm run prerender
       - name: Validate prerendered SEO and JSON-LD
