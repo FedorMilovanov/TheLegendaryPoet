@@ -43,7 +43,7 @@
   - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта опубликованной выборки разлуки;
   - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года.
 - Финальный документальный кластер:
-  - [`sources/death-case-no50-2005.md`](./sources/death-case-no50-2005.md) — точный библиографический паспорт 672-страничного издания дела № 50 и границы его использования до получения полного тома;
+  - [`sources/death-case-no50-2005.md`](./sources/death-case-no50-2005.md) — паспорт издания дела № 50, две локализованные электронные копии и нерешённое различие печатных `672` и физических `676` страниц;
   - [`verification/final-letter-vsem-provenance-pass1.md`](./verification/final-letter-vsem-provenance-pass1.md) — разделение подлинника, фотокопии РГАЛИ и позднего факсимиле письма «Всем»;
   - [`verification/claim-ledger-pass7-death-case-and-final-letter.md`](./verification/claim-ledger-pass7-death-case-and-final-letter.md) — утверждения `READY/VERIFY` по делу № 50, письму и экспертизе;
   - [`sources/polonskaya-memoirs-1938-1987-1990.md`](./sources/polonskaya-memoirs-1938-1987-1990.md) — паспорт двух рукописных тетрадей Полонской, вставных листов, машинописи и редакций 1987/1990 годов;
@@ -53,6 +53,11 @@
   - [`verification/claim-ledger-pass8-polonskaya.md`](./verification/claim-ledger-pass8-polonskaya.md) — утверждения по рукописи, публикациям и маргиналиям Лили;
   - [`verification/claim-ledger-pass9-polonskaya-protocol.md`](./verification/claim-ledger-pass9-polonskaya-protocol.md) — статусы расхождений между протоколом и мемуаром;
   - [`verification/archive-request-pack-death-case-polonskaya.md`](./verification/archive-request-pack-death-case-polonskaya.md) — готовый пакет запросов по музейным инвентарным номерам, делу № 50 и листам протоколов.
+- Кластер Татьяны Яковлевой:
+  - [`sources/tatyana-yakovleva-letters-and-tata-archive.md`](./sources/tatyana-yakovleva-letters-and-tata-archive.md) — семь писем по машинописным копиям с неизвестными купюрами, утраченная ответная сторона, книжка 65а, аудиобеседы и Гарвардский архив;
+  - [`verification/tatyana-yakovleva-flowers-legend-audit.md`](./verification/tatyana-yakovleva-flowers-legend-audit.md) — отделение краткосрочной доставки роз от легенды о десятилетиях посмертных букетов;
+  - [`verification/claim-ledger-pass10-tatyana-yakovleva.md`](./verification/claim-ledger-pass10-tatyana-yakovleva.md) — статусы писем, автографов, интервью, визовой версии и цветов;
+  - [`verification/archive-request-pack-tatyana-yakovleva.md`](./verification/archive-request-pack-tatyana-yakovleva.md) — готовые запросы в РГАЛИ, ГММ, Гарвард и архив Шмакова.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
