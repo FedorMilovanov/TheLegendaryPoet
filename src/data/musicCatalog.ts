@@ -14,6 +14,12 @@ const publishedTime = (track: MusicTrack) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const scheduledTime = (track: MusicTrack) => {
+  if (!track.scheduledFor) return Number.POSITIVE_INFINITY;
+  const parsed = Date.parse(`${track.scheduledFor}T00:00:00Z`);
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+};
+
 export function normalizeMusicSearchText(value: string) {
   return value
     .normalize('NFKD')
@@ -61,6 +67,18 @@ export function sortMusicTracks(tracks: readonly MusicTrack[], sort: MusicCatalo
 
 export function getPublishedMusicTracks(tracks: readonly MusicTrack[]) {
   return sortMusicTracks(tracks.filter(isPublishedMusicTrack));
+}
+
+export function getUpcomingMusicTracks(tracks: readonly MusicTrack[]) {
+  return tracks
+    .filter((track) => track.availability === 'coming-soon')
+    .sort((left, right) => {
+      const dateDifference = scheduledTime(left) - scheduledTime(right);
+      if (dateDifference !== 0) return dateDifference;
+      const orderDifference = left.releaseOrder - right.releaseOrder;
+      if (orderDifference !== 0) return orderDifference;
+      return russianCollator.compare(left.id, right.id);
+    });
 }
 
 export function getPlaybackQueue(tracks: readonly MusicTrack[]) {
