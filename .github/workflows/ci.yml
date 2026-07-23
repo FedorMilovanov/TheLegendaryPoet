@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    # The temporary research-branch trigger keeps the large source/renderer
+    # integration testable even while current main has merge conflicts. Remove
+    # it when PR #37 is synchronized and ready for review.
+    branches: [main, work/local-images-playwright-wtoc]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
