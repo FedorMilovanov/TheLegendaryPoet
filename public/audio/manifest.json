@@ -12,6 +12,28 @@
       "cover": "/images/music/yesenin-ya-ustalym-cover.webp",
       "rightsHolder": "The Legendary Poet",
       "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "pushkin-tucha",
+      "path": "/audio/pushkin-tucha.tlp-2026.mp3",
+      "sha256": "1d4f77fb01ccd31a4fe8934281fc7771157b7f9a0373529ca97ad0aafa86ff30",
+      "bytes": 6574758,
+      "durationSeconds": 263.904,
+      "codec": "MP3, 44.1 kHz stereo",
+      "cover": "/images/music/pushkin-tucha-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-rossiya",
+      "path": "/audio/blok-rossiya.tlp-2026.mp3",
+      "sha256": "feb6d1607278fce8621000a542e76e075cca5a6b44cf63c0a9db67603b943c9d",
+      "bytes": 7996391,
+      "durationSeconds": 257.664,
+      "codec": "MP3, 44.1 kHz stereo",
+      "cover": "/images/music/blok-rossiya-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
     }
   ]
 }
