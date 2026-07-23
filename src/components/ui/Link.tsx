@@ -8,6 +8,7 @@ import {
   type NavigateOptions,
   type To,
 } from 'react-router-dom';
+import { preloadRoute } from '../../lib/routeModules';
 
 /**
  * Site-standard internal navigation.
@@ -19,12 +20,71 @@ import {
  * essay covers). See src/lib/viewTransition.ts for the engine notes.
  */
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(props, ref) {
-  return <RouterLink viewTransition {...props} ref={ref} />;
+function pathnameFromTo(to: To): string | undefined {
+  if (typeof to === 'string') return to;
+  return to.pathname;
+}
+
+export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
+  { to, onPointerEnter, onPointerDown, onFocus, ...props },
+  ref,
+) {
+  const preload = () => {
+    const pathname = pathnameFromTo(to);
+    if (pathname) void preloadRoute(pathname);
+  };
+
+  return (
+    <RouterLink
+      viewTransition
+      {...props}
+      to={to}
+      ref={ref}
+      onPointerEnter={(event) => {
+        onPointerEnter?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+      onPointerDown={(event) => {
+        onPointerDown?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+      onFocus={(event) => {
+        onFocus?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+    />
+  );
 });
 
-export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(props, ref) {
-  return <RouterNavLink viewTransition {...props} ref={ref} />;
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(
+  { to, onPointerEnter, onPointerDown, onFocus, ...props },
+  ref,
+) {
+  const preload = () => {
+    const pathname = pathnameFromTo(to);
+    if (pathname) void preloadRoute(pathname);
+  };
+
+  return (
+    <RouterNavLink
+      viewTransition
+      {...props}
+      to={to}
+      ref={ref}
+      onPointerEnter={(event) => {
+        onPointerEnter?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+      onPointerDown={(event) => {
+        onPointerDown?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+      onFocus={(event) => {
+        onFocus?.(event);
+        if (!event.defaultPrevented) preload();
+      }}
+    />
+  );
 });
 
 /** `useNavigate` with the site's view-transition default baked in. */
@@ -36,6 +96,8 @@ export function useAppNavigate() {
         navigate(to);
         return;
       }
+      const pathname = pathnameFromTo(to);
+      if (pathname) void preloadRoute(pathname);
       navigate(to, { viewTransition: true, ...options });
     },
     [navigate],
