@@ -73,11 +73,15 @@ export function useDialogSurface({
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
-      // Yield stack ownership before the state update. The shared runtime can
-      // then route a subsequent Escape to the dialog underneath without any
-      // listener-order race between independently mounted portals.
-      handle.release();
-      closeRef.current();
+      // Commit the React close state first. Releasing the final overlay may
+      // restore scrolling and restart Lenis; the finally block guarantees that
+      // runtime cleanup still happens even if the consumer close callback
+      // itself fails, while the state update cannot be skipped by unlock work.
+      try {
+        closeRef.current();
+      } finally {
+        handle.release();
+      }
     } : null);
 
     const focusFrame = window.requestAnimationFrame(() => {
