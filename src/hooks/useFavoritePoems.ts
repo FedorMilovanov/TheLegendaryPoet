@@ -2,8 +2,10 @@ import { useSyncExternalStore } from 'react';
 import { getFavoritePoems, subscribeFavoritePoems, type FavoritePoem } from '../utils/myArchiveStore';
 
 const emptySnapshot: FavoritePoem[] = [];
+const emptyIds = new Set<string>();
 const listeners = new Set<() => void>();
 let currentSnapshot: FavoritePoem[] = emptySnapshot;
+let currentIds = emptyIds;
 let initialized = false;
 let stopStoreSubscription: (() => void) | null = null;
 
@@ -12,19 +14,29 @@ function snapshotsEqual(left: readonly FavoritePoem[], right: readonly FavoriteP
     && left.every((favorite, index) => favorite.id === right[index]?.id && favorite.addedAt === right[index]?.addedAt);
 }
 
+function installSnapshot(next: FavoritePoem[]) {
+  currentSnapshot = next;
+  currentIds = new Set(next.map((favorite) => favorite.id));
+  initialized = true;
+}
+
 function refreshSnapshot() {
   const next = getFavoritePoems();
-  initialized = true;
+  if (!initialized) {
+    installSnapshot(next);
+    return;
+  }
   if (snapshotsEqual(currentSnapshot, next)) return;
-  currentSnapshot = next;
+  installSnapshot(next);
   for (const listener of listeners) listener();
 }
 
+function ensureInitialized() {
+  if (!initialized && typeof window !== 'undefined') installSnapshot(getFavoritePoems());
+}
+
 function getClientSnapshot() {
-  if (!initialized && typeof window !== 'undefined') {
-    currentSnapshot = getFavoritePoems();
-    initialized = true;
-  }
+  ensureInitialized();
   return currentSnapshot;
 }
 
@@ -44,4 +56,15 @@ function subscribe(listener: () => void) {
 
 export function useFavoritePoems() {
   return useSyncExternalStore(subscribe, getClientSnapshot, () => emptySnapshot);
+}
+
+export function useFavoritePoem(poemId: string) {
+  return useSyncExternalStore(
+    subscribe,
+    () => {
+      ensureInitialized();
+      return currentIds.has(poemId);
+    },
+    () => false,
+  );
 }
