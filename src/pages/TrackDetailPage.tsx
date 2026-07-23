@@ -1,14 +1,15 @@
 import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Clock3, Disc3, FileCheck2, Fingerprint, Headphones, Quote, Sparkles } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Clock3, Disc3, FileCheck2, Fingerprint, Headphones, Hourglass, Quote, Sparkles } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import CommunityPanel from '../components/community/CommunityPanel';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
 import TrackReleaseCard from '../components/music/TrackReleaseCard';
 import { formatAudioTime, formatIsoDuration, parseAudioMoment } from '../components/music/audioPresentation';
 import { getTrackTheme, getTrackThemeStyle } from '../components/music/trackTheme';
+import { getRelatedMusicTracks, isPlayableMusicTrack } from '../data/musicCatalog';
 import { trackRatingDimensions } from '../data/ratingDimensions';
-import { musicTracks } from '../data/poets';
+import { allMusicTracks, musicTracks } from '../data/poets';
 import { siteConfig } from '../config/site';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
@@ -16,9 +17,10 @@ import { asset } from '../utils/asset';
 export default function TrackDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const track = musicTracks.find((item) => item.id === id);
-  const relatedTracks = musicTracks.filter((item) => item.id !== id).slice(0, 2);
-  const sharedTime = parseAudioMoment(searchParams.get('t'), track?.durationSeconds);
+  const track = allMusicTracks.find((item) => item.id === id);
+  const playable = track ? isPlayableMusicTrack(track) : false;
+  const relatedTracks = track ? getRelatedMusicTracks(musicTracks, track, 2) : [];
+  const sharedTime = playable ? parseAudioMoment(searchParams.get('t'), track?.durationSeconds) : undefined;
 
   useSeo({
     title: track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET',
@@ -33,11 +35,11 @@ export default function TrackDetailPage() {
       description: track.description,
       byArtist: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
       lyricist: { '@type': 'Person', name: track.poet },
-      duration: formatIsoDuration(track.durationSeconds),
-      datePublished: String(track.releaseYear ?? 2026),
+      duration: playable ? formatIsoDuration(track.durationSeconds) : undefined,
+      datePublished: track.publishedAt ?? String(track.releaseYear ?? 2026),
       image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
-      contentUrl: track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
-      encodingFormat: 'audio/mpeg',
+      contentUrl: playable && track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
+      encodingFormat: playable ? 'audio/mpeg' : undefined,
       url: `${siteConfig.url}/music/${track.id}`,
       isFamilyFriendly: true,
       copyrightHolder: { '@type': 'Organization', name: 'The Legendary Poet' },
@@ -58,6 +60,11 @@ export default function TrackDetailPage() {
 
   const theme = getTrackTheme(track);
   const coverTransition = { viewTransitionName: `track-cover-${track.id}` } as CSSProperties;
+  const releaseLabel = track.availability === 'coming-soon'
+    ? 'Анонс публикации'
+    : track.availability === 'archived'
+      ? 'Архивная публикация'
+      : 'Официальный релиз';
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 text-white" style={getTrackThemeStyle(track)}>
@@ -80,8 +87,8 @@ export default function TrackDetailPage() {
           <div className="max-w-4xl">
             <Link to="/music" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-black/28 px-4 text-xs font-bold text-white/72 shadow-lg backdrop-blur-xl transition hover:border-white/32 hover:bg-black/42 hover:text-white"><ArrowLeft size={15} /> Все музыкальные публикации</Link>
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-black/34 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-xl" style={{ color: 'var(--track-accent)' }}><Disc3 size={14} /> Официальный релиз · {track.releaseYear}</span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/28 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/55 backdrop-blur-xl"><Headphones size={14} /> {track.duration} · 44.1 kHz</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-black/34 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-xl" style={{ color: 'var(--track-accent)' }}><Disc3 size={14} /> {releaseLabel} · {track.releaseYear}</span>
+              {playable && <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/28 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/55 backdrop-blur-xl"><Headphones size={14} /> {track.duration} · 44.1 kHz</span>}
             </div>
             <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.91] drop-shadow-[0_6px_38px_rgba(0,0,0,0.88)] sm:text-7xl lg:text-[5.7rem]">{track.title}</h1>
             <p className="mt-5 text-lg text-white/68 sm:text-xl">{track.poet} <span className="text-white/22">·</span> музыкальная версия The Legendary Poet</p>
@@ -110,7 +117,16 @@ export default function TrackDetailPage() {
       </section>
 
       <div className="relative z-20 mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
-        <FeaturedTrackPlayer track={track} initialTime={sharedTime} />
+        {playable ? (
+          <FeaturedTrackPlayer track={track} initialTime={sharedTime} />
+        ) : (
+          <section className="relative overflow-hidden rounded-[2.4rem] border border-white/[0.09] bg-white/[0.025] px-6 py-12 text-center shadow-[0_34px_120px_rgba(0,0,0,0.42)] sm:px-10 sm:py-16">
+            <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--track-accent) 12%, transparent), transparent 48%)' }} />
+            <Hourglass className="relative mx-auto" size={30} style={{ color: 'var(--track-accent)' }} />
+            <h2 className="relative mt-5 font-serif text-3xl font-bold">Аудиомастер пока не опубликован</h2>
+            <p className="relative mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/48">Страница и визуальная система уже подготовлены, но воспроизведение появится только после загрузки проверенного мастер-файла, обложки, метаданных и контрольной суммы.</p>
+          </section>
+        )}
 
         <section className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.86fr]">
           <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.09] p-6 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-8" style={{ background: 'linear-gradient(145deg, color-mix(in srgb, var(--track-surface) 94%, black), rgba(5,5,5,.92))' }}>
@@ -138,7 +154,7 @@ export default function TrackDetailPage() {
                 <ChevronDown size={16} className="transition duration-300 group-open:rotate-180" />
               </summary>
               <div className="border-t border-white/[0.07] px-4 pb-4 pt-4">
-                <p className="text-xs leading-relaxed text-white/40">Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.</p>
+                <p className="text-xs leading-relaxed text-white/40">{playable ? 'Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.' : 'Технические данные будут опубликованы вместе с проверенным мастер-файлом. До этого момента страница не имитирует доступность аудио.'}</p>
                 {track.audioSha256 && <code className="mt-4 block break-all rounded-xl border border-white/[0.06] bg-black/32 p-3 text-[10px] leading-relaxed text-white/40">SHA-256: {track.audioSha256}</code>}
                 {track.rightsNotice && <p className="mt-4 text-[10px] leading-relaxed text-white/28">{track.rightsNotice}</p>}
               </div>
@@ -146,9 +162,11 @@ export default function TrackDetailPage() {
           </div>
         </section>
 
-        <section className="mt-10">
-          <CommunityPanel targetType="track" targetId={track.id} title={`Оценка релиза: ${track.title}`} dimensions={trackRatingDimensions} />
-        </section>
+        {playable && (
+          <section className="mt-10">
+            <CommunityPanel targetType="track" targetId={track.id} title={`Оценка релиза: ${track.title}`} dimensions={trackRatingDimensions} />
+          </section>
+        )}
 
         {relatedTracks.length > 0 && (
           <section className="mt-20 border-t border-white/[0.07] pt-12" aria-labelledby="related-releases-title">
