@@ -1,14 +1,38 @@
 import type Lenis from 'lenis';
 
 /**
- * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation.
- * Plain `#hash` clicks don't work under Lenis because it runs its own scroll
- * loop, so in-page jumps must go through `lenis.scrollTo`.
+ * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation and
+ * to modal surfaces that must temporarily freeze the page behind them.
  */
 let activeLenis: Lenis | null = null;
+const pauseTokens = new Set<symbol>();
 
 export function setActiveLenis(lenis: Lenis | null) {
   activeLenis = lenis;
+  if (activeLenis && pauseTokens.size > 0) activeLenis.stop();
+}
+
+/**
+ * Pause the current smooth-scroll enhancement until the returned release
+ * function is called. Tokens make nested overlays safe: closing one dialog
+ * cannot restart Lenis while another dialog is still open.
+ */
+export function pauseSmoothScroll(reason = 'overlay') {
+  const token = Symbol(reason);
+  pauseTokens.add(token);
+  activeLenis?.stop();
+  let released = false;
+
+  return () => {
+    if (released) return;
+    released = true;
+    pauseTokens.delete(token);
+    if (pauseTokens.size === 0) activeLenis?.start();
+  };
+}
+
+export function isSmoothScrollPaused() {
+  return pauseTokens.size > 0;
 }
 
 export function scrollToId(id: string) {

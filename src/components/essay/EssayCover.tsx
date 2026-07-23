@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
-import { asset } from '../../utils/asset';
+import { useCallback, useState, type ReactNode } from 'react';
 import { vtShared } from '../../lib/viewTransition';
+import ResilientImage, { type ImageLoadState } from '../media/ResilientImage';
 import { DEFAULT_ACCENT, coverBackground } from './theme';
 
 /**
@@ -26,6 +26,8 @@ interface EssayCoverProps {
   /** Extra classes on the <img> (e.g. a hover zoom). */
   imgClassName?: string;
   loading?: 'eager' | 'lazy';
+  priority?: boolean;
+  sizes?: string;
   /** Size / rounding / border of the cover box itself. */
   className?: string;
   /**
@@ -47,28 +49,34 @@ export default function EssayCover({
   ornamentClass = 'text-[9rem]',
   imgClassName = '',
   loading = 'lazy',
+  priority = false,
+  sizes = '100vw',
   className = '',
   sharedName,
   children,
 }: EssayCoverProps) {
-  const [imgOk, setImgOk] = useState(true);
+  const [imageState, setImageState] = useState<ImageLoadState>('loading');
+  const onStateChange = useCallback((next: ImageLoadState) => setImageState(next), []);
+  const imageFailed = imageState === 'failed';
 
   return (
     <div
       className={`relative overflow-hidden ${className}`}
       style={{ background: coverBackground(accent, focusY), ...(sharedName ? vtShared(sharedName) : undefined) }}
+      data-cover-state={imageState}
     >
-      {imgOk ? (
-        <img
-          src={asset(src)}
-          alt={alt}
-          className={`h-full w-full object-cover ${imgClassName}`}
-          onError={() => setImgOk(false)}
-          loading={loading}
-          decoding="async"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center">
+      <ResilientImage
+        src={src}
+        alt={alt}
+        loading={loading}
+        priority={priority}
+        sizes={sizes}
+        onStateChange={onStateChange}
+        className={`h-full w-full object-cover transition-opacity duration-500 ${imageFailed ? 'opacity-0' : 'opacity-100'} ${imgClassName}`}
+      />
+
+      {imageFailed && (
+        <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
           <span className={`font-serif ${ornamentClass} leading-none opacity-10`} style={{ color: accent }}>
             «»
           </span>

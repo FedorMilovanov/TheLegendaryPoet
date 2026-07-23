@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { asset } from '../utils/asset';
+import { useMemo } from 'react';
+import ResilientImage, { type ResilientImageProps } from './media/ResilientImage';
 
-interface PoetImageProps {
+interface PoetImageProps extends Omit<ResilientImageProps, 'src' | 'fallbackSrc' | 'alt'> {
   src?: string;
   name: string;
   alt?: string;
-  className?: string;
 }
 
 function makePlaceholder(name: string) {
@@ -36,31 +35,15 @@ function makePlaceholder(name: string) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-export default function PoetImage({ src, name, alt, className = '' }: PoetImageProps) {
+export default function PoetImage({ src, name, alt, ...imageProps }: PoetImageProps) {
   const fallbackSrc = useMemo(() => makePlaceholder(name), [name]);
-  // Resolve real image paths against the app base ("/TheLegendaryPoet/" on
-  // GitHub Pages) so bare "/images/..." paths don't 404. The generated
-  // placeholder is a data: URI and must not be prefixed.
-  const resolvedSrc = useMemo(() => (src ? asset(src) : fallbackSrc), [src, fallbackSrc]);
-  const [currentSrc, setCurrentSrc] = useState(resolvedSrc);
-
-  useEffect(() => {
-    setCurrentSrc(resolvedSrc);
-  }, [resolvedSrc]);
 
   return (
-    <img
-      src={currentSrc}
+    <ResilientImage
+      {...imageProps}
+      src={src}
+      fallbackSrc={fallbackSrc}
       alt={alt || name}
-      className={className}
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-      onError={() => {
-        if (currentSrc !== fallbackSrc) {
-          setCurrentSrc(fallbackSrc);
-        }
-      }}
     />
   );
 }
