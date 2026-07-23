@@ -3,13 +3,16 @@
   <url><loc>https://thelegendarypoet.ru/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://thelegendarypoet.ru/hall</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://thelegendarypoet.ru/poets</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://thelegendarypoet.ru/ratings</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://thelegendarypoet.ru/articles</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://thelegendarypoet.ru/music</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://thelegendarypoet.ru/music</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://thelegendarypoet.ru/archive</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://thelegendarypoet.ru/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://thelegendarypoet.ru/essays/brik-case</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://thelegendarypoet.ru/essays/yesenin-kutezhi</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://thelegendarypoet.ru/poets/afanasy-fet</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://thelegendarypoet.ru/poets/alexander-blok</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://thelegendarypoet.ru/poets/alexander-pushkin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
