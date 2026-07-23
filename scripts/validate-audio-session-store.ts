@@ -2,6 +2,7 @@ import {
   AUDIO_SESSION_STORAGE_KEY,
   getStoredTrackPosition,
   readAudioSession,
+  reconcileAudioSession,
   setStoredCompletedTracks,
   setStoredLastTrack,
   setStoredTrackPosition,
@@ -80,6 +81,21 @@ setStoredLastTrack('INVALID ID WITH SPACES');
 expect(readAudioSession().lastTrackId === null, 'invalid track ids must not enter the session');
 setStoredCompletedTracks(['blok-rossiya', 'blok-rossiya', 'bad id']);
 expect(readAudioSession().completedTrackIds.join(',') === 'blok-rossiya', 'completed ids must remain unique and sanitized');
+
+updateAudioSession((snapshot) => {
+  snapshot.lastTrackId = 'pushkin-tucha';
+  snapshot.positions['pushkin-tucha'] = 88;
+  snapshot.positions['removed-release'] = 33;
+  snapshot.completedTrackIds = ['blok-rossiya', 'removed-release'];
+});
+const reconciled = reconcileAudioSession(['pushkin-tucha', 'blok-rossiya']);
+expect(reconciled.lastTrackId === 'pushkin-tucha', 'reconciliation must preserve a valid last track');
+expect(reconciled.positions['pushkin-tucha'] === 88, 'reconciliation must preserve valid progress');
+expect(reconciled.positions['removed-release'] === undefined, 'reconciliation must remove progress for deleted releases');
+expect(reconciled.completedTrackIds.join(',') === 'blok-rossiya', 'reconciliation must prune removed completion ids');
+const reconciledAgain = reconcileAudioSession(['blok-rossiya']);
+expect(reconciledAgain.lastTrackId === null, 'reconciliation must clear a last track that left the public catalog');
+expect(reconciledAgain.positions['pushkin-tucha'] === undefined, 'reconciliation must remove positions for archived releases');
 
 storage.setItem(AUDIO_SESSION_STORAGE_KEY, '{broken json');
 const recovered = readAudioSession();
