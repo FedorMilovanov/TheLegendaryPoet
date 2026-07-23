@@ -84,8 +84,11 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     return { ok: true as const, message: 'Комментарий добавлен' };
   };
 
+  const helpfulScope = (commentId: string) => `helpful:${targetType}:${targetId}:${commentId}`;
+  const hasMarkedHelpful = (commentId: string) => !canMarkHelpful(helpfulScope(commentId));
+
   const markHelpful = (commentId: string) => {
-    const scope = `helpful:${targetType}:${targetId}:${commentId}`;
+    const scope = helpfulScope(commentId);
     if (!canMarkHelpful(scope)) return { ok: false as const, message: 'Вы уже отметили этот комментарий' };
 
     const stored = commitHelpfulFeedback(commentId, scope, getCommunityDeviceId());
@@ -107,5 +110,6 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     addRating,
     addComment,
     markHelpful,
+    hasMarkedHelpful,
   };
 }
