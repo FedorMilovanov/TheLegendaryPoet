@@ -70,7 +70,10 @@ for (const track of publishedTracks) {
     if (digest !== manifestTrack.sha256) errors.push(`${track.id}: SHA-256 mismatch (${digest})`);
     if (audioStat.size !== manifestTrack.bytes) errors.push(`${track.id}: byte size mismatch (${audioStat.size})`);
     if (!Number.isFinite(manifestTrack.durationSeconds) || manifestTrack.durationSeconds <= 0) errors.push(`${track.id}: invalid duration`);
-    if (!/\bMP3\b/i.test(manifestTrack.codec) || !/44\.1\s*kHz/i.test(manifestTrack.codec) || !/stereo/i.test(manifestTrack.codec)) {
+    if (typeof manifestTrack.codec !== 'string'
+      || !/\bMP3\b/i.test(manifestTrack.codec)
+      || !/44\.1\s*kHz/i.test(manifestTrack.codec)
+      || !/stereo/i.test(manifestTrack.codec)) {
       errors.push(`${track.id}: codec description must identify MP3, 44.1 kHz, and stereo`);
     }
     validated += 1;
