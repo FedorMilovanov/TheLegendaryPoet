@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
@@ -60,26 +60,36 @@ const WipeOverlay = () => (
 
 let introPlayed = false;
 
+function RouteSettled({ pathname, onSettled, children }: { pathname: string; onSettled: () => void; children: ReactNode }) {
+  useEffect(() => {
+    // The effect belongs to the Suspense content tree, so it cannot run while
+    // the route skeleton is still visible. A zero-delay task lets page SEO
+    // effects update document.title before the announcement is read.
+    const timeout = window.setTimeout(onSettled, 0);
+    return () => window.clearTimeout(timeout);
+  }, [onSettled, pathname]);
+  return <>{children}</>;
+}
+
 function RouteContent() {
   const location = useLocation();
   const outlet = useOutlet();
   const firstRouteRef = useRef(true);
   const [announcement, setAnnouncement] = useState('');
 
-  useEffect(() => {
+  const handleSettled = useCallback(() => {
     const firstRoute = firstRouteRef.current;
     firstRouteRef.current = false;
-    const timeout = window.setTimeout(() => {
-      setAnnouncement(document.title || 'Страница открыта');
-      if (!firstRoute) document.getElementById('main-content')?.focus({ preventScroll: true });
-    }, 80);
-    return () => window.clearTimeout(timeout);
-  }, [location.pathname]);
+    setAnnouncement(document.title || 'Страница открыта');
+    if (!firstRoute) document.getElementById('main-content')?.focus({ preventScroll: true });
+  }, []);
 
   const page = (
     <ErrorBoundary resetKey={location.pathname} variant="page">
       <Suspense fallback={<RouteLoadingShell />}>
-        {outlet}
+        <RouteSettled pathname={location.pathname} onSettled={handleSettled}>
+          {outlet}
+        </RouteSettled>
       </Suspense>
     </ErrorBoundary>
   );
