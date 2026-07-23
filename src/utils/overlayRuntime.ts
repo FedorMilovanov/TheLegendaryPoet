@@ -127,7 +127,7 @@ export function acquireOverlayLock(label = 'overlay'): OverlayLockHandle {
   let released = false;
 
   return {
-    isTopmost: () => overlayStack.at(-1) === token,
+    isTopmost: () => overlayStack[overlayStack.length - 1] === token,
     release: () => {
       if (released) return;
       released = true;
