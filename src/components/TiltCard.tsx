@@ -10,15 +10,14 @@ interface TiltCardProps {
 }
 
 /**
- * Pointer-driven tilt without React renders on every move.
+ * Pointer-driven tilt with a stable, non-transforming hit surface.
  *
- * The former implementation queried two media features and measured the card on
- * every pointer event, kept every card permanently promoted with will-change and
- * pushed all children 28px towards the camera. On image-heavy pages that created
- * many 3D compositor layers and could make AVIF/WebP surfaces shimmer while the
- * pointer crossed the card. This version caches geometry for the duration of the
- * hover, writes at most once per animation frame and only promotes the active
- * card. Children remain in one raster plane.
+ * Pointer events belong to the outer wrapper while only the inner visual plane
+ * rotates. This matters at card edges: when the transformed element itself owns
+ * pointerleave, its projected bounds can move out from under the cursor and
+ * repeatedly reset/reactivate — the exact stutter that looks like a flickering
+ * cover. Geometry is cached per hover, writes are RAF-batched, and a small lerp
+ * filters high-frequency mouse noise without adding React renders.
  */
 export default function TiltCard({
   children,
@@ -26,11 +25,13 @@ export default function TiltCard({
   intensity = 6,
   sheen = true,
 }: TiltCardProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const hitRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
   const settleFrameRef = useRef<number | null>(null);
   const rectRef = useRef<DOMRect | null>(null);
-  const pointerRef = useRef({ x: 0.5, y: 0.5 });
+  const targetRef = useRef({ x: 0.5, y: 0.5 });
+  const currentRef = useRef({ x: 0.5, y: 0.5 });
   const canAnimateRef = useRef(false);
 
   const cancelFrame = () => {
@@ -50,9 +51,10 @@ export default function TiltCard({
   const clearPointerState = () => {
     cancelFrame();
     rectRef.current = null;
-    pointerRef.current = { x: 0.5, y: 0.5 };
+    targetRef.current = { x: 0.5, y: 0.5 };
+    currentRef.current = { x: 0.5, y: 0.5 };
 
-    const node = ref.current;
+    const node = visualRef.current;
     if (!node) return null;
     node.removeAttribute('data-tilting');
     node.style.setProperty('--tilt-sheen-x', '50%');
@@ -65,9 +67,8 @@ export default function TiltCard({
     node?.style.removeProperty('transform');
   };
 
-  /** Flatten synchronously before a click starts a shared View Transition or
-   * opens a portal. Otherwise Chromium can snapshot a half-tilted cover and then
-   * morph that raster into a flat hero, which reads as a flash or soft frame. */
+  /** Flatten synchronously before a click starts a View Transition or opens a
+   * portal. Chromium then snapshots a flat decoded cover, never a tilted raster. */
   const flattenForActivation = () => {
     const node = clearPointerState();
     if (!node) return;
@@ -104,22 +105,34 @@ export default function TiltCard({
 
   const paint = () => {
     frameRef.current = null;
-    const node = ref.current;
-    if (!node || !canAnimateRef.current) return;
+    const node = visualRef.current;
+    if (!node || !canAnimateRef.current || !node.hasAttribute('data-tilting')) return;
 
-    const { x, y } = pointerRef.current;
-    const rotateY = (x - 0.5) * intensity;
-    const rotateX = (0.5 - y) * intensity;
+    const target = targetRef.current;
+    const current = currentRef.current;
+    const smoothing = 0.3;
+    current.x += (target.x - current.x) * smoothing;
+    current.y += (target.y - current.y) * smoothing;
 
-    node.style.transform = `perspective(1200px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
-    node.style.setProperty('--tilt-sheen-x', `${(x * 100).toFixed(1)}%`);
-    node.style.setProperty('--tilt-sheen-y', `${(y * 100).toFixed(1)}%`);
+    const rotateY = (current.x - 0.5) * intensity;
+    const rotateX = (0.5 - current.y) * intensity;
+    node.style.transform = `rotateX(${rotateX.toFixed(3)}deg) rotateY(${rotateY.toFixed(3)}deg)`;
+    node.style.setProperty('--tilt-sheen-x', `${(current.x * 100).toFixed(1)}%`);
+    node.style.setProperty('--tilt-sheen-y', `${(current.y * 100).toFixed(1)}%`);
+
+    const unsettled = Math.abs(target.x - current.x) > 0.001 || Math.abs(target.y - current.y) > 0.001;
+    if (unsettled) frameRef.current = requestAnimationFrame(paint);
+  };
+
+  const schedulePaint = () => {
+    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
   const activate = () => {
-    const node = ref.current;
-    if (!canAnimateRef.current || !node) return false;
-    if (!rectRef.current) rectRef.current = node.getBoundingClientRect();
+    const node = visualRef.current;
+    const hit = hitRef.current;
+    if (!canAnimateRef.current || !node || !hit) return false;
+    if (!rectRef.current) rectRef.current = hit.getBoundingClientRect();
     node.setAttribute('data-tilting', 'true');
     return true;
   };
@@ -129,28 +142,31 @@ export default function TiltCard({
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!activate() || !ref.current) return;
-    const rect = rectRef.current ?? ref.current.getBoundingClientRect();
+    if (!activate()) return;
+    const hit = hitRef.current;
+    const rect = rectRef.current ?? hit?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
     rectRef.current = rect;
-    if (rect.width <= 0 || rect.height <= 0) return;
 
-    pointerRef.current = {
+    targetRef.current = {
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-
-    if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
+    schedulePaint();
   };
 
   return (
-    <div className="tilt-card-wrapper relative h-full w-full">
+    <div
+      ref={hitRef}
+      onPointerEnter={handlePointerEnter}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={reset}
+      onPointerCancel={reset}
+      onPointerDown={flattenForActivation}
+      className="tilt-card-wrapper relative h-full w-full"
+    >
       <div
-        ref={ref}
-        onPointerEnter={handlePointerEnter}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={reset}
-        onPointerCancel={reset}
-        onPointerDown={flattenForActivation}
+        ref={visualRef}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         {children}
