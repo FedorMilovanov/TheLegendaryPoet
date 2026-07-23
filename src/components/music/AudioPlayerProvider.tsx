@@ -10,8 +10,24 @@ import {
 } from 'react';
 import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
+import {
+  AUDIO_COORDINATION_CHANNEL,
+  AUDIO_COORDINATION_STORAGE_KEY,
+  getStoredTrackPosition,
+  readAudioSession,
+  setStoredCompletedTracks,
+  setStoredLastTrack,
+  setStoredTrackPosition,
+  setStoredVolume,
+} from './audioSessionStore';
 
 export type AudioStatus = 'idle' | 'loading' | 'ready' | 'buffering' | 'error';
+export type AudioFailureReason = 'network' | 'decode' | 'source' | 'blocked' | 'aborted' | 'unknown';
+
+export interface AudioFailure {
+  reason: AudioFailureReason;
+  message: string;
+}
 
 interface LoadTrackOptions {
   startAt?: number;
@@ -23,6 +39,7 @@ interface AudioPlayerContextValue {
   playing: boolean;
   ended: boolean;
   status: AudioStatus;
+  failure: AudioFailure | null;
   currentTime: number;
   duration: number;
   buffered: number;
@@ -35,6 +52,7 @@ interface AudioPlayerContextValue {
   playTrack: (track: MusicTrack, options?: Omit<LoadTrackOptions, 'autoplay'>) => Promise<void>;
   toggleTrack: (track: MusicTrack) => Promise<void>;
   pause: () => void;
+  retry: () => void;
   seekTo: (seconds: number) => void;
   seekBy: (seconds: number) => void;
   restart: () => void;
@@ -48,40 +66,24 @@ interface AudioPlayerContextValue {
   getSavedPosition: (trackId: string) => number;
 }
 
-const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
-
-const LAST_TRACK_KEY = 'tlp-audio-last-track';
-const VOLUME_KEY = 'tlp-audio-volume';
-const COMPLETED_KEY = 'tlp-audio-completed';
-const positionKey = (trackId: string) => `tlp-audio-position:${trackId}`;
-const mediaActions: MediaSessionAction[] = ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto', 'nexttrack', 'previoustrack'];
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
-function readStoredNumber(key: string, fallback = 0) {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (raw === null) return fallback;
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : fallback;
-  } catch {
-    return fallback;
-  }
+interface CoordinationMessage {
+  type: 'playing';
+  instanceId: string;
+  trackId: string;
+  timestamp: number;
 }
 
-function readCompletedTracks() {
-  if (typeof window === 'undefined') return new Set<string>();
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(COMPLETED_KEY) ?? '[]');
-    return new Set<string>(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : []);
-  } catch {
-    return new Set<string>();
-  }
+const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
+const mediaActions: MediaSessionAction[] = ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto', 'nexttrack', 'previoustrack'];
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+function createInstanceId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return `audio-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 function clearMediaSession() {
-  if (!('mediaSession' in navigator)) return;
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
   for (const action of mediaActions) {
     try { navigator.mediaSession.setActionHandler(action, null); } catch { /* unsupported action */ }
   }
@@ -89,36 +91,100 @@ function clearMediaSession() {
   navigator.mediaSession.playbackState = 'none';
 }
 
+function failureFromMediaError(error: MediaError | null): AudioFailure {
+  switch (error?.code) {
+    case MediaError.MEDIA_ERR_ABORTED:
+      return { reason: 'aborted', message: 'Загрузка аудио была прервана.' };
+    case MediaError.MEDIA_ERR_NETWORK:
+      return { reason: 'network', message: 'Соединение прервалось во время загрузки аудио.' };
+    case MediaError.MEDIA_ERR_DECODE:
+      return { reason: 'decode', message: 'Браузер не смог декодировать аудиофайл.' };
+    case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+      return { reason: 'source', message: 'Аудиофайл недоступен или не поддерживается браузером.' };
+    default:
+      return { reason: 'unknown', message: 'Не удалось подготовить аудио к воспроизведению.' };
+  }
+}
+
+function failureFromPlayError(error: unknown): AudioFailure | null {
+  if (error instanceof DOMException) {
+    if (error.name === 'AbortError') return null;
+    if (error.name === 'NotAllowedError') {
+      return { reason: 'blocked', message: 'Браузер заблокировал запуск. Нажмите кнопку воспроизведения ещё раз.' };
+    }
+    if (error.name === 'NotSupportedError') {
+      return { reason: 'source', message: 'Формат или источник аудио не поддерживается браузером.' };
+    }
+  }
+  return { reason: 'unknown', message: 'Воспроизведение не запустилось. Попробуйте ещё раз.' };
+}
+
+function isCoordinationMessage(value: unknown): value is CoordinationMessage {
+  if (!value || typeof value !== 'object') return false;
+  const message = value as Partial<CoordinationMessage>;
+  return message.type === 'playing'
+    && typeof message.instanceId === 'string'
+    && typeof message.trackId === 'string'
+    && Number.isFinite(message.timestamp);
+}
+
 export function AudioPlayerProvider({ tracks, children }: { tracks: readonly MusicTrack[]; children: ReactNode }) {
+  const initialSessionRef = useRef(readAudioSession());
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentTrackRef = useRef<MusicTrack | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
   const pendingAutoplayRef = useRef(false);
+  const sourceTransitionRef = useRef(false);
   const lastSavedRef = useRef(0);
+  const restoredRef = useRef(false);
+  const instanceIdRef = useRef(createInstanceId());
+  const coordinationChannelRef = useRef<BroadcastChannel | null>(null);
   const adjacentPlaybackRef = useRef<(direction: -1 | 1) => Promise<void>>(async () => undefined);
-  const completedRef = useRef<Set<string>>(readCompletedTracks());
-  const initialVolumeRef = useRef(clamp(readStoredNumber(VOLUME_KEY, 0.9), 0, 1));
+  const completedRef = useRef<Set<string>>(new Set(initialSessionRef.current.completedTrackIds));
 
   const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
   const [playing, setPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
   const [status, setStatus] = useState<AudioStatus>('idle');
+  const [failure, setFailure] = useState<AudioFailure | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
-  const [volume, setVolumeState] = useState(initialVolumeRef.current);
-  const [muted, setMuted] = useState(initialVolumeRef.current === 0);
+  const [volume, setVolumeState] = useState(clamp(initialSessionRef.current.volume, 0, 1));
+  const [muted, setMuted] = useState(initialSessionRef.current.muted);
   const [resumeAt, setResumeAt] = useState<number | null>(null);
   const [immersiveOpen, setImmersiveOpen] = useState(false);
   const [completedTrackIds, setCompletedTrackIds] = useState<ReadonlySet<string>>(() => new Set(completedRef.current));
 
-  const getSavedPosition = useCallback((trackId: string) => Math.max(0, readStoredNumber(positionKey(trackId), 0)), []);
+  const getSavedPosition = useCallback((trackId: string) => getStoredTrackPosition(trackId), []);
 
   const persistCompleted = useCallback((trackId: string) => {
     if (completedRef.current.has(trackId)) return;
     completedRef.current = new Set(completedRef.current).add(trackId);
     setCompletedTrackIds(new Set(completedRef.current));
-    try { window.localStorage.setItem(COMPLETED_KEY, JSON.stringify([...completedRef.current])); } catch { /* storage unavailable */ }
+    setStoredCompletedTracks(completedRef.current);
+  }, []);
+
+  const persistCurrentPosition = useCallback((force = false) => {
+    const audio = audioRef.current;
+    const track = currentTrackRef.current;
+    if (!audio || !track) return;
+
+    const position = audio.currentTime;
+    const total = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration
+      : track.durationSeconds ?? 0;
+
+    if (audio.ended || (total > 0 && position >= total - 2)) {
+      setStoredTrackPosition(track.id, null);
+      lastSavedRef.current = 0;
+      return;
+    }
+
+    if (position >= 4 && (force || Math.abs(position - lastSavedRef.current) >= 3)) {
+      setStoredTrackPosition(track.id, position);
+      lastSavedRef.current = position;
+    }
   }, []);
 
   const applyPendingSeek = useCallback(() => {
@@ -133,14 +199,33 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     lastSavedRef.current = safe;
   }, []);
 
+  const requestPlayback = useCallback((audio: HTMLAudioElement) => {
+    pendingAutoplayRef.current = true;
+    setFailure(null);
+    setStatus('loading');
+    void audio.play().catch((error: unknown) => {
+      const nextFailure = failureFromPlayError(error);
+      if (!nextFailure) return;
+      pendingAutoplayRef.current = false;
+      setFailure(nextFailure);
+      setStatus('error');
+      setPlaying(false);
+    });
+  }, []);
+
   const setTrackSource = useCallback((track: MusicTrack, startAt?: number) => {
     const audio = audioRef.current;
     if (!audio || !track.audioUrl) return false;
+
+    persistCurrentPosition(true);
+    sourceTransitionRef.current = true;
+    audio.pause();
 
     currentTrackRef.current = track;
     setCurrentTrack(track);
     setPlaying(false);
     setEnded(false);
+    setFailure(null);
     setStatus('loading');
     setCurrentTime(0);
     setDuration(track.durationSeconds ?? 0);
@@ -152,9 +237,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     pendingSeekRef.current = savedPosition > 0 ? savedPosition : null;
     audio.src = asset(track.audioUrl);
     audio.load();
-    try { window.localStorage.setItem(LAST_TRACK_KEY, track.id); } catch { /* storage unavailable */ }
+    setStoredLastTrack(track.id);
     return true;
-  }, [getSavedPosition]);
+  }, [getSavedPosition, persistCurrentPosition]);
 
   const loadTrack = useCallback((track: MusicTrack, options: LoadTrackOptions = {}) => {
     const audio = audioRef.current;
@@ -162,12 +247,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
     if (currentTrackRef.current?.id !== track.id) {
       pendingAutoplayRef.current = options.autoplay ?? false;
-      setTrackSource(track, options.startAt);
-      if (options.autoplay) {
-        void audio.play().catch(() => {
-          /* loadedmetadata retries if the browser needs the source first */
-        });
-      }
+      if (!setTrackSource(track, options.startAt)) return;
+      if (options.autoplay) requestPlayback(audio);
       return;
     }
 
@@ -180,32 +261,41 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       setCurrentTime(safe);
       setResumeAt(null);
       setEnded(false);
+      if (safe >= 4) setStoredTrackPosition(track.id, safe);
     }
 
-    if (options.autoplay) {
-      setEnded(false);
-      setStatus('loading');
-      void audio.play().catch(() => {
-        setStatus('error');
-        setPlaying(false);
-      });
-    }
-  }, [setTrackSource]);
+    if (options.autoplay) requestPlayback(audio);
+  }, [requestPlayback, setTrackSource]);
 
   const playTrack = useCallback(async (track: MusicTrack, options: Omit<LoadTrackOptions, 'autoplay'> = {}) => {
     if (!track.audioUrl || !audioRef.current) return;
     loadTrack(track, { ...options, autoplay: true });
   }, [loadTrack]);
 
+  const retry = useCallback(() => {
+    const audio = audioRef.current;
+    const track = currentTrackRef.current;
+    if (!audio || !track?.audioUrl) return;
+    const retryAt = Number.isFinite(audio.currentTime) && audio.currentTime > 0
+      ? audio.currentTime
+      : getSavedPosition(track.id);
+    pendingAutoplayRef.current = true;
+    if (setTrackSource(track, retryAt)) requestPlayback(audio);
+  }, [getSavedPosition, requestPlayback, setTrackSource]);
+
   const toggleTrack = useCallback(async (track: MusicTrack) => {
     const audio = audioRef.current;
     if (!audio || !track.audioUrl) return;
+    if (currentTrackRef.current?.id === track.id && status === 'error') {
+      retry();
+      return;
+    }
     if (currentTrackRef.current?.id === track.id && !audio.paused) {
       audio.pause();
       return;
     }
     await playTrack(track);
-  }, [playTrack]);
+  }, [playTrack, retry, status]);
 
   const pause = useCallback(() => audioRef.current?.pause(), []);
 
@@ -219,6 +309,10 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     setCurrentTime(safe);
     setResumeAt(null);
     setEnded(false);
+    if (safe >= 4) {
+      setStoredTrackPosition(track.id, safe);
+      lastSavedRef.current = safe;
+    }
   }, []);
 
   const seekBy = useCallback((seconds: number) => {
@@ -230,24 +324,33 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const track = currentTrackRef.current;
     if (!track) return;
     seekTo(0);
-    try { window.localStorage.removeItem(positionKey(track.id)); } catch { /* storage unavailable */ }
+    setStoredTrackPosition(track.id, null);
+    lastSavedRef.current = 0;
   }, [seekTo]);
 
   const setVolume = useCallback((value: number) => {
     const next = clamp(value, 0, 1);
+    const nextMuted = next === 0;
     setVolumeState(next);
-    setMuted(next === 0);
-    try { window.localStorage.setItem(VOLUME_KEY, String(next)); } catch { /* storage unavailable */ }
+    setMuted(nextMuted);
+    setStoredVolume(next, nextMuted);
   }, []);
 
   const toggleMute = useCallback(() => {
     if (muted) {
-      if (volume === 0) setVolume(0.75);
-      else setMuted(false);
+      if (volume === 0) {
+        setVolumeState(0.75);
+        setMuted(false);
+        setStoredVolume(0.75, false);
+      } else {
+        setMuted(false);
+        setStoredVolume(volume, false);
+      }
       return;
     }
     setMuted(true);
-  }, [muted, setVolume, volume]);
+    setStoredVolume(volume, true);
+  }, [muted, volume]);
 
   const playAdjacent = useCallback(async (direction: -1 | 1) => {
     const track = currentTrackRef.current;
@@ -264,6 +367,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
   const closePlayer = useCallback(() => {
     const audio = audioRef.current;
+    persistCurrentPosition(true);
+    sourceTransitionRef.current = true;
     if (audio) {
       audio.pause();
       audio.removeAttribute('src');
@@ -275,15 +380,17 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     setCurrentTrack(null);
     setPlaying(false);
     setEnded(false);
+    setFailure(null);
     setStatus('idle');
     setCurrentTime(0);
     setDuration(0);
     setBuffered(0);
     setResumeAt(null);
     setImmersiveOpen(false);
-    try { window.localStorage.removeItem(LAST_TRACK_KEY); } catch { /* storage unavailable */ }
+    setStoredLastTrack(null);
     clearMediaSession();
-  }, []);
+    window.setTimeout(() => { sourceTransitionRef.current = false; }, 0);
+  }, [persistCurrentPosition]);
 
   const openImmersive = useCallback((track?: MusicTrack) => {
     if (track && currentTrackRef.current?.id !== track.id) loadTrack(track);
@@ -302,12 +409,62 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const audio = audioRef.current;
     if (!audio) return;
 
+    const handleRemotePlayback = (message: CoordinationMessage) => {
+      if (message.instanceId === instanceIdRef.current || audio.paused) return;
+      audio.pause();
+    };
+
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel(AUDIO_COORDINATION_CHANNEL);
+      coordinationChannelRef.current = channel;
+      channel.addEventListener('message', (event: MessageEvent<unknown>) => {
+        if (isCoordinationMessage(event.data)) handleRemotePlayback(event.data);
+      });
+    }
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== AUDIO_COORDINATION_STORAGE_KEY || !event.newValue) return;
+      try {
+        const message: unknown = JSON.parse(event.newValue);
+        if (isCoordinationMessage(message)) handleRemotePlayback(message);
+      } catch {
+        // Ignore malformed cross-tab messages.
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      coordinationChannelRef.current?.close();
+      coordinationChannelRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const announcePlayback = (trackId: string) => {
+      const message: CoordinationMessage = {
+        type: 'playing',
+        instanceId: instanceIdRef.current,
+        trackId,
+        timestamp: Date.now(),
+      };
+      coordinationChannelRef.current?.postMessage(message);
+      try { window.localStorage.setItem(AUDIO_COORDINATION_STORAGE_KEY, JSON.stringify(message)); } catch { /* storage unavailable */ }
+    };
+
     const updateBuffered = () => {
       if (!audio.buffered.length) {
         setBuffered(0);
         return;
       }
-      setBuffered(audio.buffered.end(audio.buffered.length - 1));
+      try {
+        setBuffered(audio.buffered.end(audio.buffered.length - 1));
+      } catch {
+        setBuffered(0);
+      }
     };
 
     const configureMediaSession = () => {
@@ -326,7 +483,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
         try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* unsupported action */ }
       };
-      setHandler('play', () => { void audio.play(); });
+      setHandler('play', () => requestPlayback(audio));
       setHandler('pause', () => audio.pause());
       setHandler('stop', closePlayer);
       setHandler('seekbackward', (details) => seekBy(-(details.seekOffset ?? 10)));
@@ -348,7 +505,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
           playbackRate: audio.playbackRate,
           position: clamp(audio.currentTime, 0, audio.duration),
         });
-      } catch { /* transient browser state */ }
+      } catch {
+        // Position state may reject briefly while a source is changing.
+      }
     };
 
     const syncTime = () => {
@@ -356,12 +515,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       setCurrentTime(audio.currentTime);
       updatePositionState();
       if (!track || audio.ended) return;
-
-      if (audio.currentTime > 4 && Math.abs(audio.currentTime - lastSavedRef.current) >= 3) {
-        lastSavedRef.current = audio.currentTime;
-        try { window.localStorage.setItem(positionKey(track.id), String(audio.currentTime)); } catch { /* storage unavailable */ }
-      }
-      if (audio.duration > 30 && audio.currentTime / audio.duration >= 0.9) persistCompleted(track.id);
+      persistCurrentPosition();
+      if (audio.duration > 30 && audio.currentTime / audio.duration >= 0.97) persistCompleted(track.id);
     };
 
     const syncDuration = () => {
@@ -370,32 +525,42 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       setDuration(nextDuration);
       updateBuffered();
       applyPendingSeek();
-      if (pendingAutoplayRef.current) {
-        void audio.play().catch(() => {
-          setStatus('error');
-          setPlaying(false);
-        });
-      }
+      if (pendingAutoplayRef.current && audio.paused) requestPlayback(audio);
     };
 
-    const onLoadStart = () => setStatus('loading');
-    const onCanPlay = () => setStatus((value) => value === 'error' ? value : 'ready');
+    const onLoadStart = () => {
+      sourceTransitionRef.current = false;
+      setFailure(null);
+      setStatus('loading');
+    };
+    const onCanPlay = () => {
+      setFailure(null);
+      setStatus('ready');
+      if (pendingAutoplayRef.current && audio.paused) requestPlayback(audio);
+    };
     const onWaiting = () => { if (!audio.paused) setStatus('buffering'); };
     const onError = () => {
+      if (sourceTransitionRef.current || !currentTrackRef.current) return;
       pendingAutoplayRef.current = false;
+      setFailure(failureFromMediaError(audio.error));
       setStatus('error');
       setPlaying(false);
     };
     const onPlay = () => {
+      const track = currentTrackRef.current;
       pendingAutoplayRef.current = false;
       setPlaying(true);
       setEnded(false);
+      setFailure(null);
       setStatus('ready');
       configureMediaSession();
+      if (track) announcePlayback(track.id);
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     };
     const onPause = () => {
       setPlaying(false);
+      persistCurrentPosition(true);
+      if (sourceTransitionRef.current || !currentTrackRef.current || audio.ended) return;
       setStatus((value) => value === 'error' ? value : 'ready');
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     };
@@ -407,9 +572,13 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       setResumeAt(null);
       if (track) {
         persistCompleted(track.id);
-        try { window.localStorage.removeItem(positionKey(track.id)); } catch { /* storage unavailable */ }
+        setStoredTrackPosition(track.id, null);
       }
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
+    };
+    const persistBeforeLeave = () => persistCurrentPosition(true);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') persistCurrentPosition(true);
     };
 
     audio.addEventListener('timeupdate', syncTime);
@@ -425,13 +594,17 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnd);
+    window.addEventListener('pagehide', persistBeforeLeave);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
-    let savedTrackId: string | null = null;
-    try { savedTrackId = window.localStorage.getItem(LAST_TRACK_KEY); } catch { /* storage unavailable */ }
-    const savedTrack = tracks.find((track) => track.id === savedTrackId);
-    if (savedTrack?.audioUrl) setTrackSource(savedTrack);
+    if (!restoredRef.current) {
+      restoredRef.current = true;
+      const savedTrack = tracks.find((track) => track.id === initialSessionRef.current.lastTrackId);
+      if (savedTrack?.audioUrl) setTrackSource(savedTrack, initialSessionRef.current.positions[savedTrack.id]);
+    }
 
     return () => {
+      persistCurrentPosition(true);
       audio.removeEventListener('timeupdate', syncTime);
       audio.removeEventListener('loadedmetadata', syncDuration);
       audio.removeEventListener('durationchange', syncDuration);
@@ -445,15 +618,18 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnd);
+      window.removeEventListener('pagehide', persistBeforeLeave);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       clearMediaSession();
     };
-  }, [applyPendingSeek, closePlayer, persistCompleted, seekBy, seekTo, setTrackSource, tracks]);
+  }, [applyPendingSeek, closePlayer, persistCompleted, persistCurrentPosition, requestPlayback, seekBy, seekTo, setTrackSource, tracks]);
 
   const value = useMemo<AudioPlayerContextValue>(() => ({
     currentTrack,
     playing,
     ended,
     status,
+    failure,
     currentTime,
     duration,
     buffered,
@@ -466,6 +642,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     playTrack,
     toggleTrack,
     pause,
+    retry,
     seekTo,
     seekBy,
     restart,
@@ -486,6 +663,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     currentTrack,
     duration,
     ended,
+    failure,
     getSavedPosition,
     immersiveOpen,
     loadTrack,
@@ -498,6 +676,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     playing,
     restart,
     resumeAt,
+    retry,
     seekBy,
     seekTo,
     setVolume,
