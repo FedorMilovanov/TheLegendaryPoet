@@ -28,14 +28,8 @@ test.describe('runtime discovery and indexing state', () => {
     await expect(page.getByRole('searchbox', { name: 'Поиск поэтов' })).toHaveValue('Маяковский');
     await expect(page.getByTestId('poet-card')).toHaveCount(1);
     await expect(page.getByTestId('poet-card')).toContainText('Маяковский');
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      'href',
-      'https://thelegendarypoet.ru/poets',
-    );
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-      'content',
-      'index, follow, max-image-preview:large',
-    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://thelegendarypoet.ru/poets');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow, max-image-preview:large');
     const types = await routeJsonTypes(page);
     for (const type of ['CollectionPage', 'ItemList', 'BreadcrumbList']) {
       expect(types.includes(type), `/poets should contain ${type}`).toBe(true);
@@ -71,24 +65,14 @@ test.describe('runtime discovery and indexing state', () => {
 
     await page.goto('/essays/mayakovsky-pro-eto-separation');
     await expect(page.locator('h1')).toContainText('Про это');
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-      'content',
-      'index, follow, max-image-preview:large',
-    );
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      'href',
-      'https://thelegendarypoet.ru/essays/mayakovsky-pro-eto-separation',
-    );
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow, max-image-preview:large');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://thelegendarypoet.ru/essays/mayakovsky-pro-eto-separation');
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
-    await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute(
-      'content',
-      '2026-07-23',
-    );
-    // The longread cover is not the 1200×630 default image, so dimensions from
-    // the homepage head must be removed rather than reused as false metadata.
+    await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute('content', '2026-07-23');
     await expect(page.locator('meta[property="og:image:width"]')).toHaveCount(0);
     await expect(page.locator('meta[property="og:image:height"]')).toHaveCount(0);
-    await expect(page.locator('script#route-jsonld')).toContainText('BreadcrumbList');
+    const longreadTypes = await routeJsonTypes(page);
+    expect(longreadTypes.includes('BreadcrumbList'), 'longread JSON-LD should retain BreadcrumbList').toBe(true);
 
     await page.goto('/');
     await expect(page.locator('h1')).toBeVisible();
