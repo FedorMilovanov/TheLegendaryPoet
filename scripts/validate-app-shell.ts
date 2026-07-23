@@ -35,6 +35,9 @@ expect(!/from ['"]\.\/pages\//.test(app), 'App.tsx must not eagerly import page 
 expect(app.includes('<Route element={<SiteLayout />}>'), 'all pages must remain below one persistent SiteLayout route');
 expect(app.includes('useOutlet()'), 'the persistent shell must render route content through useOutlet');
 expect(app.includes('<Suspense fallback={<RouteLoadingShell />}'), 'lazy routes need a stable loading presentation');
+expect(app.includes('<RouteSettled pathname={location.pathname}'), 'focus and announcements must wait for lazy route content to settle');
+expect(app.includes('document.title ||'), 'settled routes must announce their final document title');
+expect(app.includes("focus({ preventScroll: true })"), 'SPA focus management must not disturb the restored scroll position');
 expect(app.includes('variant="page"'), 'route failures must be isolated inside the persistent shell');
 expect(app.includes('<AudioChrome />'), 'global audio chrome must remain outside page-level routing failures');
 expect(app.includes('tabIndex={-1}'), 'main content must remain programmatically focusable after SPA navigation');
@@ -80,6 +83,7 @@ expect(cursor.includes('prefers-reduced-motion: reduce'), 'the custom cursor mus
 expect(cursor.includes('forced-colors: active'), 'the custom cursor must preserve high-contrast system pointers');
 expect(cursor.includes('visibilitychange'), 'the cursor must hide when the document is backgrounded');
 expect(cursor.includes('INTERACTIVE_SELECTOR'), 'cursor emphasis must cover controls beyond links and buttons');
+expect(cursor.includes('activatedRef.current'), 'the native cursor must remain visible until a real pointer position exists');
 
 expect(boundary.includes("variant?: 'root' | 'page'"), 'ErrorBoundary must support page-scoped recovery');
 expect(boundary.includes('window.location.reload()'), 'error recovery must provide a real reload path');
