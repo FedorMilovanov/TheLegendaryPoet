@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-23",
+  "tracks": [
+    {
+      "id": "yesenin-ya-ustalym-takim-eshche-ne-byl",
+      "path": "/audio/yesenin-ya-ustalym-takim-eshche-ne-byl.tlp-2026.mp3",
+      "sha256": "2f5b7c0a9b83be4685d0d83728e5896c8adde78b75b46dad361eddfb28356381",
+      "bytes": 11341887,
+      "durationSeconds": 280.241633,
+      "codec": "MP3 320 kbps, 44.1 kHz stereo",
+      "cover": "/images/music/yesenin-ya-ustalym-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "pushkin-tucha",
+      "path": "/audio/pushkin-tucha.tlp-2026.mp3",
+      "sha256": "1d4f77fb01ccd31a4fe8934281fc7771157b7f9a0373529ca97ad0aafa86ff30",
+      "bytes": 6574758,
+      "durationSeconds": 263.904,
+      "codec": "MP3, 44.1 kHz stereo",
+      "cover": "/images/music/pushkin-tucha-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-rossiya",
+      "path": "/audio/blok-rossiya.tlp-2026.mp3",
+      "sha256": "feb6d1607278fce8621000a542e76e075cca5a6b44cf63c0a9db67603b943c9d",
+      "bytes": 7996391,
+      "durationSeconds": 257.664,
+      "codec": "MP3, 44.1 kHz stereo",
+      "cover": "/images/music/blok-rossiya-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    }
+  ]
+}
