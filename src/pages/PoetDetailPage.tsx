@@ -36,9 +36,11 @@ export default function PoetDetailPage() {
     title: poet ? `${poet.name} — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
     description: poet ? poet.shortBio : 'Страница не найдена.',
     path: `/poets/${id ?? ''}`,
-    type: 'profile',
+    type: poet ? 'profile' : 'website',
     image: poet?.photo,
+    imageAlt: poet?.fullName ?? poet?.name,
     keywords: poet ? [poet.name, poet.fullName, ...poet.tags, 'стихи', 'биография'].join(', ') : undefined,
+    noIndex: !poet,
     jsonLd: poet ? poetStructuredData(poet, relatedEssays) : undefined,
   });
 
@@ -47,7 +49,7 @@ export default function PoetDetailPage() {
       <div className="min-h-screen pt-32 pb-20 flex items-center justify-center bg-[#050505]">
         <div className="text-center">
           <h1 className="text-4xl font-serif text-white mb-4">{titleCase('Поэт не найден')}</h1>
-          <Link to="/poets" className="text-luxury-gold hover:text-luxury-gold-light transition-colors font-medium">
+          <Link to="/poets" className="inline-flex min-h-11 items-center text-luxury-gold hover:text-luxury-gold-light transition-colors font-medium">
             ← Вернуться к списку поэтов
           </Link>
         </div>
@@ -73,7 +75,7 @@ export default function PoetDetailPage() {
             {/* Share-a-line: poem verses and bio passages are deep-linkable. */}
             <ShareLine scopeRef={contentRef} />
             <p className="text-2xl md:text-3xl text-white font-serif leading-[1.6] italic border-l-4 border-luxury-gold pl-8 font-light">
-              "{poet.shortBio}"
+              «{poet.shortBio}»
             </p>
 
             <RelatedEssays poetId={poet.id} />
