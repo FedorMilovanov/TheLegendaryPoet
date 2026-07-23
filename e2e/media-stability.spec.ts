@@ -59,24 +59,24 @@ async function assertNoHorizontalOverflow(page: Page) {
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 }
 
-async function assertFittedLightbox(page: Page) {
-  const dialog = page.getByTestId('essay-image-dialog');
-  const image = page.getByTestId('essay-image-dialog-image');
+type LightboxGeometry = {
+  viewport: { left: number; top: number; right: number; bottom: number; width: number; height: number };
+  image: { left: number; top: number; right: number; bottom: number; width: number; height: number };
+  naturalWidth: number;
+  naturalHeight: number;
+  bodyOverflow: string;
+  viewportWidth: number;
+  viewportHeight: number;
+};
 
-  await expect(dialog).toBeVisible();
-  await assertDecoded(image);
-  await page.waitForTimeout(520);
-
-  const geometry = await page.evaluate(() => {
-    const dialogNode = document.querySelector<HTMLElement>('[data-testid="essay-image-dialog"]')!;
+async function readLightboxGeometry(page: Page): Promise<LightboxGeometry> {
+  return page.evaluate(() => {
     const viewportNode = document.querySelector<HTMLElement>('[data-testid="essay-image-viewport"]')!;
     const imageNode = document.querySelector<HTMLImageElement>('[data-testid="essay-image-dialog-image"]')!;
-    const dialogRect = dialogNode.getBoundingClientRect();
     const viewportRect = viewportNode.getBoundingClientRect();
     const imageRect = imageNode.getBoundingClientRect();
 
     return {
-      dialog: { left: dialogRect.left, top: dialogRect.top, right: dialogRect.right, bottom: dialogRect.bottom },
       viewport: { left: viewportRect.left, top: viewportRect.top, right: viewportRect.right, bottom: viewportRect.bottom, width: viewportRect.width, height: viewportRect.height },
       image: { left: imageRect.left, top: imageRect.top, right: imageRect.right, bottom: imageRect.bottom, width: imageRect.width, height: imageRect.height },
       naturalWidth: imageNode.naturalWidth,
@@ -86,7 +86,31 @@ async function assertFittedLightbox(page: Page) {
       viewportHeight: window.innerHeight,
     };
   });
+}
 
+async function assertFittedLightbox(page: Page) {
+  const dialog = page.getByTestId('essay-image-dialog');
+  const image = page.getByTestId('essay-image-dialog-image');
+
+  await expect(dialog).toBeVisible();
+  await assertDecoded(image);
+
+  // Springs are intentionally soft, but the final fitted state must be exact.
+  // Polling the actual boxes distinguishes a transient animation frame from the
+  // persistent black-frame regression without padding every image with a fixed wait.
+  await expect.poll(async () => {
+    const geometry = await readLightboxGeometry(page);
+    return Math.max(
+      Math.abs(geometry.viewport.width - geometry.image.width),
+      Math.abs(geometry.viewport.height - geometry.image.height),
+      Math.max(0, -geometry.image.left),
+      Math.max(0, -geometry.image.top),
+      Math.max(0, geometry.image.right - geometry.viewportWidth),
+      Math.max(0, geometry.image.bottom - geometry.viewportHeight),
+    );
+  }, { timeout: 4_000, intervals: [60, 90, 140, 220] }).toBeLessThanOrEqual(4);
+
+  const geometry = await readLightboxGeometry(page);
   expect(geometry.bodyOverflow).toBe('hidden');
   expect(geometry.image.width).toBeGreaterThan(24);
   expect(geometry.image.height).toBeGreaterThan(24);
@@ -102,9 +126,6 @@ async function assertFittedLightbox(page: Page) {
   const intrinsicRatio = geometry.naturalWidth / geometry.naturalHeight;
   const renderedRatio = geometry.image.width / geometry.image.height;
   expect(Math.abs(renderedRatio - intrinsicRatio) / intrinsicRatio).toBeLessThan(0.025);
-
-  // At fit scale the viewport hugs the photograph. A large difference here is
-  // the exact regression users perceived as a differently-sized black frame.
   expect(Math.abs(geometry.viewport.width - geometry.image.width)).toBeLessThanOrEqual(4);
   expect(Math.abs(geometry.viewport.height - geometry.image.height)).toBeLessThanOrEqual(4);
 }
@@ -134,8 +155,8 @@ async function exerciseTilt(page: Page, trigger: Locator) {
   }
 
   await expect(tilt).toHaveAttribute('data-tilting', 'true');
+  await expect.poll(() => tilt.evaluate((node) => getComputedStyle(node).transform)).not.toBe('none');
   const activeTransform = await tilt.evaluate((node) => getComputedStyle(node).transform);
-  expect(activeTransform).not.toBe('none');
   expect(activeTransform).not.toContain('NaN');
 
   const activeBox = await trigger.boundingBox();
@@ -198,7 +219,7 @@ for (const slug of essays) {
       const zoom = page.getByTestId('essay-image-zoom');
       await zoom.click();
       await expect(zoom).toHaveAttribute('aria-pressed', 'true');
-      await page.waitForTimeout(280);
+      await page.waitForTimeout(180);
       await zoom.click();
       await expect(zoom).toHaveAttribute('aria-pressed', 'false');
       await assertFittedLightbox(page);
