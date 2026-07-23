@@ -13,8 +13,11 @@ export interface CommandItem {
 const baseItems: CommandItem[] = [
   { id: 'home', label: 'Главная', description: 'Обложка проекта', path: '/', group: 'Разделы' },
   { id: 'poets', label: 'Поэты', description: 'Каталог поэтов', path: '/poets', group: 'Разделы' },
+  { id: 'ratings', label: 'Рейтинг поэтов', description: 'Оценки и комментарии читателей', path: '/ratings', group: 'Разделы' },
+  { id: 'hall', label: 'Зал поэтов', description: 'Иммерсивный пантеон русской поэзии', path: '/hall', group: 'Разделы' },
   { id: 'articles', label: 'Статьи', description: 'Материалы и анализы', path: '/articles', group: 'Разделы' },
-  { id: 'music', label: 'Музыка', description: 'Аудио и интерпретации', path: '/music', group: 'Разделы' },
+  { id: 'music', label: 'Музыка', description: 'Официальные музыкальные публикации', path: '/music', group: 'Разделы' },
+  { id: 'archive', label: 'Мой архив', description: 'Сохранённые стихи и музыкальные сессии', path: '/archive', group: 'Разделы' },
   { id: 'about', label: 'О проекте', description: 'Миссия и контакты', path: '/about', group: 'Разделы' },
 ];
 
@@ -46,8 +49,8 @@ export function getCommandItems(): CommandItem[] {
   const trackItems = musicTracks.map((track) => ({
     id: `track-${track.id}`,
     label: track.title,
-    description: `${track.poet} · ${track.duration}`,
-    path: '/music',
+    description: `${track.poet} · ${track.duration ?? 'музыкальная публикация'}`,
+    path: `/music/${track.id}`,
     group: 'Музыка',
   }));
 
