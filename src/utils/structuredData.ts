@@ -1,6 +1,6 @@
 import { siteConfig } from '../config/site';
 import type { Essay } from '../types/essay';
-import type { Poet } from '../types/poet';
+import type { Article, Poet } from '../types/poet';
 
 function absoluteUrl(pathOrUrl?: string): string {
   if (!pathOrUrl) return `${siteConfig.url}/og-image.jpg`;
@@ -48,6 +48,45 @@ export function relatedEssaysFor(essay: Essay, essays: Essay[]): Essay[] {
       }
       return (a.cluster?.order ?? 999) - (b.cluster?.order ?? 999);
     });
+}
+
+export function legacyArticleStructuredData(article: Article): Record<string, unknown> {
+  const url = `${siteConfig.url}/articles/${article.id}`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      compact({
+        '@type': 'Article',
+        '@id': `${url}#article`,
+        headline: article.title,
+        description: article.excerpt,
+        image: absoluteUrl(article.image),
+        url,
+        inLanguage: 'ru-RU',
+        datePublished: article.date,
+        dateModified: article.date,
+        timeRequired: `PT${article.readTime}M`,
+        articleSection: article.category,
+        author: {
+          '@type': 'Organization',
+          name: article.author || siteConfig.name,
+          url: `${siteConfig.url}/about`,
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: siteConfig.name,
+          url: siteConfig.url,
+          logo: { '@type': 'ImageObject', url: `${siteConfig.url}/icon-512.png` },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+      }),
+      breadcrumb([
+        { name: siteConfig.name, url: `${siteConfig.url}/` },
+        { name: 'Статьи', url: `${siteConfig.url}/articles` },
+        { name: article.title, url },
+      ]),
+    ],
+  };
 }
 
 export function essayStructuredData(
