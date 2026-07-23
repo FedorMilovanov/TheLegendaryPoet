@@ -83,16 +83,6 @@ export default function CommandPalette() {
       if (results.length > 0) setActiveIndex((value) => Math.max(value - 1, 0));
       return;
     }
-    if (event.key === 'Home') {
-      event.preventDefault();
-      setActiveIndex(0);
-      return;
-    }
-    if (event.key === 'End') {
-      event.preventDefault();
-      setActiveIndex(Math.max(0, results.length - 1));
-      return;
-    }
     if (event.key === 'Enter' && results[activeIndex]) {
       event.preventDefault();
       select(results[activeIndex].path);
@@ -114,7 +104,7 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[90] overflow-y-auto overscroll-contain bg-black/70 px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
+      className="fixed inset-0 z-[120] overflow-y-auto overscroll-contain bg-black/70 px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
