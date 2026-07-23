@@ -39,7 +39,20 @@ jobs:
       - name: Report essay source coverage
         run: npm run report:sources
       - name: Validate inline citations
-        run: npm run validate:citations
+        id: citations
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:citations 2>&1 | tee citation-validation.log
+      - name: Upload citation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: citation-validation
+          path: citation-validation.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validate SEO topic clusters
         run: npm run validate:clusters
       - name: Validate Mayakovsky correspondence dataset
@@ -74,9 +87,9 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 3
-      # Browser regressions must not hide build/prerender regressions. The final
-      # gate below still fails the job when Playwright failed, but every other
-      # production layer is exercised first.
+      # Browser and citation regressions must not hide build/prerender regressions.
+      # The final gates below still fail the job when either validation failed,
+      # but every other production layer is exercised first.
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
@@ -91,6 +104,9 @@ jobs:
         run: npm run validate:prerender-seo
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+      - name: Enforce citation result
+        if: always()
+        run: test "${{ steps.citations.outcome }}" = "success"
       - name: Enforce Playwright result
         if: always()
         run: test "${{ steps.e2e.outcome }}" = "success"
