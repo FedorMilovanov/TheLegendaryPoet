@@ -1,6 +1,7 @@
 import type { Essay, EssaySource } from '../../types/essay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
+import { yeseninDocumentSources } from './yeseninDocumentSources';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { mayakovskyProEto } from './mayakovskyProEto';
@@ -14,6 +15,12 @@ import {
   brikSupplementalSources,
   mayakovskyEarlySupplementalSources,
 } from './mayakovskySupplementalSources';
+import {
+  brikCoverageSources,
+  mayakovskyEarlyCoverageSources,
+  mayakovskyLateCoverageSources,
+  mayakovskyProEtoCoverageSources,
+} from './mayakovskyCoverageSources';
 import {
   attachEssayCitations,
   brikCitationRules,
@@ -72,7 +79,11 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
 
 const yeseninWithArchiveLayer: Essay = {
   ...yeseninKutezhiVisual,
+  // The classified documentary registry comes first. When an older essay-local
+  // source repeats the same URL, the stricter evidence kind and limitation note
+  // therefore win instead of the unclassified legacy card.
   sources: uniqueSources([
+    ...yeseninDocumentSources,
     ...(yeseninKutezhiVisual.sources ?? []),
     ...yeseninArchiveSources,
   ]),
@@ -105,7 +116,11 @@ const mayakovskyPartOneWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
     mayakovskyPartOnePlacements,
   ),
-  sources: uniqueSources([...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources]),
+  sources: uniqueSources([
+    ...mayakovskyEarlySources,
+    ...mayakovskyEarlySupplementalSources,
+    ...mayakovskyEarlyCoverageSources,
+  ]),
 };
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
@@ -135,12 +150,15 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
   ),
-  sources: uniqueSources(mayakovskyLateSources),
+  sources: uniqueSources([...mayakovskyLateSources, ...mayakovskyLateCoverageSources]),
 };
 
 const mayakovskyProEtoWithSources: Essay = {
   ...mayakovskyProEto,
-  sources: uniqueSources(mayakovskyProEto.sources),
+  sources: uniqueSources([
+    ...(mayakovskyProEto.sources ?? []),
+    ...mayakovskyProEtoCoverageSources,
+  ]),
 };
 
 const brikCaseWithSourceLibrary: Essay = {
@@ -170,6 +188,7 @@ const brikCaseWithSourceLibrary: Essay = {
   sources: uniqueSources([
     ...brikDocumentSources,
     ...brikSupplementalSources,
+    ...brikCoverageSources,
     ...(brikCaseVisual.sources ?? []),
   ]),
 };
