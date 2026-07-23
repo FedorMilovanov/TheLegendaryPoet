@@ -60,7 +60,7 @@ export function useDialogSurface({
       : null;
     const handle = acquireOverlayLock(label);
     handleRef.current = handle;
-    let focusFrame = window.requestAnimationFrame(() => {
+    const focusFrame = window.requestAnimationFrame(() => {
       const preferred = initialFocusRef?.current;
       const fallback = getFocusableElements(dialogRef.current)[0] ?? dialogRef.current;
       (preferred ?? fallback)?.focus({ preventScroll: true });
@@ -91,26 +91,27 @@ export function useDialogSurface({
 
       if (!activeInside) {
         event.preventDefault();
-        (event.shiftKey ? last : first)?.focus();
+        (event.shiftKey ? last : first)?.focus({ preventScroll: true });
       } else if (event.shiftKey && active === first) {
         event.preventDefault();
-        last?.focus();
+        last?.focus({ preventScroll: true });
       } else if (!event.shiftKey && active === last) {
         event.preventDefault();
-        first?.focus();
+        first?.focus({ preventScroll: true });
       }
     };
 
     document.addEventListener('keydown', onKeyDown, true);
     return () => {
       window.cancelAnimationFrame(focusFrame);
-      focusFrame = 0;
       document.removeEventListener('keydown', onKeyDown, true);
       handle.release();
       if (handleRef.current === handle) handleRef.current = null;
 
-      if (restoreFocus && previouslyFocused?.isConnected) {
-        window.requestAnimationFrame(() => previouslyFocused.focus({ preventScroll: true }));
+      if (restoreFocus && previouslyFocused) {
+        window.requestAnimationFrame(() => {
+          if (previouslyFocused.isConnected) previouslyFocused.focus({ preventScroll: true });
+        });
       }
     };
   }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus]);
