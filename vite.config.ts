@@ -22,6 +22,9 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    // CI reads the manifest to guarantee that large route pages and literary
+    // datasets remain dynamic entries instead of drifting back into the shell.
+    manifest: true,
     rollupOptions: {
       output: {
         // Long-term caching: framework code changes rarely — split it from
