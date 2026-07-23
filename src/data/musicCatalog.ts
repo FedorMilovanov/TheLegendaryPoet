@@ -73,8 +73,9 @@ export function getUpcomingMusicTracks(tracks: readonly MusicTrack[]) {
   return tracks
     .filter((track) => track.availability === 'coming-soon')
     .sort((left, right) => {
-      const dateDifference = scheduledTime(left) - scheduledTime(right);
-      if (dateDifference !== 0) return dateDifference;
+      const leftTime = scheduledTime(left);
+      const rightTime = scheduledTime(right);
+      if (leftTime !== rightTime) return leftTime < rightTime ? -1 : 1;
       const orderDifference = left.releaseOrder - right.releaseOrder;
       if (orderDifference !== 0) return orderDifference;
       return russianCollator.compare(left.id, right.id);
