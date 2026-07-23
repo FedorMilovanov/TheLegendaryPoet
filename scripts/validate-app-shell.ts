@@ -13,6 +13,7 @@ const routes = read('src/routes/routeModules.tsx');
 const link = read('src/components/ui/Link.tsx');
 const smooth = read('src/components/SmoothScroll.tsx');
 const boundary = read('src/components/ErrorBoundary.tsx');
+const cursor = read('src/components/CustomCursor.tsx');
 
 const expectedPages = [
   'HomePage',
@@ -71,6 +72,14 @@ expect(smooth.includes('positionsRef.current.size > 80'), 'scroll history must r
 expect(smooth.includes('function decodeHash'), 'malformed percent-encoded hashes must not crash navigation');
 expect(smooth.includes('FIXED_HEADER_OFFSET'), 'hash navigation must compensate for the fixed header');
 expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native hash scrolling must apply the same header offset as Lenis');
+
+expect(cursor.includes('useMotionValue'), 'the persistent custom cursor must not rerender React on every pointer movement');
+expect(!cursor.includes('setMousePosition'), 'pointer coordinates must remain outside React state');
+expect(cursor.includes("'(pointer: fine)'"), 'the custom cursor must require a fine pointer');
+expect(cursor.includes('prefers-reduced-motion: reduce'), 'the custom cursor must preserve the native pointer for reduced motion');
+expect(cursor.includes('forced-colors: active'), 'the custom cursor must preserve high-contrast system pointers');
+expect(cursor.includes('visibilitychange'), 'the cursor must hide when the document is backgrounded');
+expect(cursor.includes('INTERACTIVE_SELECTOR'), 'cursor emphasis must cover controls beyond links and buttons');
 
 expect(boundary.includes("variant?: 'root' | 'page'"), 'ErrorBoundary must support page-scoped recovery');
 expect(boundary.includes('window.location.reload()'), 'error recovery must provide a real reload path');
