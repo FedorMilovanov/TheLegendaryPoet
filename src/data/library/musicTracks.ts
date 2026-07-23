@@ -1,5 +1,7 @@
 import { MusicTrack } from '../../types/poet';
-import { yeseninYaUstalymWaveform } from '../musicWaveforms';
+import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform } from '../musicWaveforms';
+
+const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
 
 export const musicTracks: MusicTrack[] = [
   {
@@ -20,8 +22,50 @@ export const musicTracks: MusicTrack[] = [
       'Музыкальная интерпретация и мастер — The Legendary Poet',
       'Создано с использованием генеративных музыкальных технологий',
     ],
-    rightsNotice: '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Повторная загрузка и коммерческое распространение без разрешения запрещены.',
+    rightsNotice: standardRights,
     audioSha256: '2f5b7c0a9b83be4685d0d83728e5896c8adde78b75b46dad361eddfb28356381',
     waveform: yeseninYaUstalymWaveform,
+  },
+  {
+    id: 'pushkin-tucha',
+    title: 'Туча',
+    poet: 'Александр Пушкин',
+    poetId: 'alexander-pushkin',
+    duration: '4:24',
+    durationSeconds: 263.904,
+    audioUrl: '/audio/pushkin-tucha.tlp-2026.mp3',
+    coverUrl: '/images/music/pushkin-tucha-cover.webp',
+    wideCoverUrl: '/images/music/pushkin-tucha-wide.webp',
+    description: 'Грозовая электронно-симфоническая интерпретация пушкинской «Тучи»: от напряжения последней бури к ясному, освобождённому небу.',
+    releaseYear: 2026,
+    credits: [
+      'Слова — Александр Пушкин, «Туча» (1835)',
+      'Музыкальная интерпретация и мастер — The Legendary Poet',
+      'Создано с использованием генеративных музыкальных технологий',
+    ],
+    rightsNotice: standardRights,
+    audioSha256: '1d4f77fb01ccd31a4fe8934281fc7771157b7f9a0373529ca97ad0aafa86ff30',
+    waveform: pushkinTuchaWaveform,
+  },
+  {
+    id: 'blok-rossiya',
+    title: 'Россия',
+    poet: 'Александр Блок',
+    poetId: 'alexander-blok',
+    duration: '4:18',
+    durationSeconds: 257.664,
+    audioUrl: '/audio/blok-rossiya.tlp-2026.mp3',
+    coverUrl: '/images/music/blok-rossiya-cover.webp',
+    wideCoverUrl: '/images/music/blok-rossiya-wide.webp',
+    description: 'Тёмная атмосферная версия блоковской «России», в которой дорожная тоска, бедность и любовь к родине проходят через электронный шум и кинематографический размах.',
+    releaseYear: 2026,
+    credits: [
+      'Слова — Александр Блок, «Россия» (1908)',
+      'Музыкальная интерпретация и мастер — The Legendary Poet',
+      'Создано с использованием генеративных музыкальных технологий',
+    ],
+    rightsNotice: standardRights,
+    audioSha256: 'feb6d1607278fce8621000a542e76e075cca5a6b44cf63c0a9db67603b943c9d',
+    waveform: blokRossiyaWaveform,
   },
 ];
