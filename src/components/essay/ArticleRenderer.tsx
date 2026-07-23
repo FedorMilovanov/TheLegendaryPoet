@@ -131,6 +131,10 @@ export default function ArticleRenderer({
             direction={layout.direction}
             distance={18}
             once
+            // Dozens of blur-filter animations on a long article force large
+            // offscreen textures while the reader scrolls. Opacity + translation
+            // keeps the same quiet reveal without competing with images or Tilt.
+            blur={false}
             className={className}
           >
             {blockView}
