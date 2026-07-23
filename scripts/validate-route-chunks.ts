@@ -43,14 +43,25 @@ function findEntry(source: string): [string, ManifestEntry] | undefined {
   return entries.find(([key, entry]) => key === source || entry.src === source);
 }
 
-const shell = findEntry('src/main.tsx');
+/**
+ * Vite's manifest key for an HTML application entry is version-dependent.
+ * Older builds may expose `src/main.tsx`, while Vite 7 normally records the
+ * actual Rollup input as `index.html`. Both describe the same persistent shell;
+ * route splitting must not fail merely because the manifest key changed.
+ */
+const shell =
+  findEntry('src/main.tsx') ??
+  entries.find(
+    ([key, entry]) =>
+      entry.isEntry === true && (key === 'index.html' || entry.src === 'index.html'),
+  );
 let shellFile = '';
 if (!shell) {
-  errors.push('missing src/main.tsx manifest entry');
+  errors.push('missing application shell manifest entry (src/main.tsx or index.html)');
 } else {
   const [, entry] = shell;
   shellFile = entry.file;
-  if (!entry.isEntry) errors.push('src/main.tsx is not marked as the build entry');
+  if (!entry.isEntry) errors.push('application shell is not marked as the build entry');
   if (!fs.existsSync(path.resolve('dist', entry.file))) {
     errors.push(`main entry points to missing file ${entry.file}`);
   }
