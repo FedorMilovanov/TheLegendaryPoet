@@ -51,12 +51,7 @@ export function useDialogSurface({
   restoreFocus = true,
   restoreFocusRef,
 }: DialogSurfaceOptions) {
-  const closeRef = useRef(onClose);
   const handleRef = useRef<OverlayLockHandle | null>(null);
-
-  useEffect(() => {
-    closeRef.current = onClose;
-  }, [onClose]);
 
   // A keyed modal can replace its DOM node while staying logically open (for
   // example when the active track changes). Keep the stack's focus root live.
@@ -73,12 +68,12 @@ export function useDialogSurface({
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
-      // Commit the React close state first. Releasing the final overlay may
-      // restore scrolling and restart Lenis; the finally block guarantees that
-      // runtime cleanup still happens even if the consumer close callback
-      // itself fails, while the state update cannot be skipped by unlock work.
+      // Current modal surfaces provide stable callbacks. Calling the concrete
+      // callback directly avoids a separate passive-effect ref handoff while
+      // audio state is re-rendering rapidly, and finally still guarantees the
+      // runtime stack is released synchronously for the next Escape.
       try {
-        closeRef.current();
+        onClose();
       } finally {
         handle.release();
       }
@@ -132,7 +127,7 @@ export function useDialogSurface({
         });
       }
     };
-  }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
