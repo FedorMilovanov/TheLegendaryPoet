@@ -99,7 +99,7 @@ for (const track of allMusicTracks) {
   if (!track.description || track.description.trim().length < 60 || track.description.length > 420) {
     errors.push(`${prefix}: description must contain 60–420 characters`);
   }
-  if (!Number.isInteger(track.releaseYear) || (track.releaseYear ?? 0) < 1900 || (track.releaseYear ?? 0) > 2100) {
+  if (!Number.isInteger(track.releaseYear) || track.releaseYear < 1900 || track.releaseYear > 2100) {
     errors.push(`${prefix}: releaseYear must be an integer from 1900 to 2100`);
   }
 
@@ -126,7 +126,7 @@ for (const track of allMusicTracks) {
   }
 
   const lifecycleDate = track.publishedAt ?? track.scheduledFor;
-  if (lifecycleDate && track.releaseYear && Number(lifecycleDate.slice(0, 4)) !== track.releaseYear) {
+  if (lifecycleDate && Number(lifecycleDate.slice(0, 4)) !== track.releaseYear) {
     errors.push(`${prefix}: releaseYear differs from the lifecycle date`);
   }
 
@@ -156,20 +156,27 @@ for (const track of allMusicTracks) {
     audioHashes.add(track.audioSha256);
   }
 
-  const displayedDuration = parseDuration(track.duration);
-  if (!Number.isFinite(displayedDuration)) errors.push(`${prefix}: duration must use a valid m:ss value`);
-  else if (track.durationSeconds && Math.abs(displayedDuration - track.durationSeconds) > 1.5) warnings.push(`${prefix}: displayed duration differs from master by more than 1.5 seconds`);
+  const displayedDuration = track.duration ? parseDuration(track.duration) : Number.NaN;
+  if (track.duration && !Number.isFinite(displayedDuration)) errors.push(`${prefix}: duration must use a valid m:ss value`);
+  else if (track.durationSeconds && Number.isFinite(displayedDuration) && Math.abs(displayedDuration - track.durationSeconds) > 1.5) warnings.push(`${prefix}: displayed duration differs from master by more than 1.5 seconds`);
 
   if (track.availability === 'published') {
     if (!track.audioUrl || !track.coverUrl || !track.wideCoverUrl) errors.push(`${prefix}: published releases require audio, square cover, and wide cover`);
     if (!track.audioSha256 || !SHA256.test(track.audioSha256)) errors.push(`${prefix}: published releases require a valid SHA-256`);
+    if (!track.duration || !Number.isFinite(displayedDuration)) errors.push(`${prefix}: published releases require a verified m:ss duration`);
     if (!track.durationSeconds || track.durationSeconds <= 0) errors.push(`${prefix}: published releases require a positive durationSeconds`);
     if (!track.waveform || track.waveform.length < 64) errors.push(`${prefix}: published releases require at least 64 verified waveform peaks`);
   }
 
+  if (track.availability === 'archived') {
+    if (!track.duration || !Number.isFinite(displayedDuration) || !track.durationSeconds || track.durationSeconds <= 0) {
+      errors.push(`${prefix}: archived releases must retain their verified duration provenance`);
+    }
+  }
+
   if (track.availability === 'coming-soon') {
-    if (track.audioUrl || track.audioSha256 || track.durationSeconds || track.waveform) {
-      errors.push(`${prefix}: coming-soon releases cannot expose unverified playable master data`);
+    if (track.duration || track.audioUrl || track.audioSha256 || track.durationSeconds || track.waveform) {
+      errors.push(`${prefix}: coming-soon releases cannot expose guessed or unverified master data`);
     }
   }
 
@@ -269,6 +276,7 @@ if (musicTracks.length >= 2) {
     publishedAt: undefined,
     scheduledFor: '2027-01-01',
     featured: false,
+    duration: undefined,
     audioUrl: undefined,
     audioSha256: undefined,
     durationSeconds: undefined,
