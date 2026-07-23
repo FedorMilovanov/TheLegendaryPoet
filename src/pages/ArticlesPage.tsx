@@ -12,6 +12,10 @@ import { articlesCollectionStructuredData } from '../utils/collectionStructuredD
 import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
+const articles = getAllArticles();
+const essays = getAllEssays();
+const articlesJsonLd = articlesCollectionStructuredData(essays, articles);
+
 const categories = [
   { value: '', label: 'Все статьи' },
   { value: 'biblical', label: 'Библейский анализ' },
@@ -65,22 +69,16 @@ function groupEssays(essays: Essay[]): EssayGroup[] {
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedCluster, setSelectedCluster] = useState<string>('');
-  const articles = getAllArticles();
-  const essays = getAllEssays();
-  const jsonLd = useMemo(
-    () => articlesCollectionStructuredData(essays, articles),
-    [articles, essays],
-  );
 
   useSeo({
     title: 'Статьи, биографии и литературные исследования — THE LEGENDARY POET',
     description: 'Большие биографии поэтов, документальные расследования, история произведений, архивные источники и литературный анализ с внутренними тематическими связями.',
     path: '/articles',
     keywords: 'биографии поэтов, литературные исследования, анализ стихотворений, Маяковский, Есенин, архивные документы',
-    jsonLd,
+    jsonLd: articlesJsonLd,
   });
 
-  const essayGroups = useMemo(() => groupEssays(essays), [essays]);
+  const essayGroups = useMemo(() => groupEssays(essays), []);
   const visibleEssayGroups = selectedCluster
     ? essayGroups.filter((group) => group.id === selectedCluster)
     : essayGroups;
@@ -134,7 +132,7 @@ export default function ArticlesPage() {
                   type="button"
                   onClick={() => setSelectedCluster('')}
                   aria-pressed={!selectedCluster}
-                  className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition ${!selectedCluster ? 'bg-luxury-gold text-black' : 'border border-luxury-gold/15 text-luxury-gray-light/55 hover:text-luxury-gold'}`}
+                  className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${!selectedCluster ? 'bg-luxury-gold text-black' : 'border border-luxury-gold/15 text-luxury-gray-light/55 hover:text-luxury-gold'}`}
                 >
                   Все кластеры
                 </button>
@@ -144,7 +142,7 @@ export default function ArticlesPage() {
                     type="button"
                     onClick={() => setSelectedCluster(group.id === selectedCluster ? '' : group.id)}
                     aria-pressed={selectedCluster === group.id}
-                    className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition ${selectedCluster === group.id ? 'bg-cyan-300 text-[#041014]' : 'border border-cyan-400/15 text-cyan-100/50 hover:text-cyan-200'}`}
+                    className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${selectedCluster === group.id ? 'bg-cyan-300 text-[#041014]' : 'border border-cyan-400/15 text-cyan-100/50 hover:text-cyan-200'}`}
                   >
                     {group.label} · {group.essays.length}
                   </button>
@@ -197,8 +195,10 @@ export default function ArticlesPage() {
             {categories.map((category) => (
               <button
                 key={category.value}
+                type="button"
                 onClick={() => setSelectedCategory(category.value)}
-                className={`min-h-11 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all ${
+                aria-pressed={selectedCategory === category.value}
+                className={`min-h-11 rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
                   selectedCategory === category.value
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
                     : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
