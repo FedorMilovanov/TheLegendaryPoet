@@ -2,7 +2,10 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    # `work/local-images-playwright-wtoc` is temporarily included so a tiny child
+    # PR can expose full Actions results while PR #37 itself conflicts with the
+    # rapidly changing main branch. Remove this research base before final merge.
+    branches: [main, work/local-images-playwright-wtoc]
   push:
     # The temporary research-branch trigger keeps the large source/renderer
     # integration testable even while current main has merge conflicts. Remove
