@@ -21,12 +21,8 @@ import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer, type AudioStatus } from './AudioPlayerProvider';
+import { buildTrackMomentPath, formatAudioTime } from './audioPresentation';
 import { getTrackThemeStyle } from './trackTheme';
-
-const formatTime = (value: number) => {
-  const safe = Number.isFinite(value) && value > 0 ? value : 0;
-  return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
-};
 
 const copyText = async (value: string) => {
   if (navigator.clipboard?.writeText) {
@@ -140,21 +136,20 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
   const share = async () => {
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     const moment = position >= 5 ? Math.floor(position) : 0;
-    const suffix = moment > 0 ? `?t=${moment}` : '';
-    const url = `${window.location.origin}${base}/music/${track.id}${suffix}`;
+    const url = `${window.location.origin}${base}${buildTrackMomentPath(track.id, position)}`;
     try {
       if (navigator.share) {
         await navigator.share({
           title: `${track.title} — ${track.poet}`,
           text: moment > 0
-            ? `${track.poet} — «${track.title}», момент ${formatTime(moment)}`
+            ? `${track.poet} — «${track.title}», момент ${formatAudioTime(moment)}`
             : `${track.poet} — музыкальная версия The Legendary Poet`,
           url,
         });
       } else {
         await copyText(url);
       }
-      setShareLabel(moment > 0 ? `Скопировано с ${formatTime(moment)}` : 'Ссылка скопирована');
+      setShareLabel(moment > 0 ? `Скопировано с ${formatAudioTime(moment)}` : 'Ссылка скопирована');
       window.setTimeout(() => setShareLabel('Поделиться'), 2200);
     } catch {
       // Native share was cancelled or clipboard access was denied.
@@ -296,7 +291,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
           {restoredPosition !== null && restoredPosition > 0 && (
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-xs text-white/58">
               <Check size={15} style={{ color: 'var(--track-secondary)' }} />
-              <span>Продолжение с {formatTime(restoredPosition)}</span>
+              <span>Продолжение с {formatAudioTime(restoredPosition)}</span>
               <button type="button" onClick={restartTrack} className="font-bold transition hover:text-white" style={{ color: 'var(--track-accent)' }}>Начать сначала</button>
             </div>
           )}
@@ -331,8 +326,8 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                     key={`${chapter.label}-${chapter.start}`}
                     type="button"
                     onClick={() => seekToTrack(chapter.start)}
-                    aria-label={`${chapter.label}, ${formatTime(chapter.start)}`}
-                    title={`${chapter.label} · ${formatTime(chapter.start)}`}
+                    aria-label={`${chapter.label}, ${formatAudioTime(chapter.start)}`}
+                    title={`${chapter.label} · ${formatAudioTime(chapter.start)}`}
                     className="absolute bottom-0 top-0 z-10 w-px bg-white/25 transition hover:bg-white/75"
                     style={{ left: `${left}%` }}
                   />
@@ -348,13 +343,13 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                 disabled={unavailable || recoverableError}
                 onInput={(event) => seekToTrack(Number(event.currentTarget.value))}
                 aria-label="Позиция воспроизведения"
-                aria-valuetext={`${formatTime(position)} из ${formatTime(totalDuration)}`}
+                aria-valuetext={`${formatAudioTime(position)} из ${formatAudioTime(totalDuration)}`}
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
             </div>
             <div className="mt-2.5 flex items-center justify-between text-xs tabular-nums text-white/40">
-              <span className="font-medium text-white/58">{formatTime(position)}</span>
-              <span>{playerStatus === 'buffering' ? 'буферизация…' : formatTime(totalDuration)}</span>
+              <span className="font-medium text-white/58">{formatAudioTime(position)}</span>
+              <span>{playerStatus === 'buffering' ? 'буферизация…' : formatAudioTime(totalDuration)}</span>
             </div>
           </div>
 
