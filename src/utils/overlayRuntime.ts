@@ -21,8 +21,18 @@ type StyleSnapshot = {
 
 type OverlayEntry = {
   token: symbol;
+  label: string;
   root: HTMLElement | null;
   onEscape: (() => void) | null;
+};
+
+type OverlayDebugState = {
+  depth: number;
+  labels: string[];
+  connected: boolean[];
+  topLabel: string | null;
+  escapeCount: number;
+  lastEscapeLabel: string | null;
 };
 
 export interface OverlayLockHandle {
@@ -35,14 +45,35 @@ export interface OverlayLockHandle {
 const overlayStack: OverlayEntry[] = [];
 let styleSnapshot: StyleSnapshot | null = null;
 let resumeSmoothScroll: (() => void) | null = null;
+let escapeCount = 0;
+let lastEscapeLabel: string | null = null;
 
-function setLegacyModalFlag(open: boolean) {
+function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: boolean | OverlayDebugState) {
   if (typeof window === 'undefined') return;
   try {
-    (window as Window & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open;
+    (window as Window & {
+      __TLP_MODAL_OPEN?: boolean;
+      __TLP_OVERLAY_DEBUG?: OverlayDebugState;
+    })[key] = value as never;
   } catch {
     // Restricted embedded browsers may expose a non-extensible Window object.
   }
+}
+
+function setLegacyModalFlag(open: boolean) {
+  setWindowValue('__TLP_MODAL_OPEN', open);
+}
+
+function publishOverlayDebug() {
+  const top = overlayStack[overlayStack.length - 1];
+  setWindowValue('__TLP_OVERLAY_DEBUG', {
+    depth: overlayStack.length,
+    labels: overlayStack.map((entry) => entry.label),
+    connected: overlayStack.map((entry) => Boolean(entry.root?.isConnected)),
+    topLabel: top?.label ?? null,
+    escapeCount,
+    lastEscapeLabel,
+  });
 }
 
 function rootIsDetached(root: HTMLElement | null) {
@@ -63,6 +94,7 @@ function pruneDetachedOverlays() {
     overlayStack.splice(index, 1);
     removed = true;
   }
+  if (removed) publishOverlayDebug();
   if (removed && overlayStack.length === 0 && styleSnapshot) unlockDocument();
 }
 
@@ -74,7 +106,13 @@ function getTopOverlay() {
 function onOverlayKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   const top = getTopOverlay();
-  if (!top?.onEscape) return;
+  lastEscapeLabel = top?.label ?? null;
+  if (!top?.onEscape) {
+    publishOverlayDebug();
+    return;
+  }
+  escapeCount += 1;
+  publishOverlayDebug();
   event.preventDefault();
   event.stopPropagation();
   top.onEscape();
@@ -154,6 +192,7 @@ function unlockDocument() {
   resumeSmoothScroll?.();
   resumeSmoothScroll = null;
   setLegacyModalFlag(false);
+  publishOverlayDebug();
 }
 
 /**
@@ -172,15 +211,19 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
     };
   }
 
-  const entry: OverlayEntry = { token: Symbol(label), root, onEscape: null };
+  const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null };
   overlayStack.push(entry);
   if (overlayStack.length === 1) lockDocument();
+  publishOverlayDebug();
   let released = false;
 
   return {
     isTopmost: () => getTopOverlay()?.token === entry.token,
     setRoot: (nextRoot) => {
-      if (!released) entry.root = nextRoot;
+      if (!released) {
+        entry.root = nextRoot;
+        publishOverlayDebug();
+      }
     },
     setEscapeHandler: (handler) => {
       if (!released) entry.onEscape = handler;
@@ -190,6 +233,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       released = true;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
+      publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
     },
   };
