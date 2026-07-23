@@ -9,15 +9,16 @@ const readLibraryFile = (file) => fs.readFileSync(path.join(libDir, file), 'utf8
 
 const poetFiles = fs
   .readdirSync(libDir)
-  .filter(
-    (file) =>
-      file.endsWith('.ts') &&
-      !['index.ts', 'articles.ts', 'musicTracks.ts'].includes(file),
-  )
+  .filter((file) => file.endsWith('.ts') && !['index.ts', 'articles.ts', 'musicTracks.ts'].includes(file))
   .sort();
 
 const poetIds = poetFiles
   .map((file) => (readLibraryFile(file).match(/^\s*id:\s*['"]([a-z0-9-]+)['"]/m) || [])[1])
+  .filter(Boolean)
+  .sort();
+
+const trackIds = [...readLibraryFile('musicTracks.ts').matchAll(/^\s*id:\s*['"]([a-z0-9-]+)['"]/gm)]
+  .map((match) => match[1])
   .filter(Boolean)
   .sort();
 
@@ -28,9 +29,6 @@ for (const file of [...poetFiles, 'articles.ts']) {
   }
 }
 
-// Visual wrappers may intentionally retain the slug of the verified source
-// essay. De-duplicate extracted slugs so a compatibility wrapper cannot create
-// duplicate <url> entries in the generated sitemap.
 const essaySlugs = [
   ...new Set(
     fs
@@ -44,17 +42,16 @@ const essaySlugs = [
   ),
 ].sort();
 
-const staticRoutes = ['/', '/hall', '/poets', '/articles', '/music', '/about'];
+const staticRoutes = ['/', '/hall', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 const urls = [
   ...staticRoutes.map((route) => ({
     loc: route,
-    priority: route === '/' ? '1.0' : '0.8',
+    priority: route === '/' ? '1.0' : route === '/ratings' || route === '/music' ? '0.9' : '0.8',
   })),
   ...essaySlugs.map((slug) => ({ loc: `/essays/${slug}`, priority: '0.9' })),
+  ...trackIds.map((id) => ({ loc: `/music/${id}`, priority: '0.9' })),
   ...poetIds.map((id) => ({ loc: `/poets/${id}`, priority: '0.7' })),
-  ...[...articleIds]
-    .sort()
-    .map((id) => ({ loc: `/articles/${id}`, priority: '0.6' })),
+  ...[...articleIds].sort().map((id) => ({ loc: `/articles/${id}`, priority: '0.6' })),
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -70,5 +67,5 @@ ${urls
 
 fs.writeFileSync('public/sitemap.xml', xml);
 console.log(
-  `sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${articleIds.size} articles)`,
+  `sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${trackIds.length} tracks, ${articleIds.size} articles)`,
 );
