@@ -10,7 +10,7 @@ export default function RouteLoadingShell() {
     >
       <div className="relative overflow-hidden rounded-[2.25rem] border border-cyan-400/10 bg-[radial-gradient(circle_at_18%_20%,rgba(212,175,55,0.10),transparent_30%),radial-gradient(circle_at_82%_15%,rgba(0,212,255,0.08),transparent_32%),rgba(6,16,24,0.76)] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.34)] sm:p-9">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden bg-white/[0.05]">
-          <div className="h-full w-1/3 animate-[route-loading-line_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-cyan-300/80 to-transparent motion-reduce:animate-none" />
+          <div className="h-full w-full animate-pulse bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent motion-reduce:animate-none" />
         </div>
 
         <div className="flex items-center gap-4">
