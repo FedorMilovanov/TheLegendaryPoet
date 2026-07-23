@@ -65,16 +65,62 @@ function normalizeSourceKind(source: EssaySource): EssaySource {
   return source;
 }
 
+function normalizedSourceKey(source: EssaySource): string {
+  return source.url
+    ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
+    : `${source.id ?? ''}:${source.title}`;
+}
+
+function mergeSourceAliases(canonical: EssaySource, duplicate: EssaySource): EssaySource {
+  const ids = [
+    canonical.id,
+    ...(canonical.aliases ?? []),
+    duplicate.id,
+    ...(duplicate.aliases ?? []),
+  ].filter((id): id is string => Boolean(id));
+  const canonicalId = canonical.id ?? duplicate.id;
+  const aliases = [...new Set(ids)].filter((id) => id !== canonicalId);
+
+  return {
+    ...canonical,
+    id: canonicalId,
+    aliases: aliases.length > 0 ? aliases : undefined,
+    // The first registry remains the evidentiary source of truth, while older
+    // unclassified cards can still fill genuinely missing display metadata.
+    title: canonical.title || duplicate.title,
+    url: canonical.url ?? duplicate.url,
+    kind: canonical.kind ?? duplicate.kind,
+    institution: canonical.institution ?? duplicate.institution,
+    year: canonical.year ?? duplicate.year,
+    note: canonical.note ?? duplicate.note,
+  };
+}
+
+/**
+ * Deduplicate bibliography rows by normalized URL without orphaning historical
+ * inline-citation ids. Every duplicate id becomes an alias of the first,
+ * canonical source card, so one URL renders once while all existing citations
+ * continue to resolve to the same numbered row.
+ */
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
-  const seen = new Set<string>();
-  return sources.map(normalizeSourceKind).filter((source) => {
-    const key = source.url
-      ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
-      : `${source.id ?? ''}:${source.title}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const result: EssaySource[] = [];
+  const sourceIndex = new Map<string, number>();
+
+  for (const rawSource of sources) {
+    const source = normalizeSourceKind(rawSource);
+    const key = normalizedSourceKey(source);
+    const existingIndex = sourceIndex.get(key);
+
+    if (existingIndex == null) {
+      sourceIndex.set(key, result.length);
+      result.push(source);
+      continue;
+    }
+
+    result[existingIndex] = mergeSourceAliases(result[existingIndex], source);
+  }
+
+  return result;
 }
 
 const yeseninWithArchiveLayer: Essay = {
@@ -150,11 +196,9 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
   ),
-  // Inline-cited essay-local sources must precede URL-equivalent registries so
-  // deduplication cannot discard the stable IDs already stored on prose blocks.
   sources: uniqueSources([
-    ...(mayakovskyPartTwo.sources ?? []),
     ...mayakovskyLateSources,
+    ...(mayakovskyPartTwo.sources ?? []),
     ...mayakovskyLateCoverageSources,
   ]),
 };
@@ -188,12 +232,9 @@ const brikCaseWithSourceLibrary: Essay = {
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
-  // Keep the IDs cited by the expanded essay before URL-equivalent canonical
-  // registries. The later libraries still supply every independent source, but
-  // cannot silently orphan an inline citation during URL deduplication.
   sources: uniqueSources([
-    ...(brikCaseVisual.sources ?? []),
     ...brikDocumentSources,
+    ...(brikCaseVisual.sources ?? []),
     ...brikSupplementalSources,
     ...brikCoverageSources,
   ]),
