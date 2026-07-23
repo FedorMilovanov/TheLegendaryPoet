@@ -54,6 +54,7 @@ const LAST_TRACK_KEY = 'tlp-audio-last-track';
 const VOLUME_KEY = 'tlp-audio-volume';
 const COMPLETED_KEY = 'tlp-audio-completed';
 const positionKey = (trackId: string) => `tlp-audio-position:${trackId}`;
+const mediaActions: MediaSessionAction[] = ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto', 'nexttrack', 'previoustrack'];
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -79,6 +80,15 @@ function readCompletedTracks() {
   }
 }
 
+function clearMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  for (const action of mediaActions) {
+    try { navigator.mediaSession.setActionHandler(action, null); } catch { /* unsupported action */ }
+  }
+  navigator.mediaSession.metadata = null;
+  navigator.mediaSession.playbackState = 'none';
+}
+
 export function AudioPlayerProvider({ tracks, children }: { tracks: readonly MusicTrack[]; children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const currentTrackRef = useRef<MusicTrack | null>(null);
@@ -87,6 +97,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const lastSavedRef = useRef(0);
   const adjacentPlaybackRef = useRef<(direction: -1 | 1) => Promise<void>>(async () => undefined);
   const completedRef = useRef<Set<string>>(readCompletedTracks());
+  const initialVolumeRef = useRef(clamp(readStoredNumber(VOLUME_KEY, 0.9), 0, 1));
 
   const [currentTrack, setCurrentTrack] = useState<MusicTrack | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -95,8 +106,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
-  const [volume, setVolumeState] = useState(() => clamp(readStoredNumber(VOLUME_KEY, 0.9), 0, 1));
-  const [muted, setMuted] = useState(false);
+  const [volume, setVolumeState] = useState(initialVolumeRef.current);
+  const [muted, setMuted] = useState(initialVolumeRef.current === 0);
   const [resumeAt, setResumeAt] = useState<number | null>(null);
   const [immersiveOpen, setImmersiveOpen] = useState(false);
   const [completedTrackIds, setCompletedTrackIds] = useState<ReadonlySet<string>>(() => new Set(completedRef.current));
@@ -112,10 +123,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
   const applyPendingSeek = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
     const requested = pendingSeekRef.current;
+    if (!audio || requested === null || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
     pendingSeekRef.current = null;
-    if (requested === null) return;
     const safe = clamp(requested, 0, Math.max(0, audio.duration - 0.1));
     audio.currentTime = safe;
     setCurrentTime(safe);
@@ -150,13 +160,12 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const audio = audioRef.current;
     if (!audio || !track.audioUrl) return;
 
-    const isSameTrack = currentTrackRef.current?.id === track.id;
-    if (!isSameTrack) {
+    if (currentTrackRef.current?.id !== track.id) {
       pendingAutoplayRef.current = options.autoplay ?? false;
       setTrackSource(track, options.startAt);
       if (options.autoplay) {
         void audio.play().catch(() => {
-          /* loadedmetadata retries while preserving the original user action */
+          /* loadedmetadata retries if the browser needs the source first */
         });
       }
       return;
@@ -170,6 +179,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       audio.currentTime = safe;
       setCurrentTime(safe);
       setResumeAt(null);
+      setEnded(false);
     }
 
     if (options.autoplay) {
@@ -183,8 +193,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   }, [setTrackSource]);
 
   const playTrack = useCallback(async (track: MusicTrack, options: Omit<LoadTrackOptions, 'autoplay'> = {}) => {
-    const audio = audioRef.current;
-    if (!audio || !track.audioUrl) return;
+    if (!track.audioUrl || !audioRef.current) return;
     loadTrack(track, { ...options, autoplay: true });
   }, [loadTrack]);
 
@@ -202,10 +211,9 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
   const seekTo = useCallback((seconds: number) => {
     const audio = audioRef.current;
-    if (!audio || currentTrackRef.current === null) return;
-    const limit = Number.isFinite(audio.duration) && audio.duration > 0
-      ? audio.duration
-      : currentTrackRef.current.durationSeconds ?? seconds;
+    const track = currentTrackRef.current;
+    if (!audio || !track) return;
+    const limit = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : track.durationSeconds ?? seconds;
     const safe = clamp(seconds, 0, Math.max(0, limit - 0.1));
     audio.currentTime = safe;
     setCurrentTime(safe);
@@ -215,8 +223,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
 
   const seekBy = useCallback((seconds: number) => {
     const audio = audioRef.current;
-    if (!audio) return;
-    seekTo(audio.currentTime + seconds);
+    if (audio) seekTo(audio.currentTime + seconds);
   }, [seekTo]);
 
   const restart = useCallback(() => {
@@ -234,25 +241,24 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   }, []);
 
   const toggleMute = useCallback(() => {
-    setMuted((value) => {
-      if (value) return false;
+    if (muted) {
       if (volume === 0) setVolume(0.75);
-      return true;
-    });
-  }, [setVolume, volume]);
+      else setMuted(false);
+      return;
+    }
+    setMuted(true);
+  }, [muted, setVolume, volume]);
 
   const playAdjacent = useCallback(async (direction: -1 | 1) => {
     const track = currentTrackRef.current;
     if (!track || tracks.length < 2) return;
     const currentIndex = tracks.findIndex((item) => item.id === track.id);
     if (currentIndex < 0) return;
-    const nextIndex = (currentIndex + direction + tracks.length) % tracks.length;
-    const nextTrack = tracks[nextIndex];
+    const nextTrack = tracks[(currentIndex + direction + tracks.length) % tracks.length];
     if (nextTrack) await playTrack(nextTrack, { startAt: 0 });
   }, [playTrack, tracks]);
 
   adjacentPlaybackRef.current = playAdjacent;
-
   const playNext = useCallback(() => playAdjacent(1), [playAdjacent]);
   const playPrevious = useCallback(() => playAdjacent(-1), [playAdjacent]);
 
@@ -276,10 +282,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     setResumeAt(null);
     setImmersiveOpen(false);
     try { window.localStorage.removeItem(LAST_TRACK_KEY); } catch { /* storage unavailable */ }
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = null;
-      navigator.mediaSession.playbackState = 'none';
-    }
+    clearMediaSession();
   }, []);
 
   const openImmersive = useCallback((track?: MusicTrack) => {
@@ -358,7 +361,6 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         lastSavedRef.current = audio.currentTime;
         try { window.localStorage.setItem(positionKey(track.id), String(audio.currentTime)); } catch { /* storage unavailable */ }
       }
-
       if (audio.duration > 30 && audio.currentTime / audio.duration >= 0.9) persistCompleted(track.id);
     };
 
@@ -424,9 +426,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnd);
 
-    const savedTrackId = (() => {
-      try { return window.localStorage.getItem(LAST_TRACK_KEY); } catch { return null; }
-    })();
+    let savedTrackId: string | null = null;
+    try { savedTrackId = window.localStorage.getItem(LAST_TRACK_KEY); } catch { /* storage unavailable */ }
     const savedTrack = tracks.find((track) => track.id === savedTrackId);
     if (savedTrack?.audioUrl) setTrackSource(savedTrack);
 
@@ -444,6 +445,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnd);
+      clearMediaSession();
     };
   }, [applyPendingSeek, closePlayer, persistCompleted, seekBy, seekTo, setTrackSource, tracks]);
 
