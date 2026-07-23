@@ -11,7 +11,6 @@ import { titleCase } from '../utils/titleCase';
 
 export default function MusicPage() {
   const featured = getFeaturedMusicTrack(musicTracks);
-  const remaining = musicTracks.filter((track) => track.id !== featured?.id);
   const upcoming = getUpcomingMusicTracks(allMusicTracks);
   const stats = getMusicCatalogStats(allMusicTracks);
   const archiveMinutes = Math.max(1, Math.round(stats.totalDurationSeconds / 60));
@@ -107,7 +106,7 @@ export default function MusicPage() {
           </section>
         )}
 
-        {remaining.length > 0 && (
+        {musicTracks.length > 1 && (
           <section className="mt-20" aria-labelledby="release-archive-title">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -116,7 +115,7 @@ export default function MusicPage() {
               </div>
               <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Поиск, фильтры, постепенная отрисовка и стабильная сортировка готовы к десяткам и сотням новых публикаций.</p>
             </div>
-            <MusicArchiveBrowser tracks={remaining} />
+            <MusicArchiveBrowser tracks={musicTracks} featuredTrackId={featured?.id} />
           </section>
         )}
 
