@@ -108,6 +108,7 @@ expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap k
 expect(dialogSource.includes('handleRef.current?.setRoot(dialogRef.current)'), 'keyed dialog replacements must refresh the overlay root');
 expect(dialogSource.includes('canRestoreOverlayFocus(previouslyFocused)'), 'dialog close must not restore focus beneath another surface');
 expect(dialogSource.includes('previouslyFocused.focus({ preventScroll: true })'), 'dialog close must restore focus without moving the page');
+expect(dialogSource.includes('handle.release();\n        closeRef.current();'), 'Escape must yield overlay ownership synchronously before React cleanup');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
 expect(commandSource.includes('onPointerDown'), 'the command backdrop must support pointer and touch input');
