@@ -12,6 +12,7 @@ const fragments = [
 
 type FragmentStyle = CSSProperties & {
   '--fragment-opacity': number;
+  '--fragment-opacity-peak': number;
   '--fragment-rotate': string;
   '--fragment-dx': string;
   '--fragment-dy': string;
@@ -35,6 +36,7 @@ export default function PoetryBackdrop() {
           left: fragment.left,
           textShadow: '0 0 28px rgba(0,212,255,0.16)',
           '--fragment-opacity': fragment.opacity,
+          '--fragment-opacity-peak': fragment.opacity * 1.55,
           '--fragment-rotate': `${fragment.rotate}deg`,
           '--fragment-dx': `${fragment.dx}px`,
           '--fragment-dy': `${fragment.dy}px`,
