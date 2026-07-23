@@ -1,10 +1,15 @@
-import { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
+import type { CommentEntry, FeedbackSnapshot, RatingEntry } from '../types/community';
 
-const URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, '');
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const VITE_ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+const NODE_ENV = typeof process !== 'undefined' ? process.env : undefined;
+const URL = (VITE_ENV?.VITE_SUPABASE_URL ?? NODE_ENV?.VITE_SUPABASE_URL)?.replace(/\/$/, '');
+const KEY = VITE_ENV?.VITE_SUPABASE_ANON_KEY ?? NODE_ENV?.VITE_SUPABASE_ANON_KEY;
 
 const RATINGS_VIEW = 'tlp_ratings_public';
 const COMMENTS_VIEW = 'tlp_comments_public';
+const PAGE_SIZE = 1000;
+const MAX_ROWS_PER_VIEW = 20_000;
+const REQUEST_TIMEOUT_MS = 12_000;
 
 export const remoteEnabled = Boolean(URL && KEY);
 
@@ -20,24 +25,75 @@ function headers(extra: Record<string, string> = {}): Record<string, string> {
 interface RatingRow { id: string; target_type: string; target_id: string; scores: Record<string, number>; created_at: string }
 interface CommentRow { id: string; target_type: string; target_id: string; author: string; text: string; kind: string; helpful: number; created_at: string }
 
-function rowToRating(r: RatingRow): RatingEntry {
-  return { id: r.id, targetType: r.target_type as RatingEntry['targetType'], targetId: r.target_id, scores: r.scores || {}, createdAt: r.created_at };
+function rowToRating(row: RatingRow): RatingEntry {
+  return {
+    id: row.id,
+    targetType: row.target_type as RatingEntry['targetType'],
+    targetId: row.target_id,
+    scores: row.scores || {},
+    createdAt: row.created_at,
+  };
 }
-function rowToComment(r: CommentRow): CommentEntry {
-  return { id: r.id, targetType: r.target_type as CommentEntry['targetType'], targetId: r.target_id, author: r.author, text: r.text, kind: r.kind as CommentEntry['kind'], helpful: r.helpful ?? 0, createdAt: r.created_at };
+
+function rowToComment(row: CommentRow): CommentEntry {
+  return {
+    id: row.id,
+    targetType: row.target_type as CommentEntry['targetType'],
+    targetId: row.target_id,
+    author: row.author,
+    text: row.text,
+    kind: row.kind as CommentEntry['kind'],
+    helpful: row.helpful ?? 0,
+    createdAt: row.created_at,
+  };
+}
+
+async function fetchWithTimeout(input: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+}
+
+async function fetchRows<Row>(view: string): Promise<Row[] | null> {
+  const rows: Row[] = [];
+
+  for (let offset = 0; offset < MAX_ROWS_PER_VIEW; offset += PAGE_SIZE) {
+    const response = await fetchWithTimeout(
+      `${URL}/rest/v1/${view}?select=*&order=created_at.desc`,
+      {
+        headers: headers({
+          Range: `${offset}-${offset + PAGE_SIZE - 1}`,
+          Prefer: 'count=exact',
+        }),
+      },
+    );
+    if (!response.ok) return null;
+
+    const page = await response.json() as Row[];
+    if (!Array.isArray(page)) return null;
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+
+  return rows;
 }
 
 export async function fetchAllRemote(): Promise<FeedbackSnapshot | null> {
   if (!remoteEnabled) return null;
   try {
-    const [rRes, cRes] = await Promise.all([
-      fetch(`${URL}/rest/v1/${RATINGS_VIEW}?select=*&order=created_at.desc`, { headers: headers() }),
-      fetch(`${URL}/rest/v1/${COMMENTS_VIEW}?select=*&order=created_at.desc`, { headers: headers() }),
+    const [ratingRows, commentRows] = await Promise.all([
+      fetchRows<RatingRow>(RATINGS_VIEW),
+      fetchRows<CommentRow>(COMMENTS_VIEW),
     ]);
-    if (!rRes.ok || !cRes.ok) return null;
-    const ratings = (await rRes.json() as RatingRow[]).map(rowToRating);
-    const comments = (await cRes.json() as CommentRow[]).map(rowToComment);
-    return { ratings, comments };
+    if (!ratingRows || !commentRows) return null;
+    return {
+      ratings: ratingRows.map(rowToRating),
+      comments: commentRows.map(rowToComment),
+    };
   } catch {
     return null;
   }
@@ -46,7 +102,7 @@ export async function fetchAllRemote(): Promise<FeedbackSnapshot | null> {
 async function rpc(name: string, body: Record<string, unknown>): Promise<boolean> {
   if (!remoteEnabled) return false;
   try {
-    const response = await fetch(`${URL}/rest/v1/rpc/${name}`, {
+    const response = await fetchWithTimeout(`${URL}/rest/v1/rpc/${name}`, {
       method: 'POST',
       headers: headers({ Prefer: 'return=minimal' }),
       body: JSON.stringify(body),
