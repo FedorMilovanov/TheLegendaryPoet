@@ -118,47 +118,11 @@ function write(routePath, html) {
   fs.writeFileSync(path.join(DIST, `${rel}.html`), html);
 }
 
-function legacyArticleJsonLd(article) {
-  const url = `${SITE_URL}/articles/${article.id}`;
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'Article',
-        '@id': `${url}#article`,
-        headline: article.title,
-        description: article.excerpt,
-        image: absUrl(article.image),
-        url,
-        inLanguage: 'ru-RU',
-        datePublished: article.date,
-        dateModified: article.date,
-        author: { '@type': 'Organization', name: article.author || 'THE LEGENDARY POET' },
-        publisher: {
-          '@type': 'Organization',
-          name: 'THE LEGENDARY POET',
-          url: SITE_URL,
-          logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
-        },
-        mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'THE LEGENDARY POET', item: `${SITE_URL}/` },
-          { '@type': 'ListItem', position: 2, name: 'Статьи', item: `${SITE_URL}/articles` },
-          { '@type': 'ListItem', position: 3, name: article.title, item: url },
-        ],
-      },
-    ],
-  };
-}
-
 async function main() {
   const [
     { getAllEssays },
     { poets, articles },
-    { essayStructuredData, poetStructuredData, relatedEssaysFor },
+    { essayStructuredData, legacyArticleStructuredData, poetStructuredData, relatedEssaysFor },
   ] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
@@ -213,7 +177,7 @@ async function main() {
       type: 'article',
       publishedTime: article.date,
       author: article.author,
-      jsonLd: legacyArticleJsonLd(article),
+      jsonLd: legacyArticleStructuredData(article),
     });
     write(`/articles/${article.id}`, html);
     count += 1;
