@@ -1,3 +1,4 @@
+import { getAllEssays } from '../../data/essays';
 import { getAllArticles } from '../../utils/articleLibrary';
 import { musicTracks, poets } from '../../data/poets';
 
@@ -17,6 +18,15 @@ const baseItems: CommandItem[] = [
   { id: 'about', label: 'О проекте', description: 'Миссия и контакты', path: '/about', group: 'Разделы' },
 ];
 
+export function normalizeCommandText(value: string): string {
+  return value
+    .toLocaleLowerCase('ru-RU')
+    .replace(/ё/g, 'е')
+    .replace(/[«»„“”'’]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
 export function getCommandItems(): CommandItem[] {
   const poetItems = poets.map((poet) => ({
     id: `poet-${poet.id}`,
@@ -24,6 +34,14 @@ export function getCommandItems(): CommandItem[] {
     description: poet.fullName,
     path: `/poets/${poet.id}`,
     group: 'Поэты',
+  }));
+
+  const essayItems = getAllEssays().map((essay) => ({
+    id: `essay-${essay.id}`,
+    label: essay.title,
+    description: essay.excerpt,
+    path: `/essays/${essay.slug}`,
+    group: 'Лонгриды',
   }));
 
   const articleItems = getAllArticles().map((article) => ({
@@ -42,5 +60,5 @@ export function getCommandItems(): CommandItem[] {
     group: 'Музыка',
   }));
 
-  return [...baseItems, ...poetItems, ...articleItems, ...trackItems];
+  return [...baseItems, ...poetItems, ...essayItems, ...articleItems, ...trackItems];
 }
