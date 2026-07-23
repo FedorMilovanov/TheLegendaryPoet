@@ -5,6 +5,7 @@ import { Link } from '../components/ui/Link';
 import CommunityPanel from '../components/community/CommunityPanel';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
 import TrackReleaseCard from '../components/music/TrackReleaseCard';
+import { formatAudioTime, formatIsoDuration, parseAudioMoment } from '../components/music/audioPresentation';
 import { getTrackTheme, getTrackThemeStyle } from '../components/music/trackTheme';
 import { trackRatingDimensions } from '../data/ratingDimensions';
 import { musicTracks } from '../data/poets';
@@ -12,32 +13,12 @@ import { siteConfig } from '../config/site';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 
-function isoDuration(seconds = 0) {
-  const rounded = Math.max(0, Math.round(Number.isFinite(seconds) ? seconds : 0));
-  const minutes = Math.floor(rounded / 60);
-  const rest = rounded % 60;
-  return `PT${minutes}M${rest}S`;
-}
-
-function formatTime(value: number) {
-  const safe = Number.isFinite(value) && value > 0 ? value : 0;
-  return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
-}
-
-function readSharedTime(raw: string | null, duration?: number) {
-  if (raw === null || !/^\d+(?:\.\d+)?$/.test(raw)) return undefined;
-  const requested = Number(raw);
-  if (!Number.isFinite(requested) || requested < 0) return undefined;
-  const upperBound = duration && duration > 0 ? Math.max(0, duration - 0.1) : requested;
-  return Math.min(requested, upperBound);
-}
-
 export default function TrackDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const track = musicTracks.find((item) => item.id === id);
   const relatedTracks = musicTracks.filter((item) => item.id !== id).slice(0, 2);
-  const sharedTime = readSharedTime(searchParams.get('t'), track?.durationSeconds);
+  const sharedTime = parseAudioMoment(searchParams.get('t'), track?.durationSeconds);
 
   useSeo({
     title: track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET',
@@ -52,7 +33,7 @@ export default function TrackDetailPage() {
       description: track.description,
       byArtist: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
       lyricist: { '@type': 'Person', name: track.poet },
-      duration: isoDuration(track.durationSeconds),
+      duration: formatIsoDuration(track.durationSeconds),
       datePublished: String(track.releaseYear ?? 2026),
       image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
       contentUrl: track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
@@ -107,7 +88,7 @@ export default function TrackDetailPage() {
             {track.description && <p className="mt-6 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">{track.description}</p>}
             {sharedTime !== undefined && sharedTime >= 1 && (
               <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/32 px-4 py-2 text-xs text-white/64 backdrop-blur-xl">
-                <Clock3 size={14} style={{ color: 'var(--track-secondary)' }} /> Ссылка открыта с отметки {formatTime(sharedTime)}
+                <Clock3 size={14} style={{ color: 'var(--track-secondary)' }} /> Ссылка открыта с отметки {formatAudioTime(sharedTime)}
               </div>
             )}
           </div>
