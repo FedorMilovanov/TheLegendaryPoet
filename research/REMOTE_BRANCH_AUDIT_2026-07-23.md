@@ -1,115 +1,111 @@
 # Аудит удалённых веток и план консолидации
 
-Дата проверки: 2026-07-23
+Дата актуализации: 2026-07-23
 
-Статус: `ACTIVE / AUDIO-MERGED / RESEARCH-BRANCH-CONFLICTED / DO-NOT-BULK-MERGE`
+Статус: `AUDIO-HARDENING-MERGED / RESEARCH-BRANCH-CONFLICTED / VALIDATION-IN-PROGRESS / DO-NOT-BULK-MERGE`
 
-Цель этого файла — прекратить параллельное дублирование одной и той же архитектуры разными агентами. Ни одна крупная ветка не должна сливаться целиком только потому, что в ней есть полезные файлы. Сначала извлекаются уникальные слои, затем выполняется проверка на актуальном `main`.
+Цель этого файла — исключить параллельные источники истины. Крупные ветки не сливаются целиком только потому, что в них есть полезные файлы: сначала извлекаются уникальные слои, затем всё проверяется на актуальном `main`.
 
 ## Текущее состояние `main`
 
-Аудиоагент завершил работу и слил PR #39. На момент повторного аудита вершина `main` — commit `3948e8ecd150f1af3adea4d0d18d201441ae2273` (`Polish premium music player and release pages`). В `main` теперь находятся:
+Проверенная вершина `main`: `43c65411a3fd695e65861f4939b891b5499c1d26` — **Harden the global audio runtime and repair integration regressions**.
 
-- три музыкальных релиза: Есенин, Пушкин и Блок;
-- `public/audio/manifest.json` и MP3 Есенина;
-- WebP-обложки в `public/images/music`;
-- `FeaturedTrackPlayer`, waveform и Media Session;
-- маршруты `/ratings` и `/music/:slug`;
-- читательские рейтинги и Supabase/RPC-контур;
-- `validate-audio-assets.ts`;
-- обновлённые sitemap и prerender.
+В `main` находятся:
 
-Исследовательская ветка PR #37 теперь отстаёт от `main` на четыре коммита и имеет конфликты в общих архитектурных файлах. Это не основание копировать аудиокод вручную или делать force-push. Требуется обычная интеграция с сохранением обеих сторон.
+- рейтинги, Supabase/RPC и маршруты `/ratings`;
+- музыкальный архив и release routes `/music/:slug`;
+- MP3/WebP, manifest, waveform, права и SHA-256;
+- постоянный `AudioPlayerProvider` над Router;
+- `GlobalMiniPlayer` и `ImmersivePlayer` в `AudioChromeBoundary` вне route error boundary;
+- версионированное хранилище аудиосессии, миграции и sanitization;
+- retry, pending seek, race protection, ended replay и cross-tab coordination;
+- Media Session и обязательный `validate:audio-session`.
 
-## Карта PR и веток
+PR #37 расходится с `main`: он впереди на сотни исследовательских/статьяных коммитов и отстаёт на шесть main-коммитов. Это не основание копировать аудиокод вручную или force-push’ить одну сторону. Нужна обычная интеграция с ручным разрешением общих файлов.
 
-| PR | Ветка | Роль | Текущее решение |
+## Карта активных и закрытых веток
+
+| PR | Ветка | Роль | Решение |
 |---:|---|---|---|
-| #32 | `archive-collage-real-photos` | воспроизводимый коллаж из подлинных фото Маяковского и Бриков | **Сохранить отдельно.** Не сливать до повторного аудита 30 карточек Commons, лицензий, SHA-256 и результата workflow. После проверки перенести только скрипты/manifest-подход либо закрыть как исследовательский эксперимент. |
-| #34 | `work/yesenin-visual-series` | двухчастная биография Есенина | **Извлечь содержание, не merge целиком.** Первая часть нужна, но уже найдены фактические поправки: точное название Спас-Клепиковской школы, служба в поезде № 143, ошибочность распространённой версии о лазарете № 17, необходимость осторожной формулировки об Изрядновой. |
-| #37 | `work/local-images-playwright-wtoc` | основной исследовательский и архитектурный контур статей | **Главная ветка консолидации исследований.** Здесь находятся source policy, 40+ classified links, PDF/access ledgers, локальные архивные медиа, SEO/prerender и полный Playwright. Сейчас draft и conflicted из-за нового `main`. |
-| #38 | `audit/playwright-total-article-check` | более ранний аудит и альтернативная унификация article engine | **Заморозить как источник уникальных проверок.** Перенести только отсутствующие тесты/сводки; второй renderer и дублирующий workflow не возвращать. После письменного extraction ledger закрыть как superseded by #37. |
-| #39 | `feat/community-ratings-audio` | рейтинги, Supabase, музыка и релизы | **СЛИТ В `main`.** Реализацию считать канонической. PR #37 должен интегрировать маршруты и проверки, но не переписывать MP3, waveform, release metadata или Supabase-схему. |
+| #32 | `archive-collage-real-photos` | воспроизводимый архивный коллаж | Сохранить отдельно до provenance repair. Не сливать derivatives/thumbnails как originals. |
+| #34 | `work/yesenin-visual-series` | черновая часть I Есенина | Извлечь содержание вручную после факт-чека и локализации. Не merge целиком. |
+| #37 | `work/local-images-playwright-wtoc` | основной article/research контур | Главная ветка консолидации исследований. Draft; интегрировать с актуальным `main` только по matrix ниже. |
+| #38 | `audit/playwright-total-article-check` | ранний альтернативный аудит | Закрыт без merge как superseded. Reduced-motion перенесён; stable block IDs вынесены в issue #46. |
+| #44 | `validation/research-source-gates-20260723` | наблюдаемый CI поверх #37 | Временный PR. Не сливать marker; закрыть после записи результатов. |
+| #39–#45 | merged audio/community chain | канонический аудио- и rating-слой | Использовать только текущий `main`; не cherry-pick’ать повторно. |
 
-## Каноническая граница аудио после merge
-
-Зафиксированная в `main` реализация отвечает за:
-
-- `FeaturedTrackPlayer` и страницы музыкальных релизов;
-- `RatingsPage` и читательские рейтинги;
-- Supabase/RPC-схему;
-- `public/audio/manifest.json` и `validate-audio-assets`;
-- маршруты `/ratings` и `/music/:slug`;
-- каталог `public/images/music`;
-- SHA-256, длительность, права и release metadata.
+## Каноническая граница аудио
 
 Исследовательская интеграция не должна:
 
-- переименовывать или перекодировать MP3;
-- переносить финальные WebP обратно в `public/audio`;
-- редактировать waveform и Media Session без отдельного аудиоаудита;
-- менять права, контрольные суммы или release metadata;
-- восстанавливать старую страницу `MusicPage`, уничтожая новый плеер;
-- удалять `RatingsPage`, `TrackDetailPage` или Supabase/RPC-контур.
+- перемещать или перекодировать MP3/WebP;
+- менять waveform, release metadata, права или контрольные суммы;
+- возвращать старый независимый `FeaturedTrackPlayer` вместо persistent provider;
+- монтировать второй audio provider внутри маршрутов;
+- помещать `GlobalMiniPlayer`/`ImmersivePlayer` внутрь route `ErrorBoundary`;
+- удалять `RatingsPage`, `TrackDetailPage`, Supabase/RPC или storage migrations;
+- терять `validate:audio-session` из `package.json` и CI.
 
 ## Конфликтные файлы: стратегия разрешения
 
-| Файл/слой | Каноническая основа | Что добавить с другой стороны |
+| Файл/слой | Каноническая основа | Что сохранить с другой стороны |
 |---|---|---|
-| `src/App.tsx` | shell, lazy routes и error boundary из #37 | маршруты `/ratings` и `/music/:slug` из `main`; страницы должны остаться lazy route chunks |
-| `src/components/Header.tsx` | accessibility, persistent shell и prefetch links из #37 | пункт рейтинга/актуальная навигация из `main`, без уменьшения hit targets |
-| `src/components/MobileDock.tsx` | доступность и persistent mobile shell из #37 | актуальный состав destinations из `main` |
-| `src/components/command/commandItems.ts` | отложенно загружаемый поисковый индекс #37 | рейтинги и отдельные музыкальные релизы из `main` |
-| `src/pages/MusicPage.tsx` | **новая реализация из `main`** | SEO/structured-data и lazy route contract из #37, без возвращения старого списка треков |
-| `src/pages/PoetsPage.tsx` | расширенный каталог/поиск #37 | переход в рейтинги из `main`; не заменять весь файл упрощённой версией |
-| `scripts/gen-sitemap.mjs` | генератор #37 с essays/poets/articles | маршруты ratings и music releases из `main` |
-| `scripts/prerender-og.mjs` | общий статический prerender и JSON-LD #37 | release pages/ratings из `main` |
-| `package.json` | все проверки и route/source scripts #37 | `validate:audio` и зависимости/скрипты audio-main |
-| `src/types/poet.ts` | совместимое объединение типов | сохранить новые поля релизов и ratings; не потерять article/poet contracts |
-| community hooks/schema | **версия из `main`** | только совместимость с persistent shell; никакой параллельной переписи RPC |
-| бинарные MP3/WebP | **только `main`** | не разрешать бинарные конфликты ручным пересохранением |
+| `src/App.tsx` | audio shell из актуального `main`: `AudioPlayerProvider`, `AudioChromeBoundary`, mini/immersive chrome | persistent navigation, lazy route modules, route error handling и article routes из #37; provider не должен перемонтироваться |
+| `src/components/Header.tsx` | accessibility/prefetch/hit targets из #37 | актуальные ratings/music destinations из `main` |
+| `src/components/MobileDock.tsx` | актуальный destination set и audio-safe layout из `main` | accessibility и persistent shell behavior из #37 |
+| `src/components/command/commandItems.ts` | deferred search-index contract из #37 | ratings и все release pages из `main` |
+| `src/pages/MusicPage.tsx` и release pages | только актуальный `main` | lazy route facade и SEO/schema compatibility из #37 без возврата старого плеера |
+| `scripts/gen-sitemap.mjs` | объединённый генератор | все essays/poets/articles из #37 плюс ratings/releases из `main` |
+| `scripts/prerender-og.mjs` | общий prerender #37 | music releases/ratings и MusicRecording metadata из `main` |
+| `package.json` | объединение, не выбор одной версии | все research validators #37 плюс `validate:audio`, `validate:audio-session` и актуальные dependencies из `main` |
+| `.github/workflows/ci.yml` | последовательность research/Playwright/build gates #37 | audio asset/session validators из `main`; diagnostics не должны маскировать финальный failure |
+| `src/types/*` | совместимое объединение | article/media/source contracts #37 и audio/rating contracts `main` |
+| community/audio hooks | только `main` | лишь импорты/маршрутизация, необходимые persistent shell |
+| бинарные файлы | только `main` | никаких ручных пересохранений при конфликте |
 
-## Уникальные слои, которые нужно извлечь
+## Уникальные слои других PR
 
-### Из PR #34
+### PR #34
 
-1. Каркас первой части биографии Есенина `1895–1921`.
-2. Серийная навигация `part 1 / part 2`.
-3. Разделы: Константиново, Спас-Клепики, Москва, Изряднова, Блок, Клюев, `Радуница`, санитарный поезд, революционная религиозная утопия, имажинизм.
-4. Нравственная граница: литературный путь не отменяет ответственности перед Анной Изрядновой и сыном.
-5. Запрет на перенос remote-image URL в production: сначала локализация, license ledger и media manifest.
+Нужны только каркас части I Есенина 1895–1921 и series navigation. Уже установлены обязательные поправки: полное название Спас-Клепиковской школы; военно-санитарный поезд № 143; отсутствие надёжного подтверждения лазарета № 17; отказ от выдуманного единственного мотива ухода от Изрядновой. Remote media не переносится без license ledger и manifest.
 
-### Из PR #38
+### PR #38
 
-1. Проверить, остались ли уникальными `tests/playwright-audit/*`.
-2. Сверить прежний `yeseninSources.ts` с новым classified source library PR #37.
-3. Сверить reduced-motion сценарии с нынешним полным Chromium sweep.
-4. Не переносить второй `LongformPage`, если текущий `ArticleRenderer` уже покрывает тот же контракт.
-5. Не возвращать отдельный диагностический workflow, если проверка уже встроена в основной CI.
+Консолидация закончена. Reduced-motion проверка адаптирована в #37. Второй renderer, старый `LongformPage`, отдельный workflow и устаревшие source wrappers отклонены. Stable block IDs оформлены как issue #46; PR закрыт без merge.
 
-### Из PR #32
+### PR #32
 
-1. Список исходных Commons-файлов и stable page URLs.
-2. Лицензии и авторство каждого объекта.
-3. SHA-256 скачанных оригиналов.
-4. Контроль запрета на генерацию лиц.
-5. CSV/JSON manifest как потенциальный источник для общего архивного медиареестра.
+Workflow и SHA технически воспроизводимы, но итог не готов к публикации: 28 derivatives через weserv, два thumbnails, пустые license URLs, повреждённые авторские строки и фактически пустой audit log. Переносить можно только после прямого скачивания originals, двойных SHA original/derivative, нормализации metadata и риск-аудита атрибуций.
+
+## Текущая техническая верификация #37
+
+Предыдущий validation run подтвердил зелёные source policy, 40+ unique URLs, inline citations, correspondence, Yesenin archive, responsive media, literary style, TypeScript и production build. Он выявил реальные остатки:
+
+- 12 Playwright failures вокруг точного восстановления scroll position, модалей, reduced motion, runtime SEO и Lenis-aware navigation;
+- Vite 7 manifest mismatch: валидатор ошибочно требовал `src/main.tsx`, хотя HTML-entry записан как `index.html`.
+
+После run внесены:
+
+- ref-counted Lenis pause/resume и повторное restoration после `resize()`;
+- дополнительные fixes Reveal/Tilt/hash/modal tests;
+- Vite 7-compatible shell detection в `validate-route-chunks`;
+- сохранение citation diagnostics с финальным enforce, чтобы ранняя ошибка не скрывала build/Playwright/prerender.
+
+Зелёный статус текущего head объявляется только после полного дочернего run #44.
 
 ## Порядок действий
 
-1. Продолжать факт-чек и source audit в PR #37.
-2. Довести каждый из пяти опубликованных лонгридов до 40 уникальных classified URL и отдельного порога первичных источников.
-3. Перенести первую часть Есенина из #34 вручную после полного claim-ledger и локализации изображений.
-4. Извлечь из #38 только уникальные проверки; затем закрыть #38 как superseded.
-5. Получить/проверить workflow-артефакт #32; перенести только воспроизводимый manifest-подход.
-6. Интегрировать четыре audio/rating-коммита `main` в #37 обычным merge commit или через локальный git, разрешая конфликтные файлы по таблице выше.
-7. После интеграции обязательно прогнать `validate:audio`, source coverage, TypeScript, Playwright, build, route chunks, prerender и sitemap stability.
-8. Не объединять #34, #37 и #38 одним массовым merge.
+1. Завершить validation PR #44 и сохранить точные logs/artifacts.
+2. Исправить только фактически воспроизводимые citation/Playwright/build regressions; не ослаблять тесты ради зелёного статуса.
+3. Закрыть #44 без merge marker-файла.
+4. Интегрировать шесть актуальных main-коммитов в #37 вручную по matrix.
+5. Прогнать `validate:audio`, `validate:audio-session`, source/citation/media/style/TypeScript, полный Playwright, build, route chunks, prerender и sitemap stability.
+6. Только после этого переводить #37 из draft в ready for review.
+7. Отдельно продолжать PDF/архивную работу; отсутствие источника не заменять предположением.
 
-## Условия закрытия веток
+## Условия закрытия
 
-- #38 закрывается только после письменной таблицы «уникально / уже есть в #37 / отброшено».
-- #34 закрывается только после появления проверенной части I Есенина в основной исследовательской ветке.
-- #32 закрывается после получения и проверки артефакта либо после документированного отказа от подхода.
-- #39 уже слит; дальнейшие аудиоизменения идут отдельными узкими PR, а не через исследовательскую перепись.
-- #37 становится ready for review только после интеграции актуального `main`, редакционной вычитки всех публичных формулировок и зелёного CI.
+- #34 закрывается после появления проверенной части I Есенина в основном article engine.
+- #32 закрывается после provenance repair либо документированного отказа.
+- #44 закрывается после зафиксированного validation evidence и никогда не merge’ится.
+- #37 готов к review только после интеграции актуального `main`, полного зелёного CI и финальной редакционной вычитки публичных claims.
