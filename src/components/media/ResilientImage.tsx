@@ -17,6 +17,12 @@ export interface ResilientImageProps extends Omit<ImgHTMLAttributes<HTMLImageEle
 
 function resolveSource(source: string) {
   if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(source)) return source;
+
+  // Essay media is sometimes resolved through `asset()` before reaching this
+  // primitive. Keep that path idempotent under a GitHub Pages sub-directory;
+  // otherwise `/TheLegendaryPoet/images/...` would be prefixed a second time.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  if (base && (source === base || source.startsWith(`${base}/`))) return source;
   return asset(source);
 }
 
