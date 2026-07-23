@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // The production site is served from the root of the custom domain.
 // VITE_BASE remains overridable for previews on another path.
 // NOTE: a normal multi-file build (no vite-plugin-singlefile) is used so that
-// the base path, router basename and asset URLs resolve correctly for deep links.
+// route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [react(), tailwindcss()],
@@ -22,11 +22,13 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    manifest: true,
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
-        // Long-term caching: framework code changes rarely — split it from
-        // app/content code so a content deploy doesn't re-download React,
-        // the router or the animation runtime.
+        // Framework code changes rarely, so content deploys should not force
+        // visitors to download React or the animation runtime again.
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           motion: ['framer-motion'],
