@@ -11,7 +11,10 @@ async function assertNoHorizontalOverflow(page: import('@playwright/test').Page)
 }
 
 async function expectAnchorSettled(page: import('@playwright/test').Page, id: string) {
-  await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(`#${id}`);
+  // Chromium serializes non-ASCII URL fragments with percent escapes. Compare
+  // the decoded fragment to the DOM id instead of mistaking standards-compliant
+  // URL serialization for a broken Cyrillic anchor.
+  await expect.poll(() => page.evaluate(() => decodeURIComponent(window.location.hash))).toBe(`#${id}`);
   await expect.poll(
     () => page.locator(`#${id}`).evaluate((node) => Math.round(node.getBoundingClientRect().top)),
     { timeout: 4_000 },
