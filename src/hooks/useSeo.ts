@@ -18,6 +18,8 @@ interface SeoOptions {
   author?: string;
   /** Comma-joined keywords. */
   keywords?: string;
+  /** Prevent indexing for missing, private or user-specific routes. */
+  noIndex?: boolean;
   /** Optional pre-built JSON-LD object; overrides the default WebPage/Article schema. */
   jsonLd?: Record<string, unknown>;
 }
@@ -55,7 +57,8 @@ function ensureLink(rel: string, href: string) {
 /**
  * Per-route metadata for the client-rendered SPA. Tags that no longer apply to
  * the active route are removed, so navigation from an article to a poet/profile
- * cannot leave stale article dates, authors, or keywords in the document head.
+ * cannot leave stale article dates, authors, keywords or indexing directives in
+ * the document head.
  */
 export function useSeo({
   title,
@@ -67,6 +70,7 @@ export function useSeo({
   publishedTime,
   author,
   keywords,
+  noIndex = false,
   jsonLd,
 }: SeoOptions) {
   useEffect(() => {
@@ -76,6 +80,10 @@ export function useSeo({
 
     document.title = title;
     ensureMeta('description', description);
+    ensureMeta(
+      'robots',
+      noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large',
+    );
     ensureLink('canonical', url);
     if (keywords) ensureMeta('keywords', keywords);
     else removeMeta('keywords');
@@ -154,6 +162,7 @@ export function useSeo({
     publishedTime,
     author,
     keywords,
+    noIndex,
     jsonLd,
   ]);
 }
