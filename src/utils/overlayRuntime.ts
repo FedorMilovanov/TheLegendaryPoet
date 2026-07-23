@@ -117,6 +117,32 @@ function unlockDocument() {
   setLegacyModalFlag(false);
 }
 
+function rootIsDetached(root: HTMLElement | null) {
+  return Boolean(root && 'isConnected' in root && root.isConnected === false);
+}
+
+/**
+ * React effects normally release every overlay entry during unmount. Browser
+ * focus and keyboard events can, however, land in the single frame between a
+ * portal being detached and its passive cleanup running. Remove only entries
+ * whose concrete DOM roots are already disconnected so a stale upper surface
+ * cannot swallow Escape from the still-visible dialog underneath it.
+ */
+function pruneDetachedOverlays() {
+  let removed = false;
+  for (let index = overlayStack.length - 1; index >= 0; index -= 1) {
+    if (!rootIsDetached(overlayStack[index].root)) continue;
+    overlayStack.splice(index, 1);
+    removed = true;
+  }
+  if (removed && overlayStack.length === 0 && styleSnapshot) unlockDocument();
+}
+
+function getTopOverlay() {
+  pruneDetachedOverlays();
+  return overlayStack[overlayStack.length - 1];
+}
+
 /**
  * Lock the page behind a modal surface. The returned handle is idempotent and
  * stack-aware, so command search can open above the immersive player without
@@ -133,7 +159,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
   let released = false;
 
   return {
-    isTopmost: () => overlayStack[overlayStack.length - 1]?.token === entry.token,
+    isTopmost: () => getTopOverlay()?.token === entry.token,
     setRoot: (nextRoot) => {
       if (!released) entry.root = nextRoot;
     },
@@ -153,11 +179,12 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
  * the previous control belongs to the new topmost dialog.
  */
 export function canRestoreOverlayFocus(element: HTMLElement) {
-  const top = overlayStack[overlayStack.length - 1];
+  const top = getTopOverlay();
   if (!top) return true;
   return Boolean(top.root?.contains(element));
 }
 
 export function hasOpenOverlay() {
+  pruneDetachedOverlays();
   return overlayStack.length > 0;
 }
