@@ -33,6 +33,7 @@ interface DialogSurfaceOptions {
   label?: string;
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
+  restoreFocusRef?: RefObject<boolean | null>;
 }
 
 /**
@@ -48,6 +49,7 @@ export function useDialogSurface({
   label = 'dialog',
   closeOnEscape = true,
   restoreFocus = true,
+  restoreFocusRef,
 }: DialogSurfaceOptions) {
   const closeRef = useRef(onClose);
   const handleRef = useRef<OverlayLockHandle | null>(null);
@@ -70,6 +72,14 @@ export function useDialogSurface({
       : null;
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
+    handle.setEscapeHandler(closeOnEscape ? () => {
+      // Yield stack ownership before the state update. The shared runtime can
+      // then route a subsequent Escape to the dialog underneath without any
+      // listener-order race between independently mounted portals.
+      handle.release();
+      closeRef.current();
+    } : null);
+
     const focusFrame = window.requestAnimationFrame(() => {
       const preferred = initialFocusRef?.current;
       const fallback = getFocusableElements(dialogRef.current)[0] ?? dialogRef.current;
@@ -77,21 +87,7 @@ export function useDialogSurface({
     });
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!handle.isTopmost()) return;
-
-      if (closeOnEscape && event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        // Yield stack ownership immediately instead of waiting for React's
-        // effect cleanup. A rapid second Escape can then reach the dialog that
-        // was underneath this one rather than being swallowed by a stale top
-        // entry after the upper surface has already disappeared visually.
-        handle.release();
-        closeRef.current();
-        return;
-      }
-
-      if (event.key !== 'Tab') return;
+      if (!handle.isTopmost() || event.key !== 'Tab') return;
       const focusable = getFocusableElements(dialogRef.current);
       if (focusable.length === 0) {
         event.preventDefault();
@@ -123,7 +119,8 @@ export function useDialogSurface({
       handle.release();
       if (handleRef.current === handle) handleRef.current = null;
 
-      if (restoreFocus && previouslyFocused) {
+      const shouldRestoreFocus = restoreFocusRef?.current ?? restoreFocus;
+      if (shouldRestoreFocus && previouslyFocused) {
         window.requestAnimationFrame(() => {
           if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
             previouslyFocused.focus({ preventScroll: true });
@@ -131,7 +128,7 @@ export function useDialogSurface({
         });
       }
     };
-  }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus]);
+  }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus, restoreFocusRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
