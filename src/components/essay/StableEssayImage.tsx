@@ -54,12 +54,14 @@ interface PageLock {
  * Preview and dialog deliberately do not share a Framer `layoutId`. Morphing a
  * portal image out of a transformed 3D card forced Chromium to interpolate
  * unrelated aspect ratios and occasionally exposed the black modal surface.
- * The dialog instead calculates one intrinsic-ratio viewport and animates that
- * independent panel, so portrait, landscape and document scans never stretch.
+ * The dialog calculates one intrinsic-ratio viewport and keeps the already
+ * decoded preview as its matte until the larger responsive source is decoded.
  */
 export default function StableEssayImage({ block }: { block: ImageBlock }) {
   const [open, setOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [dialogLoaded, setDialogLoaded] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [viewerWidth, setViewerWidth] = useState<number | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -134,6 +136,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
   const openViewer = () => {
     measureViewer();
     acquirePageLock();
+    setDialogLoaded(false);
     setOpen(true);
   };
 
@@ -184,9 +187,11 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
     };
   }, [open, intrinsicRatio, naturalWidth]);
 
+  const matteSource = previewSrc ?? media.placeholder ?? null;
   const viewportStyle = {
     width: viewerWidth ? `${viewerWidth}px` : undefined,
     aspectRatio: `${naturalWidth} / ${naturalHeight}`,
+    backgroundImage: matteSource ? `url(${JSON.stringify(matteSource)})` : undefined,
   } as CSSProperties;
 
   const previewPicture = (
@@ -201,7 +206,10 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
         sizes={sizes}
         width={media.width}
         height={media.height}
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => {
+          setLoaded(true);
+          setPreviewSrc(event.currentTarget.currentSrc || event.currentTarget.src);
+        }}
         onError={() => setLoaded(true)}
         data-media-key={block.mediaKey}
         data-testid="essay-image"
@@ -225,7 +233,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
     >
       <span
         className="absolute inset-0"
-        style={media.placeholder ? { backgroundImage: `url(${media.placeholder})`, backgroundSize: 'cover' } : undefined}
+        style={media.placeholder ? { backgroundImage: `url(${JSON.stringify(media.placeholder)})`, backgroundSize: 'cover' } : undefined}
       >
         {!loaded && (
           <span className="absolute inset-0 overflow-hidden bg-[#0d0d0d]/55 backdrop-blur-md">
@@ -279,6 +287,7 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
               className="essay-lightbox-viewport relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_35px_120px_rgba(0,0,0,0.72)]"
               style={viewportStyle}
               data-testid="essay-image-viewport"
+              data-has-matte={matteSource ? 'true' : 'false'}
             >
               <picture className="block h-full w-full leading-none">
                 {media.avifSrcSet && <source type="image/avif" srcSet={media.avifSrcSet} sizes="94vw" />}
@@ -286,6 +295,8 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
                 <motion.img
                   src={media.fallback}
                   alt={block.alt}
+                  loading="eager"
+                  fetchPriority="high"
                   decoding="async"
                   width={media.width}
                   height={media.height}
@@ -295,9 +306,12 @@ export default function StableEssayImage({ block }: { block: ImageBlock }) {
                   dragElastic={0.06}
                   animate={{ scale: zoomed ? 1.58 : 1 }}
                   transition={{ type: 'spring', stiffness: 285, damping: 31, mass: 0.72 }}
+                  onLoad={() => setDialogLoaded(true)}
+                  onError={() => setDialogLoaded(true)}
                   onDoubleClick={() => setZoomed((value) => !value)}
-                  className={`essay-lightbox-image block h-full w-full select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                  className={`essay-lightbox-image block h-full w-full select-none object-contain transition-opacity duration-300 motion-reduce:transition-none ${dialogLoaded ? 'opacity-100' : 'opacity-0'} ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
                   data-testid="essay-image-dialog-image"
+                  data-loaded={dialogLoaded ? 'true' : 'false'}
                 />
               </picture>
               <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
