@@ -10,13 +10,29 @@ const minimumCitedBlocks: Record<string, number> = {
 };
 
 for (const essay of essays) {
-  const sourceMap = new Map(
-    (essay.sources ?? []).flatMap((source) =>
-      [source.id, ...(source.aliases ?? [])]
-        .filter((id): id is string => Boolean(id))
-        .map((id) => [id, source] as const),
-    ),
-  );
+  const sourceMap = new Map<string, NonNullable<typeof essay.sources>[number]>();
+
+  for (const [index, source] of (essay.sources ?? []).entries()) {
+    const ids = [source.id, ...(source.aliases ?? [])].filter(
+      (id): id is string => Boolean(id),
+    );
+    const localIds = new Set<string>();
+
+    for (const id of ids) {
+      if (!/^[a-z0-9-]+$/.test(id)) {
+        errors.push(`${essay.slug}: source ${index + 1} has invalid id or alias ${id}`);
+      }
+      if (localIds.has(id)) {
+        errors.push(`${essay.slug}: source ${index + 1} repeats id or alias ${id}`);
+      }
+      localIds.add(id);
+      if (sourceMap.has(id)) {
+        errors.push(`${essay.slug}: duplicate bibliography id or alias ${id}`);
+      } else {
+        sourceMap.set(id, source);
+      }
+    }
+  }
 
   let citedBlocks = 0;
   let citationCount = 0;
