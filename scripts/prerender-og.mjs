@@ -80,6 +80,15 @@ function renderPage({
   html = html.replace(/<meta name="twitter:title" content="[^"]*"\s*\/>/, `<meta name="twitter:title" content="${t}" />`);
   html = html.replace(/<meta name="twitter:description" content="[^"]*"\s*\/>/, `<meta name="twitter:description" content="${d}" />`);
   html = html.replace(/<meta name="twitter:image" content="[^"]*"\s*\/>/, `<meta name="twitter:image" content="${img}" />`);
+  html = html.replace(/<meta name="twitter:image:alt" content="[^"]*"\s*\/>/, `<meta name="twitter:image:alt" content="${alt}" />`);
+
+  // The homepage default is known to be 1200×630. Essay and portrait covers use
+  // heterogeneous source ratios, so retaining those default dimensions would be
+  // false metadata and can make social crawlers crop the wrong rectangle.
+  if (img !== DEFAULT_OG_IMAGE) {
+    html = html.replace(/\s*<meta property="og:image:width" content="[^"]*"\s*\/>/, '');
+    html = html.replace(/\s*<meta property="og:image:height" content="[^"]*"\s*\/>/, '');
+  }
 
   if (keywords?.length) {
     const content = escapeHtml(Array.isArray(keywords) ? keywords.join(', ') : keywords);
@@ -158,7 +167,7 @@ async function main() {
       description: poet.shortBio,
       routePath: `/poets/${poet.id}`,
       image: poet.photo,
-      imageAlt: poet.name,
+      imageAlt: poet.fullName || poet.name,
       type: 'profile',
       keywords: [poet.name, poet.fullName, ...poet.tags, 'стихи', 'биография'],
       jsonLd: poetStructuredData(poet, related),
