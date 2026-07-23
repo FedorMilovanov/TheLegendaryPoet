@@ -6,9 +6,11 @@ import { MusicTrack } from '../types/poet';
 import { Clock, Download, ExternalLink, Play, Pause, AudioWaveform } from '../components/PremiumIcons';
 import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
+import { musicCollectionStructuredData } from '../utils/collectionStructuredData';
 import { titleCase } from '../utils/titleCase';
 
 const AUDIO_EXT = /\.(mp3|ogg|wav|m4a|aac|flac)$/i;
+const musicJsonLd = musicCollectionStructuredData(musicTracks);
 
 function AudioWave({ isPlaying, color = 'text-cyan-300' }: { isPlaying: boolean; color?: string }) {
   return (
@@ -105,7 +107,7 @@ function TrackRow({ track, index }: { track: MusicTrack; index: number }) {
             type="button"
             onClick={toggle}
             aria-label={playing ? `Пауза: ${track.title}` : `Слушать: ${track.title}`}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 transition-all hover:bg-cyan-400/18 hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] active:scale-95"
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 transition-all hover:bg-cyan-400/18 hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
           >
             {playing ? <Pause size={20} className="text-cyan-300" /> : <Play size={20} className="ml-0.5 text-cyan-300" />}
           </button>
@@ -115,7 +117,7 @@ function TrackRow({ track, index }: { track: MusicTrack; index: number }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Слушать «${track.title}» на канале`}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 transition-all hover:bg-cyan-400/18 hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] active:scale-95"
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 transition-all hover:bg-cyan-400/18 hover:shadow-[0_0_18px_rgba(0,212,255,0.24)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
           >
             <Play size={20} className="ml-0.5 text-cyan-300" />
           </a>
@@ -135,10 +137,10 @@ function TrackRow({ track, index }: { track: MusicTrack; index: number }) {
       <div className="flex items-center justify-between gap-4 sm:flex-shrink-0 sm:justify-start">
         <span className="flex items-center gap-1 text-sm text-cyan-100/40"><Clock size={14} /> {track.duration}</span>
         {hasPlayableAudio && (
-          <a href={asset(track.audioUrl!)} download className="rounded-full p-2 text-cyan-100/55 transition-colors hover:bg-cyan-400/8 hover:text-cyan-300" aria-label={`Скачать «${track.title}»`}><Download size={18} /></a>
+          <a href={asset(track.audioUrl!)} download className="inline-flex h-11 w-11 items-center justify-center rounded-full text-cyan-100/55 transition-colors hover:bg-cyan-400/8 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70" aria-label={`Скачать «${track.title}»`}><Download size={18} /></a>
         )}
         {outboundUrl && (
-          <a href={outboundUrl} target="_blank" rel="noopener noreferrer" className="rounded-full p-2 text-cyan-100/55 transition-colors hover:bg-cyan-400/8 hover:text-cyan-300" aria-label={`Открыть «${track.title}» на канале`}><ExternalLink size={18} /></a>
+          <a href={outboundUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 w-11 items-center justify-center rounded-full text-cyan-100/55 transition-colors hover:bg-cyan-400/8 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70" aria-label={`Открыть «${track.title}» на канале`}><ExternalLink size={18} /></a>
         )}
       </div>
 
@@ -182,9 +184,11 @@ function MusicFutureNote() {
 
 export default function MusicPage() {
   useSeo({
-    title: 'Музыка — THE LEGENDARY POET',
-    description: 'Музыкальные интерпретации и декламации великих стихов — переходы к полным записям на каналах проекта.',
+    title: 'Музыка поэзии — THE LEGENDARY POET',
+    description: 'Музыкальные интерпретации и декламации великих стихов на каналах проекта.',
     path: '/music',
+    keywords: 'музыка на стихи, поэзия в музыке, декламация стихов',
+    jsonLd: musicJsonLd,
   });
   return (
     <div className="min-h-screen pb-20 pt-32">
