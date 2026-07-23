@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { CalendarDays, ListMusic, Search, SlidersHorizontal, UserRound, X } from 'lucide-react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { CalendarDays, ChevronDown, ListMusic, Search, SlidersHorizontal, UserRound, X } from 'lucide-react';
 import type { MusicTrack } from '../../types/poet';
 import {
   filterMusicTracks,
@@ -12,6 +12,7 @@ interface MusicArchiveBrowserProps {
   tracks: readonly MusicTrack[];
 }
 
+const PAGE_SIZE = 8;
 const sortOptions: Array<{ value: MusicCatalogSort; label: string }> = [
   { value: 'editorial', label: 'Порядок проекта' },
   { value: 'newest', label: 'Сначала новые' },
@@ -24,22 +25,32 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
   const [query, setQuery] = useState('');
   const [poetId, setPoetId] = useState('');
   const [sort, setSort] = useState<MusicCatalogSort>('editorial');
+  const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
+  const deferredQuery = useDeferredValue(query);
 
   const poets = useMemo(() => getMusicCatalogPoets(tracks), [tracks]);
-  const visibleTracks = useMemo(
-    () => filterMusicTracks(tracks, { query, poetId: poetId || undefined, sort }),
-    [poetId, query, sort, tracks],
+  const matchingTracks = useMemo(
+    () => filterMusicTracks(tracks, { query: deferredQuery, poetId: poetId || undefined, sort }),
+    [deferredQuery, poetId, sort, tracks],
   );
+  const renderedTracks = matchingTracks.slice(0, visibleLimit);
+  const remainingCount = Math.max(0, matchingTracks.length - renderedTracks.length);
   const filtersActive = Boolean(query.trim() || poetId || sort !== 'editorial');
+  const searchPending = deferredQuery !== query;
+
+  useEffect(() => {
+    setVisibleLimit(PAGE_SIZE);
+  }, [deferredQuery, poetId, sort, tracks]);
 
   const reset = () => {
     setQuery('');
     setPoetId('');
     setSort('editorial');
+    setVisibleLimit(PAGE_SIZE);
   };
 
   return (
-    <div>
+    <div aria-busy={searchPending}>
       <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.018] p-4 shadow-[0_18px_70px_rgba(0,0,0,0.22)] sm:p-5">
         <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-52 w-52 rounded-full bg-cyan-300/[0.045] blur-3xl" />
         <div className="relative grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-center">
@@ -52,6 +63,7 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Название, поэт или описание"
               autoComplete="off"
+              spellCheck="false"
               className="min-h-12 w-full rounded-2xl border border-white/[0.08] bg-black/28 pl-11 pr-11 text-sm text-white outline-none transition placeholder:text-cyan-100/25 hover:border-white/[0.14] focus:border-cyan-300/35 focus:ring-2 focus:ring-cyan-300/10"
             />
             {query && (
@@ -106,8 +118,12 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
 
         <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-xs text-cyan-100/34">
           <div aria-live="polite">
-            Найдено: <strong className="font-bold text-white/66">{visibleTracks.length}</strong>
-            {visibleTracks.length !== tracks.length && <span> из {tracks.length}</span>}
+            {searchPending ? 'Обновляем результаты…' : (
+              <>
+                Найдено: <strong className="font-bold text-white/66">{matchingTracks.length}</strong>
+                {matchingTracks.length !== tracks.length && <span> из {tracks.length}</span>}
+              </>
+            )}
           </div>
           {filtersActive && (
             <button type="button" onClick={reset} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.08] px-3 font-bold text-white/42 transition hover:border-white/[0.2] hover:text-white">
@@ -117,10 +133,23 @@ export default function MusicArchiveBrowser({ tracks }: MusicArchiveBrowserProps
         </div>
       </div>
 
-      {visibleTracks.length > 0 ? (
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          {visibleTracks.map((track) => <TrackReleaseCard key={track.id} track={track} />)}
-        </div>
+      {matchingTracks.length > 0 ? (
+        <>
+          <div className={`mt-6 grid gap-6 transition-opacity xl:grid-cols-2 ${searchPending ? 'opacity-55' : 'opacity-100'}`}>
+            {renderedTracks.map((track) => <TrackReleaseCard key={track.id} track={track} />)}
+          </div>
+          {remainingCount > 0 && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisibleLimit((current) => current + PAGE_SIZE)}
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.025] px-6 text-xs font-bold text-white/58 shadow-[0_14px_45px_rgba(0,0,0,0.24)] transition hover:-translate-y-0.5 hover:border-cyan-300/28 hover:bg-cyan-300/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              >
+                <ChevronDown size={17} /> Показать ещё {Math.min(PAGE_SIZE, remainingCount)}
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="mt-6 rounded-[2rem] border border-dashed border-white/[0.1] bg-white/[0.015] px-6 py-14 text-center">
           <Search className="mx-auto text-cyan-100/24" size={28} />
