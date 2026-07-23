@@ -19,8 +19,9 @@
     "validate:audio-session": "tsx scripts/validate-audio-session-store.ts",
     "validate:archive-store": "tsx scripts/validate-personal-archive-store.ts",
     "validate:community-store": "tsx scripts/validate-community-store.ts",
+    "validate:community-target-store": "tsx scripts/validate-community-target-store.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
-    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:style && npm run typecheck",
+    "check": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style && npm run typecheck",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "prerender": "tsx scripts/prerender-og.mjs"
   },
