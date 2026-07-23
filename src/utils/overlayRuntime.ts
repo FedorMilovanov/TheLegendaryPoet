@@ -19,12 +19,17 @@ type StyleSnapshot = {
   };
 };
 
+type OverlayEntry = {
+  token: symbol;
+  root: HTMLElement | null;
+};
+
 export interface OverlayLockHandle {
   release: () => void;
   isTopmost: () => boolean;
 }
 
-const overlayStack: symbol[] = [];
+const overlayStack: OverlayEntry[] = [];
 let styleSnapshot: StyleSnapshot | null = null;
 let resumeSmoothScroll: (() => void) | null = null;
 
@@ -116,26 +121,37 @@ function unlockDocument() {
  * stack-aware, so command search can open above the immersive player without
  * restoring body scroll or Lenis too early.
  */
-export function acquireOverlayLock(label = 'overlay'): OverlayLockHandle {
+export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null = null): OverlayLockHandle {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return { release: () => undefined, isTopmost: () => true };
   }
 
   const token = Symbol(label);
-  overlayStack.push(token);
+  overlayStack.push({ token, root });
   if (overlayStack.length === 1) lockDocument();
   let released = false;
 
   return {
-    isTopmost: () => overlayStack[overlayStack.length - 1] === token,
+    isTopmost: () => overlayStack[overlayStack.length - 1]?.token === token,
     release: () => {
       if (released) return;
       released = true;
-      const index = overlayStack.lastIndexOf(token);
+      const index = overlayStack.findIndex((entry) => entry.token === token);
       if (index >= 0) overlayStack.splice(index, 1);
       if (overlayStack.length === 0) unlockDocument();
     },
   };
+}
+
+/**
+ * Focus may return outside the overlay system only after the final surface has
+ * closed. With another surface still open, restoration is allowed solely when
+ * the previous control belongs to the new topmost dialog.
+ */
+export function canRestoreOverlayFocus(element: HTMLElement) {
+  const top = overlayStack[overlayStack.length - 1];
+  if (!top) return true;
+  return Boolean(top.root?.contains(element));
 }
 
 export function hasOpenOverlay() {
