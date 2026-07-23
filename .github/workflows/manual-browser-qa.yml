@@ -52,7 +52,13 @@ jobs:
           exit 1
 
       - name: Run browser-driven manual QA matrix
-        run: npx playwright test qa/manual-e2e.spec.mjs --workers=1 --reporter=line,html
+        run: >-
+          npx playwright test
+          qa/manual-e2e.spec.mjs
+          qa/focused-interactions.spec.mjs
+          --grep-invert "poet rating keyboard flow, durable comment and helpful state"
+          --workers=1
+          --reporter=line,html
 
       - name: Upload visual QA evidence
         if: ${{ always() }}
