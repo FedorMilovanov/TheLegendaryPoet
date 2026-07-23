@@ -5,9 +5,9 @@ import { getAllArticles } from '../utils/articleLibrary';
 import { getAllEssays } from '../data/essays';
 import ArticleCard from '../components/articles/ArticleCard';
 import EssayCard from '../components/essay/EssayCard';
+import ResilientImage from '../components/media/ResilientImage';
 import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
-import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 const categories = [
@@ -44,12 +44,12 @@ export default function ArticlesPage() {
   return (
     <div className="min-h-screen bg-[#050505] pb-20">
       <div className="relative overflow-hidden pt-40 pb-16">
-        <img
-          src={asset('/images/sections/articles-cover.jpg')}
+        <ResilientImage
+          src="/images/sections/articles-cover.jpg"
           alt=""
           aria-hidden="true"
-          loading="eager"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+          priority
+          sizes="100vw"
           className="absolute inset-0 h-full w-full object-cover opacity-30"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-[#050505]" />
@@ -70,7 +70,6 @@ export default function ArticlesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {essays.length > 0 && !selectedCategory && (
           <Reveal direction="up" className="mb-14">
             <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
@@ -93,20 +92,25 @@ export default function ArticlesPage() {
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">
             <Filter size={14} /> Фильтр разделов
           </div>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                onClick={() => setSelectedCategory(category.value)}
-                className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all ${
-                  selectedCategory === category.value
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
-                    : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-3" aria-label="Фильтр статей">
+            {categories.map((category) => {
+              const active = selectedCategory === category.value;
+              return (
+                <button
+                  key={category.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setSelectedCategory(category.value)}
+                  className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all ${
+                    active
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
+                      : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
+                  }`}
+                >
+                  {category.label}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
