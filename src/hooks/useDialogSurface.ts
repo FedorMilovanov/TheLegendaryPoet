@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { acquireOverlayLock, type OverlayLockHandle } from '../utils/overlayRuntime';
+import {
+  acquireOverlayLock,
+  canRestoreOverlayFocus,
+  type OverlayLockHandle,
+} from '../utils/overlayRuntime';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -58,7 +62,7 @@ export function useDialogSurface({
     const previouslyFocused = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
-    const handle = acquireOverlayLock(label);
+    const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     const focusFrame = window.requestAnimationFrame(() => {
       const preferred = initialFocusRef?.current;
@@ -110,7 +114,9 @@ export function useDialogSurface({
 
       if (restoreFocus && previouslyFocused) {
         window.requestAnimationFrame(() => {
-          if (previouslyFocused.isConnected) previouslyFocused.focus({ preventScroll: true });
+          if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
+            previouslyFocused.focus({ preventScroll: true });
+          }
         });
       }
     };
