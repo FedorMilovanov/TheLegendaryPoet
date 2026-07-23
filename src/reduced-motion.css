@@ -1,0 +1,14 @@
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * Prerendered Framer markup can carry an initial inline opacity:0 until
+   * hydration resolves the media query. Readability must never depend on that
+   * JavaScript race: every article block is immediately visible and static.
+   */
+  .essay-block-shell {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
