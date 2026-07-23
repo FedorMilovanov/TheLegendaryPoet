@@ -13,8 +13,9 @@ import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 
 function isoDuration(seconds = 0) {
-  const minutes = Math.floor(seconds / 60);
-  const rest = Math.round(seconds % 60);
+  const rounded = Math.max(0, Math.round(Number.isFinite(seconds) ? seconds : 0));
+  const minutes = Math.floor(rounded / 60);
+  const rest = rounded % 60;
   return `PT${minutes}M${rest}S`;
 }
 
@@ -23,15 +24,20 @@ function formatTime(value: number) {
   return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
 }
 
+function readSharedTime(raw: string | null, duration?: number) {
+  if (raw === null || !/^\d+(?:\.\d+)?$/.test(raw)) return undefined;
+  const requested = Number(raw);
+  if (!Number.isFinite(requested) || requested < 0) return undefined;
+  const upperBound = duration && duration > 0 ? Math.max(0, duration - 0.1) : requested;
+  return Math.min(requested, upperBound);
+}
+
 export default function TrackDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const track = musicTracks.find((item) => item.id === id);
   const relatedTracks = musicTracks.filter((item) => item.id !== id).slice(0, 2);
-  const requestedTime = Number(searchParams.get('t'));
-  const sharedTime = track && Number.isFinite(requestedTime) && requestedTime >= 0
-    ? Math.min(requestedTime, Math.max(0, (track.durationSeconds ?? requestedTime) - 0.1))
-    : undefined;
+  const sharedTime = readSharedTime(searchParams.get('t'), track?.durationSeconds);
 
   useSeo({
     title: track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET',
