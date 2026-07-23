@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
-import { useFavoritePoems } from '../../hooks/useFavoritePoems';
+import { useFavoritePoem } from '../../hooks/useFavoritePoems';
 import InteractivePoemText from './InteractivePoemText';
 import { toggleFavoritePoem } from '../../utils/myArchiveStore';
 
@@ -13,8 +13,7 @@ interface PoemCardProps {
 }
 
 export default function PoemCard({ poem }: PoemCardProps) {
-  const favorites = useFavoritePoems();
-  const favorite = favorites.some((entry) => entry.id === poem.id);
+  const favorite = useFavoritePoem(poem.id);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
