@@ -1,4 +1,4 @@
-import { MusicTrack } from '../../types/poet';
+import type { MusicTrack } from '../../types/poet';
 import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform } from '../musicWaveforms';
 
 const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
@@ -9,6 +9,9 @@ export const musicTracks: MusicTrack[] = [
     title: 'Я усталым таким ещё не был',
     poet: 'Сергей Есенин',
     poetId: 'sergei-yesenin',
+    availability: 'published',
+    releaseOrder: 10,
+    publishedAt: '2026-07-23',
     duration: '4:40',
     durationSeconds: 280.241633,
     audioUrl: '/audio/yesenin-ya-ustalym-takim-eshche-ne-byl.tlp-2026.mp3',
@@ -37,6 +40,9 @@ export const musicTracks: MusicTrack[] = [
     title: 'Туча',
     poet: 'Александр Пушкин',
     poetId: 'alexander-pushkin',
+    availability: 'published',
+    releaseOrder: 20,
+    publishedAt: '2026-07-23',
     duration: '4:24',
     durationSeconds: 263.904,
     audioUrl: '/audio/pushkin-tucha.tlp-2026.mp3',
@@ -64,6 +70,9 @@ export const musicTracks: MusicTrack[] = [
     title: 'Россия',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
+    availability: 'published',
+    releaseOrder: 30,
+    publishedAt: '2026-07-23',
     duration: '4:18',
     durationSeconds: 257.664,
     audioUrl: '/audio/blok-rossiya.tlp-2026.mp3',
