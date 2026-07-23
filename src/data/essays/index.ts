@@ -150,7 +150,13 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
   ),
-  sources: uniqueSources([...mayakovskyLateSources, ...mayakovskyLateCoverageSources]),
+  // Inline-cited essay-local sources must precede URL-equivalent registries so
+  // deduplication cannot discard the stable IDs already stored on prose blocks.
+  sources: uniqueSources([
+    ...(mayakovskyPartTwo.sources ?? []),
+    ...mayakovskyLateSources,
+    ...mayakovskyLateCoverageSources,
+  ]),
 };
 
 const mayakovskyProEtoWithSources: Essay = {
@@ -182,14 +188,14 @@ const brikCaseWithSourceLibrary: Essay = {
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
-  // Canonical registries come first so their stable ids, evidence kinds, and
-  // limitations win over older essay-local cards that happen to reuse a URL.
-  // Unique sources authored by the expansion layer are then retained as well.
+  // Keep the IDs cited by the expanded essay before URL-equivalent canonical
+  // registries. The later libraries still supply every independent source, but
+  // cannot silently orphan an inline citation during URL deduplication.
   sources: uniqueSources([
+    ...(brikCaseVisual.sources ?? []),
     ...brikDocumentSources,
     ...brikSupplementalSources,
     ...brikCoverageSources,
-    ...(brikCaseVisual.sources ?? []),
   ]),
 };
 
