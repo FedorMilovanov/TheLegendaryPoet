@@ -132,16 +132,18 @@ export function toggleFavoritePoem(poemId: string): boolean {
   const items = existing
     ? snapshot.items.filter((favorite) => favorite.id !== poemId)
     : [...snapshot.items, { id: poemId, addedAt: Date.now() }];
-  writeSnapshot({ ...snapshot, items });
-  return !existing;
+  const persisted = writeSnapshot({ ...snapshot, items });
+  return persisted ? !existing : existing;
 }
 
 export function reconcileFavoritePoems(validPoemIds: Iterable<string>) {
   const validIds = new Set([...validPoemIds].filter((id) => POEM_ID.test(id)));
   const snapshot = readSnapshot();
   const items = snapshot.items.filter((favorite) => validIds.has(favorite.id));
-  if (items.length !== snapshot.items.length) writeSnapshot({ ...snapshot, items });
-  return items.map((favorite) => ({ ...favorite }));
+  if (items.length === snapshot.items.length) return items.map((favorite) => ({ ...favorite }));
+  const persisted = writeSnapshot({ ...snapshot, items });
+  const result = persisted ? items : snapshot.items;
+  return result.map((favorite) => ({ ...favorite }));
 }
 
 export function subscribeFavoritePoems(listener: () => void) {
