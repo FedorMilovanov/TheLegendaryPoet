@@ -39,6 +39,10 @@
   - [`notes/correspondence-113-pro-eto-source-audit.md`](./notes/correspondence-113-pro-eto-source-audit.md) — аудит письма-дневника № 113, неполного подлинника и редакции Лили 1956 года;
   - [`notes/correspondence-081-113-separation-pro-eto.md`](./notes/correspondence-081-113-separation-pro-eto.md) — документальная карта опубликованной выборки разлуки;
   - [`notes/correspondence-397-416-last-exchange.md`](./notes/correspondence-397-416-last-exchange.md) — последний сохранившийся обмен февраля–апреля 1930 года.
+- Финальный документальный кластер:
+  - [`sources/death-case-no50-2005.md`](./sources/death-case-no50-2005.md) — точный библиографический паспорт 672-страничного издания дела № 50 и границы его использования до получения полного тома;
+  - [`verification/final-letter-vsem-provenance-pass1.md`](./verification/final-letter-vsem-provenance-pass1.md) — разделение подлинника, фотокопии РГАЛИ и позднего факсимиле письма «Всем»;
+  - [`verification/claim-ledger-pass7-death-case-and-final-letter.md`](./verification/claim-ledger-pass7-death-case-and-final-letter.md) — утверждения `READY/VERIFY` по делу № 50, письму и экспертизе.
 - Расширенный пробег по 50+ веб-адресам о Бриках: [`sources/brik-source-sweep-30plus.md`](./sources/brik-source-sweep-30plus.md)
 - Карта расширения статей: [`dossiers/article-expansion-map.md`](./dossiers/article-expansion-map.md)
 - Основной реестр утверждений: [`verification/claim-ledger.md`](./verification/claim-ledger.md)
