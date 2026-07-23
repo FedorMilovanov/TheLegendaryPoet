@@ -28,8 +28,9 @@ export default function GlobalMiniPlayer() {
     immersiveOpen,
   } = useAudioPlayer();
 
+  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
   const ownDetailOpen = currentTrack
-    ? location.pathname === `/music/${currentTrack.id}`
+    ? normalizedPath === `/music/${currentTrack.id}`
     : false;
   const visible = Boolean(currentTrack) && !immersiveOpen && !ownDetailOpen;
   const totalDuration = duration || currentTrack?.durationSeconds || 0;
