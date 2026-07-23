@@ -97,6 +97,15 @@ export default function CommandPalette() {
           if (!value) restoreOnCloseRef.current = true;
           return !value;
         });
+        return;
+      }
+
+      // The lazy index can still be loading when the dialog first paints, before
+      // its deferred focus frame reaches the input. Escape must nevertheless
+      // close the page-level modal from anywhere in the window.
+      if (event.key === 'Escape' && open) {
+        event.preventDefault();
+        close();
       }
     };
     window.addEventListener('tlp-open-command-palette', openPalette);
@@ -105,7 +114,7 @@ export default function CommandPalette() {
       window.removeEventListener('tlp-open-command-palette', openPalette);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [openPalette]);
+  }, [close, open, openPalette]);
 
   useEffect(() => setActiveIndex(0), [query]);
 
