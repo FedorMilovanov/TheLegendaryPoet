@@ -99,6 +99,9 @@ for (const track of allMusicTracks) {
   if (!track.description || track.description.trim().length < 60 || track.description.length > 420) {
     errors.push(`${prefix}: description must contain 60–420 characters`);
   }
+  if (!Number.isInteger(track.releaseYear) || (track.releaseYear ?? 0) < 1900 || (track.releaseYear ?? 0) > 2100) {
+    errors.push(`${prefix}: releaseYear must be an integer from 1900 to 2100`);
+  }
 
   if (!track.poetId) {
     errors.push(`${prefix}: poetId is required`);
@@ -108,11 +111,23 @@ for (const track of allMusicTracks) {
     else if (poet.name !== track.poet) errors.push(`${prefix}: poet name differs from the linked poet record`);
   }
 
-  if (track.publishedAt) {
-    if (!validIsoDate(track.publishedAt)) errors.push(`${prefix}: publishedAt must be a valid YYYY-MM-DD date`);
-    if (track.releaseYear && Number(track.publishedAt.slice(0, 4)) !== track.releaseYear) errors.push(`${prefix}: releaseYear differs from publishedAt`);
-  } else if (track.availability === 'published') {
-    errors.push(`${prefix}: published releases require publishedAt`);
+  if (track.publishedAt && !validIsoDate(track.publishedAt)) errors.push(`${prefix}: publishedAt must be a valid YYYY-MM-DD date`);
+  if (track.scheduledFor && !validIsoDate(track.scheduledFor)) errors.push(`${prefix}: scheduledFor must be a valid YYYY-MM-DD date`);
+  if (track.publishedAt && track.scheduledFor) errors.push(`${prefix}: publishedAt and scheduledFor are mutually exclusive`);
+
+  if (track.availability === 'published') {
+    if (!track.publishedAt) errors.push(`${prefix}: published releases require publishedAt`);
+    if (track.scheduledFor) errors.push(`${prefix}: published releases cannot retain scheduledFor`);
+  } else if (track.availability === 'coming-soon') {
+    if (track.publishedAt) errors.push(`${prefix}: coming-soon releases cannot have publishedAt`);
+  } else if (track.availability === 'archived') {
+    if (!track.publishedAt) errors.push(`${prefix}: archived releases must retain their original publishedAt provenance`);
+    if (track.scheduledFor) errors.push(`${prefix}: archived releases cannot have scheduledFor`);
+  }
+
+  const lifecycleDate = track.publishedAt ?? track.scheduledFor;
+  if (lifecycleDate && track.releaseYear && Number(lifecycleDate.slice(0, 4)) !== track.releaseYear) {
+    errors.push(`${prefix}: releaseYear differs from the lifecycle date`);
   }
 
   if (!track.credits || track.credits.length < 2 || new Set(track.credits).size !== track.credits.length) {
@@ -150,6 +165,12 @@ for (const track of allMusicTracks) {
     if (!track.audioSha256 || !SHA256.test(track.audioSha256)) errors.push(`${prefix}: published releases require a valid SHA-256`);
     if (!track.durationSeconds || track.durationSeconds <= 0) errors.push(`${prefix}: published releases require a positive durationSeconds`);
     if (!track.waveform || track.waveform.length < 64) errors.push(`${prefix}: published releases require at least 64 verified waveform peaks`);
+  }
+
+  if (track.availability === 'coming-soon') {
+    if (track.audioUrl || track.audioSha256 || track.durationSeconds || track.waveform) {
+      errors.push(`${prefix}: coming-soon releases cannot expose unverified playable master data`);
+    }
   }
 
   if (track.waveform?.some((peak) => !Number.isFinite(peak) || peak < 0 || peak > 1)) {
@@ -244,6 +265,9 @@ if (musicTracks.length >= 2) {
     title: 'Будущая публикация',
     availability: 'coming-soon',
     releaseOrder: first.releaseOrder + 1,
+    releaseYear: 2027,
+    publishedAt: undefined,
+    scheduledFor: '2027-01-01',
     featured: false,
     audioUrl: undefined,
     audioSha256: undefined,
@@ -256,6 +280,7 @@ if (musicTracks.length >= 2) {
     title: 'Архивная публикация',
     availability: 'archived',
     releaseOrder: second.releaseOrder + 1,
+    scheduledFor: undefined,
     featured: false,
   };
   const fixture = [second, comingSoon, first, archived];
