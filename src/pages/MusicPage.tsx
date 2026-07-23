@@ -1,16 +1,19 @@
-import { Headphones, ShieldCheck, Sparkles as SparklesIcon, Waves } from 'lucide-react';
+import { Headphones, Hourglass, ShieldCheck, Sparkles as SparklesIcon, Waves } from 'lucide-react';
 import { AudioWaveform, Sparkles } from '../components/PremiumIcons';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
-import TrackReleaseCard from '../components/music/TrackReleaseCard';
-import { musicTracks } from '../data/poets';
+import MusicArchiveBrowser from '../components/music/MusicArchiveBrowser';
+import TrackAnnouncementCard from '../components/music/TrackAnnouncementCard';
+import { allMusicTracks, musicTracks } from '../data/poets';
+import { getFeaturedMusicTrack, getMusicCatalogStats, getUpcomingMusicTracks } from '../data/musicCatalog';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 export default function MusicPage() {
-  const featured = musicTracks.find((track) => track.featured) ?? musicTracks[0];
-  const remaining = musicTracks.filter((track) => track.id !== featured?.id);
-  const poetCount = new Set(musicTracks.map((track) => track.poet)).size;
+  const featured = getFeaturedMusicTrack(musicTracks);
+  const upcoming = getUpcomingMusicTracks(allMusicTracks);
+  const stats = getMusicCatalogStats(allMusicTracks);
+  const archiveMinutes = Math.max(1, Math.round(stats.totalDurationSeconds / 60));
 
   useSeo({
     title: 'Музыка — THE LEGENDARY POET',
@@ -52,16 +55,16 @@ export default function MusicPage() {
 
             <div className="grid min-w-[250px] grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1">
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
-                <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{musicTracks.length}</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">релиза</div>
+                <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{stats.publishedCount}</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">релизов</div>
               </div>
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
-                <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{poetCount}</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">поэта</div>
+                <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{stats.poetCount}</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">поэтов</div>
               </div>
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
-                <div className="font-serif text-xl font-bold text-luxury-gold sm:text-2xl">44.1</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">kHz</div>
+                <div className="font-serif text-xl font-bold text-luxury-gold sm:text-2xl">{archiveMinutes}</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">минут</div>
               </div>
             </div>
           </div>
@@ -88,18 +91,31 @@ export default function MusicPage() {
           <div className="rounded-3xl border border-cyan-400/10 p-12 text-center text-cyan-100/40">Первый релиз готовится.</div>
         )}
 
-        {remaining.length > 0 && (
+        {upcoming.length > 0 && (
+          <section className="mt-16" aria-labelledby="upcoming-releases-title">
+            <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70"><Hourglass size={14} /> В производстве</div>
+                <h2 id="upcoming-releases-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Следующие публикации</h2>
+              </div>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Анонс не попадает в очередь воспроизведения, пока мастер, метаданные и контрольная сумма не проверены.</p>
+            </div>
+            <div className="grid gap-6 xl:grid-cols-2">
+              {upcoming.map((track) => <TrackAnnouncementCard key={track.id} track={track} />)}
+            </div>
+          </section>
+        )}
+
+        {musicTracks.length > 1 && (
           <section className="mt-20" aria-labelledby="release-archive-title">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/55">Аудиоархив</div>
                 <h2 id="release-archive-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Другие релизы</h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Каждый релиз открывается как самостоятельная публикация — с большим плеером, паспортом, оценками и обсуждением слушателей.</p>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Поиск, фильтры, постепенная отрисовка и стабильная сортировка готовы к десяткам и сотням новых публикаций.</p>
             </div>
-            <div className="grid gap-6 xl:grid-cols-2">
-              {remaining.map((track) => <TrackReleaseCard key={track.id} track={track} />)}
-            </div>
+            <MusicArchiveBrowser tracks={musicTracks} featuredTrackId={featured?.id} />
           </section>
         )}
 
@@ -109,7 +125,7 @@ export default function MusicPage() {
             <AudioWaveform className="mt-1 flex-shrink-0 text-cyan-300" size={26} />
             <div>
               <div className="mb-2 flex items-center gap-2"><h3 className="font-serif text-xl font-semibold text-white">{titleCase('Аудиоархив будет расти')}</h3><Sparkles size={16} className="text-luxury-gold" /></div>
-              <p className="max-w-3xl text-sm leading-relaxed text-cyan-100/55">Новые композиции получают один стандарт публикации: мастер-файл с внутренней обложкой и ID3-метаданными, оптимизированные изображения для сайта, адаптивный плеер, системное управление на телефоне и проверяемую контрольную сумму.</p>
+              <p className="max-w-3xl text-sm leading-relaxed text-cyan-100/55">Новые композиции получают один стандарт публикации: явный статус релиза, стабильное место в каталоге, мастер-файл с внутренней обложкой и ID3-метаданными, адаптивный плеер, системное управление на телефоне и проверяемую контрольную сумму.</p>
             </div>
           </div>
         </aside>

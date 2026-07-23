@@ -159,6 +159,36 @@ export function updateAudioSession(mutator: (snapshot: AudioSessionSnapshot) => 
   return next;
 }
 
+export function reconcileAudioSession(trackIds: Iterable<string>) {
+  const validIds = new Set(
+    [...trackIds]
+      .map(sanitizeTrackId)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const current = readAudioSession();
+  const nextPositions = Object.fromEntries(
+    Object.entries(current.positions).filter(([id]) => validIds.has(id)),
+  );
+  const nextCompleted = current.completedTrackIds.filter((id) => validIds.has(id));
+  const nextLastTrack = current.lastTrackId && validIds.has(current.lastTrackId)
+    ? current.lastTrackId
+    : null;
+
+  const changed = nextLastTrack !== current.lastTrackId
+    || nextCompleted.length !== current.completedTrackIds.length
+    || Object.keys(nextPositions).length !== Object.keys(current.positions).length;
+
+  if (!changed) return current;
+  const reconciled: AudioSessionSnapshot = {
+    ...current,
+    lastTrackId: nextLastTrack,
+    positions: nextPositions,
+    completedTrackIds: nextCompleted,
+  };
+  writeAudioSession(reconciled);
+  return reconciled;
+}
+
 export function getStoredTrackPosition(trackId: string) {
   const id = sanitizeTrackId(trackId);
   if (!id) return 0;

@@ -24,4 +24,4 @@ export const poets: Poet[] = [
 ];
 
 export { articles } from './articles';
-export { musicTracks } from './musicTracks';
+export { allMusicTracks, musicTracks } from './musicTracks';

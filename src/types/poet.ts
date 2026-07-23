@@ -87,23 +87,35 @@ export interface MusicTrackChapter {
   start: number;
 }
 
+export type MusicTrackAvailability = 'published' | 'coming-soon' | 'archived';
+
 export interface MusicTrack {
   id: string;
   title: string;
   poet: string;
   poetId?: string;
-  duration: string;
+  /** Explicit lifecycle state so future announcements do not accidentally enter playback queues. */
+  availability: MusicTrackAvailability;
+  /** Stable editorial order. Lower values are shown and played first unless the user chooses another sort. */
+  releaseOrder: number;
+  /** Calendar year associated with the publication or announced target date. */
+  releaseYear: number;
+  /** Verified ISO publication date. Never use this for an unpublished announcement. */
+  publishedAt?: string;
+  /** Optional ISO target date for a coming-soon announcement. */
+  scheduledFor?: string;
+  /** Human-readable duration. Required only after a master has been verified. */
+  duration?: string;
   durationSeconds?: number;
-  /** Direct, playable audio file. */
+  /** Direct, playable audio file. Required for published releases. */
   audioUrl?: string;
-  /** Square release artwork. */
+  /** Square release artwork. Required for published releases. */
   coverUrl?: string;
-  /** Wide artwork for a dedicated publication page. */
+  /** Wide artwork for a dedicated publication page. Required for published releases. */
   wideCoverUrl?: string;
   externalUrl?: string;
   videoUrl?: string;
   description?: string;
-  releaseYear?: number;
   featured?: boolean;
   credits?: string[];
   rightsNotice?: string;
