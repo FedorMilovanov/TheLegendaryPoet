@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import { musicTracks, poets } from '../data/poets';
@@ -39,14 +39,16 @@ type ArchiveSort = 'date' | 'rating' | 'poet';
 
 export default function MyArchivePage() {
   const favorites = useFavoritePoems();
-  const { completedTrackIds, getSavedPosition } = useAudioPlayer();
+  const { completedTrackIds, currentTrack, currentTime, getSavedPosition } = useAudioPlayer();
   const [sortBy, setSortBy] = useState<ArchiveSort>('date');
   const [query, setQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
+  const deferredQuery = useDeferredValue(query);
+  const searchPending = deferredQuery !== query;
 
   useSeo({
     title: 'Мой архив — THE LEGENDARY POET',
-    description: 'Личная коллекция сохранённых стихотворений и история прослушивания музыкальных публикаций.',
+    description: 'Личная коллекция сохранённых стихотворений и музыкальных сессий, к которым можно вернуться.',
     path: '/archive',
     type: 'website',
   });
@@ -57,7 +59,7 @@ export default function MyArchivePage() {
 
   useEffect(() => {
     setVisibleLimit(PAGE_SIZE);
-  }, [query, sortBy]);
+  }, [deferredQuery, sortBy]);
 
   const archivedPoems = useMemo(() => {
     const resolved = favorites
@@ -75,14 +77,14 @@ export default function MyArchivePage() {
   }, [favorites, sortBy]);
 
   const filteredPoems = useMemo(() => {
-    const normalized = normalizeSearch(query);
+    const normalized = normalizeSearch(deferredQuery);
     if (!normalized) return archivedPoems;
     const terms = normalized.split(' ');
     return archivedPoems.filter(({ poem, poetName }) => {
       const haystack = normalizeSearch(`${poem.title} ${poetName} ${poem.year ?? ''}`);
       return terms.every((term) => haystack.includes(term));
     });
-  }, [archivedPoems, query]);
+  }, [archivedPoems, deferredQuery]);
 
   const renderedPoems = filteredPoems.slice(0, visibleLimit);
   const hiddenPoemCount = Math.max(0, filteredPoems.length - renderedPoems.length);
@@ -97,13 +99,13 @@ export default function MyArchivePage() {
     .map((track) => ({
       track,
       completed: completedTrackIds.has(track.id),
-      position: getSavedPosition(track.id),
+      position: currentTrack?.id === track.id ? currentTime : getSavedPosition(track.id),
     }))
     .filter((entry) => entry.completed || entry.position >= 8)
     .sort((left, right) => {
       if (left.completed !== right.completed) return left.completed ? 1 : -1;
       return left.track.releaseOrder - right.track.releaseOrder;
-    }), [completedTrackIds, getSavedPosition]);
+    }), [completedTrackIds, currentTime, currentTrack?.id, getSavedPosition]);
 
   const hasAnyArchive = archivedPoems.length > 0 || listeningEntries.length > 0;
   const authorCount = new Set(archivedPoems.map((entry) => entry.poetId)).size;
@@ -160,7 +162,7 @@ export default function MyArchivePage() {
           <section className="mb-14" aria-labelledby="listening-archive-title">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/70">История прослушивания</div>
+                <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/70">Сохранённые сессии</div>
                 <h2 id="listening-archive-title" className="font-serif text-3xl font-bold text-white">Вернуться к музыке</h2>
               </div>
               <Link to="/music" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold text-white/45 transition hover:border-white/24 hover:text-white">Весь аудиоархив <ArrowRight size={14} /></Link>
@@ -172,7 +174,7 @@ export default function MyArchivePage() {
         )}
 
         {archivedPoems.length > 0 && (
-          <section aria-labelledby="saved-poems-title">
+          <section aria-labelledby="saved-poems-title" aria-busy={searchPending}>
             <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300/55">Личная библиотека</div>
@@ -209,11 +211,11 @@ export default function MyArchivePage() {
               </div>
             </div>
 
-            <div className="mb-4 text-xs text-cyan-100/32" aria-live="polite">Найдено: <strong className="text-white/60">{filteredPoems.length}</strong>{filteredPoems.length !== archivedPoems.length && ` из ${archivedPoems.length}`}</div>
+            <div className="mb-4 text-xs text-cyan-100/32" aria-live="polite">{searchPending ? 'Обновляем результаты…' : <>Найдено: <strong className="text-white/60">{filteredPoems.length}</strong>{filteredPoems.length !== archivedPoems.length && ` из ${archivedPoems.length}`}</>}</div>
 
             {filteredPoems.length > 0 ? (
               <>
-                <div className="space-y-3">
+                <div className={`space-y-3 transition-opacity ${searchPending ? 'opacity-55' : 'opacity-100'}`}>
                   {renderedPoems.map(({ poem, poetName, poetId, addedAt }) => (
                     <article key={poem.id} className="luxury-card flex flex-col gap-3 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                       <div className="min-w-0 flex-1">
