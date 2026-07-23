@@ -17,12 +17,8 @@ import {
 import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
+import { formatAudioTime } from './audioPresentation';
 import { getTrackTheme, getTrackThemeStyle } from './trackTheme';
-
-const formatTime = (value: number) => {
-  const safe = Number.isFinite(value) && value > 0 ? value : 0;
-  return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
-};
 
 const focusableSelector = [
   'a[href]',
@@ -149,7 +145,7 @@ export default function ImmersivePlayer() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="immersive-track-title"
-            aria-describedby="immersive-track-description"
+            aria-describedby={currentTrack.description ? 'immersive-track-description' : undefined}
             style={getTrackThemeStyle(currentTrack)}
           >
             {currentTrack.wideCoverUrl && (
@@ -170,9 +166,9 @@ export default function ImmersivePlayer() {
             <div className="fixed inset-0 -z-10" style={{ background: 'radial-gradient(circle at 22% 28%, color-mix(in srgb, var(--track-accent) 16%, transparent), transparent 32%), radial-gradient(circle at 76% 34%, color-mix(in srgb, var(--track-secondary) 14%, transparent), transparent 30%)' }} />
             <div className="pointer-events-none fixed inset-0 -z-10 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:72px_72px]" />
 
-            <button ref={closeButtonRef} type="button" onClick={closeImmersive} className="fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-30 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/14 bg-black/48 px-4 text-xs font-bold text-white/68 shadow-xl backdrop-blur-xl transition hover:border-white/30 hover:bg-black/62 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-7 sm:top-7"><Minimize2 size={16} /> Выйти</button>
+            <button ref={closeButtonRef} type="button" onClick={closeImmersive} className="fixed right-4 top-[calc(1rem_+_env(safe-area-inset-top))] z-30 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/14 bg-black/48 px-4 text-xs font-bold text-white/68 shadow-xl backdrop-blur-xl transition hover:border-white/30 hover:bg-black/62 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-7 sm:top-7"><Minimize2 size={16} /> Выйти</button>
 
-            <div className="mx-auto grid min-h-[100svh] max-w-7xl items-center gap-8 px-5 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-[calc(6.5rem+env(safe-area-inset-top))] sm:px-8 lg:grid-cols-[minmax(280px,420px)_1fr] lg:gap-16 lg:px-12">
+            <div className="mx-auto grid min-h-[100svh] max-w-7xl items-center gap-8 px-5 pb-[calc(4rem_+_env(safe-area-inset-bottom))] pt-[calc(6.5rem_+_env(safe-area-inset-top))] sm:px-8 lg:grid-cols-[minmax(280px,420px)_1fr] lg:gap-16 lg:px-12">
               <motion.div initial={{ opacity: 0, x: -26 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }} className="relative mx-auto w-full max-w-[min(72vw,420px)] lg:max-w-[420px]">
                 <div className="absolute -inset-10 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--track-secondary) 20%, transparent), transparent 68%)' }} />
                 <div className="relative overflow-hidden rounded-[2rem] border border-white/16 bg-black shadow-[0_45px_130px_rgba(0,0,0,.72)]">
@@ -180,7 +176,7 @@ export default function ImmersivePlayer() {
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/48 via-transparent to-white/[0.06]" />
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/46 px-4 py-3 text-[9px] font-bold uppercase tracking-[0.16em] text-white/58 backdrop-blur-xl">
                     <span aria-live="polite">{status === 'error' ? 'Нужна повторная загрузка' : busy ? 'Подготовка аудио' : playing ? 'Сейчас звучит' : ended ? 'Прослушано' : 'Пауза'}</span>
-                    <span className="tabular-nums">{formatTime(currentTime)} / {formatTime(totalDuration)}</span>
+                    <span className="tabular-nums">{formatAudioTime(currentTime)} / {formatAudioTime(totalDuration)}</span>
                   </div>
                 </div>
               </motion.div>
@@ -195,7 +191,7 @@ export default function ImmersivePlayer() {
                   <div className="relative flex h-24 items-center gap-[2px] overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/30 px-4 shadow-inner shadow-black/50 sm:h-28">
                     {waveform.map((peak, index) => {
                       const point = (index + 0.5) / waveform.length;
-                      const state = point <= progress ? 'played' : point <= bufferedProgress ? 'buffered' : 'idle';
+                      const waveState = point <= progress ? 'played' : point <= bufferedProgress ? 'buffered' : 'idle';
                       return (
                         <span
                           key={index}
@@ -203,14 +199,14 @@ export default function ImmersivePlayer() {
                           className="min-w-[2px] flex-1 rounded-full transition duration-300"
                           style={{
                             height: `${Math.max(8, peak * 92)}%`,
-                            backgroundColor: state === 'played' ? 'var(--track-accent)' : state === 'buffered' ? 'color-mix(in srgb, var(--track-secondary) 38%, transparent)' : 'rgba(255,255,255,.12)',
-                            boxShadow: state === 'played' ? '0 0 8px color-mix(in srgb, var(--track-accent) 28%, transparent)' : undefined,
+                            backgroundColor: waveState === 'played' ? 'var(--track-accent)' : waveState === 'buffered' ? 'color-mix(in srgb, var(--track-secondary) 38%, transparent)' : 'rgba(255,255,255,.12)',
+                            boxShadow: waveState === 'played' ? '0 0 8px color-mix(in srgb, var(--track-accent) 28%, transparent)' : undefined,
                           }}
                         />
                       );
                     })}
                     <div className="pointer-events-none absolute bottom-0 top-0 w-px bg-white/70 shadow-[0_0_12px_rgba(255,255,255,.46)]" style={{ left: `${progress * 100}%` }} />
-                    <input type="range" min={0} max={totalDuration || 1} step="0.1" value={Math.min(currentTime, totalDuration || 1)} disabled={status === 'error'} onInput={(event) => seekTo(Number(event.currentTarget.value))} aria-label="Позиция воспроизведения" aria-valuetext={`${formatTime(currentTime)} из ${formatTime(totalDuration)}`} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
+                    <input type="range" min={0} max={totalDuration || 1} step="0.1" value={Math.min(currentTime, totalDuration || 1)} disabled={status === 'error'} onInput={(event) => seekTo(Number(event.currentTarget.value))} aria-label="Позиция воспроизведения" aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
                   </div>
                 </div>
 
