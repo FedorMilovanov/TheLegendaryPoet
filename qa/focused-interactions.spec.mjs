@@ -104,8 +104,9 @@ test.describe('nested overlay ownership', () => {
     const immersiveOpener = page.getByRole('button', { name: 'Погружение' }).first();
     await immersiveOpener.click();
     const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    const immersiveClose = immersive.getByRole('button', { name: 'Выйти' });
     await expect(immersive).toBeVisible();
-    await expect(immersive.getByRole('button', { name: 'Выйти' })).toBeFocused();
+    await expect(immersiveClose).toBeFocused();
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
 
     const mediaBefore = await audio.evaluate((element) => ({ paused: element.paused, muted: element.muted, currentTime: element.currentTime }));
@@ -128,6 +129,7 @@ test.describe('nested overlay ownership', () => {
     await expect(search).toBeHidden();
     await expect(immersive).toBeVisible();
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
+    await expect(immersiveClose).toBeFocused();
 
     await page.keyboard.press('Escape');
     await expect(immersive).toBeHidden();
