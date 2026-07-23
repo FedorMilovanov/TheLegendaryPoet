@@ -11,9 +11,11 @@ const minimumCitedBlocks: Record<string, number> = {
 
 for (const essay of essays) {
   const sourceMap = new Map(
-    (essay.sources ?? [])
-      .filter((source): source is typeof source & { id: string } => Boolean(source.id))
-      .map((source) => [source.id, source]),
+    (essay.sources ?? []).flatMap((source) =>
+      [source.id, ...(source.aliases ?? [])]
+        .filter((id): id is string => Boolean(id))
+        .map((id) => [id, source] as const),
+    ),
   );
 
   let citedBlocks = 0;
