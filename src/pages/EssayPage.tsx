@@ -30,11 +30,13 @@ export default function EssayPage() {
     title: essay ? `${essay.seoTitle ?? essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
     description: essay ? essay.seoDescription ?? essay.excerpt : 'Статья не найдена.',
     path: `/essays/${slug ?? ''}`,
-    type: 'article',
+    type: essay ? 'article' : 'website',
     image: essay?.cover,
+    imageAlt: essay?.coverAlt,
     publishedTime: essay?.date,
     author: essay?.author,
     keywords: essay ? (essay.seoKeywords ?? essay.tags).join(',') : undefined,
+    noIndex: !essay,
     jsonLd: essay ? essayStructuredData(essay, poet, relatedEssays) : undefined,
   });
 
