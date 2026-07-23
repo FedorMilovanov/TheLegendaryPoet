@@ -53,6 +53,10 @@ expect(migrated.lastTrackId === 'pushkin-tucha', 'legacy last-track id must migr
 expect(migrated.volume === 0.42, 'legacy volume must migrate');
 expect(migrated.positions['pushkin-tucha'] === 128.5, 'legacy progress must migrate');
 expect(migrated.completedTrackIds.length === 1, 'legacy completed ids must be deduplicated and sanitized');
+expect(storage.getItem('tlp-audio-last-track') === null, 'legacy last-track storage must be retired after migration');
+expect(storage.getItem('tlp-audio-volume') === null, 'legacy volume storage must be retired after migration');
+expect(storage.getItem('tlp-audio-completed') === null, 'legacy completion storage must be retired after migration');
+expect(storage.getItem('tlp-audio-position:pushkin-tucha') === null, 'legacy progress storage must be retired after migration');
 
 updateAudioSession((snapshot) => {
   snapshot.positions['pushkin-tucha'] = 140;
@@ -63,6 +67,8 @@ setStoredTrackPosition('pushkin-tucha', null);
 expect(getStoredTrackPosition('pushkin-tucha') === 0, 'cleared progress must read as zero');
 setStoredTrackPosition('pushkin-tucha', 12.25);
 expect(getStoredTrackPosition('pushkin-tucha') === 12.25, 'valid progress must persist');
+setStoredTrackPosition('invalid track id', 50);
+expect(getStoredTrackPosition('invalid track id') === 0, 'invalid track ids must not create progress entries');
 
 setStoredVolume(4, false);
 expect(readAudioSession().volume === 1, 'volume must be clamped to one');
