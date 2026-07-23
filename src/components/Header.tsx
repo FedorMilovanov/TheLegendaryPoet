@@ -11,6 +11,7 @@ import { titleCase } from '../utils/titleCase';
 const navigation = [
   { name: 'Главная', path: '/', accent: false },
   { name: 'Поэты', path: '/poets', accent: false },
+  { name: 'Рейтинг', path: '/ratings', accent: true },
   { name: 'Зал', path: '/hall', accent: true },
   { name: 'Статьи', path: '/articles', accent: false },
   { name: 'Музыка', path: '/music', accent: false },
@@ -27,17 +28,14 @@ const Header = () => {
   return (
     <header className="site-header fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 bg-[#050505]/85 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between gap-4 lg:gap-8">
+        <div className="flex h-20 items-center justify-between gap-3 lg:gap-5">
           <Link
             to="/"
             aria-label="THE LEGENDARY POET — на главную"
             className="group flex min-h-11 shrink-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
           >
             <BrandMark size="sm" />
-            {/* At tablet width the seven-item navigation needs the horizontal
-                space more than the repeated wordmark. The full lockup returns
-                on desktop, while the brand icon remains visible everywhere. */}
-            <div className="hidden flex-col leading-[1.2] lg:flex">
+            <div className="hidden flex-col leading-[1.2] xl:flex">
               <span className="whitespace-nowrap font-serif text-xl font-semibold neon-blue-gradient neon-glow-text">
                 THE LEGENDARY POET
               </span>
@@ -47,7 +45,7 @@ const Header = () => {
             </div>
           </Link>
 
-          <nav aria-label="Основная навигация" className="header-nav flex-1 items-center justify-center gap-4 lg:gap-7 xl:gap-8">
+          <nav aria-label="Основная навигация" className="header-nav flex-1 items-center justify-center gap-2 lg:gap-3 xl:gap-5">
             {navigation.map((item) => {
               const active = isActive(item.path);
               return (
@@ -56,7 +54,7 @@ const Header = () => {
                   to={item.path}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'relative inline-flex min-h-11 min-w-9 shrink-0 items-center justify-center rounded-lg text-sm font-medium transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70',
+                    'relative inline-flex min-h-11 min-w-8 shrink-0 items-center justify-center rounded-lg px-1 text-[13px] font-medium transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 xl:text-sm',
                     active ? 'text-cyan-300 neon-glow-text' : 'text-cyan-100/55',
                     item.accent && !active && 'text-luxury-gold/70 hover:text-luxury-gold',
                   )}
@@ -78,7 +76,7 @@ const Header = () => {
             })}
           </nav>
 
-          <div className="header-controls ml-auto shrink-0 items-center gap-2.5 lg:gap-3">
+          <div className="header-controls ml-auto shrink-0 items-center gap-2 lg:gap-2.5">
             <ThemeToggle />
             <button
               type="button"
@@ -89,37 +87,17 @@ const Header = () => {
               <Search size={13} aria-hidden="true" />
               <span className="header-search-label">Ctrl K</span>
             </button>
-            <a
-              href="https://youtube.com/@TheLegendaryPoet"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70"
-              aria-label="YouTube"
-            >
+            <a href="https://youtube.com/@TheLegendaryPoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70" aria-label="YouTube">
               <YouTubeIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(255,0,51,0.5)]" />
             </a>
-            <a
-              href="https://rutube.ru/channel/74579453"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-sky-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
-              aria-label="Rutube"
-            >
+            <a href="https://rutube.ru/channel/74579453" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-sky-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70" aria-label="Rutube">
               <RutubeIcon className="h-[21px] w-[21px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(18,204,237,0.5)]" />
             </a>
-            <a
-              href="https://vk.com/thelegendarypoet"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70"
-              aria-label="VK"
-            >
+            <a href="https://vk.com/thelegendarypoet" target="_blank" rel="noopener noreferrer" className="header-social group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/70" aria-label="VK">
               <VKIcon className="h-[20px] w-[20px] transition-transform duration-300 group-hover/social:scale-110 group-hover/social:drop-shadow-[0_0_10px_rgba(7,119,255,0.5)]" />
             </a>
           </div>
 
-          {/* Mobile: theme toggle only — search lives in the dock's centre jewel,
-              a second search button here would duplicate it. */}
           <div className="header-mobile-controls ml-auto shrink-0 items-center gap-4">
             <ThemeToggle />
           </div>
