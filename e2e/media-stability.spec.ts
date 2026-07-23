@@ -78,6 +78,14 @@ async function readPosition(page: Page): Promise<ReadingPosition> {
   }));
 }
 
+async function clickFocusedTrigger(trigger: Locator) {
+  // Playwright's normal click may perform an extra actionability scroll after the
+  // coordinate snapshot. A real user taps the already visible, focused surface;
+  // dispatching that click in-page keeps the test tied to the position the app
+  // actually locks and later restores.
+  await trigger.evaluate((node: HTMLButtonElement) => node.click());
+}
+
 async function assertPositionRestored(page: Page, expected: ReadingPosition) {
   await expect.poll(
     () => page.evaluate(() => document.documentElement.clientWidth),
@@ -242,7 +250,7 @@ for (const slug of essays) {
       await expect(trigger).toBeFocused();
       let expectedAfterClose = await readPosition(page);
 
-      await trigger.click();
+      await clickFocusedTrigger(trigger);
       await assertFittedLightbox(page);
 
       const zoom = page.getByTestId('essay-image-zoom');
@@ -273,7 +281,7 @@ for (const slug of essays) {
         // captured coordinate, not with the previous modal's snapshot.
         await trigger.focus();
         expectedAfterClose = await readPosition(page);
-        await trigger.click();
+        await clickFocusedTrigger(trigger);
         await assertFittedLightbox(page);
 
         const originalViewport = page.viewportSize();
