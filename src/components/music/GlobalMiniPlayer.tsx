@@ -5,12 +5,8 @@ import { useLocation } from 'react-router-dom';
 import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
+import { formatAudioTime } from './audioPresentation';
 import { getTrackThemeStyle } from './trackTheme';
-
-const formatTime = (value: number) => {
-  const safe = Number.isFinite(value) && value > 0 ? value : 0;
-  return `${Math.floor(safe / 60)}:${Math.floor(safe % 60).toString().padStart(2, '0')}`;
-};
 
 export default function GlobalMiniPlayer() {
   const location = useLocation();
@@ -77,10 +73,11 @@ export default function GlobalMiniPlayer() {
                 max={totalDuration || 1}
                 step="0.1"
                 value={Math.min(currentTime, totalDuration || 1)}
+                disabled={status === 'error'}
                 onInput={(event) => seekTo(Number(event.currentTarget.value))}
                 aria-label="Позиция текущего релиза"
-                aria-valuetext={`${formatTime(currentTime)} из ${formatTime(totalDuration)}`}
-                className="absolute inset-0 h-3 w-full cursor-pointer opacity-0"
+                aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`}
+                className="absolute inset-0 h-3 w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -91,25 +88,27 @@ export default function GlobalMiniPlayer() {
               </Link>
 
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/38" aria-live="polite">
-                  <span className={`h-1.5 w-1.5 rounded-full ${playing ? 'animate-pulse' : ''}`} style={{ backgroundColor: playing ? 'var(--track-secondary)' : status === 'error' ? '#fbbf24' : 'rgba(255,255,255,.25)' }} />
-                  {status === 'error'
-                    ? failure?.message ?? 'Ошибка воспроизведения'
-                    : ended
-                      ? 'Прослушано'
-                      : status === 'buffering'
-                        ? 'Буферизация'
-                        : playing
-                          ? 'Сейчас звучит'
-                          : busy
-                            ? 'Подготовка аудио'
-                            : 'Прослушивание приостановлено'}
+                <div className="mb-1 flex min-w-0 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/38" aria-live="polite" title={status === 'error' ? failure?.message : undefined}>
+                  <span className={`h-1.5 w-1.5 flex-none rounded-full ${playing ? 'animate-pulse' : ''}`} style={{ backgroundColor: playing ? 'var(--track-secondary)' : status === 'error' ? '#fbbf24' : 'rgba(255,255,255,.25)' }} />
+                  <span className="truncate">
+                    {status === 'error'
+                      ? 'Ошибка загрузки'
+                      : ended
+                        ? 'Прослушано'
+                        : status === 'buffering'
+                          ? 'Буферизация'
+                          : playing
+                            ? 'Сейчас звучит'
+                            : busy
+                              ? 'Подготовка аудио'
+                              : 'Прослушивание приостановлено'}
+                  </span>
                 </div>
                 <Link to={`/music/${currentTrack.id}`} className="block truncate font-serif text-lg font-bold leading-none text-white transition hover:text-[var(--track-accent)] sm:text-xl">{currentTrack.title}</Link>
                 <div className="mt-1 flex items-center gap-2 text-[11px] text-white/42">
                   <span className="truncate">{currentTrack.poet}</span>
                   <span className="text-white/16">·</span>
-                  <span className="tabular-nums">{formatTime(currentTime)} / {formatTime(totalDuration)}</span>
+                  <span className="flex-none tabular-nums">{formatAudioTime(currentTime)} / {formatAudioTime(totalDuration)}</span>
                 </div>
               </div>
 
