@@ -5,12 +5,16 @@ interface CommandResultProps {
   item: CommandItem;
   active: boolean;
   onSelect: () => void;
+  optionId?: string;
 }
 
-export default function CommandResult({ item, active, onSelect }: CommandResultProps) {
+export default function CommandResult({ item, active, onSelect, optionId }: CommandResultProps) {
   return (
     <button
+      id={optionId}
       type="button"
+      role="option"
+      aria-selected={active}
       onClick={onSelect}
       className={`w-full rounded-2xl border p-4 text-left transition ${
         active
