@@ -35,7 +35,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
 
   useEffect(() => {
     if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(null), 2200);
+    const timeout = window.setTimeout(() => setToast(null), 2600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
@@ -70,7 +70,14 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
       </div>
 
       <div className={actionGrid}>
-        <div className="space-y-5"><RatingForm dimensions={dimensions} onSubmit={feedback.addRating} onStatus={(message, tone) => setToast({ message, tone })} /></div>
+        <div className="space-y-5">
+          <RatingForm
+            dimensions={dimensions}
+            initialScores={feedback.ownRating?.scores}
+            onSubmit={feedback.addRating}
+            onStatus={(message, tone) => setToast({ message, tone })}
+          />
+        </div>
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} className="text-cyan-300" /> Комментарии</div>
           <CommentComposer onSubmit={feedback.addComment} onStatus={(message, tone) => setToast({ message, tone })} />
