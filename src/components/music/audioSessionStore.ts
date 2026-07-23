@@ -71,8 +71,11 @@ function migrateLegacySnapshot(storage: Storage) {
   const snapshot = createDefaultSnapshot();
   snapshot.lastTrackId = sanitizeTrackId(storage.getItem(LEGACY_LAST_TRACK_KEY));
 
-  const legacyVolume = Number(storage.getItem(LEGACY_VOLUME_KEY));
-  if (Number.isFinite(legacyVolume)) snapshot.volume = clamp(legacyVolume, 0, 1);
+  const legacyVolumeRaw = storage.getItem(LEGACY_VOLUME_KEY);
+  if (legacyVolumeRaw !== null) {
+    const legacyVolume = Number(legacyVolumeRaw);
+    if (Number.isFinite(legacyVolume)) snapshot.volume = clamp(legacyVolume, 0, 1);
+  }
   snapshot.muted = snapshot.volume === 0;
 
   try {
@@ -133,12 +136,13 @@ export function writeAudioSession(snapshot: AudioSessionSnapshot) {
 
 export function updateAudioSession(mutator: (snapshot: AudioSessionSnapshot) => AudioSessionSnapshot | void) {
   const current = readAudioSession();
-  const result = mutator({
+  const draft: AudioSessionSnapshot = {
     ...current,
     positions: { ...current.positions },
     completedTrackIds: [...current.completedTrackIds],
-  });
-  const next = result ?? current;
+  };
+  const result = mutator(draft);
+  const next = result ?? draft;
   writeAudioSession(next);
   return next;
 }
@@ -152,14 +156,12 @@ export function setStoredTrackPosition(trackId: string, position: number | null)
   updateAudioSession((snapshot) => {
     if (position === null || !Number.isFinite(position) || position < 0) delete snapshot.positions[trackId];
     else snapshot.positions[trackId] = position;
-    return snapshot;
   });
 }
 
 export function setStoredLastTrack(trackId: string | null) {
   updateAudioSession((snapshot) => {
     snapshot.lastTrackId = sanitizeTrackId(trackId);
-    return snapshot;
   });
 }
 
@@ -167,13 +169,11 @@ export function setStoredVolume(volume: number, muted: boolean) {
   updateAudioSession((snapshot) => {
     snapshot.volume = clamp(volume, 0, 1);
     snapshot.muted = muted;
-    return snapshot;
   });
 }
 
 export function setStoredCompletedTracks(trackIds: Iterable<string>) {
   updateAudioSession((snapshot) => {
     snapshot.completedTrackIds = sanitizeCompleted([...trackIds]);
-    return snapshot;
   });
 }
