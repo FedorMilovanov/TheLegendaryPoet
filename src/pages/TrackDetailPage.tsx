@@ -130,8 +130,8 @@ export default function TrackDetailPage() {
                 <ChevronDown size={16} className="transition duration-300 group-open:rotate-180" />
               </summary>
               <div className="border-t border-white/[0.07] px-4 pb-4 pt-4">
-                <p className="text-xs leading-relaxed text-cyan-100/4">Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.</p>
-                {track.audioSha256 && <code className="mt-4 block break-all rounded-xl border border-cyan-300/[0.06] bg-black/32 p-3 text-[10px] leading-relaxed text-cyan-200/4">SHA-256: {track.audioSha256}</code>}
+                <p className="text-xs leading-relaxed text-cyan-100/40">Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.</p>
+                {track.audioSha256 && <code className="mt-4 block break-all rounded-xl border border-cyan-300/[0.06] bg-black/32 p-3 text-[10px] leading-relaxed text-cyan-200/40">SHA-256: {track.audioSha256}</code>}
                 {track.rightsNotice && <p className="mt-4 text-[10px] leading-relaxed text-cyan-100/28">{track.rightsNotice}</p>}
               </div>
             </details>
