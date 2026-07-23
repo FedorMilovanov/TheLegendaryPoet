@@ -14,177 +14,183 @@ permissions:
 
 jobs:
   acquire-and-verify:
+    name: verify ${{ matrix.source.id }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 9
+      matrix:
+        source:
+          - id: esenin-chronicle-v2-2005
+            filename: esenin-chronicle-v2-2005.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/Летопись. Том 2.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-chronicle-v3-book2-2008
+            filename: esenin-chronicle-v3-book2-2008.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/letopis3-2.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-chronicle-v4-2010
+            filename: esenin-chronicle-v4-2010.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/letopis-4.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-chronicle-v5-book1-2013
+            filename: esenin-chronicle-v5-book1-2013.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/letopis5-1.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-pss-v6-letters-2005
+            filename: esenin-pss-v6-letters-2005.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/Esenin PSS_7_t6_2005.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-pss-v7-book2-2000
+            filename: esenin-pss-v7-book2-2000.pdf
+            url: https://biblio.imli.ru/images/abook/russliteratura/Esenin_PSS_7_t7-2_2000.pdf
+            provenance: IMLI RAN electronic library
+          - id: esenin-chronicle-v5-book2-2018
+            filename: esenin-chronicle-v5-book2-2018.pdf
+            url: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_(poet)/Летопись жизни и творчества С.А.Есенина в 5 томах. Том 5. Книга 2. 24 декабря 1925 - середина 1926 г.(2018).pdf
+            provenance: Universal Library mirror; verify against IMLI title and colophon
+          - id: esenin-death-documents-2003
+            filename: esenin-death-documents-2003.pdf
+            url: https://warlib.site/wp-content/uploads/2025/12/death-of-esenin-warlib.site_.pdf
+            provenance: Public scan mirror; verify against IMLI RAN 2003 edition, ISBN 5-9208-0176-X
+          - id: mayakovsky-death-case-2005
+            filename: mayakovsky-death-case-2005.pdf
+            url: https://publ.lib.ru/ARCHIVES/M/MAYAKOVSKIY_Vladimir_Vladimirovich/В том, что умираю, не вините никого... Следственное дело В.В.Маяковского. Документы, воспоминания современников.(2005).pdf
+            provenance: Universal Library mirror; independently catalogued by NLR
+
+    env:
+      SOURCE_ID: ${{ matrix.source.id }}
+      SOURCE_FILENAME: ${{ matrix.source.filename }}
+      SOURCE_URL: ${{ matrix.source.url }}
+      SOURCE_PROVENANCE: ${{ matrix.source.provenance }}
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install PDF verification tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y poppler-utils qpdf unzip
+          sudo apt-get install -y poppler-utils qpdf
 
-      - name: Download source scans and build manifest
+      - name: Acquire source bytes
+        id: acquire
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p source-acquisition-49/raw source-acquisition-49/verification
+          mkdir -p "source-acquisition-49/$SOURCE_ID/raw" "source-acquisition-49/$SOURCE_ID/verification"
           python3 - <<'PY'
           from __future__ import annotations
 
           import hashlib
           import json
+          import os
           import pathlib
           import time
           import urllib.parse
           import urllib.request
 
-          root = pathlib.Path('source-acquisition-49')
+          source_id = os.environ['SOURCE_ID']
+          filename = os.environ['SOURCE_FILENAME']
+          original_url = os.environ['SOURCE_URL']
+          provenance = os.environ['SOURCE_PROVENANCE']
+          root = pathlib.Path('source-acquisition-49') / source_id
           raw = root / 'raw'
           verification = root / 'verification'
-
-          sources = [
-              {
-                  'id': 'esenin-chronicle-v2-2005',
-                  'filename': 'esenin-chronicle-v2-2005.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/Летопись. Том 2.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-chronicle-v3-book2-2008',
-                  'filename': 'esenin-chronicle-v3-book2-2008.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/letopis3-2.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-chronicle-v4-2010',
-                  'filename': 'esenin-chronicle-v4-2010.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/letopis-4.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-chronicle-v5-book1-2013',
-                  'filename': 'esenin-chronicle-v5-book1-2013.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/letopis5-1.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-pss-v6-letters-2005',
-                  'filename': 'esenin-pss-v6-letters-2005.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/Esenin PSS_7_t6_2005.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-pss-v7-book2-2000',
-                  'filename': 'esenin-pss-v7-book2-2000.pdf',
-                  'url': 'https://biblio.imli.ru/images/abook/russliteratura/Esenin_PSS_7_t7-2_2000.pdf',
-                  'provenance': 'IMLI RAN electronic library',
-              },
-              {
-                  'id': 'esenin-chronicle-v5-book2-2018',
-                  'filename': 'esenin-chronicle-v5-book2-2018.pdf',
-                  'url': 'https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_(poet)/Летопись жизни и творчества С.А.Есенина в 5 томах. Том 5. Книга 2. 24 декабря 1925 - середина 1926 г.(2018).pdf',
-                  'provenance': 'Universal Library mirror; verify against IMLI title and colophon',
-              },
-              {
-                  'id': 'mayakovsky-death-case-2005',
-                  'filename': 'mayakovsky-death-case-2005.pdf',
-                  'url': 'https://publ.lib.ru/ARCHIVES/M/MAYAKOVSKIY_Vladimir_Vladimirovich/В том, что умираю, не вините никого... Следственное дело В.В.Маяковского. Документы, воспоминания современников.(2005).pdf',
-                  'provenance': 'Universal Library mirror; independently catalogued by NLR',
-              },
-          ]
+          target = raw / filename
 
           def encoded_url(url: str) -> str:
               parts = urllib.parse.urlsplit(url)
-              return urllib.parse.urlunsplit((
-                  parts.scheme,
-                  parts.netloc,
-                  urllib.parse.quote(urllib.parse.unquote(parts.path), safe='/()[]_-.,'),
-                  parts.query,
-                  parts.fragment,
-              ))
+              path = urllib.parse.quote(urllib.parse.unquote(parts.path), safe='/()[]_-.,')
+              return urllib.parse.urlunsplit((parts.scheme, parts.netloc, path, parts.query, parts.fragment))
 
-          def download(url: str, target: pathlib.Path) -> None:
-              last_error: Exception | None = None
-              for attempt in range(1, 6):
-                  try:
-                      request = urllib.request.Request(
-                          encoded_url(url),
-                          headers={
-                              'User-Agent': 'Mozilla/5.0 source-verification/1.0',
-                              'Accept': 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.1',
-                          },
-                      )
-                      with urllib.request.urlopen(request, timeout=180) as response, target.open('wb') as output:
-                          while True:
-                              chunk = response.read(1024 * 1024)
-                              if not chunk:
-                                  break
-                              output.write(chunk)
-                      if target.stat().st_size < 1024:
-                          raise RuntimeError(f'download too small: {target.stat().st_size} bytes')
-                      return
-                  except Exception as error:
-                      last_error = error
-                      target.unlink(missing_ok=True)
-                      if attempt < 5:
-                          time.sleep(attempt * 5)
-              raise RuntimeError(f'failed to download {url}: {last_error}')
+          resolved_url = encoded_url(original_url)
+          errors: list[str] = []
+          acquired = False
+          for attempt in range(1, 6):
+              try:
+                  request = urllib.request.Request(
+                      resolved_url,
+                      headers={
+                          'User-Agent': 'Mozilla/5.0 source-verification/1.0',
+                          'Accept': 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.1',
+                      },
+                  )
+                  with urllib.request.urlopen(request, timeout=240) as response, target.open('wb') as output:
+                      while chunk := response.read(1024 * 1024):
+                          output.write(chunk)
+                  if target.stat().st_size < 1024:
+                      raise RuntimeError(f'download too small: {target.stat().st_size} bytes')
+                  if target.read_bytes()[:5] != b'%PDF-':
+                      raise RuntimeError(f'not a PDF; header={target.read_bytes()[:16]!r}')
+                  acquired = True
+                  break
+              except Exception as error:
+                  errors.append(f'attempt {attempt}: {type(error).__name__}: {error}')
+                  target.unlink(missing_ok=True)
+                  if attempt < 5:
+                      time.sleep(attempt * 5)
 
-          manifest: list[dict[str, object]] = []
-          for source in sources:
-              target = raw / str(source['filename'])
-              download(str(source['url']), target)
-              header = target.read_bytes()[:5]
-              if header != b'%PDF-':
-                  raise RuntimeError(f"{source['id']} is not a PDF: header={header!r}")
-              digest = hashlib.sha256(target.read_bytes()).hexdigest()
-              manifest.append({
-                  **source,
-                  'resolved_url': encoded_url(str(source['url'])),
-                  'bytes': target.stat().st_size,
-                  'sha256': digest,
-              })
-              print(f"downloaded {source['id']}: {target.stat().st_size} bytes sha256={digest}")
+          record: dict[str, object] = {
+              'id': source_id,
+              'filename': filename,
+              'original_url': original_url,
+              'resolved_url': resolved_url,
+              'provenance': provenance,
+              'acquired': acquired,
+              'errors': errors,
+          }
+          if acquired:
+              digest = hashlib.sha256()
+              with target.open('rb') as stream:
+                  while chunk := stream.read(1024 * 1024):
+                      digest.update(chunk)
+              record['bytes'] = target.stat().st_size
+              record['sha256'] = digest.hexdigest()
 
-          (verification / 'download-manifest.json').write_text(
-              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
+          (verification / 'acquisition-status.json').write_text(
+              json.dumps(record, ensure_ascii=False, indent=2) + '\n',
               encoding='utf-8',
           )
+          github_output = pathlib.Path(os.environ['GITHUB_OUTPUT'])
+          with github_output.open('a', encoding='utf-8') as output:
+              output.write(f"acquired={'true' if acquired else 'false'}\n")
+          print(json.dumps(record, ensure_ascii=False, indent=2))
           PY
 
-      - name: Verify PDF structure, pagination and searchable text
+      - name: Verify PDF structure and page topology
+        id: verify
+        if: steps.acquire.outputs.acquired == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          raw='source-acquisition-49/raw'
-          out='source-acquisition-49/verification'
-          : > "$out/pdf-verification-summary.txt"
-          for pdf in "$raw"/*.pdf; do
-            base="$(basename "$pdf" .pdf)"
-            mkdir -p "$out/$base"
-            qpdf --check "$pdf" > "$out/$base/qpdf-check.txt" 2>&1
-            pdfinfo "$pdf" > "$out/$base/pdfinfo.txt"
-            pdftotext -layout "$pdf" "$out/$base/full-text.txt"
-            pdftoppm -f 1 -singlefile -jpeg -r 110 "$pdf" "$out/$base/page-0001" >/dev/null 2>&1
-            pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$out/$base/pdfinfo.txt")"
-            chars="$(wc -c < "$out/$base/full-text.txt")"
-            printf '%s\tpages=%s\ttext-bytes=%s\n' "$base" "$pages" "$chars" | tee -a "$out/pdf-verification-summary.txt"
-          done
-
-      - name: Build targeted evidence extracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          out='source-acquisition-49/verification'
-          python3 - <<'PY'
+          raw="source-acquisition-49/$SOURCE_ID/raw/$SOURCE_FILENAME"
+          out="source-acquisition-49/$SOURCE_ID/verification"
+          qpdf_status=0
+          qpdf --check "$raw" > "$out/qpdf-check.txt" 2>&1 || qpdf_status=$?
+          pdfinfo "$raw" > "$out/pdfinfo.txt"
+          pdftotext -layout "$raw" "$out/full-text.txt"
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$out/pdfinfo.txt")"
+          first_end="$pages"
+          if [ "$first_end" -gt 8 ]; then first_end=8; fi
+          pdftoppm -f 1 -l "$first_end" -jpeg -r 120 "$raw" "$out/front" >/dev/null 2>&1
+          if [ "$pages" -gt 8 ]; then
+            pdftoppm -f "$pages" -l "$pages" -singlefile -jpeg -r 120 "$raw" "$out/final-page" >/dev/null 2>&1
+          fi
+          python3 - "$out" "$pages" "$qpdf_status" <<'PY'
           from __future__ import annotations
 
           import json
           import pathlib
           import re
+          import sys
 
-          out = pathlib.Path('source-acquisition-49/verification')
+          out = pathlib.Path(sys.argv[1])
+          pages = int(sys.argv[2])
+          qpdf_status = int(sys.argv[3])
+          source_id = out.parent.name
+          text = (out / 'full-text.txt').read_text(encoding='utf-8', errors='replace')
+          pdf_pages = text.split('\f')
           needles = {
               'esenin-chronicle-v5-book2-2018': [
                   'Англетер', 'Горбов', 'Гиляревский', 'акт осмотра', '28 декабря 1925',
@@ -196,50 +202,74 @@ jobs:
               'esenin-pss-v6-letters-2005': [
                   'Толстая', 'Бениславская', 'Эрлих', 'Клюев', 'Мариенгоф',
               ],
+              'esenin-death-documents-2003': [
+                  'Заключение специалиста', 'Гиляревский', 'акт осмотра', 'акт судебно-медицинского',
+                  '№ 374/010', '№ 214/6-7', '№ 282/6-7', '№ 429/6-7', '№ 430/6-7',
+                  '№ 431/6-7', '№ 432/6-7', '23 января 1993', '19 февраля 1993',
+                  '28 июня 1993', '25 февраля 1993',
+              ],
               'mayakovsky-death-case-2005': [
                   'Дело № 50', 'Полонская', 'предсмерт', 'выстрел', 'экспертиз',
                   '14 апреля 1930', 'Всем',
               ],
           }
+          evidence: dict[str, list[dict[str, object]]] = {}
+          for term in needles.get(source_id, []):
+              pattern = re.compile(re.escape(term), re.IGNORECASE)
+              matches: list[dict[str, object]] = []
+              for page_index, page in enumerate(pdf_pages, start=1):
+                  match = pattern.search(page)
+                  if not match:
+                      continue
+                  start = max(0, match.start() - 350)
+                  end = min(len(page), match.end() + 500)
+                  excerpt = ' '.join(page[start:end].split())
+                  matches.append({'pdf_page': page_index, 'excerpt': excerpt})
+                  if len(matches) == 12:
+                      break
+              evidence[term] = matches
 
-          report: dict[str, dict[str, list[str]]] = {}
-          for source_id, terms in needles.items():
-              text_path = out / source_id / 'full-text.txt'
-              text = text_path.read_text(encoding='utf-8', errors='replace')
-              lines = text.splitlines()
-              source_report: dict[str, list[str]] = {}
-              for term in terms:
-                  matches: list[str] = []
-                  pattern = re.compile(re.escape(term), re.IGNORECASE)
-                  for index, line in enumerate(lines):
-                      if pattern.search(line):
-                          start = max(0, index - 2)
-                          end = min(len(lines), index + 3)
-                          excerpt = '\n'.join(lines[start:end]).strip()
-                          matches.append(excerpt)
-                          if len(matches) == 8:
-                              break
-                  source_report[term] = matches
-              report[source_id] = source_report
-
-          (out / 'targeted-evidence-extracts.json').write_text(
-              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
+          status = {
+              'id': source_id,
+              'qpdf_ok': qpdf_status == 0,
+              'qpdf_exit_code': qpdf_status,
+              'pdf_pages': pages,
+              'text_layer_bytes': len(text.encode('utf-8')),
+              'text_page_segments': len(pdf_pages),
+          }
+          (out / 'verification-status.json').write_text(
+              json.dumps(status, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
           )
+          (out / 'targeted-evidence-extracts.json').write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(status, ensure_ascii=False, indent=2))
           PY
+          echo "qpdf_ok=$([ "$qpdf_status" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload verification bundle
+      - name: Upload verification evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: source-49-verification
-          path: source-acquisition-49/verification
+          name: source-49-${{ matrix.source.id }}-verification
+          path: source-acquisition-49/${{ matrix.source.id }}/verification
+          if-no-files-found: error
           retention-days: 14
           compression-level: 6
 
-      - name: Upload raw source PDFs
+      - name: Upload acquired PDF
+        if: steps.acquire.outputs.acquired == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: source-49-raw-pdfs
-          path: source-acquisition-49/raw
+          name: source-49-${{ matrix.source.id }}-raw
+          path: source-acquisition-49/${{ matrix.source.id }}/raw
+          if-no-files-found: error
           retention-days: 7
           compression-level: 0
+
+      - name: Enforce acquisition and structural verification
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.acquire.outputs.acquired }}" = "true"
+          test "${{ steps.verify.outputs.qpdf_ok }}" = "true"
