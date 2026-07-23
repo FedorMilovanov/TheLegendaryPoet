@@ -68,6 +68,9 @@ expect(smooth.includes("navigationType === 'POP'"), 'back/forward navigation mus
 expect(smooth.includes("'(pointer: coarse)'"), 'coarse-pointer devices must retain native scrolling');
 expect(smooth.includes('prefers-reduced-motion: reduce'), 'reduced-motion users must retain native scrolling');
 expect(smooth.includes('positionsRef.current.size > 80'), 'scroll history must remain bounded during long sessions');
+expect(smooth.includes('function decodeHash'), 'malformed percent-encoded hashes must not crash navigation');
+expect(smooth.includes('FIXED_HEADER_OFFSET'), 'hash navigation must compensate for the fixed header');
+expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native hash scrolling must apply the same header offset as Lenis');
 
 expect(boundary.includes("variant?: 'root' | 'page'"), 'ErrorBoundary must support page-scoped recovery');
 expect(boundary.includes('window.location.reload()'), 'error recovery must provide a real reload path');
