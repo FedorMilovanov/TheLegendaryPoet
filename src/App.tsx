@@ -5,6 +5,7 @@ import { supportsViewTransitions } from './lib/viewTransition';
 import { routeLoaders } from './lib/routeModules';
 import { hydrateFromRemote } from './utils/communityStore';
 import { initAnalytics } from './utils/analytics';
+import { musicTracks } from './data/poets';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CommandPalette from './components/command/CommandPalette';
@@ -15,19 +16,25 @@ import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
+import AudioChromeBoundary from './components/music/AudioChromeBoundary';
+import GlobalMiniPlayer from './components/music/GlobalMiniPlayer';
+import ImmersivePlayer from './components/music/ImmersivePlayer';
+import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 
 // Route code and its large literary datasets are loaded only when requested.
-// The persistent shell remains in the entry chunk, so navigation, focus and the
-// one Lenis/RAF owner are not recreated while page bundles arrive.
+// The persistent shell remains in the entry chunk, so navigation, focus, the
+// global audio element and the one Lenis/RAF owner survive route transitions.
 const HomePage = lazy(routeLoaders.home);
 const HallPage = lazy(routeLoaders.hall);
 const PoetsPage = lazy(routeLoaders.poets);
 const PoetDetailPage = lazy(routeLoaders.poet);
+const RatingsPage = lazy(routeLoaders.ratings);
 const ArticlesPage = lazy(routeLoaders.articles);
 const ArticleDetailPage = lazy(routeLoaders.article);
 const EssayPage = lazy(routeLoaders.essay);
 const MusicPage = lazy(routeLoaders.music);
+const TrackDetailPage = lazy(routeLoaders.track);
 const AboutPage = lazy(routeLoaders.about);
 const MyArchivePage = lazy(routeLoaders.archive);
 const NotFoundPage = lazy(routeLoaders.notFound);
@@ -68,8 +75,6 @@ function RouteFallback() {
   );
 }
 
-// With View Transitions the brand wipe plays only once — as the site's opening
-// reveal. Route changes are handled by the browser (see lib/viewTransition.ts).
 let introPlayed = false;
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -87,8 +92,6 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Fallback for browsers without the View Transitions API: the classic
-  // framer wipe + fade on every navigation.
   return (
     <>
       <WipeOverlay />
@@ -104,14 +107,6 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-/**
- * Persistent application shell.
- *
- * Header, command palette, cursor, ambient layers, footer and the Lenis owner
- * remain mounted while only the route page changes. Recreating the whole shell
- * on every navigation used to restart global listeners and RAF loops, reset
- * modal state and make browser View Transition snapshots less deterministic.
- */
 function SiteLayout({ children }: { children: React.ReactNode }) {
   useAutoHideChrome();
   return (
@@ -129,8 +124,6 @@ function SiteLayout({ children }: { children: React.ReactNode }) {
         <Header />
         <CommandPalette />
         <main id="main-content" className="relative z-10 pb-32 md:pb-0">
-          {/* The keyed Routes element gives AnimatePresence one page child at a
-              time without unmounting the surrounding application shell. */}
           {supportsViewTransitions ? children : <AnimatePresence mode="wait">{children}</AnimatePresence>}
         </main>
         <MobileDock />
@@ -151,10 +144,12 @@ function AnimatedRoutes() {
       <Route path="/hall" element={<PageWrapper><HallPage /></PageWrapper>} />
       <Route path="/poets" element={<PageWrapper><PoetsPage /></PageWrapper>} />
       <Route path="/poets/:id" element={<PageWrapper><PoetDetailPage /></PageWrapper>} />
+      <Route path="/ratings" element={<PageWrapper><RatingsPage /></PageWrapper>} />
       <Route path="/articles" element={<PageWrapper><ArticlesPage /></PageWrapper>} />
       <Route path="/essays/:slug" element={<PageWrapper><EssayPage /></PageWrapper>} />
       <Route path="/articles/:id" element={<PageWrapper><ArticleDetailPage /></PageWrapper>} />
       <Route path="/music" element={<PageWrapper><MusicPage /></PageWrapper>} />
+      <Route path="/music/:id" element={<PageWrapper><TrackDetailPage /></PageWrapper>} />
       <Route path="/about" element={<PageWrapper><AboutPage /></PageWrapper>} />
       <Route path="/archive" element={<PageWrapper><MyArchivePage /></PageWrapper>} />
       <Route path="*" element={<PageWrapper><NotFoundPage /></PageWrapper>} />
@@ -168,32 +163,44 @@ function AnimatedRoutes() {
   );
 }
 
+function AudioChrome() {
+  const { currentTrack, closePlayer } = useAudioPlayer();
+  return (
+    <AudioChromeBoundary resetKey={currentTrack?.id ?? 'idle'} onStop={closePlayer}>
+      <GlobalMiniPlayer />
+      <ImmersivePlayer />
+    </AudioChromeBoundary>
+  );
+}
+
 function RoutedApp() {
   const location = useLocation();
   return (
-    <ErrorBoundary resetKey={location.pathname}>
-      <AnimatedRoutes />
-    </ErrorBoundary>
+    <>
+      <ErrorBoundary resetKey={location.pathname}>
+        <AnimatedRoutes />
+      </ErrorBoundary>
+      <AudioChrome />
+    </>
   );
 }
 
 function App() {
-  // Router base so links work under the GitHub Pages sub-path (/TheLegendaryPoet/).
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-  // If a shared backend is configured, pull everyone's ratings/comments once.
-  // No-op (and no network) when it isn't — the app stays on the local store.
   useEffect(() => {
     void hydrateFromRemote();
     initAnalytics();
   }, []);
 
   return (
-    <Router basename={basename}>
-      <MotionConfig reducedMotion="user">
-        <RoutedApp />
-      </MotionConfig>
-    </Router>
+    <AudioPlayerProvider tracks={musicTracks}>
+      <Router basename={basename}>
+        <MotionConfig reducedMotion="user">
+          <RoutedApp />
+        </MotionConfig>
+      </Router>
+    </AudioPlayerProvider>
   );
 }
 
