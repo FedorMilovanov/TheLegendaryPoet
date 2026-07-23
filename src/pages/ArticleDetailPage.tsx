@@ -14,6 +14,7 @@ import SectionChip from '../components/essay/SectionChip';
 import SourceLibrary from '../components/essay/SourceLibrary';
 import { getArticleById, getRelatedArticles } from '../utils/articleLibrary';
 import { useSeo } from '../hooks/useSeo';
+import { legacyArticleStructuredData } from '../utils/structuredData';
 import { titleCase } from '../utils/titleCase';
 import type { EssayBlock } from '../types/essay';
 import type { Article } from '../types/poet';
@@ -54,6 +55,13 @@ export default function ArticleDetailPage() {
     title: article ? `${article.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
     description: article ? article.excerpt : 'Статья не найдена.',
     path: `/articles/${id ?? ''}`,
+    type: article ? 'article' : 'website',
+    image: article?.image,
+    imageAlt: article?.title,
+    publishedTime: article?.date,
+    author: article?.author,
+    noIndex: !article,
+    jsonLd: article ? legacyArticleStructuredData(article) : undefined,
   });
 
   if (!article) {
@@ -61,7 +69,7 @@ export default function ArticleDetailPage() {
       <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
-          <Link to="/articles" className="text-cyan-300 hover:text-cyan-200">
+          <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">
             Вернуться к списку статей
           </Link>
         </div>
@@ -81,14 +89,14 @@ export default function ArticleDetailPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Link
           to="/articles"
-          className="mb-8 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70 transition-colors hover:text-cyan-300"
+          className="mb-8 inline-flex min-h-11 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
         >
           <ArrowLeft size={14} /> Все статьи
         </Link>
 
         <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
           <ArticleMetaRail article={article} categoryLabel={categoryLabel} />
-          <article ref={articleRef} className="luxury-card min-w-0 rounded-[2rem] border border-cyan-400/15 bg-[#061018]/70 p-8 md:p-12">
+          <article ref={articleRef} className="luxury-card min-w-0 rounded-[2rem] border border-cyan-400/15 bg-[#061018]/70 p-6 sm:p-8 md:p-12">
             <ShareLine scopeRef={articleRef} />
             <ArticleHeader article={article} categoryLabel={categoryLabel} />
             <ArticleRenderer blocks={blocks} sources={article.sources} />
