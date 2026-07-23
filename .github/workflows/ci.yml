@@ -30,6 +30,8 @@ jobs:
         run: npm run validate:library
       - name: Validate essay structure and source policy
         run: npm run validate:essays
+      - name: Report essay source coverage
+        run: npm run report:sources
       - name: Validate inline citations
         run: npm run validate:citations
       - name: Validate SEO topic clusters
