@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useAppNavigate } from '../ui/Link';
 import { pauseSmoothScroll, resumeSmoothScroll } from '../../utils/smoothScroll';
-import { getCommandItems } from './commandItems';
+import { getCommandItems, normalizeCommandText } from './commandItems';
 import CommandResult from './CommandResult';
 
 export default function CommandPalette() {
@@ -12,17 +12,25 @@ export default function CommandPalette() {
   const navigate = useAppNavigate();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const restoreOnCloseRef = useRef(true);
   const listId = 'command-palette-results';
 
   const items = useMemo(() => getCommandItems(), []);
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return items.slice(0, 8);
+    const normalizedQuery = normalizeCommandText(query);
+    if (!normalizedQuery) return items.slice(0, 8);
     return items
-      .filter((item) => `${item.label} ${item.description} ${item.group}`.toLowerCase().includes(q))
+      .filter((item) =>
+        normalizeCommandText(`${item.label} ${item.description} ${item.group}`).includes(normalizedQuery),
+      )
       .slice(0, 10);
   }, [items, query]);
   const activeOptionId = results[activeIndex] ? `command-option-${results[activeIndex].id}` : undefined;
+
+  const openPalette = useCallback(() => {
+    restoreOnCloseRef.current = true;
+    setOpen(true);
+  }, []);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -31,16 +39,22 @@ export default function CommandPalette() {
   }, []);
 
   const select = useCallback((path: string) => {
+    // Normal dismissal returns the reader to the exact paragraph. Navigation is
+    // different: restoring the old page's Y coordinate after the route changed
+    // would drop the reader halfway down the destination longread.
+    restoreOnCloseRef.current = false;
     navigate(path);
     close();
   }, [navigate, close]);
 
   useEffect(() => {
-    const openPalette = () => setOpen(true);
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setOpen((value) => !value);
+        setOpen((value) => {
+          if (!value) restoreOnCloseRef.current = true;
+          return !value;
+        });
       }
     };
     window.addEventListener('tlp-open-command-palette', openPalette);
@@ -49,13 +63,19 @@ export default function CommandPalette() {
       window.removeEventListener('tlp-open-command-palette', openPalette);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, []);
+  }, [openPalette]);
 
   useEffect(() => setActiveIndex(0), [query]);
 
+  // Keep the keyboard-selected option visible inside the results scroller.
+  useEffect(() => {
+    if (!open || !activeOptionId) return;
+    document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
+  }, [activeOptionId, open]);
+
   // A real page-level modal: freeze both Lenis and native body scrolling, keep
   // the viewport width stable, focus without scrolling, then restore the exact
-  // reading position and opener when the palette closes.
+  // reading position and opener when the palette closes without navigation.
   useEffect(() => {
     if (!open) return;
 
@@ -77,8 +97,13 @@ export default function CommandPalette() {
       cancelAnimationFrame(focusFrame);
       body.style.overflow = previousOverflow;
       body.style.paddingRight = previousPaddingRight;
-      resumeSmoothScroll(scrollY);
-      requestAnimationFrame(() => previouslyFocused?.focus?.({ preventScroll: true }));
+
+      const shouldRestore = restoreOnCloseRef.current;
+      restoreOnCloseRef.current = true;
+      resumeSmoothScroll(shouldRestore ? scrollY : undefined);
+      if (shouldRestore) {
+        requestAnimationFrame(() => previouslyFocused?.focus?.({ preventScroll: true }));
+      }
     };
   }, [open]);
 
@@ -96,11 +121,13 @@ export default function CommandPalette() {
       return;
     }
     if (event.key === 'ArrowDown') {
+      if (results.length === 0) return;
       event.preventDefault();
       setActiveIndex((value) => Math.min(value + 1, results.length - 1));
       return;
     }
     if (event.key === 'ArrowUp') {
+      if (results.length === 0) return;
       event.preventDefault();
       setActiveIndex((value) => Math.max(value - 1, 0));
       return;
@@ -131,7 +158,7 @@ export default function CommandPalette() {
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         aria-label="Открыть поиск по сайту (Ctrl + K)"
         className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 lg:inline-flex"
         data-testid="command-palette-trigger"
