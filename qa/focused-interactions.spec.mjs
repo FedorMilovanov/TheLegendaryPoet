@@ -24,6 +24,10 @@ async function exercisePage(page) {
   await page.waitForTimeout(500);
 }
 
+async function readOverlayDebug(page) {
+  return page.evaluate(() => window.__TLP_OVERLAY_DEBUG ?? null);
+}
+
 test.describe('focused community interactions', () => {
   test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
 
@@ -86,6 +90,7 @@ test.describe('nested overlay ownership', () => {
   test('search stays above immersive mode and background media keys remain isolated', async ({ page }) => {
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+    const overlayTimeline = [];
 
     await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
     await waitForRoute(page);
@@ -108,6 +113,7 @@ test.describe('nested overlay ownership', () => {
     await expect(immersive).toBeVisible();
     await expect(immersiveClose).toBeFocused();
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
+    overlayTimeline.push({ step: 'immersive-open', state: await readOverlayDebug(page) });
 
     const mediaBefore = await audio.evaluate((element) => ({ paused: element.paused, muted: element.muted, currentTime: element.currentTime }));
     await page.keyboard.press('Control+K');
@@ -115,6 +121,7 @@ test.describe('nested overlay ownership', () => {
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
     await expect(search).toBeVisible();
     await expect(input).toBeFocused();
+    overlayTimeline.push({ step: 'search-open', state: await readOverlayDebug(page) });
     await input.fill('музыка');
     await page.keyboard.press('Space');
     await page.keyboard.press('KeyM');
@@ -130,8 +137,17 @@ test.describe('nested overlay ownership', () => {
     await expect(immersive).toBeVisible();
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
     await expect(immersiveClose).toBeFocused();
+    const afterSearchClose = await readOverlayDebug(page);
+    overlayTimeline.push({ step: 'search-closed', state: afterSearchClose });
+    expect(afterSearchClose).toMatchObject({ depth: 1, topLabel: 'immersive-player', lastEscapeLabel: 'command-palette' });
 
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(120);
+    const afterImmersiveEscape = await readOverlayDebug(page);
+    overlayTimeline.push({ step: 'immersive-escape', state: afterImmersiveEscape });
+    fs.writeFileSync(path.join(ARTIFACT_DIR, 'desktop-overlay-timeline.json'), JSON.stringify(overlayTimeline, null, 2));
+    expect(afterImmersiveEscape?.escapeCount).toBeGreaterThanOrEqual(2);
+    expect(afterImmersiveEscape?.lastEscapeLabel).toBe('immersive-player');
     await expect(immersive).toBeHidden();
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
     await expect(immersiveOpener).toBeFocused();
