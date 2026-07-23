@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Clock3, Disc3, FileCheck2, Fingerprint, Headphones, Hourglass, Quote, Sparkles } from 'lucide-react';
+import { Archive, ArrowLeft, CalendarDays, ChevronDown, Clock3, Disc3, FileCheck2, Fingerprint, Headphones, Hourglass, Quote, Sparkles } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import CommunityPanel from '../components/community/CommunityPanel';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
@@ -14,6 +14,19 @@ import { siteConfig } from '../config/site';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 
+const releaseDateFormatter = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatReleaseDate(value?: string) {
+  if (!value) return null;
+  const parsed = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed) ? releaseDateFormatter.format(parsed) : null;
+}
+
 export default function TrackDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -21,6 +34,40 @@ export default function TrackDetailPage() {
   const playable = track ? isPlayableMusicTrack(track) : false;
   const relatedTracks = track ? getRelatedMusicTracks(musicTracks, track, 2) : [];
   const sharedTime = playable ? parseAudioMoment(searchParams.get('t'), track?.durationSeconds) : undefined;
+  const scheduledDate = formatReleaseDate(track?.scheduledFor);
+
+  const jsonLd = track
+    ? track.availability === 'coming-soon'
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: track.title,
+          description: track.description,
+          creator: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
+          author: { '@type': 'Person', name: track.poet },
+          image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
+          url: `${siteConfig.url}/music/${track.id}`,
+          isFamilyFriendly: true,
+          inLanguage: 'ru-RU',
+        }
+      : {
+          '@context': 'https://schema.org',
+          '@type': 'MusicRecording',
+          name: track.title,
+          description: track.description,
+          byArtist: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
+          lyricist: { '@type': 'Person', name: track.poet },
+          duration: track.durationSeconds ? formatIsoDuration(track.durationSeconds) : undefined,
+          datePublished: track.publishedAt,
+          image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
+          contentUrl: playable && track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
+          encodingFormat: playable ? 'audio/mpeg' : undefined,
+          url: `${siteConfig.url}/music/${track.id}`,
+          isFamilyFriendly: true,
+          copyrightHolder: { '@type': 'Organization', name: 'The Legendary Poet' },
+          inLanguage: 'ru-RU',
+        }
+    : undefined;
 
   useSeo({
     title: track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET',
@@ -28,23 +75,7 @@ export default function TrackDetailPage() {
     path: `/music/${id ?? ''}`,
     type: 'website',
     image: track?.wideCoverUrl ?? track?.coverUrl,
-    jsonLd: track ? {
-      '@context': 'https://schema.org',
-      '@type': 'MusicRecording',
-      name: track.title,
-      description: track.description,
-      byArtist: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
-      lyricist: { '@type': 'Person', name: track.poet },
-      duration: playable ? formatIsoDuration(track.durationSeconds) : undefined,
-      datePublished: track.publishedAt ?? String(track.releaseYear ?? 2026),
-      image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
-      contentUrl: playable && track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
-      encodingFormat: playable ? 'audio/mpeg' : undefined,
-      url: `${siteConfig.url}/music/${track.id}`,
-      isFamilyFriendly: true,
-      copyrightHolder: { '@type': 'Organization', name: 'The Legendary Poet' },
-      inLanguage: 'ru-RU',
-    } : undefined,
+    jsonLd,
   });
 
   if (!track) {
@@ -65,6 +96,13 @@ export default function TrackDetailPage() {
     : track.availability === 'archived'
       ? 'Архивная публикация'
       : 'Официальный релиз';
+  const unavailableTitle = track.availability === 'archived'
+    ? 'Релиз находится в архиве'
+    : 'Аудиомастер пока не опубликован';
+  const unavailableDescription = track.availability === 'archived'
+    ? 'Публикация сохранена для истории проекта, но исключена из публичного аудиоархива и очереди воспроизведения. Страница не выдаёт архивный мастер за доступный релиз.'
+    : 'Страница и визуальная система уже подготовлены, но воспроизведение появится только после загрузки проверенного мастер-файла, обложки, метаданных и контрольной суммы.';
+  const UnavailableIcon = track.availability === 'archived' ? Archive : Hourglass;
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 text-white" style={getTrackThemeStyle(track)}>
@@ -93,6 +131,11 @@ export default function TrackDetailPage() {
             <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.91] drop-shadow-[0_6px_38px_rgba(0,0,0,0.88)] sm:text-7xl lg:text-[5.7rem]">{track.title}</h1>
             <p className="mt-5 text-lg text-white/68 sm:text-xl">{track.poet} <span className="text-white/22">·</span> музыкальная версия The Legendary Poet</p>
             {track.description && <p className="mt-6 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">{track.description}</p>}
+            {scheduledDate && track.availability === 'coming-soon' && (
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/32 px-4 py-2 text-xs text-white/64 backdrop-blur-xl">
+                <CalendarDays size={14} style={{ color: 'var(--track-secondary)' }} /> Ориентировочная дата: {scheduledDate}
+              </div>
+            )}
             {sharedTime !== undefined && sharedTime >= 1 && (
               <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/32 px-4 py-2 text-xs text-white/64 backdrop-blur-xl">
                 <Clock3 size={14} style={{ color: 'var(--track-secondary)' }} /> Ссылка открыта с отметки {formatAudioTime(sharedTime)}
@@ -122,9 +165,9 @@ export default function TrackDetailPage() {
         ) : (
           <section className="relative overflow-hidden rounded-[2.4rem] border border-white/[0.09] bg-white/[0.025] px-6 py-12 text-center shadow-[0_34px_120px_rgba(0,0,0,0.42)] sm:px-10 sm:py-16">
             <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--track-accent) 12%, transparent), transparent 48%)' }} />
-            <Hourglass className="relative mx-auto" size={30} style={{ color: 'var(--track-accent)' }} />
-            <h2 className="relative mt-5 font-serif text-3xl font-bold">Аудиомастер пока не опубликован</h2>
-            <p className="relative mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/48">Страница и визуальная система уже подготовлены, но воспроизведение появится только после загрузки проверенного мастер-файла, обложки, метаданных и контрольной суммы.</p>
+            <UnavailableIcon className="relative mx-auto" size={30} style={{ color: 'var(--track-accent)' }} />
+            <h2 className="relative mt-5 font-serif text-3xl font-bold">{unavailableTitle}</h2>
+            <p className="relative mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/48">{unavailableDescription}</p>
           </section>
         )}
 
@@ -154,7 +197,7 @@ export default function TrackDetailPage() {
                 <ChevronDown size={16} className="transition duration-300 group-open:rotate-180" />
               </summary>
               <div className="border-t border-white/[0.07] px-4 pb-4 pt-4">
-                <p className="text-xs leading-relaxed text-white/40">{playable ? 'Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.' : 'Технические данные будут опубликованы вместе с проверенным мастер-файлом. До этого момента страница не имитирует доступность аудио.'}</p>
+                <p className="text-xs leading-relaxed text-white/40">{playable ? 'Мастер содержит внутреннюю обложку и авторские ID3-метаданные. Контрольная сумма позволяет подтвердить неизменность опубликованного файла.' : track.availability === 'archived' ? 'Архивный статус сохраняет сведения о публикации, но не объявляет мастер доступным для воспроизведения.' : 'Технические данные будут опубликованы вместе с проверенным мастер-файлом. До этого момента страница не имитирует доступность аудио.'}</p>
                 {track.audioSha256 && <code className="mt-4 block break-all rounded-xl border border-white/[0.06] bg-black/32 p-3 text-[10px] leading-relaxed text-white/40">SHA-256: {track.audioSha256}</code>}
                 {track.rightsNotice && <p className="mt-4 text-[10px] leading-relaxed text-white/28">{track.rightsNotice}</p>}
               </div>
