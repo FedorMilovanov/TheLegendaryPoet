@@ -42,11 +42,25 @@ test.describe('reduced-motion article readability', () => {
       'one reduced-motion Chromium viewport is sufficient; responsive layout is covered separately',
     );
 
+    // Some Playwright/project combinations have preserved the context option for
+    // JavaScript while failing to apply the CSS media feature before the first
+    // navigation. Set it explicitly on the page and prove that the browser sees
+    // the same environment the readability assertion is intended to cover.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(
+      () => page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    ).toBe(true);
+
     const routes = await publicLongreadRoutes(page);
     expect(routes.length).toBeGreaterThan(0);
 
     for (const route of routes) {
       await page.goto(route, { waitUntil: 'domcontentloaded' });
+      await expect.poll(
+        () => page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+        { message: `${route}: reduced-motion media emulation must remain active` },
+      ).toBe(true);
+
       const body = page.locator('.essay-body');
       await expect(body, `${route}: shared article body`).toBeVisible();
 
