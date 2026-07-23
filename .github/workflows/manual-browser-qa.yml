@@ -56,6 +56,7 @@ jobs:
           npx playwright test
           qa/manual-e2e.spec.mjs
           qa/focused-interactions.spec.mjs
+          qa/deep-routes.spec.mjs
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
           --reporter=line,html
