@@ -22,6 +22,7 @@ export default function CommandPalette() {
       .filter((item) => `${item.label} ${item.description} ${item.group}`.toLowerCase().includes(q))
       .slice(0, 10);
   }, [items, query]);
+  const activeOptionId = results[activeIndex] ? `command-option-${results[activeIndex].id}` : undefined;
 
   const close = useCallback(() => {
     setOpen(false);
@@ -167,6 +168,7 @@ export default function CommandPalette() {
             aria-label="Поисковый запрос"
             aria-controls={listId}
             aria-expanded={results.length > 0}
+            aria-activedescendant={activeOptionId}
             role="combobox"
             className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
             data-testid="command-palette-input"
@@ -177,7 +179,13 @@ export default function CommandPalette() {
         </div>
         <div id={listId} role="listbox" aria-label="Результаты поиска" className="max-h-[60vh] space-y-2 overflow-y-auto p-3">
           {results.map((item, index) => (
-            <CommandResult key={item.id} item={item} active={index === activeIndex} onSelect={() => select(item.path)} />
+            <CommandResult
+              key={item.id}
+              item={item}
+              active={index === activeIndex}
+              optionId={`command-option-${item.id}`}
+              onSelect={() => select(item.path)}
+            />
           ))}
           {!results.length && <div className="p-8 text-center text-cyan-100/50">Ничего не найдено.</div>}
         </div>
