@@ -71,8 +71,14 @@ export type EssayBlock =
 export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'institutional' | 'context';
 
 export interface EssaySource {
-  /** Stable optional identifier for future inline footnotes. */
+  /** Canonical stable identifier used by the bibliography row. */
   id?: string;
+  /**
+   * Historical or essay-local identifiers that resolve to this same deduplicated
+   * source. Aliases preserve old inline citations without rendering duplicate
+   * bibliography cards for one URL.
+   */
+  aliases?: string[];
   title: string;
   url?: string;
   /** Primary text, archive/catalogue, scholarship, institutional narrative, or wider context. */
