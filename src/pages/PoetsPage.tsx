@@ -8,7 +8,10 @@ import { Poet } from '../types/poet';
 import { Search, Filter, ArrowDownUp, X, ArrowRight, Sparkles } from '../components/PremiumIcons';
 import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
+import { poetsCollectionStructuredData } from '../utils/collectionStructuredData';
 import { titleCase } from '../utils/titleCase';
+
+const poetsJsonLd = poetsCollectionStructuredData(poets);
 
 function normalizeSearch(value: string) {
   return value.toLocaleLowerCase('ru-RU').replace(/ё/g, 'е').trim();
@@ -44,7 +47,7 @@ function PoetsFilters({ searchTerm, selectedTag, sortBy, allTags, onSearch, onSe
     { value: 'year', label: 'По эпохе' },
   ];
 
-  const tagButtonClass = (active: boolean) => `relative min-h-11 shrink-0 rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all ${active ? 'text-luxury-dark' : 'text-luxury-gray hover:text-white'}`;
+  const tagButtonClass = (active: boolean) => `relative min-h-11 shrink-0 rounded-full px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${active ? 'text-luxury-dark' : 'text-luxury-gray hover:text-white'}`;
 
   return (
     <div className="mb-12 space-y-6 rounded-3xl bg-luxury-dark-200/24 p-4 backdrop-blur-md select-none sm:p-6">
@@ -112,7 +115,7 @@ function PoetsFilters({ searchTerm, selectedTag, sortBy, allTags, onSearch, onSe
                   key={option.value}
                   onClick={() => onSort(option.value)}
                   aria-pressed={isActive}
-                  className={`relative z-10 min-h-11 rounded-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 sm:px-4 ${isActive ? 'text-luxury-dark' : 'text-luxury-gray-light hover:text-white'}`}
+                  className={`relative z-10 min-h-11 rounded-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 sm:px-4 ${isActive ? 'text-luxury-dark' : 'text-luxury-gray-light hover:text-white'}`}
                 >
                   {isActive && <motion.div layoutId="sort-active-indicator" className="absolute inset-0 bg-luxury-gold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.25)]" style={{ zIndex: -1 }} transition={{ type: 'spring', stiffness: 350, damping: 26 }} />}
                   {option.label}
@@ -161,6 +164,7 @@ export default function PoetsPage() {
     description: 'Каталог русских поэтов: биографии, избранные стихи, свидетельства современников и документальные исследования.',
     path: '/poets',
     keywords: 'русские поэты, биографии поэтов, стихи, Пушкин, Лермонтов, Есенин, Маяковский',
+    jsonLd: poetsJsonLd,
   });
 
   const updateSearch = (value: string) => {
@@ -197,7 +201,7 @@ export default function PoetsPage() {
             Найдено гениев <span className="mx-2 h-px w-8 inline-block align-middle bg-cyan-400/30"></span>
             <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,212,255,0.5)]">{filteredPoets.length}</span>
           </p>
-          <Link to="/hall" className="group flex min-h-11 items-center gap-3 rounded-full border border-luxury-gold/30 bg-luxury-gold/10 px-6 py-2.5 text-sm font-bold uppercase tracking-[0.15em] text-luxury-gold transition-all hover:bg-luxury-gold/20 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+          <Link to="/hall" className="group flex min-h-11 items-center gap-3 rounded-full border border-luxury-gold/30 bg-luxury-gold/10 px-6 py-2.5 text-sm font-bold uppercase tracking-[0.15em] text-luxury-gold transition-all hover:bg-luxury-gold/20 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70">
             <Sparkles size={16} className="animate-pulse" />
             <span>Зал Поэтов</span>
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
