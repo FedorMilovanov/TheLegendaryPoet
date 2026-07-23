@@ -56,6 +56,7 @@ function sanitizeSnapshot(value: unknown): AudioSessionSnapshot | null {
   const candidate = value as Partial<AudioSessionSnapshot>;
   if (candidate.version !== 2) return null;
   const numericVolume = Number(candidate.volume);
+  const numericUpdatedAt = Number(candidate.updatedAt);
   return {
     version: 2,
     lastTrackId: sanitizeTrackId(candidate.lastTrackId),
@@ -63,7 +64,7 @@ function sanitizeSnapshot(value: unknown): AudioSessionSnapshot | null {
     muted: candidate.muted === true,
     positions: sanitizePositions(candidate.positions),
     completedTrackIds: sanitizeCompleted(candidate.completedTrackIds),
-    updatedAt: Number.isFinite(Number(candidate.updatedAt)) ? Number(candidate.updatedAt) : Date.now(),
+    updatedAt: Number.isFinite(numericUpdatedAt) && numericUpdatedAt > 0 ? numericUpdatedAt : Date.now(),
   };
 }
 
@@ -95,6 +96,15 @@ function migrateLegacySnapshot(storage: Storage) {
   return snapshot;
 }
 
+function clearLegacySnapshot(storage: Storage) {
+  const keysToRemove = [LEGACY_LAST_TRACK_KEY, LEGACY_VOLUME_KEY, LEGACY_COMPLETED_KEY];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (key?.startsWith(LEGACY_POSITION_PREFIX)) keysToRemove.push(key);
+  }
+  for (const key of keysToRemove) storage.removeItem(key);
+}
+
 function getStorage() {
   if (typeof window === 'undefined') return null;
   try {
@@ -119,18 +129,20 @@ export function readAudioSession(): AudioSessionSnapshot {
   }
 
   const migrated = migrateLegacySnapshot(storage);
-  writeAudioSession(migrated);
+  if (writeAudioSession(migrated)) clearLegacySnapshot(storage);
   return migrated;
 }
 
 export function writeAudioSession(snapshot: AudioSessionSnapshot) {
   const storage = getStorage();
-  if (!storage) return;
+  if (!storage) return false;
   const sanitized = sanitizeSnapshot({ ...snapshot, version: 2, updatedAt: Date.now() }) ?? createDefaultSnapshot();
   try {
     storage.setItem(AUDIO_SESSION_STORAGE_KEY, JSON.stringify(sanitized));
+    return true;
   } catch {
     // Private browsing and storage quotas must never break playback.
+    return false;
   }
 }
 
@@ -148,14 +160,18 @@ export function updateAudioSession(mutator: (snapshot: AudioSessionSnapshot) => 
 }
 
 export function getStoredTrackPosition(trackId: string) {
-  const position = readAudioSession().positions[trackId];
+  const id = sanitizeTrackId(trackId);
+  if (!id) return 0;
+  const position = readAudioSession().positions[id];
   return Number.isFinite(position) && position >= 0 ? position : 0;
 }
 
 export function setStoredTrackPosition(trackId: string, position: number | null) {
+  const id = sanitizeTrackId(trackId);
+  if (!id) return;
   updateAudioSession((snapshot) => {
-    if (position === null || !Number.isFinite(position) || position < 0) delete snapshot.positions[trackId];
-    else snapshot.positions[trackId] = position;
+    if (position === null || !Number.isFinite(position) || position < 0) delete snapshot.positions[id];
+    else snapshot.positions[id] = position;
   });
 }
 
