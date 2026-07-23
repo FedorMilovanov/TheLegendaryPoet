@@ -16,9 +16,9 @@ const roleLabels: Record<EssayClusterRole, string> = {
 };
 
 /**
- * Featured essay link card with a restrained pointer tilt. Cover motion stays on
- * one raster plane; the global TiltCard supplies the depth rather than stacking
- * a second aggressive zoom on top of it.
+ * Featured essay link card with a restrained pointer tilt. The cover remains a
+ * single decoded raster plane: TiltCard supplies depth, while the image itself
+ * never runs a competing zoom that would resample edges and shimmer.
  */
 export default function EssayCard({ essay, variant = 'default' }: { essay: Essay; variant?: 'default' | 'feature' }) {
   const accent = essay.accent || DEFAULT_ACCENT;
@@ -40,7 +40,6 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
             focusY="30%"
             overlayFrom="#060606"
             ornamentClass="text-8xl"
-            imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-[1.025]"
             className={feature ? 'aspect-[16/10] md:aspect-auto md:w-1/2' : 'aspect-[16/10]'}
             sharedName={`essay-cover-${essay.id}`}
           />
