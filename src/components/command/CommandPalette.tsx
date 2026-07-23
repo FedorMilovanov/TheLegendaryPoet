@@ -66,10 +66,11 @@ export default function CommandPalette() {
 
   // The search index imports poet profiles, longreads, articles and music. Keep
   // that data out of the persistent shell until the user expresses search intent.
-  // Re-enter even from `loading`: closing the palette while the chunk was in
-  // flight cancels only this component subscription, not the shared module load.
+  // Re-enter even while a shared promise is in flight: closing the palette only
+  // cancels this component subscription. A failed import retries on the next
+  // explicit open instead of spinning in an automatic error loop.
   useEffect(() => {
-    if (!open || indexStatus === 'ready') return;
+    if (!open || items.length > 0) return;
 
     let active = true;
     setIndexStatus('loading');
@@ -86,7 +87,7 @@ export default function CommandPalette() {
     return () => {
       active = false;
     };
-  }, [indexStatus, open]);
+  }, [items.length, open]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
