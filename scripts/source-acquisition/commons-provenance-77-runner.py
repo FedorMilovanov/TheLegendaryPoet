@@ -2,11 +2,10 @@
 """Run issue #77 provenance acquisition with MediaWiki-safe title resolution.
 
 The core acquisition implementation stays in commons-provenance-77.py. This
-runner replaces only its metadata_batch function because MediaWiki forbids
+runner replaces only the Commons metadata adapter because MediaWiki forbids
 rvlimit when multiple pages are supplied. Image metadata is fetched in one
-batch; the latest revision timestamp is then fetched per resolved canonical
-page. Normalization and redirect aliases are retained so an exact requested
-candidate can resolve to its canonical Commons title without weakening the
+batch; revision/template evidence is then fetched per canonical page.
+Normalization and redirect aliases are retained without weakening the
 original-only download policy.
 """
 
@@ -14,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -51,7 +51,10 @@ def _follow_alias(value: str, aliases: dict[str, str]) -> str:
     return current
 
 
-def _latest_revision(session: requests.Session, canonical_title: str) -> dict[str, Any]:
+def _latest_revision_and_templates(
+    session: requests.Session,
+    canonical_title: str,
+) -> tuple[dict[str, Any], list[str]]:
     payload = _api_json(
         session,
         data={
@@ -59,18 +62,46 @@ def _latest_revision(session: requests.Session, canonical_title: str) -> dict[st
             "format": "json",
             "formatversion": "2",
             "maxlag": "5",
-            "prop": "revisions",
+            "prop": "revisions|templates",
             "rvprop": "ids|timestamp",
             "rvlimit": "1",
+            "tlnamespace": "10",
+            "tllimit": "max",
             "titles": canonical_title,
         },
         timeout=90,
     )
     pages = payload.get("query", {}).get("pages", [])
     if len(pages) != 1:
-        return {}
+        return {}, []
     revisions = pages[0].get("revisions") or []
-    return dict(revisions[0]) if revisions else {}
+    templates = [
+        str(item.get("title", ""))
+        for item in (pages[0].get("templates") or [])
+        if item.get("title")
+    ]
+    return (dict(revisions[0]) if revisions else {}), templates
+
+
+def _sanitize_unknown_author(raw_artist: str, raw_credit: str) -> str:
+    # Commons often embeds a hidden duplicate for multilingual display. Remove
+    # only display:none spans before converting the attribution to plain text.
+    artist = re.sub(
+        r'<span[^>]*display\s*:\s*none[^>]*>.*?</span>',
+        '',
+        raw_artist,
+        flags=re.I | re.S,
+    )
+    text = core.clean_html(artist) or core.clean_html(raw_credit)
+    text = re.sub(r'\s+', ' ', text).strip()
+    folded = text.casefold()
+    if not text or folded.startswith('unknown') or folded in {
+        'неизвестен',
+        'неизвестный автор',
+        'неизвестный фотограф',
+    }:
+        return 'Unknown author'
+    return text
 
 
 def metadata_batch(session: requests.Session) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
@@ -110,14 +141,30 @@ def metadata_batch(session: requests.Session) -> tuple[dict[str, dict[str, Any]]
         info["canonicaltitle"] = canonical_title
         info["pageid"] = page.get("pageid")
         info["lastrevid"] = page.get("lastrevid")
-        revision = _latest_revision(session, canonical_title)
+        revision, templates = _latest_revision_and_templates(session, canonical_title)
         info["revision"] = revision
+        info["provenance_templates"] = templates
+
+        # DateTime without DateTimeOriginal is commonly the MediaWiki upload
+        # timestamp, not the depicted/created date. Preserve it in raw API
+        # evidence but do not promote it to the editorial date field.
+        extmetadata = dict(info.get("extmetadata") or {})
+        date_time = extmetadata.get("DateTime") or {}
+        if (
+            not extmetadata.get("DateTimeOriginal")
+            and isinstance(date_time, dict)
+            and date_time.get("source") == "mediawiki-metadata"
+        ):
+            extmetadata.pop("DateTime", None)
+        info["extmetadata"] = extmetadata
+
         revision_payloads.append(
             {
                 "canonicaltitle": canonical_title,
                 "pageid": page.get("pageid"),
                 "lastrevid": page.get("lastrevid"),
                 "revision": revision,
+                "templates": templates,
             }
         )
         pages_by_key[core.norm_title(canonical_title)] = info
@@ -144,9 +191,15 @@ def metadata_batch(session: requests.Session) -> tuple[dict[str, dict[str, Any]]
         "revision_queries": revision_payloads,
         "alias_map": aliases,
         "unresolved_aliases": unresolved_aliases,
+        "sha1_representation": "Commons imageinfo sha1 and computed digest are compared as lowercase hexadecimal SHA-1",
     }
     return result, evidence
 
 
 core.metadata_batch = metadata_batch
+core.normalized_author = _sanitize_unknown_author
+# Current Commons imageinfo returns a 40-character hexadecimal SHA-1. The core
+# field name keeps its initial compatibility label, but both values are now
+# compared in the API's actual representation rather than converting one side.
+core.sha1_base36_from_hex = lambda hex_digest: hex_digest.lower()
 raise SystemExit(core.main())
