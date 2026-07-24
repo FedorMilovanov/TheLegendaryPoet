@@ -165,7 +165,7 @@ for (const [blockId, text] of editorialEntries) {
   }
 }
 const requiredEditorialAnchors: Readonly<Record<string, readonly string[]>> = {
-  'yesenin-p1-reich-family-memory-boundary': ['семейная память', 'не превращаются'],
+  'yesenin-p1-reich-family-memory-boundary': ['семья помнила', 'не превращаются'],
   'yesenin-p1-poems-analysis-method': ['что именно написано', 'богословская оценка'],
   'yesenin-p1-poems-inoniya-cross-conflict': ['распятого и воскресшего Христа'],
   'yesenin-p1-poems-christian-reflection-limit': ['не принадлежит биографу'],
