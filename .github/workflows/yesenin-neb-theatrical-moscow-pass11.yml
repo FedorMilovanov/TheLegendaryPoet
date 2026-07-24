@@ -1,0 +1,77 @@
+name: Yesenin NEB Theatrical Moscow Pass 11
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-neb-theatrical-moscow-pass11]
+    paths:
+      - 'scripts/discover-yesenin-neb-serial-issues-pass10.py'
+      - 'scripts/discover-yesenin-neb-serial-pdf-routes-pass10.py'
+      - 'scripts/validate-yesenin-neb-serial-discovery-pass10.py'
+      - 'scripts/validate-yesenin-neb-serial-pdf-routes-pass10.py'
+      - 'scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py'
+      - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
+      - '.github/workflows/yesenin-neb-theatrical-moscow-pass11.yml'
+  pull_request:
+    branches: [research/yesenin-neb-serial-discovery-pass10]
+    paths:
+      - 'scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py'
+      - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
+      - '.github/workflows/yesenin-neb-theatrical-moscow-pass11.yml'
+
+concurrency:
+  group: yesenin-neb-theatrical-moscow-pass11-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install non-generative PDF tooling
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
+      - name: Reproduce exact parent and child issue discovery
+        env:
+          YESENIN_NEB_SERIAL_OUTPUT: artifacts/yesenin-neb-serial-discovery-pass10
+        run: |
+          set -o pipefail
+          python scripts/discover-yesenin-neb-serial-issues-pass10.py 2>&1 | tee yesenin-neb-serial-discovery-pass10.log
+          python scripts/discover-yesenin-neb-serial-pdf-routes-pass10.py 2>&1 | tee yesenin-neb-serial-pdf-routes-pass10.log
+          python scripts/validate-yesenin-neb-serial-discovery-pass10.py
+          python scripts/validate-yesenin-neb-serial-pdf-routes-pass10.py
+      - name: Acquire four real Theatrical Moscow issue PDFs
+        env:
+          YESENIN_NEB_SERIAL_OUTPUT: artifacts/yesenin-neb-serial-discovery-pass10
+          YESENIN_NEB_THEATRE_OUTPUT: artifacts/yesenin-neb-theatrical-moscow-pass11
+        run: |
+          set -o pipefail
+          python scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py 2>&1 | tee yesenin-neb-theatrical-moscow-pass11.log
+      - name: Upload discovery and acquisition diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-neb-theatrical-moscow-pass11-diagnostics
+          path: |
+            yesenin-neb-serial-discovery-pass10.log
+            yesenin-neb-serial-pdf-routes-pass10.log
+            yesenin-neb-theatrical-moscow-pass11.log
+            artifacts/yesenin-neb-serial-discovery-pass10/discovery.json
+            artifacts/yesenin-neb-serial-discovery-pass10/child-pdf-routes.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload real issue PDFs and complete page-contact sheets
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-neb-theatrical-moscow-pass11-research-only
+          path: artifacts/yesenin-neb-theatrical-moscow-pass11
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
