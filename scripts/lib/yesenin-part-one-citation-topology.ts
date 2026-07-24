@@ -76,7 +76,7 @@ const parseSectionHeading = (paragraph: string) => {
 };
 
 const stripMetadataTail = (paragraph: string, label: string) => {
-  const metadataTail = /\s*\[block:\s*[^\]]+\]\s*\[claims:\s*[^\]]+\]\s*\[sources:\s*[^\]]+\]\s*$/;
+  const metadataTail = /\s*`?\[block:\s*[^\]]+\]\s*\[claims:\s*[^\]]+\]\s*\[sources:\s*[^\]]+\]\s*`?\s*$/;
   if (!metadataTail.test(paragraph)) {
     fail(`${label} must end with [block] [claims] [sources] metadata`);
   }
