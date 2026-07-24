@@ -13,7 +13,9 @@ const requireText = (content: string, fragment: string, label: string) => {
 
 const verificationPath = 'research/yesenin/PART_ONE_SOURCE_VERIFICATION_PASS4_2026-07-24.md';
 const supplementPath = 'research/yesenin/PART_ONE_TARGETED_WEB_SUPPLEMENT_2026-07-24.md';
-const matrixPath = 'research/yesenin/PART_ONE_1895_1921_AUTHORING_MATRIX_V3.md';
+const mcvayPath = 'research/yesenin/PART_ONE_MCVAY_DUNCAN_VERIFICATION_PASS5_2026-07-24.md';
+const bookUpdatePath = 'research/yesenin/PART_ONE_BOOK_REQUESTS_UPDATE_MCVAY_2026-07-24.md';
+const matrixPath = 'research/yesenin/PART_ONE_1895_1921_AUTHORING_MATRIX_V4.md';
 const draftPaths = [
   'research/yesenin/PART_ONE_DRAFT_1895_1921.md',
   'research/yesenin/PART_ONE_DRAFT_CONTINUATION_1916_1920.md',
@@ -27,6 +29,8 @@ const sourcePaths = [
 
 const verification = read(verificationPath);
 const supplement = read(supplementPath);
+const mcvay = read(mcvayPath);
+const bookUpdate = read(bookUpdatePath);
 const matrix = read(matrixPath);
 const drafts = draftPaths.map((path) => ({ path, content: read(path) }));
 const sourceModules = sourcePaths.map((path) => read(path)).join('\n');
@@ -43,11 +47,17 @@ requireText(
   supplementPath,
 );
 requireText(
+  mcvay,
+  'USER-SUPPLIED-BOOK-COLLATED / 44-NEW-WEB-CHECKS / FIRST-MEETING-DATE-RECLASSIFIED',
+  mcvayPath,
+);
+requireText(
   matrix,
-  '52-WEB-VERIFICATIONS / 42-CANONICAL-SOURCES / 10-TARGETED-SUPPLEMENTS / 12-SECTIONS-DRAFTED',
+  '96-CUMULATIVE-WEB-VERIFICATIONS / 44-MCVAY-CONTROL-CHECKS / 42-CANONICAL-SOURCES / 10-TARGETED-SUPPLEMENTS / 12-SECTIONS-DRAFTED',
   matrixPath,
 );
 requireText(matrix, 'PUBLICATION-NOT-AUTHORIZED', matrixPath);
+requireText(bookUpdate, 'ONE-BOOK-ACQUIRED / RELATIONSHIP-MONOGRAPH-COLLATED', bookUpdatePath);
 
 const verificationRows = [...verification.matchAll(/^\|\s*(\d+)\s*\|\s*`ye1-/gm)].map((match) =>
   Number(match[1]),
@@ -77,6 +87,24 @@ if (supplementalIds.some((value, index) => value !== expectedSupplementalIds[ind
   fail('supplemental verification IDs must remain continuous from SUP-YE1-001 through SUP-YE1-010');
 }
 
+const mcvayRows = [...mcvay.matchAll(/^\|\s*(\d+)\s*\|/gm)].map((match) => Number(match[1]));
+if (mcvayRows.length !== 44) {
+  fail(`expected 44 McVay pass-five verification records, found ${mcvayRows.length}`);
+}
+const expectedMcVayRows = Array.from({ length: 44 }, (_, index) => index + 1);
+if (mcvayRows.some((value, index) => value !== expectedMcVayRows[index])) {
+  fail('McVay pass-five numbering must remain continuous from 1 through 44');
+}
+
+for (const fragment of [
+  'ACADEMIC-RECONSTRUCTION / NO-CONTEMPORANEOUS-MEETING-RECORD / COMPETING-MEMOIR-CHRONOLOGIES',
+  'USR-YE1-MCVAY-ISADORA-ESENIN-1980',
+  '1a3167db1cb9cc2aa1ad64ac59b07bad4d97ebc51c5a142c334f2a74a0dc3238',
+] as const) {
+  requireText(mcvay, fragment, mcvayPath);
+}
+requireText(mcvay, 'PDF не коммитится и не перераспространяется', mcvayPath);
+
 const matrixRows = [...matrix.matchAll(/^\|\s*(\d+)\s*\|/gm)].map((match) => Number(match[1]));
 for (const section of Array.from({ length: 12 }, (_, index) => index + 1)) {
   if (!matrixRows.includes(section)) fail(`matrix status table is missing section ${section}`);
@@ -87,7 +115,7 @@ for (const state of [
   'DRAFT-WRITTEN-WITH-PUBLICATION-HOLD',
   'PRIMARY-TEXTS-COLLATED',
   'THREE-DATE-HISTORY-COLLATED',
-  'ACADEMIC-DATING-AND-NEB-OBJECT',
+  'ACADEMIC-RECONSTRUCTION / COMPETING-MEMOIRS / MCVAY-COLLATED',
   'TYPED-CITATIONS-PENDING',
 ] as const) {
   requireText(matrix, state, matrixPath);
@@ -118,12 +146,56 @@ for (const { path, content } of drafts) {
   }
 }
 
-const blockEntries = drafts.flatMap(({ path, content }) =>
-  [...content.matchAll(/\[block:\s*([^\]]+)\]/g)].map((match) => ({ path, id: match[1].trim() })),
-);
-if (blockEntries.length < 100) {
-  fail(`expected at least 100 authored paragraph blocks, found ${blockEntries.length}`);
+const finalDraft = drafts.find(({ path }) => path.endsWith('PART_ONE_DRAFT_FINAL_SECTIONS_1917_1921.md'))
+  ?.content ?? fail('final-section draft is missing');
+for (const fragment of [
+  'McVay после сопоставления мемуаров прямо заключает, что точная дата первой встречи неизвестна',
+  'видимо, 3 октября 1921 года',
+  '2 мая 1922 года',
+  'Мастерская Якулова подтверждена лучше, чем календарное число',
+  'Сцена `золотая голова — ангел — чёрт` принадлежит мемуарной версии Мариенгофа',
+] as const) {
+  requireText(finalDraft, fragment, draftPaths[2]);
 }
+if (/они точно встретились 3 октября/i.test(finalDraft)) {
+  fail('final draft must not promote the reconstructed 3 October date to certainty');
+}
+
+const blockParagraphs = drafts.flatMap(({ path, content }) =>
+  content
+    .split(/\n\s*\n/)
+    .map((paragraph, index) => ({ path, paragraph: paragraph.trim(), paragraphNumber: index + 1 }))
+    .filter(({ paragraph }) => paragraph.includes('[block:')),
+);
+if (blockParagraphs.length < 136) {
+  fail(`expected at least 136 authored paragraph blocks after McVay pass, found ${blockParagraphs.length}`);
+}
+
+const blockEntries = blockParagraphs.map(({ path, paragraph, paragraphNumber }) => {
+  const blockMatches = [...paragraph.matchAll(/\[block:\s*([^\]]+)\]/g)];
+  const claimMatches = [...paragraph.matchAll(/\[claims:\s*([^\]]+)\]/g)];
+  const sourceMatches = [...paragraph.matchAll(/\[sources:\s*([^\]]+)\]/g)];
+  const label = `${path} paragraph ${paragraphNumber}`;
+
+  if (blockMatches.length !== 1) {
+    fail(`${label} must contain exactly one [block] tag; found ${blockMatches.length}`);
+  }
+  if (claimMatches.length !== 1) {
+    fail(`${label} must contain exactly one [claims] tag; found ${claimMatches.length}`);
+  }
+  if (sourceMatches.length !== 1) {
+    fail(`${label} must contain exactly one [sources] tag; found ${sourceMatches.length}`);
+  }
+
+  const blockIndex = blockMatches[0].index ?? -1;
+  const claimIndex = claimMatches[0].index ?? -1;
+  const sourceIndex = sourceMatches[0].index ?? -1;
+  if (!(blockIndex < claimIndex && claimIndex < sourceIndex)) {
+    fail(`${label} must keep tag order [block] [claims] [sources]`);
+  }
+
+  return { path, id: blockMatches[0][1].trim() };
+});
 
 const blockOwners = new Map<string, string>();
 for (const { path, id } of blockEntries) {
@@ -143,11 +215,15 @@ if (declaredSourceIds.size !== 42) {
 const supplementalIdSet = new Set(supplementalIds);
 const referencedYeSourceIds = new Set<string>();
 const referencedSupplementalIds = new Set<string>();
+const referencedMcVayIds = new Set<string>();
+let userMcVayCopyReferenced = false;
 for (const match of allDraftText.matchAll(/\[sources:\s*([^\]]+)\]/g)) {
   for (const rawToken of match[1].split(',')) {
     const token = rawToken.trim();
     if (token.startsWith('ye1-')) referencedYeSourceIds.add(token);
     if (token.startsWith('SUP-YE1-')) referencedSupplementalIds.add(token);
+    if (token.startsWith('MCVAY-P5-')) referencedMcVayIds.add(token);
+    if (token === 'USR-YE1-MCVAY-ISADORA-ESENIN-1980') userMcVayCopyReferenced = true;
   }
 }
 for (const sourceId of referencedYeSourceIds) {
@@ -156,8 +232,24 @@ for (const sourceId of referencedYeSourceIds) {
 for (const sourceId of referencedSupplementalIds) {
   if (!supplementalIdSet.has(sourceId)) fail(`draft references unknown supplemental source ID ${sourceId}`);
 }
+for (const sourceId of referencedMcVayIds) {
+  const match = /^MCVAY-P5-(\d{3})$/.exec(sourceId);
+  const number = match ? Number(match[1]) : NaN;
+  if (!Number.isInteger(number) || number < 1 || number > 44) {
+    fail(`draft references invalid McVay pass-five source ID ${sourceId}`);
+  }
+}
+if (referencedYeSourceIds.size < 37) {
+  fail(`expected at least 37 canonical source IDs used in prose, found ${referencedYeSourceIds.size}`);
+}
 if (referencedSupplementalIds.size !== 10) {
   fail(`all 10 targeted supplemental records must be used in prose; found ${referencedSupplementalIds.size}`);
+}
+if (referencedMcVayIds.size < 20) {
+  fail(`expected at least 20 distinct McVay verification IDs used in prose, found ${referencedMcVayIds.size}`);
+}
+if (!userMcVayCopyReferenced) {
+  fail('user-supplied McVay copy must remain explicitly referenced in the Duncan prose');
 }
 
 const forbiddenPublicTokens = ['essay-yesenin-1895-1921', "slug: 'yesenin-1895-1921'"];
@@ -174,16 +266,20 @@ requireText(
   verificationPath,
 );
 requireText(supplement, 'PHYSICAL-WITNESSES-STILL-HELD', supplementPath);
+requireText(bookUpdate, 'COPYRIGHTED-PDF-NOT-COMMITTED', bookUpdatePath);
 
 console.log(
   JSON.stringify(
     {
       canonicalVerificationRecords: verificationRows.length,
       targetedSupplementalRecords: supplementalIds.length,
-      totalWebVerifications: verificationRows.length + supplementalIds.length,
+      mcvayControlChecks: mcvayRows.length,
+      totalWebVerifications: verificationRows.length + supplementalIds.length + mcvayRows.length,
       declaredCanonicalSourceIds: declaredSourceIds.size,
       referencedCanonicalSourceIds: referencedYeSourceIds.size,
       referencedSupplementalIds: referencedSupplementalIds.size,
+      referencedMcVayIds: referencedMcVayIds.size,
+      userMcVayCopyReferenced,
       authoredBlocks: blockEntries.length,
       draftedSections: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       pendingSections: [],
