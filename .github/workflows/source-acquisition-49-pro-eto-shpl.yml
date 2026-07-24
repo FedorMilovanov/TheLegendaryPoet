@@ -35,11 +35,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick jq curl
 
-      - name: Inspect Docview network and page surfaces
+      - name: Capture static node response
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p shpl-docview/responses shpl-docview/images shpl-docview/downloads
+          target='https://elib.shpl.ru/ru/nodes/3515-mayakovskiy-v-v-pro-eto-m-pg-gos-izd-vo-1923'
+          curl --location --compressed --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent 'Mozilla/5.0 source-verifier/2.0' \
+            --dump-header shpl-docview/static-headers.txt \
+            --output shpl-docview/static-page.html \
+            "$target" || true
+          stat --printf='%s\n' shpl-docview/static-page.html > shpl-docview/static-bytes.txt 2>/dev/null || printf '0\n' > shpl-docview/static-bytes.txt
+
+      - name: Inspect Docview network and page surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
 
           cat > /tmp/inspect-shpl.mjs <<'JS'
           import { chromium } from 'playwright';
@@ -49,182 +62,218 @@ jobs:
 
           const root = path.resolve('shpl-docview');
           const target = 'https://elib.shpl.ru/ru/nodes/3515-mayakovskiy-v-v-pro-eto-m-pg-gos-izd-vo-1923#page/1/mode/grid/zoom/1';
-          const browser = await chromium.launch({ headless: true });
-          const context = await browser.newContext({
-            acceptDownloads: true,
-            viewport: { width: 1440, height: 1100 },
-            locale: 'ru-RU',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/1.0',
-          });
-          const page = await context.newPage();
           const network = [];
           const responseBodies = [];
+          const events = [];
+          const safeName = value => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, 20);
+          const saveJson = async (name, value) => fs.writeFile(path.join(root, name), JSON.stringify(value, null, 2));
+          let browser;
+          let context;
+          let page;
+          let initialStatus = null;
+          let fatal = null;
 
-          const safeName = (value) => crypto.createHash('sha256').update(value).digest('hex').slice(0, 20);
+          try {
+            browser = await chromium.launch({ headless: true });
+            context = await browser.newContext({
+              acceptDownloads: true,
+              ignoreHTTPSErrors: true,
+              viewport: { width: 1440, height: 1100 },
+              locale: 'ru-RU',
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/2.0',
+            });
+            page = await context.newPage();
 
-          page.on('request', request => {
-            network.push({
+            page.on('console', message => events.push({ type: 'console', level: message.type(), text: message.text() }));
+            page.on('pageerror', error => events.push({ type: 'pageerror', text: error.stack || error.message }));
+            page.on('requestfailed', request => events.push({
+              type: 'requestfailed',
+              url: request.url(),
+              failure: request.failure()?.errorText || '',
+            }));
+            page.on('request', request => network.push({
               phase: 'request',
               method: request.method(),
               resourceType: request.resourceType(),
               url: request.url(),
-            });
-          });
-
-          page.on('response', async response => {
-            const headers = await response.allHeaders().catch(() => ({}));
-            const item = {
-              phase: 'response',
-              status: response.status(),
-              contentType: headers['content-type'] || '',
-              contentLength: headers['content-length'] || '',
-              url: response.url(),
-            };
-            network.push(item);
-            const contentType = item.contentType.toLowerCase();
-            const interesting = /json|javascript|html|text\//.test(contentType) &&
-              /doc|view|page|node|image|download|asset|3515/i.test(response.url());
-            if (!interesting) return;
-            try {
-              const body = await response.body();
-              if (body.length > 8_000_000) return;
-              const extension = contentType.includes('json') ? 'json' : contentType.includes('javascript') ? 'js' : 'txt';
-              const filename = `${safeName(response.url())}.${extension}`;
-              await fs.writeFile(path.join(root, 'responses', filename), body);
-              responseBodies.push({ filename, bytes: body.length, url: response.url(), contentType });
-            } catch {}
-          });
-
-          page.on('download', async download => {
-            const suggested = download.suggestedFilename().replace(/[^a-zA-Z0-9._-]+/g, '_');
-            await download.saveAs(path.join(root, 'downloads', `${Date.now()}-${suggested}`)).catch(() => {});
-          });
-
-          const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-          await page.waitForTimeout(12_000);
-
-          let stableRounds = 0;
-          let lastHeight = 0;
-          for (let round = 0; round < 60 && stableRounds < 5; round += 1) {
-            const metrics = await page.evaluate(() => ({
-              height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
-              images: document.images.length,
             }));
-            await page.evaluate(() => window.scrollTo(0, Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)));
-            await page.waitForTimeout(1200);
-            if (metrics.height === lastHeight) stableRounds += 1;
-            else stableRounds = 0;
-            lastHeight = metrics.height;
-          }
-          await page.evaluate(() => window.scrollTo(0, 0));
-          await page.waitForTimeout(2000);
-
-          const dom = await page.evaluate(() => {
-            const attrs = element => Object.fromEntries([...element.attributes].map(attribute => [attribute.name, attribute.value]));
-            const backgrounds = [...document.querySelectorAll('*')]
-              .map(element => ({
-                tag: element.tagName,
-                attrs: attrs(element),
-                backgroundImage: getComputedStyle(element).backgroundImage,
-              }))
-              .filter(item => item.backgroundImage && item.backgroundImage !== 'none');
-            const windowHints = Object.keys(window)
-              .filter(key => /doc|view|page|image|node/i.test(key))
-              .slice(0, 500);
-            return {
-              title: document.title,
-              url: location.href,
-              images: [...document.images].map(image => ({
-                attrs: attrs(image),
-                src: image.src,
-                currentSrc: image.currentSrc,
-                srcset: image.srcset,
-                naturalWidth: image.naturalWidth,
-                naturalHeight: image.naturalHeight,
-              })),
-              sources: [...document.querySelectorAll('source')].map(source => ({ attrs: attrs(source) })),
-              anchors: [...document.querySelectorAll('a')].map(anchor => ({
-                attrs: attrs(anchor),
-                href: anchor.href,
-                text: anchor.innerText.trim(),
-              })),
-              buttons: [...document.querySelectorAll('button,[role=button]')].map(button => ({
-                attrs: attrs(button),
-                text: button.innerText.trim(),
-                ariaLabel: button.getAttribute('aria-label'),
-                title: button.getAttribute('title'),
-              })),
-              backgrounds,
-              scripts: [...document.scripts].map(script => ({ src: script.src, type: script.type, text: script.src ? '' : script.textContent.slice(0, 100_000) })),
-              performance: performance.getEntriesByType('resource').map(entry => ({
-                name: entry.name,
-                initiatorType: entry.initiatorType,
-                transferSize: entry.transferSize,
-                decodedBodySize: entry.decodedBodySize,
-              })),
-              windowHints,
-              bodyText: document.body.innerText.slice(0, 200_000),
-              html: document.documentElement.outerHTML,
-            };
-          });
-
-          await fs.writeFile(path.join(root, 'dom.json'), JSON.stringify({ ...dom, html: undefined }, null, 2));
-          await fs.writeFile(path.join(root, 'page.html'), dom.html);
-          await fs.writeFile(path.join(root, 'network.json'), JSON.stringify(network, null, 2));
-          await fs.writeFile(path.join(root, 'response-bodies.json'), JSON.stringify(responseBodies, null, 2));
-          await fs.writeFile(path.join(root, 'cookies.json'), JSON.stringify(await context.cookies(), null, 2));
-          await page.screenshot({ path: path.join(root, 'docview-full.png'), fullPage: true });
-
-          const candidates = new Set();
-          const add = value => {
-            if (!value || typeof value !== 'string') return;
-            for (const match of value.matchAll(/https?:\/\/[^\s"'()<>]+/g)) candidates.add(match[0].replace(/[},;]+$/, ''));
-          };
-          for (const image of dom.images) {
-            add(image.src); add(image.currentSrc); add(image.srcset);
-          }
-          for (const source of dom.sources) for (const value of Object.values(source.attrs)) add(value);
-          for (const anchor of dom.anchors) add(anchor.href);
-          for (const background of dom.backgrounds) add(background.backgroundImage);
-          for (const entry of dom.performance) add(entry.name);
-          for (const item of network) add(item.url);
-
-          const downloaded = [];
-          let index = 0;
-          for (const url of [...candidates].sort()) {
-            if (!/image|page|download|asset|upload|system|storage|\.jpe?g|\.png|\.webp/i.test(url)) continue;
-            try {
-              const fetched = await context.request.get(url, { timeout: 60_000, failOnStatusCode: false });
-              const contentType = (fetched.headers()['content-type'] || '').toLowerCase();
-              if (fetched.status() !== 200 || !contentType.startsWith('image/')) continue;
-              const body = await fetched.body();
-              if (body.length < 10_000) continue;
-              index += 1;
-              const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-              const filename = `${String(index).padStart(4, '0')}-${safeName(url)}.${ext}`;
-              await fs.writeFile(path.join(root, 'images', filename), body);
-              downloaded.push({
-                filename,
-                bytes: body.length,
-                sha256: crypto.createHash('sha256').update(body).digest('hex'),
-                contentType,
-                url,
+            page.on('response', async response => {
+              const headers = await response.allHeaders().catch(() => ({}));
+              const item = {
+                phase: 'response',
+                status: response.status(),
+                contentType: headers['content-type'] || '',
+                contentLength: headers['content-length'] || '',
+                url: response.url(),
+              };
+              network.push(item);
+              const contentType = item.contentType.toLowerCase();
+              const interesting = /json|javascript|html|text\//.test(contentType) &&
+                /doc|view|page|node|image|download|asset|3515/i.test(response.url());
+              if (!interesting) return;
+              try {
+                const body = await response.body();
+                if (body.length > 8_000_000) return;
+                const extension = contentType.includes('json') ? 'json' : contentType.includes('javascript') ? 'js' : 'txt';
+                const filename = `${safeName(response.url())}.${extension}`;
+                await fs.writeFile(path.join(root, 'responses', filename), body);
+                responseBodies.push({ filename, bytes: body.length, url: response.url(), contentType });
+              } catch (error) {
+                events.push({ type: 'response-body-error', url: response.url(), text: String(error) });
+              }
+            });
+            page.on('download', async download => {
+              const suggested = download.suggestedFilename().replace(/[^a-zA-Z0-9._-]+/g, '_');
+              await download.saveAs(path.join(root, 'downloads', `${Date.now()}-${suggested}`)).catch(error => {
+                events.push({ type: 'download-error', text: String(error) });
               });
-            } catch {}
-          }
-          await fs.writeFile(path.join(root, 'image-manifest.json'), JSON.stringify(downloaded, null, 2));
-          await fs.writeFile(path.join(root, 'summary.json'), JSON.stringify({
-            target,
-            initialStatus: response?.status() || null,
-            networkEntries: network.length,
-            responseBodies: responseBodies.length,
-            domImages: dom.images.length,
-            anchors: dom.anchors.length,
-            buttons: dom.buttons.length,
-            downloadedImages: downloaded.length,
-          }, null, 2));
+            });
 
-          await browser.close();
+            let navigation;
+            try {
+              navigation = await page.goto(target, { waitUntil: 'commit', timeout: 120_000 });
+            } catch (error) {
+              events.push({ type: 'https-navigation-error', text: error.stack || String(error) });
+              const fallback = target.replace('https://', 'http://');
+              navigation = await page.goto(fallback, { waitUntil: 'commit', timeout: 120_000 });
+            }
+            initialStatus = navigation?.status() || null;
+            await page.waitForLoadState('domcontentloaded', { timeout: 120_000 }).catch(error => {
+              events.push({ type: 'domcontentloaded-error', text: String(error) });
+            });
+            await page.waitForTimeout(12_000);
+
+            let stableRounds = 0;
+            let last = { height: 0, images: 0 };
+            for (let round = 0; round < 80 && stableRounds < 6; round += 1) {
+              const metrics = await page.evaluate(() => ({
+                height: Math.max(document.documentElement?.scrollHeight || 0, document.body?.scrollHeight || 0),
+                images: document.images?.length || 0,
+              })).catch(() => ({ height: 0, images: 0 }));
+              await page.evaluate(() => window.scrollTo(0, Math.max(document.documentElement?.scrollHeight || 0, document.body?.scrollHeight || 0))).catch(() => {});
+              await page.waitForTimeout(1000);
+              if (metrics.height === last.height && metrics.images === last.images) stableRounds += 1;
+              else stableRounds = 0;
+              last = metrics;
+            }
+            await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+            await page.waitForTimeout(1500);
+
+            const dom = await page.evaluate(() => {
+              const attrs = element => Object.fromEntries([...element.attributes].map(attribute => [attribute.name, attribute.value]));
+              const backgrounds = [...document.querySelectorAll('*')]
+                .map(element => ({
+                  tag: element.tagName,
+                  attrs: attrs(element),
+                  backgroundImage: getComputedStyle(element).backgroundImage,
+                }))
+                .filter(item => item.backgroundImage && item.backgroundImage !== 'none');
+              return {
+                title: document.title,
+                url: location.href,
+                images: [...document.images].map(image => ({
+                  attrs: attrs(image),
+                  src: image.src,
+                  currentSrc: image.currentSrc,
+                  srcset: image.srcset,
+                  naturalWidth: image.naturalWidth,
+                  naturalHeight: image.naturalHeight,
+                })),
+                sources: [...document.querySelectorAll('source')].map(source => ({ attrs: attrs(source) })),
+                anchors: [...document.querySelectorAll('a')].map(anchor => ({
+                  attrs: attrs(anchor),
+                  href: anchor.href,
+                  text: (anchor.innerText || '').trim(),
+                })),
+                buttons: [...document.querySelectorAll('button,[role=button]')].map(button => ({
+                  attrs: attrs(button),
+                  text: (button.innerText || '').trim(),
+                  ariaLabel: button.getAttribute('aria-label'),
+                  title: button.getAttribute('title'),
+                })),
+                backgrounds,
+                scripts: [...document.scripts].map(script => ({
+                  src: script.src,
+                  type: script.type,
+                  text: script.src ? '' : (script.textContent || '').slice(0, 100_000),
+                })),
+                performance: performance.getEntriesByType('resource').map(entry => ({
+                  name: entry.name,
+                  initiatorType: entry.initiatorType,
+                  transferSize: entry.transferSize,
+                  decodedBodySize: entry.decodedBodySize,
+                })),
+                bodyText: (document.body?.innerText || '').slice(0, 200_000),
+                html: document.documentElement?.outerHTML || '',
+              };
+            });
+
+            await saveJson('dom.json', { ...dom, html: undefined });
+            await fs.writeFile(path.join(root, 'page.html'), dom.html);
+            await page.screenshot({ path: path.join(root, 'docview-full.png'), fullPage: true }).catch(error => {
+              events.push({ type: 'screenshot-error', text: String(error) });
+            });
+
+            const candidates = new Set();
+            const add = value => {
+              if (!value || typeof value !== 'string') return;
+              for (const match of value.matchAll(/https?:\/\/[^\s"'()<>]+/g)) {
+                candidates.add(match[0].replace(/[},;]+$/, ''));
+              }
+            };
+            for (const image of dom.images) { add(image.src); add(image.currentSrc); add(image.srcset); }
+            for (const source of dom.sources) for (const value of Object.values(source.attrs)) add(value);
+            for (const anchor of dom.anchors) add(anchor.href);
+            for (const background of dom.backgrounds) add(background.backgroundImage);
+            for (const entry of dom.performance) add(entry.name);
+            for (const item of network) add(item.url);
+
+            const downloaded = [];
+            let index = 0;
+            for (const url of [...candidates].sort()) {
+              if (!/image|page|download|asset|upload|system|storage|\.jpe?g|\.png|\.webp/i.test(url)) continue;
+              try {
+                const fetched = await context.request.get(url, { timeout: 60_000, failOnStatusCode: false });
+                const contentType = (fetched.headers()['content-type'] || '').toLowerCase();
+                if (fetched.status() !== 200 || !contentType.startsWith('image/')) continue;
+                const body = await fetched.body();
+                if (body.length < 10_000) continue;
+                index += 1;
+                const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+                const filename = `${String(index).padStart(4, '0')}-${safeName(url)}.${ext}`;
+                await fs.writeFile(path.join(root, 'images', filename), body);
+                downloaded.push({
+                  filename,
+                  bytes: body.length,
+                  sha256: crypto.createHash('sha256').update(body).digest('hex'),
+                  contentType,
+                  url,
+                });
+              } catch (error) {
+                events.push({ type: 'candidate-download-error', url, text: String(error) });
+              }
+            }
+            await saveJson('image-manifest.json', downloaded);
+            await saveJson('summary.json', {
+              target,
+              initialStatus,
+              networkEntries: network.length,
+              responseBodies: responseBodies.length,
+              domImages: dom.images.length,
+              anchors: dom.anchors.length,
+              buttons: dom.buttons.length,
+              downloadedImages: downloaded.length,
+            });
+          } catch (error) {
+            fatal = error?.stack || String(error);
+          } finally {
+            await saveJson('network.json', network).catch(() => {});
+            await saveJson('response-bodies.json', responseBodies).catch(() => {});
+            await saveJson('events.json', events).catch(() => {});
+            if (fatal) await fs.writeFile(path.join(root, 'fatal-error.txt'), fatal).catch(() => {});
+            if (context) await saveJson('cookies.json', await context.cookies().catch(() => [])).catch(() => {});
+            if (browser) await browser.close().catch(() => {});
+          }
           JS
 
           node /tmp/inspect-shpl.mjs
