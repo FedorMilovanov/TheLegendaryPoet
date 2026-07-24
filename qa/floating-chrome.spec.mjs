@@ -42,10 +42,13 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
     () => page.evaluate(() => window.scrollY),
     { timeout: 5_000, message: 'ratings page should cross the scroll-top threshold' },
   ).toBeGreaterThan(400);
-  // Auto-hide is a separate behavior and can be mid-transition depending on the
-  // scroll scheduler. Force the documented visible state so this test measures
-  // the collision contract, not a temporarily translated, pointer-inert pill.
-  await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
+  // Drive the real direction-sensitive auto-hide contract. Mutating the class
+  // directly races the hook and can leave the pill translated/pointer-inert.
+  await page.mouse.wheel(0, -140);
+  await expect.poll(
+    () => page.evaluate(() => !document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'site chrome should return after an upward wheel gesture' },
+  ).toBe(true);
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
