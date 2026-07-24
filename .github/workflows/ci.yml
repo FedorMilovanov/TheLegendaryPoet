@@ -65,6 +65,8 @@ jobs:
         run: npm run validate:yesenin-part-one-topology
       - name: Validate unpublished Yesenin Part I article package
         run: npm run validate:yesenin-part-one-unpublished
+      - name: Validate complete Yesenin Part I sentence edit
+        run: npm run validate:yesenin-part-one-editorial
       - name: Validate public historical claim boundaries
         run: npm run validate:public-claims
       - name: Validate responsive AVIF and WebP media
