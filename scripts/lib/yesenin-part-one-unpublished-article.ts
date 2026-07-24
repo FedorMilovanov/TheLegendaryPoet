@@ -1,9 +1,11 @@
 import type { Essay, EssayBlock, EssaySource } from '../../src/types/essay';
 import { yeseninPartOneEditorialPassSeven } from '../../src/data/essays/yeseninPartOneEditorialPassSeven';
+import { yeseninPartOneEditorialPassSevenPass6 } from '../../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
 import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSources';
 import { yeseninPartOneSourcesPassTwo } from '../../src/data/essays/yeseninPartOneSourcesPassTwo';
 import { yeseninPartOneSourcesPassThree } from '../../src/data/essays/yeseninPartOneSourcesPassThree';
-import { loadYeseninPartOneCompleteCitationTopology } from './yesenin-part-one-complete-citation-topology';
+import { yeseninPartOneSourcesPassFour } from '../../src/data/essays/yeseninPartOneSourcesPassFour';
+import { loadYeseninPartOnePass6CitationTopology } from './yesenin-part-one-pass6-citation-topology';
 
 export const YESENIN_PART_ONE_UNPUBLISHED_ID = 'essay-yesenin-biography-part-one-unpublished' as const;
 export const YESENIN_PART_ONE_UNPUBLISHED_SLUG = 'sergei-yesenin-1895-1921-unpublished' as const;
@@ -46,6 +48,7 @@ const canonicalSourceRecords = [
   ...yeseninPartOneSources,
   ...yeseninPartOneSourcesPassTwo,
   ...yeseninPartOneSourcesPassThree,
+  ...yeseninPartOneSourcesPassFour,
 ];
 
 const allCanonicalSources: EssaySource[] = canonicalSourceRecords.map(
@@ -67,10 +70,15 @@ const sectionAnchor = (sectionNumber: number) =>
 const withRenderSources = (block: EssayBlock, sourceIds: readonly string[]): EssayBlock =>
   sourceIds.length > 0 ? ({ ...block, sourceIds: [...sourceIds] } as EssayBlock) : block;
 
+const editorialPassSeven = {
+  ...yeseninPartOneEditorialPassSeven,
+  ...yeseninPartOneEditorialPassSevenPass6,
+} as const satisfies Readonly<Record<string, string>>;
+
 export function buildYeseninPartOneUnpublishedArticle(
   root = process.cwd(),
 ): YeseninPartOneUnpublishedArticlePackage {
-  const topology = loadYeseninPartOneCompleteCitationTopology(root);
+  const topology = loadYeseninPartOnePass6CitationTopology(root);
   const referencedCanonicalSourceIds = new Set(
     topology.nodes.flatMap((node) => node.canonicalSourceIds),
   );
@@ -95,7 +103,7 @@ export function buildYeseninPartOneUnpublishedArticle(
       });
     }
 
-    const editedText = yeseninPartOneEditorialPassSeven[node.blockId as keyof typeof yeseninPartOneEditorialPassSeven];
+    const editedText = editorialPassSeven[node.blockId as keyof typeof editorialPassSeven];
     const renderText = editedText ?? node.text;
     renderTexts.push(renderText);
 
