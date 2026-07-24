@@ -5,6 +5,7 @@ import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
+import './commandPaletteChrome.css';
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function CommandPalette() {
   const previousPathRef = useRef(location.pathname);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const restoreFocusRef = useRef(true);
   const listId = 'command-palette-results';
 
   const items = useMemo(() => getCommandItems(), []);
@@ -38,28 +40,42 @@ export default function CommandPalette() {
     initialFocusRef: inputRef,
     onClose: close,
     label: 'command-palette',
+    restoreFocusRef,
   });
 
+  const openPalette = useCallback(() => {
+    restoreFocusRef.current = true;
+    setOpen(true);
+  }, []);
+
   const select = useCallback((path: string) => {
+    // A command result changes the page. Let RouteContent move focus to the new
+    // main landmark instead of restoring the old search trigger over it.
+    restoreFocusRef.current = false;
     navigate(path);
     close();
   }, [navigate, close]);
 
   useEffect(() => {
-    const openPalette = () => setOpen(true);
+    const onOpenPalette = () => openPalette();
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        if (!event.repeat) setOpen((value) => !value);
+        if (!event.repeat) {
+          setOpen((value) => {
+            if (!value) restoreFocusRef.current = true;
+            return !value;
+          });
+        }
       }
     };
-    window.addEventListener('tlp-open-command-palette', openPalette);
+    window.addEventListener('tlp-open-command-palette', onOpenPalette);
     window.addEventListener('keydown', onKeyDown);
     return () => {
-      window.removeEventListener('tlp-open-command-palette', openPalette);
+      window.removeEventListener('tlp-open-command-palette', onOpenPalette);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, []);
+  }, [openPalette]);
 
   useEffect(() => setActiveIndex(0), [query]);
   useEffect(() => {
@@ -69,6 +85,7 @@ export default function CommandPalette() {
   useEffect(() => {
     if (previousPathRef.current === location.pathname) return;
     previousPathRef.current = location.pathname;
+    restoreFocusRef.current = false;
     close();
   }, [close, location.pathname]);
 
@@ -93,7 +110,7 @@ export default function CommandPalette() {
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         aria-label="Открыть поиск по сайту (Ctrl + K)"
         className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 lg:inline-flex"
       >

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, RefreshCw } from 'lucide-react';
 import type { RatingDimension } from '../../types/community';
 import RatingStars from './RatingStars';
@@ -10,10 +10,6 @@ interface RatingFormProps {
   onStatus?: (message: string, tone: 'success' | 'warning') => void;
 }
 
-function emptyScores(dimensions: RatingDimension[]) {
-  return Object.fromEntries(dimensions.map((dimension) => [dimension.key, 0]));
-}
-
 function normalizeInitialScores(dimensions: RatingDimension[], initialScores?: Record<string, number>) {
   return Object.fromEntries(dimensions.map((dimension) => {
     const value = Number(initialScores?.[dimension.key]);
@@ -21,15 +17,46 @@ function normalizeInitialScores(dimensions: RatingDimension[], initialScores?: R
   }));
 }
 
+function scoreSignature(dimensions: RatingDimension[], scores: Record<string, number>) {
+  return dimensions.map((dimension) => `${dimension.key}:${scores[dimension.key] ?? 0}`).join('|');
+}
+
 export default function RatingForm({ dimensions, initialScores, onSubmit, onStatus }: RatingFormProps) {
-  const [scores, setScores] = useState<Record<string, number>>(() => ({
-    ...emptyScores(dimensions),
-    ...normalizeInitialScores(dimensions, initialScores),
-  }));
+  const normalizedInitialScores = useMemo(
+    () => normalizeInitialScores(dimensions, initialScores),
+    [dimensions, initialScores],
+  );
+  const dimensionSignature = useMemo(
+    () => dimensions.map((dimension) => dimension.key).join('|'),
+    [dimensions],
+  );
+  const initialSignature = useMemo(
+    () => scoreSignature(dimensions, normalizedInitialScores),
+    [dimensions, normalizedInitialScores],
+  );
+  const [scores, setScores] = useState<Record<string, number>>(() => normalizedInitialScores);
+  const dirtyRef = useRef(false);
+  const dimensionSignatureRef = useRef(dimensionSignature);
+  const appliedInitialSignatureRef = useRef(initialSignature);
 
   useEffect(() => {
-    setScores(normalizeInitialScores(dimensions, initialScores));
-  }, [dimensions, initialScores]);
+    const targetChanged = dimensionSignatureRef.current !== dimensionSignature;
+    const initialChanged = appliedInitialSignatureRef.current !== initialSignature;
+    dimensionSignatureRef.current = dimensionSignature;
+    appliedInitialSignatureRef.current = initialSignature;
+
+    if (targetChanged) {
+      dirtyRef.current = false;
+      setScores(normalizedInitialScores);
+      return;
+    }
+
+    // Remote hydration and cross-tab updates may arrive while a visitor is
+    // actively filling the form. Never erase those in-progress choices merely
+    // because the snapshot object changed underneath the editor. Once the form
+    // is pristine again, genuine saved-score changes are applied normally.
+    if (initialChanged && !dirtyRef.current) setScores(normalizedInitialScores);
+  }, [dimensionSignature, initialSignature, normalizedInitialScores]);
 
   const completedCount = useMemo(
     () => dimensions.filter((dimension) => scores[dimension.key] >= 1 && scores[dimension.key] <= 5).length,
@@ -65,7 +92,10 @@ export default function RatingForm({ dimensions, initialScores, onSubmit, onStat
             <RatingStars
               value={scores[dimension.key] ?? 0}
               label={dimension.label}
-              onChange={(value) => setScores((current) => ({ ...current, [dimension.key]: value }))}
+              onChange={(value) => {
+                dirtyRef.current = true;
+                setScores((current) => ({ ...current, [dimension.key]: value }));
+              }}
             />
           </div>
         </div>
@@ -77,6 +107,10 @@ export default function RatingForm({ dimensions, initialScores, onSubmit, onStat
         onClick={() => {
           const cleanScores = Object.fromEntries(dimensions.map((dimension) => [dimension.key, scores[dimension.key]]));
           const result = onSubmit(cleanScores);
+          if (result.ok) {
+            dirtyRef.current = false;
+            appliedInitialSignatureRef.current = scoreSignature(dimensions, cleanScores);
+          }
           onStatus?.(result.message, result.ok ? 'success' : 'warning');
         }}
         className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_24px_rgba(0,212,255,0.28)] transition hover:shadow-[0_0_34px_rgba(0,212,255,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-35"
