@@ -1,0 +1,57 @@
+name: Yesenin NEB Serial Discovery Pass 10
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-neb-serial-discovery-pass10]
+    paths:
+      - 'scripts/discover-yesenin-neb-serial-issues-pass10.py'
+      - 'scripts/validate-yesenin-neb-serial-discovery-pass10.py'
+      - 'research/yesenin/PART_ONE_NEB_SERIAL_DISCOVERY_PASS10.md'
+      - '.github/workflows/yesenin-neb-serial-discovery-pass10.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/discover-yesenin-neb-serial-issues-pass10.py'
+      - 'scripts/validate-yesenin-neb-serial-discovery-pass10.py'
+      - 'research/yesenin/PART_ONE_NEB_SERIAL_DISCOVERY_PASS10.md'
+      - '.github/workflows/yesenin-neb-serial-discovery-pass10.yml'
+
+concurrency:
+  group: yesenin-neb-serial-discovery-pass10-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch exact NEB serial parent HTML and discover child issues
+        env:
+          YESENIN_NEB_SERIAL_OUTPUT: artifacts/yesenin-neb-serial-discovery-pass10
+        run: |
+          set -o pipefail
+          python scripts/discover-yesenin-neb-serial-issues-pass10.py 2>&1 | tee yesenin-neb-serial-discovery-pass10.log
+      - name: Upload raw HTML and discovery diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-neb-serial-discovery-pass10-research-only
+          path: |
+            artifacts/yesenin-neb-serial-discovery-pass10
+            yesenin-neb-serial-discovery-pass10.log
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+      - name: Enforce issue-level discovery boundaries
+        env:
+          YESENIN_NEB_SERIAL_OUTPUT: artifacts/yesenin-neb-serial-discovery-pass10
+        run: python scripts/validate-yesenin-neb-serial-discovery-pass10.py
