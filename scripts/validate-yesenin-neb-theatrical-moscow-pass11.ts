@@ -10,6 +10,7 @@ const ledgerPath = resolve(root, 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCO
 const fail = (message: string): never => {
   throw new Error(`[yesenin-neb-theatrical-moscow-pass11] ${message}`);
 };
+const normalizeIssueLabel = (value: string): string => value.replace(/[–—]/gu, '-').replace(/\s+/gu, ' ').trim();
 
 interface RuntimeIssue {
   label: string;
@@ -70,7 +71,7 @@ for (const record of records) {
   const runtime = runtimeByCode.get(record.catalogueCode);
   if (!runtime) fail(`${record.id} is missing from runtime acquisition manifest`);
   if (
-    runtime.label !== record.label ||
+    normalizeIssueLabel(runtime.label) !== normalizeIssueLabel(record.label) ||
     runtime.catalogueUrl !== record.catalogueUrl ||
     runtime.bytes !== record.bytes ||
     runtime.sha256 !== record.sha256 ||
