@@ -40,6 +40,44 @@
       },
       "productionMediaKey": "mayakovsky-1914",
       "editorialNotes": "Do not name a photographer. Prefer the museum-backed Kazan/1914 caption over the weaker source link currently stored on the Commons file page."
+    },
+    "Mayakovsky 1928 by Osip Brik.jpg": {
+      "candidateId": "C08",
+      "status": "accepted",
+      "publicationScope": "identity, depicted person, 1928 date and Osip Brik photographer attribution",
+      "caption": "Владимир Маяковский. Фотография Осипа Брика, 1928.",
+      "creator": "Осип Максимович Брик",
+      "date": "1928",
+      "location": "unresolved",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg",
+      "independentEvidenceInstitution": "Российская государственная библиотека",
+      "independentEvidence": {
+        "indexViewerUrl": "https://dlib.rsl.ru/viewer/01005408088#?page=377",
+        "indexPageApiUrl": "https://viewer.rsl.ru/api/v1/document/rsl01005408088/page/377",
+        "indexWitness": "The official ten-volume index states under portraits: portrait 2 is a 1928 photograph by O. M. Brik in volume seven.",
+        "reproductionViewerUrl": "https://dlib.rsl.ru/viewer/01005408111#?page=5",
+        "reproductionPageApiUrl": "https://viewer.rsl.ru/api/v1/document/rsl01005408111/page/5",
+        "reproductionWitness": "The official scan of volume seven, viewer page 5, contains the exact portrait reproduced by C08.",
+        "workflowRun": "30097285671",
+        "artifactDigest": "sha256:c1397cfa078f80319515cab9aeba8674c459c1ca037f30c271dab69eb56f9067"
+      },
+      "visualMatch": {
+        "status": "confirmed",
+        "notes": "C08 is a close crop of the RSL volume-seven reproduction: identical face, raised left hand, striped shirt and tie, jacket pattern, lighting and framing."
+      },
+      "originalSha256": "0e004e5ae2ce5d2c152e4dd603dff619ae35b219de431e84df065b7d12f18f0f",
+      "originalBytes": 100934,
+      "originalDimensions": {
+        "width": 514,
+        "height": 724
+      },
+      "publicDomainRationale": {
+        "commonsTemplate": "Template:PD-Russia",
+        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-Russia",
+        "note": "This records the Commons source page's public-domain rationale and is separate from the RSL author/date verification."
+      },
+      "productionMediaKey": "mayakovsky-1928-osip",
+      "editorialNotes": "The RSL witnesses establish photographer and date but not the shooting location. Do not add a location without a separate object card or contemporary record."
     }
   },
   "unresolvedByDefault": [
@@ -49,7 +87,6 @@
     "C05",
     "C06",
     "C07",
-    "C08",
     "C09",
     "C10",
     "C11",
