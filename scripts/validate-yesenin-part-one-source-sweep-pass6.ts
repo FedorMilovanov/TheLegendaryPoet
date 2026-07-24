@@ -38,14 +38,14 @@ const additions = read(yeseninPartOnePass6AdditionPath);
 if (base.nodes.length !== 137) {
   fail(`expected accepted pre-pass6 topology to contain 137 nodes, found ${base.nodes.length}`);
 }
-if (topology.nodes.length !== 145) {
-  fail(`expected exact pass6 topology size 145, found ${topology.nodes.length}`);
+if (topology.nodes.length !== 146) {
+  fail(`expected exact pass6 topology size 146, found ${topology.nodes.length}`);
 }
-if (topology.pass6BlockIds.size !== 8) {
-  fail(`expected eight pass6 prose blocks, found ${topology.pass6BlockIds.size}`);
+if (topology.pass6BlockIds.size !== 9) {
+  fail(`expected nine pass6 prose blocks, found ${topology.pass6BlockIds.size}`);
 }
-if (topology.nodes.filter((node) => node.origin === 'authoring-markdown').length !== 144) {
-  fail('expected 144 Markdown-authored nodes after pass6');
+if (topology.nodes.filter((node) => node.origin === 'authoring-markdown').length !== 145) {
+  fail('expected 145 Markdown-authored nodes after pass6');
 }
 const editorialOverrides = topology.nodes.filter((node) => node.origin === 'editorial-override');
 if (
@@ -109,7 +109,7 @@ if (
 }
 
 const pass6Nodes = topology.nodes.filter((node) => topology.pass6BlockIds.has(node.blockId));
-const expectedSections = [1, 2, 3, 7, 8, 10, 11];
+const expectedSections = [1, 2, 3, 7, 8, 10, 11, 12];
 const actualSections = [...new Set(pass6Nodes.map((node) => node.sectionNumber))].sort(
   (left, right) => left - right,
 );
@@ -118,6 +118,9 @@ if (actualSections.join(',') !== expectedSections.join(',')) {
 }
 if (pass6Nodes.filter((node) => node.sectionNumber === 3).length !== 2) {
   fail('Moscow section must retain two pass6 blocks');
+}
+if (pass6Nodes.filter((node) => node.sectionNumber === 12).length !== 1) {
+  fail('Duncan section must retain one pass6 archive-program block');
 }
 for (const node of pass6Nodes) {
   if (!node.blockId.startsWith('yesenin-p1-pass6-')) fail(`unexpected pass6 block ID ${node.blockId}`);
@@ -132,8 +135,8 @@ for (const node of pass6Nodes) {
 const referencedPassFourIds = new Set(
   pass6Nodes.flatMap((node) => node.canonicalSourceIds.filter((sourceId) => passFourIds.has(sourceId))),
 );
-if (referencedPassFourIds.size !== 23) {
-  fail(`expected exactly 23 pass-four source IDs wired into prose, found ${referencedPassFourIds.size}`);
+if (referencedPassFourIds.size !== 27) {
+  fail(`expected exactly 27 pass-four source IDs wired into prose, found ${referencedPassFourIds.size}`);
 }
 
 const packageRows = sourcePackages.flatMap(({ path, text }) => {
@@ -166,15 +169,15 @@ for (const marker of [
   if (!visual.includes(marker)) fail(`visual/provenance policy is missing marker: ${marker}`);
 }
 
-if ((additions.match(/\[block:/g) ?? []).length !== 8) {
-  fail('addition file must retain exactly eight [block] tags');
+if ((additions.match(/\[block:/g) ?? []).length !== 9) {
+  fail('addition file must retain exactly nine [block] tags');
 }
 if (!additions.includes('NOT-YET-PUBLIC')) fail('addition file lost the unpublished status');
 for (const marker of [
   '48-NON-DUPLICATE-SOURCES',
   '90 canonical source IDs',
-  '144 Markdown-блока',
-  '145 complete topology nodes',
+  '145 Markdown-блоков',
+  '146 complete topology nodes',
 ] as const) {
   if (!index.includes(marker)) fail(`source-sweep index is missing marker: ${marker}`);
 }
