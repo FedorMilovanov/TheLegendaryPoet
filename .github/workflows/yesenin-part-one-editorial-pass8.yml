@@ -9,6 +9,7 @@ on:
       - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
+      - 'research/yesenin/PART_ONE_EDITORIAL_PASS8_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
       - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
   pull_request:
@@ -18,6 +19,7 @@ on:
       - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
+      - 'research/yesenin/PART_ONE_EDITORIAL_PASS8_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
       - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
 
