@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,8 @@ SPEC = importlib.util.spec_from_file_location("commons_provenance_77_core", CORE
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"unable to load provenance core from {CORE_PATH}")
 core = importlib.util.module_from_spec(SPEC)
+# dataclasses resolves annotations through sys.modules during class creation.
+sys.modules[SPEC.name] = core
 SPEC.loader.exec_module(core)
 
 
