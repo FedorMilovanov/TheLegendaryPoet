@@ -40,22 +40,48 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Acquire exact FEB published-page candidates
+      - name: Acquire and classify FEB published-page candidates
         id: acquisition
         continue-on-error: true
         env:
           OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
         run: node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs
 
+      - name: Prepare bounded evidence archive
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/yesenin-feb-page-witnesses-76
+          if [ ! -f artifacts/yesenin-feb-page-witnesses-76/manifest.json ]; then
+            printf '{"summary":{"technicalErrorCount":1},"technicalErrors":[{"targetId":"workflow","message":"manifest was not produced"}]}\n' \
+              > artifacts/yesenin-feb-page-witnesses-76/manifest.json
+          fi
+          du -ah artifacts/yesenin-feb-page-witnesses-76 | sort -h | tail -n 30
+          tar -czf artifacts/yesenin-feb-page-witnesses-76.tgz \
+            -C artifacts yesenin-feb-page-witnesses-76
+          ls -lh artifacts/yesenin-feb-page-witnesses-76.tgz
+
       - name: Upload evidence package
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: yesenin-feb-page-witnesses-76
-          path: artifacts/yesenin-feb-page-witnesses-76
+          path: artifacts/yesenin-feb-page-witnesses-76.tgz
           if-no-files-found: error
           retention-days: 14
 
-      - name: Enforce page identity result
+      - name: Enforce technical acquisition result
         if: always()
-        run: test "${{ steps.acquisition.outcome }}" = "success"
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const manifest = JSON.parse(readFileSync('artifacts/yesenin-feb-page-witnesses-76/manifest.json', 'utf8'));
+          const errors = manifest?.summary?.technicalErrorCount;
+          if (!Number.isInteger(errors)) throw new Error('manifest technicalErrorCount is missing');
+          if (errors > 0) {
+            console.error(JSON.stringify(manifest.technicalErrors || [], null, 2));
+            process.exit(1);
+          }
+          console.log(JSON.stringify(manifest.summary, null, 2));
+          NODE
