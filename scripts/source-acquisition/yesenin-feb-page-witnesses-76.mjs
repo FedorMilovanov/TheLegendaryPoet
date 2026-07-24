@@ -5,33 +5,62 @@ import path from 'node:path';
 
 const OUT_DIR = process.env.OUT_DIR || 'artifacts/yesenin-feb-page-witnesses-76';
 const USER_AGENT = 'TheLegendaryPoet research verification/1.0 (+https://github.com/FedorMilovanov/TheLegendaryPoet)';
-const MAX_IMAGES_PER_TARGET = 12;
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 const targets = [
   {
     id: 'wit-ye1-school-certificate-545',
-    indexUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-411-.htm?cmd=p',
+    pageUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-485-.htm?cmd=p',
+    fallbackUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-411-.htm?cmd=p',
     printedPages: [545],
     titleNeedles: ['Свидетельство об окончании', 'Спас-Клепиковской'],
+    exactImagePages: [545],
+    candidateUrls: [
+      'https://feb-web.ru/feb/esenin/pictures/el1-545-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-545-1.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-545-2.jpg',
+    ],
   },
   {
     id: 'wit-ye1-train-assignment-672-674',
-    directUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-669-.htm?cmd=p',
+    pageUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-669-.htm?cmd=p',
     printedPages: [672, 673, 674],
     titleNeedles: ['военно-санитарный поезд № 143', 'Петроградского резерва санитаров'],
+    exactImagePages: [672, 673],
+    requiredImagePages: [673],
+    candidateUrls: [
+      'https://feb-web.ru/feb/esenin/pictures/el1-672-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-672-1.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-672-2.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-673-.jpg',
+    ],
   },
   {
     id: 'wit-ye1-train-reports-688-691',
-    indexUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-411-.htm?cmd=p',
+    pageUrl: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-669-.htm?cmd=p',
     printedPages: [688, 689, 690, 691],
-    titleNeedles: ['доклад', 'поезд', '143'],
+    titleNeedles: ['Доклад коменданта', 'военно-санитарного поезда № 143'],
+    exactImagePages: [688, 689, 690, 691],
+    requiredImagePages: [688, 691],
+    candidateUrls: [
+      'https://feb-web.ru/feb/esenin/pictures/el1-688-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-689-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-690-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el1-691-.jpg',
+    ],
   },
   {
     id: 'wit-ye1-imagist-sirena-cover-621',
-    indexUrl: 'https://feb-web.ru/feb/esenin/chronics/el2/el2-449-.htm?cmd=p',
+    pageUrl: 'https://feb-web.ru/feb/esenin/chronics/el2/el2-449-.htm?cmd=p',
     printedPages: [621],
-    titleNeedles: ['Сирена', 'Декларация имажинистов'],
+    titleNeedles: ['Обложка журнала «Сирена»', 'декларацию имажинистов'],
+    exactImagePages: [621],
+    candidateUrls: [
+      'https://feb-web.ru/feb/esenin/pictures/el2-621-.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el2-621-1.jpg',
+      'https://feb-web.ru/feb/esenin/pictures/el2-621-2.jpg',
+    ],
+    roleReviewRequired: true,
   },
 ];
 
@@ -40,67 +69,105 @@ function sha256(buffer) {
 }
 
 function safeName(value) {
-  return value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
+  return value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) || 'image';
+}
+
+function pageNumberFromImageUrl(value) {
+  const match = value.match(/\/pictures\/el[12]-(\d{3})(?:-|\.)/i);
+  return match ? Number(match[1]) : null;
+}
+
+function isExactPageImageUrl(value, target) {
+  const pageNumber = pageNumberFromImageUrl(value);
+  return pageNumber !== null && target.exactImagePages.includes(pageNumber);
 }
 
 async function ensureDir(dir) {
   await mkdir(dir, { recursive: true });
 }
 
-async function resolveTargetUrl(page, target) {
-  if (target.directUrl) return { url: target.directUrl, method: 'direct-known-group', candidates: [] };
+async function navigate(page, target) {
+  const attempts = [target.pageUrl, target.fallbackUrl].filter(Boolean);
+  const failures = [];
 
-  await page.goto(target.indexUrl, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await page.waitForTimeout(1200);
-
-  const candidates = await page.locator('a[href]').evaluateAll((anchors) => anchors.map((anchor) => ({
-    text: (anchor.textContent || '').replace(/\s+/g, ' ').trim(),
-    href: anchor.href,
-    context: (anchor.parentElement?.textContent || anchor.textContent || '').replace(/\s+/g, ' ').trim(),
-  })));
-
-  const exactPagePatterns = target.printedPages.map((number) => new RegExp(`(^|\\D)${number}(\\D|$)`));
-  const scored = candidates
-    .filter((candidate) => candidate.href.includes('/feb/esenin/chronics/'))
-    .map((candidate) => {
-      const haystack = `${candidate.text} ${candidate.context}`.toLowerCase();
-      const pageHits = exactPagePatterns.filter((pattern) => pattern.test(haystack)).length;
-      const titleHits = target.titleNeedles.filter((needle) => haystack.includes(needle.toLowerCase())).length;
-      return { ...candidate, score: pageHits * 10 + titleHits * 4 };
-    })
-    .filter((candidate) => candidate.score > 0)
-    .sort((a, b) => b.score - a.score || a.href.localeCompare(b.href));
-
-  if (scored.length === 0) {
-    return { url: target.indexUrl, method: 'index-fallback-no-link-match', candidates: [] };
+  for (const url of attempts) {
+    try {
+      const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+      await page.waitForTimeout(1600);
+      const status = response?.status() ?? null;
+      if (status !== null && status >= 400) {
+        failures.push({ url, status });
+        continue;
+      }
+      return { requestedUrl: url, response };
+    } catch (error) {
+      failures.push({ url, error: error instanceof Error ? error.message : String(error) });
+    }
   }
 
-  return {
-    url: scored[0].href,
-    method: 'index-anchor-match',
-    candidates: scored.slice(0, 10),
-  };
+  throw new Error(`all FEB navigation attempts failed: ${JSON.stringify(failures)}`);
 }
 
-function imageScore(image, target) {
-  const haystack = `${image.alt} ${image.parentText}`.toLowerCase();
-  const pageHits = target.printedPages.filter((number) => new RegExp(`(^|\\D)${number}(\\D|$)`).test(haystack)).length;
-  const titleHits = target.titleNeedles.filter((needle) => haystack.includes(needle.toLowerCase())).length;
-  const sizeScore = Math.min(8, Math.floor(Math.max(image.naturalWidth, image.naturalHeight) / 250));
-  return pageHits * 20 + titleHits * 10 + sizeScore;
+async function downloadCandidate(context, sourceUrl, referer, targetDir, label) {
+  const result = { sourceUrl, label, status: 'not-requested' };
+  try {
+    const response = await context.request.get(sourceUrl, {
+      timeout: 90_000,
+      headers: { 'User-Agent': USER_AGENT, Referer: referer },
+    });
+    const bytes = await response.body();
+    const contentType = response.headers()['content-type'] || '';
+    result.status = response.status();
+    result.finalUrl = response.url();
+    result.contentType = contentType;
+    result.byteSize = bytes.length;
+    result.sha256 = sha256(bytes);
+    result.pageNumber = pageNumberFromImageUrl(result.finalUrl || sourceUrl);
+
+    if (!response.ok()) {
+      result.rejectedReason = `HTTP ${response.status()}`;
+      return result;
+    }
+    if (!contentType.startsWith('image/')) {
+      result.rejectedReason = `non-image MIME ${contentType || '(missing)'}`;
+      return result;
+    }
+    if (bytes.length === 0) {
+      result.rejectedReason = 'empty image response';
+      return result;
+    }
+    if (bytes.length > MAX_IMAGE_BYTES) {
+      result.rejectedReason = `image exceeds ${MAX_IMAGE_BYTES} byte evidence cap`;
+      return result;
+    }
+
+    const extension = contentType.includes('png') ? '.png'
+      : contentType.includes('webp') ? '.webp'
+        : contentType.includes('gif') ? '.gif'
+          : '.jpg';
+    const fileName = `${safeName(label)}-${result.sha256.slice(0, 12)}${extension}`;
+    await writeFile(path.join(targetDir, fileName), bytes);
+    result.savedAs = fileName;
+    return result;
+  } catch (error) {
+    result.status = 'request-error';
+    result.error = error instanceof Error ? error.message : String(error);
+    return result;
+  }
 }
 
-async function collectPageEvidence(page, context, target, resolved) {
-  const response = await page.goto(resolved.url, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await page.waitForTimeout(1800);
-
+async function collectPageEvidence(page, context, target) {
+  const navigation = await navigate(page, target);
   const finalUrl = page.url();
   const title = await page.title();
-  const bodyText = (await page.locator('body').innerText()).replace(/\r/g, '');
-  const visiblePageNumbers = target.printedPages.filter((number) =>
+  const bodyText = String(await page.evaluate(() =>
+    document.body?.innerText || document.documentElement?.innerText || '',
+  )).replace(/\r/g, '');
+
+  const visiblePrintedPages = target.printedPages.filter((number) =>
     new RegExp(`(^|\\D)${number}(\\D|$)`, 'm').test(bodyText),
   );
-  const visibleNeedles = target.titleNeedles.filter((needle) =>
+  const visibleTitleNeedles = target.titleNeedles.filter((needle) =>
     bodyText.toLowerCase().includes(needle.toLowerCase()),
   );
 
@@ -109,104 +176,110 @@ async function collectPageEvidence(page, context, target, resolved) {
   await page.screenshot({ path: path.join(targetDir, 'viewport.png'), fullPage: false });
   await writeFile(path.join(targetDir, 'body.txt'), bodyText.slice(0, 1_000_000), 'utf8');
 
-  const imageElements = await page.locator('img').evaluateAll((images) => images.map((image, index) => {
-    const rect = image.getBoundingClientRect();
-    return {
-      index,
-      alt: image.alt || '',
-      src: image.src,
-      currentSrc: image.currentSrc,
-      naturalWidth: image.naturalWidth,
-      naturalHeight: image.naturalHeight,
-      displayWidth: Math.round(rect.width),
-      displayHeight: Math.round(rect.height),
-      parentText: (image.parentElement?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 700),
-    };
-  }));
+  const domImages = await page.locator('img').evaluateAll((images) => images.map((image, index) => ({
+    index,
+    alt: image.alt || '',
+    src: image.src,
+    currentSrc: image.currentSrc,
+    naturalWidth: image.naturalWidth,
+    naturalHeight: image.naturalHeight,
+    parentText: (image.parentElement?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 700),
+  })));
 
-  const rankedImages = imageElements
-    .map((image) => ({ ...image, evidenceScore: imageScore(image, target) }))
-    .filter((image) => {
-      const sourceUrl = image.currentSrc || image.src;
-      return /^https?:/i.test(sourceUrl || '')
-        && (image.evidenceScore > 0 || image.naturalWidth >= 250 || image.naturalHeight >= 250);
-    })
-    .sort((a, b) => b.evidenceScore - a.evidenceScore || (b.naturalWidth * b.naturalHeight) - (a.naturalWidth * a.naturalHeight))
-    .slice(0, MAX_IMAGES_PER_TARGET);
-
-  const downloads = [];
-  for (const image of rankedImages) {
+  const candidateMap = new Map();
+  for (const explicitUrl of target.candidateUrls) {
+    candidateMap.set(explicitUrl, { url: explicitUrl, label: `explicit-${path.basename(explicitUrl)}` });
+  }
+  for (const image of domImages) {
     const sourceUrl = image.currentSrc || image.src;
-    const result = { ...image, sourceUrl, status: 'not-requested' };
-
-    try {
-      const imageResponse = await context.request.get(sourceUrl, {
-        timeout: 90_000,
-        headers: { 'User-Agent': USER_AGENT, Referer: finalUrl },
-      });
-      const bytes = await imageResponse.body();
-      const contentType = imageResponse.headers()['content-type'] || '';
-      result.status = imageResponse.status();
-      result.finalUrl = imageResponse.url();
-      result.contentType = contentType;
-      result.byteSize = bytes.length;
-      result.sha256 = sha256(bytes);
-
-      if (!imageResponse.ok() || !contentType.startsWith('image/') || bytes.length === 0) {
-        result.rejectedReason = 'response is not a successful non-empty image';
-      } else if (bytes.length > MAX_IMAGE_BYTES) {
-        result.rejectedReason = `image exceeds ${MAX_IMAGE_BYTES} byte evidence cap`;
-      } else {
-        const extension = contentType.includes('png') ? '.png'
-          : contentType.includes('webp') ? '.webp'
-            : contentType.includes('gif') ? '.gif'
-              : '.jpg';
-        const fileName = `${String(image.index).padStart(2, '0')}-${safeName(image.alt || 'image')}${extension}`;
-        await writeFile(path.join(targetDir, fileName), bytes);
-        result.savedAs = fileName;
-      }
-    } catch (error) {
-      result.status = 'request-error';
-      result.error = error instanceof Error ? error.message : String(error);
-    }
-
-    downloads.push(result);
+    if (!/^https?:/i.test(sourceUrl || '') || !isExactPageImageUrl(sourceUrl, target)) continue;
+    candidateMap.set(sourceUrl, {
+      url: sourceUrl,
+      label: `dom-${image.index}-${path.basename(new URL(sourceUrl).pathname)}`,
+      dom: image,
+    });
   }
 
-  const hasCandidateBytes = downloads.some((item) => item.savedAs);
-  const pageIdentityComplete = target.printedPages.every((pageNumber) => visiblePageNumbers.includes(pageNumber));
+  const downloads = [];
+  for (const candidate of candidateMap.values()) {
+    const downloaded = await downloadCandidate(
+      context,
+      candidate.url,
+      finalUrl,
+      targetDir,
+      candidate.label,
+    );
+    downloads.push({ ...candidate.dom, ...downloaded });
+  }
+
+  const savedExactImages = downloads.filter((item) =>
+    item.savedAs && isExactPageImageUrl(item.finalUrl || item.sourceUrl, target),
+  );
+  const acquiredPages = [...new Set(savedExactImages.map((item) => item.pageNumber).filter(Number.isInteger))].sort((a, b) => a - b);
+  const requiredImagePages = target.requiredImagePages || target.exactImagePages;
+  const requiredImagesComplete = requiredImagePages.every((pageNumber) => acquiredPages.includes(pageNumber));
+  const pageIdentityComplete = target.printedPages.every((pageNumber) => visiblePrintedPages.includes(pageNumber));
+  const roleEvidence = savedExactImages.map((item) => ({
+    pageNumber: item.pageNumber,
+    sourceUrl: item.sourceUrl,
+    finalUrl: item.finalUrl,
+    alt: item.alt || '',
+    parentText: item.parentText || '',
+    savedAs: item.savedAs,
+    sha256: item.sha256,
+  }));
+  const roleConfirmed = !target.roleReviewRequired || roleEvidence.some((item) =>
+    `${item.alt} ${item.parentText}`.toLowerCase().includes('сирен'),
+  );
+
+  let classification;
+  if (pageIdentityComplete && requiredImagesComplete && roleConfirmed) {
+    classification = 'PAGE-IDENTIFIED-EXACT-BYTES-ACQUIRED';
+  } else if (pageIdentityComplete && requiredImagesComplete && target.roleReviewRequired) {
+    classification = 'PAGE-IDENTIFIED-EXACT-BYTES-ACQUIRED-ROLE-REVIEW';
+  } else if (pageIdentityComplete && savedExactImages.length > 0) {
+    classification = 'PAGE-IDENTIFIED-PARTIAL-EXACT-BYTES';
+  } else if (pageIdentityComplete) {
+    classification = 'PAGE-IDENTIFIED-BYTES-NOT-ACQUIRED';
+  } else if (savedExactImages.length > 0) {
+    classification = 'EXACT-BYTES-ACQUIRED-PAGE-IDENTITY-INCOMPLETE';
+  } else {
+    classification = 'PAGE-AND-BYTES-INCOMPLETE';
+  }
 
   return {
     id: target.id,
-    requestedUrl: resolved.url,
-    resolutionMethod: resolved.method,
-    resolutionCandidates: resolved.candidates || [],
+    requestedUrl: navigation.requestedUrl,
     finalUrl,
-    documentStatus: response?.status() ?? null,
-    documentContentType: response?.headers()['content-type'] || null,
+    documentStatus: navigation.response?.status() ?? null,
+    documentContentType: navigation.response?.headers()['content-type'] || null,
     title,
     expectedPrintedPages: target.printedPages,
-    visiblePrintedPages: visiblePageNumbers,
+    visiblePrintedPages,
     pageIdentityComplete,
     expectedTitleNeedles: target.titleNeedles,
-    visibleTitleNeedles: visibleNeedles,
+    visibleTitleNeedles,
+    exactImagePages: target.exactImagePages,
+    requiredImagePages,
+    acquiredImagePages: acquiredPages,
+    requiredImagesComplete,
+    roleReviewRequired: Boolean(target.roleReviewRequired),
+    roleConfirmed,
     screenshot: `${target.id}/viewport.png`,
     bodyText: `${target.id}/body.txt`,
-    imageElementCount: imageElements.length,
-    rankedImageCount: rankedImages.length,
-    downloadedCandidateCount: downloads.filter((item) => item.savedAs).length,
+    domImageCount: domImages.length,
+    probedCandidateCount: downloads.length,
+    downloadedExactImageCount: savedExactImages.length,
+    roleEvidence,
     images: downloads,
-    classification: pageIdentityComplete && hasCandidateBytes
-      ? 'PAGE-IDENTIFIED-CANDIDATE-BYTES-ACQUIRED'
-      : pageIdentityComplete
-        ? 'PAGE-IDENTIFIED-BYTES-NOT-ACQUIRED'
-        : hasCandidateBytes
-          ? 'CANDIDATE-BYTES-ACQUIRED-PAGE-IDENTITY-INCOMPLETE'
-          : 'PAGE-AND-BYTES-INCOMPLETE',
+    classification,
     limitations: [
       'Downloaded bytes are published FEB page/image candidates, not direct archive originals.',
       'Object provenance and reproduction rights require separate editorial verification.',
       'A successful download does not authorize public reuse.',
+      ...(target.roleReviewRequired && !roleConfirmed
+        ? ['Page 621 contains two objects; the exact Sirena-cover role requires visual/metadata confirmation.']
+        : []),
     ],
   };
 }
@@ -230,11 +303,11 @@ try {
     ignoreHTTPSErrors: false,
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(30_000);
 
   for (const target of targets) {
     try {
-      const resolved = await resolveTargetUrl(page, target);
-      manifest.targets.push(await collectPageEvidence(page, context, target, resolved));
+      manifest.targets.push(await collectPageEvidence(page, context, target));
     } catch (error) {
       manifest.technicalErrors.push({
         targetId: target.id,
@@ -244,8 +317,10 @@ try {
         id: target.id,
         expectedPrintedPages: target.printedPages,
         visiblePrintedPages: [],
+        acquiredImagePages: [],
         pageIdentityComplete: false,
-        downloadedCandidateCount: 0,
+        requiredImagesComplete: false,
+        downloadedExactImageCount: 0,
         classification: 'TECHNICAL-ACQUISITION-ERROR',
       });
     }
@@ -261,11 +336,14 @@ try {
 
 manifest.summary = {
   targetCount: manifest.targets.length,
-  candidateImageCount: manifest.targets.reduce((sum, target) => sum + (target.downloadedCandidateCount || 0), 0),
+  exactImageCount: manifest.targets.reduce((sum, target) => sum + (target.downloadedExactImageCount || 0), 0),
   identifiedTargetCount: manifest.targets.filter((target) => target.pageIdentityComplete).length,
-  pageIdentityComplete: manifest.targets.length === targets.length && manifest.targets.every((target) => target.pageIdentityComplete),
-  allTargetsHaveImageCandidates: manifest.targets.length === targets.length
-    && manifest.targets.every((target) => (target.downloadedCandidateCount || 0) > 0),
+  exactBytesCompleteTargetCount: manifest.targets.filter((target) => target.requiredImagesComplete).length,
+  roleConfirmedTargetCount: manifest.targets.filter((target) => target.roleConfirmed !== false).length,
+  pageIdentityComplete: manifest.targets.length === targets.length
+    && manifest.targets.every((target) => target.pageIdentityComplete),
+  exactBytesComplete: manifest.targets.length === targets.length
+    && manifest.targets.every((target) => target.requiredImagesComplete),
   technicalErrorCount: manifest.technicalErrors.length,
 };
 
@@ -273,12 +351,13 @@ await writeFile(path.join(OUT_DIR, 'manifest.json'), `${JSON.stringify(manifest,
 await writeFile(path.join(OUT_DIR, 'summary.txt'), [
   `targets=${manifest.summary.targetCount}`,
   `identified_targets=${manifest.summary.identifiedTargetCount}`,
-  `candidate_images=${manifest.summary.candidateImageCount}`,
+  `exact_images=${manifest.summary.exactImageCount}`,
+  `exact_bytes_complete_targets=${manifest.summary.exactBytesCompleteTargetCount}`,
   `page_identity_complete=${manifest.summary.pageIdentityComplete}`,
-  `all_targets_have_image_candidates=${manifest.summary.allTargetsHaveImageCandidates}`,
+  `exact_bytes_complete=${manifest.summary.exactBytesComplete}`,
   `technical_errors=${manifest.summary.technicalErrorCount}`,
   ...manifest.targets.map((target) =>
-    `${target.id}: ${target.classification}; pages ${(target.visiblePrintedPages || []).join(',') || 'none'}; images ${target.downloadedCandidateCount || 0}`,
+    `${target.id}: ${target.classification}; visible ${(target.visiblePrintedPages || []).join(',') || 'none'}; acquired ${(target.acquiredImagePages || []).join(',') || 'none'}`,
   ),
   '',
 ].join('\n'), 'utf8');
