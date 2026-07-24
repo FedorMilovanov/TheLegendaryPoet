@@ -121,7 +121,7 @@ export default function ImmersivePlayer() {
               <motion.div
                 initial={{ scale: 1.06, opacity: 0 }}
                 animate={{ scale: playing ? 1.025 : 1.04, opacity: 0.72 }}
-                exit={{ scale: 1.07, opacity: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.4, ease: 'easeInOut' } }}
                 transition={{ scale: { duration: 8, ease: 'easeOut' }, opacity: { duration: 0.7 } }}
                 className="fixed inset-0 -z-30"
               >
