@@ -57,6 +57,8 @@ jobs:
         run: npm run validate:yesenin-part-one
       - name: Validate Yesenin Part I page-witness boundaries
         run: npm run validate:yesenin-part-one-witnesses
+      - name: Validate durable Yesenin FEB acquisition evidence
+        run: npm run validate:yesenin-part-one-feb-acquisition
       - name: Validate public historical claim boundaries
         run: npm run validate:public-claims
       - name: Validate responsive AVIF and WebP media
