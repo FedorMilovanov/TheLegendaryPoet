@@ -58,9 +58,9 @@ jobs:
         run: |
           set -euo pipefail
           dir="djvu/$SOURCE_ID"
-          mkdir -p "$dir/front"
+          mkdir -p "$dir/front" "$dir/tmp"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 300 \
-            --user-agent 'Mozilla/5.0 source-djvu-resolver/1.0' \
+            --user-agent 'Mozilla/5.0 source-djvu-resolver/1.1' \
             --output "$dir/index.raw" \
             "$INDEX_URL"
 
@@ -87,13 +87,16 @@ jobs:
                   self.href: str | None = None
                   self.label: list[str] = []
                   self.items: list[tuple[str, str]] = []
+
               def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
                   if tag.lower() == 'a':
                       self.href = next((v for k, v in attrs if k.lower() == 'href' and v), None)
                       self.label = []
+
               def handle_data(self, data: str) -> None:
                   if self.href is not None:
                       self.label.append(data)
+
               def handle_endtag(self, tag: str) -> None:
                   if tag.lower() == 'a' and self.href is not None:
                       self.items.append((self.href, ''.join(self.label).strip()))
@@ -111,13 +114,24 @@ jobs:
               if needle.casefold() not in haystack.casefold() or year not in haystack:
                   continue
               absolute = urllib.parse.urljoin(index_url, href)
-              matches.append({'href': href, 'label': label, 'decoded': decoded, 'resolved_url': absolute})
+              matches.append({
+                  'href': href,
+                  'label': label,
+                  'decoded': decoded,
+                  'resolved_url': absolute,
+              })
 
           report = {'id': source_id, 'index': index_url, 'matches': matches}
-          (root / 'resolution.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          (root / 'resolution.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
           if len(matches) != 1:
               raise RuntimeError(f'expected one DJVU, found {len(matches)}')
-          (root / 'resolved-url.txt').write_text(matches[0]['resolved_url'] + '\n', encoding='utf-8')
+          (root / 'resolved-url.txt').write_text(
+              matches[0]['resolved_url'] + '\n',
+              encoding='utf-8',
+          )
           print(json.dumps(report, ensure_ascii=False, indent=2))
           PY
 
@@ -138,7 +152,7 @@ jobs:
             --retry-wait=5 \
             --split=8 \
             --timeout=120 \
-            --user-agent='Mozilla/5.0 source-djvu-resolver/1.0' \
+            --user-agent='Mozilla/5.0 source-djvu-resolver/1.1' \
             --referer="$INDEX_URL" \
             --dir="$dir" \
             --out=source.djvu \
@@ -157,24 +171,41 @@ jobs:
           pages="$(tr -d '[:space:]' < "$dir/page-count.txt")"
           test "$pages" -gt 1
           djvutxt "$dir/source.djvu" "$dir/full-text.txt" || true
+          touch "$dir/full-text.txt"
+
           end=12
-          if [ "$pages" -lt "$end" ]; then end="$pages"; fi
+          if [ "$pages" -lt "$end" ]; then
+            end="$pages"
+          fi
+
           render_jpeg() {
             local page="$1"
             local target="$2"
-            local ppm="${target%.jpg}.ppm"
-            ddjvu -format=ppm -page="$page" -scale=1400 "$dir/source.djvu" "$ppm"
-            convert "$ppm" -quality 90 "$target"
+            local ppm="$dir/tmp/page-$page.ppm"
+            ddjvu \
+              -format=ppm \
+              -page="$page" \
+              -size=1600x2400 \
+              "$dir/source.djvu" \
+              "$ppm"
+            convert "$ppm" -strip -interlace Plane -quality 88 "$target"
+            test -s "$target"
             rm -f "$ppm"
           }
+
           for page in $(seq 1 "$end"); do
             printf -v page4 '%04d' "$page"
             render_jpeg "$page" "$dir/front/page-$page4.jpg"
           done
           render_jpeg "$pages" "$dir/final-page.jpg"
-          printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$dir/full-text.txt" 2>/dev/null || echo 0)" > "$dir/summary.txt"
+
+          printf 'pages=%s\ntext_bytes=%s\n' \
+            "$pages" \
+            "$(wc -c < "$dir/full-text.txt")" \
+            > "$dir/summary.txt"
 
       - name: Upload DJVU verification
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: source-49-djvu-${{ matrix.source.id }}-verification
@@ -189,12 +220,15 @@ jobs:
             djvu/${{ matrix.source.id }}/summary.txt
             djvu/${{ matrix.source.id }}/front/*.jpg
             djvu/${{ matrix.source.id }}/final-page.jpg
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Upload raw DJVU scan
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: source-49-djvu-${{ matrix.source.id }}-raw
           path: djvu/${{ matrix.source.id }}/source.djvu
+          if-no-files-found: warn
           retention-days: 7
           compression-level: 0
