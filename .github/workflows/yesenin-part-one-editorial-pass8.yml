@@ -6,6 +6,7 @@ on:
     branches: [research/yesenin-part1-editorial-pass8-early-76]
     paths:
       - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
+      - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
@@ -14,6 +15,7 @@ on:
     branches: [work/local-images-playwright-wtoc]
     paths:
       - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
+      - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
@@ -27,7 +29,7 @@ permissions:
   contents: read
 
 jobs:
-  inventory:
+  inventory-and-validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,10 +43,16 @@ jobs:
         run: npm ci --silent
       - name: Build exact early-section inventory
         run: npx tsx scripts/report-yesenin-part-one-editorial-pass8.ts
-      - name: Upload editorial inventory
+      - name: Validate early-A reader prose
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-part-one-editorial-pass8.ts \
+            | tee artifacts/yesenin-part-one-pass8/early-a-validation.json
+      - name: Upload editorial inventory and validation
         uses: actions/upload-artifact@v4
         with:
-          name: yesenin-part-one-editorial-pass8-inventory
+          name: yesenin-part-one-editorial-pass8-evidence
           path: artifacts/yesenin-part-one-pass8
           if-no-files-found: error
           retention-days: 7
