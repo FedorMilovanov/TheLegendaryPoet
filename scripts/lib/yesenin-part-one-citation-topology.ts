@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { yeseninPartOneFebAcquiredRecords } from '../../src/data/essays/yeseninPartOneFebAcquisition';
 
 export const yeseninPartOneDraftPaths = [
   'research/yesenin/PART_ONE_DRAFT_1895_1921.md',
@@ -17,11 +18,21 @@ const supplementPath = 'research/yesenin/PART_ONE_TARGETED_WEB_SUPPLEMENT_2026-0
 const witnessPath = 'research/yesenin/PART_ONE_PAGE_WITNESS_LEDGER.md';
 const claimLedgerPath = 'research/yesenin/part-one-claim-ledger-pass1.md';
 
+const trainAcquisitionIds = yeseninPartOneFebAcquiredRecords
+  .filter((record) => record.id.startsWith('feb-ye1-train-'))
+  .map((record) => record.id);
+
 const legacySourceAliases = new Map<string, readonly string[]>([
-  ['yeseninPartOneFebAcquisition', ['WIT-YE1-002']],
+  ['yeseninPartOneFebAcquisition', trainAcquisitionIds],
 ]);
 
-export type YeseninPartOneSourceLayer = 'canonical' | 'supplemental' | 'witness';
+const witnessClaimSupport = new Map<string, ReadonlySet<string>>([
+  ['WIT-YE1-001', new Set(['YE1-001', 'YE1-004', 'YE1-005'])],
+  ['WIT-YE1-002', new Set(['YE1-016', 'YE1-018', 'YE1-019'])],
+  ['WIT-YE1-003', new Set(['YE1-023'])],
+]);
+
+export type YeseninPartOneSourceLayer = 'canonical' | 'supplemental' | 'witness' | 'acquisition';
 
 export interface YeseninPartOneCitationNode {
   blockId: string;
@@ -39,6 +50,7 @@ export interface YeseninPartOneCitationNode {
   canonicalSourceIds: string[];
   supplementalSourceIds: string[];
   witnessSourceIds: string[];
+  acquisitionSourceIds: string[];
   legacySourceTokens: string[];
 }
 
@@ -47,6 +59,7 @@ export interface YeseninPartOneCitationTopology {
   canonicalSourceIds: Set<string>;
   supplementalSourceIds: Set<string>;
   witnessSourceIds: Set<string>;
+  acquisitionSourceIds: Set<string>;
   claimIds: Set<string>;
   sectionHeadings: Map<number, string>;
 }
@@ -127,6 +140,10 @@ export function loadYeseninPartOneCitationTopology(
   const witnessSourceIds = new Set(
     [...read(root, witnessPath).matchAll(/^##\s+(WIT-YE1-\d{3})\b/gm)].map((match) => match[1]),
   );
+  const acquisitionSourceIds = new Set(yeseninPartOneFebAcquiredRecords.map((record) => record.id));
+  const acquisitionClaimSupport = new Map(
+    yeseninPartOneFebAcquiredRecords.map((record) => [record.id, new Set(record.claimIds)] as const),
+  );
   const claimIds = new Set(
     [...read(root, claimLedgerPath).matchAll(/^\|\s*(YE1-\d{3})\s*\|/gm)].map(
       (match) => match[1],
@@ -140,10 +157,15 @@ export function loadYeseninPartOneCitationTopology(
     fail(`expected 10 supplemental source IDs, found ${supplementalSourceIds.size}`);
   }
   if (witnessSourceIds.size === 0) fail('page-witness registry contains no WIT-YE1 IDs');
+  if (acquisitionSourceIds.size === 0) fail('FEB acquisition registry contains no stable record IDs');
+  if (trainAcquisitionIds.length !== 5) {
+    fail(`expected five acquired train records for the legacy bundle, found ${trainAcquisitionIds.length}`);
+  }
   if (claimIds.size === 0) fail('claim ledger contains no YE1 claim IDs');
 
   const sectionHeadings = new Map<number, string>();
   const nodes: YeseninPartOneCitationNode[] = [];
+  const sourceErrors: string[] = [];
   let sourceOrder = 0;
 
   for (const path of yeseninPartOneDraftPaths) {
@@ -218,7 +240,8 @@ export function loadYeseninPartOneCitationTopology(
         if (aliases) legacySourceTokens.push(rawSourceId);
         for (const normalizedSourceId of aliases ?? [rawSourceId]) {
           if (sourceIds.includes(normalizedSourceId)) {
-            fail(`${label} resolves duplicate source ID ${normalizedSourceId}`);
+            sourceErrors.push(`${label} resolves duplicate source ID ${normalizedSourceId}`);
+            continue;
           }
           sourceIds.push(normalizedSourceId);
         }
@@ -227,11 +250,39 @@ export function loadYeseninPartOneCitationTopology(
       const canonical: string[] = [];
       const supplemental: string[] = [];
       const witnesses: string[] = [];
+      const acquisitions: string[] = [];
       for (const sourceId of sourceIds) {
         if (canonicalSourceIds.has(sourceId)) canonical.push(sourceId);
         else if (supplementalSourceIds.has(sourceId)) supplemental.push(sourceId);
         else if (witnessSourceIds.has(sourceId)) witnesses.push(sourceId);
-        else fail(`${label} references unknown source ID ${sourceId}`);
+        else if (acquisitionSourceIds.has(sourceId)) acquisitions.push(sourceId);
+        else sourceErrors.push(`${label} references unknown source ID ${sourceId}`);
+      }
+
+      for (const witnessId of witnesses) {
+        const supportedClaims = witnessClaimSupport.get(witnessId);
+        if (!supportedClaims) {
+          sourceErrors.push(`${label} has no semantic claim map for witness ${witnessId}`);
+          continue;
+        }
+        if (nodeClaimIds.length > 0 && !nodeClaimIds.some((claimId) => supportedClaims.has(claimId))) {
+          sourceErrors.push(
+            `${label} cites ${witnessId} for incompatible claims ${nodeClaimIds.join(', ')}`,
+          );
+        }
+      }
+
+      for (const acquisitionId of acquisitions) {
+        const supportedClaims = acquisitionClaimSupport.get(acquisitionId);
+        if (
+          supportedClaims &&
+          nodeClaimIds.length > 0 &&
+          !nodeClaimIds.some((claimId) => supportedClaims.has(claimId))
+        ) {
+          sourceErrors.push(
+            `${label} cites ${acquisitionId} for incompatible claims ${nodeClaimIds.join(', ')}`,
+          );
+        }
       }
 
       nodes.push({
@@ -250,9 +301,14 @@ export function loadYeseninPartOneCitationTopology(
         canonicalSourceIds: canonical,
         supplementalSourceIds: supplemental,
         witnessSourceIds: witnesses,
+        acquisitionSourceIds: acquisitions,
         legacySourceTokens,
       });
     }
+  }
+
+  if (sourceErrors.length > 0) {
+    fail(`source topology has ${sourceErrors.length} error(s):\n- ${sourceErrors.join('\n- ')}`);
   }
 
   nodes.sort((left, right) =>
@@ -266,6 +322,7 @@ export function loadYeseninPartOneCitationTopology(
     canonicalSourceIds,
     supplementalSourceIds,
     witnessSourceIds,
+    acquisitionSourceIds,
     claimIds,
     sectionHeadings,
   };
