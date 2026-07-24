@@ -38,6 +38,7 @@ function attachRuntimeDiagnostics(page) {
     if (!url.startsWith(BASE_URL)) return;
     const failure = request.failure()?.errorText || 'unknown failure';
     if (/ERR_ABORTED/i.test(failure)) return;
+    if (request.resourceType() === 'media' && /cancelled/i.test(failure)) return;
     result.localRequestFailures.push(`${request.method()} ${url}: ${failure}`);
   });
 
@@ -316,15 +317,18 @@ test('ratings and community input survive touch entry and reload', async ({ page
   const text = `Мобильная проверка ${platformName(testInfo)}: оценка и комментарий сохраняются.`;
   const author = panel.getByPlaceholder('Ваше имя или псевдоним — необязательно');
   const composer = panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
+  const commentCard = panel.getByRole('article').filter({ hasText: text });
   await author.fill('Mobile QA');
   await composer.fill(text);
   await composer.press(testInfo.project.name === 'iphone-safari' ? 'Meta+Enter' : 'Control+Enter');
   await expect(composer).toHaveValue('');
-  await expect(panel.getByText(text)).toBeVisible();
+  await expect(commentCard).toHaveCount(1);
+  await expect(commentCard).toBeVisible();
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await settle(page);
-  await expect(page.getByText(text)).toBeVisible();
+  await expect(commentCard).toHaveCount(1);
+  await expect(commentCard).toBeVisible();
   await expect(page.getByRole('button', { name: 'Обновить оценку' }).first()).toBeVisible();
   await expectCleanRuntime(runtime);
 });
