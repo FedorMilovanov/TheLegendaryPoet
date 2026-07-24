@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - research/source-acquisition-49
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
   workflow_dispatch:
 
 permissions:
@@ -44,8 +47,6 @@ jobs:
           pdftotext -layout mayakovsky-case/source.pdf mayakovsky-case/full-text.txt
           pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' mayakovsky-case/pdfinfo.txt)"
           pdftoppm -f 1 -l 14 -jpeg -r 130 mayakovsky-case/source.pdf mayakovsky-case/front/page >/dev/null 2>&1
-          # Catalogue analytics place printed pp. 34–91 at the beginning of the case dossier.
-          # Render a broad PDF-page witness window to survive front-matter offset differences.
           pdftoppm -f 30 -l 100 -jpeg -r 110 mayakovsky-case/source.pdf mayakovsky-case/case-50/page >/dev/null 2>&1
           pdftoppm -f "$pages" -l "$pages" -singlefile -jpeg -r 130 mayakovsky-case/source.pdf mayakovsky-case/final-page >/dev/null 2>&1
           python3 - <<'PY'
