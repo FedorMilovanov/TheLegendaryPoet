@@ -1,0 +1,200 @@
+name: Source acquisition 49 Mayakovsky documentary description RSL
+
+on:
+  push:
+    branches:
+      - research/source-acquisition-49
+    paths:
+      - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
+    paths:
+      - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-49-mayakovsky-description-rsl-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-bs4 python3-requests
+
+      - name: Discover child records and digital-access routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p rsl-mayakovsky-description/pages
+
+          cat > /tmp/discover-rsl.py <<'PY'
+          from __future__ import annotations
+
+          import concurrent.futures
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import time
+          from typing import Any
+          from urllib.parse import urljoin, urlparse
+
+          import requests
+          from bs4 import BeautifulSoup
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
+
+          ROOT = pathlib.Path('rsl-mayakovsky-description')
+          BASE = 'https://search.rsl.ru'
+          MASTER = BASE + '/ru/record/01006741660'
+          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/1.0'
+
+          session = requests.Session()
+          session.headers.update({'User-Agent': UA, 'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.5'})
+          retry = Retry(
+              total=3,
+              connect=3,
+              read=3,
+              backoff_factor=0.7,
+              status_forcelist=(429, 500, 502, 503, 504),
+              allowed_methods=frozenset({'GET'}),
+          )
+          session.mount('https://', HTTPAdapter(max_retries=retry, pool_connections=12, pool_maxsize=12))
+
+          def save_json(name: str, value: Any) -> None:
+              (ROOT / name).write_text(
+                  json.dumps(value, ensure_ascii=False, indent=2) + '\n',
+                  encoding='utf-8',
+              )
+
+          master = session.get(MASTER, timeout=(20, 180), allow_redirects=True)
+          master.raise_for_status()
+          (ROOT / 'master.html').write_bytes(master.content)
+          save_json('master-headers.json', dict(master.headers))
+
+          soup = BeautifulSoup(master.text, 'html.parser')
+          anchors: list[dict[str, str]] = []
+          discovered: set[str] = {MASTER}
+          record_urls: set[str] = set()
+          access_urls: set[str] = set()
+          keywords = ('электрон', 'полный текст', 'доступ', 'читать', 'просмотр', 'viewer', 'digital', 'online', 'pdf', 'скач')
+
+          for anchor in soup.find_all('a', href=True):
+              href = urljoin(master.url, anchor.get('href', ''))
+              text = ' '.join(anchor.get_text(' ', strip=True).split())
+              anchors.append({'href': href, 'text': text})
+              if re.search(r'/ru/record/\d+', href):
+                  record_urls.add(href.split('#', 1)[0])
+              if any(keyword in f'{text} {href}'.casefold() for keyword in keywords):
+                  access_urls.add(href)
+
+          # Embedded URLs and record IDs often live in JSON script data rather than anchors.
+          for script in soup.find_all('script'):
+              text = script.string or script.get_text() or ''
+              for match in re.finditer(r'https?://[^\s"\'<>]+|/ru/record/\d+|/[^\s"\'<>]*(?:viewer|digital|online|document|fulltext|pdf)[^\s"\'<>]*', text, re.I):
+                  url = urljoin(master.url, match.group(0).replace('\\/', '/').rstrip('},;)]'))
+                  if re.search(r'/ru/record/\d+', url):
+                      record_urls.add(url.split('#', 1)[0])
+                  if any(keyword in url.casefold() for keyword in keywords):
+                      access_urls.add(url)
+
+          save_json('master-anchors.json', anchors)
+          save_json('master-record-urls.json', sorted(record_urls))
+          save_json('master-access-urls.json', sorted(access_urls))
+
+          likely_records = sorted(record_urls)
+          # Keep crawl bounded to the master and directly linked record pages.
+          def fetch_record(url: str) -> dict[str, Any]:
+              started = time.monotonic()
+              try:
+                  response = session.get(url, timeout=(15, 120), allow_redirects=True)
+                  body = response.content
+                  digest = hashlib.sha256(url.encode()).hexdigest()[:16]
+                  filename = f'pages/{digest}.html'
+                  (ROOT / filename).write_bytes(body)
+                  page_soup = BeautifulSoup(response.text, 'html.parser')
+                  title = page_soup.title.get_text(' ', strip=True) if page_soup.title else ''
+                  links: list[dict[str, str]] = []
+                  page_access: set[str] = set()
+                  for anchor in page_soup.find_all('a', href=True):
+                      href = urljoin(response.url, anchor.get('href', ''))
+                      text = ' '.join(anchor.get_text(' ', strip=True).split())
+                      links.append({'href': href, 'text': text})
+                      if any(keyword in f'{text} {href}'.casefold() for keyword in keywords):
+                          page_access.add(href)
+                  embedded: set[str] = set()
+                  for script in page_soup.find_all('script'):
+                      text = script.string or script.get_text() or ''
+                      for match in re.finditer(r'https?://[^\s"\'<>]+|/[^\s"\'<>]*(?:viewer|digital|online|document|fulltext|pdf)[^\s"\'<>]*', text, re.I):
+                          embedded.add(urljoin(response.url, match.group(0).replace('\\/', '/').rstrip('},;)]')))
+                  save_json(f'pages/{digest}-links.json', links)
+                  return {
+                      'requested_url': url,
+                      'final_url': response.url,
+                      'status': response.status_code,
+                      'bytes': len(body),
+                      'content_type': response.headers.get('content-type', ''),
+                      'elapsed': round(time.monotonic() - started, 3),
+                      'title': title,
+                      'filename': filename,
+                      'access_urls': sorted(page_access | embedded),
+                  }
+              except Exception as error:
+                  return {
+                      'requested_url': url,
+                      'error': repr(error),
+                      'elapsed': round(time.monotonic() - started, 3),
+                  }
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+              record_results = list(executor.map(fetch_record, likely_records))
+          save_json('record-results.json', record_results)
+
+          all_access = set(access_urls)
+          for result in record_results:
+              all_access.update(result.get('access_urls', []))
+          save_json('all-access-candidates.json', sorted(all_access))
+
+          summary = {
+              'master_status': master.status_code,
+              'master_bytes': len(master.content),
+              'direct_record_links': len(record_urls),
+              'record_pages_fetched': sum(1 for item in record_results if item.get('status') == 200),
+              'access_candidates': len(all_access),
+              'record_results': [
+                  {
+                      'url': item.get('final_url') or item.get('requested_url'),
+                      'status': item.get('status'),
+                      'title': item.get('title'),
+                      'access_count': len(item.get('access_urls', [])),
+                      'error': item.get('error'),
+                  }
+                  for item in record_results
+              ],
+          }
+          save_json('summary.json', summary)
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          PY
+
+          python3 /tmp/discover-rsl.py
+
+      - name: Upload discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-description-rsl-discovery
+          path: rsl-mayakovsky-description
+          if-no-files-found: error
+          retention-days: 14
