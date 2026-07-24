@@ -1,0 +1,51 @@
+name: Source acquisition 76 — Yesenin FEB page witnesses
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: source-acquisition-76-yesenin-feb-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci --silent
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Acquire exact FEB published-page candidates
+        id: acquisition
+        continue-on-error: true
+        env:
+          OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
+        run: node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs
+
+      - name: Upload evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-feb-page-witnesses-76
+          path: artifacts/yesenin-feb-page-witnesses-76
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce page identity result
+        if: always()
+        run: test "${{ steps.acquisition.outcome }}" = "success"
