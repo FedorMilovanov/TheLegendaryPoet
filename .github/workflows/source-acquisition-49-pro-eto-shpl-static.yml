@@ -23,7 +23,7 @@ concurrency:
 jobs:
   resolve-pages:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 35
 
     steps:
       - uses: actions/checkout@v4
@@ -31,180 +31,134 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl imagemagick jq
+          sudo apt-get install -y imagemagick python3-pil python3-requests
 
-      - name: Resolve Docview page metadata and images
+      - name: Resolve and download all official Docview pages
         shell: bash
         run: |
           set -euo pipefail
-          root='shpl-pro-eto'
-          base='http://elib.shpl.ru'
-          node='/ru/nodes/3515-mayakovskiy-v-v-pro-eto-m-pg-gos-izd-vo-1923'
-          mkdir -p "$root/endpoints/read" "$root/endpoints/page" "$root/endpoints/headers" "$root/images/all" "$root/images/best" "$root/contact-sheets"
+          mkdir -p shpl-pro-eto/images/all shpl-pro-eto/images/best shpl-pro-eto/endpoints shpl-pro-eto/contact-sheets
 
-          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0'
-          curl --fail --location --compressed --retry 5 --retry-all-errors \
-            --connect-timeout 30 --max-time 300 \
-            --user-agent "$ua" \
-            --cookie-jar "$root/cookies.txt" \
-            --dump-header "$root/node-headers.txt" \
-            --output "$root/node.html" \
-            "$base$node"
-
-          python3 - <<'PY'
+          cat > /tmp/resolve-shpl.py <<'PY'
           from __future__ import annotations
 
-          import json
-          import pathlib
-
-          root = pathlib.Path('shpl-pro-eto')
-          text = (root / 'node.html').read_text(encoding='utf-8', errors='replace')
-          marker = 'initDocview('
-          marker_index = text.find(marker)
-          if marker_index < 0:
-              raise RuntimeError('initDocview payload not found')
-          start = text.find('{', marker_index)
-          if start < 0:
-              raise RuntimeError('initDocview object start not found')
-
-          depth = 0
-          quoted = False
-          quote = ''
-          escaped = False
-          end = None
-          for index in range(start, len(text)):
-              char = text[index]
-              if quoted:
-                  if escaped:
-                      escaped = False
-                  elif char == '\\':
-                      escaped = True
-                  elif char == quote:
-                      quoted = False
-                  continue
-              if char in ('"', "'"):
-                  quoted = True
-                  quote = char
-              elif char == '{':
-                  depth += 1
-              elif char == '}':
-                  depth -= 1
-                  if depth == 0:
-                      end = index + 1
-                      break
-          if end is None:
-              raise RuntimeError('initDocview object end not found')
-
-          options = json.loads(text[start:end])
-          pages = options.get('pages') or []
-          if len(pages) != 70:
-              raise RuntimeError(f'expected 70 physical scans, found {len(pages)}')
-          (root / 'docview-options.json').write_text(
-              json.dumps(options, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          (root / 'page-ids.txt').write_text(
-              ''.join(f"{page['id']}\n" for page in pages),
-              encoding='utf-8',
-          )
-          static: list[dict[str, object]] = []
-          for zoom_key in ('links_z0', 'links_z1', 'links_z2'):
-              for page_id, url in (options.get(zoom_key) or {}).items():
-                  static.append({
-                      'page_id': int(page_id),
-                      'origin': zoom_key,
-                      'url': url,
-                  })
-          (root / 'static-links.json').write_text(
-              json.dumps(static, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          summary = {
-              'physical_scans': len(pages),
-              'page_ids_first': pages[:3],
-              'page_ids_last': pages[-3:],
-              'node_pdf_url': options.get('node_pdf_url'),
-              'node_archive_url': options.get('node_archive_url'),
-              'read_page_path': options.get('read_page_path'),
-              'page_path': options.get('page_path'),
-              'script_path': options.get('script_path'),
-              'zooms': options.get('zooms'),
-              'static_links': len(static),
-          }
-          (root / 'docview-summary.json').write_text(
-              json.dumps(summary, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          print(json.dumps(summary, ensure_ascii=False, indent=2))
-          PY
-
-          script_path="$(jq -r '.script_path' "$root/docview-options.json")"
-          curl --location --compressed --retry 4 --retry-all-errors \
-            --connect-timeout 30 --max-time 300 \
-            --user-agent "$ua" \
-            --cookie "$root/cookies.txt" \
-            --referer "$base$node" \
-            --dump-header "$root/docview-script-headers.txt" \
-            --output "$root/docview-script.txt" \
-            "$base$script_path" || true
-
-          app_asset="$(grep -oE '/assets/application-[A-Za-z0-9]+\.js' "$root/node.html" | head -n 1 || true)"
-          if [ -n "$app_asset" ]; then
-            curl --location --compressed --retry 4 --retry-all-errors \
-              --connect-timeout 30 --max-time 600 \
-              --user-agent "$ua" \
-              --output "$root/application.js" \
-              "$base$app_asset" || true
-          fi
-
-          while IFS= read -r id; do
-            [ -n "$id" ] || continue
-            for route in "/ru/pages/$id/read" "/ru/pages/$id"; do
-              if [[ "$route" == */read ]]; then
-                stem="read/$id"
-              else
-                stem="page/$id"
-              fi
-              curl --location --compressed --retry 3 --retry-all-errors \
-                --connect-timeout 30 --max-time 180 \
-                --user-agent "$ua" \
-                --cookie "$root/cookies.txt" \
-                --referer "$base$node" \
-                --header 'X-Requested-With: XMLHttpRequest' \
-                --header 'Accept: application/json, text/javascript, */*; q=0.01' \
-                --dump-header "$root/endpoints/headers/${stem//\//-}.txt" \
-                --output "$root/endpoints/$stem.txt" \
-                "$base$route" || true
-            done
-          done < "$root/page-ids.txt"
-
-          python3 - <<'PY'
-          from __future__ import annotations
-
+          import concurrent.futures
           import hashlib
+          import io
           import json
           import pathlib
           import re
-          import urllib.parse
+          import shutil
+          import time
+          from typing import Any
+          from urllib.parse import urljoin
 
-          root = pathlib.Path('shpl-pro-eto')
-          base = 'http://elib.shpl.ru'
-          options = json.loads((root / 'docview-options.json').read_text(encoding='utf-8'))
-          candidates: dict[str, dict[str, object]] = {}
+          import requests
+          from PIL import Image
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
 
-          def add(url: str, origin: str, page_id: int | None = None) -> None:
-              url = url.strip().replace('\\/', '/')
-              if not url or url in ('null', 'None'):
+          ROOT = pathlib.Path('shpl-pro-eto')
+          BASE = 'http://elib.shpl.ru'
+          NODE_PATH = '/ru/nodes/3515-mayakovskiy-v-v-pro-eto-m-pg-gos-izd-vo-1923'
+          NODE_URL = BASE + NODE_PATH
+          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/4.0'
+
+          session = requests.Session()
+          retry = Retry(
+              total=3,
+              connect=3,
+              read=3,
+              backoff_factor=0.5,
+              status_forcelist=(429, 500, 502, 503, 504),
+              allowed_methods=frozenset({'GET'}),
+          )
+          adapter = HTTPAdapter(max_retries=retry, pool_connections=24, pool_maxsize=24)
+          session.mount('http://', adapter)
+          session.mount('https://', adapter)
+          session.headers.update({'User-Agent': UA})
+
+          def save_json(name: str, value: Any) -> None:
+              (ROOT / name).write_text(
+                  json.dumps(value, ensure_ascii=False, indent=2) + '\n',
+                  encoding='utf-8',
+              )
+
+          def extract_docview(text: str) -> dict[str, Any]:
+              marker_index = text.find('initDocview(')
+              if marker_index < 0:
+                  raise RuntimeError('initDocview payload not found')
+              start = text.find('{', marker_index)
+              if start < 0:
+                  raise RuntimeError('initDocview object start not found')
+              depth = 0
+              quoted = False
+              quote = ''
+              escaped = False
+              for index in range(start, len(text)):
+                  char = text[index]
+                  if quoted:
+                      if escaped:
+                          escaped = False
+                      elif char == '\\':
+                          escaped = True
+                      elif char == quote:
+                          quoted = False
+                      continue
+                  if char in ('"', "'"):
+                      quoted = True
+                      quote = char
+                  elif char == '{':
+                      depth += 1
+                  elif char == '}':
+                      depth -= 1
+                      if depth == 0:
+                          return json.loads(text[start:index + 1])
+              raise RuntimeError('initDocview object end not found')
+
+          node_response = session.get(NODE_URL, timeout=(20, 180), allow_redirects=True)
+          node_response.raise_for_status()
+          (ROOT / 'node.html').write_bytes(node_response.content)
+          (ROOT / 'node-headers.json').write_text(
+              json.dumps(dict(node_response.headers), ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          options = extract_docview(node_response.text)
+          pages = options.get('pages') or []
+          if len(pages) != 70:
+              raise RuntimeError(f'expected 70 physical scans, found {len(pages)}')
+          page_ids = [int(page['id']) for page in pages]
+          save_json('docview-options.json', options)
+          (ROOT / 'page-ids.txt').write_text(
+              ''.join(f'{page_id}\n' for page_id in page_ids),
+              encoding='utf-8',
+          )
+
+          prefix_to_page: dict[str, int] = {}
+          candidates: dict[str, dict[str, Any]] = {}
+
+          def normalize_url(value: str) -> str | None:
+              value = value.strip().replace('\\/', '/').replace('&amp;', '&')
+              value = value.rstrip('"\' ,;}])')
+              if value.startswith('//'):
+                  value = 'http:' + value
+              elif value.startswith('/'):
+                  value = urljoin(BASE, value)
+              if not value.startswith(('http://', 'https://')):
+                  return None
+              if not re.search(r'(?:/images/|\.jpe?g(?:\?|$)|\.png(?:\?|$)|\.webp(?:\?|$))', value, re.I):
+                  return None
+              return value
+
+          def add_candidate(value: str, origin: str, page_id: int | None = None) -> None:
+              url = normalize_url(value)
+              if not url:
                   return
-              if url.startswith('//'):
-                  url = 'http:' + url
-              elif url.startswith('/'):
-                  url = base + url
-              elif not url.startswith(('http://', 'https://')):
-                  return
-              url = url.rstrip('"\' ,;}])')
-              if not re.search(r'(?:/images/|\.jpe?g(?:\?|$)|\.png(?:\?|$)|\.webp(?:\?|$))', url, re.I):
-                  return
+              if page_id is None:
+                  for prefix, mapped_page in prefix_to_page.items():
+                      if prefix in url:
+                          page_id = mapped_page
+                          break
               key = hashlib.sha256(url.encode()).hexdigest()
               item = candidates.setdefault(key, {
                   'url': url,
@@ -216,156 +170,214 @@ jobs:
               if page_id is not None and page_id not in item['page_ids']:
                   item['page_ids'].append(page_id)
 
+          static_links: list[dict[str, Any]] = []
           for zoom_key in ('links_z0', 'links_z1', 'links_z2'):
-              for page_id, url in (options.get(zoom_key) or {}).items():
-                  add(str(url), zoom_key, int(page_id))
+              for page_id_text, value in (options.get(zoom_key) or {}).items():
+                  page_id = int(page_id_text)
+                  static_links.append({'page_id': page_id, 'origin': zoom_key, 'url': value})
+                  path_match = re.search(r'(/system/pages/\d{3}/\d{3}/\d{2}/)', value)
+                  if path_match:
+                      prefix_to_page[path_match.group(1)] = page_id
+                  add_candidate(str(value), zoom_key, page_id)
+          save_json('static-links.json', static_links)
+
+          auxiliary: list[dict[str, Any]] = []
+          for label, path in (
+              ('docview-script', options.get('script_path')),
+              ('application-js', re.search(r'<script[^>]+src=["\']([^"\']*application-[^"\']+\.js)', node_response.text, re.I).group(1)
+               if re.search(r'<script[^>]+src=["\']([^"\']*application-[^"\']+\.js)', node_response.text, re.I) else None),
+          ):
+              if not path:
+                  continue
+              url = urljoin(BASE, str(path))
+              try:
+                  response = session.get(url, headers={'Referer': NODE_URL}, timeout=(15, 120))
+                  body = response.content
+                  filename = f'{label}.txt'
+                  (ROOT / filename).write_bytes(body)
+                  auxiliary.append({
+                      'label': label,
+                      'url': url,
+                      'status': response.status_code,
+                      'bytes': len(body),
+                      'content_type': response.headers.get('content-type', ''),
+                  })
+              except Exception as error:
+                  auxiliary.append({'label': label, 'url': url, 'error': repr(error)})
+          save_json('auxiliary-responses.json', auxiliary)
+
+          endpoint_specs = [
+              (page_id, kind, f'{BASE}/ru/pages/{page_id}' + ('/read' if kind == 'read' else ''))
+              for page_id in page_ids
+              for kind in ('read', 'page')
+          ]
+
+          def fetch_endpoint(spec: tuple[int, str, str]) -> dict[str, Any]:
+              page_id, kind, url = spec
+              started = time.monotonic()
+              try:
+                  response = session.get(
+                      url,
+                      headers={
+                          'Referer': NODE_URL,
+                          'X-Requested-With': 'XMLHttpRequest',
+                          'Accept': 'application/json, text/javascript, */*; q=0.01',
+                      },
+                      timeout=(10, 35),
+                  )
+                  body = response.content
+                  filename = f'{kind}-{page_id}.txt'
+                  (ROOT / 'endpoints' / filename).write_bytes(body)
+                  return {
+                      'page_id': page_id,
+                      'kind': kind,
+                      'url': url,
+                      'status': response.status_code,
+                      'bytes': len(body),
+                      'content_type': response.headers.get('content-type', ''),
+                      'elapsed': round(time.monotonic() - started, 3),
+                      'filename': filename,
+                  }
+              except Exception as error:
+                  return {
+                      'page_id': page_id,
+                      'kind': kind,
+                      'url': url,
+                      'error': repr(error),
+                      'elapsed': round(time.monotonic() - started, 3),
+                  }
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=18) as executor:
+              endpoint_results = list(executor.map(fetch_endpoint, endpoint_specs))
+          save_json('endpoint-results.json', endpoint_results)
 
           url_pattern = re.compile(r'(?:https?:)?//[^\s"\'<>]+|/system/pages/[^\s"\'<>]+', re.I)
-          page_id_pattern = re.compile(r'391\d{3}')
-          sources = [root / 'docview-script.txt', root / 'application.js']
-          sources.extend(sorted((root / 'endpoints').rglob('*.txt')))
-          for source in sources:
+          for result in endpoint_results:
+              filename = result.get('filename')
+              if not filename:
+                  continue
+              source = ROOT / 'endpoints' / str(filename)
+              text = source.read_text(encoding='utf-8', errors='replace')
+              for match in url_pattern.finditer(text):
+                  add_candidate(match.group(0), f"endpoint:{result['kind']}", int(result['page_id']))
+
+          for auxiliary_file in ('docview-script.txt', 'application-js.txt'):
+              source = ROOT / auxiliary_file
               if not source.exists():
                   continue
               text = source.read_text(encoding='utf-8', errors='replace')
-              ids = [int(value) for value in page_id_pattern.findall(text)]
-              unique_ids = sorted(set(ids))
-              inferred = unique_ids[0] if len(unique_ids) == 1 else None
               for match in url_pattern.finditer(text):
-                  add(match.group(0), str(source.relative_to(root)), inferred)
+                  add_candidate(match.group(0), auxiliary_file)
 
-          values = sorted(candidates.values(), key=lambda item: item['url'])
-          (root / 'candidate-images.json').write_text(
-              json.dumps(values, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          with (root / 'candidate-images.tsv').open('w', encoding='utf-8') as handle:
-              for index, item in enumerate(values, start=1):
-                  page_ids = ','.join(str(value) for value in item['page_ids'])
-                  origins = ','.join(item['origins'])
-                  handle.write(f"{index}\t{page_ids}\t{origins}\t{item['url']}\n")
-          print(f'discovered {len(values)} unique image URLs')
-          PY
+          candidate_values = sorted(candidates.values(), key=lambda item: item['url'])
+          save_json('candidate-images.json', candidate_values)
 
-          : > "$root/download-attempts.tsv"
-          while IFS=$'\t' read -r index page_ids origins url; do
-            printf -v index4 '%04d' "$index"
-            target="$root/images/all/$index4.bin"
-            headers="$root/images/all/$index4.headers"
-            code=0
-            curl --fail --location --compressed --retry 3 --retry-all-errors \
-              --connect-timeout 30 --max-time 600 \
-              --user-agent "$ua" \
-              --cookie "$root/cookies.txt" \
-              --referer "$base$node" \
-              --dump-header "$headers" \
-              --output "$target" \
-              "$url" || code=$?
-            bytes=0
-            [ -f "$target" ] && bytes="$(stat --printf='%s' "$target")"
-            mime=''
-            dimensions=''
-            if [ "$code" -eq 0 ] && [ -s "$target" ]; then
-              mime="$(file --brief --mime-type "$target")"
-              dimensions="$(identify -format '%wx%h' "$target" 2>/dev/null || true)"
-            fi
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-              "$index4" "$code" "$bytes" "$mime" "$dimensions" "$page_ids" "$origins" "$url" \
-              >> "$root/download-attempts.tsv"
-          done < "$root/candidate-images.tsv"
-
-          python3 - <<'PY'
-          from __future__ import annotations
-
-          import hashlib
-          import json
-          import pathlib
-          import re
-          import shutil
-          import subprocess
-
-          root = pathlib.Path('shpl-pro-eto')
-          page_ids = [int(value) for value in (root / 'page-ids.txt').read_text().split()]
-          attempts: list[dict[str, object]] = []
-          for line in (root / 'download-attempts.tsv').read_text(encoding='utf-8').splitlines():
-              fields = line.split('\t')
-              if len(fields) != 8:
-                  continue
-              index, code, bytes_text, mime, dimensions, page_ids_text, origins, url = fields
-              width = height = 0
-              match = re.fullmatch(r'(\d+)x(\d+)', dimensions)
-              if match:
-                  width, height = map(int, match.groups())
-              file_path = root / 'images' / 'all' / f'{index}.bin'
-              sha = hashlib.sha256(file_path.read_bytes()).hexdigest() if file_path.exists() and file_path.stat().st_size else ''
-              attempts.append({
+          def download_candidate(index_item: tuple[int, dict[str, Any]]) -> dict[str, Any]:
+              index, item = index_item
+              url = str(item['url'])
+              started = time.monotonic()
+              result: dict[str, Any] = {
                   'index': index,
-                  'code': int(code),
-                  'bytes': int(bytes_text or 0),
-                  'mime': mime,
-                  'width': width,
-                  'height': height,
-                  'area': width * height,
-                  'page_ids': [int(value) for value in page_ids_text.split(',') if value],
-                  'origins': origins.split(',') if origins else [],
                   'url': url,
-                  'sha256': sha,
-                  'file': str(file_path),
-              })
+                  'origins': item['origins'],
+                  'page_ids': item['page_ids'],
+              }
+              try:
+                  response = session.get(url, headers={'Referer': NODE_URL}, timeout=(10, 75))
+                  body = response.content
+                  result.update({
+                      'status': response.status_code,
+                      'bytes': len(body),
+                      'content_type': response.headers.get('content-type', ''),
+                      'elapsed': round(time.monotonic() - started, 3),
+                  })
+                  if response.status_code != 200 or len(body) < 1000:
+                      return result
+                  try:
+                      with Image.open(io.BytesIO(body)) as image:
+                          width, height = image.size
+                          image_format = (image.format or 'JPEG').lower()
+                  except Exception as error:
+                      result['image_error'] = repr(error)
+                      return result
+                  extension = 'jpg' if image_format in ('jpeg', 'jpg') else image_format
+                  filename = f'{index:04d}.{extension}'
+                  target = ROOT / 'images' / 'all' / filename
+                  target.write_bytes(body)
+                  result.update({
+                      'file': str(target),
+                      'width': width,
+                      'height': height,
+                      'area': width * height,
+                      'sha256': hashlib.sha256(body).hexdigest(),
+                  })
+                  return result
+              except Exception as error:
+                  result['error'] = repr(error)
+                  result['elapsed'] = round(time.monotonic() - started, 3)
+                  return result
 
-          best: list[dict[str, object]] = []
+          with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+              download_results = list(executor.map(download_candidate, enumerate(candidate_values, start=1)))
+          save_json('download-manifest.json', download_results)
+
+          best_manifest: list[dict[str, Any]] = []
           for sequence, page_id in enumerate(page_ids, start=1):
-              matching = [item for item in attempts if page_id in item['page_ids'] and item['code'] == 0 and item['area'] > 0]
-              matching.sort(key=lambda item: (item['area'], item['bytes']), reverse=True)
+              matching = [
+                  item for item in download_results
+                  if page_id in item.get('page_ids', []) and item.get('area', 0) > 0 and item.get('file')
+              ]
+              matching.sort(key=lambda item: (item.get('area', 0), item.get('bytes', 0)), reverse=True)
               if not matching:
-                  best.append({'sequence': sequence, 'page_id': page_id, 'status': 'missing'})
+                  best_manifest.append({'sequence': sequence, 'page_id': page_id, 'status': 'missing'})
                   continue
               chosen = matching[0]
-              extension = 'jpg' if 'jpeg' in chosen['mime'] else 'png' if 'png' in chosen['mime'] else 'img'
-              target = root / 'images' / 'best' / f'{sequence:03d}-page-{page_id}.{extension}'
-              shutil.copyfile(chosen['file'], target)
-              best.append({
+              source = pathlib.Path(str(chosen['file']))
+              extension = source.suffix or '.jpg'
+              target = ROOT / 'images' / 'best' / f'{sequence:03d}-page-{page_id}{extension}'
+              shutil.copyfile(source, target)
+              best_manifest.append({
                   'sequence': sequence,
                   'page_id': page_id,
                   'status': 'downloaded',
                   'file': str(target),
-                  'bytes': chosen['bytes'],
                   'width': chosen['width'],
                   'height': chosen['height'],
+                  'bytes': chosen['bytes'],
                   'sha256': chosen['sha256'],
                   'url': chosen['url'],
                   'origins': chosen['origins'],
-                  'available_candidates': len(matching),
+                  'candidate_count': len(matching),
               })
+          save_json('best-page-manifest.json', best_manifest)
 
-          (root / 'download-manifest.json').write_text(
-              json.dumps(attempts, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          (root / 'best-page-manifest.json').write_text(
-              json.dumps(best, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          downloaded = [item for item in best if item['status'] == 'downloaded']
+          downloaded = [item for item in best_manifest if item['status'] == 'downloaded']
           summary = {
               'physical_scans': len(page_ids),
-              'candidate_urls': len(attempts),
+              'static_links': len(static_links),
+              'endpoint_requests': len(endpoint_results),
+              'endpoint_success_200': sum(1 for item in endpoint_results if item.get('status') == 200),
+              'candidate_urls': len(candidate_values),
+              'downloaded_candidate_images': sum(1 for item in download_results if item.get('area', 0) > 0),
               'best_pages_downloaded': len(downloaded),
               'best_pages_missing': len(page_ids) - len(downloaded),
-              'min_width': min((item['width'] for item in downloaded), default=0),
-              'max_width': max((item['width'] for item in downloaded), default=0),
-              'min_height': min((item['height'] for item in downloaded), default=0),
-              'max_height': max((item['height'] for item in downloaded), default=0),
+              'min_dimensions': [
+                  min((item['width'] for item in downloaded), default=0),
+                  min((item['height'] for item in downloaded), default=0),
+              ],
+              'max_dimensions': [
+                  max((item['width'] for item in downloaded), default=0),
+                  max((item['height'] for item in downloaded), default=0),
+              ],
               'total_best_bytes': sum(item['bytes'] for item in downloaded),
           }
-          (root / 'acquisition-summary.json').write_text(
-              json.dumps(summary, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
+          save_json('acquisition-summary.json', summary)
           print(json.dumps(summary, ensure_ascii=False, indent=2))
-          if len(downloaded) < 70:
-              raise RuntimeError(f"only {len(downloaded)} of 70 page scans acquired")
+          if len(downloaded) != 70:
+              raise RuntimeError(f"only {len(downloaded)} of 70 official page scans acquired")
           PY
+
+          python3 /tmp/resolve-shpl.py
 
       - name: Build visual contact sheets
         if: always()
@@ -392,18 +404,17 @@ jobs:
         with:
           name: source-49-pro-eto-shpl-static-verification
           path: |
-            shpl-pro-eto/node-headers.txt
+            shpl-pro-eto/node-headers.json
             shpl-pro-eto/node.html
             shpl-pro-eto/docview-options.json
-            shpl-pro-eto/docview-summary.json
             shpl-pro-eto/page-ids.txt
             shpl-pro-eto/static-links.json
-            shpl-pro-eto/docview-script-headers.txt
+            shpl-pro-eto/auxiliary-responses.json
             shpl-pro-eto/docview-script.txt
-            shpl-pro-eto/application.js
-            shpl-pro-eto/endpoints/**/*.txt
+            shpl-pro-eto/application-js.txt
+            shpl-pro-eto/endpoints/*.txt
+            shpl-pro-eto/endpoint-results.json
             shpl-pro-eto/candidate-images.json
-            shpl-pro-eto/download-attempts.tsv
             shpl-pro-eto/download-manifest.json
             shpl-pro-eto/best-page-manifest.json
             shpl-pro-eto/acquisition-summary.json
