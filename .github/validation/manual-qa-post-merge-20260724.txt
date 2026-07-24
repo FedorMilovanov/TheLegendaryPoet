@@ -1,0 +1,5 @@
+Temporary validation marker.
+
+Base commit under test: e2cd14a52c2ab7ebb9a069595cc67c204c6d3dc8
+Purpose: trigger CI and Manual Browser QA against the exact post-merge main tree.
+Never merge this validation-only branch.
