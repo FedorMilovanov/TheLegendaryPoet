@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto';
-import { loadYeseninPartOneCitationTopology } from './lib/yesenin-part-one-citation-topology';
+import { loadYeseninPartOneCompleteCitationTopology } from './lib/yesenin-part-one-complete-citation-topology';
 
 const fail = (message: string): never => {
   throw new Error(`[yesenin-part-one-topology] ${message}`);
 };
 
-const topology = loadYeseninPartOneCitationTopology();
+const topology = loadYeseninPartOneCompleteCitationTopology();
 const { nodes } = topology;
 
-if (nodes.length < 128) {
-  fail(`expected at least 128 typed citation nodes, found ${nodes.length}`);
+if (nodes.length < 129) {
+  fail(`expected at least 129 typed citation nodes, found ${nodes.length}`);
 }
 
 const allowedLegacySourceTokens = new Set([
@@ -52,6 +52,23 @@ for (const node of nodes) {
   }
 }
 
+const editorialOverrideNodes = nodes.filter((node) => node.origin === 'editorial-override');
+if (
+  editorialOverrideNodes.length !== 1 ||
+  editorialOverrideNodes[0].blockId !== 'yesenin-p1-reich-1918-retrospective-boundary'
+) {
+  fail(
+    `expected exactly one YE1-021 editorial override node; found ${editorialOverrideNodes.map((node) => node.blockId).join(', ') || 'none'}`,
+  );
+}
+const schoolCertificateNode = nodes.find(
+  (node) => node.blockId === 'yesenin-p1-spas-klepiki-certificate',
+);
+if (!schoolCertificateNode) fail('school-certificate block is missing');
+if (!schoolCertificateNode.overrideSourceIds.includes('feb-ye1-school-certificate-545')) {
+  fail('school-certificate block must include exact FEB acquisition page 545 through the override layer');
+}
+
 const expectedSections = Array.from({ length: 12 }, (_, index) => index + 1);
 const numberedSections = new Set(nodes.map((node) => node.sectionNumber).filter((value) => value > 0));
 for (const section of expectedSections) {
@@ -69,6 +86,7 @@ const referencedClaimIds = new Set(nodes.flatMap((node) => node.claimIds));
 const editorialClaimLabels = new Set(nodes.flatMap((node) => node.editorialClaims));
 const legacySourceTokens = new Set(nodes.flatMap((node) => node.legacySourceTokens));
 const sourceCorrections = new Set(nodes.flatMap((node) => node.sourceCorrections));
+const overrideSourceIds = new Set(nodes.flatMap((node) => node.overrideSourceIds));
 const unreferencedClaimIds = [...topology.claimIds].filter((id) => !referencedClaimIds.has(id)).sort();
 const unreferencedWitnessSourceIds = [...topology.witnessSourceIds]
   .filter((id) => !referencedWitnessSourceIds.has(id))
@@ -83,26 +101,26 @@ if (referencedCanonicalSourceIds.size < 37) {
 if (referencedSupplementalSourceIds.size !== 10) {
   fail(`expected all 10 supplemental source IDs in topology, found ${referencedSupplementalSourceIds.size}`);
 }
-if (referencedAcquisitionSourceIds.size < 6) {
-  fail(`expected at least six exact FEB acquisition IDs in topology, found ${referencedAcquisitionSourceIds.size}`);
+if (referencedAcquisitionSourceIds.size !== 7) {
+  fail(`expected all seven exact FEB acquisition IDs in topology, found ${referencedAcquisitionSourceIds.size}`);
 }
-if (unreferencedClaimIds.join(',') !== 'YE1-021') {
-  fail(`expected only YE1-021 to remain an editorial coverage gap; found ${unreferencedClaimIds.join(', ') || 'none'}`);
+if (unreferencedClaimIds.length !== 0) {
+  fail(`all 27 claim IDs must be represented; missing ${unreferencedClaimIds.join(', ')}`);
 }
-if (unreferencedAcquisitionSourceIds.join(',') !== 'feb-ye1-school-certificate-545') {
-  fail(
-    `expected only the school-certificate acquisition to remain unwired; found ${unreferencedAcquisitionSourceIds.join(', ') || 'none'}`,
-  );
+if (unreferencedAcquisitionSourceIds.length !== 0) {
+  fail(`all seven FEB acquisition IDs must be wired; missing ${unreferencedAcquisitionSourceIds.join(', ')}`);
 }
 
 const stableShape = nodes.map((node) => ({
   blockId: node.blockId,
+  origin: node.origin,
   sectionNumber: node.sectionNumber,
   claimIds: node.claimIds,
   editorialClaims: node.editorialClaims,
   rawSourceIds: node.rawSourceIds,
   sourceIds: node.sourceIds,
   acquisitionSourceIds: node.acquisitionSourceIds,
+  overrideSourceIds: node.overrideSourceIds,
   legacySourceTokens: node.legacySourceTokens,
   sourceCorrections: node.sourceCorrections,
 }));
@@ -118,6 +136,7 @@ const sectionCoverage = expectedSections.map((sectionNumber) => {
     supplementalSources: new Set(sectionNodes.flatMap((node) => node.supplementalSourceIds)).size,
     witnesses: new Set(sectionNodes.flatMap((node) => node.witnessSourceIds)).size,
     acquisitions: new Set(sectionNodes.flatMap((node) => node.acquisitionSourceIds)).size,
+    overrideBlocks: sectionNodes.filter((node) => node.origin === 'editorial-override').length,
   };
 });
 
@@ -126,6 +145,8 @@ console.log(
     {
       typedCitationNodes: nodes.length,
       stableBlockIds: blockIds.size,
+      markdownNodes: nodes.filter((node) => node.origin === 'authoring-markdown').length,
+      editorialOverrideNodes: editorialOverrideNodes.length,
       leadBlocks: nodes.filter((node) => node.sectionNumber === 0).length,
       numberedSections: numberedSections.size,
       declaredCanonicalSourceIds: topology.canonicalSourceIds.size,
@@ -144,6 +165,7 @@ console.log(
       editorialClaimLabels: [...editorialClaimLabels].sort(),
       legacySourceTokens: [...legacySourceTokens].sort(),
       sourceCorrections: [...sourceCorrections].sort(),
+      overrideSourceIds: [...overrideSourceIds].sort(),
       stableShapeSha256: digest,
       sectionCoverage,
       publicationAuthorized: false,
