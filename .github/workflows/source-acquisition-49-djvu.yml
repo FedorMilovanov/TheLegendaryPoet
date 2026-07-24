@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: source-49-djvu-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   acquire-djvu:
     name: djvu ${{ matrix.source.id }}
@@ -19,6 +23,7 @@ jobs:
     timeout-minutes: 90
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         source:
           - id: esenin-chronicle-v2-2005
