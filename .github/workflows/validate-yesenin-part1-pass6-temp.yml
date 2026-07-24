@@ -1,5 +1,6 @@
 name: Temporary Yesenin Part I Pass 6 Validation
 
+# Validation-only workflow on the temporary alias branch. Never merge this file.
 on:
   push:
     branches: [research/yesenin-part1-pass6]
