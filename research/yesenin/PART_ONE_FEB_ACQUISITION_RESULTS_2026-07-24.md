@@ -4,26 +4,47 @@
 
 Issue: #76
 
-Статус: `THREE-WITNESS-GROUPS-ACQUIRED / SIRENA-COVER-BYTES-PENDING / RIGHTS-AND-OBJECT-PROVENANCE-UNRESOLVED / PUBLICATION-NOT-AUTHORIZED`
+Статус: `FOUR-WITNESS-GROUPS-ACQUIRED / SEVEN-EXACT-PUBLISHED-PAGE-IMAGES / RIGHTS-AND-OBJECT-PROVENANCE-UNRESOLVED / INTERNAL-DECLARATION-WITNESSES-PENDING / PUBLICATION-NOT-AUTHORIZED`
 
-## Доказательный прогон
+## Доказательные прогоны
+
+### Run № 11 — основной exact-page acquisition
 
 - workflow: `Source acquisition 76 — Yesenin FEB page witnesses`;
-- run: № 11, GitHub Actions run `30104627205`;
+- GitHub Actions run: `30104627205`;
 - exact head: `5d33eb1adfccc4f43a9eafbf8d72ae3ac8769918`;
 - conclusion: `success`;
 - artifact: `yesenin-feb-page-witnesses-76`;
 - artifact size: `1,524,969` bytes;
 - artifact digest: `sha256:b057dcc655b15e6e729216c922d9692059fff91c3c80bbafc74e366edf38aa01`;
 - artifact expiry: 2026-08-07;
-- manifest summary:
+- summary:
   - targets: 4;
   - exact downloaded images: 6;
   - page-identified targets: 4/4;
-  - exact-byte-complete targets: 3/4;
+  - exact-byte-complete targets at that stage: 3/4;
   - technical errors: 0.
 
-Artifact expiry is the reason this durable textual ledger records every accepted source URL and SHA-256. The external image bytes are not committed by this branch.
+### Run № 21 — exact `Сирена` anchor/click discovery
+
+- GitHub Actions run: `30105655555`;
+- exact head: `8847c97b34902f184b626e371219393efa8c6d4e`;
+- conclusion: `success`;
+- artifact: `yesenin-feb-page-witnesses-76`;
+- artifact size: `1,608,116` bytes;
+- artifact digest: `sha256:6cbb3392d942e95abb47230208c861c30380a12d65ecc2d239aef4bd8891f1fb`;
+- artifact expiry: 2026-08-07;
+- exact anchor:
+  - visible label: `С. 621`;
+  - raw `href`: `#`;
+  - `onclick`: `showimg('../../pictures/El2-6212.jpg', ...)`;
+- click-time network:
+  - request: `https://feb-web.ru/feb/esenin/pictures/El2-6212.jpg`;
+  - response: HTTP 200, `image/jpeg`;
+- popup title and image alt independently identify the object as the cover of `Сирена`, № 4–5, 1919;
+- one non-blocking generic-route timeout occurred on the separate Palace-of-Arts application route `el2-621-.htm#75`; it did not affect the exact anchor click or image acquisition.
+
+Artifact expiry is why this durable ledger and typed registry retain every accepted URL, SHA-256 and evidence boundary. External source-image bytes are not committed by this branch.
 
 ## WIT-YE1-001 — school certificate, printed page 545
 
@@ -45,8 +66,8 @@ Still unresolved:
 
 Claim effect:
 
-- official school type and the fact of completion are supported for carefully cited drafting;
-- public reproduction of the certificate remains on HOLD pending rights/object provenance.
+- official school type and completion are supported for carefully cited drafting;
+- public reproduction remains on HOLD pending rights/object provenance.
 
 ## WIT-YE1-002 — assignment to military-sanitary train no. 143, pages 672–674
 
@@ -57,21 +78,19 @@ Classification: `PAGE-IDENTIFIED-EXACT-PUBLISHED-BYTES-ACQUIRED`.
 - visible printed pages in the group: 672, 673, 674;
 - FEB alt text: `Извещение Петроградского резерва санитаров`;
 - source SHA-256: `b9ce49137fa139faa1ee47e8e33d6e4592ac2d4bed1e2b69ac8da88c167c1484`;
-- visual inspection: the image is a document assigning Есенин to the train command; it is not the nearby portrait or an unrelated page.
+- visual inspection: the image is the assignment document, not the nearby portrait or an unrelated page.
 
 Important boundary:
 
-- the acquired published image supports the train no. 143 assignment context;
+- the published image supports the train no. 143 assignment context;
 - it does not prove direct inspection of the controlling RGIA original;
 - it does not establish infirmary no. 17 as Есенин's formal unit.
 
-Archive HOLD remains for the controlling RGIA shelfmarks already fixed in `PART_ONE_PAGE_WITNESS_LEDGER.md`.
+Archive HOLD remains for the controlling RGIA shelfmarks in `PART_ONE_PAGE_WITNESS_LEDGER.md`.
 
 ## WIT-YE1-003 — train reports and personnel photograph, pages 688–691
 
 Classification: `PAGE-IDENTIFIED-EXACT-PUBLISHED-BYTES-ACQUIRED`.
-
-All four expected exact image routes were acquired and visually inspected:
 
 | Printed page | Exact FEB image | FEB description | SHA-256 |
 |---:|---|---|---|
@@ -86,57 +105,77 @@ Visual inspection confirms:
 - page 690 is the personnel photograph beside the train;
 - none of the accepted files is a site logo or generic illustration.
 
-Separate media-provenance work remains mandatory for page 690 before any production use as an image.
+Separate media-provenance work remains mandatory for page 690 before production use.
 
-## WIT-YE1-004 — `Сирена`, printed page 621
+## WIT-YE1-004 — cover of `Сирена`, printed page 621
 
-Classification after run № 11: `PAGE-IDENTIFIED-BYTES-NOT-ACQUIRED`.
+Classification: `PAGE-IDENTIFIED-EXACT-PUBLISHED-BYTES-ACQUIRED`.
 
-The official FEB contents/list pages independently identify two different objects on printed page 621:
+The official FEB list contains two distinct page-621 objects:
 
 1. Есенин's application to the Palace of Arts;
 2. the cover of `Сирена`, № 4–5 (1919), associated with publication of the imagist declaration.
 
-The acquisition probe confirmed printed-page identity but rejected the guessed routes:
+The first guessed routes were correctly rejected as HTTP 404 / HTML:
 
-- `el2-621-.jpg` — HTTP 404 / HTML;
-- `el2-621-1.jpg` — HTTP 404 / HTML;
-- `el2-621-2.jpg` — HTTP 404 / HTML.
+- `el2-621-.jpg`;
+- `el2-621-1.jpg`;
+- `el2-621-2.jpg`.
 
-No logo, generic page asset or first object on page 621 is accepted as the `Сирена` cover.
+Run № 21 then inspected the exact `Сирена` list anchor and found its hidden JavaScript route:
 
-A dedicated route/DOM discovery pass is required. Even after the cover is acquired, it will not prove the internal declaration pages or resolve the printed-date versus probable-release-date problem.
+- source/list URL: `https://feb-web.ru/feb/esenin/chronics/el2/el2-spis.htm?cmd=p`;
+- raw anchor: `href="#"`;
+- exact `onclick`: `showimg('../../pictures/El2-6212.jpg', ...)`;
+- exact image URL: `https://feb-web.ru/feb/esenin/pictures/El2-6212.jpg`;
+- HTTP/MIME: 200 / `image/jpeg`;
+- bytes: `18,693`;
+- dimensions: `237 × 309`;
+- source SHA-256: `a316190933bcbdb433c835359d971854176a32d808787bcdc0050aad5b501cb4`;
+- popup title/image alt: `Обложка журнала «Сирена» (№ 4—5, 1919), опубликовавшего декларацию имажинистов.`;
+- visual inspection: the image is the stylized `Сирена` cover, not the Palace-of-Arts application, a site logo or a generic asset.
 
-## What the run proves
+Still unresolved:
 
-The run proves that:
+- internal declaration pages, signatures and typesetting state;
+- the exact `Советская страна`, № 3, 10 February 1919 newspaper witness;
+- printed-date versus probable public-release-date chronology;
+- original object provenance and reproduction rights.
 
-- the four expected printed-page groups are reachable from GitHub Actions;
-- six exact FEB image responses were acquired with stable URLs and hashes;
-- three witness groups are byte-complete at the published-page layer;
-- the school and train files are visually the claimed published objects;
-- technical acquisition errors are currently zero;
-- page 621 remains honestly incomplete.
+Claim effect:
 
-## What the run does not prove
+- the identity and appearance of the `Сирена` issue cover are supported at the published-page layer;
+- the cover alone does **not** authorize an unqualified claim that `Сирена` was the first actual publication in circulation;
+- public reuse of the cover remains unauthorized until rights/provenance review.
 
-It does not prove:
+## What the combined evidence proves
+
+- all four expected printed-page witness groups are reachable;
+- seven exact FEB image responses have stable URLs and SHA-256 hashes;
+- school, train-assignment, train-report/personnel and `Сирена`-cover objects were independently visually identified;
+- the exact hidden `Сирена` route is reproducible from the official list anchor;
+- no logo, HTML error page or unrelated page object is accepted as a facsimile;
+- no accepted FEB image is promoted to `archive-original`;
+- technical/source incompleteness is separated from production authorization.
+
+## What the evidence does not prove
 
 - direct inspection of any archive original;
 - ownership, public-domain status or permission for production reuse;
 - full object provenance for the school certificate;
 - complete RGIA personnel/service files;
-- that the train photograph may be published without a separate media decision;
-- the first actual circulation date of the imagist declaration;
+- photographer/provenance rights for the train photograph;
 - the internal pages or text setting of `Сирена` № 4–5;
+- the exact physical `Советская страна` № 3 witness;
+- the first actual circulation date of the imagist declaration;
 - a publication-ready Yesenin article.
 
 ## Required next actions
 
-1. finish exact `Сирена` page-621 route discovery;
-2. acquire and visually distinguish the cover from the Palace-of-Arts application;
-3. locate internal `Сирена` declaration pages and `Советская страна` № 3;
-4. preserve all accepted hashes in a typed durable evidence registry;
-5. determine object provenance and rights for any image proposed for production;
-6. obtain/request controlling RGIA and family-record facsimiles;
-7. only then begin citation topology and section drafting.
+1. locate the internal `Сирена` declaration pages;
+2. locate `Советская страна`, № 3, 10 February 1919;
+3. collate both text/settings and printed versus probable release dates;
+4. determine object provenance and rights for any image proposed for production;
+5. obtain/request controlling RGIA and family-record facsimiles;
+6. build stable block-to-source citation topology;
+7. only then begin section drafting and editorial review.
