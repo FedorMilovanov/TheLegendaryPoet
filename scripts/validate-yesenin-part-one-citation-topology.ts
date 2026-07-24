@@ -69,6 +69,13 @@ const referencedClaimIds = new Set(nodes.flatMap((node) => node.claimIds));
 const editorialClaimLabels = new Set(nodes.flatMap((node) => node.editorialClaims));
 const legacySourceTokens = new Set(nodes.flatMap((node) => node.legacySourceTokens));
 const sourceCorrections = new Set(nodes.flatMap((node) => node.sourceCorrections));
+const unreferencedClaimIds = [...topology.claimIds].filter((id) => !referencedClaimIds.has(id)).sort();
+const unreferencedWitnessSourceIds = [...topology.witnessSourceIds]
+  .filter((id) => !referencedWitnessSourceIds.has(id))
+  .sort();
+const unreferencedAcquisitionSourceIds = [...topology.acquisitionSourceIds]
+  .filter((id) => !referencedAcquisitionSourceIds.has(id))
+  .sort();
 
 if (referencedCanonicalSourceIds.size < 37) {
   fail(`expected at least 37 canonical source IDs in topology, found ${referencedCanonicalSourceIds.size}`);
@@ -78,6 +85,14 @@ if (referencedSupplementalSourceIds.size !== 10) {
 }
 if (referencedAcquisitionSourceIds.size < 6) {
   fail(`expected at least six exact FEB acquisition IDs in topology, found ${referencedAcquisitionSourceIds.size}`);
+}
+if (unreferencedClaimIds.join(',') !== 'YE1-021') {
+  fail(`expected only YE1-021 to remain an editorial coverage gap; found ${unreferencedClaimIds.join(', ') || 'none'}`);
+}
+if (unreferencedAcquisitionSourceIds.join(',') !== 'feb-ye1-school-certificate-545') {
+  fail(
+    `expected only the school-certificate acquisition to remain unwired; found ${unreferencedAcquisitionSourceIds.join(', ') || 'none'}`,
+  );
 }
 
 const stableShape = nodes.map((node) => ({
@@ -119,10 +134,13 @@ console.log(
       referencedSupplementalSourceIds: referencedSupplementalSourceIds.size,
       declaredWitnessSourceIds: topology.witnessSourceIds.size,
       referencedWitnessSourceIds: referencedWitnessSourceIds.size,
+      unreferencedWitnessSourceIds,
       declaredAcquisitionSourceIds: topology.acquisitionSourceIds.size,
       referencedAcquisitionSourceIds: referencedAcquisitionSourceIds.size,
+      unreferencedAcquisitionSourceIds,
       declaredClaimIds: topology.claimIds.size,
       referencedClaimIds: referencedClaimIds.size,
+      unreferencedClaimIds,
       editorialClaimLabels: [...editorialClaimLabels].sort(),
       legacySourceTokens: [...legacySourceTokens].sort(),
       sourceCorrections: [...sourceCorrections].sort(),
