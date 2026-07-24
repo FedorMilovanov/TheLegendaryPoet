@@ -31,9 +31,10 @@ RECORDS: list[dict[str, Any]] = [
         "catalog_url": "https://rusneb.ru/catalog/000199_000009_004210209/",
         "pdf_url": "https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_004210209&doc_type=pdf&name=000199_000009_004210209-%D0%A0%D0%B0%D0%B4%D1%83%D0%BD%D0%B8%D1%86%D0%B0+%3A+%D0%A1%D0%B1.+%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2",
         "catalog_extent": "62 printed pages",
-        "pdf_packaging": "35 PDF frames; the scan packages printed pages as single leaves and/or spreads",
+        "pdf_packaging": "35 PDF frames; printed leaves are photographed as full leaves and spreads",
         "holding": "Russian State Library / National Electronic Library",
-        "minimum_bytes": 20_000_000,
+        "expected_bytes": 49_288_163,
+        "expected_sha256": "761ba9c1eb41e0d6e146618c8d5cb30bb79485d02587e0161523a819cd753185",
         "expected_pdf_frames": 35,
     },
     {
@@ -41,11 +42,12 @@ RECORDS: list[dict[str, Any]] = [
         "title": "С. А. Есенин. Исповедь хулигана. Москва, 1921",
         "catalog_url": "https://rusneb.ru/catalog/000200_000018_RU_NLR_A1SV_46698/",
         "pdf_url": "https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000200_000018_RU_NLR_A1SV_46698&doc_type=pdf&name=000200_000018_RU_NLR_A1SV_46698-%D0%98%D1%81%D0%BF%D0%BE%D0%B2%D0%B5%D0%B4%D1%8C+%D1%85%D1%83%D0%BB%D0%B8%D0%B3%D0%B0%D0%BD%D0%B0",
-        "catalog_extent": "[12] printed pages",
-        "pdf_packaging": "exact PDF-frame count pending first complete acquisition",
+        "catalog_extent": "[12] printed pages plus cover/endpaper frames",
+        "pdf_packaging": "16 PDF frames including front cover, inner covers, text leaves and back cover",
         "holding": "Russian National Library / National Electronic Library",
-        "minimum_bytes": 1_000_000,
-        "minimum_pdf_frames": 10,
+        "expected_bytes": 3_309_388,
+        "expected_sha256": "17917962290fdd24eedd52fdd76d84c7c1bdf0898f53a41c52af555691f3116c",
+        "expected_pdf_frames": 16,
     },
 ]
 
@@ -83,11 +85,18 @@ def acquire(record: dict[str, Any], pdf_path: Path) -> dict[str, Any]:
     if not data.startswith(b"%PDF-"):
         preview = data[:100].decode("utf-8", errors="replace")
         fail(f"{record['id']} returned {content_type}, not PDF bytes: {preview!r}")
-    if len(data) < record["minimum_bytes"]:
-        fail(f"{record['id']} is implausibly small: {len(data)} bytes")
+    if len(data) != record["expected_bytes"]:
+        fail(
+            f"{record['id']} byte-size drifted: expected {record['expected_bytes']}, found {len(data)}"
+        )
+
+    sha256 = hashlib.sha256(data).hexdigest()
+    if sha256 != record["expected_sha256"]:
+        fail(
+            f"{record['id']} SHA-256 drifted: expected {record['expected_sha256']}, found {sha256}"
+        )
 
     pdf_path.write_bytes(data)
-    sha256 = hashlib.sha256(data).hexdigest()
     document = fitz.open(stream=data, filetype="pdf")
     frame_count = document.page_count
     metadata = {key: value for key, value in document.metadata.items() if value}
@@ -96,12 +105,10 @@ def acquire(record: dict[str, Any], pdf_path: Path) -> dict[str, Any]:
 
     if needs_password:
         fail(f"{record['id']} unexpectedly requires a password")
-    expected_frames = record.get("expected_pdf_frames")
-    if expected_frames is not None and frame_count != expected_frames:
-        fail(f"{record['id']} PDF-frame count drifted: expected {expected_frames}, found {frame_count}")
-    minimum_frames = record.get("minimum_pdf_frames")
-    if minimum_frames is not None and frame_count < minimum_frames:
-        fail(f"{record['id']} has only {frame_count} PDF frames")
+    if frame_count != record["expected_pdf_frames"]:
+        fail(
+            f"{record['id']} PDF-frame count drifted: expected {record['expected_pdf_frames']}, found {frame_count}"
+        )
 
     return {
         **record,
@@ -181,6 +188,9 @@ def main() -> int:
         "records": len(manifest),
         "realPdfObjects": len(manifest),
         "totalPdfFrames": sum(record["pdf_frames"] for record in manifest),
+        "exactBytesFrozen": True,
+        "exactSha256Frozen": True,
+        "exactFrameCountsFrozen": True,
         "ocrUsed": False,
         "syntheticImages": 0,
         "generatedDocuments": 0,
