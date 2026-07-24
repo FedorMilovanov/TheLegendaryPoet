@@ -45,16 +45,12 @@ jobs:
       - name: Install non-generative PDF tooling
         run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
       - name: Acquire exact NEB PDFs and render page contact sheets
-        id: acquisition
-        continue-on-error: true
         env:
           YESENIN_NEB_OUTPUT: artifacts/yesenin-neb-editions-pass8
         run: |
           set -o pipefail
           python scripts/acquire-yesenin-neb-editions-pass8.py 2>&1 | tee yesenin-neb-editions-pass8.log
       - name: Validate typed physical-edition evidence
-        id: typed_evidence
-        continue-on-error: true
         run: |
           set -o pipefail
           npx tsx scripts/validate-yesenin-part-one-physical-editions-pass8.ts 2>&1 | tee yesenin-physical-editions-pass8-validation.log
@@ -69,7 +65,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Upload real PDFs and page-contact sheets
-        if: steps.acquisition.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: yesenin-neb-editions-pass8-research-only
@@ -77,8 +72,3 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 9
-      - name: Enforce acquisition and typed evidence results
-        if: always()
-        run: |
-          test "${{ steps.acquisition.outcome }}" = "success"
-          test "${{ steps.typed_evidence.outcome }}" = "success"
