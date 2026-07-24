@@ -1,0 +1,72 @@
+name: Yesenin Part I Effective Physical Witnesses
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-physical-witness-effective-state-pass12]
+    paths:
+      - 'package.json'
+      - 'scripts/validate-yesenin-part-one-physical-editions-pass8.ts'
+      - 'scripts/validate-yesenin-part-one-physical-witness-effective-state.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalEditionAcquisitionsPassEight.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalWitnessesPassSix.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalWitnessEffectiveState.ts'
+      - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - 'research/yesenin/PART_ONE_PHYSICAL_WITNESS_EFFECTIVE_STATE_2026-07-25.md'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-part-one-effective-witnesses.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'package.json'
+      - 'scripts/validate-yesenin-part-one-physical-editions-pass8.ts'
+      - 'scripts/validate-yesenin-part-one-physical-witness-effective-state.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalEditionAcquisitionsPassEight.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalWitnessesPassSix.ts'
+      - 'src/data/essays/yeseninPartOnePhysicalWitnessEffectiveState.ts'
+      - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - 'research/yesenin/PART_ONE_PHYSICAL_WITNESS_EFFECTIVE_STATE_2026-07-25.md'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-part-one-effective-witnesses.yml'
+
+concurrency:
+  group: yesenin-part-one-effective-witnesses-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-effective-state:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Prepare evidence directory
+        run: mkdir -p artifacts/yesenin-effective-witnesses
+      - name: Validate acquired physical editions
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-physical-editions \
+            | tee artifacts/yesenin-effective-witnesses/physical-editions.json
+      - name: Validate effective witness state
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-effective-witnesses \
+            | tee artifacts/yesenin-effective-witnesses/effective-state.json
+      - name: Upload effective-state evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-effective-witnesses
+          path: artifacts/yesenin-effective-witnesses
+          if-no-files-found: error
+          retention-days: 7
