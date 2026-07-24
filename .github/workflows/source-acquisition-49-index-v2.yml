@@ -21,6 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         source:
+          - id: esenin-chronicle-v2-2005-mirror
+            index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
+            needle: Том 2. 1917-1920
+            year: "2005"
           - id: esenin-chronicle-v5-book1-2013-mirror
             index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
             needle: Том 5. Книга 1. Январь 1925
@@ -48,14 +52,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y curl qpdf poppler-utils
 
-      - name: Resolve exact legacy href
+      - name: Resolve exact legacy PDF href
         shell: bash
         run: |
           set -euo pipefail
           dir="legacy-index/$SOURCE_ID"
           mkdir -p "$dir"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 300 \
-            --user-agent 'Mozilla/5.0 legacy-index-resolver/2.0' \
+            --user-agent 'Mozilla/5.0 legacy-index-resolver/3.0' \
             --dump-header "$dir/index-headers.txt" \
             --output "$dir/index.raw" \
             "$INDEX_URL"
@@ -76,13 +80,6 @@ jobs:
           root = pathlib.Path('legacy-index') / source_id
           raw = (root / 'index.raw').read_bytes()
 
-          decoded_variants: list[tuple[str, str]] = []
-          for encoding in ('utf-8', 'cp1251', 'windows-1251', 'koi8-r', 'latin-1'):
-              try:
-                  decoded_variants.append((encoding, raw.decode(encoding)))
-              except UnicodeDecodeError:
-                  pass
-
           class AnchorParser(html.parser.HTMLParser):
               def __init__(self) -> None:
                   super().__init__()
@@ -92,11 +89,8 @@ jobs:
               def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
                   if tag.lower() != 'a':
                       return
-                  self.current_href = None
+                  self.current_href = next((value for key, value in attrs if key.lower() == 'href' and value), None)
                   self.current_text = []
-                  for key, value in attrs:
-                      if key.lower() == 'href' and value:
-                          self.current_href = value
               def handle_data(self, data: str) -> None:
                   if self.current_href is not None:
                       self.current_text.append(data)
@@ -108,33 +102,34 @@ jobs:
 
           attempts: list[dict[str, object]] = []
           chosen: dict[str, str] | None = None
-          for encoding, text in decoded_variants:
+          for encoding in ('cp1251', 'windows-1251', 'utf-8', 'koi8-r', 'latin-1'):
+              try:
+                  text = raw.decode(encoding)
+              except UnicodeDecodeError:
+                  continue
               parser = AnchorParser()
               parser.feed(text)
               matches: list[dict[str, str]] = []
               for href, anchor_text in parser.anchors:
-                  href_utf8 = urllib.parse.unquote(href, encoding='utf-8', errors='replace')
                   href_cp1251 = urllib.parse.unquote(href, encoding='cp1251', errors='replace')
-                  haystacks = (anchor_text, href, href_utf8, href_cp1251)
+                  href_utf8 = urllib.parse.unquote(href, encoding='utf-8', errors='replace')
+                  haystacks = (anchor_text, href_cp1251, href_utf8)
+                  if not any(value.casefold().endswith('.pdf') for value in haystacks):
+                      continue
                   if not any(needle.casefold() in value.casefold() for value in haystacks):
                       continue
                   if not any(target_year in value for value in haystacks):
                       continue
                   absolute = urllib.parse.urljoin(index_url, href)
                   parts = urllib.parse.urlsplit(absolute)
-                  resolved_path = urllib.parse.quote(
-                      urllib.parse.unquote(parts.path, encoding=encoding, errors='strict'),
-                      safe='/%[]_-.,',
-                      encoding=encoding,
-                      errors='strict',
-                  )
-                  resolved = urllib.parse.urlunsplit((parts.scheme, parts.netloc, resolved_path, parts.query, parts.fragment))
+                  # The directory exposes percent-encoded CP1251 hrefs. Preserve them byte-for-byte.
+                  resolved = urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment))
                   matches.append({
                       'encoding': encoding,
                       'href': href,
                       'anchor_text': anchor_text,
-                      'href_utf8': href_utf8,
                       'href_cp1251': href_cp1251,
+                      'href_utf8': href_utf8,
                       'resolved_url': resolved,
                   })
               attempts.append({'encoding': encoding, 'anchor_count': len(parser.anchors), 'matches': matches})
@@ -151,19 +146,19 @@ jobs:
           }
           (root / 'resolution.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           if chosen is None:
-              raise RuntimeError('no unique legacy href resolved')
+              raise RuntimeError('no unique PDF href resolved')
           (root / 'resolved-url.txt').write_text(chosen['resolved_url'] + '\n', encoding='utf-8')
           print(json.dumps(report, ensure_ascii=False, indent=2))
           PY
 
-      - name: Download exact resolved file
+      - name: Download exact resolved PDF
         shell: bash
         run: |
           set -euo pipefail
           dir="legacy-index/$SOURCE_ID"
           url="$(cat "$dir/resolved-url.txt")"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 3600 \
-            --user-agent 'Mozilla/5.0 legacy-index-resolver/2.0' \
+            --user-agent 'Mozilla/5.0 legacy-index-resolver/3.0' \
             --referer "$INDEX_URL" \
             --output "$dir/source.pdf" \
             "$url"
@@ -186,6 +181,7 @@ jobs:
           end=12
           if [ "$pages" -lt "$end" ]; then end="$pages"; fi
           pdftoppm -f 1 -l "$end" -jpeg -r 130 "$dir/normalized.pdf" "$dir/front" >/dev/null 2>&1
+          pdftoppm -f "$pages" -l "$pages" -singlefile -jpeg -r 130 "$dir/normalized.pdf" "$dir/final-page" >/dev/null 2>&1
           printf 'original_qpdf_exit=%s\npages=%s\ntext_bytes=%s\n' \
             "$original_status" "$pages" "$(wc -c < "$dir/full-text.txt")" > "$dir/summary.txt"
 
