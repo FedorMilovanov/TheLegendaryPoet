@@ -43,7 +43,7 @@ def main() -> int:
         fail("child-route discovery boundary changed")
 
     by_label = {item["label"]: item for item in manifest.get("issues", [])}
-    resolved: dict[str, str] = {}
+    resolved: dict[str, dict[str, object]] = {}
     for label, code in EXPECTED.items():
         issue = by_label.get(label)
         if not issue:
@@ -68,7 +68,7 @@ def main() -> int:
         routes = issue.get("pdfRoutes", [])
         if not routes:
             fail(f"{label} child page exposed no exact PDF route")
-        exact_routes: list[str] = []
+        exact_routes: list[tuple[str, str]] = []
         for route in routes:
             parsed = urlparse(route)
             query = parse_qs(parsed.query)
@@ -78,13 +78,27 @@ def main() -> int:
                 continue
             if query.get("book_id") != [code] or query.get("doc_type") != ["pdf"]:
                 continue
-            exact_routes.append(route)
-        if len(exact_routes) != 1:
-            fail(f"{label} expected one exact PDF route, found {len(exact_routes)}")
-        resolved[label] = exact_routes[0]
+            names = query.get("name", [])
+            if len(names) != 1 or not names[0].strip():
+                continue
+            exact_routes.append((route, names[0]))
+        if not exact_routes:
+            fail(f"{label} exposes no published PDF route with exact book_id and doc_type")
 
-    if len(set(resolved.values())) != len(resolved):
-        fail("different serial issues resolved to the same PDF route")
+        preferred = [route for route, name in exact_routes if name.startswith(f"{code}-")]
+        if len(preferred) != 1:
+            fail(f"{label} expected one code-prefixed canonical route, found {len(preferred)}")
+        alternatives = [route for route, _name in exact_routes if route != preferred[0]]
+        resolved[label] = {
+            "catalogueCode": code,
+            "canonicalPdfRoute": preferred[0],
+            "publishedAlternativeRoutes": alternatives,
+            "publishedRouteCount": len(exact_routes),
+        }
+
+    canonical_routes = [item["canonicalPdfRoute"] for item in resolved.values()]
+    if len(set(canonical_routes)) != len(canonical_routes):
+        fail("different serial issues resolved to the same canonical PDF route")
 
     print(
         json.dumps(
