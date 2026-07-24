@@ -1,0 +1,50 @@
+name: Yesenin Part I Editorial Pass 8
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-part1-editorial-pass8-early-76]
+    paths:
+      - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
+      - 'scripts/lib/yesenin-part-one-*.ts'
+      - 'research/yesenin/PART_ONE_DRAFT_*.md'
+      - 'src/data/essays/yeseninPartOne*.ts'
+      - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
+      - 'scripts/lib/yesenin-part-one-*.ts'
+      - 'research/yesenin/PART_ONE_DRAFT_*.md'
+      - 'src/data/essays/yeseninPartOne*.ts'
+      - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
+
+concurrency:
+  group: yesenin-part-one-editorial-pass8-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Build exact early-section inventory
+        run: npx tsx scripts/report-yesenin-part-one-editorial-pass8.ts
+      - name: Upload editorial inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-editorial-pass8-inventory
+          path: artifacts/yesenin-part-one-pass8
+          if-no-files-found: error
+          retention-days: 7
