@@ -1,18 +1,6 @@
 name: Source verification 77 RSL active photo witness
 
 on:
-  push:
-    branches:
-      - research/provenance-repair-77
-    paths:
-      - .github/workflows/source-verification-77-rsl-active-photo.yml
-      - scripts/source-acquisition/rsl-active-photo-witness-77.mjs
-  pull_request:
-    branches:
-      - work/local-images-playwright-wtoc
-    paths:
-      - .github/workflows/source-verification-77-rsl-active-photo.yml
-      - scripts/source-acquisition/rsl-active-photo-witness-77.mjs
   workflow_dispatch:
 
 permissions:
@@ -48,15 +36,21 @@ jobs:
           root='build/rsl-active-photo-witness-77'
           test -s "$root/summary.json"
           test -s "$root/captures.json"
-          test -s "$root/c08-author-date-page/state.json"
-          test -s "$root/c08-author-date-page/viewer.png"
-          test -s "$root/c08-publication-source-page/state.json"
-          test -s "$root/c08-publication-source-page/viewer.png"
+          test -s "$root/c08-author-date-page/document-info.json"
+          test -s "$root/c08-publication-source-page/document-info.json"
           node - <<'JS'
           const fs = require('fs');
           const summary = JSON.parse(fs.readFileSync('build/rsl-active-photo-witness-77/summary.json', 'utf8'));
+          const captures = JSON.parse(fs.readFileSync('build/rsl-active-photo-witness-77/captures.json', 'utf8'));
           if (summary.fatal) throw new Error(summary.fatal);
           if (summary.targets.length !== 2) throw new Error('expected two exact RSL targets');
+          const urls = new Set(captures.map((item) => item.url));
+          for (const expected of [
+            'https://viewer.rsl.ru/api/v1/document/rsl01005408088/page/377',
+            'https://viewer.rsl.ru/api/v1/document/rsl01005408111/page/5',
+          ]) {
+            if (!urls.has(expected)) throw new Error(`missing exact page witness: ${expected}`);
+          }
           JS
 
       - name: Upload page witnesses
