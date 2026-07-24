@@ -7,11 +7,19 @@ import {
   yeseninPartOnePassTwoClaimCoverage,
   yeseninPartOneSourcesPassTwo,
 } from '../src/data/essays/yeseninPartOneSourcesPassTwo';
+import {
+  yeseninPartOnePassThreeClaimCoverage,
+  yeseninPartOneSourcesPassThree,
+} from '../src/data/essays/yeseninPartOneSourcesPassThree';
 
 const errors: string[] = [];
 const sourceIds = new Set<string>();
 const normalizedUrls = new Set<string>();
-const allSources = [...yeseninPartOneSources, ...yeseninPartOneSourcesPassTwo] as const;
+const allSources = [
+  ...yeseninPartOneSources,
+  ...yeseninPartOneSourcesPassTwo,
+  ...yeseninPartOneSourcesPassThree,
+] as const;
 
 function normalizedUrl(value: string): string {
   return value.replace(/^http:/, 'https:').replace(/\/$/, '');
@@ -21,8 +29,8 @@ function fail(message: string) {
   errors.push(message);
 }
 
-if (allSources.length < 29) {
-  fail(`source registry regressed below pass-two floor: ${allSources.length} < 29`);
+if (allSources.length < 42) {
+  fail(`source registry regressed below canonical threshold: ${allSources.length} < 42`);
 }
 
 for (const source of allSources) {
@@ -37,7 +45,7 @@ for (const source of allSources) {
   sourceIds.add(source.id);
 
   if (!source.url) {
-    fail(`${source.id}: source URL is required in pass-two registry`);
+    fail(`${source.id}: source URL is required in the canonical research registry`);
   } else {
     if (!source.url.startsWith('https://')) fail(`${source.id}: non-HTTPS source URL ${source.url}`);
     const urlKey = normalizedUrl(source.url);
@@ -57,6 +65,11 @@ for (const source of allSources) {
     }
     if (sourceIds.has(alias)) fail(`${source.id}: alias collides with an earlier source id ${alias}`);
   }
+}
+
+const primaryCount = allSources.filter((source) => source.kind === 'primary').length;
+if (primaryCount < 12 || primaryCount > 15) {
+  fail(`primary-document registry must stay within issue #76 target: ${primaryCount} not in 12–15`);
 }
 
 const requiredClaims = [
@@ -89,15 +102,20 @@ for (const claimId of requiredClaims) {
   }
 }
 
-for (const [claimId, coverage] of Object.entries(yeseninPartOnePassTwoClaimCoverage)) {
-  if (!requiredClaims.includes(claimId as (typeof requiredClaims)[number])) {
-    fail(`${claimId}: pass-two coverage points to an unguarded claim`);
-  }
-  if (coverage.sourceIds.length === 0) {
-    fail(`${claimId}: pass-two coverage must add at least one exact source`);
-  }
-  for (const sourceId of coverage.sourceIds) {
-    if (!sourceIds.has(sourceId)) fail(`${claimId}: unknown pass-two source id ${sourceId}`);
+for (const [passLabel, registry] of [
+  ['pass-two', yeseninPartOnePassTwoClaimCoverage],
+  ['pass-three', yeseninPartOnePassThreeClaimCoverage],
+] as const) {
+  for (const [claimId, coverage] of Object.entries(registry)) {
+    if (!requiredClaims.includes(claimId as (typeof requiredClaims)[number])) {
+      fail(`${claimId}: ${passLabel} coverage points to an unguarded claim`);
+    }
+    if (coverage.sourceIds.length === 0) {
+      fail(`${claimId}: ${passLabel} coverage must add at least one exact source`);
+    }
+    for (const sourceId of coverage.sourceIds) {
+      if (!sourceIds.has(sourceId)) fail(`${claimId}: unknown ${passLabel} source id ${sourceId}`);
+    }
   }
 }
 
@@ -130,6 +148,21 @@ for (const [claimId, requiredText] of passTwoHoldAssertions) {
   }
 }
 
+const passThreeHoldAssertions: Array<[keyof typeof yeseninPartOnePassThreeClaimCoverage, string]> = [
+  ['YE1-007', 'employment and address'],
+  ['YE1-010', 'birth/family record'],
+  ['YE1-020', 'marriage, birth and divorce'],
+  ['YE1-022', 'first-publication facsimiles'],
+  ['YE1-023', '1919 declaration first-publication witness'],
+];
+
+for (const [claimId, requiredText] of passThreeHoldAssertions) {
+  const remainingText = yeseninPartOnePassThreeClaimCoverage[claimId].remaining.join(' ');
+  if (!remainingText.includes(requiredText)) {
+    fail(`${claimId}: pass-three archive/publication hold changed or disappeared (${requiredText})`);
+  }
+}
+
 const forbiddenPublishedIds = new Set([
   'essay-yesenin-1895-1921',
 ]);
@@ -153,18 +186,21 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-const primaryCount = allSources.filter((source) => source.kind === 'primary').length;
 const unresolvedClaims = Object.values(yeseninPartOneClaimCoverage)
   .filter((coverage) => coverage.missing.length > 0)
   .length;
 const passTwoOpenHolds = Object.values(yeseninPartOnePassTwoClaimCoverage)
   .filter((coverage) => coverage.remaining.length > 0)
   .length;
+const passThreeOpenHolds = Object.values(yeseninPartOnePassThreeClaimCoverage)
+  .filter((coverage) => coverage.remaining.length > 0)
+  .length;
 
 console.log(
-  `Yesenin Part I research validation: ${allSources.length} classified sources `
-  + `(${yeseninPartOneSources.length} pass one + ${yeseninPartOneSourcesPassTwo.length} pass two), `
+  `Yesenin Part I research validation: ${allSources.length} classified unique sources `
+  + `(${yeseninPartOneSources.length} pass one + ${yeseninPartOneSourcesPassTwo.length} pass two `
+  + `+ ${yeseninPartOneSourcesPassThree.length} pass three), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
-  + `${unresolvedClaims} pass-one gaps and ${passTwoOpenHolds} pass-two archive/publication holds; `
-  + 'public registration remains blocked.',
+  + `${unresolvedClaims} pass-one gaps, ${passTwoOpenHolds} pass-two holds and `
+  + `${passThreeOpenHolds} pass-three holds; public registration remains blocked.`,
 );
