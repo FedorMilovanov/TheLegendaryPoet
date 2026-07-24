@@ -26,10 +26,6 @@ jobs:
       max-parallel: 1
       matrix:
         source:
-          - id: esenin-chronicle-v2-2005-mirror
-            index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
-            needle: Том 2. 1917-1920
-            year: "2005"
           - id: esenin-chronicle-v5-book1-2013-mirror
             index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
             needle: Том 5. Книга 1. Январь 1925
