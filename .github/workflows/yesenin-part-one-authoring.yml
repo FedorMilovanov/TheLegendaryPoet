@@ -39,4 +39,20 @@ jobs:
       - name: Install dependencies
         run: npm ci --silent
       - name: Validate verified authoring corpus
-        run: npm run validate:yesenin-part-one-authoring
+        id: authoring
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-authoring 2>&1 | tee yesenin-part-one-authoring-validation.log
+      - name: Upload focused authoring diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-authoring-validation
+          path: yesenin-part-one-authoring-validation.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce authoring result
+        if: always()
+        run: test "${{ steps.authoring.outcome }}" = "success"
