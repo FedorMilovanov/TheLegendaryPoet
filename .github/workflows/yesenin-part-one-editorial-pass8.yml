@@ -5,22 +5,26 @@ on:
   push:
     branches: [research/yesenin-part1-editorial-pass8-early-76]
     paths:
+      - 'package.json'
       - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
       - 'research/yesenin/PART_ONE_EDITORIAL_PASS8_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
+      - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
   pull_request:
     branches: [work/local-images-playwright-wtoc]
     paths:
+      - 'package.json'
       - 'scripts/report-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/validate-yesenin-part-one-editorial-pass8.ts'
       - 'scripts/lib/yesenin-part-one-*.ts'
       - 'research/yesenin/PART_ONE_DRAFT_*.md'
       - 'research/yesenin/PART_ONE_EDITORIAL_PASS8_*.md'
       - 'src/data/essays/yeseninPartOne*.ts'
+      - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-part-one-editorial-pass8.yml'
 
 concurrency:
@@ -43,14 +47,14 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --silent
-      - name: Build exact early-section inventory
+      - name: Build exact editorial inventory
         run: npx tsx scripts/report-yesenin-part-one-editorial-pass8.ts
-      - name: Validate early-A reader prose
+      - name: Validate complete reader prose
         shell: bash
         run: |
           set -o pipefail
           npx tsx scripts/validate-yesenin-part-one-editorial-pass8.ts \
-            | tee artifacts/yesenin-part-one-pass8/early-a-validation.json
+            | tee artifacts/yesenin-part-one-pass8/editorial-validation.json
       - name: Upload editorial inventory and validation
         uses: actions/upload-artifact@v4
         with:
