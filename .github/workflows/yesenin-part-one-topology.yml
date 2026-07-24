@@ -1,0 +1,62 @@
+name: Yesenin Part I Citation Topology
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'research/yesenin/part-one-claim-ledger-pass1.md'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/lib/yesenin-part-one-citation-topology.ts'
+      - 'scripts/validate-yesenin-part-one-citation-topology.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-topology.yml'
+  push:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'research/yesenin/part-one-claim-ledger-pass1.md'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/lib/yesenin-part-one-citation-topology.ts'
+      - 'scripts/validate-yesenin-part-one-citation-topology.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-topology.yml'
+
+concurrency:
+  group: yesenin-part-one-topology-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate typed citation topology
+        id: topology
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-topology 2>&1 | tee yesenin-part-one-topology.log
+      - name: Upload topology diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-topology-diagnostics
+          path: yesenin-part-one-topology.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce topology result
+        if: always()
+        run: test "${{ steps.topology.outcome }}" = "success"
