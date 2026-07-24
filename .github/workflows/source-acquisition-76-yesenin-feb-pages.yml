@@ -1,0 +1,109 @@
+name: Source acquisition 76 — Yesenin FEB page witnesses
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: source-acquisition-76-yesenin-feb-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci --silent
+
+      - name: Install pinned Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium
+
+      - name: Acquire and classify FEB published-page candidates
+        id: acquisition
+        continue-on-error: true
+        shell: bash
+        env:
+          OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/yesenin-feb-page-witnesses-76
+          node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs \
+            2>&1 | tee artifacts/yesenin-feb-page-witnesses-76/acquisition.log
+
+      - name: Discover exact Sirena page-621 route and asset
+        id: sirena
+        continue-on-error: true
+        shell: bash
+        env:
+          OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
+        run: |
+          set -o pipefail
+          node scripts/source-acquisition/yesenin-feb-sirena-discovery-76.mjs \
+            2>&1 | tee artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.log
+
+      - name: Prepare bounded evidence archive
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/yesenin-feb-page-witnesses-76
+          if [ ! -f artifacts/yesenin-feb-page-witnesses-76/manifest.json ]; then
+            printf '{"summary":{"technicalErrorCount":1},"technicalErrors":[{"targetId":"workflow","message":"manifest was not produced; inspect acquisition.log"}]}\n' \
+              > artifacts/yesenin-feb-page-witnesses-76/manifest.json
+          fi
+          if [ ! -f artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json ]; then
+            printf '{"summary":{"technicalErrorCount":1,"classification":"TECHNICAL-DISCOVERY-ERROR"},"technicalErrors":[{"message":"Sirena discovery report was not produced; inspect sirena-discovery.log"}]}\n' \
+              > artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json
+          fi
+          du -ah artifacts/yesenin-feb-page-witnesses-76 | sort -h | tail -n 40
+          tar -czf artifacts/yesenin-feb-page-witnesses-76.tgz \
+            -C artifacts yesenin-feb-page-witnesses-76
+          ls -lh artifacts/yesenin-feb-page-witnesses-76.tgz
+
+      - name: Upload evidence package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-feb-page-witnesses-76
+          path: artifacts/yesenin-feb-page-witnesses-76.tgz
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce technical acquisition result
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const manifest = JSON.parse(readFileSync('artifacts/yesenin-feb-page-witnesses-76/manifest.json', 'utf8'));
+          const discovery = JSON.parse(readFileSync('artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json', 'utf8'));
+          const acquisitionErrors = manifest?.summary?.technicalErrorCount;
+          const discoveryErrors = discovery?.summary?.technicalErrorCount;
+          if (!Number.isInteger(acquisitionErrors)) throw new Error('manifest technicalErrorCount is missing');
+          if (!Number.isInteger(discoveryErrors)) throw new Error('Sirena discovery technicalErrorCount is missing');
+          if (acquisitionErrors > 0) {
+            console.error(JSON.stringify(manifest.technicalErrors || [], null, 2));
+            process.exitCode = 1;
+          }
+          if (discoveryErrors > 0 && (discovery?.summary?.successfulImageCount || 0) === 0) {
+            console.error(JSON.stringify(discovery.technicalErrors || [], null, 2));
+            process.exitCode = 1;
+          }
+          console.log(JSON.stringify({
+            acquisition: manifest.summary,
+            sirenaDiscovery: discovery.summary,
+          }, null, 2));
+          NODE
