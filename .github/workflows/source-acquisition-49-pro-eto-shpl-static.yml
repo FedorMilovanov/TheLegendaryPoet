@@ -1,0 +1,423 @@
+name: Source acquisition 49 Pro eto SHPL static resolver
+
+on:
+  push:
+    branches:
+      - research/source-acquisition-49
+    paths:
+      - .github/workflows/source-acquisition-49-pro-eto-shpl-static.yml
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
+    paths:
+      - .github/workflows/source-acquisition-49-pro-eto-shpl-static.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-49-pro-eto-shpl-static-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl imagemagick jq
+
+      - name: Resolve Docview page metadata and images
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='shpl-pro-eto'
+          base='http://elib.shpl.ru'
+          node='/ru/nodes/3515-mayakovskiy-v-v-pro-eto-m-pg-gos-izd-vo-1923'
+          mkdir -p "$root/endpoints/read" "$root/endpoints/page" "$root/endpoints/headers" "$root/images/all" "$root/images/best" "$root/contact-sheets"
+
+          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0'
+          curl --fail --location --compressed --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent "$ua" \
+            --cookie-jar "$root/cookies.txt" \
+            --dump-header "$root/node-headers.txt" \
+            --output "$root/node.html" \
+            "$base$node"
+
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import pathlib
+
+          root = pathlib.Path('shpl-pro-eto')
+          text = (root / 'node.html').read_text(encoding='utf-8', errors='replace')
+          marker = 'initDocview('
+          marker_index = text.find(marker)
+          if marker_index < 0:
+              raise RuntimeError('initDocview payload not found')
+          start = text.find('{', marker_index)
+          if start < 0:
+              raise RuntimeError('initDocview object start not found')
+
+          depth = 0
+          quoted = False
+          quote = ''
+          escaped = False
+          end = None
+          for index in range(start, len(text)):
+              char = text[index]
+              if quoted:
+                  if escaped:
+                      escaped = False
+                  elif char == '\\':
+                      escaped = True
+                  elif char == quote:
+                      quoted = False
+                  continue
+              if char in ('"', "'"):
+                  quoted = True
+                  quote = char
+              elif char == '{':
+                  depth += 1
+              elif char == '}':
+                  depth -= 1
+                  if depth == 0:
+                      end = index + 1
+                      break
+          if end is None:
+              raise RuntimeError('initDocview object end not found')
+
+          options = json.loads(text[start:end])
+          pages = options.get('pages') or []
+          if len(pages) != 70:
+              raise RuntimeError(f'expected 70 physical scans, found {len(pages)}')
+          (root / 'docview-options.json').write_text(
+              json.dumps(options, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          (root / 'page-ids.txt').write_text(
+              ''.join(f"{page['id']}\n" for page in pages),
+              encoding='utf-8',
+          )
+          static: list[dict[str, object]] = []
+          for zoom_key in ('links_z0', 'links_z1', 'links_z2'):
+              for page_id, url in (options.get(zoom_key) or {}).items():
+                  static.append({
+                      'page_id': int(page_id),
+                      'origin': zoom_key,
+                      'url': url,
+                  })
+          (root / 'static-links.json').write_text(
+              json.dumps(static, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          summary = {
+              'physical_scans': len(pages),
+              'page_ids_first': pages[:3],
+              'page_ids_last': pages[-3:],
+              'node_pdf_url': options.get('node_pdf_url'),
+              'node_archive_url': options.get('node_archive_url'),
+              'read_page_path': options.get('read_page_path'),
+              'page_path': options.get('page_path'),
+              'script_path': options.get('script_path'),
+              'zooms': options.get('zooms'),
+              'static_links': len(static),
+          }
+          (root / 'docview-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          PY
+
+          script_path="$(jq -r '.script_path' "$root/docview-options.json")"
+          curl --location --compressed --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent "$ua" \
+            --cookie "$root/cookies.txt" \
+            --referer "$base$node" \
+            --dump-header "$root/docview-script-headers.txt" \
+            --output "$root/docview-script.txt" \
+            "$base$script_path" || true
+
+          app_asset="$(grep -oE '/assets/application-[A-Za-z0-9]+\.js' "$root/node.html" | head -n 1 || true)"
+          if [ -n "$app_asset" ]; then
+            curl --location --compressed --retry 4 --retry-all-errors \
+              --connect-timeout 30 --max-time 600 \
+              --user-agent "$ua" \
+              --output "$root/application.js" \
+              "$base$app_asset" || true
+          fi
+
+          while IFS= read -r id; do
+            [ -n "$id" ] || continue
+            for route in "/ru/pages/$id/read" "/ru/pages/$id"; do
+              if [[ "$route" == */read ]]; then
+                stem="read/$id"
+              else
+                stem="page/$id"
+              fi
+              curl --location --compressed --retry 3 --retry-all-errors \
+                --connect-timeout 30 --max-time 180 \
+                --user-agent "$ua" \
+                --cookie "$root/cookies.txt" \
+                --referer "$base$node" \
+                --header 'X-Requested-With: XMLHttpRequest' \
+                --header 'Accept: application/json, text/javascript, */*; q=0.01' \
+                --dump-header "$root/endpoints/headers/${stem//\//-}.txt" \
+                --output "$root/endpoints/$stem.txt" \
+                "$base$route" || true
+            done
+          done < "$root/page-ids.txt"
+
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import urllib.parse
+
+          root = pathlib.Path('shpl-pro-eto')
+          base = 'http://elib.shpl.ru'
+          options = json.loads((root / 'docview-options.json').read_text(encoding='utf-8'))
+          candidates: dict[str, dict[str, object]] = {}
+
+          def add(url: str, origin: str, page_id: int | None = None) -> None:
+              url = url.strip().replace('\\/', '/')
+              if not url or url in ('null', 'None'):
+                  return
+              if url.startswith('//'):
+                  url = 'http:' + url
+              elif url.startswith('/'):
+                  url = base + url
+              elif not url.startswith(('http://', 'https://')):
+                  return
+              url = url.rstrip('"\' ,;}])')
+              if not re.search(r'(?:/images/|\.jpe?g(?:\?|$)|\.png(?:\?|$)|\.webp(?:\?|$))', url, re.I):
+                  return
+              key = hashlib.sha256(url.encode()).hexdigest()
+              item = candidates.setdefault(key, {
+                  'url': url,
+                  'origins': [],
+                  'page_ids': [],
+              })
+              if origin not in item['origins']:
+                  item['origins'].append(origin)
+              if page_id is not None and page_id not in item['page_ids']:
+                  item['page_ids'].append(page_id)
+
+          for zoom_key in ('links_z0', 'links_z1', 'links_z2'):
+              for page_id, url in (options.get(zoom_key) or {}).items():
+                  add(str(url), zoom_key, int(page_id))
+
+          url_pattern = re.compile(r'(?:https?:)?//[^\s"\'<>]+|/system/pages/[^\s"\'<>]+', re.I)
+          page_id_pattern = re.compile(r'391\d{3}')
+          sources = [root / 'docview-script.txt', root / 'application.js']
+          sources.extend(sorted((root / 'endpoints').rglob('*.txt')))
+          for source in sources:
+              if not source.exists():
+                  continue
+              text = source.read_text(encoding='utf-8', errors='replace')
+              ids = [int(value) for value in page_id_pattern.findall(text)]
+              unique_ids = sorted(set(ids))
+              inferred = unique_ids[0] if len(unique_ids) == 1 else None
+              for match in url_pattern.finditer(text):
+                  add(match.group(0), str(source.relative_to(root)), inferred)
+
+          values = sorted(candidates.values(), key=lambda item: item['url'])
+          (root / 'candidate-images.json').write_text(
+              json.dumps(values, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          with (root / 'candidate-images.tsv').open('w', encoding='utf-8') as handle:
+              for index, item in enumerate(values, start=1):
+                  page_ids = ','.join(str(value) for value in item['page_ids'])
+                  origins = ','.join(item['origins'])
+                  handle.write(f"{index}\t{page_ids}\t{origins}\t{item['url']}\n")
+          print(f'discovered {len(values)} unique image URLs')
+          PY
+
+          : > "$root/download-attempts.tsv"
+          while IFS=$'\t' read -r index page_ids origins url; do
+            printf -v index4 '%04d' "$index"
+            target="$root/images/all/$index4.bin"
+            headers="$root/images/all/$index4.headers"
+            code=0
+            curl --fail --location --compressed --retry 3 --retry-all-errors \
+              --connect-timeout 30 --max-time 600 \
+              --user-agent "$ua" \
+              --cookie "$root/cookies.txt" \
+              --referer "$base$node" \
+              --dump-header "$headers" \
+              --output "$target" \
+              "$url" || code=$?
+            bytes=0
+            [ -f "$target" ] && bytes="$(stat --printf='%s' "$target")"
+            mime=''
+            dimensions=''
+            if [ "$code" -eq 0 ] && [ -s "$target" ]; then
+              mime="$(file --brief --mime-type "$target")"
+              dimensions="$(identify -format '%wx%h' "$target" 2>/dev/null || true)"
+            fi
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+              "$index4" "$code" "$bytes" "$mime" "$dimensions" "$page_ids" "$origins" "$url" \
+              >> "$root/download-attempts.tsv"
+          done < "$root/candidate-images.tsv"
+
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import shutil
+          import subprocess
+
+          root = pathlib.Path('shpl-pro-eto')
+          page_ids = [int(value) for value in (root / 'page-ids.txt').read_text().split()]
+          attempts: list[dict[str, object]] = []
+          for line in (root / 'download-attempts.tsv').read_text(encoding='utf-8').splitlines():
+              fields = line.split('\t')
+              if len(fields) != 8:
+                  continue
+              index, code, bytes_text, mime, dimensions, page_ids_text, origins, url = fields
+              width = height = 0
+              match = re.fullmatch(r'(\d+)x(\d+)', dimensions)
+              if match:
+                  width, height = map(int, match.groups())
+              file_path = root / 'images' / 'all' / f'{index}.bin'
+              sha = hashlib.sha256(file_path.read_bytes()).hexdigest() if file_path.exists() and file_path.stat().st_size else ''
+              attempts.append({
+                  'index': index,
+                  'code': int(code),
+                  'bytes': int(bytes_text or 0),
+                  'mime': mime,
+                  'width': width,
+                  'height': height,
+                  'area': width * height,
+                  'page_ids': [int(value) for value in page_ids_text.split(',') if value],
+                  'origins': origins.split(',') if origins else [],
+                  'url': url,
+                  'sha256': sha,
+                  'file': str(file_path),
+              })
+
+          best: list[dict[str, object]] = []
+          for sequence, page_id in enumerate(page_ids, start=1):
+              matching = [item for item in attempts if page_id in item['page_ids'] and item['code'] == 0 and item['area'] > 0]
+              matching.sort(key=lambda item: (item['area'], item['bytes']), reverse=True)
+              if not matching:
+                  best.append({'sequence': sequence, 'page_id': page_id, 'status': 'missing'})
+                  continue
+              chosen = matching[0]
+              extension = 'jpg' if 'jpeg' in chosen['mime'] else 'png' if 'png' in chosen['mime'] else 'img'
+              target = root / 'images' / 'best' / f'{sequence:03d}-page-{page_id}.{extension}'
+              shutil.copyfile(chosen['file'], target)
+              best.append({
+                  'sequence': sequence,
+                  'page_id': page_id,
+                  'status': 'downloaded',
+                  'file': str(target),
+                  'bytes': chosen['bytes'],
+                  'width': chosen['width'],
+                  'height': chosen['height'],
+                  'sha256': chosen['sha256'],
+                  'url': chosen['url'],
+                  'origins': chosen['origins'],
+                  'available_candidates': len(matching),
+              })
+
+          (root / 'download-manifest.json').write_text(
+              json.dumps(attempts, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          (root / 'best-page-manifest.json').write_text(
+              json.dumps(best, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          downloaded = [item for item in best if item['status'] == 'downloaded']
+          summary = {
+              'physical_scans': len(page_ids),
+              'candidate_urls': len(attempts),
+              'best_pages_downloaded': len(downloaded),
+              'best_pages_missing': len(page_ids) - len(downloaded),
+              'min_width': min((item['width'] for item in downloaded), default=0),
+              'max_width': max((item['width'] for item in downloaded), default=0),
+              'min_height': min((item['height'] for item in downloaded), default=0),
+              'max_height': max((item['height'] for item in downloaded), default=0),
+              'total_best_bytes': sum(item['bytes'] for item in downloaded),
+          }
+          (root / 'acquisition-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          if len(downloaded) < 70:
+              raise RuntimeError(f"only {len(downloaded)} of 70 page scans acquired")
+          PY
+
+      - name: Build visual contact sheets
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="$(find shpl-pro-eto/images/best -type f | wc -l)"
+          printf 'best_page_files=%s\n' "$count" > shpl-pro-eto/best-page-count.txt
+          if [ "$count" -gt 0 ]; then
+            montage shpl-pro-eto/images/best/* -thumbnail 260x -tile 10x -geometry +6+6 shpl-pro-eto/contact-sheets/all-pages.jpg
+            for start in 1 21 41 61; do
+              end=$((start + 19))
+              mapfile -t files < <(find shpl-pro-eto/images/best -type f -printf '%f\n' | sort | awk -v s="$start" -v e="$end" 'NR>=s && NR<=e {print "shpl-pro-eto/images/best/"$0}')
+              if [ "${#files[@]}" -gt 0 ]; then
+                printf -v label '%03d-%03d' "$start" "$end"
+                montage "${files[@]}" -thumbnail 420x -tile 5x -geometry +8+8 "shpl-pro-eto/contact-sheets/pages-$label.jpg"
+              fi
+            done
+          fi
+
+      - name: Upload SHPL verification bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-pro-eto-shpl-static-verification
+          path: |
+            shpl-pro-eto/node-headers.txt
+            shpl-pro-eto/node.html
+            shpl-pro-eto/docview-options.json
+            shpl-pro-eto/docview-summary.json
+            shpl-pro-eto/page-ids.txt
+            shpl-pro-eto/static-links.json
+            shpl-pro-eto/docview-script-headers.txt
+            shpl-pro-eto/docview-script.txt
+            shpl-pro-eto/application.js
+            shpl-pro-eto/endpoints/**/*.txt
+            shpl-pro-eto/candidate-images.json
+            shpl-pro-eto/download-attempts.tsv
+            shpl-pro-eto/download-manifest.json
+            shpl-pro-eto/best-page-manifest.json
+            shpl-pro-eto/acquisition-summary.json
+            shpl-pro-eto/best-page-count.txt
+            shpl-pro-eto/contact-sheets/*.jpg
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload official page scans
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-pro-eto-shpl-page-scans
+          path: shpl-pro-eto/images/best
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
