@@ -37,11 +37,24 @@ export interface YeseninPartOneUnpublishedArticlePackage {
   evidenceByBlockId: Readonly<Record<string, YeseninPartOneInternalEvidence>>;
 }
 
-const allCanonicalSources: EssaySource[] = [
+const canonicalSourceRecords = [
   ...yeseninPartOneSources,
   ...yeseninPartOneSourcesPassTwo,
   ...yeseninPartOneSourcesPassThree,
-].map((source) => ({ ...source }));
+];
+
+const allCanonicalSources: EssaySource[] = canonicalSourceRecords.map(
+  (source): EssaySource => ({
+    id: source.id,
+    aliases: 'aliases' in source ? [...source.aliases] : undefined,
+    title: source.title,
+    url: source.url,
+    kind: source.kind,
+    institution: source.institution,
+    year: source.year,
+    note: source.note,
+  }),
+);
 
 const sectionAnchor = (sectionNumber: number) =>
   `yesenin-part-one-section-${String(sectionNumber).padStart(2, '0')}`;
