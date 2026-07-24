@@ -2,7 +2,8 @@ import type { Essay, EssayBlock, EssaySource } from '../../src/types/essay';
 import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSources';
 import { yeseninPartOneSourcesPassTwo } from '../../src/data/essays/yeseninPartOneSourcesPassTwo';
 import { yeseninPartOneSourcesPassThree } from '../../src/data/essays/yeseninPartOneSourcesPassThree';
-import { loadYeseninPartOneCompleteCitationTopology } from './yesenin-part-one-complete-citation-topology';
+import { yeseninPartOneSourcesPassFour } from '../../src/data/essays/yeseninPartOneSourcesPassFour';
+import { loadYeseninPartOnePass6CitationTopology } from './yesenin-part-one-pass6-citation-topology';
 
 export const YESENIN_PART_ONE_UNPUBLISHED_ID = 'essay-yesenin-biography-part-one-unpublished' as const;
 export const YESENIN_PART_ONE_UNPUBLISHED_SLUG = 'sergei-yesenin-1895-1921-unpublished' as const;
@@ -41,6 +42,7 @@ const canonicalSourceRecords = [
   ...yeseninPartOneSources,
   ...yeseninPartOneSourcesPassTwo,
   ...yeseninPartOneSourcesPassThree,
+  ...yeseninPartOneSourcesPassFour,
 ];
 
 const allCanonicalSources: EssaySource[] = canonicalSourceRecords.map(
@@ -65,7 +67,7 @@ const withRenderSources = (block: EssayBlock, sourceIds: readonly string[]): Ess
 export function buildYeseninPartOneUnpublishedArticle(
   root = process.cwd(),
 ): YeseninPartOneUnpublishedArticlePackage {
-  const topology = loadYeseninPartOneCompleteCitationTopology(root);
+  const topology = loadYeseninPartOnePass6CitationTopology(root);
   const referencedCanonicalSourceIds = new Set(
     topology.nodes.flatMap((node) => node.canonicalSourceIds),
   );
