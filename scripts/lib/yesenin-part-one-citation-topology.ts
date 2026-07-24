@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { yeseninPartOneFebAcquiredRecords } from '../../src/data/essays/yeseninPartOneFebAcquisition';
+import {
+  YESENIN_MCVAY_USER_SOURCE_ID,
+  yeseninPartOneMcVayResearchCheckIds,
+  yeseninPartOneMcVayResearchChecks,
+} from '../../src/data/essays/yeseninPartOneMcVayResearchChecks';
 
 export const yeseninPartOneDraftPaths = [
   'research/yesenin/PART_ONE_DRAFT_1895_1921.md',
@@ -15,6 +20,7 @@ const sourcePaths = [
 ] as const;
 
 const supplementPath = 'research/yesenin/PART_ONE_TARGETED_WEB_SUPPLEMENT_2026-07-24.md';
+const mcvayPath = 'research/yesenin/PART_ONE_MCVAY_DUNCAN_VERIFICATION_PASS5_2026-07-24.md';
 const witnessPath = 'research/yesenin/PART_ONE_PAGE_WITNESS_LEDGER.md';
 const claimLedgerPath = 'research/yesenin/part-one-claim-ledger-pass1.md';
 
@@ -31,7 +37,12 @@ const witnessClaimSupport = new Map<string, ReadonlySet<string>>([
   ['WIT-YE1-005', new Set(['YE1-022'])],
 ]);
 
-export type YeseninPartOneSourceLayer = 'canonical' | 'supplemental' | 'witness' | 'acquisition';
+export type YeseninPartOneSourceLayer =
+  | 'canonical'
+  | 'supplemental'
+  | 'research-check'
+  | 'witness'
+  | 'acquisition';
 
 export interface YeseninPartOneCitationNode {
   blockId: string;
@@ -48,6 +59,7 @@ export interface YeseninPartOneCitationNode {
   sourceIds: string[];
   canonicalSourceIds: string[];
   supplementalSourceIds: string[];
+  researchCheckSourceIds: string[];
   witnessSourceIds: string[];
   acquisitionSourceIds: string[];
   legacySourceTokens: string[];
@@ -58,6 +70,7 @@ export interface YeseninPartOneCitationTopology {
   nodes: YeseninPartOneCitationNode[];
   canonicalSourceIds: Set<string>;
   supplementalSourceIds: Set<string>;
+  researchCheckSourceIds: Set<string>;
   witnessSourceIds: Set<string>;
   acquisitionSourceIds: Set<string>;
   claimIds: Set<string>;
@@ -74,6 +87,7 @@ const fail = (message: string): never => {
 };
 
 const read = (root: string, path: string) => readFileSync(resolve(root, path), 'utf8');
+const normalizeLedgerLabel = (value: string) => value.replace(/\s+/g, ' ').trim();
 
 const parseTag = (paragraph: string, tag: 'block' | 'claims' | 'sources', label: string) => {
   const matches = [...paragraph.matchAll(new RegExp(`\\[${tag}:\\s*([^\\]]+)\\]`, 'g'))];
@@ -193,6 +207,11 @@ export function loadYeseninPartOneCitationTopology(
       (match) => match[1],
     ),
   );
+  const mcvayText = read(root, mcvayPath);
+  const mcvayRows = [...mcvayText.matchAll(/^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|/gm)].map(
+    (match) => ({ row: Number(match[1]), ledgerLabel: normalizeLedgerLabel(match[2]) }),
+  );
+  const researchCheckSourceIds = new Set(yeseninPartOneMcVayResearchCheckIds);
   const witnessSourceIds = new Set(
     [...read(root, witnessPath).matchAll(/^##\s+(WIT-YE1-\d{3})\b/gm)].map((match) => match[1]),
   );
@@ -211,6 +230,24 @@ export function loadYeseninPartOneCitationTopology(
   }
   if (supplementalSourceIds.size !== 10) {
     fail(`expected 10 supplemental source IDs, found ${supplementalSourceIds.size}`);
+  }
+  if (researchCheckSourceIds.size !== 45) {
+    fail(`expected 44 explicit McVay checks plus one frozen user source, found ${researchCheckSourceIds.size}`);
+  }
+  if (mcvayRows.length !== yeseninPartOneMcVayResearchChecks.length) {
+    fail(`expected ${yeseninPartOneMcVayResearchChecks.length} McVay ledger rows, found ${mcvayRows.length}`);
+  }
+  for (const check of yeseninPartOneMcVayResearchChecks) {
+    const row = mcvayRows.find((candidate) => candidate.row === check.row);
+    if (!row) fail(`McVay ledger is missing row ${check.row} for ${check.id}`);
+    if (row.ledgerLabel !== normalizeLedgerLabel(check.ledgerLabel)) {
+      fail(
+        `McVay ledger row ${check.row} does not match ${check.id}: expected “${check.ledgerLabel}”, found “${row.ledgerLabel}”`,
+      );
+    }
+  }
+  if (!mcvayText.includes(YESENIN_MCVAY_USER_SOURCE_ID)) {
+    fail(`McVay ledger is missing frozen user source ID ${YESENIN_MCVAY_USER_SOURCE_ID}`);
   }
   if (witnessSourceIds.size !== 5) {
     fail(`expected five WIT-YE1 witness records, found ${witnessSourceIds.size}`);
@@ -317,14 +354,23 @@ export function loadYeseninPartOneCitationTopology(
 
       const canonical: string[] = [];
       const supplemental: string[] = [];
+      const researchChecks: string[] = [];
       const witnesses: string[] = [];
       const acquisitions: string[] = [];
       for (const sourceId of sourceIds) {
         if (canonicalSourceIds.has(sourceId)) canonical.push(sourceId);
         else if (supplementalSourceIds.has(sourceId)) supplemental.push(sourceId);
+        else if (researchCheckSourceIds.has(sourceId)) researchChecks.push(sourceId);
         else if (witnessSourceIds.has(sourceId)) witnesses.push(sourceId);
         else if (acquisitionSourceIds.has(sourceId)) acquisitions.push(sourceId);
         else sourceErrors.push(`${label} references unknown source ID ${sourceId}`);
+      }
+
+      if (researchChecks.length > 0 && currentSectionNumber !== 12) {
+        sourceErrors.push(`${label} uses McVay research checks outside section 12`);
+      }
+      if (researchChecks.length > 0 && !nodeClaimIds.includes('YE1-027')) {
+        sourceErrors.push(`${label} uses McVay research checks without claim YE1-027`);
       }
 
       for (const witnessId of witnesses) {
@@ -368,6 +414,7 @@ export function loadYeseninPartOneCitationTopology(
         sourceIds,
         canonicalSourceIds: canonical,
         supplementalSourceIds: supplemental,
+        researchCheckSourceIds: researchChecks,
         witnessSourceIds: witnesses,
         acquisitionSourceIds: acquisitions,
         legacySourceTokens,
@@ -390,6 +437,7 @@ export function loadYeseninPartOneCitationTopology(
     nodes,
     canonicalSourceIds,
     supplementalSourceIds,
+    researchCheckSourceIds,
     witnessSourceIds,
     acquisitionSourceIds,
     claimIds,
