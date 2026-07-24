@@ -30,6 +30,8 @@ jobs:
       - name: Install project dependencies
         run: npm ci
 
+      # Keep the browser engines isolated from the app lockfile: this workflow
+      # validates the production build without changing application dependencies.
       - name: Install isolated Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
