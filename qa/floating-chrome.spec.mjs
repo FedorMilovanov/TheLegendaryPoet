@@ -33,6 +33,11 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await page.getByRole('link', { name: 'Рейтинг' }).click();
   await expect(page).toHaveURL(/\/ratings$/);
   await page.evaluate(() => window.scrollTo(0, 780));
+  await page.waitForTimeout(350);
+  // The reading chrome intentionally hides on downward movement. A short upward
+  // movement brings the header and Ctrl+K pill back while keeping scroll-top
+  // visible, which is the actual collision state a pointer user can reach.
+  await page.evaluate(() => window.scrollTo(0, 700));
   await page.waitForTimeout(650);
 
   const player = page.locator('.global-audio-mini');
