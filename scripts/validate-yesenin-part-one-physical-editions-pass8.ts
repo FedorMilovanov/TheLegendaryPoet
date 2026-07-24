@@ -8,6 +8,8 @@ const read = (path: string): string => readFileSync(resolve(root, path), 'utf8')
 const fail = (message: string): never => {
   throw new Error(`[yesenin-physical-editions-pass8] ${message}`);
 };
+const pythonInteger = (value: number): string =>
+  String(value).replace(/\B(?=(\d{3})+(?!\d))/gu, '_');
 
 const acquisitions = yeseninPartOnePhysicalEditionAcquisitionsPassEight;
 if (acquisitions.length !== 2) {
@@ -87,7 +89,6 @@ if (oldIspovedHold.facsimileBytesAcquired || oldIspovedHold.facsimileVisuallyIns
 
 const ledger = read('research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md');
 const acquisitionScript = read('scripts/acquire-yesenin-neb-editions-pass8.py');
-const normalizedAcquisitionScript = acquisitionScript.replaceAll('_', '');
 for (const required of [
   '2-REAL-NEB-PDFS / EXACT-BYTES / FRAME-MAP-COLLATED / NO-OCR / NOT-YET-PUBLIC',
   radunitsa.sha256,
@@ -101,9 +102,15 @@ for (const required of [
 }
 
 for (const record of acquisitions) {
-  for (const required of [record.catalogueCode, record.sha256, String(record.bytes), String(record.pdfFrames)]) {
-    if (!normalizedAcquisitionScript.includes(required)) {
-      fail(`acquisition script is missing frozen ${record.id} value ${required}`);
+  const requiredScriptFields = [
+    `"catalog_url": "https://rusneb.ru/catalog/${record.catalogueCode}/"`,
+    `"expected_bytes": ${pythonInteger(record.bytes)}`,
+    `"expected_sha256": "${record.sha256}"`,
+    `"expected_pdf_frames": ${record.pdfFrames}`,
+  ];
+  for (const required of requiredScriptFields) {
+    if (!acquisitionScript.includes(required)) {
+      fail(`acquisition script is missing frozen ${record.id} field ${required}`);
     }
   }
 }
