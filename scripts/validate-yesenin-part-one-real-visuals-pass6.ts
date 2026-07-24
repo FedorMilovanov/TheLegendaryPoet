@@ -1,0 +1,93 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { yeseninPartOneRealVisualsPassSix } from '../src/data/essays/yeseninPartOneRealVisualsPassSix';
+
+const root = process.cwd();
+const visualPath = 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md';
+const visual = readFileSync(resolve(root, visualPath), 'utf8');
+const fail = (message: string): never => {
+  throw new Error(`[yesenin-part-one-real-visuals-pass6] ${message}`);
+};
+
+if (yeseninPartOneRealVisualsPassSix.length !== 8) {
+  fail(`expected eight real visual records, found ${yeseninPartOneRealVisualsPassSix.length}`);
+}
+
+const ids = yeseninPartOneRealVisualsPassSix.map((record) => record.id);
+if (new Set(ids).size !== ids.length) fail('real visual IDs must be unique');
+
+for (const [index, record] of yeseninPartOneRealVisualsPassSix.entries()) {
+  const expectedId = `VIS-YE1-P6-${String(index + 1).padStart(3, '0')}`;
+  if (record.id !== expectedId) fail(`expected ${expectedId}, found ${record.id}`);
+  if (record.renderMode !== 'numbered-real-thumbnail') {
+    fail(`${record.id} must use numbered-real-thumbnail mode`);
+  }
+  if (record.productionAuthorized !== false) {
+    fail(`${record.id} must remain productionUnauthorized`);
+  }
+  if (!record.sourcePageUrl.startsWith('https://')) {
+    fail(`${record.id} must have an HTTPS source page`);
+  }
+  if (record.controllingSourceIds.length === 0) {
+    fail(`${record.id} must have at least one controlling source ID`);
+  }
+  if (record.note.length < 80) fail(`${record.id} provenance note is too short`);
+
+  const occurrences = visual.split(`\`${record.id}\``).length - 1;
+  if (occurrences !== 1) {
+    fail(`${record.id} must appear exactly once in the visual registry; found ${occurrences}`);
+  }
+}
+
+for (const forbidden of [
+  'Фотореалистичная 16:9 реконструкция',
+  'Кинематографическая 16:9 реконструкция',
+  'Реалистичный research-table shot',
+  'сгенерированное лицо за новый найденный снимок',
+  'Исторически правдоподобный печатный цех',
+] as const) {
+  if (visual.includes(forbidden)) fail(`legacy synthetic brief returned: ${forbidden}`);
+}
+
+for (const required of [
+  'NUMBERED-THUMBNAILS-ONLY',
+  'NO-SYNTHETIC-SCENES',
+  'только реальные миниатюры',
+  'не генерировать ложный автограф',
+  'В production пока не добавляется ни одно новое изображение',
+  'SHA-256',
+] as const) {
+  if (!visual.includes(required)) fail(`real-visual policy is missing marker: ${required}`);
+}
+
+const statusCounts = yeseninPartOneRealVisualsPassSix.reduce<Record<string, number>>(
+  (counts, record) => {
+    counts[record.status] = (counts[record.status] ?? 0) + 1;
+    return counts;
+  },
+  {},
+);
+
+if (
+  statusCounts['public-domain-candidate'] !== 3 ||
+  statusCounts['research-only'] !== 2 ||
+  statusCounts['acquired-rights-unresolved'] !== 3
+) {
+  fail(`unexpected rights distribution: ${JSON.stringify(statusCounts)}`);
+}
+
+console.log(
+  JSON.stringify(
+    {
+      realVisualRecords: yeseninPartOneRealVisualsPassSix.length,
+      renderMode: 'numbered-real-thumbnail',
+      statusCounts,
+      productionAuthorized: false,
+      syntheticScenesAllowed: false,
+      generatedFacesAllowed: false,
+      generatedDocumentsAllowed: false,
+    },
+    null,
+    2,
+  ),
+);
