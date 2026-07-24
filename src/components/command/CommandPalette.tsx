@@ -5,6 +5,7 @@ import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
+import './commandPaletteChrome.css';
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
