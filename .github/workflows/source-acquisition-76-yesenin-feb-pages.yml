@@ -7,11 +7,13 @@ on:
     paths:
       - '.github/workflows/source-acquisition-76-yesenin-feb-pages.yml'
       - 'scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs'
+      - 'scripts/source-acquisition/yesenin-feb-sirena-discovery-76.mjs'
   pull_request:
     branches: [research/yesenin-part1-page-witnesses-76]
     paths:
       - '.github/workflows/source-acquisition-76-yesenin-feb-pages.yml'
       - 'scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs'
+      - 'scripts/source-acquisition/yesenin-feb-sirena-discovery-76.mjs'
 
 concurrency:
   group: source-acquisition-76-yesenin-feb-pages-${{ github.ref }}
@@ -54,6 +56,17 @@ jobs:
           node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs \
             2>&1 | tee artifacts/yesenin-feb-page-witnesses-76/acquisition.log
 
+      - name: Discover exact Sirena page-621 route and asset
+        id: sirena
+        continue-on-error: true
+        shell: bash
+        env:
+          OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
+        run: |
+          set -o pipefail
+          node scripts/source-acquisition/yesenin-feb-sirena-discovery-76.mjs \
+            2>&1 | tee artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.log
+
       - name: Prepare bounded evidence archive
         if: always()
         shell: bash
@@ -63,7 +76,11 @@ jobs:
             printf '{"summary":{"technicalErrorCount":1},"technicalErrors":[{"targetId":"workflow","message":"manifest was not produced; inspect acquisition.log"}]}\n' \
               > artifacts/yesenin-feb-page-witnesses-76/manifest.json
           fi
-          du -ah artifacts/yesenin-feb-page-witnesses-76 | sort -h | tail -n 30
+          if [ ! -f artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json ]; then
+            printf '{"summary":{"technicalErrorCount":1,"classification":"TECHNICAL-DISCOVERY-ERROR"},"technicalErrors":[{"message":"Sirena discovery report was not produced; inspect sirena-discovery.log"}]}\n' \
+              > artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json
+          fi
+          du -ah artifacts/yesenin-feb-page-witnesses-76 | sort -h | tail -n 40
           tar -czf artifacts/yesenin-feb-page-witnesses-76.tgz \
             -C artifacts yesenin-feb-page-witnesses-76
           ls -lh artifacts/yesenin-feb-page-witnesses-76.tgz
@@ -84,11 +101,21 @@ jobs:
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
           const manifest = JSON.parse(readFileSync('artifacts/yesenin-feb-page-witnesses-76/manifest.json', 'utf8'));
-          const errors = manifest?.summary?.technicalErrorCount;
-          if (!Number.isInteger(errors)) throw new Error('manifest technicalErrorCount is missing');
-          if (errors > 0) {
+          const discovery = JSON.parse(readFileSync('artifacts/yesenin-feb-page-witnesses-76/sirena-discovery.json', 'utf8'));
+          const acquisitionErrors = manifest?.summary?.technicalErrorCount;
+          const discoveryErrors = discovery?.summary?.technicalErrorCount;
+          if (!Number.isInteger(acquisitionErrors)) throw new Error('manifest technicalErrorCount is missing');
+          if (!Number.isInteger(discoveryErrors)) throw new Error('Sirena discovery technicalErrorCount is missing');
+          if (acquisitionErrors > 0) {
             console.error(JSON.stringify(manifest.technicalErrors || [], null, 2));
-            process.exit(1);
+            process.exitCode = 1;
           }
-          console.log(JSON.stringify(manifest.summary, null, 2));
+          if (discoveryErrors > 0 && (discovery?.summary?.sourcePageCount || 0) === 0) {
+            console.error(JSON.stringify(discovery.technicalErrors || [], null, 2));
+            process.exitCode = 1;
+          }
+          console.log(JSON.stringify({
+            acquisition: manifest.summary,
+            sirenaDiscovery: discovery.summary,
+          }, null, 2));
           NODE
