@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-24",
+  "policy": {
+    "defaultStatus": "unresolved",
+    "acceptedRequires": [
+      "exact Commons original identity and hashes",
+      "independent institutional or photo-chronicle caption evidence",
+      "visual match between the independent witness and the acquired original",
+      "creator/date uncertainty preserved without inference",
+      "public-domain or licence rationale recorded separately from caption verification"
+    ]
+  },
+  "decisions": {
+    "Vladimir Mayakovsky 1914.jpg": {
+      "candidateId": "C03",
+      "status": "accepted",
+      "publicationScope": "identity, depicted person, Kazan location, 1914 date and unknown photographer",
+      "caption": "Футурист Владимир Маяковский. Казань, 1914.",
+      "creator": "Unknown author",
+      "date": "1914",
+      "location": "Казань",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vladimir_Mayakovsky_1914.jpg",
+      "independentEvidenceUrl": "https://russiainphoto.ru/photos/248776/",
+      "independentEvidenceInstitution": "ГБУК г. Москвы «Государственный музей В. В. Маяковского»",
+      "visualMatch": {
+        "status": "confirmed",
+        "notes": "The museum/photo-chronicle witness and C03 show the same studio negative: identical pose, top hat, cigarette and holder, cane, glove, clothing, background and handwritten inscription. C03 is a reduced high-contrast reproduction of that witness."
+      },
+      "originalSha256": "b6250970d408b602b96b0cf35fc1ee8b50eff88d64caebd6e53a6018dd7a974d",
+      "originalBytes": 28750,
+      "originalDimensions": {
+        "width": 400,
+        "height": 564
+      },
+      "publicDomainRationale": {
+        "commonsTemplate": "Template:PD-RusEmpire",
+        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-RusEmpire",
+        "note": "This records the Commons source page's public-domain rationale; it is separate from the museum-based caption verification."
+      },
+      "productionMediaKey": "mayakovsky-1914",
+      "editorialNotes": "Do not name a photographer. Prefer the museum-backed Kazan/1914 caption over the weaker source link currently stored on the Commons file page."
+    }
+  },
+  "unresolvedByDefault": [
+    "C01",
+    "C02",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10",
+    "C11",
+    "C12",
+    "C13",
+    "C14",
+    "C15",
+    "C16",
+    "C17",
+    "C18",
+    "C19",
+    "C20",
+    "C21",
+    "C22",
+    "C23",
+    "C24",
+    "C25",
+    "C26",
+    "C27",
+    "C28",
+    "C29",
+    "C30"
+  ]
+}
