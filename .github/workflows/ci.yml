@@ -63,6 +63,8 @@ jobs:
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
         run: npm run validate:yesenin-part-one-topology
+      - name: Validate unpublished Yesenin Part I article package
+        run: npm run validate:yesenin-part-one-unpublished
       - name: Validate public historical claim boundaries
         run: npm run validate:public-claims
       - name: Validate responsive AVIF and WebP media
