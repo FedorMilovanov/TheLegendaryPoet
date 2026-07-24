@@ -24,6 +24,9 @@ for (const node of nodes) {
   if (node.claimIds.length === 0 && node.editorialClaims.length === 0) {
     fail(`${node.blockId} has no claim classification`);
   }
+  if (node.legacySourceTokens.length > 1) {
+    fail(`${node.blockId} contains more than one legacy source token`);
+  }
 }
 
 const expectedSections = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -40,6 +43,7 @@ const referencedSupplementalSourceIds = new Set(nodes.flatMap((node) => node.sup
 const referencedWitnessSourceIds = new Set(nodes.flatMap((node) => node.witnessSourceIds));
 const referencedClaimIds = new Set(nodes.flatMap((node) => node.claimIds));
 const editorialClaimLabels = new Set(nodes.flatMap((node) => node.editorialClaims));
+const legacySourceTokens = new Set(nodes.flatMap((node) => node.legacySourceTokens));
 
 if (referencedCanonicalSourceIds.size < 37) {
   fail(`expected at least 37 canonical source IDs in topology, found ${referencedCanonicalSourceIds.size}`);
@@ -47,13 +51,20 @@ if (referencedCanonicalSourceIds.size < 37) {
 if (referencedSupplementalSourceIds.size !== 10) {
   fail(`expected all 10 supplemental source IDs in topology, found ${referencedSupplementalSourceIds.size}`);
 }
+for (const token of legacySourceTokens) {
+  if (token !== 'yeseninPartOneFebAcquisition') {
+    fail(`unexpected legacy source token ${token}`);
+  }
+}
 
 const stableShape = nodes.map((node) => ({
   blockId: node.blockId,
   sectionNumber: node.sectionNumber,
   claimIds: node.claimIds,
   editorialClaims: node.editorialClaims,
+  rawSourceIds: node.rawSourceIds,
   sourceIds: node.sourceIds,
+  legacySourceTokens: node.legacySourceTokens,
 }));
 const digest = createHash('sha256').update(JSON.stringify(stableShape)).digest('hex');
 
@@ -85,6 +96,7 @@ console.log(
       declaredClaimIds: topology.claimIds.size,
       referencedClaimIds: referencedClaimIds.size,
       editorialClaimLabels: [...editorialClaimLabels].sort(),
+      legacySourceTokens: [...legacySourceTokens].sort(),
       stableShapeSha256: digest,
       sectionCoverage,
       publicationAuthorized: false,
