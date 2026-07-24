@@ -39,7 +39,12 @@ export default function RatingStars({ value, onChange, size = 18, label = 'Оц�
   const selectAndFocus = (next: number) => {
     const clamped = Math.max(1, Math.min(5, next));
     onChange(clamped);
-    window.requestAnimationFrame(() => buttonsRef.current[clamped - 1]?.focus());
+    // The radio buttons remain mounted while the controlled value changes, so
+    // focus can move immediately. Deferring this through requestAnimationFrame
+    // let a previous rating row steal focus back after a fast user had already
+    // entered the next row, causing the following arrow/Home/End key to update
+    // the wrong dimension.
+    buttonsRef.current[clamped - 1]?.focus();
   };
 
   return (

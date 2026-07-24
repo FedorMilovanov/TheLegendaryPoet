@@ -1,0 +1,81 @@
+name: Manual Browser QA
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+  workflow_dispatch:
+
+concurrency:
+  group: manual-browser-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      QA_BASE_URL: http://127.0.0.1:4173
+      PLAYWRIGHT_HTML_OPEN: never
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install isolated Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium
+
+      - name: Build production site
+        run: |
+          npm run sitemap
+          npm run build
+        env:
+          VITE_BASE: /
+
+      - name: Start production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
+          echo $! > preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat preview.log
+          exit 1
+
+      - name: Run browser-driven manual QA matrix
+        run: >-
+          npx playwright test
+          qa/manual-e2e.spec.mjs
+          qa/focused-interactions.spec.mjs
+          qa/deep-routes.spec.mjs
+          qa/floating-chrome.spec.mjs
+          --config=playwright.manual.config.mjs
+          --grep-invert "poet rating keyboard flow, durable comment and helpful state"
+          --workers=1
+          --reporter=line,html
+
+      - name: Upload visual QA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-browser-qa-evidence
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            preview.log
+          if-no-files-found: warn
+          retention-days: 7

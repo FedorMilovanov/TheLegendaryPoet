@@ -21,7 +21,18 @@ type StyleSnapshot = {
 
 type OverlayEntry = {
   token: symbol;
+  label: string;
   root: HTMLElement | null;
+  onEscape: (() => void) | null;
+};
+
+type OverlayDebugState = {
+  depth: number;
+  labels: string[];
+  connected: boolean[];
+  topLabel: string | null;
+  escapeCount: number;
+  lastEscapeLabel: string | null;
 };
 
 export interface OverlayReleaseOptions {
@@ -32,20 +43,84 @@ export interface OverlayLockHandle {
   release: (options?: OverlayReleaseOptions) => void;
   isTopmost: () => boolean;
   setRoot: (root: HTMLElement | null) => void;
+  setEscapeHandler: (handler: (() => void) | null) => void;
 }
 
 const overlayStack: OverlayEntry[] = [];
 let styleSnapshot: StyleSnapshot | null = null;
 let releaseSmoothScroll: (() => void) | null = null;
 let restoreScrollOnUnlock = true;
+let escapeCount = 0;
+let lastEscapeLabel: string | null = null;
 
-function setLegacyModalFlag(open: boolean) {
+function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: boolean | OverlayDebugState) {
   if (typeof window === 'undefined') return;
   try {
-    (window as Window & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = open;
+    (window as Window & {
+      __TLP_MODAL_OPEN?: boolean;
+      __TLP_OVERLAY_DEBUG?: OverlayDebugState;
+    })[key] = value as never;
   } catch {
     // Restricted embedded browsers may expose a non-extensible Window object.
   }
+}
+
+function setLegacyModalFlag(open: boolean) {
+  setWindowValue('__TLP_MODAL_OPEN', open);
+}
+
+function publishOverlayDebug() {
+  const top = overlayStack[overlayStack.length - 1];
+  setWindowValue('__TLP_OVERLAY_DEBUG', {
+    depth: overlayStack.length,
+    labels: overlayStack.map((entry) => entry.label),
+    connected: overlayStack.map((entry) => Boolean(entry.root?.isConnected)),
+    topLabel: top?.label ?? null,
+    escapeCount,
+    lastEscapeLabel,
+  });
+}
+
+function rootIsDetached(root: HTMLElement | null) {
+  return root === null || ('isConnected' in root && root.isConnected === false);
+}
+
+/**
+ * React effects normally release every overlay entry during unmount. Browser
+ * focus and keyboard events can, however, land in the single frame between a
+ * portal being detached and its passive cleanup running. Remove entries whose
+ * concrete roots are already gone so a stale upper surface cannot retain
+ * keyboard ownership over the visible dialog underneath it.
+ */
+function pruneDetachedOverlays() {
+  let removed = false;
+  for (let index = overlayStack.length - 1; index >= 0; index -= 1) {
+    if (!rootIsDetached(overlayStack[index].root)) continue;
+    overlayStack.splice(index, 1);
+    removed = true;
+  }
+  if (removed) publishOverlayDebug();
+  if (removed && overlayStack.length === 0 && styleSnapshot) unlockDocument();
+}
+
+function getTopOverlay() {
+  pruneDetachedOverlays();
+  return overlayStack[overlayStack.length - 1];
+}
+
+function onOverlayKeyDown(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return;
+  const top = getTopOverlay();
+  lastEscapeLabel = top?.label ?? null;
+  if (!top?.onEscape) {
+    publishOverlayDebug();
+    return;
+  }
+  escapeCount += 1;
+  publishOverlayDebug();
+  event.preventDefault();
+  event.stopPropagation();
+  top.onEscape();
 }
 
 function lockDocument() {
@@ -91,6 +166,7 @@ function lockDocument() {
   body.style.overflow = 'hidden';
   body.style.overscrollBehavior = 'none';
   if (scrollbarGap > 0) body.style.paddingRight = `${computedPaddingRight + scrollbarGap}px`;
+  document.addEventListener('keydown', onOverlayKeyDown, true);
   setLegacyModalFlag(true);
 }
 
@@ -102,6 +178,7 @@ function unlockDocument() {
   const body = document.body;
   const html = document.documentElement;
 
+  document.removeEventListener('keydown', onOverlayKeyDown, true);
   if (snapshot) {
     body.style.position = snapshot.body.position;
     body.style.top = snapshot.body.top;
@@ -123,17 +200,17 @@ function unlockDocument() {
   releaseSmoothScroll = null;
   release?.();
 
-  // A legacy essay lightbox can sit below a shared overlay. Its own body lock
-  // and Lenis token must remain authoritative after the upper surface closes.
+  // A legacy essay lightbox can remain beneath a shared overlay. Preserve its
+  // body lock and legacy integration flag when the upper surface closes.
   const legacyLockStillOpen =
     body.style.overflow === 'hidden' ||
     html.style.overflow === 'hidden' ||
     body.style.position === 'fixed';
   setLegacyModalFlag(legacyLockStillOpen);
+  publishOverlayDebug();
 
-  // Browser layout and Lenis limits settle after fixed-body styles are removed.
-  // Re-apply only in a real animation-frame environment; the synchronous write
-  // above remains deterministic for the Node interaction validator.
+  // Fixed-body styles and Lenis limits settle on the following frame. Skip this
+  // write for route-changing dismissals so the destination owns its position.
   if (snapshot && shouldRestoreScroll && typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => restoreSmoothScrollPosition(snapshot.scrollX, snapshot.scrollY));
   }
@@ -141,24 +218,37 @@ function unlockDocument() {
 }
 
 /**
- * Lock the page behind a modal surface. Handles are idempotent and stack-aware,
- * so command search may open above immersive playback without unlocking the
- * document or resuming Lenis too early.
+ * Lock the page behind a modal surface. The returned handle is idempotent and
+ * stack-aware, so command search can open above the immersive player without
+ * restoring body scroll or Lenis too early. Escape is dispatched once through
+ * the same stack instead of being contested by independent document listeners.
  */
 export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null = null): OverlayLockHandle {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return { release: () => undefined, isTopmost: () => true, setRoot: () => undefined };
+    return {
+      release: () => undefined,
+      isTopmost: () => true,
+      setRoot: () => undefined,
+      setEscapeHandler: () => undefined,
+    };
   }
 
-  const entry: OverlayEntry = { token: Symbol(label), root };
+  const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null };
   overlayStack.push(entry);
   if (overlayStack.length === 1) lockDocument();
+  publishOverlayDebug();
   let released = false;
 
   return {
-    isTopmost: () => overlayStack[overlayStack.length - 1]?.token === entry.token,
+    isTopmost: () => getTopOverlay()?.token === entry.token,
     setRoot: (nextRoot) => {
-      if (!released) entry.root = nextRoot;
+      if (!released) {
+        entry.root = nextRoot;
+        publishOverlayDebug();
+      }
+    },
+    setEscapeHandler: (handler) => {
+      if (!released) entry.onEscape = handler;
     },
     release: (options) => {
       if (released) return;
@@ -166,6 +256,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       if (options?.restoreScroll === false) restoreScrollOnUnlock = false;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
+      publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
     },
   };
@@ -177,11 +268,12 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
  * the previous control belongs to the new topmost dialog.
  */
 export function canRestoreOverlayFocus(element: HTMLElement) {
-  const top = overlayStack[overlayStack.length - 1];
+  const top = getTopOverlay();
   if (!top) return true;
   return Boolean(top.root?.contains(element));
 }
 
 export function hasOpenOverlay() {
+  pruneDetachedOverlays();
   return overlayStack.length > 0;
 }
