@@ -61,6 +61,8 @@ jobs:
         run: npm run validate:yesenin-part-one-feb-acquisition
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
+      - name: Validate typed Yesenin Part I citation topology
+        run: npm run validate:yesenin-part-one-topology
       - name: Validate public historical claim boundaries
         run: npm run validate:public-claims
       - name: Validate responsive AVIF and WebP media
