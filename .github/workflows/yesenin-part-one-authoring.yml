@@ -1,0 +1,42 @@
+name: Yesenin Part I Authoring
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/validate-yesenin-part-one-authoring.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-authoring.yml'
+  push:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/validate-yesenin-part-one-authoring.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-authoring.yml'
+
+concurrency:
+  group: yesenin-part-one-authoring-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate verified authoring corpus
+        run: npm run validate:yesenin-part-one-authoring
