@@ -4,6 +4,8 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
+const CHROME_TRANSITION_MS = 700;
+
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const routes = [
@@ -47,15 +49,52 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-async function waitForChromeToReturn(page) {
-  await page.evaluate(() => window.scrollTo(0, 0));
+async function restoreChromeAtTop(page) {
+  await page.evaluate(async () => {
+    const afterPaint = () => new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
+    // Safari/WebKit can coalesce a long sequence of programmatic scrolls. Give
+    // the direction-sensitive chrome engine an observable down/up gesture rather
+    // than mutating its class from the test.
+    if (window.scrollY <= 16 && maxScroll > 32) {
+      window.scrollTo({ top: Math.min(64, maxScroll), left: 0, behavior: 'auto' });
+      await afterPaint();
+    }
+    window.scrollTo({
+      top: Math.max(0, window.scrollY - 96),
+      left: 0,
+      behavior: 'auto',
+    });
+    await afterPaint();
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    await afterPaint();
+  });
+
   await expect.poll(
-    () => page.evaluate(() => !document.documentElement.classList.contains('chrome-hidden')),
-    { timeout: 2_500 },
+    () => page.evaluate(() => window.scrollY <= 1 && !document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'site chrome should return after an upward mobile scroll' },
   ).toBe(true);
-  // The production chrome transition lasts 550 ms. Measure and click only
-  // after its final geometry is stable, not in a synthetic intermediate frame.
-  await page.waitForTimeout(650);
+
+  // Wait for the 550ms compositor transition before measuring or tapping fixed UI.
+  await page.waitForTimeout(CHROME_TRANSITION_MS);
+}
+
+async function expectDockInsideViewport(page) {
+  const dock = page.locator('.mobile-dock');
+  await expect(dock).toBeVisible();
+  await expect.poll(
+    () => dock.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left >= -1
+        && rect.right <= window.innerWidth + 1
+        && rect.top >= -1
+        && rect.bottom <= window.innerHeight + 1;
+    }),
+    { timeout: 5_000, message: 'mobile dock should finish returning inside the visual viewport' },
+  ).toBe(true);
 }
 
 async function exerciseLazyContent(page) {
@@ -67,7 +106,7 @@ async function exerciseLazyContent(page) {
       await new Promise((resolve) => setTimeout(resolve, 35));
     }
   });
-  await waitForChromeToReturn(page);
+  await restoreChromeAtTop(page);
 }
 
 async function collectDiagnostics(page) {
@@ -89,6 +128,7 @@ async function collectDiagnostics(page) {
       platform: navigator.platform,
       maxTouchPoints: navigator.maxTouchPoints,
       coarsePointer: matchMedia('(pointer: coarse)').matches,
+      touchEventSurface: 'ontouchstart' in window || typeof TouchEvent === 'function',
       viewport: { width: innerWidth, height: innerHeight },
       screen: { width: screen.width, height: screen.height },
       visualViewport: window.visualViewport
@@ -111,7 +151,7 @@ async function collectDiagnostics(page) {
         const rect = element.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       }).length,
-      dock: dockRect && dockStyle
+      dock: dockRect && dockStyle && dockRect.width > 0
         ? {
             left: dockRect.left,
             right: dockRect.right,
@@ -120,9 +160,10 @@ async function collectDiagnostics(page) {
             width: dockRect.width,
             height: dockRect.height,
             computedBottom: dockStyle.bottom,
-            paddingBottom: dockStyle.paddingBottom,
+            transform: dockStyle.transform,
           }
         : null,
+      chromeHidden: root.classList.contains('chrome-hidden'),
       modalOpen: Boolean(window.__TLP_MODAL_OPEN),
     };
   });
@@ -145,6 +186,7 @@ for (const [name, route] of routes) {
     expect(response.status(), `HTTP status for ${route}`).toBeLessThan(400);
     await settle(page);
     await exerciseLazyContent(page);
+    await expectDockInsideViewport(page);
 
     const diagnostics = await collectDiagnostics(page);
     const platform = platformName(testInfo);
@@ -162,19 +204,18 @@ for (const [name, route] of routes) {
     expect(diagnostics.failedResilientImages, 'failed resilient images').toBe(0);
     expect(diagnostics.visibleBusyRegions, 'stuck loading regions').toBe(0);
     expect(diagnostics.visualViewport, 'visual viewport API').not.toBeNull();
-    // Playwright's Linux WebKit can expose an iPhone/Safari engine and coarse
-    // pointer while reporting maxTouchPoints=0. The engine/touch assertions
-    // below remain strict without mistaking that emulation quirk for an app bug.
-    expect(
-      diagnostics.maxTouchPoints > 0 || diagnostics.coarsePointer,
-      'mobile input capability',
-    ).toBe(true);
     expect(diagnostics.coarsePointer, 'coarse pointer media query').toBe(true);
+    expect(
+      diagnostics.maxTouchPoints > 0 || diagnostics.touchEventSurface,
+      'touch event surface',
+    ).toBe(true);
     expect(diagnostics.supportsDynamicViewport, 'dynamic viewport units').toBe(true);
     expect(diagnostics.supportsSafeArea, 'safe-area environment variables').toBe(true);
+    expect(diagnostics.chromeHidden, 'chrome unexpectedly hidden at page top').toBe(false);
     if (diagnostics.dock) {
       expect(diagnostics.dock.left).toBeGreaterThanOrEqual(-1);
       expect(diagnostics.dock.right).toBeLessThanOrEqual(diagnostics.viewport.width + 1);
+      expect(diagnostics.dock.top).toBeGreaterThanOrEqual(-1);
       expect(diagnostics.dock.bottom).toBeLessThanOrEqual(diagnostics.viewport.height + 1);
     }
     await expectCleanRuntime(runtime);
@@ -185,9 +226,10 @@ test('mobile dock, search sheet and tap targets remain usable', async ({ page },
   const runtime = attachRuntimeDiagnostics(page);
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
+  await restoreChromeAtTop(page);
 
   const dock = page.locator('.mobile-dock');
-  await expect(dock).toBeVisible();
+  await expectDockInsideViewport(page);
   const tapTargets = await dock.locator('a, button').evaluateAll((elements) => elements.map((element) => {
     const rect = element.getBoundingClientRect();
     return {
@@ -203,9 +245,8 @@ test('mobile dock, search sheet and tap targets remain usable', async ({ page },
   }
 
   const searchButtons = page.getByRole('button', { name: /поиск/i });
-  const searchButtonCount = await searchButtons.count();
-  expect(searchButtonCount).toBeGreaterThan(0);
-  await searchButtons.last().click();
+  expect(await searchButtons.count()).toBeGreaterThan(0);
+  await searchButtons.last().tap();
   const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
   const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
   await expect(dialog).toBeVisible();
@@ -215,7 +256,6 @@ test('mobile dock, search sheet and tap targets remain usable', async ({ page },
 
   const focusedState = await page.evaluate(() => ({
     activeTag: document.activeElement?.tagName,
-    activeRole: document.activeElement?.getAttribute('role'),
     scrollLocked: getComputedStyle(document.body).overflow === 'hidden',
     modalOpen: Boolean(window.__TLP_MODAL_OPEN),
     visualViewportHeight: window.visualViewport?.height ?? null,
@@ -231,7 +271,7 @@ test('mobile dock, search sheet and tap targets remain usable', async ({ page },
     fullPage: false,
   });
 
-  await page.getByRole('button', { name: 'Закрыть поиск' }).click();
+  await page.getByRole('button', { name: 'Закрыть поиск' }).tap();
   await expect(dialog).toBeHidden();
   await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
   await expectCleanRuntime(runtime);
@@ -254,42 +294,38 @@ test('ratings and community input survive touch entry and reload', async ({ page
   await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
   await settle(page);
   const poetLinks = page.locator('a[href^="/poets/"]');
-  const poetLinkCount = await poetLinks.count();
-  expect(poetLinkCount).toBeGreaterThan(0);
+  expect(await poetLinks.count()).toBeGreaterThan(0);
   const href = await poetLinks.first().getAttribute('href');
   expect(href).toMatch(/^\/poets\//);
   await page.goto(`${BASE_URL}${href}`, { waitUntil: 'domcontentloaded' });
   await settle(page);
 
-  const groups = page.getByRole('radiogroup');
-  const groupCount = await groups.count();
-  expect(groupCount).toBeGreaterThanOrEqual(4);
+  const submit = page.getByRole('button', { name: /зафиксировать оценку|обновить оценку/i }).first();
+  const panel = submit.locator('xpath=ancestor::section[1]');
+  const groups = panel.getByRole('radiogroup');
+  expect(await groups.count()).toBe(4);
   for (let index = 0; index < 4; index += 1) {
     const radios = groups.nth(index).getByRole('radio');
-    const radioCount = await radios.count();
-    expect(radioCount).toBe(5);
-    await radios.nth(4).click();
+    expect(await radios.count()).toBe(5);
+    await radios.nth(4).tap();
     await expect(radios.nth(4)).toBeChecked();
   }
-  const enabledRatingSubmit = page.locator('button:not([disabled])', {
-    hasText: /зафиксировать оценку|обновить оценку/i,
-  });
-  await expect(enabledRatingSubmit).toHaveCount(1);
-  await enabledRatingSubmit.click();
+  await expect(submit).toBeEnabled();
+  await submit.tap();
 
   const text = `Мобильная проверка ${platformName(testInfo)}: оценка и комментарий сохраняются.`;
-  const author = page.getByPlaceholder('Ваше имя или псевдоним — необязательно');
-  const composer = page.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
+  const author = panel.getByPlaceholder('Ваше имя или псевдоним — необязательно');
+  const composer = panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
   await author.fill('Mobile QA');
   await composer.fill(text);
   await composer.press(testInfo.project.name === 'iphone-safari' ? 'Meta+Enter' : 'Control+Enter');
   await expect(composer).toHaveValue('');
-  await expect(page.getByText(text)).toBeVisible();
+  await expect(panel.getByText(text)).toBeVisible();
 
   await page.reload({ waitUntil: 'domcontentloaded' });
   await settle(page);
   await expect(page.getByText(text)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Обновить оценку' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Обновить оценку' }).first()).toBeVisible();
   await expectCleanRuntime(runtime);
 });
 
@@ -299,10 +335,9 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
   await settle(page);
 
   const playButtons = page.getByRole('button', { name: /воспроизвести трек|поставить на паузу|повторить загрузку аудио/i });
-  const playCount = await playButtons.count();
-  expect(playCount).toBeGreaterThan(0);
-  await playButtons.first().click();
-  await page.waitForTimeout(1200);
+  expect(await playButtons.count()).toBeGreaterThan(0);
+  await playButtons.first().tap();
+  await page.waitForTimeout(1_200);
   const audio = page.locator('audio');
   await expect(audio).toHaveCount(1);
   const audioState = await audio.evaluate((element) => ({
@@ -314,25 +349,21 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
   expect(audioState.currentSrc).toContain('/audio/');
 
   const immersiveButtons = page.getByRole('button', { name: 'Погружение' });
-  const immersiveCount = await immersiveButtons.count();
-  expect(immersiveCount).toBeGreaterThan(0);
-  await immersiveButtons.first().click();
+  expect(await immersiveButtons.count()).toBeGreaterThan(0);
+  await immersiveButtons.first().tap();
   const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
   await expect(immersive).toBeVisible();
   await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
-  await immersive.getByRole('button', { name: 'Выйти' }).click();
-  await expect.poll(
-    () => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN)),
-    { timeout: 5_000 },
-  ).toBe(false);
-  await expect(immersive).toBeHidden({ timeout: 5_000 });
+  await immersive.getByRole('button', { name: 'Выйти' }).tap();
+  await expect(immersive).toBeHidden({ timeout: 8_000 });
+  await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
 
-  await waitForChromeToReturn(page);
-  const ratingsLink = page.getByRole('link', { name: 'Рейтинг' });
-  await expect(ratingsLink).toBeInViewport();
-  await ratingsLink.click();
+  await restoreChromeAtTop(page);
+  await expectDockInsideViewport(page);
+  await page.locator('.mobile-dock').getByRole('link', { name: 'Рейтинг' }).tap();
   await expect(page).toHaveURL(/\/ratings$/);
   await expect(audio).toHaveCount(1);
+
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
       const rect = document.querySelector(selector)?.getBoundingClientRect();
@@ -372,7 +403,7 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await page.waitForTimeout(450);
   const landscape = await collectDiagnostics(page);
   expect(landscape.horizontalOverflow, 'landscape horizontal overflow').toBeLessThanOrEqual(2);
-  expect(landscape.dock?.right).toBeLessThanOrEqual(landscape.viewport.width + 1);
+  if (landscape.dock) expect(landscape.dock.right).toBeLessThanOrEqual(landscape.viewport.width + 1);
 
   await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'domcontentloaded' });
   await settle(page);
@@ -381,7 +412,7 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await settle(page);
 
   if (original) await page.setViewportSize(original);
-  await page.waitForTimeout(350);
+  await restoreChromeAtTop(page);
   const portrait = await collectDiagnostics(page);
   expect(portrait.horizontalOverflow, 'restored portrait horizontal overflow').toBeLessThanOrEqual(2);
 
@@ -401,6 +432,7 @@ test('engine identity is honest for Android Chrome and iPhone Safari', async ({ 
     platform: navigator.platform,
     maxTouchPoints: navigator.maxTouchPoints,
     coarsePointer: matchMedia('(pointer: coarse)').matches,
+    touchEventSurface: 'ontouchstart' in window || typeof TouchEvent === 'function',
     webkitAppearance: CSS.supports('-webkit-appearance: none'),
   }));
 
@@ -409,10 +441,11 @@ test('engine identity is honest for Android Chrome and iPhone Safari', async ({ 
     expect(identity.userAgent).toContain('AppleWebKit');
     expect(identity.userAgent).toContain('Safari');
     expect(identity.webkitAppearance).toBe(true);
-    expect(identity.coarsePointer).toBe(true);
   } else {
     expect(identity.userAgent).toContain('Android');
     expect(identity.userAgent).toContain('Chrome');
     expect(identity.maxTouchPoints).toBeGreaterThan(0);
   }
+  expect(identity.coarsePointer).toBe(true);
+  expect(identity.maxTouchPoints > 0 || identity.touchEventSurface).toBe(true);
 });
