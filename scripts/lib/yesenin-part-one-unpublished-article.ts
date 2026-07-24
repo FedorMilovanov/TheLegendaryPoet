@@ -1,6 +1,7 @@
 import type { Essay, EssayBlock, EssaySource } from '../../src/types/essay';
 import { yeseninPartOneEditorialPassSeven } from '../../src/data/essays/yeseninPartOneEditorialPassSeven';
 import { yeseninPartOneEditorialPassSevenPass6 } from '../../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
+import { yeseninPartOneEditorialPassEightEarlyA } from '../../src/data/essays/yeseninPartOneEditorialPassEightEarlyA';
 import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSources';
 import { yeseninPartOneSourcesPassTwo } from '../../src/data/essays/yeseninPartOneSourcesPassTwo';
 import { yeseninPartOneSourcesPassThree } from '../../src/data/essays/yeseninPartOneSourcesPassThree';
@@ -27,6 +28,7 @@ export interface YeseninPartOneInternalEvidence {
   legacySourceTokens: readonly string[];
   sourceCorrections: readonly string[];
   editorialPassSevenApplied: boolean;
+  editorialPassEightApplied: boolean;
   publicationAuthorized: false;
 }
 
@@ -103,8 +105,12 @@ export function buildYeseninPartOneUnpublishedArticle(
       });
     }
 
-    const editedText = editorialPassSeven[node.blockId as keyof typeof editorialPassSeven];
-    const renderText = editedText ?? node.text;
+    const passSevenText = editorialPassSeven[node.blockId as keyof typeof editorialPassSeven];
+    const passEightText =
+      yeseninPartOneEditorialPassEightEarlyA[
+        node.blockId as keyof typeof yeseninPartOneEditorialPassEightEarlyA
+      ];
+    const renderText = passEightText ?? passSevenText ?? node.text;
     renderTexts.push(renderText);
 
     let authoredBlock: EssayBlock;
@@ -148,7 +154,8 @@ export function buildYeseninPartOneUnpublishedArticle(
         acquisitionSourceIds: [...node.acquisitionSourceIds],
         legacySourceTokens: [...node.legacySourceTokens],
         sourceCorrections: [...node.sourceCorrections],
-        editorialPassSevenApplied: Boolean(editedText),
+        editorialPassSevenApplied: Boolean(passSevenText),
+        editorialPassEightApplied: Boolean(passEightText),
         publicationAuthorized: false,
       },
     ]);
