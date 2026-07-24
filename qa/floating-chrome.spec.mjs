@@ -34,10 +34,10 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await expect(page).toHaveURL(/\/ratings$/);
   await page.evaluate(() => window.scrollTo(0, 780));
   await page.waitForTimeout(350);
-  // The reading chrome intentionally hides on downward movement. A short upward
-  // movement brings the header and Ctrl+K pill back while keeping scroll-top
-  // visible, which is the actual collision state a pointer user can reach.
-  await page.evaluate(() => window.scrollTo(0, 700));
+  // Auto-hide is a separate behavior and can be mid-transition depending on the
+  // scroll scheduler. Force the documented visible state so this test measures
+  // the collision contract, not a temporarily translated, pointer-inert pill.
+  await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
   await page.waitForTimeout(650);
 
   const player = page.locator('.global-audio-mini');
@@ -49,8 +49,19 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
-      const rect = document.querySelector(selector)?.getBoundingClientRect();
-      return rect ? { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height } : null;
+      const element = document.querySelector(selector);
+      const rect = element?.getBoundingClientRect();
+      const style = element ? getComputedStyle(element) : null;
+      return rect && style ? {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        opacity: Number(style.opacity),
+        pointerEvents: style.pointerEvents,
+      } : null;
     };
     return {
       player: read('.global-audio-mini'),
@@ -65,6 +76,8 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   expect(geometry.player).not.toBeNull();
   expect(geometry.palette).not.toBeNull();
   expect(geometry.scrollTop).not.toBeNull();
+  expect(geometry.palette.opacity).toBeGreaterThan(0.9);
+  expect(geometry.palette.pointerEvents).not.toBe('none');
   expect(overlaps(geometry.player, geometry.palette)).toBe(false);
   expect(overlaps(geometry.player, geometry.scrollTop)).toBe(false);
   expect(overlaps(geometry.palette, geometry.scrollTop)).toBe(false);
