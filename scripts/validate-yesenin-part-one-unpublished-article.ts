@@ -7,6 +7,11 @@ import {
   yeseninPartOneUnpublishedArticle,
 } from './lib/yesenin-part-one-unpublished-article';
 import { loadYeseninPartOneCompleteCitationTopology } from './lib/yesenin-part-one-complete-citation-topology';
+import {
+  yeseninPartOneEditorialPassSeven,
+  yeseninPartOneEditorialPassSevenExpectedCount,
+  yeseninPartOneEditorialPassSevenExpectedSections,
+} from '../src/data/essays/yeseninPartOneEditorialPassSeven';
 import { yeseninPartOnePhysicalWitnessesPassSix } from '../src/data/essays/yeseninPartOnePhysicalWitnessesPassSix';
 
 const fail = (message: string): never => {
@@ -35,6 +40,13 @@ if (essay.id !== YESENIN_PART_ONE_UNPUBLISHED_ID || essay.slug !== YESENIN_PART_
 }
 if (essay.series?.part !== 1 || essay.series.total !== 2) {
   fail('Yesenin biography must remain a two-part series with this package as part one');
+}
+if (
+  articlePackage.editorialPass !== 'sections-9-12-literary-theological-pass-seven' ||
+  JSON.stringify(articlePackage.editedSections) !== JSON.stringify([9, 10, 11, 12]) ||
+  articlePackage.fullyEditedSections !== false
+) {
+  fail('pass seven must cover sections 9-12 without claiming whole-article completion');
 }
 
 const evidenceEntries = Object.values(evidenceByBlockId);
@@ -90,6 +102,89 @@ if (JSON.stringify(authoredBlockIds) !== JSON.stringify(expectedOrder)) {
   fail('render block order differs from complete citation topology');
 }
 
+const renderedTextById = new Map(
+  authoredBlocks.map((block) => [
+    block.id as string,
+    'text' in block && typeof block.text === 'string' ? block.text : '',
+  ] as const),
+);
+const editorialEntries = Object.entries(yeseninPartOneEditorialPassSeven);
+if (
+  yeseninPartOneEditorialPassSevenExpectedCount !== 68 ||
+  editorialEntries.length !== yeseninPartOneEditorialPassSevenExpectedCount
+) {
+  fail(`expected 68 pass-seven overrides, found ${editorialEntries.length}`);
+}
+if (JSON.stringify(yeseninPartOneEditorialPassSevenExpectedSections) !== JSON.stringify([9, 10, 11, 12])) {
+  fail('pass-seven section contract changed');
+}
+const targetNodes = topology.nodes.filter((node) => node.sectionNumber >= 9 && node.sectionNumber <= 12);
+if (targetNodes.length !== 68) fail(`expected 68 topology nodes in sections 9-12, found ${targetNodes.length}`);
+const targetIds = new Set(targetNodes.map((node) => node.blockId));
+const overrideIds = new Set(editorialEntries.map(([blockId]) => blockId));
+if (overrideIds.size !== 68) fail('pass-seven overrides contain duplicate block IDs');
+for (const blockId of targetIds) {
+  if (!overrideIds.has(blockId)) fail(`pass seven misses late-section block ${blockId}`);
+}
+for (const [blockId, text] of editorialEntries) {
+  const node = topology.nodes.find((candidate) => candidate.blockId === blockId);
+  if (!node) fail(`pass seven targets unknown block ${blockId}`);
+  if (node.sectionNumber < 9 || node.sectionNumber > 12) {
+    fail(`pass seven escapes sections 9-12 at ${blockId}`);
+  }
+  if (!evidenceByBlockId[blockId]?.editorialPassSevenApplied) {
+    fail(`${blockId} is not marked as edited in the internal evidence map`);
+  }
+  if (renderedTextById.get(blockId) !== text) {
+    fail(`${blockId} does not render the reviewed pass-seven text`);
+  }
+  if (text.length < 120 || text.length > 1200) {
+    fail(`${blockId} has implausible edited text length ${text.length}`);
+  }
+  if (/\[(?:block|claims|sources):/u.test(text)) {
+    fail(`${blockId} leaks authoring metadata into reader-facing prose`);
+  }
+}
+for (const node of topology.nodes.filter((candidate) => candidate.sectionNumber < 9)) {
+  if (evidenceByBlockId[node.blockId]?.editorialPassSevenApplied) {
+    fail(`pass seven silently edits early-section block ${node.blockId}`);
+  }
+}
+
+const serviceLanguagePatterns = [
+  /статья должна/iu,
+  /в авторском тексте/iu,
+  /нужный следующий шаг/iu,
+  /citation topology/iu,
+  /должны быть включены в финальную/iu,
+  /историческая добросовестность требует/iu,
+];
+for (const [blockId, text] of editorialEntries) {
+  for (const pattern of serviceLanguagePatterns) {
+    if (pattern.test(text)) fail(`${blockId} retains service-language pattern ${pattern}`);
+  }
+}
+const requiredEditorialAnchors: Readonly<Record<string, readonly string[]>> = {
+  'yesenin-p1-reich-family-memory-boundary': ['семья помнила', 'не превращаются'],
+  'yesenin-p1-poems-analysis-method': ['что именно написано', 'богословская оценка'],
+  'yesenin-p1-poems-inoniya-cross-conflict': ['распятого и воскресшего Христа'],
+  'yesenin-p1-poems-christian-reflection-limit': ['не принадлежит биографу'],
+  'yesenin-p1-imaginism-three-dates': ['30 января 1919 года', '10 февраля', '17 или 18 апреля'],
+  'yesenin-p1-transition-duncan-academic-date-hierarchy': ['видимо, 3 октября 1921 года', 'предположительность'],
+  'yesenin-p1-transition-duncan-mariengof-attribution': ['Анатолия Мариенгофа', 'не'],
+  'yesenin-p1-transition-duncan-competing-chronologies': ['Маквей', 'Ирма Дункан', 'Шнейдер'],
+};
+for (const [blockId, anchors] of Object.entries(requiredEditorialAnchors)) {
+  const text = yeseninPartOneEditorialPassSeven[blockId as keyof typeof yeseninPartOneEditorialPassSeven];
+  if (!text) fail(`missing anchored editorial block ${blockId}`);
+  const normalizedText = text.toLocaleLowerCase('ru-RU');
+  for (const anchor of anchors) {
+    if (!normalizedText.includes(anchor.toLocaleLowerCase('ru-RU'))) {
+      fail(`${blockId} is missing editorial anchor ${anchor}`);
+    }
+  }
+}
+
 const bibliographyIds = new Set(
   (essay.sources ?? []).map((source) => source.id).filter((id): id is string => Boolean(id)),
 );
@@ -140,6 +235,7 @@ const topologyDigest = createHash('sha256').update(JSON.stringify(stableShape)).
 if (topologyDigest !== '26b6ef20ccb07abde9064c18bff716a4890b6823242f808e2aecccb551b53a52') {
   fail(`unexpected complete topology digest ${topologyDigest}`);
 }
+const editorialDigest = createHash('sha256').update(JSON.stringify(editorialEntries)).digest('hex');
 
 const registryText = [
   read('src/data/essays/index.ts'),
@@ -194,6 +290,15 @@ for (const status of [
 ]) {
   if (!passSixLedger.includes(status)) fail(`pass-six ledger is missing status ${status}`);
 }
+const passSevenLedger = read('research/yesenin/PART_ONE_EDITORIAL_PASS7_SECTIONS_9_12_2026-07-24.md');
+for (const status of [
+  'SECTIONS-9-12-LITERARY-EDIT-COMPLETE',
+  'SECTION-10-THEOLOGICAL-SENTENCE-EDIT-COMPLETE',
+  'SECTIONS-1-8-SENTENCE-EDIT-PENDING',
+  'PUBLICATION-AUTHORIZATION-FALSE',
+]) {
+  if (!passSevenLedger.includes(status)) fail(`pass-seven ledger is missing status ${status}`);
+}
 
 console.log(
   JSON.stringify(
@@ -204,6 +309,8 @@ console.log(
       totalRenderBlocks: essay.blocks.length,
       sectionBlocks: sectionBlocks.length,
       evidenceBearingBlocks: authoredBlocks.length,
+      passSevenEditedBlocks: editorialEntries.length,
+      passSevenEditedSections: articlePackage.editedSections,
       renderedBibliographySources: bibliographyIds.size,
       representedClaims: claims.size,
       internalSupplementalSources: supplements.size,
@@ -212,8 +319,10 @@ console.log(
       physicalWitnessRecords: yeseninPartOnePhysicalWitnessesPassSix.length,
       deepSourceChecks: passRows.length,
       stableTopologySha256: topologyDigest,
-      literaryRewriteComplete: false,
-      theologicalSentenceEditComplete: false,
+      editorialPassSevenSha256: editorialDigest,
+      sectionsNineToTwelveLiteraryEditComplete: true,
+      sectionTenTheologicalSentenceEditComplete: true,
+      wholeArticleSentenceEditComplete: false,
       publicationAuthorized: false,
       mediaPublicationAuthorized: false,
     },

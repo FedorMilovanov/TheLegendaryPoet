@@ -1,4 +1,5 @@
 import type { Essay, EssayBlock, EssaySource } from '../../src/types/essay';
+import { yeseninPartOneEditorialPassSeven } from '../../src/data/essays/yeseninPartOneEditorialPassSeven';
 import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSources';
 import { yeseninPartOneSourcesPassTwo } from '../../src/data/essays/yeseninPartOneSourcesPassTwo';
 import { yeseninPartOneSourcesPassThree } from '../../src/data/essays/yeseninPartOneSourcesPassThree';
@@ -23,6 +24,7 @@ export interface YeseninPartOneInternalEvidence {
   acquisitionSourceIds: readonly string[];
   legacySourceTokens: readonly string[];
   sourceCorrections: readonly string[];
+  editorialPassSevenApplied: boolean;
   publicationAuthorized: false;
 }
 
@@ -33,6 +35,9 @@ export interface YeseninPartOneUnpublishedArticlePackage {
   mediaPublicationAuthorized: false;
   bibliographyPolicy: 'canonical-only-rendering';
   internalEvidencePolicy: 'supplemental-research-witness-acquisition-held-outside-public-bibliography';
+  editorialPass: 'sections-9-12-literary-theological-pass-seven';
+  editedSections: readonly [9, 10, 11, 12];
+  fullyEditedSections: false;
   essay: Essay;
   evidenceByBlockId: Readonly<Record<string, YeseninPartOneInternalEvidence>>;
 }
@@ -75,6 +80,7 @@ export function buildYeseninPartOneUnpublishedArticle(
 
   const blocks: EssayBlock[] = [];
   const evidenceEntries: Array<[string, YeseninPartOneInternalEvidence]> = [];
+  const renderTexts: string[] = [];
   let renderedSection: number | null = null;
   let leadRendered = false;
 
@@ -89,25 +95,29 @@ export function buildYeseninPartOneUnpublishedArticle(
       });
     }
 
+    const editedText = yeseninPartOneEditorialPassSeven[node.blockId as keyof typeof yeseninPartOneEditorialPassSeven];
+    const renderText = editedText ?? node.text;
+    renderTexts.push(renderText);
+
     let authoredBlock: EssayBlock;
     if (node.origin === 'editorial-override') {
       authoredBlock = {
         id: node.blockId,
         type: 'note',
-        text: node.text,
+        text: renderText,
       };
     } else if (node.sectionNumber === 0 && !leadRendered) {
       leadRendered = true;
       authoredBlock = {
         id: node.blockId,
         type: 'lead',
-        text: node.text,
+        text: renderText,
       };
     } else {
       authoredBlock = {
         id: node.blockId,
         type: 'paragraph',
-        text: node.text,
+        text: renderText,
       };
     }
 
@@ -130,13 +140,14 @@ export function buildYeseninPartOneUnpublishedArticle(
         acquisitionSourceIds: [...node.acquisitionSourceIds],
         legacySourceTokens: [...node.legacySourceTokens],
         sourceCorrections: [...node.sourceCorrections],
+        editorialPassSevenApplied: Boolean(editedText),
         publicationAuthorized: false,
       },
     ]);
   }
 
-  const wordCount = topology.nodes.reduce(
-    (total, node) => total + node.text.split(/\s+/u).filter(Boolean).length,
+  const wordCount = renderTexts.reduce(
+    (total, text) => total + text.split(/\s+/u).filter(Boolean).length,
     0,
   );
 
@@ -184,6 +195,9 @@ export function buildYeseninPartOneUnpublishedArticle(
     bibliographyPolicy: 'canonical-only-rendering',
     internalEvidencePolicy:
       'supplemental-research-witness-acquisition-held-outside-public-bibliography',
+    editorialPass: 'sections-9-12-literary-theological-pass-seven',
+    editedSections: [9, 10, 11, 12],
+    fullyEditedSections: false,
     essay,
     evidenceByBlockId: Object.fromEntries(evidenceEntries),
   };
