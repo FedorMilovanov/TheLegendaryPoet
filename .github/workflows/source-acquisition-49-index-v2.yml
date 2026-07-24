@@ -181,12 +181,34 @@ jobs:
           printf 'original_qpdf_exit=%s\npages=%s\ntext_bytes=%s\n' \
             "$original_status" "$pages" "$(wc -c < "$dir/full-text.txt")" > "$dir/summary.txt"
 
-      - name: Upload verification bundle
+      - name: Upload compact verification bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: source-49-legacy-${{ matrix.source.id }}
-          path: legacy-index/${{ matrix.source.id }}
+          name: source-49-legacy-${{ matrix.source.id }}-verification
+          path: |
+            legacy-index/${{ matrix.source.id }}/index-headers.txt
+            legacy-index/${{ matrix.source.id }}/resolution.json
+            legacy-index/${{ matrix.source.id }}/resolved-url.txt
+            legacy-index/${{ matrix.source.id }}/bytes.txt
+            legacy-index/${{ matrix.source.id }}/sha256.txt
+            legacy-index/${{ matrix.source.id }}/qpdf-original.txt
+            legacy-index/${{ matrix.source.id }}/qpdf-normalized.txt
+            legacy-index/${{ matrix.source.id }}/pdfinfo.txt
+            legacy-index/${{ matrix.source.id }}/full-text.txt
+            legacy-index/${{ matrix.source.id }}/summary.txt
+            legacy-index/${{ matrix.source.id }}/front-*.jpg
+            legacy-index/${{ matrix.source.id }}/final-page.jpg
           if-no-files-found: error
           retention-days: 14
           compression-level: 6
+
+      - name: Upload raw resolved PDF
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-legacy-${{ matrix.source.id }}-raw
+          path: legacy-index/${{ matrix.source.id }}/source.pdf
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
