@@ -37,15 +37,22 @@ jobs:
       - name: Install project dependencies
         run: npm ci --silent
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install pinned Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium
 
       - name: Acquire and classify FEB published-page candidates
         id: acquisition
         continue-on-error: true
+        shell: bash
         env:
           OUT_DIR: artifacts/yesenin-feb-page-witnesses-76
-        run: node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/yesenin-feb-page-witnesses-76
+          node scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs \
+            2>&1 | tee artifacts/yesenin-feb-page-witnesses-76/acquisition.log
 
       - name: Prepare bounded evidence archive
         if: always()
@@ -53,7 +60,7 @@ jobs:
         run: |
           mkdir -p artifacts/yesenin-feb-page-witnesses-76
           if [ ! -f artifacts/yesenin-feb-page-witnesses-76/manifest.json ]; then
-            printf '{"summary":{"technicalErrorCount":1},"technicalErrors":[{"targetId":"workflow","message":"manifest was not produced"}]}\n' \
+            printf '{"summary":{"technicalErrorCount":1},"technicalErrors":[{"targetId":"workflow","message":"manifest was not produced; inspect acquisition.log"}]}\n' \
               > artifacts/yesenin-feb-page-witnesses-76/manifest.json
           fi
           du -ah artifacts/yesenin-feb-page-witnesses-76 | sort -h | tail -n 30
