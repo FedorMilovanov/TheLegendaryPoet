@@ -118,12 +118,41 @@ for (const { path, content } of drafts) {
   }
 }
 
-const blockEntries = drafts.flatMap(({ path, content }) =>
-  [...content.matchAll(/\[block:\s*([^\]]+)\]/g)].map((match) => ({ path, id: match[1].trim() })),
+const blockParagraphs = drafts.flatMap(({ path, content }) =>
+  content
+    .split(/\n\s*\n/)
+    .map((paragraph, index) => ({ path, paragraph: paragraph.trim(), paragraphNumber: index + 1 }))
+    .filter(({ paragraph }) => paragraph.includes('[block:')),
 );
-if (blockEntries.length < 100) {
-  fail(`expected at least 100 authored paragraph blocks, found ${blockEntries.length}`);
+if (blockParagraphs.length < 128) {
+  fail(`expected at least 128 authored paragraph blocks, found ${blockParagraphs.length}`);
 }
+
+const blockEntries = blockParagraphs.map(({ path, paragraph, paragraphNumber }) => {
+  const blockMatches = [...paragraph.matchAll(/\[block:\s*([^\]]+)\]/g)];
+  const claimMatches = [...paragraph.matchAll(/\[claims:\s*([^\]]+)\]/g)];
+  const sourceMatches = [...paragraph.matchAll(/\[sources:\s*([^\]]+)\]/g)];
+  const label = `${path} paragraph ${paragraphNumber}`;
+
+  if (blockMatches.length !== 1) {
+    fail(`${label} must contain exactly one [block] tag; found ${blockMatches.length}`);
+  }
+  if (claimMatches.length !== 1) {
+    fail(`${label} must contain exactly one [claims] tag; found ${claimMatches.length}`);
+  }
+  if (sourceMatches.length !== 1) {
+    fail(`${label} must contain exactly one [sources] tag; found ${sourceMatches.length}`);
+  }
+
+  const blockIndex = blockMatches[0].index ?? -1;
+  const claimIndex = claimMatches[0].index ?? -1;
+  const sourceIndex = sourceMatches[0].index ?? -1;
+  if (!(blockIndex < claimIndex && claimIndex < sourceIndex)) {
+    fail(`${label} must keep tag order [block] [claims] [sources]`);
+  }
+
+  return { path, id: blockMatches[0][1].trim() };
+});
 
 const blockOwners = new Map<string, string>();
 for (const { path, id } of blockEntries) {
@@ -155,6 +184,9 @@ for (const sourceId of referencedYeSourceIds) {
 }
 for (const sourceId of referencedSupplementalIds) {
   if (!supplementalIdSet.has(sourceId)) fail(`draft references unknown supplemental source ID ${sourceId}`);
+}
+if (referencedYeSourceIds.size < 37) {
+  fail(`expected at least 37 canonical source IDs used in prose, found ${referencedYeSourceIds.size}`);
 }
 if (referencedSupplementalIds.size !== 10) {
   fail(`all 10 targeted supplemental records must be used in prose; found ${referencedSupplementalIds.size}`);
