@@ -1,0 +1,68 @@
+import type { EssaySource } from '../../types/essay';
+
+export const yeseninPartOneSourcesPassFourDuncan = [
+  {
+    id: 'ye1-ellens-duncan-yesenin',
+    title: 'А. Элленс. Есенин и Айседора Дункан',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-020-.htm?cmd=2',
+    kind: 'primary',
+    institution: 'Фундаментальная электронная библиотека; «Есенин в воспоминаниях современников», т. 2',
+    note: 'Мемуарное свидетельство отношений Есенина и Дункан; не используется как синхронный протокол первой встречи или исчерпывающая причинная история.',
+  },
+  {
+    id: 'ye1-schneider-memoir-commentary',
+    title: 'Комментарии к воспоминаниям И. И. Шнейдера',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-361-.htm?cmd=p',
+    kind: 'research',
+    institution: 'Фундаментальная электронная библиотека; «Есенин в воспоминаниях современников», т. 2',
+    note: 'Редакционный аппарат к свидетельству Шнейдера: даты, имена и варианты; комментарий не превращает мемуариста в очевидца первой встречи.',
+  },
+  {
+    id: 'ye1-nypl-isadora-programs',
+    title: 'Isadora Duncan programs and announcements',
+    url: 'https://digitalcollections.nypl.org/collections/isadora-duncan-programs-and-announcements',
+    kind: 'archive',
+    institution: 'New York Public Library, Jerome Robbins Dance Division',
+    note: 'Коллекция программ и объявлений для item-level поиска гастрольных и школьных событий; конкретный российский объект и права должны устанавливаться отдельно.',
+  },
+  {
+    id: 'ye1-nypl-isadora-moscow-reviews',
+    title: 'Isadora Duncan: reviews and materials relating to performances in St. Petersburg and Moscow',
+    url: 'https://archives.nypl.org/dan/19659',
+    kind: 'archive',
+    institution: 'New York Public Library, Jerome Robbins Dance Division',
+    note: 'Узкий finding aid по российским выступлениям и московской школе на Пречистенке, 20; подтверждает состав коллекции, но требует item-level заказа и проверки каждого документа.',
+  },
+  {
+    id: 'ye1-nypl-isadora-school-scores',
+    title: 'Music scores from the Isadora Duncan School',
+    url: 'https://archives.nypl.org/dan/19739',
+    kind: 'archive',
+    institution: 'New York Public Library, Jerome Robbins Dance Division',
+    note: 'Finding aid музыкальных материалов школы Дункан; подтверждает архивный корпус, но не содержание конкретного московского урока без item inspection.',
+  },
+  {
+    id: 'ye1-nypl-irma-duncan-papers',
+    title: 'Irma Duncan papers',
+    url: 'https://archives.nypl.org/dan/19694',
+    kind: 'archive',
+    institution: 'New York Public Library, Jerome Robbins Dance Division',
+    note: 'Архивный finding aid бумаг Ирмы Дункан, включая дневники 1921 года; потенциальный источник по школе и хронологии, пока без утверждения, что нужная единица просмотрена.',
+  },
+  {
+    id: 'ye1-nypl-irma-duncan-collection',
+    title: 'Irma Duncan collection of Isadora Duncan materials',
+    url: 'https://archives.nypl.org/dan/19640',
+    kind: 'archive',
+    institution: 'New York Public Library, Jerome Robbins Dance Division',
+    note: 'Описание коллекции материалов Айседоры Дункан; служит картой дальнейшего поиска, а не самостоятельным доказательством первой встречи с Есениным.',
+  },
+  {
+    id: 'ye1-letter-schneider-june-1922',
+    title: 'С. А. Есенин — И. И. Шнейдеру, 21 июня 1922 года',
+    url: 'https://feb-web.ru/feb/esenin/texts/es6/es6-1372.htm?cmd=p',
+    kind: 'primary',
+    institution: 'Фундаментальная электронная библиотека; ПСС Есенина, т. 6',
+    note: 'Письмо следующего периода о Дункан, поездке и регистрации брака; используется как позднейшая первичная перспектива, не проецируемая на первую встречу.',
+  },
+] as const satisfies readonly EssaySource[];

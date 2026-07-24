@@ -1,0 +1,68 @@
+name: Yesenin Part I Real Visual Acquisition Pass 6
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-part1-source-sweep-pass6]
+    paths:
+      - 'scripts/acquire-yesenin-real-visuals-pass6.py'
+      - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
+      - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - '.github/workflows/yesenin-part-one-real-visual-acquisition-pass6.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/acquire-yesenin-real-visuals-pass6.py'
+      - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
+      - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - '.github/workflows/yesenin-part-one-real-visual-acquisition-pass6.yml'
+
+concurrency:
+  group: yesenin-part-one-real-visual-acquisition-pass6-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install non-generative image tooling
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pillow==11.3.0
+      - name: Acquire exact real originals and build numbered contact sheet
+        id: acquisition
+        continue-on-error: true
+        env:
+          YESENIN_REAL_VISUAL_OUTPUT: artifacts/yesenin-real-visuals-pass6
+        run: |
+          set -o pipefail
+          python scripts/acquire-yesenin-real-visuals-pass6.py 2>&1 | tee yesenin-real-visual-acquisition-pass6.log
+      - name: Upload acquisition diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-real-visual-acquisition-pass6-diagnostics
+          path: yesenin-real-visual-acquisition-pass6.log
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload real originals and research contact sheet
+        if: steps.acquisition.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-real-visuals-pass6-research-only
+          path: artifacts/yesenin-real-visuals-pass6
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
+      - name: Enforce acquisition result
+        if: always()
+        run: test "${{ steps.acquisition.outcome }}" = "success"

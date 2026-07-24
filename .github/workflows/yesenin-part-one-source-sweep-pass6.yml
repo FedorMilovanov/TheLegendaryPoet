@@ -1,0 +1,83 @@
+name: Yesenin Part I Source Sweep Pass 6
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_SOURCE_SWEEP_PASS6_*.md'
+      - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - 'research/yesenin/PART_ONE_DRAFT_SOURCE_SWEEP_PASS6_ADDITIONS.md'
+      - 'src/data/essays/yeseninPartOneSourcesPassFour*.ts'
+      - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
+      - 'scripts/lib/yesenin-part-one-pass6-citation-topology.ts'
+      - 'scripts/validate-yesenin-part-one-source-sweep-pass6.ts'
+      - 'scripts/validate-yesenin-part-one-real-visuals-pass6.ts'
+      - '.github/workflows/yesenin-part-one-source-sweep-pass6.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [main, work/local-images-playwright-wtoc, research/yesenin-part1-source-sweep-pass6]
+    paths:
+      - 'research/yesenin/PART_ONE_SOURCE_SWEEP_PASS6_*.md'
+      - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - 'research/yesenin/PART_ONE_DRAFT_SOURCE_SWEEP_PASS6_ADDITIONS.md'
+      - 'src/data/essays/yeseninPartOneSourcesPassFour*.ts'
+      - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
+      - 'scripts/lib/yesenin-part-one-pass6-citation-topology.ts'
+      - 'scripts/validate-yesenin-part-one-source-sweep-pass6.ts'
+      - 'scripts/validate-yesenin-part-one-real-visuals-pass6.ts'
+      - '.github/workflows/yesenin-part-one-source-sweep-pass6.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+concurrency:
+  group: yesenin-part-one-source-sweep-pass6-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate source sweep, prose and citation topology
+        id: source-sweep
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-part-one-source-sweep-pass6.ts 2>&1 | tee yesenin-part-one-source-sweep-pass6.log
+      - name: Validate real-only visual provenance
+        id: real-visuals
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-part-one-real-visuals-pass6.ts 2>&1 | tee yesenin-part-one-real-visuals-pass6.log
+      - name: Upload pass-6 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-source-sweep-pass6-diagnostics
+          path: |
+            yesenin-part-one-source-sweep-pass6.log
+            yesenin-part-one-real-visuals-pass6.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce pass-6 results
+        if: always()
+        run: |
+          test "${{ steps.source-sweep.outcome }}" = "success"
+          test "${{ steps.real-visuals.outcome }}" = "success"
