@@ -26,12 +26,12 @@ export const yeseninPartOneSourcesPassFourDuncan = [
     note: 'Коллекция программ и объявлений для item-level поиска гастрольных и школьных событий; конкретный российский объект и права должны устанавливаться отдельно.',
   },
   {
-    id: 'ye1-nypl-isadora-dancers-programs',
-    title: 'Isadora Duncan Dancers programs',
-    url: 'https://digitalcollections.nypl.org/collections/isadora-duncan-dancers-programs',
+    id: 'ye1-nypl-isadora-moscow-reviews',
+    title: 'Isadora Duncan: reviews and materials relating to performances in St. Petersburg and Moscow',
+    url: 'https://archives.nypl.org/dan/19659',
     kind: 'archive',
     institution: 'New York Public Library, Jerome Robbins Dance Division',
-    note: 'Архивная коллекция программ учеников и труппы; полезна для институционального контекста, но не автоматически для московского события 1921 года.',
+    note: 'Узкий finding aid по российским выступлениям и московской школе на Пречистенке, 20; подтверждает состав коллекции, но требует item-level заказа и проверки каждого документа.',
   },
   {
     id: 'ye1-nypl-isadora-school-scores',
@@ -47,7 +47,7 @@ export const yeseninPartOneSourcesPassFourDuncan = [
     url: 'https://archives.nypl.org/dan/19694',
     kind: 'archive',
     institution: 'New York Public Library, Jerome Robbins Dance Division',
-    note: 'Архивный finding aid бумаг Ирмы Дункан; потенциальный источник по школе и хронологии, пока без утверждения, что нужная единица просмотрена.',
+    note: 'Архивный finding aid бумаг Ирмы Дункан, включая дневники 1921 года; потенциальный источник по школе и хронологии, пока без утверждения, что нужная единица просмотрена.',
   },
   {
     id: 'ye1-nypl-irma-duncan-collection',
