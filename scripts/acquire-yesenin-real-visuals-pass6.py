@@ -32,6 +32,8 @@ RECORDS: list[dict[str, Any]] = [
         "source_page": "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B9_%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D1%81_%D1%81%D1%91%D1%81%D1%82%D1%80%D0%B0%D0%BC%D0%B8_%D0%9A%D0%B0%D1%82%D0%B5%D0%B9_%D0%B8_%D0%A8%D1%83%D1%80%D0%BE%D0%B9.jpg",
         "file_url": "https://upload.wikimedia.org/wikipedia/commons/e/e6/%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B9_%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D1%81_%D1%81%D1%91%D1%81%D1%82%D1%80%D0%B0%D0%BC%D0%B8_%D0%9A%D0%B0%D1%82%D0%B5%D0%B9_%D0%B8_%D0%A8%D1%83%D1%80%D0%BE%D0%B9.jpg",
         "expected_dimensions": [2268, 3160],
+        "expected_bytes": 4118323,
+        "expected_sha256": "72e2c130c01969948e33e6f872fb49123fb36abdf6afcb03de3376ff7314759f",
         "rights": "public-domain-candidate / legal metadata incomplete",
     },
     {
@@ -41,6 +43,9 @@ RECORDS: list[dict[str, Any]] = [
         "date": "до 18 августа 1912; ФЭБ, печатная с. 557",
         "source_page": "https://feb-web.ru/feb/esenin/chronics/el1/el1-551-.htm?cmd=p",
         "file_url": "https://feb-web.ru/feb/esenin/pictures/el1-557-.jpg",
+        "expected_dimensions": [491, 680],
+        "expected_bytes": 75811,
+        "expected_sha256": "360e31bea4e627248ffac8fcacee1a8af856894510601fb032783be2ced7fa26",
         "rights": "research-only / scan rights unresolved",
     },
     {
@@ -51,6 +56,8 @@ RECORDS: list[dict[str, Any]] = [
         "source_page": "https://commons.wikimedia.org/wiki/File:Esenin1914.jpg",
         "file_url": "https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg",
         "expected_dimensions": [570, 606],
+        "expected_bytes": 67529,
+        "expected_sha256": "1f4f3d25719582dedd54c7804c4b438136e943730526b75ec1437f8fcf73dfe6",
         "rights": "public-domain-candidate",
     },
     {
@@ -61,6 +68,8 @@ RECORDS: list[dict[str, Any]] = [
         "source_page": "https://commons.wikimedia.org/wiki/File:Eseninnikolaiklyeuv.jpg",
         "file_url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Eseninnikolaiklyeuv.jpg",
         "expected_dimensions": [792, 620],
+        "expected_bytes": 228836,
+        "expected_sha256": "5ca96a2d2f48eb320ad119dff7275149d8a27935a373359524152444814391bc",
         "rights": "public-domain-candidate",
     },
     {
@@ -70,6 +79,9 @@ RECORDS: list[dict[str, Any]] = [
         "date": "Петроград, 10 апреля 1916; ФЭБ, печатная с. 668",
         "source_page": "https://feb-web.ru/feb/esenin/chronics/el1/el1-411-.htm?cmd=p",
         "file_url": "https://feb-web.ru/feb/esenin/pictures/el1-668-.jpg",
+        "expected_dimensions": [614, 416],
+        "expected_bytes": 39069,
+        "expected_sha256": "2f16e6f0de81b4c7e9fc15d14845d5a665d8df6ef0ce37ba12aced1645b2189f",
         "rights": "research-only / exact holding and scan rights unresolved",
     },
     {
@@ -79,6 +91,8 @@ RECORDS: list[dict[str, Any]] = [
         "date": "1916; ФЭБ, печатная с. 673",
         "source_page": "https://feb-web.ru/feb/esenin/chronics/el1/el1-669-.htm?cmd=p",
         "file_url": "https://feb-web.ru/feb/esenin/pictures/el1-673-.jpg",
+        "expected_dimensions": [373, 542],
+        "expected_bytes": 43430,
         "expected_sha256": "b9ce49137fa139faa1ee47e8e33d6e4592ac2d4bed1e2b69ac8da88c167c1484",
         "rights": "acquired-hashed / rights unresolved",
     },
@@ -89,6 +103,8 @@ RECORDS: list[dict[str, Any]] = [
         "date": "1916; ФЭБ, печатная с. 690",
         "source_page": "https://feb-web.ru/feb/esenin/chronics/el1/el1-669-.htm?cmd=p",
         "file_url": "https://feb-web.ru/feb/esenin/pictures/el1-690-.jpg",
+        "expected_dimensions": [614, 408],
+        "expected_bytes": 54060,
         "expected_sha256": "08465a4383e3afa2d9fa087c61a006e750c6fc6c395a343ebf26c0fbfb5ad8ef",
         "rights": "acquired-hashed / rights unresolved",
     },
@@ -99,8 +115,9 @@ RECORDS: list[dict[str, Any]] = [
         "date": "1919; ФЭБ, печатная с. 621",
         "source_page": "https://feb-web.ru/feb/esenin/chronics/el2/el2-spis.htm?cmd=p",
         "file_url": "https://feb-web.ru/feb/esenin/pictures/El2-6212.jpg",
-        "expected_sha256": "a316190933bcbdb433c835359d971854176a32d808787bcdc0050aad5b501cb4",
         "expected_dimensions": [237, 309],
+        "expected_bytes": 18693,
+        "expected_sha256": "a316190933bcbdb433c835359d971854176a32d808787bcdc0050aad5b501cb4",
         "rights": "acquired-hashed / rights unresolved",
     },
 ]
@@ -134,9 +151,17 @@ def download(record: dict[str, Any], destination: Path) -> dict[str, Any]:
     if len(data) < 2_000:
         fail(f"{record['id']} is implausibly small: {len(data)} bytes")
 
+    expected_bytes = record.get("expected_bytes")
+    if expected_bytes is None:
+        fail(f"{record['id']} has no frozen byte-size baseline")
+    if len(data) != expected_bytes:
+        fail(f"{record['id']} byte size drifted: expected {expected_bytes}, found {len(data)}")
+
     sha256 = hashlib.sha256(data).hexdigest()
     expected_sha = record.get("expected_sha256")
-    if expected_sha and sha256 != expected_sha:
+    if not expected_sha:
+        fail(f"{record['id']} has no frozen SHA-256 baseline")
+    if sha256 != expected_sha:
         fail(f"{record['id']} SHA-256 drifted: expected {expected_sha}, found {sha256}")
 
     suffix = mimetypes.guess_extension(content_type) or ".img"
@@ -155,7 +180,9 @@ def download(record: dict[str, Any], destination: Path) -> dict[str, Any]:
         fail(f"{record['id']} is not a decodable image: {exc}")
 
     expected_dimensions = record.get("expected_dimensions")
-    if expected_dimensions and [width, height] != expected_dimensions:
+    if not expected_dimensions:
+        fail(f"{record['id']} has no frozen dimensions baseline")
+    if [width, height] != expected_dimensions:
         fail(
             f"{record['id']} dimensions drifted: expected {expected_dimensions}, "
             f"found {[width, height]}"
@@ -222,12 +249,13 @@ def main() -> int:
         "syntheticImages": 0,
         "generatedFaces": 0,
         "generatedDocuments": 0,
+        "allByteBaselinesFrozen": True,
+        "allDimensionBaselinesFrozen": True,
+        "allSha256BaselinesFrozen": True,
         "productionAuthorized": False,
         "contactSheet": "contact-sheet-01-08.png",
         "manifest": "manifest.json",
-        "sha256": {
-            item["id"]: item["sha256"] for item in manifest
-        },
+        "sha256": {item["id"]: item["sha256"] for item in manifest},
     }
     (OUTPUT / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
