@@ -5,6 +5,8 @@ import path from 'node:path';
 
 const OUT_DIR = process.env.OUT_DIR || 'artifacts/yesenin-feb-page-witnesses-76';
 const USER_AGENT = 'TheLegendaryPoet research verification/1.0 (+https://github.com/FedorMilovanov/TheLegendaryPoet)';
+const MAX_IMAGES_PER_TARGET = 12;
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 const targets = [
   {
@@ -46,10 +48,10 @@ async function ensureDir(dir) {
 }
 
 async function resolveTargetUrl(page, target) {
-  if (target.directUrl) return { url: target.directUrl, method: 'direct-known-group' };
+  if (target.directUrl) return { url: target.directUrl, method: 'direct-known-group', candidates: [] };
 
   await page.goto(target.indexUrl, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1200);
 
   const candidates = await page.locator('a[href]').evaluateAll((anchors) => anchors.map((anchor) => ({
     text: (anchor.textContent || '').replace(/\s+/g, ' ').trim(),
@@ -80,9 +82,17 @@ async function resolveTargetUrl(page, target) {
   };
 }
 
+function imageScore(image, target) {
+  const haystack = `${image.alt} ${image.parentText}`.toLowerCase();
+  const pageHits = target.printedPages.filter((number) => new RegExp(`(^|\\D)${number}(\\D|$)`).test(haystack)).length;
+  const titleHits = target.titleNeedles.filter((needle) => haystack.includes(needle.toLowerCase())).length;
+  const sizeScore = Math.min(8, Math.floor(Math.max(image.naturalWidth, image.naturalHeight) / 250));
+  return pageHits * 20 + titleHits * 10 + sizeScore;
+}
+
 async function collectPageEvidence(page, context, target, resolved) {
   const response = await page.goto(resolved.url, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1800);
 
   const finalUrl = page.url();
   const title = await page.title();
@@ -96,8 +106,8 @@ async function collectPageEvidence(page, context, target, resolved) {
 
   const targetDir = path.join(OUT_DIR, target.id);
   await ensureDir(targetDir);
-  await page.screenshot({ path: path.join(targetDir, 'full-page.png'), fullPage: true });
-  await writeFile(path.join(targetDir, 'body.txt'), bodyText, 'utf8');
+  await page.screenshot({ path: path.join(targetDir, 'viewport.png'), fullPage: false });
+  await writeFile(path.join(targetDir, 'body.txt'), bodyText.slice(0, 1_000_000), 'utf8');
 
   const imageElements = await page.locator('img').evaluateAll((images) => images.map((image, index) => {
     const rect = image.getBoundingClientRect();
@@ -110,25 +120,24 @@ async function collectPageEvidence(page, context, target, resolved) {
       naturalHeight: image.naturalHeight,
       displayWidth: Math.round(rect.width),
       displayHeight: Math.round(rect.height),
-      parentText: (image.parentElement?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 500),
+      parentText: (image.parentElement?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 700),
     };
   }));
 
+  const rankedImages = imageElements
+    .map((image) => ({ ...image, evidenceScore: imageScore(image, target) }))
+    .filter((image) => {
+      const sourceUrl = image.currentSrc || image.src;
+      return /^https?:/i.test(sourceUrl || '')
+        && (image.evidenceScore > 0 || image.naturalWidth >= 250 || image.naturalHeight >= 250);
+    })
+    .sort((a, b) => b.evidenceScore - a.evidenceScore || (b.naturalWidth * b.naturalHeight) - (a.naturalWidth * a.naturalHeight))
+    .slice(0, MAX_IMAGES_PER_TARGET);
+
   const downloads = [];
-  for (const image of imageElements) {
+  for (const image of rankedImages) {
     const sourceUrl = image.currentSrc || image.src;
-    if (!sourceUrl || !/^https?:/i.test(sourceUrl)) continue;
-
-    const likelyContent = image.naturalWidth >= 250
-      || image.naturalHeight >= 250
-      || target.titleNeedles.some((needle) => `${image.alt} ${image.parentText}`.toLowerCase().includes(needle.toLowerCase()));
-    if (!likelyContent) continue;
-
-    const result = {
-      ...image,
-      sourceUrl,
-      status: 'not-requested',
-    };
+    const result = { ...image, sourceUrl, status: 'not-requested' };
 
     try {
       const imageResponse = await context.request.get(sourceUrl, {
@@ -143,7 +152,11 @@ async function collectPageEvidence(page, context, target, resolved) {
       result.byteSize = bytes.length;
       result.sha256 = sha256(bytes);
 
-      if (imageResponse.ok() && contentType.startsWith('image/') && bytes.length > 0) {
+      if (!imageResponse.ok() || !contentType.startsWith('image/') || bytes.length === 0) {
+        result.rejectedReason = 'response is not a successful non-empty image';
+      } else if (bytes.length > MAX_IMAGE_BYTES) {
+        result.rejectedReason = `image exceeds ${MAX_IMAGE_BYTES} byte evidence cap`;
+      } else {
         const extension = contentType.includes('png') ? '.png'
           : contentType.includes('webp') ? '.webp'
             : contentType.includes('gif') ? '.gif'
@@ -151,8 +164,6 @@ async function collectPageEvidence(page, context, target, resolved) {
         const fileName = `${String(image.index).padStart(2, '0')}-${safeName(image.alt || 'image')}${extension}`;
         await writeFile(path.join(targetDir, fileName), bytes);
         result.savedAs = fileName;
-      } else {
-        result.rejectedReason = 'response is not a successful non-empty image';
       }
     } catch (error) {
       result.status = 'request-error';
@@ -161,6 +172,9 @@ async function collectPageEvidence(page, context, target, resolved) {
 
     downloads.push(result);
   }
+
+  const hasCandidateBytes = downloads.some((item) => item.savedAs);
+  const pageIdentityComplete = target.printedPages.every((pageNumber) => visiblePageNumbers.includes(pageNumber));
 
   return {
     id: target.id,
@@ -173,16 +187,22 @@ async function collectPageEvidence(page, context, target, resolved) {
     title,
     expectedPrintedPages: target.printedPages,
     visiblePrintedPages: visiblePageNumbers,
+    pageIdentityComplete,
     expectedTitleNeedles: target.titleNeedles,
     visibleTitleNeedles: visibleNeedles,
-    screenshot: `${target.id}/full-page.png`,
+    screenshot: `${target.id}/viewport.png`,
     bodyText: `${target.id}/body.txt`,
     imageElementCount: imageElements.length,
+    rankedImageCount: rankedImages.length,
     downloadedCandidateCount: downloads.filter((item) => item.savedAs).length,
     images: downloads,
-    classification: downloads.some((item) => item.savedAs)
-      ? 'PUBLISHED-PAGE-BYTES-CANDIDATES-ACQUIRED'
-      : 'PAGE-IDENTIFIED-BYTES-NOT-ACQUIRED',
+    classification: pageIdentityComplete && hasCandidateBytes
+      ? 'PAGE-IDENTIFIED-CANDIDATE-BYTES-ACQUIRED'
+      : pageIdentityComplete
+        ? 'PAGE-IDENTIFIED-BYTES-NOT-ACQUIRED'
+        : hasCandidateBytes
+          ? 'CANDIDATE-BYTES-ACQUIRED-PAGE-IDENTITY-INCOMPLETE'
+          : 'PAGE-AND-BYTES-INCOMPLETE',
     limitations: [
       'Downloaded bytes are published FEB page/image candidates, not direct archive originals.',
       'Object provenance and reproduction rights require separate editorial verification.',
@@ -193,54 +213,79 @@ async function collectPageEvidence(page, context, target, resolved) {
 
 await ensureDir(OUT_DIR);
 
-const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({
-  userAgent: USER_AGENT,
-  viewport: { width: 1440, height: 1100 },
-  locale: 'ru-RU',
-  ignoreHTTPSErrors: false,
-});
-const page = await context.newPage();
-
 const manifest = {
   generatedAt: new Date().toISOString(),
   workflowPurpose: 'Issue #76 exact FEB published-page witness acquisition',
   targets: [],
+  technicalErrors: [],
 };
 
+let browser;
 try {
+  browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent: USER_AGENT,
+    viewport: { width: 1440, height: 1100 },
+    locale: 'ru-RU',
+    ignoreHTTPSErrors: false,
+  });
+  const page = await context.newPage();
+
   for (const target of targets) {
-    const resolved = await resolveTargetUrl(page, target);
-    manifest.targets.push(await collectPageEvidence(page, context, target, resolved));
+    try {
+      const resolved = await resolveTargetUrl(page, target);
+      manifest.targets.push(await collectPageEvidence(page, context, target, resolved));
+    } catch (error) {
+      manifest.technicalErrors.push({
+        targetId: target.id,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      manifest.targets.push({
+        id: target.id,
+        expectedPrintedPages: target.printedPages,
+        visiblePrintedPages: [],
+        pageIdentityComplete: false,
+        downloadedCandidateCount: 0,
+        classification: 'TECHNICAL-ACQUISITION-ERROR',
+      });
+    }
   }
+} catch (error) {
+  manifest.technicalErrors.push({
+    targetId: 'browser-runtime',
+    message: error instanceof Error ? error.message : String(error),
+  });
 } finally {
-  await browser.close();
+  if (browser) await browser.close();
 }
 
 manifest.summary = {
   targetCount: manifest.targets.length,
-  candidateImageCount: manifest.targets.reduce((sum, target) => sum + target.downloadedCandidateCount, 0),
-  pageIdentityComplete: manifest.targets.every((target) =>
-    target.expectedPrintedPages.every((pageNumber) => target.visiblePrintedPages.includes(pageNumber)),
-  ),
-  allTargetsHaveImageCandidates: manifest.targets.every((target) => target.downloadedCandidateCount > 0),
+  candidateImageCount: manifest.targets.reduce((sum, target) => sum + (target.downloadedCandidateCount || 0), 0),
+  identifiedTargetCount: manifest.targets.filter((target) => target.pageIdentityComplete).length,
+  pageIdentityComplete: manifest.targets.length === targets.length && manifest.targets.every((target) => target.pageIdentityComplete),
+  allTargetsHaveImageCandidates: manifest.targets.length === targets.length
+    && manifest.targets.every((target) => (target.downloadedCandidateCount || 0) > 0),
+  technicalErrorCount: manifest.technicalErrors.length,
 };
 
 await writeFile(path.join(OUT_DIR, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 await writeFile(path.join(OUT_DIR, 'summary.txt'), [
   `targets=${manifest.summary.targetCount}`,
+  `identified_targets=${manifest.summary.identifiedTargetCount}`,
   `candidate_images=${manifest.summary.candidateImageCount}`,
   `page_identity_complete=${manifest.summary.pageIdentityComplete}`,
   `all_targets_have_image_candidates=${manifest.summary.allTargetsHaveImageCandidates}`,
+  `technical_errors=${manifest.summary.technicalErrorCount}`,
   ...manifest.targets.map((target) =>
-    `${target.id}: ${target.classification}; pages ${target.visiblePrintedPages.join(',') || 'none'}; images ${target.downloadedCandidateCount}`,
+    `${target.id}: ${target.classification}; pages ${(target.visiblePrintedPages || []).join(',') || 'none'}; images ${target.downloadedCandidateCount || 0}`,
   ),
   '',
 ].join('\n'), 'utf8');
 
 console.log(JSON.stringify(manifest.summary, null, 2));
 
-if (!manifest.summary.pageIdentityComplete) {
-  console.error('At least one exact printed-page identity was not visible in the captured FEB page.');
-  process.exitCode = 2;
+if (manifest.summary.technicalErrorCount > 0) {
+  console.error('Technical acquisition errors occurred; inspect the uploaded manifest.');
+  process.exitCode = 1;
 }
