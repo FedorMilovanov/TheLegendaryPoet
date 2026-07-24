@@ -3,12 +3,13 @@ name: Yesenin Part I Real Visual Acquisition Pass 6
 on:
   workflow_dispatch:
   push:
-    branches: [research/yesenin-part1-source-sweep-pass6]
+    branches: [main, work/local-images-playwright-wtoc, research/yesenin-part1-source-sweep-pass6]
     paths:
       - 'scripts/acquire-yesenin-real-visuals-pass6.py'
       - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
       - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
       - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_HASH_BASELINE_PASS6.md'
       - '.github/workflows/yesenin-part-one-real-visual-acquisition-pass6.yml'
   pull_request:
     branches: [work/local-images-playwright-wtoc]
@@ -17,6 +18,7 @@ on:
       - 'src/data/essays/yeseninPartOneRealVisualsPassSix.ts'
       - 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md'
       - 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md'
+      - 'research/yesenin/PART_ONE_REAL_VISUAL_HASH_BASELINE_PASS6.md'
       - '.github/workflows/yesenin-part-one-real-visual-acquisition-pass6.yml'
 
 concurrency:
