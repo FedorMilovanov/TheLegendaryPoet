@@ -1,0 +1,64 @@
+name: Yesenin NEB Physical Editions Pass 8
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/acquire-yesenin-neb-editions-pass8.py'
+      - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - '.github/workflows/yesenin-neb-physical-editions-pass8.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/acquire-yesenin-neb-editions-pass8.py'
+      - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - '.github/workflows/yesenin-neb-physical-editions-pass8.yml'
+
+concurrency:
+  group: yesenin-neb-physical-editions-pass8-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install non-generative PDF tooling
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
+      - name: Acquire exact NEB PDFs and render page contact sheets
+        id: acquisition
+        continue-on-error: true
+        env:
+          YESENIN_NEB_OUTPUT: artifacts/yesenin-neb-editions-pass8
+        run: |
+          set -o pipefail
+          python scripts/acquire-yesenin-neb-editions-pass8.py 2>&1 | tee yesenin-neb-editions-pass8.log
+      - name: Upload acquisition diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-neb-editions-pass8-diagnostics
+          path: yesenin-neb-editions-pass8.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload real PDFs and page-contact sheets
+        if: steps.acquisition.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-neb-editions-pass8-research-only
+          path: artifacts/yesenin-neb-editions-pass8
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+      - name: Enforce acquisition result
+        if: always()
+        run: test "${{ steps.acquisition.outcome }}" = "success"
