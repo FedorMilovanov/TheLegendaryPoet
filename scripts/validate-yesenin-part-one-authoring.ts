@@ -173,7 +173,7 @@ requireText(
   'Три старые страницы ФЭБ отвечают по известному адресу',
   verificationPath,
 );
-requireText(supplement, 'physical witnesses still held', supplementPath.toLowerCase());
+requireText(supplement, 'PHYSICAL-WITNESSES-STILL-HELD', supplementPath);
 
 console.log(
   JSON.stringify(
