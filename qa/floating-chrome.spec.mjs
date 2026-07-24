@@ -46,7 +46,6 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   // scroll scheduler. Force the documented visible state so this test measures
   // the collision contract, not a temporarily translated, pointer-inert pill.
   await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
-  await page.waitForTimeout(650);
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
@@ -54,6 +53,17 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await expect(player).toBeVisible();
   await expect(palette).toBeVisible();
   await expect(scrollTop).toBeVisible();
+  // Framer Motion can take longer than a fixed timeout to finish the spring on
+  // a busy runner. Measure the collision contract only after the pill is fully
+  // interactive in its settled frame.
+  await expect.poll(
+    () => palette.evaluate((element) => Number(getComputedStyle(element).opacity)),
+    { timeout: 5_000, message: 'command palette pill should finish entering' },
+  ).toBeGreaterThan(0.9);
+  await expect.poll(
+    () => palette.evaluate((element) => getComputedStyle(element).pointerEvents),
+    { timeout: 5_000, message: 'command palette pill should be interactive' },
+  ).not.toBe('none');
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
