@@ -142,14 +142,16 @@ test.describe('nested overlay ownership', () => {
     expect(afterSearchClose).toMatchObject({ depth: 1, topLabel: 'immersive-player', lastEscapeLabel: 'command-palette' });
 
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(120);
+    await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
     const afterImmersiveEscape = await readOverlayDebug(page);
     overlayTimeline.push({ step: 'immersive-escape', state: afterImmersiveEscape });
     fs.writeFileSync(path.join(ARTIFACT_DIR, 'desktop-overlay-timeline.json'), JSON.stringify(overlayTimeline, null, 2));
     expect(afterImmersiveEscape?.escapeCount).toBeGreaterThanOrEqual(2);
     expect(afterImmersiveEscape?.lastEscapeLabel).toBe('immersive-player');
-    await expect(immersive).toBeHidden();
-    await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
+    // The logical lock releases immediately, while AnimatePresence intentionally
+    // keeps the fading dialog mounted for 450 ms. Wait for that visible contract
+    // instead of treating its exit animation as a stuck overlay.
+    await expect(immersive).toBeHidden({ timeout: 2_000 });
     await expect(immersiveOpener).toBeFocused();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollBefore, 0);
     expect(pageErrors).toEqual([]);
