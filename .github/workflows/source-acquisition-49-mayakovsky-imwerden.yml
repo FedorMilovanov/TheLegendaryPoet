@@ -1,4 +1,4 @@
-name: Source acquisition 49 Mayakovsky ImWerden
+name: Source acquisition 49 Mayakovsky sources
 
 on:
   push:
@@ -11,6 +11,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: source-49-mayakovsky-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify-mayakovsky-case:
@@ -109,5 +113,109 @@ jobs:
         with:
           name: source-49-mayakovsky-case-2005-raw
           path: mayakovsky-case/source.pdf
+          retention-days: 7
+          compression-level: 0
+
+  verify-pro-eto-viewer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install image verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      - name: Download all unique high-resolution scans
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pro-eto/pages pro-eto/contact-sheets
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import urllib.request
+
+          root = pathlib.Path('pro-eto')
+          page_url = 'https://www.togdazine.ru/article/1389'
+          request = urllib.request.Request(page_url, headers={'User-Agent': 'Mozilla/5.0 source-verification/1.0'})
+          with urllib.request.urlopen(request, timeout=120) as response:
+              html = response.read().decode('utf-8', errors='replace')
+          (root / 'viewer.html').write_text(html, encoding='utf-8')
+
+          hashes: list[str] = []
+          seen: set[str] = set()
+          for match in re.finditer(r'/images/gallery/111/(?:555|1170)/([0-9a-f]{32}\.jpg)', html, re.I):
+              filename = match.group(1).lower()
+              if filename in seen:
+                  continue
+              seen.add(filename)
+              hashes.append(filename)
+
+          if len(hashes) != 48:
+              raise RuntimeError(f'expected 48 unique scans, found {len(hashes)}')
+
+          manifest: list[dict[str, object]] = []
+          for index, filename in enumerate(hashes, start=1):
+              url = f'https://www.togdazine.ru/images/gallery/111/1170/{filename}'
+              target = root / 'pages' / f'{index:03d}-{filename}'
+              request = urllib.request.Request(url, headers={
+                  'User-Agent': 'Mozilla/5.0 source-verification/1.0',
+                  'Referer': page_url,
+              })
+              with urllib.request.urlopen(request, timeout=180) as response, target.open('wb') as output:
+                  data = response.read()
+                  output.write(data)
+              if not data.startswith(b'\xff\xd8\xff'):
+                  raise RuntimeError(f'{target} is not a JPEG')
+              manifest.append({
+                  'sequence': index,
+                  'filename': filename,
+                  'url': url,
+                  'bytes': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+              })
+
+          (root / 'manifest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
+      - name: Verify dimensions and build contact sheets
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > pro-eto/dimensions.tsv
+          for image in pro-eto/pages/*.jpg; do
+            identify -format '%f\t%wx%h\n' "$image" >> pro-eto/dimensions.tsv
+          done
+          montage pro-eto/pages/0{01..24}-*.jpg -thumbnail 220x320 -tile 6x4 -geometry +8+8 pro-eto/contact-sheets/pages-001-024.jpg
+          montage pro-eto/pages/0{25..48}-*.jpg -thumbnail 220x320 -tile 6x4 -geometry +8+8 pro-eto/contact-sheets/pages-025-048.jpg
+          printf 'unique_scans=%s\ntotal_bytes=%s\n' \
+            "$(find pro-eto/pages -type f -name '*.jpg' | wc -l)" \
+            "$(find pro-eto/pages -type f -name '*.jpg' -printf '%s\n' | awk '{sum += $1} END {print sum}')" \
+            > pro-eto/summary.txt
+
+      - name: Upload viewer verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-pro-eto-1923-viewer-verification
+          path: |
+            pro-eto/manifest.json
+            pro-eto/dimensions.tsv
+            pro-eto/summary.txt
+            pro-eto/contact-sheets/*.jpg
+          retention-days: 14
+
+      - name: Upload page scans
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-pro-eto-1923-page-scans
+          path: pro-eto/pages/*.jpg
           retention-days: 7
           compression-level: 0
