@@ -21,248 +21,288 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  discover:
+  acquire-issue-3:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install tools
+      - name: Install verification and browser tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-bs4 python3-requests
+          sudo apt-get install -y curl qpdf poppler-utils imagemagick
+          npm install --no-save --ignore-scripts playwright@1.55.0
+          npx playwright install --with-deps chromium
 
-      - name: Resolve issue records and public-access boundaries
+      - name: Probe record, direct PDF and viewer routes
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p rsl-mayakovsky-description/searches rsl-mayakovsky-description/records
+          root='rsl-description-issue-3'
+          mkdir -p "$root/direct" "$root/browser/responses" "$root/browser/downloads" "$root/front" "$root/final"
+          record='https://search.rsl.ru/ru/record/01006741660'
+          viewer='https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white'
+          dlib_path='/rsl01006000000/rsl01006741000/rsl01006741660/rsl01006741660.pdf'
+          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0'
 
-          cat > /tmp/resolve-rsl-descriptions.py <<'PY'
-          from __future__ import annotations
+          curl --location --compressed --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent "$ua" \
+            --dump-header "$root/record-headers.txt" \
+            --output "$root/record.html" \
+            "$record"
 
-          import concurrent.futures
-          import hashlib
-          import json
-          import pathlib
-          import re
-          import time
-          from typing import Any
-          from urllib.parse import urljoin
+          curl --location --compressed --retry 4 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent "$ua" \
+            --referer "$record" \
+            --dump-header "$root/action-record-headers.txt" \
+            --output "$root/action-record.js" \
+            'https://search.rsl.ru/js/action-record.js' || true
 
-          import requests
-          from bs4 import BeautifulSoup
-          from requests.adapters import HTTPAdapter
-          from urllib3.util.retry import Retry
+          : > "$root/direct-attempts.tsv"
+          found=''
+          index=0
+          for url in \
+            "https://dlib.rsl.ru$dlib_path" \
+            "http://dlib.rsl.ru$dlib_path" \
+            'https://viewer.rsl.ru/ru/rsl01006741660' \
+            'https://viewer.rsl.ru/rsl01006741660'; do
+            index=$((index + 1))
+            printf -v index2 '%02d' "$index"
+            target="$root/direct/$index2.bin"
+            headers="$root/direct/$index2.headers"
+            code=0
+            curl --location --compressed --retry 3 --retry-all-errors \
+              --connect-timeout 30 --max-time 1800 \
+              --user-agent "$ua" \
+              --referer "$record" \
+              --dump-header "$headers" \
+              --output "$target" \
+              "$url" || code=$?
+            bytes=0
+            signature=''
+            [ -f "$target" ] && bytes="$(stat --printf='%s' "$target")"
+            [ -f "$target" ] && signature="$(head -c 8 "$target" | xxd -p -c 32)"
+            printf '%s\t%s\t%s\t%s\t%s\n' "$index2" "$code" "$bytes" "$signature" "$url" >> "$root/direct-attempts.tsv"
+            if [ "$code" -eq 0 ] && [ -s "$target" ] && [ "$(head -c 5 "$target")" = '%PDF-' ]; then
+              cp "$target" "$root/source.pdf"
+              printf '%s\n' "$url" > "$root/acquired-url.txt"
+              found='direct'
+              break
+            fi
+          done
+          printf '%s\n' "$found" > "$root/direct-result.txt"
 
-          ROOT = pathlib.Path('rsl-mayakovsky-description')
-          BASE = 'https://search.rsl.ru'
-          MASTER_ID = '01006741660'
-          MASTER = f'{BASE}/ru/record/{MASTER_ID}'
-          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/2.0'
-          TITLE = 'Описание документальных материалов В. В. Маяковского, находящихся в государственных хранилищах'
-          QUERIES = [
-              TITLE,
-              f'{TITLE} Вып. 1',
-              f'{TITLE} Вып. 2',
-              f'{TITLE} Вып. 3',
-              'В. В. Маяковский Описание документальных материалов выпуск 1',
-              'В. В. Маяковский Описание документальных материалов выпуск 2',
-              'В. В. Маяковский Описание документальных материалов выпуск 3',
-          ]
+          cat > /tmp/inspect-rsl-viewer.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import crypto from 'node:crypto';
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
 
-          session = requests.Session()
-          session.headers.update({
-              'User-Agent': UA,
-              'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.5',
-          })
-          retry = Retry(
-              total=3,
-              connect=3,
-              read=3,
-              backoff_factor=0.7,
-              status_forcelist=(429, 500, 502, 503, 504),
-              allowed_methods=frozenset({'GET', 'POST'}),
-          )
-          session.mount('https://', HTTPAdapter(max_retries=retry, pool_connections=12, pool_maxsize=12))
+          const root = path.resolve('rsl-description-issue-3/browser');
+          const target = 'https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white';
+          const record = 'https://search.rsl.ru/ru/record/01006741660';
+          const network = [];
+          const events = [];
+          const savedBodies = [];
+          const candidates = new Set();
+          const safe = value => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, 20);
+          const addCandidate = value => {
+            if (!value || typeof value !== 'string') return;
+            if (/\.pdf(?:[?#]|$)|dlib\.rsl\.ru|viewer.*download|api.*document|file/i.test(value)) candidates.add(value);
+          };
 
-          def save_json(name: str, value: Any) -> None:
-              (ROOT / name).write_text(
-                  json.dumps(value, ensure_ascii=False, indent=2) + '\n',
-                  encoding='utf-8',
-              )
-
-          def record_urls(text: str, current_url: str) -> set[str]:
-              soup = BeautifulSoup(text, 'html.parser')
-              urls: set[str] = set()
-              for anchor in soup.find_all('a', href=True):
-                  href = urljoin(current_url, anchor.get('href', ''))
-                  if re.search(r'/ru/record/\d+', href):
-                      urls.add(href.split('#', 1)[0].split('?', 1)[0])
-              for match in re.finditer(r'(?:https://search\.rsl\.ru)?/ru/record/\d+', text):
-                  urls.add(urljoin(current_url, match.group(0)))
-              return urls
-
-          master = session.get(MASTER, timeout=(20, 180), allow_redirects=True)
-          master.raise_for_status()
-          (ROOT / 'master.html').write_bytes(master.content)
-          save_json('master-headers.json', dict(master.headers))
-
-          discovered = record_urls(master.text, master.url)
-          discovered.add(MASTER)
-          search_results: list[dict[str, Any]] = []
-
-          for index, query in enumerate(QUERIES, start=1):
-              for method in ('post', 'get'):
-                  started = time.monotonic()
-                  try:
-                      if method == 'post':
-                          response = session.post(
-                              f'{BASE}/ru/search',
-                              data={'search': query},
-                              timeout=(20, 180),
-                              allow_redirects=True,
-                          )
-                      else:
-                          response = session.get(
-                              f'{BASE}/ru/search',
-                              params={'search': query},
-                              timeout=(20, 180),
-                              allow_redirects=True,
-                          )
-                      filename = f'searches/{index:02d}-{method}.html'
-                      (ROOT / filename).write_bytes(response.content)
-                      urls = record_urls(response.text, response.url)
-                      discovered.update(urls)
-                      search_results.append({
-                          'query': query,
-                          'method': method,
-                          'requested_url': response.request.url,
-                          'final_url': response.url,
-                          'status': response.status_code,
-                          'bytes': len(response.content),
-                          'elapsed': round(time.monotonic() - started, 3),
-                          'record_urls': sorted(urls),
-                          'filename': filename,
-                      })
-                  except Exception as error:
-                      search_results.append({
-                          'query': query,
-                          'method': method,
-                          'error': repr(error),
-                          'elapsed': round(time.monotonic() - started, 3),
-                      })
-          save_json('search-results.json', search_results)
-          save_json('discovered-record-urls.json', sorted(discovered))
-
-          access_terms = (
-              'полный текст', 'электронный ресурс', 'читать', 'просмотр',
-              'viewer', 'fulltext', 'digital', 'online', '.pdf', 'скачать',
-          )
-
-          def fetch_record(url: str) -> dict[str, Any]:
-              started = time.monotonic()
-              try:
-                  response = session.get(url, timeout=(15, 120), allow_redirects=True)
-                  response.raise_for_status()
-                  digest = hashlib.sha256(url.encode()).hexdigest()[:16]
-                  html_name = f'records/{digest}.html'
-                  (ROOT / html_name).write_bytes(response.content)
-                  soup = BeautifulSoup(response.text, 'html.parser')
-                  title = soup.title.get_text(' ', strip=True) if soup.title else ''
-                  record_title = ''
-                  title_node = soup.select_one('.rsl-record-title')
-                  if title_node:
-                      record_title = ' '.join(title_node.get_text(' ', strip=True).split())
-                  marc = ''
-                  marc_node = soup.select_one('#marc-rec')
-                  if marc_node:
-                      marc = ' '.join(marc_node.get_text(' ', strip=True).split())
-                  public_links: list[dict[str, str]] = []
-                  fragment_links: list[dict[str, str]] = []
-                  for anchor in soup.find_all('a', href=True):
-                      href = urljoin(response.url, anchor.get('href', ''))
-                      text = ' '.join(anchor.get_text(' ', strip=True).split())
-                      lowered = f'{text} {href}'.casefold()
-                      item = {'href': href, 'text': text}
-                      if 'fragment-eorder' in href or 'заказать копию фрагмента' in lowered:
-                          fragment_links.append(item)
-                      if any(term in lowered for term in access_terms):
-                          if 'download/marc21' not in href and 'fragment-eorder' not in href:
-                              public_links.append(item)
-                  classification = 'CATALOGUE-ONLY'
-                  if public_links:
-                      classification = 'PUBLIC-DIGITAL-CANDIDATE'
-                  elif fragment_links:
-                      classification = 'CATALOGUE-WITH-FRAGMENT-ORDER'
-                  return {
-                      'requested_url': url,
-                      'final_url': response.url,
-                      'status': response.status_code,
-                      'bytes': len(response.content),
-                      'elapsed': round(time.monotonic() - started, 3),
-                      'title': title,
-                      'record_title': record_title,
-                      'marc_text': marc,
-                      'public_links': public_links,
-                      'fragment_links': fragment_links,
-                      'classification': classification,
-                      'filename': html_name,
+          let browser;
+          let context;
+          let page;
+          let fatal = null;
+          let initialStatus = null;
+          try {
+            browser = await chromium.launch({ headless: true });
+            context = await browser.newContext({
+              acceptDownloads: true,
+              ignoreHTTPSErrors: true,
+              viewport: { width: 1500, height: 1100 },
+              locale: 'ru-RU',
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0',
+            });
+            page = await context.newPage();
+            page.on('console', message => events.push({ type: 'console', level: message.type(), text: message.text() }));
+            page.on('pageerror', error => events.push({ type: 'pageerror', text: error.stack || error.message }));
+            page.on('requestfailed', request => events.push({ type: 'requestfailed', url: request.url(), failure: request.failure()?.errorText || '' }));
+            page.on('request', request => {
+              const item = { phase: 'request', method: request.method(), resourceType: request.resourceType(), url: request.url() };
+              network.push(item);
+              addCandidate(item.url);
+            });
+            page.on('response', async response => {
+              const headers = await response.allHeaders().catch(() => ({}));
+              const item = {
+                phase: 'response',
+                status: response.status(),
+                contentType: headers['content-type'] || '',
+                contentLength: headers['content-length'] || '',
+                url: response.url(),
+              };
+              network.push(item);
+              addCandidate(item.url);
+              if (/application\/pdf/i.test(item.contentType)) addCandidate(item.url);
+              if (/json|javascript|text\//i.test(item.contentType) && /api|viewer|document|book|page|file|download/i.test(item.url)) {
+                try {
+                  const body = await response.body();
+                  if (body.length <= 12_000_000) {
+                    const extension = item.contentType.includes('json') ? 'json' : item.contentType.includes('javascript') ? 'js' : 'txt';
+                    const filename = `${safe(item.url)}.${extension}`;
+                    await fs.writeFile(path.join(root, 'responses', filename), body);
+                    savedBodies.push({ filename, bytes: body.length, url: item.url, contentType: item.contentType });
+                    const text = body.toString('utf8');
+                    for (const match of text.matchAll(/https?:\/\/[^\s"'<>]+/g)) addCandidate(match[0].replace(/[},;]+$/, ''));
                   }
-              except Exception as error:
-                  return {
-                      'requested_url': url,
-                      'error': repr(error),
-                      'elapsed': round(time.monotonic() - started, 3),
-                  }
+                } catch {}
+              }
+            });
+            page.on('download', async download => {
+              const name = download.suggestedFilename().replace(/[^a-zA-Z0-9._-]+/g, '_');
+              const destination = path.join(root, 'downloads', `${Date.now()}-${name}`);
+              await download.saveAs(destination).catch(error => events.push({ type: 'download-error', text: String(error) }));
+            });
 
-          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-              records = list(executor.map(fetch_record, sorted(discovered)))
-          save_json('record-results.json', records)
+            let navigation = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120_000 }).catch(async error => {
+              events.push({ type: 'viewer-navigation-error', text: error.stack || String(error) });
+              return page.goto(record, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+            });
+            initialStatus = navigation?.status() || null;
+            await page.waitForTimeout(15_000);
 
-          relevant = []
-          for item in records:
-              haystack = f"{item.get('record_title', '')} {item.get('marc_text', '')}".casefold()
-              if 'маяковск' in haystack and 'описание документальных материалов' in haystack:
-                  relevant.append(item)
-          save_json('relevant-records.json', relevant)
+            const downloadLocators = [
+              page.getByText('Скачать', { exact: true }),
+              page.getByRole('button', { name: /скач/i }),
+              page.getByRole('link', { name: /скач/i }),
+            ];
+            for (const locator of downloadLocators) {
+              if (await locator.count().catch(() => 0)) {
+                await locator.first().click({ timeout: 10_000 }).catch(error => events.push({ type: 'download-click-error', text: String(error) }));
+                await page.waitForTimeout(5_000);
+                break;
+              }
+            }
 
-          summary = {
-              'master_id': MASTER_ID,
-              'queries': len(QUERIES),
-              'search_requests': len(search_results),
-              'discovered_records': len(discovered),
-              'fetched_records': sum(1 for item in records if item.get('status') == 200),
-              'relevant_records': len(relevant),
-              'public_digital_candidates': sum(
-                  1 for item in relevant if item.get('classification') == 'PUBLIC-DIGITAL-CANDIDATE'
-              ),
-              'fragment_order_only': sum(
-                  1 for item in relevant if item.get('classification') == 'CATALOGUE-WITH-FRAGMENT-ORDER'
-              ),
-              'relevant': [
-                  {
-                      'url': item.get('final_url') or item.get('requested_url'),
-                      'title': item.get('record_title') or item.get('title'),
-                      'classification': item.get('classification'),
-                      'public_links': item.get('public_links'),
-                      'fragment_links': item.get('fragment_links'),
-                  }
-                  for item in relevant
-              ],
+            const dom = await page.evaluate(() => ({
+              title: document.title,
+              url: location.href,
+              bodyText: (document.body?.innerText || '').slice(0, 200_000),
+              html: document.documentElement?.outerHTML || '',
+              links: [...document.querySelectorAll('a')].map(anchor => ({ href: anchor.href, text: (anchor.innerText || '').trim(), download: anchor.download })),
+              buttons: [...document.querySelectorAll('button,[role=button]')].map(button => ({ text: (button.innerText || '').trim(), ariaLabel: button.getAttribute('aria-label'), title: button.getAttribute('title') })),
+              resources: performance.getEntriesByType('resource').map(entry => ({ name: entry.name, initiatorType: entry.initiatorType, transferSize: entry.transferSize })),
+            }));
+            for (const link of dom.links) addCandidate(link.href);
+            for (const resource of dom.resources) addCandidate(resource.name);
+            await fs.writeFile(path.join(root, 'dom.json'), JSON.stringify({ ...dom, html: undefined }, null, 2));
+            await fs.writeFile(path.join(root, 'page.html'), dom.html);
+            await page.screenshot({ path: path.join(root, 'viewer.png'), fullPage: true }).catch(() => {});
+
+            const candidateResults = [];
+            let pdfSaved = false;
+            for (const url of [...candidates].sort()) {
+              try {
+                const response = await context.request.get(url, { timeout: 120_000, failOnStatusCode: false, headers: { Referer: target } });
+                const contentType = response.headers()['content-type'] || '';
+                const body = await response.body();
+                const isPdf = body.subarray(0, 5).toString() === '%PDF-';
+                candidateResults.push({ url, status: response.status(), contentType, bytes: body.length, isPdf });
+                if (!pdfSaved && response.status() === 200 && isPdf) {
+                  await fs.writeFile(path.join(root, 'downloads', 'network-source.pdf'), body);
+                  pdfSaved = true;
+                }
+              } catch (error) {
+                candidateResults.push({ url, error: String(error) });
+              }
+            }
+            await fs.writeFile(path.join(root, 'candidates.json'), JSON.stringify(candidateResults, null, 2));
+          } catch (error) {
+            fatal = error?.stack || String(error);
+          } finally {
+            await fs.writeFile(path.join(root, 'network.json'), JSON.stringify(network, null, 2)).catch(() => {});
+            await fs.writeFile(path.join(root, 'events.json'), JSON.stringify(events, null, 2)).catch(() => {});
+            await fs.writeFile(path.join(root, 'saved-bodies.json'), JSON.stringify(savedBodies, null, 2)).catch(() => {});
+            await fs.writeFile(path.join(root, 'summary.json'), JSON.stringify({ target, initialStatus, networkEntries: network.length, candidates: candidates.size, fatal }, null, 2)).catch(() => {});
+            if (fatal) await fs.writeFile(path.join(root, 'fatal-error.txt'), fatal).catch(() => {});
+            if (browser) await browser.close().catch(() => {});
           }
-          save_json('summary.json', summary)
-          print(json.dumps(summary, ensure_ascii=False, indent=2))
-          PY
+          JS
 
-          python3 /tmp/resolve-rsl-descriptions.py
+          node /tmp/inspect-rsl-viewer.mjs
 
-      - name: Upload RSL discovery evidence
+          if [ ! -s "$root/source.pdf" ]; then
+            browser_pdf="$(find "$root/browser/downloads" -type f -size +100k -print0 | xargs -0 -r file | awk -F: '/PDF document/ {print $1; exit}')"
+            if [ -n "$browser_pdf" ]; then
+              cp "$browser_pdf" "$root/source.pdf"
+              printf '%s\n' 'browser-viewer' > "$root/acquired-url.txt"
+            fi
+          fi
+
+          if [ -s "$root/source.pdf" ]; then
+            stat --printf='%s\n' "$root/source.pdf" > "$root/bytes.txt"
+            sha256sum "$root/source.pdf" | cut -d' ' -f1 > "$root/sha256.txt"
+            printf '%s\n' 'PDF-ACQUIRED' > "$root/classification.txt"
+          else
+            printf '%s\n' 'VIEWER-DECLARED-FREE / BYTES-NOT-YET-ACQUIRED' > "$root/classification.txt"
+          fi
+
+      - name: Verify acquired PDF and render witnesses
+        if: hashFiles('rsl-description-issue-3/source.pdf') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='rsl-description-issue-3'
+          qpdf --warning-exit-0 --check "$root/source.pdf" > "$root/qpdf-check.txt" 2>&1
+          pdfinfo "$root/source.pdf" > "$root/pdfinfo.txt"
+          pdftotext -layout "$root/source.pdf" "$root/full-text.txt" || true
+          touch "$root/full-text.txt"
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$root/pdfinfo.txt")"
+          test "$pages" -gt 250
+          front_end=18
+          [ "$pages" -lt "$front_end" ] && front_end="$pages"
+          pdftoppm -f 1 -l "$front_end" -jpeg -scale-to 1600 "$root/source.pdf" "$root/front/page" >/dev/null 2>&1
+          final_start=$((pages - 9))
+          [ "$final_start" -lt 1 ] && final_start=1
+          pdftoppm -f "$final_start" -l "$pages" -jpeg -scale-to 1500 "$root/source.pdf" "$root/final/page" >/dev/null 2>&1
+          printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$root/full-text.txt")" > "$root/verification-summary.txt"
+
+      - name: Upload RSL verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: source-49-mayakovsky-description-rsl-discovery
-          path: rsl-mayakovsky-description
-          if-no-files-found: error
+          name: source-49-mayakovsky-description-rsl-verification
+          path: |
+            rsl-description-issue-3/record-headers.txt
+            rsl-description-issue-3/record.html
+            rsl-description-issue-3/action-record-headers.txt
+            rsl-description-issue-3/action-record.js
+            rsl-description-issue-3/direct-attempts.tsv
+            rsl-description-issue-3/direct-result.txt
+            rsl-description-issue-3/acquired-url.txt
+            rsl-description-issue-3/classification.txt
+            rsl-description-issue-3/bytes.txt
+            rsl-description-issue-3/sha256.txt
+            rsl-description-issue-3/qpdf-check.txt
+            rsl-description-issue-3/pdfinfo.txt
+            rsl-description-issue-3/full-text.txt
+            rsl-description-issue-3/verification-summary.txt
+            rsl-description-issue-3/front/*.jpg
+            rsl-description-issue-3/final/*.jpg
+            rsl-description-issue-3/browser
+          if-no-files-found: warn
           retention-days: 14
+
+      - name: Upload raw RSL PDF
+        if: hashFiles('rsl-description-issue-3/source.pdf') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-description-rsl-raw
+          path: rsl-description-issue-3/source.pdf
+          retention-days: 7
+          compression-level: 0
