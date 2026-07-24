@@ -1,18 +1,6 @@
 name: Source acquisition 49 Mayakovsky documentary description RSL
 
 on:
-  push:
-    branches:
-      - research/source-acquisition-49
-    paths:
-      - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
-      - scripts/source-acquisition/rsl-description-issue3.mjs
-  pull_request:
-    branches:
-      - work/local-images-playwright-wtoc
-    paths:
-      - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
-      - scripts/source-acquisition/rsl-description-issue3.mjs
   workflow_dispatch:
 
 permissions:
