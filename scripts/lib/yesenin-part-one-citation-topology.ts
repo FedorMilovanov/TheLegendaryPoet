@@ -21,15 +21,14 @@ const claimLedgerPath = 'research/yesenin/part-one-claim-ledger-pass1.md';
 const trainAcquisitionIds = yeseninPartOneFebAcquiredRecords
   .filter((record) => record.id.startsWith('feb-ye1-train-'))
   .map((record) => record.id);
-
-const legacySourceAliases = new Map<string, readonly string[]>([
-  ['yeseninPartOneFebAcquisition', trainAcquisitionIds],
-]);
+const sirenaCoverAcquisitionId = 'feb-ye1-sirena-cover-621';
 
 const witnessClaimSupport = new Map<string, ReadonlySet<string>>([
   ['WIT-YE1-001', new Set(['YE1-001', 'YE1-004', 'YE1-005'])],
   ['WIT-YE1-002', new Set(['YE1-016', 'YE1-018', 'YE1-019'])],
   ['WIT-YE1-003', new Set(['YE1-023'])],
+  ['WIT-YE1-004', new Set(['YE1-020'])],
+  ['WIT-YE1-005', new Set(['YE1-022'])],
 ]);
 
 export type YeseninPartOneSourceLayer = 'canonical' | 'supplemental' | 'witness' | 'acquisition';
@@ -52,6 +51,7 @@ export interface YeseninPartOneCitationNode {
   witnessSourceIds: string[];
   acquisitionSourceIds: string[];
   legacySourceTokens: string[];
+  sourceCorrections: string[];
 }
 
 export interface YeseninPartOneCitationTopology {
@@ -62,6 +62,11 @@ export interface YeseninPartOneCitationTopology {
   acquisitionSourceIds: Set<string>;
   claimIds: Set<string>;
   sectionHeadings: Map<number, string>;
+}
+
+interface SourceResolution {
+  ids: readonly string[];
+  correction?: string;
 }
 
 const fail = (message: string): never => {
@@ -125,6 +130,57 @@ const expandClaimToken = (claim: string, claimIds: Set<string>, label: string) =
   });
 };
 
+const resolveSourceToken = (
+  rawSourceId: string,
+  sectionNumber: number,
+  claimIds: readonly string[],
+  label: string,
+): SourceResolution => {
+  const hasClaim = (claimId: string) => claimIds.includes(claimId);
+
+  if (rawSourceId === 'yeseninPartOneFebAcquisition') {
+    if (sectionNumber === 8 || hasClaim('YE1-016')) {
+      return {
+        ids: trainAcquisitionIds,
+        correction: `${rawSourceId}=>${trainAcquisitionIds.join('+')}`,
+      };
+    }
+    if (sectionNumber === 11 || hasClaim('YE1-023')) {
+      return {
+        ids: [sirenaCoverAcquisitionId],
+        correction: `${rawSourceId}=>${sirenaCoverAcquisitionId}`,
+      };
+    }
+    fail(`${label} uses ${rawSourceId} outside a supported train or imagist context`);
+  }
+
+  if (rawSourceId === 'PART_ONE_PAGE_WITNESS_LEDGER') {
+    if (sectionNumber !== 8) {
+      fail(`${label} uses ${rawSourceId} outside the train section`);
+    }
+    return {
+      ids: ['WIT-YE1-002'],
+      correction: `${rawSourceId}=>WIT-YE1-002`,
+    };
+  }
+
+  if (rawSourceId === 'WIT-YE1-003' && sectionNumber === 8) {
+    return {
+      ids: ['WIT-YE1-002'],
+      correction: 'WIT-YE1-003=>WIT-YE1-002',
+    };
+  }
+
+  if (rawSourceId === 'WIT-YE1-004' && (sectionNumber === 11 || hasClaim('YE1-023'))) {
+    return {
+      ids: ['WIT-YE1-003'],
+      correction: 'WIT-YE1-004=>WIT-YE1-003',
+    };
+  }
+
+  return { ids: [rawSourceId] };
+};
+
 export function loadYeseninPartOneCitationTopology(
   root = process.cwd(),
 ): YeseninPartOneCitationTopology {
@@ -156,10 +212,17 @@ export function loadYeseninPartOneCitationTopology(
   if (supplementalSourceIds.size !== 10) {
     fail(`expected 10 supplemental source IDs, found ${supplementalSourceIds.size}`);
   }
-  if (witnessSourceIds.size === 0) fail('page-witness registry contains no WIT-YE1 IDs');
-  if (acquisitionSourceIds.size === 0) fail('FEB acquisition registry contains no stable record IDs');
+  if (witnessSourceIds.size !== 5) {
+    fail(`expected five WIT-YE1 witness records, found ${witnessSourceIds.size}`);
+  }
+  if (acquisitionSourceIds.size !== 7) {
+    fail(`expected seven acquired FEB records, found ${acquisitionSourceIds.size}`);
+  }
   if (trainAcquisitionIds.length !== 5) {
     fail(`expected five acquired train records for the legacy bundle, found ${trainAcquisitionIds.length}`);
+  }
+  if (!acquisitionSourceIds.has(sirenaCoverAcquisitionId)) {
+    fail(`missing acquired Sirena cover record ${sirenaCoverAcquisitionId}`);
   }
   if (claimIds.size === 0) fail('claim ledger contains no YE1 claim IDs');
 
@@ -235,15 +298,20 @@ export function loadYeseninPartOneCitationTopology(
 
       const sourceIds: string[] = [];
       const legacySourceTokens: string[] = [];
+      const sourceCorrections: string[] = [];
       for (const rawSourceId of rawSourceIds) {
-        const aliases = legacySourceAliases.get(rawSourceId);
-        if (aliases) legacySourceTokens.push(rawSourceId);
-        for (const normalizedSourceId of aliases ?? [rawSourceId]) {
-          if (sourceIds.includes(normalizedSourceId)) {
-            sourceErrors.push(`${label} resolves duplicate source ID ${normalizedSourceId}`);
-            continue;
-          }
-          sourceIds.push(normalizedSourceId);
+        const resolution = resolveSourceToken(
+          rawSourceId,
+          currentSectionNumber,
+          nodeClaimIds,
+          label,
+        );
+        if (resolution.correction) {
+          legacySourceTokens.push(rawSourceId);
+          sourceCorrections.push(resolution.correction);
+        }
+        for (const normalizedSourceId of resolution.ids) {
+          if (!sourceIds.includes(normalizedSourceId)) sourceIds.push(normalizedSourceId);
         }
       }
 
@@ -303,6 +371,7 @@ export function loadYeseninPartOneCitationTopology(
         witnessSourceIds: witnesses,
         acquisitionSourceIds: acquisitions,
         legacySourceTokens,
+        sourceCorrections,
       });
     }
   }
