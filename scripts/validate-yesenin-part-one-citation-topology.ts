@@ -8,8 +8,8 @@ const fail = (message: string): never => {
 const topology = loadYeseninPartOneCompleteCitationTopology();
 const { nodes } = topology;
 
-if (nodes.length < 129) {
-  fail(`expected at least 129 typed citation nodes, found ${nodes.length}`);
+if (nodes.length < 137) {
+  fail(`expected at least 137 typed citation nodes, found ${nodes.length}`);
 }
 
 const allowedLegacySourceTokens = new Set([
@@ -50,6 +50,13 @@ for (const node of nodes) {
       fail(`${node.blockId} contains unexpected source correction ${correction}`);
     }
   }
+  if (node.researchCheckSourceIds.length > 0) {
+    if (node.sectionNumber !== 12) fail(`${node.blockId} uses research checks outside section 12`);
+    if (!node.claimIds.includes('YE1-027')) fail(`${node.blockId} uses research checks without YE1-027`);
+    if (node.origin !== 'authoring-markdown') {
+      fail(`${node.blockId} must not inject McVay research checks through an editorial override`);
+    }
+  }
 }
 
 const editorialOverrideNodes = nodes.filter((node) => node.origin === 'editorial-override');
@@ -80,6 +87,7 @@ if (!nodes.some((node) => node.sectionNumber === 0)) fail('typed topology is mis
 
 const referencedCanonicalSourceIds = new Set(nodes.flatMap((node) => node.canonicalSourceIds));
 const referencedSupplementalSourceIds = new Set(nodes.flatMap((node) => node.supplementalSourceIds));
+const referencedResearchCheckSourceIds = new Set(nodes.flatMap((node) => node.researchCheckSourceIds));
 const referencedWitnessSourceIds = new Set(nodes.flatMap((node) => node.witnessSourceIds));
 const referencedAcquisitionSourceIds = new Set(nodes.flatMap((node) => node.acquisitionSourceIds));
 const referencedClaimIds = new Set(nodes.flatMap((node) => node.claimIds));
@@ -88,6 +96,9 @@ const legacySourceTokens = new Set(nodes.flatMap((node) => node.legacySourceToke
 const sourceCorrections = new Set(nodes.flatMap((node) => node.sourceCorrections));
 const overrideSourceIds = new Set(nodes.flatMap((node) => node.overrideSourceIds));
 const unreferencedClaimIds = [...topology.claimIds].filter((id) => !referencedClaimIds.has(id)).sort();
+const unreferencedResearchCheckSourceIds = [...topology.researchCheckSourceIds]
+  .filter((id) => !referencedResearchCheckSourceIds.has(id))
+  .sort();
 const unreferencedWitnessSourceIds = [...topology.witnessSourceIds]
   .filter((id) => !referencedWitnessSourceIds.has(id))
   .sort();
@@ -100,6 +111,15 @@ if (referencedCanonicalSourceIds.size < 37) {
 }
 if (referencedSupplementalSourceIds.size !== 10) {
   fail(`expected all 10 supplemental source IDs in topology, found ${referencedSupplementalSourceIds.size}`);
+}
+if (topology.researchCheckSourceIds.size !== 45) {
+  fail(`expected 45 declared McVay research-check IDs, found ${topology.researchCheckSourceIds.size}`);
+}
+if (referencedResearchCheckSourceIds.size !== 24) {
+  fail(`expected 24 McVay research-check IDs wired into prose, found ${referencedResearchCheckSourceIds.size}`);
+}
+if (!referencedResearchCheckSourceIds.has('USR-YE1-MCVAY-ISADORA-ESENIN-1980')) {
+  fail('typed topology is missing the frozen user-supplied McVay book record');
 }
 if (referencedAcquisitionSourceIds.size !== 7) {
   fail(`expected all seven exact FEB acquisition IDs in topology, found ${referencedAcquisitionSourceIds.size}`);
@@ -119,6 +139,7 @@ const stableShape = nodes.map((node) => ({
   editorialClaims: node.editorialClaims,
   rawSourceIds: node.rawSourceIds,
   sourceIds: node.sourceIds,
+  researchCheckSourceIds: node.researchCheckSourceIds,
   acquisitionSourceIds: node.acquisitionSourceIds,
   overrideSourceIds: node.overrideSourceIds,
   legacySourceTokens: node.legacySourceTokens,
@@ -134,6 +155,7 @@ const sectionCoverage = expectedSections.map((sectionNumber) => {
     blocks: sectionNodes.length,
     canonicalSources: new Set(sectionNodes.flatMap((node) => node.canonicalSourceIds)).size,
     supplementalSources: new Set(sectionNodes.flatMap((node) => node.supplementalSourceIds)).size,
+    researchChecks: new Set(sectionNodes.flatMap((node) => node.researchCheckSourceIds)).size,
     witnesses: new Set(sectionNodes.flatMap((node) => node.witnessSourceIds)).size,
     acquisitions: new Set(sectionNodes.flatMap((node) => node.acquisitionSourceIds)).size,
     overrideBlocks: sectionNodes.filter((node) => node.origin === 'editorial-override').length,
@@ -153,6 +175,9 @@ console.log(
       referencedCanonicalSourceIds: referencedCanonicalSourceIds.size,
       declaredSupplementalSourceIds: topology.supplementalSourceIds.size,
       referencedSupplementalSourceIds: referencedSupplementalSourceIds.size,
+      declaredResearchCheckSourceIds: topology.researchCheckSourceIds.size,
+      referencedResearchCheckSourceIds: referencedResearchCheckSourceIds.size,
+      unreferencedResearchCheckSourceIds,
       declaredWitnessSourceIds: topology.witnessSourceIds.size,
       referencedWitnessSourceIds: referencedWitnessSourceIds.size,
       unreferencedWitnessSourceIds,

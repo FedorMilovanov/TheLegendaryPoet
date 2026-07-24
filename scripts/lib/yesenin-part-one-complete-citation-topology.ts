@@ -82,11 +82,13 @@ export function loadYeseninPartOneCompleteCitationTopology(
 
     const canonicalSourceIds: string[] = [];
     const supplementalSourceIds: string[] = [];
+    const researchCheckSourceIds: string[] = [];
     const witnessSourceIds: string[] = [];
     const acquisitionSourceIds: string[] = [];
     for (const sourceId of insertion.sourceIds) {
       if (base.canonicalSourceIds.has(sourceId)) canonicalSourceIds.push(sourceId);
       else if (base.supplementalSourceIds.has(sourceId)) supplementalSourceIds.push(sourceId);
+      else if (base.researchCheckSourceIds.has(sourceId)) researchCheckSourceIds.push(sourceId);
       else if (base.witnessSourceIds.has(sourceId)) witnessSourceIds.push(sourceId);
       else if (base.acquisitionSourceIds.has(sourceId)) acquisitionSourceIds.push(sourceId);
       else fail(`editorial insertion ${insertion.blockId} references unknown source ID ${sourceId}`);
@@ -114,6 +116,7 @@ export function loadYeseninPartOneCompleteCitationTopology(
       sourceIds: [...insertion.sourceIds],
       canonicalSourceIds,
       supplementalSourceIds,
+      researchCheckSourceIds,
       witnessSourceIds,
       acquisitionSourceIds,
       legacySourceTokens: [],
