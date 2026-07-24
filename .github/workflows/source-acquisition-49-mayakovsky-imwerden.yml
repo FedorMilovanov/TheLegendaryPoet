@@ -1,0 +1,112 @@
+name: Source acquisition 49 Mayakovsky ImWerden
+
+on:
+  push:
+    branches:
+      - research/source-acquisition-49
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-mayakovsky-case:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PDF verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl qpdf poppler-utils
+
+      - name: Download independent photographic OCR-PDF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p mayakovsky-case/front mayakovsky-case/case-50
+          curl --fail --location --retry 8 --retry-all-errors --connect-timeout 30 --max-time 2400 \
+            --user-agent 'Mozilla/5.0 source-verification/1.0' \
+            --referer 'https://imwerden.de/publ-11371' \
+            --output mayakovsky-case/source.pdf \
+            'https://imwerden.de/pdf/mayakovsky_sledstvennoe_delo_dokumenty_2005__ocr.pdf'
+          test "$(head -c 5 mayakovsky-case/source.pdf)" = '%PDF-'
+          stat --printf='%s\n' mayakovsky-case/source.pdf > mayakovsky-case/bytes.txt
+          sha256sum mayakovsky-case/source.pdf | cut -d' ' -f1 > mayakovsky-case/sha256.txt
+
+      - name: Verify structure, pagination and target sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          qpdf --check mayakovsky-case/source.pdf > mayakovsky-case/qpdf-check.txt 2>&1
+          pdfinfo mayakovsky-case/source.pdf > mayakovsky-case/pdfinfo.txt
+          pdftotext -layout mayakovsky-case/source.pdf mayakovsky-case/full-text.txt
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' mayakovsky-case/pdfinfo.txt)"
+          pdftoppm -f 1 -l 14 -jpeg -r 130 mayakovsky-case/source.pdf mayakovsky-case/front/page >/dev/null 2>&1
+          # Catalogue analytics place printed pp. 34–91 at the beginning of the case dossier.
+          # Render a broad PDF-page witness window to survive front-matter offset differences.
+          pdftoppm -f 30 -l 100 -jpeg -r 110 mayakovsky-case/source.pdf mayakovsky-case/case-50/page >/dev/null 2>&1
+          pdftoppm -f "$pages" -l "$pages" -singlefile -jpeg -r 130 mayakovsky-case/source.pdf mayakovsky-case/final-page >/dev/null 2>&1
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import pathlib
+          import re
+
+          root = pathlib.Path('mayakovsky-case')
+          text = (root / 'full-text.txt').read_text(encoding='utf-8', errors='replace')
+          pages = text.split('\f')
+          terms = [
+              'Дело № 50', 'Дело N.50', 'Полонская', '14 апреля 1930',
+              'В том, что умираю', 'предсмерт', 'выстрел', 'судебно-медицин',
+              'баллист', 'экспертиз', 'Всем', 'Ежов', 'ОГПУ',
+          ]
+          evidence: dict[str, list[dict[str, object]]] = {}
+          for term in terms:
+              pattern = re.compile(re.escape(term), re.IGNORECASE)
+              matches: list[dict[str, object]] = []
+              for page_number, page in enumerate(pages, start=1):
+                  match = pattern.search(page)
+                  if not match:
+                      continue
+                  start = max(0, match.start() - 350)
+                  end = min(len(page), match.end() + 600)
+                  matches.append({
+                      'pdf_page': page_number,
+                      'excerpt': ' '.join(page[start:end].split()),
+                  })
+                  if len(matches) >= 20:
+                      break
+              evidence[term] = matches
+          (root / 'targeted-evidence.json').write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < mayakovsky-case/full-text.txt)" > mayakovsky-case/summary.txt
+
+      - name: Upload verification evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-case-2005-verification
+          path: |
+            mayakovsky-case/bytes.txt
+            mayakovsky-case/sha256.txt
+            mayakovsky-case/qpdf-check.txt
+            mayakovsky-case/pdfinfo.txt
+            mayakovsky-case/full-text.txt
+            mayakovsky-case/targeted-evidence.json
+            mayakovsky-case/summary.txt
+            mayakovsky-case/front/*.jpg
+            mayakovsky-case/case-50/*.jpg
+            mayakovsky-case/final-page.jpg
+          retention-days: 14
+
+      - name: Upload raw PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-case-2005-raw
+          path: mayakovsky-case/source.pdf
+          retention-days: 7
+          compression-level: 0
