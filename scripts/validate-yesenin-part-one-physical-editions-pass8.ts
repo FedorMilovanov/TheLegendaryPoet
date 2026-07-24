@@ -87,6 +87,7 @@ if (oldIspovedHold.facsimileBytesAcquired || oldIspovedHold.facsimileVisuallyIns
 
 const ledger = read('research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md');
 const acquisitionScript = read('scripts/acquire-yesenin-neb-editions-pass8.py');
+const normalizedAcquisitionScript = acquisitionScript.replaceAll('_', '');
 for (const required of [
   '2-REAL-NEB-PDFS / EXACT-BYTES / FRAME-MAP-COLLATED / NO-OCR / NOT-YET-PUBLIC',
   radunitsa.sha256,
@@ -101,7 +102,7 @@ for (const required of [
 
 for (const record of acquisitions) {
   for (const required of [record.catalogueCode, record.sha256, String(record.bytes), String(record.pdfFrames)]) {
-    if (!acquisitionScript.includes(required)) {
+    if (!normalizedAcquisitionScript.includes(required)) {
       fail(`acquisition script is missing frozen ${record.id} value ${required}`);
     }
   }
