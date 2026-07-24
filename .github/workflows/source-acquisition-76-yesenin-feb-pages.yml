@@ -2,6 +2,11 @@ name: Source acquisition 76 — Yesenin FEB page witnesses
 
 on:
   workflow_dispatch:
+  push:
+    branches: [research/yesenin-part1-feb-acquisition-76]
+    paths:
+      - '.github/workflows/source-acquisition-76-yesenin-feb-pages.yml'
+      - 'scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs'
 
 concurrency:
   group: source-acquisition-76-yesenin-feb-pages
