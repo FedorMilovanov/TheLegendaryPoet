@@ -33,14 +33,16 @@ interface DialogSurfaceOptions {
   label?: string;
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
-  /** Mutable dismissal policy; useful when closing because navigation starts. */
+  /** Focus-only override used by callers that do not change routes. */
+  restoreFocusRef?: RefObject<boolean | null>;
+  /** Combined focus/scroll policy for route-changing dismissal. */
   restoreOnCloseRef?: RefObject<boolean | null>;
 }
 
 /**
  * Shared lifecycle for modal surfaces: stack-safe page locking, focus entry,
- * focus containment, Escape handling and focus restoration. It owns no visual
- * markup, so each dialog retains its own design and responsive layout.
+ * focus containment, Escape handling and focus restoration. It intentionally
+ * owns no visual markup, so every surface keeps its own design.
  */
 export function useDialogSurface({
   open,
@@ -50,14 +52,10 @@ export function useDialogSurface({
   label = 'dialog',
   closeOnEscape = true,
   restoreFocus = true,
+  restoreFocusRef,
   restoreOnCloseRef,
 }: DialogSurfaceOptions) {
-  const closeRef = useRef(onClose);
   const handleRef = useRef<OverlayLockHandle | null>(null);
-
-  useEffect(() => {
-    closeRef.current = onClose;
-  }, [onClose]);
 
   // A keyed modal can replace its DOM node while staying logically open (for
   // example when the active track changes). Keep the stack's focus root live.
@@ -73,6 +71,18 @@ export function useDialogSurface({
       : null;
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
+    handle.setEscapeHandler(closeOnEscape ? () => {
+      // Current modal surfaces provide stable callbacks. Calling the concrete
+      // callback directly avoids a separate passive-effect ref handoff while
+      // audio state is re-rendering rapidly, and finally still guarantees the
+      // runtime stack is released synchronously for the next Escape.
+      try {
+        onClose();
+      } finally {
+        handle.release();
+      }
+    } : null);
+
     const focusFrame = window.requestAnimationFrame(() => {
       const preferred = initialFocusRef?.current;
       const fallback = getFocusableElements(dialogRef.current)[0] ?? dialogRef.current;
@@ -80,16 +90,7 @@ export function useDialogSurface({
     });
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!handle.isTopmost()) return;
-
-      if (closeOnEscape && event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        closeRef.current();
-        return;
-      }
-
-      if (event.key !== 'Tab') return;
+      if (!handle.isTopmost() || event.key !== 'Tab') return;
       const focusable = getFocusableElements(dialogRef.current);
       if (focusable.length === 0) {
         event.preventDefault();
@@ -122,7 +123,8 @@ export function useDialogSurface({
       handle.release({ restoreScroll: shouldRestore });
       if (handleRef.current === handle) handleRef.current = null;
 
-      if (restoreFocus && shouldRestore && previouslyFocused) {
+      const shouldRestoreFocus = shouldRestore && (restoreFocusRef?.current ?? restoreFocus);
+      if (shouldRestoreFocus && previouslyFocused) {
         window.requestAnimationFrame(() => {
           if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
             previouslyFocused.focus({ preventScroll: true });
@@ -130,7 +132,7 @@ export function useDialogSurface({
         });
       }
     };
-  }, [closeOnEscape, dialogRef, initialFocusRef, label, open, restoreFocus, restoreOnCloseRef]);
+  }, [closeOnEscape, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef, restoreOnCloseRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),

@@ -1,0 +1,38 @@
+/* Persistent desktop controls share the bottom-right corner with the global
+   audio player. Move them into a compact row above the player instead of
+   allowing the Ctrl+K pill, scroll-to-top button and playback chrome to stack. */
+@media (min-width: 768px) {
+  .scroll-top-btn {
+    transition:
+      bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      right 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  html.global-audio-active .scroll-top-btn {
+    bottom: 8.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .palette-fab {
+    transition:
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.4s ease,
+      bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      right 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html.global-audio-active .palette-fab {
+    bottom: 8.75rem;
+    right: 5.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .palette-fab,
+  .scroll-top-btn {
+    transition: none !important;
+  }
+}

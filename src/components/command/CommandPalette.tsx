@@ -6,6 +6,7 @@ import { useAppNavigate } from '../ui/Link';
 import { normalizeCommandText } from './commandSearch';
 import type { CommandItem } from './commandItems';
 import CommandResult from './CommandResult';
+import './commandPaletteChrome.css';
 
 type IndexStatus = 'idle' | 'loading' | 'ready' | 'error';
 
