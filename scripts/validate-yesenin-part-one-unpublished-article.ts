@@ -6,13 +6,18 @@ import {
   YESENIN_PART_ONE_UNPUBLISHED_SLUG,
   yeseninPartOneUnpublishedArticle,
 } from './lib/yesenin-part-one-unpublished-article';
-import { loadYeseninPartOneCompleteCitationTopology } from './lib/yesenin-part-one-complete-citation-topology';
+import { loadYeseninPartOnePass6CitationTopology } from './lib/yesenin-part-one-pass6-citation-topology';
 import {
   yeseninPartOneEditorialPassSeven,
   yeseninPartOneEditorialPassSevenExpectedCount,
   yeseninPartOneEditorialPassSevenExpectedSections,
 } from '../src/data/essays/yeseninPartOneEditorialPassSeven';
+import {
+  yeseninPartOneEditorialPassSevenPass6,
+  yeseninPartOneEditorialPassSevenPass6ExpectedCount,
+} from '../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
 import { yeseninPartOnePhysicalWitnessesPassSix } from '../src/data/essays/yeseninPartOnePhysicalWitnessesPassSix';
+import { yeseninPartOneRealVisualsPassSix } from '../src/data/essays/yeseninPartOneRealVisualsPassSix';
 
 const fail = (message: string): never => {
   throw new Error(`[yesenin-part-one-unpublished] ${message}`);
@@ -20,7 +25,7 @@ const fail = (message: string): never => {
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
-const topology = loadYeseninPartOneCompleteCitationTopology(root);
+const topology = loadYeseninPartOnePass6CitationTopology(root);
 const articlePackage = yeseninPartOneUnpublishedArticle;
 const { essay, evidenceByBlockId } = articlePackage;
 
@@ -50,11 +55,17 @@ if (
 }
 
 const evidenceEntries = Object.values(evidenceByBlockId);
-if (topology.nodes.length !== 137 || evidenceEntries.length !== 137) {
-  fail(`expected 137 topology/evidence nodes; found ${topology.nodes.length}/${evidenceEntries.length}`);
+if (topology.nodes.length !== 146 || evidenceEntries.length !== 146) {
+  fail(`expected 146 pass-6 topology/evidence nodes; found ${topology.nodes.length}/${evidenceEntries.length}`);
+}
+if (topology.pass6BlockIds.size !== 9) {
+  fail(`expected nine pass-6 authored additions, found ${topology.pass6BlockIds.size}`);
+}
+if (topology.canonicalSourceIds.size !== 90) {
+  fail(`expected 90 declared canonical source IDs, found ${topology.canonicalSourceIds.size}`);
 }
 const evidenceIds = new Set(evidenceEntries.map((entry) => entry.blockId));
-if (evidenceIds.size !== 137) fail('evidence map contains duplicate stable block IDs');
+if (evidenceIds.size !== 146) fail('evidence map contains duplicate stable block IDs');
 for (const node of topology.nodes) {
   const evidence = evidenceByBlockId[node.blockId];
   if (!evidence) fail(`missing evidence record for ${node.blockId}`);
@@ -82,8 +93,8 @@ for (const node of topology.nodes) {
 const sectionBlocks = essay.blocks.filter((block) => block.type === 'section');
 const authoredBlocks = essay.blocks.filter((block) => block.type !== 'section');
 if (sectionBlocks.length !== 12) fail(`expected 12 rendered section blocks, found ${sectionBlocks.length}`);
-if (authoredBlocks.length !== 137) fail(`expected 137 authored render blocks, found ${authoredBlocks.length}`);
-if (essay.blocks.length !== 149) fail(`expected 149 total render blocks, found ${essay.blocks.length}`);
+if (authoredBlocks.length !== 146) fail(`expected 146 authored render blocks, found ${authoredBlocks.length}`);
+if (essay.blocks.length !== 158) fail(`expected 158 total render blocks, found ${essay.blocks.length}`);
 if (essay.blocks.filter((block) => block.type === 'lead').length !== 1) {
   fail('typed article must render exactly one lead block');
 }
@@ -96,10 +107,13 @@ if (essay.blocks.some((block) => block.type === 'image')) {
 
 const authoredBlockIds = authoredBlocks.map((block) => block.id);
 if (authoredBlockIds.some((id) => !id)) fail('every authored render block needs a stable ID');
-if (new Set(authoredBlockIds).size !== 137) fail('authored render block IDs are not unique');
+if (new Set(authoredBlockIds).size !== 146) fail('authored render block IDs are not unique');
 const expectedOrder = topology.nodes.map((node) => node.blockId);
 if (JSON.stringify(authoredBlockIds) !== JSON.stringify(expectedOrder)) {
-  fail('render block order differs from complete citation topology');
+  fail('render block order differs from pass-6 citation topology');
+}
+for (const blockId of topology.pass6BlockIds) {
+  if (!authoredBlockIds.includes(blockId)) fail(`pass-6 block ${blockId} is absent from the typed article`);
 }
 
 const renderedTextById = new Map(
@@ -108,21 +122,31 @@ const renderedTextById = new Map(
     'text' in block && typeof block.text === 'string' ? block.text : '',
   ] as const),
 );
-const editorialEntries = Object.entries(yeseninPartOneEditorialPassSeven);
+const baseEditorialEntries = Object.entries(yeseninPartOneEditorialPassSeven);
+const pass6EditorialEntries = Object.entries(yeseninPartOneEditorialPassSevenPass6);
+const editorialEntries = [...baseEditorialEntries, ...pass6EditorialEntries];
 if (
   yeseninPartOneEditorialPassSevenExpectedCount !== 68 ||
-  editorialEntries.length !== yeseninPartOneEditorialPassSevenExpectedCount
+  baseEditorialEntries.length !== yeseninPartOneEditorialPassSevenExpectedCount
 ) {
-  fail(`expected 68 pass-seven overrides, found ${editorialEntries.length}`);
+  fail(`expected 68 original pass-seven overrides, found ${baseEditorialEntries.length}`);
+}
+if (
+  yeseninPartOneEditorialPassSevenPass6ExpectedCount !== 3 ||
+  pass6EditorialEntries.length !== yeseninPartOneEditorialPassSevenPass6ExpectedCount
+) {
+  fail(`expected three pass-six integration overrides, found ${pass6EditorialEntries.length}`);
 }
 if (JSON.stringify(yeseninPartOneEditorialPassSevenExpectedSections) !== JSON.stringify([9, 10, 11, 12])) {
   fail('pass-seven section contract changed');
 }
 const targetNodes = topology.nodes.filter((node) => node.sectionNumber >= 9 && node.sectionNumber <= 12);
-if (targetNodes.length !== 68) fail(`expected 68 topology nodes in sections 9-12, found ${targetNodes.length}`);
+if (targetNodes.length !== 71) fail(`expected 71 topology nodes in sections 9-12, found ${targetNodes.length}`);
 const targetIds = new Set(targetNodes.map((node) => node.blockId));
 const overrideIds = new Set(editorialEntries.map(([blockId]) => blockId));
-if (overrideIds.size !== 68) fail('pass-seven overrides contain duplicate block IDs');
+if (overrideIds.size !== 71 || editorialEntries.length !== 71) {
+  fail(`expected 71 unique pass-seven overrides, found ${editorialEntries.length}/${overrideIds.size}`);
+}
 for (const blockId of targetIds) {
   if (!overrideIds.has(blockId)) fail(`pass seven misses late-section block ${blockId}`);
 }
@@ -150,6 +174,22 @@ for (const node of topology.nodes.filter((candidate) => candidate.sectionNumber 
     fail(`pass seven silently edits early-section block ${node.blockId}`);
   }
 }
+const latePass6Ids = [...topology.pass6BlockIds].filter((blockId) => targetIds.has(blockId));
+if (
+  JSON.stringify(latePass6Ids.sort()) !==
+  JSON.stringify([
+    'yesenin-p1-pass6-duncan-archive-program',
+    'yesenin-p1-pass6-imaginism-publishing-practice',
+    'yesenin-p1-pass6-poems-book-materiality',
+  ])
+) {
+  fail(`unexpected late-section pass-six set: ${latePass6Ids.join(', ')}`);
+}
+for (const blockId of latePass6Ids) {
+  if (!Object.prototype.hasOwnProperty.call(yeseninPartOneEditorialPassSevenPass6, blockId)) {
+    fail(`late pass-six block ${blockId} is not edited by the integration registry`);
+  }
+}
 
 const serviceLanguagePatterns = [
   /статья должна/iu,
@@ -164,6 +204,7 @@ for (const [blockId, text] of editorialEntries) {
     if (pattern.test(text)) fail(`${blockId} retains service-language pattern ${pattern}`);
   }
 }
+const editorialTextById = new Map(editorialEntries);
 const requiredEditorialAnchors: Readonly<Record<string, readonly string[]>> = {
   'yesenin-p1-reich-family-memory-boundary': ['семья помнила', 'не превращаются'],
   'yesenin-p1-poems-analysis-method': ['что именно написано', 'богословская оценка'],
@@ -173,9 +214,12 @@ const requiredEditorialAnchors: Readonly<Record<string, readonly string[]>> = {
   'yesenin-p1-transition-duncan-academic-date-hierarchy': ['видимо, 3 октября 1921 года', 'предположительность'],
   'yesenin-p1-transition-duncan-mariengof-attribution': ['Анатолия Мариенгофа', 'не'],
   'yesenin-p1-transition-duncan-competing-chronologies': ['Маквей', 'Ирма Дункан', 'Шнейдер'],
+  'yesenin-p1-pass6-poems-book-materiality': ['материальную историю', 'не подменяя друг друга'],
+  'yesenin-p1-pass6-imaginism-publishing-practice': ['Плавильня слов', 'ни один мемуар'],
+  'yesenin-p1-pass6-duncan-archive-program': ['не найденный дневник', 'item-level'],
 };
 for (const [blockId, anchors] of Object.entries(requiredEditorialAnchors)) {
-  const text = yeseninPartOneEditorialPassSeven[blockId as keyof typeof yeseninPartOneEditorialPassSeven];
+  const text = editorialTextById.get(blockId);
   if (!text) fail(`missing anchored editorial block ${blockId}`);
   const normalizedText = text.toLocaleLowerCase('ru-RU');
   for (const anchor of anchors) {
@@ -188,8 +232,8 @@ for (const [blockId, anchors] of Object.entries(requiredEditorialAnchors)) {
 const bibliographyIds = new Set(
   (essay.sources ?? []).map((source) => source.id).filter((id): id is string => Boolean(id)),
 );
-if (bibliographyIds.size !== 37 || essay.sources?.length !== 37) {
-  fail(`expected 37 referenced canonical bibliography rows, found ${essay.sources?.length ?? 0}/${bibliographyIds.size}`);
+if (bibliographyIds.size !== 64 || essay.sources?.length !== 64) {
+  fail(`expected 64 referenced canonical bibliography rows, found ${essay.sources?.length ?? 0}/${bibliographyIds.size}`);
 }
 const forbiddenInternalId = /^(?:SUP-YE1-|MCVAY-P5-|USR-YE1-|WIT-YE1-|feb-ye1-)/;
 for (const source of essay.sources ?? []) {
@@ -208,6 +252,16 @@ for (const block of authoredBlocks) {
   }
 }
 
+const pass6ReferencedSources = new Set(
+  topology.nodes
+    .filter((node) => topology.pass6BlockIds.has(node.blockId))
+    .flatMap((node) => node.canonicalSourceIds)
+    .filter((sourceId) => topology.passFourSourceIds.has(sourceId)),
+);
+if (pass6ReferencedSources.size !== 27) {
+  fail(`expected 27 pass-four sources rendered by new prose, found ${pass6ReferencedSources.size}`);
+}
+
 const claims = new Set(evidenceEntries.flatMap((entry) => entry.claimIds));
 const supplements = new Set(evidenceEntries.flatMap((entry) => entry.supplementalSourceIds));
 const researchChecks = new Set(evidenceEntries.flatMap((entry) => entry.researchCheckSourceIds));
@@ -222,18 +276,12 @@ const stableShape = topology.nodes.map((node) => ({
   origin: node.origin,
   sectionNumber: node.sectionNumber,
   claimIds: node.claimIds,
-  editorialClaims: node.editorialClaims,
-  rawSourceIds: node.rawSourceIds,
   sourceIds: node.sourceIds,
-  researchCheckSourceIds: node.researchCheckSourceIds,
-  acquisitionSourceIds: node.acquisitionSourceIds,
   overrideSourceIds: node.overrideSourceIds,
-  legacySourceTokens: node.legacySourceTokens,
-  sourceCorrections: node.sourceCorrections,
 }));
 const topologyDigest = createHash('sha256').update(JSON.stringify(stableShape)).digest('hex');
-if (topologyDigest !== '26b6ef20ccb07abde9064c18bff716a4890b6823242f808e2aecccb551b53a52') {
-  fail(`unexpected complete topology digest ${topologyDigest}`);
+if (topologyDigest !== '49354adab3d14bbe03ca48b3fb6c4f1795601d7101c82694a5f7fa5cfec1b838') {
+  fail(`unexpected pass-6 topology digest ${topologyDigest}`);
 }
 const editorialDigest = createHash('sha256').update(JSON.stringify(editorialEntries)).digest('hex');
 
@@ -278,6 +326,13 @@ if (!nypl?.exactLocator?.includes('*MGZB-Res. ++ 93-8695')) {
 const pravda = yeseninPartOnePhysicalWitnessesPassSix.find((record) => record.id === 'PW6-YE1-PRAVDA-1921-11-09');
 if (pravda?.state !== 'still-unresolved') fail('Pravda 9 November target must remain unresolved');
 
+if (yeseninPartOneRealVisualsPassSix.length !== 8) {
+  fail(`expected eight real-only visual records, found ${yeseninPartOneRealVisualsPassSix.length}`);
+}
+if (yeseninPartOneRealVisualsPassSix.some((record) => record.productionAuthorized !== false)) {
+  fail('real visual registry silently authorizes production use');
+}
+
 const passSixLedger = read('research/yesenin/PART_ONE_DEEP_SOURCE_PASS6_AND_EDITORIAL_GATE_2026-07-24.md');
 const passRows = [...passSixLedger.matchAll(/^\|\s*(\d+)\s*\|/gm)].map((match) => Number(match[1]));
 if (passRows.length !== 44 || passRows.some((row, index) => row !== index + 1)) {
@@ -290,14 +345,17 @@ for (const status of [
 ]) {
   if (!passSixLedger.includes(status)) fail(`pass-six ledger is missing status ${status}`);
 }
-const passSevenLedger = read('research/yesenin/PART_ONE_EDITORIAL_PASS7_SECTIONS_9_12_2026-07-24.md');
+
+const integrationLedger = read(
+  'research/yesenin/PART_ONE_EDITORIAL_PASS7_PASS6_INTEGRATION_2026-07-25.md',
+);
 for (const status of [
-  'SECTIONS-9-12-LITERARY-EDIT-COMPLETE',
-  'SECTION-10-THEOLOGICAL-SENTENCE-EDIT-COMPLETE',
-  'SECTIONS-1-8-SENTENCE-EDIT-PENDING',
-  'PUBLICATION-AUTHORIZATION-FALSE',
+  '71/71 LATE-SECTION-BLOCKS-EDITED',
+  '146 EVIDENCE-NODES-PRESERVED',
+  '64 RENDERED-SOURCES-PRESERVED',
+  'UNPUBLISHED / UNREGISTERED / MEDIA-HOLD',
 ]) {
-  if (!passSevenLedger.includes(status)) fail(`pass-seven ledger is missing status ${status}`);
+  if (!integrationLedger.includes(status)) fail(`pass-seven integration ledger is missing status ${status}`);
 }
 
 console.log(
@@ -309,20 +367,24 @@ console.log(
       totalRenderBlocks: essay.blocks.length,
       sectionBlocks: sectionBlocks.length,
       evidenceBearingBlocks: authoredBlocks.length,
-      passSevenEditedBlocks: editorialEntries.length,
-      passSevenEditedSections: articlePackage.editedSections,
+      pass6AuthoredBlocks: topology.pass6BlockIds.size,
+      editedLateSectionBlocks: editorialEntries.length,
+      editedLatePass6Blocks: latePass6Ids.length,
+      declaredCanonicalSources: topology.canonicalSourceIds.size,
       renderedBibliographySources: bibliographyIds.size,
+      pass6SourcesRenderedInNewProse: pass6ReferencedSources.size,
       representedClaims: claims.size,
       internalSupplementalSources: supplements.size,
       referencedResearchChecks: researchChecks.size,
       internalAcquisitionSources: acquisitions.size,
       physicalWitnessRecords: yeseninPartOnePhysicalWitnessesPassSix.length,
+      realOnlyVisualRecords: yeseninPartOneRealVisualsPassSix.length,
       deepSourceChecks: passRows.length,
       stableTopologySha256: topologyDigest,
       editorialPassSevenSha256: editorialDigest,
-      sectionsNineToTwelveLiteraryEditComplete: true,
-      sectionTenTheologicalSentenceEditComplete: true,
-      wholeArticleSentenceEditComplete: false,
+      literaryRewriteComplete: false,
+      lateHalfSentenceEditComplete: true,
+      theologicalSectionTenSentenceEditComplete: true,
       publicationAuthorized: false,
       mediaPublicationAuthorized: false,
     },
