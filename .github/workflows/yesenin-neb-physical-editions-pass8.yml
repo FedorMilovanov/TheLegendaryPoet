@@ -8,7 +8,7 @@ on:
       - 'scripts/acquire-yesenin-neb-editions-pass8.py'
       - '.github/workflows/yesenin-neb-physical-editions-pass8.yml'
   pull_request:
-    branches: [work/local-images-playwright-wtoc]
+    branches: [work/local-images-playwright-wtoc, research/yesenin-real-visual-hash-baseline-clean]
     paths:
       - 'scripts/acquire-yesenin-neb-editions-pass8.py'
       - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
