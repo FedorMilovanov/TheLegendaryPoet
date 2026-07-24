@@ -6,11 +6,13 @@ on:
       - research/source-acquisition-49
     paths:
       - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
+      - scripts/source-acquisition/rsl-description-issue3.mjs
   pull_request:
     branches:
       - work/local-images-playwright-wtoc
     paths:
       - .github/workflows/source-acquisition-49-mayakovsky-description-rsl.yml
+      - scripts/source-acquisition/rsl-description-issue3.mjs
   workflow_dispatch:
 
 permissions:
@@ -40,11 +42,10 @@ jobs:
         run: |
           set -euo pipefail
           root='rsl-description-issue-3'
-          mkdir -p "$root/direct" "$root/browser/downloads" "$root/front" "$root/final"
+          mkdir -p "$root/direct" "$root/front" "$root/final"
           record='https://search.rsl.ru/ru/record/01006741660'
-          viewer='https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white'
           dlib_path='/rsl01006000000/rsl01006741000/rsl01006741660/rsl01006741660.pdf'
-          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/4.0'
+          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/4.1'
 
           curl --location --compressed --retry 5 --retry-all-errors \
             --connect-timeout 30 --max-time 300 \
@@ -57,14 +58,6 @@ jobs:
           grep -q '01006741660' "$root/record.html"
           grep -q 'Описание документальных материалов' "$root/record.html"
           printf '%s\n' 'CATALOGUE-RECORD-VERIFIED' > "$root/record-status.txt"
-
-          curl --location --compressed --retry 4 --retry-all-errors \
-            --connect-timeout 30 --max-time 300 \
-            --user-agent "$ua" \
-            --referer "$record" \
-            --dump-header "$root/action-record-headers.txt" \
-            --output "$root/action-record.js" \
-            'https://search.rsl.ru/js/action-record.js' || true
 
           : > "$root/direct-attempts.tsv"
           found=''
@@ -100,133 +93,13 @@ jobs:
           done
           printf '%s\n' "$found" > "$root/direct-result.txt"
 
-          # Keep the script inside the checkout so Node can resolve the locally
-          # installed Playwright package. A /tmp script cannot see repo/node_modules.
-          cat > "$root/inspect-rsl-viewer.mjs" <<'JS'
-          import { chromium } from 'playwright';
-          import fs from 'node:fs/promises';
-          import path from 'node:path';
-
-          const root = path.resolve('rsl-description-issue-3/browser');
-          const target = 'https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white';
-          const record = 'https://search.rsl.ru/ru/record/01006741660';
-          const events = [];
-          const candidates = new Set();
-          const addCandidate = (value) => {
-            if (typeof value !== 'string' || !value) return;
-            if (/\.pdf(?:[?#]|$)|dlib\.rsl\.ru|download|document|fulltext|file/i.test(value)) candidates.add(value);
-          };
-
-          await fs.mkdir(path.join(root, 'downloads'), { recursive: true });
-          let browser;
-          let page;
-          let fatal = null;
-          try {
-            browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext({
-              acceptDownloads: true,
-              ignoreHTTPSErrors: true,
-              viewport: { width: 1500, height: 1100 },
-              locale: 'ru-RU',
-            });
-            page = await context.newPage();
-            page.on('pageerror', (error) => events.push({ type: 'pageerror', text: String(error) }));
-            page.on('requestfailed', (request) => events.push({
-              type: 'requestfailed',
-              url: request.url(),
-              failure: request.failure()?.errorText || '',
-            }));
-            page.on('request', (request) => addCandidate(request.url()));
-            page.on('response', (response) => addCandidate(response.url()));
-            page.on('download', async (download) => {
-              const name = download.suggestedFilename().replace(/[^a-zA-Z0-9._-]+/g, '_');
-              await download.saveAs(path.join(root, 'downloads', name));
-            });
-
-            const navigation = await page.goto(target, {
-              waitUntil: 'domcontentloaded',
-              timeout: 120_000,
-            }).catch(async (error) => {
-              events.push({ type: 'viewer-navigation-error', text: String(error) });
-              return page.goto(record, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-            });
-            await page.waitForTimeout(10_000);
-
-            const dom = await page.evaluate(() => ({
-              title: document.title,
-              url: location.href,
-              bodyText: (document.body?.innerText || '').slice(0, 100_000),
-              links: [...document.querySelectorAll('a')].map((anchor) => ({
-                href: anchor.href,
-                text: (anchor.innerText || '').trim(),
-              })),
-              resources: performance.getEntriesByType('resource').map((entry) => entry.name),
-            }));
-            dom.links.forEach((link) => addCandidate(link.href));
-            dom.resources.forEach(addCandidate);
-            await fs.writeFile(path.join(root, 'dom.json'), JSON.stringify(dom, null, 2));
-            await page.screenshot({ path: path.join(root, 'viewer.png'), fullPage: true }).catch(() => {});
-
-            const downloadControl = page.getByRole('link', { name: /скач/i }).or(
-              page.getByRole('button', { name: /скач/i }),
-            );
-            if (await downloadControl.count().catch(() => 0)) {
-              await downloadControl.first().click({ timeout: 10_000 }).catch((error) => {
-                events.push({ type: 'download-click-error', text: String(error) });
-              });
-              await page.waitForTimeout(5_000);
-            }
-
-            const candidateResults = [];
-            for (const url of [...candidates].sort()) {
-              try {
-                const response = await context.request.get(url, {
-                  timeout: 120_000,
-                  failOnStatusCode: false,
-                  headers: { Referer: target },
-                });
-                const body = await response.body();
-                const isPdf = body.subarray(0, 5).toString() === '%PDF-';
-                candidateResults.push({
-                  url,
-                  status: response.status(),
-                  contentType: response.headers()['content-type'] || '',
-                  bytes: body.length,
-                  isPdf,
-                });
-                if (response.status() === 200 && isPdf) {
-                  await fs.writeFile(path.join(root, 'downloads', 'network-source.pdf'), body);
-                  break;
-                }
-              } catch (error) {
-                candidateResults.push({ url, error: String(error) });
-              }
-            }
-            await fs.writeFile(path.join(root, 'candidates.json'), JSON.stringify(candidateResults, null, 2));
-            await fs.writeFile(path.join(root, 'navigation.json'), JSON.stringify({
-              status: navigation?.status() || null,
-              finalUrl: page.url(),
-            }, null, 2));
-          } catch (error) {
-            fatal = String(error?.stack || error);
-          } finally {
-            await fs.writeFile(path.join(root, 'events.json'), JSON.stringify(events, null, 2)).catch(() => {});
-            await fs.writeFile(path.join(root, 'summary.json'), JSON.stringify({
-              target,
-              candidateCount: candidates.size,
-              fatal,
-            }, null, 2)).catch(() => {});
-            if (fatal) await fs.writeFile(path.join(root, 'fatal-error.txt'), fatal).catch(() => {});
-            if (browser) await browser.close().catch(() => {});
-          }
-          JS
-
           viewer_code=0
-          node "$root/inspect-rsl-viewer.mjs" > "$root/browser-process.log" 2>&1 || viewer_code=$?
+          node scripts/source-acquisition/rsl-description-issue3.mjs \
+            > "$root/browser-process.log" 2>&1 || viewer_code=$?
           printf '%s\n' "$viewer_code" > "$root/browser-process-exit.txt"
 
           if [ ! -s "$root/source.pdf" ]; then
-            browser_pdf="$(find "$root/browser/downloads" -type f -size +100k -print0 | xargs -0 -r file | awk -F: '/PDF document/ {print $1; exit}')"
+            browser_pdf="$(find "$root/downloads" "$root/responses" -type f -size +100k -print0 2>/dev/null | xargs -0 -r file | awk -F: '/PDF document/ {print $1; exit}')"
             if [ -n "$browser_pdf" ]; then
               cp "$browser_pdf" "$root/source.pdf"
               printf '%s\n' 'browser-viewer' > "$root/acquired-url.txt"
@@ -288,15 +161,24 @@ jobs:
             rsl-description-issue-3/record-headers.txt
             rsl-description-issue-3/record.html
             rsl-description-issue-3/record-status.txt
-            rsl-description-issue-3/action-record-headers.txt
-            rsl-description-issue-3/action-record.js
             rsl-description-issue-3/direct-attempts.tsv
             rsl-description-issue-3/direct-result.txt
             rsl-description-issue-3/acquired-url.txt
             rsl-description-issue-3/classification.txt
+            rsl-description-issue-3/classification.json
             rsl-description-issue-3/acquisition-summary.txt
             rsl-description-issue-3/browser-process.log
             rsl-description-issue-3/browser-process-exit.txt
+            rsl-description-issue-3/probe-started.txt
+            rsl-description-issue-3/probe-summary.json
+            rsl-description-issue-3/network.json
+            rsl-description-issue-3/events.json
+            rsl-description-issue-3/saved-bodies.json
+            rsl-description-issue-3/record.json
+            rsl-description-issue-3/record.png
+            rsl-description-issue-3/viewer.json
+            rsl-description-issue-3/viewer.png
+            rsl-description-issue-3/fatal-error.txt
             rsl-description-issue-3/bytes.txt
             rsl-description-issue-3/sha256.txt
             rsl-description-issue-3/qpdf-check.txt
@@ -305,7 +187,6 @@ jobs:
             rsl-description-issue-3/verification-summary.txt
             rsl-description-issue-3/front/*.jpg
             rsl-description-issue-3/final/*.jpg
-            rsl-description-issue-3/browser
           if-no-files-found: warn
           retention-days: 14
 
