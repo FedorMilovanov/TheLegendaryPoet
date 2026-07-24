@@ -7,12 +7,14 @@ on:
     paths:
       - .github/workflows/source-acquisition-77-commons-provenance.yml
       - scripts/source-acquisition/commons-provenance-77.py
+      - scripts/source-acquisition/commons-provenance-77-runner.py
   pull_request:
     branches:
       - work/local-images-playwright-wtoc
     paths:
       - .github/workflows/source-acquisition-77-commons-provenance.yml
       - scripts/source-acquisition/commons-provenance-77.py
+      - scripts/source-acquisition/commons-provenance-77-runner.py
   workflow_dispatch:
 
 permissions:
@@ -40,9 +42,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile scripts/source-acquisition/commons-provenance-77.py
+          python -m py_compile \
+            scripts/source-acquisition/commons-provenance-77.py \
+            scripts/source-acquisition/commons-provenance-77-runner.py
           if grep -En 'images\.weserv|wsrv\.nl|thumburl|Special:Redirect/file' \
-            scripts/source-acquisition/commons-provenance-77.py; then
+            scripts/source-acquisition/commons-provenance-77.py \
+            scripts/source-acquisition/commons-provenance-77-runner.py; then
             echo 'Proxy, thumbnail or Special:Redirect acquisition is forbidden.' >&2
             exit 1
           fi
@@ -50,6 +55,8 @@ jobs:
             scripts/source-acquisition/commons-provenance-77.py
           grep -q '"/thumb/" not in parsed.path' \
             scripts/source-acquisition/commons-provenance-77.py
+          grep -q 'Commons API error' \
+            scripts/source-acquisition/commons-provenance-77-runner.py
 
       - name: Acquire exact Commons originals and build provenance evidence
         shell: bash
@@ -57,7 +64,7 @@ jobs:
           set -o pipefail
           mkdir -p build/provenance-77
           code=0
-          python scripts/source-acquisition/commons-provenance-77.py \
+          python scripts/source-acquisition/commons-provenance-77-runner.py \
             --output build/provenance-77 \
             2>&1 | tee build/provenance-77/process.log || code=${PIPESTATUS[0]}
           printf '%s\n' "$code" > build/provenance-77/process-exit.txt
