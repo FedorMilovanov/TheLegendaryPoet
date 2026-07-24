@@ -10,12 +10,16 @@ on:
       - 'scripts/validate-yesenin-neb-serial-discovery-pass10.py'
       - 'scripts/validate-yesenin-neb-serial-pdf-routes-pass10.py'
       - 'scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py'
+      - 'scripts/validate-yesenin-neb-theatrical-moscow-pass11.ts'
+      - 'src/data/essays/yeseninPartOneTheatricalMoscowPassEleven.ts'
       - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
       - '.github/workflows/yesenin-neb-theatrical-moscow-pass11.yml'
   pull_request:
     branches: [research/yesenin-neb-serial-discovery-pass10]
     paths:
       - 'scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py'
+      - 'scripts/validate-yesenin-neb-theatrical-moscow-pass11.ts'
+      - 'src/data/essays/yeseninPartOneTheatricalMoscowPassEleven.ts'
       - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
       - '.github/workflows/yesenin-neb-theatrical-moscow-pass11.yml'
 
@@ -36,6 +40,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci --silent
       - name: Install non-generative PDF tooling
         run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
       - name: Reproduce exact parent and child issue discovery
@@ -54,6 +64,12 @@ jobs:
         run: |
           set -o pipefail
           python scripts/acquire-yesenin-neb-theatrical-moscow-pass11.py 2>&1 | tee yesenin-neb-theatrical-moscow-pass11.log
+      - name: Validate exact bytes and manual frame-level findings
+        env:
+          YESENIN_NEB_THEATRE_OUTPUT: artifacts/yesenin-neb-theatrical-moscow-pass11
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-neb-theatrical-moscow-pass11.ts 2>&1 | tee yesenin-neb-theatrical-moscow-pass11-validation.log
       - name: Upload discovery and acquisition diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -63,8 +79,11 @@ jobs:
             yesenin-neb-serial-discovery-pass10.log
             yesenin-neb-serial-pdf-routes-pass10.log
             yesenin-neb-theatrical-moscow-pass11.log
+            yesenin-neb-theatrical-moscow-pass11-validation.log
             artifacts/yesenin-neb-serial-discovery-pass10/discovery.json
             artifacts/yesenin-neb-serial-discovery-pass10/child-pdf-routes.json
+            artifacts/yesenin-neb-theatrical-moscow-pass11/manifest.json
+            artifacts/yesenin-neb-theatrical-moscow-pass11/summary.json
           if-no-files-found: error
           retention-days: 7
       - name: Upload real issue PDFs and complete page-contact sheets
