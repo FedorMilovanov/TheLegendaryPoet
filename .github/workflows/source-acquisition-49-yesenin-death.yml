@@ -34,14 +34,12 @@ jobs:
         run: |
           set -euo pipefail
           root="yesenin-death"
-          mkdir -p "$root/candidates" "$root/front" "$root/targets" "$root/final"
+          mkdir -p "$root/candidates" "$root/front" "$root/targets" "$root/final" "$root/contact-sheets"
 
           browser_ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36'
           klex_page='https://www.klex.ru/24ah'
-          warlib_page='https://warlib.site/esenin-death/'
-          warlib_pdf='https://warlib.site/wp-content/uploads/2025/12/death-of-esenin-warlib.site_.pdf'
-
           : > "$root/network-attempts.tsv"
+
           curl --fail --location --compressed --retry 4 --retry-all-errors \
             --connect-timeout 30 --max-time 300 \
             --user-agent "$browser_ua" \
@@ -59,7 +57,20 @@ jobs:
 
           root = pathlib.Path('yesenin-death')
           page_url = 'https://www.klex.ru/24ah'
-          candidates: list[dict[str, str]] = []
+          candidates: list[dict[str, str]] = [
+              {
+                  'url': 'https://www.phantastike.com/history/smert_sergeya_esenina_dokumenty_fakty_ve/zip/',
+                  'referer': page_url,
+                  'origin': 'verified-klex-target',
+                  'label': 'ZIP mirror exposed by Klex',
+              },
+              {
+                  'url': 'https://www.phantastike.com/history/smert_sergeya_esenina_dokumenty_fakty_ve/pdf/',
+                  'referer': page_url,
+                  'origin': 'verified-klex-target',
+                  'label': 'PDF mirror exposed by Klex',
+              },
+          ]
 
           class Links(html.parser.HTMLParser):
               def __init__(self) -> None:
@@ -85,15 +96,12 @@ jobs:
                       self.label = []
 
           raw = (root / 'klex-page.raw').read_bytes() if (root / 'klex-page.raw').exists() else b''
-          decoded_variants: list[tuple[str, str]] = []
+          seen = {item['url'] for item in candidates}
           for encoding in ('utf-8', 'cp1251', 'windows-1251', 'koi8-r', 'latin-1'):
               try:
-                  decoded_variants.append((encoding, raw.decode(encoding)))
+                  text = raw.decode(encoding)
               except UnicodeDecodeError:
                   continue
-
-          seen: set[str] = set()
-          for encoding, text in decoded_variants:
               parser = Links()
               parser.feed(text)
               for href, label in parser.items:
@@ -111,21 +119,18 @@ jobs:
                       'label': label,
                   })
 
-          guesses = [
+          fallbacks = [
               'https://www.klex.ru/24ah.pdf',
               'https://www.klex.ru/24ah.zip',
-              'https://klex.ru/24ah.pdf',
-              'https://klex.ru/24ah.zip',
               'https://warlib.site/wp-content/uploads/2025/12/death-of-esenin-warlib.site_.pdf',
           ]
-          for url in guesses:
+          for url in fallbacks:
               if url in seen:
                   continue
-              seen.add(url)
               candidates.append({
                   'url': url,
                   'referer': page_url if 'klex' in url else 'https://warlib.site/esenin-death/',
-                  'origin': 'fallback-guess',
+                  'origin': 'fallback',
                   'label': '',
               })
 
@@ -136,7 +141,6 @@ jobs:
           with (root / 'candidates.tsv').open('w', encoding='utf-8') as handle:
               for item in candidates:
                   handle.write(f"{item['url']}\t{item['referer']}\t{item['origin']}\n")
-          print(json.dumps(candidates, ensure_ascii=False, indent=2))
           PY
 
           found=''
@@ -167,8 +171,9 @@ jobs:
               break
             fi
             if unzip -t "$target" >/dev/null 2>&1; then
-              unzip -o "$target" -d "$root/candidates/unpacked-$index" >/dev/null
-              pdf="$(find "$root/candidates/unpacked-$index" -type f -iname '*.pdf' -print -quit)"
+              unpacked="$root/candidates/unpacked-$index"
+              unzip -o "$target" -d "$unpacked" >/dev/null
+              pdf="$(find "$unpacked" -type f -iname '*.pdf' -print -quit)"
               if [ -n "$pdf" ] && [ "$(head -c 5 "$pdf")" = '%PDF-' ]; then
                 cp "$pdf" "$root/source.pdf"
                 found="$url"
@@ -186,83 +191,58 @@ jobs:
           stat --printf='%s\n' "$root/source.pdf" > "$root/bytes.txt"
           sha256sum "$root/source.pdf" | cut -d' ' -f1 > "$root/sha256.txt"
 
-      - name: Verify pagination and extract evidence
+      - name: Repair structure and render page witnesses
         shell: bash
         run: |
           set -euo pipefail
           root="yesenin-death"
-          qpdf --check "$root/source.pdf" > "$root/qpdf-check.txt" 2>&1
-          pdfinfo "$root/source.pdf" > "$root/pdfinfo.txt"
-          pdftotext -layout "$root/source.pdf" "$root/full-text.txt"
-          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$root/pdfinfo.txt")"
-          test "$pages" -gt 300
 
-          front_end=14
+          qpdf --warning-exit-0 --check "$root/source.pdf" > "$root/qpdf-original.txt" 2>&1
+          qpdf --warning-exit-0 "$root/source.pdf" "$root/normalized.pdf" > "$root/qpdf-normalize.txt" 2>&1
+          qpdf --warning-exit-0 --check "$root/normalized.pdf" > "$root/qpdf-normalized.txt" 2>&1
+          pdfinfo "$root/normalized.pdf" > "$root/pdfinfo.txt"
+          pdfimages -list "$root/normalized.pdf" > "$root/pdfimages.txt"
+          pdftotext -layout "$root/normalized.pdf" "$root/full-text.txt" || true
+          touch "$root/full-text.txt"
+
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$root/pdfinfo.txt")"
+          test "$pages" -gt 400
+          text_bytes="$(wc -c < "$root/full-text.txt")"
+          if [ "$text_bytes" -lt 1000 ]; then
+            text_layer='image-only'
+          else
+            text_layer='present'
+          fi
+
+          front_end=16
           [ "$pages" -lt "$front_end" ] && front_end="$pages"
-          pdftoppm -f 1 -l "$front_end" -jpeg -r 125 "$root/source.pdf" "$root/front/page" >/dev/null 2>&1
+          pdftoppm -f 1 -l "$front_end" -jpeg -scale-to 1600 \
+            "$root/normalized.pdf" "$root/front/page" >/dev/null 2>&1
+          montage "$root"/front/*.jpg -thumbnail 360x -tile 4x -geometry +8+8 \
+            "$root/contact-sheets/front.jpg"
 
           for printed in 53 68 79 83 88 92 96 102 134 155 162 368 376 392 393 394; do
+            mkdir -p "$root/targets/printed-$printed"
             for delta in 0 1 2 3 4; do
               pdf_page=$((printed + delta))
               [ "$pdf_page" -le "$pages" ] || continue
-              printf -v label '%03d-plus-%d' "$printed" "$delta"
-              pdftoppm -f "$pdf_page" -l "$pdf_page" -singlefile -jpeg -r 120 \
-                "$root/source.pdf" "$root/targets/$label" >/dev/null 2>&1
+              printf -v label 'pdf-%03d' "$pdf_page"
+              pdftoppm -f "$pdf_page" -l "$pdf_page" -singlefile -jpeg -scale-to 1600 \
+                "$root/normalized.pdf" "$root/targets/printed-$printed/$label" >/dev/null 2>&1
             done
+            montage "$root"/targets/printed-$printed/*.jpg -thumbnail 320x -tile 5x -geometry +8+8 \
+              "$root/contact-sheets/printed-$printed.jpg"
           done
 
-          final_start=$((pages - 7))
+          final_start=$((pages - 9))
           [ "$final_start" -lt 1 ] && final_start=1
-          pdftoppm -f "$final_start" -l "$pages" -jpeg -r 120 \
-            "$root/source.pdf" "$root/final/page" >/dev/null 2>&1
+          pdftoppm -f "$final_start" -l "$pages" -jpeg -scale-to 1500 \
+            "$root/normalized.pdf" "$root/final/page" >/dev/null 2>&1
+          montage "$root"/final/*.jpg -thumbnail 340x -tile 5x -geometry +8+8 \
+            "$root/contact-sheets/final.jpg"
 
-          python3 - <<'PY'
-          from __future__ import annotations
-
-          import json
-          import pathlib
-          import re
-
-          root = pathlib.Path('yesenin-death')
-          pages = (root / 'full-text.txt').read_text(encoding='utf-8', errors='replace').split('\f')
-          terms = [
-              'Заключение специалиста',
-              'Погибко',
-              'Майлис',
-              'Дегтярев',
-              'Заключение экспертов',
-              'Дедов',
-              'акт осмотра',
-              'Гиляревский',
-              'судебно-медицин',
-              'протокол',
-              'Материалы о болезни и смерти',
-              'кровью',
-          ]
-          evidence: dict[str, list[dict[str, object]]] = {}
-          for term in terms:
-              pattern = re.compile(re.escape(term), re.I)
-              hits: list[dict[str, object]] = []
-              for number, page in enumerate(pages, start=1):
-                  match = pattern.search(page)
-                  if not match:
-                      continue
-                  start = max(0, match.start() - 300)
-                  end = min(len(page), match.end() + 650)
-                  hits.append({
-                      'pdf_page': number,
-                      'excerpt': ' '.join(page[start:end].split()),
-                  })
-                  if len(hits) >= 30:
-                      break
-              evidence[term] = hits
-          (root / 'targeted-evidence.json').write_text(
-              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n',
-              encoding='utf-8',
-          )
-          PY
-
-          printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$root/full-text.txt")" > "$root/summary.txt"
+          printf 'pages=%s\ntext_layer=%s\ntext_bytes=%s\nprinted_to_pdf_offset_candidates=0..4\n' \
+            "$pages" "$text_layer" "$text_bytes" > "$root/summary.txt"
 
       - name: Upload verification evidence
         if: always()
@@ -273,17 +253,20 @@ jobs:
             yesenin-death/acquired-url.txt
             yesenin-death/bytes.txt
             yesenin-death/sha256.txt
-            yesenin-death/qpdf-check.txt
+            yesenin-death/qpdf-original.txt
+            yesenin-death/qpdf-normalize.txt
+            yesenin-death/qpdf-normalized.txt
             yesenin-death/pdfinfo.txt
+            yesenin-death/pdfimages.txt
             yesenin-death/full-text.txt
-            yesenin-death/targeted-evidence.json
             yesenin-death/summary.txt
             yesenin-death/network-attempts.tsv
             yesenin-death/candidates.json
             yesenin-death/klex-headers.txt
             yesenin-death/candidates/*.headers
+            yesenin-death/contact-sheets/*.jpg
             yesenin-death/front/*.jpg
-            yesenin-death/targets/*.jpg
+            yesenin-death/targets/**/*.jpg
             yesenin-death/final/*.jpg
           if-no-files-found: warn
           retention-days: 14
