@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: source-49-legacy-pdf-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   resolve:
     name: legacy-resolve ${{ matrix.source.id }}
@@ -19,6 +23,7 @@ jobs:
     timeout-minutes: 90
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         source:
           - id: esenin-chronicle-v2-2005-mirror
@@ -33,10 +38,6 @@ jobs:
             index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
             needle: Том 5. Книга 2. 24 декабря 1925
             year: "2018"
-          - id: mayakovsky-death-case-2005
-            index: https://publ.lib.ru/ARCHIVES/M/MAYAKOVSKIY_Vladimir_Vladimirovich/
-            needle: Следственное дело В.В.Маяковского
-            year: "2005"
 
     env:
       SOURCE_ID: ${{ matrix.source.id }}
@@ -122,7 +123,6 @@ jobs:
                       continue
                   absolute = urllib.parse.urljoin(index_url, href)
                   parts = urllib.parse.urlsplit(absolute)
-                  # The directory exposes percent-encoded CP1251 hrefs. Preserve them byte-for-byte.
                   resolved = urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, parts.fragment))
                   matches.append({
                       'encoding': encoding,
