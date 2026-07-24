@@ -4,7 +4,9 @@ import { yeseninPartOneRealVisualsPassSix } from '../src/data/essays/yeseninPart
 
 const root = process.cwd();
 const visualPath = 'research/yesenin/PART_ONE_VISUAL_BRIEFS_PASS6.md';
+const licensePath = 'research/yesenin/PART_ONE_REAL_VISUAL_LICENSE_LEDGER_PASS6.md';
 const visual = readFileSync(resolve(root, visualPath), 'utf8');
+const license = readFileSync(resolve(root, licensePath), 'utf8');
 const fail = (message: string): never => {
   throw new Error(`[yesenin-part-one-real-visuals-pass6] ${message}`);
 };
@@ -33,9 +35,14 @@ for (const [index, record] of yeseninPartOneRealVisualsPassSix.entries()) {
   }
   if (record.note.length < 80) fail(`${record.id} provenance note is too short`);
 
-  const occurrences = visual.split(`\`${record.id}\``).length - 1;
-  if (occurrences !== 1) {
-    fail(`${record.id} must appear exactly once in the visual registry; found ${occurrences}`);
+  const visualOccurrences = visual.split(`\`${record.id}\``).length - 1;
+  if (visualOccurrences !== 1) {
+    fail(`${record.id} must appear exactly once in the visual registry; found ${visualOccurrences}`);
+  }
+
+  const licenseOccurrences = license.split(`\`${record.id}\``).length - 1;
+  if (licenseOccurrences !== 1) {
+    fail(`${record.id} must appear exactly once in the license ledger; found ${licenseOccurrences}`);
   }
 }
 
@@ -60,6 +67,18 @@ for (const required of [
   if (!visual.includes(required)) fail(`real-visual policy is missing marker: ${required}`);
 }
 
+for (const required of [
+  'REAL-OBJECTS-ONLY',
+  'RIGHTS-SEPARATED',
+  'NO-PRODUCTION-AUTHORIZATION',
+  'productionAuthorized: false',
+  'Public Domain Mark',
+  'PD-RusEmpire',
+  'ACQUIRED-HASHED / RIGHTS-UNRESOLVED',
+] as const) {
+  if (!license.includes(required)) fail(`license ledger is missing marker: ${required}`);
+}
+
 const statusCounts = yeseninPartOneRealVisualsPassSix.reduce<Record<string, number>>(
   (counts, record) => {
     counts[record.status] = (counts[record.status] ?? 0) + 1;
@@ -80,6 +99,8 @@ console.log(
   JSON.stringify(
     {
       realVisualRecords: yeseninPartOneRealVisualsPassSix.length,
+      visualRegistryRecords: ids.length,
+      licenseLedgerRecords: ids.length,
       renderMode: 'numbered-real-thumbnail',
       statusCounts,
       productionAuthorized: false,
