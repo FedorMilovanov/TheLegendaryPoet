@@ -53,6 +53,8 @@ jobs:
         run: npm run validate:mayakovsky-correspondence
       - name: Validate Yesenin archive records
         run: npm run validate:yesenin-archive
+      - name: Validate unpublished Yesenin Part I research gate
+        run: npm run validate:yesenin-part-one
       - name: Validate public historical claim boundaries
         run: npm run validate:public-claims
       - name: Validate responsive AVIF and WebP media
