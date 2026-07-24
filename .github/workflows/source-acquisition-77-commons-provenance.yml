@@ -9,7 +9,6 @@ on:
       - scripts/source-acquisition/commons-provenance-77.py
   pull_request:
     branches:
-      - integration/research-mobile-qa-20260724
       - work/local-images-playwright-wtoc
     paths:
       - .github/workflows/source-acquisition-77-commons-provenance.yml
@@ -33,7 +32,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
 
       - name: Install provenance dependencies
         run: python -m pip install --disable-pip-version-check requests==2.32.4 pillow==11.3.0
