@@ -7,14 +7,31 @@ import type { Essay, EssayBlock, EssaySourceKind } from '../src/types/essay';
 const errors: string[] = [];
 const warnings: string[] = [];
 const institutionalSourcePattern = /музей|мемориаль|выставк|фильм|кино/i;
-const primarySourceUrlPattern = /feb-web\.ru|rvb\.ru|wikisource\.org/i;
 const scriptureReferencePattern = /\((?:[1-3]\s*)?[А-ЯЁ][А-Яа-яё. ]+\s+\d+:\d+(?:[–-]\d+)?\)/g;
-const allowedSourceKinds = new Set<EssaySourceKind>(['primary', 'archive', 'research', 'context']);
+const allowedSourceKinds = new Set<EssaySourceKind>([
+  'primary',
+  'archive',
+  'research',
+  'institutional',
+  'context',
+]);
 
-const sourceMinimums: Record<string, { total: number; primary: number }> = {
-  'mayakovsky-before-revolution': { total: 30, primary: 18 },
-  'mayakovsky-gromovoy': { total: 30, primary: 18 },
-  'brik-case': { total: 30, primary: 12 },
+/**
+ * Flagship source gates deliberately distinguish three quantities:
+ *
+ * - total: bibliography cards after de-duplication;
+ * - linked: distinct working/canonical URLs, not repeated cards;
+ * - primary: explicitly classified authorial texts or documents.
+ *
+ * Forty links are therefore not allowed to hide a bibliography made mostly of
+ * repeated museum summaries or generic collection landing pages.
+ */
+const sourceMinimums: Record<string, { total: number; linked: number; primary: number }> = {
+  'yesenin-kutezhi': { total: 40, linked: 40, primary: 8 },
+  'mayakovsky-before-revolution': { total: 40, linked: 40, primary: 15 },
+  'mayakovsky-gromovoy': { total: 40, linked: 40, primary: 18 },
+  'mayakovsky-pro-eto-separation': { total: 40, linked: 40, primary: 12 },
+  'brik-case': { total: 40, linked: 40, primary: 12 },
 };
 
 const requiredContentMarkers: Record<string, string[]> = {
@@ -184,33 +201,21 @@ function validateSources(essay: Essay) {
     return;
   }
 
-  const independentSources = sources.filter(
-    (source) => source.kind === 'primary' || !institutionalSourcePattern.test(source.title),
-  );
-
+  const independentSources = sources.filter((source) => source.kind !== 'institutional');
   if (independentSources.length === 0) {
     error(
       essay,
-      'relies only on museum, memorial, exhibition, or film sources; add primary or independent research',
+      'relies only on institutional or memorial narratives; add primary documents, archives, or independent research',
     );
   }
 
-  const primarySources = sources.filter(
-    (source) =>
-      source.kind === 'primary' ||
-      Boolean(source.url && primarySourceUrlPattern.test(source.url)),
-  );
+  // Primary status is explicit. A FEB, museum, library, or archive domain does
+  // not make every hosted page a primary source: an authorial text can be
+  // primary, while a chronology or scholarly article on the same domain is not.
+  const primarySources = sources.filter((source) => source.kind === 'primary');
 
   if (primarySources.length < 2) {
-    warning(essay, `has only ${primarySources.length} linked primary sources`);
-  }
-
-  const minimum = sourceMinimums[essay.slug];
-  if (minimum && sources.length < minimum.total) {
-    error(essay, `requires at least ${minimum.total} sources; found ${sources.length}`);
-  }
-  if (minimum && primarySources.length < minimum.primary) {
-    error(essay, `requires at least ${minimum.primary} primary sources; found ${primarySources.length}`);
+    warning(essay, `has only ${primarySources.length} explicitly classified primary sources`);
   }
 
   const sourceIds = new Set<string>();
@@ -229,8 +234,6 @@ function validateSources(essay: Essay) {
       if (!/^[a-z0-9-]+$/.test(source.id)) error(essay, `${label} has an invalid id: ${source.id}`);
       if (sourceIds.has(source.id)) error(essay, `duplicate source id: ${source.id}`);
       sourceIds.add(source.id);
-    } else if (minimum) {
-      warning(essay, `${label} has no stable id`);
     }
     if (source.url) {
       const normalizedUrl = source.url.replace(/^http:/, 'https:').replace(/\/$/, '');
@@ -240,9 +243,28 @@ function validateSources(essay: Essay) {
     if ((source.kind === 'primary' || source.kind === 'archive') && !source.institution) {
       warning(essay, `${label} should name its institution or collection`);
     }
-    if ((source.kind === 'primary' || source.kind === 'archive') && !source.note) {
-      warning(essay, `${label} should explain its evidentiary role`);
+    if ((source.kind === 'primary' || source.kind === 'archive' || source.kind === 'institutional') && !source.note) {
+      warning(essay, `${label} should explain its evidentiary role and limitations`);
     }
+    if (source.kind === 'institutional' && source.note && !/не замен|навигац|пересказ|огранич/i.test(source.note)) {
+      warning(essay, `${label} institutional narrative should state that it does not replace the underlying document`);
+    }
+  }
+
+  const minimum = sourceMinimums[essay.slug];
+  if (!minimum) return;
+
+  if (sources.length < minimum.total) {
+    error(essay, `requires at least ${minimum.total} source cards; found ${sources.length}`);
+  }
+  if (sourceUrls.size < minimum.linked) {
+    error(essay, `requires at least ${minimum.linked} unique source links; found ${sourceUrls.size}`);
+  }
+  if (primarySources.length < minimum.primary) {
+    error(essay, `requires at least ${minimum.primary} explicitly classified primary sources; found ${primarySources.length}`);
+  }
+  if (sources.some((source) => !source.url)) {
+    error(essay, 'flagship source bibliography contains an unlinked source card');
   }
 }
 
@@ -290,11 +312,7 @@ for (const essay of essays) {
   validateEditorialRegressions(essay);
 }
 
-for (const message of warnings) console.warn(`WARN  ${message}`);
-for (const message of errors) console.error(`ERROR ${message}`);
-
-console.log(
-  `Essay validation: ${essays.length} essays, ${errors.length} errors, ${warnings.length} warnings`,
-);
-
+for (const item of warnings) console.warn(`WARNING ${item}`);
+for (const item of errors) console.error(`ERROR ${item}`);
+console.log(`Essay validation: ${essays.length} essays, ${warnings.length} warnings, ${errors.length} errors`);
 if (errors.length > 0) process.exit(1);

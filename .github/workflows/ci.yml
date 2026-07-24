@@ -2,12 +2,12 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, work/local-images-playwright-wtoc]
   push:
-    branches: [main]
+    branches: [main, work/local-images-playwright-wtoc]
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -18,19 +18,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          show-progress: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
-      - run: npm ci
-      - name: Validate content, stores, and literary style
-        run: npm run check:content
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate library content
+        run: npm run validate:library
+      - name: Validate essay structure and source policy
+        run: npm run validate:essays
+      - name: Report essay source coverage
+        run: npm run report:sources
+      - name: Validate inline citations
+        id: citations
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:citations 2>&1 | tee citation-validation.log
+      - name: Upload citation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: citation-validation
+          path: citation-validation.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Validate SEO topic clusters
+        run: npm run validate:clusters
+      - name: Validate Mayakovsky correspondence dataset
+        run: npm run validate:mayakovsky-correspondence
+      - name: Validate Yesenin archive records
+        run: npm run validate:yesenin-archive
+      - name: Validate unpublished Yesenin Part I research gate
+        run: npm run validate:yesenin-part-one
+      - name: Validate Yesenin Part I page-witness boundaries
+        run: npm run validate:yesenin-part-one-witnesses
+      - name: Validate public historical claim boundaries
+        run: npm run validate:public-claims
+      - name: Validate responsive AVIF and WebP media
+        run: npm run validate:media
+      - name: Validate physical audio assets
+        run: npm run validate:audio
+      - name: Validate music catalog
+        run: npm run validate:music
+      - name: Validate music runtime invariants
+        run: npm run validate:music-runtime
+      - name: Validate audio session migrations
+        run: npm run validate:audio-session
+      - name: Validate personal archive migrations
+        run: npm run validate:archive-store
+      - name: Validate durable community storage and offline outbox
+        run: npm run validate:community-store
+      - name: Validate target-scoped community subscriptions
+        run: npm run validate:community-target-store
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
+        shell: bash
         run: |
           set +e
           npm run validate:interaction-runtime > interaction-runtime.log 2>&1
@@ -45,21 +94,46 @@ jobs:
           path: interaction-runtime.log
           if-no-files-found: error
           retention-days: 3
-      - name: Typecheck
+      - name: Validate literary editorial rules
+        run: npm run validate:style
+      - name: TypeScript typecheck
         id: typecheck
+        continue-on-error: true
+        shell: bash
         run: |
-          set +e
-          npm run typecheck > typecheck.log 2>&1
-          status=$?
-          cat typecheck.log
-          exit $status
-      - name: Upload typecheck diagnostics
-        if: ${{ failure() && steps.typecheck.outcome == 'failure' }}
+          set -o pipefail
+          npm run typecheck 2>&1 | tee typecheck.log
+      - name: Upload TypeScript diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: typecheck-diagnostics
           path: typecheck.log
-          if-no-files-found: error
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Enforce TypeScript result
+        run: test "${{ steps.typecheck.outcome }}" = "success"
+      - name: Run Playwright article-engine QA
+        id: e2e
+        continue-on-error: true
+        run: npm run test:e2e
+      - name: Upload concise Playwright result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-result
+          path: test-results/results.json
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Playwright QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-qa
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
           retention-days: 3
       - name: Generate sitemap
         run: npm run sitemap
@@ -67,23 +141,19 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /
-      - name: Validate route splitting and production asset budgets
-        id: build_audit
-        run: |
-          set +e
-          npm run validate:build-output > build-output-audit.log 2>&1
-          status=$?
-          cat build-output-audit.log
-          exit $status
-      - name: Upload build audit diagnostics
-        if: ${{ failure() && steps.build_audit.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output-audit
-          path: build-output-audit.log
-          if-no-files-found: error
-          retention-days: 3
+      - name: Validate route code splitting
+        run: npm run validate:route-chunks
+      - name: Validate production route and asset budgets
+        run: npm run validate:build-output
       - name: Prerender social pages
         run: npm run prerender
+      - name: Validate prerendered SEO and JSON-LD
+        run: npm run validate:prerender-seo
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+      - name: Enforce citation result
+        if: always()
+        run: test "${{ steps.citations.outcome }}" = "success"
+      - name: Enforce Playwright result
+        if: always()
+        run: test "${{ steps.e2e.outcome }}" = "success"

@@ -1,0 +1,16 @@
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * Prerendered Framer markup can carry an initial inline opacity:0 until
+   * hydration resolves the media query. Readability must never depend on that
+   * JavaScript race. Cover both current shells and legacy direct children of
+   * the shared article body without affecting overlays outside the article.
+   */
+  .essay-block-shell,
+  .essay-body > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

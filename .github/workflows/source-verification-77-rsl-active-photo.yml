@@ -1,0 +1,63 @@
+name: Source verification 77 RSL active photo witness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-verification-77-rsl-active-photo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture-page-witnesses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install isolated Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Capture exact RSL viewer pages and large image responses
+        run: node scripts/source-acquisition/rsl-active-photo-witness-77.mjs
+
+      - name: Validate witness package
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='build/rsl-active-photo-witness-77'
+          test -s "$root/summary.json"
+          test -s "$root/captures.json"
+          test -s "$root/c08-author-date-page/document-info.json"
+          test -s "$root/c08-publication-source-page/document-info.json"
+          node - <<'JS'
+          const fs = require('fs');
+          const summary = JSON.parse(fs.readFileSync('build/rsl-active-photo-witness-77/summary.json', 'utf8'));
+          const captures = JSON.parse(fs.readFileSync('build/rsl-active-photo-witness-77/captures.json', 'utf8'));
+          if (summary.fatal) throw new Error(summary.fatal);
+          if (summary.targets.length !== 2) throw new Error('expected two exact RSL targets');
+          const urls = new Set(captures.map((item) => item.url));
+          for (const expected of [
+            'https://viewer.rsl.ru/api/v1/document/rsl01005408088/page/377',
+            'https://viewer.rsl.ru/api/v1/document/rsl01005408111/page/5',
+          ]) {
+            if (!urls.has(expected)) throw new Error(`missing exact page witness: ${expected}`);
+          }
+          JS
+
+      - name: Upload page witnesses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-77-rsl-active-photo-witness
+          path: build/rsl-active-photo-witness-77
+          if-no-files-found: error
+          retention-days: 14

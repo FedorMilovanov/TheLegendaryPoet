@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
-import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3, Network } from 'lucide-react';
 import { getAllEssays, getEssayBySlug } from '../data/essays';
 import { poets } from '../data/poets';
 import ReadingProgress from '../components/articles/ReadingProgress';
@@ -10,32 +10,40 @@ import EssayHero from '../components/essay/EssayHero';
 import ArticleRenderer, { getEssayToc } from '../components/essay/ArticleRenderer';
 import SectionChip from '../components/essay/SectionChip';
 import SourceLibrary from '../components/essay/SourceLibrary';
+import RelatedClusterEssays from '../components/essay/RelatedClusterEssays';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
-import { titleCase } from '../utils/titleCase';
+import { scrollToId } from '../utils/smoothScroll';
+import { essayStructuredData, relatedEssaysFor } from '../utils/structuredData';
 
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
   const essay = slug ? getEssayBySlug(slug) : undefined;
   const articleRef = useRef<HTMLElement>(null);
+  const allEssays = getAllEssays();
+  const poet = essay?.poetId ? poets.find((entry) => entry.id === essay.poetId) : undefined;
+  const relatedEssays = essay ? relatedEssaysFor(essay, allEssays) : [];
 
   useSeo({
-    title: essay ? `${essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
-    description: essay ? essay.excerpt : 'Статья не найдена.',
+    title: essay ? `${essay.seoTitle ?? essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
+    description: essay ? essay.seoDescription ?? essay.excerpt : 'Статья не найдена.',
     path: `/essays/${slug ?? ''}`,
-    type: 'article',
+    type: essay ? 'article' : 'website',
     image: essay?.cover,
+    imageAlt: essay?.coverAlt,
     publishedTime: essay?.date,
     author: essay?.author,
-    keywords: essay?.tags.join(','),
+    keywords: essay ? (essay.seoKeywords ?? essay.tags).join(',') : undefined,
+    noIndex: !essay,
+    jsonLd: essay ? essayStructuredData(essay, poet, relatedEssays) : undefined,
   });
 
   if (!essay) {
     return (
       <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
+          <h1 className="mb-4 font-serif text-4xl">Статья не найдена</h1>
           <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
         </div>
       </div>
@@ -43,9 +51,8 @@ export default function EssayPage() {
   }
 
   const toc = getEssayToc(essay.blocks);
-  const poet = essay.poetId ? poets.find((p) => p.id === essay.poetId) : undefined;
   const seriesEntries = essay.series
-    ? getAllEssays()
+    ? allEssays
         .filter((entry) => entry.series?.id === essay.series?.id)
         .sort((a, b) => (a.series?.part ?? 0) - (b.series?.part ?? 0))
     : [];
@@ -53,6 +60,11 @@ export default function EssayPage() {
   const next = seriesEntries.find((entry) => entry.series?.part === (essay.series?.part ?? 0) + 1);
   const sourceCount = essay.sources?.length ?? 0;
   const primarySourceCount = essay.sources?.filter((source) => source.kind === 'primary').length ?? 0;
+
+  const goToAnchor = (anchor: string) => {
+    window.history.replaceState(null, '', `#${anchor}`);
+    requestAnimationFrame(() => scrollToId(anchor));
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] pt-28 pb-24 text-white">
@@ -72,12 +84,20 @@ export default function EssayPage() {
           <aside className="hidden lg:block">
             <div className="sticky top-28">
               {toc.length > 0 && (
-                <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl">
+                <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl" aria-label="Оглавление статьи">
                   <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70">Оглавление</div>
                   <ul className="space-y-1">
                     {toc.map((section) => (
                       <li key={section.anchor}>
-                        <a href={`#${section.anchor}`} className="flex min-h-9 items-center gap-2.5 rounded-lg py-1.5 text-sm text-luxury-gray-light/70 transition-colors hover:bg-white/[0.03] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60">
+                        <a
+                          href={`#${section.anchor}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            goToAnchor(section.anchor);
+                          }}
+                          className="flex min-h-9 items-center gap-2.5 rounded-lg py-1.5 text-sm text-luxury-gray-light/70 transition-colors hover:bg-white/[0.03] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+                          data-testid="desktop-toc-link"
+                        >
                           <span className="font-serif text-[12px] font-semibold tabular-nums text-luxury-gold/55">{String(section.number).padStart(2, '0')}</span>
                           <span>{section.heading}</span>
                         </a>
@@ -86,10 +106,24 @@ export default function EssayPage() {
                   </ul>
                 </nav>
               )}
+              {essay.cluster && (
+                <div className="mt-4 flex items-start gap-3 rounded-2xl border border-cyan-400/12 bg-[#061018]/55 p-4 text-sm text-cyan-100/65">
+                  <Network size={15} className="mt-0.5 shrink-0 text-cyan-300/55" />
+                  <span>
+                    <span className="block text-[9px] font-bold uppercase tracking-[0.15em] text-cyan-300/40">Тематический кластер</span>
+                    <span className="mt-1 block leading-snug">{essay.cluster.label}</span>
+                  </span>
+                </div>
+              )}
               {sourceCount > 0 && (
                 <a
                   href="#sources"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    goToAnchor('sources');
+                  }}
                   className="mt-4 flex min-h-11 items-center gap-3 rounded-2xl border border-luxury-gold/12 bg-luxury-gold/[0.025] p-4 text-sm text-luxury-gray-light/65 transition hover:-translate-y-0.5 hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+                  data-testid="desktop-sources-link"
                 >
                   <FileText size={15} className="shrink-0 text-luxury-gold/60" />
                   <span>
@@ -145,6 +179,7 @@ export default function EssayPage() {
               </nav>
             )}
 
+            <RelatedClusterEssays essay={essay} />
             {essay.sources && essay.sources.length > 0 && <SourceLibrary sources={essay.sources} />}
           </article>
         </div>

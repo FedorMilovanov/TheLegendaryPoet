@@ -6,12 +6,16 @@ import OfferGrid from '../components/about/OfferGrid';
 import SocialLinks from '../components/about/SocialLinks';
 import YouTubeFeature from '../components/about/YouTubeFeature';
 import { useSeo } from '../hooks/useSeo';
+import { aboutPageStructuredData } from '../utils/collectionStructuredData';
+
+const aboutJsonLd = aboutPageStructuredData();
 
 export default function AboutPage() {
   useSeo({
     title: 'О проекте — THE LEGENDARY POET',
     description: 'THE LEGENDARY POET — независимый редакторский проект о поэзии, истории и культуре с осторожным христианским анализом.',
     path: '/about',
+    jsonLd: aboutJsonLd,
   });
   return (
     <div className="min-h-screen bg-[#050505] pb-20 pt-32">

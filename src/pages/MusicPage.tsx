@@ -7,7 +7,10 @@ import { allMusicTracks, musicTracks } from '../data/poets';
 import { getFeaturedMusicTrack, getMusicCatalogStats, getUpcomingMusicTracks } from '../data/musicCatalog';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
+import { musicCollectionStructuredData } from '../utils/collectionStructuredData';
 import { titleCase } from '../utils/titleCase';
+
+const musicJsonLd = musicCollectionStructuredData(musicTracks);
 
 export default function MusicPage() {
   const featured = getFeaturedMusicTrack(musicTracks);
@@ -20,6 +23,7 @@ export default function MusicPage() {
     description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet: авторские плееры, обложки и отдельные страницы релизов.',
     path: '/music',
     image: featured?.wideCoverUrl ?? featured?.coverUrl,
+    jsonLd: musicJsonLd,
   });
 
   return (

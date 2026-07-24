@@ -33,7 +33,10 @@ interface DialogSurfaceOptions {
   label?: string;
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
+  /** Focus-only override used by callers that do not change routes. */
   restoreFocusRef?: RefObject<boolean | null>;
+  /** Combined focus/scroll policy for route-changing dismissal. */
+  restoreOnCloseRef?: RefObject<boolean | null>;
 }
 
 /**
@@ -50,6 +53,7 @@ export function useDialogSurface({
   closeOnEscape = true,
   restoreFocus = true,
   restoreFocusRef,
+  restoreOnCloseRef,
 }: DialogSurfaceOptions) {
   const handleRef = useRef<OverlayLockHandle | null>(null);
 
@@ -115,10 +119,11 @@ export function useDialogSurface({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', onKeyDown, true);
-      handle.release();
+      const shouldRestore = restoreOnCloseRef?.current ?? true;
+      handle.release({ restoreScroll: shouldRestore });
       if (handleRef.current === handle) handleRef.current = null;
 
-      const shouldRestoreFocus = restoreFocusRef?.current ?? restoreFocus;
+      const shouldRestoreFocus = shouldRestore && (restoreFocusRef?.current ?? restoreFocus);
       if (shouldRestoreFocus && previouslyFocused) {
         window.requestAnimationFrame(() => {
           if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
@@ -127,7 +132,7 @@ export function useDialogSurface({
         });
       }
     };
-  }, [closeOnEscape, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef, restoreOnCloseRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),

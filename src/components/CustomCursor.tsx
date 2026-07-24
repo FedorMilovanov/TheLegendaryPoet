@@ -100,6 +100,7 @@ const CustomCursor = () => {
   return (
     <>
       <motion.div
+        data-testid="custom-cursor-dot"
         aria-hidden="true"
         className="pointer-events-none fixed left-0 top-0 z-[9999] h-4 w-4 rounded-full bg-luxury-gold mix-blend-difference"
         style={{ x: rawX, y: rawY, marginLeft: -8, marginTop: -8 }}
@@ -107,6 +108,7 @@ const CustomCursor = () => {
         transition={{ opacity: { duration: 0.14 }, scale: { type: 'spring', stiffness: 420, damping: 27 } }}
       />
       <motion.div
+        data-testid="custom-cursor-ring"
         aria-hidden="true"
         className="pointer-events-none fixed left-0 top-0 z-[9998] h-12 w-12 rounded-full border border-luxury-gold/30"
         style={{ x: ringX, y: ringY, marginLeft: -24, marginTop: -24 }}

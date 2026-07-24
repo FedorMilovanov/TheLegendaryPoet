@@ -1,0 +1,188 @@
+name: Source acquisition 49 Mayakovsky documentary description RSL
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-49-mayakovsky-description-rsl-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acquire-issue-3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install verification and browser tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl qpdf poppler-utils imagemagick
+          npm install --no-save --ignore-scripts playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Verify catalogue record and probe optional fulltext routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='rsl-description-issue-3'
+          mkdir -p "$root/direct" "$root/front" "$root/final"
+          record='https://search.rsl.ru/ru/record/01006741660'
+          dlib_path='/rsl01006000000/rsl01006741000/rsl01006741660/rsl01006741660.pdf'
+          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/4.1'
+
+          curl --location --compressed --retry 5 --retry-all-errors \
+            --connect-timeout 30 --max-time 300 \
+            --user-agent "$ua" \
+            --dump-header "$root/record-headers.txt" \
+            --output "$root/record.html" \
+            "$record"
+
+          test -s "$root/record.html"
+          grep -q '01006741660' "$root/record.html"
+          grep -q 'Описание документальных материалов' "$root/record.html"
+          printf '%s\n' 'CATALOGUE-RECORD-VERIFIED' > "$root/record-status.txt"
+
+          : > "$root/direct-attempts.tsv"
+          found=''
+          index=0
+          for url in \
+            "https://dlib.rsl.ru$dlib_path" \
+            "http://dlib.rsl.ru$dlib_path" \
+            'https://viewer.rsl.ru/ru/rsl01006741660' \
+            'https://viewer.rsl.ru/rsl01006741660'; do
+            index=$((index + 1))
+            printf -v index2 '%02d' "$index"
+            target="$root/direct/$index2.bin"
+            headers="$root/direct/$index2.headers"
+            code=0
+            curl --location --compressed --retry 3 --retry-all-errors \
+              --connect-timeout 30 --max-time 900 \
+              --user-agent "$ua" \
+              --referer "$record" \
+              --dump-header "$headers" \
+              --output "$target" \
+              "$url" || code=$?
+            bytes=0
+            signature=''
+            [ -f "$target" ] && bytes="$(stat --printf='%s' "$target")"
+            [ -f "$target" ] && signature="$(head -c 8 "$target" | xxd -p -c 32)"
+            printf '%s\t%s\t%s\t%s\t%s\n' "$index2" "$code" "$bytes" "$signature" "$url" >> "$root/direct-attempts.tsv"
+            if [ "$code" -eq 0 ] && [ -s "$target" ] && [ "$(head -c 5 "$target")" = '%PDF-' ]; then
+              cp "$target" "$root/source.pdf"
+              printf '%s\n' "$url" > "$root/acquired-url.txt"
+              found='direct'
+              break
+            fi
+          done
+          printf '%s\n' "$found" > "$root/direct-result.txt"
+
+          viewer_code=0
+          node scripts/source-acquisition/rsl-description-issue3.mjs \
+            > "$root/browser-process.log" 2>&1 || viewer_code=$?
+          printf '%s\n' "$viewer_code" > "$root/browser-process-exit.txt"
+
+          if [ ! -s "$root/source.pdf" ]; then
+            browser_pdf="$(find "$root/downloads" "$root/responses" -type f -size +100k -print0 2>/dev/null | xargs -0 -r file | awk -F: '/PDF document/ {print $1; exit}')"
+            if [ -n "$browser_pdf" ]; then
+              cp "$browser_pdf" "$root/source.pdf"
+              printf '%s\n' 'browser-viewer' > "$root/acquired-url.txt"
+            fi
+          fi
+
+          if [ -s "$root/source.pdf" ]; then
+            stat --printf='%s\n' "$root/source.pdf" > "$root/bytes.txt"
+            sha256sum "$root/source.pdf" | cut -d' ' -f1 > "$root/sha256.txt"
+            printf '%s\n' 'PDF-ACQUIRED' > "$root/classification.txt"
+          else
+            printf '%s\n' 'CATALOGUE-VERIFIED / FULL-SCAN-NOT-ACQUIRED' > "$root/classification.txt"
+          fi
+
+          printf 'record=%s\nclassification=%s\nviewer_process_exit=%s\n' \
+            "$record" "$(cat "$root/classification.txt")" "$viewer_code" \
+            > "$root/acquisition-summary.txt"
+
+      - name: Verify acquired PDF and render witnesses
+        if: hashFiles('rsl-description-issue-3/source.pdf') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='rsl-description-issue-3'
+          qpdf --warning-exit-0 --check "$root/source.pdf" > "$root/qpdf-check.txt" 2>&1
+          pdfinfo "$root/source.pdf" > "$root/pdfinfo.txt"
+          pdftotext -layout "$root/source.pdf" "$root/full-text.txt" || true
+          touch "$root/full-text.txt"
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$root/pdfinfo.txt")"
+          test "$pages" -gt 250
+          front_end=18
+          [ "$pages" -lt "$front_end" ] && front_end="$pages"
+          pdftoppm -f 1 -l "$front_end" -jpeg -scale-to 1600 "$root/source.pdf" "$root/front/page" >/dev/null 2>&1
+          final_start=$((pages - 9))
+          [ "$final_start" -lt 1 ] && final_start=1
+          pdftoppm -f "$final_start" -l "$pages" -jpeg -scale-to 1500 "$root/source.pdf" "$root/final/page" >/dev/null 2>&1
+          printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$root/full-text.txt")" > "$root/verification-summary.txt"
+
+      - name: Validate evidence classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='rsl-description-issue-3'
+          test -s "$root/record.html"
+          test -s "$root/record-status.txt"
+          test -s "$root/classification.txt"
+          grep -Eq '^(PDF-ACQUIRED|CATALOGUE-VERIFIED / FULL-SCAN-NOT-ACQUIRED)$' "$root/classification.txt"
+          if grep -q '^PDF-ACQUIRED$' "$root/classification.txt"; then
+            test -s "$root/source.pdf"
+            test -s "$root/sha256.txt"
+          fi
+
+      - name: Upload RSL verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-description-rsl-verification
+          path: |
+            rsl-description-issue-3/record-headers.txt
+            rsl-description-issue-3/record.html
+            rsl-description-issue-3/record-status.txt
+            rsl-description-issue-3/direct-attempts.tsv
+            rsl-description-issue-3/direct-result.txt
+            rsl-description-issue-3/acquired-url.txt
+            rsl-description-issue-3/classification.txt
+            rsl-description-issue-3/classification.json
+            rsl-description-issue-3/acquisition-summary.txt
+            rsl-description-issue-3/browser-process.log
+            rsl-description-issue-3/browser-process-exit.txt
+            rsl-description-issue-3/probe-started.txt
+            rsl-description-issue-3/probe-summary.json
+            rsl-description-issue-3/network.json
+            rsl-description-issue-3/events.json
+            rsl-description-issue-3/saved-bodies.json
+            rsl-description-issue-3/record.json
+            rsl-description-issue-3/record.png
+            rsl-description-issue-3/viewer.json
+            rsl-description-issue-3/viewer.png
+            rsl-description-issue-3/fatal-error.txt
+            rsl-description-issue-3/bytes.txt
+            rsl-description-issue-3/sha256.txt
+            rsl-description-issue-3/qpdf-check.txt
+            rsl-description-issue-3/pdfinfo.txt
+            rsl-description-issue-3/full-text.txt
+            rsl-description-issue-3/verification-summary.txt
+            rsl-description-issue-3/front/*.jpg
+            rsl-description-issue-3/final/*.jpg
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload raw RSL PDF
+        if: hashFiles('rsl-description-issue-3/source.pdf') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-mayakovsky-description-rsl-raw
+          path: rsl-description-issue-3/source.pdf
+          retention-days: 7
+          compression-level: 0

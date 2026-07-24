@@ -1,8 +1,11 @@
 import { Link } from '../components/ui/Link';
 import { motion } from 'framer-motion';
 import { useSeo } from '../hooks/useSeo';
+import { hallPageStructuredData } from '../utils/collectionStructuredData';
 import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
+
+const hallJsonLd = hallPageStructuredData();
 
 /**
  * Hall of Poets — placeholder while the immersive version is rebuilt.
@@ -18,6 +21,7 @@ export default function HallPage() {
     title: 'Зал Поэтов — в разработке — THE LEGENDARY POET',
     description: 'Иммерсивный «Храм Русской Поэзии» сейчас в разработке. Скоро здесь можно будет пройтись по залам поэтов разных эпох.',
     path: '/hall',
+    jsonLd: hallJsonLd,
   });
 
   return (
@@ -60,13 +64,13 @@ export default function HallPage() {
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
             to="/poets"
-            className="inline-flex items-center gap-2 rounded-full bg-luxury-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-[#050505] transition-all hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-luxury-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-[#050505] transition-all hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold-light"
           >
             Перейти к поэтам
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-luxury-gold/40 px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-luxury-gold transition-all hover:border-luxury-gold/70 hover:bg-luxury-gold/5"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/40 px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-luxury-gold transition-all hover:border-luxury-gold/70 hover:bg-luxury-gold/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold-light"
           >
             На главную
           </Link>

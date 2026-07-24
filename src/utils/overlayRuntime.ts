@@ -1,4 +1,4 @@
-import { pauseSmoothScroll } from './smoothScroll';
+import { pauseSmoothScroll, restoreSmoothScrollPosition } from './smoothScroll';
 
 type StyleSnapshot = {
   scrollX: number;
@@ -35,8 +35,12 @@ type OverlayDebugState = {
   lastEscapeLabel: string | null;
 };
 
+export interface OverlayReleaseOptions {
+  restoreScroll?: boolean;
+}
+
 export interface OverlayLockHandle {
-  release: () => void;
+  release: (options?: OverlayReleaseOptions) => void;
   isTopmost: () => boolean;
   setRoot: (root: HTMLElement | null) => void;
   setEscapeHandler: (handler: (() => void) | null) => void;
@@ -44,7 +48,8 @@ export interface OverlayLockHandle {
 
 const overlayStack: OverlayEntry[] = [];
 let styleSnapshot: StyleSnapshot | null = null;
-let resumeSmoothScroll: (() => void) | null = null;
+let releaseSmoothScroll: (() => void) | null = null;
+let restoreScrollOnUnlock = true;
 let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
 
@@ -147,7 +152,8 @@ function lockDocument() {
     },
   };
 
-  resumeSmoothScroll = pauseSmoothScroll('modal-surface');
+  restoreScrollOnUnlock = true;
+  releaseSmoothScroll = pauseSmoothScroll('modal-surface');
   html.classList.add('overlay-open');
   body.classList.add('overlay-open');
   html.style.overflow = 'hidden';
@@ -168,6 +174,7 @@ function unlockDocument() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   const snapshot = styleSnapshot;
+  const shouldRestoreScroll = restoreScrollOnUnlock;
   const body = document.body;
   const html = document.documentElement;
 
@@ -183,16 +190,31 @@ function unlockDocument() {
     body.style.overscrollBehavior = snapshot.body.overscrollBehavior;
     html.style.overflow = snapshot.html.overflow;
     html.style.overscrollBehavior = snapshot.html.overscrollBehavior;
-    window.scrollTo(snapshot.scrollX, snapshot.scrollY);
+    if (shouldRestoreScroll) window.scrollTo(snapshot.scrollX, snapshot.scrollY);
   }
 
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
-  resumeSmoothScroll?.();
-  resumeSmoothScroll = null;
-  setLegacyModalFlag(false);
+  const release = releaseSmoothScroll;
+  releaseSmoothScroll = null;
+  release?.();
+
+  // A legacy essay lightbox can remain beneath a shared overlay. Preserve its
+  // body lock and legacy integration flag when the upper surface closes.
+  const legacyLockStillOpen =
+    body.style.overflow === 'hidden' ||
+    html.style.overflow === 'hidden' ||
+    body.style.position === 'fixed';
+  setLegacyModalFlag(legacyLockStillOpen);
   publishOverlayDebug();
+
+  // Fixed-body styles and Lenis limits settle on the following frame. Skip this
+  // write for route-changing dismissals so the destination owns its position.
+  if (snapshot && shouldRestoreScroll && typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => restoreSmoothScrollPosition(snapshot.scrollX, snapshot.scrollY));
+  }
+  restoreScrollOnUnlock = true;
 }
 
 /**
@@ -228,9 +250,10 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
     setEscapeHandler: (handler) => {
       if (!released) entry.onEscape = handler;
     },
-    release: () => {
+    release: (options) => {
       if (released) return;
       released = true;
+      if (options?.restoreScroll === false) restoreScrollOnUnlock = false;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
       publishOverlayDebug();

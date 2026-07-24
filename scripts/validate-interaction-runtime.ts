@@ -92,6 +92,23 @@ expect((documentListeners.get('keydown')?.size ?? 0) === 0, 'the shared Escape l
 second.release();
 expect(scrollCalls.length === 1, 'overlay release must be idempotent');
 
+// A legacy essay lightbox may already own body overflow and a Lenis token when
+// command search opens above it. Closing the shared overlay must preserve that
+// underlying lock instead of advertising that every modal is gone.
+bodyStyle.overflow = 'hidden';
+(fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = true;
+const aboveLegacy = overlay.acquireOverlayLock('above-legacy-lightbox', connectedRoot());
+aboveLegacy.release();
+expect(bodyStyle.overflow === 'hidden', 'an upper overlay must restore the underlying legacy body lock');
+expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'legacy modal flag must survive while the underlying lightbox remains open');
+bodyStyle.overflow = 'visible';
+(fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN = false;
+
+const beforeNavigationRelease = scrollCalls.length;
+const navigating = overlay.acquireOverlayLock('navigating-dialog', connectedRoot());
+navigating.release({ restoreScroll: false });
+expect(scrollCalls.length === beforeNavigationRelease, 'navigation dismissal must not restore the previous route scroll position');
+
 const lowerControl = {} as HTMLElement;
 const upperControl = {} as HTMLElement;
 const replacementControl = {} as HTMLElement;
@@ -108,7 +125,7 @@ expect(!overlay.canRestoreOverlayFocus(upperControl), 'a detached previous dialo
 upper.release();
 expect(overlay.canRestoreOverlayFocus(lowerControl), 'closing the top dialog must return focus ownership to the lower dialog');
 lower.release();
-expect(scrollCalls.length === 2, 'each complete overlay session must restore scroll exactly once');
+expect(scrollCalls.length === 3, 'each restoring overlay session must restore scroll exactly once');
 
 const survivingControl = {} as HTMLElement;
 const survivingRoot = {
@@ -126,7 +143,7 @@ expect(!detached.isTopmost(), 'a disconnected overlay entry must not remain topm
 expect(overlay.canRestoreOverlayFocus(survivingControl), 'focus restoration must ignore a disconnected upper portal');
 detached.release();
 surviving.release();
-expect(scrollCalls.length === 3, 'pruning a stale upper portal must still unlock the document exactly once');
+expect(scrollCalls.length === 4, 'pruning a stale upper portal must still unlock the document exactly once');
 
 const escapeOrder: string[] = [];
 const escapeLower = overlay.acquireOverlayLock('escape-lower', connectedRoot());
@@ -146,7 +163,7 @@ expect(escapeLower.isTopmost(), 'after closing the upper overlay the lower overl
 dispatchEscape();
 expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close the revealed lower overlay');
 expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
-expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
+expect(scrollCalls.length === 5, 'a complete centrally-routed overlay session must restore scroll once');
 
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
@@ -159,10 +176,13 @@ const poetCardSource = read('src/components/PoetCard.tsx');
 const essayCoverSource = read('src/components/essay/EssayCover.tsx');
 const tiltSource = read('src/components/TiltCard.tsx');
 const smoothSource = read('src/utils/smoothScroll.ts');
+const articlesSource = read('src/pages/ArticlesPage.tsx');
 
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
 expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
+expect(overlaySource.includes('legacyLockStillOpen'), 'shared overlays must preserve an underlying legacy lightbox lock');
+expect(overlaySource.includes('restoreScrollOnUnlock'), 'route-changing dismissals must be able to suppress obsolete scroll restoration');
 expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must guard focus restoration ownership');
 expect(overlaySource.includes('pruneDetachedOverlays'), 'keyboard ownership must recover from detached portal entries');
 expect(overlaySource.includes('onOverlayKeyDown'), 'Escape must be dispatched by one shared stack listener');
@@ -173,7 +193,7 @@ expect(dialogSource.includes('handle.setEscapeHandler'), 'dialogs must delegate 
 expect(dialogSource.includes('handleRef.current?.setRoot(dialogRef.current)'), 'keyed dialog replacements must refresh the overlay root');
 expect(dialogSource.includes('canRestoreOverlayFocus(previouslyFocused)'), 'dialog close must not restore focus beneath another surface');
 expect(dialogSource.includes('restoreFocusRef?.current ?? restoreFocus'), 'navigation-triggered dialog closes must be able to preserve route focus');
-expect(commandSource.includes('restoreFocusRef.current = false'), 'command navigation must not refocus the old trigger over the new page');
+expect(commandSource.includes('restoreOnCloseRef.current = false'), 'command navigation must suppress focus and scroll restoration into the destination route');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
 expect(commandSource.includes('onPointerDown'), 'the command backdrop must support pointer and touch input');
@@ -186,12 +206,18 @@ expect(imageSource.includes('fallbackSrc'), 'resilient images must support a det
 expect(imageSource.includes("fetchPriority={priority ? 'high'"), 'priority imagery must advertise high fetch priority');
 expect(imageSource.includes('data-image-state'), 'image load state must remain inspectable for UI and QA');
 expect(imageSource.includes('setSourceIndex(0)'), 'changing an image source must reset the candidate chain');
+expect(imageSource.includes('source.startsWith(`${base}/`)'), 'already base-resolved assets must not be prefixed twice');
 expect(poetImageSource.includes('ResilientImage'), 'poet placeholders must use the shared image primitive');
 expect(poetCardSource.includes('<PoetImage'), 'catalog portraits must no longer use an unguarded img element');
+expect(poetCardSource.includes('researchLabel'), 'poet cards must retain research-count context');
 expect(essayCoverSource.includes('ImageLoadState'), 'essay covers must expose loading and terminal fallback states');
+expect(essayCoverSource.includes('resolveEssayMedia'), 'essay covers must retain generated AVIF/WebP source resolution');
+expect(articlesSource.includes('articlesCollectionStructuredData'), 'the article index must retain CollectionPage JSON-LD');
+expect(articlesSource.includes('groupEssays'), 'the article index must retain research cluster navigation');
 expect(tiltSource.includes('IntersectionObserver'), 'offscreen tilt cards must stop pointer painting');
 expect(tiltSource.includes('forced-colors: active'), 'tilt effects must preserve forced-color accessibility');
 expect(tiltSource.includes("event.pointerType !== 'mouse'"), 'tilt effects must reject touch pointer movement');
+expect(tiltSource.includes('flattenForActivation'), 'tilt cards must flatten before navigation snapshots');
 expect(!tiltSource.includes('will-change-transform'), 'large card grids must not permanently promote every tilt card');
 expect(smoothSource.includes('pauseTokens'), 'smooth scrolling must remain reference-counted across stacked overlays');
 
@@ -201,4 +227,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Interaction runtime validation passed: centralized Escape, route focus, rating draft safety, resilient images and bounded pointer effects.');
+console.log('Interaction runtime validation passed: centralized Escape, exact route scroll/focus policy, rating draft safety, resilient research media and bounded pointer effects.');

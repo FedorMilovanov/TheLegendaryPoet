@@ -1,5 +1,6 @@
 import type { EssayBlock, EssaySource } from '../../types/essay';
 import { EssayBlockView } from './blocks';
+import StableEssayImage from './StableEssayImage';
 import { sectionAnchor } from './anchor';
 import { titleCase } from '../../utils/titleCase';
 import Reveal from '../Reveal';
@@ -44,11 +45,16 @@ export function getEssayToc(blocks: EssayBlock[]): TocEntry[] {
 }
 
 function buildSourceReferences(sources: EssaySource[]): EssaySourceReferenceMap {
-  return Object.fromEntries(
-    sources.flatMap((source, index) =>
-      source.id ? [[source.id, { number: index + 1, source }] as const] : [],
-    ),
-  );
+  const references: EssaySourceReferenceMap = {};
+
+  sources.forEach((source, index) => {
+    const reference = { number: index + 1, source };
+    for (const id of [source.id, ...(source.aliases ?? [])]) {
+      if (id) references[id] = reference;
+    }
+  });
+
+  return references;
 }
 
 function blockLayout(block: EssayBlock): { className: string; direction: 'up' | 'left' | 'right' } {
@@ -101,6 +107,28 @@ export default function ArticleRenderer({
           <InlineCitations sourceIds={sourceIds} references={references} />
         ) : undefined;
         const layout = blockLayout(block);
+        const blockView =
+          block.type === 'image' ? (
+            <StableEssayImage block={block} />
+          ) : (
+            <EssayBlockView
+              block={block}
+              sectionNumber={sectionNumber}
+              citations={citations}
+            />
+          );
+        const className = `${layout.className} essay-block-shell essay-block-${block.type}`;
+
+        // Fixed overlays must not be nested under a transformed Reveal node.
+        // StableEssayImage owns both the pointer tilt and a body-level portal,
+        // while its shell remains a normal document-flow element.
+        if (block.type === 'image') {
+          return (
+            <div key={`${block.type}-${i}`} className={className}>
+              {blockView}
+            </div>
+          );
+        }
 
         return (
           <Reveal
@@ -108,13 +136,13 @@ export default function ArticleRenderer({
             direction={layout.direction}
             distance={18}
             once
-            className={`${layout.className} will-change-transform`}
+            // Dozens of blur-filter animations on a long article force large
+            // offscreen textures while the reader scrolls. Opacity + translation
+            // keeps the same quiet reveal without competing with images or Tilt.
+            blur={false}
+            className={className}
           >
-            <EssayBlockView
-              block={block}
-              sectionNumber={sectionNumber}
-              citations={citations}
-            />
+            {blockView}
           </Reveal>
         );
       })}

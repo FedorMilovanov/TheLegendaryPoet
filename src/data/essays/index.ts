@@ -1,95 +1,34 @@
-import type { Essay, EssaySource } from '../../types/essay';
-import { yeseninKutezhiVisual } from './yeseninVisual';
-import { yeseninArchiveSources } from './yeseninArchiveSources';
-import { mayakovskyPartOne } from './mayakovskyPartOne';
-import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
-import { brikCaseVisual } from './brikCaseVisual';
-import {
-  brikDocumentSources,
-  mayakovskyEarlySources,
-  mayakovskyLateSources,
-} from './mayakovskySources';
-import {
-  brikSupplementalSources,
-  mayakovskyEarlySupplementalSources,
-} from './mayakovskySupplementalSources';
-import {
-  attachEssayCitations,
-  brikCitationRules,
-  mayakovskyPartOneCitationRules,
-  mayakovskyPartTwoCitationRules,
-} from './essayCitations';
-import {
-  brikEssayPlacements,
-  mayakovskyPartOnePlacements,
-  mayakovskyPartTwoPlacements,
-  placeEssayImages,
-} from './essayVisualLayout';
+import type { Essay } from '../../types/essay';
+import { essays as essayContent } from './indexContent';
 
-function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
-  const seen = new Set<string>();
-  return sources.filter((source) => {
-    const key = source.url
-      ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
-      : `${source.id ?? ''}:${source.title}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
+/**
+ * Canonical essay registry with evidence-backed metadata overlays.
+ *
+ * `indexContent.ts` retains the source/citation/series assembly. This wrapper
+ * applies archival corrections by stable essay identity, keeping provenance
+ * changes separate from the large registry implementation.
+ */
+export const essays: Essay[] = essayContent.map((essay) => {
+  if (essay.id === 'essay-mayakovsky-before-revolution') {
+    return {
+      ...essay,
+      coverAlt: 'Футурист Владимир Маяковский в цилиндре. Казань, 1914 год',
+      coverCredit: 'Неизвестный фотограф · Государственный музей В. В. Маяковского',
+      coverSourceUrl: 'https://russiainphoto.ru/photos/248776/',
+    };
+  }
 
-const yeseninWithArchiveLayer: Essay = {
-  ...yeseninKutezhiVisual,
-  sources: uniqueSources([
-    ...(yeseninKutezhiVisual.sources ?? []),
-    ...yeseninArchiveSources,
-  ]),
-};
+  if (essay.id === 'essay-mayakovsky-gromovoy') {
+    return {
+      ...essay,
+      coverAlt: 'Портрет Владимира Маяковского. Фотография Осипа Брика, 1928 год',
+      coverCredit: 'Осип Брик · Российская государственная библиотека',
+      coverSourceUrl: 'https://dlib.rsl.ru/viewer/01005408111#?page=5',
+    };
+  }
 
-const mayakovskyPartOneWithLocalCover: Essay = {
-  ...mayakovskyPartOne,
-  cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
-  cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
-  coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
-  coverKind: 'reconstruction',
-  coverCredit: 'THE LEGENDARY POET',
-  blocks: placeEssayImages(
-    attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
-    mayakovskyPartOnePlacements,
-  ),
-  sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
-};
-
-const mayakovskyPartTwoWithLocalCover: Essay = {
-  ...mayakovskyPartTwo,
-  cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-  cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-  coverAlt: 'Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года',
-  coverKind: 'restoration',
-  coverCredit: 'Осип Брик · реставрация проекта',
-  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
-  blocks: placeEssayImages(
-    attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
-    mayakovskyPartTwoPlacements,
-  ),
-  sources: mayakovskyLateSources,
-};
-
-const brikCaseWithSourceLibrary: Essay = {
-  ...brikCaseVisual,
-  blocks: placeEssayImages(
-    attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
-    brikEssayPlacements,
-  ),
-  sources: [...brikDocumentSources, ...brikSupplementalSources],
-};
-
-export const essays: Essay[] = [
-  yeseninWithArchiveLayer,
-  mayakovskyPartOneWithLocalCover,
-  mayakovskyPartTwoWithLocalCover,
-  brikCaseWithSourceLibrary,
-];
+  return essay;
+});
 
 export function getAllEssays(): Essay[] {
   return essays;

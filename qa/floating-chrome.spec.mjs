@@ -32,13 +32,23 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
 
   await page.getByRole('link', { name: 'Рейтинг' }).click();
   await expect(page).toHaveURL(/\/ratings$/);
-  await page.evaluate(() => window.scrollTo(0, 780));
-  await page.waitForTimeout(350);
-  // Auto-hide is a separate behavior and can be mid-transition depending on the
-  // scroll scheduler. Force the documented visible state so this test measures
-  // the collision contract, not a temporarily translated, pointer-inert pill.
-  await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
-  await page.waitForTimeout(650);
+  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  // The persistent shell restores route scroll after navigation. Wait for that
+  // lifecycle to settle, then use a real wheel gesture and prove the threshold
+  // was crossed before asserting that ScrollToTop has mounted.
+  await page.waitForTimeout(750);
+  await page.mouse.wheel(0, 900);
+  await expect.poll(
+    () => page.evaluate(() => window.scrollY),
+    { timeout: 5_000, message: 'ratings page should cross the scroll-top threshold' },
+  ).toBeGreaterThan(400);
+  // Drive the real direction-sensitive auto-hide contract. Mutating the class
+  // directly races the hook and can leave the pill translated/pointer-inert.
+  await page.mouse.wheel(0, -140);
+  await expect.poll(
+    () => page.evaluate(() => !document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'site chrome should return after an upward wheel gesture' },
+  ).toBe(true);
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
@@ -46,6 +56,17 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await expect(player).toBeVisible();
   await expect(palette).toBeVisible();
   await expect(scrollTop).toBeVisible();
+  // Framer Motion can take longer than a fixed timeout to finish the spring on
+  // a busy runner. Measure the collision contract only after the pill is fully
+  // interactive in its settled frame.
+  await expect.poll(
+    () => palette.evaluate((element) => Number(getComputedStyle(element).opacity)),
+    { timeout: 5_000, message: 'command palette pill should finish entering' },
+  ).toBeGreaterThan(0.9);
+  await expect.poll(
+    () => palette.evaluate((element) => getComputedStyle(element).pointerEvents),
+    { timeout: 5_000, message: 'command palette pill should be interactive' },
+  ).not.toBe('none');
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {

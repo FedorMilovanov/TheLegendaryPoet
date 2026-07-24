@@ -1,18 +1,22 @@
 import { ArrowRight } from 'lucide-react';
-import { CommandItem } from './commandItems';
+import type { CommandItem } from './commandItems';
 
 interface CommandResultProps {
   item: CommandItem;
   active: boolean;
   onSelect: () => void;
+  optionId?: string;
 }
 
-export default function CommandResult({ item, active, onSelect }: CommandResultProps) {
+export default function CommandResult({ item, active, onSelect, optionId }: CommandResultProps) {
   return (
     <button
+      id={optionId}
       type="button"
+      role="option"
+      aria-selected={active}
       onClick={onSelect}
-      className={`w-full rounded-2xl border p-4 text-left transition ${
+      className={`w-full rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
         active
           ? 'border-cyan-300/45 bg-cyan-400/10 shadow-[0_0_22px_rgba(0,212,255,0.14)]'
           : 'border-cyan-400/10 bg-black/20 hover:border-cyan-400/25'

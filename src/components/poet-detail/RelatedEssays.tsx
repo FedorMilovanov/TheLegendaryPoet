@@ -1,14 +1,28 @@
-import { ArrowUpRight, Clock, Layers3 } from 'lucide-react';
+import { ArrowUpRight, Clock, Layers3, Network } from 'lucide-react';
 import { Link } from '../ui/Link';
 import TiltCard from '../TiltCard';
 import EssayCover from '../essay/EssayCover';
 import { getAllEssays } from '../../data/essays';
+import type { EssayClusterRole } from '../../types/essay';
 import { titleCase } from '../../utils/titleCase';
+
+const roleLabels: Record<EssayClusterRole, string> = {
+  pillar: 'Опорный материал',
+  biography: 'Большая биография',
+  investigation: 'Документальное расследование',
+  work: 'История произведения',
+  archive: 'Архив и источники',
+  context: 'Исторический контекст',
+};
 
 export default function RelatedEssays({ poetId }: { poetId: string }) {
   const related = getAllEssays()
     .filter((essay) => essay.poetId === poetId)
     .sort((a, b) => {
+      if (a.cluster?.id && a.cluster.id === b.cluster?.id) {
+        const clusterOrder = (a.cluster.order ?? 999) - (b.cluster.order ?? 999);
+        if (clusterOrder !== 0) return clusterOrder;
+      }
       if (a.series?.id && a.series.id === b.series?.id) {
         return (a.series.part ?? 0) - (b.series.part ?? 0);
       }
@@ -16,13 +30,19 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
     });
 
   if (related.length === 0) return null;
+  const clusterLabel = related.find((essay) => essay.cluster)?.cluster?.label;
 
   return (
     <section aria-labelledby="poet-longreads-title" className="space-y-7">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-luxury-gold/10 pb-4">
         <div>
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/60">
-            Большие материалы
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/60">
+            <span>Большие материалы · {related.length}</span>
+            {clusterLabel && (
+              <span className="inline-flex items-center gap-1.5 text-cyan-300/45">
+                <Network size={11} /> {clusterLabel}
+              </span>
+            )}
           </div>
           <h2 id="poet-longreads-title" className="font-serif text-3xl font-bold text-white md:text-4xl">
             {titleCase('Биография и исследования')}
@@ -47,16 +67,21 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
                 src={essay.cardCover || essay.cover}
                 alt={essay.coverAlt || essay.title}
                 accent={essay.accent}
-                kicker={essay.series ? `Часть ${essay.series.part} из ${essay.series.total}` : essay.kicker}
+                kicker={essay.series
+                  ? `Часть ${essay.series.part} из ${essay.series.total}`
+                  : essay.cluster
+                    ? roleLabels[essay.cluster.role]
+                    : essay.kicker}
                 focusY="24%"
                 className="aspect-[16/10] w-full"
                 imgClassName="transition duration-700 ease-out group-hover:scale-[1.025] group-hover:contrast-[1.04]"
                 sharedName={`essay-cover-${essay.id}`}
               />
               <div className="p-6">
-                {essay.series && (
+                {(essay.series || essay.cluster) && (
                   <div className="mb-3 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-luxury-gold/55">
-                    <Layers3 size={11} /> {essay.series.label}
+                    {essay.series ? <Layers3 size={11} /> : <Network size={11} />}
+                    {essay.series?.label ?? essay.cluster?.label}
                   </div>
                 )}
                 <h3 className="font-serif text-2xl font-bold leading-tight text-white/92 transition group-hover:text-luxury-gold">

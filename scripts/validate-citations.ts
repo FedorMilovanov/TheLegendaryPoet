@@ -1,25 +1,57 @@
 import { essays } from '../src/data/essays/index';
+import { stableCitationRuleSets } from '../src/data/essays/essayCitations';
 
 const errors: string[] = [];
 const warnings: string[] = [];
 
 const minimumCitedBlocks: Record<string, number> = {
-  'mayakovsky-before-revolution': 8,
-  'mayakovsky-gromovoy': 8,
-  'brik-case': 8,
+  'mayakovsky-before-revolution': 10,
+  'mayakovsky-gromovoy': 10,
+  'brik-case': 9,
 };
 
 for (const essay of essays) {
-  const sourceMap = new Map(
-    (essay.sources ?? [])
-      .filter((source): source is typeof source & { id: string } => Boolean(source.id))
-      .map((source) => [source.id, source]),
-  );
+  const sourceMap = new Map<string, NonNullable<typeof essay.sources>[number]>();
+
+  for (const [index, source] of (essay.sources ?? []).entries()) {
+    const ids = [source.id, ...(source.aliases ?? [])].filter(
+      (id): id is string => Boolean(id),
+    );
+    const localIds = new Set<string>();
+
+    for (const id of ids) {
+      if (!/^[a-z0-9-]+$/.test(id)) {
+        errors.push(`${essay.slug}: source ${index + 1} has invalid id or alias ${id}`);
+      }
+      if (localIds.has(id)) {
+        errors.push(`${essay.slug}: source ${index + 1} repeats id or alias ${id}`);
+      }
+      localIds.add(id);
+      if (sourceMap.has(id)) {
+        errors.push(`${essay.slug}: duplicate bibliography id or alias ${id}`);
+      } else {
+        sourceMap.set(id, source);
+      }
+    }
+  }
 
   let citedBlocks = 0;
   let citationCount = 0;
+  const blockIdMap = new Map<string, number>();
 
   for (const [index, block] of essay.blocks.entries()) {
+    if (block.id) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(block.id)) {
+        errors.push(`${essay.slug}: block ${index + 1} has invalid stable id ${block.id}`);
+      }
+      const previousIndex = blockIdMap.get(block.id);
+      if (previousIndex != null) {
+        errors.push(`${essay.slug}: blocks ${previousIndex + 1} and ${index + 1} repeat stable id ${block.id}`);
+      } else {
+        blockIdMap.set(block.id, index);
+      }
+    }
+
     if (!('sourceIds' in block) || !block.sourceIds?.length) continue;
     citedBlocks += 1;
 
@@ -39,6 +71,31 @@ for (const essay of essays) {
       if (!source.url) {
         warnings.push(`${essay.slug}: cited source ${sourceId} has no URL`);
       }
+    }
+  }
+
+  const ruleSet = stableCitationRuleSets[essay.slug as keyof typeof stableCitationRuleSets];
+  if (ruleSet) {
+    for (const rule of ruleSet) {
+      const blockIndex = blockIdMap.get(rule.blockId);
+      if (blockIndex == null) {
+        errors.push(`${essay.slug}: stable citation rule ${rule.blockId} is orphaned`);
+        continue;
+      }
+      const block = essay.blocks[blockIndex];
+      if (!('sourceIds' in block) || !block.sourceIds) {
+        errors.push(`${essay.slug}: stable block ${rule.blockId} has no inline citations`);
+        continue;
+      }
+      const actual = [...block.sourceIds].sort().join('|');
+      const expected = [...rule.sourceIds].sort().join('|');
+      if (actual !== expected) {
+        errors.push(`${essay.slug}: stable block ${rule.blockId} citation map drifted`);
+      }
+    }
+
+    if (blockIdMap.size < ruleSet.length) {
+      errors.push(`${essay.slug}: expected at least ${ruleSet.length} stable citation block ids; found ${blockIdMap.size}`);
     }
   }
 

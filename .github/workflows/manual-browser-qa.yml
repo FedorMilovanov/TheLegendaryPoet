@@ -2,7 +2,7 @@ name: Manual Browser QA
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, work/local-images-playwright-wtoc]
   workflow_dispatch:
 
 concurrency:
@@ -30,8 +30,6 @@ jobs:
       - name: Install project dependencies
         run: npm ci
 
-      # Keep the browser engines isolated from the app lockfile: this workflow
-      # validates the production build without changing application dependencies.
       - name: Install isolated Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
@@ -65,7 +63,7 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
-          --config=playwright.config.mjs
+          --config=playwright.manual.config.mjs
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
           --reporter=line,html

@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Archive,
   BookOpenText,
+  Building2,
   ChevronDown,
   ExternalLink,
   LibraryBig,
@@ -10,6 +11,7 @@ import {
   Network,
 } from 'lucide-react';
 import type { EssaySource, EssaySourceKind } from '../../types/essay';
+import { scrollToId } from '../../utils/smoothScroll';
 
 const sourceKinds: Record<
   EssaySourceKind,
@@ -18,10 +20,12 @@ const sourceKinds: Record<
   primary: { label: 'Первоисточники', shortLabel: 'Первичные', icon: BookOpenText },
   archive: { label: 'Архивы и каталоги', shortLabel: 'Архивы', icon: Archive },
   research: { label: 'Исследования', shortLabel: 'Исследования', icon: Microscope },
+  institutional: { label: 'Институциональные нарративы', shortLabel: 'Музеи', icon: Building2 },
   context: { label: 'Контекст', shortLabel: 'Контекст', icon: Network },
 };
 
-type Filter = 'all' | EssaySourceKind;
+const filterOrder = ['all', 'primary', 'archive', 'research', 'institutional', 'context'] as const;
+type Filter = (typeof filterOrder)[number];
 
 function sourceKind(source: EssaySource): EssaySourceKind {
   return source.kind ?? 'research';
@@ -42,6 +46,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       primary: 0,
       archive: 0,
       research: 0,
+      institutional: 0,
       context: 0,
     };
     for (const source of sources) result[sourceKind(source)] += 1;
@@ -66,6 +71,9 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
   };
 
   useEffect(() => {
+    let firstFrame = 0;
+    let secondFrame = 0;
+
     const revealLinkedSource = () => {
       const match = window.location.hash.match(/^#source-(.+)$/);
       if (!match) return;
@@ -74,24 +82,28 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
 
       setFilter('all');
       setExpanded(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById(`source-${sourceId}`)?.scrollIntoView({
-            behavior: reduceMotion ? 'auto' : 'smooth',
-            block: 'center',
-          });
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(() => {
+          scrollToId(`source-${sourceId}`);
         });
       });
     };
 
     revealLinkedSource();
     window.addEventListener('hashchange', revealLinkedSource);
-    return () => window.removeEventListener('hashchange', revealLinkedSource);
-  }, [reduceMotion, sources]);
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      window.removeEventListener('hashchange', revealLinkedSource);
+    };
+  }, [sources]);
 
   return (
     <section
       id="sources"
+      data-testid="source-library"
       className="scroll-mt-28 mt-16 overflow-hidden rounded-[2.25rem] border border-luxury-gold/12 bg-[linear-gradient(145deg,rgba(15,14,11,0.94),rgba(7,7,7,0.96))] p-5 sm:p-7 md:p-9"
     >
       <div className="flex flex-col gap-5 border-b border-white/[0.06] pb-6 sm:flex-row sm:items-end sm:justify-between">
@@ -101,7 +113,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
           </div>
           <h2 className="font-serif text-3xl text-white">Документы, тексты и исследования</h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-luxury-gray-light/55">
-            Сначала показаны первичные тексты и архивы; интерпретации отделены от документов.
+            Первоисточники и архивы отделены от исследований и музейных биографических нарративов.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.14em] text-luxury-gray-light/55">
@@ -115,7 +127,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       </div>
 
       <div className="mt-6 flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {(['all', 'primary', 'archive', 'research', 'context'] as Filter[]).map((item) => {
+        {filterOrder.map((item) => {
           const active = filter === item;
           const label = item === 'all' ? 'Все' : sourceKinds[item].shortLabel;
           const count = item === 'all' ? sources.length : counts[item];
@@ -126,6 +138,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
               onClick={() => changeFilter(item)}
               className="relative isolate inline-flex min-h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border border-white/8 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-luxury-gray-light/55 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
               aria-pressed={active}
+              data-testid={`source-filter-${item}`}
             >
               {active && (
                 <motion.span
@@ -185,6 +198,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+                data-testid="source-item"
                 className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-luxury-gold/65 target:ring-offset-4 target:ring-offset-[#090806]"
               >
                 {source.url ? (
@@ -216,6 +230,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
             transition={{ type: 'spring', stiffness: 420, damping: 24 }}
             className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-5 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/70 transition hover:border-luxury-gold/30 hover:bg-luxury-gold/[0.07] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
             aria-expanded={expanded}
+            data-testid="source-expand"
           >
             {expanded ? 'Свернуть список' : `Показать ещё ${hiddenCount}`}
             <ChevronDown

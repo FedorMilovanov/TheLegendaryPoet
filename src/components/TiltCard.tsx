@@ -1,56 +1,110 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 
 interface TiltCardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   intensity?: number;
   /** Subtle moving highlight; disabled automatically for reduced motion and touch pointers. */
   sheen?: boolean;
 }
 
+/**
+ * Pointer-driven tilt with a stable, non-transforming hit surface. Geometry is
+ * cached per hover, writes are RAF-batched and lerped, offscreen cards stop
+ * painting, and the visual plane is flattened before navigation snapshots.
+ */
 export default function TiltCard({
   children,
   className = '',
-  intensity = 12,
+  intensity = 6,
   sheen = true,
 }: TiltCardProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const hitRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
-  const settleTimerRef = useRef<number | null>(null);
-  const pointerRef = useRef({ x: 0.5, y: 0.5 });
-  const enabledRef = useRef(false);
+  const settleFrameRef = useRef<number | null>(null);
+  const willChangeTimerRef = useRef<number | null>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+  const targetRef = useRef({ x: 0.5, y: 0.5 });
+  const currentRef = useRef({ x: 0.5, y: 0.5 });
+  const enabledRef = useRef(true);
   const visibleRef = useRef(true);
 
-  const reset = useCallback(() => {
+  const cancelFrame = useCallback(() => {
     if (frameRef.current != null) {
       cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
     }
-    if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
-    const node = ref.current;
-    if (!node) return;
-    node.style.setProperty('--tilt-x', '0deg');
-    node.style.setProperty('--tilt-y', '0deg');
-    node.style.setProperty('--tilt-sheen-x', '50%');
-    node.style.setProperty('--tilt-sheen-y', '50%');
-    settleTimerRef.current = window.setTimeout(() => {
-      if (ref.current) ref.current.style.willChange = 'auto';
-      settleTimerRef.current = null;
-    }, 420);
   }, []);
 
+  const cancelSettleFrame = useCallback(() => {
+    if (settleFrameRef.current != null) {
+      cancelAnimationFrame(settleFrameRef.current);
+      settleFrameRef.current = null;
+    }
+  }, []);
+
+  const cancelWillChangeTimer = useCallback(() => {
+    if (willChangeTimerRef.current != null) {
+      window.clearTimeout(willChangeTimerRef.current);
+      willChangeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleWillChangeReset = useCallback(() => {
+    cancelWillChangeTimer();
+    willChangeTimerRef.current = window.setTimeout(() => {
+      if (visualRef.current) visualRef.current.style.willChange = 'auto';
+      willChangeTimerRef.current = null;
+    }, 420);
+  }, [cancelWillChangeTimer]);
+
+  const clearPointerState = useCallback(() => {
+    cancelFrame();
+    rectRef.current = null;
+    targetRef.current = { x: 0.5, y: 0.5 };
+    currentRef.current = { x: 0.5, y: 0.5 };
+
+    const node = visualRef.current;
+    if (!node) return null;
+    node.removeAttribute('data-tilting');
+    node.style.setProperty('--tilt-sheen-x', '50%');
+    node.style.setProperty('--tilt-sheen-y', '50%');
+    return node;
+  }, [cancelFrame]);
+
+  const reset = useCallback(() => {
+    const node = clearPointerState();
+    node?.style.removeProperty('transform');
+    scheduleWillChangeReset();
+  }, [clearPointerState, scheduleWillChangeReset]);
+
+  /** Flatten before a click starts a View Transition or opens a portal. */
+  const flattenForActivation = useCallback(() => {
+    const node = clearPointerState();
+    if (!node) return;
+
+    cancelSettleFrame();
+    node.style.setProperty('transition', 'none');
+    node.style.removeProperty('transform');
+    scheduleWillChangeReset();
+    settleFrameRef.current = requestAnimationFrame(() => {
+      node.style.removeProperty('transition');
+      settleFrameRef.current = null;
+    });
+  }, [cancelSettleFrame, clearPointerState, scheduleWillChangeReset]);
+
   useEffect(() => {
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const forcedColors = window.matchMedia('(forced-colors: active)');
 
     const updateCapability = () => {
-      enabledRef.current = finePointer.matches && !reducedMotion.matches && !forcedColors.matches;
+      enabledRef.current = !reducedMotion.matches && !forcedColors.matches;
       if (!enabledRef.current) reset();
     };
 
     updateCapability();
-    finePointer.addEventListener?.('change', updateCapability);
     reducedMotion.addEventListener?.('change', updateCapability);
     forcedColors.addEventListener?.('change', updateCapability);
 
@@ -60,67 +114,92 @@ export default function TiltCard({
           visibleRef.current = Boolean(entry?.isIntersecting);
           if (!visibleRef.current) reset();
         }, { rootMargin: '120px' });
-    if (ref.current) observer?.observe(ref.current);
+    if (hitRef.current) observer?.observe(hitRef.current);
 
     return () => {
-      finePointer.removeEventListener?.('change', updateCapability);
       reducedMotion.removeEventListener?.('change', updateCapability);
       forcedColors.removeEventListener?.('change', updateCapability);
       observer?.disconnect();
-      if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
-      if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
+      cancelFrame();
+      cancelSettleFrame();
+      cancelWillChangeTimer();
     };
-  }, [reset]);
+  }, [cancelFrame, cancelSettleFrame, cancelWillChangeTimer, reset]);
 
   const paint = () => {
     frameRef.current = null;
-    const node = ref.current;
-    if (!node || !enabledRef.current || !visibleRef.current) return;
+    const node = visualRef.current;
+    if (!node || !enabledRef.current || !visibleRef.current || !node.hasAttribute('data-tilting')) return;
 
-    const { x, y } = pointerRef.current;
-    const rotateY = (x - 0.5) * intensity;
-    const rotateX = (0.5 - y) * intensity;
+    const target = targetRef.current;
+    const current = currentRef.current;
+    const smoothing = 0.3;
+    current.x += (target.x - current.x) * smoothing;
+    current.y += (target.y - current.y) * smoothing;
 
-    node.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);
-    node.style.setProperty('--tilt-y', `${rotateY.toFixed(2)}deg`);
-    node.style.setProperty('--tilt-sheen-x', `${(x * 100).toFixed(1)}%`);
-    node.style.setProperty('--tilt-sheen-y', `${(y * 100).toFixed(1)}%`);
+    const rotateY = (current.x - 0.5) * intensity;
+    const rotateX = (0.5 - current.y) * intensity;
+    node.style.transform = `rotateX(${rotateX.toFixed(3)}deg) rotateY(${rotateY.toFixed(3)}deg)`;
+    node.style.setProperty('--tilt-sheen-x', `${(current.x * 100).toFixed(1)}%`);
+    node.style.setProperty('--tilt-sheen-y', `${(current.y * 100).toFixed(1)}%`);
+
+    const unsettled = Math.abs(target.x - current.x) > 0.001 || Math.abs(target.y - current.y) > 0.001;
+    if (unsettled) frameRef.current = requestAnimationFrame(paint);
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!ref.current || !enabledRef.current || !visibleRef.current) return;
-    if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
-    const rect = ref.current.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-    pointerRef.current = {
+  const activate = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return false;
+    const node = visualRef.current;
+    const hit = hitRef.current;
+    if (!enabledRef.current || !visibleRef.current || !node || !hit) return false;
+
+    if (!rectRef.current) rectRef.current = hit.getBoundingClientRect();
+    node.setAttribute('data-tilting', 'true');
+    node.style.willChange = 'transform';
+    cancelWillChangeTimer();
+    return true;
+  };
+
+  const handlePointerEnter = (event: PointerEvent<HTMLDivElement>) => {
+    activate(event);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!activate(event)) return;
+    const hit = hitRef.current;
+    const rect = rectRef.current ?? hit?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+    rectRef.current = rect;
+
+    targetRef.current = {
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-    ref.current.style.willChange = 'transform';
-    if (settleTimerRef.current != null) {
-      window.clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = null;
-    }
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
   return (
-    <div className="tilt-card-wrapper relative h-full w-full">
+    <div
+      ref={hitRef}
+      onPointerEnter={handlePointerEnter}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={reset}
+      onPointerCancel={reset}
+      onPointerDown={flattenForActivation}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) reset();
+      }}
+      className="tilt-card-wrapper relative h-full w-full"
+    >
       <div
-        ref={ref}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={reset}
-        onPointerCancel={reset}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) reset();
-        }}
+        ref={visualRef}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         {children}
         {sheen && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.12),transparent_38%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
+            className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_36%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
           />
         )}
       </div>

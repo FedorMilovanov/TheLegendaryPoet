@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
 import { asset } from '../../utils/asset';
 
 const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
@@ -17,6 +17,12 @@ export interface ResilientImageProps extends Omit<ImgHTMLAttributes<HTMLImageEle
 
 function resolveSource(source: string) {
   if (/^(?:data:|blob:|https?:\/\/|\/\/)/i.test(source)) return source;
+
+  // Essay media is sometimes resolved through `asset()` before reaching this
+  // primitive. Keep that path idempotent under a GitHub Pages sub-directory;
+  // otherwise `/TheLegendaryPoet/images/...` would be prefixed a second time.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  if (base && (source === base || source.startsWith(`${base}/`))) return source;
   return asset(source);
 }
 
@@ -39,6 +45,7 @@ export default function ResilientImage({
   onStateChange,
   ...props
 }: ResilientImageProps) {
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const candidates = useMemo(() => {
     const sources = [src, fallbackSrc]
       .filter((source): source is string => Boolean(source?.trim()))
@@ -61,9 +68,31 @@ export default function ResilientImage({
     ? TRANSPARENT_PIXEL
     : candidates[sourceIndex] ?? TRANSPARENT_PIXEL;
 
+  // Eager and memory-cached images can complete before React subscribes to the
+  // native load event during hydration. Reconcile the actual DOM state after
+  // mount/source changes so a decoded cover never remains falsely "loading".
+  useEffect(() => {
+    if (state !== 'loading') return;
+    const image = imageRef.current;
+    if (!image?.complete) return;
+
+    if (image.naturalWidth > 0) {
+      setState(sourceIndex > 0 ? 'fallback' : 'loaded');
+      return;
+    }
+
+    if (sourceIndex + 1 < candidates.length) {
+      setSourceIndex((index) => index + 1);
+      return;
+    }
+    setState('failed');
+    onFinalError?.();
+  }, [candidates.length, currentSrc, onFinalError, sourceIndex, state]);
+
   return (
     <img
       {...props}
+      ref={imageRef}
       src={currentSrc}
       loading={priority ? 'eager' : (loading ?? 'lazy')}
       decoding={decoding}

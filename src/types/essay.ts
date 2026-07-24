@@ -12,6 +12,8 @@ export type EssayImagePlacement = 'full' | 'left' | 'right';
 
 export interface EssayImageData {
   src: string;
+  /** Key in the generated local AVIF/WebP manifest. */
+  mediaKey?: string;
   alt: string;
   /** Minimal museum-style caption. */
   caption: string;
@@ -28,10 +30,15 @@ export interface EssayImageData {
 
 export interface EssayCitationData {
   /** Stable ids from the essay bibliography, rendered as inline source markers. */
-  sourceIds?: string[];
+  sourceIds?: readonly string[];
 }
 
-export type EssayBlock =
+export interface EssayBlockIdentity {
+  /** Stable editorial identity used by citations, anchors and future migrations. */
+  id?: string;
+}
+
+type EssayBlockContent =
   /** Opening epigraph — a short line/quote that sets the tone. */
   | { type: 'epigraph'; text: string; cite?: string }
   /** Large lead paragraph that opens the body. */
@@ -66,18 +73,26 @@ export type EssayBlock =
   /** A decorative divider between movements of the essay. */
   | { type: 'divider' };
 
-export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'context';
+export type EssayBlock = EssayBlockContent & EssayBlockIdentity;
+
+export type EssaySourceKind = 'primary' | 'archive' | 'research' | 'institutional' | 'context';
 
 export interface EssaySource {
-  /** Stable optional identifier for future inline footnotes. */
+  /** Canonical stable identifier used by the bibliography row. */
   id?: string;
+  /**
+   * Historical or essay-local identifiers that resolve to this same deduplicated
+   * source. Aliases preserve old inline citations without rendering duplicate
+   * bibliography cards for one URL.
+   */
+  aliases?: string[];
   title: string;
   url?: string;
-  /** Primary text, archive/catalogue, scholarly research, or wider context. */
+  /** Primary text, archive/catalogue, scholarship, institutional narrative, or wider context. */
   kind?: EssaySourceKind;
   institution?: string;
   year?: string | number;
-  /** One restrained sentence explaining why this source is used. */
+  /** One restrained sentence explaining why this source is used and what it cannot prove. */
   note?: string;
 }
 
@@ -88,6 +103,25 @@ export interface EssaySeries {
   total: number;
 }
 
+export type EssayClusterRole =
+  | 'pillar'
+  | 'biography'
+  | 'investigation'
+  | 'work'
+  | 'archive'
+  | 'context';
+
+export interface EssayCluster {
+  /** Stable topical cluster id, shared by internally linked longreads. */
+  id: string;
+  /** Human-facing cluster label, e.g. “Маяковский: жизнь, тексты, архив”. */
+  label: string;
+  /** Editorial role inside the cluster; does not affect the visible H1. */
+  role: EssayClusterRole;
+  /** Stable order for cluster navigation and poet-profile cards. */
+  order?: number;
+}
+
 export interface Essay {
   id: string;
   slug: string;
@@ -95,8 +129,14 @@ export interface Essay {
   kicker?: string;
   title: string;
   subtitle?: string;
-  /** Short summary for cards / SEO. */
+  /** Short summary for cards / default SEO. */
   excerpt: string;
+  /** Search title can be more explicit than the literary page H1. */
+  seoTitle?: string;
+  /** Search description can differ from the on-site card excerpt. */
+  seoDescription?: string;
+  /** A restrained list of entities and stable search phrases. */
+  seoKeywords?: string[];
   author: string;
   /** ISO-ish date string, e.g. "2026-07-12". */
   date: string;
@@ -117,6 +157,10 @@ export interface Essay {
   poetId?: string;
   /** Optional sequence metadata for multi-part biographies. */
   series?: EssaySeries;
+  /** Optional broader SEO/editorial cluster spanning biographies and investigations. */
+  cluster?: EssayCluster;
+  /** Manual priority links when shared poet/cluster metadata is not sufficient. */
+  relatedEssayIds?: string[];
   blocks: EssayBlock[];
   sources?: EssaySource[];
 }

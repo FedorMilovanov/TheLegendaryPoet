@@ -6,12 +6,11 @@
  * first (and, for hyphenated titles, the word right after a colon/dash),
  * which is always capitalized regardless of what it is.
  *
- * Use on structural headings (page titles, section headings, kickers) —
- * not on proper nouns whose casing is already fixed (poet names), nor on
- * quoted verse/prose, which must keep the author's exact capitalization.
+ * Text inside Russian guillemets is preserved exactly. This matters for names
+ * of poems, books, plays and quoted phrases: «Про это» must never become
+ * «Про Это» merely because the surrounding page heading uses Title Case.
  */
 
-// Russian prepositions, conjunctions and particles short enough to stay lowercase.
 const SMALL_WORDS = new Set([
   'и', 'а', 'но', 'или', 'да', 'ни', 'же', 'ли', 'бы', 'то',
   'в', 'во', 'на', 'к', 'ко', 'с', 'со', 'у', 'о', 'об', 'обо',
@@ -23,8 +22,7 @@ const SMALL_WORDS = new Set([
 
 function capitalizeWord(word: string): string {
   if (!word) return word;
-  // Preserve leading punctuation like « or ( when capitalizing the letter after it.
-  const match = word.match(/^([«(\-—"']*)(.*)$/);
+  const match = word.match(/^([("'\-—]*)(.*)$/);
   if (!match) return word;
   const [, lead, rest] = match;
   if (!rest) return word;
@@ -32,7 +30,7 @@ function capitalizeWord(word: string): string {
 }
 
 function lowercaseWord(word: string): string {
-  const match = word.match(/^([«(\-—"']*)(.*)$/);
+  const match = word.match(/^([("'\-—]*)(.*)$/);
   if (!match) return word;
   const [, lead, rest] = match;
   if (!rest) return word;
@@ -41,27 +39,20 @@ function lowercaseWord(word: string): string {
 
 interface TitleCaseOptions {
   /**
-   * Set false when this string is a mid-heading fragment (e.g. the tail half
-   * of a heading split across two JSX nodes for styling) rather than a
-   * heading in its own right — otherwise its first word gets force-capitalized
-   * as if it opened the sentence, even when it's a small word like "и"/"с".
+   * Set false when this string is a mid-heading fragment rather than a heading
+   * in its own right. Otherwise a small first word may be force-capitalized.
    */
   isHeadingStart?: boolean;
 }
 
-/** Applies the site's Title Case heading rule to a single line of text. */
-export function titleCase(text: string, options: TitleCaseOptions = {}): string {
-  if (!text) return text;
-  const { isHeadingStart = true } = options;
-
+function titleCaseUnquoted(text: string, isHeadingStart: boolean): string {
   return text
     .split(/(\s+)/)
     .map((token, i, tokens) => {
       if (/^\s+$/.test(token)) return token;
 
-      const bare = token.replace(/[«»()"'.,!?:;]/g, '').toLowerCase();
-      const isFirst = isHeadingStart && tokens.slice(0, i).every((t) => /^\s+$/.test(t));
-      // Treat the word right after a colon/dash/guillemet as a fresh "first word" too.
+      const bare = token.replace(/[()"'.,!?:;]/g, '').toLowerCase();
+      const isFirst = isHeadingStart && tokens.slice(0, i).every((part) => /^\s+$/.test(part));
       const prevToken = tokens[i - 2];
       const startsNewClause = prevToken != null && /[:—-]$/.test(prevToken.trim());
 
@@ -69,6 +60,29 @@ export function titleCase(text: string, options: TitleCaseOptions = {}): string 
         return lowercaseWord(token);
       }
       return capitalizeWord(token);
+    })
+    .join('');
+}
+
+/** Applies the site's heading rule while preserving quoted work titles. */
+export function titleCase(text: string, options: TitleCaseOptions = {}): string {
+  if (!text) return text;
+  const { isHeadingStart = true } = options;
+
+  const segments = text.split(/(«[^»]*»)/g);
+  let visibleContentSeen = !isHeadingStart;
+
+  return segments
+    .map((segment) => {
+      if (!segment) return segment;
+      if (segment.startsWith('«') && segment.endsWith('»')) {
+        visibleContentSeen = true;
+        return segment;
+      }
+
+      const transformed = titleCaseUnquoted(segment, !visibleContentSeen);
+      if (/\S/.test(segment)) visibleContentSeen = true;
+      return transformed;
     })
     .join('');
 }

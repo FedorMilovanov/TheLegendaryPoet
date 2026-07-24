@@ -30,32 +30,81 @@ function makeVariants(direction: Direction, distance: number, blur: boolean): Va
   };
 }
 
-export default function Reveal({ children, direction = 'up', delay = 0, duration = 0.78, distance = 30, threshold = 0.1, className = '', once = true, blur = true }: RevealProps) {
+export default function Reveal({
+  children,
+  direction = 'up',
+  delay = 0,
+  duration = 0.78,
+  distance = 30,
+  threshold = 0.1,
+  className = '',
+  once = true,
+  blur = true,
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  const prefersReduced = useReducedMotion();
+  const framerReduced = useReducedMotion();
+  const [nativeReduced, setNativeReduced] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true,
+  );
+  const prefersReduced = framerReduced === true || nativeReduced;
+
+  // Framer's hook can resolve after the first paint in an emulated or newly
+  // changed media environment. Native matchMedia gives the initial render a
+  // synchronous answer, so below-the-fold prose never starts at opacity:0 for
+  // reduced-motion users.
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!media) return;
+    const update = () => setNativeReduced(media.matches);
+    update();
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, []);
+
+  const [inView, setInView] = useState(prefersReduced);
 
   useEffect(() => {
+    if (prefersReduced) {
+      setInView(true);
+      return;
+    }
+
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); if (once) observer.disconnect(); }
-        else if (!once) { setInView(false); }
+        if (entry.isIntersecting) {
+          setInView(true);
+          if (once) observer.disconnect();
+        } else if (!once) {
+          setInView(false);
+        }
       },
       { threshold },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [threshold, once]);
+  }, [threshold, once, prefersReduced]);
 
   const effectiveDir = prefersReduced ? 'none' : direction;
   const effectiveBlur = prefersReduced ? false : blur;
   const variants = makeVariants(effectiveDir, distance, effectiveBlur);
+  const visible = prefersReduced || inView;
 
   return (
-    <motion.div ref={ref} className={className} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={variants}
-      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={prefersReduced ? 'visible' : 'hidden'}
+      animate={visible ? 'visible' : 'hidden'}
+      variants={variants}
+      transition={{
+        duration: prefersReduced ? 0 : duration,
+        delay: prefersReduced ? 0 : delay,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+    >
       {children}
     </motion.div>
   );

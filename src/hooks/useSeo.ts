@@ -10,13 +10,17 @@ interface SeoOptions {
   type?: 'website' | 'article' | 'profile';
   /** Site-root-relative image path (e.g. "/images/essays/x.jpg"). Absolutised for OG. */
   image?: string;
+  /** Human-readable image alternative for OG/Twitter cards. */
+  imageAlt?: string;
   /** ISO date for articles (sets article:published_time + JSON-LD datePublished). */
   publishedTime?: string;
   /** Author name for articles. */
   author?: string;
   /** Comma-joined keywords. */
   keywords?: string;
-  /** Optional pre-built JSON-LD object; overrides the default WebPage/Article schema. */
+  /** Prevent indexing for missing, private or user-specific routes. */
+  noIndex?: boolean;
+  /** Optional pre-built JSON-LD object; route components own collection schemas. */
   jsonLd?: Record<string, unknown>;
 }
 
@@ -36,6 +40,10 @@ function ensureMeta(key: string, value: string, kind: 'name' | 'property' = 'nam
   el.setAttribute('content', value);
 }
 
+function removeMeta(key: string, kind: 'name' | 'property' = 'name') {
+  document.head.querySelector(`meta[${kind}="${key}"]`)?.remove();
+}
+
 function ensureLink(rel: string, href: string) {
   let el = document.head.querySelector(`link[rel="${rel}"]`);
   if (!el) {
@@ -46,21 +54,45 @@ function ensureLink(rel: string, href: string) {
   el.setAttribute('href', href);
 }
 
+function removeLink(rel: string) {
+  document.head.querySelector(`link[rel="${rel}"]`)?.remove();
+}
+
 /**
- * Per-route metadata for a client-rendered SPA. Updates head tags in place —
- * title, description, canonical, Open Graph, Twitter, article meta, and a
- * per-route JSON-LD block (WebPage / Article) so Google & Yandex can build
- * rich results. Both crawlers render JS, so client-side injection is indexed.
+ * Per-route metadata for the client-rendered SPA. Tags that no longer apply to
+ * the active route are removed, so navigation from an article to a poet/profile
+ * cannot leave stale article dates, authors, dimensions, keywords or indexing
+ * directives in the document head.
  */
-export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
+export function useSeo({
+  title,
+  description,
+  path,
+  type = 'website',
+  image,
+  imageAlt,
+  publishedTime,
+  author,
+  keywords,
+  noIndex = false,
+  jsonLd,
+}: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
+    const usesDefaultImage = !image;
     const img = absUrl(image || '/og-image.jpg');
+    const imgAlt = imageAlt || title;
 
     document.title = title;
     ensureMeta('description', description);
-    ensureLink('canonical', url);
+    ensureMeta(
+      'robots',
+      noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large',
+    );
+    if (noIndex) removeLink('canonical');
+    else ensureLink('canonical', url);
     if (keywords) ensureMeta('keywords', keywords);
+    else removeMeta('keywords');
 
     // Open Graph
     ensureMeta('og:title', title, 'property');
@@ -68,17 +100,33 @@ export function useSeo({ title, description, path, type = 'website', image, publ
     ensureMeta('og:url', url, 'property');
     ensureMeta('og:type', type, 'property');
     ensureMeta('og:image', img, 'property');
+    ensureMeta('og:image:alt', imgAlt, 'property');
+    if (usesDefaultImage) {
+      ensureMeta('og:image:width', '1200', 'property');
+      ensureMeta('og:image:height', '630', 'property');
+    } else {
+      removeMeta('og:image:width', 'property');
+      removeMeta('og:image:height', 'property');
+    }
 
     // Twitter
     ensureMeta('twitter:title', title);
     ensureMeta('twitter:description', description);
     ensureMeta('twitter:image', img);
+    ensureMeta('twitter:image:alt', imgAlt);
 
-    // Article-specific
-    if (type === 'article' && publishedTime) ensureMeta('article:published_time', publishedTime, 'property');
-    if (type === 'article' && author) ensureMeta('article:author', author, 'property');
+    // Article-specific metadata must disappear on non-article routes.
+    if (type === 'article' && publishedTime) {
+      ensureMeta('article:published_time', publishedTime, 'property');
+    } else {
+      removeMeta('article:published_time', 'property');
+    }
+    if (type === 'article' && author) {
+      ensureMeta('article:author', author, 'property');
+    } else {
+      removeMeta('article:author', 'property');
+    }
 
-    // Per-route JSON-LD (structured data)
     const schema =
       jsonLd ||
       (type === 'article'
@@ -117,5 +165,17 @@ export function useSeo({ title, description, path, type = 'website', image, publ
       document.head.appendChild(ld);
     }
     ld.textContent = JSON.stringify(schema);
-  }, [title, description, path, type, image, publishedTime, author, keywords, jsonLd]);
+  }, [
+    title,
+    description,
+    path,
+    type,
+    image,
+    imageAlt,
+    publishedTime,
+    author,
+    keywords,
+    noIndex,
+    jsonLd,
+  ]);
 }
