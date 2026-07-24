@@ -59,6 +59,10 @@ jobs:
         run: npm run validate:yesenin-part-one-witnesses
       - name: Validate durable Yesenin FEB acquisition evidence
         run: npm run validate:yesenin-part-one-feb-acquisition
+      - name: Validate acquired Yesenin physical editions
+        run: npm run validate:yesenin-part-one-physical-editions
+      - name: Validate effective Yesenin physical witness state
+        run: npm run validate:yesenin-part-one-effective-witnesses
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
