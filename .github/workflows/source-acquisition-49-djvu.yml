@@ -159,11 +159,19 @@ jobs:
           djvutxt "$dir/source.djvu" "$dir/full-text.txt" || true
           end=12
           if [ "$pages" -lt "$end" ]; then end="$pages"; fi
+          render_jpeg() {
+            local page="$1"
+            local target="$2"
+            local ppm="${target%.jpg}.ppm"
+            ddjvu -format=ppm -page="$page" -scale=1400 "$dir/source.djvu" "$ppm"
+            convert "$ppm" -quality 90 "$target"
+            rm -f "$ppm"
+          }
           for page in $(seq 1 "$end"); do
             printf -v page4 '%04d' "$page"
-            ddjvu -format=jpeg -quality=90 -page="$page" -scale=1400 "$dir/source.djvu" "$dir/front/page-$page4.jpg"
+            render_jpeg "$page" "$dir/front/page-$page4.jpg"
           done
-          ddjvu -format=jpeg -quality=90 -page="$pages" -scale=1400 "$dir/source.djvu" "$dir/final-page.jpg"
+          render_jpeg "$pages" "$dir/final-page.jpg"
           printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$dir/full-text.txt" 2>/dev/null || echo 0)" > "$dir/summary.txt"
 
       - name: Upload DJVU verification
