@@ -43,15 +43,11 @@ const allCanonicalSources: EssaySource[] = [
   ...yeseninPartOneSourcesPassThree,
 ].map((source) => ({ ...source }));
 
-const sectionAnchor = (sectionNumber: number) => `yesenin-part-one-section-${String(sectionNumber).padStart(2, '0')}`;
+const sectionAnchor = (sectionNumber: number) =>
+  `yesenin-part-one-section-${String(sectionNumber).padStart(2, '0')}`;
 
-const withRenderSources = (
-  block: Omit<EssayBlock, 'sourceIds'>,
-  sourceIds: readonly string[],
-): EssayBlock =>
-  sourceIds.length > 0
-    ? ({ ...block, sourceIds: [...sourceIds] } as EssayBlock)
-    : (block as EssayBlock);
+const withRenderSources = (block: EssayBlock, sourceIds: readonly string[]): EssayBlock =>
+  sourceIds.length > 0 ? ({ ...block, sourceIds: [...sourceIds] } as EssayBlock) : block;
 
 export function buildYeseninPartOneUnpublishedArticle(
   root = process.cwd(),
@@ -80,7 +76,7 @@ export function buildYeseninPartOneUnpublishedArticle(
       });
     }
 
-    let authoredBlock: Omit<EssayBlock, 'sourceIds'>;
+    let authoredBlock: EssayBlock;
     if (node.origin === 'editorial-override') {
       authoredBlock = {
         id: node.blockId,
