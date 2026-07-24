@@ -6,6 +6,11 @@ import {
   yeseninPartOneEditorialPassEightEarlyAExpectedCount,
   yeseninPartOneEditorialPassEightEarlyAExpectedSections,
 } from '../src/data/essays/yeseninPartOneEditorialPassEightEarlyA';
+import {
+  yeseninPartOneEditorialPassEightEarlyB,
+  yeseninPartOneEditorialPassEightEarlyBExpectedCount,
+  yeseninPartOneEditorialPassEightEarlyBExpectedSections,
+} from '../src/data/essays/yeseninPartOneEditorialPassEightEarlyB';
 import { yeseninPartOneEditorialPassSeven } from '../src/data/essays/yeseninPartOneEditorialPassSeven';
 import { yeseninPartOneEditorialPassSevenPass6 } from '../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
 
@@ -15,7 +20,9 @@ const fail = (message: string): never => {
 
 const topology = loadYeseninPartOnePass6CitationTopology(process.cwd());
 const articlePackage = yeseninPartOneUnpublishedArticle;
-const entries = Object.entries(yeseninPartOneEditorialPassEightEarlyA);
+const earlyAEntries = Object.entries(yeseninPartOneEditorialPassEightEarlyA);
+const earlyBEntries = Object.entries(yeseninPartOneEditorialPassEightEarlyB);
+const passEightEntries = [...earlyAEntries, ...earlyBEntries];
 
 if (
   articlePackage.publicationAuthorized !== false ||
@@ -24,61 +31,77 @@ if (
 ) {
   fail('editorial pass must not authorize publication, registration or media reuse');
 }
+if (
+  articlePackage.editorialPassEight !== 'lead-sections-1-8-literary-theological-pass-eight' ||
+  JSON.stringify(articlePackage.editorialPassEightEditedSections) !==
+    JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8]) ||
+  articlePackage.wholeArticleSentenceEditComplete !== true
+) {
+  fail('whole-article pass-eight completion metadata is inconsistent');
+}
 if (topology.nodes.length !== 146) fail(`expected 146 topology nodes, found ${topology.nodes.length}`);
 if (
   yeseninPartOneEditorialPassEightEarlyAExpectedCount !== 37 ||
-  entries.length !== yeseninPartOneEditorialPassEightEarlyAExpectedCount
+  earlyAEntries.length !== yeseninPartOneEditorialPassEightEarlyAExpectedCount
 ) {
-  fail(`expected 37 pass-eight early overrides, found ${entries.length}`);
+  fail(`expected 37 early-A overrides, found ${earlyAEntries.length}`);
+}
+if (
+  yeseninPartOneEditorialPassEightEarlyBExpectedCount !== 38 ||
+  earlyBEntries.length !== yeseninPartOneEditorialPassEightEarlyBExpectedCount
+) {
+  fail(`expected 38 early-B overrides, found ${earlyBEntries.length}`);
+}
+if (passEightEntries.length !== 75) {
+  fail(`expected 75 total pass-eight overrides, found ${passEightEntries.length}`);
 }
 if (
   JSON.stringify(yeseninPartOneEditorialPassEightEarlyAExpectedSections) !==
-  JSON.stringify([0, 1, 2, 3, 4])
+    JSON.stringify([0, 1, 2, 3, 4]) ||
+  JSON.stringify(yeseninPartOneEditorialPassEightEarlyBExpectedSections) !==
+    JSON.stringify([5, 6, 7, 8])
 ) {
-  fail('pass-eight early-A section contract changed');
+  fail('pass-eight section contracts changed');
 }
 
-const targetNodes = topology.nodes.filter(
-  (node) => node.sectionNumber >= 0 && node.sectionNumber <= 4,
-);
-const remainingEarlyNodes = topology.nodes.filter(
-  (node) => node.sectionNumber >= 5 && node.sectionNumber <= 8,
+const earlyNodes = topology.nodes.filter(
+  (node) => node.sectionNumber >= 0 && node.sectionNumber <= 8,
 );
 const lateNodes = topology.nodes.filter(
   (node) => node.sectionNumber >= 9 && node.sectionNumber <= 12,
 );
-if (targetNodes.length !== 37) fail(`expected 37 nodes in lead/sections 1-4, found ${targetNodes.length}`);
-if (remainingEarlyNodes.length !== 38) {
-  fail(`expected 38 still-pending nodes in sections 5-8, found ${remainingEarlyNodes.length}`);
-}
-if (lateNodes.length !== 71) fail(`expected 71 pass-seven nodes in sections 9-12, found ${lateNodes.length}`);
+if (earlyNodes.length !== 75) fail(`expected 75 early nodes, found ${earlyNodes.length}`);
+if (lateNodes.length !== 71) fail(`expected 71 late nodes, found ${lateNodes.length}`);
 
-const targetIds = new Set(targetNodes.map((node) => node.blockId));
-const overrideIds = new Set(entries.map(([blockId]) => blockId));
-if (overrideIds.size !== 37) fail(`pass-eight registry contains duplicate IDs: ${overrideIds.size}/37`);
-for (const blockId of targetIds) {
-  if (!overrideIds.has(blockId)) fail(`pass eight misses target block ${blockId}`);
+const earlyIds = new Set(earlyNodes.map((node) => node.blockId));
+const passEightIds = new Set(passEightEntries.map(([blockId]) => blockId));
+if (passEightIds.size !== 75) fail(`pass-eight registry contains duplicate IDs: ${passEightIds.size}/75`);
+for (const blockId of earlyIds) {
+  if (!passEightIds.has(blockId)) fail(`pass eight misses early block ${blockId}`);
 }
-for (const blockId of overrideIds) {
-  if (!targetIds.has(blockId)) fail(`pass eight escapes lead/sections 1-4 at ${blockId}`);
+for (const blockId of passEightIds) {
+  if (!earlyIds.has(blockId)) fail(`pass eight escapes lead/sections 1-8 at ${blockId}`);
 }
 
 const passSevenIds = new Set([
   ...Object.keys(yeseninPartOneEditorialPassSeven),
   ...Object.keys(yeseninPartOneEditorialPassSevenPass6),
 ]);
-for (const blockId of overrideIds) {
+if (passSevenIds.size !== 71) fail(`expected 71 preserved pass-seven IDs, found ${passSevenIds.size}`);
+for (const blockId of passEightIds) {
   if (passSevenIds.has(blockId)) fail(`pass-eight block overlaps pass seven: ${blockId}`);
 }
-if (passSevenIds.size !== 71) fail(`expected 71 preserved pass-seven IDs, found ${passSevenIds.size}`);
+if (new Set([...passEightIds, ...passSevenIds]).size !== 146) {
+  fail('pass seven and pass eight do not cover the exact 146-node article');
+}
 
 const renderedTextById = new Map(
   articlePackage.essay.blocks
     .filter((block) => block.type !== 'section' && block.id && 'text' in block)
     .map((block) => [block.id as string, String(block.text)] as const),
 );
-for (const [blockId, text] of entries) {
-  const node = targetNodes.find((candidate) => candidate.blockId === blockId);
+for (const [blockId, text] of passEightEntries) {
+  const node = earlyNodes.find((candidate) => candidate.blockId === blockId);
   if (!node) fail(`unknown pass-eight target ${blockId}`);
   const evidence = articlePackage.evidenceByBlockId[blockId];
   if (!evidence) fail(`missing internal evidence for ${blockId}`);
@@ -92,17 +115,6 @@ for (const [blockId, text] of entries) {
     fail(`${blockId} leaks authoring metadata into reader-facing prose`);
   }
 }
-
-for (const node of remainingEarlyNodes) {
-  const evidence = articlePackage.evidenceByBlockId[node.blockId];
-  if (!evidence) fail(`missing evidence for pending block ${node.blockId}`);
-  if (evidence.editorialPassEightApplied) {
-    fail(`sections 5-8 must remain pending in early-A checkpoint: ${node.blockId}`);
-  }
-  if (renderedTextById.get(node.blockId) !== node.text) {
-    fail(`pending block ${node.blockId} changed before its pass-eight review`);
-  }
-}
 for (const node of lateNodes) {
   const evidence = articlePackage.evidenceByBlockId[node.blockId];
   if (!evidence?.editorialPassSevenApplied) fail(`late pass-seven edit was lost at ${node.blockId}`);
@@ -112,20 +124,21 @@ for (const node of lateNodes) {
 const serviceLanguagePatterns = [
   /для статьи/iu,
   /в окончательной статье/iu,
-  /биограф должен/iu,
-  /нужно показать/iu,
+  /будущая статья/iu,
+  /следующий раздел должен/iu,
   /авторская проза/iu,
   /редакционная граница/iu,
-  /следующий шаг/iu,
+  /нужный следующий шаг/iu,
   /citation topology/iu,
+  /должны быть включены в финальную/iu,
 ];
-for (const [blockId, text] of entries) {
+for (const [blockId, text] of passEightEntries) {
   for (const pattern of serviceLanguagePatterns) {
     if (pattern.test(text)) fail(`${blockId} retains service-language pattern ${pattern}`);
   }
 }
 
-const textById = new Map(entries);
+const textById = new Map(passEightEntries);
 const requiredAnchors: Readonly<Record<string, readonly string[]>> = {
   'yesenin-p1-lead-method': ['Документы сопротивляются', 'синхронным'],
   'yesenin-p1-konstantinovo-birth-date': ['21 сентября 1895 года', '3 октября'],
@@ -142,6 +155,18 @@ const requiredAnchors: Readonly<Record<string, readonly string[]>> = {
     'Нравственная тяжесть',
     'окончательный суд о человеке',
   ],
+  'yesenin-p1-blok-arrival-9-march-1915': ['9 марта 1915 года', 'синхронных документов'],
+  'yesenin-p1-blok-not-instant-fame': ['Блок открыл Есенина', 'не был пройден за один день'],
+  'yesenin-p1-klyuev-agency-boundary': ['психологическим диагнозом', 'начинала диктовать'],
+  'yesenin-p1-radunitsa-bibliographic-date': ['1916 года', 'ноябрь 1915-го'],
+  'yesenin-p1-radunitsa-theological-boundary': [
+    'библейские и литургические ассоциации',
+    'распятого и воскресшего Христа',
+  ],
+  'yesenin-p1-train-143-enlistment-date': ['20 апреля 1916 года', 'вагона № 6'],
+  'yesenin-p1-train-143-team-record': ['странице 673', 'SHA-256', 'дела РГИА'],
+  'yesenin-p1-train-143-lazaret-17-rejection': ['лазарету № 17', 'поезда № 143'],
+  'yesenin-p1-train-143-transition-poems': ['народной эсхатологией', 'богословское напряжение'],
 };
 for (const [blockId, anchors] of Object.entries(requiredAnchors)) {
   const text = textById.get(blockId);
@@ -155,25 +180,37 @@ for (const [blockId, anchors] of Object.entries(requiredAnchors)) {
 }
 
 const sectionCounts = Object.fromEntries(
-  Array.from({ length: 5 }, (_, sectionNumber) => [
+  Array.from({ length: 9 }, (_, sectionNumber) => [
     sectionNumber,
-    targetNodes.filter((node) => node.sectionNumber === sectionNumber).length,
+    earlyNodes.filter((node) => node.sectionNumber === sectionNumber).length,
   ]),
 );
-const registryDigest = createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+const passEightDigest = createHash('sha256')
+  .update(JSON.stringify(passEightEntries))
+  .digest('hex');
+const fullEditorialDigest = createHash('sha256')
+  .update(
+    JSON.stringify([
+      ...passEightEntries,
+      ...Object.entries(yeseninPartOneEditorialPassSeven),
+      ...Object.entries(yeseninPartOneEditorialPassSevenPass6),
+    ]),
+  )
+  .digest('hex');
 
 console.log(
   JSON.stringify(
     {
-      status: 'PASS8-EARLY-A-37-OF-75 / UNPUBLISHED / UNREGISTERED / MEDIA-HOLD',
+      status: 'WHOLE-ARTICLE-SENTENCE-EDIT-COMPLETE / 146-OF-146 / UNPUBLISHED / UNREGISTERED / MEDIA-HOLD',
       totalTopologyNodes: topology.nodes.length,
-      passEightEditedBlocks: entries.length,
-      passEightEditedSections: [0, 1, 2, 3, 4],
-      remainingPassEightBlocks: remainingEarlyNodes.length,
-      remainingPassEightSections: [5, 6, 7, 8],
+      passEightEditedBlocks: passEightEntries.length,
+      passEightEditedSections: [0, 1, 2, 3, 4, 5, 6, 7, 8],
       preservedPassSevenBlocks: passSevenIds.size,
+      totalEditedBlocks: passEightIds.size + passSevenIds.size,
       sectionCounts,
-      registrySha256: registryDigest,
+      passEightSha256: passEightDigest,
+      fullEditorialSha256: fullEditorialDigest,
+      wholeArticleSentenceEditComplete: articlePackage.wholeArticleSentenceEditComplete,
       publicationAuthorized: articlePackage.publicationAuthorized,
       registrationAuthorized: articlePackage.registrationAuthorized,
       mediaPublicationAuthorized: articlePackage.mediaPublicationAuthorized,
