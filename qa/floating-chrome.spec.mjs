@@ -32,8 +32,16 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
 
   await page.getByRole('link', { name: 'Рейтинг' }).click();
   await expect(page).toHaveURL(/\/ratings$/);
-  await page.evaluate(() => window.scrollTo(0, 780));
-  await page.waitForTimeout(350);
+  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  // The persistent shell restores route scroll after navigation. Wait for that
+  // lifecycle to settle, then use a real wheel gesture and prove the threshold
+  // was crossed before asserting that ScrollToTop has mounted.
+  await page.waitForTimeout(750);
+  await page.mouse.wheel(0, 900);
+  await expect.poll(
+    () => page.evaluate(() => window.scrollY),
+    { timeout: 5_000, message: 'ratings page should cross the scroll-top threshold' },
+  ).toBeGreaterThan(400);
   // Auto-hide is a separate behavior and can be mid-transition depending on the
   // scroll scheduler. Force the documented visible state so this test measures
   // the collision contract, not a temporarily translated, pointer-inert pill.
