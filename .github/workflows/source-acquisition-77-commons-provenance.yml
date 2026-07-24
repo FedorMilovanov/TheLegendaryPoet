@@ -1,20 +1,6 @@
 name: Source acquisition 77 Commons original provenance
 
 on:
-  push:
-    branches:
-      - research/provenance-repair-77
-    paths:
-      - .github/workflows/source-acquisition-77-commons-provenance.yml
-      - scripts/source-acquisition/commons-provenance-77.py
-      - scripts/source-acquisition/commons-provenance-77-runner.py
-  pull_request:
-    branches:
-      - work/local-images-playwright-wtoc
-    paths:
-      - .github/workflows/source-acquisition-77-commons-provenance.yml
-      - scripts/source-acquisition/commons-provenance-77.py
-      - scripts/source-acquisition/commons-provenance-77-runner.py
   workflow_dispatch:
 
 permissions:
