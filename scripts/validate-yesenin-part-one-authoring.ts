@@ -135,9 +135,10 @@ for (const token of forbiddenPublicTokens) {
 
 requireText(matrix, '0 document images authorized for production reuse', matrixPath);
 requireText(matrix, 'route unregistered', matrixPath);
+requireText(verification, '`LEGACY-ENCODING-HOLD`', verificationPath);
 requireText(
   verification,
-  '`URL-REACHABLE / CONTENT-COLLATION-PENDING`',
+  'Три старые страницы ФЭБ отвечают по известному адресу',
   verificationPath,
 );
 
