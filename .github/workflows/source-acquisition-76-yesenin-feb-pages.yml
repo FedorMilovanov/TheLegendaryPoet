@@ -7,9 +7,14 @@ on:
     paths:
       - '.github/workflows/source-acquisition-76-yesenin-feb-pages.yml'
       - 'scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs'
+  pull_request:
+    branches: [research/yesenin-part1-page-witnesses-76]
+    paths:
+      - '.github/workflows/source-acquisition-76-yesenin-feb-pages.yml'
+      - 'scripts/source-acquisition/yesenin-feb-page-witnesses-76.mjs'
 
 concurrency:
-  group: source-acquisition-76-yesenin-feb-pages
+  group: source-acquisition-76-yesenin-feb-pages-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
