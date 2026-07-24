@@ -1,0 +1,98 @@
+name: Domain TLS post-CNAME validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/domain-tls-post-cname.yml
+      - public/CNAME
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  domain-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install DNS tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dnsutils
+
+      - name: Capture DNS, certificate and redirect evidence
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p domain-evidence
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > domain-evidence/checked-at.txt
+          cat public/CNAME > domain-evidence/cname.txt
+
+          for host in thelegendarypoet.ru www.thelegendarypoet.ru FedorMilovanov.github.io; do
+            {
+              echo "### $host"
+              echo '-- A'
+              dig +short A "$host"
+              echo '-- AAAA'
+              dig +short AAAA "$host"
+              echo '-- CNAME'
+              dig +short CNAME "$host"
+            } > "domain-evidence/${host}.dns.txt" 2>&1
+
+            timeout 30 openssl s_client \
+              -connect "$host:443" \
+              -servername "$host" \
+              -showcerts < /dev/null \
+              > "domain-evidence/${host}.openssl.txt" 2>&1 || true
+
+            awk '/-----BEGIN CERTIFICATE-----/{capture=1} capture{print} /-----END CERTIFICATE-----/{exit}' \
+              "domain-evidence/${host}.openssl.txt" \
+              > "domain-evidence/${host}.leaf.pem"
+            if grep -q 'BEGIN CERTIFICATE' "domain-evidence/${host}.leaf.pem"; then
+              openssl x509 -in "domain-evidence/${host}.leaf.pem" \
+                -noout -subject -issuer -dates -ext subjectAltName \
+                > "domain-evidence/${host}.certificate.txt" 2>&1 || true
+            fi
+          done
+
+          : > domain-evidence/curl-summary.tsv
+          for url in \
+            'https://thelegendarypoet.ru/' \
+            'https://www.thelegendarypoet.ru/' \
+            'https://FedorMilovanov.github.io/TheLegendaryPoet/'; do
+            safe="$(printf '%s' "$url" | sed 's#[^A-Za-z0-9]#_#g')"
+            code=0
+            curl --silent --show-error --location --max-time 45 \
+              --dump-header "domain-evidence/${safe}.headers.txt" \
+              --output "domain-evidence/${safe}.html" \
+              --write-out '%{http_code}\t%{url_effective}\t%{ssl_verify_result}' \
+              "$url" > "domain-evidence/${safe}.result.txt" \
+              2> "domain-evidence/${safe}.error.txt" || code=$?
+            printf '%s\t%s\t%s\t%s\n' \
+              "$code" "$(cat "domain-evidence/${safe}.result.txt")" "$url" \
+              "$(tr '\n' ' ' < "domain-evidence/${safe}.error.txt")" \
+              >> domain-evidence/curl-summary.tsv
+          done
+
+      - name: Enforce valid HTTPS and redirects
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk -F '\t' '
+            $1 != 0 { print "curl failed:", $0 > "/dev/stderr"; failed=1 }
+            $2 !~ /^(200|301|302|307|308)$/ { print "unexpected HTTP status:", $0 > "/dev/stderr"; failed=1 }
+            $4 != 0 { print "TLS verification failed:", $0 > "/dev/stderr"; failed=1 }
+            END { exit failed ? 1 : 0 }
+          ' domain-evidence/curl-summary.tsv
+
+      - name: Upload domain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: domain-tls-post-cname-evidence
+          path: domain-evidence
+          if-no-files-found: error
+          retention-days: 7
