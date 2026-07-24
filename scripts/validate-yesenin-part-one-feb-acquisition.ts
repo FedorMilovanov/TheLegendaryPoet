@@ -3,6 +3,7 @@ import {
   yeseninPartOneFebAcquiredRecords,
   yeseninPartOneFebAcquisitionRun11,
   yeseninPartOneFebPendingTargets,
+  yeseninPartOneFebSirenaDiscoveryRun21,
 } from '../src/data/essays/yeseninPartOneFebAcquisition';
 
 const errors: string[] = [];
@@ -25,14 +26,33 @@ if (yeseninPartOneFebAcquisitionRun11.exactImageCount !== 6) {
   fail('run 11 exact-image count must remain six');
 }
 if (yeseninPartOneFebAcquisitionRun11.exactBytesCompleteTargetCount !== 3) {
-  fail('run 11 complete-target count must remain three until Sirena is acquired');
+  fail('run 11 historical complete-target count must remain three');
 }
 if (!/^[a-f0-9]{64}$/.test(yeseninPartOneFebAcquisitionRun11.artifactDigest)) {
   fail('run 11 artifact digest must be a lowercase SHA-256');
 }
 
-if (yeseninPartOneFebAcquiredRecords.length !== 6) {
-  fail(`accepted FEB record count changed: ${yeseninPartOneFebAcquiredRecords.length} !== 6`);
+if (yeseninPartOneFebSirenaDiscoveryRun21.conclusion !== 'success') {
+  fail('run 21 Sirena discovery conclusion must remain success');
+}
+if (!/^[a-f0-9]{64}$/.test(yeseninPartOneFebSirenaDiscoveryRun21.artifactDigest)) {
+  fail('run 21 artifact digest must be a lowercase SHA-256');
+}
+if (yeseninPartOneFebSirenaDiscoveryRun21.discoveredImageCount !== 1) {
+  fail('run 21 must retain exactly one role-confirmed Sirena cover image');
+}
+if (yeseninPartOneFebSirenaDiscoveryRun21.discoveredImageUrl !== 'https://feb-web.ru/feb/esenin/pictures/El2-6212.jpg') {
+  fail('run 21 exact Sirena image URL changed');
+}
+if (!yeseninPartOneFebSirenaDiscoveryRun21.exactAnchorOnclick.includes("showimg('../../pictures/El2-6212.jpg'")) {
+  fail('run 21 exact onclick route evidence disappeared');
+}
+if (yeseninPartOneFebSirenaDiscoveryRun21.nonBlockingTechnicalErrorCount !== 1) {
+  fail('run 21 non-blocking generic-route timeout count changed');
+}
+
+if (yeseninPartOneFebAcquiredRecords.length !== 7) {
+  fail(`accepted FEB record count changed: ${yeseninPartOneFebAcquiredRecords.length} !== 7`);
 }
 
 for (const record of yeseninPartOneFebAcquiredRecords) {
@@ -78,7 +98,7 @@ for (const record of yeseninPartOneFebAcquiredRecords) {
 }
 
 const exactPages = yeseninPartOneFebAcquiredRecords.map((record) => record.printedPage).sort((a, b) => a - b);
-const requiredPages = [545, 673, 688, 689, 690, 691];
+const requiredPages = [545, 621, 673, 688, 689, 690, 691];
 for (const page of requiredPages) {
   if (!exactPages.includes(page)) fail(`accepted exact printed page ${page} disappeared`);
 }
@@ -95,22 +115,48 @@ const personnelPhoto = yeseninPartOneFebAcquiredRecords.find((record) => record.
 if (!personnelPhoto?.limitations.some((value) => value.includes('media-provenance'))) {
   fail('page 690 separate media-provenance boundary disappeared');
 }
+const sirenaCover = yeseninPartOneFebAcquiredRecords.find((record) => record.printedPage === 621);
+if (sirenaCover?.witnessId !== 'wit-ye1-imagist-sirena-cover-621') {
+  fail('Sirena cover is not attached to the controlling page-621 witness');
+}
+if (sirenaCover?.exactImageUrl !== 'https://feb-web.ru/feb/esenin/pictures/El2-6212.jpg') {
+  fail('Sirena exact image URL changed');
+}
+if (sirenaCover?.sourceSha256 !== 'a316190933bcbdb433c835359d971854176a32d808787bcdc0050aad5b501cb4') {
+  fail('Sirena cover controlling SHA-256 changed');
+}
+if (sirenaCover?.width !== 237 || sirenaCover?.height !== 309 || sirenaCover?.byteSize !== 18_693) {
+  fail('Sirena cover byte/dimension evidence changed');
+}
+if (!sirenaCover?.limitations.some((value) => value.includes('internal declaration pages'))) {
+  fail('Sirena internal-page boundary disappeared from the accepted cover record');
+}
+if (!sirenaCover?.limitations.some((value) => value.includes('Sovetskaya strana'))) {
+  fail('Sovetskaya strana two-witness boundary disappeared from the accepted cover record');
+}
 
-if (yeseninPartOneFebPendingTargets.length !== 1) {
-  fail('Sirena pending-target count must remain one until exact role-confirmed bytes are acquired');
+if (yeseninPartOneFebPendingTargets.length !== 2) {
+  fail('two declaration-publication object witnesses must remain pending');
 }
-const sirena = yeseninPartOneFebPendingTargets[0];
-if (sirena.witnessId !== 'wit-ye1-imagist-sirena-cover-621') {
-  fail('Sirena pending witness id changed');
+const pendingByWitness = new Map(yeseninPartOneFebPendingTargets.map((target) => [target.witnessId, target]));
+for (const witnessId of [
+  'wit-ye1-imagist-sirena-internal-pages',
+  'wit-ye1-imagist-sovetskaya-strana-no3',
+]) {
+  const pending = pendingByWitness.get(witnessId);
+  if (!pending) {
+    fail(`${witnessId}: pending declaration witness disappeared`);
+    continue;
+  }
+  if (pending.status !== 'object-facsimile-not-acquired') {
+    fail(`${witnessId}: pending status must remain object-facsimile-not-acquired`);
+  }
+  if (pending.limitations.length === 0) {
+    fail(`${witnessId}: pending limitations are mandatory`);
+  }
 }
-if (sirena.printedPage !== 621 || sirena.status !== 'route-and-bytes-pending') {
-  fail('Sirena page 621 must remain route-and-bytes-pending');
-}
-if (sirena.rejectedGuesses.length !== 3) {
-  fail('Sirena rejected 404 route evidence disappeared');
-}
-if (!sirena.limitations.some((value) => value.includes('two different objects'))) {
-  fail('Sirena two-object role-confirmation boundary disappeared');
+if (yeseninPartOneFebPendingTargets.some((target) => target.witnessId === 'wit-ye1-imagist-sirena-cover-621')) {
+  fail('the role-confirmed Sirena cover must no longer remain in the pending registry');
 }
 
 if (errors.length > 0) {
@@ -119,8 +165,9 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Yesenin FEB acquisition validation: run ${yeseninPartOneFebAcquisitionRun11.runNumber}, `
+  `Yesenin FEB acquisition validation: runs ${yeseninPartOneFebAcquisitionRun11.runNumber}/`
+  + `${yeseninPartOneFebSirenaDiscoveryRun21.runNumber}, `
   + `${yeseninPartOneFebAcquiredRecords.length} exact published-page records, `
   + `${requiredPages.length} guarded image pages, rights unresolved and production reuse unauthorized; `
-  + 'Sirena page 621 remains pending.',
+  + `${yeseninPartOneFebPendingTargets.length} declaration-publication object witnesses remain pending.`,
 );
