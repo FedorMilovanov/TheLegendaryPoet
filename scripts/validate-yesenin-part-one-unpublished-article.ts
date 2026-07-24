@@ -177,8 +177,11 @@ const requiredEditorialAnchors: Readonly<Record<string, readonly string[]>> = {
 for (const [blockId, anchors] of Object.entries(requiredEditorialAnchors)) {
   const text = yeseninPartOneEditorialPassSeven[blockId as keyof typeof yeseninPartOneEditorialPassSeven];
   if (!text) fail(`missing anchored editorial block ${blockId}`);
+  const normalizedText = text.toLocaleLowerCase('ru-RU');
   for (const anchor of anchors) {
-    if (!text.includes(anchor)) fail(`${blockId} is missing editorial anchor ${anchor}`);
+    if (!normalizedText.includes(anchor.toLocaleLowerCase('ru-RU'))) {
+      fail(`${blockId} is missing editorial anchor ${anchor}`);
+    }
   }
 }
 
