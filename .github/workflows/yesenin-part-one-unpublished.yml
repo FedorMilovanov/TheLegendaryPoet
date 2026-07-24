@@ -1,0 +1,52 @@
+name: Yesenin Part I Unpublished Article
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/**'
+      - 'scripts/lib/yesenin-part-one-*.ts'
+      - 'scripts/validate-yesenin-part-one-*.ts'
+      - 'src/data/essays/yeseninPartOne*.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/yesenin-part-one-unpublished.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: yesenin-part-one-unpublished-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate unpublished typed article package
+        id: unpublished
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-unpublished 2>&1 | tee yesenin-part-one-unpublished.log
+      - name: Upload focused unpublished article diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-unpublished-validation
+          path: yesenin-part-one-unpublished.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce unpublished article result
+        run: test "${{ steps.unpublished.outcome }}" = "success"
