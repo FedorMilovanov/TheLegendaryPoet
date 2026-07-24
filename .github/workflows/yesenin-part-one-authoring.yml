@@ -1,0 +1,58 @@
+name: Yesenin Part I Authoring
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/validate-yesenin-part-one-authoring.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-authoring.yml'
+  push:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_*'
+      - 'src/data/essays/yeseninPartOneSources*.ts'
+      - 'scripts/validate-yesenin-part-one-authoring.ts'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-one-authoring.yml'
+
+concurrency:
+  group: yesenin-part-one-authoring-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate verified authoring corpus
+        id: authoring
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-authoring 2>&1 | tee yesenin-part-one-authoring-validation.log
+      - name: Upload focused authoring diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-authoring-validation
+          path: yesenin-part-one-authoring-validation.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce authoring result
+        if: always()
+        run: test "${{ steps.authoring.outcome }}" = "success"
