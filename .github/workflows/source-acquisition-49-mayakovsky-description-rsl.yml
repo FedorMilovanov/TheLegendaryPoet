@@ -33,13 +33,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-bs4 python3-requests
 
-      - name: Discover child records and digital-access routes
+      - name: Resolve issue records and public-access boundaries
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p rsl-mayakovsky-description/pages
+          mkdir -p rsl-mayakovsky-description/searches rsl-mayakovsky-description/records
 
-          cat > /tmp/discover-rsl.py <<'PY'
+          cat > /tmp/resolve-rsl-descriptions.py <<'PY'
           from __future__ import annotations
 
           import concurrent.futures
@@ -49,7 +49,7 @@ jobs:
           import re
           import time
           from typing import Any
-          from urllib.parse import urljoin, urlparse
+          from urllib.parse import urljoin
 
           import requests
           from bs4 import BeautifulSoup
@@ -58,18 +58,32 @@ jobs:
 
           ROOT = pathlib.Path('rsl-mayakovsky-description')
           BASE = 'https://search.rsl.ru'
-          MASTER = BASE + '/ru/record/01006741660'
-          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/1.0'
+          MASTER_ID = '01006741660'
+          MASTER = f'{BASE}/ru/record/{MASTER_ID}'
+          UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/2.0'
+          TITLE = 'Описание документальных материалов В. В. Маяковского, находящихся в государственных хранилищах'
+          QUERIES = [
+              TITLE,
+              f'{TITLE} Вып. 1',
+              f'{TITLE} Вып. 2',
+              f'{TITLE} Вып. 3',
+              'В. В. Маяковский Описание документальных материалов выпуск 1',
+              'В. В. Маяковский Описание документальных материалов выпуск 2',
+              'В. В. Маяковский Описание документальных материалов выпуск 3',
+          ]
 
           session = requests.Session()
-          session.headers.update({'User-Agent': UA, 'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.5'})
+          session.headers.update({
+              'User-Agent': UA,
+              'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.5',
+          })
           retry = Retry(
               total=3,
               connect=3,
               read=3,
               backoff_factor=0.7,
               status_forcelist=(429, 500, 502, 503, 504),
-              allowed_methods=frozenset({'GET'}),
+              allowed_methods=frozenset({'GET', 'POST'}),
           )
           session.mount('https://', HTTPAdapter(max_retries=retry, pool_connections=12, pool_maxsize=12))
 
@@ -79,77 +93,122 @@ jobs:
                   encoding='utf-8',
               )
 
+          def record_urls(text: str, current_url: str) -> set[str]:
+              soup = BeautifulSoup(text, 'html.parser')
+              urls: set[str] = set()
+              for anchor in soup.find_all('a', href=True):
+                  href = urljoin(current_url, anchor.get('href', ''))
+                  if re.search(r'/ru/record/\d+', href):
+                      urls.add(href.split('#', 1)[0].split('?', 1)[0])
+              for match in re.finditer(r'(?:https://search\.rsl\.ru)?/ru/record/\d+', text):
+                  urls.add(urljoin(current_url, match.group(0)))
+              return urls
+
           master = session.get(MASTER, timeout=(20, 180), allow_redirects=True)
           master.raise_for_status()
           (ROOT / 'master.html').write_bytes(master.content)
           save_json('master-headers.json', dict(master.headers))
 
-          soup = BeautifulSoup(master.text, 'html.parser')
-          anchors: list[dict[str, str]] = []
-          discovered: set[str] = {MASTER}
-          record_urls: set[str] = set()
-          access_urls: set[str] = set()
-          keywords = ('электрон', 'полный текст', 'доступ', 'читать', 'просмотр', 'viewer', 'digital', 'online', 'pdf', 'скач')
+          discovered = record_urls(master.text, master.url)
+          discovered.add(MASTER)
+          search_results: list[dict[str, Any]] = []
 
-          for anchor in soup.find_all('a', href=True):
-              href = urljoin(master.url, anchor.get('href', ''))
-              text = ' '.join(anchor.get_text(' ', strip=True).split())
-              anchors.append({'href': href, 'text': text})
-              if re.search(r'/ru/record/\d+', href):
-                  record_urls.add(href.split('#', 1)[0])
-              if any(keyword in f'{text} {href}'.casefold() for keyword in keywords):
-                  access_urls.add(href)
+          for index, query in enumerate(QUERIES, start=1):
+              for method in ('post', 'get'):
+                  started = time.monotonic()
+                  try:
+                      if method == 'post':
+                          response = session.post(
+                              f'{BASE}/ru/search',
+                              data={'search': query},
+                              timeout=(20, 180),
+                              allow_redirects=True,
+                          )
+                      else:
+                          response = session.get(
+                              f'{BASE}/ru/search',
+                              params={'search': query},
+                              timeout=(20, 180),
+                              allow_redirects=True,
+                          )
+                      filename = f'searches/{index:02d}-{method}.html'
+                      (ROOT / filename).write_bytes(response.content)
+                      urls = record_urls(response.text, response.url)
+                      discovered.update(urls)
+                      search_results.append({
+                          'query': query,
+                          'method': method,
+                          'requested_url': response.request.url,
+                          'final_url': response.url,
+                          'status': response.status_code,
+                          'bytes': len(response.content),
+                          'elapsed': round(time.monotonic() - started, 3),
+                          'record_urls': sorted(urls),
+                          'filename': filename,
+                      })
+                  except Exception as error:
+                      search_results.append({
+                          'query': query,
+                          'method': method,
+                          'error': repr(error),
+                          'elapsed': round(time.monotonic() - started, 3),
+                      })
+          save_json('search-results.json', search_results)
+          save_json('discovered-record-urls.json', sorted(discovered))
 
-          # Embedded URLs and record IDs often live in JSON script data rather than anchors.
-          for script in soup.find_all('script'):
-              text = script.string or script.get_text() or ''
-              for match in re.finditer(r'https?://[^\s"\'<>]+|/ru/record/\d+|/[^\s"\'<>]*(?:viewer|digital|online|document|fulltext|pdf)[^\s"\'<>]*', text, re.I):
-                  url = urljoin(master.url, match.group(0).replace('\\/', '/').rstrip('},;)]'))
-                  if re.search(r'/ru/record/\d+', url):
-                      record_urls.add(url.split('#', 1)[0])
-                  if any(keyword in url.casefold() for keyword in keywords):
-                      access_urls.add(url)
+          access_terms = (
+              'полный текст', 'электронный ресурс', 'читать', 'просмотр',
+              'viewer', 'fulltext', 'digital', 'online', '.pdf', 'скачать',
+          )
 
-          save_json('master-anchors.json', anchors)
-          save_json('master-record-urls.json', sorted(record_urls))
-          save_json('master-access-urls.json', sorted(access_urls))
-
-          likely_records = sorted(record_urls)
-          # Keep crawl bounded to the master and directly linked record pages.
           def fetch_record(url: str) -> dict[str, Any]:
               started = time.monotonic()
               try:
                   response = session.get(url, timeout=(15, 120), allow_redirects=True)
-                  body = response.content
+                  response.raise_for_status()
                   digest = hashlib.sha256(url.encode()).hexdigest()[:16]
-                  filename = f'pages/{digest}.html'
-                  (ROOT / filename).write_bytes(body)
-                  page_soup = BeautifulSoup(response.text, 'html.parser')
-                  title = page_soup.title.get_text(' ', strip=True) if page_soup.title else ''
-                  links: list[dict[str, str]] = []
-                  page_access: set[str] = set()
-                  for anchor in page_soup.find_all('a', href=True):
+                  html_name = f'records/{digest}.html'
+                  (ROOT / html_name).write_bytes(response.content)
+                  soup = BeautifulSoup(response.text, 'html.parser')
+                  title = soup.title.get_text(' ', strip=True) if soup.title else ''
+                  record_title = ''
+                  title_node = soup.select_one('.rsl-record-title')
+                  if title_node:
+                      record_title = ' '.join(title_node.get_text(' ', strip=True).split())
+                  marc = ''
+                  marc_node = soup.select_one('#marc-rec')
+                  if marc_node:
+                      marc = ' '.join(marc_node.get_text(' ', strip=True).split())
+                  public_links: list[dict[str, str]] = []
+                  fragment_links: list[dict[str, str]] = []
+                  for anchor in soup.find_all('a', href=True):
                       href = urljoin(response.url, anchor.get('href', ''))
                       text = ' '.join(anchor.get_text(' ', strip=True).split())
-                      links.append({'href': href, 'text': text})
-                      if any(keyword in f'{text} {href}'.casefold() for keyword in keywords):
-                          page_access.add(href)
-                  embedded: set[str] = set()
-                  for script in page_soup.find_all('script'):
-                      text = script.string or script.get_text() or ''
-                      for match in re.finditer(r'https?://[^\s"\'<>]+|/[^\s"\'<>]*(?:viewer|digital|online|document|fulltext|pdf)[^\s"\'<>]*', text, re.I):
-                          embedded.add(urljoin(response.url, match.group(0).replace('\\/', '/').rstrip('},;)]')))
-                  save_json(f'pages/{digest}-links.json', links)
+                      lowered = f'{text} {href}'.casefold()
+                      item = {'href': href, 'text': text}
+                      if 'fragment-eorder' in href or 'заказать копию фрагмента' in lowered:
+                          fragment_links.append(item)
+                      if any(term in lowered for term in access_terms):
+                          if 'download/marc21' not in href and 'fragment-eorder' not in href:
+                              public_links.append(item)
+                  classification = 'CATALOGUE-ONLY'
+                  if public_links:
+                      classification = 'PUBLIC-DIGITAL-CANDIDATE'
+                  elif fragment_links:
+                      classification = 'CATALOGUE-WITH-FRAGMENT-ORDER'
                   return {
                       'requested_url': url,
                       'final_url': response.url,
                       'status': response.status_code,
-                      'bytes': len(body),
-                      'content_type': response.headers.get('content-type', ''),
+                      'bytes': len(response.content),
                       'elapsed': round(time.monotonic() - started, 3),
                       'title': title,
-                      'filename': filename,
-                      'access_urls': sorted(page_access | embedded),
+                      'record_title': record_title,
+                      'marc_text': marc,
+                      'public_links': public_links,
+                      'fragment_links': fragment_links,
+                      'classification': classification,
+                      'filename': html_name,
                   }
               except Exception as error:
                   return {
@@ -159,38 +218,47 @@ jobs:
                   }
 
           with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-              record_results = list(executor.map(fetch_record, likely_records))
-          save_json('record-results.json', record_results)
+              records = list(executor.map(fetch_record, sorted(discovered)))
+          save_json('record-results.json', records)
 
-          all_access = set(access_urls)
-          for result in record_results:
-              all_access.update(result.get('access_urls', []))
-          save_json('all-access-candidates.json', sorted(all_access))
+          relevant = []
+          for item in records:
+              haystack = f"{item.get('record_title', '')} {item.get('marc_text', '')}".casefold()
+              if 'маяковск' in haystack and 'описание документальных материалов' in haystack:
+                  relevant.append(item)
+          save_json('relevant-records.json', relevant)
 
           summary = {
-              'master_status': master.status_code,
-              'master_bytes': len(master.content),
-              'direct_record_links': len(record_urls),
-              'record_pages_fetched': sum(1 for item in record_results if item.get('status') == 200),
-              'access_candidates': len(all_access),
-              'record_results': [
+              'master_id': MASTER_ID,
+              'queries': len(QUERIES),
+              'search_requests': len(search_results),
+              'discovered_records': len(discovered),
+              'fetched_records': sum(1 for item in records if item.get('status') == 200),
+              'relevant_records': len(relevant),
+              'public_digital_candidates': sum(
+                  1 for item in relevant if item.get('classification') == 'PUBLIC-DIGITAL-CANDIDATE'
+              ),
+              'fragment_order_only': sum(
+                  1 for item in relevant if item.get('classification') == 'CATALOGUE-WITH-FRAGMENT-ORDER'
+              ),
+              'relevant': [
                   {
                       'url': item.get('final_url') or item.get('requested_url'),
-                      'status': item.get('status'),
-                      'title': item.get('title'),
-                      'access_count': len(item.get('access_urls', [])),
-                      'error': item.get('error'),
+                      'title': item.get('record_title') or item.get('title'),
+                      'classification': item.get('classification'),
+                      'public_links': item.get('public_links'),
+                      'fragment_links': item.get('fragment_links'),
                   }
-                  for item in record_results
+                  for item in relevant
               ],
           }
           save_json('summary.json', summary)
           print(json.dumps(summary, ensure_ascii=False, indent=2))
           PY
 
-          python3 /tmp/discover-rsl.py
+          python3 /tmp/resolve-rsl-descriptions.py
 
-      - name: Upload discovery evidence
+      - name: Upload RSL discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
