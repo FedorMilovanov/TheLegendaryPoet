@@ -35,16 +35,16 @@ jobs:
           npm install --no-save --ignore-scripts playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Probe record, direct PDF and viewer routes
+      - name: Verify catalogue record and probe optional fulltext routes
         shell: bash
         run: |
           set -euo pipefail
           root='rsl-description-issue-3'
-          mkdir -p "$root/direct" "$root/browser/responses" "$root/browser/downloads" "$root/front" "$root/final"
+          mkdir -p "$root/direct" "$root/browser/downloads" "$root/front" "$root/final"
           record='https://search.rsl.ru/ru/record/01006741660'
           viewer='https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white'
           dlib_path='/rsl01006000000/rsl01006741000/rsl01006741660/rsl01006741660.pdf'
-          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0'
+          ua='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/4.0'
 
           curl --location --compressed --retry 5 --retry-all-errors \
             --connect-timeout 30 --max-time 300 \
@@ -52,6 +52,11 @@ jobs:
             --dump-header "$root/record-headers.txt" \
             --output "$root/record.html" \
             "$record"
+
+          test -s "$root/record.html"
+          grep -q '01006741660' "$root/record.html"
+          grep -q 'Описание документальных материалов' "$root/record.html"
+          printf '%s\n' 'CATALOGUE-RECORD-VERIFIED' > "$root/record-status.txt"
 
           curl --location --compressed --retry 4 --retry-all-errors \
             --connect-timeout 30 --max-time 300 \
@@ -75,7 +80,7 @@ jobs:
             headers="$root/direct/$index2.headers"
             code=0
             curl --location --compressed --retry 3 --retry-all-errors \
-              --connect-timeout 30 --max-time 1800 \
+              --connect-timeout 30 --max-time 900 \
               --user-agent "$ua" \
               --referer "$record" \
               --dump-header "$headers" \
@@ -95,146 +100,130 @@ jobs:
           done
           printf '%s\n' "$found" > "$root/direct-result.txt"
 
-          cat > /tmp/inspect-rsl-viewer.mjs <<'JS'
+          # Keep the script inside the checkout so Node can resolve the locally
+          # installed Playwright package. A /tmp script cannot see repo/node_modules.
+          cat > "$root/inspect-rsl-viewer.mjs" <<'JS'
           import { chromium } from 'playwright';
-          import crypto from 'node:crypto';
           import fs from 'node:fs/promises';
           import path from 'node:path';
 
           const root = path.resolve('rsl-description-issue-3/browser');
           const target = 'https://viewer.rsl.ru/ru/rsl01006741660?page=1&rotate=0&theme=white';
           const record = 'https://search.rsl.ru/ru/record/01006741660';
-          const network = [];
           const events = [];
-          const savedBodies = [];
           const candidates = new Set();
-          const safe = value => crypto.createHash('sha256').update(String(value)).digest('hex').slice(0, 20);
-          const addCandidate = value => {
-            if (!value || typeof value !== 'string') return;
-            if (/\.pdf(?:[?#]|$)|dlib\.rsl\.ru|viewer.*download|api.*document|file/i.test(value)) candidates.add(value);
+          const addCandidate = (value) => {
+            if (typeof value !== 'string' || !value) return;
+            if (/\.pdf(?:[?#]|$)|dlib\.rsl\.ru|download|document|fulltext|file/i.test(value)) candidates.add(value);
           };
 
+          await fs.mkdir(path.join(root, 'downloads'), { recursive: true });
           let browser;
-          let context;
           let page;
           let fatal = null;
-          let initialStatus = null;
           try {
             browser = await chromium.launch({ headless: true });
-            context = await browser.newContext({
+            const context = await browser.newContext({
               acceptDownloads: true,
               ignoreHTTPSErrors: true,
               viewport: { width: 1500, height: 1100 },
               locale: 'ru-RU',
-              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/148.0.0.0 Safari/537.36 source-verifier/3.0',
             });
             page = await context.newPage();
-            page.on('console', message => events.push({ type: 'console', level: message.type(), text: message.text() }));
-            page.on('pageerror', error => events.push({ type: 'pageerror', text: error.stack || error.message }));
-            page.on('requestfailed', request => events.push({ type: 'requestfailed', url: request.url(), failure: request.failure()?.errorText || '' }));
-            page.on('request', request => {
-              const item = { phase: 'request', method: request.method(), resourceType: request.resourceType(), url: request.url() };
-              network.push(item);
-              addCandidate(item.url);
-            });
-            page.on('response', async response => {
-              const headers = await response.allHeaders().catch(() => ({}));
-              const item = {
-                phase: 'response',
-                status: response.status(),
-                contentType: headers['content-type'] || '',
-                contentLength: headers['content-length'] || '',
-                url: response.url(),
-              };
-              network.push(item);
-              addCandidate(item.url);
-              if (/application\/pdf/i.test(item.contentType)) addCandidate(item.url);
-              if (/json|javascript|text\//i.test(item.contentType) && /api|viewer|document|book|page|file|download/i.test(item.url)) {
-                try {
-                  const body = await response.body();
-                  if (body.length <= 12_000_000) {
-                    const extension = item.contentType.includes('json') ? 'json' : item.contentType.includes('javascript') ? 'js' : 'txt';
-                    const filename = `${safe(item.url)}.${extension}`;
-                    await fs.writeFile(path.join(root, 'responses', filename), body);
-                    savedBodies.push({ filename, bytes: body.length, url: item.url, contentType: item.contentType });
-                    const text = body.toString('utf8');
-                    for (const match of text.matchAll(/https?:\/\/[^\s"'<>]+/g)) addCandidate(match[0].replace(/[},;]+$/, ''));
-                  }
-                } catch {}
-              }
-            });
-            page.on('download', async download => {
+            page.on('pageerror', (error) => events.push({ type: 'pageerror', text: String(error) }));
+            page.on('requestfailed', (request) => events.push({
+              type: 'requestfailed',
+              url: request.url(),
+              failure: request.failure()?.errorText || '',
+            }));
+            page.on('request', (request) => addCandidate(request.url()));
+            page.on('response', (response) => addCandidate(response.url()));
+            page.on('download', async (download) => {
               const name = download.suggestedFilename().replace(/[^a-zA-Z0-9._-]+/g, '_');
-              const destination = path.join(root, 'downloads', `${Date.now()}-${name}`);
-              await download.saveAs(destination).catch(error => events.push({ type: 'download-error', text: String(error) }));
+              await download.saveAs(path.join(root, 'downloads', name));
             });
 
-            let navigation = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 120_000 }).catch(async error => {
-              events.push({ type: 'viewer-navigation-error', text: error.stack || String(error) });
+            const navigation = await page.goto(target, {
+              waitUntil: 'domcontentloaded',
+              timeout: 120_000,
+            }).catch(async (error) => {
+              events.push({ type: 'viewer-navigation-error', text: String(error) });
               return page.goto(record, { waitUntil: 'domcontentloaded', timeout: 120_000 });
             });
-            initialStatus = navigation?.status() || null;
-            await page.waitForTimeout(15_000);
-
-            const downloadLocators = [
-              page.getByText('Скачать', { exact: true }),
-              page.getByRole('button', { name: /скач/i }),
-              page.getByRole('link', { name: /скач/i }),
-            ];
-            for (const locator of downloadLocators) {
-              if (await locator.count().catch(() => 0)) {
-                await locator.first().click({ timeout: 10_000 }).catch(error => events.push({ type: 'download-click-error', text: String(error) }));
-                await page.waitForTimeout(5_000);
-                break;
-              }
-            }
+            await page.waitForTimeout(10_000);
 
             const dom = await page.evaluate(() => ({
               title: document.title,
               url: location.href,
-              bodyText: (document.body?.innerText || '').slice(0, 200_000),
-              html: document.documentElement?.outerHTML || '',
-              links: [...document.querySelectorAll('a')].map(anchor => ({ href: anchor.href, text: (anchor.innerText || '').trim(), download: anchor.download })),
-              buttons: [...document.querySelectorAll('button,[role=button]')].map(button => ({ text: (button.innerText || '').trim(), ariaLabel: button.getAttribute('aria-label'), title: button.getAttribute('title') })),
-              resources: performance.getEntriesByType('resource').map(entry => ({ name: entry.name, initiatorType: entry.initiatorType, transferSize: entry.transferSize })),
+              bodyText: (document.body?.innerText || '').slice(0, 100_000),
+              links: [...document.querySelectorAll('a')].map((anchor) => ({
+                href: anchor.href,
+                text: (anchor.innerText || '').trim(),
+              })),
+              resources: performance.getEntriesByType('resource').map((entry) => entry.name),
             }));
-            for (const link of dom.links) addCandidate(link.href);
-            for (const resource of dom.resources) addCandidate(resource.name);
-            await fs.writeFile(path.join(root, 'dom.json'), JSON.stringify({ ...dom, html: undefined }, null, 2));
-            await fs.writeFile(path.join(root, 'page.html'), dom.html);
+            dom.links.forEach((link) => addCandidate(link.href));
+            dom.resources.forEach(addCandidate);
+            await fs.writeFile(path.join(root, 'dom.json'), JSON.stringify(dom, null, 2));
             await page.screenshot({ path: path.join(root, 'viewer.png'), fullPage: true }).catch(() => {});
 
+            const downloadControl = page.getByRole('link', { name: /скач/i }).or(
+              page.getByRole('button', { name: /скач/i }),
+            );
+            if (await downloadControl.count().catch(() => 0)) {
+              await downloadControl.first().click({ timeout: 10_000 }).catch((error) => {
+                events.push({ type: 'download-click-error', text: String(error) });
+              });
+              await page.waitForTimeout(5_000);
+            }
+
             const candidateResults = [];
-            let pdfSaved = false;
             for (const url of [...candidates].sort()) {
               try {
-                const response = await context.request.get(url, { timeout: 120_000, failOnStatusCode: false, headers: { Referer: target } });
-                const contentType = response.headers()['content-type'] || '';
+                const response = await context.request.get(url, {
+                  timeout: 120_000,
+                  failOnStatusCode: false,
+                  headers: { Referer: target },
+                });
                 const body = await response.body();
                 const isPdf = body.subarray(0, 5).toString() === '%PDF-';
-                candidateResults.push({ url, status: response.status(), contentType, bytes: body.length, isPdf });
-                if (!pdfSaved && response.status() === 200 && isPdf) {
+                candidateResults.push({
+                  url,
+                  status: response.status(),
+                  contentType: response.headers()['content-type'] || '',
+                  bytes: body.length,
+                  isPdf,
+                });
+                if (response.status() === 200 && isPdf) {
                   await fs.writeFile(path.join(root, 'downloads', 'network-source.pdf'), body);
-                  pdfSaved = true;
+                  break;
                 }
               } catch (error) {
                 candidateResults.push({ url, error: String(error) });
               }
             }
             await fs.writeFile(path.join(root, 'candidates.json'), JSON.stringify(candidateResults, null, 2));
+            await fs.writeFile(path.join(root, 'navigation.json'), JSON.stringify({
+              status: navigation?.status() || null,
+              finalUrl: page.url(),
+            }, null, 2));
           } catch (error) {
-            fatal = error?.stack || String(error);
+            fatal = String(error?.stack || error);
           } finally {
-            await fs.writeFile(path.join(root, 'network.json'), JSON.stringify(network, null, 2)).catch(() => {});
             await fs.writeFile(path.join(root, 'events.json'), JSON.stringify(events, null, 2)).catch(() => {});
-            await fs.writeFile(path.join(root, 'saved-bodies.json'), JSON.stringify(savedBodies, null, 2)).catch(() => {});
-            await fs.writeFile(path.join(root, 'summary.json'), JSON.stringify({ target, initialStatus, networkEntries: network.length, candidates: candidates.size, fatal }, null, 2)).catch(() => {});
+            await fs.writeFile(path.join(root, 'summary.json'), JSON.stringify({
+              target,
+              candidateCount: candidates.size,
+              fatal,
+            }, null, 2)).catch(() => {});
             if (fatal) await fs.writeFile(path.join(root, 'fatal-error.txt'), fatal).catch(() => {});
             if (browser) await browser.close().catch(() => {});
           }
           JS
 
-          node /tmp/inspect-rsl-viewer.mjs
+          viewer_code=0
+          node "$root/inspect-rsl-viewer.mjs" > "$root/browser-process.log" 2>&1 || viewer_code=$?
+          printf '%s\n' "$viewer_code" > "$root/browser-process-exit.txt"
 
           if [ ! -s "$root/source.pdf" ]; then
             browser_pdf="$(find "$root/browser/downloads" -type f -size +100k -print0 | xargs -0 -r file | awk -F: '/PDF document/ {print $1; exit}')"
@@ -249,8 +238,12 @@ jobs:
             sha256sum "$root/source.pdf" | cut -d' ' -f1 > "$root/sha256.txt"
             printf '%s\n' 'PDF-ACQUIRED' > "$root/classification.txt"
           else
-            printf '%s\n' 'VIEWER-DECLARED-FREE / BYTES-NOT-YET-ACQUIRED' > "$root/classification.txt"
+            printf '%s\n' 'CATALOGUE-VERIFIED / FULL-SCAN-NOT-ACQUIRED' > "$root/classification.txt"
           fi
+
+          printf 'record=%s\nclassification=%s\nviewer_process_exit=%s\n' \
+            "$record" "$(cat "$root/classification.txt")" "$viewer_code" \
+            > "$root/acquisition-summary.txt"
 
       - name: Verify acquired PDF and render witnesses
         if: hashFiles('rsl-description-issue-3/source.pdf') != ''
@@ -272,6 +265,20 @@ jobs:
           pdftoppm -f "$final_start" -l "$pages" -jpeg -scale-to 1500 "$root/source.pdf" "$root/final/page" >/dev/null 2>&1
           printf 'pages=%s\ntext_bytes=%s\n' "$pages" "$(wc -c < "$root/full-text.txt")" > "$root/verification-summary.txt"
 
+      - name: Validate evidence classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='rsl-description-issue-3'
+          test -s "$root/record.html"
+          test -s "$root/record-status.txt"
+          test -s "$root/classification.txt"
+          grep -Eq '^(PDF-ACQUIRED|CATALOGUE-VERIFIED / FULL-SCAN-NOT-ACQUIRED)$' "$root/classification.txt"
+          if grep -q '^PDF-ACQUIRED$' "$root/classification.txt"; then
+            test -s "$root/source.pdf"
+            test -s "$root/sha256.txt"
+          fi
+
       - name: Upload RSL verification evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -280,12 +287,16 @@ jobs:
           path: |
             rsl-description-issue-3/record-headers.txt
             rsl-description-issue-3/record.html
+            rsl-description-issue-3/record-status.txt
             rsl-description-issue-3/action-record-headers.txt
             rsl-description-issue-3/action-record.js
             rsl-description-issue-3/direct-attempts.tsv
             rsl-description-issue-3/direct-result.txt
             rsl-description-issue-3/acquired-url.txt
             rsl-description-issue-3/classification.txt
+            rsl-description-issue-3/acquisition-summary.txt
+            rsl-description-issue-3/browser-process.log
+            rsl-description-issue-3/browser-process-exit.txt
             rsl-description-issue-3/bytes.txt
             rsl-description-issue-3/sha256.txt
             rsl-description-issue-3/qpdf-check.txt
