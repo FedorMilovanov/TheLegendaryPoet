@@ -3,10 +3,15 @@ import {
   yeseninPartOneClaimCoverage,
   yeseninPartOneSources,
 } from '../src/data/essays/yeseninPartOneSources';
+import {
+  yeseninPartOnePassTwoClaimCoverage,
+  yeseninPartOneSourcesPassTwo,
+} from '../src/data/essays/yeseninPartOneSourcesPassTwo';
 
 const errors: string[] = [];
 const sourceIds = new Set<string>();
 const normalizedUrls = new Set<string>();
+const allSources = [...yeseninPartOneSources, ...yeseninPartOneSourcesPassTwo] as const;
 
 function normalizedUrl(value: string): string {
   return value.replace(/^http:/, 'https:').replace(/\/$/, '');
@@ -16,11 +21,11 @@ function fail(message: string) {
   errors.push(message);
 }
 
-if (yeseninPartOneSources.length < 16) {
-  fail(`source registry regressed below pass-one floor: ${yeseninPartOneSources.length} < 16`);
+if (allSources.length < 29) {
+  fail(`source registry regressed below pass-two floor: ${allSources.length} < 29`);
 }
 
-for (const source of yeseninPartOneSources) {
+for (const source of allSources) {
   if (!source.id) {
     fail(`source without stable id: ${source.title}`);
     continue;
@@ -32,7 +37,7 @@ for (const source of yeseninPartOneSources) {
   sourceIds.add(source.id);
 
   if (!source.url) {
-    fail(`${source.id}: source URL is required in pass-one registry`);
+    fail(`${source.id}: source URL is required in pass-two registry`);
   } else {
     if (!source.url.startsWith('https://')) fail(`${source.id}: non-HTTPS source URL ${source.url}`);
     const urlKey = normalizedUrl(source.url);
@@ -77,10 +82,22 @@ for (const claimId of requiredClaims) {
     continue;
   }
   for (const sourceId of coverage.sourceIds) {
-    if (!sourceIds.has(sourceId)) fail(`${claimId}: unknown source id ${sourceId}`);
+    if (!sourceIds.has(sourceId)) fail(`${claimId}: unknown pass-one source id ${sourceId}`);
   }
   if (coverage.sourceIds.length === 0 && coverage.missing.length === 0) {
     fail(`${claimId}: empty coverage must retain an explicit missing-evidence reason`);
+  }
+}
+
+for (const [claimId, coverage] of Object.entries(yeseninPartOnePassTwoClaimCoverage)) {
+  if (!requiredClaims.includes(claimId as (typeof requiredClaims)[number])) {
+    fail(`${claimId}: pass-two coverage points to an unguarded claim`);
+  }
+  if (coverage.sourceIds.length === 0) {
+    fail(`${claimId}: pass-two coverage must add at least one exact source`);
+  }
+  for (const sourceId of coverage.sourceIds) {
+    if (!sourceIds.has(sourceId)) fail(`${claimId}: unknown pass-two source id ${sourceId}`);
   }
 }
 
@@ -95,6 +112,21 @@ for (const [claimId, requiredText] of exactBoundaryAssertions) {
     ?.missing.join(' ') ?? '';
   if (!missingText.includes(requiredText)) {
     fail(`${claimId}: required evidence boundary changed or disappeared (${requiredText})`);
+  }
+}
+
+const passTwoHoldAssertions: Array<[keyof typeof yeseninPartOnePassTwoClaimCoverage, string]> = [
+  ['YE1-004', 'facsimile'],
+  ['YE1-013', 'object-level provenance'],
+  ['YE1-016', '20 April 1916 train no. 143 team record'],
+  ['YE1-020', 'marriage, birth and divorce'],
+  ['YE1-023', 'first-publication facsimile'],
+];
+
+for (const [claimId, requiredText] of passTwoHoldAssertions) {
+  const remainingText = yeseninPartOnePassTwoClaimCoverage[claimId].remaining.join(' ');
+  if (!remainingText.includes(requiredText)) {
+    fail(`${claimId}: pass-two archive/publication hold changed or disappeared (${requiredText})`);
   }
 }
 
@@ -121,13 +153,18 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-const primaryCount = yeseninPartOneSources.filter((source) => source.kind === 'primary').length;
+const primaryCount = allSources.filter((source) => source.kind === 'primary').length;
 const unresolvedClaims = Object.values(yeseninPartOneClaimCoverage)
   .filter((coverage) => coverage.missing.length > 0)
   .length;
+const passTwoOpenHolds = Object.values(yeseninPartOnePassTwoClaimCoverage)
+  .filter((coverage) => coverage.remaining.length > 0)
+  .length;
 
 console.log(
-  `Yesenin Part I research validation: ${yeseninPartOneSources.length} classified sources, `
+  `Yesenin Part I research validation: ${allSources.length} classified sources `
+  + `(${yeseninPartOneSources.length} pass one + ${yeseninPartOneSourcesPassTwo.length} pass two), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
-  + `${unresolvedClaims} claims retaining explicit evidence gaps; public registration remains blocked.`,
+  + `${unresolvedClaims} pass-one gaps and ${passTwoOpenHolds} pass-two archive/publication holds; `
+  + 'public registration remains blocked.',
 );
