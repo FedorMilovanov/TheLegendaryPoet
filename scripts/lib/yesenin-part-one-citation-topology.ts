@@ -17,6 +17,10 @@ const supplementPath = 'research/yesenin/PART_ONE_TARGETED_WEB_SUPPLEMENT_2026-0
 const witnessPath = 'research/yesenin/PART_ONE_PAGE_WITNESS_LEDGER.md';
 const claimLedgerPath = 'research/yesenin/part-one-claim-ledger-pass1.md';
 
+const legacySourceAliases = new Map<string, readonly string[]>([
+  ['yeseninPartOneFebAcquisition', ['WIT-YE1-002']],
+]);
+
 export type YeseninPartOneSourceLayer = 'canonical' | 'supplemental' | 'witness';
 
 export interface YeseninPartOneCitationNode {
@@ -30,10 +34,12 @@ export interface YeseninPartOneCitationNode {
   text: string;
   claimIds: string[];
   editorialClaims: string[];
+  rawSourceIds: string[];
   sourceIds: string[];
   canonicalSourceIds: string[];
   supplementalSourceIds: string[];
   witnessSourceIds: string[];
+  legacySourceTokens: string[];
 }
 
 export interface YeseninPartOneCitationTopology {
@@ -83,6 +89,27 @@ const stripMetadataTail = (paragraph: string, label: string) => {
   const text = paragraph.replace(metadataTail, '').trim();
   if (!text) fail(`${label} has no authored prose before metadata`);
   return text;
+};
+
+const expandClaimToken = (claim: string, claimIds: Set<string>, label: string) => {
+  if (/^YE1-\d{3}$/.test(claim)) {
+    if (!claimIds.has(claim)) fail(`${label} references unknown claim ID ${claim}`);
+    return [claim];
+  }
+
+  const range = claim.match(/^YE1-(\d{3})[–—-]YE1-(\d{3})$/);
+  if (!range) return null;
+
+  const start = Number(range[1]);
+  const end = Number(range[2]);
+  if (end < start) fail(`${label} has reversed claim range ${claim}`);
+  if (end - start > 50) fail(`${label} has implausibly wide claim range ${claim}`);
+
+  return Array.from({ length: end - start + 1 }, (_, offset) => {
+    const id = `YE1-${String(start + offset).padStart(3, '0')}`;
+    if (!claimIds.has(id)) fail(`${label} range ${claim} expands to unknown claim ID ${id}`);
+    return id;
+  });
 };
 
 export function loadYeseninPartOneCitationTopology(
@@ -162,26 +189,45 @@ export function loadYeseninPartOneCitationTopology(
       }
 
       const claimTokens = splitTokens(claims.value, `${label} claims`);
-      const sourceTokens = splitTokens(sources.value, `${label} sources`);
+      const rawSourceIds = splitTokens(sources.value, `${label} sources`);
       const nodeClaimIds: string[] = [];
       const editorialClaims: string[] = [];
+      const seenClaimIds = new Set<string>();
 
       for (const claim of claimTokens) {
-        if (/^YE1-\d{3}$/.test(claim)) {
-          if (!claimIds.has(claim)) fail(`${label} references unknown claim ID ${claim}`);
-          nodeClaimIds.push(claim);
-        } else {
-          if (!/^[\p{L}\p{N}][\p{L}\p{N} .:/()'’«»“”–—-]*$/u.test(claim)) {
-            fail(`${label} has malformed editorial claim label ${claim}`);
+        const expanded = expandClaimToken(claim, claimIds, label);
+        if (expanded) {
+          for (const id of expanded) {
+            if (seenClaimIds.has(id)) fail(`${label} resolves duplicate claim ID ${id}`);
+            seenClaimIds.add(id);
+            nodeClaimIds.push(id);
           }
-          editorialClaims.push(claim);
+          continue;
+        }
+
+        if (!/^[\p{L}\p{N}][\p{L}\p{N} .:/()'’«»“”–—-]*$/u.test(claim)) {
+          fail(`${label} has malformed editorial claim label ${claim}`);
+        }
+        editorialClaims.push(claim);
+      }
+
+      const sourceIds: string[] = [];
+      const legacySourceTokens: string[] = [];
+      for (const rawSourceId of rawSourceIds) {
+        const aliases = legacySourceAliases.get(rawSourceId);
+        if (aliases) legacySourceTokens.push(rawSourceId);
+        for (const normalizedSourceId of aliases ?? [rawSourceId]) {
+          if (sourceIds.includes(normalizedSourceId)) {
+            fail(`${label} resolves duplicate source ID ${normalizedSourceId}`);
+          }
+          sourceIds.push(normalizedSourceId);
         }
       }
 
       const canonical: string[] = [];
       const supplemental: string[] = [];
       const witnesses: string[] = [];
-      for (const sourceId of sourceTokens) {
+      for (const sourceId of sourceIds) {
         if (canonicalSourceIds.has(sourceId)) canonical.push(sourceId);
         else if (supplementalSourceIds.has(sourceId)) supplemental.push(sourceId);
         else if (witnessSourceIds.has(sourceId)) witnesses.push(sourceId);
@@ -199,10 +245,12 @@ export function loadYeseninPartOneCitationTopology(
         text: stripMetadataTail(paragraph, label),
         claimIds: nodeClaimIds,
         editorialClaims,
-        sourceIds: sourceTokens,
+        rawSourceIds,
+        sourceIds,
         canonicalSourceIds: canonical,
         supplementalSourceIds: supplemental,
         witnessSourceIds: witnesses,
+        legacySourceTokens,
       });
     }
   }
