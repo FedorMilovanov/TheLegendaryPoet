@@ -1,0 +1,200 @@
+name: Source acquisition 49 legacy index resolver
+
+on:
+  push:
+    branches:
+      - research/source-acquisition-49
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: legacy-resolve ${{ matrix.source.id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        source:
+          - id: esenin-chronicle-v5-book1-2013-mirror
+            index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
+            needle: Том 5. Книга 1. Январь 1925
+            year: "2013"
+          - id: esenin-chronicle-v5-book2-2018
+            index: https://publ.lib.ru/ARCHIVES/E/ESENIN_Sergey_Aleksandrovich_%28poet%29/
+            needle: Том 5. Книга 2. 24 декабря 1925
+            year: "2018"
+          - id: mayakovsky-death-case-2005
+            index: https://publ.lib.ru/ARCHIVES/M/MAYAKOVSKIY_Vladimir_Vladimirovich/
+            needle: Следственное дело В.В.Маяковского
+            year: "2005"
+
+    env:
+      SOURCE_ID: ${{ matrix.source.id }}
+      INDEX_URL: ${{ matrix.source.index }}
+      NEEDLE: ${{ matrix.source.needle }}
+      TARGET_YEAR: ${{ matrix.source.year }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl qpdf poppler-utils
+
+      - name: Resolve exact legacy href
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir="legacy-index/$SOURCE_ID"
+          mkdir -p "$dir"
+          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 300 \
+            --user-agent 'Mozilla/5.0 legacy-index-resolver/2.0' \
+            --dump-header "$dir/index-headers.txt" \
+            --output "$dir/index.raw" \
+            "$INDEX_URL"
+
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import html.parser
+          import json
+          import os
+          import pathlib
+          import urllib.parse
+
+          source_id = os.environ['SOURCE_ID']
+          index_url = os.environ['INDEX_URL']
+          needle = os.environ['NEEDLE']
+          target_year = os.environ['TARGET_YEAR']
+          root = pathlib.Path('legacy-index') / source_id
+          raw = (root / 'index.raw').read_bytes()
+
+          decoded_variants: list[tuple[str, str]] = []
+          for encoding in ('utf-8', 'cp1251', 'windows-1251', 'koi8-r', 'latin-1'):
+              try:
+                  decoded_variants.append((encoding, raw.decode(encoding)))
+              except UnicodeDecodeError:
+                  pass
+
+          class AnchorParser(html.parser.HTMLParser):
+              def __init__(self) -> None:
+                  super().__init__()
+                  self.current_href: str | None = None
+                  self.current_text: list[str] = []
+                  self.anchors: list[tuple[str, str]] = []
+              def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                  if tag.lower() != 'a':
+                      return
+                  self.current_href = None
+                  self.current_text = []
+                  for key, value in attrs:
+                      if key.lower() == 'href' and value:
+                          self.current_href = value
+              def handle_data(self, data: str) -> None:
+                  if self.current_href is not None:
+                      self.current_text.append(data)
+              def handle_endtag(self, tag: str) -> None:
+                  if tag.lower() == 'a' and self.current_href is not None:
+                      self.anchors.append((self.current_href, ''.join(self.current_text).strip()))
+                      self.current_href = None
+                      self.current_text = []
+
+          attempts: list[dict[str, object]] = []
+          chosen: dict[str, str] | None = None
+          for encoding, text in decoded_variants:
+              parser = AnchorParser()
+              parser.feed(text)
+              matches: list[dict[str, str]] = []
+              for href, anchor_text in parser.anchors:
+                  href_utf8 = urllib.parse.unquote(href, encoding='utf-8', errors='replace')
+                  href_cp1251 = urllib.parse.unquote(href, encoding='cp1251', errors='replace')
+                  haystacks = (anchor_text, href, href_utf8, href_cp1251)
+                  if not any(needle.casefold() in value.casefold() for value in haystacks):
+                      continue
+                  if not any(target_year in value for value in haystacks):
+                      continue
+                  absolute = urllib.parse.urljoin(index_url, href)
+                  parts = urllib.parse.urlsplit(absolute)
+                  resolved_path = urllib.parse.quote(
+                      urllib.parse.unquote(parts.path, encoding=encoding, errors='strict'),
+                      safe='/%[]_-.,',
+                      encoding=encoding,
+                      errors='strict',
+                  )
+                  resolved = urllib.parse.urlunsplit((parts.scheme, parts.netloc, resolved_path, parts.query, parts.fragment))
+                  matches.append({
+                      'encoding': encoding,
+                      'href': href,
+                      'anchor_text': anchor_text,
+                      'href_utf8': href_utf8,
+                      'href_cp1251': href_cp1251,
+                      'resolved_url': resolved,
+                  })
+              attempts.append({'encoding': encoding, 'anchor_count': len(parser.anchors), 'matches': matches})
+              if len(matches) == 1 and chosen is None:
+                  chosen = matches[0]
+
+          report = {
+              'source_id': source_id,
+              'index_url': index_url,
+              'needle': needle,
+              'target_year': target_year,
+              'attempts': attempts,
+              'chosen': chosen,
+          }
+          (root / 'resolution.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          if chosen is None:
+              raise RuntimeError('no unique legacy href resolved')
+          (root / 'resolved-url.txt').write_text(chosen['resolved_url'] + '\n', encoding='utf-8')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Download exact resolved file
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir="legacy-index/$SOURCE_ID"
+          url="$(cat "$dir/resolved-url.txt")"
+          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 3600 \
+            --user-agent 'Mozilla/5.0 legacy-index-resolver/2.0' \
+            --referer "$INDEX_URL" \
+            --output "$dir/source.pdf" \
+            "$url"
+          test "$(head -c 5 "$dir/source.pdf")" = '%PDF-'
+          stat --printf='%s\n' "$dir/source.pdf" > "$dir/bytes.txt"
+          sha256sum "$dir/source.pdf" | cut -d' ' -f1 > "$dir/sha256.txt"
+
+      - name: Verify PDF and extract front matter
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir="legacy-index/$SOURCE_ID"
+          original_status=0
+          qpdf --check "$dir/source.pdf" > "$dir/qpdf-original.txt" 2>&1 || original_status=$?
+          qpdf --object-streams=generate "$dir/source.pdf" "$dir/normalized.pdf"
+          qpdf --check "$dir/normalized.pdf" > "$dir/qpdf-normalized.txt" 2>&1
+          pdfinfo "$dir/normalized.pdf" > "$dir/pdfinfo.txt"
+          pdftotext -layout "$dir/normalized.pdf" "$dir/full-text.txt"
+          pages="$(awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}' "$dir/pdfinfo.txt")"
+          end=12
+          if [ "$pages" -lt "$end" ]; then end="$pages"; fi
+          pdftoppm -f 1 -l "$end" -jpeg -r 130 "$dir/normalized.pdf" "$dir/front" >/dev/null 2>&1
+          printf 'original_qpdf_exit=%s\npages=%s\ntext_bytes=%s\n' \
+            "$original_status" "$pages" "$(wc -c < "$dir/full-text.txt")" > "$dir/summary.txt"
+
+      - name: Upload verification bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-49-legacy-${{ matrix.source.id }}
+          path: legacy-index/${{ matrix.source.id }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
