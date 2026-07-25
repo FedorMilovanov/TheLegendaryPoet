@@ -14,6 +14,9 @@ const link = read('src/components/ui/Link.tsx');
 const smooth = read('src/components/SmoothScroll.tsx');
 const boundary = read('src/components/ErrorBoundary.tsx');
 const cursor = read('src/components/CustomCursor.tsx');
+const commandPalette = read('src/components/command/CommandPalette.tsx');
+const header = read('src/components/Header.tsx');
+const mobileDock = read('src/components/MobileDock.tsx');
 const deployWorkflow = read('.github/workflows/deploy.yml');
 const deployDispatchWorkflow = read('.github/workflows/deploy-dispatch.yml');
 
@@ -90,6 +93,23 @@ expect(cursor.includes('visibilitychange'), 'the cursor must hide when the docum
 expect(cursor.includes('INTERACTIVE_SELECTOR'), 'cursor emphasis must cover controls beyond links and buttons');
 expect(cursor.includes('activatedRef.current'), 'the native cursor must remain visible until a real pointer position exists');
 
+expect(commandPalette.includes('if (!open) return null;'), 'closed search must not render a duplicate fixed desktop trigger');
+expect(!commandPalette.includes('palette-fab'), 'the retired floating Ctrl K pill must stay out of the command palette DOM');
+expect(
+  commandPalette.includes("window.addEventListener('tlp-open-command-palette'"),
+  'the command palette must remain available to persistent shell entry points',
+);
+expect(commandPalette.includes('event.metaKey || event.ctrlKey'), 'Ctrl/Cmd+K must continue to toggle search');
+expect(
+  header.includes("new Event('tlp-open-command-palette')") && header.includes('aria-label="Открыть поиск"'),
+  'desktop search must remain available exactly through the persistent header trigger',
+);
+expect(
+  mobileDock.includes("new Event('tlp-open-command-palette')")
+    && mobileDock.includes('aria-label="Открыть поиск и все разделы"'),
+  'mobile search and section discovery must remain available through the centre dock trigger',
+);
+
 expect(deployWorkflow.includes('source_sha:'), 'deploy workflow must declare the source_sha input used by the release dispatcher');
 expect(deployDispatchWorkflow.includes('source_sha: sourceSha'), 'release dispatcher must pass the exact source SHA');
 expect(
@@ -128,4 +148,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`App shell validation passed: ${expectedPages.length} lazy routes, persistent chrome, bounded scroll restoration, intent prefetch and exact-head Pages provenance.`);
+console.log(`App shell validation passed: ${expectedPages.length} lazy routes, persistent chrome, single search entry points, bounded scroll restoration, intent prefetch and exact-head Pages provenance.`);
