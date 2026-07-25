@@ -283,6 +283,10 @@ test('reduced motion removes title, hero-root, window and decorative movement', 
   expect(['none', 'matrix(1, 0, 0, 1, 0, 0)']).toContain(state.surfaceTransform);
   expect(state.shineDisplay).toBe('none');
 
+  // WebKit can expose the correct computed state before the first visual paint
+  // reaches Playwright's page screenshot. Two animation frames are sufficient;
+  // no production repaint workaround is required.
+  await afterPaint(page);
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-reduced-motion.png`),
     fullPage: false,
