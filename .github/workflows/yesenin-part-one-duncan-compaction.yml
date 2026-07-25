@@ -1,0 +1,65 @@
+name: Yesenin Part I Duncan Compaction
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/local-images-playwright-wtoc, research/yesenin-part1-duncan-compaction-diagnostic]
+    paths:
+      - 'scripts/lib/yesenin-part-one-unpublished-article.ts'
+      - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-part-one-unpublished-article.ts'
+      - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-part-one-duncan-compaction.ts'
+      - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
+      - 'src/data/essays/yeseninPartOneEditorialPassEightEarlyB.ts'
+      - 'src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight.ts'
+      - '.github/workflows/yesenin-part-one-duncan-compaction.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc, research/yesenin-duncan-companion-split]
+    paths:
+      - 'scripts/lib/yesenin-part-one-unpublished-article.ts'
+      - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-part-one-unpublished-article.ts'
+      - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-part-one-duncan-compaction.ts'
+      - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
+      - 'src/data/essays/yeseninPartOneEditorialPassEightEarlyB.ts'
+      - 'src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight.ts'
+      - '.github/workflows/yesenin-part-one-duncan-compaction.yml'
+
+concurrency:
+  group: yesenin-part-one-duncan-compaction-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci --silent
+      - name: Validate compacted Part I and companion evidence preservation
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-part-one-duncan-compaction.ts 2>&1 | tee yesenin-part-one-duncan-compaction.log
+      - name: Validate companion article contract
+        run: npx tsx scripts/validate-yesenin-duncan-first-meeting-unpublished.ts
+      - name: Validate complete unpublished Part I package
+        run: npx tsx scripts/validate-yesenin-part-one-unpublished-article.ts
+      - name: Upload compaction diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-duncan-compaction
+          path: yesenin-part-one-duncan-compaction.log
+          if-no-files-found: error
+          retention-days: 7

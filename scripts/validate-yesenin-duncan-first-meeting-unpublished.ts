@@ -100,9 +100,9 @@ if (
   yeseninDuncanMainArticleMaximumBlocks !== 6 ||
   yeseninDuncanCompanionTransferredBlocks !== 6 ||
   bridgeParagraphBudget !== 6 ||
-  yeseninDuncanSplitApplied !== false
+  yeseninDuncanSplitApplied !== true
 ) {
-  fail('main-biography six-block budget changed or was applied prematurely');
+  fail('main-biography six-block budget or applied split state changed');
 }
 
 const splitIds = yeseninDuncanMainArticleSplit.map((record) => record.blockId);
