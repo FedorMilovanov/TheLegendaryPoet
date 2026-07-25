@@ -183,7 +183,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         />
         <motion.path
           data-brand-wing="right"
-          d="M65 39 C73 42 80 56 84 73 C86 82 85 88 80 86 C73 81 67 68 61 52"
+          d="M65 39 C73 43 80 56 84 73 C86 82 85 88 80 86 C73 81 67 68 61 52"
           fill={`url(#${ids.wingRight})`}
           stroke="#7ddfff"
           strokeWidth="0.9"
