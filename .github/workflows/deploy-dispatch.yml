@@ -40,5 +40,6 @@ jobs:
               ref: 'main',
               inputs: {
                 status_sha: context.payload.pull_request.head.sha,
+                pr_number: String(context.payload.pull_request.number),
               },
             });
