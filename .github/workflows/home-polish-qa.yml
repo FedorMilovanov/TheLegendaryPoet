@@ -1,0 +1,91 @@
+name: Premium Home QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: premium-home-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  home-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      QA_BASE_URL: http://127.0.0.1:4173
+      PLAYWRIGHT_HTML_OPEN: never
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Build production site
+        env:
+          VITE_BASE: /
+        run: |
+          set +e
+          {
+            npm run sitemap
+            npm run build
+          } > production-build.log 2>&1
+          status=$?
+          cat production-build.log
+          exit $status
+
+      - name: Install isolated Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium webkit
+
+      - name: Start production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat preview.log
+          exit 1
+
+      - name: Run desktop, Pixel 7 and iPhone Safari home contracts
+        run: >-
+          npx playwright test
+          qa/home-polish.spec.mjs
+          --config=playwright.home-polish.config.mjs
+          --workers=1
+          --reporter=line
+
+      - name: Upload premium home evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-home-qa-evidence
+          path: |
+            qa-artifacts
+            playwright-report/home-polish
+            test-results/home-polish
+            preview.log
+            production-build.log
+          if-no-files-found: warn
+          retention-days: 7
