@@ -1,0 +1,150 @@
+name: Temporary Hero Poet Window Contract Repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temp-hero-poet-window-contract.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - name: Bind hero poets by stable id and add focused QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          home_path = Path('src/pages/HomePage.tsx')
+          home = home_path.read_text(encoding='utf-8')
+          old = """const heroPoetNames = [\n  'Сергей Есенин',\n  'Михаил Лермонтов',\n  'Александр Пушкин',\n  'Федор Тютчев',\n  'Владимир Маяковский',\n  'Афанасий Фет',\n];\n\nconst heroPoets = heroPoetNames.flatMap((name) => {\n  const poet = poets.find((candidate) => candidate.name === name);\n  return poet ? [poet] : [];\n});\n"""
+          new = """const heroPoetIds = [\n  'sergei-yesenin',\n  'mikhail-lermontov',\n  'alexander-pushkin',\n  'fyodor-tyutchev',\n  'vladimir-mayakovsky',\n  'afanasy-fet',\n];\n\nfunction requireHeroPoet(id: string) {\n  const poet = poets.find((candidate) => candidate.id === id);\n  if (!poet) throw new Error(`Hero poet is missing from the library: ${id}`);\n  return poet;\n}\n\nconst heroPoets = heroPoetIds.map(requireHeroPoet);\n"""
+          if old not in home:
+              raise SystemExit('hero poet name binding block missing')
+          home_path.write_text(home.replace(old, new, 1), encoding='utf-8')
+
+          component_path = Path('src/components/home/HeroPoetWindow.tsx')
+          component = component_path.read_text(encoding='utf-8')
+          replacements = [
+              (
+                  """      <Link\n        to={`/poets/${poet.id}`}\n        aria-label={`Открыть страницу поэта ${poet.name}`}\n""",
+                  """      <Link\n        to={`/poets/${poet.id}`}\n        data-hero-poet-window={poet.id}\n        aria-label={`Открыть страницу поэта ${poet.name}`}\n""",
+              ),
+              (
+                  """        <motion.div\n          ref={cardRef}\n          onPointerMove={handlePointerMove}\n""",
+                  """        <motion.div\n          ref={cardRef}\n          data-hero-poet-window-surface\n          onPointerMove={handlePointerMove}\n""",
+              ),
+              (
+                  """          <div className=\"pointer-events-none absolute -inset-[7px] rounded-t-[999px] border border-cyan-200/0 bg-[radial-gradient(circle_at_50%_18%,rgba(95,225,255,0.24),transparent_48%)] opacity-35 blur-xl transition-all duration-700 group-hover:border-cyan-200/20 group-hover:opacity-100 group-hover:blur-2xl group-focus-visible:border-cyan-200/20 group-focus-visible:opacity-100\" />\n""",
+                  """          <div data-hero-poet-window-glow className=\"pointer-events-none absolute -inset-[7px] rounded-t-[999px] border border-cyan-200/0 bg-[radial-gradient(circle_at_50%_18%,rgba(95,225,255,0.24),transparent_48%)] opacity-35 blur-xl transition-all duration-700 group-hover:border-cyan-200/20 group-hover:opacity-100 group-hover:blur-2xl group-focus-visible:border-cyan-200/20 group-focus-visible:opacity-100\" />\n""",
+              ),
+          ]
+          for old_part, new_part in replacements:
+              if old_part not in component:
+                  raise SystemExit(f'component patch anchor missing: {old_part[:50]!r}')
+              component = component.replace(old_part, new_part, 1)
+          component_path.write_text(component, encoding='utf-8')
+
+          qa_path = Path('qa/focused-interactions.spec.mjs')
+          qa = qa_path.read_text(encoding='utf-8')
+          marker = "test.describe('premium home poet windows'"
+          if marker in qa:
+              raise SystemExit('hero poet window QA already exists')
+          qa += r'''
+
+test.describe('premium home poet windows', () => {
+  test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
+
+  test('six canonical poets keep working links, focus and premium hover depth', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+
+    const windows = page.locator('[data-hero-poet-window]');
+    await expect(windows).toHaveCount(6);
+    expect(await windows.evaluateAll((links) => links.map((link) => link.getAttribute('href')))).toEqual([
+      '/poets/sergei-yesenin',
+      '/poets/mikhail-lermontov',
+      '/poets/alexander-pushkin',
+      '/poets/fyodor-tyutchev',
+      '/poets/vladimir-mayakovsky',
+      '/poets/afanasy-fet',
+    ]);
+
+    const decoded = await windows.locator('img').evaluateAll((images) => images.map((image) => ({
+      complete: image.complete,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    })));
+    expect(decoded.every((image) => image.complete && image.width > 0 && image.height > 0)).toBe(true);
+
+    const first = windows.first();
+    const surface = first.locator('[data-hero-poet-window-surface]');
+    const glow = first.locator('[data-hero-poet-window-glow]');
+    const before = await surface.evaluate((node) => ({
+      transform: getComputedStyle(node).transform,
+      glowOpacity: getComputedStyle(node.querySelector('[data-hero-poet-window-glow]')).opacity,
+    }));
+
+    await first.hover({ position: { x: 12, y: 18 } });
+    await expect.poll(() => surface.evaluate((node) => getComputedStyle(node).transform), { timeout: 2_500 }).not.toBe(before.transform);
+    await expect.poll(() => glow.evaluate((node) => getComputedStyle(node).opacity), { timeout: 2_500 }).not.toBe(before.glowOpacity);
+
+    await first.focus();
+    await expect(first).toBeFocused();
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'desktop-premium-poet-windows.png'), fullPage: true });
+    expect(pageErrors).toEqual([]);
+  });
+});
+'''
+          qa_path.write_text(qa, encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Validate exact feature scope
+        run: |
+          npm ci
+          npm run validate:interaction-runtime
+          npm run typecheck
+          npm run build
+          git diff --check
+
+      - name: Commit exact permanent changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          files=(
+            src/pages/HomePage.tsx
+            src/components/home/HeroPoetWindow.tsx
+            qa/focused-interactions.spec.mjs
+          )
+          git add "${files[@]}"
+          actual="$(git diff --cached --name-only | sort)"
+          expected="$(printf '%s\n' "${files[@]}" | sort)"
+          test "$actual" = "$expected"
+          git diff --cached --check
+          git commit -m 'test(home): enforce six premium poet windows'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
