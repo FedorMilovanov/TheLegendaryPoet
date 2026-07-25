@@ -66,6 +66,10 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 22px rgba(0, 183, 255, 0.11), inset 0 1px 0 rgba(211, 249, 255, 0.06);
 }
 
+.hero-poet-window-name-compact {
+  display: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .group:hover .hero-poet-window-glow,
   .group:focus-visible .hero-poet-window-glow {
@@ -140,6 +144,14 @@
   .hero-poet-window-label {
     opacity: 0.96 !important;
     transform: translateY(0) translateZ(22px) !important;
+  }
+
+  .hero-poet-window-name-full {
+    display: none;
+  }
+
+  .hero-poet-window-name-compact {
+    display: inline;
   }
 
   .hero-poet-window-image {
