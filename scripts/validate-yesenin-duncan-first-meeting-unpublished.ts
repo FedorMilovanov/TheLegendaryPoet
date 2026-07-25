@@ -9,6 +9,12 @@ import {
   yeseninDuncanSplitApplied,
 } from '../src/data/essays/yeseninDuncanMainArticleSplit';
 import {
+  yeseninDuncanCompanionEditorialPassOneExpectedHeadingIds,
+  yeseninDuncanCompanionEditorialPassOneExpectedTextIds,
+  yeseninDuncanCompanionEditorialPassOneHeadings,
+  yeseninDuncanCompanionEditorialPassOneText,
+} from '../src/data/essays/yeseninDuncanCompanionEditorialPassOne';
+import {
   YESENIN_DUNCAN_FIRST_MEETING_UNPUBLISHED_ID,
   YESENIN_DUNCAN_FIRST_MEETING_UNPUBLISHED_SLUG,
   yeseninDuncanFirstMeetingUnpublished,
@@ -33,7 +39,9 @@ if (
 }
 if (
   article.draftComplete !== true ||
-  article.finalEditorialReviewComplete !== false ||
+  article.finalEditorialReviewComplete !== true ||
+  article.editorialPassOne !== 'literary-source-boundary-pass-one' ||
+  article.readerFacingTextBlockCap !== 25 ||
   essay.id !== YESENIN_DUNCAN_FIRST_MEETING_UNPUBLISHED_ID ||
   essay.slug !== YESENIN_DUNCAN_FIRST_MEETING_UNPUBLISHED_SLUG
 ) {
@@ -58,18 +66,32 @@ const textBlocks = essay.blocks.filter(
   (block): block is typeof block & { text: string } => 'text' in block,
 );
 if (sections.length !== 9) fail(`expected nine investigation sections, found ${sections.length}`);
-if (textBlocks.length < 24 || textBlocks.length > 28) {
-  fail(`expected a substantial but bounded companion draft, found ${textBlocks.length} text blocks`);
+if (textBlocks.length !== article.readerFacingTextBlockCap) {
+  fail(`expected exactly ${article.readerFacingTextBlockCap} companion text blocks, found ${textBlocks.length}`);
 }
 
 const sourceIds = (essay.sources ?? []).map((source) => source.id).filter((id): id is string => Boolean(id));
 if (new Set(sourceIds).size !== sourceIds.length) fail('companion source IDs must be unique');
 const sourceIdSet = new Set(sourceIds);
+const referencedSourceIds = new Set<string>();
 for (const block of essay.blocks) {
   if (!('sourceIds' in block) || !block.sourceIds) continue;
   for (const sourceId of block.sourceIds) {
     if (!sourceIdSet.has(sourceId)) fail(`${block.id ?? block.type} references missing source ${sourceId}`);
+    referencedSourceIds.add(sourceId);
   }
+}
+for (const sourceId of sourceIds) {
+  if (!referencedSourceIds.has(sourceId)) fail(`companion bibliography contains unused source ${sourceId}`);
+}
+const internalOnlySourceIds = new Set(['yd1-pss-duncan-chronology', 'yd1-mcvay-isadora-yesenin']);
+for (const source of essay.sources ?? []) {
+  if (!source.id) continue;
+  if (internalOnlySourceIds.has(source.id)) {
+    if (source.url) fail(`${source.id} must remain an internal-only source until a stable locator is recorded`);
+    continue;
+  }
+  if (!source.url?.startsWith('https://')) fail(`${source.id} is missing a stable HTTPS URL`);
 }
 
 const theatricalSourceIds = yeseninPartOneTheatricalMoscowPassEleven.map(
@@ -142,7 +164,8 @@ for (const required of [
   '7 ноября',
   'не доказывает присутствие Есенина',
   'Анатолия Мариенгофа',
-  'шести движений',
+  'Устойчивый итог',
+  'порог новой главы',
 ] as const) {
   if (!readerText.toLocaleLowerCase('ru-RU').includes(required.toLocaleLowerCase('ru-RU'))) {
     fail(`reader-facing draft is missing required boundary phrase: ${required}`);
@@ -155,6 +178,14 @@ for (const forbidden of [
   /book_id/iu,
   /getFiles\.php/iu,
   /PDF\s+\d{2}/u,
+  /PDF-кадр/iu,
+  /item-level/iu,
+  /reader-facing/iu,
+  /production/iu,
+  /provenance/iu,
+  /для первой части биографии/iu,
+  /всё остальное принадлежит отдельному расследованию/iu,
+  /следующий шаг/iu,
 ] as const) {
   if (forbidden.test(readerText)) fail(`technical acquisition apparatus leaked into prose: ${forbidden}`);
 }
@@ -166,10 +197,23 @@ if (essay.cluster?.role !== 'investigation' || essay.series) {
   fail('companion must remain an investigation, not a numbered biography part');
 }
 
+const textById = new Map(textBlocks.map((block) => [block.id, block.text] as const));
+for (const blockId of yeseninDuncanCompanionEditorialPassOneExpectedTextIds) {
+  if (textById.get(blockId) !== yeseninDuncanCompanionEditorialPassOneText[blockId]) {
+    fail(`editorial text override is not rendered at ${blockId}`);
+  }
+}
+const sectionById = new Map(sections.map((block) => [block.id, block] as const));
+for (const blockId of yeseninDuncanCompanionEditorialPassOneExpectedHeadingIds) {
+  if (sectionById.get(blockId)?.heading !== yeseninDuncanCompanionEditorialPassOneHeadings[blockId]) {
+    fail(`editorial heading override is not rendered at ${blockId}`);
+  }
+}
+
 console.log(
   JSON.stringify(
     {
-      status: 'UNPUBLISHED-COMPANION-DRAFT / MAIN-BIOGRAPHY-6-BLOCK-BUDGET / NO-REGISTRATION',
+      status: 'UNPUBLISHED-COMPANION-EDITORIAL-PASS-ONE-COMPLETE / 25-BLOCK-CAP / NO-REGISTRATION',
       articleId: essay.id,
       slug: essay.slug,
       sections: sections.length,
@@ -183,6 +227,9 @@ console.log(
       publicationAuthorized: article.publicationAuthorized,
       registrationAuthorized: article.registrationAuthorized,
       mediaPublicationAuthorized: article.mediaPublicationAuthorized,
+      finalEditorialReviewComplete: article.finalEditorialReviewComplete,
+      editorialPassOne: article.editorialPassOne,
+      readerFacingTextBlockCap: article.readerFacingTextBlockCap,
       sourceImagesAuthorized: article.sourceImagesAuthorized,
     },
     null,
