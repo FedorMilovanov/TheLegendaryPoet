@@ -1,124 +1,145 @@
 name: Manual Browser QA
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:
-
-concurrency:
-  group: manual-browser-qa-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions:
+  actions: read
   contents: read
+  deployments: read
 
 jobs:
-  browser-qa:
+  postmerge-v4-live-witness:
+    if: github.event.pull_request.head.ref == 'agent/postmerge-brand-v4-live-witness'
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 30
     env:
-      QA_BASE_URL: http://127.0.0.1:4173
-      PLAYWRIGHT_HTML_OPEN: never
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 0d1ff31f0e3640a2302e263d157458b4a07b5fa0
+      SITE_URL: https://thelegendarypoet.ru
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install project dependencies
-        run: npm ci
-
-      - name: Install FFmpeg for deterministic brand assets
+      - name: Wait for exact push Pages workflow
+        id: pages
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          run_id=""
+          run_url=""
+          conclusion=""
 
-      - name: Build production site
-        id: production_build
-        env:
-          VITE_BASE: /
+          for attempt in $(seq 1 120); do
+            row="$(gh api "/repos/${repo}/actions/runs?head_sha=${TARGET_SHA}&event=push&per_page=100" \
+              --jq '.workflow_runs[] | select(.name == "Deploy to GitHub Pages") | [.id,.status,(.conclusion // ""),.html_url] | @tsv' \
+              | head -1 || true)"
+            if [[ -n "${row}" ]]; then
+              IFS=$'\t' read -r run_id status conclusion run_url <<<"${row}"
+              echo "Exact Pages run ${run_id}: status=${status}, conclusion=${conclusion}"
+              if [[ "${status}" == "completed" ]]; then
+                [[ "${conclusion}" == "success" ]] || {
+                  echo "::error::Exact push Pages run failed: ${run_url}"
+                  exit 1
+                }
+                break
+              fi
+            else
+              echo "Waiting for exact push Pages run (${attempt}/120)"
+            fi
+            sleep 10
+          done
+
+          [[ -n "${run_id}" && "${conclusion}" == "success" ]] || {
+            echo "::error::No successful exact push Pages run found for ${TARGET_SHA}"
+            exit 1
+          }
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+          echo "run_url=${run_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for exact github-pages deployment
+        id: deployment
+        shell: bash
         run: |
-          set +e
-          {
-            npm run sitemap
-            npm run build
-          } > production-build.log 2>&1
-          status=$?
-          cat production-build.log
-          exit $status
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          deployment_id=""
+          deployment_state=""
+          environment_url=""
 
-      - name: Upload production build diagnostics
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-build-diagnostics
-          path: production-build.log
-          if-no-files-found: error
-          retention-days: 7
+          for attempt in $(seq 1 120); do
+            deployment_id="$(gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=100" \
+              --jq '.[0].id // empty' || true)"
+            if [[ -n "${deployment_id}" ]]; then
+              row="$(gh api "/repos/${repo}/deployments/${deployment_id}/statuses?per_page=100" \
+                --jq '.[0] | [(.state // ""),(.environment_url // ""),(.log_url // "")] | @tsv')"
+              IFS=$'\t' read -r deployment_state environment_url log_url <<<"${row}"
+              echo "Deployment ${deployment_id}: ${deployment_state}"
+              case "${deployment_state}" in
+                success) break ;;
+                error|failure|inactive)
+                  echo "::error::Exact deployment failed: ${log_url}"
+                  exit 1
+                  ;;
+              esac
+            fi
+            sleep 10
+          done
 
-      # Keep the browser engines isolated from the app lockfile: this workflow
-      # validates the production build without changing application dependencies.
-      - name: Install isolated Playwright runtime
+          [[ -n "${deployment_id}" && "${deployment_state}" == "success" ]] || {
+            echo "::error::No successful github-pages deployment found for ${TARGET_SHA}"
+            exit 1
+          }
+          echo "deployment_id=${deployment_id}" >> "$GITHUB_OUTPUT"
+          echo "environment_url=${environment_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify v4 source, release and custom-domain bytes
+        id: live
+        shell: bash
         run: |
-          npm install --no-save --no-package-lock @playwright/test@1.54.1
-          npx playwright install --with-deps chromium webkit
+          set -euo pipefail
+          mapfile -t expected < public/brand-release.txt
+          [[ "${#expected[@]}" -eq 2 ]]
+          version="${expected[0]}"
+          [[ "${expected[1]}" =~ ^master-sha256=[a-f0-9]{64}$ ]]
+          master_sha="${expected[1]#master-sha256=}"
+          expected_release="${version}"$'\n'"master-sha256=${master_sha}"
 
-      - name: Start production preview
-        run: |
-          npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
-          echo $! > preview.pid
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+            nonce="${TARGET_SHA}-${GITHUB_RUN_ID}-${attempt}"
+            release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "${SITE_URL}/brand-release.txt?verify=${nonce}" || true)"
+            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "${SITE_URL}/?verify=${nonce}" || true)"
+            if [[ "${release}" == "${expected_release}" ]] \
+              && grep -Fq "name=\"brand-release\" content=\"${version}\"" <<<"${html}"; then
+              curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "${SITE_URL}/brand-emblem-master.webp?v=${version}&verify=${nonce}" \
+                -o live-brand.webp
+              echo "${master_sha}  live-brand.webp" | sha256sum -c -
+              svg="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "${SITE_URL}/brand-emblem.svg?verify=${nonce}")"
+              grep -Fq "brand-emblem-master.webp?v=${version}" <<<"${svg}"
+              printf '{\n  "targetSha": "%s",\n  "pagesRunId": "%s",\n  "deploymentId": "%s",\n  "release": "%s",\n  "masterSha256": "%s",\n  "site": "%s"\n}\n' \
+                "$TARGET_SHA" "${{ steps.pages.outputs.run_id }}" \
+                "${{ steps.deployment.outputs.deployment_id }}" "$version" "$master_sha" "$SITE_URL" \
+                > postmerge-v4-live-witness.json
+              echo "release=${version}" >> "$GITHUB_OUTPUT"
+              echo "master_sha256=${master_sha}" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            sleep 1
+            echo "Waiting for ${version} on custom domain (${attempt}/60)"
+            sleep 10
           done
-          cat preview.log
+          echo "::error::Custom domain did not serve the exact v4 release"
           exit 1
 
-      - name: Run Chromium, Android Chrome and iPhone Safari QA
-        run: >-
-          npx playwright test
-          qa/manual-e2e.spec.mjs
-          qa/focused-interactions.spec.mjs
-          qa/deep-routes.spec.mjs
-          qa/floating-chrome.spec.mjs
-          qa/mobile-platforms.spec.mjs
-          qa/brand-emblem.spec.mjs
-          --config=playwright.config.mjs
-          --grep-invert "poet rating keyboard flow, durable comment and helpful state"
-          --workers=1
-          --reporter=line,html
-
-      - name: Run dedicated premium homepage and pointer-performance matrix
-        id: home_polish
-        run: |
-          set +e
-          npx playwright test \
-            qa/home-polish.spec.mjs \
-            --config=playwright.home-polish.config.mjs \
-            --workers=1 \
-            --reporter=line > home-polish.log 2>&1
-          status=$?
-          cat home-polish.log
-          exit $status
-
-      - name: Upload visual QA evidence
-        if: ${{ always() }}
+      - name: Upload immutable v4 witness
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: manual-browser-qa-evidence
-          path: |
-            qa-artifacts
-            playwright-report
-            test-results
-            preview.log
-            production-build.log
-            home-polish.log
+          name: postmerge-brand-v4-live-witness
+          path: postmerge-v4-live-witness.json
           if-no-files-found: warn
           retention-days: 7
