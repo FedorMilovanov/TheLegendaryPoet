@@ -6,12 +6,19 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+async function afterPaint(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 test('persistent ambient depth stays static, filter-free and compositor-idle', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  const intro = page.locator('.page-wipe');
+  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 4_000 });
+  await afterPaint(page);
 
   const backdrop = page.locator('[data-ambient-backdrop]');
   const fields = page.locator('[data-ambient-field]');
@@ -26,7 +33,9 @@ test('persistent ambient depth stays static, filter-free and compositor-idle', a
       kind: node.getAttribute('data-ambient-field'),
       animationName: style.animationName,
       filter: style.filter,
-      backdropFilter: style.backdropFilter,
+      backdropFilter: style.getPropertyValue('backdrop-filter')
+        || style.getPropertyValue('-webkit-backdrop-filter')
+        || 'none',
       willChange: style.willChange,
       backgroundImage: style.backgroundImage,
       position: style.position,
