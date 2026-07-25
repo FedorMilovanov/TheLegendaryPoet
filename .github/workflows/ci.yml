@@ -75,6 +75,8 @@ jobs:
         run: npm run validate:yesenin-mirok-pdf-evidence-pass17
       - name: Validate archive access and attribution pass 18
         run: npm run validate:yesenin-archive-access-pass18
+      - name: Validate NYPL program item and capture evidence pass 19
+        run: npm run validate:yesenin-nypl-program-pass19
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
