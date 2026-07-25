@@ -36,9 +36,18 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
 
   // Route restoration owns the first post-navigation frame. Wait for that
   // documented reset before creating the geometry state under test; otherwise
-  // a late restore can race the synthetic scroll and hide the scroll-top button.
+  // a late restore can race the user scroll and hide the scroll-top button.
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeLessThan(5);
-  await page.evaluate(() => window.scrollTo(0, 780));
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight),
+    { timeout: 5_000, message: 'ratings page must have enough vertical range for floating chrome geometry' },
+  ).toBeGreaterThan(500);
+
+  // Exercise the same wheel input path a desktop visitor uses. Calling
+  // window.scrollTo directly can conflict with the active Lenis owner and leave
+  // window.scrollY at zero even though application scrolling is healthy.
+  await page.mouse.move(720, 500);
+  await page.mouse.wheel(0, 900);
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(400);
 
   // Auto-hide is a separate behavior and can be mid-transition depending on the
