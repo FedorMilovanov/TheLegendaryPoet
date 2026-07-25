@@ -1,4 +1,8 @@
 import {
+  yeseninPartOneMariengofAccessPassThirteen,
+  type YeseninPartOneMariengofAccessPassThirteen,
+} from './yeseninPartOneMariengofAccessPassThirteen';
+import {
   yeseninPartOnePhysicalEditionAcquisitionsPassEight,
   type YeseninPartOnePhysicalEditionAcquisitionPassEight,
 } from './yeseninPartOnePhysicalEditionAcquisitionsPassEight';
@@ -22,6 +26,8 @@ export interface YeseninPartOneEffectiveHistoricalWitness {
   supersededByAcquisitionId?: `PWA8-YE1-${string}`;
   supersededByObjectId?: `NEB-YE1-${string}`;
   partiallySatisfiedByEvidenceIds?: readonly `TM11-YE1-${string}`[];
+  accessInvestigationId?: `MA13-YE1-${string}`;
+  correctedCatalogueUrl?: string;
   remainingTargets?: readonly string[];
 }
 
@@ -31,11 +37,14 @@ const acquisitionOverlays: readonly YeseninPartOnePhysicalEditionAcquisitionPass
   yeseninPartOnePhysicalEditionAcquisitionsPassEight;
 const serialEvidenceRecords = yeseninPartOneTheatricalMoscowPassEleven;
 const serialCoverage = yeseninPartOneTheatricalMoscowPassElevenCoverage;
+const mariengofAccessRecords: readonly YeseninPartOneMariengofAccessPassThirteen[] =
+  yeseninPartOneMariengofAccessPassThirteen;
 
 /**
  * Resolve current operational state without mutating the historical pass-six
- * queue. A later acquisition may fully supersede one old HOLD, or may satisfy
- * only part of a broader historical target while that HOLD remains active.
+ * queue. A later acquisition may fully supersede one old HOLD, serial evidence
+ * may satisfy only part of a broad target, and an access investigation may
+ * correct metadata or explain a block without pretending the target was met.
  */
 export const yeseninPartOneEffectiveHistoricalWitnesses = historicalRecords.map(
   (historicalRecord): YeseninPartOneEffectiveHistoricalWitness => {
@@ -61,6 +70,21 @@ export const yeseninPartOneEffectiveHistoricalWitnesses = historicalRecords.map(
       };
     }
 
+    const accessRecord = mariengofAccessRecords.find(
+      (candidate) => candidate.historicalHoldId === historicalRecord.id,
+    );
+    if (accessRecord) {
+      return {
+        historicalRecord,
+        effectiveStatus: 'active-hold',
+        accessInvestigationId: accessRecord.id,
+        correctedCatalogueUrl: accessRecord.historicalCatalogueUrl
+          ? accessRecord.catalogueUrl
+          : undefined,
+        remainingTargets: [accessRecord.remainingTarget],
+      };
+    }
+
     return {
       historicalRecord,
       effectiveStatus: 'active-hold',
@@ -76,9 +100,19 @@ export const yeseninPartOneActiveEffectiveHistoricalWitnesses =
 export const yeseninPartOneActiveHistoricalWitnesses =
   yeseninPartOneActiveEffectiveHistoricalWitnesses.map((record) => record.historicalRecord);
 
+/**
+ * Compatibility name: these targets remain untouched by satisfying evidence.
+ * Two Mariengof rows now carry access-investigation metadata, but neither target
+ * has been fulfilled because no facsimile pages were acquired or inspected.
+ */
 export const yeseninPartOneUntouchedActiveHistoricalWitnesses =
   yeseninPartOneEffectiveHistoricalWitnesses.filter(
     (record) => record.effectiveStatus === 'active-hold',
+  );
+
+export const yeseninPartOneAccessInvestigatedHistoricalWitnesses =
+  yeseninPartOneEffectiveHistoricalWitnesses.filter(
+    (record) => record.accessInvestigationId !== undefined,
   );
 
 export const yeseninPartOnePartiallySatisfiedHistoricalWitnesses =
@@ -99,8 +133,20 @@ export const yeseninPartOnePhysicalWitnessEffectiveStateSummary = {
   acquisitionOverlays: acquisitionOverlays.length,
   serialEvidenceRecords: serialEvidenceRecords.length,
   serialIssueEvidenceCount: serialEvidenceRecords.length,
+  mariengofAccessRecords: mariengofAccessRecords.length,
   activeHistoricalHolds: yeseninPartOneActiveHistoricalWitnesses.length,
   untouchedActiveHistoricalHolds: yeseninPartOneUntouchedActiveHistoricalWitnesses.length,
+  accessInvestigatedHistoricalHolds:
+    yeseninPartOneAccessInvestigatedHistoricalWitnesses.length,
+  metadataCorrectedHistoricalHolds: mariengofAccessRecords.filter(
+    (record) => record.historicalCatalogueUrl !== undefined,
+  ).length,
+  viewerApiDownloadBlockedObjects: mariengofAccessRecords.filter(
+    (record) => record.state === 'viewer-api-verified-download-blocked',
+  ).length,
+  unresolvedPublishedViewerRoutes: mariengofAccessRecords.filter(
+    (record) => record.state === 'catalogue-verified-route-unresolved',
+  ).length,
   partiallySatisfiedHistoricalHolds:
     yeseninPartOnePartiallySatisfiedHistoricalWitnesses.length,
   supersededHistoricalHolds: yeseninPartOneSupersededHistoricalWitnesses.length,
