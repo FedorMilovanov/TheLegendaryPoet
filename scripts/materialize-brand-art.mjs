@@ -6,14 +6,31 @@ const sourceDir = path.join(root, 'src', 'brand-assets');
 const parts = fs
   .readdirSync(sourceDir)
   .filter((name) => /^assets\.part\d+\.b64$/.test(name))
-  .sort();
+  .sort((left, right) => left.localeCompare(right, 'en', { numeric: true }));
 
 if (parts.length === 0) throw new Error('brand materialize: encoded asset parts are missing');
 
-const encoded = parts
-  .map((name) => fs.readFileSync(path.join(sourceDir, name), 'utf8').trim())
-  .join('');
-const archive = Buffer.from(encoded, 'base64');
+function decodePart(name) {
+  const encoded = fs.readFileSync(path.join(sourceDir, name), 'utf8').replace(/\s+/g, '');
+  if (encoded.length === 0 || encoded.length % 4 !== 0) {
+    throw new Error(`brand materialize: ${name} has an invalid base64 length`);
+  }
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) {
+    throw new Error(`brand materialize: ${name} contains invalid base64 data`);
+  }
+
+  const decoded = Buffer.from(encoded, 'base64');
+  if (decoded.toString('base64') !== encoded) {
+    throw new Error(`brand materialize: ${name} is not canonical base64`);
+  }
+  return decoded;
+}
+
+// Each checked-in part is an independently encoded binary slice. Decoding the
+// concatenated text would stop at the first part's padding and silently truncate
+// the archive. Decode each part first, then join the binary slices.
+const decodedParts = parts.map(decodePart);
+const archive = Buffer.concat(decodedParts);
 let offset = 0;
 
 function readLine() {
@@ -28,22 +45,39 @@ if (readLine() !== 'LPBRAND1') throw new Error('brand materialize: invalid archi
 const fileCount = Number(readLine());
 if (!Number.isInteger(fileCount) || fileCount < 1) throw new Error('brand materialize: invalid file count');
 
-const publicDir = path.join(root, 'public');
-fs.mkdirSync(publicDir, { recursive: true });
-const written = [];
-
+const entries = [];
+const names = new Set();
 for (let index = 0; index < fileCount; index += 1) {
   const name = readLine();
   const length = Number(readLine());
-  if (!/^[a-z0-9][a-z0-9.-]+$/i.test(name) || !Number.isInteger(length) || length < 1) {
-    throw new Error(`brand materialize: invalid entry ${index + 1}`);
+  if (!/^[a-z0-9][a-z0-9.-]+$/i.test(name) || path.basename(name) !== name) {
+    throw new Error(`brand materialize: invalid entry name ${index + 1}`);
   }
+  if (names.has(name)) throw new Error(`brand materialize: duplicate entry ${name}`);
+  if (!Number.isInteger(length) || length < 1) {
+    throw new Error(`brand materialize: invalid entry length for ${name}`);
+  }
+
   const end = offset + length;
   if (end > archive.length) throw new Error(`brand materialize: truncated entry ${name}`);
-  fs.writeFileSync(path.join(publicDir, name), archive.subarray(offset, end));
+  entries.push({ name, bytes: archive.subarray(offset, end) });
+  names.add(name);
   offset = end;
-  written.push(`${name} (${length} B)`);
 }
 
 if (offset !== archive.length) throw new Error('brand materialize: unexpected trailing bytes');
-console.log(`brand materialize: ${written.join(', ')}`);
+
+const publicDir = path.join(root, 'public');
+fs.mkdirSync(publicDir, { recursive: true });
+for (const entry of entries) {
+  const target = path.join(publicDir, entry.name);
+  const temporary = `${target}.tmp-${process.pid}`;
+  fs.writeFileSync(temporary, entry.bytes);
+  fs.renameSync(temporary, target);
+}
+
+console.log(
+  `brand materialize: ${parts.length} parts / ${archive.length} B -> ${entries
+    .map(({ name, bytes }) => `${name} (${bytes.length} B)`)
+    .join(', ')}`,
+);
