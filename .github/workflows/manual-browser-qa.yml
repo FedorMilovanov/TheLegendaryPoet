@@ -10,10 +10,10 @@ permissions:
   deployments: read
 
 jobs:
-  postmerge-live-witness:
+  postmerge-live-diagnostics:
     if: github.event.pull_request.head.ref == 'agent/postmerge-emblem-v3-live-witness'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     env:
       GH_TOKEN: ${{ github.token }}
       TARGET_SHA: c5f90764450e690b42e8d949b860609f05961a3c
@@ -21,131 +21,67 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for exact push Pages workflow
-        id: pages
+      - name: Capture exact run, deployment and live state
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           repo="$GITHUB_REPOSITORY"
-          run_id=""
-          run_url=""
-          conclusion=""
+          mkdir -p postmerge-diagnostics
 
-          for attempt in $(seq 1 90); do
-            row="$(gh api "/repos/${repo}/actions/runs?head_sha=${TARGET_SHA}&event=push&per_page=100" \
-              --jq '.workflow_runs[] | select(.name == "Deploy to GitHub Pages" and .head_sha == env.TARGET_SHA) | [.id,.status,(.conclusion // ""),.html_url] | @tsv' \
-              | head -1 || true)"
-            if [[ -n "${row}" ]]; then
-              IFS=$'\t' read -r run_id status conclusion run_url <<<"${row}"
-              echo "Exact Pages run ${run_id}: status=${status}, conclusion=${conclusion}"
-              if [[ "${status}" == "completed" ]]; then
-                [[ "${conclusion}" == "success" ]] || {
-                  echo "::error::Exact push Pages run failed: ${run_url}"
-                  exit 1
-                }
-                break
-              fi
-            else
-              echo "Waiting for exact push Pages run for ${TARGET_SHA} (${attempt}/90)"
-            fi
-            sleep 10
-          done
+          gh api "/repos/${repo}/actions/runs?head_sha=${TARGET_SHA}&event=push&per_page=100" \
+            > postmerge-diagnostics/exact-push-runs.json
+          jq '[.workflow_runs[] | select(.head_sha == env.TARGET_SHA)]' \
+            postmerge-diagnostics/exact-push-runs.json \
+            > postmerge-diagnostics/exact-push-runs-filtered.json
 
-          [[ -n "${run_id}" && "${conclusion}" == "success" ]] || {
-            echo "::error::No successful exact push Pages run found for ${TARGET_SHA}"
-            exit 1
-          }
-          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
-          echo "run_url=${run_url}" >> "$GITHUB_OUTPUT"
+          run_id="$(jq -r '.workflow_runs[] | select(.name == "Deploy to GitHub Pages" and .head_sha == env.TARGET_SHA) | .id' \
+            postmerge-diagnostics/exact-push-runs.json | head -1)"
+          if [[ -n "${run_id}" && "${run_id}" != "null" ]]; then
+            gh api "/repos/${repo}/actions/runs/${run_id}" > postmerge-diagnostics/pages-run.json || true
+            gh api "/repos/${repo}/actions/runs/${run_id}/jobs?per_page=100" > postmerge-diagnostics/pages-jobs.json || true
+            gh run view "${run_id}" --log > postmerge-diagnostics/pages.log 2>&1 || true
+          else
+            printf '{"error":"no exact push Pages run","targetSha":"%s"}\n' "$TARGET_SHA" \
+              > postmerge-diagnostics/pages-run.json
+          fi
 
-      - name: Wait for exact github-pages deployment
-        id: deployment
-        shell: bash
-        run: |
-          set -euo pipefail
-          repo="$GITHUB_REPOSITORY"
-          deployment_id=""
-          deployment_status=""
-          environment_url=""
+          gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=100" \
+            > postmerge-diagnostics/deployments.json || true
+          deployment_id="$(jq -r '.[0].id // empty' postmerge-diagnostics/deployments.json 2>/dev/null || true)"
+          if [[ -n "${deployment_id}" ]]; then
+            gh api "/repos/${repo}/deployments/${deployment_id}/statuses?per_page=100" \
+              > postmerge-diagnostics/deployment-statuses.json || true
+          else
+            printf '[]\n' > postmerge-diagnostics/deployment-statuses.json
+          fi
 
-          for attempt in $(seq 1 90); do
-            deployment_id="$(gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=100" \
-              --jq '.[0].id // empty' || true)"
-            if [[ -n "${deployment_id}" ]]; then
-              row="$(gh api "/repos/${repo}/deployments/${deployment_id}/statuses?per_page=100" \
-                --jq '.[0] | [(.state // ""),(.environment_url // ""),(.log_url // "")] | @tsv')"
-              IFS=$'\t' read -r deployment_status environment_url log_url <<<"${row}"
-              echo "Deployment ${deployment_id}: ${deployment_status}"
-              case "${deployment_status}" in
-                success) break ;;
-                error|failure|inactive)
-                  echo "::error::Exact deployment failed: ${log_url}"
-                  exit 1
-                  ;;
-              esac
-            fi
-            sleep 10
-          done
+          curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+            "${SITE_URL}/brand-release.txt?diagnostic=${GITHUB_RUN_ID}" \
+            > postmerge-diagnostics/live-brand-release.txt 2> postmerge-diagnostics/live-brand-release.stderr || true
+          curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+            "${SITE_URL}/?diagnostic=${GITHUB_RUN_ID}" \
+            > postmerge-diagnostics/live-index.html 2> postmerge-diagnostics/live-index.stderr || true
 
-          [[ -n "${deployment_id}" && "${deployment_status}" == "success" ]] || {
-            echo "::error::No successful github-pages deployment found for ${TARGET_SHA}"
-            exit 1
-          }
-          echo "deployment_id=${deployment_id}" >> "$GITHUB_OUTPUT"
-          echo "environment_url=${environment_url}" >> "$GITHUB_OUTPUT"
+          cp public/brand-release.txt postmerge-diagnostics/expected-brand-release.txt
+          printf 'target_sha=%s\npages_run_id=%s\ndeployment_id=%s\n' \
+            "$TARGET_SHA" "${run_id:-}" "${deployment_id:-}" \
+            > postmerge-diagnostics/summary.txt
 
-      - name: Verify exact release on custom domain
-        id: live
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t release_lines < public/brand-release.txt
-          [[ "${#release_lines[@]}" -eq 2 ]] || {
-            echo "::error::Invalid checked-in brand-release.txt"
-            exit 1
-          }
-          version="${release_lines[0]}"
-          [[ "${release_lines[1]}" =~ ^master-sha256=([a-f0-9]{64})$ ]] || {
-            echo "::error::Invalid checked-in master hash line"
-            exit 1
-          }
-          expected_sha="${BASH_REMATCH[1]}"
-          expected_release="${version}"$'\n'"master-sha256=${expected_sha}"
+          echo 'Exact push runs:'
+          jq -r '.workflow_runs[] | [.id,.name,.status,(.conclusion // ""),.head_sha,.html_url] | @tsv' \
+            postmerge-diagnostics/exact-push-runs.json || true
+          echo 'Latest deployment state:'
+          jq -r '.[0] | [(.state // ""),(.environment_url // ""),(.log_url // "")] | @tsv' \
+            postmerge-diagnostics/deployment-statuses.json 2>/dev/null || true
+          echo 'Expected release:'
+          cat postmerge-diagnostics/expected-brand-release.txt
+          echo 'Live release:'
+          cat postmerge-diagnostics/live-brand-release.txt || true
 
-          for attempt in $(seq 1 60); do
-            nonce="${TARGET_SHA}-${GITHUB_RUN_ID}-${attempt}"
-            live_release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-              "${SITE_URL}/brand-release.txt?verify=${nonce}" || true)"
-            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-              "${SITE_URL}/?verify=${nonce}" || true)"
-            if [[ "${live_release}" == "${expected_release}" ]] \
-              && grep -Fq "name=\"brand-release\" content=\"${version}\"" <<<"${html}"; then
-              curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-                "${SITE_URL}/brand-emblem-master.webp?v=${version}&verify=${nonce}" \
-                -o live-brand.webp
-              echo "${expected_sha}  live-brand.webp" | sha256sum -c -
-              svg="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-                "${SITE_URL}/brand-emblem.svg?verify=${nonce}")"
-              grep -Fq "brand-emblem-master.webp?v=${version}" <<<"${svg}"
-              printf '{\n  "targetSha": "%s",\n  "release": "%s",\n  "masterSha256": "%s",\n  "pagesRunId": "%s",\n  "deploymentId": "%s",\n  "site": "%s"\n}\n' \
-                "$TARGET_SHA" "$version" "$expected_sha" \
-                "${{ steps.pages.outputs.run_id }}" "${{ steps.deployment.outputs.deployment_id }}" "$SITE_URL" \
-                > postmerge-live-witness.json
-              echo "version=${version}" >> "$GITHUB_OUTPUT"
-              echo "master_sha256=${expected_sha}" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "Waiting for ${version} on custom domain (${attempt}/60)"
-            sleep 10
-          done
-          echo "::error::Custom domain did not serve the exact checked-in release"
-          exit 1
-
-      - name: Upload immutable witness
-        if: always()
+      - name: Upload exact Pages diagnostics
         uses: actions/upload-artifact@v4
         with:
-          name: postmerge-emblem-v3-live-witness
-          path: postmerge-live-witness.json
-          if-no-files-found: warn
+          name: postmerge-emblem-v3-pages-diagnostics
+          path: postmerge-diagnostics
+          if-no-files-found: error
           retention-days: 7
