@@ -4,11 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # GitHub App commits do not always emit a new push workflow. A same-repo
-  # deploy-live-* PR provides a guarded publication path without accepting
-  # executable code from forks or arbitrary branches.
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  # GitHub App commits do not always emit a push workflow. After a successful
+  # CI run on a guarded same-repository deploy-live-* branch, workflow_run uses
+  # the trusted workflow from main and publishes that exact tested commit.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
 
 # Allow the workflow to publish to Pages.
 permissions:
@@ -24,17 +25,17 @@ concurrency:
 jobs:
   build:
     if: >-
-      github.event_name != 'pull_request_target' ||
-      (github.event.pull_request.head.repo.full_name == github.repository &&
-       startsWith(github.event.pull_request.head.ref, 'deploy-live-'))
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       startsWith(github.event.workflow_run.head_branch, 'deploy-live-'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # pull_request_target has write-capable Pages permissions because the
-          # workflow comes from main, while the actual same-repo release code is
-          # checked out explicitly from the guarded deploy branch.
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          # For the guarded workflow_run path, publish the exact commit that
+          # passed CI rather than the current tip of any mutable branch.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
