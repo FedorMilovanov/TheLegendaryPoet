@@ -96,12 +96,17 @@ jobs:
           --reporter=line,html
 
       - name: Run dedicated premium homepage and pointer-performance matrix
-        run: >-
-          npx playwright test
-          qa/home-polish.spec.mjs
-          --config=playwright.home-polish.config.mjs
-          --workers=1
-          --reporter=line
+        id: home_polish
+        run: |
+          set +e
+          npx playwright test \
+            qa/home-polish.spec.mjs \
+            --config=playwright.home-polish.config.mjs \
+            --workers=1 \
+            --reporter=line > home-polish.log 2>&1
+          status=$?
+          cat home-polish.log
+          exit $status
 
       - name: Upload visual QA evidence
         if: ${{ always() }}
@@ -114,5 +119,6 @@ jobs:
             test-results
             preview.log
             production-build.log
+            home-polish.log
           if-no-files-found: warn
           retention-days: 7
