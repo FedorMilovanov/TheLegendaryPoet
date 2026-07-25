@@ -15,18 +15,26 @@ export default function PoetryBackdrop() {
   const scrollOpacity = useTransform(scrollY, [0, 800], [1, 0.2]);
 
   return (
-    <motion.div className="pointer-events-none fixed inset-0 z-[1] overflow-hidden select-none" aria-hidden="true" style={{ opacity: scrollOpacity }}>
+    <motion.div
+      className="pointer-events-none fixed inset-0 z-[1] overflow-hidden select-none"
+      aria-hidden="true"
+      style={{ opacity: scrollOpacity }}
+    >
       <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black_0%,black_48%,transparent_80%)]" />
-      {fragments.map((fragment, index) => (
-        <motion.div
+      {fragments.map((fragment) => (
+        <div
           key={fragment.text}
           className={`absolute whitespace-nowrap font-serif italic tracking-wide text-cyan-100/100 ${fragment.size}`}
-          style={{ top: fragment.top, left: fragment.left, rotate: `${fragment.rotate}deg`, opacity: fragment.opacity, textShadow: '0 0 28px rgba(0,212,255,0.16)' }}
-          animate={{ y: [0, index % 2 ? 16 : -14, 0], x: [0, index % 2 ? -10 : 12, 0], opacity: [fragment.opacity, fragment.opacity * 1.6, fragment.opacity] }}
-          transition={{ duration: 18 + index * 2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.8 }}
+          style={{
+            top: fragment.top,
+            left: fragment.left,
+            opacity: fragment.opacity,
+            transform: `translate3d(0, 0, 0) rotate(${fragment.rotate}deg)`,
+            textShadow: '0 0 28px rgba(0,212,255,0.16)',
+          }}
         >
           {fragment.text}
-        </motion.div>
+        </div>
       ))}
       <svg className="absolute inset-0 h-full w-full opacity-[0.035]" viewBox="0 0 1200 800" preserveAspectRatio="none">
         <path d="M80 210 C260 140, 390 260, 560 180 S900 70, 1120 220" fill="none" stroke="#d4af37" strokeWidth="1.2" />
