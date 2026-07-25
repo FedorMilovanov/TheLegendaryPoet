@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 2,
+  "signature": "LPBRAND2",
+  "generator": "scripts/rebuild-brand-assets.py@2",
+  "source": {
+    "path": "public/brand-emblem.svg",
+    "sha256": "5c618af217e68739e9d5328abfc690d18db9e8bbdb722999e56e16b1e3d8004f"
+  },
+  "archive": {
+    "byteLength": 323873,
+    "sha256": "3e8370069c518b55d6ab8da8cd8795a34dda1c3c602ffad79f93f080a7b03f31",
+    "parts": [
+      {
+        "name": "assets.part01.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "fbc3b86babe73148ff99c0b5b19ed65677402f84f0f86ab7f41ff3c59c99eee2"
+      },
+      {
+        "name": "assets.part02.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "1923d6242d345adc20d60232cb423b1e3678e01ff6164a0fca63b925ff5aa9ef"
+      },
+      {
+        "name": "assets.part03.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "fd4c36c189525c3eb0dbd0786cfeb314380c07b6ed42b2fc306317b81b208203"
+      },
+      {
+        "name": "assets.part04.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "4a90d1f94500e52910df488790e3d7e69758d6881a3831d4593342fb696add0f"
+      },
+      {
+        "name": "assets.part05.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "602f5cd21ba72ed1fe46774009c33af159d162e73b57627f9f103ca647d6360c"
+      },
+      {
+        "name": "assets.part06.b64",
+        "encodedLength": 64000,
+        "decodedBytes": 48000,
+        "sha256": "a8848740b1dcd114e9a3972b2b783fb8cb41125673350158520c80c71c131287"
+      },
+      {
+        "name": "assets.part07.b64",
+        "encodedLength": 47832,
+        "decodedBytes": 35873,
+        "sha256": "4f386680c8e2d2973700bd5218c422e944a611402708c0395e1dfa8d7c1eb233"
+      }
+    ]
+  },
+  "entries": [
+    {
+      "name": "brand-emblem-master.webp",
+      "size": 30938,
+      "sha256": "f20286181b2dddd8246da2a5d070002489d010908422bbdc0fcc03c1da6f09dd",
+      "width": 512,
+      "height": 512,
+      "mime": "image/webp"
+    },
+    {
+      "name": "favicon-16.png",
+      "size": 696,
+      "sha256": "a4c374c379cfefa8b273edf0c8bcba73bf788451ee724694054d2c1e869bed7b",
+      "width": 16,
+      "height": 16,
+      "mime": "image/png"
+    },
+    {
+      "name": "favicon-32.png",
+      "size": 1816,
+      "sha256": "6ea86224284ae75b04a4f1ff680657da1d2933c06de066d4d880947801dbab99",
+      "width": 32,
+      "height": 32,
+      "mime": "image/png"
+    },
+    {
+      "name": "apple-touch-icon.png",
+      "size": 19552,
+      "sha256": "cb6d05f65a956a7f59c611ad4e91066db580404be47945b84e34b1568459e006",
+      "width": 180,
+      "height": 180,
+      "mime": "image/png"
+    },
+    {
+      "name": "icon-192.png",
+      "size": 21320,
+      "sha256": "66d6895be319ef5e744a4937fea2ff200e4bc66c162a2e5abe88ff545bbe2b42",
+      "width": 192,
+      "height": 192,
+      "mime": "image/png"
+    },
+    {
+      "name": "icon-512.png",
+      "size": 69806,
+      "sha256": "f0ade4abad9f03a679c83c3191f236ac6f8566244cba62dc3255ae4c31310bbe",
+      "width": 512,
+      "height": 512,
+      "mime": "image/png"
+    },
+    {
+      "name": "icon-maskable-512.png",
+      "size": 54643,
+      "sha256": "3999e6e043d47d1af6aa1c00fa0560a00e9f67939e2cb5b3567b44472c0c5215",
+      "width": 512,
+      "height": 512,
+      "mime": "image/png"
+    },
+    {
+      "name": "mstile-150x150.png",
+      "size": 15493,
+      "sha256": "5a60f5a793b085dd065545e0a64dc4e609d18d3f6284889e59befd40df3a56d8",
+      "width": 150,
+      "height": 150,
+      "mime": "image/png"
+    },
+    {
+      "name": "og-image.jpg",
+      "size": 109390,
+      "sha256": "a63eaff26a008edfc769a95dd23758e6e16a187f4aa92e658dc928e2087a0bd1",
+      "width": 1200,
+      "height": 630,
+      "mime": "image/jpeg"
+    }
+  ]
+}
