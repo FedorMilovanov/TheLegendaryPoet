@@ -32,6 +32,12 @@ jobs:
       - name: Install project dependencies
         run: npm ci
 
+      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
       # Keep the browser engines isolated from the app lockfile: this workflow
       # validates the production build without changing application dependencies.
       - name: Install isolated Playwright runtime
