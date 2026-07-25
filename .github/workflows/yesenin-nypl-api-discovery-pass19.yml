@@ -5,6 +5,7 @@ on:
     branches: [research/yesenin-archive-access-pass18]
     paths:
       - 'scripts/discover-yesenin-nypl-programs-pass19.mjs'
+      - 'scripts/probe-yesenin-nypl-iiif-pass19.mjs'
       - 'scripts/acquire-yesenin-nypl-program-captures-pass19-v2.mjs'
       - '.github/workflows/yesenin-nypl-api-discovery-pass19.yml'
   workflow_dispatch:
@@ -32,6 +33,9 @@ jobs:
         id: repo_api
         continue-on-error: true
         run: node scripts/discover-yesenin-nypl-programs-pass19.mjs
+      - name: Probe exact NYPL IIIF route variants
+        if: always()
+        run: node scripts/probe-yesenin-nypl-iiif-pass19.mjs
       - name: Acquire four public items and fifteen exact IIIF derivatives
         if: always()
         run: node scripts/acquire-yesenin-nypl-program-captures-pass19-v2.mjs
