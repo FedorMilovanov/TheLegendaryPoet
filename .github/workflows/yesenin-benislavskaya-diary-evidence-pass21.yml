@@ -1,0 +1,46 @@
+name: Yesenin Benislavskaya Diary Evidence Pass 21
+
+on:
+  pull_request:
+    branches: [research/yesenin-materials-bibliography-pass20]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaDiaryEvidencePassTwentyOne.ts'
+      - 'scripts/validate-yesenin-benislavskaya-diary-evidence-pass21.ts'
+      - 'research/yesenin/PART_ONE_BENISLAVSKAYA_DIARY_EVIDENCE_PASS21_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-diary-evidence-pass21.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaDiaryEvidencePassTwentyOne.ts'
+      - 'scripts/validate-yesenin-benislavskaya-diary-evidence-pass21.ts'
+      - 'research/yesenin/PART_ONE_BENISLAVSKAYA_DIARY_EVIDENCE_PASS21_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-diary-evidence-pass21.yml'
+
+concurrency:
+  group: yesenin-benislavskaya-diary-pass21-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate exact RGALI Benislavskaya diary archive-card evidence
+        run: npm run validate:yesenin-benislavskaya-diary-pass21
+      - name: TypeScript typecheck
+        run: npm run typecheck
