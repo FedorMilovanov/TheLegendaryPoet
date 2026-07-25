@@ -89,13 +89,22 @@ const febDuncanChronology = (essay.sources ?? []).find((source) => source.id ===
 if (febDuncanChronology?.url !== febDuncanChronologyUrl || febDuncanChronology.year !== 1999) {
   fail('yd1-pss-duncan-chronology must retain the exact official FEB locator and 1999 edition year');
 }
-const internalOnlySourceIds = new Set(['yd1-mcvay-isadora-yesenin']);
+const mcvayCatalogUrl = 'https://libris.kb.se/bib/4823661';
+const mcvaySource = (essay.sources ?? []).find((source) => source.id === 'yd1-mcvay-isadora-yesenin');
+if (mcvaySource?.url !== mcvayCatalogUrl || mcvaySource.year !== 1980) {
+  fail('yd1-mcvay-isadora-yesenin must retain the exact LIBRIS locator and 1980 edition year');
+}
+if (
+  !mcvaySource.institution?.includes('LIBRIS') ||
+  !mcvaySource.institution.includes('рабочий PDF предоставлен редакции') ||
+  !mcvaySource.note?.includes('Каталожная карточка LIBRIS') ||
+  !mcvaySource.note.includes('предоставленному редакции') ||
+  !mcvaySource.note.includes('не заменяет provenance')
+) {
+  fail('McVay source must distinguish the public catalogue locator from the editorial working PDF');
+}
 for (const source of essay.sources ?? []) {
   if (!source.id) continue;
-  if (internalOnlySourceIds.has(source.id)) {
-    if (source.url) fail(`${source.id} must remain an internal-only source until a stable locator is recorded`);
-    continue;
-  }
   if (!source.url?.startsWith('https://')) fail(`${source.id} is missing a stable HTTPS URL`);
 }
 
