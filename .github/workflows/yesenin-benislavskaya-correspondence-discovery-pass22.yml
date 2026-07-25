@@ -5,7 +5,7 @@ on:
     branches:
       - research/yesenin-benislavskaya-diary-evidence-pass21
     paths:
-      - scripts/discover-yesenin-benislavskaya-correspondence-pass22.mjs
+      - scripts/discover-yesenin-benislavskaya-correspondence-pass22-v2.mjs
       - .github/workflows/yesenin-benislavskaya-correspondence-discovery-pass22.yml
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node scripts/discover-yesenin-benislavskaya-correspondence-pass22.mjs
+      - run: node scripts/discover-yesenin-benislavskaya-correspondence-pass22-v2.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
