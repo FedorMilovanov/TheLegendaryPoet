@@ -45,7 +45,19 @@ Gordon McVay, `Esenin: A Life` (1976), preferably:
 - or chapters through the end of 1921;
 - notes, bibliography and index mandatory.
 
-Status: `STILL-REQUESTED / PARTIALLY-SUPPORTED-BY-LATER-MCVAY-BOOK`.
+Точный каталог для лондонского издания:
+
+- CiNii Research / National Institute of Informatics: https://ci.nii.ac.jp/ncid/BA03831281;
+- NCID `BA03831281`;
+- Hodder and Stoughton, London, 1976;
+- 352 pages and 62 pages of plates;
+- ISBN `0340204613`;
+- LCCN `77355924`;
+- bibliography pages 312–332.
+
+Это только идентификация издания. Полный текст `Esenin: A Life`, целевые главы, notes, bibliography и index не получены и не просмотрены. Карточка Hodder and Stoughton не подменяет отдельную Ardis-версию ISBN `0882331825`.
+
+Status: `STILL-REQUESTED / CATALOG-IDENTIFIED / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED`.
 
 ### A2 — без изменений
 

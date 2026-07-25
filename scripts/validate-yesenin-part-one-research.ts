@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { essays } from '../src/data/essays/index';
 import {
   yeseninPartOneClaimCoverage,
@@ -20,6 +22,8 @@ const allSources = [
   ...yeseninPartOneSourcesPassTwo,
   ...yeseninPartOneSourcesPassThree,
 ] as const;
+const root = process.cwd();
+const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 function normalizedUrl(value: string): string {
   return value.replace(/^http:/, 'https:').replace(/\/$/, '');
@@ -27,6 +31,20 @@ function normalizedUrl(value: string): string {
 
 function fail(message: string) {
   errors.push(message);
+}
+
+function markdownSection(text: string, startHeading: string, nextHeading: string): string {
+  const start = text.indexOf(startHeading);
+  if (start < 0) {
+    fail(`missing request section ${startHeading}`);
+    return '';
+  }
+  const end = text.indexOf(nextHeading, start + startHeading.length);
+  if (end < 0) {
+    fail(`missing request section boundary ${nextHeading}`);
+    return text.slice(start);
+  }
+  return text.slice(start, end);
 }
 
 if (allSources.length < 42) {
@@ -163,6 +181,60 @@ for (const [claimId, requiredText] of passThreeHoldAssertions) {
   }
 }
 
+const bookRequestPath = 'research/yesenin/PART_ONE_BOOK_REQUESTS_2026-07-24.md';
+const bookRequestUpdatePath = 'research/yesenin/PART_ONE_BOOK_REQUESTS_UPDATE_MCVAY_2026-07-24.md';
+const bookRequest = read(bookRequestPath);
+const bookRequestUpdate = read(bookRequestUpdatePath);
+const mcvayRequestSections = [
+  {
+    path: bookRequestPath,
+    text: markdownSection(
+      bookRequest,
+      '### A1. Gordon McVay — `Esenin: A Life`',
+      '### A2. Н. И. Шубникова-Гусева',
+    ),
+  },
+  {
+    path: bookRequestUpdatePath,
+    text: markdownSection(
+      bookRequestUpdate,
+      '### A1 — остаётся полезным',
+      '### A2 — без изменений',
+    ),
+  },
+];
+const mcvayLifeCatalogUrl = 'https://ci.nii.ac.jp/ncid/BA03831281';
+const requiredMcvayRequestMarkers = [
+  mcvayLifeCatalogUrl,
+  'BA03831281',
+  '0340204613',
+  '77355924',
+  'STILL-REQUESTED / CATALOG-IDENTIFIED / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+] as const;
+for (const requestSection of mcvayRequestSections) {
+  for (const marker of requiredMcvayRequestMarkers) {
+    if (!requestSection.text.includes(marker)) {
+      fail(`${requestSection.path}: McVay Life request lost required catalogue/status marker ${marker}`);
+    }
+  }
+  for (const forbiddenMarker of [
+    'FULL-TEXT-ACQUIRED',
+    'CONTENT-INSPECTED',
+    'Status: `ACQUIRED',
+    'Статус: `ACQUIRED',
+  ] as const) {
+    if (requestSection.text.includes(forbiddenMarker)) {
+      fail(`${requestSection.path}: McVay Life request was falsely upgraded (${forbiddenMarker})`);
+    }
+  }
+}
+if (!mcvayRequestSections[0].text.includes('Ardis ISBN `0882331825`')) {
+  fail(`${bookRequestPath}: Hodder catalogue must not silently replace the separate Ardis edition`);
+}
+if (!mcvayRequestSections[1].text.includes('не подменяет отдельную Ardis-версию ISBN `0882331825`')) {
+  fail(`${bookRequestUpdatePath}: McVay update lost the Hodder/Ardis edition boundary`);
+}
+
 const forbiddenPublishedIds = new Set([
   'essay-yesenin-1895-1921',
 ]);
@@ -202,5 +274,6 @@ console.log(
   + `+ ${yeseninPartOneSourcesPassThree.length} pass three), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
   + `${unresolvedClaims} pass-one gaps, ${passTwoOpenHolds} pass-two holds and `
-  + `${passThreeOpenHolds} pass-three holds; public registration remains blocked.`,
+  + `${passThreeOpenHolds} pass-three holds; McVay Life remains catalog-identified but unacquired; `
+  + `public registration remains blocked.`,
 );

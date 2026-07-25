@@ -39,6 +39,20 @@ Issue: #76
 - 352 p.;
 - ISBN 978-0-88233-182-9 / 0340204613 depending edition.
 
+Точный каталожный locator для лондонского издания:
+
+- CiNii Research / National Institute of Informatics: https://ci.nii.ac.jp/ncid/BA03831281;
+- NCID `BA03831281`;
+- London: Hodder and Stoughton, 1976;
+- 352 pages and 62 pages of plates;
+- ISBN `0340204613`;
+- LCCN `77355924`;
+- bibliography pages 312–332.
+
+Каталожная карточка идентифицирует издание, но не означает, что полный текст, главы, примечания или указатели были получены и просмотрены. Ardis ISBN `0882331825` относится к отдельной издательской версии и не подменяется карточкой Hodder and Stoughton.
+
+Статус: `STILL-REQUESTED / CATALOG-IDENTIFIED / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED`.
+
 Почему требуется:
 
 - независимая англоязычная научная биография;
@@ -170,7 +184,7 @@ Issue: #76
 
 Для следующего сильного исследования достаточно трёх позиций:
 
-1. Gordon McVay, `Esenin: A Life`;
+1. Gordon McVay, `Esenin: A Life` — каталог идентифицирован, полный текст не получен;
 2. Н. И. Шубникова-Гусева, `Поэмы Есенина`;
 3. С. А. Серегина, `Николай Клюев и Сергей Есенин: диалог с эпохой`.
 
