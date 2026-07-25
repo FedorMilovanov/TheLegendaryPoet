@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
+const VERSION = 'cloak-20260725-2';
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
@@ -17,13 +18,11 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('selected emblem, preload, install metadata and share metadata are coherent', async ({ page, request }) => {
+test('approved emblem master, install icons and share metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
 
   const expectedAssets = [
-    ['favicon.svg', null],
-    ['brand-emblem.svg', null],
     ['brand-emblem-mask.svg', null],
     ['brand-emblem-master.webp', { width: 512, height: 512 }],
     ['favicon-16.png', { width: 16, height: 16 }],
@@ -43,43 +42,48 @@ test('selected emblem, preload, install metadata and share metadata are coherent
     if (size) expect(await imageSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
   }
 
-  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('href', /brand-emblem-master\.webp$/);
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute(
+    'href',
+    new RegExp(`brand-emblem-master\\.webp\\?v=${VERSION}$`),
+  );
   await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('type', 'image/webp');
   await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('fetchpriority', 'high');
+  await expect(page.locator('link[rel="icon"][sizes="32x32"]')).toHaveAttribute('href', new RegExp(`favicon-32\\.png\\?v=${VERSION}$`));
+  await expect(page.locator('link[rel="icon"][sizes="16x16"]')).toHaveAttribute('href', new RegExp(`favicon-16\\.png\\?v=${VERSION}$`));
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', new RegExp(`apple-touch-icon\\.png\\?v=${VERSION}$`));
+  expect(await page.locator('link[rel="icon"][href*="favicon.svg"]').count()).toBe(0);
 
   const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
   const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
   expect(ogImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
   expect(twitterImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
   await expect(page.locator('meta[property="og:image:type"]')).toHaveAttribute('content', 'image/jpeg');
-  await expect(page.locator('link[rel="mask-icon"]')).toHaveAttribute('href', /brand-emblem-mask\.svg$/);
-  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-touch-icon\.png$/);
 
-  const manifestResponse = await request.get(`${BASE_URL}/site.webmanifest`);
+  const manifestResponse = await request.get(`${BASE_URL}/site.webmanifest?v=${VERSION}`);
   expect(manifestResponse.status()).toBe(200);
   const manifest = await manifestResponse.json();
   expect(manifest.icons).toEqual(expect.arrayContaining([
-    expect.objectContaining({ src: '/favicon.svg', sizes: 'any' }),
-    expect.objectContaining({ src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }),
-    expect.objectContaining({ src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }),
-    expect.objectContaining({ src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }),
+    expect.objectContaining({ src: `/favicon-32.png?v=${VERSION}`, sizes: '32x32', type: 'image/png' }),
+    expect.objectContaining({ src: `/icon-192.png?v=${VERSION}`, sizes: '192x192', type: 'image/png', purpose: 'any' }),
+    expect.objectContaining({ src: `/icon-512.png?v=${VERSION}`, sizes: '512x512', type: 'image/png', purpose: 'any' }),
+    expect.objectContaining({ src: `/icon-maskable-512.png?v=${VERSION}`, purpose: 'maskable' }),
   ]));
-
-  const retiredResponse = await request.get(`${BASE_URL}/og-image.png`);
-  expect(retiredResponse.status(), 'old share card must be removed').toBe(404);
 });
 
-test('the selected faceless figure glows subtly on hover without halo or retired symbols', async ({ page }) => {
+test('header renders only the approved cloaked figure and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toBeVisible();
-  await expect(mark.locator('[data-brand-fallback]')).toBeVisible();
+  await expect(mark).toHaveAttribute('data-brand-version', VERSION);
   await expect(mark.locator('[data-brand-figure]')).toBeVisible();
-  await expect(mark.locator('[data-brand-aura]')).toBeVisible();
-  expect(await mark.locator('[data-brand-book], [data-brand-wing], [data-brand-halo]').count()).toBe(0);
+  await expect(mark.locator('[data-brand-glow]')).toBeVisible();
+  expect(await mark.locator('[data-brand-fallback], [data-brand-book], [data-brand-wing], [data-brand-halo], [data-brand-mist]').count()).toBe(0);
+
+  const figureHref = await mark.locator('[data-brand-figure]').getAttribute('href');
+  expect(figureHref).toContain(`brand-emblem-master.webp?v=${VERSION}`);
 
   const box = await mark.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(40);
@@ -87,21 +91,11 @@ test('the selected faceless figure glows subtly on hover without halo or retired
   expect(box?.height).toBeGreaterThanOrEqual(40);
   expect(box?.height).toBeLessThanOrEqual(52);
 
-  const duplicateIds = await page.evaluate(() => {
-    const ids = [...document.querySelectorAll('[data-brand-mark] svg [id]')].map((node) => node.id);
-    return ids.filter((id, index) => ids.indexOf(id) !== index);
-  });
-  expect(duplicateIds, 'SVG definitions must be namespaced per emblem instance').toEqual([]);
-
   const figure = mark.locator('[data-brand-figure]');
-  const fallback = mark.locator('[data-brand-fallback]');
-  const aura = mark.locator('[data-brand-aura]');
-  const mist = mark.locator('[data-brand-mist]');
+  const glow = mark.locator('[data-brand-glow]');
   const before = {
     figure: await figure.getAttribute('style'),
-    fallback: await fallback.getAttribute('style'),
-    aura: await aura.getAttribute('style'),
-    mist: await mist.getAttribute('style'),
+    glow: await glow.getAttribute('style'),
     filter: await mark.locator('svg').getAttribute('style'),
   };
 
@@ -110,19 +104,15 @@ test('the selected faceless figure glows subtly on hover without halo or retired
 
   const after = {
     figure: await figure.getAttribute('style'),
-    fallback: await fallback.getAttribute('style'),
-    aura: await aura.getAttribute('style'),
-    mist: await mist.getAttribute('style'),
+    glow: await glow.getAttribute('style'),
     filter: await mark.locator('svg').getAttribute('style'),
   };
   expect(after.figure).not.toBe(before.figure);
-  expect(after.fallback).not.toBe(before.fallback);
-  expect(after.aura).not.toBe(before.aura);
-  expect(after.mist).not.toBe(before.mist);
+  expect(after.glow).not.toBe(before.glow);
   expect(after.filter).not.toBe(before.filter);
 
   await page.screenshot({
-    path: path.join(ARTIFACT_DIR, 'brand-emblem-selected-hover.png'),
+    path: path.join(ARTIFACT_DIR, 'brand-emblem-approved-hover.png'),
     clip: {
       x: Math.max(0, (box?.x || 0) - 24),
       y: Math.max(0, (box?.y || 0) - 24),
@@ -133,30 +123,8 @@ test('the selected faceless figure glows subtly on hover without halo or retired
   expect(pageErrors).toEqual([]);
 });
 
-test('coded vector figure remains visible if the selected master asset is unavailable', async ({ page }) => {
-  await page.route('**/brand-emblem-master.webp', (route) => route.abort('failed'));
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-
-  const mark = page.locator('header [data-brand-mark]').first();
-  const fallback = mark.locator('[data-brand-fallback]');
-  await expect(mark).toBeVisible();
-  await expect(fallback).toBeVisible();
-  expect(await fallback.locator('path').count()).toBeGreaterThanOrEqual(8);
-
-  const box = await mark.boundingBox();
-  await page.screenshot({
-    path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-fallback.png'),
-    clip: {
-      x: Math.max(0, (box?.x || 0) - 24),
-      y: Math.max(0, (box?.y || 0) - 24),
-      width: (box?.width || 44) + 48,
-      height: (box?.height || 44) + 48,
-    },
-  });
-});
-
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the same selected emblem without SVG id collisions`, async ({ page }) => {
+  test(`${route}: header and footer use only the approved emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
     await expect(page.locator('header [data-brand-mark]').first()).toBeVisible();
@@ -164,25 +132,22 @@ for (const route of coreRoutes) {
 
     const result = await page.evaluate(() => {
       const marks = [...document.querySelectorAll('[data-brand-mark]')];
-      const ids = marks.flatMap((mark) => [...mark.querySelectorAll('svg [id]')].map((node) => node.id));
       return {
         marks: marks.length,
-        duplicateIds: ids.filter((id, index) => ids.indexOf(id) !== index),
+        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260725-2').length,
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))
           .filter((viewBox) => viewBox !== '0 0 96 96'),
-        missingFallbacks: marks.filter((mark) => !mark.querySelector('[data-brand-fallback]')).length,
-        retiredElements: marks.reduce(
-          (count, mark) => count + mark.querySelectorAll('[data-brand-book], [data-brand-wing], [data-brand-halo]').length,
+        substituteFigures: marks.reduce(
+          (count, mark) => count + mark.querySelectorAll('[data-brand-fallback], path, circle, polygon, [data-brand-book], [data-brand-wing], [data-brand-halo]').length,
           0,
         ),
       };
     });
 
     expect(result.marks).toBeGreaterThanOrEqual(2);
-    expect(result.duplicateIds).toEqual([]);
+    expect(result.wrongVersions).toBe(0);
     expect(result.invalidViewBoxes).toEqual([]);
-    expect(result.missingFallbacks).toBe(0);
-    expect(result.retiredElements).toBe(0);
+    expect(result.substituteFigures).toBe(0);
   });
 }
