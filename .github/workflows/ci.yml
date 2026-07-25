@@ -81,6 +81,8 @@ jobs:
         run: npm run validate:yesenin-materials-bibliography-pass20
       - name: Validate Benislavskaya diary archive-card evidence pass 21
         run: npm run validate:yesenin-benislavskaya-diary-pass21
+      - name: Validate Benislavskaya correspondence evidence pass 22
+        run: npm run validate:yesenin-benislavskaya-correspondence-pass22
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
