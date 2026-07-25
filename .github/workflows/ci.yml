@@ -63,6 +63,11 @@ jobs:
           retention-days: 3
       - name: Generate sitemap
         run: npm run sitemap
+      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
       - name: Build
         id: production_build
         run: |
