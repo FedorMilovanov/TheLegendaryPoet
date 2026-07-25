@@ -14,7 +14,7 @@ const sizes = {
 };
 
 const premiumEase = [0.16, 1, 0.3, 1] as const;
-const BRAND_VERSION = 'cloak-20260725-2';
+const BRAND_VERSION = 'cloak-20260725-3';
 
 /**
  * Owner-approved emblem: the selected faceless hooded figure in a heavy
