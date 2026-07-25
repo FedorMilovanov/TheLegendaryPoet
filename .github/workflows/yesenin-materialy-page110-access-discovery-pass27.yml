@@ -1,0 +1,38 @@
+name: Yesenin Materialy Page 110 Access Discovery Pass 27
+
+on:
+  push:
+    branches:
+      - research/yesenin-materialy-page110-access-discovery-pass27
+  pull_request:
+    branches:
+      - research/yesenin-pravda-rsl-access-evidence-pass26-final
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install isolated browser diagnostic runtime
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.58.0
+          npx playwright install --with-deps chromium
+      - name: Discover literal institutional access routes
+        run: node scripts/discover-yesenin-materialy-page110-access-pass27.mjs
+      - name: Upload immutable page-110 access evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-materialy-page110-access-pass27
+          path: artifacts/yesenin-materialy-page110-access-pass27
+          if-no-files-found: error
+          retention-days: 14
