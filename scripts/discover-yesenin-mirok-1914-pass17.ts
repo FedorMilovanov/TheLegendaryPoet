@@ -21,6 +21,15 @@ interface DiscoveredIssue {
   discoveredOn: string;
 }
 
+interface PdfAcquisition {
+  url: string;
+  finalUrl: string;
+  contentType: string;
+  byteSize: number;
+  sha256: string;
+  savedAs: string;
+}
+
 interface IssueRecord {
   book: number;
   title: string;
@@ -34,7 +43,8 @@ interface IssueRecord {
   viewerCandidates: string[];
   accessOpenMarker: boolean;
   exactIssueIdentified: true;
-  pdfBytesAcquired: false;
+  pdfBytesAcquired: boolean;
+  pdfAcquisition: PdfAcquisition | null;
   contentInspected: false;
 }
 
@@ -44,7 +54,9 @@ const yearUrl = `${serialUrl}?year=1914`;
 const searchUrl = 'https://rusneb.ru/search/';
 const artifactRoot = 'artifacts/yesenin-mirok-1914-discovery-pass17';
 const rawDir = join(artifactRoot, 'raw');
+const pdfDir = join(artifactRoot, 'pdf');
 await mkdir(rawDir, { recursive: true });
+await mkdir(pdfDir, { recursive: true });
 
 const targets: readonly PublicationTarget[] = [
   {
@@ -142,6 +154,42 @@ async function fetchHtml(url: string): Promise<{ html: string; finalUrl: string;
   const html = await response.text();
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   return { html, finalUrl: response.url, status: response.status };
+}
+
+async function acquirePdf(
+  candidates: readonly string[],
+  book: number,
+  code: string,
+): Promise<PdfAcquisition | null> {
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, {
+        redirect: 'follow',
+        headers: {
+          'user-agent': 'TheLegendaryPoet primary-source acquisition runner/1.0 (+https://github.com/FedorMilovanov/TheLegendaryPoet)',
+          accept: 'application/pdf,*/*;q=0.2',
+          'accept-language': 'ru,en;q=0.7',
+        },
+        signal: AbortSignal.timeout(120_000),
+      });
+      if (!response.ok) continue;
+      const bytes = Buffer.from(await response.arrayBuffer());
+      if (bytes.length < 5 || bytes.subarray(0, 5).toString('ascii') !== '%PDF-') continue;
+      const filename = `mirok-1914-book-${book}-${code}.pdf`;
+      await writeFile(join(pdfDir, filename), bytes);
+      return {
+        url,
+        finalUrl: response.url,
+        contentType: response.headers.get('content-type') ?? 'application/pdf',
+        byteSize: bytes.length,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+        savedAs: `pdf/${filename}`,
+      };
+    } catch {
+      // The next literal candidate may be the functioning variant.
+    }
+  }
+  return null;
 }
 
 function extractAnchors(html: string, base: string): Array<{ url: string; text: string }> {
@@ -292,6 +340,8 @@ for (const target of targets) {
     /\.pdf(?:$|[?#])|\/pdf(?:\/|$)|download[^?#]*pdf|format=pdf|type=pdf|download/i.test(url),
   );
   const viewerCandidates = urls.filter((url) => /viewer|dlib\.rsl\.ru|viewer\.rsl\.ru|read\//i.test(url));
+  const uniquePdfCandidates = [...new Set(literalPdfCandidates)];
+  const pdfAcquisition = await acquirePdf(uniquePdfCandidates, target.book, issue.code);
   issueRecords.push({
     book: target.book,
     title: issue.title,
@@ -301,17 +351,18 @@ for (const target of targets) {
     discoverySourceUrl: issue.discoveredOn,
     issuePageSha256: sha,
     issuePageBytes: bytes,
-    literalPdfCandidates: [...new Set(literalPdfCandidates)],
+    literalPdfCandidates: uniquePdfCandidates,
     viewerCandidates: [...new Set(viewerCandidates)],
     accessOpenMarker: /Доступ[\s\S]{0,200}свободн/iu.test(html),
     exactIssueIdentified: true,
-    pdfBytesAcquired: false,
+    pdfBytesAcquired: pdfAcquisition !== null,
+    pdfAcquisition,
     contentInspected: false,
   });
 }
 
 const manifest = {
-  schema: 'yesenin-mirok-1914-discovery-pass17/v2',
+  schema: 'yesenin-mirok-1914-discovery-pass17/v3',
   generatedAt: new Date().toISOString(),
   parentSerial: {
     title: 'Мирок : ежемесячный иллюстрированный детский журнал для семьи и начальной школы',
@@ -329,8 +380,11 @@ const manifest = {
   missingRequiredBooks: missing,
   issueRecords,
   parserCorrection: 'Removed ASCII word-boundary matching around Cyrillic Мирок; added independent literal NEB search fallback.',
+  pdfAcquisitions: issueRecords.filter((record) => record.pdfAcquisition !== null).map((record) => record.pdfAcquisition),
+  acquiredPdfCount: issueRecords.filter((record) => record.pdfBytesAcquired).length,
+  acquiredPdfBytes: issueRecords.reduce((sum, record) => sum + (record.pdfAcquisition?.byteSize ?? 0), 0),
   noCatalogueArithmetic: true,
-  pdfBytesAcquired: false,
+  pdfBytesAcquired: issueRecords.some((record) => record.pdfBytesAcquired),
   contentInspected: false,
   wikipediaUsedAsEvidence: false,
 };
@@ -349,13 +403,16 @@ const rows = targets.map((target) => {
     issue?.viewerCandidates.length ?? 0,
   ].join(' | ');
 });
-const summary = `# «Мирок», 1914 — discovery pass 17 v2\n\n`
+const acquiredPdfCount = issueRecords.filter((record) => record.pdfBytesAcquired).length;
+const acquiredPdfBytes = issueRecords.reduce((sum, record) => sum + (record.pdfAcquisition?.byteSize ?? 0), 0);
+const summary = `# «Мирок», 1914 — discovery/acquisition pass 17 v3\n\n`
   + `- Parent NEB code: ${serialCode}\n`
   + `- Exact issues discovered: ${discovered.size}\n`
   + `- Required targets resolved: ${requiredBooks.length - missing.length}/${requiredBooks.length}\n`
   + `- Serial-year issue anchors: ${[...discovered.values()].filter((item) => item.method === 'serial-year-anchor').length}\n`
   + `- NEB-search issue anchors: ${[...discovered.values()].filter((item) => item.method === 'neb-search-anchor').length}\n`
-  + `- PDF bytes acquired: false\n`
+  + `- Exact PDFs acquired: ${acquiredPdfCount}\n`
+  + `- Acquired PDF bytes: ${acquiredPdfBytes}\n`
   + `- Content inspected: false\n`
   + `- Catalogue arithmetic used: false\n`
   + `- Wikipedia evidence: false\n\n`
