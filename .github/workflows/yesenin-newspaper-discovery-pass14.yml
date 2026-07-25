@@ -26,6 +26,8 @@ jobs:
         run: python scripts/discover-yesenin-neb-serial-issues-pass10.py
       - name: Discover exact cards through official NEB search results
         run: python scripts/discover-yesenin-newspaper-neb-search-pass14.py
+      - name: Extract literal PDF routes from accepted issue cards
+        run: python scripts/discover-yesenin-newspaper-neb-pdf-routes-pass14.py
       - name: Upload immutable discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
