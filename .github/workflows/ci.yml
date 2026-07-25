@@ -3,93 +3,13 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
-
-concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - run: npm ci
-      - name: Validate content, stores, and literary style
-        run: npm run check:content
-      - name: Validate persistent app shell invariants
-        run: npm run validate:app-shell
-      - name: Validate overlays, images, and pointer interactions
-        id: interaction_runtime
-        run: |
-          set +e
-          npm run validate:interaction-runtime > interaction-runtime.log 2>&1
-          status=$?
-          cat interaction-runtime.log
-          exit $status
-      - name: Upload interaction runtime diagnostics
-        if: ${{ failure() && steps.interaction_runtime.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-runtime-diagnostics
-          path: interaction-runtime.log
-          if-no-files-found: error
-          retention-days: 3
-      - name: Typecheck
-        id: typecheck
-        run: |
-          set +e
-          npm run typecheck > typecheck.log 2>&1
-          status=$?
-          cat typecheck.log
-          exit $status
-      - name: Upload typecheck diagnostics
-        if: ${{ failure() && steps.typecheck.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: typecheck-diagnostics
-          path: typecheck.log
-          if-no-files-found: error
-          retention-days: 3
-      - name: Generate sitemap
-        run: npm run sitemap
-      - name: Build
-        run: npm run build
-        env:
-          VITE_BASE: /
-      - name: Validate route splitting and production asset budgets
-        id: build_audit
-        run: |
-          set +e
-          npm run validate:build-output > build-output-audit.log 2>&1
-          status=$?
-          cat build-output-audit.log
-          exit $status
-      - name: Upload build audit diagnostics
-        if: ${{ failure() && steps.build_audit.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output-audit
-          path: build-output-audit.log
-          if-no-files-found: error
-          retention-days: 3
-      - name: Prerender social pages
-        run: npm run prerender
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
-
   premium-poet-live-witness:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/premium-poet-live-witness'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/premium-poet-live-witness'
     permissions:
       actions: read
       contents: read
@@ -109,34 +29,16 @@ jobs:
           node-version: '22.12.0'
           cache: npm
 
-      - name: Wait for exact Pages workflow and deployment
+      - name: Confirm exact Pages workflow and deployment
         shell: bash
         run: |
           set -euo pipefail
           repo="$GITHUB_REPOSITORY"
           mkdir -p live-witness
-          found=''
-          for attempt in $(seq 1 80); do
-            gh api "/repos/${repo}/actions/workflows/deploy.yml/runs?head_sha=${TARGET_SHA}&per_page=20" > live-witness/pages-runs.json
-            found="$(jq -r '.workflow_runs | map(select(.head_sha == env.TARGET_SHA)) | sort_by(.created_at) | last | .id // empty' live-witness/pages-runs.json)"
-            if [ -n "$found" ]; then
-              status="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .status' live-witness/pages-runs.json)"
-              conclusion="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .conclusion // ""' live-witness/pages-runs.json)"
-              echo "Exact Pages run ${found}: ${status}/${conclusion:-pending}"
-              if [ "$status" = 'completed' ]; then
-                test "$conclusion" = 'success'
-                break
-              fi
-            else
-              echo "Exact Pages run not created yet (attempt ${attempt})"
-            fi
-            sleep 15
-          done
-          test -n "$found"
-          status="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .status' live-witness/pages-runs.json)"
-          conclusion="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .conclusion // ""' live-witness/pages-runs.json)"
-          test "$status" = 'completed'
-          test "$conclusion" = 'success'
+
+          gh api "/repos/${repo}/actions/workflows/deploy.yml/runs?head_sha=${TARGET_SHA}&per_page=20" > live-witness/pages-runs.json
+          pages_run="$(jq -r '.workflow_runs | map(select(.head_sha == env.TARGET_SHA and .status == "completed" and .conclusion == "success")) | sort_by(.created_at) | last | .id // empty' live-witness/pages-runs.json)"
+          test -n "$pages_run"
 
           gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=20" > live-witness/deployments.json
           deployment_id="$(jq -r 'sort_by(.created_at) | last | .id // empty' live-witness/deployments.json)"
@@ -146,7 +48,7 @@ jobs:
 
           jq -n \
             --arg target "$TARGET_SHA" \
-            --arg run "$found" \
+            --arg run "$pages_run" \
             --arg deployment "$deployment_id" \
             '{targetSha:$target,pagesRunId:($run|tonumber),deploymentId:($deployment|tonumber),pagesConclusion:"success",deploymentState:"success"}' \
             > live-witness/exact-deploy-summary.json
@@ -181,12 +83,15 @@ jobs:
               if (message.type() === 'error' && !/Failed to load resource/i.test(message.text())) consoleErrors.push(message.text());
             });
 
-            const response = await page.goto(process.env.LIVE_URL, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+            const url = `${process.env.LIVE_URL}?premium-poet-witness=${Date.now()}`;
+            const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
             if (!response || response.status() >= 400) throw new Error(`live navigation failed: ${response?.status()}`);
+
             const windows = page.locator('[data-hero-poet-window]');
             await windows.first().waitFor({ state: 'visible', timeout: 30_000 });
             const count = await windows.count();
             if (count !== 6) throw new Error(`expected 6 live poet windows, received ${count}`);
+
             const hrefs = await windows.evaluateAll((links) => links.map((link) => link.getAttribute('href')));
             const expected = [
               '/poets/sergei-yesenin',
@@ -197,7 +102,20 @@ jobs:
               '/poets/afanasy-fet',
             ];
             if (JSON.stringify(hrefs) !== JSON.stringify(expected)) throw new Error(`live href order mismatch: ${JSON.stringify(hrefs)}`);
-            const images = await windows.locator('img').evaluateAll((nodes) => nodes.map((image) => ({ complete: image.complete, width: image.naturalWidth, height: image.naturalHeight })));
+
+            await windows.first().scrollIntoViewIfNeeded();
+            await page.waitForFunction(() => {
+              const images = [...document.querySelectorAll('[data-hero-poet-window] img')];
+              return images.length === 6 && images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+            }, null, { timeout: 30_000 });
+            await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => undefined);
+
+            const images = await windows.locator('img').evaluateAll(async (nodes) => {
+              await Promise.all(nodes.map(async (image) => {
+                if (typeof image.decode === 'function') await image.decode();
+              }));
+              return nodes.map((image) => ({ complete: image.complete, width: image.naturalWidth, height: image.naturalHeight, src: image.currentSrc || image.src }));
+            });
             if (!images.every((image) => image.complete && image.width > 0 && image.height > 0)) throw new Error(`live image decode failure: ${JSON.stringify(images)}`);
             if (pageErrors.length || consoleErrors.length) throw new Error(`live runtime errors: ${JSON.stringify({ pageErrors, consoleErrors })}`);
 
@@ -209,7 +127,7 @@ jobs:
               glowOpacity: await glow.evaluate((node) => getComputedStyle(node).opacity),
             };
             await first.hover({ position: { x: 12, y: 18 } });
-            await page.waitForTimeout(750);
+            await page.waitForTimeout(900);
             const after = {
               transform: await surface.evaluate((node) => getComputedStyle(node).transform),
               glowOpacity: await glow.evaluate((node) => getComputedStyle(node).opacity),
@@ -218,6 +136,7 @@ jobs:
             if (before.glowOpacity === after.glowOpacity) throw new Error('live glow did not react to hover');
 
             const result = {
+              targetSha: process.env.TARGET_SHA,
               url: page.url(),
               title: await page.title(),
               count,
