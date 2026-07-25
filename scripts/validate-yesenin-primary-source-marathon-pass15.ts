@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
-  yeseninPrimarySourceMarathonPassFifteen,
-  yeseninPrimaryVisualPlacementsPassFifteen,
+  yeseninPrimarySourceMarathonPassFifteen as passes,
+  yeseninPrimaryVisualPlacementsPassFifteen as visuals,
 } from '../src/data/essays/yeseninPrimarySourceMarathonPassFifteen';
 
 const root = process.cwd();
@@ -14,72 +14,42 @@ const fail = (message: string): never => {
 const researchPath = 'research/yesenin/PART_ONE_PRIMARY_SOURCE_MARATHON_PASS15_2026-07-25.md';
 const visualPath = 'research/yesenin/PART_ONE_VISUAL_PLACEMENT_PASS15_2026-07-25.md';
 const research = read(researchPath);
-const visual = read(visualPath);
+const visualDoc = read(visualPath);
 
-if (yeseninPrimarySourceMarathonPassFifteen.length !== 48) {
-  fail(`expected exactly 48 search routes, found ${yeseninPrimarySourceMarathonPassFifteen.length}`);
-}
-if (yeseninPrimaryVisualPlacementsPassFifteen.length !== 16) {
-  fail(`expected exactly 16 visual placements, found ${yeseninPrimaryVisualPlacementsPassFifteen.length}`);
-}
+if (passes.length !== 48) fail(`expected 48 routes, found ${passes.length}`);
+if (visuals.length !== 16) fail(`expected 16 visuals, found ${visuals.length}`);
 
-const passIds = new Set<string>();
-for (const [index, pass] of yeseninPrimarySourceMarathonPassFifteen.entries()) {
-  const expectedId = `PS15-${String(index + 1).padStart(3, '0')}`;
-  if (pass.id !== expectedId) fail(`route ${index + 1} must be ${expectedId}, found ${pass.id}`);
-  if (passIds.has(pass.id)) fail(`duplicate route id ${pass.id}`);
-  passIds.add(pass.id);
-  if (pass.resultUrl !== null && !pass.resultUrl.startsWith('https://')) {
-    fail(`${pass.id}: result URL must be HTTPS`);
-  }
-  if (pass.fullTextAcquired !== false) {
-    fail(`${pass.id}: pass 15 must not claim newly acquired full text`);
-  }
-  if (pass.wikipediaUsedAsEvidence !== false) {
-    fail(`${pass.id}: Wikipedia must never be evidence`);
-  }
-  if (/wikipedia\.org/i.test(pass.resultUrl ?? '')) {
-    fail(`${pass.id}: Wikipedia URL entered the evidence matrix`);
-  }
-  if (pass.evidenceLimit.length < 45) {
-    fail(`${pass.id}: evidence-limit note is too weak`);
-  }
+const ids = new Set<string>();
+for (const [index, pass] of passes.entries()) {
+  const expected = `PS15-${String(index + 1).padStart(3, '0')}`;
+  if (pass.id !== expected) fail(`route ${index + 1}: expected ${expected}, found ${pass.id}`);
+  if (ids.has(pass.id)) fail(`duplicate route ${pass.id}`);
+  ids.add(pass.id);
+  if (pass.resultUrl && !pass.resultUrl.startsWith('https://')) fail(`${pass.id}: non-HTTPS URL`);
+  if (pass.fullTextAcquired !== false) fail(`${pass.id}: false full-text acquisition`);
+  if (pass.wikipediaUsedAsEvidence !== false) fail(`${pass.id}: Wikipedia entered evidence`);
+  if (/wikipedia\.org/i.test(pass.resultUrl ?? '')) fail(`${pass.id}: Wikipedia URL entered evidence`);
+  if (pass.evidenceLimit.length < 45) fail(`${pass.id}: weak evidence boundary`);
 }
 
-const nullLocatorIds = yeseninPrimarySourceMarathonPassFifteen
-  .filter((pass) => pass.resultUrl === null)
-  .map((pass) => pass.id)
-  .join(',');
-if (nullLocatorIds !== 'PS15-013,PS15-014,PS15-040') {
-  fail(`unexpected null-locator set: ${nullLocatorIds}`);
+const nullIds = passes.filter((pass) => pass.resultUrl === null).map((pass) => pass.id);
+if (nullIds.join(',') !== 'PS15-013,PS15-014,PS15-040') {
+  fail(`unexpected null locators: ${nullIds.join(',')}`);
 }
 
-const gradeCounts = yeseninPrimarySourceMarathonPassFifteen.reduce<Record<string, number>>(
-  (counts, pass) => {
-    counts[pass.grade] = (counts[pass.grade] ?? 0) + 1;
-    return counts;
-  },
-  {},
-);
-if (
-  gradeCounts['A+'] !== 12 ||
-  gradeCounts.A !== 30 ||
-  gradeCounts.B !== 3 ||
-  gradeCounts.EXCLUDED !== 3
-) {
-  fail(`unexpected grade distribution: ${JSON.stringify(gradeCounts)}`);
-}
-if ((gradeCounts['A+'] ?? 0) + (gradeCounts.A ?? 0) !== 42) {
-  fail('pass 15 must retain exactly 42 A+/A routes');
-}
+const countBy = <T extends string>(values: readonly T[]) =>
+  values.reduce<Record<string, number>>((acc, value) => {
+    acc[value] = (acc[value] ?? 0) + 1;
+    return acc;
+  }, {});
 
-const stateCounts = yeseninPrimarySourceMarathonPassFifteen.reduce<Record<string, number>>(
-  (counts, pass) => {
-    counts[pass.resultState] = (counts[pass.resultState] ?? 0) + 1;
-    return counts;
-  },
-  {},
-);
+const grades = countBy(passes.map((pass) => pass.grade));
+for (const [grade, expected] of [['A+', 12], ['A', 30], ['B', 3], ['EXCLUDED', 3]] as const) {
+  if (grades[grade] !== expected) fail(`expected ${expected} ${grade}, found ${grades[grade] ?? 0}`);
+}
+if ((grades['A+'] ?? 0) + (grades.A ?? 0) !== 42) fail('A+/A route total must remain 42');
+
+const states = countBy(passes.map((pass) => pass.resultState));
 for (const [state, expected] of [
   ['archive-catalog', 8],
   ['reading-room-only', 4],
@@ -88,12 +58,10 @@ for (const [state, expected] of [
   ['quarantined-visual', 3],
   ['quarantined-secondary', 2],
 ] as const) {
-  if (stateCounts[state] !== expected) {
-    fail(`expected ${expected} ${state} routes, found ${stateCounts[state] ?? 0}`);
-  }
+  if (states[state] !== expected) fail(`expected ${expected} ${state}, found ${states[state] ?? 0}`);
 }
 
-const requiredRouteMarkers: Record<string, readonly string[]> = {
+const markers: Record<string, readonly string[]> = {
   'PS15-002': ['30 июля', 'Кирико-Иулиттовская'],
   'PS15-006': ['«Советская страна»', '«Сирены»'],
   'PS15-012': ['видимо, 3 октября 1921'],
@@ -107,124 +75,84 @@ const requiredRouteMarkers: Record<string, readonly string[]> = {
   'PS15-040': ['ВОМ-13607'],
   'PS15-046': ['поездом № 143'],
 };
-for (const [id, markers] of Object.entries(requiredRouteMarkers)) {
-  const pass = yeseninPrimarySourceMarathonPassFifteen.find((candidate) => candidate.id === id);
-  if (!pass) fail(`missing required route ${id}`);
-  const haystack = `${pass.target} ${pass.evidenceLimit}`;
-  for (const marker of markers) {
-    if (!haystack.includes(marker)) fail(`${id}: missing marker ${marker}`);
-  }
+for (const [id, required] of Object.entries(markers)) {
+  const pass = passes.find((candidate) => candidate.id === id);
+  if (!pass) fail(`missing route ${id}`);
+  const text = `${pass.target} ${pass.evidenceLimit}`;
+  for (const marker of required) if (!text.includes(marker)) fail(`${id}: missing ${marker}`);
 }
 
-const requiredHosts = new Set([
-  'feb-web.ru',
-  'www.rgali.ru',
-  'www.prlib.ru',
-  'archives.nypl.org',
-  'www.loc.gov',
-  'rusneb.ru',
-  'gosarchive.gov35.ru',
-  'commons.wikimedia.org',
-  'kulturologia.ru',
+const allowedHosts = new Set([
+  'feb-web.ru', 'www.rgali.ru', 'www.prlib.ru', 'archives.nypl.org', 'www.loc.gov',
+  'rusneb.ru', 'gosarchive.gov35.ru', 'commons.wikimedia.org', 'kulturologia.ru',
   'godliteratury.ru',
 ]);
-for (const pass of yeseninPrimarySourceMarathonPassFifteen) {
+for (const pass of passes) {
   if (!pass.resultUrl) continue;
   const host = new URL(pass.resultUrl).hostname;
-  if (!requiredHosts.has(host)) fail(`${pass.id}: unreviewed host ${host}`);
+  if (!allowedHosts.has(host)) fail(`${pass.id}: unreviewed host ${host}`);
 }
 
 const visualIds = new Set<string>();
-const placementCounts = new Map<string, number>();
-for (const [index, item] of yeseninPrimaryVisualPlacementsPassFifteen.entries()) {
-  const expectedId = `VIS-YE1-P15-${String(index + 1).padStart(3, '0')}`;
-  if (item.id !== expectedId) fail(`visual ${index + 1} must be ${expectedId}, found ${item.id}`);
-  if (visualIds.has(item.id)) fail(`duplicate visual id ${item.id}`);
+const sections = new Map<string, number>();
+for (const [index, item] of visuals.entries()) {
+  const expected = `VIS-YE1-P15-${String(index + 1).padStart(3, '0')}`;
+  if (item.id !== expected) fail(`visual ${index + 1}: expected ${expected}, found ${item.id}`);
+  if (visualIds.has(item.id)) fail(`duplicate visual ${item.id}`);
   visualIds.add(item.id);
-  if (!item.sourcePageUrl.startsWith('https://')) fail(`${item.id}: source page must use HTTPS`);
+  if (!item.sourcePageUrl.startsWith('https://')) fail(`${item.id}: non-HTTPS source page`);
   if (item.originalSha256 !== null || item.derivativeSha256 !== null) {
-    fail(`${item.id}: hashes must remain null until real bytes and derivatives are acquired`);
+    fail(`${item.id}: hashes appeared before byte acquisition`);
   }
-  if (item.productionAuthorized !== false) {
-    fail(`${item.id}: production authorization must remain false`);
-  }
-  if (item.editorialUse.length < 55) fail(`${item.id}: editorial placement note is too weak`);
-  placementCounts.set(item.placement, (placementCounts.get(item.placement) ?? 0) + 1);
+  if (item.productionAuthorized !== false) fail(`${item.id}: production was falsely authorized`);
+  if (item.editorialUse.length < 55) fail(`${item.id}: weak placement boundary`);
+  sections.set(item.placement, (sections.get(item.placement) ?? 0) + 1);
 }
 for (const section of [
-  'section-1-konstantinovo',
-  'section-3-moscow',
-  'section-4-blok-petrograd',
-  'section-5-klyuev-image',
-  'section-6-radunitsa',
-  'section-7-military-service',
-  'section-8-revolutionary-poems',
-  'section-9-reich-family',
-  'section-10-imagism',
-  'section-11-transition-1921',
-  'section-12-duncan-threshold',
-] as const) {
-  if (!placementCounts.has(section)) fail(`visual map lost ${section}`);
+  'section-1-konstantinovo', 'section-3-moscow', 'section-4-blok-petrograd',
+  'section-5-klyuev-image', 'section-6-radunitsa', 'section-7-military-service',
+  'section-8-revolutionary-poems', 'section-9-reich-family', 'section-10-imagism',
+  'section-11-transition-1921', 'section-12-duncan-threshold',
+]) {
+  if (!sections.has(section)) fail(`visual map lost ${section}`);
 }
-if (placementCounts.get('section-7-military-service') !== 2) {
-  fail('military section must retain notice + train no. 143 visual pair');
-}
-if (placementCounts.get('section-10-imagism') !== 2) {
-  fail('imagism section must retain leaflet + Sirena-cover visual pair');
-}
+if (sections.get('section-7-military-service') !== 2) fail('military visual pair regressed');
+if (sections.get('section-10-imagism') !== 2) fail('imagism visual pair regressed');
 
 for (const marker of [
-  '48-SEARCH-ROUTES',
-  'PRIMARY-FIRST',
-  'WIKIPEDIA-ZERO-EVIDENCE',
-  'NOT-YET-PUBLIC',
-  '42 A+/A',
-  'ВОМ-13607',
-  '300 предметов',
-  '1458 предметов',
-  'поезд № 143',
-  'Википедия не включена ни в один evidence record',
-] as const) {
-  if (!research.includes(marker)) fail(`${researchPath}: missing marker ${marker}`);
+  '48-SEARCH-ROUTES', 'PRIMARY-FIRST', 'WIKIPEDIA-ZERO-EVIDENCE', 'NOT-YET-PUBLIC',
+  '## 48 выполненных маршрутов', 'ВОМ-13607', '300 предметов', '1458 предметов',
+  'поезд № 143', 'Википедия не включена ни в один evidence record',
+]) {
+  if (!research.includes(marker)) fail(`${researchPath}: missing ${marker}`);
 }
-if ((research.match(/^\| PS15-\d{3} \|/gm) ?? []).length !== 48) {
-  fail(`${researchPath}: markdown table must retain 48 routes`);
-}
+if ((research.match(/^\| PS15-\d{3} \|/gm) ?? []).length !== 48) fail('research table lost routes');
+
 for (const marker of [
-  '16-REAL-VISUAL-TARGETS',
-  'NO-GENERATIVE-ARCHIVE',
-  'NO-PRODUCTION-AUTHORIZATION',
-  'Записка Есенина Блоку',
-  'поезда № 143',
-  'не подписывать LOC-портрет Дункан как `Москва, 1921`',
-  'productionAuthorized: true',
-] as const) {
-  if (!visual.includes(marker)) fail(`${visualPath}: missing marker ${marker}`);
+  '16-REAL-VISUAL-TARGETS', 'NO-GENERATIVE-ARCHIVE', 'NO-PRODUCTION-AUTHORIZATION',
+  'Записка Есенина Блоку', 'поезда № 143',
+  'не подписывать LOC-портрет Дункан как `Москва, 1921`', 'productionAuthorized: true',
+]) {
+  if (!visualDoc.includes(marker)) fail(`${visualPath}: missing ${marker}`);
 }
-if ((visual.match(/^\| VIS-YE1-P15-\d{3} \|/gm) ?? []).length !== 16) {
-  fail(`${visualPath}: markdown table must retain 16 visual placements`);
+if ((visualDoc.match(/^\| VIS-YE1-P15-\d{3} \|/gm) ?? []).length !== 16) {
+  fail('visual table lost placements');
 }
 
 const essayIndex = read('src/data/essays/index.ts');
 for (const forbidden of ['essay-yesenin-1895-1921', "slug: 'yesenin-1895-1921'"]) {
-  if (essayIndex.includes(forbidden)) fail(`public essay registry must not contain ${forbidden}`);
+  if (essayIndex.includes(forbidden)) fail(`public registry contains ${forbidden}`);
 }
 
-console.log(
-  JSON.stringify(
-    {
-      searchRoutes: yeseninPrimarySourceMarathonPassFifteen.length,
-      gradeCounts,
-      stateCounts,
-      primaryGradeRoutes: (gradeCounts['A+'] ?? 0) + (gradeCounts.A ?? 0),
-      visualPlacements: yeseninPrimaryVisualPlacementsPassFifteen.length,
-      visualSections: Object.fromEntries(placementCounts),
-      wikipediaEvidence: 0,
-      newFullTextsAcquired: 0,
-      productionAuthorizedVisuals: 0,
-      articleRegistered: false,
-    },
-    null,
-    2,
-  ),
-);
+console.log(JSON.stringify({
+  searchRoutes: passes.length,
+  grades,
+  states,
+  primaryGradeRoutes: (grades['A+'] ?? 0) + (grades.A ?? 0),
+  visualPlacements: visuals.length,
+  visualSections: Object.fromEntries(sections),
+  wikipediaEvidence: 0,
+  newFullTextsAcquired: 0,
+  productionAuthorizedVisuals: 0,
+  articleRegistered: false,
+}, null, 2));
