@@ -54,8 +54,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Verify image pipeline dependency
-        run: ffmpeg -version
+      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
 
       - name: Validate content, literary style, brand assets, and types
         run: npm run check
