@@ -16,6 +16,12 @@ export function setActiveLenis(lenis: Lenis | null) {
  * Pause the current smooth-scroll enhancement until the returned release
  * function is called. Tokens make nested overlays safe: closing one dialog
  * cannot restart Lenis while another dialog is still open.
+ *
+ * A modal body lock temporarily replaces the browser's scroll position with a
+ * fixed-body offset. When the final lock closes, pass the restored Y position
+ * so Lenis synchronises its internal target before its animation loop resumes;
+ * otherwise a stale target can pull the page several pixels after focus has
+ * already returned to the opener.
  */
 export function pauseSmoothScroll(reason = 'overlay') {
   const token = Symbol(reason);
@@ -23,11 +29,19 @@ export function pauseSmoothScroll(reason = 'overlay') {
   activeLenis?.stop();
   let released = false;
 
-  return () => {
+  return (restoredScrollY?: number) => {
     if (released) return;
     released = true;
     pauseTokens.delete(token);
-    if (pauseTokens.size === 0) activeLenis?.start();
+    if (pauseTokens.size !== 0) return;
+
+    if (activeLenis && Number.isFinite(restoredScrollY)) {
+      activeLenis.scrollTo(restoredScrollY as number, {
+        immediate: true,
+        force: true,
+      });
+    }
+    activeLenis?.start();
   };
 }
 
