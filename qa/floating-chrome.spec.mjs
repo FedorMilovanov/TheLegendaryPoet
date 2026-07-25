@@ -13,6 +13,33 @@ function overlaps(left, right) {
     && left.bottom > right.top;
 }
 
+async function sampleScrollStability(page) {
+  return page.evaluate(() => new Promise((resolve) => {
+    const samples = [];
+    const sample = () => {
+      samples.push(window.scrollY);
+      if (samples.length < 6) {
+        requestAnimationFrame(sample);
+        return;
+      }
+      const deltas = samples.slice(1).map((value, index) => Math.abs(value - samples[index]));
+      resolve({
+        first: samples[0],
+        last: samples.at(-1),
+        maxDelta: Math.max(0, ...deltas),
+      });
+    };
+    requestAnimationFrame(sample);
+  }));
+}
+
+async function waitForScrollSettled(page, message) {
+  await expect.poll(
+    () => sampleScrollStability(page).then((sample) => sample.maxDelta),
+    { timeout: 6_000, message },
+  ).toBeLessThan(0.5);
+}
+
 test.use({
   viewport: { width: 1440, height: 1000 },
   locale: 'ru-RU',
@@ -44,8 +71,12 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
     { timeout: 5_000, message: 'downward user scroll should enter reading-mode chrome hiding' },
   ).toBe(true);
 
+  // Lenis may still carry downward momentum after the threshold is crossed.
+  // Observe six consecutive animation frames and reverse direction only after
+  // the actual scroll position is stable, rather than sleeping for a guessed time.
+  await waitForScrollSettled(page, 'downward smooth scrolling should settle before direction reversal');
   const hiddenAt = await page.evaluate(() => window.scrollY);
-  await page.mouse.wheel(0, -160);
+  await page.mouse.wheel(0, -420);
   await expect.poll(
     () => page.evaluate(() => window.scrollY),
     { timeout: 5_000, message: 'upward user scroll should move the document before geometry is measured' },
@@ -54,6 +85,7 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
     () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
     { timeout: 5_000, message: 'upward user scroll should reveal floating chrome through the product hook' },
   ).toBe(false);
+  await waitForScrollSettled(page, 'upward smooth scrolling should settle before floating geometry is measured');
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
