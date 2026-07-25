@@ -87,3 +87,160 @@ jobs:
         run: npm run prerender
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+
+  premium-poet-live-witness:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/premium-poet-live-witness'
+    permissions:
+      actions: read
+      contents: read
+      deployments: read
+      pages: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 68f7a6151e6371349724e3549d85e612980ca020
+      LIVE_URL: https://thelegendarypoet.ru/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - name: Wait for exact Pages workflow and deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          mkdir -p live-witness
+          found=''
+          for attempt in $(seq 1 80); do
+            gh api "/repos/${repo}/actions/workflows/deploy.yml/runs?head_sha=${TARGET_SHA}&per_page=20" > live-witness/pages-runs.json
+            found="$(jq -r '.workflow_runs | map(select(.head_sha == env.TARGET_SHA)) | sort_by(.created_at) | last | .id // empty' live-witness/pages-runs.json)"
+            if [ -n "$found" ]; then
+              status="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .status' live-witness/pages-runs.json)"
+              conclusion="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .conclusion // ""' live-witness/pages-runs.json)"
+              echo "Exact Pages run ${found}: ${status}/${conclusion:-pending}"
+              if [ "$status" = 'completed' ]; then
+                test "$conclusion" = 'success'
+                break
+              fi
+            else
+              echo "Exact Pages run not created yet (attempt ${attempt})"
+            fi
+            sleep 15
+          done
+          test -n "$found"
+          status="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .status' live-witness/pages-runs.json)"
+          conclusion="$(jq -r --argjson id "$found" '.workflow_runs[] | select(.id == $id) | .conclusion // ""' live-witness/pages-runs.json)"
+          test "$status" = 'completed'
+          test "$conclusion" = 'success'
+
+          gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=20" > live-witness/deployments.json
+          deployment_id="$(jq -r 'sort_by(.created_at) | last | .id // empty' live-witness/deployments.json)"
+          test -n "$deployment_id"
+          gh api "/repos/${repo}/deployments/${deployment_id}/statuses?per_page=20" > live-witness/deployment-statuses.json
+          test "$(jq -r 'sort_by(.created_at) | last | .state' live-witness/deployment-statuses.json)" = 'success'
+
+          jq -n \
+            --arg target "$TARGET_SHA" \
+            --arg run "$found" \
+            --arg deployment "$deployment_id" \
+            '{targetSha:$target,pagesRunId:($run|tonumber),deploymentId:($deployment|tonumber),pagesConclusion:"success",deploymentState:"success"}' \
+            > live-witness/exact-deploy-summary.json
+
+      - name: Install isolated Chromium witness runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium
+
+      - name: Verify six premium windows on the live site
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const { chromium } = require('@playwright/test');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext({
+              viewport: { width: 1440, height: 1000 },
+              colorScheme: 'dark',
+              locale: 'ru-RU',
+              serviceWorkers: 'block',
+            });
+            const page = await context.newPage();
+            const pageErrors = [];
+            const consoleErrors = [];
+            page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+            page.on('console', (message) => {
+              if (message.type() === 'error' && !/Failed to load resource/i.test(message.text())) consoleErrors.push(message.text());
+            });
+
+            const response = await page.goto(process.env.LIVE_URL, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+            if (!response || response.status() >= 400) throw new Error(`live navigation failed: ${response?.status()}`);
+            const windows = page.locator('[data-hero-poet-window]');
+            await windows.first().waitFor({ state: 'visible', timeout: 30_000 });
+            const count = await windows.count();
+            if (count !== 6) throw new Error(`expected 6 live poet windows, received ${count}`);
+            const hrefs = await windows.evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+            const expected = [
+              '/poets/sergei-yesenin',
+              '/poets/mikhail-lermontov',
+              '/poets/alexander-pushkin',
+              '/poets/fyodor-tyutchev',
+              '/poets/vladimir-mayakovsky',
+              '/poets/afanasy-fet',
+            ];
+            if (JSON.stringify(hrefs) !== JSON.stringify(expected)) throw new Error(`live href order mismatch: ${JSON.stringify(hrefs)}`);
+            const images = await windows.locator('img').evaluateAll((nodes) => nodes.map((image) => ({ complete: image.complete, width: image.naturalWidth, height: image.naturalHeight })));
+            if (!images.every((image) => image.complete && image.width > 0 && image.height > 0)) throw new Error(`live image decode failure: ${JSON.stringify(images)}`);
+            if (pageErrors.length || consoleErrors.length) throw new Error(`live runtime errors: ${JSON.stringify({ pageErrors, consoleErrors })}`);
+
+            const first = windows.first();
+            const surface = first.locator('[data-hero-poet-window-surface]');
+            const glow = first.locator('[data-hero-poet-window-glow]');
+            const before = {
+              transform: await surface.evaluate((node) => getComputedStyle(node).transform),
+              glowOpacity: await glow.evaluate((node) => getComputedStyle(node).opacity),
+            };
+            await first.hover({ position: { x: 12, y: 18 } });
+            await page.waitForTimeout(750);
+            const after = {
+              transform: await surface.evaluate((node) => getComputedStyle(node).transform),
+              glowOpacity: await glow.evaluate((node) => getComputedStyle(node).opacity),
+            };
+            if (before.transform === after.transform) throw new Error('live 3D transform did not react to hover');
+            if (before.glowOpacity === after.glowOpacity) throw new Error('live glow did not react to hover');
+
+            const result = {
+              url: page.url(),
+              title: await page.title(),
+              count,
+              hrefs,
+              images,
+              before,
+              after,
+              pageErrors,
+              consoleErrors,
+              checkedAt: new Date().toISOString(),
+            };
+            fs.writeFileSync('live-witness/live-dom-summary.json', JSON.stringify(result, null, 2));
+            await page.screenshot({ path: 'live-witness/live-premium-poet-windows.png', fullPage: true });
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Upload exact deployment and live witness
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-poet-live-witness
+          path: live-witness
+          if-no-files-found: error
+          retention-days: 7
