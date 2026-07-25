@@ -1,0 +1,46 @@
+name: Yesenin Benislavskaya Correspondence Evidence Pass 22
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaCorrespondenceEvidencePassTwentyTwo.ts'
+      - 'scripts/validate-yesenin-benislavskaya-correspondence-evidence-pass22.ts'
+      - 'research/yesenin/BENISLAVSKAYA_CORRESPONDENCE_EVIDENCE_PASS22_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-correspondence-evidence-pass22.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaCorrespondenceEvidencePassTwentyTwo.ts'
+      - 'scripts/validate-yesenin-benislavskaya-correspondence-evidence-pass22.ts'
+      - 'research/yesenin/BENISLAVSKAYA_CORRESPONDENCE_EVIDENCE_PASS22_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-correspondence-evidence-pass22.yml'
+
+concurrency:
+  group: yesenin-benislavskaya-correspondence-pass22-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate exact FEB Benislavskaya correspondence evidence
+        run: npm run validate:yesenin-benislavskaya-correspondence-pass22
+      - name: TypeScript typecheck
+        run: npm run typecheck
