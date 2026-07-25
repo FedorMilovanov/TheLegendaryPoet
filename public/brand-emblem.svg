@@ -1,41 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="THE LEGENDARY POET">
-  <defs>
-    <radialGradient id="aura" cx="50%" cy="38%" r="58%">
-      <stop offset="0" stop-color="#dffcff" stop-opacity=".62"/>
-      <stop offset=".22" stop-color="#63e8ff" stop-opacity=".38"/>
-      <stop offset=".58" stop-color="#167fc2" stop-opacity=".16"/>
-      <stop offset="1" stop-color="#02050b" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="cloak" x1="25" y1="22" x2="72" y2="92">
-      <stop offset="0" stop-color="#17374d"/>
-      <stop offset=".3" stop-color="#091724"/>
-      <stop offset=".76" stop-color="#02060c"/>
-      <stop offset="1" stop-color="#000104" stop-opacity=".12"/>
-    </linearGradient>
-    <linearGradient id="rim" x1="29" y1="9" x2="76" y2="90">
-      <stop offset="0" stop-color="#eaffff"/>
-      <stop offset=".28" stop-color="#71e8ff"/>
-      <stop offset=".66" stop-color="#2196ce" stop-opacity=".58"/>
-      <stop offset="1" stop-color="#0a4b78" stop-opacity="0"/>
-    </linearGradient>
-    <radialGradient id="void" cx="50%" cy="38%" r="72%">
-      <stop offset="0" stop-color="#000"/>
-      <stop offset=".74" stop-color="#010205"/>
-      <stop offset="1" stop-color="#07121c"/>
-    </radialGradient>
-    <filter id="soft" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.2"/></filter>
-  </defs>
-  <ellipse cx="48" cy="42" rx="25" ry="31" fill="url(#aura)" filter="url(#soft)" opacity=".46"/>
-  <g id="vector-fallback">
-    <path d="M35 43 C27 46 22 54 18 65 L9 91 C22 86 35 87 48 92 C61 87 74 86 87 91 L78 65 C74 54 69 46 61 43 C57 48 53 51 48 52 C43 51 39 48 35 43Z" fill="url(#cloak)" stroke="url(#rim)" stroke-width=".72" opacity=".92"/>
-    <path d="M48 7 C39 9 34 19 32 31 C30 40 34 47 40 51 C43 53 46 54 48 54 C50 54 53 53 56 51 C62 47 66 40 64 31 C62 19 57 9 48 7Z" fill="url(#cloak)" stroke="url(#rim)" stroke-width=".92"/>
-    <path d="M48 20 C41 21 38 28 38 36 C38 44 42 49 48 51 C54 49 58 44 58 36 C58 28 55 21 48 20Z" fill="url(#void)"/>
-    <path d="M34 43 C39 48 43 51 48 52 C53 51 57 48 62 43 C69 46 74 50 78 57 C67 53 57 54 48 59 C39 54 29 53 18 57 C22 50 27 46 34 43Z" fill="#07121d" stroke="#48cffa" stroke-width=".46" opacity=".94"/>
-    <path d="M19 58 C31 62 39 68 46 77" fill="none" stroke="#348eb8" stroke-width=".55" opacity=".42"/>
-    <path d="M77 58 C65 62 57 68 50 77" fill="none" stroke="#2b79a5" stroke-width=".55" opacity=".36"/>
-    <path d="M29 51 C38 58 43 68 47 87" fill="none" stroke="#174b68" stroke-width=".55" opacity=".52"/>
-    <path d="M67 51 C58 58 53 68 49 87" fill="none" stroke="#123e5a" stroke-width=".55" opacity=".46"/>
-    <path d="M48 59 C44 70 43 82 42 91 C45 89 47 86 48 82 C49 86 51 89 54 91 C53 82 52 70 48 59Z" fill="#000207" opacity=".9"/>
-  </g>
-  <image x="-2" y="-2" width="100" height="100" preserveAspectRatio="xMidYMid meet" href="brand-emblem-master.webp"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="brand-title brand-description">
+  <title id="brand-title">THE LEGENDARY POET</title>
+  <desc id="brand-description">Безликая фигура в глубоком капюшоне и тяжёлом чёрно-синем плаще с холодным голубым свечением</desc>
+  <image href="brand-emblem-master.webp?v=cloak-20260725-3" x="0" y="0" width="96" height="96" preserveAspectRatio="xMidYMid meet"/>
 </svg>
