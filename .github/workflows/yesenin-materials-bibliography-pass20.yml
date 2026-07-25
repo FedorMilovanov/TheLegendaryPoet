@@ -1,0 +1,46 @@
+name: Yesenin Materials Bibliography Pass 20
+
+on:
+  pull_request:
+    branches: [research/yesenin-nypl-evidence-pass19]
+    paths:
+      - 'src/data/essays/yeseninMaterialsBibliographyPassTwenty.ts'
+      - 'scripts/validate-yesenin-materials-bibliography-pass20.ts'
+      - 'research/yesenin/PART_ONE_MATERIALS_BIBLIOGRAPHY_PASS20_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-materials-bibliography-pass20.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninMaterialsBibliographyPassTwenty.ts'
+      - 'scripts/validate-yesenin-materials-bibliography-pass20.ts'
+      - 'research/yesenin/PART_ONE_MATERIALS_BIBLIOGRAPHY_PASS20_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-materials-bibliography-pass20.yml'
+
+concurrency:
+  group: yesenin-materials-bibliography-pass20-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate Materials to Biography bibliography pass 20
+        run: npm run validate:yesenin-materials-bibliography-pass20
+      - name: TypeScript typecheck
+        run: npm run typecheck
