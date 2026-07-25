@@ -1,0 +1,47 @@
+name: Yesenin Visual Byte Acquisition Pass 16
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/yesenin-visual-byte-acquisition-pass16
+    paths:
+      - 'scripts/acquire-yesenin-visual-bytes-pass16.ts'
+      - '.github/workflows/yesenin-visual-byte-acquisition-pass16.yml'
+
+concurrency:
+  group: yesenin-visual-byte-acquisition-pass16-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Download and fingerprint 12 exact archival visual targets
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/acquire-yesenin-visual-bytes-pass16.ts 2>&1 | tee yesenin-visual-byte-acquisition-pass16.log
+      - name: Upload byte-acquisition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-visual-byte-acquisition-pass16
+          path: |
+            artifacts/yesenin-visual-byte-acquisition-pass16
+            yesenin-visual-byte-acquisition-pass16.log
+          if-no-files-found: error
+          retention-days: 14
