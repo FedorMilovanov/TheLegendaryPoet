@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { siteConfig } from '../config/site';
 
+const BRAND_VERSION = 'cloak-20260725-3';
+
 interface SeoOptions {
   title: string;
   description: string;
@@ -63,7 +65,7 @@ function ensureLink(rel: string, href: string) {
 export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
-    const img = absUrl(image || '/og-image.jpg');
+    const img = absUrl(image || `/og-image.jpg?v=${BRAND_VERSION}`);
 
     document.title = title;
     ensureMeta('description', description);
@@ -104,7 +106,7 @@ export function useSeo({ title, description, path, type = 'website', image, publ
             publisher: {
               '@type': 'Organization',
               name: siteConfig.name,
-              logo: { '@type': 'ImageObject', url: `${siteConfig.url}/icon-512.png` },
+              logo: { '@type': 'ImageObject', url: `${siteConfig.url}/icon-512.png?v=${BRAND_VERSION}` },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': url },
           }
