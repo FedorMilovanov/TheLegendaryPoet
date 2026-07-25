@@ -1,0 +1,46 @@
+name: Yesenin Pravda RSL Access Evidence Pass 26
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninPravdaRslAccessEvidencePassTwentySix.ts'
+      - 'scripts/validate-yesenin-pravda-rsl-access-evidence-pass26.ts'
+      - 'research/yesenin/PART_ONE_PRAVDA_RSL_ACCESS_PASS26_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-pravda-rsl-access-evidence-pass26.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninPravdaRslAccessEvidencePassTwentySix.ts'
+      - 'scripts/validate-yesenin-pravda-rsl-access-evidence-pass26.ts'
+      - 'research/yesenin/PART_ONE_PRAVDA_RSL_ACCESS_PASS26_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-pravda-rsl-access-evidence-pass26.yml'
+
+concurrency:
+  group: yesenin-pravda-rsl-access-evidence-pass26-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate Pravda RSL access evidence pass 26
+        run: npm run validate:yesenin-pravda-rsl-access-pass26
+      - name: TypeScript typecheck
+        run: npm run typecheck

@@ -89,6 +89,8 @@ jobs:
         run: npm run validate:yesenin-benislavskaya-inbound-pass24
       - name: Validate Benislavskaya source-volume access evidence pass 25
         run: npm run validate:yesenin-benislavskaya-volume-access-pass25
+      - name: Validate Pravda RSL access evidence pass 26
+        run: npm run validate:yesenin-pravda-rsl-access-pass26
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
