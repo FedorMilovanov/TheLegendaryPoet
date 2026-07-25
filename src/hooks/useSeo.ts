@@ -25,6 +25,13 @@ function absUrl(pathOrUrl: string) {
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
+function imageMime(url: string) {
+  const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
+  if (pathname.endsWith('.png')) return 'image/png';
+  if (pathname.endsWith('.webp')) return 'image/webp';
+  return 'image/jpeg';
+}
+
 /** Set an attribute on an existing head tag, creating a <meta> if it is missing. */
 function ensureMeta(key: string, value: string, kind: 'name' | 'property' = 'name') {
   let el = document.head.querySelector(`meta[${kind}="${key}"]`);
@@ -55,7 +62,7 @@ function ensureLink(rel: string, href: string) {
 export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
-    const img = absUrl(image || '/og-image.jpg');
+    const img = absUrl(image || '/og-image.png');
 
     document.title = title;
     ensureMeta('description', description);
@@ -68,6 +75,7 @@ export function useSeo({ title, description, path, type = 'website', image, publ
     ensureMeta('og:url', url, 'property');
     ensureMeta('og:type', type, 'property');
     ensureMeta('og:image', img, 'property');
+    ensureMeta('og:image:type', imageMime(img), 'property');
 
     // Twitter
     ensureMeta('twitter:title', title);

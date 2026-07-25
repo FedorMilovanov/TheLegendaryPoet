@@ -12,7 +12,6 @@
     <filter id="glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="1.2"/></filter>
     <filter id="mist" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter>
   </defs>
-  <rect width="96" height="96" rx="18" fill="#02050b"/>
   <path d="M24 40 C26 18 35 6 48 4 C61 6 70 18 72 40" fill="none" stroke="url(#halo)" stroke-width=".85" opacity=".42" stroke-linecap="round"/>
   <g opacity=".32" filter="url(#mist)"><path d="M17 83 C26 78 35 78 48 83 C61 78 70 78 79 83" fill="none" stroke="#2ed8ff" stroke-width="2"/></g>
   <path d="M48 28 C38 28 31 33 26 42 C20 53 15 66 12 80 C10 87 10 91 12 93 C25 89 36 89 48 91 C60 89 71 89 84 93 C86 91 86 87 84 80 C81 66 76 53 70 42 C65 33 58 28 48 28Z" fill="url(#cloak)" stroke="url(#edge)" stroke-width=".72"/>
