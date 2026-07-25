@@ -31,23 +31,39 @@ jobs:
             let offset = 8;
             const chunks = [];
             const idat = [];
-            while (offset + 12 <= bytes.length) {
-              const length = bytes.readUInt32BE(offset);
-              const type = bytes.subarray(offset + 4, offset + 8).toString('ascii');
-              const data = bytes.subarray(offset + 8, offset + 8 + length);
-              chunks.push({ type, length, sha256: digest(data) });
-              if (type === 'IDAT') idat.push(data);
-              offset += 12 + length;
-              if (type === 'IEND') break;
+            let parseError = null;
+            try {
+              while (offset + 12 <= bytes.length) {
+                const length = bytes.readUInt32BE(offset);
+                const type = bytes.subarray(offset + 4, offset + 8).toString('ascii');
+                const dataEnd = offset + 8 + length;
+                if (dataEnd + 4 > bytes.length) throw new Error(`truncated ${type || 'unknown'} chunk`);
+                const data = bytes.subarray(offset + 8, dataEnd);
+                chunks.push({ type, length, sha256: digest(data) });
+                if (type === 'IDAT') idat.push(data);
+                offset = dataEnd + 4;
+                if (type === 'IEND') break;
+              }
+            } catch (error) {
+              parseError = error instanceof Error ? error.message : String(error);
             }
             const compressed = Buffer.concat(idat);
+            let inflated = null;
+            let inflateError = null;
+            try {
+              inflated = zlib.inflateSync(compressed);
+            } catch (error) {
+              inflateError = error instanceof Error ? error.message : String(error);
+            }
             return {
               width: bytes.readUInt32BE(16),
               height: bytes.readUInt32BE(20),
               chunks,
+              parseError,
               idatCompressedSha256: digest(compressed),
-              idatInflatedSha256: digest(zlib.inflateSync(compressed)),
-              idatInflatedBytes: zlib.inflateSync(compressed).length,
+              idatInflatedSha256: inflated ? digest(inflated) : null,
+              idatInflatedBytes: inflated?.length ?? null,
+              inflateError,
             };
           };
           const files = [
