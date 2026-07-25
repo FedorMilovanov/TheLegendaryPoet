@@ -1,0 +1,87 @@
+.ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  isolation: isolate;
+}
+
+.ambient-field {
+  position: absolute;
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.ambient-field-gold {
+  width: min(74vw, 940px);
+  top: -36rem;
+  right: -25rem;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(212, 175, 55, 0.13) 0%,
+    rgba(212, 175, 55, 0.065) 27%,
+    rgba(46, 216, 255, 0.025) 48%,
+    transparent 72%
+  );
+}
+
+.ambient-field-cyan {
+  width: min(68vw, 860px);
+  bottom: -34rem;
+  left: -24rem;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(46, 216, 255, 0.095) 0%,
+    rgba(28, 142, 211, 0.045) 36%,
+    transparent 70%
+  );
+}
+
+.ambient-field-blue {
+  width: min(58vw, 760px);
+  left: 50%;
+  top: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(42, 127, 255, 0.055) 0%,
+    rgba(24, 91, 178, 0.022) 42%,
+    transparent 72%
+  );
+}
+
+@media (max-width: 767px) {
+  .ambient-field-gold {
+    width: 180vw;
+    top: -62vw;
+    right: -92vw;
+  }
+
+  .ambient-field-cyan {
+    width: 170vw;
+    bottom: -72vw;
+    left: -95vw;
+  }
+
+  .ambient-field-blue {
+    width: 145vw;
+    opacity: 0.72;
+  }
+}
+
+html.theme-light .ambient-field-gold {
+  background: radial-gradient(circle, rgba(184, 128, 38, 0.1) 0%, rgba(184, 128, 38, 0.035) 40%, transparent 72%);
+}
+
+html.theme-light .ambient-field-cyan {
+  background: radial-gradient(circle, rgba(18, 126, 177, 0.07) 0%, rgba(18, 126, 177, 0.025) 42%, transparent 70%);
+}
+
+html.theme-light .ambient-field-blue {
+  background: radial-gradient(circle, rgba(50, 94, 163, 0.04) 0%, transparent 70%);
+}
