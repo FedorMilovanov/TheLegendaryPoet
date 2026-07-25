@@ -29,9 +29,18 @@ jobs:
         with:
           node-version: 24
       - name: Query NYPL item, MODS, capture and rights endpoints
+        id: repo_api
+        continue-on-error: true
         run: node scripts/discover-yesenin-nypl-programs-pass19.mjs
       - name: Acquire public item metadata and all IIIF capture derivatives
+        if: always()
         run: node scripts/acquire-yesenin-nypl-program-captures-pass19.mjs
+      - name: Record Repo API outcome
+        if: always()
+        shell: bash
+        run: |
+          printf 'Repo API diagnostic outcome: %s\n' '${{ steps.repo_api.outcome }}'
+          printf 'A failed API step is retained as an auth/network boundary and does not override successful public-page/IIIF evidence.\n'
       - name: Upload NYPL API and IIIF discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
