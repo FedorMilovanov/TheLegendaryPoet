@@ -56,7 +56,7 @@ function assertPng(buffer, label, width, height) {
   if (buffer.readUInt32BE(16) !== width || buffer.readUInt32BE(20) !== height) {
     throw new Error(`brand materialize: ${label} dimensions are not ${width}x${height}`);
   }
-  if (buffer.subarray(-12, -8).toString('ascii') !== 'IEND') {
+  if (buffer.subarray(-8, -4).toString('ascii') !== 'IEND') {
     throw new Error(`brand materialize: ${label} has no terminal IEND chunk`);
   }
 }
