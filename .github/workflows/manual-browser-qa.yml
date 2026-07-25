@@ -101,6 +101,7 @@ jobs:
           set +e
           npx playwright test \
             qa/home-polish.spec.mjs \
+            qa/home-labels.spec.mjs \
             --config=playwright.home-polish.config.mjs \
             --workers=1 \
             --reporter=line > home-polish.log 2>&1
