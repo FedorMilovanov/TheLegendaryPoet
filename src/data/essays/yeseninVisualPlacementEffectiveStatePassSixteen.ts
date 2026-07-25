@@ -8,23 +8,25 @@ export type YeseninVisualEffectiveAcquisitionState =
   | 'bytes-acquired / visually-inspected / rights-review'
   | 'bytes-pending';
 
+type PlacementId = (typeof yeseninPrimaryVisualPlacementsPassFifteen)[number]['id'];
+type ByteEvidence = (typeof yeseninVisualByteEvidencePassSixteen)[number];
+
 export interface YeseninVisualPlacementEffectiveStatePassSixteen {
-  placementId: (typeof yeseninPrimaryVisualPlacementsPassFifteen)[number]['id'];
+  placementId: PlacementId;
   title: string;
   placement: string;
   sourcePageUrl: string;
-  byteEvidenceId: (typeof yeseninVisualByteEvidencePassSixteen)[number]['id'] | null;
+  byteEvidenceId: ByteEvidence['id'] | null;
   acquisitionState: YeseninVisualEffectiveAcquisitionState;
   originalSha256: string | null;
   productionAuthorized: false;
   supersessionNote: string | null;
 }
 
-const evidenceByPlacement = new Map(
-  yeseninVisualByteEvidencePassSixteen
-    .filter((record) => record.placementId !== null)
-    .map((record) => [record.placementId, record] as const),
-);
+const evidenceByPlacement = new Map<PlacementId, ByteEvidence>();
+for (const record of yeseninVisualByteEvidencePassSixteen) {
+  if (record.placementId !== null) evidenceByPlacement.set(record.placementId, record);
+}
 
 export const yeseninVisualPlacementEffectiveStatePassSixteen =
   yeseninPrimaryVisualPlacementsPassFifteen.map((placement) => {
