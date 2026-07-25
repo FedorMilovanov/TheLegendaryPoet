@@ -25,6 +25,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Apply exact Cyrillic index formula
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/discover-yesenin-benislavskaya-inbound-pass24.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = r'дарственн\w*\s+надпис\w*'
+          new = r'дарственная\s+надпись'
+          if old not in text:
+              raise SystemExit('expected diagnostic regex not found')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
       - name: Discover fourteen inbound letters and exact gift inscription
         run: node scripts/discover-yesenin-benislavskaya-inbound-pass24.mjs
       - name: Upload Benislavskaya inbound discovery evidence
