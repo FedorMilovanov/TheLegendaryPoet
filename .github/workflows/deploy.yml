@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
   # GitHub App commits do not always emit a push workflow. After a successful
   # CI run on a guarded same-repository deploy-live-* branch, workflow_run uses
@@ -11,15 +13,15 @@ on:
     workflows: [CI]
     types: [completed]
 
-# Allow the workflow to publish to Pages.
+# Allow the workflow to publish to Pages after main is updated.
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# One deployment at a time; don't cancel an in-progress publish.
+# PR validation is isolated; actual Pages publications remain serialized.
 concurrency:
-  group: pages
+  group: pages-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -44,7 +46,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Validate content, literary style, and types
+      - name: Verify image pipeline dependency
+        run: ffmpeg -version
+
+      - name: Validate content, literary style, brand assets, and types
         run: npm run check
 
       - name: Generate sitemap
@@ -65,18 +70,36 @@ jobs:
       - name: Prerender OG pages (essays, poets, articles)
         run: npm run prerender
 
+      - name: Verify build contains the exact brand release
+        env:
+          EXPECTED_VERSION: cloak-20260725-3
+          EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
+        run: |
+          set -euo pipefail
+          grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" dist/index.html
+          test "$(cat dist/brand-release.txt)" = "${EXPECTED_VERSION}"$'\n'"master-sha256=${EXPECTED_MASTER_SHA256}"
+          echo "${EXPECTED_MASTER_SHA256}  dist/brand-emblem-master.webp" | sha256sum -c -
+          grep -Fq "brand-emblem-master.webp?v=${EXPECTED_VERSION}" dist/brand-emblem.svg
+          ! grep -Eq '<(path|circle|ellipse|polygon|polyline)([[:space:]>])' dist/brand-emblem.svg
+          test ! -e dist/favicon.svg
+
       - name: SPA fallback (serve the app for deep links / refresh)
+        if: github.event_name != 'pull_request'
         run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -84,29 +107,42 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Verify approved emblem on published domain
-        shell: bash
+      - name: Verify the custom domain serves the approved emblem release
+        env:
+          EXPECTED_VERSION: cloak-20260725-3
+          EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
         run: |
           set -euo pipefail
-          expected='3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d'
-          version='cloak-20260725-2'
-          for attempt in $(seq 1 30); do
-            stamp="${GITHUB_RUN_ID}-${attempt}"
-            html="$(curl -fsSL --connect-timeout 10 --max-time 30 "https://thelegendarypoet.ru/?brand-check=${stamp}" || true)"
-            if printf '%s' "$html" | grep -q "brand-emblem-master.webp?v=${version}"; then
-              curl -fsSL --connect-timeout 10 --max-time 30 \
-                "https://thelegendarypoet.ru/brand-emblem-master.webp?v=${stamp}" \
-                -o live-brand.webp
-              actual="$(sha256sum live-brand.webp | cut -d' ' -f1)"
-              if [ "$actual" = "$expected" ]; then
-                echo "Published emblem verified: ${actual}"
+
+          for attempt in $(seq 1 36); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            echo "Live verification attempt ${attempt}/36"
+
+            release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "https://thelegendarypoet.ru/brand-release.txt?verify=${nonce}" || true)"
+            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "https://thelegendarypoet.ru/?brand_verify=${nonce}" || true)"
+
+            if [[ "${release}" == "${EXPECTED_VERSION}"$'\n'"master-sha256=${EXPECTED_MASTER_SHA256}" ]] \
+              && grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" <<<"${html}"; then
+              curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "https://thelegendarypoet.ru/brand-emblem-master.webp?v=${EXPECTED_VERSION}&verify=${nonce}" \
+                -o /tmp/brand-emblem-master.webp
+              echo "${EXPECTED_MASTER_SHA256}  /tmp/brand-emblem-master.webp" | sha256sum -c -
+
+              svg="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "https://thelegendarypoet.ru/brand-emblem.svg?verify=${nonce}")"
+              grep -Fq "brand-emblem-master.webp?v=${EXPECTED_VERSION}" <<<"${svg}"
+              if grep -Eq '<(path|circle|ellipse|polygon|polyline)([[:space:]>])' <<<"${svg}"; then
+                echo "Standalone SVG still contains a retired substitute character"
+              else
+                echo "Verified ${EXPECTED_VERSION} on the custom domain with the approved master SHA-256"
                 exit 0
               fi
-              echo "Attempt ${attempt}: new HTML, asset hash ${actual}"
-            else
-              echo "Attempt ${attempt}: waiting for new HTML"
             fi
+
             sleep 10
           done
-          echo "Published domain did not expose the approved emblem" >&2
+
+          echo "::error::GitHub Pages deployment finished, but the custom domain did not serve ${EXPECTED_VERSION} with the approved emblem within six minutes."
           exit 1
