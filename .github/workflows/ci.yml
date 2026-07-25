@@ -64,9 +64,23 @@ jobs:
       - name: Generate sitemap
         run: npm run sitemap
       - name: Build
-        run: npm run build
+        id: production_build
+        run: |
+          set +e
+          npm run build > production-build.log 2>&1
+          status=$?
+          cat production-build.log
+          exit $status
         env:
           VITE_BASE: /
+      - name: Upload production build diagnostics
+        if: ${{ failure() && steps.production_build.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-diagnostics
+          path: production-build.log
+          if-no-files-found: error
+          retention-days: 3
       - name: Validate route splitting and production asset budgets
         id: build_audit
         run: |
