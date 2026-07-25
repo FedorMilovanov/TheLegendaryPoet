@@ -14,7 +14,7 @@ const sizes = {
 };
 
 const premiumEase = [0.16, 1, 0.3, 1] as const;
-const BRAND_VERSION = 'vector-cloak-preview-20260726-1';
+const BRAND_VERSION = 'cloak-20260725-4';
 
 /**
  * Vector-first faceless poet emblem.
