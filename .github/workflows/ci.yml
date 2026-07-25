@@ -120,11 +120,12 @@ jobs:
           cache: npm
 
       - name: Materialize exact five-file transaction
+        id: materialize
         if: steps.detect.outputs.needed == 'true'
         shell: bash
         run: |
-          set -euo pipefail
-          python - <<'PY'
+          set +e
+          python - <<'PY' > materialize-premium-poet-windows.log 2>&1
           from pathlib import Path
           import textwrap
 
@@ -135,7 +136,22 @@ jobs:
           body = workflow.split(marker, 1)[1].split("\n          PY", 1)[0]
           exec(compile(textwrap.dedent(body), '<premium-poet-materializer>', 'exec'))
           PY
-          git diff --check
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            git diff --check >> materialize-premium-poet-windows.log 2>&1
+            status=$?
+          fi
+          cat materialize-premium-poet-windows.log
+          exit "$status"
+
+      - name: Upload materializer diagnostics
+        if: ${{ always() && steps.detect.outputs.needed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-poet-materializer-diagnostics
+          path: materialize-premium-poet-windows.log
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Install project dependencies
         if: steps.detect.outputs.needed == 'true'
