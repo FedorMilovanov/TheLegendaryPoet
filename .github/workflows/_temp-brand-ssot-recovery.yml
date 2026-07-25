@@ -1,16 +1,18 @@
 name: Temporary Brand SSOT Recovery
 
 on:
-  push:
-    branches:
-      - fix/brand-ssot-recovery-20260725
+  pull_request:
+    types: [opened]
+    branches: [main]
+    paths:
+      - '.github/workflows/_temp-brand-ssot-recovery.yml'
 
 permissions:
   contents: write
 
 jobs:
   rebuild:
-    if: github.event.head_commit.message == 'ci: add temporary brand SSOT recovery'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/brand-ssot-recovery-20260725'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
