@@ -78,7 +78,10 @@ expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native 
 
 expect(cursor.includes('useMotionValue'), 'the persistent custom cursor must not rerender React on every pointer movement');
 expect(!cursor.includes('setMousePosition'), 'pointer coordinates must remain outside React state');
-expect(cursor.includes("'(pointer: fine)'"), 'the custom cursor must require a fine pointer');
+expect(
+  cursor.includes("'(hover: hover) and (pointer: fine)'"),
+  'the custom cursor must require both hover capability and a fine pointer',
+);
 expect(cursor.includes('prefers-reduced-motion: reduce'), 'the custom cursor must preserve the native pointer for reduced motion');
 expect(cursor.includes('forced-colors: active'), 'the custom cursor must preserve high-contrast system pointers');
 expect(cursor.includes('visibilitychange'), 'the cursor must hide when the document is backgrounded');
