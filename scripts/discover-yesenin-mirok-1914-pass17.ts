@@ -10,15 +10,29 @@ interface PublicationTarget {
   febUrl: string;
 }
 
+type DiscoveryMethod = 'serial-year-anchor' | 'neb-search-anchor';
+
+interface DiscoveredIssue {
+  book: number;
+  title: string;
+  code: string;
+  url: string;
+  method: DiscoveryMethod;
+  discoveredOn: string;
+}
+
 interface IssueRecord {
   book: number;
   title: string;
   catalogueCode: string;
   catalogueUrl: string;
+  discoveryMethod: DiscoveryMethod;
+  discoverySourceUrl: string;
   issuePageSha256: string;
   issuePageBytes: number;
   literalPdfCandidates: string[];
   viewerCandidates: string[];
+  accessOpenMarker: boolean;
   exactIssueIdentified: true;
   pdfBytesAcquired: false;
   contentInspected: false;
@@ -27,6 +41,7 @@ interface IssueRecord {
 const serialCode = '000199_000009_006697247';
 const serialUrl = `https://rusneb.ru/catalog/${serialCode}/`;
 const yearUrl = `${serialUrl}?year=1914`;
+const searchUrl = 'https://rusneb.ru/search/';
 const artifactRoot = 'artifacts/yesenin-mirok-1914-discovery-pass17';
 const rawDir = join(artifactRoot, 'raw');
 await mkdir(rawDir, { recursive: true });
@@ -76,6 +91,9 @@ const targets: readonly PublicationTarget[] = [
   },
 ] as const;
 
+const requiredBooks = targets.map((target) => target.book);
+const requiredBookSet = new Set<number>(requiredBooks);
+
 function decodeHtml(value: string): string {
   return value
     .replace(/&nbsp;|&#160;/g, ' ')
@@ -89,7 +107,12 @@ function decodeHtml(value: string): string {
 }
 
 function stripHtml(value: string): string {
-  return decodeHtml(value.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '))
+  return decodeHtml(
+    value
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' '),
+  )
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -110,7 +133,7 @@ async function fetchHtml(url: string): Promise<{ html: string; finalUrl: string;
   const response = await fetch(url, {
     redirect: 'follow',
     headers: {
-      'user-agent': 'TheLegendaryPoet primary-source discovery runner/1.0 (+https://github.com/FedorMilovanov/TheLegendaryPoet)',
+      'user-agent': 'TheLegendaryPoet primary-source discovery runner/1.1 (+https://github.com/FedorMilovanov/TheLegendaryPoet)',
       accept: 'text/html,application/xhtml+xml,application/json;q=0.8,*/*;q=0.2',
       'accept-language': 'ru,en;q=0.7',
     },
@@ -134,7 +157,7 @@ function extractAnchors(html: string, base: string): Array<{ url: string; text: 
 
 function extractAllUrls(html: string, base: string): string[] {
   const values = new Set<string>();
-  for (const match of html.matchAll(/(?:href|src|data-url|data-src)\s*=\s*["']([^"']+)["']/gi)) {
+  for (const match of html.matchAll(/(?:href|src|data-url|data-src|data-download)\s*=\s*["']([^"']+)["']/gi)) {
     const url = absoluteUrl(match[1], base);
     if (url) values.add(url);
   }
@@ -142,7 +165,7 @@ function extractAllUrls(html: string, base: string): string[] {
     const url = absoluteUrl(match[0], base);
     if (url) values.add(url);
   }
-  for (const match of html.matchAll(/["'](?:downloadUrl|pdfUrl|fileUrl|viewerUrl)["']\s*:\s*["']([^"']+)["']/gi)) {
+  for (const match of html.matchAll(/["'](?:downloadUrl|pdfUrl|fileUrl|viewerUrl|url)["']\s*:\s*["']([^"']+)["']/gi)) {
     const url = absoluteUrl(match[1], base);
     if (url) values.add(url);
   }
@@ -150,29 +173,111 @@ function extractAllUrls(html: string, base: string): string[] {
 }
 
 function bookNumber(text: string): number | null {
-  const match = text.match(/1914\s*,?\s*(?:кн\.|книга|№)\s*(\d{1,2})/iu);
+  const normalized = text.replace(/№/g, 'кн.').replace(/\s+/g, ' ');
+  const match = normalized.match(/1914\s*,?\s*(?:кн\.|книга)\s*(\d{1,2})/iu);
   return match ? Number(match[1]) : null;
 }
 
-const discovered = new Map<number, { title: string; code: string; url: string }>();
-const crawledYearPages: string[] = [];
-for (let page = 1; page <= 6; page += 1) {
-  const url = page === 1 ? yearUrl : `${yearUrl}&page=${page}`;
-  const { html, finalUrl } = await fetchHtml(url);
-  crawledYearPages.push(finalUrl);
-  await writeFile(join(rawDir, `year-1914-page-${page}.html`), html, 'utf8');
-  let added = 0;
-  for (const anchor of extractAnchors(html, finalUrl)) {
-    const codeMatch = anchor.url.match(/\/catalog\/(000199_000009_\d+)\/?/);
-    const book = bookNumber(anchor.text);
-    if (!codeMatch || book === null || !/\bМирок\b/iu.test(anchor.text)) continue;
-    if (!discovered.has(book)) added += 1;
-    discovered.set(book, { title: anchor.text, code: codeMatch[1], url: `https://rusneb.ru/catalog/${codeMatch[1]}/` });
-  }
-  if (page > 1 && added === 0) break;
+function catalogueCode(url: string): string | null {
+  const match = url.match(/\/catalog\/([^/?#]+)\/?/i);
+  return match ? match[1] : null;
 }
 
-const requiredBooks = targets.map((target) => target.book);
+const discovered = new Map<number, DiscoveredIssue>();
+const discoveryPages: Array<{
+  method: 'serial-year' | 'neb-search';
+  url: string;
+  htmlBytes: number;
+  htmlSha256: string;
+  savedAs: string;
+}> = [];
+const searchAttempts: Array<{ book: number; query: string; url: string; error: string | null }> = [];
+
+async function crawlAndRegister(
+  url: string,
+  filename: string,
+  method: DiscoveryMethod,
+): Promise<{ htmlSha256: string; newMatches: number }> {
+  const { html, finalUrl } = await fetchHtml(url);
+  const htmlBytes = Buffer.byteLength(html);
+  const htmlSha256 = createHash('sha256').update(html).digest('hex');
+  await writeFile(join(rawDir, filename), html, 'utf8');
+  discoveryPages.push({
+    method: method === 'serial-year-anchor' ? 'serial-year' : 'neb-search',
+    url: finalUrl,
+    htmlBytes,
+    htmlSha256,
+    savedAs: `raw/${filename}`,
+  });
+
+  let newMatches = 0;
+  for (const anchor of extractAnchors(html, finalUrl)) {
+    const code = catalogueCode(anchor.url);
+    const book = bookNumber(anchor.text);
+    if (!code || code === serialCode || book === null || !requiredBookSet.has(book)) continue;
+    // Do not use JS \b around Cyrillic words: \b is ASCII-oriented and caused the pass-17 false zero.
+    if (!/Мирок/iu.test(anchor.text) || !/1914/iu.test(anchor.text)) continue;
+    if (!discovered.has(book)) {
+      discovered.set(book, {
+        book,
+        title: anchor.text,
+        code,
+        url: `https://rusneb.ru/catalog/${code}/`,
+        method,
+        discoveredOn: finalUrl,
+      });
+      newMatches += 1;
+    }
+  }
+  return { htmlSha256, newMatches };
+}
+
+let previousYearSha: string | null = null;
+for (let page = 1; page <= 6; page += 1) {
+  const url = page === 1 ? yearUrl : `${yearUrl}&page=${page}`;
+  const result = await crawlAndRegister(url, `year-1914-page-${page}.html`, 'serial-year-anchor');
+  if (page > 1 && result.htmlSha256 === previousYearSha) break;
+  previousYearSha = result.htmlSha256;
+  if (page > 1 && result.newMatches === 0) break;
+}
+
+for (const target of targets) {
+  if (discovered.has(target.book)) continue;
+  const queries = [
+    `Мирок 1914 кн. ${target.book}`,
+    `1914, кн. ${target.book} Мирок`,
+    `Мирок Сытин 1914 книга ${target.book}`,
+    `${target.poem} Мирок 1914`,
+  ];
+
+  queryLoop: for (const [queryIndex, query] of queries.entries()) {
+    for (let page = 1; page <= 4; page += 1) {
+      const params = new URLSearchParams({ q: query });
+      params.append('access[]', 'open');
+      if (page > 1) params.set('page', String(page));
+      const url = `${searchUrl}?${params.toString()}`;
+      try {
+        const result = await crawlAndRegister(
+          url,
+          `search-book-${target.book}-q${queryIndex + 1}-page-${page}.html`,
+          'neb-search-anchor',
+        );
+        searchAttempts.push({ book: target.book, query, url, error: null });
+        if (discovered.has(target.book)) break queryLoop;
+        if (page > 1 && result.newMatches === 0) break;
+      } catch (error) {
+        searchAttempts.push({
+          book: target.book,
+          query,
+          url,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        break;
+      }
+    }
+  }
+}
+
 const missing = requiredBooks.filter((book) => !discovered.has(book));
 const issueRecords: IssueRecord[] = [];
 for (const target of targets) {
@@ -183,17 +288,22 @@ for (const target of targets) {
   const sha = createHash('sha256').update(html).digest('hex');
   await writeFile(join(rawDir, `issue-${target.book}-${issue.code}.html`), html, 'utf8');
   const urls = extractAllUrls(html, finalUrl);
-  const literalPdfCandidates = urls.filter((url) => /\.pdf(?:$|[?#])|\/pdf(?:\/|$)|download[^/]*pdf|format=pdf/i.test(url));
+  const literalPdfCandidates = urls.filter((url) =>
+    /\.pdf(?:$|[?#])|\/pdf(?:\/|$)|download[^?#]*pdf|format=pdf|type=pdf|download/i.test(url),
+  );
   const viewerCandidates = urls.filter((url) => /viewer|dlib\.rsl\.ru|viewer\.rsl\.ru|read\//i.test(url));
   issueRecords.push({
     book: target.book,
     title: issue.title,
     catalogueCode: issue.code,
     catalogueUrl: issue.url,
+    discoveryMethod: issue.method,
+    discoverySourceUrl: issue.discoveredOn,
     issuePageSha256: sha,
     issuePageBytes: bytes,
     literalPdfCandidates: [...new Set(literalPdfCandidates)],
     viewerCandidates: [...new Set(viewerCandidates)],
+    accessOpenMarker: /Доступ[\s\S]{0,200}свободн/iu.test(html),
     exactIssueIdentified: true,
     pdfBytesAcquired: false,
     contentInspected: false,
@@ -201,7 +311,7 @@ for (const target of targets) {
 }
 
 const manifest = {
-  schema: 'yesenin-mirok-1914-discovery-pass17/v1',
+  schema: 'yesenin-mirok-1914-discovery-pass17/v2',
   generatedAt: new Date().toISOString(),
   parentSerial: {
     title: 'Мирок : ежемесячный иллюстрированный детский журнал для семьи и начальной школы',
@@ -211,12 +321,14 @@ const manifest = {
     publisher: 'Т-во И. Д. Сытин',
     holding: 'Российская государственная библиотека / НЭБ',
   },
-  crawledYearPages,
-  exactIssuesDiscovered: [...discovered.entries()].sort(([a], [b]) => a - b).map(([book, issue]) => ({ book, ...issue })),
+  discoveryPages,
+  searchAttempts,
+  exactIssuesDiscovered: [...discovered.values()].sort((a, b) => a.book - b.book),
   publicationTargets: targets,
   requiredBooks,
   missingRequiredBooks: missing,
   issueRecords,
+  parserCorrection: 'Removed ASCII word-boundary matching around Cyrillic Мирок; added independent literal NEB search fallback.',
   noCatalogueArithmetic: true,
   pdfBytesAcquired: false,
   contentInspected: false,
@@ -232,20 +344,23 @@ const rows = targets.map((target) => {
     target.poem,
     target.printedPages,
     issue?.catalogueCode ?? 'UNRESOLVED',
+    issue?.discoveryMethod ?? '—',
     issue?.literalPdfCandidates.length ?? 0,
     issue?.viewerCandidates.length ?? 0,
   ].join(' | ');
 });
-const summary = `# «Мирок», 1914 — discovery pass 17\n\n`
+const summary = `# «Мирок», 1914 — discovery pass 17 v2\n\n`
   + `- Parent NEB code: ${serialCode}\n`
-  + `- Exact issues discovered in year filter: ${discovered.size}\n`
+  + `- Exact issues discovered: ${discovered.size}\n`
   + `- Required targets resolved: ${requiredBooks.length - missing.length}/${requiredBooks.length}\n`
+  + `- Serial-year issue anchors: ${[...discovered.values()].filter((item) => item.method === 'serial-year-anchor').length}\n`
+  + `- NEB-search issue anchors: ${[...discovered.values()].filter((item) => item.method === 'neb-search-anchor').length}\n`
   + `- PDF bytes acquired: false\n`
   + `- Content inspected: false\n`
   + `- Catalogue arithmetic used: false\n`
   + `- Wikipedia evidence: false\n\n`
-  + `Book | Month | Poem | Printed page(s) | Exact NEB code | Literal PDF candidates | Viewer candidates\n`
-  + `---: | --- | --- | --- | --- | ---: | ---:\n`
+  + `Book | Month | Poem | Printed page(s) | Exact NEB code | Discovery | Literal PDF candidates | Viewer candidates\n`
+  + `---: | --- | --- | --- | --- | --- | ---: | ---:\n`
   + `${rows.join('\n')}\n`;
 await writeFile(join(artifactRoot, 'SUMMARY.md'), summary, 'utf8');
 
