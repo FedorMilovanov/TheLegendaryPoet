@@ -6,14 +6,23 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+async function afterPaint(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 async function settle(page) {
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
-  await page.waitForTimeout(250);
+  await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
+  await page.getByRole('heading', { level: 1, name: 'THE LEGENDARY POET' }).waitFor({ state: 'visible', timeout: 20_000 });
+  await afterPaint(page);
+  await page.waitForTimeout(150);
 }
 
 async function waitForImages(page) {
+  const images = page.locator('[data-hero-poet-window] img');
+  await expect(images).toHaveCount(6, { timeout: 20_000 });
   await expect.poll(
-    () => page.locator('[data-hero-poet-window] img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)),
+    () => images.evaluateAll((nodes) => nodes.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)),
     { timeout: 12_000, message: 'all six hero portraits should decode' },
   ).toBe(true);
 }
@@ -30,10 +39,6 @@ async function effectiveOpacity(locator) {
   });
 }
 
-async function afterPaint(page) {
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-}
-
 function percentile(values, fraction) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -48,7 +53,6 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   await settle(page);
 
   const windows = page.locator('[data-hero-poet-window]');
-  await expect(windows).toHaveCount(6);
   await waitForImages(page);
 
   const imageHints = await windows.locator('img').evaluateAll((images) => images.map((image) => ({
@@ -71,7 +75,7 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   const first = windows.first();
   const label = first.locator('[data-hero-poet-window-label]');
   if (coarsePointer) {
-    expect(await effectiveOpacity(label)).toBeGreaterThan(0.85);
+    await expect.poll(() => effectiveOpacity(label), { timeout: 2_500 }).toBeGreaterThan(0.85);
   } else {
     const before = await effectiveOpacity(label);
     await first.hover({ position: { x: 12, y: 18 } });
@@ -226,7 +230,7 @@ test('real stepped scrolling reveals all principal homepage sections', async ({ 
 test('reduced motion removes title, hero-root, window and decorative movement', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  await settle(page);
   await waitForImages(page);
 
   const state = await page.evaluate(() => {
