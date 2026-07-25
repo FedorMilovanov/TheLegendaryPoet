@@ -25,6 +25,31 @@ jobs:
           node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
           import fs from 'node:fs';
+          import zlib from 'node:zlib';
+          const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
+          const pngFacts = (bytes) => {
+            let offset = 8;
+            const chunks = [];
+            const idat = [];
+            while (offset + 12 <= bytes.length) {
+              const length = bytes.readUInt32BE(offset);
+              const type = bytes.subarray(offset + 4, offset + 8).toString('ascii');
+              const data = bytes.subarray(offset + 8, offset + 8 + length);
+              chunks.push({ type, length, sha256: digest(data) });
+              if (type === 'IDAT') idat.push(data);
+              offset += 12 + length;
+              if (type === 'IEND') break;
+            }
+            const compressed = Buffer.concat(idat);
+            return {
+              width: bytes.readUInt32BE(16),
+              height: bytes.readUInt32BE(20),
+              chunks,
+              idatCompressedSha256: digest(compressed),
+              idatInflatedSha256: digest(zlib.inflateSync(compressed)),
+              idatInflatedBytes: zlib.inflateSync(compressed).length,
+            };
+          };
           const files = [
             'public/brand-emblem-master.png',
             'public/favicon-16.png',
@@ -43,10 +68,9 @@ jobs:
             return {
               file,
               bytes: bytes.length,
-              sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+              sha256: digest(bytes),
               format: png ? 'png' : jpeg ? 'jpeg' : 'unknown',
-              width: png ? bytes.readUInt32BE(16) : null,
-              height: png ? bytes.readUInt32BE(20) : null,
+              ...(png ? pngFacts(bytes) : {}),
             };
           });
           fs.writeFileSync('brand-asset-diagnostics.json', `${JSON.stringify(rows, null, 2)}\n`);
