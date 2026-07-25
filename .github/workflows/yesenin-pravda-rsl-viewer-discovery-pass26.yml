@@ -26,6 +26,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Apply exact Cyrillic RSL archive formula
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/discover-yesenin-pravda-rsl-viewer-pass26-v2.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = r'/Имеется\s+удаленн\w*\s+доступ\s+к\s+электронн\w*\s+архиву\s+газеты/iu'
+          new = r'/Имеется\s+удаленный\s+доступ\s+к\s+электронному\s+архиву\s+газеты/iu'
+          if old not in text:
+              raise SystemExit('expected diagnostic regex not found')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
       - name: Discover exact RSL viewer and issue routes for Pravda
         run: node scripts/discover-yesenin-pravda-rsl-viewer-pass26-v2.mjs
       - name: Upload RSL Pravda discovery evidence
