@@ -1,0 +1,39 @@
+name: Diagnostic apply Yesenin Duncan companion editorial pass one
+
+on:
+  push:
+    branches: [research/yesenin-duncan-companion-editorial-pass1]
+    paths:
+      - 'scripts/diagnostic-apply-yesenin-duncan-companion-editorial-pass1.py'
+      - 'src/data/essays/yeseninDuncanCompanionEditorialPassOne.ts'
+      - '.github/workflows/diagnostic-apply-yesenin-duncan-companion-editorial-pass1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diagnostic-apply-yesenin-duncan-companion-editorial-pass1
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/yesenin-duncan-companion-editorial-pass1
+          fetch-depth: 0
+      - name: Apply deterministic editorial patch
+        run: python scripts/diagnostic-apply-yesenin-duncan-companion-editorial-pass1.py
+      - name: Commit patched companion package
+        run: |
+          if git diff --quiet; then
+            echo 'No patch commit required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/lib/yesenin-duncan-first-meeting-unpublished.ts
+          git commit -m 'Apply Duncan companion editorial pass one'
+          git push origin HEAD:research/yesenin-duncan-companion-editorial-pass1
