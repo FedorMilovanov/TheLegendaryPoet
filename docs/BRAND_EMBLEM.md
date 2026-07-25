@@ -43,3 +43,5 @@
 - `npm run validate:brand` — мастер‑арт, отсутствие запасного старого силуэта, preload, cache version, метаданные, PWA и share preview;
 - `qa/brand-emblem.spec.mjs` — размеры, hover, загрузка утверждённого WebP, маршруты и отсутствие книги/крыльев/нимба;
 - `npm run check` включает бренд‑валидацию.
+
+<!-- deploy-trigger: cloak-20260725-2 -->
