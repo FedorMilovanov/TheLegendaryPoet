@@ -1,0 +1,29 @@
+name: Benislavskaya Correspondence Discovery Pass 22
+
+on:
+  pull_request:
+    branches:
+      - research/yesenin-benislavskaya-diary-evidence-pass21
+    paths:
+      - scripts/discover-yesenin-benislavskaya-correspondence-pass22.mjs
+      - .github/workflows/yesenin-benislavskaya-correspondence-discovery-pass22.yml
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/discover-yesenin-benislavskaya-correspondence-pass22.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-benislavskaya-correspondence-pass22
+          path: artifacts/yesenin-benislavskaya-correspondence-pass22
+          if-no-files-found: error
+          retention-days: 14
