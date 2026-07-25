@@ -28,7 +28,7 @@ assert.match(component, /data-brand-figure/, 'BrandMark selected cloaked figure 
 assert.match(component, /data-brand-fallback/, 'BrandMark coded SVG fallback is missing');
 assert.match(component, /data-brand-aura/, 'BrandMark cold aura is missing');
 assert.match(component, /data-brand-mist/, 'BrandMark lower mist transition is missing');
-assert.match(component, /brand-emblem-master\.png/, 'BrandMark does not use the committed selected master artwork');
+assert.match(component, /brand-emblem-master\.png/, 'BrandMark does not use the selected PNG master artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp/, 'BrandMark still references the retired WebP master');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link hover/click target');
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo)/, 'retired book, wing or halo hooks remain in BrandMark');
@@ -41,7 +41,7 @@ assert.ok(
 
 assert.match(emblem, /viewBox="0 0 96 96"/, 'brand-emblem.svg: canonical viewBox changed');
 assert.match(emblem, /id="vector-fallback"/, 'brand-emblem.svg: coded vector fallback is missing');
-assert.match(emblem, /brand-emblem-master\.png/, 'brand-emblem.svg: committed selected artwork is not referenced');
+assert.match(emblem, /brand-emblem-master\.png/, 'brand-emblem.svg: selected artwork is not referenced');
 assert.doesNotMatch(emblem, /brand-emblem-master\.webp/, 'brand-emblem.svg still references the retired WebP master');
 assert.match(emblem, /M48 7 C39 9 34 19 32 31/, 'brand-emblem.svg: hood fallback silhouette changed');
 assert.doesNotMatch(emblem, /<script|<foreignObject/i, 'brand-emblem.svg: unsafe or non-portable SVG content');
@@ -59,9 +59,37 @@ assert.match(maskEmblem, /viewBox="0 0 96 96"/, 'Safari mask icon viewBox change
 assert.match(maskEmblem, /<path fill="#000"/, 'Safari mask icon must be a monochrome vector path');
 assert.doesNotMatch(maskEmblem, /<image|data:image|<circle/i, 'Safari mask icon must stay pure vector and ring-free');
 
-assert.match(materializer, /brand assets verified/, 'brand prebuild no longer verifies direct immutable assets');
-assert.match(materializer, /retired archive parts remain/, 'brand prebuild does not reject the corrupt archive format');
-assert.doesNotMatch(materializer, /LPBRAND1|Buffer\.from\(encoded, 'base64'\)/, 'brand prebuild still parses the retired binary archive');
+assert.match(materializer, /decodeCanonicalPart/, 'brand prebuild no longer validates per-file source parts');
+assert.match(materializer, /brand assets materialized/, 'brand prebuild no longer reports deterministic materialization');
+assert.match(materializer, /retired LPBRAND1 archive parts remain/, 'brand prebuild does not reject the corrupt archive format');
+assert.match(materializer, /crypto\.randomUUID\(\)/, 'brand prebuild no longer stages generated files before replacement');
+assert.doesNotMatch(materializer, /LPBRAND1|Buffer\.from\(encoded, 'base64'\)/, 'brand prebuild still parses the retired combined archive');
+
+const expectedSourceParts: Record<string, number> = {
+  'src/brand-assets/master.part01.b64': 2000,
+  'src/brand-assets/master.part02.b64': 2000,
+  'src/brand-assets/master.part03.b64': 821,
+  'src/brand-assets/icon512.part01.b64': 2000,
+  'src/brand-assets/icon512.part02.b64': 2000,
+  'src/brand-assets/icon512.part03.b64': 2000,
+  'src/brand-assets/icon512.part04.b64': 2000,
+  'src/brand-assets/icon512.part05.b64': 955,
+  'src/brand-assets/maskable512.part01.b64': 2000,
+  'src/brand-assets/maskable512.part02.b64': 2000,
+  'src/brand-assets/maskable512.part03.b64': 2000,
+  'src/brand-assets/maskable512.part04.b64': 428,
+};
+for (const [file, expectedBytes] of Object.entries(expectedSourceParts)) {
+  assert.equal(fs.existsSync(resolve(file)), true, `${file}: source part is missing`);
+  const compact = read(file).replace(/\s+/g, '');
+  assert.match(compact, /^[A-Za-z0-9+/]+={0,2}$/, `${file}: source part is not base64`);
+  assert.equal(compact.length % 4, 0, `${file}: source part base64 length is invalid`);
+  const bytes = Buffer.from(compact, 'base64');
+  assert.equal(bytes.toString('base64'), compact, `${file}: source part is not canonical base64`);
+  assert.equal(bytes.length, expectedBytes, `${file}: decoded byte length changed`);
+}
+const sourceNames = fs.readdirSync(resolve('src/brand-assets')).filter((name) => /^(?:master|icon512|maskable512)\.part\d{2}\.b64$/.test(name));
+assert.deepEqual(sourceNames.sort(), Object.keys(expectedSourceParts).map((file) => path.basename(file)).sort(), 'brand source-part inventory changed');
 
 for (const pathName of [
   'brand-emblem-master.png',
@@ -111,7 +139,6 @@ const expectedHashes: Record<string, string> = {
   'public/mstile-150x150.png': 'b44796d8a5feb8989f3c214ef33b63667eb9c9de4c83142a400acf3c2b8f6723',
   'public/og-image.jpg': '3064016c3e3cb672a90564af224ef3ca1774bf9b883dfdcb30c6da2c3bbf8974',
 };
-
 for (const [file, expected] of Object.entries(expectedHashes)) {
   assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or an old emblem returned`);
 }
@@ -131,6 +158,7 @@ for (const [file, [width, height]] of Object.entries(expectedPngDimensions)) {
   assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
   assert.equal(buffer.readUInt32BE(16), width, `${file}: unexpected width`);
   assert.equal(buffer.readUInt32BE(20), height, `${file}: unexpected height`);
+  assert.equal(buffer.subarray(-12, -8).toString('ascii'), 'IEND', `${file}: missing terminal IEND`);
 }
 const share = readBuffer('public/og-image.jpg');
 assert.equal(share.subarray(0, 3).toString('hex'), 'ffd8ff', 'og-image.jpg: invalid JPEG signature');
@@ -144,4 +172,4 @@ const retired = [
 ];
 for (const file of retired) assert.equal(fs.existsSync(resolve(file)), false, `${file}: retired asset must be removed`);
 
-console.log('brand validation: selected cloaked figure, direct immutable assets, coded fallback, preload and platform metadata are consistent');
+console.log('brand validation: selected cloaked figure, verified per-file materialization, coded fallback, preload and platform metadata are consistent');
