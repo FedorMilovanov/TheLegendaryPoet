@@ -64,7 +64,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           hover: {
             y: -0.7,
             scale: 1.026,
-            filter: 'drop-shadow(0 6px 11px rgba(0, 8, 20, 0.68)) drop-shadow(0 0 7px rgba(46, 216, 255, 0.22))',
+            filter: 'drop-shadow(0 6px 11px rgba(0, 8, 20, 0.68)) drop-shadow(0 0 7px rgba(46, 216, 255, 0.18))',
             transition: { duration: 0.72, ease: premiumEase },
           },
         }}
@@ -121,17 +121,17 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           fill="none"
           strokeLinecap="round"
           variants={{
-            idle: { opacity: compact ? 0.34 : 0.42, scale: 0.985 },
+            idle: { opacity: compact ? 0.14 : 0.42, scale: compact ? 0.98 : 0.985 },
             hover: {
-              opacity: compact ? 0.52 : 0.72,
-              scale: 1.035,
+              opacity: compact ? 0.24 : 0.72,
+              scale: compact ? 1.01 : 1.035,
               transition: { duration: 0.82, ease: premiumEase },
             },
           }}
           style={{ transformOrigin: '48px 49px' }}
         >
-          <path d="M22 51C17 38 21 22 33 13" stroke={`url(#${edgeGradientId})`} strokeWidth="1.15" />
-          <path d="M74 51C80 37 75 21 63 13" stroke={`url(#${edgeGradientId})`} strokeWidth="1.15" />
+          <path d="M22 51C17 38 21 22 33 13" stroke={`url(#${edgeGradientId})`} strokeWidth={compact ? 0.85 : 1.15} />
+          <path d="M74 51C80 37 75 21 63 13" stroke={`url(#${edgeGradientId})`} strokeWidth={compact ? 0.85 : 1.15} />
           {!compact && (
             <>
               <path d="M15 64C12 48 17 32 27 21" stroke="#2ed8ff" strokeOpacity="0.13" strokeWidth="0.85" />
@@ -140,25 +140,27 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           )}
         </motion.g>
 
-        <motion.ellipse
-          data-brand-core-glow
-          aria-hidden="true"
-          cx="48"
-          cy="58"
-          rx="17"
-          ry="20"
-          fill={`url(#${coreGradientId})`}
-          filter={`url(#${softGlowFilterId})`}
-          variants={{
-            idle: { opacity: compact ? 0.14 : 0.18, scale: 0.92 },
-            hover: {
-              opacity: compact ? 0.25 : 0.34,
-              scale: 1.08,
-              transition: { duration: 0.78, ease: premiumEase },
-            },
-          }}
-          style={{ transformOrigin: '48px 58px' }}
-        />
+        {!compact && (
+          <motion.ellipse
+            data-brand-core-glow
+            aria-hidden="true"
+            cx="48"
+            cy="58"
+            rx="17"
+            ry="20"
+            fill={`url(#${coreGradientId})`}
+            filter={`url(#${softGlowFilterId})`}
+            variants={{
+              idle: { opacity: 0.18, scale: 0.92 },
+              hover: {
+                opacity: 0.34,
+                scale: 1.08,
+                transition: { duration: 0.78, ease: premiumEase },
+              },
+            }}
+            style={{ transformOrigin: '48px 58px' }}
+          />
+        )}
 
         <g data-brand-figure>
           <path
@@ -205,19 +207,27 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         <motion.g
           data-brand-light-core
           aria-hidden="true"
-          filter={`url(#${glowFilterId})`}
+          filter={compact ? undefined : `url(#${glowFilterId})`}
           variants={{
-            idle: { opacity: 0.68, scale: 0.94 },
+            idle: { opacity: compact ? 0.46 : 0.68, scale: compact ? 0.9 : 0.94 },
             hover: {
-              opacity: 1,
-              scale: 1.08,
+              opacity: compact ? 0.68 : 1,
+              scale: compact ? 1.02 : 1.08,
               transition: { duration: 0.62, ease: premiumEase },
             },
           }}
           style={{ transformOrigin: '48px 57px' }}
         >
-          <path d="M48 49.5L51.5 57L48 66.2L44.5 57L48 49.5Z" fill={`url(#${coreGradientId})`} />
-          <path d="M48 52.2V62.2" stroke="#ddfbff" strokeWidth="1.15" strokeLinecap="round" />
+          <path
+            d={compact ? 'M48 52L50.1 57L48 62L45.9 57L48 52Z' : 'M48 49.5L51.5 57L48 66.2L44.5 57L48 49.5Z'}
+            fill={`url(#${coreGradientId})`}
+          />
+          <path
+            d={compact ? 'M48 54.5V59.5' : 'M48 52.2V62.2'}
+            stroke="#ddfbff"
+            strokeWidth={compact ? 0.7 : 1.15}
+            strokeLinecap="round"
+          />
         </motion.g>
 
         {!compact && (
