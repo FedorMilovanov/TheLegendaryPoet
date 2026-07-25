@@ -15,7 +15,7 @@ on:
       - 'src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight.ts'
       - '.github/workflows/yesenin-part-one-duncan-compaction.yml'
   pull_request:
-    branches: [work/local-images-playwright-wtoc]
+    branches: [work/local-images-playwright-wtoc, research/yesenin-duncan-companion-split]
     paths:
       - 'scripts/lib/yesenin-part-one-unpublished-article.ts'
       - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
