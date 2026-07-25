@@ -91,6 +91,8 @@ jobs:
         run: npm run validate:community-store
       - name: Validate target-scoped community subscriptions
         run: npm run validate:community-target-store
+      - name: Validate canonical brand assets
+        run: npm run validate:brand
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Validate overlays, images, and pointer interactions
