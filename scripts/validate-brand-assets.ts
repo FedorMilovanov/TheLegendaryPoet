@@ -110,8 +110,8 @@ const materializer = read('scripts/materialize-brand-art.mjs');
 const standaloneSvg = read('public/brand-emblem.svg');
 const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260725-3';
-const masterSha256 = '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d';
+const version = 'cloak-20260725-4';
+const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
