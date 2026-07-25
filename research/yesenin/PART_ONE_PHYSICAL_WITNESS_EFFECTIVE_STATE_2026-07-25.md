@@ -2,25 +2,17 @@
 
 Дата: 2026-07-25
 
-Статус: `12 HISTORICAL-QUEUE-RECORDS / 2 PHYSICAL-EDITION-OVERLAYS / 4 SERIAL-EVIDENCE-RECORDS / 2 ACCESS-INVESTIGATION-RECORDS / 11 ACTIVE-HOLDS / 10 TARGET-UNFULFILLED-HOLDS / 2 ACCESS-INVESTIGATED-HOLDS / 1 PARTIALLY-SATISFIED-HOLD / 1 SUPERSEDED-HOLD / 1 STANDALONE-ACQUISITION / HISTORY-PRESERVED / EFFECTIVE-STATE-RESOLVED / UNPUBLISHED / MEDIA-HOLD`
+Статус: `12 HISTORICAL-QUEUE-RECORDS / 2 PHYSICAL-EDITION-OVERLAYS / 7 SERIAL-EVIDENCE-RECORDS / 3 ACCESS-INVESTIGATION-RECORDS / 10 ACTIVE-HOLDS / 9 TARGET-UNFULFILLED-HOLDS / 3 ACCESS-INVESTIGATED-HOLDS / 1 PARTIALLY-SATISFIED-HOLD / 2 SUPERSEDED-HOLDS / 1 STANDALONE-ACQUISITION / HISTORY-PRESERVED / EFFECTIVE-STATE-RESOLVED / UNPUBLISHED / MEDIA-HOLD`
 
-## Зачем нужен отдельный effective-state слой
+## Принцип слоя
 
-Pass 6 зафиксировал историческую очередь физических и архивных целей. Позднейшие проходы не должны переписывать эту очередь так, будто PDF, правильный locator или viewer state были известны с самого начала. Одновременно operational-отчёт обязан различать:
+Pass 6 остаётся неизменяемой исторической очередью. Позднейшие приобретения и исследования доступа не переписывают старые строки, а образуют typed overlays:
 
-- полностью приобретённый и визуально проверенный объект;
-- частично удовлетворённый широкий target;
-- исследованный доступ, который не дал факсимиле;
-- полностью нетронутый target.
-
-Current state вычисляется наложением:
-
-- historical records остаются неизменными;
-- physical-edition records могут полностью supersede только прямо названный HOLD;
-- serial evidence может частично закрывать широкий target, сохраняя HOLD активным;
-- access investigation может исправить metadata или зафиксировать серверную блокировку, не удовлетворяя page-level target;
-- acquisition без historical `PW6-*` target остаётся самостоятельным объектом;
-- права на републикацию, archive-original status и production authorization не выводятся из карточки, viewer metadata или открытого PDF.
+- полное приобретение может supersede только прямо названный historical HOLD;
+- частичное serial evidence оставляет широкий HOLD активным;
+- access investigation объясняет metadata/route block, но не заменяет требуемые страницы;
+- открытый библиотечный PDF не является архивным оригиналом и не решает reproduction rights;
+- ни acquisition, ни access record не дают publication или production authorization.
 
 ## Точная арифметика
 
@@ -28,144 +20,201 @@ Current state вычисляется наложением:
 |---|---:|
 | Historical pass-6 records | 12 |
 | Physical-edition acquisition overlays | 2 |
-| Typed serial issue evidence records | 4 |
-| Typed Mariengof access records | 2 |
-| Эффективно активные historical HOLD | 11 |
-| Active HOLD без удовлетворяющего target evidence | 10 |
-| Access-investigated active HOLD | 2 |
-| Metadata-corrected historical HOLD | 1 |
-| Viewer-API download-blocked object | 1 |
-| Unresolved published viewer route | 1 |
+| `Театральная Москва` issue records | 4 |
+| `Известия` issue records | 3 |
+| Всего serial issue evidence records | 7 |
+| Mariengof access records | 2 |
+| `Правда` access records | 1 |
+| Эффективно активные historical HOLD | 10 |
+| Active HOLD без удовлетворяющего evidence | 9 |
+| Access-investigated active HOLD | 3 |
 | Частично удовлетворённый active HOLD | 1 |
-| Superseded historical HOLD | 1 |
+| Superseded historical HOLD | 2 |
 | Standalone acquisition | 1 |
 | Просмотренные physical-edition facsimiles | 2 |
-| Просмотренные serial issue facsimiles | 4 |
-| Всего acquired facsimile objects | 6 |
+| Просмотренные `Театральная Москва` facsimiles | 4 |
+| Просмотренные `Известия` facsimiles | 3 |
+| Всего acquired facsimile objects | 9 |
 | Просмотренные archive originals | 0 |
 | Объекты с решёнными reproduction rights | 0 |
 | Production-authorized objects | 0 |
 
-Два access-investigated HOLD входят в десять target-unfulfilled HOLD: исследование доступа не заменяет требуемое постраничное чтение.
+Три access-investigated HOLD входят в девять target-unfulfilled HOLD: исследование доступа не удовлетворяет page-level target.
 
-## Единственный supersession-edge
+## Supersession 1 — `Исповедь хулигана`, 1921
 
-`PW6-YE1-ISPOVED-1921` сохраняется в historical queue со своими исходными `facsimileBytesAcquired=false` и `facsimileVisuallyInspected=false`. Его current status становится `superseded-by-acquisition` только через:
+Historical row `PW6-YE1-ISPOVED-1921` сохраняет исходные `facsimileBytesAcquired=false` и `facsimileVisuallyInspected=false`.
 
-- acquisition ID: `PWA8-YE1-ISPOVED-1921`;
-- object ID: `NEB-YE1-ISPOVED-1921`;
-- exact PDF bytes: 3 309 388;
-- PDF frames: 16;
-- verified physical order: `Хулиган` → `Сорокоуст` → `Исповедь хулигана`.
+Текущий статус задаётся только overlay:
 
-Historical record не переписывается: он документирует состояние исследования до acquisition pass.
+- acquisition ID `PWA8-YE1-ISPOVED-1921`;
+- object ID `NEB-YE1-ISPOVED-1921`;
+- 3 309 388 bytes;
+- 16 PDF frames;
+- verified order: `Хулиган` → `Сорокоуст` → `Исповедь хулигана`.
 
-## Standalone acquisition
+## Supersession 2 — три точных выпуска `Известий`, 1921
 
-`PWA8-YE1-RADUNITSA-1916` / `NEB-YE1-RADUNITSA-1916` не подменяет pass-six record: отдельного historical HOLD для этого объекта в typed queue не существовало.
+Historical row `PW6-YE1-IZVESTIA-1921-SERIAL` не изменён. Его исходный target требовал ровно три issue-level объекта и визуальную проверку целевых материалов.
 
-- exact PDF bytes: 49 288 163;
-- PDF frames: 35;
-- visually inspected: title, verso, composition, contents and selected poem pages;
+### `NEWS14-YE1-IZVESTIA-NO186`
+
+- дата: 24 августа 1921;
+- issue: №186;
+- NEB code: `000199_000009_013351165`;
+- 52 016 796 bytes;
+- 4 PDF frames;
+- SHA-256 `c8f83373f17c4c34bb059c624f81b917a2e5d4f4ed636d7735d398fb0789dd79`;
+- PDF 01: masthead/date;
+- PDF 03: `Наша гостья.`;
+- визуально подтверждённая подпись: `А. ЛУНАЧАРСКИЙ`.
+
+Принятая граница: статья современно представляет приезд Дункан, её педагогические идеи и предполагаемую работу/школу в Москве. Она не является административным актом открытия школы и не устанавливает встречу с Есениным.
+
+### `NEWS14-YE1-IZVESTIA-NO251`
+
+- дата: 9 ноября 1921;
+- issue: №251;
+- NEB code: `000199_000009_013351339`;
+- 23 798 944 bytes;
+- 2 PDF frames;
+- SHA-256 `0e35e292398e6b281c43bd016fd94d62df3981476aa0ed79d4130d987c98ef99`;
+- PDF 01: masthead/date;
+- PDF 02: `Айседора Дункан. (Первое выступление 7 ноября).`.
+
+Принятая граница: same-week review прямо связывает первое выступление 7 ноября с Академическим Большим театром и даёт художественную оценку. Это не official program, не attendance list и не свидетельство присутствия Есенина.
+
+### `NEWS14-YE1-IZVESTIA-NO263`
+
+- дата: 23 ноября 1921;
+- issue: №263;
+- NEB code: `000199_000009_013351387`;
+- 49 148 667 bytes;
+- 4 PDF frames;
+- SHA-256 `b3e007bf66bf9efafd103481f2108ba315770627b4df35fa503ad31c241fcdec`;
+- PDF 01: masthead/date;
+- PDF 04: `Искусство для масс.`;
+- визуально подтверждённая подпись: `А. АЙСЕДОРА ДУНКАН`.
+
+Принятая граница: текст формулирует программу искусства для рабочих и детей, московской школы и массового театра. Программное намерение не доказывает формальное открытие, staffing или фактическую работу школы к 23 ноября.
+
+### Acquisition summary
+
+- 3 real official NEB PDFs;
+- 124 964 407 bytes;
+- 10 PDF frames;
+- acquisition artifact SHA-256 `66520651ad99e962e2fd160d2fe606d517f8a9e410dd16c504f50dbe6e7ff206`;
+- no catalogue-ID arithmetic;
+- no constructed PDF route;
+- `ocrUsedForEvidence=false`;
 - `productionAuthorized=false`;
 - reproduction rights unresolved.
 
-## Частично удовлетворённый active HOLD
+Все три исходных target даты и материалы визуально проверены. Поэтому `PW6-YE1-IZVESTIA-1921-SERIAL` получает `effectiveStatus=superseded-by-acquisition` через три `NEWS14-*` records, а не через изменение historical row.
 
-`PW6-YE1-TEATRALNAYA-MOSKVA-1921` остаётся активным с `effectiveStatus=active-hold-partially-satisfied`.
+## Standalone acquisition
 
-Связанные issue records:
+`PWA8-YE1-RADUNITSA-1916` / `NEB-YE1-RADUNITSA-1916` остаётся единственным standalone acquisition:
 
-- `TM11-YE1-NO2` — №2, 1–3 ноября 1921;
-- `TM11-YE1-NO7` — №7, 15–17 ноября 1921;
-- `TM11-YE1-NO8` — №8, 18–20 ноября 1921;
-- `TM11-YE1-NO11-12` — №11–12, 29 ноября — 4 декабря 1921.
+- 49 288 163 bytes;
+- 35 PDF frames;
+- title/verso/composition/contents/selected poem pages inspected;
+- `productionAuthorized=false`;
+- reproduction rights unresolved.
 
-Получено и визуально проверено:
+## Единственный partially satisfied HOLD
 
-- 4 real PDFs;
-- 43 100 448 bytes;
-- 94 PDF frames;
-- материал «Айседора Дункан о Москве» в №2;
-- contemporaneous reception вечера 7 ноября и «Спор о Дункан» в №7;
-- последующая критическая рецепция Дункан после вечера 11 ноября в №8;
-- упоминание Есенина и Клюева в «Литературной богеме Москвы!» в №11–12.
+`PW6-YE1-TEATRALNAYA-MOSKVA-1921` остаётся `active-hold-partially-satisfied`.
 
-Historical target не superseded, потому что ещё не изолированы:
+Issue records:
+
+- `TM11-YE1-NO2`;
+- `TM11-YE1-NO7`;
+- `TM11-YE1-NO8`;
+- `TM11-YE1-NO11-12`.
+
+Получено 4 PDF / 43 100 448 bytes / 94 frames. Подтверждены contemporaneous материалы о Дункан и упоминание Есенина/Клюева, но не изолированы:
 
 - точная официальная программа или объявление вечера 7 ноября;
-- объявление либо item-level record официального открытия школы Дункан;
-- дипломатические транскрипции страниц для прямого цитирования.
+- item-level record официального открытия школы;
+- дипломатические транскрипции для прямого цитирования.
 
-## Два access-investigated active HOLD
+## Access-investigated active HOLD
 
-### `PW6-YE1-MARIENGOF-1927`
-
-Overlay: `MA13-YE1-MARIENGOF-1927`.
+### Mariengof 1927 — `MA13-YE1-MARIENGOF-1927`
 
 - exact RSL card `01009215492` verified;
-- 154 pages and holdings confirmed;
-- card claims full open viewer access;
-- literal reader anchor remains `href="#"`;
-- published client code only copies a missing `data-read-url`;
-- no institution-published working viewer/PDF route was accepted;
-- no route was reconstructed from the record ID;
-- effective status remains `active-hold`.
+- 154 pages/holdings confirmed;
+- literal working viewer/PDF route не опубликован;
+- route из record ID не реконструирован;
+- no facsimile bytes;
+- status остаётся `active-hold`.
 
-### `PW6-YE1-MARIENGOF-1928`
+### Mariengof 1928 — `MA13-YE1-MARIENGOF-1928`
 
-Overlay: `MA13-YE1-MARIENGOF-1928`.
-
-Historical locator `01009198586` remains visible in pass 6, while the overlay corrects the operational object to official RSL card `01009215494`.
-
-Verified literal chain:
-
-- Search RSL card view URL;
-- dlib replacement rule;
-- viewer `https://viewer.rsl.ru/rsl01009215494`;
-- official distributed viewer API contract;
-- `/api/v1/document/rsl01009215494/info` HTTP 200;
-- viewer page count 172;
+- historical stale locator сохранён;
+- operational card corrected to `01009215494`;
+- official card → dlib → viewer → API chain verified;
 - `accessLevel=restricted`;
 - `isAvailable=false`;
 - `isDownloadable=false`;
-- `downloadableFormats=[]`.
+- no facsimile bytes;
+- status остаётся `active-hold`.
 
-No PDF bytes were acquired. The second-edition target remains `active-hold`; direct page-level comparison with 1927 remains unresolved.
+### `Правда`, 9 ноября 1921 — `PR15-YE1-PRAVDA-1921-11-09`
 
-## Остальные восемь active HOLD без нового access/evidence overlay
+- historical HOLD: `PW6-YE1-PRAVDA-1921-11-09`;
+- official RSL serial parent: `01004548325`;
+- 4 official NEB searches without open-access filter;
+- 0 literal Moscow central-party issue candidates;
+- `Деревенская правда`, `Правда Севера`, `Правда Востока` explicitly rejected;
+- no catalogue ID constructed;
+- no PDF route constructed;
+- artifact SHA-256 `d02149ce5d760cc07014d283faceff3f5e6c051c0d79125f709447b52246dc1c`;
+- resolution `no-literal-official-central-moscow-match`;
+- status остаётся `active-hold`.
 
-### Academic basis identified
+Нужен exact Moscow issue card, reading-room object или authorised copy для 9 ноября 1921 и визуальная проверка релевантной полосы.
+
+## Активный набор после newspaper pass
+
+### Academic basis
 
 1. `PW6-YE1-MATERIALY-110`;
 2. `PW6-YE1-BENISLAVSKAYA-DIARY-BASIS`.
 
+### Exact editions / access bounded
+
+3. `PW6-YE1-MARIENGOF-1927`;
+4. `PW6-YE1-MARIENGOF-1928`.
+
 ### Serial work
 
-3. `PW6-YE1-IZVESTIA-1921-SERIAL`;
-4. `PW6-YE1-PRAVDA-1921-11-09`.
+5. `PW6-YE1-TEATRALNAYA-MOSKVA-1921` — partial;
+6. `PW6-YE1-PRAVDA-1921-11-09` — access investigated, unresolved.
 
-### Archive collections located, item-level request required
+### Archive collections
 
-5. `PW6-YE1-NYPL-DUNCAN-PROGRAM`;
-6. `PW6-YE1-NYPL-IRMA-DUNCAN`.
+7. `PW6-YE1-NYPL-DUNCAN-PROGRAM`;
+8. `PW6-YE1-NYPL-IRMA-DUNCAN`.
 
-### Civil records requiring request
+### Civil records
 
-7. `PW6-YE1-REICH-DIVORCE`;
-8. `PW6-YE1-DUNCAN-MARRIAGE`.
+9. `PW6-YE1-REICH-DIVORCE`;
+10. `PW6-YE1-DUNCAN-MARRIAGE`.
 
 ## Постоянные границы
 
-- `12 HISTORICAL-QUEUE-RECORDS / 2 PHYSICAL-EDITION-OVERLAYS / 4 SERIAL-EVIDENCE-RECORDS / 11 ACTIVE-HOLDS`;
 - historical queue immutable;
-- locator correction is an overlay, not a silent historical rewrite;
+- `12 HISTORICAL-QUEUE-RECORDS / 2 PHYSICAL-EDITION-OVERLAYS / 7 SERIAL-EVIDENCE-RECORDS / 3 ACCESS-INVESTIGATION-RECORDS / 10 ACTIVE-HOLDS`;
+- `2 SUPERSEDED-HOLDS`;
 - access investigation is not page evidence;
 - partial evidence does not become false completion;
-- library scan is not an archive original;
+- search result, catalogue HTML and OCR are not controlling facsimiles;
+- library PDF is not an archive original;
 - `ocrUsedForEvidence=false`;
 - `syntheticContentUsed=false`;
 - `productionAuthorized=false`;
-- reproduction rights remain unresolved for all acquired facsimiles and access-inspected objects;
-- completion of one target is not a publication decision for the article;
-- public route, sitemap, navigation and media registry remain unchanged.
+- reproduction rights remain unresolved;
+- completion of the `Известия` target is not a publication decision;
+- public routes, sitemap, navigation and media registry remain unchanged.

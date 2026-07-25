@@ -1,0 +1,50 @@
+name: Yesenin Newspaper Pass 14
+
+on:
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
+  push:
+    branches:
+      - research/yesenin-newspaper-acquisition-pass14-clean
+      - work/local-images-playwright-wtoc
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate exact Izvestia and Pravda records
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-newspaper-pass14 | tee newspaper-pass14.json
+      - name: Validate integrated effective state
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-part-one-effective-witnesses | tee newspaper-effective-state.json
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: Upload focused newspaper evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-newspaper-pass14-validation
+          path: |
+            newspaper-pass14.json
+            newspaper-effective-state.json
+          if-no-files-found: error
+          retention-days: 14
