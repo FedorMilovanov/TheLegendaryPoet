@@ -1,0 +1,45 @@
+name: Yesenin Mariengof RSL Route Pass 13
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-mariengof-rsl-route-pass13]
+    paths:
+      - 'scripts/discover-yesenin-mariengof-rsl-route-pass13.py'
+      - 'research/yesenin/PART_ONE_MARIENGOF_RSL_ROUTE_PASS13.md'
+      - '.github/workflows/yesenin-mariengof-rsl-route-pass13.yml'
+
+concurrency:
+  group: yesenin-mariengof-rsl-route-pass13-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover-route:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Discover only published RSL routes
+        env:
+          YESENIN_MARIENGOF_RSL_OUTPUT: artifacts/yesenin-mariengof-rsl-pass13
+        run: |
+          set -o pipefail
+          python scripts/discover-yesenin-mariengof-rsl-route-pass13.py \
+            2>&1 | tee yesenin-mariengof-rsl-pass13.log
+      - name: Upload route and provenance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-mariengof-rsl-route-pass13
+          path: |
+            artifacts/yesenin-mariengof-rsl-pass13
+            yesenin-mariengof-rsl-pass13.log
+          if-no-files-found: error
+          retention-days: 7
