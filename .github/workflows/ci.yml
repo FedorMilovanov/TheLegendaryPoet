@@ -106,3 +106,121 @@ jobs:
         run: npm run prerender
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+
+  repair-approved-brand-ssot:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'fix/approved-brand-ssot-release-repair'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/approved-brand-ssot-release-repair
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Restore exact source and write permanent CI contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_blob='d61334ecfab61f648833c92666eb1b9661b1f27a'
+          git fetch --no-tags origin \
+            main:refs/remotes/origin/main \
+            fix/approved-brand-integrity-complete-20260725:refs/remotes/origin/approved-brand-integrity \
+            --depth=1
+
+          actual_blob="$(git rev-parse refs/remotes/origin/approved-brand-integrity:src/brand-assets/master-320-q92.webp.b64)"
+          [[ "${actual_blob}" == "${expected_blob}" ]] || {
+            echo "::error::Authoritative source blob changed: ${actual_blob}"
+            exit 1
+          }
+          git checkout refs/remotes/origin/approved-brand-integrity -- src/brand-assets/master-320-q92.webp.b64
+          git show refs/remotes/origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/ci.yml')
+          text = path.read_text(encoding='utf-8')
+          old = '''      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+      - name: Build
+'''
+          new = '''      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+      - name: Validate approved brand assets
+        id: brand_validation
+        run: |
+          set +e
+          npm run validate:brand > brand-validation.log 2>&1
+          status=$?
+          cat brand-validation.log
+          exit $status
+      - name: Upload brand validation diagnostics
+        if: ${{ failure() && steps.brand_validation.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-validation-diagnostics
+          path: brand-validation.log
+          if-no-files-found: error
+          retention-days: 3
+      - name: Build
+'''
+          if text.count(old) != 1:
+              raise SystemExit('CI brand-gate insertion anchor mismatch')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+          [[ "$(git hash-object src/brand-assets/master-320-q92.webp.b64)" == "${expected_blob}" ]]
+          grep -Fq 'name: Validate approved brand assets' .github/workflows/ci.yml
+          ! grep -Fq 'repair-approved-brand-ssot:' .github/workflows/ci.yml
+
+      - name: Install deterministic toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+          npm ci
+
+      - name: Prove approved source and production build
+        env:
+          VITE_BASE: /
+        run: |
+          set -euo pipefail
+          npm run validate:brand
+          npm run typecheck
+          npm run sitemap
+          npm run build
+          npm run validate:build-output
+
+      - name: Commit only the proven permanent files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add .github/workflows/ci.yml src/brand-assets/master-320-q92.webp.b64
+          mapfile -t staged < <(git diff --cached --name-only)
+          expected=(
+            '.github/workflows/ci.yml'
+            'src/brand-assets/master-320-q92.webp.b64'
+          )
+          printf 'Staged scope:\n%s\n' "${staged[*]:-<empty>}"
+          [[ "${#staged[@]}" -eq "${#expected[@]}" ]]
+          for index in "${!expected[@]}"; do
+            [[ "${staged[$index]}" == "${expected[$index]}" ]]
+          done
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(brand): restore approved SSOT and require CI validation'
+          git push origin HEAD:fix/approved-brand-ssot-release-repair
