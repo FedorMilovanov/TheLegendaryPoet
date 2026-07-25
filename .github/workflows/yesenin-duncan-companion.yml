@@ -3,20 +3,24 @@ name: Yesenin Duncan Companion Draft
 on:
   workflow_dispatch:
   push:
-    branches: [work/local-images-playwright-wtoc, research/yesenin-duncan-companion-split]
+    branches: [work/local-images-playwright-wtoc]
     paths:
       - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
       - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'src/data/essays/yeseninDuncanCompanionEditorialPassOne.ts'
       - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
       - 'research/yesenin/YESENIN_DUNCAN_COMPANION_SPLIT_2026-07-25.md'
+      - 'research/yesenin/YESENIN_DUNCAN_COMPANION_EDITORIAL_PASS1_2026-07-25.md'
       - '.github/workflows/yesenin-duncan-companion.yml'
   pull_request:
     branches: [work/local-images-playwright-wtoc]
     paths:
       - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
       - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'src/data/essays/yeseninDuncanCompanionEditorialPassOne.ts'
       - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
       - 'research/yesenin/YESENIN_DUNCAN_COMPANION_SPLIT_2026-07-25.md'
+      - 'research/yesenin/YESENIN_DUNCAN_COMPANION_EDITORIAL_PASS1_2026-07-25.md'
       - '.github/workflows/yesenin-duncan-companion.yml'
 
 concurrency:
@@ -39,7 +43,7 @@ jobs:
           cache: npm
       - name: Install project dependencies
         run: npm ci --silent
-      - name: Validate unpublished companion and 6/6 content split
+      - name: Validate unpublished companion, editorial pass and 6/6 content split
         run: |
           set -o pipefail
           npx tsx scripts/validate-yesenin-duncan-first-meeting-unpublished.ts 2>&1 | tee yesenin-duncan-companion-validation.log
