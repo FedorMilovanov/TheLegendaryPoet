@@ -6,14 +6,18 @@ on:
     paths:
       - 'src/data/essays/yeseninPravdaEastViewEvidencePassTwentySeven.ts'
       - 'scripts/validate-yesenin-pravda-eastview-evidence-pass27.ts'
-      - 'research/yesenin/PART_ONE_PRAVDA_EASTVIEW_PASS27_2026-07-26.md'
+      - 'research/yesenin/PART_ONE_PRAVDA_EAST_VIEW_PASS27_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-pravda-eastview-evidence-pass27.yml'
   push:
     branches: [work/local-images-playwright-wtoc]
     paths:
       - 'src/data/essays/yeseninPravdaEastViewEvidencePassTwentySeven.ts'
       - 'scripts/validate-yesenin-pravda-eastview-evidence-pass27.ts'
-      - 'research/yesenin/PART_ONE_PRAVDA_EASTVIEW_PASS27_2026-07-26.md'
+      - 'research/yesenin/PART_ONE_PRAVDA_EAST_VIEW_PASS27_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-pravda-eastview-evidence-pass27.yml'
 
 concurrency:
@@ -36,7 +40,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --silent
-      - name: Validate East View evidence pass 27
-        run: npx tsx scripts/validate-yesenin-pravda-eastview-evidence-pass27.ts
+      - name: Validate exact East View Pravda evidence pass 27
+        run: npm run validate:yesenin-pravda-eastview-pass27
       - name: TypeScript typecheck
         run: npm run typecheck
