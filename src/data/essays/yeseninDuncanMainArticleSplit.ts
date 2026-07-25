@@ -80,4 +80,4 @@ export const yeseninDuncanMainArticleSplit = [
 
 export const yeseninDuncanMainArticleMaximumBlocks = 6 as const;
 export const yeseninDuncanCompanionTransferredBlocks = 6 as const;
-export const yeseninDuncanSplitApplied = false as const;
+export const yeseninDuncanSplitApplied = true as const;

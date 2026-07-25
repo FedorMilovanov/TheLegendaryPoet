@@ -18,6 +18,8 @@ import {
 } from '../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
 import { yeseninPartOnePhysicalWitnessesPassSix } from '../src/data/essays/yeseninPartOnePhysicalWitnessesPassSix';
 import { yeseninPartOneRealVisualsPassSix } from '../src/data/essays/yeseninPartOneRealVisualsPassSix';
+import { yeseninPartOneEditorialPhysicalEditionsPassEight } from '../src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight';
+import { yeseninDuncanMainArticleSplit, yeseninDuncanSplitApplied } from '../src/data/essays/yeseninDuncanMainArticleSplit';
 
 const fail = (message: string): never => {
   throw new Error(`[yesenin-part-one-unpublished] ${message}`);
@@ -66,6 +68,23 @@ if (topology.canonicalSourceIds.size !== 90) {
 }
 const evidenceIds = new Set(evidenceEntries.map((entry) => entry.blockId));
 if (evidenceIds.size !== 146) fail('evidence map contains duplicate stable block IDs');
+const companionTransferredBlockIds = yeseninDuncanMainArticleSplit
+  .filter((record) => record.destination === 'companion-investigation')
+  .map((record) => record.blockId);
+const companionTransferredIdSet = new Set<string>(companionTransferredBlockIds);
+if (yeseninDuncanSplitApplied !== true || companionTransferredIdSet.size !== 6) {
+  fail('Duncan companion split must be applied with exactly six transferred IDs');
+}
+if (
+  articlePackage.evidenceNodeCount !== 146 ||
+  articlePackage.readerFacingTextBlocks !== 140 ||
+  articlePackage.duncanCompactionApplied !== true ||
+  articlePackage.companionArticleId !== 'essay-yesenin-duncan-first-meeting-unpublished' ||
+  JSON.stringify([...articlePackage.companionTransferredBlockIds].sort()) !==
+    JSON.stringify([...companionTransferredBlockIds].sort())
+) {
+  fail('Duncan compaction package metadata is inconsistent');
+}
 for (const node of topology.nodes) {
   const evidence = evidenceByBlockId[node.blockId];
   if (!evidence) fail(`missing evidence record for ${node.blockId}`);
@@ -74,6 +93,17 @@ for (const node of topology.nodes) {
   }
   if (evidence.publicationAuthorized !== false) {
     fail(`${node.blockId} silently authorizes publication`);
+  }
+  const expectedReaderFacing = !companionTransferredIdSet.has(node.blockId);
+  if (evidence.readerFacingInPartOne !== expectedReaderFacing) {
+    fail(`${node.blockId} has an incorrect reader-facing disposition`);
+  }
+  if (
+    expectedReaderFacing
+      ? evidence.transferredToCompanionArticleId !== undefined
+      : evidence.transferredToCompanionArticleId !== 'essay-yesenin-duncan-first-meeting-unpublished'
+  ) {
+    fail(`${node.blockId} has an incorrect companion transfer link`);
   }
   const pairs: Array<[string, readonly string[], readonly string[]]> = [
     ['claims', evidence.claimIds, node.claimIds],
@@ -93,8 +123,8 @@ for (const node of topology.nodes) {
 const sectionBlocks = essay.blocks.filter((block) => block.type === 'section');
 const authoredBlocks = essay.blocks.filter((block) => block.type !== 'section');
 if (sectionBlocks.length !== 12) fail(`expected 12 rendered section blocks, found ${sectionBlocks.length}`);
-if (authoredBlocks.length !== 146) fail(`expected 146 authored render blocks, found ${authoredBlocks.length}`);
-if (essay.blocks.length !== 158) fail(`expected 158 total render blocks, found ${essay.blocks.length}`);
+if (authoredBlocks.length !== 140) fail(`expected 140 reader-facing render blocks, found ${authoredBlocks.length}`);
+if (essay.blocks.length !== 152) fail(`expected 152 total render blocks, found ${essay.blocks.length}`);
 if (essay.blocks.filter((block) => block.type === 'lead').length !== 1) {
   fail('typed article must render exactly one lead block');
 }
@@ -107,8 +137,10 @@ if (essay.blocks.some((block) => block.type === 'image')) {
 
 const authoredBlockIds = authoredBlocks.map((block) => block.id);
 if (authoredBlockIds.some((id) => !id)) fail('every authored render block needs a stable ID');
-if (new Set(authoredBlockIds).size !== 146) fail('authored render block IDs are not unique');
-const expectedOrder = topology.nodes.map((node) => node.blockId);
+if (new Set(authoredBlockIds).size !== 140) fail('reader-facing render block IDs are not unique');
+const expectedOrder = topology.nodes
+  .map((node) => node.blockId)
+  .filter((blockId) => !companionTransferredIdSet.has(blockId));
 if (JSON.stringify(authoredBlockIds) !== JSON.stringify(expectedOrder)) {
   fail('render block order differs from pass-6 citation topology');
 }
@@ -122,7 +154,10 @@ const renderedTextById = new Map(
     'text' in block && typeof block.text === 'string' ? block.text : '',
   ] as const),
 );
-const baseEditorialEntries = Object.entries(yeseninPartOneEditorialPassSeven);
+const baseEditorialEntries = Object.entries({
+  ...yeseninPartOneEditorialPassSeven,
+  ...yeseninPartOneEditorialPhysicalEditionsPassEight,
+});
 const pass6EditorialEntries = Object.entries(yeseninPartOneEditorialPassSevenPass6);
 const editorialEntries = [...baseEditorialEntries, ...pass6EditorialEntries];
 if (
@@ -159,7 +194,11 @@ for (const [blockId, text] of editorialEntries) {
   if (!evidenceByBlockId[blockId]?.editorialPassSevenApplied) {
     fail(`${blockId} is not marked as edited in the internal evidence map`);
   }
-  if (renderedTextById.get(blockId) !== text) {
+  if (companionTransferredIdSet.has(blockId)) {
+    if (renderedTextById.has(blockId)) {
+      fail(`${blockId} should be preserved only in evidence and the companion article`);
+    }
+  } else if (renderedTextById.get(blockId) !== text) {
     fail(`${blockId} does not render the reviewed pass-seven text`);
   }
   if (text.length < 120 || text.length > 1200) {
