@@ -1,0 +1,38 @@
+name: Yesenin Pravda East View Runtime Network
+
+on:
+  push:
+    branches:
+      - research/yesenin-pravda-eastview-runtime-network-discovery
+  pull_request:
+    branches:
+      - research/yesenin-pravda-eastview-literal-pages-discovery
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install isolated browser runtime
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.58.0
+          npx playwright install --with-deps chromium
+      - name: Capture actual East View runtime responses
+        run: node scripts/discover-yesenin-pravda-eastview-runtime-network.mjs
+      - name: Upload immutable runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-pravda-eastview-runtime-network
+          path: artifacts/yesenin-pravda-eastview-runtime-network
+          if-no-files-found: error
+          retention-days: 14
