@@ -63,6 +63,8 @@ jobs:
         run: npm run validate:yesenin-part-one-physical-editions
       - name: Validate effective Yesenin physical witness state
         run: npm run validate:yesenin-part-one-effective-witnesses
+      - name: Validate Mariengof RSL access state
+        run: npm run validate:yesenin-part-one-mariengof-access
       - name: Validate verified Yesenin Part I authoring corpus
         run: npm run validate:yesenin-part-one-authoring
       - name: Validate typed Yesenin Part I citation topology
