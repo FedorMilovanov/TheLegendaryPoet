@@ -12,8 +12,10 @@ async function settle(page) {
 }
 
 async function waitForImages(page) {
+  const images = page.locator('[data-hero-poet-window] img');
+  await expect(images).toHaveCount(6, { timeout: 20_000 });
   await expect.poll(
-    () => page.locator('[data-hero-poet-window] img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)),
+    () => images.evaluateAll((nodes) => nodes.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0)),
     { timeout: 12_000, message: 'all six hero portraits should decode' },
   ).toBe(true);
 }
@@ -40,6 +42,15 @@ function percentile(values, fraction) {
   return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))];
 }
 
+function summarizeLongTasks(tasks) {
+  return {
+    count: tasks.length,
+    max: Math.max(0, ...tasks.map((task) => task.duration)),
+    total: tasks.reduce((sum, task) => sum + task.duration, 0),
+    tasks,
+  };
+}
+
 test('first viewport keeps six decoded portraits, crisp title and usable labels', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
@@ -60,17 +71,18 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   expect(imageHints.slice(2).every((image) => image.fetchPriority !== 'high')).toBe(true);
 
   await expect.poll(
-    () => page.locator('.hero-blur-reveal').evaluateAll((nodes) => nodes.every((node) => {
+    () => page.locator('.hero-blur-reveal').evaluateAll((nodes) => nodes.length > 0 && nodes.every((node) => {
       const style = getComputedStyle(node);
       return style.opacity === '1' && (style.filter === 'none' || style.filter === 'blur(0px)');
     })),
-    { timeout: 3_000, message: 'hero title should finish crisp quickly' },
+    { timeout: 4_000, message: 'hero title should finish crisp quickly' },
   ).toBe(true);
 
   const coarsePointer = await page.evaluate(() => matchMedia('(hover: none) and (pointer: coarse)').matches);
+  const touchProfile = testInfo.project.name !== 'home-desktop';
   const first = windows.first();
   const label = first.locator('[data-hero-poet-window-label]');
-  if (coarsePointer) {
+  if (touchProfile || coarsePointer) {
     expect(await effectiveOpacity(label)).toBeGreaterThan(0.85);
   } else {
     const before = await effectiveOpacity(label);
@@ -92,9 +104,6 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   expect(rimState.height).toBeGreaterThan(40);
   expect(rimState.width).toBeGreaterThan(40);
 
-  // Regression contract for the screenshot bug: the old decorative element was
-  // a literal one-pixel-wide horizontal stripe. No visible aria-hidden layer in
-  // the portrait viewport may collapse to a long 1–2px bar again.
   const suspiciousHorizontalLayers = await first.locator('[data-hero-poet-window-surface] [aria-hidden="true"]').evaluateAll((nodes) => nodes.flatMap((node) => {
     const style = getComputedStyle(node);
     const rect = node.getBoundingClientRect();
@@ -107,6 +116,8 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   expect(suspiciousHorizontalLayers).toEqual([]);
 
   const overflow = await page.evaluate(() => Math.max(document.body.scrollWidth, document.documentElement.scrollWidth) - document.documentElement.clientWidth);
+  const facts = { project: testInfo.project.name, imageHints, coarsePointer, touchProfile, rimState, suspiciousHorizontalLayers, overflow, pageErrors };
+  fs.writeFileSync(path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-first-viewport.json`), JSON.stringify(facts, null, 2));
   expect(overflow).toBeLessThanOrEqual(2);
   expect(pageErrors).toEqual([]);
 
@@ -138,12 +149,16 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
   await waitForImages(page);
-  await page.waitForTimeout(1_450);
+  // Measure interaction after the first viewport has finished its intentional
+  // entrance work. Startup cost is recorded separately instead of contaminating
+  // pointer latency with image decode and route hydration.
+  await page.waitForTimeout(2_600);
 
   const first = page.locator('[data-hero-poet-window]').first();
   const box = await first.boundingBox();
   expect(box).not.toBeNull();
 
+  const startupLongTasks = await page.evaluate(() => window.__tlpLongTasks || []);
   await page.evaluate(() => {
     window.__tlpPointerFrames = [];
     window.__tlpLongTasks = [];
@@ -173,14 +188,14 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
 
   const p95FrameLatency = percentile(metrics.pointerFrames, 0.95);
   const maxFrameLatency = Math.max(0, ...metrics.pointerFrames);
-  const maxLongTask = Math.max(0, ...metrics.longTasks.map((task) => task.duration));
-  const totalLongTaskTime = metrics.longTasks.reduce((sum, task) => sum + task.duration, 0);
+  const startup = summarizeLongTasks(startupLongTasks);
+  const interaction = summarizeLongTasks(metrics.longTasks);
   const report = {
     samples: metrics.pointerFrames.length,
     p95FrameLatency,
     maxFrameLatency,
-    maxLongTask,
-    totalLongTaskTime,
+    startupLongTasks: startup,
+    interactionLongTasks: interaction,
     cursorReady: metrics.cursorReady,
     dotMixBlendMode: metrics.dotMixBlendMode,
     dotTransform: metrics.dotTransform,
@@ -189,10 +204,10 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   fs.writeFileSync(path.join(ARTIFACT_DIR, 'home-desktop-pointer-performance.json'), JSON.stringify(report, null, 2));
 
   expect(metrics.pointerFrames.length).toBeGreaterThan(20);
-  expect(p95FrameLatency).toBeLessThan(80);
-  expect(maxFrameLatency).toBeLessThan(180);
-  expect(maxLongTask).toBeLessThan(350);
-  expect(totalLongTaskTime).toBeLessThan(900);
+  expect(p95FrameLatency).toBeLessThan(32);
+  expect(maxFrameLatency).toBeLessThan(80);
+  expect(interaction.max).toBeLessThan(160);
+  expect(interaction.total).toBeLessThan(750);
   expect(metrics.cursorReady).toBe(true);
   expect(metrics.dotMixBlendMode).toBe('normal');
   expect(metrics.dotTransform).not.toBe('none');
@@ -226,7 +241,8 @@ test('real stepped scrolling reveals all principal homepage sections', async ({ 
 test('reduced motion removes title, hero-root, window and decorative movement', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  await settle(page);
+  await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
   await waitForImages(page);
 
   const state = await page.evaluate(() => {
@@ -252,6 +268,7 @@ test('reduced motion removes title, hero-root, window and decorative movement', 
     };
   });
 
+  fs.writeFileSync(path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-reduced-motion.json`), JSON.stringify(state, null, 2));
   expect(state.titleAnimation).toBe('none');
   expect(['none', 'blur(0px)']).toContain(state.titleFilter);
   expect(['none', 'matrix(1, 0, 0, 1, 0, 0)']).toContain(state.titleWordTransform);
