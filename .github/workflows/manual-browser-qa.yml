@@ -5,83 +5,127 @@ on:
     branches: [main]
 
 permissions:
-  actions: read
   contents: read
-  deployments: read
 
 jobs:
-  postmerge-live-diagnostics:
+  decoded-brand-source-forensics:
     if: github.event.pull_request.head.ref == 'agent/postmerge-emblem-v3-live-witness'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
-      GH_TOKEN: ${{ github.token }}
-      TARGET_SHA: c5f90764450e690b42e8d949b860609f05961a3c
-      SITE_URL: https://thelegendarypoet.ru
+      EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Capture exact run, deployment and live state
+      - name: Fetch every preserved branch and pull-request ref
+        run: |
+          git fetch --no-tags origin \
+            '+refs/heads/*:refs/remotes/origin/*' \
+            '+refs/pull/*/head:refs/remotes/pull/*/head' \
+            '+refs/pull/*/merge:refs/remotes/pull/*/merge'
+
+      - name: Hash decoded Base64 sources and preserved master blobs
         shell: bash
         run: |
-          set -uo pipefail
-          repo="$GITHUB_REPOSITORY"
-          mkdir -p postmerge-diagnostics
+          set -euo pipefail
+          mkdir -p decoded-brand-forensics/exact
+          python - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
 
-          gh api "/repos/${repo}/actions/runs?head_sha=${TARGET_SHA}&event=push&per_page=100" \
-            > postmerge-diagnostics/exact-push-runs.json
-          jq '[.workflow_runs[] | select(.head_sha == env.TARGET_SHA)]' \
-            postmerge-diagnostics/exact-push-runs.json \
-            > postmerge-diagnostics/exact-push-runs-filtered.json
+          expected = os.environ['EXPECTED_MASTER_SHA256']
+          out = Path('decoded-brand-forensics')
+          refs_text = subprocess.check_output(
+              ['git', 'for-each-ref', '--format=%(refname)\t%(objectname)', 'refs/remotes/origin', 'refs/remotes/pull'],
+              text=True,
+          )
+          refs = [line.split('\t', 1) for line in refs_text.splitlines() if '\t' in line]
+          seen = set()
+          records = []
+          exact = []
 
-          run_id="$(jq -r '.workflow_runs[] | select(.name == "Deploy to GitHub Pages" and .head_sha == env.TARGET_SHA) | .id' \
-            postmerge-diagnostics/exact-push-runs.json | head -1)"
-          if [[ -n "${run_id}" && "${run_id}" != "null" ]]; then
-            gh api "/repos/${repo}/actions/runs/${run_id}" > postmerge-diagnostics/pages-run.json || true
-            gh api "/repos/${repo}/actions/runs/${run_id}/jobs?per_page=100" > postmerge-diagnostics/pages-jobs.json || true
-            gh run view "${run_id}" --log > postmerge-diagnostics/pages.log 2>&1 || true
-          else
-            printf '{"error":"no exact push Pages run","targetSha":"%s"}\n' "$TARGET_SHA" \
-              > postmerge-diagnostics/pages-run.json
-          fi
+          for ref, commit in refs:
+              try:
+                  names = subprocess.check_output(
+                      ['git', 'ls-tree', '-r', '--name-only', commit, 'src/brand-assets', 'public'],
+                      text=True,
+                      stderr=subprocess.DEVNULL,
+                  ).splitlines()
+              except subprocess.CalledProcessError:
+                  continue
 
-          gh api "/repos/${repo}/deployments?sha=${TARGET_SHA}&environment=github-pages&per_page=100" \
-            > postmerge-diagnostics/deployments.json || true
-          deployment_id="$(jq -r '.[0].id // empty' postmerge-diagnostics/deployments.json 2>/dev/null || true)"
-          if [[ -n "${deployment_id}" ]]; then
-            gh api "/repos/${repo}/deployments/${deployment_id}/statuses?per_page=100" \
-              > postmerge-diagnostics/deployment-statuses.json || true
-          else
-            printf '[]\n' > postmerge-diagnostics/deployment-statuses.json
-          fi
+              candidates = [
+                  name for name in names
+                  if (name.startswith('src/brand-assets/') and name.endswith('.b64'))
+                  or name == 'public/brand-emblem-master.webp'
+              ]
+              for name in candidates:
+                  try:
+                      blob = subprocess.check_output(['git', 'rev-parse', f'{commit}:{name}'], text=True).strip()
+                  except subprocess.CalledProcessError:
+                      continue
+                  key = (blob, name.endswith('.b64'))
+                  if key in seen:
+                      continue
+                  seen.add(key)
+                  raw = subprocess.check_output(['git', 'cat-file', 'blob', blob])
+                  mode = 'raw'
+                  payload = raw
+                  error = None
+                  if name.endswith('.b64'):
+                      mode = 'base64'
+                      encoded = b''.join(raw.split())
+                      try:
+                          payload = base64.b64decode(encoded, validate=True)
+                      except Exception as exc:
+                          error = f'{type(exc).__name__}: {exc}'
+                          payload = b''
+                  digest = hashlib.sha256(payload).hexdigest() if payload else ''
+                  record = {
+                      'ref': ref,
+                      'commit': commit,
+                      'path': name,
+                      'blob': blob,
+                      'mode': mode,
+                      'sourceBytes': len(raw),
+                      'decodedBytes': len(payload),
+                      'decodedSha256': digest,
+                      'error': error,
+                  }
+                  records.append(record)
+                  if digest == expected:
+                      exact.append(record)
+                      suffix = '.b64' if mode == 'base64' else '.webp'
+                      target = out / 'exact' / f'{blob}-{Path(name).name}{suffix}'
+                      target.write_bytes(raw if mode == 'base64' else payload)
 
-          curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-            "${SITE_URL}/brand-release.txt?diagnostic=${GITHUB_RUN_ID}" \
-            > postmerge-diagnostics/live-brand-release.txt 2> postmerge-diagnostics/live-brand-release.stderr || true
-          curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
-            "${SITE_URL}/?diagnostic=${GITHUB_RUN_ID}" \
-            > postmerge-diagnostics/live-index.html 2> postmerge-diagnostics/live-index.stderr || true
+          records.sort(key=lambda item: (item['decodedSha256'], item['path'], item['ref']))
+          exact.sort(key=lambda item: (item['path'], item['ref']))
+          (out / 'decoded-candidates.json').write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding='utf-8')
+          (out / 'exact-matches.json').write_text(json.dumps(exact, ensure_ascii=False, indent=2), encoding='utf-8')
+          with (out / 'decoded-candidates.tsv').open('w', encoding='utf-8') as handle:
+              handle.write('decodedSha256\tdecodedBytes\tblob\tmode\tpath\tref\tcommit\terror\n')
+              for item in records:
+                  handle.write('\t'.join(str(item[key] or '') for key in (
+                      'decodedSha256', 'decodedBytes', 'blob', 'mode', 'path', 'ref', 'commit', 'error'
+                  )) + '\n')
+          print(f'Refs scanned: {len(refs)}')
+          print(f'Unique candidate blobs: {len(records)}')
+          print(f'Exact decoded matches for {expected}: {len(exact)}')
+          for item in exact:
+              print(json.dumps(item, ensure_ascii=False))
+          PY
 
-          cp public/brand-release.txt postmerge-diagnostics/expected-brand-release.txt
-          printf 'target_sha=%s\npages_run_id=%s\ndeployment_id=%s\n' \
-            "$TARGET_SHA" "${run_id:-}" "${deployment_id:-}" \
-            > postmerge-diagnostics/summary.txt
-
-          echo 'Exact push runs:'
-          jq -r '.workflow_runs[] | [.id,.name,.status,(.conclusion // ""),.head_sha,.html_url] | @tsv' \
-            postmerge-diagnostics/exact-push-runs.json || true
-          echo 'Latest deployment state:'
-          jq -r '.[0] | [(.state // ""),(.environment_url // ""),(.log_url // "")] | @tsv' \
-            postmerge-diagnostics/deployment-statuses.json 2>/dev/null || true
-          echo 'Expected release:'
-          cat postmerge-diagnostics/expected-brand-release.txt
-          echo 'Live release:'
-          cat postmerge-diagnostics/live-brand-release.txt || true
-
-      - name: Upload exact Pages diagnostics
+      - name: Upload decoded-source forensic evidence
         uses: actions/upload-artifact@v4
         with:
-          name: postmerge-emblem-v3-pages-diagnostics
-          path: postmerge-diagnostics
+          name: decoded-brand-source-forensics
+          path: decoded-brand-forensics
           if-no-files-found: error
           retention-days: 7
