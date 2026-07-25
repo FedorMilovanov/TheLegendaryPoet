@@ -11,11 +11,12 @@ on:
     workflows: [CI]
     types: [completed]
 
-# Allow the workflow to publish to Pages.
+# Allow the workflow to publish to Pages and expose an observable commit status.
 permissions:
   contents: read
   pages: write
   id-token: write
+  statuses: write
 
 # One deployment at a time; don't cancel an in-progress publish.
 concurrency:
@@ -31,6 +32,20 @@ jobs:
        startsWith(github.event.workflow_run.head_branch, 'deploy-live-'))
     runs-on: ubuntu-latest
     steps:
+      - name: Mark Pages deployment pending
+        if: github.event_name == 'workflow_run'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              state: 'pending',
+              context: 'pages/deploy',
+              description: 'Building the verified Pages release',
+            });
+
       - uses: actions/checkout@v4
         with:
           # For the guarded workflow_run path, publish the exact commit that
@@ -110,3 +125,27 @@ jobs:
           done
           echo "Published domain did not expose the approved emblem" >&2
           exit 1
+
+  report:
+    if: always() && github.event_name == 'workflow_run'
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish observable Pages result
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        with:
+          script: |
+            const ok = process.env.BUILD_RESULT === 'success' && process.env.DEPLOY_RESULT === 'success';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              state: ok ? 'success' : 'failure',
+              context: 'pages/deploy',
+              description: ok
+                ? 'Published domain matches the approved emblem'
+                : `Pages failed: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`.slice(0, 140),
+            });
