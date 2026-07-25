@@ -1,0 +1,37 @@
+name: Yesenin Benislavskaya Diary Pass 21
+
+on:
+  pull_request:
+    branches: [research/yesenin-materials-bibliography-pass20]
+    paths:
+      - 'scripts/discover-yesenin-benislavskaya-diary-rgali-pass21.mjs'
+      - '.github/workflows/yesenin-benislavskaya-diary-pass21.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: yesenin-benislavskaya-diary-pass21-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Crawl literal RGALI opis and identify ed.hr.1123
+        run: node scripts/discover-yesenin-benislavskaya-diary-rgali-pass21.mjs
+      - name: Upload RGALI diary discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-benislavskaya-diary-pass21
+          path: artifacts/yesenin-benislavskaya-diary-pass21
+          if-no-files-found: error
+          retention-days: 14
