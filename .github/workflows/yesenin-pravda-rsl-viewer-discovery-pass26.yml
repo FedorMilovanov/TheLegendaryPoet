@@ -1,0 +1,37 @@
+name: Yesenin Pravda RSL Viewer Discovery Pass 26
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/discover-yesenin-pravda-rsl-viewer-pass26.mjs'
+      - '.github/workflows/yesenin-pravda-rsl-viewer-discovery-pass26.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: yesenin-pravda-rsl-viewer-pass26-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Discover exact RSL viewer and issue routes for Pravda
+        run: node scripts/discover-yesenin-pravda-rsl-viewer-pass26.mjs
+      - name: Upload RSL Pravda discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-pravda-rsl-viewer-pass26
+          path: artifacts/yesenin-pravda-rsl-viewer-pass26
+          if-no-files-found: error
+          retention-days: 14
