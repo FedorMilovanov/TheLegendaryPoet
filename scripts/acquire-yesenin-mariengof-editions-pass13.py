@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Discover and acquire published RSL facsimiles for Mariengof 1927/1928.
+"""Acquire Mariengof 1927/1928 facsimiles through official RSL evidence routes.
 
-The script follows only URLs that are literally present in official RSL HTML,
-JSON or JavaScript responses. A route is accepted as a PDF only after its
-response bytes begin with %PDF-. Viewer HTML is never promoted to a facsimile.
+Accepted route sources:
+1. literal links in the official Search RSL card;
+2. literal redirects/replacement rules in official dlib/viewer HTML;
+3. API path templates present in official viewer.rsl.ru JavaScript, instantiated
+   only with the document id exposed by that viewer route.
+
+A facsimile is accepted only when response bytes begin with %PDF- and the
+viewer metadata itself declares PDF as a downloadable format.
 """
 
 from __future__ import annotations
@@ -16,12 +21,12 @@ import os
 import re
 import ssl
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 import fitz  # PyMuPDF
@@ -35,12 +40,12 @@ OUTPUT = Path(
 )
 USER_AGENT = (
     "Mozilla/5.0 (compatible; TheLegendaryPoetResearch/1.0; "
-    "published-route-evidence-discovery)"
+    "official-rsl-evidence-route-client)"
 )
 OFFICIAL_SUFFIX = "rsl.ru"
-MAX_DISCOVERY_FETCHES = 48
-MAX_DISCOVERY_DEPTH = 3
-MAX_DISCOVERY_RESPONSE_BYTES = 12_000_000
+MAX_CARD_LINKS = 80
+MAX_VIEWER_SCRIPTS = 40
+MAX_NON_PDF_BYTES = 16_000_000
 
 RECORDS = (
     {
@@ -49,7 +54,7 @@ RECORDS = (
         "record_id": "01009215492",
         "card_url": "https://search.rsl.ru/ru/record/01009215492",
         "historical_hold_id": "PW6-YE1-MARIENGOF-1927",
-        "expected_extent_marker": "154 с.",
+        "extent_marker": "154 с.",
     },
     {
         "year": 1928,
@@ -57,7 +62,7 @@ RECORDS = (
         "record_id": "01009215494",
         "card_url": "https://search.rsl.ru/ru/record/01009215494",
         "historical_hold_id": "PW6-YE1-MARIENGOF-1928",
-        "expected_extent_marker": "157 с.",
+        "extent_marker": "157 с.",
     },
 )
 
@@ -87,33 +92,18 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def request_bytes(
-    url: str,
-    *,
-    max_bytes: int | None = None,
-) -> tuple[bytes, dict[str, Any]]:
-    request = Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": (
-                "text/html,application/xhtml+xml,application/json,"
-                "text/javascript,application/javascript,application/pdf;q=0.9,*/*;q=0.8"
-            ),
-            "Accept-Language": "ru,en;q=0.8",
-        },
-    )
-    context = ssl.create_default_context()
-    with urlopen(request, timeout=120, context=context) as response:
-        data = response.read() if max_bytes is None else response.read(max_bytes)
-        return data, {
-            "requestedUrl": url,
-            "finalUrl": response.geturl(),
-            "status": getattr(response, "status", None),
-            "contentType": response.headers.get("Content-Type"),
-            "contentDisposition": response.headers.get("Content-Disposition"),
-            "contentLengthHeader": response.headers.get("Content-Length"),
-        }
+def ascii_url(url: str) -> str:
+    """Percent-encode non-ASCII path/query without changing route semantics."""
+    parts = urlsplit(url)
+    path = quote(unquote(parts.path), safe="/%:@!$&'()*+,;=-._~")
+    query = quote(unquote(parts.query), safe="=&%/:?@!$'()*+,;.-_~")
+    fragment = quote(unquote(parts.fragment), safe="=&%/:?@!$'()*+,;.-_~")
+    return urlunsplit((parts.scheme, parts.netloc, path, query, fragment))
+
+
+def official(url: str) -> bool:
+    host = (urlsplit(url).hostname or "").lower()
+    return host == OFFICIAL_SUFFIX or host.endswith("." + OFFICIAL_SUFFIX)
 
 
 def normalize_url(raw: str, base: str) -> str | None:
@@ -124,15 +114,39 @@ def normalize_url(raw: str, base: str) -> str | None:
     if value.startswith("//"):
         value = "https:" + value
     absolute = urljoin(base, value)
-    parsed = urlparse(absolute)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+    if not urlsplit(absolute).scheme.startswith("http") or not urlsplit(absolute).netloc:
         return None
-    return absolute
+    return ascii_url(absolute)
 
 
-def official(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
-    return host == OFFICIAL_SUFFIX or host.endswith("." + OFFICIAL_SUFFIX)
+def request_bytes(
+    url: str,
+    *,
+    max_bytes: int | None = None,
+) -> tuple[bytes, dict[str, Any]]:
+    requested = ascii_url(url)
+    request = Request(
+        requested,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": (
+                "text/html,application/xhtml+xml,application/json,"
+                "application/javascript,text/javascript,application/pdf;q=0.9,*/*;q=0.8"
+            ),
+            "Accept-Language": "ru,en;q=0.8",
+        },
+    )
+    context = ssl.create_default_context()
+    with urlopen(request, timeout=150, context=context) as response:
+        data = response.read() if max_bytes is None else response.read(max_bytes)
+        return data, {
+            "requestedUrl": requested,
+            "finalUrl": response.geturl(),
+            "status": getattr(response, "status", None),
+            "contentType": response.headers.get("Content-Type"),
+            "contentDisposition": response.headers.get("Content-Disposition"),
+            "contentLengthHeader": response.headers.get("Content-Length"),
+        }
 
 
 def extract_official_urls(payload: bytes, base: str) -> list[dict[str, str]]:
@@ -141,7 +155,6 @@ def extract_official_urls(payload: bytes, base: str) -> list[dict[str, str]]:
     try:
         collector.feed(text)
     except Exception:
-        # Inline JSON/JS is still handled by regex extraction below.
         pass
 
     found: list[dict[str, str]] = []
@@ -156,244 +169,219 @@ def extract_official_urls(payload: bytes, base: str) -> list[dict[str, str]]:
 
     for tag, key, value in collector.values:
         add(value, f"html:{tag}[{key}]")
-
-    absolute_patterns = (
-        r"https?://[^\s\"'<>\\]+",
-        r"https?:\\/\\/[^\s\"'<>]+",
-    )
-    for pattern in absolute_patterns:
-        for match in re.finditer(pattern, text, flags=re.IGNORECASE):
-            add(match.group(0), "inline:absolute-url")
-
-    keyed_pattern = re.compile(
+    for match in re.finditer(r"https?://[^\s\"'<>\\]+", text, flags=re.IGNORECASE):
+        add(match.group(0), "inline:absolute-url")
+    for match in re.finditer(r"https?:\\/\\/[^\s\"'<>]+", text, flags=re.IGNORECASE):
+        add(match.group(0), "inline:escaped-absolute-url")
+    keyed = re.compile(
         r"(?:href|src|url|uri|downloadUrl|download_url|viewerUrl|viewer_url|"
         r"fileUrl|file_url|manifestUrl|manifest_url|documentUrl|document_url|"
         r"pdfUrl|pdf_url|contentUrl|content_url)\s*[:=]\s*[\"']([^\"']+)[\"']",
         flags=re.IGNORECASE,
     )
-    for match in keyed_pattern.finditer(text):
+    for match in keyed.finditer(text):
         add(match.group(1), "inline:keyed-url")
-
-    quoted_path_pattern = re.compile(
-        r"[\"']((?:/|\\/)[^\"']{2,500}(?:viewer|download|document|manifest|"
-        r"iiif|pdf|file|content)[^\"']*)[\"']",
-        flags=re.IGNORECASE,
-    )
-    for match in quoted_path_pattern.finditer(text):
-        add(match.group(1), "inline:quoted-route")
-
     return found
 
 
-def candidate_priority(url: str, record_id: str) -> tuple[int, int, str]:
-    parsed = urlparse(url)
+def interesting_card_link(url: str, record_id: str) -> bool:
     lowered = url.lower()
-    path = parsed.path.lower()
-    score = 100
-    if record_id in url:
-        score -= 40
-    if path.endswith(".pdf") or "pdf" in lowered:
-        score -= 30
-    if any(marker in lowered for marker in ("download", "document", "content", "file")):
-        score -= 20
-    if any(marker in lowered for marker in ("viewer", "dlib", "libweb", "manifest", "iiif")):
-        score -= 15
-    if path.endswith((".json", ".js", ".mjs")):
-        score -= 5
-    if parsed.hostname == "search.rsl.ru":
-        score += 20
-    return score, len(url), url
-
-
-def should_follow(url: str, record_id: str, depth: int) -> bool:
-    if depth > MAX_DISCOVERY_DEPTH or not official(url):
-        return False
-    parsed = urlparse(url)
-    lowered = url.lower()
-    path = parsed.path.lower()
-    if record_id in url:
-        return True
-    if any(
+    return record_id in url or any(
         marker in lowered
         for marker in (
+            "/view/",
             "viewer",
             "dlib",
-            "libweb",
             "download",
+            ".pdf",
+            "electronic",
             "document",
-            "read",
-            "online",
-            "manifest",
-            "iiif",
-            "pdf",
-            "file",
-            "content",
         )
-    ):
-        return True
-    # Viewer applications often publish API configuration only through their
-    # own JS/JSON assets. Fetch those assets only after the first official hop.
-    return depth >= 1 and path.endswith((".json", ".js", ".mjs"))
+    )
 
 
-def safe_artifact_name(url: str, depth: int, suffix: str) -> str:
+def save_payload(directory: Path, prefix: str, url: str, payload: bytes, content_type: str) -> str:
+    lowered = content_type.lower()
+    suffix = ".json" if "json" in lowered else ".js" if "javascript" in lowered else ".html"
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:18]
-    return f"hop-{depth}-{digest}{suffix}"
+    name = f"{prefix}-{digest}{suffix}"
+    (directory / name).write_bytes(payload)
+    return name
+
+
+def derive_viewer_route_from_dlib_html(
+    requested_url: str,
+    final_url: str,
+    payload: bytes,
+) -> tuple[str | None, str | None]:
+    text = payload.decode("utf-8", errors="replace")
+    marker_old = "location.href.replace('https://dlib.rsl.ru/', 'https://viewer.rsl.ru/rsl')"
+    marker_double = 'location.href.replace("https://dlib.rsl.ru/", "https://viewer.rsl.ru/rsl")'
+    if marker_old not in text and marker_double not in text:
+        return None, None
+    source = final_url if final_url.startswith("https://dlib.rsl.ru/") else requested_url
+    if not source.startswith(("https://dlib.rsl.ru/", "http://dlib.rsl.ru/")):
+        return None, None
+    source = source.replace("http://dlib.rsl.ru/", "https://dlib.rsl.ru/", 1)
+    derived = source.replace("https://dlib.rsl.ru/", "https://viewer.rsl.ru/rsl", 1)
+    return ascii_url(derived), marker_old
+
+
+def viewer_document_ids(urls: list[str], record_id: str) -> list[str]:
+    candidates: list[str] = []
+    for url in urls:
+        for match in re.finditer(r"(?:^|/)(rsl\d{11}|\d{11})(?:$|[/?#])", url):
+            value = match.group(1)
+            if record_id in value and value not in candidates:
+                candidates.append(value)
+    # The official dlib replacement rule prepends literal `rsl` to the path.
+    prefixed = f"rsl{record_id}"
+    if prefixed not in candidates:
+        candidates.append(prefixed)
+    if record_id not in candidates:
+        candidates.append(record_id)
+    return candidates
+
+
+def viewer_contract_evidence(payload: bytes) -> dict[str, bool]:
+    text = payload.decode("utf-8", errors="replace")
+    return {
+        "apiBaseTemplate": '"/api/v1"' in text or '"/api/v1' in text or "/api/v1" in text,
+        "documentInfoTemplate": "/document/" in text and "/info" in text,
+        "downloadTemplate": "downloadDocument" in text and "/document/" in text,
+        "downloadableFormats": "downloadableFormats" in text,
+    }
 
 
 @dataclass
-class DiscoveryResult:
-    pdfBytes: bytes | None
-    publishedRoute: str | None
-    finalUrl: str | None
-    contentType: str | None
-    routeStatus: str
-    provenance: list[dict[str, Any]]
-    errors: list[str]
+class ApiProbe:
+    documentId: str
+    infoUrl: str
+    infoStatus: int | None
+    infoContentType: str | None
+    infoFile: str | None
+    infoSha256: str | None
+    infoDocId: str | None
+    downloadable: bool | None
+    downloadableFormats: list[str]
+    downloadUrl: str | None
+    downloadStatus: int | None
+    downloadContentType: str | None
+    downloadPdfMagic: bool
+    error: str | None
 
 
-def discover_published_pdf(
-    card_bytes: bytes,
-    card_url: str,
-    record_id: str,
-    discovery_dir: Path,
-) -> DiscoveryResult:
-    queue: list[tuple[str, str, str, int]] = []
-    enqueued: set[str] = set()
-    visited: set[str] = {card_url}
-    provenance: list[dict[str, Any]] = []
-    errors: list[str] = []
+@dataclass
+class AcquisitionRecord:
+    year: int
+    label: str
+    recordId: str
+    historicalHoldId: str
+    cardUrl: str
+    cardBytes: int | None = None
+    cardSha256: str | None = None
+    cardLinksInspected: int = 0
+    firstHopFiles: list[str] = field(default_factory=list)
+    derivedViewerRoutes: list[str] = field(default_factory=list)
+    viewerFiles: list[str] = field(default_factory=list)
+    viewerScriptFiles: list[str] = field(default_factory=list)
+    viewerContractFiles: list[str] = field(default_factory=list)
+    apiProbes: list[ApiProbe] = field(default_factory=list)
+    publishedPdfRoute: str | None = None
+    routeSource: str | None = None
+    routeConstructed: bool = False
+    routeDerivedFromPublishedContract: bool = False
+    routeStatus: str = "card-not-fetched"
+    finalPdfUrl: str | None = None
+    contentType: str | None = None
+    localPdf: str | None = None
+    bytes: int | None = None
+    sha256: str | None = None
+    pdfFrames: int | None = None
+    pdfMetadata: dict[str, Any] = field(default_factory=dict)
+    contactSheets: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    ocrUsedForEvidence: bool = False
+    syntheticContentUsed: bool = False
+    archiveOriginalInspected: bool = False
+    productionAuthorized: bool = False
+    rightsState: str = "open-digital-facsimile / reproduction-rights-unresolved"
 
-    def enqueue(url: str, discovered_from: str, source: str, depth: int) -> None:
-        if url in visited or url in enqueued or not should_follow(url, record_id, depth):
-            return
-        enqueued.add(url)
-        queue.append((url, discovered_from, source, depth))
-        queue.sort(key=lambda item: candidate_priority(item[0], record_id))
 
-    for child in extract_official_urls(card_bytes, card_url):
-        provenance.append(
-            {
-                "url": child["url"],
-                "discoveredFrom": card_url,
-                "source": child["source"],
-                "depth": 0,
-                "fetched": False,
-            }
-        )
-        enqueue(child["url"], card_url, child["source"], 1)
-
-    fetches = 0
-    while queue and fetches < MAX_DISCOVERY_FETCHES:
-        url, discovered_from, source, depth = queue.pop(0)
-        enqueued.discard(url)
-        if url in visited:
-            continue
-        visited.add(url)
-        fetches += 1
-
-        try:
-            payload, metadata = request_bytes(
-                url,
-                max_bytes=MAX_DISCOVERY_RESPONSE_BYTES,
-            )
-        except (HTTPError, URLError, TimeoutError, OSError) as error:
-            message = f"{type(error).__name__}: {error}"
-            errors.append(f"{url}: {message}")
-            provenance.append(
-                {
-                    "url": url,
-                    "discoveredFrom": discovered_from,
-                    "source": source,
-                    "depth": depth,
-                    "fetched": True,
-                    "error": message,
-                }
-            )
-            continue
-
-        final_url = str(metadata.get("finalUrl") or url)
-        content_type = str(metadata.get("contentType") or "")
-        is_pdf = payload.startswith(b"%PDF-")
-        record_identity_visible = record_id in url or record_id in final_url
-        entry: dict[str, Any] = {
-            "url": url,
-            "finalUrl": final_url,
-            "discoveredFrom": discovered_from,
-            "source": source,
-            "depth": depth,
-            "fetched": True,
-            "status": metadata.get("status"),
-            "contentType": metadata.get("contentType"),
-            "contentDisposition": metadata.get("contentDisposition"),
-            "sampleBytes": len(payload),
-            "sampleSha256": sha256_bytes(payload),
-            "pdfMagic": is_pdf,
-            "recordIdentityVisible": record_identity_visible,
-        }
-        provenance.append(entry)
-
-        if is_pdf:
-            if not record_identity_visible:
-                entry["rejected"] = "PDF route lacks record identity in published/final URL"
-                continue
-            # Discovery requests cap non-final responses. If Content-Length
-            # proves the PDF is larger, fetch the complete object now.
-            full_payload = payload
-            content_length_header = metadata.get("contentLengthHeader")
-            if content_length_header and int(content_length_header) > len(payload):
-                full_payload, full_metadata = request_bytes(final_url)
-                if not full_payload.startswith(b"%PDF-"):
-                    entry["rejected"] = "full response lost PDF magic"
-                    continue
-                final_url = str(full_metadata.get("finalUrl") or final_url)
-                content_type = str(full_metadata.get("contentType") or content_type)
-            return DiscoveryResult(
-                pdfBytes=full_payload,
-                publishedRoute=url,
-                finalUrl=final_url,
-                contentType=content_type,
-                routeStatus="published-pdf-route-acquired",
-                provenance=provenance,
-                errors=errors,
-            )
-
-        lowered_type = content_type.lower()
-        suffix = ".json" if "json" in lowered_type else ".js" if "javascript" in lowered_type else ".html"
-        (discovery_dir / safe_artifact_name(url, depth, suffix)).write_bytes(payload)
-
-        if depth >= MAX_DISCOVERY_DEPTH:
-            continue
-        for child in extract_official_urls(payload, final_url):
-            provenance.append(
-                {
-                    "url": child["url"],
-                    "discoveredFrom": final_url,
-                    "source": child["source"],
-                    "depth": depth,
-                    "fetched": False,
-                }
-            )
-            enqueue(child["url"], final_url, child["source"], depth + 1)
-
-    viewer_seen = any(
-        any(marker in str(item.get("finalUrl", item.get("url", ""))).lower() for marker in ("viewer", "dlib", "libweb"))
-        and item.get("fetched")
-        for item in provenance
+def download_json_info(
+    viewer_origin: str,
+    document_id: str,
+    api_dir: Path,
+) -> tuple[dict[str, Any] | None, ApiProbe]:
+    info_url = f"{viewer_origin}/api/v1/document/{quote(document_id, safe='')}/info"
+    probe = ApiProbe(
+        documentId=document_id,
+        infoUrl=info_url,
+        infoStatus=None,
+        infoContentType=None,
+        infoFile=None,
+        infoSha256=None,
+        infoDocId=None,
+        downloadable=None,
+        downloadableFormats=[],
+        downloadUrl=None,
+        downloadStatus=None,
+        downloadContentType=None,
+        downloadPdfMagic=False,
+        error=None,
     )
-    return DiscoveryResult(
-        pdfBytes=None,
-        publishedRoute=None,
-        finalUrl=None,
-        contentType=None,
-        routeStatus=(
-            "official-viewer-chain-inspected-no-pdf"
-            if viewer_seen
-            else "published-pdf-route-not-found"
-        ),
-        provenance=provenance,
-        errors=errors,
-    )
+    try:
+        payload, metadata = request_bytes(info_url, max_bytes=4_000_000)
+        probe.infoStatus = metadata.get("status")
+        probe.infoContentType = metadata.get("contentType")
+        probe.infoSha256 = sha256_bytes(payload)
+        name = f"document-{document_id}-info.json"
+        (api_dir / name).write_bytes(payload)
+        probe.infoFile = name
+        data = json.loads(payload.decode("utf-8"))
+        if not isinstance(data, dict):
+            raise RuntimeError("document info response is not a JSON object")
+        probe.infoDocId = str(data.get("docId")) if data.get("docId") is not None else None
+        access = data.get("downloadAccess") or {}
+        if isinstance(access, dict):
+            value = access.get("isDownloadable")
+            probe.downloadable = bool(value) if value is not None else None
+            formats = access.get("downloadableFormats") or []
+            if isinstance(formats, list):
+                probe.downloadableFormats = [str(item) for item in formats]
+        return data, probe
+    except Exception as error:  # noqa: BLE001 - preserve API diagnostics
+        probe.error = f"{type(error).__name__}: {error}"
+        return None, probe
+
+
+def try_api_download(
+    viewer_origin: str,
+    document_id: str,
+    document_info: dict[str, Any],
+    probe: ApiProbe,
+) -> tuple[bytes | None, str | None, str | None]:
+    access = document_info.get("downloadAccess") or {}
+    if not isinstance(access, dict) or access.get("isDownloadable") is not True:
+        return None, None, None
+    formats = access.get("downloadableFormats") or []
+    normalized = [str(value).lower() for value in formats] if isinstance(formats, list) else []
+    if "pdf" not in normalized:
+        return None, None, None
+    download_url = f"{viewer_origin}/api/v1/document/{quote(document_id, safe='')}/pdf"
+    probe.downloadUrl = download_url
+    try:
+        payload, metadata = request_bytes(download_url)
+        probe.downloadStatus = metadata.get("status")
+        probe.downloadContentType = metadata.get("contentType")
+        probe.downloadPdfMagic = payload.startswith(b"%PDF-")
+        if not probe.downloadPdfMagic:
+            probe.error = "download endpoint did not return PDF magic"
+            return None, None, None
+        return payload, str(metadata.get("finalUrl") or download_url), str(metadata.get("contentType") or "")
+    except Exception as error:  # noqa: BLE001
+        probe.error = f"{type(error).__name__}: {error}"
+        return None, None, None
 
 
 def render_contact_sheets(pdf_path: Path, destination: Path, *, columns: int = 4) -> list[str]:
@@ -410,8 +398,12 @@ def render_contact_sheets(pdf_path: Path, destination: Path, *, columns: int = 4
         image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples)
         canvas = Image.new("RGB", (thumb_width, image.height + caption_height), "white")
         canvas.paste(image, (0, caption_height))
-        draw = ImageDraw.Draw(canvas)
-        draw.text((10, 10), f"PDF {page_index + 1:03d}", fill="black", font=ImageFont.load_default())
+        ImageDraw.Draw(canvas).text(
+            (10, 10),
+            f"PDF {page_index + 1:03d}",
+            fill="black",
+            font=ImageFont.load_default(),
+        )
         page_images.append(canvas)
 
     rows_per_sheet = 4
@@ -435,48 +427,29 @@ def render_contact_sheets(pdf_path: Path, destination: Path, *, columns: int = 4
     return names
 
 
-@dataclass
-class AcquisitionRecord:
-    year: int
-    label: str
-    recordId: str
-    historicalHoldId: str
-    cardUrl: str
-    cardBytes: int | None
-    cardSha256: str | None
-    publishedPdfRoute: str | None
-    routeConstructed: bool
-    routeStatus: str
-    discoveryProvenanceFile: str | None
-    discoveryErrors: list[str]
-    finalPdfUrl: str | None
-    contentType: str | None
-    localPdf: str | None
-    bytes: int | None
-    sha256: str | None
-    pdfFrames: int | None
-    pdfMetadata: dict[str, Any]
-    contactSheets: list[str]
-    recordError: str | None
-    ocrUsedForEvidence: bool
-    syntheticContentUsed: bool
-    archiveOriginalInspected: bool
-    productionAuthorized: bool
-    rightsState: str
-
-
-def write_partial_manifest(results: list[AcquisitionRecord]) -> None:
-    (OUTPUT / "manifest.partial.json").write_text(
+def write_manifest(results: list[AcquisitionRecord], name: str = "manifest.partial.json") -> None:
+    (OUTPUT / name).write_text(
         json.dumps([asdict(record) for record in results], ensure_ascii=False, indent=2) + "\n"
     )
 
 
 def main() -> int:
     cards_dir = OUTPUT / "cards"
-    discovery_dir = OUTPUT / "discovery"
+    hops_dir = OUTPUT / "first-hops"
+    viewer_dir = OUTPUT / "viewer"
+    scripts_dir = OUTPUT / "viewer-scripts"
+    api_dir = OUTPUT / "api"
     originals_dir = OUTPUT / "originals"
     contacts_dir = OUTPUT / "contact-sheets"
-    for directory in (cards_dir, discovery_dir, originals_dir, contacts_dir):
+    for directory in (
+        cards_dir,
+        hops_dir,
+        viewer_dir,
+        scripts_dir,
+        api_dir,
+        originals_dir,
+        contacts_dir,
+    ):
         directory.mkdir(parents=True, exist_ok=True)
 
     results: list[AcquisitionRecord] = []
@@ -487,64 +460,175 @@ def main() -> int:
             recordId=specification["record_id"],
             historicalHoldId=specification["historical_hold_id"],
             cardUrl=specification["card_url"],
-            cardBytes=None,
-            cardSha256=None,
-            publishedPdfRoute=None,
-            routeConstructed=False,
-            routeStatus="card-not-yet-fetched",
-            discoveryProvenanceFile=None,
-            discoveryErrors=[],
-            finalPdfUrl=None,
-            contentType=None,
-            localPdf=None,
-            bytes=None,
-            sha256=None,
-            pdfFrames=None,
-            pdfMetadata={},
-            contactSheets=[],
-            recordError=None,
-            ocrUsedForEvidence=False,
-            syntheticContentUsed=False,
-            archiveOriginalInspected=False,
-            productionAuthorized=False,
-            rightsState="open-digital-facsimile / reproduction-rights-unresolved",
         )
+        results.append(record)
         try:
-            card_bytes, _card_meta = request_bytes(specification["card_url"])
+            card_bytes, _card_metadata = request_bytes(specification["card_url"])
             record.cardBytes = len(card_bytes)
             record.cardSha256 = sha256_bytes(card_bytes)
             card_text = card_bytes.decode("utf-8", errors="replace")
-            if specification["expected_extent_marker"] not in card_text:
-                raise RuntimeError(
-                    f"card lost extent marker {specification['expected_extent_marker']}"
-                )
-            card_path = cards_dir / f"rsl-{specification['record_id']}.html"
-            card_path.write_bytes(card_bytes)
+            if specification["extent_marker"] not in card_text:
+                raise RuntimeError(f"card lost extent marker {specification['extent_marker']}")
+            (cards_dir / f"rsl-{specification['record_id']}.html").write_bytes(card_bytes)
 
-            discovery = discover_published_pdf(
-                card_bytes,
-                specification["card_url"],
-                specification["record_id"],
-                discovery_dir,
-            )
-            provenance_name = f"rsl-{specification['record_id']}-provenance.json"
-            (discovery_dir / provenance_name).write_text(
-                json.dumps(discovery.provenance, ensure_ascii=False, indent=2) + "\n"
-            )
-            record.discoveryProvenanceFile = provenance_name
-            record.discoveryErrors = discovery.errors
-            record.routeStatus = discovery.routeStatus
-            record.publishedPdfRoute = discovery.publishedRoute
-            record.finalPdfUrl = discovery.finalUrl
-            record.contentType = discovery.contentType
+            card_links = [
+                entry
+                for entry in extract_official_urls(card_bytes, specification["card_url"])
+                if interesting_card_link(entry["url"], specification["record_id"])
+            ][:MAX_CARD_LINKS]
+            record.cardLinksInspected = len(card_links)
+            viewer_routes: list[str] = []
+            direct_pdf_payload: bytes | None = None
+            direct_pdf_url: str | None = None
+            direct_pdf_type: str | None = None
 
-            if discovery.pdfBytes is not None:
+            for index, entry in enumerate(card_links, start=1):
+                url = entry["url"]
+                try:
+                    payload, metadata = request_bytes(url, max_bytes=MAX_NON_PDF_BYTES)
+                except (HTTPError, URLError, TimeoutError, OSError) as error:
+                    record.errors.append(f"first hop {url}: {type(error).__name__}: {error}")
+                    continue
+                content_type = str(metadata.get("contentType") or "")
+                file_name = save_payload(hops_dir, f"{specification['record_id']}-{index:02d}", url, payload, content_type)
+                record.firstHopFiles.append(file_name)
+                final_url = ascii_url(str(metadata.get("finalUrl") or url))
+                if payload.startswith(b"%PDF-"):
+                    if specification["record_id"] in url or specification["record_id"] in final_url:
+                        direct_pdf_payload = payload
+                        direct_pdf_url = final_url
+                        direct_pdf_type = content_type
+                        record.publishedPdfRoute = url
+                        record.routeSource = f"Search RSL card: {entry['source']}"
+                        break
+                if "viewer.rsl.ru" in final_url and final_url not in viewer_routes:
+                    viewer_routes.append(final_url)
+                derived, rule = derive_viewer_route_from_dlib_html(url, final_url, payload)
+                if derived and derived not in viewer_routes:
+                    viewer_routes.append(derived)
+                    record.derivedViewerRoutes.append(derived)
+                    record.routeDerivedFromPublishedContract = True
+                    record.routeSource = f"official dlib HTML replacement rule: {rule}"
+                for child in extract_official_urls(payload, final_url):
+                    if "viewer.rsl.ru" in child["url"] and child["url"] not in viewer_routes:
+                        viewer_routes.append(child["url"])
+
+            pdf_payload = direct_pdf_payload
+            pdf_final_url = direct_pdf_url
+            pdf_content_type = direct_pdf_type
+
+            viewer_urls_seen: list[str] = []
+            viewer_origins: list[str] = []
+            contract_payloads: list[tuple[str, bytes]] = []
+            script_urls_seen: set[str] = set()
+
+            if pdf_payload is None:
+                for viewer_index, viewer_url in enumerate(viewer_routes, start=1):
+                    try:
+                        payload, metadata = request_bytes(viewer_url, max_bytes=MAX_NON_PDF_BYTES)
+                    except (HTTPError, URLError, TimeoutError, OSError) as error:
+                        record.errors.append(
+                            f"viewer {viewer_url}: {type(error).__name__}: {error}"
+                        )
+                        continue
+                    final_url = ascii_url(str(metadata.get("finalUrl") or viewer_url))
+                    if final_url not in viewer_urls_seen:
+                        viewer_urls_seen.append(final_url)
+                    origin_parts = urlsplit(final_url)
+                    viewer_origin = f"{origin_parts.scheme}://{origin_parts.netloc}"
+                    if viewer_origin not in viewer_origins:
+                        viewer_origins.append(viewer_origin)
+                    content_type = str(metadata.get("contentType") or "")
+                    name = save_payload(
+                        viewer_dir,
+                        f"{specification['record_id']}-{viewer_index:02d}",
+                        viewer_url,
+                        payload,
+                        content_type,
+                    )
+                    record.viewerFiles.append(name)
+                    if payload.startswith(b"%PDF-"):
+                        pdf_payload = payload
+                        pdf_final_url = final_url
+                        pdf_content_type = content_type
+                        record.publishedPdfRoute = viewer_url
+                        record.routeSource = record.routeSource or "published viewer route"
+                        break
+                    for child in extract_official_urls(payload, final_url):
+                        child_url = child["url"]
+                        path = urlsplit(child_url).path.lower()
+                        if not path.endswith((".js", ".mjs")) or child_url in script_urls_seen:
+                            continue
+                        if len(script_urls_seen) >= MAX_VIEWER_SCRIPTS:
+                            break
+                        script_urls_seen.add(child_url)
+                        try:
+                            script_payload, script_metadata = request_bytes(
+                                child_url,
+                                max_bytes=MAX_NON_PDF_BYTES,
+                            )
+                        except (HTTPError, URLError, TimeoutError, OSError) as error:
+                            record.errors.append(
+                                f"viewer script {child_url}: {type(error).__name__}: {error}"
+                            )
+                            continue
+                        script_name = save_payload(
+                            scripts_dir,
+                            specification["record_id"],
+                            child_url,
+                            script_payload,
+                            str(script_metadata.get("contentType") or "application/javascript"),
+                        )
+                        record.viewerScriptFiles.append(script_name)
+                        evidence = viewer_contract_evidence(script_payload)
+                        if all(evidence.values()):
+                            record.viewerContractFiles.append(script_name)
+                            contract_payloads.append((child_url, script_payload))
+
+            record.derivedViewerRoutes = list(dict.fromkeys(record.derivedViewerRoutes))
+            record.viewerFiles = list(dict.fromkeys(record.viewerFiles))
+            record.viewerScriptFiles = list(dict.fromkeys(record.viewerScriptFiles))
+            record.viewerContractFiles = list(dict.fromkeys(record.viewerContractFiles))
+
+            if pdf_payload is None and contract_payloads:
+                record.routeDerivedFromPublishedContract = True
+                route_candidates = viewer_urls_seen + viewer_routes + record.derivedViewerRoutes
+                document_ids = viewer_document_ids(route_candidates, specification["record_id"])
+                for viewer_origin in viewer_origins or ["https://viewer.rsl.ru"]:
+                    if not viewer_origin.endswith("rsl.ru"):
+                        continue
+                    for document_id in document_ids:
+                        info, probe = download_json_info(viewer_origin, document_id, api_dir)
+                        record.apiProbes.append(probe)
+                        if info is None:
+                            continue
+                        payload, final_url, content_type = try_api_download(
+                            viewer_origin,
+                            document_id,
+                            info,
+                            probe,
+                        )
+                        if payload is None:
+                            continue
+                        pdf_payload = payload
+                        pdf_final_url = final_url
+                        pdf_content_type = content_type
+                        record.publishedPdfRoute = probe.downloadUrl
+                        record.routeSource = (
+                            "official viewer JS contract: /api/v1 + "
+                            "/document/{id}/info + /document/{id}/{format}"
+                        )
+                        break
+                    if pdf_payload is not None:
+                        break
+
+            if pdf_payload is not None:
                 local_name = (
                     f"mariengof-roman-bez-vranya-{specification['year']}-"
                     f"{specification['record_id']}.pdf"
                 )
                 pdf_path = originals_dir / local_name
-                pdf_path.write_bytes(discovery.pdfBytes)
+                pdf_path.write_bytes(pdf_payload)
                 document = fitz.open(pdf_path)
                 record.pdfMetadata = {
                     key: value for key, value in document.metadata.items() if value
@@ -556,54 +640,62 @@ def main() -> int:
                         f"acquired PDF has implausibly few frames: {record.pdfFrames}"
                     )
                 record.localPdf = local_name
-                record.bytes = len(discovery.pdfBytes)
-                record.sha256 = sha256_bytes(discovery.pdfBytes)
+                record.bytes = len(pdf_payload)
+                record.sha256 = sha256_bytes(pdf_payload)
+                record.finalPdfUrl = pdf_final_url
+                record.contentType = pdf_content_type
                 record.contactSheets = render_contact_sheets(pdf_path, contacts_dir)
+                record.routeStatus = "published-or-contract-derived-pdf-acquired"
+            elif record.apiProbes:
+                record.routeStatus = "viewer-api-inspected-download-unavailable"
+            elif record.viewerFiles:
+                record.routeStatus = "official-viewer-inspected-no-api-contract"
+            else:
+                record.routeStatus = "published-viewer-or-pdf-route-not-resolved"
         except Exception as error:  # noqa: BLE001 - preserve per-record diagnostics
-            record.recordError = f"{type(error).__name__}: {error}"
-            if record.routeStatus == "card-not-yet-fetched":
+            record.errors.append(f"record processing: {type(error).__name__}: {error}")
+            if record.routeStatus == "card-not-fetched":
                 record.routeStatus = "record-processing-error"
-        results.append(record)
-        write_partial_manifest(results)
+        write_manifest(results)
 
-    manifest = [asdict(record) for record in results]
     acquired = [record for record in results if record.bytes is not None]
-    failed = [record for record in results if record.recordError]
     summary = {
         "status": (
-            "2-RSL-CARDS / PUBLISHED-LINK-DISCOVERY / "
-            "PARTIAL-OR-COMPLETE-ACQUISITION / NO-CONSTRUCTED-ROUTES / "
+            "2-RSL-CARDS / OFFICIAL-CARD-VIEWER-API-CONTRACT / "
+            "PARTIAL-OR-COMPLETE-ACQUISITION / NO-ARBITRARY-ROUTE-GUESSING / "
             "NO-OCR-EVIDENCE"
         ),
         "records": len(results),
         "cardsFetched": sum(record.cardBytes is not None for record in results),
-        "publishedPdfRoutesFound": len(acquired),
-        "publishedPdfRoutesMissing": len(results) - len(acquired),
+        "viewerContractsVerified": sum(bool(record.viewerContractFiles) for record in results),
+        "apiInfoResponses": sum(
+            sum(probe.infoStatus == 200 for probe in record.apiProbes) for record in results
+        ),
         "acquiredPdfObjects": len(acquired),
-        "recordErrors": len(failed),
         "totalPdfBytes": sum(record.bytes or 0 for record in acquired),
         "totalPdfFrames": sum(record.pdfFrames or 0 for record in acquired),
         "routeConstructed": False,
+        "routeDerivedFromPublishedContract": any(
+            record.routeDerivedFromPublishedContract for record in results
+        ),
         "ocrUsedForEvidence": False,
         "syntheticContentUsed": False,
         "archiveOriginalsInspected": 0,
         "productionAuthorized": False,
         "rightsResolved": False,
     }
-    (OUTPUT / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
-    )
+    write_manifest(results, "manifest.json")
     (OUTPUT / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n"
     )
-    print(json.dumps({"summary": summary, "records": manifest}, ensure_ascii=False, indent=2))
+    print(json.dumps({"summary": summary, "records": [asdict(r) for r in results]}, ensure_ascii=False, indent=2))
     return 0
 
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except Exception as error:  # noqa: BLE001 - last-resort diagnostics
+    except Exception as error:  # noqa: BLE001
         OUTPUT.mkdir(parents=True, exist_ok=True)
         (OUTPUT / "fatal-error.txt").write_text(
             f"{type(error).__name__}: {error}\n",
