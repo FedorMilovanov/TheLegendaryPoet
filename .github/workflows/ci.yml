@@ -103,7 +103,23 @@ jobs:
           npm ci
 
       - name: Validate approved brand assets
-        run: npm run validate:brand
+        id: focused_brand_validation
+        shell: bash
+        run: |
+          set +e
+          npm run validate:brand > focused-brand-validation.log 2>&1
+          status=$?
+          cat focused-brand-validation.log
+          exit $status
+
+      - name: Upload focused brand diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-brand-validation-diagnostics
+          path: focused-brand-validation.log
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Typecheck
         run: npm run typecheck
