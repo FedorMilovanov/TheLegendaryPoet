@@ -87,3 +87,67 @@ jobs:
         run: npm run prerender
       - name: Verify generated output is stable
         run: git diff --exit-code -- public/sitemap.xml
+
+  materialize-premium-poet-windows:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/premium-poet-windows-v2'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - name: Materialize, validate and publish exact permanent scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f src/components/home/HeroPoetWindow.tsx; then
+            echo 'Premium poet windows are already materialized; guarded writer is idle.'
+            exit 0
+          fi
+
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/_temp-premium-poet-windows-v2.yml').read_text(encoding='utf-8')
+          marker = "python - <<'PY'\n"
+          if marker not in workflow:
+              raise SystemExit('embedded materializer start marker missing')
+          body = workflow.split(marker, 1)[1].split("\n          PY", 1)[0]
+          exec(compile(textwrap.dedent(body), '<premium-poet-materializer>', 'exec'))
+          PY
+
+          npm ci
+          npm run validate:brand
+          npm run validate:interaction-runtime
+          npm run typecheck
+          npm run build
+          git diff --check
+
+          files=(
+            src/components/home/HeroPoetWindow.tsx
+            src/pages/HomePage.tsx
+            qa/focused-interactions.spec.mjs
+            qa/brand-emblem.spec.mjs
+            scripts/validate-brand-assets.ts
+          )
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "${files[@]}"
+          actual="$(git diff --cached --name-only | sort)"
+          expected="$(printf '%s\n' "${files[@]}" | sort)"
+          test "$actual" = "$expected"
+          git diff --cached --check
+          git commit -m 'feat(home): add premium interactive poet windows'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
