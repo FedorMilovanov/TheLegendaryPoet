@@ -12,12 +12,18 @@ permissions:
   contents: read
 
 jobs:
-  repair-approved-brand-ssot:
+  materialize-approved-brand-v4:
     if: github.event.pull_request.head.ref == 'fix/approved-brand-ssot-release-repair'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     permissions:
       contents: write
+    env:
+      OLD_VERSION: cloak-20260725-3
+      NEW_VERSION: cloak-20260725-4
+      OLD_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
+      NEW_MASTER_SHA256: f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7
+      APPROVED_SOURCE_BLOB: d61334ecfab61f648833c92666eb1b9661b1f27a
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,71 +35,73 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Restore exact source and write permanent CI contract
+      - name: Restore owner-recovered source and reconcile v4 contracts
         shell: bash
         run: |
           set -euo pipefail
-          expected_blob='d61334ecfab61f648833c92666eb1b9661b1f27a'
           git fetch --no-tags origin \
-            main:refs/remotes/origin/main \
             fix/approved-brand-integrity-complete-20260725:refs/remotes/origin/approved-brand-integrity \
             --depth=1
-
           actual_blob="$(git rev-parse refs/remotes/origin/approved-brand-integrity:src/brand-assets/master-320-q92.webp.b64)"
-          [[ "${actual_blob}" == "${expected_blob}" ]] || {
-            echo "::error::Authoritative source blob changed: ${actual_blob}"
+          [[ "${actual_blob}" == "${APPROVED_SOURCE_BLOB}" ]] || {
+            echo "::error::Owner-recovered source blob changed: ${actual_blob}"
             exit 1
           }
           git checkout refs/remotes/origin/approved-brand-integrity -- src/brand-assets/master-320-q92.webp.b64
-          git show refs/remotes/origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
 
           python - <<'PY'
+          import os
           from pathlib import Path
-          path = Path('.github/workflows/ci.yml')
-          text = path.read_text(encoding='utf-8')
-          old_lines = [
-              '      - name: Install FFmpeg for deterministic brand assets',
-              '        run: |',
-              '          sudo apt-get update',
-              '          sudo apt-get install -y --no-install-recommends ffmpeg',
-              '          ffmpeg -version | head -1',
-              '      - name: Build',
+
+          old_version = os.environ['OLD_VERSION']
+          new_version = os.environ['NEW_VERSION']
+          old_hash = os.environ['OLD_MASTER_SHA256']
+          new_hash = os.environ['NEW_MASTER_SHA256']
+          paths = [
+              'docs/BRAND_EMBLEM.md',
+              'index.html',
+              'public/brand-emblem.svg',
+              'public/brand-release.txt',
+              'public/browserconfig.xml',
+              'public/site.webmanifest',
+              'qa/brand-emblem.spec.mjs',
+              'scripts/prerender-og.mjs',
+              'scripts/validate-brand-assets.ts',
+              'src/components/BrandMark.tsx',
+              'src/hooks/useSeo.ts',
           ]
-          expression = '$' + "{{ failure() && steps.brand_validation.outcome == 'failure' }}"
-          new_lines = [
-              '      - name: Install FFmpeg for deterministic brand assets',
-              '        run: |',
-              '          sudo apt-get update',
-              '          sudo apt-get install -y --no-install-recommends ffmpeg',
-              '          ffmpeg -version | head -1',
-              '      - name: Validate approved brand assets',
-              '        id: brand_validation',
-              '        run: |',
-              '          set +e',
-              '          npm run validate:brand > brand-validation.log 2>&1',
-              '          status=$?',
-              '          cat brand-validation.log',
-              '          exit $status',
-              '      - name: Upload brand validation diagnostics',
-              f'        if: {expression}',
-              '        uses: actions/upload-artifact@v4',
-              '        with:',
-              '          name: brand-validation-diagnostics',
-              '          path: brand-validation.log',
-              '          if-no-files-found: error',
-              '          retention-days: 3',
-              '      - name: Build',
-          ]
-          old = '\n'.join(old_lines) + '\n'
-          new = '\n'.join(new_lines) + '\n'
-          if text.count(old) != 1:
-              raise SystemExit('CI brand-gate insertion anchor mismatch')
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          for name in paths:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              if old_version not in text and old_hash not in text:
+                  raise SystemExit(f'{name}: no v3 contract to reconcile')
+              updated = text.replace(old_version, new_version).replace(old_hash, new_hash)
+              if name == 'index.html':
+                  updated = updated.replace(
+                      '    <!-- Trusted bootstrap verifier compatibility only; inactive text: brand-emblem-master.webp?v=cloak-20260725-2 -->\n',
+                      '',
+                  )
+              if old_version in updated or old_hash in updated:
+                  raise SystemExit(f'{name}: stale v3 contract remains')
+              path.write_text(updated, encoding='utf-8')
           PY
 
-          [[ "$(git hash-object src/brand-assets/master-320-q92.webp.b64)" == "${expected_blob}" ]]
-          grep -Fq 'name: Validate approved brand assets' .github/workflows/ci.yml
-          ! grep -Fq 'repair-approved-brand-ssot:' .github/workflows/ci.yml
+          [[ "$(git hash-object src/brand-assets/master-320-q92.webp.b64)" == "${APPROVED_SOURCE_BLOB}" ]]
+          for path in \
+            docs/BRAND_EMBLEM.md \
+            index.html \
+            public/brand-emblem.svg \
+            public/brand-release.txt \
+            public/browserconfig.xml \
+            public/site.webmanifest \
+            qa/brand-emblem.spec.mjs \
+            scripts/prerender-og.mjs \
+            scripts/validate-brand-assets.ts \
+            src/components/BrandMark.tsx \
+            src/hooks/useSeo.ts; do
+            ! grep -Fq "${OLD_VERSION}" "${path}"
+            ! grep -Fq "${OLD_MASTER_SHA256}" "${path}"
+          done
 
       - name: Install deterministic toolchain
         run: |
@@ -102,24 +110,8 @@ jobs:
           ffmpeg -version | head -1
           npm ci
 
-      - name: Validate approved brand assets
-        id: focused_brand_validation
-        shell: bash
-        run: |
-          set +e
-          npm run validate:brand > focused-brand-validation.log 2>&1
-          status=$?
-          cat focused-brand-validation.log
-          exit $status
-
-      - name: Upload focused brand diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: focused-brand-validation-diagnostics
-          path: focused-brand-validation.log
-          if-no-files-found: error
-          retention-days: 3
+      - name: Validate approved v4 brand contract
+        run: npm run validate:brand
 
       - name: Typecheck
         run: npm run typecheck
@@ -135,23 +127,53 @@ jobs:
       - name: Validate route splitting and asset budgets
         run: npm run validate:build-output
 
-      - name: Commit only the proven permanent files
+      - name: Prerender social pages
+        run: npm run prerender
+
+      - name: Commit only proven v4 product and metadata files
         shell: bash
         run: |
           set -euo pipefail
-          git add .github/workflows/ci.yml src/brand-assets/master-320-q92.webp.b64
+          git add \
+            docs/BRAND_EMBLEM.md \
+            index.html \
+            public/brand-emblem.svg \
+            public/brand-release.txt \
+            public/browserconfig.xml \
+            public/og-image.jpg \
+            public/site.webmanifest \
+            qa/brand-emblem.spec.mjs \
+            scripts/prerender-og.mjs \
+            scripts/validate-brand-assets.ts \
+            src/brand-assets/master-320-q92.webp.b64 \
+            src/components/BrandMark.tsx \
+            src/hooks/useSeo.ts
+
           mapfile -t staged < <(git diff --cached --name-only)
-          expected=(
-            '.github/workflows/ci.yml'
+          required=(
+            'docs/BRAND_EMBLEM.md'
+            'index.html'
+            'public/brand-emblem.svg'
+            'public/brand-release.txt'
+            'public/browserconfig.xml'
+            'public/site.webmanifest'
+            'qa/brand-emblem.spec.mjs'
+            'scripts/prerender-og.mjs'
+            'scripts/validate-brand-assets.ts'
             'src/brand-assets/master-320-q92.webp.b64'
+            'src/components/BrandMark.tsx'
+            'src/hooks/useSeo.ts'
           )
-          printf 'Staged scope:\n%s\n' "${staged[*]:-<empty>}"
-          [[ "${#staged[@]}" -eq "${#expected[@]}" ]]
-          for index in "${!expected[@]}"; do
-            [[ "${staged[$index]}" == "${expected[$index]}" ]]
+          allowed=("${required[@]}" 'public/og-image.jpg')
+          printf 'Staged v4 scope:\n%s\n' "${staged[*]:-<empty>}"
+          for path in "${required[@]}"; do
+            printf '%s\n' "${staged[@]}" | grep -Fxq "${path}"
+          done
+          for path in "${staged[@]}"; do
+            printf '%s\n' "${allowed[@]}" | grep -Fxq "${path}"
           done
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(brand): restore approved SSOT and require CI validation'
+          git commit -m 'fix(brand): publish reconciled approved emblem release v4'
           git push origin HEAD:fix/approved-brand-ssot-release-repair
