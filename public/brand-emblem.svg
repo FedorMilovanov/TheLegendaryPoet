@@ -1,5 +1,98 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="brand-title brand-description">
-  <title id="brand-title">THE LEGENDARY POET</title>
-  <desc id="brand-description">Безликая фигура в глубоком капюшоне и тяжёлом чёрно-синем плаще с холодным голубым свечением</desc>
-  <image href="brand-emblem-master.webp?v=cloak-20260725-4" x="0" y="0" width="96" height="96" preserveAspectRatio="xMidYMid meet"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">THE LEGENDARY POET</title>
+<desc id="desc">Таинственная фигура в глубоком капюшоне с холодным голубым ореолом и световым ядром</desc>
+<defs>
+  <radialGradient id="field" cx="64" cy="62" r="58" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#0a6a9a" stop-opacity=".22"/>
+    <stop offset=".42" stop-color="#04263e" stop-opacity=".28"/>
+    <stop offset=".74" stop-color="#03121f" stop-opacity=".18"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="halo" cx="64" cy="61" r="53" gradientUnits="userSpaceOnUse">
+    <stop offset=".62" stop-color="#2ed8ff" stop-opacity="0"/>
+    <stop offset=".86" stop-color="#2ed8ff" stop-opacity=".16"/>
+    <stop offset="1" stop-color="#7bedff" stop-opacity=".04"/>
+  </radialGradient>
+  <linearGradient id="cloak" x1="64" y1="34" x2="64" y2="116" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#081927"/>
+    <stop offset=".34" stop-color="#02070d"/>
+    <stop offset=".78" stop-color="#04111c"/>
+    <stop offset="1" stop-color="#071a28"/>
+  </linearGradient>
+  <linearGradient id="rim" x1="41" y1="27" x2="89" y2="84" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#a5f6ff" stop-opacity=".86"/>
+    <stop offset=".25" stop-color="#44dcff" stop-opacity=".82"/>
+    <stop offset=".7" stop-color="#1587c3" stop-opacity=".42"/>
+    <stop offset="1" stop-color="#0c4770" stop-opacity=".08"/>
+  </linearGradient>
+  <linearGradient id="fold" x1="35" y1="56" x2="94" y2="109" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#35d6ff" stop-opacity=".42"/>
+    <stop offset=".58" stop-color="#147ba9" stop-opacity=".2"/>
+    <stop offset="1" stop-color="#7bedff" stop-opacity=".08"/>
+  </linearGradient>
+  <radialGradient id="orb" cx="60" cy="72" r="16" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#fff"/>
+    <stop offset=".25" stop-color="#f3feff"/>
+    <stop offset=".58" stop-color="#8debff"/>
+    <stop offset=".84" stop-color="#27bde9"/>
+    <stop offset="1" stop-color="#0b6f9d"/>
+  </radialGradient>
+  <filter id="softGlow" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+    <feGaussianBlur stdDeviation="2.4" result="blur"/>
+    <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.08 0 0 0 0 0.72 0 0 0 0 1 0 0 0 .72 0"/>
+    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="orbGlow" x="-260%" y="-260%" width="620%" height="620%" color-interpolation-filters="sRGB">
+    <feGaussianBlur stdDeviation="5.8" result="wide"/>
+    <feGaussianBlur in="SourceGraphic" stdDeviation="1.25" result="soft"/>
+    <feMerge><feMergeNode in="wide"/><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="lineGlow" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+    <feGaussianBlur stdDeviation=".8" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="haloClip"><circle cx="64" cy="64" r="52"/></clipPath>
+</defs>
+<circle cx="64" cy="64" r="60" fill="url(#field)"/>
+<circle cx="64" cy="64" r="55" fill="url(#halo)"/>
+<g data-brand-halo="true" fill="none" stroke-linecap="round">
+  <circle cx="64" cy="64" r="49.2" stroke="#54e5ff" stroke-opacity=".16" stroke-width="1.1"/>
+  <path d="M25 48C32 28 46 16 64 14C82 16 96 28 103 48" stroke="#71efff" stroke-opacity=".3" stroke-width="1.15" filter="url(#lineGlow)"/>
+  <path d="M18 70C20 92 37 110 59 114" stroke="#1da9df" stroke-opacity=".18" stroke-width="1"/>
+  <path d="M110 70C108 92 91 110 69 114" stroke="#1da9df" stroke-opacity=".18" stroke-width="1"/>
+  <circle cx="64" cy="64" r="52" stroke="#2ed8ff" stroke-opacity=".08" stroke-width=".55" stroke-dasharray="1 6"/>
+</g>
+<g data-brand-aura="true" clip-path="url(#haloClip)" fill="none" stroke-linecap="round">
+  <path d="M64 18C58 26 54 33 52 40" stroke="#65e9ff" stroke-opacity=".26" stroke-width=".8"/>
+  <path d="M64 18C70 26 74 33 76 40" stroke="#65e9ff" stroke-opacity=".26" stroke-width=".8"/>
+  <path d="M23 61C34 57 42 53 48 47" stroke="#2ed8ff" stroke-opacity=".16" stroke-width=".7"/>
+  <path d="M105 61C94 57 86 53 80 47" stroke="#2ed8ff" stroke-opacity=".16" stroke-width=".7"/>
+  <path d="M20 76C32 76 42 73 51 68" stroke="#2ed8ff" stroke-opacity=".12" stroke-width=".7"/>
+  <path d="M108 76C96 76 86 73 77 68" stroke="#2ed8ff" stroke-opacity=".12" stroke-width=".7"/>
+</g>
+<g data-brand-cloak="true">
+  <path d="M64 27C52 28 44 38 41 51C32 57 25 68 22 83C29 79 35 76 43 73C41 89 47 104 64 117C81 104 87 89 85 73C93 76 99 79 106 83C103 68 96 57 87 51C84 38 76 28 64 27Z" fill="url(#cloak)" stroke="#239fcf" stroke-opacity=".18" stroke-width=".8"/>
+  <path d="M42 52C44 39 52 28 64 25C76 28 84 39 86 52" fill="none" stroke="url(#rim)" stroke-width="2.15" filter="url(#softGlow)"/>
+  <path d="M64 35C56 35 50 43 47 53C51 59 57 63 64 66C71 63 77 59 81 53C78 43 72 35 64 35Z" fill="#000205"/>
+  <path d="M47 53C51 58 57 61 64 64C71 61 77 58 81 53" fill="none" stroke="#58e1ff" stroke-opacity=".16" stroke-width=".75"/>
+  <path d="M23 83C35 76 45 72 52 64C50 81 54 99 64 114" fill="none" stroke="url(#fold)" stroke-width="1.05"/>
+  <path d="M105 83C93 76 83 72 76 64C78 81 74 99 64 114" fill="none" stroke="url(#fold)" stroke-width="1.05"/>
+  <path d="M33 86C43 82 50 77 56 69M95 86C85 82 78 77 72 69" fill="none" stroke="#4cdfff" stroke-opacity=".12" stroke-width=".85"/>
+  <path d="M64 67C59 80 59 95 64 112C69 95 69 80 64 67Z" fill="#0e6287" fill-opacity=".15"/>
+  <path d="M45 73C50 84 56 92 64 101C72 92 78 84 83 73" fill="none" stroke="#31c4ef" stroke-opacity=".1" stroke-width=".7"/>
+</g>
+<g data-brand-energy="true" clip-path="url(#haloClip)" fill="none" stroke="#4ee1ff" stroke-linecap="round" filter="url(#lineGlow)">
+  <path d="M64 80C59 74 56 68 52 63C49 59 45 56 40 54" stroke-opacity=".54" stroke-width=".85"/>
+  <path d="M64 80C69 74 72 68 76 63C79 59 83 56 88 54" stroke-opacity=".54" stroke-width=".85"/>
+  <path d="M64 80C61 72 61 65 61 58C61 51 58 45 54 41" stroke-opacity=".36" stroke-width=".7"/>
+  <path d="M64 80C67 72 67 65 67 58C67 51 70 45 74 41" stroke-opacity=".36" stroke-width=".7"/>
+  <path d="M59 79C53 78 48 79 43 83C39 86 35 87 31 86" stroke-opacity=".22" stroke-width=".65"/>
+  <path d="M69 79C75 78 80 79 85 83C89 86 93 87 97 86" stroke-opacity=".22" stroke-width=".65"/>
+</g>
+<g data-brand-orb="true">
+  <circle cx="64" cy="80" r="12" fill="#33d7ff" fill-opacity=".12" filter="url(#orbGlow)"/>
+  <circle cx="64" cy="80" r="7.8" fill="url(#orb)" stroke="#e6fdff" stroke-width="1.05" filter="url(#orbGlow)"/>
+  <circle cx="61.5" cy="77.2" r="2.25" fill="#fff" fill-opacity=".78"/>
+  <circle cx="64" cy="80" r="10.4" fill="none" stroke="#70ebff" stroke-opacity=".15" stroke-width=".7"/>
+</g>
 </svg>
