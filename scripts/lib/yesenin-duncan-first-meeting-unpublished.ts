@@ -3,6 +3,10 @@ import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSourc
 import { yeseninPartOneSourcesPassFourDuncan } from '../../src/data/essays/yeseninPartOneSourcesPassFourDuncan';
 import { yeseninPartOneSourcesPassFourImagism } from '../../src/data/essays/yeseninPartOneSourcesPassFourImagism';
 import { yeseninPartOneTheatricalMoscowPassEleven } from '../../src/data/essays/yeseninPartOneTheatricalMoscowPassEleven';
+import {
+  yeseninDuncanCompanionEditorialPassOneHeadings,
+  yeseninDuncanCompanionEditorialPassOneText,
+} from '../../src/data/essays/yeseninDuncanCompanionEditorialPassOne';
 
 export const YESENIN_DUNCAN_FIRST_MEETING_UNPUBLISHED_ID =
   'essay-yesenin-duncan-first-meeting-unpublished' as const;
@@ -26,7 +30,9 @@ export interface YeseninDuncanFirstMeetingUnpublishedPackage {
   mainArticleBridge: readonly YeseninDuncanMainArticleBridge[];
   companionOnlyTopics: readonly string[];
   draftComplete: true;
-  finalEditorialReviewComplete: false;
+  finalEditorialReviewComplete: true;
+  editorialPassOne: 'literary-source-boundary-pass-one';
+  readerFacingTextBlockCap: 25;
   essay: Essay;
 }
 
@@ -67,8 +73,8 @@ const theatricalSources: EssaySource[] = yeseninPartOneTheatricalMoscowPassEleve
   institution: 'Национальная электронная библиотека',
   year: 1921,
   note:
-    `Реальный цифровой выпуск просмотрен покадрово (${record.pdfFrames} PDF-кадров). ` +
-    'Используются только вручную проверенные заголовки и хронологические опоры; права на воспроизведение сканов не установлены.',
+    'Цифровой выпуск получен из НЭБ и просмотрен полностью. Используются только вручную проверенные ' +
+    'заголовки и хронологические опоры; права на воспроизведение сканов не установлены.',
 }));
 
 const companionSources: EssaySource[] = [
@@ -94,7 +100,7 @@ const companionSources: EssaySource[] = [
   },
 ];
 
-const blocks: EssayBlock[] = [
+const draftBlocks: EssayBlock[] = [
   {
     id: 'yd1-lead',
     type: 'lead',
@@ -290,6 +296,23 @@ const blocks: EssayBlock[] = [
   },
 ];
 
+const blocks: EssayBlock[] = draftBlocks.map((block) => {
+  const textOverride =
+    yeseninDuncanCompanionEditorialPassOneText[
+      block.id as keyof typeof yeseninDuncanCompanionEditorialPassOneText
+    ];
+  const headingOverride =
+    yeseninDuncanCompanionEditorialPassOneHeadings[
+      block.id as keyof typeof yeseninDuncanCompanionEditorialPassOneHeadings
+    ];
+
+  if (textOverride && 'text' in block) return { ...block, text: textOverride } as EssayBlock;
+  if (headingOverride && block.type === 'section') {
+    return { ...block, heading: headingOverride } as EssayBlock;
+  }
+  return block;
+});
+
 const wordCount = blocks
   .filter((block): block is EssayBlock & { text: string } => 'text' in block)
   .reduce((total, block) => total + block.text.split(/\s+/u).filter(Boolean).length, 0);
@@ -385,6 +408,8 @@ export const yeseninDuncanFirstMeetingUnpublished: YeseninDuncanFirstMeetingUnpu
     'развёрнутый разбор взаимных обвинительных легенд',
   ],
   draftComplete: true,
-  finalEditorialReviewComplete: false,
+  finalEditorialReviewComplete: true,
+  editorialPassOne: 'literary-source-boundary-pass-one',
+  readerFacingTextBlockCap: 25,
   essay,
 };
