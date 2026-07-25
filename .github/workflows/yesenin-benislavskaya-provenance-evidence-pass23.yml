@@ -1,0 +1,46 @@
+name: Yesenin Benislavskaya Provenance Evidence Pass 23
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaProvenancePassTwentyThree.ts'
+      - 'scripts/validate-yesenin-benislavskaya-provenance-evidence-pass23.ts'
+      - 'research/yesenin/BENISLAVSKAYA_PROVENANCE_EVIDENCE_PASS23_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-provenance-evidence-pass23.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaProvenancePassTwentyThree.ts'
+      - 'scripts/validate-yesenin-benislavskaya-provenance-evidence-pass23.ts'
+      - 'research/yesenin/BENISLAVSKAYA_PROVENANCE_EVIDENCE_PASS23_2026-07-25.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-provenance-evidence-pass23.yml'
+
+concurrency:
+  group: yesenin-benislavskaya-provenance-pass23-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate exact PSS Benislavskaya provenance matrix
+        run: npm run validate:yesenin-benislavskaya-provenance-pass23
+      - name: TypeScript typecheck
+        run: npm run typecheck
