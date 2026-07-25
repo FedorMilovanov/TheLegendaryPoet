@@ -31,6 +31,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Verify image pipeline dependency
+        run: ffmpeg -version
+
       - name: Validate content, literary style, brand assets, and types
         run: npm run check
 
