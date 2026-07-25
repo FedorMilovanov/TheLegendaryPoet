@@ -1,0 +1,110 @@
+name: Temporary Brand SSOT Recovery
+
+on:
+  push:
+    branches:
+      - fix/brand-ssot-recovery-20260725
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    if: github.event.head_commit.message == 'ci: add temporary brand SSOT recovery'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact recovery branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/brand-ssot-recovery-20260725
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install pinned raster toolchain
+        run: python -m pip install --disable-pip-version-check cairosvg==2.8.2 pillow==11.3.0
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Rebuild twice and prove deterministic bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/rebuild-brand-assets.py > brand-rebuild-first.json
+          {
+            sha256sum public/brand-emblem-master.webp
+            sha256sum public/favicon-16.png public/favicon-32.png
+            sha256sum public/apple-touch-icon.png public/icon-192.png public/icon-512.png
+            sha256sum public/icon-maskable-512.png public/mstile-150x150.png public/og-image.jpg
+            sha256sum src/brand-assets/manifest.json src/brand-assets/assets.part*.b64
+          } > brand-rebuild-first.sha256
+
+          python scripts/rebuild-brand-assets.py > brand-rebuild-second.json
+          {
+            sha256sum public/brand-emblem-master.webp
+            sha256sum public/favicon-16.png public/favicon-32.png
+            sha256sum public/apple-touch-icon.png public/icon-192.png public/icon-512.png
+            sha256sum public/icon-maskable-512.png public/mstile-150x150.png public/og-image.jpg
+            sha256sum src/brand-assets/manifest.json src/brand-assets/assets.part*.b64
+          } > brand-rebuild-second.sha256
+
+          diff -u brand-rebuild-first.sha256 brand-rebuild-second.sha256
+          cmp brand-rebuild-first.json brand-rebuild-second.json
+
+      - name: Validate archive, TypeScript and production build
+        env:
+          VITE_BASE: /
+        run: |
+          node scripts/materialize-brand-art.mjs
+          npm run validate:brand
+          npm run typecheck
+          npm run sitemap
+          npm run build
+
+      - name: Commit complete deterministic SSOT
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            public/brand-emblem-master.webp \
+            public/favicon-16.png \
+            public/favicon-32.png \
+            public/apple-touch-icon.png \
+            public/icon-192.png \
+            public/icon-512.png \
+            public/icon-maskable-512.png \
+            public/mstile-150x150.png \
+            public/og-image.jpg \
+            src/brand-assets/manifest.json \
+            src/brand-assets/assets.part*.b64
+          git diff --cached --stat
+          git diff --cached --quiet && { echo 'Recovery produced no files'; exit 1; }
+          git commit -m 'fix(brand): rebuild complete deterministic SSOT archive'
+          git push origin HEAD:fix/brand-ssot-recovery-20260725
+
+      - name: Upload recovery evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-ssot-recovery-evidence
+          path: |
+            brand-rebuild-first.json
+            brand-rebuild-second.json
+            brand-rebuild-first.sha256
+            brand-rebuild-second.sha256
+            src/brand-assets/manifest.json
+          if-no-files-found: warn
+          retention-days: 7
