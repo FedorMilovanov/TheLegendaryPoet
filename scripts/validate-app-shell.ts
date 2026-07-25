@@ -14,6 +14,8 @@ const link = read('src/components/ui/Link.tsx');
 const smooth = read('src/components/SmoothScroll.tsx');
 const boundary = read('src/components/ErrorBoundary.tsx');
 const cursor = read('src/components/CustomCursor.tsx');
+const deployWorkflow = read('.github/workflows/deploy.yml');
+const deployDispatchWorkflow = read('.github/workflows/deploy-dispatch.yml');
 
 const expectedPages = [
   'HomePage',
@@ -85,6 +87,34 @@ expect(cursor.includes('visibilitychange'), 'the cursor must hide when the docum
 expect(cursor.includes('INTERACTIVE_SELECTOR'), 'cursor emphasis must cover controls beyond links and buttons');
 expect(cursor.includes('activatedRef.current'), 'the native cursor must remain visible until a real pointer position exists');
 
+expect(deployWorkflow.includes('source_sha:'), 'deploy workflow must declare the source_sha input used by the release dispatcher');
+expect(deployDispatchWorkflow.includes('source_sha: sourceSha'), 'release dispatcher must pass the exact source SHA');
+expect(
+  deployWorkflow.includes('ref: ${{ inputs.source_sha || github.sha }}'),
+  'deploy workflow must check out the exact requested source SHA',
+);
+expect(
+  deployWorkflow.includes('pr.head.sha === sourceSha'),
+  'deploy workflow must verify the requested SHA is still the trusted PR head',
+);
+expect(
+  deployDispatchWorkflow.includes('expected_version: process.env.RELEASE_VERSION'),
+  'release dispatcher must pass the exact brand release id read from the PR head',
+);
+expect(
+  deployDispatchWorkflow.includes('expected_master_sha256: process.env.MASTER_SHA256'),
+  'release dispatcher must pass the exact approved master hash',
+);
+expect(
+  deployWorkflow.includes('EXPECTED_VERSION: ${{ inputs.expected_version }}')
+    && deployWorkflow.includes('EXPECTED_MASTER_SHA256: ${{ inputs.expected_master_sha256 }}'),
+  'deploy workflow must verify the dispatched release metadata against the built artifact',
+);
+expect(
+  deployDispatchWorkflow.includes("startsWith(github.event.pull_request.head.ref, 'deploy-live-')"),
+  'exact-head Pages dispatch must remain restricted to same-repository deploy-live branches',
+);
+
 expect(boundary.includes("variant?: 'root' | 'page'"), 'ErrorBoundary must support page-scoped recovery');
 expect(boundary.includes('window.location.reload()'), 'error recovery must provide a real reload path');
 expect(boundary.includes('navigator.onLine === false'), 'error copy must distinguish an offline failure');
@@ -95,4 +125,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`App shell validation passed: ${expectedPages.length} lazy routes, persistent chrome, bounded scroll restoration and intent prefetch.`);
+console.log(`App shell validation passed: ${expectedPages.length} lazy routes, persistent chrome, bounded scroll restoration, intent prefetch and exact-head Pages provenance.`);

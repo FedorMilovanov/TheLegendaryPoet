@@ -83,7 +83,10 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   const first = windows.first();
   const label = first.locator('[data-hero-poet-window-label]');
   if (touchProfile || coarsePointer) {
-    expect(await effectiveOpacity(label)).toBeGreaterThan(0.85);
+    await expect.poll(
+      () => effectiveOpacity(label),
+      { timeout: 4_000, message: 'touch label should become fully visible after the card entrance animation' },
+    ).toBeGreaterThan(0.85);
   } else {
     const before = await effectiveOpacity(label);
     await first.hover({ position: { x: 12, y: 18 } });
