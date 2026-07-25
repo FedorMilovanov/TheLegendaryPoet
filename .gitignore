@@ -6,6 +6,11 @@ dist/
 dist-ssr/
 *.local
 
+# Generated brand assets
+/public/brand-emblem-master.png
+/public/icon-512.png
+/public/icon-maskable-512.png
+
 # Logs
 logs/
 *.log
