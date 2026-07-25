@@ -21,7 +21,7 @@ const CustomCursor = () => {
   const latestPointerRef = useRef({ x: -100, y: -100 });
 
   useEffect(() => {
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const finePointer = window.matchMedia('(pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const forcedColors = window.matchMedia('(forced-colors: active)');
 
@@ -89,9 +89,6 @@ const CustomCursor = () => {
 
       if (!activatedRef.current) {
         activatedRef.current = true;
-        // Keep native cursor hiding and custom cursor activation on one canonical
-        // class. The previous implementation added a different class than CSS
-        // consumed, leaving two cursor systems visible at once.
         document.body.classList.add('custom-cursor-ready');
         document.body.classList.remove('has-custom-cursor');
       }
