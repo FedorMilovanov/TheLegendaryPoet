@@ -1,0 +1,65 @@
+name: Yesenin Mirok PDF Evidence Pass 17
+
+on:
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
+    paths:
+      - 'src/data/essays/yeseninMirokPdfEvidencePassSeventeen.ts'
+      - 'scripts/validate-yesenin-mirok-pdf-evidence-pass17.ts'
+      - 'research/yesenin/PART_ONE_MIROK_PDF_EVIDENCE_PASS17_2026-07-25.md'
+      - '.github/workflows/yesenin-mirok-pdf-evidence-pass17.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+  push:
+    branches:
+      - research/yesenin-mirok-pdf-evidence-pass17
+    paths:
+      - 'src/data/essays/yeseninMirokPdfEvidencePassSeventeen.ts'
+      - 'scripts/validate-yesenin-mirok-pdf-evidence-pass17.ts'
+      - 'research/yesenin/PART_ONE_MIROK_PDF_EVIDENCE_PASS17_2026-07-25.md'
+      - '.github/workflows/yesenin-mirok-pdf-evidence-pass17.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+
+concurrency:
+  group: yesenin-mirok-pdf-evidence-pass17-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate exact Mirok issue PDFs and unresolved boundaries
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-mirok-pdf-evidence-pass17 2>&1 | tee yesenin-mirok-pdf-evidence-pass17.log
+      - name: TypeScript typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee typecheck.log
+      - name: Upload pass-17 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-mirok-pdf-evidence-pass17-diagnostics
+          path: |
+            yesenin-mirok-pdf-evidence-pass17.log
+            typecheck.log
+          if-no-files-found: ignore
+          retention-days: 7
