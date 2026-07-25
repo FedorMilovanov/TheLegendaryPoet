@@ -158,7 +158,7 @@ for (const [file, [width, height]] of Object.entries(expectedPngDimensions)) {
   assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
   assert.equal(buffer.readUInt32BE(16), width, `${file}: unexpected width`);
   assert.equal(buffer.readUInt32BE(20), height, `${file}: unexpected height`);
-  assert.equal(buffer.subarray(-12, -8).toString('ascii'), 'IEND', `${file}: missing terminal IEND`);
+  assert.equal(buffer.subarray(-8, -4).toString('ascii'), 'IEND', `${file}: missing terminal IEND`);
 }
 const share = readBuffer('public/og-image.jpg');
 assert.equal(share.subarray(0, 3).toString('hex'), 'ffd8ff', 'og-image.jpg: invalid JPEG signature');
