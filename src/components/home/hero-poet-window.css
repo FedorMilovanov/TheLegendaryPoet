@@ -1,0 +1,66 @@
+@media (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce) {
+  /* The complete first viewport is wrapped in a Framer Motion stage on HomePage.
+     WebKit can retain its inline opacity:0 compositing layer on coarse pointers,
+     leaving a fully populated DOM visually blank. Touch and reduced-motion
+     users do not benefit from that entrance travel, so force the final state. */
+  section[class~="min-h-[100svh]"] > div[class~="z-10"] > div[class~="w-full"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* WebKit can also resolve the CSS animation promise while retaining the
+     initial filter/opacity frame when blur and forwards fill are combined.
+     Keep the premium blur reveal on hover-capable desktop only. */
+  .hero-blur-reveal,
+  .hero-blur-reveal-strong {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hero-poet-window-label {
+    opacity: 0.96 !important;
+    transform: translateY(0) !important;
+  }
+
+  .hero-poet-window-image {
+    filter: grayscale(0.42) contrast(1.2) saturate(0.82);
+    opacity: 0.9;
+    transform: scale(1.065);
+  }
+
+  .hero-poet-window-shine {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) and (prefers-reduced-motion: no-preference) {
+  .hero-blur-reveal {
+    animation-duration: 1.35s;
+  }
+
+  .hero-blur-reveal-strong {
+    animation-duration: 1.55s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-poet-window-surface,
+  .hero-poet-window-glow,
+  .hero-poet-window-image,
+  .hero-poet-window-halo,
+  .hero-poet-window-shine,
+  .hero-poet-window-label {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .hero-poet-window-shine {
+    display: none;
+  }
+}
