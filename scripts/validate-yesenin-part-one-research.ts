@@ -13,6 +13,7 @@ import {
   yeseninPartOnePassThreeClaimCoverage,
   yeseninPartOneSourcesPassThree,
 } from '../src/data/essays/yeseninPartOneSourcesPassThree';
+import { yeseninPartOnePhysicalEditionAcquisitionsPassEight } from '../src/data/essays/yeseninPartOnePhysicalEditionAcquisitionsPassEight';
 
 const errors: string[] = [];
 const sourceIds = new Set<string>();
@@ -384,6 +385,89 @@ if (
   fail(`${bookRequestPath}: Samodelova request lost the physical-pagination boundary`);
 }
 
+const karokhinRequestSection = markdownSection(
+  bookRequest,
+  '### C1. Л. Ф. Карохин — `Сергей Есенин и Николай Клюев`',
+  '### C2. Первые издания и физические выпуски: закрытые и открытые запросы',
+);
+requireRequestMarkers(
+  bookRequestPath,
+  karokhinRequestSection,
+  'Karokhin Esenin-Klyuev',
+  [
+    'https://ci.nii.ac.jp/ncid/BA69381630',
+    'BA69381630',
+    '5-93550-047-7',
+    '2003486932',
+    'https://www.finna.fi/Record/fikka.1841814',
+    '168, [6]',
+    'STILL-REQUESTED / AUTHORITATIVE-CATALOGS-IDENTIFIED / EXTENT-COLLATION-PENDING-168-PLUS-6 / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+  ],
+);
+forbidFalseAcquisition(bookRequestPath, karokhinRequestSection, 'Karokhin Esenin-Klyuev');
+if (!karokhinRequestSection.includes('не противоречат основной нумерации в 168 страниц')) {
+  fail(`${bookRequestPath}: Karokhin request lost the 168 versus 168+[6] extent boundary`);
+}
+
+const physicalRequestSection = markdownSection(
+  bookRequest,
+  '### C2. Первые издания и физические выпуски: закрытые и открытые запросы',
+  '## Формат передачи',
+);
+const acquiredRequestStatus = 'NOT-REQUESTED / ACQUIRED / HASHED / VISUALLY-INSPECTED / REPRODUCTION-RIGHTS-UNRESOLVED / PRODUCTION-NOT-AUTHORIZED';
+requireRequestMarkers(
+  bookRequestPath,
+  physicalRequestSection,
+  'physical publication requests',
+  [
+    '000199_000009_004210209',
+    '49 288 163 байта',
+    '761ba9c1eb41e0d6e146618c8d5cb30bb79485d02587e0161523a819cd753185',
+    '000200_000018_RU_NLR_A1SV_46698',
+    '3 309 388 байт',
+    '17917962290fdd24eedd52fdd76d84c7c1bdf0898f53a41c52af555691f3116c',
+    acquiredRequestStatus,
+    '`Сирена`, № 4–5, 1919',
+    '`Советская страна`, № 3, 10 февраля 1919',
+    'STILL-REQUESTED / TWO-PUBLICATION-WITNESSES-UNRESOLVED / FACSIMILES-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+  ],
+);
+if ((physicalRequestSection.match(new RegExp(acquiredRequestStatus.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? []).length !== 2) {
+  fail(`${bookRequestPath}: exactly two acquired physical editions must be marked NOT-REQUESTED`);
+}
+
+const radunitsaAcquisition = yeseninPartOnePhysicalEditionAcquisitionsPassEight.find(
+  (record) => record.id === 'PWA8-YE1-RADUNITSA-1916',
+);
+if (
+  !radunitsaAcquisition ||
+  radunitsaAcquisition.catalogueCode !== '000199_000009_004210209' ||
+  radunitsaAcquisition.bytes !== 49_288_163 ||
+  radunitsaAcquisition.pdfFrames !== 35 ||
+  radunitsaAcquisition.sha256 !== '761ba9c1eb41e0d6e146618c8d5cb30bb79485d02587e0161523a819cd753185' ||
+  radunitsaAcquisition.facsimileBytesAcquired !== true ||
+  radunitsaAcquisition.facsimileVisuallyInspected !== true ||
+  radunitsaAcquisition.productionAuthorized !== false
+) {
+  fail('Radunitsa request closure must remain anchored to the accepted pass-eight acquisition record');
+}
+
+const ispovedAcquisition = yeseninPartOnePhysicalEditionAcquisitionsPassEight.find(
+  (record) => record.id === 'PWA8-YE1-ISPOVED-1921',
+);
+if (
+  !ispovedAcquisition ||
+  ispovedAcquisition.catalogueCode !== '000200_000018_RU_NLR_A1SV_46698' ||
+  ispovedAcquisition.bytes !== 3_309_388 ||
+  ispovedAcquisition.pdfFrames !== 16 ||
+  ispovedAcquisition.sha256 !== '17917962290fdd24eedd52fdd76d84c7c1bdf0898f53a41c52af555691f3116c' ||
+  ispovedAcquisition.facsimileBytesAcquired !== true ||
+  ispovedAcquisition.facsimileVisuallyInspected !== true ||
+  ispovedAcquisition.productionAuthorized !== false
+) {
+  fail('Ispoved request closure must remain anchored to the accepted pass-eight acquisition record');
+}
+
 const forbiddenPublishedIds = new Set([
   'essay-yesenin-1895-1921',
 ]);
@@ -423,6 +507,7 @@ console.log(
   + `+ ${yeseninPartOneSourcesPassThree.length} pass three), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
   + `${unresolvedClaims} pass-one gaps, ${passTwoOpenHolds} pass-two holds and `
-  + `${passThreeOpenHolds} pass-three holds; five requested books are access-bounded but unacquired; `
+  + `${passThreeOpenHolds} pass-three holds; six requested books are access-bounded and unacquired, `
+  + `two physical editions are acquired/closed, and two publication witnesses remain requested; `
   + `public registration remains blocked.`,
 );
