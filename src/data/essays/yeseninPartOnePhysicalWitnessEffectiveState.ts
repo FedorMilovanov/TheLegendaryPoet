@@ -3,6 +3,11 @@ import {
   type YeseninPartOneMariengofAccessPassThirteen,
 } from './yeseninPartOneMariengofAccessPassThirteen';
 import {
+  yeseninPartOneNewspaperPassFourteen,
+  yeseninPartOneNewspaperPassFourteenCoverage,
+  yeseninPartOnePravdaPassFifteenAccess,
+} from './yeseninPartOneNewspaperPassFourteen';
+import {
   yeseninPartOnePhysicalEditionAcquisitionsPassEight,
   type YeseninPartOnePhysicalEditionAcquisitionPassEight,
 } from './yeseninPartOnePhysicalEditionAcquisitionsPassEight';
@@ -25,8 +30,9 @@ export interface YeseninPartOneEffectiveHistoricalWitness {
   effectiveStatus: YeseninPartOneEffectiveWitnessStatus;
   supersededByAcquisitionId?: `PWA8-YE1-${string}`;
   supersededByObjectId?: `NEB-YE1-${string}`;
+  supersededByNewspaperEvidenceIds?: readonly `NEWS14-YE1-${string}`[];
   partiallySatisfiedByEvidenceIds?: readonly `TM11-YE1-${string}`[];
-  accessInvestigationId?: `MA13-YE1-${string}`;
+  accessInvestigationId?: `MA13-YE1-${string}` | 'PR15-YE1-PRAVDA-1921-11-09';
   correctedCatalogueUrl?: string;
   remainingTargets?: readonly string[];
 }
@@ -35,10 +41,13 @@ const historicalRecords: readonly YeseninPartOnePhysicalWitnessPassSix[] =
   yeseninPartOnePhysicalWitnessesPassSix;
 const acquisitionOverlays: readonly YeseninPartOnePhysicalEditionAcquisitionPassEight[] =
   yeseninPartOnePhysicalEditionAcquisitionsPassEight;
-const serialEvidenceRecords = yeseninPartOneTheatricalMoscowPassEleven;
-const serialCoverage = yeseninPartOneTheatricalMoscowPassElevenCoverage;
+const theatricalSerialEvidenceRecords = yeseninPartOneTheatricalMoscowPassEleven;
+const theatricalSerialCoverage = yeseninPartOneTheatricalMoscowPassElevenCoverage;
+const newspaperEvidenceRecords = yeseninPartOneNewspaperPassFourteen;
+const newspaperCoverage = yeseninPartOneNewspaperPassFourteenCoverage;
 const mariengofAccessRecords: readonly YeseninPartOneMariengofAccessPassThirteen[] =
   yeseninPartOneMariengofAccessPassThirteen;
+const pravdaAccessRecord = yeseninPartOnePravdaPassFifteenAccess;
 
 /**
  * Resolve current operational state without mutating the historical pass-six
@@ -61,12 +70,21 @@ export const yeseninPartOneEffectiveHistoricalWitnesses = historicalRecords.map(
       };
     }
 
-    if (serialCoverage.historicalHoldId === historicalRecord.id) {
+    if (newspaperCoverage.historicalHoldId === historicalRecord.id) {
       return {
         historicalRecord,
-        effectiveStatus: serialCoverage.effectiveStatus,
-        partiallySatisfiedByEvidenceIds: serialCoverage.evidenceIds,
-        remainingTargets: serialCoverage.remainingTargets,
+        effectiveStatus: newspaperCoverage.effectiveStatus,
+        supersededByNewspaperEvidenceIds: newspaperCoverage.evidenceIds,
+        remainingTargets: newspaperCoverage.remainingTargets,
+      };
+    }
+
+    if (theatricalSerialCoverage.historicalHoldId === historicalRecord.id) {
+      return {
+        historicalRecord,
+        effectiveStatus: theatricalSerialCoverage.effectiveStatus,
+        partiallySatisfiedByEvidenceIds: theatricalSerialCoverage.evidenceIds,
+        remainingTargets: theatricalSerialCoverage.remainingTargets,
       };
     }
 
@@ -82,6 +100,15 @@ export const yeseninPartOneEffectiveHistoricalWitnesses = historicalRecords.map(
           ? accessRecord.catalogueUrl
           : undefined,
         remainingTargets: [accessRecord.remainingTarget],
+      };
+    }
+
+    if (pravdaAccessRecord.historicalHoldId === historicalRecord.id) {
+      return {
+        historicalRecord,
+        effectiveStatus: 'active-hold',
+        accessInvestigationId: pravdaAccessRecord.id,
+        remainingTargets: [pravdaAccessRecord.remainingTarget],
       };
     }
 
@@ -102,8 +129,8 @@ export const yeseninPartOneActiveHistoricalWitnesses =
 
 /**
  * Compatibility name: these targets remain untouched by satisfying evidence.
- * Two Mariengof rows now carry access-investigation metadata, but neither target
- * has been fulfilled because no facsimile pages were acquired or inspected.
+ * Access-investigation metadata may explain a route block or rejected search,
+ * but it does not satisfy the underlying page-level target.
  */
 export const yeseninPartOneUntouchedActiveHistoricalWitnesses =
   yeseninPartOneEffectiveHistoricalWitnesses.filter(
@@ -128,12 +155,27 @@ export const yeseninPartOneSupersededHistoricalWitnesses =
 export const yeseninPartOneStandalonePhysicalEditionAcquisitions =
   acquisitionOverlays.filter((record) => !record.supersedesHoldId);
 
+const acquiredPhysicalEditionFacsimiles = acquisitionOverlays.filter(
+  (record) => record.facsimileBytesAcquired && record.facsimileVisuallyInspected,
+);
+const acquiredTheatricalSerialFacsimiles = theatricalSerialEvidenceRecords.filter(
+  (record) => record.realPdfAcquired && record.visuallyInspected,
+);
+const acquiredNewspaperFacsimiles = newspaperEvidenceRecords.filter(
+  (record) => record.realPdfAcquired && record.visuallyInspected,
+);
+
 export const yeseninPartOnePhysicalWitnessEffectiveStateSummary = {
   historicalQueueRecords: historicalRecords.length,
   acquisitionOverlays: acquisitionOverlays.length,
-  serialEvidenceRecords: serialEvidenceRecords.length,
-  serialIssueEvidenceCount: serialEvidenceRecords.length,
+  theatricalSerialEvidenceRecords: theatricalSerialEvidenceRecords.length,
+  newspaperEvidenceRecords: newspaperEvidenceRecords.length,
+  serialEvidenceRecords:
+    theatricalSerialEvidenceRecords.length + newspaperEvidenceRecords.length,
+  serialIssueEvidenceCount:
+    theatricalSerialEvidenceRecords.length + newspaperEvidenceRecords.length,
   mariengofAccessRecords: mariengofAccessRecords.length,
+  pravdaAccessRecords: 1,
   activeHistoricalHolds: yeseninPartOneActiveHistoricalWitnesses.length,
   untouchedActiveHistoricalHolds: yeseninPartOneUntouchedActiveHistoricalWitnesses.length,
   accessInvestigatedHistoricalHolds:
@@ -147,30 +189,33 @@ export const yeseninPartOnePhysicalWitnessEffectiveStateSummary = {
   unresolvedPublishedViewerRoutes: mariengofAccessRecords.filter(
     (record) => record.state === 'catalogue-verified-route-unresolved',
   ).length,
+  noLiteralOfficialPravdaIssueMatches:
+    pravdaAccessRecord.state === 'no-literal-official-central-moscow-match' ? 1 : 0,
   partiallySatisfiedHistoricalHolds:
     yeseninPartOnePartiallySatisfiedHistoricalWitnesses.length,
   supersededHistoricalHolds: yeseninPartOneSupersededHistoricalWitnesses.length,
   standaloneAcquisitions: yeseninPartOneStandalonePhysicalEditionAcquisitions.length,
-  acquiredFacsimiles: acquisitionOverlays.filter(
-    (record) => record.facsimileBytesAcquired && record.facsimileVisuallyInspected,
-  ).length,
-  acquiredSerialIssueFacsimiles: serialEvidenceRecords.filter(
-    (record) => record.realPdfAcquired && record.visuallyInspected,
-  ).length,
+  acquiredFacsimiles: acquiredPhysicalEditionFacsimiles.length,
+  acquiredTheatricalMoscowIssueFacsimiles: acquiredTheatricalSerialFacsimiles.length,
+  acquiredNewspaperIssueFacsimiles: acquiredNewspaperFacsimiles.length,
+  acquiredSerialIssueFacsimiles:
+    acquiredTheatricalSerialFacsimiles.length + acquiredNewspaperFacsimiles.length,
   acquiredFacsimileObjects:
-    acquisitionOverlays.filter(
-      (record) => record.facsimileBytesAcquired && record.facsimileVisuallyInspected,
-    ).length +
-    serialEvidenceRecords.filter((record) => record.realPdfAcquired && record.visuallyInspected)
-      .length,
+    acquiredPhysicalEditionFacsimiles.length +
+    acquiredTheatricalSerialFacsimiles.length +
+    acquiredNewspaperFacsimiles.length,
   archiveOriginalsInspected:
     acquisitionOverlays.filter((record) => record.archiveOriginalInspected).length +
-    serialEvidenceRecords.filter((record) => record.archiveOriginalInspected).length,
+    theatricalSerialEvidenceRecords.filter((record) => record.archiveOriginalInspected).length +
+    newspaperEvidenceRecords.filter((record) => record.archiveOriginalInspected).length,
   reproductionRightsResolved:
     acquisitionOverlays.filter(
       (record) => record.rightsState !== 'open-digital-facsimile / reproduction-rights-unresolved',
     ).length +
-    serialEvidenceRecords.filter(
+    theatricalSerialEvidenceRecords.filter(
+      (record) => record.rightsState !== 'open-digital-facsimile / reproduction-rights-unresolved',
+    ).length +
+    newspaperEvidenceRecords.filter(
       (record) => record.rightsState !== 'open-digital-facsimile / reproduction-rights-unresolved',
     ).length,
   productionAuthorized: false,

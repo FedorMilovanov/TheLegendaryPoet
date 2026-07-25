@@ -19,6 +19,9 @@ const fail = (message: string): never => {
 const records: readonly YeseninPartOneMariengofAccessPassThirteen[] =
   yeseninPartOneMariengofAccessPassThirteen;
 const summary = yeseninPartOnePhysicalWitnessEffectiveStateSummary;
+const mariengofInvestigatedHolds = yeseninPartOneAccessInvestigatedHistoricalWitnesses.filter(
+  (record) => record.accessInvestigationId?.startsWith('MA13-YE1-'),
+);
 
 if (records.length !== 2) {
   fail(`expected two exact Mariengof access records, found ${records.length}`);
@@ -120,26 +123,24 @@ for (const record of records) {
   }
 }
 
-if (yeseninPartOneAccessInvestigatedHistoricalWitnesses.length !== 2) {
-  fail('exactly two active historical HOLDs must carry access investigations');
+if (mariengofInvestigatedHolds.length !== 2) {
+  fail(`exactly two Mariengof HOLDs must carry MA13 investigations, found ${mariengofInvestigatedHolds.length}`);
 }
-const investigatedIds = yeseninPartOneAccessInvestigatedHistoricalWitnesses.map(
-  (record) => record.historicalRecord.id,
-);
+const investigatedIds = mariengofInvestigatedHolds.map((record) => record.historicalRecord.id);
 if (
   investigatedIds[0] !== 'PW6-YE1-MARIENGOF-1927' ||
   investigatedIds[1] !== 'PW6-YE1-MARIENGOF-1928'
 ) {
-  fail(`unexpected access-investigated HOLD order: ${investigatedIds.join(', ')}`);
+  fail(`unexpected Mariengof access-investigated HOLD order: ${investigatedIds.join(', ')}`);
 }
-for (const effective of yeseninPartOneAccessInvestigatedHistoricalWitnesses) {
+for (const effective of mariengofInvestigatedHolds) {
   if (
     effective.effectiveStatus !== 'active-hold' ||
     effective.remainingTargets?.length !== 1 ||
     effective.historicalRecord.facsimileBytesAcquired !== false ||
     effective.historicalRecord.facsimileVisuallyInspected !== false
   ) {
-    fail(`access investigation falsely completed its HOLD: ${JSON.stringify(effective)}`);
+    fail(`Mariengof access investigation falsely completed its HOLD: ${JSON.stringify(effective)}`);
   }
 }
 const effective1928 = yeseninPartOneEffectiveHistoricalWitnesses.find(
@@ -156,15 +157,15 @@ if (
 if (
   summary.historicalQueueRecords !== 12 ||
   summary.mariengofAccessRecords !== 2 ||
-  summary.activeHistoricalHolds !== 11 ||
-  summary.untouchedActiveHistoricalHolds !== 10 ||
-  summary.accessInvestigatedHistoricalHolds !== 2 ||
+  summary.activeHistoricalHolds !== 10 ||
+  summary.untouchedActiveHistoricalHolds !== 9 ||
+  summary.accessInvestigatedHistoricalHolds !== 3 ||
   summary.metadataCorrectedHistoricalHolds !== 1 ||
   summary.viewerApiDownloadBlockedObjects !== 1 ||
   summary.unresolvedPublishedViewerRoutes !== 1 ||
   summary.partiallySatisfiedHistoricalHolds !== 1 ||
-  summary.supersededHistoricalHolds !== 1 ||
-  summary.acquiredFacsimileObjects !== 6 ||
+  summary.supersededHistoricalHolds !== 2 ||
+  summary.acquiredFacsimileObjects !== 9 ||
   summary.archiveOriginalsInspected !== 0 ||
   summary.reproductionRightsResolved !== 0 ||
   summary.productionAuthorized !== false
@@ -206,15 +207,15 @@ console.log(
         (record) => record.state === 'viewer-api-verified-download-blocked',
       ).length,
       pdfObjectsAcquired: records.filter((record) => record.facsimileBytesAcquired).length,
-      accessInvestigationEdges: yeseninPartOneAccessInvestigatedHistoricalWitnesses.map(
-        (record) => ({
-          historicalId: record.historicalRecord.id,
-          investigationId: record.accessInvestigationId,
-          correctedCatalogueUrl: record.correctedCatalogueUrl,
-          effectiveStatus: record.effectiveStatus,
-          remainingTargets: record.remainingTargets,
-        }),
-      ),
+      accessInvestigationEdges: mariengofInvestigatedHolds.map((record) => ({
+        historicalId: record.historicalRecord.id,
+        investigationId: record.accessInvestigationId,
+        correctedCatalogueUrl: record.correctedCatalogueUrl,
+        effectiveStatus: record.effectiveStatus,
+        remainingTargets: record.remainingTargets,
+      })),
+      totalAccessInvestigatedHistoricalHolds:
+        yeseninPartOneAccessInvestigatedHistoricalWitnesses.length,
       artifactDigests: {
         research: records[0].researchArtifactDigest,
         diagnostics: records[0].diagnosticArtifactDigest,
