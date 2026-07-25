@@ -7,6 +7,59 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
 const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
 
+function pngSize(file: string) {
+  const buffer = readBuffer(file);
+  assert.deepEqual(
+    [...buffer.subarray(0, 8)],
+    [137, 80, 78, 71, 13, 10, 26, 10],
+    `${file}: invalid PNG signature`,
+  );
+  assert.ok(buffer.length >= 24, `${file}: truncated PNG`);
+  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+}
+
+function jpegSize(file: string) {
+  const buffer = readBuffer(file);
+  assert.ok(buffer.length >= 12, `${file}: truncated JPEG`);
+  assert.equal(buffer[0], 0xff, `${file}: invalid JPEG signature`);
+  assert.equal(buffer[1], 0xd8, `${file}: invalid JPEG signature`);
+
+  const sofMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  let offset = 2;
+
+  while (offset + 9 < buffer.length) {
+    if (buffer[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+
+    while (offset < buffer.length && buffer[offset] === 0xff) offset += 1;
+    const marker = buffer[offset];
+    if (marker === undefined) break;
+
+    if (marker === 0xd8 || marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      offset += 1;
+      continue;
+    }
+    if (marker === 0xda) break;
+
+    assert.ok(offset + 2 < buffer.length, `${file}: malformed JPEG segment`);
+    const length = buffer.readUInt16BE(offset + 1);
+    assert.ok(length >= 2 && offset + 1 + length <= buffer.length, `${file}: malformed JPEG segment length`);
+
+    if (sofMarkers.has(marker)) {
+      return {
+        height: buffer.readUInt16BE(offset + 4),
+        width: buffer.readUInt16BE(offset + 6),
+      };
+    }
+
+    offset += 1 + length;
+  }
+
+  throw new Error(`${file}: JPEG dimensions not found`);
+}
+
 const component = read('src/components/BrandMark.tsx');
 const index = read('index.html');
 const manifest = JSON.parse(read('public/site.webmanifest')) as {
@@ -14,8 +67,11 @@ const manifest = JSON.parse(read('public/site.webmanifest')) as {
 };
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
+const standaloneSvg = read('public/brand-emblem.svg');
+const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260725-2';
+const version = 'cloak-20260725-3';
+const masterSha256 = '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
@@ -33,6 +89,7 @@ assert.doesNotMatch(component, /data-brand-fallback/, 'the retired substitute ve
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|mist|aura)/, 'retired emblem layers remain in BrandMark');
 assert.doesNotMatch(component, /<path|<circle|<ellipse|<polygon/, 'BrandMark must not redraw a different character over the selected artwork');
 
+assert.match(index, new RegExp(`name="brand-release" content="${version}"`), 'live release marker is missing');
 assert.match(
   index,
   new RegExp(`brand-emblem-master\\.webp\\?v=${version}`),
@@ -44,8 +101,18 @@ assert.match(index, new RegExp(`apple-touch-icon\\.png\\?v=${version}`), 'Apple 
 assert.match(index, new RegExp(`brand-emblem-mask\\.svg\\?v=${version}`), 'Safari mask is not cache-versioned');
 assert.match(index, new RegExp(`site\\.webmanifest\\?v=${version}`), 'manifest link is not cache-versioned');
 assert.doesNotMatch(index, /rel="icon"[^>]+favicon\.svg/, 'the retired SVG favicon is still preferred by browsers');
-assert.match(index, /og-image\.jpg/, 'Open Graph image is missing');
+assert.match(index, new RegExp(`og-image\\.jpg\\?v=${version}`), 'Open Graph image is not cache-versioned');
 assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph MIME type must remain JPEG');
+assert.match(index, new RegExp(`icon-512\\.png\\?v=${version}`), 'structured-data logo is not cache-versioned');
+
+assert.match(standaloneSvg, new RegExp(`brand-emblem-master\\.webp\\?v=${version}`), 'standalone SVG does not use the approved master');
+assert.doesNotMatch(standaloneSvg, /<(?:path|circle|ellipse|polygon|polyline)\b/, 'standalone SVG still contains a retired substitute character');
+assert.equal(fs.existsSync(path.resolve('public/favicon.svg')), false, 'obsolete fallback favicon.svg must not be published');
+assert.equal(
+  release.trim(),
+  `${version}\nmaster-sha256=${masterSha256}`,
+  'brand release sentinel does not match the selected artwork',
+);
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
 for (const src of [
@@ -72,22 +139,45 @@ for (const source of ['master-320-q92.webp.b64', 'favicon-16.png.b64', 'favicon-
   assert.ok(fs.existsSync(path.resolve('src/brand-assets', source)), `encoded source ${source} is missing`);
 }
 assert.doesNotMatch(materializer, /LPBRAND1|assets\.part/, 'the retired truncated archive reader remains active');
+assert.match(materializer, /spawnSync/, 'platform assets are no longer generated from the approved master');
+assert.match(materializer, /ffmpeg/i, 'FFmpeg image pipeline is missing');
+
+for (const output of [
+  'apple-touch-icon.png',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-512.png',
+  'mstile-150x150.png',
+  'og-image.jpg',
+]) {
+  assert.match(materializer, new RegExp(output.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `materializer does not create ${output}`);
+}
 
 const expectedHashes: Record<string, string> = {
-  'public/brand-emblem-master.webp': '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d',
+  'public/brand-emblem-master.webp': masterSha256,
   'public/favicon-16.png': 'b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c',
   'public/favicon-32.png': '27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622',
-  'public/apple-touch-icon.png': '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2',
-  'public/icon-192.png': '67f484fb1cf3d774f87522370fb97fbc3052ed0ec9b3b4813b4414ed63ec393b',
-  'public/icon-512.png': '87b10432c44520f659c5f1ecde293f655f68792ec1e3aa4aa4aed2b65911b281',
-  'public/icon-maskable-512.png': 'e90b2455c37a99aa86b9c5d85c1097c250249b103953d678c1040b34cdf5c09e',
-  'public/mstile-150x150.png': '30be3316fc001a5d2308d9ee47a83260a298094c6684aaefa7ef82660b68c744',
-  'public/og-image.jpg': '5562fbdebddc81777672a165a1eb10c964adb207ef3a58a260a305a4587882f3',
 };
-
 for (const [file, expected] of Object.entries(expectedHashes)) {
   assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or the old emblem returned`);
 }
+
+const expectedPngSizes: Record<string, { width: number; height: number }> = {
+  'public/favicon-16.png': { width: 16, height: 16 },
+  'public/favicon-32.png': { width: 32, height: 32 },
+  'public/apple-touch-icon.png': { width: 180, height: 180 },
+  'public/icon-192.png': { width: 192, height: 192 },
+  'public/icon-512.png': { width: 512, height: 512 },
+  'public/icon-maskable-512.png': { width: 512, height: 512 },
+  'public/mstile-150x150.png': { width: 150, height: 150 },
+};
+for (const [file, expected] of Object.entries(expectedPngSizes)) {
+  assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`);
+  assert.ok(fs.statSync(path.resolve(file)).size > 500, `${file}: generated asset is unexpectedly small`);
+}
+
+assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'public/og-image.jpg: generated dimensions are wrong');
+assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'public/og-image.jpg: generated share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: approved cloak artwork materializes deterministically, old fallback is absent, and cache-busted assets are consistent');
+console.log('brand validation: deterministic approved artwork, regenerated platform assets, clean SVG and live release sentinel are consistent');
