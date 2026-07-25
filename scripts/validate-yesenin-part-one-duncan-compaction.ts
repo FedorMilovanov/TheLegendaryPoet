@@ -44,6 +44,13 @@ if (
   fail('publication, registration or media boundary changed');
 }
 if (
+  companion.finalEditorialReviewComplete !== true ||
+  companion.editorialPassOne !== 'literary-source-boundary-pass-one' ||
+  companion.readerFacingTextBlockCap !== 25
+) {
+  fail('companion editorial completion metadata is inconsistent');
+}
+if (
   partOne.evidenceNodeCount !== 146 ||
   partOne.readerFacingTextBlocks !== 140 ||
   partOne.duncanCompactionApplied !== true ||
@@ -105,11 +112,14 @@ for (const phrase of [
   '23 и ранним утром 24 июля',
   'началом ноября',
   'взаимное разрушение',
-  'item-level',
+  'конкретные единицы не заказаны и не просмотрены',
 ] as const) {
   if (!companionText.toLocaleLowerCase('ru-RU').includes(phrase.toLocaleLowerCase('ru-RU'))) {
     fail(`companion draft does not preserve transferred subject: ${phrase}`);
   }
+}
+if (/item-level/iu.test(companionText)) {
+  fail('companion reader-facing prose regressed to the internal term item-level');
 }
 
 const earlyB = read('src/data/essays/yeseninPartOneEditorialPassEightEarlyB.ts');
@@ -143,7 +153,7 @@ for (const forbidden of [
 console.log(
   JSON.stringify(
     {
-      status: '146-EVIDENCE-NODES / 140-READER-TEXT-BLOCKS / 6-MOVED-TO-COMPANION',
+      status: '146-EVIDENCE-NODES / 140-READER-TEXT-BLOCKS / 6-MOVED-TO-COMPANION / COMPANION-EDITED',
       evidenceNodes: Object.keys(partOne.evidenceByBlockId).length,
       readerFacingTextBlocks: renderedBlocks.length,
       sectionBlocks: sectionBlocks.length,
@@ -151,6 +161,8 @@ console.log(
       retainedDuncanBlocks: retained.length,
       transferredDuncanBlocks: transferred.length,
       companionSections: companion.essay.blocks.filter((block) => block.type === 'section').length,
+      companionTextBlocks: companion.essay.blocks.filter((block) => 'text' in block).length,
+      companionFinalEditorialReviewComplete: companion.finalEditorialReviewComplete,
       companionRegistered: false,
       publicationAuthorized: false,
       mediaPublicationAuthorized: false,
