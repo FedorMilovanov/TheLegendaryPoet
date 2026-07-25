@@ -1,0 +1,34 @@
+name: Yesenin Pravda East View Exact Featured Target
+
+on:
+  push:
+    branches:
+      - research/yesenin-pravda-eastview-featured-target-discovery
+  pull_request:
+    branches:
+      - research/yesenin-pravda-eastview-discovery-pass27
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Inspect exact literal East View issue target
+        run: node scripts/discover-yesenin-pravda-eastview-featured-target.mjs
+      - name: Upload immutable target evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-pravda-eastview-featured-target
+          path: artifacts/yesenin-pravda-eastview-featured-target
+          if-no-files-found: error
+          retention-days: 14
