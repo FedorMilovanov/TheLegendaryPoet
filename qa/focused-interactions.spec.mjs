@@ -189,3 +189,33 @@ test.describe('settled slow-network visual', () => {
     expect(pageErrors).toEqual([]);
   });
 });
+
+
+test.describe('premium home poet windows', () => {
+  test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
+  test('six canonical poets keep working links, focus and premium hover depth', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const windows = page.locator('[data-hero-poet-window]');
+    await expect(windows).toHaveCount(6);
+    expect(await windows.evaluateAll((links) => links.map((link) => link.getAttribute('href')))).toEqual([
+      '/poets/sergei-yesenin', '/poets/mikhail-lermontov', '/poets/alexander-pushkin',
+      '/poets/fyodor-tyutchev', '/poets/vladimir-mayakovsky', '/poets/afanasy-fet',
+    ]);
+    const decoded = await windows.locator('img').evaluateAll((images) => images.map((image) => ({ complete: image.complete, width: image.naturalWidth, height: image.naturalHeight })));
+    expect(decoded.every((image) => image.complete && image.width > 0 && image.height > 0)).toBe(true);
+    const first = windows.first();
+    const surface = first.locator('[data-hero-poet-window-surface]');
+    const glow = first.locator('[data-hero-poet-window-glow]');
+    const before = await surface.evaluate((node) => ({ transform: getComputedStyle(node).transform, glowOpacity: getComputedStyle(node.querySelector('[data-hero-poet-window-glow]')).opacity }));
+    await first.hover({ position: { x: 12, y: 18 } });
+    await expect.poll(() => surface.evaluate((node) => getComputedStyle(node).transform), { timeout: 2_500 }).not.toBe(before.transform);
+    await expect.poll(() => glow.evaluate((node) => getComputedStyle(node).opacity), { timeout: 2_500 }).not.toBe(before.glowOpacity);
+    await first.focus();
+    await expect(first).toBeFocused();
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'desktop-premium-poet-windows.png'), fullPage: true });
+    expect(pageErrors).toEqual([]);
+  });
+});
