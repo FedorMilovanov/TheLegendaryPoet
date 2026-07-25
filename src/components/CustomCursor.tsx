@@ -26,7 +26,7 @@ const CustomCursor = () => {
   const latestPointerRef = useRef({ x: -100, y: -100 });
 
   useEffect(() => {
-    const finePointer = window.matchMedia('(pointer: fine)');
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const forcedColors = window.matchMedia('(forced-colors: active)');
     const idleWindow = window as IdleCapableWindow;
