@@ -46,15 +46,11 @@ jobs:
       - name: Install dependencies
         run: npm ci --silent
       - name: Validate 48 source routes and 16 real visual placements
-        id: marathon
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           npm run validate:yesenin-primary-marathon-pass15 2>&1 | tee yesenin-primary-source-marathon-pass15.log
       - name: TypeScript typecheck
-        id: typecheck
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -69,8 +65,3 @@ jobs:
             yesenin-primary-source-marathon-pass15-typecheck.log
           if-no-files-found: error
           retention-days: 7
-      - name: Enforce pass-15 results
-        if: always()
-        run: |
-          test "${{ steps.marathon.outcome }}" = "success"
-          test "${{ steps.typecheck.outcome }}" = "success"
