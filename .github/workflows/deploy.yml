@@ -62,9 +62,50 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify the custom domain serves the approved emblem release
+        env:
+          EXPECTED_VERSION: cloak-20260725-3
+          EXPECTED_MASTER_SHA256: 186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 36); do
+            nonce="${GITHUB_SHA}-${attempt}"
+            echo "Live verification attempt ${attempt}/36"
+
+            release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "https://thelegendarypoet.ru/brand-release.txt?verify=${nonce}" || true)"
+            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+              "https://thelegendarypoet.ru/?brand_verify=${nonce}" || true)"
+
+            if [[ "${release}" == "${EXPECTED_VERSION}"$'\n'"master-sha256=${EXPECTED_MASTER_SHA256}" ]] \
+              && grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" <<<"${html}"; then
+              curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "https://thelegendarypoet.ru/brand-emblem-master.webp?v=${EXPECTED_VERSION}&verify=${nonce}" \
+                -o /tmp/brand-emblem-master.webp
+              echo "${EXPECTED_MASTER_SHA256}  /tmp/brand-emblem-master.webp" | sha256sum -c -
+
+              svg="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
+                "https://thelegendarypoet.ru/brand-emblem.svg?verify=${nonce}")"
+              grep -Fq "brand-emblem-master.webp?v=${EXPECTED_VERSION}" <<<"${svg}"
+              if grep -Eq '<(path|circle|ellipse|polygon|polyline)([[:space:]>])' <<<"${svg}"; then
+                echo "Standalone SVG still contains a retired substitute character"
+              else
+                echo "Verified ${EXPECTED_VERSION} on the custom domain with the approved master SHA-256"
+                exit 0
+              fi
+            fi
+
+            sleep 10
+          done
+
+          echo "::error::GitHub Pages deployment finished, but the custom domain did not serve ${EXPECTED_VERSION} with the approved emblem within six minutes."
+          exit 1
