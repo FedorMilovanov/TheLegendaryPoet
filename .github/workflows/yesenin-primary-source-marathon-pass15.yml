@@ -1,0 +1,67 @@
+name: Yesenin Primary Source Marathon Pass 15
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_PRIMARY_SOURCE_MARATHON_PASS15_2026-07-25.md'
+      - 'research/yesenin/PART_ONE_VISUAL_PLACEMENT_PASS15_2026-07-25.md'
+      - 'src/data/essays/yeseninPrimarySourceMarathonPassFifteen.ts'
+      - 'scripts/validate-yesenin-primary-source-marathon-pass15.ts'
+      - '.github/workflows/yesenin-primary-source-marathon-pass15.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+  push:
+    branches:
+      - main
+      - work/local-images-playwright-wtoc
+      - research/yesenin-primary-source-marathon-pass15
+    paths:
+      - 'research/yesenin/PART_ONE_PRIMARY_SOURCE_MARATHON_PASS15_2026-07-25.md'
+      - 'research/yesenin/PART_ONE_VISUAL_PLACEMENT_PASS15_2026-07-25.md'
+      - 'src/data/essays/yeseninPrimarySourceMarathonPassFifteen.ts'
+      - 'scripts/validate-yesenin-primary-source-marathon-pass15.ts'
+      - '.github/workflows/yesenin-primary-source-marathon-pass15.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+
+concurrency:
+  group: yesenin-primary-source-marathon-pass15-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate 48 source routes and 16 real visual placements
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-primary-marathon-pass15 2>&1 | tee yesenin-primary-source-marathon-pass15.log
+      - name: TypeScript typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee yesenin-primary-source-marathon-pass15-typecheck.log
+      - name: Upload pass-15 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-primary-source-marathon-pass15-diagnostics
+          path: |
+            yesenin-primary-source-marathon-pass15.log
+            yesenin-primary-source-marathon-pass15-typecheck.log
+          if-no-files-found: error
+          retention-days: 7
