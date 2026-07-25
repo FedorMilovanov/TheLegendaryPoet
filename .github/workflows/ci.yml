@@ -25,6 +25,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - name: Validate approved brand assets
+        run: npm run validate:brand
       - name: Validate content, stores, and literary style
         run: npm run check:content
       - name: Validate persistent app shell invariants
