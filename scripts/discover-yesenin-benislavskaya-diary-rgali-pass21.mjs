@@ -13,7 +13,7 @@ const targetNumber = '1123';
 const elementsOnPage = 20;
 const maximumPages = 90;
 const baseUrl = `https://rgali.ru/storage-unit?fundId=${fundId}&opisId=${opisId}`;
-const userAgent = 'TheLegendaryPoet-RGALI-Discovery/1.1 (+https://github.com/FedorMilovanov/TheLegendaryPoet)';
+const userAgent = 'TheLegendaryPoet-RGALI-Discovery/1.2 (+https://github.com/FedorMilovanov/TheLegendaryPoet)';
 const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 
 function decodeEntities(value) {
@@ -28,9 +28,10 @@ function decodeEntities(value) {
     .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)));
 }
 
-function normalize(value) {
+function normalizeVisibleText(value) {
   return decodeEntities(
     value
+      .replace(/<!--[\s\S]*?-->/g, ' ')
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
       .replace(/<[^>]+>/g, ' '),
@@ -61,7 +62,7 @@ async function fetchHtml(url) {
       `invalid RGALI HTML ${url}: HTTP ${response.status}, ${contentType}, ${bytes.length} bytes`,
     );
   }
-  return { bytes, html: bytes.toString('utf8'), finalUrl: response.url, contentType };
+  return { bytes, html: bytes.toString('utf8'), finalUrl: response.url };
 }
 
 function extractDetailCandidates(html, pageUrl) {
@@ -70,13 +71,15 @@ function extractDetailCandidates(html, pageUrl) {
     /<a\b[^>]*href=["']([^"']*\/storage-unit\/\d+[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi,
   )) {
     const url = new URL(decodeEntities(match[1]), pageUrl).toString();
-    const anchorText = normalize(match[2]);
     const rowStart = html.lastIndexOf('<tr', match.index);
     const rowEndStart = html.indexOf('</tr>', match.index + match[0].length);
     const rowEnd = rowEndStart < 0 ? match.index + match[0].length : rowEndStart + 5;
     const rowHtml = rowStart < 0 ? match[0] : html.slice(rowStart, rowEnd);
-    const context = normalize(rowHtml);
-    candidates.push({ url, anchorText, context });
+    candidates.push({
+      url,
+      anchorText: normalizeVisibleText(match[2]),
+      context: normalizeVisibleText(rowHtml),
+    });
   }
   return candidates;
 }
@@ -108,12 +111,16 @@ for (let page = 1; page <= maximumPages; page += 1) {
   const fetched = await fetchHtml(url);
   const file = `opis-page-${String(page).padStart(2, '0')}.html`;
   await writeFile(join(rawRoot, file), fetched.bytes);
+
   const candidates = extractDetailCandidates(fetched.html, fetched.finalUrl);
   const fresh = candidates.filter((candidate) => !seenDetailUrls.has(candidate.url));
   for (const candidate of fresh) seenDetailUrls.add(candidate.url);
   const pageMatches = fresh.filter(exactTarget);
   exactMatches.push(...pageMatches.map((candidate) => ({ ...candidate, page })));
-  const pageMarkerMatch = fetched.html.match(/<div[^>]+id=["']currentPage["'][^>]*>(\d+)<\/div>/i);
+
+  const pageMarkerMatch = fetched.html.match(
+    /<div[^>]+id=["']currentPage["'][^>]*>(\d+)<\/div>/i,
+  );
   const declaredCurrentPage = pageMarkerMatch ? Number(pageMarkerMatch[1]) : null;
   crawledPages.push({
     page,
@@ -141,8 +148,8 @@ for (let page = 1; page <= maximumPages; page += 1) {
 
 const uniqueMatches = [...new Map(exactMatches.map((match) => [match.url, match])).values()];
 if (uniqueMatches.length !== 1) {
-  const manifest = {
-    schema: 'yesenin-benislavskaya-diary-rgali-pass21/v2',
+  const failedManifest = {
+    schema: 'yesenin-benislavskaya-diary-rgali-pass21/v3',
     generatedAt: new Date().toISOString(),
     fundId,
     opisId,
@@ -156,7 +163,11 @@ if (uniqueMatches.length !== 1) {
     contentInspected: false,
     productionAuthorized: false,
   };
-  await writeFile(join(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await writeFile(
+    join(outputRoot, 'manifest.json'),
+    `${JSON.stringify(failedManifest, null, 2)}\n`,
+    'utf8',
+  );
   throw new Error(
     `expected exactly one literal RGALI match for ${targetCipher}, found ${uniqueMatches.length}`,
   );
@@ -165,7 +176,7 @@ if (uniqueMatches.length !== 1) {
 const match = uniqueMatches[0];
 const detail = await fetchHtml(match.url);
 await writeFile(join(rawRoot, 'target-detail.html'), detail.bytes);
-const detailText = normalize(detail.html);
+const detailText = normalizeVisibleText(detail.html);
 
 const checks = {
   targetCipherPresent:
@@ -176,14 +187,13 @@ const checks = {
   diaryPresent: /Дневник/iu.test(detailText),
   thirtyFiveLeavesPresent:
     detailText.includes('Количество листов: 35') ||
-    /Количество\s+листов\s*:\s*35(?:\s|$)/iu.test(detailText) ||
-    /35\s*л\./iu.test(detailText),
-  typescriptPresent: /Машинопис/iu.test(detailText),
+    /Количество\s+листов\s*:\s*35(?:\s|$)/iu.test(detailText),
+  typescriptPresent: /Способ воспроизведения:\s*Машинописная копия/iu.test(detailText),
   zelinskyFundPresent: /Зелинск/iu.test(detailText),
 };
 
 const manifest = {
-  schema: 'yesenin-benislavskaya-diary-rgali-pass21/v2',
+  schema: 'yesenin-benislavskaya-diary-rgali-pass21/v3',
   generatedAt: new Date().toISOString(),
   authority: 'Российский государственный архив литературы и искусства',
   fundId,
@@ -200,6 +210,7 @@ const manifest = {
     htmlSha256: sha256(detail.bytes),
     rawFile: 'raw/target-detail.html',
     checks,
+    visibleTextSha256: sha256(Buffer.from(detailText, 'utf8')),
     normalizedContext: detailText.slice(0, 5000),
   },
   exactDetailCardIdentified: Object.values(checks).every(Boolean),
@@ -222,11 +233,13 @@ const summary = [
   `- Detail URL: ${detail.finalUrl}`,
   `- Detail HTML bytes: ${detail.bytes.length}`,
   `- Detail HTML SHA-256: ${sha256(detail.bytes)}`,
+  `- Visible text SHA-256: ${manifest.detail.visibleTextSha256}`,
   `- Cipher present: ${checks.targetCipherPresent}`,
   `- Benislavskaya present: ${checks.benislavskayaPresent}`,
   `- Diary present: ${checks.diaryPresent}`,
-  `- 35 leaves present: ${checks.thirtyFiveLeavesPresent}`,
-  `- Typescript present: ${checks.typescriptPresent}`,
+  `- 35 visible leaves present: ${checks.thirtyFiveLeavesPresent}`,
+  `- Typescript copy present: ${checks.typescriptPresent}`,
+  '- Hidden HTML comments excluded from visible-text evidence: true',
   '- Catalogue ID constructed: false',
   '- Facsimile acquired: false',
   '- Content inspected: false',
@@ -238,6 +251,6 @@ console.log(summary.join('\n'));
 
 if (!manifest.exactDetailCardIdentified) {
   throw new Error(
-    `literal detail card found, but required identity markers are incomplete: ${JSON.stringify(checks)}`,
+    `literal detail card found, but required visible identity markers are incomplete: ${JSON.stringify(checks)}`,
   );
 }
