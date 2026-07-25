@@ -1,5 +1,7 @@
 export interface YeseninDuncanMainArticleSplitRecord {
-  blockId: `yesenin-p1-transition-duncan-${string}`;
+  blockId:
+    | `yesenin-p1-transition-duncan-${string}`
+    | 'yesenin-p1-transition-series-boundary';
   destination: 'main-biography' | 'companion-investigation';
   reason: string;
 }
@@ -40,7 +42,7 @@ export const yeseninDuncanMainArticleSplit = [
     reason: 'Keeps the famous scene explicitly attributed instead of silently repeating it as fact.',
   },
   {
-    blockId: 'yesenin-p1-transition-duncan-series-boundary',
+    blockId: 'yesenin-p1-transition-series-boundary',
     destination: 'main-biography',
     reason: 'Closes Part I by opening the geography and scale of Part II.',
   },
