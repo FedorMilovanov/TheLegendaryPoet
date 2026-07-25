@@ -6,6 +6,11 @@ import { setActiveLenis } from '../utils/smoothScroll';
 const HASH_RETRY_LIMIT = 20;
 const FIXED_HEADER_OFFSET = 96;
 
+type IdleCapableWindow = Window & typeof globalThis & {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
 function decodeHash(hash: string) {
   const raw = hash.replace(/^#/, '');
   if (!raw) return '';
@@ -25,24 +30,28 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     window.history.scrollRestoration = 'manual';
     const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const idleWindow = window as IdleCapableWindow;
     let cancelled = false;
     let animationFrameId = 0;
+    let idleCallbackId = 0;
+    let fallbackTimeoutId = 0;
     let instance: Lenis | null = null;
 
     const scrollTop = () => {
-      if (lenisRef.current) lenisRef.current.scrollTo(0, { duration: prefersReduced ? 0 : 0.85 });
+      if (lenisRef.current) lenisRef.current.scrollTo(0, { duration: prefersReduced ? 0 : 0.72 });
       else window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
     };
 
     window.addEventListener('tlp-scroll-top', scrollTop);
 
-    // Native touch scrolling is more reliable and less power-hungry on phones.
-    // Lenis is loaded only for fine-pointer devices that allow motion.
-    if (!prefersReduced && !coarsePointer) {
+    const startLenis = () => {
+      if (cancelled) return;
       void import('lenis').then(({ default: LenisConstructor }) => {
         if (cancelled) return;
         instance = new LenisConstructor({
-          duration: 1.08,
+          // Responsive rather than syrupy: the old 1.08s interpolation made the
+          // entire interface feel delayed even when rendering was healthy.
+          duration: 0.82,
           easing: (time) => Math.min(1, 1.001 - Math.pow(2, -10 * time)),
           orientation: 'vertical',
           gestureOrientation: 'vertical',
@@ -54,19 +63,32 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
         setActiveLenis(instance);
 
         const raf = (time: number) => {
-          instance?.raf(time);
+          if (document.visibilityState === 'visible') instance?.raf(time);
           animationFrameId = requestAnimationFrame(raf);
         };
         animationFrameId = requestAnimationFrame(raf);
       }).catch(() => {
         // Native scrolling remains fully functional when the enhancement chunk fails.
       });
+    };
+
+    // Native touch scrolling is more reliable and less power-hungry on phones.
+    // On desktop, defer Lenis until the first viewport has painted and decoded;
+    // it no longer competes with the intro, hero title and six eager portraits.
+    if (!prefersReduced && !coarsePointer) {
+      if (idleWindow.requestIdleCallback) {
+        idleCallbackId = idleWindow.requestIdleCallback(startLenis, { timeout: 1_400 });
+      } else {
+        fallbackTimeoutId = window.setTimeout(startLenis, 650);
+      }
     }
 
     return () => {
       cancelled = true;
       window.removeEventListener('tlp-scroll-top', scrollTop);
       window.history.scrollRestoration = previousRestoration;
+      if (idleCallbackId) idleWindow.cancelIdleCallback?.(idleCallbackId);
+      if (fallbackTimeoutId) window.clearTimeout(fallbackTimeoutId);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (instance) instance.destroy();
       lenisRef.current = null;
@@ -104,7 +126,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
 
     const scrollToHashTarget = (target: HTMLElement) => {
       if (lenisRef.current) {
-        lenisRef.current.scrollTo(target, { offset: -FIXED_HEADER_OFFSET, duration: 0.8 });
+        lenisRef.current.scrollTo(target, { offset: -FIXED_HEADER_OFFSET, duration: 0.72 });
         return;
       }
       const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
