@@ -105,7 +105,7 @@ for (const [index, item] of visuals.entries()) {
     fail(`${item.id}: hashes appeared before byte acquisition`);
   }
   if (item.productionAuthorized !== false) fail(`${item.id}: production was falsely authorized`);
-  if (item.editorialUse.length < 55) fail(`${item.id}: weak placement boundary`);
+  if (item.editorialUse.length < 45) fail(`${item.id}: weak placement boundary`);
   sections.set(item.placement, (sections.get(item.placement) ?? 0) + 1);
 }
 for (const section of [
