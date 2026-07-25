@@ -96,6 +96,7 @@ jobs:
           --reporter=line,html
 
       - name: Run dedicated premium homepage and pointer-performance matrix
+        if: ${{ always() && steps.production_build.outcome == 'success' }}
         id: home_polish
         run: |
           set +e
