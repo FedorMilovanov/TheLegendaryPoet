@@ -43,18 +43,21 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
     { timeout: 5_000, message: 'ratings page must have enough vertical range for floating chrome geometry' },
   ).toBeGreaterThan(500);
 
-  // Exercise the same wheel input path a desktop visitor uses. Calling
-  // window.scrollTo directly can conflict with the active Lenis owner and leave
-  // window.scrollY at zero even though application scrolling is healthy.
+  // Exercise the same wheel input path a desktop visitor uses. Downward motion
+  // enters reading mode; a small upward motion is the documented way to reveal
+  // the persistent chrome again before measuring its collision geometry.
   await page.mouse.move(720, 500);
   await page.mouse.wheel(0, 900);
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(400);
-
-  // Auto-hide is a separate behavior and can be mid-transition depending on the
-  // scroll scheduler. Force the documented visible state so this test measures
-  // the collision contract, not a temporarily translated, pointer-inert pill.
-  await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
-  await page.waitForTimeout(650);
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 3_000, message: 'downward reading scroll should hide participating chrome' },
+  ).toBe(true);
+  await page.mouse.wheel(0, -120);
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 3_000, message: 'upward user scroll should reveal participating chrome' },
+  ).toBe(false);
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
@@ -62,6 +65,10 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await expect(player).toBeVisible();
   await expect(palette).toBeVisible();
   await expect(scrollTop).toBeVisible();
+  await expect.poll(
+    () => palette.evaluate((element) => Number(getComputedStyle(element).opacity)),
+    { timeout: 3_000, message: 'command palette trigger should finish its reveal transition' },
+  ).toBeGreaterThan(0.9);
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
