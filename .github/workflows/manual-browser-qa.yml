@@ -15,6 +15,55 @@ permissions:
   contents: read
 
 jobs:
+  brand-recovery-inventory:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'agent/deep-home-polish-20260725'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRAND_SHA: 1cf00ce72adbe6c52abdecb4b7e633bfda9df815
+    steps:
+      - name: Inventory recent runs, artifacts, events and refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          mkdir -p brand-recovery/artifacts
+
+          gh api "/repos/${repo}/commits/${BRAND_SHA}" > brand-recovery/brand-commit.json
+          gh api "/repos/${repo}/actions/runs?per_page=100" > brand-recovery/recent-runs.json
+          gh api "/repos/${repo}/events?per_page=100" > brand-recovery/recent-events.json
+          gh api "/repos/${repo}/git/matching-refs/heads/" > brand-recovery/head-refs.json
+
+          jq -r '.workflow_runs[] | [.id,.name,.head_branch,.head_sha,.event,.status,.conclusion,.created_at] | @tsv' \
+            brand-recovery/recent-runs.json > brand-recovery/recent-runs.tsv
+
+          while IFS=$'\t' read -r run_id _; do
+            gh api "/repos/${repo}/actions/runs/${run_id}/artifacts?per_page=100" \
+              > "brand-recovery/artifacts/${run_id}.json" || true
+          done < brand-recovery/recent-runs.tsv
+
+          jq -s '[.[].artifacts[]? | {id,name,size_in_bytes,expired,created_at,archive_download_url,workflow_run}]' \
+            brand-recovery/artifacts/*.json > brand-recovery/all-artifacts.json
+
+          jq -r '.[] | [.id,.name,.size_in_bytes,.created_at,(.workflow_run.id // ""),(.workflow_run.head_sha // "")] | @tsv' \
+            brand-recovery/all-artifacts.json > brand-recovery/all-artifacts.tsv
+
+          echo 'Recent runs:'
+          head -40 brand-recovery/recent-runs.tsv
+          echo 'Recent artifacts:'
+          head -80 brand-recovery/all-artifacts.tsv
+
+      - name: Upload brand recovery inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-recovery-inventory
+          path: brand-recovery
+          if-no-files-found: error
+          retention-days: 3
+
   browser-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 70
