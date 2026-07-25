@@ -1,0 +1,37 @@
+name: Yesenin Benislavskaya Inbound Discovery Pass 24
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/discover-yesenin-benislavskaya-inbound-pass24.mjs'
+      - '.github/workflows/yesenin-benislavskaya-inbound-discovery-pass24.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: yesenin-benislavskaya-inbound-pass24-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Discover fourteen inbound letters and exact gift inscription
+        run: node scripts/discover-yesenin-benislavskaya-inbound-pass24.mjs
+      - name: Upload Benislavskaya inbound discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-benislavskaya-inbound-pass24
+          path: artifacts/yesenin-benislavskaya-inbound-pass24
+          if-no-files-found: error
+          retention-days: 14
