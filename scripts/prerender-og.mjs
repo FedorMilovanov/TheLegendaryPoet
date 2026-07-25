@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SITE_URL = 'https://thelegendarypoet.ru';
-const BRAND_VERSION = 'cloak-20260725-3';
+const BRAND_VERSION = 'cloak-20260725-4';
 const DIST = path.resolve('dist');
 const PUBLIC = path.resolve('public');
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg?v=${BRAND_VERSION}`;

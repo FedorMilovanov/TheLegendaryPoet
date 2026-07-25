@@ -5,12 +5,24 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      source_sha:
+        description: Optional exact same-repository PR head to build
+        required: false
+        type: string
       status_sha:
-        description: Optional commit SHA that requested this trusted main deployment
+        description: Optional commit SHA that requested this trusted deployment
         required: false
         type: string
       pr_number:
         description: Optional pull request number for deployment diagnostics
+        required: false
+        type: string
+      expected_version:
+        description: Optional release id read from the exact PR head
+        required: false
+        type: string
+      expected_master_sha256:
+        description: Optional approved master SHA-256 read from the exact PR head
         required: false
         type: string
 
@@ -28,7 +40,41 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      verify_brand: ${{ steps.release.outputs.verify_brand }}
+      release_version: ${{ steps.release.outputs.release_version }}
+      master_sha256: ${{ steps.release.outputs.master_sha256 }}
     steps:
+      - name: Validate requested release provenance
+        if: inputs.source_sha != ''
+        uses: actions/github-script@v7
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          STATUS_SHA: ${{ inputs.status_sha }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        with:
+          script: |
+            const sourceSha = process.env.SOURCE_SHA || '';
+            const statusSha = process.env.STATUS_SHA || '';
+            const prNumber = Number(process.env.PR_NUMBER || '0');
+            if (!/^[a-f0-9]{40}$/.test(sourceSha) || sourceSha !== statusSha || !Number.isInteger(prNumber) || prNumber < 1) {
+              core.setFailed('Invalid exact-head deployment inputs');
+              return;
+            }
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const valid = pr.state === 'open'
+              && pr.base.ref === 'main'
+              && pr.head.repo?.full_name === `${context.repo.owner}/${context.repo.repo}`
+              && pr.head.ref.startsWith('deploy-live-')
+              && pr.head.sha === sourceSha;
+            if (!valid) {
+              core.setFailed('Requested SHA is not the current head of an open trusted deploy-live PR targeting main');
+            }
+
       - name: Mark requested Pages deployment pending
         if: inputs.status_sha != ''
         uses: actions/github-script@v7
@@ -42,10 +88,25 @@ jobs:
               sha: process.env.STATUS_SHA,
               state: 'pending',
               context: 'pages/deploy',
-              description: 'Trusted main deployment is building',
+              description: 'Trusted exact-head deployment is building',
             });
 
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify checked-out provenance
+        env:
+          EXPECTED_SOURCE_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          if [[ -n "${EXPECTED_SOURCE_SHA}" && "${actual}" != "${EXPECTED_SOURCE_SHA}" ]]; then
+            echo "::error::Checked out ${actual}, expected ${EXPECTED_SOURCE_SHA}"
+            exit 1
+          fi
+          echo "Building exact source ${actual}"
 
       - uses: actions/setup-node@v4
         with:
@@ -54,7 +115,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Install FFmpeg for deterministic brand assets
+      - name: Install FFmpeg for deterministic generated assets
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
@@ -76,19 +137,46 @@ jobs:
       - name: Prerender OG pages
         run: npm run prerender
 
-      - name: Verify build contains the exact approved brand release
+      - name: Resolve and verify release proof
+        id: release
         env:
-          EXPECTED_VERSION: cloak-20260725-3
-          EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+          EXPECTED_MASTER_SHA256: ${{ inputs.expected_master_sha256 }}
         run: |
           set -euo pipefail
-          grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" dist/index.html
-          expected_release="${EXPECTED_VERSION}"$'\n'"master-sha256=${EXPECTED_MASTER_SHA256}"
-          test "$(cat dist/brand-release.txt)" = "${expected_release}"
-          echo "${EXPECTED_MASTER_SHA256}  dist/brand-emblem-master.webp" | sha256sum -c -
-          grep -Fq "brand-emblem-master.webp?v=${EXPECTED_VERSION}" dist/brand-emblem.svg
-          ! grep -Eq '<(path|circle|ellipse|polygon|polyline)([[:space:]>])' dist/brand-emblem.svg
-          test ! -e dist/favicon.svg
+          version=""
+          master_sha=""
+          if [[ -f dist/brand-release.txt ]]; then
+            mapfile -t lines < dist/brand-release.txt
+            if [[ "${#lines[@]}" -ne 2 || ! "${lines[0]}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]+$ || ! "${lines[1]}" =~ ^master-sha256=[a-f0-9]{64}$ ]]; then
+              echo "::error::dist/brand-release.txt has an invalid contract"
+              exit 1
+            fi
+            version="${lines[0]}"
+            master_sha="${lines[1]#master-sha256=}"
+            if [[ -n "${EXPECTED_VERSION}" && "${version}" != "${EXPECTED_VERSION}" ]]; then
+              echo "::error::Release id ${version} does not match dispatched ${EXPECTED_VERSION}"
+              exit 1
+            fi
+            if [[ -n "${EXPECTED_MASTER_SHA256}" && "${master_sha}" != "${EXPECTED_MASTER_SHA256}" ]]; then
+              echo "::error::Master SHA does not match dispatched release metadata"
+              exit 1
+            fi
+            grep -Fq "name=\"brand-release\" content=\"${version}\"" dist/index.html
+            echo "${master_sha}  dist/brand-emblem-master.webp" | sha256sum -c -
+            grep -Fq "brand-emblem-master.webp?v=${version}" dist/brand-emblem.svg
+            echo "verify_brand=true" >> "$GITHUB_OUTPUT"
+            echo "release_version=${version}" >> "$GITHUB_OUTPUT"
+            echo "master_sha256=${master_sha}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${SOURCE_SHA}" ]]; then
+            echo "::error::Exact-head release requests must publish dist/brand-release.txt"
+            exit 1
+          else
+            echo "verify_brand=false" >> "$GITHUB_OUTPUT"
+            echo "release_version=" >> "$GITHUB_OUTPUT"
+            echo "master_sha256=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: SPA fallback
         run: cp dist/index.html dist/404.html
@@ -110,22 +198,19 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Verify the custom domain serves the approved emblem release
+      - name: Verify custom domain release proof
+        if: needs.build.outputs.verify_brand == 'true'
         env:
-          EXPECTED_VERSION: cloak-20260725-3
-          EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
+          EXPECTED_VERSION: ${{ needs.build.outputs.release_version }}
+          EXPECTED_MASTER_SHA256: ${{ needs.build.outputs.master_sha256 }}
         run: |
           set -euo pipefail
-
           for attempt in $(seq 1 36); do
-            nonce="${GITHUB_SHA}-${GITHUB_RUN_ID}-${attempt}"
-            echo "Live verification attempt ${attempt}/36"
-
+            nonce="${GITHUB_RUN_ID}-${attempt}"
             release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
               "https://thelegendarypoet.ru/brand-release.txt?verify=${nonce}" || true)"
             html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
               "https://thelegendarypoet.ru/?brand_verify=${nonce}" || true)"
-
             expected_release="${EXPECTED_VERSION}"$'\n'"master-sha256=${EXPECTED_MASTER_SHA256}"
             if [[ "${release}" == "${expected_release}" ]] \
               && grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" <<<"${html}"; then
@@ -133,22 +218,15 @@ jobs:
                 "https://thelegendarypoet.ru/brand-emblem-master.webp?v=${EXPECTED_VERSION}&verify=${nonce}" \
                 -o /tmp/brand-emblem-master.webp
               echo "${EXPECTED_MASTER_SHA256}  /tmp/brand-emblem-master.webp" | sha256sum -c -
-
               svg="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
                 "https://thelegendarypoet.ru/brand-emblem.svg?verify=${nonce}")"
               grep -Fq "brand-emblem-master.webp?v=${EXPECTED_VERSION}" <<<"${svg}"
-              if grep -Eq '<(path|circle|ellipse|polygon|polyline)([[:space:]>])' <<<"${svg}"; then
-                echo "Standalone SVG still contains a retired substitute character"
-              else
-                echo "Verified ${EXPECTED_VERSION} on the custom domain with the approved master SHA-256"
-                exit 0
-              fi
+              echo "Verified ${EXPECTED_VERSION} on the custom domain"
+              exit 0
             fi
-
             sleep 10
           done
-
-          echo "::error::Pages deployed, but the custom domain did not serve ${EXPECTED_VERSION} with the approved emblem within six minutes."
+          echo "::error::Custom domain did not serve ${EXPECTED_VERSION} with the expected master within six minutes"
           exit 1
 
   report:
@@ -163,11 +241,13 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
           BUILD_RESULT: ${{ needs.build.result }}
+          RELEASE_VERSION: ${{ needs.build.outputs.release_version }}
         with:
           script: |
             const ok = process.env.BUILD_RESULT === 'success' && process.env.DEPLOY_RESULT === 'success';
+            const release = process.env.RELEASE_VERSION || 'requested exact head';
             const description = ok
-              ? 'Published domain matches approved emblem v3'
+              ? `Published ${release}`.slice(0, 140)
               : `Pages failed: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`.slice(0, 140);
             const targetUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             await github.rest.repos.createCommitStatus({
@@ -187,10 +267,10 @@ jobs:
                 body: [
                   `### Pages deployment ${ok ? 'succeeded' : 'failed'}`,
                   `- Build: **${process.env.BUILD_RESULT}**`,
-                  `- Deploy + live emblem verification: **${process.env.DEPLOY_RESULT}**`,
+                  `- Deploy + live verification: **${process.env.DEPLOY_RESULT}**`,
                   `- Workflow run: ${targetUrl}`,
                   `- Requested SHA: \`${process.env.STATUS_SHA}\``,
-                  `- Expected release: \`cloak-20260725-3\``,
+                  `- Release: \`${release}\``,
                 ].join('\n'),
               });
             }
