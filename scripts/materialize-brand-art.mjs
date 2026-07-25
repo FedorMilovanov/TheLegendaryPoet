@@ -3,47 +3,35 @@ import path from 'node:path';
 
 const root = path.resolve();
 const sourceDir = path.join(root, 'src', 'brand-assets');
-const parts = fs
-  .readdirSync(sourceDir)
-  .filter((name) => /^assets\.part\d+\.b64$/.test(name))
-  .sort();
-
-if (parts.length === 0) throw new Error('brand materialize: encoded asset parts are missing');
-
-const encoded = parts
-  .map((name) => fs.readFileSync(path.join(sourceDir, name), 'utf8').trim())
-  .join('');
-const archive = Buffer.from(encoded, 'base64');
-let offset = 0;
-
-function readLine() {
-  const end = archive.indexOf(10, offset);
-  if (end < 0) throw new Error('brand materialize: malformed archive header');
-  const line = archive.subarray(offset, end).toString('utf8');
-  offset = end + 1;
-  return line;
-}
-
-if (readLine() !== 'LPBRAND1') throw new Error('brand materialize: invalid archive signature');
-const fileCount = Number(readLine());
-if (!Number.isInteger(fileCount) || fileCount < 1) throw new Error('brand materialize: invalid file count');
-
 const publicDir = path.join(root, 'public');
 fs.mkdirSync(publicDir, { recursive: true });
+
+const assets = [
+  ['master-320-q92.webp.b64', 'brand-emblem-master.webp'],
+  ['favicon-16.png.b64', 'favicon-16.png'],
+  ['favicon-32.png.b64', 'favicon-32.png'],
+];
+
 const written = [];
 
-for (let index = 0; index < fileCount; index += 1) {
-  const name = readLine();
-  const length = Number(readLine());
-  if (!/^[a-z0-9][a-z0-9.-]+$/i.test(name) || !Number.isInteger(length) || length < 1) {
-    throw new Error(`brand materialize: invalid entry ${index + 1}`);
+for (const [sourceName, outputName] of assets) {
+  const sourcePath = path.join(sourceDir, sourceName);
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`brand materialize: missing encoded source ${sourceName}`);
   }
-  const end = offset + length;
-  if (end > archive.length) throw new Error(`brand materialize: truncated entry ${name}`);
-  fs.writeFileSync(path.join(publicDir, name), archive.subarray(offset, end));
-  offset = end;
-  written.push(`${name} (${length} B)`);
+
+  const encoded = fs.readFileSync(sourcePath, 'utf8').replace(/\s+/g, '');
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
+    throw new Error(`brand materialize: invalid base64 source ${sourceName}`);
+  }
+
+  const binary = Buffer.from(encoded, 'base64');
+  if (binary.length < 100) {
+    throw new Error(`brand materialize: decoded asset is unexpectedly small ${outputName}`);
+  }
+
+  fs.writeFileSync(path.join(publicDir, outputName), binary);
+  written.push(`${outputName} (${binary.length} B)`);
 }
 
-if (offset !== archive.length) throw new Error('brand materialize: unexpected trailing bytes');
 console.log(`brand materialize: ${written.join(', ')}`);

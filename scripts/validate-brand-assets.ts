@@ -66,13 +66,17 @@ assert.ok(
   'manifest maskable selected artwork is missing',
 );
 assert.match(browserconfig, new RegExp(`mstile-150x150\\.png\\?v=${version}`), 'Windows tile is not cache-versioned');
-assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature changed');
-assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
+
+for (const source of ['master-320-q92.webp.b64', 'favicon-16.png.b64', 'favicon-32.png.b64']) {
+  assert.match(materializer, new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `materializer is missing ${source}`);
+  assert.ok(fs.existsSync(path.resolve('src/brand-assets', source)), `encoded source ${source} is missing`);
+}
+assert.doesNotMatch(materializer, /LPBRAND1|assets\.part/, 'the retired truncated archive reader remains active');
 
 const expectedHashes: Record<string, string> = {
-  'public/brand-emblem-master.webp': '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d',
-  'public/favicon-16.png': 'fcbbf903d3a14e88a009696b55622cc5d8b755f9e09b5c80f174c3ef2699ee5b',
-  'public/favicon-32.png': 'b546bfbae1477781052748380f3c0ae15032038e24d9a305ee26c0818f52f8df',
+  'public/brand-emblem-master.webp': '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d',
+  'public/favicon-16.png': 'b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c',
+  'public/favicon-32.png': '27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622',
   'public/apple-touch-icon.png': '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2',
   'public/icon-192.png': '67f484fb1cf3d774f87522370fb97fbc3052ed0ec9b3b4813b4414ed63ec393b',
   'public/icon-512.png': '87b10432c44520f659c5f1ecde293f655f68792ec1e3aa4aa4aed2b65911b281',
@@ -86,4 +90,4 @@ for (const [file, expected] of Object.entries(expectedHashes)) {
 }
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: approved cloaked artwork, no substitute figure, cache-busted icons and platform assets are consistent');
+console.log('brand validation: approved cloak artwork materializes deterministically, old fallback is absent, and cache-busted assets are consistent');
