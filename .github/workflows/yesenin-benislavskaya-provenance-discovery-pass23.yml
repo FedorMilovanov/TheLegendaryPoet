@@ -5,7 +5,7 @@ on:
     branches:
       - research/yesenin-benislavskaya-correspondence-evidence-pass22
     paths:
-      - scripts/discover-yesenin-benislavskaya-provenance-pass23-v3.mjs
+      - scripts/discover-yesenin-benislavskaya-provenance-pass23-v4.mjs
       - .github/workflows/yesenin-benislavskaya-provenance-discovery-pass23.yml
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node scripts/discover-yesenin-benislavskaya-provenance-pass23-v3.mjs
+      - run: node scripts/discover-yesenin-benislavskaya-provenance-pass23-v4.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
