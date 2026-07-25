@@ -4,15 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Guarded same-repository release path. pull_request_target runs the trusted
-  # workflow from main (and therefore a Pages-eligible ref), while checkout is
-  # restricted to deploy-live-* branches owned by this repository.
-  pull_request_target:
-    types: [opened, synchronize, reopened]
-  # Secondary path for installations that emit workflow_run normally.
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+    inputs:
+      status_sha:
+        description: Optional commit SHA that requested this trusted main deployment
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -26,36 +22,25 @@ concurrency:
 
 jobs:
   build:
-    if: >-
-      (github.event_name != 'pull_request_target' ||
-       (github.event.pull_request.head.repo.full_name == github.repository &&
-        startsWith(github.event.pull_request.head.ref, 'deploy-live-'))) &&
-      (github.event_name != 'workflow_run' ||
-       (github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.head_repository.full_name == github.repository &&
-        startsWith(github.event.workflow_run.head_branch, 'deploy-live-')))
     runs-on: ubuntu-latest
     steps:
-      - name: Mark Pages deployment pending
-        if: github.event_name == 'pull_request_target' || github.event_name == 'workflow_run'
+      - name: Mark requested Pages deployment pending
+        if: inputs.status_sha != ''
         uses: actions/github-script@v7
+        env:
+          STATUS_SHA: ${{ inputs.status_sha }}
         with:
           script: |
-            const sha = context.eventName === 'pull_request_target'
-              ? context.payload.pull_request.head.sha
-              : context.payload.workflow_run.head_sha;
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha,
+              sha: process.env.STATUS_SHA,
               state: 'pending',
               context: 'pages/deploy',
-              description: 'Building the verified Pages release',
+              description: 'Trusted main deployment is building',
             });
 
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -127,25 +112,23 @@ jobs:
           exit 1
 
   report:
-    if: always() && (github.event_name == 'pull_request_target' || github.event_name == 'workflow_run')
+    if: always() && inputs.status_sha != ''
     needs: [build, deploy]
     runs-on: ubuntu-latest
     steps:
       - name: Publish observable Pages result
         uses: actions/github-script@v7
         env:
+          STATUS_SHA: ${{ inputs.status_sha }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
           BUILD_RESULT: ${{ needs.build.result }}
         with:
           script: |
-            const sha = context.eventName === 'pull_request_target'
-              ? context.payload.pull_request.head.sha
-              : context.payload.workflow_run.head_sha;
             const ok = process.env.BUILD_RESULT === 'success' && process.env.DEPLOY_RESULT === 'success';
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha,
+              sha: process.env.STATUS_SHA,
               state: ok ? 'success' : 'failure',
               context: 'pages/deploy',
               description: ok
