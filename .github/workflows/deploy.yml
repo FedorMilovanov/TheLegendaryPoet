@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # GitHub App commits do not always emit a new push workflow. A same-repo
+  # deploy-live-* PR provides a guarded publication path without accepting
+  # executable code from forks or arbitrary branches.
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 # Allow the workflow to publish to Pages.
 permissions:
@@ -18,9 +23,18 @@ concurrency:
 
 jobs:
   build:
+    if: >-
+      github.event_name != 'pull_request_target' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       startsWith(github.event.pull_request.head.ref, 'deploy-live-'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # pull_request_target has write-capable Pages permissions because the
+          # workflow comes from main, while the actual same-repo release code is
+          # checked out explicitly from the guarded deploy branch.
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -68,3 +82,30 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Verify approved emblem on published domain
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected='3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d'
+          version='cloak-20260725-2'
+          for attempt in $(seq 1 30); do
+            stamp="${GITHUB_RUN_ID}-${attempt}"
+            html="$(curl -fsSL --connect-timeout 10 --max-time 30 "https://thelegendarypoet.ru/?brand-check=${stamp}" || true)"
+            if printf '%s' "$html" | grep -q "brand-emblem-master.webp?v=${version}"; then
+              curl -fsSL --connect-timeout 10 --max-time 30 \
+                "https://thelegendarypoet.ru/brand-emblem-master.webp?v=${stamp}" \
+                -o live-brand.webp
+              actual="$(sha256sum live-brand.webp | cut -d' ' -f1)"
+              if [ "$actual" = "$expected" ]; then
+                echo "Published emblem verified: ${actual}"
+                exit 0
+              fi
+              echo "Attempt ${attempt}: new HTML, asset hash ${actual}"
+            else
+              echo "Attempt ${attempt}: waiting for new HTML"
+            fi
+            sleep 10
+          done
+          echo "Published domain did not expose the approved emblem" >&2
+          exit 1
