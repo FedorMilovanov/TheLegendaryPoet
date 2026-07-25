@@ -2,8 +2,8 @@
 """Inspect official FEB publication surfaces for `Материалы к биографии`, p.110.
 
 This diagnostic preserves exact HTML bytes and extracts only literal institution-
-published links. It does not invent a page URL from the year/title, use OCR, or
-promote a bibliographic description to page-level evidence.
+published links or resource addresses. It does not invent a page URL from the
+book title/year/page number, use OCR, or promote a description to page evidence.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 OUTPUT = Path(os.environ.get("YESENIN_MATERIALY110_OUTPUT", "artifacts/yesenin-materialy110-feb-pass16"))
-USER_AGENT = "TheLegendaryPoet-Research-Materialy110-Discovery/1.0 (+https://github.com/FedorMilovanov/TheLegendaryPoet)"
+USER_AGENT = "TheLegendaryPoet-Research-Materialy110-Discovery/1.1 (+https://github.com/FedorMilovanov/TheLegendaryPoet)"
 SURFACES = [
     {"id": "feb-description", "url": "https://feb-web.ru/feb/esenin/critics/-g1992.html"},
     {"id": "feb-sitemap", "url": "https://feb-web.ru/feb/esenin/sitemap.htm"},
@@ -36,17 +36,18 @@ class SurfaceParser(HTMLParser):
         self.href: str | None = None
         self.text: list[str] = []
         self.scripts: list[str] = []
-        self.script_src: str | None = None
+        self.base_href: str | None = None
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
-        if tag.lower() == "a" and values.get("href"):
+        lower = tag.lower()
+        if lower == "a" and values.get("href"):
             self.href = values["href"]
             self.text = []
-        elif tag.lower() == "script":
-            self.script_src = values.get("src")
-            if self.script_src:
-                self.scripts.append(self.script_src)
+        elif lower == "script" and values.get("src"):
+            self.scripts.append(values["src"])
+        elif lower == "base" and values.get("href"):
+            self.base_href = values["href"]
 
     def handle_data(self, data: str) -> None:
         if self.href is not None:
@@ -65,8 +66,35 @@ def fetch(url: str) -> tuple[bytes, str, str, int]:
         return response.read(), response.geturl(), response.headers.get_content_type(), getattr(response, "status", 200)
 
 
+def decode_html(data: bytes) -> tuple[str, str]:
+    head = data[:4096].decode("ascii", errors="ignore")
+    match = re.search(r"charset\s*=\s*['\"]?([A-Za-z0-9._-]+)", head, re.I)
+    candidates = [match.group(1) if match else "", "windows-1251", "utf-8"]
+    for encoding in candidates:
+        if not encoding:
+            continue
+        try:
+            return data.decode(encoding), encoding.lower()
+        except (LookupError, UnicodeDecodeError):
+            continue
+    return data.decode("windows-1251", errors="replace"), "windows-1251-replacement"
+
+
 def normalize(value: str) -> str:
     return re.sub(r"\s+", " ", unescape(value).replace("\\/", "/")).strip()
+
+
+def classify_url(url: str, label: str = "") -> dict[str, Any]:
+    lower = f"{url} {label}".casefold()
+    return {
+        "url": url,
+        "anchorText": label,
+        "mentionsMaterialy": "материалы к биографии" in lower,
+        "mentionsPage110": bool(re.search(r"(?:с\.|стр\.|page|p\.)\s*110(?:\D|$)", lower)),
+        "looksPageLevel": any(token in url.lower() for token in ("?cmd=p", "-110-", "p110", "page=110")),
+        "looksDocument": any(token in url.lower() for token in (".pdf", "download", "viewer")),
+        "isDescriptionResource": "-g1992.html" in url.lower(),
+    }
 
 
 def inspect_surface(surface: dict[str, str]) -> dict[str, Any]:
@@ -77,43 +105,48 @@ def inspect_surface(surface: dict[str, str]) -> dict[str, Any]:
         raise RuntimeError(f"{surface['id']} returned only {len(data)} bytes")
     raw_name = f"{surface['id']}.html"
     (OUTPUT / "raw").joinpath(raw_name).write_bytes(data)
-    text = data.decode("utf-8", errors="replace")
+    text, encoding = decode_html(data)
     parser = SurfaceParser()
     parser.feed(text)
+    resolution_base = urljoin(final_url, parser.base_href) if parser.base_href else final_url
 
     links: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for link in parser.links:
-        absolute = urljoin(final_url, link["href"])
+        absolute = urljoin(resolution_base, link["href"])
         anchor = normalize(link["text"])
         key = (absolute, anchor)
         if key in seen:
             continue
         seen.add(key)
-        lower = f"{absolute} {anchor}".casefold()
-        links.append(
-            {
-                "url": absolute,
-                "anchorText": anchor,
-                "mentionsMaterialy": "материалы к биографии" in lower,
-                "mentionsPage110": bool(re.search(r"(?:с\.|стр\.|page)\s*110(?:\D|$)", lower)),
-                "looksPageLevel": any(token in absolute.lower() for token in ("?cmd=p", "-110-", "p110", "page=110")),
-                "looksDocument": any(token in absolute.lower() for token in (".pdf", "download", "viewer")),
-            }
-        )
+        links.append(classify_url(absolute, anchor))
 
     normalized_html = normalize(text).casefold()
-    literal_urls = sorted(set(re.findall(r"https?://[^\"'<>\s]+", unescape(text).replace("\\/", "/"))))
+    literal_urls = sorted(
+        set(
+            re.findall(
+                r"https?://[^\"'<>\s]+",
+                unescape(text).replace("\\/", "/"),
+                flags=re.I,
+            )
+        )
+    )
+    literal_resources = [classify_url(url) for url in literal_urls]
     route_candidates = [
-        link
-        for link in links
-        if link["mentionsMaterialy"] or link["mentionsPage110"] or link["looksPageLevel"] or link["looksDocument"]
+        item
+        for item in [*links, *literal_resources]
+        if item["mentionsMaterialy"]
+        or item["mentionsPage110"]
+        or item["looksPageLevel"]
+        or item["looksDocument"]
+        or item["isDescriptionResource"]
     ]
     return {
         **surface,
         "finalUrl": final_url,
         "status": status,
         "contentType": content_type,
+        "detectedEncoding": encoding,
         "htmlBytes": len(data),
         "htmlSha256": hashlib.sha256(data).hexdigest(),
         "rawHtml": f"raw/{raw_name}",
@@ -123,11 +156,13 @@ def inspect_surface(surface: dict[str, str]) -> dict[str, Any]:
             and "1992" in normalized_html
             and "446" in normalized_html
         ),
-        "page110LiteralInHtml": bool(re.search(r"(?:с\.|стр\.|page)\s*110(?:\D|$)", normalized_html)),
+        "page110LiteralInHtml": bool(
+            re.search(r"(?:с\.|стр\.|page|p\.)\s*110(?:\D|$)", normalized_html)
+        ),
         "links": links,
         "routeCandidates": route_candidates,
-        "literalAbsoluteUrls": literal_urls,
-        "scriptSources": [urljoin(final_url, source) for source in parser.scripts],
+        "literalResourceUrls": literal_resources,
+        "scriptSources": [urljoin(resolution_base, source) for source in parser.scripts],
     }
 
 
@@ -144,17 +179,25 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001
             errors.append({"id": surface["id"], "error": str(exc)})
 
-    literal_page_routes = [
-        {"surface": item["id"], **link}
+    all_candidates = [
+        {"surface": item["id"], **candidate}
         for item in results
-        for link in item["routeCandidates"]
-        if link["looksPageLevel"] and (link["mentionsMaterialy"] or link["mentionsPage110"])
+        for candidate in item["routeCandidates"]
+    ]
+    literal_page_routes = [
+        candidate
+        for candidate in all_candidates
+        if candidate["looksPageLevel"]
+        and (candidate["mentionsMaterialy"] or candidate["mentionsPage110"])
+        and not candidate["isDescriptionResource"]
     ]
     literal_document_routes = [
-        {"surface": item["id"], **link}
-        for item in results
-        for link in item["routeCandidates"]
-        if link["looksDocument"] and link["mentionsMaterialy"]
+        candidate
+        for candidate in all_candidates
+        if candidate["looksDocument"] and candidate["mentionsMaterialy"]
+    ]
+    description_resources = [
+        candidate for candidate in all_candidates if candidate["isDescriptionResource"]
     ]
     resolution = (
         "literal-page-route-published"
@@ -169,6 +212,7 @@ def main() -> int:
         "completedSurfaces": len(results),
         "errors": errors,
         "resolutionState": resolution,
+        "descriptionResources": description_resources,
         "literalPageRoutes": literal_page_routes,
         "literalDocumentRoutes": literal_document_routes,
         "pageUrlConstructed": False,
@@ -179,13 +223,16 @@ def main() -> int:
         "productionAuthorized": False,
         "results": results,
     }
-    (OUTPUT / "discovery.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (OUTPUT / "discovery.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     (OUTPUT / "summary.md").write_text(
         "\n".join(
             [
                 "# Materialy p.110 FEB discovery pass 16",
                 "",
                 f"- Resolution: `{resolution}`",
+                f"- Description resources: `{len(description_resources)}`",
                 f"- Literal page routes: `{len(literal_page_routes)}`",
                 f"- Literal document routes: `{len(literal_document_routes)}`",
                 "- Constructed routes: `false`",
