@@ -1,0 +1,53 @@
+name: Yesenin Duncan Companion Draft
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [work/local-images-playwright-wtoc, research/yesenin-duncan-companion-split]
+    paths:
+      - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
+      - 'research/yesenin/YESENIN_DUNCAN_COMPANION_SPLIT_2026-07-25.md'
+      - '.github/workflows/yesenin-duncan-companion.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/lib/yesenin-duncan-first-meeting-unpublished.ts'
+      - 'scripts/validate-yesenin-duncan-first-meeting-unpublished.ts'
+      - 'src/data/essays/yeseninDuncanMainArticleSplit.ts'
+      - 'research/yesenin/YESENIN_DUNCAN_COMPANION_SPLIT_2026-07-25.md'
+      - '.github/workflows/yesenin-duncan-companion.yml'
+
+concurrency:
+  group: yesenin-duncan-companion-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci --silent
+      - name: Validate unpublished companion and 6/6 content split
+        run: |
+          set -o pipefail
+          npx tsx scripts/validate-yesenin-duncan-first-meeting-unpublished.ts 2>&1 | tee yesenin-duncan-companion-validation.log
+      - name: Upload companion validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-duncan-companion-validation
+          path: yesenin-duncan-companion-validation.log
+          if-no-files-found: error
+          retention-days: 7
