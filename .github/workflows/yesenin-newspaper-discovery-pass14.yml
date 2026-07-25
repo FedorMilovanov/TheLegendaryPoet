@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - research/yesenin-newspaper-discovery-pass14-diagnostic
+  pull_request:
+    branches:
+      - work/local-images-playwright-wtoc
   workflow_dispatch:
 
 permissions:
