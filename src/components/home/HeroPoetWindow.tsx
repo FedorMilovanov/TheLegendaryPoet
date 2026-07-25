@@ -151,7 +151,12 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
               className="hero-poet-window-label pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-2 pb-2 opacity-0 sm:px-3 sm:pb-3"
             >
               <div className="hero-poet-window-label-panel rounded-xl border border-cyan-200/15 px-2 py-1.5 text-center sm:px-3 sm:py-2">
-                <div className="truncate font-serif text-[9px] font-semibold tracking-[0.04em] text-cyan-50 sm:text-[11px]">{poet.name}</div>
+                <div
+                  data-hero-poet-window-name
+                  className="hero-poet-window-name font-serif text-[9px] font-semibold tracking-[0.04em] text-cyan-50 sm:text-[11px]"
+                >
+                  {poet.name}
+                </div>
                 <div className="mt-0.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-cyan-200/46 sm:text-[8px]">{poet.birthYear}—{poet.deathYear ?? 'н. в.'}</div>
               </div>
             </div>
