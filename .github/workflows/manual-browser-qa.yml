@@ -25,12 +25,16 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       BRAND_SHA: 1cf00ce72adbe6c52abdecb4b7e633bfda9df815
     steps:
-      - name: Inventory recent runs, artifacts, events and refs
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Inventory Actions, refs and preserved Git objects
         shell: bash
         run: |
           set -euo pipefail
           repo="$GITHUB_REPOSITORY"
-          mkdir -p brand-recovery/artifacts
+          mkdir -p brand-recovery/artifacts brand-recovery/git-candidates
 
           gh api "/repos/${repo}/commits/${BRAND_SHA}" > brand-recovery/brand-commit.json
           gh api "/repos/${repo}/actions/runs?per_page=100" > brand-recovery/recent-runs.json
@@ -47,14 +51,80 @@ jobs:
 
           jq -s '[.[].artifacts[]? | {id,name,size_in_bytes,expired,created_at,archive_download_url,workflow_run}]' \
             brand-recovery/artifacts/*.json > brand-recovery/all-artifacts.json
-
           jq -r '.[] | [.id,.name,.size_in_bytes,.created_at,(.workflow_run.id // ""),(.workflow_run.head_sha // "")] | @tsv' \
             brand-recovery/all-artifacts.json > brand-recovery/all-artifacts.tsv
 
-          echo 'Recent runs:'
-          head -40 brand-recovery/recent-runs.tsv
-          echo 'Recent artifacts:'
-          head -80 brand-recovery/all-artifacts.tsv
+          git fetch --no-tags origin \
+            '+refs/heads/*:refs/remotes/origin/*' \
+            '+refs/pull/*/head:refs/remotes/pull/*/head' \
+            '+refs/pull/*/merge:refs/remotes/pull/*/merge' || true
+          git for-each-ref --format='%(refname) %(objectname)' > brand-recovery/all-refs.txt
+          git rev-list --objects --all > brand-recovery/all-reachable-objects.txt
+          grep -Ei '(brand|emblem|hood|favicon|apple-touch|icon-(192|512)|mstile|og-image|assets\.part)' \
+            brand-recovery/all-reachable-objects.txt > brand-recovery/brand-named-objects.txt || true
+          git log --all --date=iso-strict --pretty='format:COMMIT %H %ad %s' --name-status -- \
+            'public/brand-emblem-master.webp' \
+            'public/favicon-16.png' \
+            'public/favicon-32.png' \
+            'public/apple-touch-icon.png' \
+            'public/icon-192.png' \
+            'public/icon-512.png' \
+            'public/icon-maskable-512.png' \
+            'public/mstile-150x150.png' \
+            'public/og-image.jpg' \
+            'src/brand-assets/**' > brand-recovery/brand-path-history.txt || true
+
+          python - <<'PY'
+          import hashlib
+          import pathlib
+          import subprocess
+
+          root = pathlib.Path('brand-recovery')
+          expected = {
+              '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d': 'brand-emblem-master.webp',
+              'fcbbf903d3a14e88a009696b55622cc5d8b755f9e09b5c80f174c3ef2699ee5b': 'favicon-16.png',
+              'b546bfbae1477781052748380f3c0ae15032038e24d9a305ee26c0818f52f8df': 'favicon-32.png',
+              '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2': 'apple-touch-icon.png',
+              '67f484fb1cf3d774f87522370fb97fbc3052ed0ec9b3b4813b4414ed63ec393b': 'icon-192.png',
+              '87b10432c44520f659c5f1ecde293f655f68792ec1e3aa4aa4aed2b65911b281': 'icon-512.png',
+              'e90b2455c37a99aa86b9c5d85c1097c250249b103953d678c1040b34cdf5c09e': 'icon-maskable-512.png',
+              '30be3316fc001a5d2308d9ee47a83260a298094c6684aaefa7ef82660b68c744': 'mstile-150x150.png',
+              '5562fbdebddc81777672a165a1eb10c964adb207ef3a58a260a305a4587882f3': 'og-image.jpg',
+          }
+          named = []
+          for line in (root / 'brand-named-objects.txt').read_text(encoding='utf-8').splitlines():
+              parts = line.split(' ', 1)
+              if len(parts) != 2:
+                  continue
+              oid, name = parts
+              try:
+                  if subprocess.check_output(['git', 'cat-file', '-t', oid], text=True).strip() != 'blob':
+                      continue
+                  data = subprocess.check_output(['git', 'cat-file', 'blob', oid])
+              except subprocess.CalledProcessError:
+                  continue
+              digest = hashlib.sha256(data).hexdigest()
+              named.append((oid, len(data), digest, name))
+              safe = name.replace('/', '__')[-160:]
+              (root / 'git-candidates' / f'{digest[:12]}-{len(data)}-{safe}').write_bytes(data)
+          with (root / 'brand-named-object-hashes.tsv').open('w', encoding='utf-8') as out:
+              for row in sorted(named, key=lambda item: (item[3], item[1], item[0])):
+                  out.write('\t'.join(map(str, row)) + '\n')
+
+          matches = []
+          for oid, size, digest, name in named:
+              if digest in expected:
+                  matches.append((expected[digest], oid, size, digest, name))
+          with (root / 'exact-hash-matches.tsv').open('w', encoding='utf-8') as out:
+              for row in matches:
+                  out.write('\t'.join(map(str, row)) + '\n')
+          print(f'Named brand blobs: {len(named)}; exact selected-asset matches: {len(matches)}')
+          PY
+
+          echo 'Named candidate objects:'
+          head -100 brand-recovery/brand-named-object-hashes.tsv || true
+          echo 'Exact matches:'
+          cat brand-recovery/exact-hash-matches.tsv || true
 
       - name: Upload brand recovery inventory
         uses: actions/upload-artifact@v4
