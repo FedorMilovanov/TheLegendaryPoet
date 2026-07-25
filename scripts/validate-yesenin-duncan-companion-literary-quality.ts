@@ -5,6 +5,7 @@ const fail = (message: string): never => {
   throw new Error(`[yesenin-duncan-companion-literary-quality] ${message}`);
 };
 
+const EXPECTED_READER_SHA256 = '74dd19c4aacf1bf6272ab00124917f1674973eaef6b02df08a7b204028cb7bf7';
 const article = yeseninDuncanFirstMeetingUnpublished;
 const essay = article.essay;
 const expectedSectionTextCounts = new Map<string, number>([
@@ -110,6 +111,9 @@ const stableReaderShape = textBlocks.map((block) => ({
   sourceIds: [...block.sourceIds],
 }));
 const readerDigest = createHash('sha256').update(JSON.stringify(stableReaderShape)).digest('hex');
+if (readerDigest !== EXPECTED_READER_SHA256) {
+  fail(`reader corpus digest changed: ${readerDigest}`);
+}
 
 console.log(
   JSON.stringify(
