@@ -63,9 +63,35 @@ assert.ok(
 );
 assert.match(browserconfig, /mstile-150x150\.png/, 'Windows tile does not use the canonical emblem');
 
-function pngDimensions(buffer: Buffer) {
-  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'invalid PNG signature');
-  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+function crc32(buffer: Buffer) {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngDimensions(buffer: Buffer, file: string) {
+  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
+  let offset = 8;
+  let dimensions: { width: number; height: number } | null = null;
+  let sawIend = false;
+  while (offset + 12 <= buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.subarray(offset + 4, offset + 8).toString('ascii');
+    const dataEnd = offset + 8 + length;
+    const chunkEnd = dataEnd + 4;
+    assert.ok(chunkEnd <= buffer.length, `${file}: truncated ${type || 'unknown'} chunk`);
+    assert.equal(crc32(buffer.subarray(offset + 4, dataEnd)), buffer.readUInt32BE(dataEnd), `${file}: invalid ${type} CRC`);
+    if (type === 'IHDR') dimensions = { width: buffer.readUInt32BE(offset + 8), height: buffer.readUInt32BE(offset + 12) };
+    offset = chunkEnd;
+    if (type === 'IEND') { sawIend = true; break; }
+  }
+  assert.ok(dimensions, `${file}: IHDR chunk is missing`);
+  assert.ok(sawIend, `${file}: IEND chunk is missing`);
+  assert.equal(offset, buffer.length, `${file}: trailing bytes after IEND`);
+  return dimensions;
 }
 
 const expectedPngs: Record<string, { width: number; height: number }> = {
@@ -80,7 +106,7 @@ const expectedPngs: Record<string, { width: number; height: number }> = {
 };
 
 for (const [file, expected] of Object.entries(expectedPngs)) {
-  assert.deepEqual(pngDimensions(readBuffer(file)), expected, `${file}: unexpected dimensions`);
+  assert.deepEqual(pngDimensions(readBuffer(file), file), expected, `${file}: unexpected dimensions`);
 }
 
 console.log('brand validation: canonical SVG, hover hooks, metadata and platform assets are consistent');
