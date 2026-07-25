@@ -22,13 +22,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Discover exact NEB issue cards from published parent HTML
+      - name: Discover issue links from published NEB parent HTML
         run: python scripts/discover-yesenin-neb-serial-issues-pass10.py
+      - name: Discover exact cards through official NEB search results
+        run: python scripts/discover-yesenin-newspaper-neb-search-pass14.py
       - name: Upload immutable discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: yesenin-newspaper-discovery-pass14
-          path: artifacts/yesenin-neb-serial-discovery-pass10
+          path: |
+            artifacts/yesenin-neb-serial-discovery-pass10
+            artifacts/yesenin-newspaper-neb-search-pass14
           if-no-files-found: error
           retention-days: 14
