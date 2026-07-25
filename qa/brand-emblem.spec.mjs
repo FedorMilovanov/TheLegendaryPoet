@@ -4,7 +4,8 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
-const VERSION = 'cloak-20260725-2';
+const VERSION = 'cloak-20260725-3';
+const MASTER_SHA256 = '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d';
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
@@ -21,6 +22,11 @@ async function imageSize(page, url) {
 test('approved emblem master, install icons and share metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
+  await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
+
+  const releaseResponse = await request.get(`${BASE_URL}/brand-release.txt?verify=${Date.now()}`);
+  expect(releaseResponse.status()).toBe(200);
+  expect((await releaseResponse.text()).trim()).toBe(`${VERSION}\nmaster-sha256=${MASTER_SHA256}`);
 
   const expectedAssets = [
     ['brand-emblem-mask.svg', null],
@@ -36,11 +42,17 @@ test('approved emblem master, install icons and share metadata are coherent', as
   ];
 
   for (const [asset, size] of expectedAssets) {
-    const assetUrl = `${BASE_URL}/${asset}`;
+    const assetUrl = `${BASE_URL}/${asset}?verify=${Date.now()}`;
     const assetResponse = await request.get(assetUrl);
     expect(assetResponse.status(), `${asset} HTTP status`).toBe(200);
     if (size) expect(await imageSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
   }
+
+  const standaloneResponse = await request.get(`${BASE_URL}/brand-emblem.svg?verify=${Date.now()}`);
+  expect(standaloneResponse.status()).toBe(200);
+  const standaloneSvg = await standaloneResponse.text();
+  expect(standaloneSvg).toContain(`brand-emblem-master.webp?v=${VERSION}`);
+  expect(standaloneSvg).not.toMatch(/<(?:path|circle|ellipse|polygon|polyline)\b/);
 
   await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute(
     'href',
@@ -55,8 +67,8 @@ test('approved emblem master, install icons and share metadata are coherent', as
 
   const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
   const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
-  expect(ogImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
-  expect(twitterImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
+  expect(ogImage).toBe(`https://thelegendarypoet.ru/og-image.jpg?v=${VERSION}`);
+  expect(twitterImage).toBe(`https://thelegendarypoet.ru/og-image.jpg?v=${VERSION}`);
   await expect(page.locator('meta[property="og:image:type"]')).toHaveAttribute('content', 'image/jpeg');
 
   const manifestResponse = await request.get(`${BASE_URL}/site.webmanifest?v=${VERSION}`);
@@ -134,7 +146,7 @@ for (const route of coreRoutes) {
       const marks = [...document.querySelectorAll('[data-brand-mark]')];
       return {
         marks: marks.length,
-        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260725-2').length,
+        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260725-3').length,
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))
           .filter((viewBox) => viewBox !== '0 0 96 96'),
