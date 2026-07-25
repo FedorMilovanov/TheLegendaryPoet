@@ -1,0 +1,31 @@
+name: Yesenin Newspaper Discovery Pass 14
+
+on:
+  push:
+    branches:
+      - research/yesenin-newspaper-discovery-pass14-diagnostic
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Discover exact NEB issue cards from published parent HTML
+        run: python scripts/discover-yesenin-neb-serial-issues-pass10.py
+      - name: Upload immutable discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-newspaper-discovery-pass14
+          path: artifacts/yesenin-neb-serial-discovery-pass10
+          if-no-files-found: error
+          retention-days: 14
