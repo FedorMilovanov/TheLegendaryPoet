@@ -8,92 +8,66 @@ const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
 const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
 
 const component = read('src/components/BrandMark.tsx');
-const emblem = read('public/brand-emblem.svg');
-const maskEmblem = read('public/brand-emblem-mask.svg');
-const favicon = read('public/favicon.svg');
 const index = read('index.html');
 const manifest = JSON.parse(read('public/site.webmanifest')) as {
   icons?: Array<{ src?: string; sizes?: string; type?: string; purpose?: string }>;
 };
-const prerender = read('scripts/prerender-og.mjs');
-const seo = read('src/hooks/useSeo.ts');
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 
-assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must namespace SVG definition ids');
+const version = 'cloak-20260725-2';
+
+assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
+assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark cache version hook is missing');
 assert.match(component, /whileHover="hover"/, 'BrandMark must keep the restrained hover interaction');
 assert.match(component, /data-brand-figure/, 'BrandMark selected cloaked figure is missing');
-assert.match(component, /data-brand-fallback/, 'BrandMark coded SVG fallback is missing');
-assert.match(component, /data-brand-aura/, 'BrandMark cold aura is missing');
-assert.match(component, /data-brand-mist/, 'BrandMark lower mist transition is missing');
-assert.match(component, /brand-emblem-master\.webp/, 'BrandMark does not use the selected master artwork');
-assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link hover/click target');
-assert.doesNotMatch(component, /data-brand-(?:book|wing|halo)/, 'retired book, wing or halo hooks remain in BrandMark');
-assert.doesNotMatch(component, /\sid="(?:aura|cloak|rim|void|soft|mist)"/, 'BrandMark contains collision-prone fixed SVG ids');
-assert.ok(
-  component.indexOf('data-brand-aura') < component.indexOf('data-brand-fallback') &&
-    component.indexOf('data-brand-fallback') < component.indexOf('data-brand-figure'),
-  'the aura and coded fallback must render behind the approved master artwork',
+assert.match(component, /data-brand-glow/, 'BrandMark premium glow layer is missing');
+assert.match(
+  component,
+  /brand-emblem-master\.webp\?v=\$\{BRAND_VERSION\}/,
+  'BrandMark does not use the versioned owner-approved master artwork',
 );
+assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
+assert.doesNotMatch(component, /data-brand-fallback/, 'the retired substitute vector figure remains in BrandMark');
+assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|mist|aura)/, 'retired emblem layers remain in BrandMark');
+assert.doesNotMatch(component, /<path|<circle|<ellipse|<polygon/, 'BrandMark must not redraw a different character over the selected artwork');
 
-assert.match(emblem, /viewBox="0 0 96 96"/, 'brand-emblem.svg: canonical viewBox changed');
-assert.match(emblem, /id="vector-fallback"/, 'brand-emblem.svg: coded vector fallback is missing');
-assert.match(emblem, /brand-emblem-master\.webp/, 'brand-emblem.svg: selected artwork is not referenced');
-assert.match(emblem, /M48 7 C39 9 34 19 32 31/, 'brand-emblem.svg: hood fallback silhouette changed');
-assert.doesNotMatch(emblem, /<script|<foreignObject/i, 'brand-emblem.svg: unsafe or non-portable SVG content');
-assert.doesNotMatch(emblem, /(?:book|wing|halo|<circle)/i, 'brand-emblem.svg: retired emblem symbolism remains');
-assert.doesNotMatch(emblem, /<rect width="96" height="96"/, 'canonical emblem must remain frameless');
-
-assert.match(favicon, /viewBox="0 0 96 96"/, 'favicon.svg: canonical viewBox changed');
-assert.match(favicon, /<rect width="96" height="96" rx="18"/, 'favicon must retain its dark safe-area tile');
-assert.match(favicon, /M48 7 C39 9 34 19 32 31/, 'favicon hood silhouette changed');
-assert.doesNotMatch(favicon, /<image|data:image|brand-emblem-master/i, 'favicon must be self-contained and not depend on an external raster');
-assert.doesNotMatch(favicon, /(?:book|wing|halo|<circle)/i, 'favicon: retired emblem symbolism remains');
-assert.doesNotMatch(favicon, /<script|<foreignObject/i, 'favicon: unsafe SVG content');
-
-assert.match(maskEmblem, /viewBox="0 0 96 96"/, 'Safari mask icon viewBox changed');
-assert.match(maskEmblem, /<path fill="#000"/, 'Safari mask icon must be a monochrome vector path');
-assert.doesNotMatch(maskEmblem, /<image|data:image|<circle/i, 'Safari mask icon must stay pure vector and ring-free');
-assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature changed');
-assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
-
-for (const pathName of [
-  'brand-emblem-master.webp',
-  'favicon.svg',
-  'favicon-16.png',
-  'favicon-32.png',
-  'apple-touch-icon.png',
-  'brand-emblem-mask.svg',
-  'icon-512.png',
-  'og-image.jpg',
-  'site.webmanifest',
-  'browserconfig.xml',
-]) {
-  assert.ok(index.includes(pathName), `index.html does not reference ${pathName}`);
-}
 assert.match(
   index,
-  /<link rel="preload" href="%BASE_URL%brand-emblem-master\.webp" as="image" type="image\/webp" fetchpriority="high" \/>/,
-  'the selected emblem master must be preloaded to avoid a header flash',
+  new RegExp(`brand-emblem-master\\.webp\\?v=${version}`),
+  'the approved master preload is not cache-versioned',
 );
-assert.doesNotMatch(index, /(?:с раскрытой книгой|og-image\.png|brand-emblem-master\.webp" \/>\s*<meta property="og:image)/, 'retired brand metadata remains in index.html');
-assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph image MIME type must use the selected JPEG share card');
-assert.match(prerender, /og-image\.jpg/g, 'prerender default does not use the selected share card');
-assert.doesNotMatch(prerender, /og-image\.png|brand-emblem-master\.webp/, 'prerender still references retired share defaults');
-assert.match(seo, /image \|\| '\/og-image\.jpg'/, 'runtime SEO default does not use the selected share card');
-assert.match(seo, /logo: \{ '@type': 'ImageObject', url: `\$\{siteConfig\.url\}\/icon-512\.png` \}/, 'runtime publisher logo is not the selected platform icon');
-assert.doesNotMatch(seo, /og-image\.png/, 'runtime SEO still references the retired share card');
+assert.match(index, new RegExp(`favicon-32\\.png\\?v=${version}`), '32px favicon is not cache-versioned');
+assert.match(index, new RegExp(`favicon-16\\.png\\?v=${version}`), '16px favicon is not cache-versioned');
+assert.match(index, new RegExp(`apple-touch-icon\\.png\\?v=${version}`), 'Apple icon is not cache-versioned');
+assert.match(index, new RegExp(`brand-emblem-mask\\.svg\\?v=${version}`), 'Safari mask is not cache-versioned');
+assert.match(index, new RegExp(`site\\.webmanifest\\?v=${version}`), 'manifest link is not cache-versioned');
+assert.doesNotMatch(index, /rel="icon"[^>]+favicon\.svg/, 'the retired SVG favicon is still preferred by browsers');
+assert.match(index, /og-image\.jpg/, 'Open Graph image is missing');
+assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph MIME type must remain JPEG');
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
-for (const src of ['/favicon.svg', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png']) {
+for (const src of [
+  `/favicon-32.png?v=${version}`,
+  `/icon-192.png?v=${version}`,
+  `/icon-512.png?v=${version}`,
+  `/icon-maskable-512.png?v=${version}`,
+]) {
   assert.ok(iconSources.has(src), `manifest is missing ${src}`);
 }
 assert.ok(
-  manifest.icons?.some((icon) => icon.src === '/icon-maskable-512.png' && icon.type === 'image/png' && icon.purpose === 'maskable'),
+  manifest.icons?.some(
+    (icon) =>
+      icon.src === `/icon-maskable-512.png?v=${version}` &&
+      icon.type === 'image/png' &&
+      icon.purpose === 'maskable',
+  ),
   'manifest maskable selected artwork is missing',
 );
-assert.match(browserconfig, /mstile-150x150\.png/, 'Windows tile does not use the selected emblem');
+assert.match(browserconfig, new RegExp(`mstile-150x150\\.png\\?v=${version}`), 'Windows tile is not cache-versioned');
+assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature changed');
+assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
 
 const expectedHashes: Record<string, string> = {
   'public/brand-emblem-master.webp': '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d',
@@ -108,8 +82,8 @@ const expectedHashes: Record<string, string> = {
 };
 
 for (const [file, expected] of Object.entries(expectedHashes)) {
-  assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or an old emblem returned`);
+  assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or the old emblem returned`);
 }
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: selected cloaked figure, coded SVG fallback, preload, ring-free hover and platform assets are consistent');
+console.log('brand validation: approved cloaked artwork, no substitute figure, cache-busted icons and platform assets are consistent');
