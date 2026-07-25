@@ -9,12 +9,17 @@ on:
         description: Optional commit SHA that requested this trusted main deployment
         required: false
         type: string
+      pr_number:
+        description: Optional pull request number for deployment diagnostics
+        required: false
+        type: string
 
 permissions:
   contents: read
   pages: write
   id-token: write
   statuses: write
+  pull-requests: write
 
 concurrency:
   group: pages
@@ -120,18 +125,35 @@ jobs:
         uses: actions/github-script@v7
         env:
           STATUS_SHA: ${{ inputs.status_sha }}
+          PR_NUMBER: ${{ inputs.pr_number }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
           BUILD_RESULT: ${{ needs.build.result }}
         with:
           script: |
             const ok = process.env.BUILD_RESULT === 'success' && process.env.DEPLOY_RESULT === 'success';
+            const description = ok
+              ? 'Published domain matches the approved emblem'
+              : `Pages failed: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`.slice(0, 140);
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
               sha: process.env.STATUS_SHA,
               state: ok ? 'success' : 'failure',
               context: 'pages/deploy',
-              description: ok
-                ? 'Published domain matches the approved emblem'
-                : `Pages failed: build=${process.env.BUILD_RESULT}, deploy=${process.env.DEPLOY_RESULT}`.slice(0, 140),
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });
+            if (process.env.PR_NUMBER) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: Number(process.env.PR_NUMBER),
+                body: [
+                  `### Pages deployment ${ok ? 'succeeded' : 'failed'}`,
+                  `- Build: **${process.env.BUILD_RESULT}**`,
+                  `- Deploy + live emblem verification: **${process.env.DEPLOY_RESULT}**`,
+                  `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                  `- Requested SHA: \`${process.env.STATUS_SHA}\``,
+                ].join('\n'),
+              });
+            }
