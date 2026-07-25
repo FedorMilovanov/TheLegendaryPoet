@@ -115,11 +115,14 @@ if (mainBlocks.length !== 6 || companionBlocks.length !== 6) {
   fail(`expected a 6/6 split, found ${mainBlocks.length}/${companionBlocks.length}`);
 }
 
-const currentDuncanIds = Object.keys(yeseninPartOneEditorialPassSeven).filter((blockId) =>
-  blockId.startsWith('yesenin-p1-transition-duncan-'),
-);
+const currentDuncanIds = [
+  ...Object.keys(yeseninPartOneEditorialPassSeven).filter((blockId) =>
+    blockId.startsWith('yesenin-p1-transition-duncan-'),
+  ),
+  'yesenin-p1-transition-series-boundary',
+].filter((blockId) => blockId in yeseninPartOneEditorialPassSeven);
 if (currentDuncanIds.length !== 12) {
-  fail(`expected twelve current Duncan transition blocks, found ${currentDuncanIds.length}`);
+  fail(`expected twelve current Duncan transition/series blocks, found ${currentDuncanIds.length}`);
 }
 const currentDuncanIdSet = new Set(currentDuncanIds);
 for (const blockId of splitIds) {
