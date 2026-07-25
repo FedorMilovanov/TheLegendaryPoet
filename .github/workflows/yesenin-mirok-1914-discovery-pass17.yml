@@ -1,0 +1,51 @@
+name: Yesenin Mirok 1914 Discovery Pass 17
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/discover-yesenin-mirok-1914-pass17.ts'
+      - '.github/workflows/yesenin-mirok-1914-discovery-pass17.yml'
+  push:
+    branches: [research/yesenin-mirok-1914-discovery-pass17]
+    paths:
+      - 'scripts/discover-yesenin-mirok-1914-pass17.ts'
+      - '.github/workflows/yesenin-mirok-1914-discovery-pass17.yml'
+
+concurrency:
+  group: yesenin-mirok-1914-discovery-pass17-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Discover literal NEB issue records and PDF/viewer routes
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tsx scripts/discover-yesenin-mirok-1914-pass17.ts 2>&1 | tee yesenin-mirok-1914-discovery-pass17.log
+      - name: Upload discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-mirok-1914-discovery-pass17
+          path: |
+            artifacts/yesenin-mirok-1914-discovery-pass17
+            yesenin-mirok-1914-discovery-pass17.log
+          if-no-files-found: error
+          retention-days: 14
