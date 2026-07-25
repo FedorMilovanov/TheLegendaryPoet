@@ -175,7 +175,9 @@ const checks = {
   benislavskayaPresent: /Бениславск/iu.test(detailText),
   diaryPresent: /Дневник/iu.test(detailText),
   thirtyFiveLeavesPresent:
-    /Количество листов:\s*35(?!\d)/iu.test(detailText) || /35\s*л\./iu.test(detailText),
+    detailText.includes('Количество листов: 35') ||
+    /Количество\s+листов\s*:\s*35(?:\s|$)/iu.test(detailText) ||
+    /35\s*л\./iu.test(detailText),
   typescriptPresent: /Машинопис/iu.test(detailText),
   zelinskyFundPresent: /Зелинск/iu.test(detailText),
 };
