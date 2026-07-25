@@ -3,8 +3,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
-const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
+const resolve = (file: string) => path.resolve(file);
+const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
+const readBuffer = (file: string) => fs.readFileSync(resolve(file));
 const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
 
 const component = read('src/components/BrandMark.tsx');
@@ -27,7 +28,8 @@ assert.match(component, /data-brand-figure/, 'BrandMark selected cloaked figure 
 assert.match(component, /data-brand-fallback/, 'BrandMark coded SVG fallback is missing');
 assert.match(component, /data-brand-aura/, 'BrandMark cold aura is missing');
 assert.match(component, /data-brand-mist/, 'BrandMark lower mist transition is missing');
-assert.match(component, /brand-emblem-master\.webp/, 'BrandMark does not use the selected master artwork');
+assert.match(component, /brand-emblem-master\.png/, 'BrandMark does not use the committed selected master artwork');
+assert.doesNotMatch(component, /brand-emblem-master\.webp/, 'BrandMark still references the retired WebP master');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link hover/click target');
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo)/, 'retired book, wing or halo hooks remain in BrandMark');
 assert.doesNotMatch(component, /\sid="(?:aura|cloak|rim|void|soft|mist)"/, 'BrandMark contains collision-prone fixed SVG ids');
@@ -39,7 +41,8 @@ assert.ok(
 
 assert.match(emblem, /viewBox="0 0 96 96"/, 'brand-emblem.svg: canonical viewBox changed');
 assert.match(emblem, /id="vector-fallback"/, 'brand-emblem.svg: coded vector fallback is missing');
-assert.match(emblem, /brand-emblem-master\.webp/, 'brand-emblem.svg: selected artwork is not referenced');
+assert.match(emblem, /brand-emblem-master\.png/, 'brand-emblem.svg: committed selected artwork is not referenced');
+assert.doesNotMatch(emblem, /brand-emblem-master\.webp/, 'brand-emblem.svg still references the retired WebP master');
 assert.match(emblem, /M48 7 C39 9 34 19 32 31/, 'brand-emblem.svg: hood fallback silhouette changed');
 assert.doesNotMatch(emblem, /<script|<foreignObject/i, 'brand-emblem.svg: unsafe or non-portable SVG content');
 assert.doesNotMatch(emblem, /(?:book|wing|halo|<circle)/i, 'brand-emblem.svg: retired emblem symbolism remains');
@@ -55,11 +58,13 @@ assert.doesNotMatch(favicon, /<script|<foreignObject/i, 'favicon: unsafe SVG con
 assert.match(maskEmblem, /viewBox="0 0 96 96"/, 'Safari mask icon viewBox changed');
 assert.match(maskEmblem, /<path fill="#000"/, 'Safari mask icon must be a monochrome vector path');
 assert.doesNotMatch(maskEmblem, /<image|data:image|<circle/i, 'Safari mask icon must stay pure vector and ring-free');
-assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature changed');
-assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
+
+assert.match(materializer, /brand assets verified/, 'brand prebuild no longer verifies direct immutable assets');
+assert.match(materializer, /retired archive parts remain/, 'brand prebuild does not reject the corrupt archive format');
+assert.doesNotMatch(materializer, /LPBRAND1|Buffer\.from\(encoded, 'base64'\)/, 'brand prebuild still parses the retired binary archive');
 
 for (const pathName of [
-  'brand-emblem-master.webp',
+  'brand-emblem-master.png',
   'favicon.svg',
   'favicon-16.png',
   'favicon-32.png',
@@ -74,13 +79,13 @@ for (const pathName of [
 }
 assert.match(
   index,
-  /<link rel="preload" href="%BASE_URL%brand-emblem-master\.webp" as="image" type="image\/webp" fetchpriority="high" \/>/,
-  'the selected emblem master must be preloaded to avoid a header flash',
+  /<link rel="preload" href="%BASE_URL%brand-emblem-master\.png" as="image" type="image\/png" fetchpriority="high" \/>/,
+  'the selected PNG master must be preloaded to avoid a header flash',
 );
-assert.doesNotMatch(index, /(?:с раскрытой книгой|og-image\.png|brand-emblem-master\.webp" \/>\s*<meta property="og:image)/, 'retired brand metadata remains in index.html');
+assert.doesNotMatch(index, /brand-emblem-master\.webp|og-image\.png|с раскрытой книгой/, 'retired brand metadata remains in index.html');
 assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph image MIME type must use the selected JPEG share card');
 assert.match(prerender, /og-image\.jpg/g, 'prerender default does not use the selected share card');
-assert.doesNotMatch(prerender, /og-image\.png|brand-emblem-master\.webp/, 'prerender still references retired share defaults');
+assert.doesNotMatch(prerender, /og-image\.png|brand-emblem-master\.(?:png|webp)/, 'prerender still references a non-share default');
 assert.match(seo, /image \|\| '\/og-image\.jpg'/, 'runtime SEO default does not use the selected share card');
 assert.match(seo, /logo: \{ '@type': 'ImageObject', url: `\$\{siteConfig\.url\}\/icon-512\.png` \}/, 'runtime publisher logo is not the selected platform icon');
 assert.doesNotMatch(seo, /og-image\.png/, 'runtime SEO still references the retired share card');
@@ -96,20 +101,47 @@ assert.ok(
 assert.match(browserconfig, /mstile-150x150\.png/, 'Windows tile does not use the selected emblem');
 
 const expectedHashes: Record<string, string> = {
-  'public/brand-emblem-master.webp': '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d',
-  'public/favicon-16.png': 'fcbbf903d3a14e88a009696b55622cc5d8b755f9e09b5c80f174c3ef2699ee5b',
-  'public/favicon-32.png': 'b546bfbae1477781052748380f3c0ae15032038e24d9a305ee26c0818f52f8df',
-  'public/apple-touch-icon.png': '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2',
-  'public/icon-192.png': '67f484fb1cf3d774f87522370fb97fbc3052ed0ec9b3b4813b4414ed63ec393b',
-  'public/icon-512.png': '87b10432c44520f659c5f1ecde293f655f68792ec1e3aa4aa4aed2b65911b281',
-  'public/icon-maskable-512.png': 'e90b2455c37a99aa86b9c5d85c1097c250249b103953d678c1040b34cdf5c09e',
-  'public/mstile-150x150.png': '30be3316fc001a5d2308d9ee47a83260a298094c6684aaefa7ef82660b68c744',
-  'public/og-image.jpg': '5562fbdebddc81777672a165a1eb10c964adb207ef3a58a260a305a4587882f3',
+  'public/brand-emblem-master.png': '4638cac0aab4b7a3bbacdd851c748ece5362e623876f717db0fdaa4feea97d6b',
+  'public/favicon-16.png': 'a44d3fcaa2e4a46d5399d48b6257e4e7dee3c9a6b6bc6542ecf991d8bc280ff1',
+  'public/favicon-32.png': '2c04279a8df520a3ce72188fca9ac6c71d8b78259c4779fc6d240197733c2f38',
+  'public/apple-touch-icon.png': 'bbe8cf441d0f3a7099148f8668078dca47aa5ce1b7d71b305dc8413af47fc0e0',
+  'public/icon-192.png': 'e4d3fa41b617680a863588f06ef8778e014bf718b7b2d6b305a2a9cde8f54a49',
+  'public/icon-512.png': 'c28d87ed099f018a01e6968cc5126f51c80c84f1e1d7fd90947737a9983c54fd',
+  'public/icon-maskable-512.png': '634033d5512eda3f7653472ad8e0e95fa3e9fee7a8ba830c9089e589155ee411',
+  'public/mstile-150x150.png': 'b44796d8a5feb8989f3c214ef33b63667eb9c9de4c83142a400acf3c2b8f6723',
+  'public/og-image.jpg': '3064016c3e3cb672a90564af224ef3ca1774bf9b883dfdcb30c6da2c3bbf8974',
 };
 
 for (const [file, expected] of Object.entries(expectedHashes)) {
   assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or an old emblem returned`);
 }
-assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: selected cloaked figure, coded SVG fallback, preload, ring-free hover and platform assets are consistent');
+const expectedPngDimensions: Record<string, [number, number]> = {
+  'public/brand-emblem-master.png': [256, 256],
+  'public/favicon-16.png': [16, 16],
+  'public/favicon-32.png': [32, 32],
+  'public/apple-touch-icon.png': [180, 180],
+  'public/icon-192.png': [192, 192],
+  'public/icon-512.png': [512, 512],
+  'public/icon-maskable-512.png': [512, 512],
+  'public/mstile-150x150.png': [150, 150],
+};
+for (const [file, [width, height]] of Object.entries(expectedPngDimensions)) {
+  const buffer = readBuffer(file);
+  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
+  assert.equal(buffer.readUInt32BE(16), width, `${file}: unexpected width`);
+  assert.equal(buffer.readUInt32BE(20), height, `${file}: unexpected height`);
+}
+const share = readBuffer('public/og-image.jpg');
+assert.equal(share.subarray(0, 3).toString('hex'), 'ffd8ff', 'og-image.jpg: invalid JPEG signature');
+assert.equal(share.subarray(-2).toString('hex'), 'ffd9', 'og-image.jpg: incomplete JPEG');
+
+const retired = [
+  'public/brand-emblem-master.webp',
+  'public/og-image.png',
+  'src/brand-assets/assets.part01.b64',
+  'src/brand-assets/assets.part02.b64',
+];
+for (const file of retired) assert.equal(fs.existsSync(resolve(file)), false, `${file}: retired asset must be removed`);
+
+console.log('brand validation: selected cloaked figure, direct immutable assets, coded fallback, preload and platform metadata are consistent');
