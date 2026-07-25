@@ -25,7 +25,7 @@ test('selected emblem, preload, install metadata and share metadata are coherent
     ['favicon.svg', null],
     ['brand-emblem.svg', null],
     ['brand-emblem-mask.svg', null],
-    ['brand-emblem-master.webp', { width: 512, height: 512 }],
+    ['brand-emblem-master.png', { width: 256, height: 256 }],
     ['favicon-16.png', { width: 16, height: 16 }],
     ['favicon-32.png', { width: 32, height: 32 }],
     ['apple-touch-icon.png', { width: 180, height: 180 }],
@@ -43,8 +43,8 @@ test('selected emblem, preload, install metadata and share metadata are coherent
     if (size) expect(await imageSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
   }
 
-  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('href', /brand-emblem-master\.webp$/);
-  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('type', 'image/webp');
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('href', /brand-emblem-master\.png$/);
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('type', 'image/png');
   await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('fetchpriority', 'high');
 
   const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
@@ -65,8 +65,10 @@ test('selected emblem, preload, install metadata and share metadata are coherent
     expect.objectContaining({ src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }),
   ]));
 
-  const retiredResponse = await request.get(`${BASE_URL}/og-image.png`);
-  expect(retiredResponse.status(), 'old share card must be removed').toBe(404);
+  const retiredPngResponse = await request.get(`${BASE_URL}/og-image.png`);
+  expect(retiredPngResponse.status(), 'old share card must be removed').toBe(404);
+  const retiredWebpResponse = await request.get(`${BASE_URL}/brand-emblem-master.webp`);
+  expect(retiredWebpResponse.status(), 'retired WebP master must be removed').toBe(404);
 });
 
 test('the selected faceless figure glows subtly on hover without halo or retired symbols', async ({ page }) => {
@@ -134,7 +136,7 @@ test('the selected faceless figure glows subtly on hover without halo or retired
 });
 
 test('coded vector figure remains visible if the selected master asset is unavailable', async ({ page }) => {
-  await page.route('**/brand-emblem-master.webp', (route) => route.abort('failed'));
+  await page.route('**/brand-emblem-master.png', (route) => route.abort('failed'));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
   const mark = page.locator('header [data-brand-mark]').first();
