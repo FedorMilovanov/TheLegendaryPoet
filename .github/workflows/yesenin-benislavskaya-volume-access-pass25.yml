@@ -5,6 +5,7 @@ on:
     branches: [research/yesenin-benislavskaya-inbound-evidence-pass24]
     paths:
       - 'scripts/discover-yesenin-benislavskaya-volume-access-pass25.mjs'
+      - 'scripts/discover-yesenin-benislavskaya-volume-access-pass25-v2.mjs'
       - '.github/workflows/yesenin-benislavskaya-volume-access-pass25.yml'
   workflow_dispatch:
 
@@ -26,7 +27,7 @@ jobs:
         with:
           node-version: 24
       - name: Probe institutional holdings and page-delivery routes
-        run: node scripts/discover-yesenin-benislavskaya-volume-access-pass25.mjs
+        run: node scripts/discover-yesenin-benislavskaya-volume-access-pass25-v2.mjs
       - name: Upload source-volume access evidence
         if: always()
         uses: actions/upload-artifact@v4
