@@ -96,7 +96,6 @@ test.describe('nested overlay ownership', () => {
     await waitForRoute(page);
     await page.evaluate(() => window.scrollTo(0, 420));
     await page.waitForTimeout(250);
-    const scrollBefore = await page.evaluate(() => window.scrollY);
 
     const primaryPlay = page.getByRole('button', { name: /Воспроизвести трек|Поставить на паузу/ }).first();
     await primaryPlay.click();
@@ -107,6 +106,9 @@ test.describe('nested overlay ownership', () => {
     await expect.poll(() => audio.evaluate((element) => element.paused)).toBe(true);
 
     const immersiveOpener = page.getByRole('button', { name: 'Погружение' }).first();
+    await immersiveOpener.scrollIntoViewIfNeeded();
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const scrollBefore = await page.evaluate(() => window.scrollY);
     await immersiveOpener.click();
     const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
     const immersiveClose = immersive.getByRole('button', { name: 'Выйти' });
