@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './qa',
-  testMatch: /home-polish\.spec\.mjs/,
+  testMatch: /home-(?:polish|labels)\.spec\.mjs/,
   timeout: 45_000,
   expect: { timeout: 12_000 },
   fullyParallel: false,
