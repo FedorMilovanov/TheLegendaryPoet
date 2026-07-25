@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "brandVersion": "cloak-20260725-2",
+  "generator": "scripts/rebuild-approved-brand-platform-assets.py@1",
+  "pillow": "11.3.0",
+  "sources": [
+    {
+      "source": "master-320-q92.webp.b64",
+      "output": "brand-emblem-master.webp",
+      "mime": "image/webp",
+      "width": 320,
+      "height": 320,
+      "bytes": 13150,
+      "sha256": "f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7"
+    },
+    {
+      "source": "favicon-16.png.b64",
+      "output": "favicon-16.png",
+      "mime": "image/png",
+      "width": 16,
+      "height": 16,
+      "bytes": 358,
+      "sha256": "b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c"
+    },
+    {
+      "source": "favicon-32.png.b64",
+      "output": "favicon-32.png",
+      "mime": "image/png",
+      "width": 32,
+      "height": 32,
+      "bytes": 959,
+      "sha256": "27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "brand-emblem-master.webp",
+      "mime": "image/webp",
+      "width": 320,
+      "height": 320,
+      "bytes": 13150,
+      "sha256": "f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7",
+      "derivedFrom": "master-320-q92.webp.b64"
+    },
+    {
+      "name": "favicon-16.png",
+      "mime": "image/png",
+      "width": 16,
+      "height": 16,
+      "bytes": 358,
+      "sha256": "b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c",
+      "derivedFrom": "favicon-16.png.b64"
+    },
+    {
+      "name": "favicon-32.png",
+      "mime": "image/png",
+      "width": 32,
+      "height": 32,
+      "bytes": 959,
+      "sha256": "27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622",
+      "derivedFrom": "favicon-32.png.b64"
+    },
+    {
+      "name": "apple-touch-icon.png",
+      "mime": "image/png",
+      "width": 180,
+      "height": 180,
+      "bytes": 37875,
+      "sha256": "01d220f4ace8330dc5be0b3bcf82998520b6826e87cc809f6957376052150c04",
+      "derivedFrom": "brand-emblem-master.webp"
+    },
+    {
+      "name": "icon-192.png",
+      "mime": "image/png",
+      "width": 192,
+      "height": 192,
+      "bytes": 41765,
+      "sha256": "e9b7f9a236eaf03c8b558d300f2cb5b202b545e110a8e422cc2a09abac6f8a7f",
+      "derivedFrom": "brand-emblem-master.webp"
+    },
+    {
+      "name": "icon-512.png",
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "bytes": 186558,
+      "sha256": "d597a25502e9a68c16b7348c6c718ecc5c8703d5124af0813937e5411815d6e1",
+      "derivedFrom": "brand-emblem-master.webp"
+    },
+    {
+      "name": "icon-maskable-512.png",
+      "mime": "image/png",
+      "width": 512,
+      "height": 512,
+      "bytes": 127910,
+      "sha256": "6b51f18819753c56df47c42ab8ec37883aeb060a4910bde9ba185bf9f8115a0b",
+      "derivedFrom": "brand-emblem-master.webp"
+    },
+    {
+      "name": "mstile-150x150.png",
+      "mime": "image/png",
+      "width": 150,
+      "height": 150,
+      "bytes": 28324,
+      "sha256": "1baff1315e77b75f91303e3eb4a1c00a19894c3e3d20a0ad39f75d3681cd1a08",
+      "derivedFrom": "brand-emblem-master.webp"
+    },
+    {
+      "name": "og-image.jpg",
+      "mime": "image/jpeg",
+      "width": 1200,
+      "height": 630,
+      "bytes": 57390,
+      "sha256": "71f968667560f29b85120d53b264c5b5f23c5e8c9a3ba208427dbb20156fc580",
+      "derivedFrom": "approved-final-share-layout"
+    }
+  ]
+}
