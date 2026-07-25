@@ -47,7 +47,7 @@ test.use({
   colorScheme: 'dark',
 });
 
-test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', async ({ page }) => {
+test('one desktop search trigger and scroll-top stay clear of persistent audio chrome', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
 
@@ -83,24 +83,18 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   ).toBeLessThan(hiddenAt - 8);
   await expect.poll(
     () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
-    { timeout: 5_000, message: 'upward user scroll should reveal floating chrome through the product hook' },
+    { timeout: 5_000, message: 'upward user scroll should reveal persistent chrome through the product hook' },
   ).toBe(false);
   await waitForScrollSettled(page, 'upward smooth scrolling should settle before floating geometry is measured');
 
   const player = page.locator('.global-audio-mini');
-  const palette = page.locator('.palette-fab');
+  const headerSearch = page.getByRole('button', { name: 'Открыть поиск', exact: true });
   const scrollTop = page.locator('.scroll-top-btn');
   await expect(player).toBeVisible();
-  await expect(palette).toBeVisible();
+  await expect(headerSearch).toHaveCount(1);
+  await expect(headerSearch).toBeVisible();
   await expect(scrollTop).toBeVisible();
-  await expect.poll(
-    () => palette.evaluate((element) => Number(getComputedStyle(element).opacity)),
-    { timeout: 5_000, message: 'command palette button should finish its real reveal transition' },
-  ).toBeGreaterThan(0.9);
-  await expect.poll(
-    () => palette.evaluate((element) => getComputedStyle(element).pointerEvents),
-    { timeout: 5_000, message: 'revealed command palette button should accept pointer input' },
-  ).not.toBe('none');
+  await expect(page.locator('.palette-fab')).toHaveCount(0);
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
@@ -122,8 +116,9 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
       scrollY: window.scrollY,
       chromeHidden: document.documentElement.classList.contains('chrome-hidden'),
       player: read('.global-audio-mini'),
-      palette: read('.palette-fab'),
+      headerSearch: read('button[aria-label="Открыть поиск"]'),
       scrollTop: read('.scroll-top-btn'),
+      duplicatePaletteCount: document.querySelectorAll('.palette-fab').length,
     };
   });
 
@@ -133,12 +128,16 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   expect(geometry.scrollY).toBeGreaterThan(240);
   expect(geometry.chromeHidden).toBe(false);
   expect(geometry.player).not.toBeNull();
-  expect(geometry.palette).not.toBeNull();
+  expect(geometry.headerSearch).not.toBeNull();
   expect(geometry.scrollTop).not.toBeNull();
-  expect(geometry.palette.opacity).toBeGreaterThan(0.9);
-  expect(geometry.palette.pointerEvents).not.toBe('none');
-  expect(overlaps(geometry.player, geometry.palette)).toBe(false);
+  expect(geometry.duplicatePaletteCount).toBe(0);
   expect(overlaps(geometry.player, geometry.scrollTop)).toBe(false);
-  expect(overlaps(geometry.palette, geometry.scrollTop)).toBe(false);
+  expect(overlaps(geometry.player, geometry.headerSearch)).toBe(false);
+  expect(overlaps(geometry.headerSearch, geometry.scrollTop)).toBe(false);
+
+  await headerSearch.click();
+  await expect(page.getByRole('dialog', { name: 'Поиск по сайту' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Поиск по сайту' })).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 });
