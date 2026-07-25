@@ -71,6 +71,26 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           </filter>
         </defs>
 
+        {/* The aura lives behind the artwork: the cowl remains an absolute void. */}
+        <motion.ellipse
+          data-brand-aura
+          cx="48"
+          cy="36"
+          rx="23"
+          ry="28"
+          fill={`url(#${ids.aura})`}
+          filter={`url(#${ids.soft})`}
+          style={{ transformOrigin: '48px 36px' }}
+          variants={{
+            idle: { opacity: 0.06, scale: 0.96 },
+            hover: {
+              opacity: 0.25,
+              scale: 1.08,
+              transition: { duration: 0.8, ease: premiumEase },
+            },
+          }}
+        />
+
         <motion.image
           data-brand-figure
           href={artworkUrl}
@@ -97,25 +117,6 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           style={{ transformOrigin: '48px 50px' }}
         />
 
-        <motion.ellipse
-          data-brand-aura
-          cx="48"
-          cy="36"
-          rx="23"
-          ry="28"
-          fill={`url(#${ids.aura})`}
-          filter={`url(#${ids.soft})`}
-          style={{ mixBlendMode: 'screen', transformOrigin: '48px 36px' }}
-          variants={{
-            idle: { opacity: 0.04, scale: 0.96 },
-            hover: {
-              opacity: 0.19,
-              scale: 1.08,
-              transition: { duration: 0.8, ease: premiumEase },
-            },
-          }}
-        />
-
         <motion.g
           data-brand-mist
           fill="none"
@@ -123,9 +124,9 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           filter={`url(#${ids.mist})`}
           style={{ transformOrigin: '48px 84px' }}
           variants={{
-            idle: { opacity: 0.08, scaleX: 0.96 },
+            idle: { opacity: 0.07, scaleX: 0.96 },
             hover: {
-              opacity: 0.25,
+              opacity: 0.22,
               scaleX: 1.06,
               transition: { duration: 0.88, ease: premiumEase },
             },

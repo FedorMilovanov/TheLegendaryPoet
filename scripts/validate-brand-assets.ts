@@ -28,16 +28,25 @@ assert.match(component, /data-brand-aura/, 'BrandMark cold aura is missing');
 assert.match(component, /data-brand-mist/, 'BrandMark lower mist transition is missing');
 assert.match(component, /brand-emblem-master\.webp/, 'BrandMark does not use the selected master artwork');
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo)/, 'retired book, wing or halo hooks remain in BrandMark');
-assert.doesNotMatch(component, /\sid="(?:aura|bloom|mist)"/, 'BrandMark contains collision-prone fixed SVG ids');
+assert.doesNotMatch(component, /\sid="(?:aura|soft|mist)"/, 'BrandMark contains collision-prone fixed SVG ids');
+assert.ok(
+  component.indexOf('data-brand-aura') < component.indexOf('data-brand-figure'),
+  'the aura must render behind the figure so the hidden face stays black',
+);
 
-for (const [name, svg] of [['brand-emblem.svg', emblem], ['favicon.svg', favicon]] as const) {
-  assert.match(svg, /viewBox="0 0 96 96"/, `${name}: canonical viewBox changed`);
-  assert.match(svg, /brand-emblem-master\.webp/, `${name}: selected artwork is not referenced`);
-  assert.doesNotMatch(svg, /<script|<foreignObject/i, `${name}: unsafe or non-portable SVG content`);
-  assert.doesNotMatch(svg, /(?:book|wing|halo|<circle)/i, `${name}: retired emblem symbolism remains`);
-}
+assert.match(emblem, /viewBox="0 0 96 96"/, 'brand-emblem.svg: canonical viewBox changed');
+assert.match(emblem, /brand-emblem-master\.webp/, 'brand-emblem.svg: selected artwork is not referenced');
+assert.doesNotMatch(emblem, /<script|<foreignObject/i, 'brand-emblem.svg: unsafe or non-portable SVG content');
+assert.doesNotMatch(emblem, /(?:book|wing|halo|<circle)/i, 'brand-emblem.svg: retired emblem symbolism remains');
 assert.doesNotMatch(emblem, /<rect width="96" height="96"/, 'canonical emblem must remain frameless');
+
+assert.match(favicon, /viewBox="0 0 96 96"/, 'favicon.svg: canonical viewBox changed');
 assert.match(favicon, /<rect width="96" height="96" rx="18"/, 'favicon must retain its dark safe-area tile');
+assert.match(favicon, /M48 7 C39 9 34 19 32 31/, 'favicon hood silhouette changed');
+assert.doesNotMatch(favicon, /<image|data:image|brand-emblem-master/i, 'favicon must be self-contained and not depend on an external raster');
+assert.doesNotMatch(favicon, /(?:book|wing|halo|<circle)/i, 'favicon: retired emblem symbolism remains');
+assert.doesNotMatch(favicon, /<script|<foreignObject/i, 'favicon: unsafe SVG content');
+
 assert.match(maskEmblem, /viewBox="0 0 96 96"/, 'Safari mask icon viewBox changed');
 assert.match(maskEmblem, /<path fill="#000"/, 'Safari mask icon must be a monochrome vector path');
 assert.doesNotMatch(maskEmblem, /<image|data:image|<circle/i, 'Safari mask icon must stay pure vector and ring-free');
@@ -92,4 +101,4 @@ for (const [file, expected] of Object.entries(expectedHashes)) {
 }
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: selected cloaked figure, ring-free SVG, hover, metadata and all platform assets are consistent');
+console.log('brand validation: selected cloaked figure, self-contained favicon, ring-free SVG, hover, metadata and platform assets are consistent');
