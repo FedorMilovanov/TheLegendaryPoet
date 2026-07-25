@@ -5,6 +5,7 @@ on:
     branches: [work/local-images-playwright-wtoc]
     paths:
       - 'scripts/discover-yesenin-pravda-rsl-viewer-pass26.mjs'
+      - 'scripts/discover-yesenin-pravda-rsl-viewer-pass26-v2.mjs'
       - '.github/workflows/yesenin-pravda-rsl-viewer-discovery-pass26.yml'
   workflow_dispatch:
 
@@ -26,7 +27,7 @@ jobs:
         with:
           node-version: 24
       - name: Discover exact RSL viewer and issue routes for Pravda
-        run: node scripts/discover-yesenin-pravda-rsl-viewer-pass26.mjs
+        run: node scripts/discover-yesenin-pravda-rsl-viewer-pass26-v2.mjs
       - name: Upload RSL Pravda discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
