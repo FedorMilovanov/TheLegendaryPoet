@@ -3,7 +3,9 @@ name: Yesenin Part I Effective Physical Witnesses
 on:
   workflow_dispatch:
   push:
-    branches: [research/yesenin-physical-witness-effective-state-pass12]
+    branches:
+      - work/local-images-playwright-wtoc
+      - research/yesenin-neb-serial-theatre-pass10-11-clean
     paths:
       - 'package.json'
       - 'scripts/validate-yesenin-part-one-physical-editions-pass8.ts'
@@ -11,7 +13,9 @@ on:
       - 'src/data/essays/yeseninPartOnePhysicalEditionAcquisitionsPassEight.ts'
       - 'src/data/essays/yeseninPartOnePhysicalWitnessesPassSix.ts'
       - 'src/data/essays/yeseninPartOnePhysicalWitnessEffectiveState.ts'
+      - 'src/data/essays/yeseninPartOneTheatricalMoscowPassEleven.ts'
       - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
       - 'research/yesenin/PART_ONE_PHYSICAL_WITNESS_EFFECTIVE_STATE_2026-07-25.md'
       - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-part-one-effective-witnesses.yml'
@@ -24,7 +28,9 @@ on:
       - 'src/data/essays/yeseninPartOnePhysicalEditionAcquisitionsPassEight.ts'
       - 'src/data/essays/yeseninPartOnePhysicalWitnessesPassSix.ts'
       - 'src/data/essays/yeseninPartOnePhysicalWitnessEffectiveState.ts'
+      - 'src/data/essays/yeseninPartOneTheatricalMoscowPassEleven.ts'
       - 'research/yesenin/PART_ONE_NEB_PHYSICAL_EDITIONS_PASS8.md'
+      - 'research/yesenin/PART_ONE_NEB_THEATRICAL_MOSCOW_PASS11.md'
       - 'research/yesenin/PART_ONE_PHYSICAL_WITNESS_EFFECTIVE_STATE_2026-07-25.md'
       - '.github/workflows/ci.yml'
       - '.github/workflows/yesenin-part-one-effective-witnesses.yml'

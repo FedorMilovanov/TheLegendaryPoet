@@ -9,11 +9,17 @@ import {
   type YeseninPartOnePhysicalWitnessPassSix,
 } from '../src/data/essays/yeseninPartOnePhysicalWitnessesPassSix';
 import {
+  yeseninPartOneTheatricalMoscowPassEleven,
+  yeseninPartOneTheatricalMoscowPassElevenCoverage,
+} from '../src/data/essays/yeseninPartOneTheatricalMoscowPassEleven';
+import {
   yeseninPartOneActiveHistoricalWitnesses,
   yeseninPartOneEffectiveHistoricalWitnesses,
+  yeseninPartOnePartiallySatisfiedHistoricalWitnesses,
   yeseninPartOnePhysicalWitnessEffectiveStateSummary,
   yeseninPartOneStandalonePhysicalEditionAcquisitions,
   yeseninPartOneSupersededHistoricalWitnesses,
+  yeseninPartOneUntouchedActiveHistoricalWitnesses,
 } from '../src/data/essays/yeseninPartOnePhysicalWitnessEffectiveState';
 
 const root = process.cwd();
@@ -26,22 +32,34 @@ const historicalRecords: readonly YeseninPartOnePhysicalWitnessPassSix[] =
   yeseninPartOnePhysicalWitnessesPassSix;
 const acquisitions: readonly YeseninPartOnePhysicalEditionAcquisitionPassEight[] =
   yeseninPartOnePhysicalEditionAcquisitionsPassEight;
+const serialRecords = yeseninPartOneTheatricalMoscowPassEleven;
+const serialCoverage = yeseninPartOneTheatricalMoscowPassElevenCoverage;
 const summary = yeseninPartOnePhysicalWitnessEffectiveStateSummary;
 
 if (historicalRecords.length !== 12) {
   fail(`expected 12 immutable historical records, found ${historicalRecords.length}`);
 }
 if (acquisitions.length !== 2) {
-  fail(`expected two acquisition overlays, found ${acquisitions.length}`);
+  fail(`expected two physical-edition acquisition overlays, found ${acquisitions.length}`);
+}
+if (serialRecords.length !== 4) {
+  fail(`expected four Theatrical Moscow serial evidence records, found ${serialRecords.length}`);
 }
 if (yeseninPartOneEffectiveHistoricalWitnesses.length !== historicalRecords.length) {
   fail('effective resolver must preserve one row per historical record');
 }
 if (
+  summary.historicalQueueRecords !== 12 ||
+  summary.acquisitionOverlays !== 2 ||
+  summary.serialEvidenceRecords !== 4 ||
   summary.activeHistoricalHolds !== 11 ||
+  summary.untouchedActiveHistoricalHolds !== 10 ||
+  summary.partiallySatisfiedHistoricalHolds !== 1 ||
   summary.supersededHistoricalHolds !== 1 ||
   summary.standaloneAcquisitions !== 1 ||
   summary.acquiredFacsimiles !== 2 ||
+  summary.acquiredSerialIssueFacsimiles !== 4 ||
+  summary.acquiredFacsimileObjects !== 6 ||
   summary.archiveOriginalsInspected !== 0 ||
   summary.reproductionRightsResolved !== 0 ||
   summary.productionAuthorized !== false
@@ -79,12 +97,52 @@ if (
   fail('historical Ispoved HOLD was rewritten instead of superseded');
 }
 
+if (yeseninPartOnePartiallySatisfiedHistoricalWitnesses.length !== 1) {
+  fail('exactly one historical HOLD must be partially satisfied');
+}
+const partial = yeseninPartOnePartiallySatisfiedHistoricalWitnesses[0];
+if (
+  partial.historicalRecord.id !== 'PW6-YE1-TEATRALNAYA-MOSKVA-1921' ||
+  partial.effectiveStatus !== 'active-hold-partially-satisfied' ||
+  partial.partiallySatisfiedByEvidenceIds?.length !== 4 ||
+  partial.partiallySatisfiedByEvidenceIds.some(
+    (id, index) => id !== serialCoverage.evidenceIds[index],
+  ) ||
+  partial.remainingTargets?.length !== serialCoverage.remainingTargets.length
+) {
+  fail(`unexpected partial-coverage edge: ${JSON.stringify(partial)}`);
+}
+if (
+  serialCoverage.historicalHoldId !== partial.historicalRecord.id ||
+  serialCoverage.supersedesHistoricalHold !== false ||
+  !serialCoverage.remainingTargets.some((item) => item.includes('official program')) ||
+  !serialCoverage.remainingTargets.some((item) => item.includes('official opening'))
+) {
+  fail(`Theatrical Moscow coverage silently closed an unresolved target: ${JSON.stringify(serialCoverage)}`);
+}
+if (
+  partial.historicalRecord.facsimileBytesAcquired ||
+  partial.historicalRecord.facsimileVisuallyInspected ||
+  partial.historicalRecord.archiveOriginalInspected
+) {
+  fail('historical Theatrical Moscow HOLD was rewritten instead of overlaid');
+}
+
+if (
+  yeseninPartOneUntouchedActiveHistoricalWitnesses.length !== 10 ||
+  yeseninPartOneUntouchedActiveHistoricalWitnesses.some(
+    (record) => record.effectiveStatus !== 'active-hold',
+  )
+) {
+  fail('untouched active HOLD count or status drifted');
+}
+
 if (
   yeseninPartOneStandalonePhysicalEditionAcquisitions.length !== 1 ||
   yeseninPartOneStandalonePhysicalEditionAcquisitions[0].id !==
     'PWA8-YE1-RADUNITSA-1916'
 ) {
-  fail('Radunitsa must remain the single standalone acquisition');
+  fail('Radunitsa must remain the single standalone physical-edition acquisition');
 }
 
 const expectedActiveIds = [
@@ -161,7 +219,21 @@ for (const record of acquisitions) {
     record.archiveOriginalInspected !== false ||
     record.rightsState !== 'open-digital-facsimile / reproduction-rights-unresolved'
   ) {
-    fail(`${record.id} violates acquisition evidence or rights boundaries`);
+    fail(`${record.id} violates physical-edition evidence or rights boundaries`);
+  }
+}
+for (const record of serialRecords) {
+  if (
+    record.realPdfAcquired !== true ||
+    record.visuallyInspected !== true ||
+    record.routeConstructed !== false ||
+    record.ocrUsedForEvidence !== false ||
+    record.syntheticContentUsed !== false ||
+    record.archiveOriginalInspected !== false ||
+    record.productionAuthorized !== false ||
+    record.rightsState !== 'open-digital-facsimile / reproduction-rights-unresolved'
+  ) {
+    fail(`${record.id} violates serial evidence or rights boundaries`);
   }
 }
 
@@ -169,10 +241,16 @@ const ledgerPath =
   'research/yesenin/PART_ONE_PHYSICAL_WITNESS_EFFECTIVE_STATE_2026-07-25.md';
 const ledger = read(ledgerPath);
 for (const required of [
-  '12 HISTORICAL-QUEUE-RECORDS / 2 ACQUISITION-OVERLAYS / 11 ACTIVE-HOLDS',
+  '12 HISTORICAL-QUEUE-RECORDS / 2 PHYSICAL-EDITION-OVERLAYS / 4 SERIAL-EVIDENCE-RECORDS / 11 ACTIVE-HOLDS',
+  '1 PARTIALLY-SATISFIED-HOLD',
   'PW6-YE1-ISPOVED-1921',
   'PWA8-YE1-ISPOVED-1921',
   'PWA8-YE1-RADUNITSA-1916',
+  'PW6-YE1-TEATRALNAYA-MOSKVA-1921',
+  'TM11-YE1-NO2',
+  'TM11-YE1-NO7',
+  'TM11-YE1-NO8',
+  'TM11-YE1-NO11-12',
   'HISTORY-PRESERVED / EFFECTIVE-STATE-RESOLVED',
   'productionAuthorized=false',
 ] as const) {
@@ -182,7 +260,8 @@ for (const required of [
 console.log(
   JSON.stringify(
     {
-      status: 'HISTORY-PRESERVED / EFFECTIVE-STATE-RESOLVED / UNPUBLISHED',
+      status:
+        'HISTORY-PRESERVED / EFFECTIVE-STATE-RESOLVED / PARTIAL-SERIAL-COVERAGE / UNPUBLISHED',
       ...summary,
       activeStateCounts,
       activeLayerCounts,
@@ -191,9 +270,23 @@ console.log(
         acquisitionId: record.supersededByAcquisitionId,
         objectId: record.supersededByObjectId,
       })),
+      partialCoverageEdges: yeseninPartOnePartiallySatisfiedHistoricalWitnesses.map(
+        (record) => ({
+          historicalId: record.historicalRecord.id,
+          evidenceIds: record.partiallySatisfiedByEvidenceIds,
+          remainingTargets: record.remainingTargets,
+        }),
+      ),
       standaloneAcquisitionRecords: yeseninPartOneStandalonePhysicalEditionAcquisitions.map(
         (record) => ({ id: record.id, objectId: record.objectId }),
       ),
+      serialEvidenceRecords: serialRecords.map((record) => ({
+        id: record.id,
+        catalogueCode: record.catalogueCode,
+        bytes: record.bytes,
+        sha256: record.sha256,
+        pdfFrames: record.pdfFrames,
+      })),
       activeHoldIds: activeIds,
       publicationAuthorized: false,
       mediaPublicationAuthorized: false,

@@ -21,6 +21,15 @@ export interface YeseninPartOneTheatricalMoscowPassElevenRecord {
   rightsState: 'open-digital-facsimile / reproduction-rights-unresolved';
 }
 
+export interface YeseninPartOneTheatricalMoscowPassElevenCoverage {
+  historicalHoldId: 'PW6-YE1-TEATRALNAYA-MOSKVA-1921';
+  effectiveStatus: 'active-hold-partially-satisfied';
+  evidenceIds: readonly `TM11-YE1-${string}`[];
+  verifiedTargetCoverage: readonly string[];
+  remainingTargets: readonly string[];
+  supersedesHistoricalHold: false;
+}
+
 /**
  * Exact NEB facsimiles and manual frame-level collation for four issues of
  * «Театральная Москва» from November–December 1921.
@@ -39,11 +48,12 @@ export const yeseninPartOneTheatricalMoscowPassEleven = [
     bytes: 7_982_255,
     sha256: '3d25919732a139957d18e35e69a9ea1360fe7644b8c99af52bc47622c327749f',
     pdfFrames: 18,
-    inspectedFrames: ['PDF 01 cover and dates', 'PDF 06 / printed page 4'],
+    inspectedFrames: ['PDF 01 cover and dates', 'PDF 06 / printed page 4', 'PDF 07 continuation'],
     verifiedPageFindings: [
       'PDF 01 identifies issue no. 2 and dates it to 1–3 November 1921.',
       'PDF 06 / printed page 4 carries the titled item «Айседора Дункан о Москве».',
       'The item presents a letter attributed to Duncan and says it was received by the Geneva Avant-Garde on 7/X.',
+      'PDF 07 preserves the continuation of the same item.',
     ],
     promotedClaims: [
       'A contemporaneous Moscow theatrical newspaper published «Айседора Дункан о Москве» in issue no. 2.',
@@ -70,12 +80,19 @@ export const yeseninPartOneTheatricalMoscowPassEleven = [
     bytes: 11_209_854,
     sha256: '19ebd9b12a94ad3ff70e5b4b87cae2c1b5b9fe552dee6d385072382f129259f8',
     pdfFrames: 24,
-    inspectedFrames: ['PDF 01 cover and dates', 'PDF 03 / printed page 3', 'PDF 06 / printed page 6'],
+    inspectedFrames: [
+      'PDF 01 cover and dates',
+      'PDF 03 / printed page 3',
+      'PDF 04 / printed page 4',
+      'PDF 06 / printed page 6',
+      'PDF 07 / printed page 7',
+    ],
     verifiedPageFindings: [
       'PDF 01 identifies issue no. 7 and dates it to 15–17 November 1921.',
-      'PDF 03 contains an editorial note and the «Листки» discussion of critical responses to Duncan.',
+      'PDF 03–04 contain an editorial note and the «Листки» discussion of critical responses to Duncan.',
       'PDF 06 / printed page 6 carries the titled item «Спор о Дункан».',
       '«Спор о Дункан» explicitly refers to the great success of her dances at the evening of 7 November and names conductor N. S. Golovanov.',
+      'PDF 07 records continuing public discussion of Duncan and choreography.',
     ],
     promotedClaims: [
       'Issue no. 7 provides contemporaneous reception evidence for Duncan’s 7 November Moscow performance.',
@@ -103,16 +120,25 @@ export const yeseninPartOneTheatricalMoscowPassEleven = [
     bytes: 11_587_545,
     sha256: '236bd3480451f0829b07b160c1b7cd1b2f103771fcf1e1ddf31852ba23dff1dc',
     pdfFrames: 24,
-    inspectedFrames: ['PDF 01 cover and dates', 'PDF 02–04 sequence', 'PDF 03 printed header'],
+    inspectedFrames: [
+      'PDF 01 cover and dates',
+      'PDF 02–04 sequence',
+      'PDF 03 printed header',
+      'PDF 05 / printed page 5',
+    ],
     verifiedPageFindings: [
       'PDF 01 identifies issue no. 8 and dates it to 18–20 November 1921.',
       'PDF 03 prints an internal header marked no. 7 while adjacent PDF 02 and PDF 04 belong to the no. 8 sequence.',
       'The header anomaly requires frame-level citation and prevents treating the PDF sequence as self-evidently uniform.',
+      'PDF 05 / printed page 5 reports on the 11 November evening «Искусство, взирающее на современность».',
+      'The report states that a substantial part of Vsevolod Meyerhold’s paper was devoted to criticism of Duncan’s art.',
     ],
-    promotedClaims: [],
+    promotedClaims: [
+      'Issue no. 8 supplies follow-up reception evidence that Duncan’s art remained a major subject in Moscow theatre debate on 11 November 1921.',
+    ],
     unresolvedQuestions: [
-      'No Duncan or Esenin claim is promoted from issue no. 8 in pass 11.',
       'The internal no. 7 header may be a printing or scan-binding anomaly; pass 11 does not choose between those explanations.',
+      'The report does not establish Esenin’s attendance, the first-meeting date or the official opening of Duncan’s school.',
     ],
     realPdfAcquired: true,
     visuallyInspected: true,
@@ -155,3 +181,21 @@ export const yeseninPartOneTheatricalMoscowPassEleven = [
     rightsState: 'open-digital-facsimile / reproduction-rights-unresolved',
   },
 ] as const satisfies readonly YeseninPartOneTheatricalMoscowPassElevenRecord[];
+
+export const yeseninPartOneTheatricalMoscowPassElevenCoverage = {
+  historicalHoldId: 'PW6-YE1-TEATRALNAYA-MOSKVA-1921',
+  effectiveStatus: 'active-hold-partially-satisfied',
+  evidenceIds: yeseninPartOneTheatricalMoscowPassEleven.map((record) => record.id),
+  verifiedTargetCoverage: [
+    'Exact issue-level PDFs for nos. 2, 7, 8 and 11–12 are acquired, hashed and manually inspected.',
+    'Issue no. 7 provides contemporaneous reception evidence tied explicitly to the 7 November performance.',
+    'Issue no. 8 provides follow-up reception evidence from the 11 November theatre evening.',
+    'Issue no. 11–12 provides a contemporaneous press mention of Esenin and Klyuev in Moscow literary-bohemia discussion.',
+  ],
+  remainingTargets: [
+    'The exact official program or announcement for the 7 November performance is not yet isolated.',
+    'An announcement or item-level record proving the official opening of Duncan’s school is not yet isolated.',
+    'Direct quotation still requires diplomatic transcription of the relevant printed columns.',
+  ],
+  supersedesHistoricalHold: false,
+} as const satisfies YeseninPartOneTheatricalMoscowPassElevenCoverage;

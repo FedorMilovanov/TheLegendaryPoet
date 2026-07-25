@@ -1,6 +1,9 @@
 import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { yeseninPartOneTheatricalMoscowPassEleven } from '../src/data/essays/yeseninPartOneTheatricalMoscowPassEleven';
+import {
+  yeseninPartOneTheatricalMoscowPassEleven,
+  yeseninPartOneTheatricalMoscowPassElevenCoverage,
+} from '../src/data/essays/yeseninPartOneTheatricalMoscowPassEleven';
 
 const root = process.cwd();
 const output = process.env.YESENIN_NEB_THEATRE_OUTPUT ?? 'artifacts/yesenin-neb-theatrical-moscow-pass11';
@@ -43,6 +46,7 @@ const runtimeIssues = JSON.parse(readFileSync(manifestPath, 'utf8')) as RuntimeI
 const runtimeSummary = JSON.parse(readFileSync(summaryPath, 'utf8')) as RuntimeSummary;
 const ledger = readFileSync(ledgerPath, 'utf8');
 const records = yeseninPartOneTheatricalMoscowPassEleven;
+const coverage = yeseninPartOneTheatricalMoscowPassElevenCoverage;
 
 if (records.length !== 4 || runtimeIssues.length !== 4) {
   fail(`expected four typed and runtime issues, found ${records.length}/${runtimeIssues.length}`);
@@ -119,6 +123,8 @@ const requiredFindings: Array<[typeof no2, string]> = [
   [no7, 'Спор о Дункан'],
   [no7, '7 November'],
   [no8, 'internal header marked no. 7'],
+  [no8, '11 November'],
+  [no8, 'Meyerhold'],
   [no1112, 'Литературная богема Москвы!'],
   [no1112, 'Esenin and Klyuev'],
 ];
@@ -126,7 +132,9 @@ for (const [record, marker] of requiredFindings) {
   const haystack = [...record.verifiedPageFindings, ...record.promotedClaims, ...record.unresolvedQuestions].join('\n');
   if (!haystack.includes(marker)) fail(`${record.id} lost manual finding marker ${marker}`);
 }
-if (no8.promotedClaims.length !== 0) fail('issue no. 8 must not promote a claim from the header anomaly');
+if (no8.promotedClaims.length !== 1) {
+  fail('issue no. 8 must promote exactly one bounded follow-up reception claim');
+}
 if (!no7.unresolvedQuestions.some((item) => item.includes('does not by itself establish Esenin'))) {
   fail('issue no. 7 lost the Esenin-attendance boundary');
 }
@@ -134,14 +142,34 @@ if (!no1112.unresolvedQuestions.some((item) => item.includes('No claim about the
   fail('issue no. 11–12 lost the Duncan-school boundary');
 }
 
+if (
+  coverage.historicalHoldId !== 'PW6-YE1-TEATRALNAYA-MOSKVA-1921' ||
+  coverage.effectiveStatus !== 'active-hold-partially-satisfied' ||
+  coverage.supersedesHistoricalHold !== false ||
+  coverage.evidenceIds.length !== records.length ||
+  coverage.evidenceIds.some((id, index) => id !== records[index].id) ||
+  coverage.verifiedTargetCoverage.length < 4 ||
+  coverage.remainingTargets.length < 3
+) {
+  fail(`series-level HOLD coverage drifted: ${JSON.stringify(coverage)}`);
+}
+if (!coverage.remainingTargets.some((item) => item.includes('official program'))) {
+  fail('series coverage lost the unresolved 7 November program target');
+}
+if (!coverage.remainingTargets.some((item) => item.includes('official opening'))) {
+  fail('series coverage lost the unresolved Duncan-school target');
+}
+
 for (const required of [
   '4-REAL-ISSUES / 43,100,448-BYTES / 94-PDF-FRAMES',
+  'PARTIALLY-SATISFIED / ACTIVE-HOLD',
   '3d25919732a139957d18e35e69a9ea1360fe7644b8c99af52bc47622c327749f',
   '19ebd9b12a94ad3ff70e5b4b87cae2c1b5b9fe552dee6d385072382f129259f8',
   '236bd3480451f0829b07b160c1b7cd1b2f103771fcf1e1ddf31852ba23dff1dc',
   'e800c77d8c2ba1d5d4b58f681a71c354c96757db434dc4bab65b41ad063a6ca8',
   '`PDF 06`, печатная с. 4',
   '**«Спор о Дункан»**',
+  '`PDF 05`, печатная с. 5',
   '`PDF 03` несёт напечатанный внутренний колонтитул `№ 7`',
   '**«Литературная богема Москвы!»**',
   '`ocrUsedForEvidence=false`',
@@ -153,7 +181,7 @@ for (const required of [
 console.log(
   JSON.stringify(
     {
-      status: '4-REAL-ISSUES / EXACT-BYTES-SHA-FRAMES / MANUAL-PAGE-MAP / NO-OCR-EVIDENCE',
+      status: '4-REAL-ISSUES / EXACT-BYTES-SHA-FRAMES / MANUAL-PAGE-MAP / PARTIAL-HOLD-COVERAGE / NO-OCR-EVIDENCE',
       issues: records.map((record) => ({
         id: record.id,
         label: record.label,
@@ -163,6 +191,7 @@ console.log(
         pdfFrames: record.pdfFrames,
         promotedClaims: record.promotedClaims.length,
       })),
+      targetCoverage: coverage,
       totalPdfBytes: runtimeSummary.totalPdfBytes,
       totalPdfFrames: runtimeSummary.totalPdfFrames,
       manuallyInspectedIssues: records.filter((record) => record.visuallyInspected).length,
