@@ -1,0 +1,46 @@
+name: Yesenin Benislavskaya Volume Access Evidence Pass 25
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaVolumeAccessPassTwentyFive.ts'
+      - 'scripts/validate-yesenin-benislavskaya-volume-access-pass25.ts'
+      - 'research/yesenin/PART_ONE_BENISLAVSKAYA_VOLUME_ACCESS_PASS25_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-volume-access-evidence-pass25.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninBenislavskayaVolumeAccessPassTwentyFive.ts'
+      - 'scripts/validate-yesenin-benislavskaya-volume-access-pass25.ts'
+      - 'research/yesenin/PART_ONE_BENISLAVSKAYA_VOLUME_ACCESS_PASS25_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-benislavskaya-volume-access-evidence-pass25.yml'
+
+concurrency:
+  group: yesenin-benislavskaya-volume-access-evidence-pass25-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate Benislavskaya source-volume access evidence pass 25
+        run: npm run validate:yesenin-benislavskaya-volume-access-pass25
+      - name: TypeScript typecheck
+        run: npm run typecheck
