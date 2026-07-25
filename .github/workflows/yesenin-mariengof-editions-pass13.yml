@@ -1,0 +1,65 @@
+name: Yesenin Mariengof RSL Editions Pass 13
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/yesenin-mariengof-editions-pass13]
+    paths:
+      - 'scripts/acquire-yesenin-mariengof-editions-pass13.py'
+      - 'research/yesenin/PART_ONE_MARIENGOF_EDITIONS_PASS13.md'
+      - '.github/workflows/yesenin-mariengof-editions-pass13.yml'
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/acquire-yesenin-mariengof-editions-pass13.py'
+      - 'research/yesenin/PART_ONE_MARIENGOF_EDITIONS_PASS13.md'
+      - '.github/workflows/yesenin-mariengof-editions-pass13.yml'
+
+concurrency:
+  group: yesenin-mariengof-editions-pass13-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acquire-and-map:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install non-generative PDF tooling
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
+      - name: Discover and acquire exact RSL objects
+        id: acquisition
+        continue-on-error: true
+        env:
+          YESENIN_MARIENGOF_OUTPUT: artifacts/yesenin-mariengof-editions-pass13
+        run: |
+          set -o pipefail
+          python scripts/acquire-yesenin-mariengof-editions-pass13.py \
+            2>&1 | tee yesenin-mariengof-editions-pass13.log
+      - name: Upload acquisition diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-mariengof-editions-pass13-diagnostics
+          path: yesenin-mariengof-editions-pass13.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload cards, provenance, partial results and real PDFs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-mariengof-editions-pass13-research-only
+          path: artifacts/yesenin-mariengof-editions-pass13
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+      - name: Enforce diagnostic process completion
+        if: always()
+        run: test "${{ steps.acquisition.outcome }}" = "success"
