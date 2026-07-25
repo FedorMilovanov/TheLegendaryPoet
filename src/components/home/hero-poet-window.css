@@ -140,7 +140,10 @@
   100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
-@media (hover: none) and (pointer: coarse) {
+/* Pointer media features are not reported consistently by every WebKit shell
+   and hybrid laptop. At tablet/mobile layout widths labels and compact names
+   must remain visible by geometry, independent of input classification. */
+@media (hover: none) and (pointer: coarse), (max-width: 1024px) {
   .hero-poet-window-label {
     opacity: 0.96 !important;
     transform: translateY(0) translateZ(22px) !important;
