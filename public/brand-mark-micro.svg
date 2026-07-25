@@ -2,21 +2,15 @@
   <title id="micro-title">THE LEGENDARY POET</title>
   <desc id="micro-description">Упрощённый знак безликой фигуры в капюшоне для малых размеров</desc>
   <defs>
-    <linearGradient id="micro-cloak" x1="6" y1="11" x2="26" y2="31" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#13283d"/>
-      <stop offset="0.48" stop-color="#07111f"/>
-      <stop offset="1" stop-color="#01040a"/>
-    </linearGradient>
-    <linearGradient id="micro-edge" x1="9" y1="4" x2="20" y2="24" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#9beeff"/>
-      <stop offset="0.48" stop-color="#2ed8ff" stop-opacity=".58"/>
-      <stop offset="1" stop-color="#2ed8ff" stop-opacity="0"/>
+    <linearGradient id="micro-shell" x1="7" y1="3" x2="25" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123b5a"/>
+      <stop offset="0.48" stop-color="#081d30"/>
+      <stop offset="1" stop-color="#020916"/>
     </linearGradient>
   </defs>
-  <path d="M4.5 30C5 23.3 6.8 17.5 10.5 14.2C12.1 12.8 14 12 16 12s3.9.8 5.5 2.2C25.2 17.5 27 23.3 27.5 30A27.4 27.4 0 0 1 16 32 27.4 27.4 0 0 1 4.5 30Z" fill="url(#micro-cloak)" stroke="#1d3b55" stroke-width=".65"/>
-  <path d="M8.2 15.1C7.8 11.1 9 7.4 11.5 5.1A6.7 6.7 0 0 1 16 3.2a6.7 6.7 0 0 1 4.5 1.9c2.5 2.3 3.7 6 3.3 10-2.3-1.8-4.8-2.7-7.8-2.7s-5.5.9-7.8 2.7Z" fill="url(#micro-cloak)" stroke="#294b67" stroke-width=".7"/>
-  <path d="M11.9 12.5c.3-3.1 1.8-5 4.1-5.5 2.3.5 3.8 2.4 4.1 5.5-1.1-.5-2.5-.8-4.1-.8s-3 .3-4.1.8Z" fill="#000208"/>
-  <path d="M9.2 13.8C10.4 8.6 12.7 5.2 16 4" fill="none" stroke="url(#micro-edge)" stroke-width=".85" stroke-linecap="round"/>
-  <path d="m16 16.8 1.5 3.2-1.5 4-1.5-4 1.5-3.2Z" fill="#58e5ff"/>
-  <path d="M16 18.2v4" stroke="#e2fbff" stroke-width=".75" stroke-linecap="round"/>
+  <path d="M4 29c.7-7 2.7-12.2 6.2-15.6C9.2 11.7 9 9.6 9.6 7.7 10.5 4.5 12.8 2.5 16 2c3.2.5 5.5 2.5 6.4 5.7.6 1.9.4 4-.6 5.7C25.3 16.8 27.3 22 28 29A27 27 0 0 1 16 32 27 27 0 0 1 4 29Z" fill="url(#micro-shell)" stroke="#48d9ff" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M10.4 13.2c.1-4.8 2.2-7.7 5.6-8.4 3.4.7 5.5 3.6 5.6 8.4-1.6-.8-3.45-1.2-5.6-1.2s-4 .4-5.6 1.2Z" fill="#00030a"/>
+  <path d="M10.8 12.1C11.5 7.4 13.2 4.6 16 3.5" fill="none" stroke="#d6fbff" stroke-width="1.15" stroke-linecap="round"/>
+  <path d="m16 17.6 1.65 3.4L16 25l-1.65-4 1.65-3.4Z" fill="#7fecff"/>
+  <path d="M16 19.4v3.6" stroke="#f2ffff" stroke-width="0.9" stroke-linecap="round"/>
 </svg>
