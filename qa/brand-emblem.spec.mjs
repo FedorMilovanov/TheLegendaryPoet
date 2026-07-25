@@ -17,7 +17,7 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('selected emblem, install metadata and share metadata are coherent', async ({ page, request }) => {
+test('selected emblem, preload, install metadata and share metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
 
@@ -42,6 +42,10 @@ test('selected emblem, install metadata and share metadata are coherent', async 
     expect(assetResponse.status(), `${asset} HTTP status`).toBe(200);
     if (size) expect(await imageSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
   }
+
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('href', /brand-emblem-master\.webp$/);
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('type', 'image/webp');
+  await expect(page.locator('link[rel="preload"][as="image"]')).toHaveAttribute('fetchpriority', 'high');
 
   const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
   const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
@@ -72,6 +76,7 @@ test('the selected faceless figure glows subtly on hover without halo or retired
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toBeVisible();
+  await expect(mark.locator('[data-brand-fallback]')).toBeVisible();
   await expect(mark.locator('[data-brand-figure]')).toBeVisible();
   await expect(mark.locator('[data-brand-aura]')).toBeVisible();
   expect(await mark.locator('[data-brand-book], [data-brand-wing], [data-brand-halo]').count()).toBe(0);
@@ -89,10 +94,12 @@ test('the selected faceless figure glows subtly on hover without halo or retired
   expect(duplicateIds, 'SVG definitions must be namespaced per emblem instance').toEqual([]);
 
   const figure = mark.locator('[data-brand-figure]');
+  const fallback = mark.locator('[data-brand-fallback]');
   const aura = mark.locator('[data-brand-aura]');
   const mist = mark.locator('[data-brand-mist]');
   const before = {
     figure: await figure.getAttribute('style'),
+    fallback: await fallback.getAttribute('style'),
     aura: await aura.getAttribute('style'),
     mist: await mist.getAttribute('style'),
     filter: await mark.locator('svg').getAttribute('style'),
@@ -103,11 +110,13 @@ test('the selected faceless figure glows subtly on hover without halo or retired
 
   const after = {
     figure: await figure.getAttribute('style'),
+    fallback: await fallback.getAttribute('style'),
     aura: await aura.getAttribute('style'),
     mist: await mist.getAttribute('style'),
     filter: await mark.locator('svg').getAttribute('style'),
   };
   expect(after.figure).not.toBe(before.figure);
+  expect(after.fallback).not.toBe(before.fallback);
   expect(after.aura).not.toBe(before.aura);
   expect(after.mist).not.toBe(before.mist);
   expect(after.filter).not.toBe(before.filter);
@@ -122,6 +131,28 @@ test('the selected faceless figure glows subtly on hover without halo or retired
     },
   });
   expect(pageErrors).toEqual([]);
+});
+
+test('coded vector figure remains visible if the selected master asset is unavailable', async ({ page }) => {
+  await page.route('**/brand-emblem-master.webp', (route) => route.abort('failed'));
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+
+  const mark = page.locator('header [data-brand-mark]').first();
+  const fallback = mark.locator('[data-brand-fallback]');
+  await expect(mark).toBeVisible();
+  await expect(fallback).toBeVisible();
+  expect(await fallback.locator('path').count()).toBeGreaterThanOrEqual(8);
+
+  const box = await mark.boundingBox();
+  await page.screenshot({
+    path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-fallback.png'),
+    clip: {
+      x: Math.max(0, (box?.x || 0) - 24),
+      y: Math.max(0, (box?.y || 0) - 24),
+      width: (box?.width || 44) + 48,
+      height: (box?.height || 44) + 48,
+    },
+  });
 });
 
 for (const route of coreRoutes) {
@@ -140,6 +171,7 @@ for (const route of coreRoutes) {
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))
           .filter((viewBox) => viewBox !== '0 0 96 96'),
+        missingFallbacks: marks.filter((mark) => !mark.querySelector('[data-brand-fallback]')).length,
         retiredElements: marks.reduce(
           (count, mark) => count + mark.querySelectorAll('[data-brand-book], [data-brand-wing], [data-brand-halo]').length,
           0,
@@ -150,6 +182,7 @@ for (const route of coreRoutes) {
     expect(result.marks).toBeGreaterThanOrEqual(2);
     expect(result.duplicateIds).toEqual([]);
     expect(result.invalidViewBoxes).toEqual([]);
+    expect(result.missingFallbacks).toBe(0);
     expect(result.retiredElements).toBe(0);
   });
 }
