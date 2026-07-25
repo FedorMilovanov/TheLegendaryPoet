@@ -32,7 +32,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
     mist: `${uid}-brand-mist`,
     soft: `${uid}-brand-soft`,
   };
-  const artworkUrl = `${import.meta.env.BASE_URL}brand-emblem-master.webp`;
+  const artworkUrl = `${import.meta.env.BASE_URL}brand-emblem-master.png`;
 
   return (
     <motion.span

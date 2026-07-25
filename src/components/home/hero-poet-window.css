@@ -1,0 +1,52 @@
+@media (hover: none) and (pointer: coarse) {
+  .hero-poet-window-label {
+    opacity: 0.96 !important;
+    transform: translateY(0) !important;
+  }
+
+  .hero-poet-window-image {
+    filter: grayscale(0.42) contrast(1.2) saturate(0.82);
+    opacity: 0.9;
+    transform: scale(1.065);
+  }
+
+  .hero-poet-window-shine {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) and (prefers-reduced-motion: no-preference) {
+  .hero-blur-reveal {
+    animation-duration: 1.35s;
+  }
+
+  .hero-blur-reveal-strong {
+    animation-duration: 1.55s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blur-reveal,
+  .hero-blur-reveal-strong {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .hero-poet-window-surface,
+  .hero-poet-window-glow,
+  .hero-poet-window-image,
+  .hero-poet-window-halo,
+  .hero-poet-window-shine,
+  .hero-poet-window-label {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .hero-poet-window-shine {
+    display: none;
+  }
+}
