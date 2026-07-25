@@ -2,6 +2,8 @@
 
 Дата: 2026-07-25
 
+Diagnostic revision: `r1`.
+
 Статус: `DIAGNOSTIC-ONLY / OFFICIAL-RSL-RECORD / PUBLISHED-LINKS-ONLY / NO-CONSTRUCTED-PDF-URL / NO-OCR / NO-SYNTHETIC-DOCUMENT / NOT-PUBLIC`
 
 ## Цель
@@ -13,7 +15,7 @@
 - Ленинград: Прибой, 1928;
 - исторический target: `PW6-YE1-MARIENGOF-1928`.
 
-Карточка указывает открытый цифровой доступ, но current typed queue ещё не содержит exact PDF bytes, SHA-256, frame count или postраничную колляцию Yakulov-сцены.
+Карточка указывает открытый цифровой доступ, но current typed queue ещё не содержит exact PDF bytes, SHA-256, frame count или постраничную колляцию Yakulov-сцены.
 
 ## Метод
 
