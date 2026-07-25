@@ -5,6 +5,7 @@ on:
     branches: [research/yesenin-archive-access-pass18]
     paths:
       - 'scripts/discover-yesenin-nypl-programs-pass19.mjs'
+      - 'scripts/acquire-yesenin-nypl-program-captures-pass19.mjs'
       - '.github/workflows/yesenin-nypl-api-discovery-pass19.yml'
   workflow_dispatch:
 
@@ -29,7 +30,9 @@ jobs:
           node-version: 24
       - name: Query NYPL item, MODS, capture and rights endpoints
         run: node scripts/discover-yesenin-nypl-programs-pass19.mjs
-      - name: Upload NYPL API discovery evidence
+      - name: Acquire public item metadata and all IIIF capture derivatives
+        run: node scripts/acquire-yesenin-nypl-program-captures-pass19.mjs
+      - name: Upload NYPL API and IIIF discovery evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
