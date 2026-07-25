@@ -8,7 +8,7 @@ fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 
-async function pngSize(page, url) {
+async function imageSize(page, url) {
   return page.evaluate(async (assetUrl) => {
     const image = new Image();
     image.src = assetUrl;
@@ -17,19 +17,15 @@ async function pngSize(page, url) {
   }, url);
 }
 
-async function visualState(locator) {
-  return locator.evaluate((node) => {
-    const computed = getComputedStyle(node);
-    return { opacity: computed.opacity, transform: computed.transform, filter: computed.filter, strokeDasharray: node.getAttribute('stroke-dasharray'), strokeDashoffset: node.getAttribute('stroke-dashoffset') };
-  });
-}
-
-test('premium brand assets, PWA icons and share metadata are coherent', async ({ page, request }) => {
+test('selected emblem, install metadata and share metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
 
   const expectedAssets = [
     ['favicon.svg', null],
+    ['brand-emblem.svg', null],
+    ['brand-emblem-mask.svg', null],
+    ['brand-emblem-master.webp', { width: 512, height: 512 }],
     ['favicon-16.png', { width: 16, height: 16 }],
     ['favicon-32.png', { width: 32, height: 32 }],
     ['apple-touch-icon.png', { width: 180, height: 180 }],
@@ -37,40 +33,48 @@ test('premium brand assets, PWA icons and share metadata are coherent', async ({
     ['icon-512.png', { width: 512, height: 512 }],
     ['icon-maskable-512.png', { width: 512, height: 512 }],
     ['mstile-150x150.png', { width: 150, height: 150 }],
-    ['og-image.png', { width: 1200, height: 630 }],
+    ['og-image.jpg', { width: 1200, height: 630 }],
   ];
 
   for (const [asset, size] of expectedAssets) {
     const assetUrl = `${BASE_URL}/${asset}`;
     const assetResponse = await request.get(assetUrl);
     expect(assetResponse.status(), `${asset} HTTP status`).toBe(200);
-    if (size) expect(await pngSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
+    if (size) expect(await imageSize(page, assetUrl), `${asset} dimensions`).toEqual(size);
   }
 
   const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
   const twitterImage = await page.locator('meta[name="twitter:image"]').getAttribute('content');
-  expect(ogImage).toBe('https://thelegendarypoet.ru/og-image.png');
-  expect(twitterImage).toBe('https://thelegendarypoet.ru/og-image.png');
-  await expect(page.locator('meta[property="og:image:type"]')).toHaveAttribute('content', 'image/png');
+  expect(ogImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
+  expect(twitterImage).toBe('https://thelegendarypoet.ru/og-image.jpg');
+  await expect(page.locator('meta[property="og:image:type"]')).toHaveAttribute('content', 'image/jpeg');
+  await expect(page.locator('link[rel="mask-icon"]')).toHaveAttribute('href', /brand-emblem-mask\.svg$/);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', /apple-touch-icon\.png$/);
 
   const manifestResponse = await request.get(`${BASE_URL}/site.webmanifest`);
   expect(manifestResponse.status()).toBe(200);
   const manifest = await manifestResponse.json();
   expect(manifest.icons).toEqual(expect.arrayContaining([
     expect.objectContaining({ src: '/favicon.svg', sizes: 'any' }),
-    expect.objectContaining({ src: '/icon-192.png', sizes: '192x192' }),
-    expect.objectContaining({ src: '/icon-512.png', sizes: '512x512' }),
-    expect.objectContaining({ src: '/icon-maskable-512.png', purpose: 'maskable' }),
+    expect.objectContaining({ src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }),
+    expect.objectContaining({ src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }),
+    expect.objectContaining({ src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }),
   ]));
+
+  const retiredResponse = await request.get(`${BASE_URL}/og-image.png`);
+  expect(retiredResponse.status(), 'old share card must be removed').toBe(404);
 });
 
-test('emblem remains unique, crisp and restrained while unfolding on hover', async ({ page }) => {
+test('the selected faceless figure glows subtly on hover without halo or retired symbols', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toBeVisible();
+  await expect(mark.locator('[data-brand-figure]')).toBeVisible();
+  await expect(mark.locator('[data-brand-aura]')).toBeVisible();
+  expect(await mark.locator('[data-brand-book], [data-brand-wing], [data-brand-halo]').count()).toBe(0);
 
   const box = await mark.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(40);
@@ -84,29 +88,44 @@ test('emblem remains unique, crisp and restrained while unfolding on hover', asy
   });
   expect(duplicateIds, 'SVG definitions must be namespaced per emblem instance').toEqual([]);
 
-  const leftWing = mark.locator('[data-brand-wing="left"]');
-  const halo = mark.locator('[data-brand-halo]');
-  const svg = mark.locator('svg');
-  const before = { wing: await visualState(leftWing), halo: await visualState(halo), filter: (await visualState(svg)).filter };
+  const figure = mark.locator('[data-brand-figure]');
+  const aura = mark.locator('[data-brand-aura]');
+  const mist = mark.locator('[data-brand-mist]');
+  const before = {
+    figure: await figure.getAttribute('style'),
+    aura: await aura.getAttribute('style'),
+    mist: await mist.getAttribute('style'),
+    filter: await mark.locator('svg').getAttribute('style'),
+  };
+
   await mark.hover();
-  await expect.poll(() => visualState(leftWing), { timeout: 2_500 }).not.toEqual(before.wing);
-  await expect.poll(() => visualState(halo), { timeout: 2_500 }).not.toEqual(before.halo);
-  await expect.poll(async () => (await visualState(svg)).filter, { timeout: 2_500 }).not.toBe(before.filter);
+  await page.waitForTimeout(440);
+
+  const after = {
+    figure: await figure.getAttribute('style'),
+    aura: await aura.getAttribute('style'),
+    mist: await mist.getAttribute('style'),
+    filter: await mark.locator('svg').getAttribute('style'),
+  };
+  expect(after.figure).not.toBe(before.figure);
+  expect(after.aura).not.toBe(before.aura);
+  expect(after.mist).not.toBe(before.mist);
+  expect(after.filter).not.toBe(before.filter);
 
   await page.screenshot({
-    path: path.join(ARTIFACT_DIR, 'brand-emblem-hover.png'),
+    path: path.join(ARTIFACT_DIR, 'brand-emblem-selected-hover.png'),
     clip: {
-      x: Math.max(0, (box?.x || 0) - 18),
-      y: Math.max(0, (box?.y || 0) - 18),
-      width: Math.min(page.viewportSize()?.width || 1280, (box?.width || 44) + 36),
-      height: (box?.height || 44) + 36,
+      x: Math.max(0, (box?.x || 0) - 24),
+      y: Math.max(0, (box?.y || 0) - 24),
+      width: Math.min(page.viewportSize()?.width || 1280, (box?.width || 44) + 48),
+      height: (box?.height || 44) + 48,
     },
   });
   expect(pageErrors).toEqual([]);
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the same canonical emblem without SVG id collisions`, async ({ page }) => {
+  test(`${route}: header and footer use the same selected emblem without SVG id collisions`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
     await expect(page.locator('header [data-brand-mark]').first()).toBeVisible();
@@ -121,11 +140,16 @@ for (const route of coreRoutes) {
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))
           .filter((viewBox) => viewBox !== '0 0 96 96'),
+        retiredElements: marks.reduce(
+          (count, mark) => count + mark.querySelectorAll('[data-brand-book], [data-brand-wing], [data-brand-halo]').length,
+          0,
+        ),
       };
     });
 
     expect(result.marks).toBeGreaterThanOrEqual(2);
     expect(result.duplicateIds).toEqual([]);
     expect(result.invalidViewBoxes).toEqual([]);
+    expect(result.retiredElements).toBe(0);
   });
 }

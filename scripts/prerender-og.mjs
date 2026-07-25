@@ -5,7 +5,7 @@ import path from 'node:path';
 const SITE_URL = 'https://thelegendarypoet.ru';
 const DIST = path.resolve('dist');
 const PUBLIC = path.resolve('public');
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 
 function absUrl(pathOrUrl) {
@@ -23,6 +23,7 @@ function imageMime(url) {
   const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
   if (pathname.endsWith('.png')) return 'image/png';
   if (pathname.endsWith('.webp')) return 'image/webp';
+  if (pathname.endsWith('.svg')) return 'image/svg+xml';
   return 'image/jpeg';
 }
 
@@ -97,7 +98,7 @@ async function main() {
   }
 
   const featuredTrack = musicTracks.find((track) => track.featured) || musicTracks[0];
-  write('/ratings', renderPage({ title: 'Рейтинг поэтов — THE LEGENDARY POET', description: 'Сводный читательский рейтинг русских поэтов: оценки, комментарии и прозрачная методика.', routePath: '/ratings', image: '/og-image.png' }));
+  write('/ratings', renderPage({ title: 'Рейтинг поэтов — THE LEGENDARY POET', description: 'Сводный читательский рейтинг русских поэтов: оценки, комментарии и прозрачная методика.', routePath: '/ratings', image: '/og-image.jpg' }));
   write('/music', renderPage({ title: 'Музыка — THE LEGENDARY POET', description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet.', routePath: '/music', image: featuredTrack?.wideCoverUrl || featuredTrack?.coverUrl }));
   count += 2;
 

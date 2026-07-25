@@ -29,6 +29,7 @@ function imageMime(url: string) {
   const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
   if (pathname.endsWith('.png')) return 'image/png';
   if (pathname.endsWith('.webp')) return 'image/webp';
+  if (pathname.endsWith('.svg')) return 'image/svg+xml';
   return 'image/jpeg';
 }
 
@@ -62,7 +63,7 @@ function ensureLink(rel: string, href: string) {
 export function useSeo({ title, description, path, type = 'website', image, publishedTime, author, keywords, jsonLd }: SeoOptions) {
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
-    const img = absUrl(image || '/og-image.png');
+    const img = absUrl(image || '/og-image.jpg');
 
     document.title = title;
     ensureMeta('description', description);

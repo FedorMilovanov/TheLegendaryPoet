@@ -1,112 +1,95 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
+const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
 
 const component = read('src/components/BrandMark.tsx');
 const emblem = read('public/brand-emblem.svg');
+const maskEmblem = read('public/brand-emblem-mask.svg');
 const favicon = read('public/favicon.svg');
 const index = read('index.html');
 const manifest = JSON.parse(read('public/site.webmanifest')) as {
-  icons?: Array<{ src?: string; sizes?: string; purpose?: string }>;
+  icons?: Array<{ src?: string; sizes?: string; type?: string; purpose?: string }>;
 };
 const prerender = read('scripts/prerender-og.mjs');
 const seo = read('src/hooks/useSeo.ts');
 const browserconfig = read('public/browserconfig.xml');
+const materializer = read('scripts/materialize-brand-art.mjs');
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must namespace SVG definition ids');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
 assert.match(component, /whileHover="hover"/, 'BrandMark must keep the restrained hover interaction');
-assert.match(component, /data-brand-wing="left"/, 'BrandMark left cloak wing is missing');
-assert.match(component, /data-brand-wing="right"/, 'BrandMark right cloak wing is missing');
-assert.match(component, /data-brand-book/, 'BrandMark illuminated book is missing');
-assert.doesNotMatch(component, /\sid="(?:cloak|hood|edge|book|glow|void)"/, 'BrandMark contains collision-prone fixed SVG ids');
+assert.match(component, /data-brand-figure/, 'BrandMark selected cloaked figure is missing');
+assert.match(component, /data-brand-aura/, 'BrandMark cold aura is missing');
+assert.match(component, /data-brand-mist/, 'BrandMark lower mist transition is missing');
+assert.match(component, /brand-emblem-master\.webp/, 'BrandMark does not use the selected master artwork');
+assert.doesNotMatch(component, /data-brand-(?:book|wing|halo)/, 'retired book, wing or halo hooks remain in BrandMark');
+assert.doesNotMatch(component, /\sid="(?:aura|bloom|mist)"/, 'BrandMark contains collision-prone fixed SVG ids');
 
 for (const [name, svg] of [['brand-emblem.svg', emblem], ['favicon.svg', favicon]] as const) {
   assert.match(svg, /viewBox="0 0 96 96"/, `${name}: canonical viewBox changed`);
-  assert.match(svg, /M48 28 C38 28 31 33 26 42/, `${name}: canonical cloak silhouette changed`);
-  assert.match(svg, /M33 55 C38 52\.5 43\.5 53\.7 48 58/, `${name}: illuminated book changed`);
+  assert.match(svg, /brand-emblem-master\.webp/, `${name}: selected artwork is not referenced`);
   assert.doesNotMatch(svg, /<script|<foreignObject/i, `${name}: unsafe or non-portable SVG content`);
+  assert.doesNotMatch(svg, /(?:book|wing|halo|<circle)/i, `${name}: retired emblem symbolism remains`);
 }
 assert.doesNotMatch(emblem, /<rect width="96" height="96"/, 'canonical emblem must remain frameless');
 assert.match(favicon, /<rect width="96" height="96" rx="18"/, 'favicon must retain its dark safe-area tile');
+assert.match(maskEmblem, /viewBox="0 0 96 96"/, 'Safari mask icon viewBox changed');
+assert.match(maskEmblem, /<path fill="#000"/, 'Safari mask icon must be a monochrome vector path');
+assert.doesNotMatch(maskEmblem, /<image|data:image|<circle/i, 'Safari mask icon must stay pure vector and ring-free');
+assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature changed');
+assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
 
 for (const pathName of [
   'favicon.svg',
   'favicon-16.png',
   'favicon-32.png',
   'apple-touch-icon.png',
-  'brand-emblem.svg',
+  'brand-emblem-mask.svg',
   'icon-512.png',
-  'og-image.png',
+  'og-image.jpg',
   'site.webmanifest',
   'browserconfig.xml',
 ]) {
   assert.ok(index.includes(pathName), `index.html does not reference ${pathName}`);
 }
-assert.doesNotMatch(index, /og-image\.jpg/, 'index.html still points to the retired OG artwork');
-assert.match(index, /og:image:type" content="image\/png"/, 'Open Graph image MIME type is missing');
-assert.match(prerender, /og-image\.png/g, 'prerender default does not use the new share card');
-assert.doesNotMatch(prerender, /og-image\.jpg/, 'prerender still references the retired share card');
-assert.match(seo, /image \|\| '\/og-image\.png'/, 'runtime SEO default does not use the new share card');
-assert.doesNotMatch(seo, /og-image\.jpg/, 'runtime SEO still references the retired share card');
+assert.doesNotMatch(index, /(?:с раскрытой книгой|og-image\.png|brand-emblem-master\.webp" \/>\s*<meta property="og:image)/, 'retired brand metadata remains in index.html');
+assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph image MIME type must use the selected JPEG share card');
+assert.match(prerender, /og-image\.jpg/g, 'prerender default does not use the selected share card');
+assert.doesNotMatch(prerender, /og-image\.png|brand-emblem-master\.webp/, 'prerender still references retired share defaults');
+assert.match(seo, /image \|\| '\/og-image\.jpg'/, 'runtime SEO default does not use the selected share card');
+assert.match(seo, /logo: \{ '@type': 'ImageObject', url: `\$\{siteConfig\.url\}\/icon-512\.png` \}/, 'runtime publisher logo is not the selected platform icon');
+assert.doesNotMatch(seo, /og-image\.png/, 'runtime SEO still references the retired share card');
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
 for (const src of ['/favicon.svg', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png']) {
   assert.ok(iconSources.has(src), `manifest is missing ${src}`);
 }
 assert.ok(
-  manifest.icons?.some((icon) => icon.src === '/icon-maskable-512.png' && icon.purpose === 'maskable'),
-  'manifest maskable icon is missing',
+  manifest.icons?.some((icon) => icon.src === '/icon-maskable-512.png' && icon.type === 'image/png' && icon.purpose === 'maskable'),
+  'manifest maskable selected artwork is missing',
 );
-assert.match(browserconfig, /mstile-150x150\.png/, 'Windows tile does not use the canonical emblem');
+assert.match(browserconfig, /mstile-150x150\.png/, 'Windows tile does not use the selected emblem');
 
-function crc32(buffer: Buffer) {
-  let crc = 0xffffffff;
-  for (const byte of buffer) {
-    crc ^= byte;
-    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngDimensions(buffer: Buffer, file: string) {
-  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
-  let offset = 8;
-  let dimensions: { width: number; height: number } | null = null;
-  let sawIend = false;
-  while (offset + 12 <= buffer.length) {
-    const length = buffer.readUInt32BE(offset);
-    const type = buffer.subarray(offset + 4, offset + 8).toString('ascii');
-    const dataEnd = offset + 8 + length;
-    const chunkEnd = dataEnd + 4;
-    assert.ok(chunkEnd <= buffer.length, `${file}: truncated ${type || 'unknown'} chunk`);
-    assert.equal(crc32(buffer.subarray(offset + 4, dataEnd)), buffer.readUInt32BE(dataEnd), `${file}: invalid ${type} CRC`);
-    if (type === 'IHDR') dimensions = { width: buffer.readUInt32BE(offset + 8), height: buffer.readUInt32BE(offset + 12) };
-    offset = chunkEnd;
-    if (type === 'IEND') { sawIend = true; break; }
-  }
-  assert.ok(dimensions, `${file}: IHDR chunk is missing`);
-  assert.ok(sawIend, `${file}: IEND chunk is missing`);
-  assert.equal(offset, buffer.length, `${file}: trailing bytes after IEND`);
-  return dimensions;
-}
-
-const expectedPngs: Record<string, { width: number; height: number }> = {
-  'public/favicon-16.png': { width: 16, height: 16 },
-  'public/favicon-32.png': { width: 32, height: 32 },
-  'public/apple-touch-icon.png': { width: 180, height: 180 },
-  'public/icon-192.png': { width: 192, height: 192 },
-  'public/icon-512.png': { width: 512, height: 512 },
-  'public/icon-maskable-512.png': { width: 512, height: 512 },
-  'public/mstile-150x150.png': { width: 150, height: 150 },
-  'public/og-image.png': { width: 1200, height: 630 },
+const expectedHashes: Record<string, string> = {
+  'public/brand-emblem-master.webp': '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d',
+  'public/favicon-16.png': 'fcbbf903d3a14e88a009696b55622cc5d8b755f9e09b5c80f174c3ef2699ee5b',
+  'public/favicon-32.png': 'b546bfbae1477781052748380f3c0ae15032038e24d9a305ee26c0818f52f8df',
+  'public/apple-touch-icon.png': '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2',
+  'public/icon-192.png': '67f484fb1cf3d774f87522370fb97fbc3052ed0ec9b3b4813b4414ed63ec393b',
+  'public/icon-512.png': '87b10432c44520f659c5f1ecde293f655f68792ec1e3aa4aa4aed2b65911b281',
+  'public/icon-maskable-512.png': 'e90b2455c37a99aa86b9c5d85c1097c250249b103953d678c1040b34cdf5c09e',
+  'public/mstile-150x150.png': '30be3316fc001a5d2308d9ee47a83260a298094c6684aaefa7ef82660b68c744',
+  'public/og-image.jpg': '5562fbdebddc81777672a165a1eb10c964adb207ef3a58a260a305a4587882f3',
 };
 
-for (const [file, expected] of Object.entries(expectedPngs)) {
-  assert.deepEqual(pngDimensions(readBuffer(file), file), expected, `${file}: unexpected dimensions`);
+for (const [file, expected] of Object.entries(expectedHashes)) {
+  assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or an old emblem returned`);
 }
+assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: canonical SVG, hover hooks, metadata and platform assets are consistent');
+console.log('brand validation: selected cloaked figure, ring-free SVG, hover, metadata and all platform assets are consistent');

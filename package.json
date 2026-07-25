@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "brand:materialize": "node scripts/materialize-brand-art.mjs",
+    "predev": "npm run brand:materialize",
     "dev": "vite",
+    "prebuild": "npm run brand:materialize",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -24,11 +27,11 @@
     "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts",
     "validate:build-output": "tsx scripts/validate-build-output.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
-    "validate:brand": "tsx scripts/validate-brand-assets.ts",
     "check:content": "npm run validate:library && npm run validate:essays && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style",
-    "check": "npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run typecheck",
     "sitemap": "node scripts/gen-sitemap.mjs",
-    "prerender": "tsx scripts/prerender-og.mjs"
+    "prerender": "tsx scripts/prerender-og.mjs",
+    "validate:brand": "npm run brand:materialize && tsx scripts/validate-brand-assets.ts",
+    "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
