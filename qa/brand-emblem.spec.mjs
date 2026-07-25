@@ -24,7 +24,7 @@ test('approved emblem master, install icons and share metadata are coherent', as
 
   const expectedAssets = [
     ['brand-emblem-mask.svg', null],
-    ['brand-emblem-master.webp', { width: 512, height: 512 }],
+    ['brand-emblem-master.webp', { width: 320, height: 320 }],
     ['favicon-16.png', { width: 16, height: 16 }],
     ['favicon-32.png', { width: 32, height: 32 }],
     ['apple-touch-icon.png', { width: 180, height: 180 }],
