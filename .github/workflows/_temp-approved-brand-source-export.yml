@@ -1,0 +1,67 @@
+name: Temporary Approved Brand Source Export
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+    paths:
+      - '.github/workflows/_temp-approved-brand-source-export.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/brand-complete-integrity-20260725'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/brand-complete-integrity-20260725
+
+      - name: Decode and inspect approved deterministic sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p approved-brand-source
+          for pair in \
+            'master-320-q92.webp.b64:brand-emblem-master.webp' \
+            'favicon-16.png.b64:favicon-16.png' \
+            'favicon-32.png.b64:favicon-32.png'; do
+            source_name="${pair%%:*}"
+            output_name="${pair##*:}"
+            tr -d '[:space:]' < "src/brand-assets/${source_name}" | base64 --decode > "approved-brand-source/${output_name}"
+          done
+          sha256sum approved-brand-source/* | sort > approved-brand-source/sha256.txt
+          file approved-brand-source/* > approved-brand-source/file.txt
+          wc -c approved-brand-source/* > approved-brand-source/sizes.txt
+          cat approved-brand-source/sha256.txt
+          cat approved-brand-source/file.txt
+          cat approved-brand-source/sizes.txt
+
+      - name: Prove current checkout misses six required derivatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/materialize-brand-art.mjs
+          required=(
+            public/apple-touch-icon.png
+            public/icon-192.png
+            public/icon-512.png
+            public/icon-maskable-512.png
+            public/mstile-150x150.png
+            public/og-image.jpg
+          )
+          : > approved-brand-source/missing-required.txt
+          for file in "${required[@]}"; do
+            [[ -f "$file" ]] || printf '%s\n' "$file" >> approved-brand-source/missing-required.txt
+          done
+          cat approved-brand-source/missing-required.txt
+          test "$(wc -l < approved-brand-source/missing-required.txt)" -eq 6
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: approved-brand-source-export
+          path: approved-brand-source
+          if-no-files-found: error
+          retention-days: 3
