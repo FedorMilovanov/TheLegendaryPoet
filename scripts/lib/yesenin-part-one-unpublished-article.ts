@@ -3,6 +3,8 @@ import { yeseninPartOneEditorialPassSeven } from '../../src/data/essays/yeseninP
 import { yeseninPartOneEditorialPassSevenPass6 } from '../../src/data/essays/yeseninPartOneEditorialPassSevenPass6';
 import { yeseninPartOneEditorialPassEightEarlyA } from '../../src/data/essays/yeseninPartOneEditorialPassEightEarlyA';
 import { yeseninPartOneEditorialPassEightEarlyB } from '../../src/data/essays/yeseninPartOneEditorialPassEightEarlyB';
+import { yeseninPartOneEditorialPhysicalEditionsPassEight } from '../../src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight';
+import { yeseninDuncanMainArticleSplit } from '../../src/data/essays/yeseninDuncanMainArticleSplit';
 import { yeseninPartOneSources } from '../../src/data/essays/yeseninPartOneSources';
 import { yeseninPartOneSourcesPassTwo } from '../../src/data/essays/yeseninPartOneSourcesPassTwo';
 import { yeseninPartOneSourcesPassThree } from '../../src/data/essays/yeseninPartOneSourcesPassThree';
@@ -30,6 +32,8 @@ export interface YeseninPartOneInternalEvidence {
   sourceCorrections: readonly string[];
   editorialPassSevenApplied: boolean;
   editorialPassEightApplied: boolean;
+  readerFacingInPartOne: boolean;
+  transferredToCompanionArticleId?: 'essay-yesenin-duncan-first-meeting-unpublished';
   publicationAuthorized: false;
 }
 
@@ -46,6 +50,11 @@ export interface YeseninPartOneUnpublishedArticlePackage {
   editorialPassEight: 'lead-sections-1-8-literary-theological-pass-eight';
   editorialPassEightEditedSections: readonly [0, 1, 2, 3, 4, 5, 6, 7, 8];
   wholeArticleSentenceEditComplete: true;
+  evidenceNodeCount: 146;
+  readerFacingTextBlocks: 140;
+  duncanCompactionApplied: true;
+  companionArticleId: 'essay-yesenin-duncan-first-meeting-unpublished';
+  companionTransferredBlockIds: readonly string[];
   essay: Essay;
   evidenceByBlockId: Readonly<Record<string, YeseninPartOneInternalEvidence>>;
 }
@@ -79,12 +88,18 @@ const withRenderSources = (block: EssayBlock, sourceIds: readonly string[]): Ess
 const editorialPassSeven = {
   ...yeseninPartOneEditorialPassSeven,
   ...yeseninPartOneEditorialPassSevenPass6,
+  ...yeseninPartOneEditorialPhysicalEditionsPassEight,
 } as const satisfies Readonly<Record<string, string>>;
 
 const editorialPassEight = {
   ...yeseninPartOneEditorialPassEightEarlyA,
   ...yeseninPartOneEditorialPassEightEarlyB,
 } as const satisfies Readonly<Record<string, string>>;
+
+const companionTransferredBlockIds = yeseninDuncanMainArticleSplit
+  .filter((record) => record.destination === 'companion-investigation')
+  .map((record) => record.blockId);
+const companionTransferredBlockIdSet = new Set<string>(companionTransferredBlockIds);
 
 export function buildYeseninPartOneUnpublishedArticle(
   root = process.cwd(),
@@ -117,31 +132,34 @@ export function buildYeseninPartOneUnpublishedArticle(
     const passSevenText = editorialPassSeven[node.blockId as keyof typeof editorialPassSeven];
     const passEightText = editorialPassEight[node.blockId as keyof typeof editorialPassEight];
     const renderText = passEightText ?? passSevenText ?? node.text;
-    renderTexts.push(renderText);
+    const readerFacingInPartOne = !companionTransferredBlockIdSet.has(node.blockId);
 
-    let authoredBlock: EssayBlock;
-    if (node.origin === 'editorial-override') {
-      authoredBlock = {
-        id: node.blockId,
-        type: 'note',
-        text: renderText,
-      };
-    } else if (node.sectionNumber === 0 && !leadRendered) {
-      leadRendered = true;
-      authoredBlock = {
-        id: node.blockId,
-        type: 'lead',
-        text: renderText,
-      };
-    } else {
-      authoredBlock = {
-        id: node.blockId,
-        type: 'paragraph',
-        text: renderText,
-      };
+    if (readerFacingInPartOne) {
+      renderTexts.push(renderText);
+      let authoredBlock: EssayBlock;
+      if (node.origin === 'editorial-override') {
+        authoredBlock = {
+          id: node.blockId,
+          type: 'note',
+          text: renderText,
+        };
+      } else if (node.sectionNumber === 0 && !leadRendered) {
+        leadRendered = true;
+        authoredBlock = {
+          id: node.blockId,
+          type: 'lead',
+          text: renderText,
+        };
+      } else {
+        authoredBlock = {
+          id: node.blockId,
+          type: 'paragraph',
+          text: renderText,
+        };
+      }
+
+      blocks.push(withRenderSources(authoredBlock, node.canonicalSourceIds));
     }
-
-    blocks.push(withRenderSources(authoredBlock, node.canonicalSourceIds));
     evidenceEntries.push([
       node.blockId,
       {
@@ -162,6 +180,10 @@ export function buildYeseninPartOneUnpublishedArticle(
         sourceCorrections: [...node.sourceCorrections],
         editorialPassSevenApplied: Boolean(passSevenText),
         editorialPassEightApplied: Boolean(passEightText),
+        readerFacingInPartOne,
+        ...(readerFacingInPartOne
+          ? {}
+          : { transferredToCompanionArticleId: 'essay-yesenin-duncan-first-meeting-unpublished' as const }),
         publicationAuthorized: false,
       },
     ]);
@@ -222,6 +244,11 @@ export function buildYeseninPartOneUnpublishedArticle(
     editorialPassEight: 'lead-sections-1-8-literary-theological-pass-eight',
     editorialPassEightEditedSections: [0, 1, 2, 3, 4, 5, 6, 7, 8],
     wholeArticleSentenceEditComplete: true,
+    evidenceNodeCount: 146,
+    readerFacingTextBlocks: 140,
+    duncanCompactionApplied: true,
+    companionArticleId: 'essay-yesenin-duncan-first-meeting-unpublished',
+    companionTransferredBlockIds: [...companionTransferredBlockIds],
     essay,
     evidenceByBlockId: Object.fromEntries(evidenceEntries),
   };

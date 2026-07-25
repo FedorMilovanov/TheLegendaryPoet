@@ -49,11 +49,10 @@ export const yeseninPartOneEditorialPhysicalEditionEvidenceByBlockId = {
   'yesenin-p1-transition-ispoved-page-hold': [ispovedAcquisition.id],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
-const mutablePassSeven = yeseninPartOneEditorialPassSeven as unknown as Record<string, string>;
-Object.assign(mutablePassSeven, yeseninPartOneEditorialPhysicalEditionsPassEight);
+const passSevenBlockIds = new Set(Object.keys(yeseninPartOneEditorialPassSeven));
 
 for (const [blockId, text] of Object.entries(yeseninPartOneEditorialPhysicalEditionsPassEight)) {
-  if (!(blockId in yeseninPartOneEditorialPassSeven)) {
+  if (!passSevenBlockIds.has(blockId)) {
     throw new Error(`[yesenin-physical-editions-pass8] unknown pass-seven block ${blockId}`);
   }
   if (text.length < 300 || text.length > 1000) {
