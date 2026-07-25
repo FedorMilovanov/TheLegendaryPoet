@@ -84,7 +84,12 @@ for (const block of essay.blocks) {
 for (const sourceId of sourceIds) {
   if (!referencedSourceIds.has(sourceId)) fail(`companion bibliography contains unused source ${sourceId}`);
 }
-const internalOnlySourceIds = new Set(['yd1-pss-duncan-chronology', 'yd1-mcvay-isadora-yesenin']);
+const febDuncanChronologyUrl = 'https://feb-web.ru/feb/esenin/texts/e77/e77-357-.htm?cmd=p';
+const febDuncanChronology = (essay.sources ?? []).find((source) => source.id === 'yd1-pss-duncan-chronology');
+if (febDuncanChronology?.url !== febDuncanChronologyUrl || febDuncanChronology.year !== 1999) {
+  fail('yd1-pss-duncan-chronology must retain the exact official FEB locator and 1999 edition year');
+}
+const internalOnlySourceIds = new Set(['yd1-mcvay-isadora-yesenin']);
 for (const source of essay.sources ?? []) {
   if (!source.id) continue;
   if (internalOnlySourceIds.has(source.id)) {
