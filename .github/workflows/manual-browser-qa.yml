@@ -38,19 +38,35 @@ jobs:
           sudo apt-get install -y --no-install-recommends ffmpeg
           ffmpeg -version | head -1
 
+      - name: Build production site
+        id: production_build
+        env:
+          VITE_BASE: /
+        run: |
+          set +e
+          {
+            npm run sitemap
+            npm run build
+          } > production-build.log 2>&1
+          status=$?
+          cat production-build.log
+          exit $status
+
+      - name: Upload production build diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-diagnostics
+          path: production-build.log
+          if-no-files-found: error
+          retention-days: 7
+
       # Keep the browser engines isolated from the app lockfile: this workflow
       # validates the production build without changing application dependencies.
       - name: Install isolated Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
           npx playwright install --with-deps chromium webkit
-
-      - name: Build production site
-        run: |
-          npm run sitemap
-          npm run build
-        env:
-          VITE_BASE: /
 
       - name: Start production preview
         run: |
@@ -79,6 +95,19 @@ jobs:
           --workers=1
           --reporter=line,html
 
+      - name: Run dedicated premium homepage and pointer-performance matrix
+        id: home_polish
+        run: |
+          set +e
+          npx playwright test \
+            qa/home-polish.spec.mjs \
+            --config=playwright.home-polish.config.mjs \
+            --workers=1 \
+            --reporter=line > home-polish.log 2>&1
+          status=$?
+          cat home-polish.log
+          exit $status
+
       - name: Upload visual QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -89,5 +118,7 @@ jobs:
             playwright-report
             test-results
             preview.log
+            production-build.log
+            home-polish.log
           if-no-files-found: warn
           retention-days: 7
