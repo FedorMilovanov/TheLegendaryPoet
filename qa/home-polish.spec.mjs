@@ -151,6 +151,7 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   await page.evaluate(() => {
     window.__tlpPointerFrames = [];
     window.__tlpLongTasks = [];
+    window.__tlpPointerMeasurementStart = performance.now();
     window.addEventListener('pointermove', () => {
       const start = performance.now();
       requestAnimationFrame(() => window.__tlpPointerFrames.push(performance.now() - start));
@@ -165,9 +166,10 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   const metrics = await page.evaluate(() => {
     const dot = document.querySelector('[data-custom-cursor-dot]');
     const ring = document.querySelector('[data-custom-cursor-ring]');
+    const measurementStart = window.__tlpPointerMeasurementStart || 0;
     return {
       pointerFrames: window.__tlpPointerFrames || [],
-      longTasks: window.__tlpLongTasks || [],
+      longTasks: (window.__tlpLongTasks || []).filter((task) => task.startTime >= measurementStart),
       cursorReady: document.body.classList.contains('custom-cursor-ready'),
       dotMixBlendMode: dot ? getComputedStyle(dot).mixBlendMode : null,
       dotTransform: dot ? getComputedStyle(dot).transform : null,
