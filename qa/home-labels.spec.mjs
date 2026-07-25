@@ -15,6 +15,18 @@ const EXPECTED_NAMES = [
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+async function effectiveOpacity(locator) {
+  return locator.evaluate((node) => {
+    let opacity = 1;
+    let current = node;
+    while (current && current !== document.documentElement) {
+      opacity *= Number.parseFloat(getComputedStyle(current).opacity || '1');
+      current = current.parentElement;
+    }
+    return opacity;
+  });
+}
+
 test('premium poet labels preserve every full name without ellipsis or clipping', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
@@ -34,18 +46,31 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     { timeout: 12_000, message: 'all premium portraits should decode before label geometry is measured' },
   ).toBe(true);
 
-  await expect.poll(
-    () => names.evaluateAll((nodes) => nodes.every((node) => {
-      let opacity = 1;
-      let current = node;
-      while (current && current !== document.documentElement) {
-        opacity *= Number.parseFloat(getComputedStyle(current).opacity || '1');
-        current = current.parentElement;
-      }
-      return opacity > 0.85;
-    })),
-    { timeout: 4_000, message: 'all six label panels should finish their entrance state before geometry is measured' },
-  ).toBe(true);
+  if (testInfo.project.name === 'home-desktop') {
+    // Desktop intentionally reveals one label at a time on hover/focus. Exercise
+    // every card through that real interaction instead of demanding six hover
+    // states simultaneously, which the product never promises.
+    for (let index = 0; index < EXPECTED_NAMES.length; index += 1) {
+      await windows.nth(index).hover({ position: { x: 12, y: 18 } });
+      await expect.poll(
+        () => effectiveOpacity(names.nth(index)),
+        { timeout: 4_000, message: `${EXPECTED_NAMES[index]} should become readable on desktop hover` },
+      ).toBeGreaterThan(0.85);
+    }
+  } else {
+    await expect.poll(
+      () => names.evaluateAll((nodes) => nodes.every((node) => {
+        let opacity = 1;
+        let current = node;
+        while (current && current !== document.documentElement) {
+          opacity *= Number.parseFloat(getComputedStyle(current).opacity || '1');
+          current = current.parentElement;
+        }
+        return opacity > 0.85;
+      })),
+      { timeout: 4_000, message: 'all six touch label panels should finish their entrance state before geometry is measured' },
+    ).toBe(true);
+  }
 
   const facts = await names.evaluateAll((nodes) => nodes.map((node) => {
     const style = getComputedStyle(node);
