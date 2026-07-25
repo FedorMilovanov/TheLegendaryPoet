@@ -72,11 +72,9 @@ function jpegSize(file: string) {
       offset += 1;
       continue;
     }
-
     while (offset < buffer.length && buffer[offset] === 0xff) offset += 1;
     const marker = buffer[offset];
     if (marker === undefined) break;
-
     if (marker === 0xd8 || marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
       offset += 1;
       continue;
@@ -86,14 +84,9 @@ function jpegSize(file: string) {
     assert.ok(offset + 2 < buffer.length, `${file}: malformed JPEG segment`);
     const length = buffer.readUInt16BE(offset + 1);
     assert.ok(length >= 2 && offset + 1 + length <= buffer.length, `${file}: malformed JPEG segment length`);
-
     if (sofMarkers.has(marker)) {
-      return {
-        height: buffer.readUInt16BE(offset + 4),
-        width: buffer.readUInt16BE(offset + 6),
-      };
+      return { height: buffer.readUInt16BE(offset + 4), width: buffer.readUInt16BE(offset + 6) };
     }
-
     offset += 1 + length;
   }
 
@@ -108,50 +101,55 @@ const manifest = JSON.parse(read('public/site.webmanifest')) as {
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 const standaloneSvg = read('public/brand-emblem.svg');
+const microSvg = read('public/brand-mark-micro.svg');
 const release = read('public/brand-release.txt');
 
 const version = 'cloak-20260725-4';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
-assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
+assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
+assert.match(component, /useReducedMotion\(\)/, 'BrandMark must respect reduced motion');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
-assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark cache version hook is missing');
-assert.match(component, /whileHover="hover"/, 'BrandMark must keep the restrained hover interaction');
-assert.match(component, /data-brand-figure/, 'BrandMark selected cloaked figure is missing');
-assert.match(component, /data-brand-glow/, 'BrandMark premium glow layer is missing');
-assert.match(
-  component,
-  /brand-emblem-master\.webp\?v=\$\{BRAND_VERSION\}/,
-  'BrandMark does not use the versioned owner-approved master artwork',
-);
+assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
+assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
+assert.match(component, /data-brand-vector/, 'inline SVG root is missing');
+assert.match(component, /data-brand-figure/, 'cloaked figure layer is missing');
+assert.match(component, /data-brand-hood/, 'hood layer is missing');
+assert.match(component, /data-brand-cloak/, 'cloak layer is missing');
+assert.match(component, /data-brand-face-void/, 'faceless void layer is missing');
+assert.match(component, /data-brand-light-core/, 'light-core layer is missing');
+assert.match(component, /data-brand-energy/, 'energy layer is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
-assert.doesNotMatch(component, /data-brand-fallback/, 'the retired substitute vector figure remains in BrandMark');
-assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|mist|aura)/, 'retired emblem layers remain in BrandMark');
-assert.doesNotMatch(component, /<path|<circle|<ellipse|<polygon/, 'BrandMark must not redraw a different character over the selected artwork');
+assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b/, 'BrandMark must not embed raster artwork');
+assert.doesNotMatch(component, /brand-emblem-master\.webp/, 'BrandMark still references the raster master');
+assert.doesNotMatch(component, /<rect\b/, 'BrandMark must remain free of a rectangular plate');
+assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|fallback)/, 'retired emblem concepts returned');
+
+assert.match(standaloneSvg, /viewBox="0 0 96 96"/, 'standalone SVG viewBox changed');
+assert.match(standaloneSvg, /<path\b/, 'standalone SVG has no vector geometry');
+assert.match(standaloneSvg, /<linearGradient\b/, 'standalone SVG lost its depth gradients');
+assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b/, 'standalone SVG embeds raster art or a square plate');
+
+assert.match(microSvg, /viewBox="0 0 32 32"/, 'micro mark must be optically authored at 32px');
+assert.match(microSvg, /<path\b/, 'micro mark has no vector geometry');
+assert.doesNotMatch(microSvg, /<(?:image|rect)\b/, 'micro mark embeds raster art or a square plate');
 
 assert.match(index, new RegExp(`name="brand-release" content="${version}"`), 'live release marker is missing');
-assert.match(
-  index,
-  new RegExp(`brand-emblem-master\\.webp\\?v=${version}`),
-  'the approved master preload is not cache-versioned',
-);
-assert.match(index, new RegExp(`favicon-32\\.png\\?v=${version}`), '32px favicon is not cache-versioned');
-assert.match(index, new RegExp(`favicon-16\\.png\\?v=${version}`), '16px favicon is not cache-versioned');
+assert.match(index, new RegExp(`brand-mark-micro\\.svg\\?v=${version}`), 'vector micro favicon is not preferred');
+assert.match(index, new RegExp(`favicon-32\\.png\\?v=${version}`), '32px PNG fallback is not cache-versioned');
+assert.match(index, new RegExp(`favicon-16\\.png\\?v=${version}`), '16px PNG fallback is not cache-versioned');
 assert.match(index, new RegExp(`apple-touch-icon\\.png\\?v=${version}`), 'Apple icon is not cache-versioned');
 assert.match(index, new RegExp(`brand-emblem-mask\\.svg\\?v=${version}`), 'Safari mask is not cache-versioned');
 assert.match(index, new RegExp(`site\\.webmanifest\\?v=${version}`), 'manifest link is not cache-versioned');
-assert.doesNotMatch(index, /rel="icon"[^>]+favicon\.svg/, 'the retired SVG favicon is still preferred by browsers');
+assert.doesNotMatch(index, /rel="preload"[^>]+brand-emblem-master\.webp/, 'inline vector must not preload the retired runtime raster');
 assert.match(index, new RegExp(`og-image\\.jpg\\?v=${version}`), 'Open Graph image is not cache-versioned');
 assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph MIME type must remain JPEG');
 assert.match(index, new RegExp(`icon-512\\.png\\?v=${version}`), 'structured-data logo is not cache-versioned');
 
-assert.match(standaloneSvg, new RegExp(`brand-emblem-master\\.webp\\?v=${version}`), 'standalone SVG does not use the approved master');
-assert.doesNotMatch(standaloneSvg, /<(?:path|circle|ellipse|polygon|polyline)\b/, 'standalone SVG still contains a retired substitute character');
-assert.equal(fs.existsSync(path.resolve('public/favicon.svg')), false, 'obsolete fallback favicon.svg must not be published');
 assert.equal(
   release.trim(),
   `${version}\nmaster-sha256=${masterSha256}`,
-  'brand release sentinel does not match the selected artwork',
+  'brand release sentinel or preserved platform master changed unexpectedly',
 );
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
@@ -170,7 +168,7 @@ assert.ok(
       icon.type === 'image/png' &&
       icon.purpose === 'maskable',
   ),
-  'manifest maskable selected artwork is missing',
+  'manifest maskable artwork is missing',
 );
 assert.match(browserconfig, new RegExp(`mstile-150x150\\.png\\?v=${version}`), 'Windows tile is not cache-versioned');
 
@@ -178,20 +176,8 @@ for (const source of ['master-320-q92.webp.b64', 'favicon-16.png.b64', 'favicon-
   assert.match(materializer, new RegExp(source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `materializer is missing ${source}`);
   assert.ok(fs.existsSync(path.resolve('src/brand-assets', source)), `encoded source ${source} is missing`);
 }
-assert.doesNotMatch(materializer, /LPBRAND1|assets\.part/, 'the retired truncated archive reader remains active');
-assert.match(materializer, /spawnSync/, 'platform assets are no longer generated from the approved master');
+assert.match(materializer, /spawnSync/, 'platform asset materializer is missing');
 assert.match(materializer, /ffmpeg/i, 'FFmpeg image pipeline is missing');
-
-for (const output of [
-  'apple-touch-icon.png',
-  'icon-192.png',
-  'icon-512.png',
-  'icon-maskable-512.png',
-  'mstile-150x150.png',
-  'og-image.jpg',
-]) {
-  assert.match(materializer, new RegExp(output.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `materializer does not create ${output}`);
-}
 
 const expectedHashes: Record<string, string> = {
   'public/brand-emblem-master.webp': masterSha256,
@@ -199,7 +185,7 @@ const expectedHashes: Record<string, string> = {
   'public/favicon-32.png': '27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622',
 };
 for (const [file, expected] of Object.entries(expectedHashes)) {
-  assert.equal(sha256(file), expected, `${file}: selected-reference asset changed or the old emblem returned`);
+  assert.equal(sha256(file), expected, `${file}: preserved platform fallback changed`);
 }
 
 const expectedPngSizes: Record<string, { width: number; height: number }> = {
@@ -222,14 +208,11 @@ const minimumPngBytes: Record<string, number> = {
 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) {
   assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`);
-  assert.ok(
-    fs.statSync(path.resolve(file)).size >= minimumPngBytes[file],
-    `${file}: generated asset is unexpectedly small`,
-  );
+  assert.ok(fs.statSync(path.resolve(file)).size >= minimumPngBytes[file], `${file}: generated asset is unexpectedly small`);
 }
 
-assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'public/og-image.jpg: generated dimensions are wrong');
-assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'public/og-image.jpg: generated share preview is unexpectedly small');
-assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
+assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
+assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
+assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
 
-console.log('brand validation: deterministic approved artwork, CRC-checked platform assets, clean SVG and live release sentinel are consistent');
+console.log('brand validation: layered inline SVG, optical micro mark and preserved platform fallbacks are consistent');
