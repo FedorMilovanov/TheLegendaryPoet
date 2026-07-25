@@ -1,0 +1,40 @@
+name: Diagnostic Apply Yesenin Duncan Compaction
+
+on:
+  push:
+    branches: [research/yesenin-part1-duncan-compaction-diagnostic]
+    paths:
+      - 'scripts/diagnostic-apply-yesenin-duncan-compaction.py'
+      - '.github/workflows/diagnostic-apply-yesenin-duncan-compaction.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/yesenin-part1-duncan-compaction-diagnostic
+          fetch-depth: 0
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply exact asserted transformations
+        run: python scripts/diagnostic-apply-yesenin-duncan-compaction.py
+      - name: Commit transformed canonical files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            scripts/lib/yesenin-part-one-unpublished-article.ts \
+            scripts/validate-yesenin-part-one-unpublished-article.ts \
+            scripts/validate-yesenin-duncan-first-meeting-unpublished.ts \
+            src/data/essays/yeseninDuncanMainArticleSplit.ts \
+            src/data/essays/yeseninPartOneEditorialPassEightEarlyB.ts \
+            src/data/essays/yeseninPartOneEditorialPhysicalEditionsPassEight.ts
+          git diff --cached --quiet && { echo 'No transformations produced'; exit 1; }
+          git commit -m 'Compact Yesenin Part I Duncan transition explicitly'
+          git push origin HEAD:research/yesenin-part1-duncan-compaction-diagnostic
