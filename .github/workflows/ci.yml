@@ -19,93 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inspect committed brand binaries
-        shell: bash
-        run: |
-          node --input-type=module <<'NODE'
-          import crypto from 'node:crypto';
-          import fs from 'node:fs';
-          import zlib from 'node:zlib';
-          const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-          const pngFacts = (bytes) => {
-            let offset = 8;
-            const chunks = [];
-            const idat = [];
-            let parseError = null;
-            try {
-              while (offset + 12 <= bytes.length) {
-                const length = bytes.readUInt32BE(offset);
-                const type = bytes.subarray(offset + 4, offset + 8).toString('ascii');
-                const dataEnd = offset + 8 + length;
-                if (dataEnd + 4 > bytes.length) throw new Error(`truncated ${type || 'unknown'} chunk`);
-                const data = bytes.subarray(offset + 8, dataEnd);
-                chunks.push({ type, length, sha256: digest(data) });
-                if (type === 'IDAT') idat.push(data);
-                offset = dataEnd + 4;
-                if (type === 'IEND') break;
-              }
-            } catch (error) {
-              parseError = error instanceof Error ? error.message : String(error);
-            }
-            const compressed = Buffer.concat(idat);
-            let inflated = null;
-            let inflateError = null;
-            try {
-              inflated = zlib.inflateSync(compressed);
-            } catch (error) {
-              inflateError = error instanceof Error ? error.message : String(error);
-            }
-            return {
-              width: bytes.readUInt32BE(16),
-              height: bytes.readUInt32BE(20),
-              chunks,
-              parseError,
-              idatCompressedSha256: digest(compressed),
-              idatInflatedSha256: inflated ? digest(inflated) : null,
-              idatInflatedBytes: inflated?.length ?? null,
-              inflateError,
-            };
-          };
-          const files = [
-            'public/brand-emblem-master.png',
-            'public/favicon-16.png',
-            'public/favicon-32.png',
-            'public/apple-touch-icon.png',
-            'public/icon-192.png',
-            'public/icon-512.png',
-            'public/icon-maskable-512.png',
-            'public/mstile-150x150.png',
-            'public/og-image.jpg',
-          ];
-          const rows = files.map((file) => {
-            const bytes = fs.readFileSync(file);
-            const png = bytes.subarray(0, 8).toString('hex') === '89504e470d0a1a0a';
-            const jpeg = bytes.subarray(0, 3).toString('hex') === 'ffd8ff' && bytes.subarray(-2).toString('hex') === 'ffd9';
-            return {
-              file,
-              bytes: bytes.length,
-              sha256: digest(bytes),
-              format: png ? 'png' : jpeg ? 'jpeg' : 'unknown',
-              ...(png ? pngFacts(bytes) : {}),
-            };
-          });
-          fs.writeFileSync('brand-asset-diagnostics.json', `${JSON.stringify(rows, null, 2)}\n`);
-          console.log(JSON.stringify(rows, null, 2));
-          NODE
-      - name: Upload committed brand binary diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: brand-asset-diagnostics
-          path: brand-asset-diagnostics.json
-          if-no-files-found: error
-          retention-days: 7
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - run: npm ci
+      - name: Validate canonical brand assets
+        run: npm run validate:brand
       - name: Validate content, stores, and literary style
         run: npm run check:content
       - name: Validate persistent app shell invariants
