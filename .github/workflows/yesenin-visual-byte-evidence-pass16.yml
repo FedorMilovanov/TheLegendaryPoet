@@ -1,0 +1,64 @@
+name: Yesenin Visual Byte Evidence Pass 16
+
+on:
+  pull_request:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_VISUAL_BYTE_EVIDENCE_PASS16_2026-07-25.md'
+      - 'src/data/essays/yeseninVisualByteEvidencePassSixteen.ts'
+      - 'src/data/essays/yeseninVisualPlacementEffectiveStatePassSixteen.ts'
+      - 'scripts/validate-yesenin-visual-byte-evidence-pass16.ts'
+      - '.github/workflows/yesenin-visual-byte-evidence-pass16.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+  push:
+    branches: [main, work/local-images-playwright-wtoc]
+    paths:
+      - 'research/yesenin/PART_ONE_VISUAL_BYTE_EVIDENCE_PASS16_2026-07-25.md'
+      - 'src/data/essays/yeseninVisualByteEvidencePassSixteen.ts'
+      - 'src/data/essays/yeseninVisualPlacementEffectiveStatePassSixteen.ts'
+      - 'scripts/validate-yesenin-visual-byte-evidence-pass16.ts'
+      - '.github/workflows/yesenin-visual-byte-evidence-pass16.yml'
+      - '.github/workflows/ci.yml'
+      - 'package.json'
+
+concurrency:
+  group: yesenin-visual-byte-evidence-pass16-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate 12 institutional objects and effective placements
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:yesenin-visual-byte-evidence-pass16 2>&1 | tee yesenin-visual-byte-evidence-pass16.log
+      - name: TypeScript typecheck
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee yesenin-visual-byte-evidence-pass16-typecheck.log
+      - name: Upload pass-16 diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-visual-byte-evidence-pass16-diagnostics
+          path: |
+            yesenin-visual-byte-evidence-pass16.log
+            yesenin-visual-byte-evidence-pass16-typecheck.log
+          if-no-files-found: error
+          retention-days: 7
