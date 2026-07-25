@@ -1,0 +1,34 @@
+name: Yesenin Pravda RSL Access Discovery Pass 26
+
+on:
+  push:
+    branches:
+      - research/yesenin-pravda-rsl-access-discovery-pass26
+  pull_request:
+    branches:
+      - research/yesenin-benislavskaya-volume-access-evidence-pass25-final
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Discover literal RSL issue and fragment-order routes
+        run: python scripts/discover-yesenin-pravda-rsl-access-pass26.py
+      - name: Upload immutable official RSL discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-pravda-rsl-access-pass26
+          path: artifacts/yesenin-pravda-rsl-access-pass26
+          if-no-files-found: error
+          retention-days: 14
