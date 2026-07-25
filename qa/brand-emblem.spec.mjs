@@ -4,8 +4,8 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
-const VERSION = 'cloak-20260725-3';
-const MASTER_SHA256 = '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d';
+const VERSION = 'cloak-20260725-4';
+const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
@@ -146,7 +146,7 @@ for (const route of coreRoutes) {
       const marks = [...document.querySelectorAll('[data-brand-mark]')];
       return {
         marks: marks.length,
-        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260725-3').length,
+        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260725-4').length,
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))
           .filter((viewBox) => viewBox !== '0 0 96 96'),

@@ -7,15 +7,55 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
 const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
 
+function crc32(buffer: Buffer) {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
 function pngSize(file: string) {
   const buffer = readBuffer(file);
-  assert.deepEqual(
-    [...buffer.subarray(0, 8)],
-    [137, 80, 78, 71, 13, 10, 26, 10],
-    `${file}: invalid PNG signature`,
-  );
-  assert.ok(buffer.length >= 24, `${file}: truncated PNG`);
-  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `${file}: invalid PNG signature`);
+
+  let offset = 8;
+  let dimensions: { width: number; height: number } | null = null;
+  let sawIend = false;
+
+  while (offset + 12 <= buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.subarray(offset + 4, offset + 8).toString('ascii');
+    const dataEnd = offset + 8 + length;
+    const chunkEnd = dataEnd + 4;
+    assert.ok(chunkEnd <= buffer.length, `${file}: truncated ${type || 'unknown'} chunk`);
+    assert.equal(
+      crc32(buffer.subarray(offset + 4, dataEnd)),
+      buffer.readUInt32BE(dataEnd),
+      `${file}: invalid ${type} CRC`,
+    );
+    if (type === 'IHDR') {
+      assert.equal(length, 13, `${file}: invalid IHDR length`);
+      dimensions = {
+        width: buffer.readUInt32BE(offset + 8),
+        height: buffer.readUInt32BE(offset + 12),
+      };
+    }
+    offset = chunkEnd;
+    if (type === 'IEND') {
+      assert.equal(length, 0, `${file}: invalid IEND length`);
+      sawIend = true;
+      break;
+    }
+  }
+
+  assert.ok(dimensions, `${file}: IHDR chunk is missing`);
+  assert.ok(sawIend, `${file}: IEND chunk is missing`);
+  assert.equal(offset, buffer.length, `${file}: trailing bytes after IEND`);
+  return dimensions;
 }
 
 function jpegSize(file: string) {
@@ -70,8 +110,8 @@ const materializer = read('scripts/materialize-brand-art.mjs');
 const standaloneSvg = read('public/brand-emblem.svg');
 const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260725-3';
-const masterSha256 = '3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d';
+const version = 'cloak-20260725-4';
+const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
@@ -171,13 +211,25 @@ const expectedPngSizes: Record<string, { width: number; height: number }> = {
   'public/icon-maskable-512.png': { width: 512, height: 512 },
   'public/mstile-150x150.png': { width: 150, height: 150 },
 };
+const minimumPngBytes: Record<string, number> = {
+  'public/favicon-16.png': 250,
+  'public/favicon-32.png': 500,
+  'public/apple-touch-icon.png': 5_000,
+  'public/icon-192.png': 5_000,
+  'public/icon-512.png': 20_000,
+  'public/icon-maskable-512.png': 20_000,
+  'public/mstile-150x150.png': 5_000,
+};
 for (const [file, expected] of Object.entries(expectedPngSizes)) {
   assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`);
-  assert.ok(fs.statSync(path.resolve(file)).size > 500, `${file}: generated asset is unexpectedly small`);
+  assert.ok(
+    fs.statSync(path.resolve(file)).size >= minimumPngBytes[file],
+    `${file}: generated asset is unexpectedly small`,
+  );
 }
 
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'public/og-image.jpg: generated dimensions are wrong');
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'public/og-image.jpg: generated share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: deterministic approved artwork, regenerated platform assets, clean SVG and live release sentinel are consistent');
+console.log('brand validation: deterministic approved artwork, CRC-checked platform assets, clean SVG and live release sentinel are consistent');

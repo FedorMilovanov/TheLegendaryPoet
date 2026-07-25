@@ -68,6 +68,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
           ffmpeg -version | head -1
+      - name: Validate approved brand assets
+        id: brand_validation
+        run: |
+          set +e
+          npm run validate:brand > brand-validation.log 2>&1
+          status=$?
+          cat brand-validation.log
+          exit $status
+      - name: Upload brand validation diagnostics
+        if: ${{ failure() && steps.brand_validation.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-validation-diagnostics
+          path: brand-validation.log
+          if-no-files-found: error
+          retention-days: 3
       - name: Build
         id: production_build
         run: |
