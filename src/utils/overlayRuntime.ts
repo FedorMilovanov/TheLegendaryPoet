@@ -44,7 +44,7 @@ export interface OverlayLockHandle {
 
 const overlayStack: OverlayEntry[] = [];
 let styleSnapshot: StyleSnapshot | null = null;
-let resumeSmoothScroll: (() => void) | null = null;
+let resumeSmoothScroll: ((restoredScrollY?: number) => void) | null = null;
 let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
 
@@ -189,7 +189,7 @@ function unlockDocument() {
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
-  resumeSmoothScroll?.();
+  resumeSmoothScroll?.(snapshot?.scrollY);
   resumeSmoothScroll = null;
   setLegacyModalFlag(false);
   publishOverlayDebug();

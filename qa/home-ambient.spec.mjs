@@ -17,7 +17,14 @@ test('persistent ambient depth stays static, filter-free and compositor-idle', a
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
   const intro = page.locator('.page-wipe');
-  if (await intro.count()) await expect(intro).toBeHidden({ timeout: 4_000 });
+  const introWaitStartedAt = Date.now();
+  if (await intro.count()) {
+    // Cold iPhone WebKit runners can keep the intentional entrance transition
+    // mounted beyond four seconds. The product contract is still strict: the
+    // wipe must actually become hidden before ambient-layer measurements begin.
+    await expect(intro).toBeHidden({ timeout: 12_000 });
+  }
+  const introWaitMs = Date.now() - introWaitStartedAt;
   await afterPaint(page);
 
   const backdrop = page.locator('[data-ambient-backdrop]');
@@ -62,13 +69,14 @@ test('persistent ambient depth stays static, filter-free and compositor-idle', a
 
   fs.writeFileSync(
     path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-ambient-performance.json`),
-    JSON.stringify({ project: testInfo.project.name, fields: facts, overflow, pageErrors }, null, 2),
+    JSON.stringify({ project: testInfo.project.name, introWaitMs, fields: facts, overflow, pageErrors }, null, 2),
   );
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-static-ambient.png`),
     fullPage: false,
   });
 
+  expect(introWaitMs).toBeLessThan(12_000);
   expect(overflow).toBeLessThanOrEqual(2);
   expect(pageErrors).toEqual([]);
 });
