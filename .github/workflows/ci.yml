@@ -157,10 +157,11 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Verify six premium windows on the live site
+        id: live_check
         shell: bash
         run: |
-          set -euo pipefail
-          node <<'NODE'
+          set +e
+          node <<'NODE' > live-witness/live-check.log 2>&1
           const fs = require('node:fs');
           const { chromium } = require('@playwright/test');
 
@@ -232,12 +233,17 @@ jobs:
             await page.screenshot({ path: 'live-witness/live-premium-poet-windows.png', fullPage: true });
             await browser.close();
           })().catch((error) => {
+            fs.writeFileSync('live-witness/live-error.json', JSON.stringify({ error: String(error?.stack || error), checkedAt: new Date().toISOString() }, null, 2));
             console.error(error);
             process.exit(1);
           });
           NODE
+          status=$?
+          cat live-witness/live-check.log
+          exit "$status"
 
       - name: Upload exact deployment and live witness
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: premium-poet-live-witness
