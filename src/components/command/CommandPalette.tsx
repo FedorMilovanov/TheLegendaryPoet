@@ -106,18 +106,10 @@ export default function CommandPalette() {
     }
   };
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={openPalette}
-        aria-label="Открыть поиск по сайту (Ctrl + K)"
-        className="palette-fab fixed bottom-6 right-6 z-[80] hidden rounded-full border border-cyan-400/20 bg-[#061018]/80 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 shadow-[0_0_28px_rgba(0,212,255,0.18)] backdrop-blur-xl transition hover:border-cyan-300/45 lg:inline-flex"
-      >
-        <Search size={15} className="mr-2" /> Ctrl K
-      </button>
-    );
-  }
+  // Desktop already owns a search trigger in the persistent header and mobile
+  // owns one in the centre dock. Keeping a third fixed Ctrl+K pill duplicated
+  // the same action, competed with audio chrome and added another blur layer.
+  if (!open) return null;
 
   return (
     <div
