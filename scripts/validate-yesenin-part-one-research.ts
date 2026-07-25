@@ -334,6 +334,56 @@ for (const requestSection of sereginaRequestSections) {
   }
 }
 
+const zakharovRequestSection = markdownSection(
+  bookRequest,
+  '### B1. А. Н. Захаров — `Поэтика Есенина`',
+  '### B2. Е. А. Самоделова',
+);
+const zakharovBibliographyUrl = 'https://esenin.ru/bibliografiia/1995-g/knigi-o-esenine';
+requireRequestMarkers(
+  bookRequestPath,
+  zakharovRequestSection,
+  'Zakharov Poetics',
+  [
+    zakharovBibliographyUrl,
+    'тираж 300 экземпляров',
+    '220 или 221 страницу',
+    '224 страницы',
+    'STILL-REQUESTED / SECONDARY-BIBLIOGRAPHY-IDENTIFIED / AUTHORITATIVE-CATALOG-UNRESOLVED / PAGINATION-CONFLICT-220-221-224 / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+  ],
+);
+forbidFalseAcquisition(bookRequestPath, zakharovRequestSection, 'Zakharov Poetics');
+if (!zakharovRequestSection.includes('Устойчивой авторитетной карточки РГБ, РНБ или НЭБ')) {
+  fail(`${bookRequestPath}: Zakharov request lost the unresolved authoritative-catalog boundary`);
+}
+
+const samodelovaRequestSection = markdownSection(
+  bookRequest,
+  '### B2. Е. А. Самоделова',
+  '## Приоритет C — только при наличии',
+);
+const samodelovaNebUrl = 'https://rusneb.ru/catalog/000199_000009_003044118/';
+requireRequestMarkers(
+  bookRequestPath,
+  samodelovaRequestSection,
+  'Samodelova Anthropological Poetics',
+  [
+    samodelovaNebUrl,
+    '000199_000009_003044118',
+    '918 с., `[16]` л. ил.',
+    '5-9551-0159-4',
+    '07-8896',
+    'STILL-REQUESTED / NEB-RECORD-IDENTIFIED / ELECTRONIC-READING-ROOM-ONLY / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+  ],
+);
+forbidFalseAcquisition(bookRequestPath, samodelovaRequestSection, 'Samodelova Anthropological Poetics');
+if (
+  !samodelovaRequestSection.includes('920, 954') ||
+  !samodelovaRequestSection.includes('контролирующей остаётся физическая формула НЭБ')
+) {
+  fail(`${bookRequestPath}: Samodelova request lost the physical-pagination boundary`);
+}
+
 const forbiddenPublishedIds = new Set([
   'essay-yesenin-1895-1921',
 ]);
@@ -373,6 +423,6 @@ console.log(
   + `+ ${yeseninPartOneSourcesPassThree.length} pass three), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
   + `${unresolvedClaims} pass-one gaps, ${passTwoOpenHolds} pass-two holds and `
-  + `${passThreeOpenHolds} pass-three holds; three priority books are exact-locator bounded but unacquired; `
+  + `${passThreeOpenHolds} pass-three holds; five requested books are access-bounded but unacquired; `
   + `public registration remains blocked.`,
 );
