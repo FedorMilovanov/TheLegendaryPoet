@@ -144,39 +144,43 @@ jobs:
 
           python - <<'PY'
           from pathlib import Path
-
           path = Path('.github/workflows/ci.yml')
           text = path.read_text(encoding='utf-8')
-          old = '''      - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-      - name: Build
-'''
-          new = '''      - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-      - name: Validate approved brand assets
-        id: brand_validation
-        run: |
-          set +e
-          npm run validate:brand > brand-validation.log 2>&1
-          status=$?
-          cat brand-validation.log
-          exit $status
-      - name: Upload brand validation diagnostics
-        if: ${{ failure() && steps.brand_validation.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: brand-validation-diagnostics
-          path: brand-validation.log
-          if-no-files-found: error
-          retention-days: 3
-      - name: Build
-'''
+          old_lines = [
+              '      - name: Install FFmpeg for deterministic brand assets',
+              '        run: |',
+              '          sudo apt-get update',
+              '          sudo apt-get install -y --no-install-recommends ffmpeg',
+              '          ffmpeg -version | head -1',
+              '      - name: Build',
+          ]
+          expression = '$' + "{{ failure() && steps.brand_validation.outcome == 'failure' }}"
+          new_lines = [
+              '      - name: Install FFmpeg for deterministic brand assets',
+              '        run: |',
+              '          sudo apt-get update',
+              '          sudo apt-get install -y --no-install-recommends ffmpeg',
+              '          ffmpeg -version | head -1',
+              '      - name: Validate approved brand assets',
+              '        id: brand_validation',
+              '        run: |',
+              '          set +e',
+              '          npm run validate:brand > brand-validation.log 2>&1',
+              '          status=$?',
+              '          cat brand-validation.log',
+              '          exit $status',
+              '      - name: Upload brand validation diagnostics',
+              f'        if: {expression}',
+              '        uses: actions/upload-artifact@v4',
+              '        with:',
+              '          name: brand-validation-diagnostics',
+              '          path: brand-validation.log',
+              '          if-no-files-found: error',
+              '          retention-days: 3',
+              '      - name: Build',
+          ]
+          old = '\n'.join(old_lines) + '\n'
+          new = '\n'.join(new_lines) + '\n'
           if text.count(old) != 1:
               raise SystemExit('CI brand-gate insertion anchor mismatch')
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
