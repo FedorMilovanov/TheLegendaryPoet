@@ -6,7 +6,7 @@ on:
     paths:
       - 'scripts/discover-yesenin-nypl-programs-pass19.mjs'
       - 'scripts/probe-yesenin-nypl-iiif-pass19.mjs'
-      - 'scripts/acquire-yesenin-nypl-program-captures-pass19-v2.mjs'
+      - 'scripts/acquire-yesenin-nypl-program-captures-pass19-v3.mjs'
       - '.github/workflows/yesenin-nypl-api-discovery-pass19.yml'
   workflow_dispatch:
 
@@ -36,9 +36,9 @@ jobs:
       - name: Probe exact NYPL IIIF route variants
         if: always()
         run: node scripts/probe-yesenin-nypl-iiif-pass19.mjs
-      - name: Acquire four public items and fifteen exact IIIF derivatives
+      - name: Acquire four public items and fifteen native IIIF originals
         if: always()
-        run: node scripts/acquire-yesenin-nypl-program-captures-pass19-v2.mjs
+        run: node scripts/acquire-yesenin-nypl-program-captures-pass19-v3.mjs
       - name: Record Repo API outcome
         if: always()
         shell: bash
