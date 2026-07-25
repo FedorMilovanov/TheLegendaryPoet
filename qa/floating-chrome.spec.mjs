@@ -13,6 +13,33 @@ function overlaps(left, right) {
     && left.bottom > right.top;
 }
 
+async function sampleScrollStability(page) {
+  return page.evaluate(() => new Promise((resolve) => {
+    const samples = [];
+    const sample = () => {
+      samples.push(window.scrollY);
+      if (samples.length < 6) {
+        requestAnimationFrame(sample);
+        return;
+      }
+      const deltas = samples.slice(1).map((value, index) => Math.abs(value - samples[index]));
+      resolve({
+        first: samples[0],
+        last: samples.at(-1),
+        maxDelta: Math.max(0, ...deltas),
+      });
+    };
+    requestAnimationFrame(sample);
+  }));
+}
+
+async function waitForScrollSettled(page, message) {
+  await expect.poll(
+    () => sampleScrollStability(page).then((sample) => sample.maxDelta),
+    { timeout: 6_000, message },
+  ).toBeLessThan(0.5);
+}
+
 test.use({
   viewport: { width: 1440, height: 1000 },
   locale: 'ru-RU',
@@ -28,17 +55,37 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
   const play = page.getByRole('button', { name: /воспроизвести трек|поставить на паузу/i }).first();
   await play.click();
-  await page.waitForTimeout(1000);
+  await expect(page.locator('.global-audio-mini')).toBeVisible();
 
   await page.getByRole('link', { name: 'Рейтинг' }).click();
   await expect(page).toHaveURL(/\/ratings$/);
-  await page.evaluate(() => window.scrollTo(0, 780));
-  await page.waitForTimeout(350);
-  // Auto-hide is a separate behavior and can be mid-transition depending on the
-  // scroll scheduler. Force the documented visible state so this test measures
-  // the collision contract, not a temporarily translated, pointer-inert pill.
-  await page.evaluate(() => document.documentElement.classList.remove('chrome-hidden'));
-  await page.waitForTimeout(650);
+  await page.getByRole('heading', { level: 1, name: 'Поэты в оценке читателей' }).waitFor({ state: 'visible', timeout: 20_000 });
+
+  // Scroll restoration owns the first route frame. Wait for that real reset,
+  // then drive auto-hide with user wheel input instead of mutating its CSS class.
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeLessThan(5);
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(400);
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'downward user scroll should enter reading-mode chrome hiding' },
+  ).toBe(true);
+
+  // Lenis may still carry downward momentum after the threshold is crossed.
+  // Observe six consecutive animation frames and reverse direction only after
+  // the actual scroll position is stable, rather than sleeping for a guessed time.
+  await waitForScrollSettled(page, 'downward smooth scrolling should settle before direction reversal');
+  const hiddenAt = await page.evaluate(() => window.scrollY);
+  await page.mouse.wheel(0, -420);
+  await expect.poll(
+    () => page.evaluate(() => window.scrollY),
+    { timeout: 5_000, message: 'upward user scroll should move the document before geometry is measured' },
+  ).toBeLessThan(hiddenAt - 8);
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'upward user scroll should reveal floating chrome through the product hook' },
+  ).toBe(false);
+  await waitForScrollSettled(page, 'upward smooth scrolling should settle before floating geometry is measured');
 
   const player = page.locator('.global-audio-mini');
   const palette = page.locator('.palette-fab');
@@ -46,6 +93,14 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   await expect(player).toBeVisible();
   await expect(palette).toBeVisible();
   await expect(scrollTop).toBeVisible();
+  await expect.poll(
+    () => palette.evaluate((element) => Number(getComputedStyle(element).opacity)),
+    { timeout: 5_000, message: 'command palette button should finish its real reveal transition' },
+  ).toBeGreaterThan(0.9);
+  await expect.poll(
+    () => palette.evaluate((element) => getComputedStyle(element).pointerEvents),
+    { timeout: 5_000, message: 'revealed command palette button should accept pointer input' },
+  ).not.toBe('none');
 
   const geometry = await page.evaluate(() => {
     const read = (selector) => {
@@ -64,6 +119,8 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
       } : null;
     };
     return {
+      scrollY: window.scrollY,
+      chromeHidden: document.documentElement.classList.contains('chrome-hidden'),
       player: read('.global-audio-mini'),
       palette: read('.palette-fab'),
       scrollTop: read('.scroll-top-btn'),
@@ -73,6 +130,8 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
   fs.writeFileSync(path.join(ARTIFACT_DIR, 'desktop-floating-chrome-geometry.json'), JSON.stringify(geometry, null, 2));
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'desktop-floating-chrome.png'), fullPage: false });
 
+  expect(geometry.scrollY).toBeGreaterThan(240);
+  expect(geometry.chromeHidden).toBe(false);
   expect(geometry.player).not.toBeNull();
   expect(geometry.palette).not.toBeNull();
   expect(geometry.scrollTop).not.toBeNull();

@@ -66,6 +66,21 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 22px rgba(0, 183, 255, 0.11), inset 0 1px 0 rgba(211, 249, 255, 0.06);
 }
 
+.hero-poet-window-name {
+  display: flex;
+  min-height: 2.1em;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .group:hover .hero-poet-window-glow,
   .group:focus-visible .hero-poet-window-glow {
@@ -153,6 +168,17 @@
 
   .hero-poet-window-shine {
     display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-poet-window-label-panel {
+    padding-inline: 0.35rem;
+  }
+
+  .hero-poet-window-name {
+    font-size: clamp(8px, 2.25vw, 9px);
+    letter-spacing: 0.015em;
   }
 }
 

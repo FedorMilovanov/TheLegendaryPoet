@@ -6,9 +6,16 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+async function afterPaint(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 async function settle(page) {
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
-  await page.waitForTimeout(250);
+  await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
+  await page.getByRole('heading', { level: 1, name: 'THE LEGENDARY POET' }).waitFor({ state: 'visible', timeout: 20_000 });
+  await afterPaint(page);
+  await page.waitForTimeout(150);
 }
 
 async function waitForImages(page) {
@@ -30,10 +37,6 @@ async function effectiveOpacity(locator) {
     }
     return opacity;
   });
-}
-
-async function afterPaint(page) {
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 
 function percentile(values, fraction) {
@@ -83,10 +86,7 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   const first = windows.first();
   const label = first.locator('[data-hero-poet-window-label]');
   if (touchProfile || coarsePointer) {
-    await expect.poll(
-      () => effectiveOpacity(label),
-      { timeout: 4_000, message: 'touch label should become fully visible after the card entrance animation' },
-    ).toBeGreaterThan(0.85);
+    await expect.poll(() => effectiveOpacity(label), { timeout: 2_500 }).toBeGreaterThan(0.85);
   } else {
     const before = await effectiveOpacity(label);
     await first.hover({ position: { x: 12, y: 18 } });
@@ -165,6 +165,7 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   await page.evaluate(() => {
     window.__tlpPointerFrames = [];
     window.__tlpLongTasks = [];
+    window.__tlpPointerMeasurementStart = performance.now();
     window.addEventListener('pointermove', () => {
       const start = performance.now();
       requestAnimationFrame(() => window.__tlpPointerFrames.push(performance.now() - start));
@@ -179,9 +180,10 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
   const metrics = await page.evaluate(() => {
     const dot = document.querySelector('[data-custom-cursor-dot]');
     const ring = document.querySelector('[data-custom-cursor-ring]');
+    const measurementStart = window.__tlpPointerMeasurementStart || 0;
     return {
       pointerFrames: window.__tlpPointerFrames || [],
-      longTasks: window.__tlpLongTasks || [],
+      longTasks: (window.__tlpLongTasks || []).filter((task) => task.startTime >= measurementStart),
       cursorReady: document.body.classList.contains('custom-cursor-ready'),
       dotMixBlendMode: dot ? getComputedStyle(dot).mixBlendMode : null,
       dotTransform: dot ? getComputedStyle(dot).transform : null,
@@ -245,7 +247,6 @@ test('reduced motion removes title, hero-root, window and decorative movement', 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
-  await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
   await waitForImages(page);
 
   const state = await page.evaluate(() => {
@@ -282,6 +283,10 @@ test('reduced motion removes title, hero-root, window and decorative movement', 
   expect(['none', 'matrix(1, 0, 0, 1, 0, 0)']).toContain(state.surfaceTransform);
   expect(state.shineDisplay).toBe('none');
 
+  // WebKit can expose the correct computed state before the first visual paint
+  // reaches Playwright's page screenshot. Two animation frames are sufficient;
+  // no production repaint workaround is required.
+  await afterPaint(page);
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-reduced-motion.png`),
     fullPage: false,
