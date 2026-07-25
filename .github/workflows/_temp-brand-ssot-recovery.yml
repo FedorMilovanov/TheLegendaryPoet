@@ -2,7 +2,7 @@ name: Temporary Brand SSOT Recovery
 
 on:
   pull_request:
-    types: [opened]
+    types: [synchronize]
     branches: [main]
     paths:
       - '.github/workflows/_temp-brand-ssot-recovery.yml'
@@ -22,24 +22,41 @@ jobs:
           ref: fix/brand-ssot-recovery-20260725
           fetch-depth: 0
 
+      - name: Gate exact diagnostic commit
+        id: gate
+        shell: bash
+        run: |
+          message="$(git log -1 --pretty=%s)"
+          if [[ "$message" == 'ci: capture brand recovery validation' ]]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping recovery for commit: $message"
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Python
+        if: steps.gate.outputs.run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Setup Node.js
+        if: steps.gate.outputs.run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install pinned raster toolchain
+        if: steps.gate.outputs.run == 'true'
         run: python -m pip install --disable-pip-version-check cairosvg==2.8.2 pillow==11.3.0
 
       - name: Install project dependencies
+        if: steps.gate.outputs.run == 'true'
         run: npm ci
 
       - name: Rebuild twice and prove deterministic bytes
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -65,16 +82,25 @@ jobs:
           cmp brand-rebuild-first.json brand-rebuild-second.json
 
       - name: Validate archive, TypeScript and production build
+        if: steps.gate.outputs.run == 'true'
         env:
           VITE_BASE: /
+        shell: bash
         run: |
-          node scripts/materialize-brand-art.mjs
-          npm run validate:brand
-          npm run typecheck
-          npm run sitemap
-          npm run build
+          set +e
+          {
+            node scripts/materialize-brand-art.mjs
+            npm run validate:brand
+            npm run typecheck
+            npm run sitemap
+            npm run build
+          } > brand-validation.log 2>&1
+          status=$?
+          cat brand-validation.log
+          exit $status
 
       - name: Commit complete deterministic SSOT
+        if: steps.gate.outputs.run == 'true' && success()
         shell: bash
         run: |
           set -euo pipefail
@@ -98,7 +124,7 @@ jobs:
           git push origin HEAD:fix/brand-ssot-recovery-20260725
 
       - name: Upload recovery evidence
-        if: ${{ always() }}
+        if: ${{ always() && steps.gate.outputs.run == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: brand-ssot-recovery-evidence
@@ -107,6 +133,7 @@ jobs:
             brand-rebuild-second.json
             brand-rebuild-first.sha256
             brand-rebuild-second.sha256
+            brand-validation.log
             src/brand-assets/manifest.json
           if-no-files-found: warn
           retention-days: 7
