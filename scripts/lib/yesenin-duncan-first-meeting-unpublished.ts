@@ -92,12 +92,13 @@ const companionSources: EssaySource[] = [
   },
   {
     id: 'yd1-mcvay-isadora-yesenin',
-    title: 'Gordon McVay. Isadora and Esenin',
+    title: 'Gordon McVay. Isadora and Esenin: The Story of Isadora Duncan and Sergei Esenin',
+    url: 'https://libris.kb.se/bib/4823661',
     kind: 'research',
-    institution: 'Исследовательский PDF, предоставленный редакции',
+    institution: 'LIBRIS / Kungliga biblioteket; рабочий PDF предоставлен редакции',
     year: 1980,
     note:
-      'Сопоставляет конкурирующие мемуарные хронологии и показывает, почему точная дата первой встречи не устанавливается одним свидетельством.',
+      'Каталожная карточка LIBRIS идентифицирует лондонское издание Macmillan 1980 года, 335 страниц, ISBN 0333281772. Содержательные проверки выполнены по рабочему PDF, предоставленному редакции; каталог подтверждает издание, но не заменяет provenance и постраничную проверку этого файла.',
   },
 ];
 
