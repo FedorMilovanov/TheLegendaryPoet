@@ -1,0 +1,37 @@
+name: Yesenin Pravda East View Discovery Pass 27
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'scripts/discover-yesenin-pravda-eastview-pass27.mjs'
+      - '.github/workflows/yesenin-pravda-eastview-discovery-pass27.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: yesenin-pravda-eastview-pass27-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Discover exact East View issue metadata for Pravda
+        run: node scripts/discover-yesenin-pravda-eastview-pass27.mjs
+      - name: Upload East View Pravda discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-pravda-eastview-pass27
+          path: artifacts/yesenin-pravda-eastview-pass27
+          if-no-files-found: error
+          retention-days: 14
