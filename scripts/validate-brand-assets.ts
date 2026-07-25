@@ -14,8 +14,11 @@ const manifest = JSON.parse(read('public/site.webmanifest')) as {
 };
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
+const standaloneSvg = read('public/brand-emblem.svg');
+const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260725-2';
+const version = 'cloak-20260725-3';
+const masterSha256 = '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep a unique accessible title id');
 assert.match(component, /data-brand-mark/, 'BrandMark must expose a stable QA hook');
@@ -33,6 +36,7 @@ assert.doesNotMatch(component, /data-brand-fallback/, 'the retired substitute ve
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|mist|aura)/, 'retired emblem layers remain in BrandMark');
 assert.doesNotMatch(component, /<path|<circle|<ellipse|<polygon/, 'BrandMark must not redraw a different character over the selected artwork');
 
+assert.match(index, new RegExp(`name="brand-release" content="${version}"`), 'live release marker is missing');
 assert.match(
   index,
   new RegExp(`brand-emblem-master\\.webp\\?v=${version}`),
@@ -44,8 +48,18 @@ assert.match(index, new RegExp(`apple-touch-icon\\.png\\?v=${version}`), 'Apple 
 assert.match(index, new RegExp(`brand-emblem-mask\\.svg\\?v=${version}`), 'Safari mask is not cache-versioned');
 assert.match(index, new RegExp(`site\\.webmanifest\\?v=${version}`), 'manifest link is not cache-versioned');
 assert.doesNotMatch(index, /rel="icon"[^>]+favicon\.svg/, 'the retired SVG favicon is still preferred by browsers');
-assert.match(index, /og-image\.jpg/, 'Open Graph image is missing');
+assert.match(index, new RegExp(`og-image\\.jpg\\?v=${version}`), 'Open Graph image is not cache-versioned');
 assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph MIME type must remain JPEG');
+assert.match(index, new RegExp(`icon-512\\.png\\?v=${version}`), 'structured-data logo is not cache-versioned');
+
+assert.match(standaloneSvg, new RegExp(`brand-emblem-master\\.webp\\?v=${version}`), 'standalone SVG does not use the approved master');
+assert.doesNotMatch(standaloneSvg, /<(?:path|circle|ellipse|polygon|polyline)\b/, 'standalone SVG still contains a retired substitute character');
+assert.equal(fs.existsSync(path.resolve('public/favicon.svg')), false, 'obsolete fallback favicon.svg must not be published');
+assert.equal(
+  release.trim(),
+  `${version}\nmaster-sha256=${masterSha256}`,
+  'brand release sentinel does not match the selected artwork',
+);
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
 for (const src of [
@@ -70,7 +84,7 @@ assert.match(materializer, /LPBRAND1/, 'brand materializer archive signature cha
 assert.match(materializer, /assets\.part/, 'brand materializer no longer reads the encoded source parts');
 
 const expectedHashes: Record<string, string> = {
-  'public/brand-emblem-master.webp': '186ed97c95eed248e9a4cdca3a01e3f2bc93a6681729c0fdc73f2c484df3ea4d',
+  'public/brand-emblem-master.webp': masterSha256,
   'public/favicon-16.png': 'fcbbf903d3a14e88a009696b55622cc5d8b755f9e09b5c80f174c3ef2699ee5b',
   'public/favicon-32.png': 'b546bfbae1477781052748380f3c0ae15032038e24d9a305ee26c0818f52f8df',
   'public/apple-touch-icon.png': '884850ea18bcfaf46d839c94c153d8daf552c677daac3b585fd3a62a313ffff2',
@@ -86,4 +100,4 @@ for (const [file, expected] of Object.entries(expectedHashes)) {
 }
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must be removed');
 
-console.log('brand validation: approved cloaked artwork, no substitute figure, cache-busted icons and platform assets are consistent');
+console.log('brand validation: approved artwork, no substitute SVG, cache generation and live release sentinel are consistent');
