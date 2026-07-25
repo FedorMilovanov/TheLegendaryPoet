@@ -4,6 +4,11 @@ import { useLocation } from 'react-router-dom';
 
 const INTERACTIVE_SELECTOR = 'a, button, input, textarea, select, summary, [role="button"], [role="link"], [data-cursor-interactive]';
 
+type IdleCapableWindow = Window & typeof globalThis & {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
 const CustomCursor = () => {
   const { pathname } = useLocation();
   const onHall = pathname === '/hall';
@@ -24,9 +29,34 @@ const CustomCursor = () => {
     const finePointer = window.matchMedia('(pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const forcedColors = window.matchMedia('(forced-colors: active)');
+    const idleWindow = window as IdleCapableWindow;
+    let idleId = 0;
+    let fallbackId = 0;
+    let cancelled = false;
+
+    const cancelSchedule = () => {
+      if (idleId) idleWindow.cancelIdleCallback?.(idleId);
+      if (fallbackId) window.clearTimeout(fallbackId);
+      idleId = 0;
+      fallbackId = 0;
+    };
 
     const updateCapability = () => {
-      setEnabled(!onHall && finePointer.matches && !reducedMotion.matches && !forcedColors.matches);
+      cancelSchedule();
+      const capable = !onHall && finePointer.matches && !reducedMotion.matches && !forcedColors.matches;
+      if (!capable) {
+        setEnabled(false);
+        return;
+      }
+
+      // Never replace the OS cursor while the first viewport is decoding and
+      // animating. A DOM cursor inevitably freezes during any main-thread task;
+      // deferring it preserves hardware-smooth pointer feedback on page open.
+      const activate = () => {
+        if (!cancelled) setEnabled(true);
+      };
+      if (idleWindow.requestIdleCallback) idleId = idleWindow.requestIdleCallback(activate, { timeout: 1_600 });
+      else fallbackId = window.setTimeout(activate, 850);
     };
 
     updateCapability();
@@ -34,6 +64,8 @@ const CustomCursor = () => {
     reducedMotion.addEventListener?.('change', updateCapability);
     forcedColors.addEventListener?.('change', updateCapability);
     return () => {
+      cancelled = true;
+      cancelSchedule();
       finePointer.removeEventListener?.('change', updateCapability);
       reducedMotion.removeEventListener?.('change', updateCapability);
       forcedColors.removeEventListener?.('change', updateCapability);
