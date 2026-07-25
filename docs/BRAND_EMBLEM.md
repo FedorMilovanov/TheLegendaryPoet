@@ -48,3 +48,5 @@
 - `npm run check` включает бренд‑валидацию;
 - PR обязан пройти сборку и prerender до слияния;
 - финальный шаг `.github/workflows/deploy.yml` после GitHub Pages проверяет `thelegendarypoet.ru`, точную ревизию, SHA‑256 мастер‑арта и отсутствие старого SVG‑персонажа. Если домен продолжает отдавать старую версию, деплой помечается ошибкой.
+
+<!-- deploy-diagnostic-request: v3-exact-stage -->
