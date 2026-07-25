@@ -6,7 +6,7 @@ import path from 'node:path';
 const SITE_URL = 'https://thelegendarypoet.ru';
 const DIST = path.resolve('dist');
 const PUBLIC = path.resolve('public');
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 const template = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 
 function absUrl(pathOrUrl) {
@@ -18,6 +18,13 @@ function absUrl(pathOrUrl) {
     return DEFAULT_OG_IMAGE;
   }
   return `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+function imageMime(url) {
+  const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
+  if (pathname.endsWith('.png')) return 'image/png';
+  if (pathname.endsWith('.webp')) return 'image/webp';
+  return 'image/jpeg';
 }
 
 function escapeHtml(value) {
@@ -64,6 +71,7 @@ function renderPage({
   html = html.replace(/<meta property="og:description" content="[^"]*"\s*\/>/, `<meta property="og:description" content="${d}" />`);
   html = html.replace(/<meta property="og:url" content="[^"]*"\s*\/>/, `<meta property="og:url" content="${url}" />`);
   html = html.replace(/<meta property="og:image" content="[^"]*"\s*\/>/, `<meta property="og:image" content="${img}" />`);
+  html = html.replace(/<meta property="og:image:type" content="[^"]*"\s*\/>/, `<meta property="og:image:type" content="${imageMime(img)}" />`);
   html = html.replace(/<meta property="og:image:alt" content="[^"]*"\s*\/>/, `<meta property="og:image:alt" content="${alt}" />`);
   html = html.replace(/<meta name="twitter:title" content="[^"]*"\s*\/>/, `<meta name="twitter:title" content="${t}" />`);
   html = html.replace(/<meta name="twitter:description" content="[^"]*"\s*\/>/, `<meta name="twitter:description" content="${d}" />`);

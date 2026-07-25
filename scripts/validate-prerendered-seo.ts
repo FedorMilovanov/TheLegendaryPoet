@@ -5,7 +5,7 @@ import { articles, poets } from '../src/data/poets';
 import { siteConfig } from '../src/config/site';
 
 const errors: string[] = [];
-const DEFAULT_OG_IMAGE = `${siteConfig.url}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${siteConfig.url}/og-image.png`;
 
 function readRoute(route: string): string {
   const file = path.resolve('dist', route.replace(/^\//, ''), 'index.html');

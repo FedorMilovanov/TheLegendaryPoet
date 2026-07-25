@@ -1,6 +1,8 @@
 name: Manual Browser QA
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, work/local-images-playwright-wtoc]
   workflow_dispatch:
@@ -63,6 +65,7 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
+          qa/brand-emblem.spec.mjs
           --config=playwright.manual.config.mjs
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1

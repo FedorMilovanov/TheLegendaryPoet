@@ -29,6 +29,13 @@ function absUrl(pathOrUrl: string) {
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
+function imageMime(url: string) {
+  const pathname = url.split(/[?#]/, 1)[0].toLowerCase();
+  if (pathname.endsWith('.png')) return 'image/png';
+  if (pathname.endsWith('.webp')) return 'image/webp';
+  return 'image/jpeg';
+}
+
 /** Set an attribute on an existing head tag, creating a <meta> if it is missing. */
 function ensureMeta(key: string, value: string, kind: 'name' | 'property' = 'name') {
   let el = document.head.querySelector(`meta[${kind}="${key}"]`);
@@ -80,7 +87,7 @@ export function useSeo({
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
     const usesDefaultImage = !image;
-    const img = absUrl(image || '/og-image.jpg');
+    const img = absUrl(image || '/og-image.png');
     const imgAlt = imageAlt || title;
 
     document.title = title;
@@ -100,6 +107,7 @@ export function useSeo({
     ensureMeta('og:url', url, 'property');
     ensureMeta('og:type', type, 'property');
     ensureMeta('og:image', img, 'property');
+    ensureMeta('og:image:type', imageMime(img), 'property');
     ensureMeta('og:image:alt', imgAlt, 'property');
     if (usesDefaultImage) {
       ensureMeta('og:image:width', '1200', 'property');
