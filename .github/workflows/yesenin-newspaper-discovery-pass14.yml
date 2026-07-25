@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  discover:
+  discover-and-acquire:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +22,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install non-generative PDF tooling
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pymupdf==1.26.3 pillow==11.3.0
       - name: Discover issue links from published NEB parent HTML
         run: python scripts/discover-yesenin-neb-serial-issues-pass10.py
       - name: Discover exact cards through official NEB search results
         run: python scripts/discover-yesenin-newspaper-neb-search-pass14.py
       - name: Extract literal PDF routes from accepted issue cards
         run: python scripts/discover-yesenin-newspaper-neb-pdf-routes-pass14.py
-      - name: Upload immutable discovery evidence
+      - name: Acquire exact Izvestia PDFs and render every frame
+        run: python scripts/acquire-yesenin-newspaper-neb-pass14.py
+      - name: Upload immutable discovery diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -38,3 +42,12 @@ jobs:
             artifacts/yesenin-newspaper-neb-search-pass14
           if-no-files-found: error
           retention-days: 14
+      - name: Upload real newspaper PDFs and contact sheets
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-newspaper-acquisition-pass14-research-only
+          path: artifacts/yesenin-newspaper-neb-acquisition-pass14
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
