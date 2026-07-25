@@ -47,6 +47,32 @@ function markdownSection(text: string, startHeading: string, nextHeading: string
   return text.slice(start, end);
 }
 
+function requireRequestMarkers(
+  path: string,
+  section: string,
+  label: string,
+  requiredMarkers: readonly string[],
+) {
+  for (const marker of requiredMarkers) {
+    if (!section.includes(marker)) {
+      fail(`${path}: ${label} request lost required marker ${marker}`);
+    }
+  }
+}
+
+function forbidFalseAcquisition(path: string, section: string, label: string) {
+  for (const forbiddenMarker of [
+    'FULL-TEXT-ACQUIRED',
+    'CONTENT-INSPECTED',
+    'Status: `ACQUIRED',
+    'Статус: `ACQUIRED',
+  ] as const) {
+    if (section.includes(forbiddenMarker)) {
+      fail(`${path}: ${label} request was falsely upgraded (${forbiddenMarker})`);
+    }
+  }
+}
+
 if (allSources.length < 42) {
   fail(`source registry regressed below canonical threshold: ${allSources.length} < 42`);
 }
@@ -185,6 +211,7 @@ const bookRequestPath = 'research/yesenin/PART_ONE_BOOK_REQUESTS_2026-07-24.md';
 const bookRequestUpdatePath = 'research/yesenin/PART_ONE_BOOK_REQUESTS_UPDATE_MCVAY_2026-07-24.md';
 const bookRequest = read(bookRequestPath);
 const bookRequestUpdate = read(bookRequestUpdatePath);
+
 const mcvayRequestSections = [
   {
     path: bookRequestPath,
@@ -199,7 +226,7 @@ const mcvayRequestSections = [
     text: markdownSection(
       bookRequestUpdate,
       '### A1 — остаётся полезным',
-      '### A2 — без изменений',
+      '### A2 — точный НЭБ-объект найден, полный текст не получен',
     ),
   },
 ];
@@ -212,27 +239,99 @@ const requiredMcvayRequestMarkers = [
   'STILL-REQUESTED / CATALOG-IDENTIFIED / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
 ] as const;
 for (const requestSection of mcvayRequestSections) {
-  for (const marker of requiredMcvayRequestMarkers) {
-    if (!requestSection.text.includes(marker)) {
-      fail(`${requestSection.path}: McVay Life request lost required catalogue/status marker ${marker}`);
-    }
-  }
-  for (const forbiddenMarker of [
-    'FULL-TEXT-ACQUIRED',
-    'CONTENT-INSPECTED',
-    'Status: `ACQUIRED',
-    'Статус: `ACQUIRED',
-  ] as const) {
-    if (requestSection.text.includes(forbiddenMarker)) {
-      fail(`${requestSection.path}: McVay Life request was falsely upgraded (${forbiddenMarker})`);
-    }
-  }
+  requireRequestMarkers(
+    requestSection.path,
+    requestSection.text,
+    'McVay Life',
+    requiredMcvayRequestMarkers,
+  );
+  forbidFalseAcquisition(requestSection.path, requestSection.text, 'McVay Life');
 }
 if (!mcvayRequestSections[0].text.includes('Ardis ISBN `0882331825`')) {
   fail(`${bookRequestPath}: Hodder catalogue must not silently replace the separate Ardis edition`);
 }
 if (!mcvayRequestSections[1].text.includes('не подменяет отдельную Ardis-версию ISBN `0882331825`')) {
   fail(`${bookRequestUpdatePath}: McVay update lost the Hodder/Ardis edition boundary`);
+}
+
+const shubnikovaRequestSections = [
+  {
+    path: bookRequestPath,
+    text: markdownSection(
+      bookRequest,
+      '### A2. Н. И. Шубникова-Гусева',
+      '### A3. С. А. Серегина',
+    ),
+  },
+  {
+    path: bookRequestUpdatePath,
+    text: markdownSection(
+      bookRequestUpdate,
+      '### A2 — точный НЭБ-объект найден, полный текст не получен',
+      '### A3 — официальный легальный PDF существует, проект его не приобретал',
+    ),
+  },
+];
+const shubnikovaNebUrl = 'https://rusneb.ru/catalog/000199_000009_002300124/';
+const requiredShubnikovaMarkers = [
+  shubnikovaNebUrl,
+  '000199_000009_002300124',
+  '71 02-10/172',
+  '688 с.',
+  '5-9208-0069-0',
+  'STILL-REQUESTED / NEB-RECORD-IDENTIFIED / ELECTRONIC-READING-ROOM-ONLY / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+] as const;
+for (const requestSection of shubnikovaRequestSections) {
+  requireRequestMarkers(
+    requestSection.path,
+    requestSection.text,
+    'Shubnikova-Guseva Poems',
+    requiredShubnikovaMarkers,
+  );
+  forbidFalseAcquisition(requestSection.path, requestSection.text, 'Shubnikova-Guseva Poems');
+  if (!requestSection.text.includes('не подменяет')) {
+    fail(`${requestSection.path}: Shubnikova request lost the dissertation/monograph boundary`);
+  }
+}
+
+const sereginaRequestSections = [
+  {
+    path: bookRequestPath,
+    text: markdownSection(
+      bookRequest,
+      '### A3. С. А. Серегина',
+      '## Приоритет B — существенно усилит статью',
+    ),
+  },
+  {
+    path: bookRequestUpdatePath,
+    text: markdownSection(
+      bookRequestUpdate,
+      '### A3 — официальный легальный PDF существует, проект его не приобретал',
+      '## Более высокий page-witness приоритет',
+    ),
+  },
+];
+const sereginaPublisherUrl = 'https://ed-imli.ru/index.php/ru/4033-nikolaj-klyuev-i-sergej-esenin-dialog-s-epokhoj';
+const requiredSereginaMarkers = [
+  sereginaPublisherUrl,
+  '978-5-9208-0781-6',
+  '10.22455/978-5-9208-0781-6',
+  'FOHRPT',
+  '816 с.',
+  'STILL-REQUESTED / OFFICIAL-PUBLISHER-RECORD / LEGAL-PDF-PURCHASE-AVAILABLE / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED',
+] as const;
+for (const requestSection of sereginaRequestSections) {
+  requireRequestMarkers(
+    requestSection.path,
+    requestSection.text,
+    'Seregina Klyuev-Esenin',
+    requiredSereginaMarkers,
+  );
+  forbidFalseAcquisition(requestSection.path, requestSection.text, 'Seregina Klyuev-Esenin');
+  if (!requestSection.text.toLocaleLowerCase('ru-RU').includes('платный pdf')) {
+    fail(`${requestSection.path}: Seregina request lost the lawful paid-PDF access boundary`);
+  }
 }
 
 const forbiddenPublishedIds = new Set([
@@ -274,6 +373,6 @@ console.log(
   + `+ ${yeseninPartOneSourcesPassThree.length} pass three), `
   + `${primaryCount} primary records, ${requiredClaims.length} guarded claims, `
   + `${unresolvedClaims} pass-one gaps, ${passTwoOpenHolds} pass-two holds and `
-  + `${passThreeOpenHolds} pass-three holds; McVay Life remains catalog-identified but unacquired; `
+  + `${passThreeOpenHolds} pass-three holds; three priority books are exact-locator bounded but unacquired; `
   + `public registration remains blocked.`,
 );

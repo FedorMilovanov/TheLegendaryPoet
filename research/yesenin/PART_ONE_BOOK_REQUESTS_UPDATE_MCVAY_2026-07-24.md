@@ -59,17 +59,44 @@ Gordon McVay, `Esenin: A Life` (1976), preferably:
 
 Status: `STILL-REQUESTED / CATALOG-IDENTIFIED / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED`.
 
-### A2 — без изменений
+### A2 — точный НЭБ-объект найден, полный текст не получен
 
 N. I. Shubnikova-Guseva, `Поэмы Есенина: от «Пророка» до «Черного человека»`.
 
-Status: `STILL-REQUESTED / THEOLOGICAL-AND-TEXTUAL-PRIORITY`.
+Книжная форма ИМЛИ / «Наследие»: Москва, 2001, 688 с., ISBN `5-9208-0069-0`.
 
-### A3 — без изменений
+Отдельный диссертационный объект НЭБ:
+
+- https://rusneb.ru/catalog/000199_000009_002300124/;
+- код `000199_000009_002300124`;
+- докторская диссертация, специальность `10.01.01`;
+- 688 с.;
+- Российская государственная библиотека;
+- шифр `71 02-10/172`;
+- полный текст доступен только в электронных читальных залах библиотек-участников НЭБ.
+
+НЭБ-карточка не подменяет отдельную книжную форму с ISBN. При получении файла должны быть проверены титульные страницы и библиографическая форма.
+
+Status: `STILL-REQUESTED / NEB-RECORD-IDENTIFIED / ELECTRONIC-READING-ROOM-ONLY / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED`.
+
+### A3 — официальный легальный PDF существует, проект его не приобретал
 
 S. A. Seregina, `Николай Клюев и Сергей Есенин: диалог с эпохой`.
 
-Status: `STILL-REQUESTED / KLYUEV-SECTION-PRIORITY`.
+Официальная запись издательства ИМЛИ РАН:
+
+- https://ed-imli.ru/index.php/ru/4033-nikolaj-klyuev-i-sergej-esenin-dialog-s-epokhoj;
+- Москва: ИМЛИ РАН, 2024;
+- 816 с.;
+- научный редактор С. И. Субботин;
+- ISBN `978-5-9208-0781-6`;
+- DOI `10.22455/978-5-9208-0781-6`;
+- EDN `FOHRPT`;
+- официальный магазин ИМЛИ предлагает платный PDF.
+
+Наличие издательского PDF фиксирует легальный маршрут получения, но не означает, что файл куплен, передан проекту или содержательно проверен.
+
+Status: `STILL-REQUESTED / OFFICIAL-PUBLISHER-RECORD / LEGAL-PDF-PURCHASE-AVAILABLE / FULL-TEXT-NOT-ACQUIRED / CONTENT-NOT-INSPECTED`.
 
 ## Более высокий page-witness приоритет
 
@@ -86,4 +113,6 @@ Status: `STILL-REQUESTED / KLYUEV-SECTION-PRIORITY`.
 
 ## Rights boundary
 
-The supplied PDF is used only for private project research. Its binary bytes and page images must not be committed to GitHub, placed in public assets or redistributed through article media.
+The supplied McVay PDF is used only for private project research. Its binary bytes and page images must not be committed to GitHub, placed in public assets or redistributed through article media.
+
+The two remaining priority books also must enter the project only through lawful access. Catalogue records, publisher pages and purchase buttons identify an object or access route; they do not authorize redistribution and do not count as content inspection.
