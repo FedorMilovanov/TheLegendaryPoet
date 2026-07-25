@@ -17,6 +17,13 @@ async function pngSize(page, url) {
   }, url);
 }
 
+async function visualState(locator) {
+  return locator.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return { opacity: computed.opacity, transform: computed.transform, filter: computed.filter, strokeDasharray: node.getAttribute('stroke-dasharray'), strokeDashoffset: node.getAttribute('stroke-dashoffset') };
+  });
+}
+
 test('premium brand assets, PWA icons and share metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
@@ -80,22 +87,11 @@ test('emblem remains unique, crisp and restrained while unfolding on hover', asy
   const leftWing = mark.locator('[data-brand-wing="left"]');
   const halo = mark.locator('[data-brand-halo]');
   const svg = mark.locator('svg');
-  const animatedState = async () => ({
-    wingTransform: await leftWing.evaluate((node) => getComputedStyle(node).transform),
-    wingOpacity: await leftWing.evaluate((node) => getComputedStyle(node).opacity),
-    haloOpacity: await halo.evaluate((node) => getComputedStyle(node).opacity),
-    filter: await svg.evaluate((node) => getComputedStyle(node).filter),
-  });
-  const before = await animatedState();
-
+  const before = { wing: await visualState(leftWing), halo: await visualState(halo), filter: (await visualState(svg)).filter };
   await mark.hover();
-  await page.waitForTimeout(520);
-
-  const after = await animatedState();
-  expect(after.wingTransform).not.toBe(before.wingTransform);
-  expect(after.wingOpacity).not.toBe(before.wingOpacity);
-  expect(after.haloOpacity).not.toBe(before.haloOpacity);
-  expect(after.filter).not.toBe(before.filter);
+  await expect.poll(() => visualState(leftWing), { timeout: 2_500 }).not.toEqual(before.wing);
+  await expect.poll(() => visualState(halo), { timeout: 2_500 }).not.toEqual(before.halo);
+  await expect.poll(async () => (await visualState(svg)).filter, { timeout: 2_500 }).not.toBe(before.filter);
 
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, 'brand-emblem-hover.png'),

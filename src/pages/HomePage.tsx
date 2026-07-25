@@ -5,7 +5,7 @@ import { poets, musicTracks, articles } from '../data/poets';
 import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon, VKIcon } from '../components/ChannelIcons';
-import PoetImage from '../components/PoetImage';
+import HeroPoetWindow from '../components/home/HeroPoetWindow';
 import { ArrowRight, Quote, BookOpen, FileText, AudioWaveform, Star, Sparkles } from '../components/PremiumIcons';
 import KineticText from '../components/KineticText';
 import Reveal from '../components/Reveal';
@@ -14,14 +14,22 @@ import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
 
-const portraits = [
-  { name: 'Сергей Есенин', src: '/images/yesenin.jpg' },
-  { name: 'Михаил Лермонтов', src: '/images/lermontov.jpg' },
-  { name: 'Александр Пушкин', src: '/images/pushkin.jpg' },
-  { name: 'Федор Тютчев', src: '/images/tyutchev.jpg' },
-  { name: 'Владимир Маяковский', src: '/images/mayakovsky.jpg' },
-  { name: 'Афанасий Фет', src: '/images/fet.jpg' },
+const heroPoetIds = [
+  'sergei-yesenin',
+  'mikhail-lermontov',
+  'alexander-pushkin',
+  'fyodor-tyutchev',
+  'vladimir-mayakovsky',
+  'afanasy-fet',
 ];
+
+function requireHeroPoet(id: string) {
+  const poet = poets.find((candidate) => candidate.id === id);
+  if (!poet) throw new Error(`Hero poet is missing from the library: ${id}`);
+  return poet;
+}
+
+const heroPoets = heroPoetIds.map(requireHeroPoet);
 
 function HeroTitle() {
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
@@ -98,12 +106,9 @@ function HeroSection() {
       </div>
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-6rem)] max-w-7xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full">
-          <div className="mx-auto mb-16 grid max-w-5xl grid-cols-3 gap-6 opacity-80 sm:grid-cols-6 lg:gap-8">
-            {portraits.map((portrait, index) => (
-              <motion.div key={portrait.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 * index, duration: 0.65 }} className="relative aspect-[4/5] overflow-hidden rounded-t-full border border-cyan-400/20 bg-black/40 shadow-[0_0_32px_rgba(0,212,255,0.10)]">
-                <PoetImage src={portrait.src} name={portrait.name} alt={`Портрет: ${portrait.name}`} className="h-full w-full object-cover grayscale contrast-125 opacity-75" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020811] via-transparent to-cyan-400/10" />
-              </motion.div>
+          <div className="mx-auto mb-16 grid max-w-5xl grid-cols-3 items-end gap-4 sm:grid-cols-6 sm:gap-5 lg:gap-7">
+            {heroPoets.map((poet, index) => (
+              <HeroPoetWindow key={poet.id} poet={poet} index={index} />
             ))}
           </div>
           <HeroTitle />
