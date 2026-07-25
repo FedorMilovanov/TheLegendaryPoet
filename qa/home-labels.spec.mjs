@@ -15,6 +15,10 @@ const EXPECTED_NAMES = [
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+async function afterPaint(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
 test('premium poet labels preserve every full name without ellipsis or clipping', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
@@ -23,8 +27,10 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
 
   const windows = page.locator('[data-hero-poet-window]');
+  const shells = page.locator('[data-hero-poet-window-shell]');
   const names = page.locator('[data-hero-poet-window-name]');
   await expect(windows).toHaveCount(6);
+  await expect(shells).toHaveCount(6);
   await expect(names).toHaveCount(6);
 
   await expect.poll(
@@ -33,6 +39,11 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     )),
     { timeout: 12_000, message: 'all premium portraits should decode before label geometry is measured' },
   ).toBe(true);
+  await expect.poll(
+    () => shells.evaluateAll((nodes) => nodes.every((node) => getComputedStyle(node).opacity === '1')),
+    { timeout: 4_000, message: 'all premium portrait entrance animations should reach their final visual state' },
+  ).toBe(true);
+  await afterPaint(page);
 
   const facts = await names.evaluateAll((nodes) => nodes.map((node) => {
     const style = getComputedStyle(node);
