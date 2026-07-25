@@ -32,8 +32,15 @@ test('Ctrl+K and scroll-top controls stay clear of the persistent mini-player', 
 
   await page.getByRole('link', { name: 'Рейтинг' }).click();
   await expect(page).toHaveURL(/\/ratings$/);
+  await page.getByRole('heading', { level: 1, name: 'Поэты в оценке читателей' }).waitFor({ state: 'visible', timeout: 20_000 });
+
+  // Route restoration owns the first post-navigation frame. Wait for that
+  // documented reset before creating the geometry state under test; otherwise
+  // a late restore can race the synthetic scroll and hide the scroll-top button.
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeLessThan(5);
   await page.evaluate(() => window.scrollTo(0, 780));
-  await page.waitForTimeout(350);
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(400);
+
   // Auto-hide is a separate behavior and can be mid-transition depending on the
   // scroll scheduler. Force the documented visible state so this test measures
   // the collision contract, not a temporarily translated, pointer-inert pill.
