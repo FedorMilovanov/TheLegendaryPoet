@@ -8,124 +8,42 @@ permissions:
   contents: read
 
 jobs:
-  decoded-brand-source-forensics:
+  brand-release-contract-inventory:
     if: github.event.pull_request.head.ref == 'agent/postmerge-emblem-v3-live-witness'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      EXPECTED_MASTER_SHA256: 3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: main
+          fetch-depth: 1
 
-      - name: Fetch every preserved branch and pull-request ref
-        run: |
-          git fetch --no-tags origin \
-            '+refs/heads/*:refs/remotes/origin/*' \
-            '+refs/pull/*/head:refs/remotes/pull/*/head' \
-            '+refs/pull/*/merge:refs/remotes/pull/*/merge'
-
-      - name: Hash decoded Base64 sources and preserved master blobs
+      - name: Inventory version, hash, source and generated-asset contracts
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p decoded-brand-forensics/exact
-          python - <<'PY'
-          import base64
-          import hashlib
-          import json
-          import os
-          from pathlib import Path
-          import subprocess
+          mkdir -p brand-release-contract
+          git grep -n -E 'cloak-20260725-[0-9]+|3022d9f142bd0705a639b373c7fae995d42df00ac865440f270823adb2dc0c8d|420ece7b9787303af128c13ea0ba85b924dc55a5b142de70f1721811b9325469|f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7' \
+            > brand-release-contract/version-hash-references.txt || true
+          git ls-files \
+            'src/brand-assets/**' \
+            'public/*brand*' \
+            'public/favicon*' \
+            'public/icon*' \
+            'public/apple-touch-icon.png' \
+            'public/mstile-150x150.png' \
+            'public/og-image*' \
+            > brand-release-contract/asset-files.txt
+          git status --short > brand-release-contract/status.txt
+          echo 'Version/hash references:'
+          cat brand-release-contract/version-hash-references.txt
+          echo 'Tracked brand-related assets:'
+          cat brand-release-contract/asset-files.txt
 
-          expected = os.environ['EXPECTED_MASTER_SHA256']
-          out = Path('decoded-brand-forensics')
-          refs_text = subprocess.check_output(
-              ['git', 'for-each-ref', '--format=%(refname)\t%(objectname)', 'refs/remotes/origin', 'refs/remotes/pull'],
-              text=True,
-          )
-          refs = [line.split('\t', 1) for line in refs_text.splitlines() if '\t' in line]
-          seen = set()
-          records = []
-          exact = []
-
-          for ref, commit in refs:
-              try:
-                  names = subprocess.check_output(
-                      ['git', 'ls-tree', '-r', '--name-only', commit, 'src/brand-assets', 'public'],
-                      text=True,
-                      stderr=subprocess.DEVNULL,
-                  ).splitlines()
-              except subprocess.CalledProcessError:
-                  continue
-
-              candidates = [
-                  name for name in names
-                  if (name.startswith('src/brand-assets/') and name.endswith('.b64'))
-                  or name == 'public/brand-emblem-master.webp'
-              ]
-              for name in candidates:
-                  try:
-                      blob = subprocess.check_output(['git', 'rev-parse', f'{commit}:{name}'], text=True).strip()
-                  except subprocess.CalledProcessError:
-                      continue
-                  key = (blob, name.endswith('.b64'))
-                  if key in seen:
-                      continue
-                  seen.add(key)
-                  raw = subprocess.check_output(['git', 'cat-file', 'blob', blob])
-                  mode = 'raw'
-                  payload = raw
-                  error = None
-                  if name.endswith('.b64'):
-                      mode = 'base64'
-                      encoded = b''.join(raw.split())
-                      try:
-                          payload = base64.b64decode(encoded, validate=True)
-                      except Exception as exc:
-                          error = f'{type(exc).__name__}: {exc}'
-                          payload = b''
-                  digest = hashlib.sha256(payload).hexdigest() if payload else ''
-                  record = {
-                      'ref': ref,
-                      'commit': commit,
-                      'path': name,
-                      'blob': blob,
-                      'mode': mode,
-                      'sourceBytes': len(raw),
-                      'decodedBytes': len(payload),
-                      'decodedSha256': digest,
-                      'error': error,
-                  }
-                  records.append(record)
-                  if digest == expected:
-                      exact.append(record)
-                      suffix = '.b64' if mode == 'base64' else '.webp'
-                      target = out / 'exact' / f'{blob}-{Path(name).name}{suffix}'
-                      target.write_bytes(raw if mode == 'base64' else payload)
-
-          records.sort(key=lambda item: (item['decodedSha256'], item['path'], item['ref']))
-          exact.sort(key=lambda item: (item['path'], item['ref']))
-          (out / 'decoded-candidates.json').write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding='utf-8')
-          (out / 'exact-matches.json').write_text(json.dumps(exact, ensure_ascii=False, indent=2), encoding='utf-8')
-          with (out / 'decoded-candidates.tsv').open('w', encoding='utf-8') as handle:
-              handle.write('decodedSha256\tdecodedBytes\tblob\tmode\tpath\tref\tcommit\terror\n')
-              for item in records:
-                  handle.write('\t'.join(str(item[key] or '') for key in (
-                      'decodedSha256', 'decodedBytes', 'blob', 'mode', 'path', 'ref', 'commit', 'error'
-                  )) + '\n')
-          print(f'Refs scanned: {len(refs)}')
-          print(f'Unique candidate blobs: {len(records)}')
-          print(f'Exact decoded matches for {expected}: {len(exact)}')
-          for item in exact:
-              print(json.dumps(item, ensure_ascii=False))
-          PY
-
-      - name: Upload decoded-source forensic evidence
+      - name: Upload complete contract inventory
         uses: actions/upload-artifact@v4
         with:
-          name: decoded-brand-source-forensics
-          path: decoded-brand-forensics
+          name: brand-release-contract-inventory
+          path: brand-release-contract
           if-no-files-found: error
           retention-days: 7
