@@ -25,7 +25,6 @@ const routeSources = [
   'src/pages/PoetDetailPage.tsx',
   'src/pages/RatingsPage.tsx',
   'src/pages/ArticlesPage.tsx',
-  'src/pages/ArticleDetailPage.tsx',
   'src/pages/EssayPage.tsx',
   'src/pages/MusicPage.tsx',
   'src/pages/TrackDetailPage.tsx',
