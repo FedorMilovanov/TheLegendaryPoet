@@ -87,9 +87,16 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
     path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one.json`),
     JSON.stringify(evidence, null, 2),
   );
+
+  await sourceHeading.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(150);
   await page.screenshot({
-    path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one.png`),
-    fullPage: true,
+    path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one-sources.png`),
+  });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(150);
+  await page.screenshot({
+    path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one-top.png`),
   });
 
   expect(state.pathname).toBe('/essays/sergei-yesenin-1895-1921');
