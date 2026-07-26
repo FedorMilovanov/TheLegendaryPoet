@@ -105,7 +105,7 @@ const microSvg = read('public/brand-mark-micro.svg');
 const maskSvg = read('public/brand-emblem-mask.svg');
 const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260726-5';
+const version = 'cloak-20260726-6';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
@@ -124,6 +124,8 @@ assert.match(component, /data-brand-collar/, 'crossed collar layer is missing');
 assert.match(component, /data-brand-atmosphere/, 'atmosphere layer is missing');
 assert.match(component, /data-brand-energy/, 'energy layer is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
+assert.match(component, /M1\.5 96C4\.8 78\.5/, 'runtime cloak must fill the optical width');
+assert.match(component, /M25 43\.5C25\.5 28\.1/, 'runtime hood must retain the broad reference geometry');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b/, 'BrandMark must not embed raster artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp/, 'BrandMark still references the raster master');
 assert.doesNotMatch(component, /<rect\b/, 'BrandMark must remain free of a rectangular plate');
@@ -136,17 +138,21 @@ assert.match(standaloneSvg, /<linearGradient\b/, 'standalone SVG lost its depth 
 assert.match(standaloneSvg, /fill-rule="evenodd"/, 'standalone hood must preserve a real deep opening');
 assert.match(standaloneSvg, /id="aura-blur"/, 'standalone SVG lost its restrained atmospheric depth');
 assert.match(standaloneSvg, /id="rim-glow"/, 'standalone SVG lost its contour-light treatment');
+assert.match(standaloneSvg, /M1\.5 96C4\.8 78\.5/, 'standalone cloak no longer fills the optical width');
+assert.match(standaloneSvg, /M25 43\.5C25\.5 28\.1/, 'standalone hood no longer follows the broad reference geometry');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b/, 'standalone SVG embeds raster art or a square plate');
 assert.doesNotMatch(standaloneSvg, /id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains the retired chest crystal');
 
 assert.match(microSvg, /viewBox="0 0 32 32"/, 'micro mark must be optically authored at 32px');
 assert.match(microSvg, /fill-rule="evenodd"/, 'micro mark must preserve the hood opening at small sizes');
+assert.match(microSvg, /M\.5 32c1\.2-6\.3/, 'micro mark must keep the widened shoulder silhouette');
 assert.match(microSvg, /<path\b/, 'micro mark has no vector geometry');
 assert.doesNotMatch(microSvg, /<(?:image|rect)\b/, 'micro mark embeds raster art or a square plate');
 assert.doesNotMatch(microSvg, /7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains the retired chest crystal');
 
 assert.match(maskSvg, /viewBox="0 0 96 96"/, 'Safari mask viewBox changed');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
+assert.match(maskSvg, /M1\.5 96C4\.8 78\.5/, 'Safari mask must preserve the broad silhouette');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b/, 'Safari mask embeds raster art or a square plate');
 
 assert.match(index, new RegExp(`name="brand-release" content="${version}"`), 'live release marker is missing');
@@ -230,4 +236,4 @@ assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
 
-console.log('brand validation: reference-shaped layered SVG, optical micro mark and preserved platform fallbacks are consistent');
+console.log('brand validation: broad reference-shaped v6 SVG, optical micro mark and preserved platform fallbacks are consistent');

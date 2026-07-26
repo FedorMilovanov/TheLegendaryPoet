@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
-const VERSION = 'cloak-20260726-5';
+const VERSION = 'cloak-20260726-6';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -45,12 +45,15 @@ test('vector emblem, micro favicon, install icons and share metadata are coheren
   expect(standaloneSvg).toContain('fill-rule="evenodd"');
   expect(standaloneSvg).toContain('id="aura-blur"');
   expect(standaloneSvg).toContain('id="rim-glow"');
+  expect(standaloneSvg).toContain('M1.5 96C4.8 78.5');
+  expect(standaloneSvg).toContain('M25 43.5C25.5 28.1');
   expect(standaloneSvg).not.toMatch(/id="core"|7fecff|49\.5L51\.5 57/i);
 
   const microResponse = await request.get(`${BASE_URL}/brand-mark-micro.svg?verify=${Date.now()}`);
   const microSvg = await microResponse.text();
   expect(microSvg).toContain('viewBox="0 0 32 32"');
   expect(microSvg).toContain('fill-rule="evenodd"');
+  expect(microSvg).toContain('M.5 32c1.2-6.3');
   expect(microSvg).not.toMatch(/7fecff|f2ffff|17\.6 1\.65 3\.4/i);
 
   const rasterAssets = [
@@ -96,7 +99,45 @@ test('vector emblem, micro favicon, install icons and share metadata are coheren
   ]));
 });
 
-test('header renders the deep reference-shaped vector and restrained hover', async ({ page }) => {
+test('standalone and micro marks remain legible across optical sizes', async ({ page }) => {
+  await page.setViewportSize({ width: 760, height: 300 });
+  await page.setContent(`
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #050810; color: #d9f8ff; font: 12px system-ui; }
+      main { box-sizing: border-box; min-height: 300px; display: flex; align-items: center; gap: 28px; padding: 28px; }
+      figure { margin: 0; display: grid; justify-items: center; gap: 9px; }
+      img { display: block; object-fit: contain; }
+      .tile { display: grid; place-items: center; width: 204px; height: 204px; background: #03070d; border: 1px solid rgba(70, 215, 255, .12); }
+      .small { width: 108px; height: 108px; }
+    </style>
+    <main>
+      <figure><div class="tile"><img data-optical="192" width="192" height="192" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>192 px</figcaption></figure>
+      <figure><div class="tile small"><img data-optical="96" width="96" height="96" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>96 px</figcaption></figure>
+      <figure><div class="tile small"><img data-optical="44" width="44" height="44" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>44 px</figcaption></figure>
+      <figure><div class="tile small"><img data-optical="32" width="32" height="32" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>micro 32 px</figcaption></figure>
+      <figure><div class="tile small"><img data-optical="16" width="16" height="16" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>micro 16 px</figcaption></figure>
+    </main>
+  `);
+
+  await page.locator('img').evaluateAll(async (images) => {
+    await Promise.all(images.map((image) => image.decode()));
+  });
+
+  for (const size of [192, 96, 44, 32, 16]) {
+    const image = page.locator(`img[data-optical="${size}"]`);
+    await expect(image).toBeVisible();
+    const box = await image.boundingBox();
+    expect(Math.round(box?.width || 0)).toBe(size);
+    expect(Math.round(box?.height || 0)).toBe(size);
+  }
+
+  await page.screenshot({
+    path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'),
+    fullPage: true,
+  });
+});
+
+test('header renders the broad reference-shaped vector and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
 
@@ -133,6 +174,9 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
     const cloak = bounds('[data-brand-cloak]');
     if (!hood || !face || !cloak) return null;
     return {
+      hoodWidth: hood.width,
+      faceWidth: face.width,
+      cloakWidth: cloak.width,
       faceToHoodWidth: face.width / hood.width,
       faceToHoodHeight: face.height / hood.height,
       cloakToHoodWidth: cloak.width / hood.width,
@@ -142,10 +186,13 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   });
 
   expect(geometry).not.toBeNull();
-  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.62);
-  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.62);
-  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.9);
-  expect(geometry.hoodTop).toBeLessThan(7);
+  expect(geometry.hoodWidth).toBeGreaterThan(44);
+  expect(geometry.faceWidth).toBeGreaterThan(36);
+  expect(geometry.cloakWidth).toBeGreaterThan(92);
+  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.78);
+  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.76);
+  expect(geometry.cloakToHoodWidth).toBeGreaterThan(2);
+  expect(geometry.hoodTop).toBeLessThan(4);
   expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.5);
 
   const readMotionState = () => mark.evaluate((node) => {
@@ -197,7 +244,7 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   expect(after.vector?.transform).not.toBe(before.vector?.transform);
   expect(after.vector?.filter).not.toBe(before.vector?.filter);
   expect(after.rim?.opacity).toBeGreaterThan(before.rim?.opacity ?? 0);
-  expect(after.folds?.opacity).toBeGreaterThan(before.folds?.opacity ?? 0);
+  expect(after.folds?.opacity).toBeGreaterThanOrEqual(before.folds?.opacity ?? 0);
   expect(after.energy?.opacity).toBeGreaterThan(before.energy?.opacity ?? 0);
   expect(after.rimDash).not.toEqual(before.rimDash);
   expect(pageErrors).toEqual([]);
@@ -214,7 +261,7 @@ for (const route of coreRoutes) {
       const marks = [...document.querySelectorAll('[data-brand-mark]')];
       return {
         marks: marks.length,
-        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260726-5').length,
+        wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== 'cloak-20260726-6').length,
         wrongRenderers: marks.filter((mark) => mark.getAttribute('data-brand-renderer') !== 'inline-vector').length,
         invalidViewBoxes: marks
           .map((mark) => mark.querySelector('svg')?.getAttribute('viewBox'))

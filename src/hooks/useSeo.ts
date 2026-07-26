@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { siteConfig } from '../config/site';
 
-const BRAND_VERSION = 'cloak-20260726-5';
+const BRAND_VERSION = 'cloak-20260726-6';
 
 interface SeoOptions {
   title: string;
