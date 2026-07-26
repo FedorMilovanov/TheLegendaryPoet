@@ -102,9 +102,10 @@ const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 const standaloneSvg = read('public/brand-emblem.svg');
 const microSvg = read('public/brand-mark-micro.svg');
+const maskSvg = read('public/brand-emblem-mask.svg');
 const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260725-4';
+const version = 'cloak-20260726-5';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
@@ -117,22 +118,36 @@ assert.match(component, /data-brand-figure/, 'cloaked figure layer is missing');
 assert.match(component, /data-brand-hood/, 'hood layer is missing');
 assert.match(component, /data-brand-cloak/, 'cloak layer is missing');
 assert.match(component, /data-brand-face-void/, 'faceless void layer is missing');
-assert.match(component, /data-brand-light-core/, 'light-core layer is missing');
+assert.match(component, /data-brand-rim-light/, 'contour-light layer is missing');
+assert.match(component, /data-brand-folds/, 'heavy cloak-fold layer is missing');
+assert.match(component, /data-brand-collar/, 'crossed collar layer is missing');
+assert.match(component, /data-brand-atmosphere/, 'atmosphere layer is missing');
 assert.match(component, /data-brand-energy/, 'energy layer is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b/, 'BrandMark must not embed raster artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp/, 'BrandMark still references the raster master');
 assert.doesNotMatch(component, /<rect\b/, 'BrandMark must remain free of a rectangular plate');
+assert.doesNotMatch(component, /data-brand-light-core|coreGradientId/, 'retired chest-light concept returned');
 assert.doesNotMatch(component, /data-brand-(?:book|wing|halo|fallback)/, 'retired emblem concepts returned');
 
 assert.match(standaloneSvg, /viewBox="0 0 96 96"/, 'standalone SVG viewBox changed');
 assert.match(standaloneSvg, /<path\b/, 'standalone SVG has no vector geometry');
 assert.match(standaloneSvg, /<linearGradient\b/, 'standalone SVG lost its depth gradients');
+assert.match(standaloneSvg, /fill-rule="evenodd"/, 'standalone hood must preserve a real deep opening');
+assert.match(standaloneSvg, /id="aura-blur"/, 'standalone SVG lost its restrained atmospheric depth');
+assert.match(standaloneSvg, /id="rim-glow"/, 'standalone SVG lost its contour-light treatment');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b/, 'standalone SVG embeds raster art or a square plate');
+assert.doesNotMatch(standaloneSvg, /id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains the retired chest crystal');
 
 assert.match(microSvg, /viewBox="0 0 32 32"/, 'micro mark must be optically authored at 32px');
+assert.match(microSvg, /fill-rule="evenodd"/, 'micro mark must preserve the hood opening at small sizes');
 assert.match(microSvg, /<path\b/, 'micro mark has no vector geometry');
 assert.doesNotMatch(microSvg, /<(?:image|rect)\b/, 'micro mark embeds raster art or a square plate');
+assert.doesNotMatch(microSvg, /7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains the retired chest crystal');
+
+assert.match(maskSvg, /viewBox="0 0 96 96"/, 'Safari mask viewBox changed');
+assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
+assert.doesNotMatch(maskSvg, /<(?:image|rect)\b/, 'Safari mask embeds raster art or a square plate');
 
 assert.match(index, new RegExp(`name="brand-release" content="${version}"`), 'live release marker is missing');
 assert.match(index, new RegExp(`brand-mark-micro\\.svg\\?v=${version}`), 'vector micro favicon is not preferred');
@@ -215,4 +230,4 @@ assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
 
-console.log('brand validation: layered inline SVG, optical micro mark and preserved platform fallbacks are consistent');
+console.log('brand validation: reference-shaped layered SVG, optical micro mark and preserved platform fallbacks are consistent');
