@@ -27,7 +27,6 @@ const expectedPages = [
   'PoetDetailPage',
   'RatingsPage',
   'ArticlesPage',
-  'ArticleDetailPage',
   'EssayPage',
   'MusicPage',
   'TrackDetailPage',
@@ -53,6 +52,12 @@ for (const page of expectedPages) {
   expect(routes.includes(`export const ${page} =`), `missing lazy component export for ${page}`);
   expect(app.includes(`<${page} />`), `missing route element for ${page}`);
 }
+
+expect(!routes.includes("import('../pages/ArticleDetailPage')"), 'retired mini-article page must not remain in the lazy route graph');
+for (const legacyId of ['article-1', 'article-2', 'article-3', 'article-main-1', 'article-main-2']) {
+  expect(app.includes(`path="/articles/${legacyId}"`), `missing safe redirect for legacy article ${legacyId}`);
+}
+expect(app.includes('path="/articles/:id"'), 'unknown legacy article URLs need a canonical fallback');
 
 const dynamicImports = [...routes.matchAll(/import\('\.\.\/pages\/(\w+)'\)/g)].map((match) => match[1]);
 expect(dynamicImports.length === expectedPages.length, `expected ${expectedPages.length} page imports, found ${dynamicImports.length}`);
@@ -148,4 +153,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`App shell validation passed: ${expectedPages.length} lazy routes, persistent chrome, single search entry points, bounded scroll restoration, intent prefetch and exact-head Pages provenance.`);
+console.log(`App shell validation passed: ${expectedPages.length} lazy routes, canonical legacy redirects, persistent chrome, single search entry points, bounded scroll restoration, intent prefetch and exact-head Pages provenance.`);
