@@ -27,15 +27,25 @@ jobs:
       - name: Replace catalogue locator and remove one-time workflow
         shell: python
         run: |
+          import re
           from pathlib import Path
 
           path = Path('src/data/essays/yeseninPartOnePublic.ts')
           text = path.read_text(encoding='utf-8')
-          old = 'https://imli.ru/izdaniya/publikatsii-otdela-novejshej-russkoj-literatury/3665-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-1-1895-1916'
-          new = 'https://search.rsl.ru/ru/record/01002391503'
-          if text.count(old) != 1:
-              raise SystemExit(f'expected one old catalogue locator, found {text.count(old)}')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          marker = '"id": "ye1-imli-chronicle-v1-catalogue"'
+          start = text.find(marker)
+          if start < 0:
+              raise SystemExit('stable source id is missing')
+          end = text.find('\n    },', start)
+          if end < 0:
+              raise SystemExit('source block end is missing')
+          end += len('\n    },')
+          block = text[start:end]
+          replacement = '"url": "https://search.rsl.ru/ru/record/01002391503"'
+          updated, count = re.subn(r'"url":\s*"https://imli\.ru/[^"]+"', replacement, block, count=1)
+          if count != 1:
+              raise SystemExit(f'expected one IMLI locator in source block, found {count}: {block}')
+          path.write_text(text[:start] + updated + text[end:], encoding='utf-8')
           Path('.github/workflows/replace-unstable-yesenin-catalogue-link.yml').unlink()
 
       - name: Commit stable locator
