@@ -6,7 +6,7 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260726-8';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-2';
+const VECTOR_SOURCE = 'reference-derived-contours-v8';
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -23,7 +23,6 @@ test('vector emblem, optical favicon, install icons and share metadata are coher
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
-
   const releaseResponse = await request.get(`${BASE_URL}/brand-release.txt?verify=${Date.now()}`);
   expect(releaseResponse.status()).toBe(200);
   expect((await releaseResponse.text()).trim()).toBe(`${VERSION}\nmaster-sha256=${MASTER_SHA256}`);
@@ -35,6 +34,7 @@ test('vector emblem, optical favicon, install icons and share metadata are coher
     const source = await assetResponse.text();
     svgSources.set(asset, source);
     expect(source, `${asset} path content`).toMatch(/<path\b/);
+    expect(source, `${asset} closing root`).toMatch(/<\/svg>\s*$/);
     expect(source, `${asset} raster ban`).not.toMatch(/<image\b|data:image|base64,/i);
     expect(source, `${asset} plate ban`).not.toMatch(/<rect\b/);
     expect(source, `${asset} XML data attributes`).not.toMatch(/<[^>]+\sdata-brand-[\w-]+(?=\s|>)(?!\s*=)/);
@@ -43,12 +43,12 @@ test('vector emblem, optical favicon, install icons and share metadata are coher
   const standaloneSvg = svgSources.get('brand-emblem.svg');
   expect(standaloneSvg).toContain('viewBox="0 0 96 96"');
   expect(standaloneSvg).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
-  expect(standaloneSvg).toContain('id="aura"');
-  expect(standaloneSvg).toContain('id="glow"');
-  expect(standaloneSvg).toContain('M24 42C17.8 44.3');
-  expect(standaloneSvg).toContain('M48 10.5C42.3 13.4');
-  expect(standaloneSvg).toContain('M48.3 21.8C41.9 21.8');
-  expect((standaloneSvg.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(40);
+  expect(standaloneSvg).toContain('id="aura-blur"');
+  expect(standaloneSvg).toContain('id="rim-glow"');
+  expect(standaloneSvg).toContain('M48 41.8C39.6 41.4');
+  expect(standaloneSvg).toContain('M47.8 4.5C43.2 5.3');
+  expect(standaloneSvg).toContain('M49 19.5C44.3 18.6');
+  expect((standaloneSvg.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(45);
   expect(standaloneSvg).not.toMatch(/id="core"|7fecff|49\.5L51\.5 57/i);
 
   const microSvg = svgSources.get('brand-mark-micro.svg');
@@ -85,13 +85,11 @@ test('vector emblem, optical favicon, install icons and share metadata are coher
 test('standalone and micro marks decode and remain legible across optical sizes', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 320 });
   await page.setContent(`<style>html,body{margin:0;min-height:100%;background:#050810;color:#d9f8ff;font:12px system-ui}main{box-sizing:border-box;min-height:320px;display:flex;align-items:center;gap:22px;padding:28px}figure{margin:0;display:grid;justify-items:center;gap:9px}img{display:block;object-fit:contain}.tile{display:grid;place-items:center;width:204px;height:204px;background:#03070d;border:1px solid rgba(70,215,255,.12)}.small{width:102px;height:102px}</style><main><figure><div class="tile"><img data-optical="192" width="192" height="192" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>192 px</figcaption></figure><figure><div class="tile small"><img data-optical="96" width="96" height="96" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>96 px</figcaption></figure><figure><div class="tile small"><img data-optical="56" width="56" height="56" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>56 px</figcaption></figure><figure><div class="tile small"><img data-optical="44" width="44" height="44" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>44 px</figcaption></figure><figure><div class="tile small"><img data-optical="32" width="32" height="32" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>micro 32 px</figcaption></figure><figure><div class="tile small"><img data-optical="16" width="16" height="16" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>micro 16 px</figcaption></figure></main>`);
-
   const decodeResults = await page.locator('img').evaluateAll(async (images) => Promise.all(images.map(async (image) => {
-    try { await image.decode(); return { size: image.dataset.optical, ok: true, width: image.naturalWidth, height: image.naturalHeight }; }
-    catch (error) { return { size: image.dataset.optical, ok: false, error: String(error) }; }
+    try { await image.decode(); return { size: image.dataset.optical, src: image.currentSrc, ok: true, width: image.naturalWidth, height: image.naturalHeight }; }
+    catch (error) { return { size: image.dataset.optical, src: image.currentSrc, ok: false, error: String(error) }; }
   })));
   expect(decodeResults.filter((result) => !result.ok), JSON.stringify(decodeResults, null, 2)).toEqual([]);
-
   for (const size of [192, 96, 56, 44, 32, 16]) {
     const image = page.locator(`img[data-optical="${size}"]`);
     await expect(image).toBeVisible();
@@ -102,7 +100,7 @@ test('standalone and micro marks decode and remain legible across optical sizes'
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('header renders the broad reference-derived vector and restrained hover', async ({ page }) => {
+test('header renders the separated mystical vector and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -112,9 +110,7 @@ test('header renders the broad reference-derived vector and restrained hover', a
   await expect(mark).toHaveAttribute('data-brand-version', VERSION);
   await expect(mark).toHaveAttribute('data-brand-renderer', 'inline-vector');
   await expect(mark).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
-  for (const hook of ['vector', 'figure', 'hood', 'cloak', 'face-void', 'rim-light', 'folds', 'collar', 'energy', 'atmosphere', 'texture']) {
-    await expect(mark.locator(`[data-brand-${hook}]`)).toBeVisible();
-  }
+  for (const hook of ['vector', 'figure', 'hood', 'cloak', 'face-void', 'rim-light', 'folds', 'collar', 'energy', 'atmosphere', 'texture']) await expect(mark.locator(`[data-brand-${hook}]`)).toBeVisible();
   expect(await mark.locator('[data-brand-light-core]').count()).toBe(0);
   expect(await mark.locator('image, rect, [data-brand-fallback], [data-brand-book], [data-brand-wing], [data-brand-halo]').count()).toBe(0);
 
@@ -123,49 +119,35 @@ test('header renders the broad reference-derived vector and restrained hover', a
   expect(box?.width).toBeLessThanOrEqual(60);
   expect(box?.height).toBeGreaterThanOrEqual(54);
   expect(box?.height).toBeLessThanOrEqual(60);
-
   const geometry = await mark.evaluate((node) => {
     const bounds = (selector) => node.querySelector(selector)?.getBBox();
     const hood = bounds('[data-brand-hood]');
     const face = bounds('[data-brand-face-void]');
     const cloak = bounds('[data-brand-cloak]');
     if (!hood || !face || !cloak) return null;
-    return {
-      hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width,
-      faceToHoodWidth: face.width / hood.width, faceToHoodHeight: face.height / hood.height,
-      cloakToHoodWidth: cloak.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height,
-    };
+    return { hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width, faceToHoodWidth: face.width / hood.width, faceToHoodHeight: face.height / hood.height, cloakToHoodWidth: cloak.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height };
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(50);
-  expect(geometry.faceWidth).toBeGreaterThan(24);
-  expect(geometry.faceWidth).toBeLessThan(31);
-  expect(geometry.cloakWidth).toBeGreaterThan(84);
-  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.46);
-  expect(geometry.faceToHoodWidth).toBeLessThan(0.6);
-  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.62);
+  expect(geometry.hoodWidth).toBeGreaterThan(44);
+  expect(geometry.hoodWidth).toBeLessThan(45);
+  expect(geometry.faceWidth).toBeGreaterThan(30);
+  expect(geometry.faceWidth).toBeLessThan(33);
+  expect(geometry.cloakWidth).toBeGreaterThan(92);
+  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.69);
+  expect(geometry.faceToHoodWidth).toBeLessThan(0.73);
+  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.76);
   expect(geometry.faceToHoodHeight).toBeLessThan(0.8);
-  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.6);
-  expect(geometry.hoodTop).toBeGreaterThan(9.5);
-  expect(geometry.hoodTop).toBeLessThan(11.5);
-  expect(geometry.cloakBottom).toBeGreaterThanOrEqual(94.5);
+  expect(geometry.cloakToHoodWidth).toBeGreaterThan(2.05);
+  expect(geometry.hoodTop).toBeGreaterThan(4.3);
+  expect(geometry.hoodTop).toBeLessThan(4.7);
+  expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.9);
 
   const readMotionState = () => mark.evaluate((node) => {
-    const read = (selector) => {
-      const element = node.querySelector(selector);
-      if (!element) return null;
-      const style = getComputedStyle(element);
-      return { opacity: Number(style.opacity), transform: style.transform, filter: style.filter };
-    };
+    const read = (selector) => { const element = node.querySelector(selector); if (!element) return null; const style = getComputedStyle(element); return { opacity: Number(style.opacity), transform: style.transform, filter: style.filter }; };
     const rimPath = node.querySelector('[data-brand-rim-light] path');
     const rimStyle = rimPath ? getComputedStyle(rimPath) : null;
-    return {
-      vector: read('[data-brand-vector]'), rim: read('[data-brand-rim-light]'), folds: read('[data-brand-folds]'),
-      energy: read('[data-brand-energy]'), atmosphere: read('[data-brand-atmosphere]'),
-      rimDash: rimStyle ? { array: rimStyle.strokeDasharray, offset: rimStyle.strokeDashoffset } : null,
-    };
+    return { vector: read('[data-brand-vector]'), rim: read('[data-brand-rim-light]'), folds: read('[data-brand-folds]'), energy: read('[data-brand-energy]'), atmosphere: read('[data-brand-atmosphere]'), rimDash: rimStyle ? { array: rimStyle.strokeDasharray, offset: rimStyle.strokeDashoffset } : null };
   });
-
   const before = await readMotionState();
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-idle.png'), clip: { x: Math.max(0, (box?.x || 0) - 28), y: Math.max(0, (box?.y || 0) - 28), width: Math.min(page.viewportSize()?.width || 1280, (box?.width || 56) + 56), height: (box?.height || 56) + 56 } });
   await mark.hover();
@@ -183,15 +165,20 @@ test('header renders the broad reference-derived vector and restrained hover', a
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the v8.2 vector emblem`, async ({ page }) => {
+  test(`${route}: header and footer use the v8 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
-    expect(response?.status(), route).toBeLessThan(400);
-    const marks = page.locator('[data-brand-mark]');
-    expect(await marks.count()).toBeGreaterThanOrEqual(1);
-    for (let index = 0; index < await marks.count(); index += 1) {
-      await expect(marks.nth(index)).toHaveAttribute('data-brand-version', VERSION);
-      await expect(marks.nth(index)).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
-      expect(await marks.nth(index).locator('image, rect').count()).toBe(0);
-    }
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page.locator('header [data-brand-mark]').first()).toBeVisible();
+    expect(await page.locator('footer [data-brand-mark]').count()).toBeGreaterThanOrEqual(1);
+    const result = await page.evaluate(({ version, source }) => {
+      const marks = [...document.querySelectorAll('[data-brand-mark]')];
+      return { marks: marks.length, wrongVersions: marks.filter((mark) => mark.getAttribute('data-brand-version') !== version).length, wrongRenderers: marks.filter((mark) => mark.getAttribute('data-brand-renderer') !== 'inline-vector').length, wrongSources: marks.filter((mark) => mark.getAttribute('data-brand-vector-source') !== source).length, invalidViewBoxes: marks.map((mark) => mark.querySelector('svg')?.getAttribute('viewBox')).filter((viewBox) => viewBox !== '0 0 96 96'), rasterOrPlate: marks.reduce((count, mark) => count + mark.querySelectorAll('image, rect, [data-brand-fallback], [data-brand-book], [data-brand-wing], [data-brand-halo], [data-brand-light-core]').length, 0) };
+    }, { version: VERSION, source: VECTOR_SOURCE });
+    expect(result.marks).toBeGreaterThanOrEqual(2);
+    expect(result.wrongVersions).toBe(0);
+    expect(result.wrongRenderers).toBe(0);
+    expect(result.wrongSources).toBe(0);
+    expect(result.invalidViewBoxes).toEqual([]);
+    expect(result.rasterOrPlate).toBe(0);
   });
 }
