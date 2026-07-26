@@ -48,8 +48,8 @@ const userAgent = 'TheLegendaryPoet-Public-Part-One-Link-Audit/2 (+https://thele
 
 async function request(route: Route, attempt = 1): Promise<Result> {
   const slowHost = /rusneb\.ru|imli\.ru/i.test(route.url);
-  const maximumAttempts = slowHost ? 3 : 2;
-  const timeoutMs = slowHost ? Math.max(defaultTimeoutMs, 45_000) : defaultTimeoutMs;
+  const maximumAttempts = slowHost ? 4 : 2;
+  const timeoutMs = slowHost ? Math.max(defaultTimeoutMs, 60_000) : defaultTimeoutMs;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -86,7 +86,7 @@ async function request(route: Route, attempt = 1): Promise<Result> {
     };
   } catch (error) {
     if (attempt < maximumAttempts) {
-      await sleep(1_500 * attempt);
+      await sleep(2_000 * attempt);
       return request(route, attempt + 1);
     }
     return {
