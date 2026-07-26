@@ -46,7 +46,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Copy exact module to clean publication branch
-        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
