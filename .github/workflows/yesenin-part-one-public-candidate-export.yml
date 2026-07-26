@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   export-static-candidate:
@@ -36,10 +36,31 @@ jobs:
         run: npx tsx scripts/validate-public-claims.ts
       - name: Export static public candidate
         run: npx tsx scripts/export-yesenin-part-one-public-candidate.ts
-      - name: Upload candidate JSON
+      - name: Upload candidate evidence
         uses: actions/upload-artifact@v4
         with:
           name: yesenin-part-one-public-candidate
-          path: artifacts/yesenin-part-one-public-candidate.json
+          path: |
+            artifacts/yesenin-part-one-public-candidate.json
+            artifacts/yeseninPartOnePublic.ts
           if-no-files-found: error
           retention-days: 14
+      - name: Copy exact module to clean publication branch
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp artifacts/yeseninPartOnePublic.ts /tmp/yeseninPartOnePublic.ts
+          git fetch origin publish/yesenin-part-one-safe
+          git checkout -B publish/yesenin-part-one-safe origin/publish/yesenin-part-one-safe
+          mkdir -p src/data/essays
+          cp /tmp/yeseninPartOnePublic.ts src/data/essays/yeseninPartOnePublic.ts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/essays/yeseninPartOnePublic.ts
+          if git diff --cached --quiet; then
+            echo 'Static public module is already current.'
+            exit 0
+          fi
+          git commit -m 'feat(essays): add static Yesenin Part I public article'
+          git push origin HEAD:publish/yesenin-part-one-safe
