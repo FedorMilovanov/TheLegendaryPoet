@@ -36,7 +36,9 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --silent
-      - name: Validate East View evidence pass 27
-        run: npx tsx scripts/validate-yesenin-pravda-eastview-evidence-pass27.ts
+      - name: Validate exact East View Pravda evidence pass 27
+        run: npm run validate:yesenin-pravda-eastview-pass27
+      - name: Validate Materialy successor pass 28 compatibility
+        run: npm run validate:yesenin-materialy-page110-access-pass28
       - name: TypeScript typecheck
         run: npm run typecheck
