@@ -12,8 +12,8 @@ const premiumEase = [0.16, 1, 0.3, 1] as const;
 const BRAND_VERSION = 'cloak-20260726-8';
 
 const cloakPath = 'M48 41.2C37.2 40.8 26.1 42.9 16.7 49.1C8.9 54.4 4.5 67.1 1.7 81.3C.7 86.6.9 91.8 2.1 95.2C16.6 95.6 31.9 95.8 48 96C64.2 95.8 79.5 95.6 94 95.2C95.2 91.8 95.4 86.6 94.3 81.3C91.5 67.1 87.1 54.4 79.3 49.1C69.9 42.9 58.8 40.8 48 41.2Z';
-const hoodPath = 'M48 8.6C41.1 10.4 36.1 16.8 32.8 25.3C30.4 31.6 29.4 36.8 26.4 41.2C23.9 44.7 20.8 47 17.8 48.7C26.1 46.1 34.9 45.9 41.8 48.3C44.8 49.4 47 51 48.3 53.2C49.8 50.8 52 49 55.2 47.9C62.1 45.4 70.1 45.7 78.4 48.1C75.1 45.8 72.1 43.2 69.7 39.5C67 35.3 66 30.4 63.5 24.6C59.9 16.3 54.8 10.2 48 8.6Z';
-const voidPath = 'M48.3 20.8C40.3 20.9 34.7 26.5 31.9 34.3C29.7 40.4 31.2 45.4 35.8 49C39.2 51.7 43.4 53.2 47.9 53.4C52.9 53.2 57.1 51.5 60.4 48.5C64.6 44.6 65.3 39.3 63 33.4C60 25.7 55.3 20.7 48.3 20.8Z';
+const hoodPath = 'M48 7.5C42 9.5 37.7 16.5 35.1 25.5C33.5 31.1 33.3 36.5 30.4 41C28.7 43.6 26.1 45.8 23.4 47.3C29.2 46 35.6 46.2 41 48.2C44 49.3 46.4 51 48 53C49.7 50.8 52.2 49.2 55.2 48.2C60.7 46.4 67 46.2 72.8 47.5C70 45.8 67.5 43.6 65.7 40.8C62.9 36.5 62.6 31.3 60.9 25.5C58.2 16.5 54 9.5 48 7.5Z';
+const voidPath = 'M48.2 20.7C42.6 20.9 38.4 25.2 35.7 31.9C33.6 37.2 34.2 42.3 37.4 46C40.3 49.4 44 51.4 48 52.6C52 51.2 55.8 49.2 58.6 45.8C61.8 42.1 62.4 37.1 60.3 31.8C57.7 25.2 53.7 20.6 48.2 20.7Z';
 
 const atmosphereFills = [
   ['M20 88C12 65 18 43 34 27C42 19 43 9 48 4C54 10 57 20 65 28C80 43 86 65 78 89C68 68 57 56 48 53C38 57 29 69 20 88Z', '#64e4ff', 0.22],
@@ -90,7 +90,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
       data-brand-mark
       data-brand-version={BRAND_VERSION}
       data-brand-renderer="inline-vector"
-      data-brand-vector-source="reference-derived-contours-v8-5"
+      data-brand-vector-source="reference-derived-contours-v8-6"
       className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
       initial={false}
       animate="idle"
@@ -114,7 +114,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         <defs>
           <linearGradient id={ids.base} x1="5" y1="43" x2="91" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#17384f"/><stop offset=".18" stopColor="#0a2436"/><stop offset=".48" stopColor="#04111b"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
           <linearGradient id={ids.hood} x1="27" y1="8" x2="70" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#244b62"/><stop offset=".22" stopColor="#123148"/><stop offset=".56" stopColor="#061822"/><stop offset="1" stopColor="#010307"/></linearGradient>
-          <linearGradient id={ids.hoodLeft} x1="27" y1="8" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#2d5b72"/><stop offset=".45" stopColor="#153a50"/><stop offset="1" stopColor="#05111a"/></linearGradient>
+          <linearGradient id={ids.hoodLeft} x1="30" y1="8" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#193c51"/><stop offset=".45" stopColor="#0d2839"/><stop offset="1" stopColor="#041019"/></linearGradient>
           <linearGradient id={ids.cowl1} x1="14" y1="46" x2="79" y2="63" gradientUnits="userSpaceOnUse"><stop stopColor="#24485d"/><stop offset=".35" stopColor="#123146"/><stop offset=".7" stopColor="#061823"/><stop offset="1" stopColor="#010409"/></linearGradient>
           <linearGradient id={ids.cowl2} x1="82" y1="47" x2="25" y2="64" gradientUnits="userSpaceOnUse"><stop stopColor="#153347"/><stop offset=".42" stopColor="#0a2433"/><stop offset=".78" stopColor="#031019"/><stop offset="1" stopColor="#000205"/></linearGradient>
           <linearGradient id={ids.rim} x1="24" y1="8" x2="76" y2="74" gradientUnits="userSpaceOnUse"><stop stopColor="#f7ffff"/><stop offset=".11" stopColor="#d5fbff"/><stop offset=".32" stopColor="#7ceaff"/><stop offset=".62" stopColor="#2fc4e8" stopOpacity=".68"/><stop offset="1" stopColor="#0b7696" stopOpacity="0"/></linearGradient>
@@ -137,18 +137,18 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           </motion.g>
 
           <motion.path data-brand-hood d={hoodPath} fill={`url(#${ids.hood})`} stroke="#28546a" strokeOpacity=".8" strokeWidth={compact ? 0.78 : 0.86} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.05 : -0.14 } }}/>
-          <path d="M48 8.9C42.1 13.3 37.9 20 35 28.2C32.9 34.2 31 39.5 26.8 44.5C32.5 43.4 38.4 44.8 43.2 48C45.6 49.5 47.2 51.1 48.3 53.1C45.5 43.7 43 35.1 43.2 27.4C43.4 20.4 45 13.6 48 8.9Z" fill={`url(#${ids.hoodLeft})`} fillOpacity=".75"/>
-          <path d="M48.1 9C54.3 13.4 58.7 20 61.5 28C63.7 34.1 65 39.4 69.4 44.1C63.8 43.5 58.4 45 53.7 48.2C51.4 49.8 49.7 51.4 48.3 53.1C51.1 43.8 53.2 35 52.9 27.4C52.7 20.6 51.2 13.8 48.1 9Z" fill="#041019" fillOpacity=".86"/>
+          <path d="M48 7.9C43.1 12.6 39.6 19.4 37.2 27.6C35.5 33.6 34.2 38.7 30.7 43.6C35.3 42.8 40 44.2 43.6 47.4C45.6 49.1 47 51 48 52.9C45.9 43.2 44 34.5 44.1 26.7C44.2 19.8 45.6 12.6 48 7.9Z" fill={`url(#${ids.hoodLeft})`} fillOpacity=".58"/>
+          <path d="M48.1 8C53 12.6 56.6 19.3 58.9 27.4C60.7 33.5 61.9 38.7 65.5 43.5C60.9 42.9 56.4 44.3 52.6 47.6C50.6 49.3 49.1 51.1 48 53C50.2 43.3 52 34.4 51.8 26.7C51.7 19.9 50.4 12.8 48.1 8Z" fill="#041019" fillOpacity=".86"/>
           <path data-brand-face-void d={voidPath} fill="#000"/>
-          <path d="M31.3 39.8C34.2 30.8 39.6 24.2 48 21.3C56.4 24.4 61.6 30.9 63.9 39.9C60.9 35.6 57.4 32.2 53.5 29.8C51.4 28.5 49.5 27.9 47.8 28C45.8 27.9 43.8 28.6 41.7 30C37.8 32.4 34.4 35.7 31.3 39.8Z" fill="#010409" fillOpacity=".78"/>
+          <path d="M35.2 38.8C37.4 30.5 41.8 24.6 48 21.2C54.2 24.6 58.5 30.4 60.7 38.8C58.2 35.2 55.3 32.3 52.2 30.3C50.5 29.2 49 28.7 47.8 28.8C46.2 28.7 44.7 29.3 43 30.4C39.9 32.4 37.3 35.2 35.2 38.8Z" fill="#010409" fillOpacity=".78"/>
 
-          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.82 : 1 }, hover: { opacity: compact ? 0.9 : 1, transition: { duration: 0.72, ease: premiumEase } } }}>
-            <path d="M13.5 49.5C25.6 44.5 37.4 46.6 49.6 52.8C60.4 47.2 71 46.1 82.4 50.8C74.8 53.1 68 56.1 61.5 59.5C56 62.3 51.5 65.4 48 68.8C43.8 65.9 39.2 63.4 33.4 60.8C27.2 58 20.6 54.7 13.5 49.5Z" fill="#020a11"/>
-            <motion.path d="M14.8 48.2C27.4 44.7 38.9 47.1 51 53.7C42 52.7 33.2 55.3 25.1 60.5C20.6 58.2 17.2 54.2 14.8 48.2Z" fill={`url(#${ids.cowl1})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.1 } }}/>
-            <motion.path d="M82 50.1C71.5 45.7 61.4 47.1 49.1 54.2C57.9 53.7 65.9 55.8 73 60.1C77.2 57.9 80.2 54.5 82 50.1Z" fill={`url(#${ids.cowl2})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.08 } }}/>
-            <path d="M21.8 55.2C31 51.9 40.2 53.1 48.8 57.6C56.8 53.5 65.2 52.8 74.2 56.1C65.5 57.5 56.9 61.2 48 67C39.6 61.6 30.8 57.9 21.8 55.2Z" fill="#01060b"/>
-            <path d="M31.6 59.5C37.7 56.8 43.3 57.1 48.2 59.8C53 57.2 58.3 57.2 64.1 60.2C58.4 61.4 53.1 64 48 68.1C42.8 64.3 37.4 61.5 31.6 59.5Z" fill="#000204"/>
-            {!compact && <path d="M18 50.1C29.6 47.3 39.8 49.5 49.4 54.4" fill="none" stroke="#7bd7e9" strokeOpacity=".11" strokeWidth=".46" strokeLinecap="round"/>}
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.42 : 0.5 }, hover: { opacity: compact ? 0.56 : 0.64, transition: { duration: 0.72, ease: premiumEase } } }}>
+            <path d="M15.2 49.2C26 45.6 36.6 46.8 46.4 51.1C55.3 55 66.9 55.5 80.9 50.6C75.3 57.5 67.1 61.1 57.1 61.5C47.4 61.9 38.6 58.5 30.1 56C23.5 54.1 18.5 51.9 15.2 49.2Z" fill="#02090f"/>
+            <motion.path d="M16.5 48.3C27 45.5 37.1 47.1 46.8 51.7C55.4 55.8 64.5 57 76.7 54C71.2 58.2 63.7 59.8 55.6 58.8C45.8 57.7 37.6 53.8 28.6 52.5C23.5 51.8 19.6 50.4 16.5 48.3Z" fill="#06131d" variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.08 } }}/>
+            <motion.path d="M80.5 50.4C70.3 47.8 61.5 48.8 51.7 53.7C43.6 57.7 36 59.3 27.9 57.2C33.1 61.5 40.9 63.2 49.7 60.9C58.8 58.5 66 56.7 73.8 56.9C77 55.2 79.2 53 80.5 50.4Z" fill="#020a11" variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.06 } }}/>
+            <path d="M21.5 54.6C31.2 52.3 40.3 53.5 48.6 57.1C56.1 60.4 64.2 60.6 73.4 57.8C67.2 62.6 58.8 64.8 49.1 64C39.7 63.2 30.6 59.5 21.5 54.6Z" fill="#01060b"/>
+            <path d="M31.1 59.3C38.8 57.2 45.4 58.3 51.3 61.1C56.1 63.4 61.1 63.8 66.5 62.6C62.1 66.3 56 67.7 48.8 67C42.1 66.3 36.1 63.5 31.1 59.3Z" fill="#000204"/>
+            {!compact && <path d="M18.4 49.9C29.1 47.3 39 49 48.3 53.2C56.8 57 65.2 57.7 74.1 55.8" fill="none" stroke="#75d4e7" strokeOpacity=".035" strokeWidth=".42" strokeLinecap="round"/>}
           </motion.g>
 
           <g data-brand-texture aria-hidden="true" fill="none" strokeLinecap="round">{hoodSeams.slice(0, compact ? 3 : hoodSeams.length).map(([d, stroke, opacity, width]) => <path key={d} d={d} stroke={stroke} strokeOpacity={opacity} strokeWidth={compact ? width * 0.88 : width}/>)}</g>
