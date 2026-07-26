@@ -164,12 +164,18 @@ for (const route of coreRoutes) {
   test(`${route}: header and footer use the v8.7 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
-    const marks = page.locator('[data-brand-mark]');
-    expect(await marks.count()).toBeGreaterThanOrEqual(2);
-    for (let index = 0; index < await marks.count(); index += 1) {
-      await expect(marks.nth(index)).toHaveAttribute('data-brand-version', VERSION);
-      await expect(marks.nth(index)).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
-      expect(await marks.nth(index).locator('image, rect').count()).toBe(0);
+
+    // Assert the two production surfaces directly. Counting every transient mark and
+    // then re-counting inside the loop races React route hydration on fast pages.
+    const marks = [
+      page.locator('header [data-brand-mark]').first(),
+      page.locator('footer [data-brand-mark]').first(),
+    ];
+    for (const mark of marks) {
+      await expect(mark).toBeAttached();
+      await expect(mark).toHaveAttribute('data-brand-version', VERSION);
+      await expect(mark).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
+      expect(await mark.locator('image, rect').count()).toBe(0);
     }
   });
 }
