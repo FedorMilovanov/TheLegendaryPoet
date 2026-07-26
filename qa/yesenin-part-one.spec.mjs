@@ -38,8 +38,30 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   await expect(page.getByText(/лазарет № 17 нельзя называть установленным местом формальной службы/i)).toBeVisible();
   await expect(page.getByText(/видимо, 3 октября 1921 года/i)).toBeVisible();
 
-  const sourceLinks = page.locator('a[href^="https://"]');
-  expect(await sourceLinks.count()).toBeGreaterThanOrEqual(20);
+  const citationTargets = await page.locator('a[href^="#source-"]').evaluateAll((links) => [
+    ...new Set(links.map((link) => link.getAttribute('href')).filter(Boolean)),
+  ]);
+  expect(citationTargets).toHaveLength(64);
+
+  const sourceHeading = page.getByRole('heading', {
+    level: 2,
+    name: 'Документы, тексты и исследования',
+  });
+  const sourceSection = page.locator('section').filter({ has: sourceHeading });
+  await expect(sourceSection).toHaveCount(1);
+  await expect(sourceSection.getByRole('button', { name: 'Все 64', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  const sourceItems = sourceSection.getByRole('listitem');
+  await expect(sourceItems).toHaveCount(12);
+  const showMore = sourceSection.getByRole('button', { name: 'Показать ещё 52', exact: true });
+  await expect(showMore).toBeVisible();
+  await showMore.click();
+  await expect(showMore).toBeHidden();
+  await expect(sourceItems).toHaveCount(64);
+  await expect(sourceSection.locator('a[href^="https://"]')).toHaveCount(64);
 
   const state = await page.evaluate(() => ({
     pathname: location.pathname,
@@ -54,9 +76,16 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
     headings: [...document.querySelectorAll('h2')].map((heading) => heading.textContent?.trim()),
   }));
 
+  const evidence = {
+    ...state,
+    uniqueCitationTargets: citationTargets.length,
+    expandedSourceCards: await sourceItems.count(),
+    expandedSourceLinks: await sourceSection.locator('a[href^="https://"]').count(),
+  };
+
   fs.writeFileSync(
     path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one.json`),
-    JSON.stringify(state, null, 2),
+    JSON.stringify(evidence, null, 2),
   );
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-yesenin-part-one.png`),
