@@ -1,0 +1,82 @@
+name: Yesenin Part I browser acceptance
+
+on:
+  push:
+    branches:
+      - publish/yesenin-part-one-safe
+    paths:
+      - 'src/data/essays/yeseninPartOnePublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'qa/yesenin-part-one.spec.mjs'
+      - 'playwright.config.mjs'
+      - '.github/workflows/yesenin-part-one-browser.yml'
+  pull_request:
+    paths:
+      - 'src/data/essays/yeseninPartOnePublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'qa/yesenin-part-one.spec.mjs'
+      - 'playwright.config.mjs'
+      - '.github/workflows/yesenin-part-one-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-android-iphone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      QA_BASE_URL: http://127.0.0.1:4173
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Install project dependencies
+        run: npm ci --silent
+      - name: Build production site
+        env:
+          VITE_BASE: /
+        run: npm run sitemap && npm run build
+      - name: Install isolated Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium webkit
+      - name: Start production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat preview.log
+          exit 1
+      - name: Run focused route on three browser profiles
+        run: >-
+          npx playwright test qa/yesenin-part-one.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
+          --project=iphone-safari
+          --workers=1
+          --reporter=line,html
+      - name: Upload focused visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-browser-evidence
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            preview.log
+          if-no-files-found: warn
+          retention-days: 14
