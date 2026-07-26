@@ -43,17 +43,29 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: Production build
+        id: production-build
+        continue-on-error: true
         shell: bash
         run: |
           set +e
           npm run build > /tmp/yesenin-duncan-build.log 2>&1
           exit_code=$?
-          if [ "$exit_code" -ne 0 ]; then
-            echo '--- production build failure (last 120 lines) ---'
-            tail -n 120 /tmp/yesenin-duncan-build.log
-            exit "$exit_code"
-          fi
-          tail -n 40 /tmp/yesenin-duncan-build.log
+          echo "$exit_code" > /tmp/yesenin-duncan-build.exit
+          tail -n 120 /tmp/yesenin-duncan-build.log
+          exit "$exit_code"
+      - name: Upload production build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-duncan-production-build
+          path: |
+            /tmp/yesenin-duncan-build.log
+            /tmp/yesenin-duncan-build.exit
+          if-no-files-found: error
+          retention-days: 14
+      - name: Require successful production build
+        if: steps.production-build.outcome != 'success'
+        run: exit 1
       - name: Regenerate sitemap
         run: npm run sitemap
       - name: Require public route in sitemap
