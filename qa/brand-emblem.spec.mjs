@@ -145,16 +145,26 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   expect(geometry.hoodTop).toBeLessThan(7);
   expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.5);
 
-  const vector = mark.locator('[data-brand-vector]');
-  const rim = mark.locator('[data-brand-rim-light]');
-  const folds = mark.locator('[data-brand-folds]');
-  const energy = mark.locator('[data-brand-energy]');
-  const before = {
-    vector: await vector.getAttribute('style'),
-    rimOpacity: await rim.evaluate((node) => getComputedStyle(node).opacity),
-    folds: await folds.getAttribute('style'),
-    energy: await energy.getAttribute('style'),
-  };
+  const readMotionState = () => mark.evaluate((node) => {
+    const read = (selector) => {
+      const element = node.querySelector(selector);
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return { opacity: Number(style.opacity), transform: style.transform, filter: style.filter };
+    };
+    const rimPath = node.querySelector('[data-brand-rim-light] path');
+    const rimPathStyle = rimPath ? getComputedStyle(rimPath) : null;
+    return {
+      vector: read('[data-brand-vector]'),
+      rim: read('[data-brand-rim-light]'),
+      folds: read('[data-brand-folds]'),
+      energy: read('[data-brand-energy]'),
+      rimDash: rimPathStyle
+        ? { array: rimPathStyle.strokeDasharray, offset: rimPathStyle.strokeDashoffset }
+        : null,
+    };
+  });
+  const before = await readMotionState();
 
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-idle.png'),
@@ -169,17 +179,7 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   await mark.hover();
   await page.waitForTimeout(520);
 
-  const after = {
-    vector: await vector.getAttribute('style'),
-    rimOpacity: await rim.evaluate((node) => getComputedStyle(node).opacity),
-    folds: await folds.getAttribute('style'),
-    energy: await energy.getAttribute('style'),
-  };
-  expect(after.vector).not.toBe(before.vector);
-  expect(after.rimOpacity).not.toBe(before.rimOpacity);
-  expect(Number(after.rimOpacity)).toBeGreaterThan(Number(before.rimOpacity));
-  expect(after.folds).not.toBe(before.folds);
-  expect(after.energy).not.toBe(before.energy);
+  const after = await readMotionState();
 
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-hover.png'),
@@ -190,6 +190,13 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
       height: (box?.height || 44) + 48,
     },
   });
+
+  expect(after.vector?.transform).not.toBe(before.vector?.transform);
+  expect(after.vector?.filter).not.toBe(before.vector?.filter);
+  expect(after.rim?.opacity).toBeGreaterThan(before.rim?.opacity ?? 0);
+  expect(after.folds?.opacity).toBeGreaterThan(before.folds?.opacity ?? 0);
+  expect(after.energy?.opacity).toBeGreaterThan(before.energy?.opacity ?? 0);
+  expect(after.rimDash).not.toEqual(before.rimDash);
   expect(pageErrors).toEqual([]);
 });
 
