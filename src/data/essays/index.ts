@@ -2,7 +2,7 @@ import type { Essay, EssaySource } from '../../types/essay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
-import { yeseninPartOnePublished } from './yeseninPartOnePublished';
+import { yeseninPartOnePublic } from './yeseninPartOnePublic';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -91,7 +91,7 @@ const brikCaseWithSourceLibrary: Essay = {
 
 export const essays: Essay[] = [
   yeseninWithArchiveLayer,
-  yeseninPartOnePublished,
+  yeseninPartOnePublic,
   yeseninDuncanFirstMeetingPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
