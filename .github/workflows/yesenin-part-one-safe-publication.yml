@@ -60,7 +60,7 @@ jobs:
       - name: Validate citation topology
         run: npm run validate:citations
       - name: Validate literary style
-        run: npm run validate:literary-style
+        run: npm run validate:style
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: Production build
