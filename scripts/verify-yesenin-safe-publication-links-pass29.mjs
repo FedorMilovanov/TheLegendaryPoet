@@ -50,13 +50,13 @@ const routes = [
   ['P29-046', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018709521/'],
   ['P29-047', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708264/'],
   ['P29-048', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708185/'],
-  ['P29-049', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/item/12760346'],
+  ['P29-049', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708243/'],
   ['P29-050', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708234/'],
   ['P29-051', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708221/'],
   ['P29-052', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018704008/'],
   ['P29-053', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018703992/'],
-  ['P29-054', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/item/2018704304/'],
-  ['P29-055', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/item/2018703943/'],
+  ['P29-054', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708244/'],
+  ['P29-055', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018708241/'],
   ['P29-056', 'Library of Congress', 'rights-safe', 'https://www.loc.gov/pictures/item/2018703966/'],
   ['P29-057', 'Presidential Library', 'catalogue', 'https://www.prlib.ru/section/2004304'],
   ['P29-058', 'Presidential Library', 'catalogue', 'https://www.prlib.ru/news/2060020'],
@@ -76,12 +76,15 @@ for (const route of routes) {
   urls.add(route.url);
 }
 
-const timeoutMs = Number(process.env.LINK_TIMEOUT_MS || 18_000);
-const concurrency = Number(process.env.LINK_CONCURRENCY || 6);
+const defaultTimeoutMs = Number(process.env.LINK_TIMEOUT_MS || 30_000);
+const concurrency = Number(process.env.LINK_CONCURRENCY || 3);
 const rightsMarker = /No known restrictions on publication/i;
 const userAgent = 'TheLegendaryPoet-Research-Link-Audit/29 (+https://thelegendarypoet.ru)';
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function request(route, attempt = 1) {
+  const maximumAttempts = route.institution === 'NEB' ? 3 : 2;
+  const timeoutMs = route.institution === 'NEB' ? Math.max(defaultTimeoutMs, 45_000) : defaultTimeoutMs;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -99,7 +102,9 @@ async function request(route, attempt = 1) {
     const status = response.status;
     const reachable = (status >= 200 && status < 400) || [401, 403, 429].includes(status);
     const hardFailure = status === 404 || status === 410 || status >= 500;
-    const rightsConfirmed = route.lane !== 'rights-safe' || (status >= 200 && status < 400 && rightsMarker.test(text));
+    const rightsConfirmed =
+      route.lane !== 'rights-safe' ||
+      (status >= 200 && status < 400 && rightsMarker.test(text));
     return {
       ...route,
       attempt,
@@ -119,7 +124,10 @@ async function request(route, attempt = 1) {
               : 'failed',
     };
   } catch (error) {
-    if (attempt < 2) return request(route, attempt + 1);
+    if (attempt < maximumAttempts) {
+      await sleep(1_500 * attempt);
+      return request(route, attempt + 1);
+    }
     return {
       ...route,
       attempt,
@@ -146,7 +154,9 @@ async function runPool(items, workerCount) {
       if (index >= items.length) return;
       results[index] = await request(items[index]);
       const result = results[index];
-      console.log(`${result.id} ${String(result.status ?? 'ERR').padStart(3)} ${result.accessState} ${result.institution}`);
+      console.log(
+        `${result.id} ${String(result.status ?? 'ERR').padStart(3)} ${result.accessState} ${result.institution}`,
+      );
     }
   }
   await Promise.all(Array.from({ length: Math.max(1, workerCount) }, () => worker()));
@@ -155,7 +165,9 @@ async function runPool(items, workerCount) {
 
 const results = await runPool(routes, concurrency);
 const hardFailures = results.filter((result) => result.hardFailure || !result.reachable);
-const rightsFailures = results.filter((result) => result.lane === 'rights-safe' && !result.rightsConfirmed);
+const rightsFailures = results.filter(
+  (result) => result.lane === 'rights-safe' && !result.rightsConfirmed,
+);
 const openResponses = results.filter((result) => result.accessState === 'open-response');
 const restrictedResponses = results.filter((result) => result.accessState.startsWith('reachable-'));
 
@@ -166,12 +178,15 @@ const report = {
   openResponseCount: openResponses.length,
   restrictedResponseCount: restrictedResponses.length,
   hardFailureCount: hardFailures.length,
-  rightsSafeCount: results.filter((result) => result.lane === 'rights-safe' && result.rightsConfirmed).length,
+  rightsSafeCount: results.filter(
+    (result) => result.lane === 'rights-safe' && result.rightsConfirmed,
+  ).length,
   policy: {
     redirectsAccepted: true,
     accessRestrictedAcceptedAsReachable: true,
     notFoundAndGoneRejected: true,
     serverErrorsRejectedAfterRetry: true,
+    slowHostRetryPolicy: 'NEB: 45s timeout, three attempts, reduced global concurrency',
     rightsSafeRequiresLiteralMarker: 'No known restrictions on publication',
     contentClaimsFromCatalogueOnly: false,
   },
@@ -186,11 +201,15 @@ await fs.writeFile(
   'utf8',
 );
 
-console.log(`\npass29: ${results.length} routes; ${openResponses.length} open; ${restrictedResponses.length} restricted; ${hardFailures.length} hard failures; ${report.rightsSafeCount} rights-safe LOC records`);
+console.log(
+  `\npass29: ${results.length} routes; ${openResponses.length} open; ${restrictedResponses.length} restricted; ${hardFailures.length} hard failures; ${report.rightsSafeCount} rights-safe LOC records`,
+);
 
 if (hardFailures.length > 0 || rightsFailures.length > 0) {
   for (const result of [...hardFailures, ...rightsFailures]) {
-    console.error(`FAIL ${result.id}: status=${result.status ?? 'ERR'} rightsConfirmed=${result.rightsConfirmed} ${result.url}`);
+    console.error(
+      `FAIL ${result.id}: status=${result.status ?? 'ERR'} rightsConfirmed=${result.rightsConfirmed} ${result.url}`,
+    );
   }
   process.exitCode = 1;
 }
