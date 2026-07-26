@@ -7,16 +7,6 @@ export const yeseninPartOnePublic: Essay = {
   "title": "Сергей Есенин. Часть I: 1895–1921",
   "subtitle": "От Константинова и Спас-Клепиков до имажинизма, «Исповеди хулигана» и встречи с Айседорой Дункан.",
   "excerpt": "Документальная биография Сергея Есенина от Константинова и Спас-Клепиков до Москвы, Блока, Клюева, революционных поэм, имажинизма и рубежа 1921 года.",
-  "seoTitle": "Сергей Есенин: документальная биография 1895–1921",
-  "seoDescription": "Первая часть большой документальной биографии Сергея Есенина: детство, учёба, Москва, Блок, Клюев, Радуница, военно-санитарный поезд № 143, Зинаида Райх, революционные поэмы и имажинизм.",
-  "seoKeywords": [
-    "Сергей Есенин биография",
-    "Есенин 1895 1921",
-    "Есенин и Блок",
-    "Есенин и Клюев",
-    "Есенин и Зинаида Райх",
-    "Есенин и Айседора Дункан"
-  ],
   "author": "Редакция THE LEGENDARY POET",
   "date": "2026-07-26",
   "readTime": 42,
@@ -25,6 +15,7 @@ export const yeseninPartOnePublic: Essay = {
   "coverAlt": "Сергей Александрович Есенин в 1914 году",
   "coverKind": "archive",
   "coverCredit": "Сергей Есенин, 1914 · Wikimedia Commons · Public domain (PD-RusEmpire; pre-1931 publication in the United States)",
+  "coverSourceUrl": "https://commons.wikimedia.org/wiki/File:Esenin1914.jpg",
   "accent": "#d7b26d",
   "tags": [
     "Сергей Есенин",
@@ -1780,6 +1771,5 @@ export const yeseninPartOnePublic: Essay = {
       "institution": "New York Public Library, Jerome Robbins Dance Division",
       "note": "Архивный finding aid бумаг Ирмы Дункан, включая дневники 1921 года; потенциальный источник по школе и хронологии, пока без утверждения, что нужная единица просмотрена."
     }
-  ],
-  "coverSourceUrl": "https://commons.wikimedia.org/wiki/File:Esenin1914.jpg"
+  ]
 };
