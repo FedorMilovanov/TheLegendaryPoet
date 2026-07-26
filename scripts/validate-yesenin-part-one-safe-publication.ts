@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { getEssayBySlug } from '../src/data/essays/index';
 import type { EssayBlock } from '../src/types/essay';
 
@@ -79,14 +81,19 @@ for (const required of [
   if (!readerText.includes(required)) throw new Error(`required public boundary is missing: ${required}`);
 }
 
-if (article.cover !== 'https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg') {
-  throw new Error('unexpected cover file');
+const expectedCover = '/images/essays/yesenin/yesenin-part-1-editorial.webp';
+const expectedCoverSha256 = '85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860';
+if (article.cover !== expectedCover) throw new Error('unexpected cover file');
+if (article.cardCover !== expectedCover) throw new Error('card cover diverges from the approved cover');
+if (article.coverKind !== 'reconstruction') throw new Error('cover must remain labelled as a reconstruction');
+if (article.coverSourceUrl) throw new Error('local editorial reconstruction must not claim an external source page');
+if (!article.coverCredit?.includes('редакционная реконструкция')) {
+  throw new Error('cover credit lost the reconstruction disclosure');
 }
-if (article.cardCover !== article.cover) throw new Error('card cover diverges from the approved cover');
-if (article.coverSourceUrl !== 'https://commons.wikimedia.org/wiki/File:Esenin1914.jpg') {
-  throw new Error('cover source page changed');
-}
-if (!article.coverCredit?.includes('Public domain')) throw new Error('cover credit lost public-domain statement');
+const coverSha256 = createHash('sha256')
+  .update(readFileSync(`public${expectedCover}`))
+  .digest('hex');
+if (coverSha256 !== expectedCoverSha256) throw new Error(`approved cover bytes changed: ${coverSha256}`);
 if (article.slug !== slug || article.id !== 'essay-yesenin-biography-part-one') {
   throw new Error('public article identity changed');
 }
@@ -95,5 +102,5 @@ if (article.series?.part !== 1 || article.series.total !== 2) {
 }
 
 console.log(
-  `Yesenin Part I public: ${sections.length} sections, ${authored.length} blocks, ${sources.length} sources, ${images.length} in-body images`,
+  `Yesenin Part I public: ${sections.length} sections, ${authored.length} blocks, ${sources.length} sources, ${images.length} in-body images, approved reconstruction=${coverSha256}`,
 );
