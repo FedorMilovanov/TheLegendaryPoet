@@ -23,7 +23,7 @@ permissions:
 jobs:
   sixty-route-link-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout exact head
         uses: actions/checkout@v4
@@ -33,8 +33,8 @@ jobs:
           node-version: 22
       - name: Verify sixty publication and research routes
         env:
-          LINK_TIMEOUT_MS: '18000'
-          LINK_CONCURRENCY: '6'
+          LINK_TIMEOUT_MS: '30000'
+          LINK_CONCURRENCY: '3'
         run: node scripts/verify-yesenin-safe-publication-links-pass29.mjs
       - name: Upload exact route evidence
         if: always()
