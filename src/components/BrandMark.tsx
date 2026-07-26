@@ -16,9 +16,9 @@ const hoodPath = 'M48 7.5C42 9.5 37.7 16.5 35.1 25.5C33.5 31.1 33.3 36.5 30.4 41
 const voidPath = 'M48.2 20.7C42.6 20.9 38.4 25.2 35.7 31.9C33.6 37.2 34.2 42.3 37.4 46C40.3 49.4 44 51.4 48 52.6C52 51.2 55.8 49.2 58.6 45.8C61.8 42.1 62.4 37.1 60.3 31.8C57.7 25.2 53.7 20.6 48.2 20.7Z';
 
 const atmosphereFills = [
-  ['M20 88C12 65 18 43 34 27C42 19 43 9 48 4C54 10 57 20 65 28C80 43 86 65 78 89C68 68 57 56 48 53C38 57 29 69 20 88Z', '#64e4ff', 0.22],
-  ['M0 94C6 70 17 51 34 39C21 60 15 78 14 96Z', '#36d8f5', 0.16],
-  ['M96 94C90 70 79 51 62 39C75 60 81 78 82 96Z', '#168da9', 0.08],
+  ['M20 88C12 65 18 43 34 27C42 19 43 9 48 4C54 10 57 20 65 28C80 43 86 65 78 89C68 68 57 56 48 53C38 57 29 69 20 88Z', '#64e4ff', 0.16],
+  ['M0 94C6 70 17 51 34 39C21 60 15 78 14 96Z', '#36d8f5', 0.11],
+  ['M96 94C90 70 79 51 62 39C75 60 81 78 82 96Z', '#168da9', 0.055],
 ] as const;
 
 const atmosphereStrokes = [
@@ -38,17 +38,17 @@ const energyPaths = [
 ] as const;
 
 const foldPaths = [
-  ['M2 94.9C6.7 72.7 17.3 55.7 34.5 46.9C39.7 44.2 44.2 46 46.4 50.1C34.1 62.5 25.1 78.4 20.2 95.7Z', '#0b2638'],
-  ['M94 94.9C89.3 72.7 78.7 55.7 61.5 46.9C56.3 44.2 51.8 46 49.6 50.1C61.9 62.5 70.9 78.4 75.8 95.7Z', '#03111b'],
-  ['M10.4 95.4C16.8 72.4 28.4 56 42.4 48.2C35.8 63.9 31.9 80.2 30.7 95.9Z', '#071c2b'],
-  ['M85.6 95.4C79.2 72.4 67.6 56 53.6 48.2C60.2 63.9 64.1 80.2 65.3 95.9Z', '#01080e'],
-  ['M24.8 95.7C29.5 75.1 37.4 59.2 45.9 50.1C41.7 66.4 39.4 81.7 39.3 96Z', '#041019'],
-  ['M71.2 95.7C66.5 75.1 58.6 59.2 50.1 50.1C54.3 66.4 56.6 81.7 56.7 96Z', '#000307'],
+  ['M2 94.9C6.7 72.7 17.3 55.7 34.5 46.9C39.7 44.2 44.2 46 46.4 50.1C34.1 62.5 25.1 78.4 20.2 95.7Z', '#071a28'],
+  ['M94 94.9C89.3 72.7 78.7 55.7 61.5 46.9C56.3 44.2 51.8 46 49.6 50.1C61.9 62.5 70.9 78.4 75.8 95.7Z', '#020c14'],
+  ['M10.4 95.4C16.8 72.4 28.4 56 42.4 48.2C35.8 63.9 31.9 80.2 30.7 95.9Z', '#04131f'],
+  ['M85.6 95.4C79.2 72.4 67.6 56 53.6 48.2C60.2 63.9 64.1 80.2 65.3 95.9Z', '#01060a'],
+  ['M24.8 95.7C29.5 75.1 37.4 59.2 45.9 50.1C41.7 66.4 39.4 81.7 39.3 96Z', '#020b12'],
+  ['M71.2 95.7C66.5 75.1 58.6 59.2 50.1 50.1C54.3 66.4 56.6 81.7 56.7 96Z', '#000205'],
   ['M39.3 96C41.3 76.4 44.4 61 48 51C51.6 61 54.7 76.4 56.7 96Z', '#000102'],
-  ['M44.8 58C32.6 61.5 20.4 74.6 8.2 94.1C20.8 82.8 32.2 75.5 43.6 71.4Z', '#12354a', 0.3],
-  ['M51.2 58C63.4 61.5 75.6 74.6 87.8 94.1C75.2 82.8 63.8 75.5 52.4 71.4Z', '#061722', 0.25],
-  ['M41.6 66.5C31.7 72.1 22.8 81.4 15 95.1C25.2 85.1 34.3 78.7 42.6 75.1Z', '#071f30', 0.5],
-  ['M54.4 66.5C64.3 72.1 73.2 81.4 81 95.1C70.8 85.1 61.7 78.7 53.4 75.1Z', '#020a11', 0.46],
+  ['M44.8 58C32.6 61.5 20.4 74.6 8.2 94.1C20.8 82.8 32.2 75.5 43.6 71.4Z', '#0d2a3b', 0.18],
+  ['M51.2 58C63.4 61.5 75.6 74.6 87.8 94.1C75.2 82.8 63.8 75.5 52.4 71.4Z', '#04131d', 0.16],
+  ['M41.6 66.5C31.7 72.1 22.8 81.4 15 95.1C25.2 85.1 34.3 78.7 42.6 75.1Z', '#051824', 0.28],
+  ['M54.4 66.5C64.3 72.1 73.2 81.4 81 95.1C70.8 85.1 61.7 78.7 53.4 75.1Z', '#01070c', 0.25],
 ] as const;
 
 const hoodSeams = [
@@ -74,6 +74,11 @@ const seamPaths = [
   ['M86.8 91.7C79.2 70.8 68.1 56.5 53.8 50.5', '#1e6c7d', 0.032, 0.36],
   ['M23 95C27.8 75.3 35.8 60.1 45 51.6', '#6ccfe2', 0.07, 0.4],
   ['M73 95C68.2 75.3 60.2 60.1 51 51.6', '#1b6576', 0.028, 0.32],
+  ['M13 92C19 72 29 57 42 50', '#4da8be', 0.09, 0.34],
+  ['M19 95C24 75 33 59 44.5 50.8', '#6ac9dc', 0.075, 0.32],
+  ['M31 95C34 76 40 59.5 46.5 51.4', '#4fa4b8', 0.055, 0.28],
+  ['M83 92C77 72 67 57 54 50', '#176176', 0.026, 0.3],
+  ['M77 95C72 75 63 59 51.5 50.8', '#155568', 0.022, 0.26],
 ] as const;
 
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
@@ -90,7 +95,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
       data-brand-mark
       data-brand-version={BRAND_VERSION}
       data-brand-renderer="inline-vector"
-      data-brand-vector-source="reference-derived-contours-v8-6"
+      data-brand-vector-source="reference-derived-contours-v8-7"
       className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
       initial={false}
       animate="idle"
@@ -112,9 +117,9 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         <title id={ids.title}>THE LEGENDARY POET</title>
         <desc id={ids.description}>Мистическая безликая фигура в глубоком капюшоне и тяжёлой почти чёрной мантии, окружённая разорванной холодной энергией</desc>
         <defs>
-          <linearGradient id={ids.base} x1="5" y1="43" x2="91" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#17384f"/><stop offset=".18" stopColor="#0a2436"/><stop offset=".48" stopColor="#04111b"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
-          <linearGradient id={ids.hood} x1="27" y1="8" x2="70" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#244b62"/><stop offset=".22" stopColor="#123148"/><stop offset=".56" stopColor="#061822"/><stop offset="1" stopColor="#010307"/></linearGradient>
-          <linearGradient id={ids.hoodLeft} x1="30" y1="8" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#193c51"/><stop offset=".45" stopColor="#0d2839"/><stop offset="1" stopColor="#041019"/></linearGradient>
+          <linearGradient id={ids.base} x1="5" y1="43" x2="91" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#0d2637"/><stop offset=".18" stopColor="#071a28"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01050a"/><stop offset="1" stopColor="#000102"/></linearGradient>
+          <linearGradient id={ids.hood} x1="27" y1="8" x2="70" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#17384b"/><stop offset=".22" stopColor="#0b2738"/><stop offset=".56" stopColor="#04131e"/><stop offset="1" stopColor="#010307"/></linearGradient>
+          <linearGradient id={ids.hoodLeft} x1="30" y1="8" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#123044"/><stop offset=".45" stopColor="#092332"/><stop offset="1" stopColor="#031019"/></linearGradient>
           <linearGradient id={ids.cowl1} x1="14" y1="46" x2="79" y2="63" gradientUnits="userSpaceOnUse"><stop stopColor="#24485d"/><stop offset=".35" stopColor="#123146"/><stop offset=".7" stopColor="#061823"/><stop offset="1" stopColor="#010409"/></linearGradient>
           <linearGradient id={ids.cowl2} x1="82" y1="47" x2="25" y2="64" gradientUnits="userSpaceOnUse"><stop stopColor="#153347"/><stop offset=".42" stopColor="#0a2433"/><stop offset=".78" stopColor="#031019"/><stop offset="1" stopColor="#000205"/></linearGradient>
           <linearGradient id={ids.rim} x1="24" y1="8" x2="76" y2="74" gradientUnits="userSpaceOnUse"><stop stopColor="#f7ffff"/><stop offset=".11" stopColor="#d5fbff"/><stop offset=".32" stopColor="#7ceaff"/><stop offset=".62" stopColor="#2fc4e8" stopOpacity=".68"/><stop offset="1" stopColor="#0b7696" stopOpacity="0"/></linearGradient>
@@ -142,7 +147,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           <path data-brand-face-void d={voidPath} fill="#000"/>
           <path d="M35.2 38.8C37.4 30.5 41.8 24.6 48 21.2C54.2 24.6 58.5 30.4 60.7 38.8C58.2 35.2 55.3 32.3 52.2 30.3C50.5 29.2 49 28.7 47.8 28.8C46.2 28.7 44.7 29.3 43 30.4C39.9 32.4 37.3 35.2 35.2 38.8Z" fill="#010409" fillOpacity=".78"/>
 
-          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.42 : 0.5 }, hover: { opacity: compact ? 0.56 : 0.64, transition: { duration: 0.72, ease: premiumEase } } }}>
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.36 : 0.43 }, hover: { opacity: compact ? 0.48 : 0.56, transition: { duration: 0.72, ease: premiumEase } } }}>
             <path d="M15.2 49.2C26 45.6 36.6 46.8 46.4 51.1C55.3 55 66.9 55.5 80.9 50.6C75.3 57.5 67.1 61.1 57.1 61.5C47.4 61.9 38.6 58.5 30.1 56C23.5 54.1 18.5 51.9 15.2 49.2Z" fill="#02090f"/>
             <motion.path d="M16.5 48.3C27 45.5 37.1 47.1 46.8 51.7C55.4 55.8 64.5 57 76.7 54C71.2 58.2 63.7 59.8 55.6 58.8C45.8 57.7 37.6 53.8 28.6 52.5C23.5 51.8 19.6 50.4 16.5 48.3Z" fill="#06131d" variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.08 } }}/>
             <motion.path d="M80.5 50.4C70.3 47.8 61.5 48.8 51.7 53.7C43.6 57.7 36 59.3 27.9 57.2C33.1 61.5 40.9 63.2 49.7 60.9C58.8 58.5 66 56.7 73.8 56.9C77 55.2 79.2 53 80.5 50.4Z" fill="#020a11" variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.06 } }}/>
