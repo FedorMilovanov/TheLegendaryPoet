@@ -69,7 +69,7 @@ function write(routePath, html) {
 }
 
 async function main() {
-  const [{ getAllEssays }, { poets, articles, allMusicTracks, musicTracks }] = await Promise.all([
+  const [{ getAllEssays }, { poets, allMusicTracks, musicTracks }] = await Promise.all([
     import(path.resolve('src/data/essays/index.ts')),
     import(path.resolve('src/data/poets.ts')),
   ]);
@@ -81,10 +81,6 @@ async function main() {
   }
   for (const poet of poets) {
     write(`/poets/${poet.id}`, renderPage({ title: `${poet.name} — THE LEGENDARY POET`, description: poet.shortBio, routePath: `/poets/${poet.id}`, image: poet.photo, type: 'profile' }));
-    count++;
-  }
-  for (const article of articles) {
-    write(`/articles/${article.id}`, renderPage({ title: `${article.title} — THE LEGENDARY POET`, description: article.excerpt, routePath: `/articles/${article.id}`, image: article.image, type: 'article', publishedTime: article.date, author: article.author }));
     count++;
   }
   for (const track of allMusicTracks) {
@@ -103,7 +99,7 @@ async function main() {
   write('/music', renderPage({ title: 'Музыка — THE LEGENDARY POET', description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet.', routePath: '/music', image: featuredTrack?.wideCoverUrl || featuredTrack?.coverUrl }));
   count += 2;
 
-  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${articles.length} articles, ${allMusicTracks.length} music registry entries, 2 hubs)`);
+  console.log(`prerender-og: wrote ${count} static pages (${getAllEssays().length} essays, ${poets.length} poets, ${allMusicTracks.length} music registry entries, 2 hubs)`);
 }
 
 main();
