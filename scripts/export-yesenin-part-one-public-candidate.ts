@@ -78,16 +78,16 @@ for (const block of publicBlocks) {
 }
 
 const publicArticle: Essay = {
-  ...source,
   id: 'essay-yesenin-biography-part-one',
   slug: 'sergei-yesenin-1895-1921',
   kicker: 'Большая биография · часть I',
+  title: source.title,
+  subtitle: source.subtitle,
   excerpt:
     'Документальная биография Сергея Есенина от Константинова и Спас-Клепиков до Москвы, Блока, Клюева, революционных поэм, имажинизма и рубежа 1921 года.',
-  seoTitle: 'Сергей Есенин: документальная биография 1895–1921',
-  seoDescription:
-    'Первая часть большой документальной биографии Сергея Есенина: детство, учёба, Москва, Блок, Клюев, Радуница, военно-санитарный поезд № 143, Зинаида Райх, революционные поэмы и имажинизм.',
+  author: source.author,
   date: '2026-07-26',
+  readTime: source.readTime,
   cover: 'https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg',
   cardCover: 'https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg',
   coverAlt: 'Сергей Александрович Есенин в 1914 году',
@@ -95,7 +95,10 @@ const publicArticle: Essay = {
   coverCredit:
     'Сергей Есенин, 1914 · Wikimedia Commons · Public domain (PD-RusEmpire; pre-1931 publication in the United States)',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Esenin1914.jpg',
+  accent: source.accent,
   tags: ['Сергей Есенин', 'Биография', 'Серебряный век', 'Часть I', 'Источники'],
+  poetId: source.poetId,
+  series: source.series,
   blocks: publicBlocks,
   sources,
 };
@@ -128,6 +131,7 @@ const output = {
     internalBlockIdsPublished: false,
     sourceAliasesPublished: false,
     institutionalSourceKindsPublished: false,
+    unsupportedSeoFieldsPublished: false,
     coverRightsRoute: 'Wikimedia Commons PD-RusEmpire + pre-1931 US public domain',
     closedArchiveMediaPublished: false,
   },
