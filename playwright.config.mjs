@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /mobile-platforms\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|yesenin-part-one)\.spec\.mjs/;
 
 export default defineConfig({
   testDir: './qa',
@@ -17,7 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-core',
-      testIgnore: mobileSpec,
+      testIgnore: /mobile-platforms\.spec\.mjs/,
       use: {
         browserName: 'chromium',
       },

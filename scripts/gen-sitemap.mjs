@@ -34,7 +34,7 @@ const essaySlugs = [
       .filter((file) => file.endsWith('.ts') && file !== 'index.ts')
       .map((file) => {
         const source = fs.readFileSync(path.join(essaysDir, file), 'utf8');
-        return (source.match(/^\s*slug:\s*['"]([a-z0-9-]+)['"]/m) || [])[1];
+        return (source.match(/^\s*['"]?slug['"]?\s*:\s*['"]([a-z0-9-]+)['"]/m) || [])[1];
       })
       .filter(Boolean),
   ),
