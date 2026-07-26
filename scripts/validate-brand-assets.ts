@@ -81,6 +81,7 @@ const microSvg = read('public/brand-mark-micro.svg');
 const maskSvg = read('public/brand-emblem-mask.svg');
 const release = read('public/brand-release.txt');
 const version = 'cloak-20260726-8';
+const vectorSource = 'reference-derived-contours-v8-10';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
@@ -88,40 +89,42 @@ assert.match(component, /useReducedMotion\(\)/, 'BrandMark must respect reduced 
 for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure', 'data-brand-hood', 'data-brand-cloak', 'data-brand-face-void', 'data-brand-rim-light', 'data-brand-folds', 'data-brand-collar', 'data-brand-atmosphere', 'data-brand-energy', 'data-brand-texture']) assert.match(component, new RegExp(hook), `${hook} is missing`);
 assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
-assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-7"/, 'v8.7 contour provenance is missing');
+assert.match(component, /const VECTOR_SOURCE = 'reference-derived-contours-v8-10'/, 'v8.10 contour provenance constant is missing');
+assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/, 'BrandMark must expose the v8.10 vector source');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept its parent link');
 assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger footprint');
-assert.match(component, /const cloakPath = 'M48 41\.2C37\.2 40\.8/, 'runtime mantle geometry changed');
-assert.match(component, /const hoodPath = 'M48 7\.5C42 9\.5/, 'runtime hood geometry changed');
-assert.match(component, /const voidPath = 'M48\.2 20\.7C42\.6 20\.9/, 'runtime face void geometry changed');
-assert.match(component, /const foldPaths = \[/, 'runtime fold system is missing');
-assert.match(component, /const rimPaths = \[/, 'runtime broken-rim system is missing');
-assert.ok((component.match(/\['M/g) || []).length >= 45, 'runtime SVG lost layered path data');
+assert.match(component, /const cloakPath = 'M48 41\.4C36\.8 40\.8/, 'runtime mantle geometry changed');
+assert.match(component, /const hoodPath = 'M48 5C40 7\.6/, 'runtime hood geometry changed');
+assert.match(component, /const voidPath = 'M48\.1 17\.6C40\.3 18/, 'runtime face void geometry changed');
+assert.match(component, /const foldPaths:/, 'runtime fold system is missing');
+assert.match(component, /const rimPaths:/, 'runtime broken-rim system is missing');
+assert.ok((component.match(/d: 'M/g) || []).length >= 61, 'runtime SVG lost layered path data');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,/i, 'BrandMark embeds raster artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|coreGradientId|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
 
 assertCompleteSvg(standaloneSvg, 'public/brand-emblem.svg', '0 0 96 96');
-assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-7"/, 'standalone contour provenance is missing');
+assert.match(standaloneSvg, new RegExp(`data-brand-vector-source="${vectorSource}"`), 'standalone contour provenance is missing');
 assert.match(standaloneSvg, /id="mist"/, 'standalone SVG lost atmospheric depth');
 assert.match(standaloneSvg, /id="glow"/, 'standalone SVG lost contour glow');
-assert.match(standaloneSvg, /M48 41\.2C37\.2 40\.8/, 'standalone mantle geometry changed');
-assert.match(standaloneSvg, /M48 7\.5C42 9\.5/, 'standalone hood geometry changed');
-assert.match(standaloneSvg, /M48\.2 20\.7C42\.6 20\.9/, 'standalone face void changed');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 57, 'standalone SVG lost layered path depth');
+assert.match(standaloneSvg, /M48 41\.4C36\.8 40\.8/, 'standalone mantle geometry changed');
+assert.match(standaloneSvg, /M48 5C40 7\.6/, 'standalone hood geometry changed');
+assert.match(standaloneSvg, /M48\.1 17\.6C40\.3 18/, 'standalone face void changed');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 67, 'standalone SVG lost layered path depth');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
 
 assertCompleteSvg(microSvg, 'public/brand-mark-micro.svg', '0 0 32 32');
-assert.match(microSvg, /M5\.6 16\.4C3 18\.2/, 'micro mantle geometry changed');
-assert.match(microSvg, /M16 2\.5C14 3\.2/, 'micro hood geometry changed');
-assert.match(microSvg, /M16\.1 6\.9C14\.2 7/, 'micro face void geometry changed');
+assert.match(microSvg, new RegExp(`data-brand-vector-source="${vectorSource}"`), 'micro contour provenance is missing');
+assert.match(microSvg, /M16 13\.7C12\.3 13\.5/, 'micro mantle geometry changed');
+assert.match(microSvg, /M16 1\.8C13\.7 2\.7/, 'micro hood geometry changed');
+assert.match(microSvg, /M16\.1 5\.7C13\.8 5\.8/, 'micro face void geometry changed');
 assert.ok((microSvg.match(/<path\b/g) || []).length >= 15, 'micro mark lost its optical layers');
 assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains raster, plate or retired crystal');
 
 assertCompleteSvg(maskSvg, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
-assert.match(maskSvg, /M48 7\.5C42 9\.5/, 'Safari mask must preserve the hood');
-assert.match(maskSvg, /M48\.2 20\.7C42\.6 20\.9/, 'Safari mask must preserve the face opening');
-assert.match(maskSvg, /C16\.6 95\.6 31\.9 95\.8 48 96/, 'Safari mask must preserve the broad mantle');
+assert.match(maskSvg, /M48 5C40 7\.6/, 'Safari mask must preserve the hood');
+assert.match(maskSvg, /M48\.1 17\.6C40\.3 18/, 'Safari mask must preserve the face opening');
+assert.match(maskSvg, /C93\.3 86 92\.5 76\.5 90\.2 68\.4/, 'Safari mask must preserve the broad mantle');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b|data:image|base64,/i, 'Safari mask embeds raster art or a plate');
 
 for (const pattern of [`name="brand-release" content="${version}"`, `brand-mark-micro\\.svg\\?v=${version}`, `favicon-32\\.png\\?v=${version}`, `favicon-16\\.png\\?v=${version}`, `apple-touch-icon\\.png\\?v=${version}`, `brand-emblem-mask\\.svg\\?v=${version}`, `site\\.webmanifest\\?v=${version}`, `og-image\\.jpg\\?v=${version}`, `icon-512\\.png\\?v=${version}`]) assert.match(index, new RegExp(pattern), `index cache identity missing: ${pattern}`);
@@ -147,4 +150,4 @@ for (const [file, expected] of Object.entries(expectedPngSizes)) { assert.deepEq
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share image is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
-console.log('brand validation: v8.7 near-black reference-proportioned cloth, restrained cowl, layered seams and platform fallbacks are consistent');
+console.log('brand validation: v8.10 high hood, cavernous void, wrapped cowl, irregular near-black folds and platform fallbacks are consistent');
