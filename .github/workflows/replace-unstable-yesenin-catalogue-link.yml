@@ -1,0 +1,49 @@
+name: Replace unstable Yesenin catalogue locator
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/replace-unstable-yesenin-catalogue-link.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  replace:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/publish-selected-yesenin-covers
+          fetch-depth: 0
+
+      - name: Replace catalogue locator and remove one-time workflow
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/data/essays/yeseninPartOnePublic.ts')
+          text = path.read_text(encoding='utf-8')
+          old = 'https://imli.ru/izdaniya/publikatsii-otdela-novejshej-russkoj-literatury/3665-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-1-1895-1916'
+          new = 'https://search.rsl.ru/ru/record/01002391503'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one old catalogue locator, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          Path('.github/workflows/replace-unstable-yesenin-catalogue-link.yml').unlink()
+
+      - name: Commit stable locator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(sources): use stable RSL catalogue locator for Yesenin chronicle'
+          git push origin HEAD:agent/publish-selected-yesenin-covers
