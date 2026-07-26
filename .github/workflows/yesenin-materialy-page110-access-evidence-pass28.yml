@@ -1,0 +1,48 @@
+name: Yesenin Materialy Page 110 Access Evidence Pass 28
+
+on:
+  pull_request:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninMaterialyPage110AccessEvidencePassTwentyEight.ts'
+      - 'scripts/validate-yesenin-materialy-page110-access-evidence-pass28.ts'
+      - 'research/yesenin/PART_ONE_MATERIALY_PAGE110_ACCESS_PASS28_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-materialy-page110-access-evidence-pass28.yml'
+  push:
+    branches: [work/local-images-playwright-wtoc]
+    paths:
+      - 'src/data/essays/yeseninMaterialyPage110AccessEvidencePassTwentyEight.ts'
+      - 'scripts/validate-yesenin-materialy-page110-access-evidence-pass28.ts'
+      - 'research/yesenin/PART_ONE_MATERIALY_PAGE110_ACCESS_PASS28_2026-07-26.md'
+      - 'package.json'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/yesenin-materialy-page110-access-evidence-pass28.yml'
+
+concurrency:
+  group: yesenin-materialy-page110-access-evidence-pass28-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate East View predecessor pass 27
+        run: npm run validate:yesenin-pravda-eastview-pass27
+      - name: Validate Materialy page 110 evidence pass 28
+        run: npm run validate:yesenin-materialy-page110-access-pass28
+      - name: TypeScript typecheck
+        run: npm run typecheck
