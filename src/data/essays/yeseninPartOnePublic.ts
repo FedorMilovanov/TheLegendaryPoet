@@ -1224,7 +1224,7 @@ export const yeseninPartOnePublic: Essay = {
     {
       "id": "ye1-imli-chronicle-v1-catalogue",
       "title": "Летопись жизни и творчества С. А. Есенина. Том 1. 1895–1916",
-      "url": "https://imli.ru/nauchnye-otdely/otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya/1497-publikatcii-otdela-otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya",
+      "url": "https://search.rsl.ru/ru/record/01002391503",
       "kind": "research",
       "institution": "ИМЛИ РАН",
       "year": 2003,
