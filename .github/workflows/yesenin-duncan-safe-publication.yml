@@ -43,7 +43,7 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: Production build
-        id: production-build
+        id: production_build
         continue-on-error: true
         shell: bash
         run: |
@@ -64,7 +64,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Require successful production build
-        if: steps.production-build.outcome != 'success'
+        if: steps.production_build.outcome != 'success'
         run: exit 1
       - name: Regenerate sitemap
         run: npm run sitemap
