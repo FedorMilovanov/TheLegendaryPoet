@@ -45,6 +45,8 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
 
 const yeseninWithArchiveLayer: Essay = {
   ...yeseninKutezhiVisual,
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET · редакционная реконструкция',
   sources: uniqueSources([
     ...(yeseninKutezhiVisual.sources ?? []),
     ...yeseninArchiveSources,

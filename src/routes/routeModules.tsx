@@ -85,7 +85,6 @@ const poetsRoute = defineRoute('poets', '/poets', () => import('../pages/PoetsPa
 const poetDetailRoute = defineRoute('poet-detail', '/poets/:id', () => import('../pages/PoetDetailPage'));
 const ratingsRoute = defineRoute('ratings', '/ratings', () => import('../pages/RatingsPage'));
 const articlesRoute = defineRoute('articles', '/articles', () => import('../pages/ArticlesPage'));
-const articleDetailRoute = defineRoute('article-detail', '/articles/:id', () => import('../pages/ArticleDetailPage'));
 const essayRoute = defineRoute('essay', '/essays/:slug', () => import('../pages/EssayPage'));
 const musicRoute = defineRoute('music', '/music', () => import('../pages/MusicPage'));
 const trackDetailRoute = defineRoute('track-detail', '/music/:id', () => import('../pages/TrackDetailPage'));
@@ -99,7 +98,6 @@ export const PoetsPage = poetsRoute.Component;
 export const PoetDetailPage = poetDetailRoute.Component;
 export const RatingsPage = ratingsRoute.Component;
 export const ArticlesPage = articlesRoute.Component;
-export const ArticleDetailPage = articleDetailRoute.Component;
 export const EssayPage = essayRoute.Component;
 export const MusicPage = musicRoute.Component;
 export const TrackDetailPage = trackDetailRoute.Component;
@@ -114,7 +112,6 @@ const prefetchableRoutes = [
   poetDetailRoute,
   ratingsRoute,
   articlesRoute,
-  articleDetailRoute,
   essayRoute,
   musicRoute,
   trackDetailRoute,

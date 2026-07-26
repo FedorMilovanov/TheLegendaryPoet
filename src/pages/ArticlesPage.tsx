@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
-import { getAllArticles } from '../utils/articleLibrary';
 import { getAllEssays } from '../data/essays';
-import ArticleCard from '../components/articles/ArticleCard';
+import type { Essay } from '../types/essay';
 import EssayCard from '../components/essay/EssayCard';
 import ResilientImage from '../components/media/ResilientImage';
 import Reveal from '../components/Reveal';
@@ -11,35 +10,37 @@ import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
 
 const categories = [
-  { value: '', label: 'Все статьи' },
-  { value: 'biblical', label: 'Библейский анализ' },
-  { value: 'moral', label: 'Моральный анализ' },
-  { value: 'history', label: 'История' },
-  { value: 'analysis', label: 'Литературный анализ' },
-  { value: 'biography', label: 'Биография' },
+  { value: '', label: 'Все материалы' },
+  { value: 'biography', label: 'Большие биографии' },
+  { value: 'documents', label: 'Документальные расследования' },
+  { value: 'fate', label: 'Судьба и нравственный анализ' },
+  { value: 'sergei-yesenin', label: 'Сергей Есенин' },
+  { value: 'vladimir-mayakovsky', label: 'Владимир Маяковский' },
 ];
 
-const categoryLabels: Record<string, string> = {
-  biblical: 'Библейский анализ',
-  moral: 'Моральный анализ',
-  history: 'История',
-  analysis: 'Литературный анализ',
-  biography: 'Биография',
-};
+function matchesCategory(essay: Essay, category: string) {
+  if (!category) return true;
+  if (category === 'sergei-yesenin' || category === 'vladimir-mayakovsky') {
+    return essay.poetId === category;
+  }
+
+  const searchable = [essay.kicker ?? '', essay.title, ...essay.tags].join(' ').toLocaleLowerCase('ru-RU');
+  if (category === 'biography') return Boolean(essay.series) || /биограф/.test(searchable);
+  if (category === 'documents') return /документ|архив|источник/.test(searchable);
+  if (category === 'fate') return /судьба|нравствен|саморазруш/.test(searchable);
+  return true;
+}
 
 export default function ArticlesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   useSeo({
-    title: 'Статьи и анализы — THE LEGENDARY POET',
-    description: 'Глубокие исследования поэзии, истории и литературы, а также отдельные тексты о вере, культуре и нравственной оценке.',
+    title: 'Исследования и большие статьи — THE LEGENDARY POET',
+    description: 'Документальные биографии и большие исследования русской поэзии с открытой библиографией, проверенными формулировками и редакционными иллюстрациями.',
     path: '/articles',
   });
-  const articles = getAllArticles();
-  const essays = getAllEssays();
 
-  const filteredArticles = selectedCategory
-    ? articles.filter((article) => article.category === selectedCategory)
-    : articles;
+  const essays = useMemo(() => getAllEssays(), []);
+  const filteredEssays = essays.filter((essay) => matchesCategory(essay, selectedCategory));
 
   return (
     <div className="min-h-screen bg-[#050505] pb-20">
@@ -59,30 +60,18 @@ export default function ArticlesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="text-5xl font-serif font-bold mb-4">
-              <span className="neon-blue-gradient neon-glow-text">{titleCase('Статьи')}</span> {titleCase('и Анализы', { isHeadingStart: false })}
+            <h1 className="mb-4 font-serif text-5xl font-bold">
+              <span className="neon-blue-gradient neon-glow-text">{titleCase('Исследования')}</span>{' '}
+              {titleCase('и большие статьи', { isHeadingStart: false })}
             </h1>
-            <p className="text-xl text-cyan-100/55 max-w-3xl">
-              Глубокие исследования поэзии, истории, литературы и отдельные тексты о вере, культуре и нравственной оценке.
+            <p className="max-w-3xl text-xl text-cyan-100/55">
+              Полноценные документальные материалы: источники, библиография, осторожные формулировки и отдельная редакционная работа с каждой иллюстрацией.
             </p>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {essays.length > 0 && !selectedCategory && (
-          <Reveal direction="up" className="mb-14">
-            <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
-              <span className="h-px w-8 bg-luxury-gold/50" /> Большой материал
-            </div>
-            <div className="space-y-6">
-              {essays.map((essay) => (
-                <EssayCard key={essay.id} essay={essay} variant="feature" />
-              ))}
-            </div>
-          </Reveal>
-        )}
-
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -90,9 +79,9 @@ export default function ArticlesPage() {
           className="mb-10 rounded-3xl border border-cyan-400/10 bg-[#061018]/60 p-6"
         >
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">
-            <Filter size={14} /> Фильтр разделов
+            <Filter size={14} /> Навигация по исследованиям
           </div>
-          <div className="flex flex-wrap gap-3" aria-label="Фильтр статей">
+          <div className="flex flex-wrap gap-3" aria-label="Фильтр исследований">
             {categories.map((category) => {
               const active = selectedCategory === category.value;
               return (
@@ -114,19 +103,20 @@ export default function ArticlesPage() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {filteredArticles.map((article) => (
-            <ArticleCard
-              key={article.id}
-              article={article}
-              categoryLabel={categoryLabels[article.category] || article.category}
-            />
-          ))}
-        </div>
+        <Reveal direction="up">
+          <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+            <span className="h-px w-8 bg-luxury-gold/50" /> Проверенные публикации · {filteredEssays.length}
+          </div>
+          <div className="space-y-6">
+            {filteredEssays.map((essay) => (
+              <EssayCard key={essay.id} essay={essay} variant="feature" />
+            ))}
+          </div>
+        </Reveal>
 
-        {filteredArticles.length === 0 && (
+        {filteredEssays.length === 0 && (
           <div className="py-20 text-center">
-            <p className="text-lg text-cyan-100/45">В этой категории пока нет материалов.</p>
+            <p className="text-lg text-cyan-100/45">В этом разделе пока нет материалов.</p>
           </div>
         )}
       </div>

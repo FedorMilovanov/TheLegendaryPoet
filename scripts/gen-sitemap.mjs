@@ -22,11 +22,6 @@ const trackIds = [...readLibraryFile('musicTracks.ts').matchAll(/^\s*id:\s*['"](
   .filter(Boolean)
   .sort();
 
-const articleIds = new Set();
-for (const file of [...poetFiles, 'articles.ts']) {
-  for (const match of readLibraryFile(file).matchAll(/id:\s*['"](article[a-z0-9-]*)['"]/g)) articleIds.add(match[1]);
-}
-
 const essaySlugs = [
   ...new Set(
     fs
@@ -46,7 +41,6 @@ const urls = [
   ...essaySlugs.map((slug) => ({ loc: `/essays/${slug}`, priority: '0.9' })),
   ...trackIds.map((id) => ({ loc: `/music/${id}`, priority: '0.9' })),
   ...poetIds.map((id) => ({ loc: `/poets/${id}`, priority: '0.7' })),
-  ...[...articleIds].sort().map((id) => ({ loc: `/articles/${id}`, priority: '0.6' })),
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -56,4 +50,4 @@ ${urls.map(({ loc, priority }) => `  <url><loc>${BASE}${loc}</loc><changefreq>mo
 `;
 
 fs.writeFileSync('public/sitemap.xml', xml);
-console.log(`sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${trackIds.length} tracks, ${articleIds.size} articles)`);
+console.log(`sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${trackIds.length} tracks)`);

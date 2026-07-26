@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
@@ -24,7 +24,6 @@ import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPla
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 import {
   AboutPage,
-  ArticleDetailPage,
   ArticlesPage,
   EssayPage,
   HallPage,
@@ -63,9 +62,6 @@ let introPlayed = false;
 
 function RouteSettled({ pathname, onSettled, children }: { pathname: string; onSettled: () => void; children: ReactNode }) {
   useEffect(() => {
-    // The effect belongs to the Suspense content tree, so it cannot run while
-    // the route skeleton is still visible. A zero-delay task lets page SEO
-    // effects update document.title before the announcement is read.
     const timeout = window.setTimeout(onSettled, 0);
     return () => window.clearTimeout(timeout);
   }, [onSettled, pathname]);
@@ -155,7 +151,12 @@ function AppRoutes() {
         <Route path="/ratings" element={<RatingsPage />} />
         <Route path="/articles" element={<ArticlesPage />} />
         <Route path="/essays/:slug" element={<EssayPage />} />
-        <Route path="/articles/:id" element={<ArticleDetailPage />} />
+        <Route path="/articles/article-1" element={<Navigate to="/poets/alexander-pushkin" replace />} />
+        <Route path="/articles/article-2" element={<Navigate to="/essays/yesenin-kutezhi" replace />} />
+        <Route path="/articles/article-3" element={<Navigate to="/poets/anna-akhmatova" replace />} />
+        <Route path="/articles/article-main-1" element={<Navigate to="/articles" replace />} />
+        <Route path="/articles/article-main-2" element={<Navigate to="/music" replace />} />
+        <Route path="/articles/:id" element={<Navigate to="/articles" replace />} />
         <Route path="/music" element={<MusicPage />} />
         <Route path="/music/:id" element={<TrackDetailPage />} />
         <Route path="/about" element={<AboutPage />} />

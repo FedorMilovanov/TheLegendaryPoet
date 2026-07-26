@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '../components/ui/Link';
 import { motion, useInView, useSpring, useTransform } from 'framer-motion';
-import { poets, musicTracks, articles } from '../data/poets';
+import { poets, musicTracks } from '../data/poets';
+import { getAllEssays } from '../data/essays';
 import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon, VKIcon } from '../components/ChannelIcons';
@@ -176,7 +177,7 @@ const stats = [
   { icon: BookOpen, label: 'Поэтов в базе', getValue: () => poets.length },
   { icon: FileText, label: 'Текстов стихов', getValue: () => poets.reduce((acc, p) => acc + p.poems.length, 0) },
   { icon: AudioWaveform, label: 'Аудио-треков', getValue: () => musicTracks.length },
-  { icon: Star, label: 'Глубоких статей', getValue: () => articles.length },
+  { icon: Star, label: 'Больших исследований', getValue: () => getAllEssays().length },
 ];
 
 function StatsSection() {
