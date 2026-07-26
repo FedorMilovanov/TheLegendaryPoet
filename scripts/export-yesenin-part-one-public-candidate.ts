@@ -19,10 +19,22 @@ if (source.blocks.some((block) => block.type === 'image')) {
   throw new Error('research article unexpectedly contains documentary image blocks');
 }
 
+const stableImliPublicationsUrl =
+  'https://imli.ru/nauchnye-otdely/otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya/1497-publikatcii-otdela-otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya';
+
 const sources = (source.sources ?? []).map((record): EssaySource => {
   if (!record.id) throw new Error(`source has no stable id: ${record.title}`);
   if (!record.url?.startsWith('https://')) {
     throw new Error(`source has no stable HTTPS locator: ${record.id}`);
+  }
+  if (record.id === 'ye1-imli-chronicle-v1-catalogue') {
+    return {
+      ...record,
+      url: stableImliPublicationsUrl,
+      institution: 'ИМЛИ РАН',
+      note:
+        'Официальная страница публикаций отдела ИМЛИ РАН подтверждает академическую серию; точные факты статьи проверяются по страницам ФЭБ и первичным текстам.',
+    };
   }
   return { ...record };
 });
@@ -56,7 +68,7 @@ const publicArticle: Essay = {
   coverAlt: 'Сергей Александрович Есенин в 1914 году',
   coverKind: 'archive',
   coverCredit:
-    'Сергей Есенин, 1914 · Wikimedia Commons · PD-RusEmpire / public domain in the United States for pre-1931 publication',
+    'Сергей Есенин, 1914 · Wikimedia Commons · Public domain (PD-RusEmpire; pre-1931 publication in the United States)',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Esenin1914.jpg',
   tags: ['Сергей Есенин', 'Биография', 'Серебряный век', 'Часть I', 'Источники'],
   blocks: source.blocks,
@@ -99,6 +111,11 @@ mkdirSync(artifactDir, { recursive: true });
 writeFileSync(
   resolve(artifactDir, 'yesenin-part-one-public-candidate.json'),
   `${JSON.stringify(output, null, 2)}\n`,
+  'utf8',
+);
+writeFileSync(
+  resolve(artifactDir, 'yeseninPartOnePublic.ts'),
+  `import type { Essay } from '../../types/essay';\n\nexport const yeseninPartOnePublic: Essay = ${JSON.stringify(publicArticle, null, 2)};\n`,
   'utf8',
 );
 
