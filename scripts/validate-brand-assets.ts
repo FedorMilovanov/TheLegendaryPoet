@@ -80,40 +80,38 @@ for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure',
 }
 assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
-assert.match(component, /data-brand-vector-source="reference-derived-contours-v8"/, 'v8 contour provenance is missing');
+assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-2"/, 'v8.2 contour provenance is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
-assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger v8 footprint');
-assert.match(component, /const cloakPath = 'M51 5\.2Q47\.1 2/, 'runtime cloak must retain the traced asymmetric silhouette');
-assert.match(component, /const hoodPath = 'M47\.4 2\.8C40\.9 6\.4/, 'runtime hood must retain the refined textile shell');
-assert.match(component, /const voidPath = 'M49\.5 21\.1Q44\.8 20/, 'runtime void must retain the organic traced opening');
-assert.match(component, /const foldPaths = \[/, 'runtime fold system is missing');
-assert.match(component, /const rimPaths = \[/, 'runtime broken-rim system is missing');
+assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger footprint');
+assert.match(component, /const cloakPath = 'M24 42C17\.8 44\.3/, 'runtime cloak must retain the broad reference-derived silhouette');
+assert.match(component, /const hoodPath = 'M48 10\.5C42\.3 13\.4/, 'runtime hood must retain the lower, wider shell');
+assert.match(component, /const voidPath = 'M48\.3 21\.8C41\.9 21\.8/, 'runtime void must retain the rounded cavern opening');
 assert.ok((component.match(/\['M/g) || []).length >= 30, 'runtime SVG lost its layered vector path data');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,/i, 'BrandMark embeds raster artwork');
-assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|coreGradientId|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
+assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
 
 assert.match(standaloneSvg, /viewBox="0 0 96 96"/, 'standalone SVG viewBox changed');
-assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8"/, 'standalone contour provenance is missing');
-assert.match(standaloneSvg, /<linearGradient\b/, 'standalone SVG lost depth gradients');
-assert.match(standaloneSvg, /id="aura-blur"/, 'standalone SVG lost atmospheric depth');
-assert.match(standaloneSvg, /id="rim-glow"/, 'standalone SVG lost contour glow');
-assert.match(standaloneSvg, /M51\.0 5\.2Q47\.1 2\.0/, 'standalone cloak no longer follows the traced silhouette');
-assert.match(standaloneSvg, /M47\.4 2\.8C40\.9 6\.4/, 'standalone hood no longer follows the refined textile shell');
-assert.match(standaloneSvg, /M49\.5 21\.1Q44\.8 20\.0/, 'standalone face void changed');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 45, 'standalone SVG lost layered path depth');
-assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
+assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-2"/, 'standalone contour provenance is missing');
+assert.match(standaloneSvg, /id="aura"/, 'standalone SVG lost atmospheric depth');
+assert.match(standaloneSvg, /id="glow"/, 'standalone SVG lost contour glow');
+assert.match(standaloneSvg, /M24 42C17\.8 44\.3/, 'standalone cloak no longer follows the broad silhouette');
+assert.match(standaloneSvg, /M48 10\.5C42\.3 13\.4/, 'standalone hood no longer follows the refined shell');
+assert.match(standaloneSvg, /M48\.3 21\.8C41\.9 21\.8/, 'standalone face void changed');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 40, 'standalone SVG lost layered path depth');
+assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
+assert.doesNotMatch(standaloneSvg, /<[^>]+\sdata-brand-[\w-]+(?=\s|>)(?!\s*=)/, 'standalone SVG contains an invalid valueless XML data attribute');
 
 assert.match(microSvg, /viewBox="0 0 32 32"/, 'micro mark must be optically authored at 32px');
-assert.match(microSvg, /M17 1\.7Q15\.7 \.7/, 'micro mark must retain the traced broad silhouette');
-assert.match(microSvg, /M15\.7 \.9C13\.5 2\.1/, 'micro hood geometry changed');
-assert.match(microSvg, /M16\.5 7Q14\.9 6\.7/, 'micro void geometry changed');
-assert.ok((microSvg.match(/<path\b/g) || []).length >= 10, 'micro mark lost its optical layers');
-assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains raster, plate or retired crystal');
+assert.match(microSvg, /M8\.1 14C6 14\.8/, 'micro cloak must retain the broad shoulder silhouette');
+assert.match(microSvg, /M16 3\.5C14\.1 4\.5/, 'micro hood geometry changed');
+assert.match(microSvg, /M16\.1 7\.3C14 7\.3/, 'micro void geometry changed');
+assert.ok((microSvg.match(/<path\b/g) || []).length >= 14, 'micro mark lost its optical layers');
+assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff/i, 'micro mark contains raster, plate or retired crystal');
 
 assert.match(maskSvg, /viewBox="0 0 96 96"/, 'Safari mask viewBox changed');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
-assert.match(maskSvg, /M51\.0 5\.2Q47\.1 2\.0/, 'Safari mask must preserve the traced silhouette');
-assert.match(maskSvg, /M49\.5 21\.1Q44\.8 20\.0/, 'Safari mask must preserve the traced face opening');
+assert.match(maskSvg, /M48 10\.5C42\.3 13\.4/, 'Safari mask must preserve the hooded outer silhouette');
+assert.match(maskSvg, /M48\.3 21\.8C41\.9 21\.8/, 'Safari mask must preserve the face opening');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b|data:image|base64,/i, 'Safari mask embeds raster art or a plate');
 
 for (const pattern of [
@@ -165,4 +163,4 @@ assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
 
-console.log('brand validation: traced v8.1 silhouette, wrapped cowl, broken rim and optical micro mark are consistent');
+console.log('brand validation: v8.2 broad cloak, lower hood, rounded void, wrapped cowl and valid XML assets are consistent');
