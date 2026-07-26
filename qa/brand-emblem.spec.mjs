@@ -6,7 +6,7 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260726-8';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-10';
+const VECTOR_SOURCE = 'reference-derived-contours-v8-19';
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -19,7 +19,7 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('v8.10 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
+test('v8.19 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
@@ -49,7 +49,7 @@ test('v8.10 vector system, optical favicon and platform metadata are coherent', 
   expect(standalone).toContain('M48 41.4C36.8 40.8');
   expect(standalone).toContain('M48 5C40 7.6');
   expect(standalone).toContain('M48.1 17.6C40.3 18');
-  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(67);
+  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(77);
 
   const micro = sources.get('brand-mark-micro.svg');
   expect(micro).toContain('viewBox="0 0 32 32"');
@@ -57,6 +57,7 @@ test('v8.10 vector system, optical favicon and platform metadata are coherent', 
   expect(micro).toContain('M16 13.7C12.3 13.5');
   expect(micro).toContain('M16 1.8C13.7 2.7');
   expect(micro).toContain('M16.1 5.7C13.8 5.8');
+  expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(17);
 
   for (const [asset, size] of [
     ['brand-emblem-master.webp', { width: 320, height: 320 }],
@@ -95,7 +96,7 @@ test('standalone and micro marks decode at every optical size', async ({ page })
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('header renders the reference-shaped v8.10 vector and restrained hover', async ({ page }) => {
+test('header renders the reference-shaped v8.19 vector and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -162,7 +163,7 @@ test('header renders the reference-shaped v8.10 vector and restrained hover', as
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the v8.10 vector emblem`, async ({ page }) => {
+  test(`${route}: header and footer use the v8.19 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
 
