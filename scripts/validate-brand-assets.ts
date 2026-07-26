@@ -87,26 +87,26 @@ assert.match(component, /useReducedMotion\(\)/, 'BrandMark must respect reduced 
 for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure', 'data-brand-hood', 'data-brand-cloak', 'data-brand-face-void', 'data-brand-rim-light', 'data-brand-folds', 'data-brand-collar', 'data-brand-atmosphere', 'data-brand-energy', 'data-brand-texture']) assert.match(component, new RegExp(hook), `${hook} is missing`);
 assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
-assert.match(component, /data-brand-vector-source="reference-derived-contours-v8"/, 'v8 contour provenance is missing');
+assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-4"/, 'v8.4 contour provenance is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept its parent link');
 assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger footprint');
-assert.match(component, /const cloakPath = 'M48 41\.8C39\.6 41\.4/, 'runtime mantle must remain independent from the hood');
-assert.match(component, /const hoodPath = 'M47\.8 4\.5C43\.2 5\.3/, 'runtime hood geometry changed');
-assert.match(component, /const voidPath = 'M49 19\.5C44\.3 18\.6/, 'runtime face void geometry changed');
+assert.match(component, /const cloakPath = 'M48 42C38\.5 41\.3/, 'runtime mantle geometry changed');
+assert.match(component, /const hoodPath = 'M47\.5 7C41\.5 8\.7/, 'runtime hood geometry changed');
+assert.match(component, /const voidPath = 'M48 18\.7C40\.4 19\.9/, 'runtime face void geometry changed');
 assert.match(component, /const foldPaths = \[/, 'runtime fold system is missing');
 assert.match(component, /const rimPaths = \[/, 'runtime broken-rim system is missing');
-assert.ok((component.match(/\['M/g) || []).length >= 30, 'runtime SVG lost layered path data');
+assert.ok((component.match(/\['M/g) || []).length >= 35, 'runtime SVG lost layered path data');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,/i, 'BrandMark embeds raster artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|coreGradientId|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
 
 assertCompleteSvg(standaloneSvg, 'public/brand-emblem.svg', '0 0 96 96');
-assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8"/, 'standalone contour provenance is missing');
-assert.match(standaloneSvg, /id="aura-blur"/, 'standalone SVG lost atmospheric depth');
-assert.match(standaloneSvg, /id="rim-glow"/, 'standalone SVG lost contour glow');
-assert.match(standaloneSvg, /M48 41\.8C39\.6 41\.4/, 'standalone mantle no longer follows separated geometry');
-assert.match(standaloneSvg, /M47\.8 4\.5C43\.2 5\.3/, 'standalone hood geometry changed');
-assert.match(standaloneSvg, /M49 19\.5C44\.3 18\.6/, 'standalone face void changed');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 45, 'standalone SVG lost layered path depth');
+assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-4"/, 'standalone contour provenance is missing');
+assert.match(standaloneSvg, /id="mist"/, 'standalone SVG lost atmospheric depth');
+assert.match(standaloneSvg, /id="glow"/, 'standalone SVG lost contour glow');
+assert.match(standaloneSvg, /M48 42C38\.5 41\.3/, 'standalone mantle geometry changed');
+assert.match(standaloneSvg, /M47\.5 7C41\.5 8\.7/, 'standalone hood geometry changed');
+assert.match(standaloneSvg, /M48 18\.7C40\.4 19\.9/, 'standalone face void changed');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 49, 'standalone SVG lost layered path depth');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
 
 assertCompleteSvg(microSvg, 'public/brand-mark-micro.svg', '0 0 32 32');
@@ -118,9 +118,9 @@ assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2fff
 
 assertCompleteSvg(maskSvg, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
-assert.match(maskSvg, /M48 41\.8C39\.6 41\.4/, 'Safari mask must preserve the separated mantle');
-assert.match(maskSvg, /M47\.8 4\.5C43\.2 5\.3/, 'Safari mask must preserve the hood');
-assert.match(maskSvg, /M49 19\.5C44\.3 18\.6/, 'Safari mask must preserve the face opening');
+assert.match(maskSvg, /M48 42C38\.5 41\.3/, 'Safari mask must preserve the mantle');
+assert.match(maskSvg, /M47\.5 7C41\.5 8\.7/, 'Safari mask must preserve the hood');
+assert.match(maskSvg, /M48 18\.7C40\.4 19\.9/, 'Safari mask must preserve the face opening');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b|data:image|base64,/i, 'Safari mask embeds raster art or a plate');
 
 for (const pattern of [`name="brand-release" content="${version}"`, `brand-mark-micro\\.svg\\?v=${version}`, `favicon-32\\.png\\?v=${version}`, `favicon-16\\.png\\?v=${version}`, `apple-touch-icon\\.png\\?v=${version}`, `brand-emblem-mask\\.svg\\?v=${version}`, `site\\.webmanifest\\?v=${version}`, `og-image\\.jpg\\?v=${version}`, `icon-512\\.png\\?v=${version}`]) assert.match(index, new RegExp(pattern), `index cache identity missing: ${pattern}`);
@@ -146,4 +146,4 @@ for (const [file, expected] of Object.entries(expectedPngSizes)) { assert.deepEq
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
-console.log('brand validation: micro-surgical v8.2 hood, independent mantle, complete SVG documents and platform fallbacks are consistent');
+console.log('brand validation: surgical v8.4 hood, mantle, complete SVG documents and platform fallbacks are consistent');
