@@ -7,6 +7,10 @@ on:
     paths:
       - 'scripts/export-yesenin-part-one-public-candidate.ts'
       - '.github/workflows/yesenin-part-one-public-candidate-export.yml'
+  pull_request:
+    paths:
+      - 'scripts/export-yesenin-part-one-public-candidate.ts'
+      - '.github/workflows/yesenin-part-one-public-candidate-export.yml'
   workflow_dispatch:
 
 permissions:
