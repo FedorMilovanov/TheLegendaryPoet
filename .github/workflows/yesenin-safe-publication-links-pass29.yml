@@ -1,0 +1,46 @@
+name: Yesenin safe publication links pass 29
+
+on:
+  push:
+    branches:
+      - research/outreach-safe-publication-pass29
+    paths:
+      - 'scripts/verify-yesenin-safe-publication-links-pass29.mjs'
+      - 'research/yesenin/PART_ONE_SAFE_PUBLICATION_LINK_MARATHON_PASS29_2026-07-26.md'
+      - 'research/yesenin/OUTREACH_REGISTER_2026-07-26.md'
+      - '.github/workflows/yesenin-safe-publication-links-pass29.yml'
+  pull_request:
+    paths:
+      - 'scripts/verify-yesenin-safe-publication-links-pass29.mjs'
+      - 'research/yesenin/PART_ONE_SAFE_PUBLICATION_LINK_MARATHON_PASS29_2026-07-26.md'
+      - 'research/yesenin/OUTREACH_REGISTER_2026-07-26.md'
+      - '.github/workflows/yesenin-safe-publication-links-pass29.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sixty-route-link-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify sixty publication and research routes
+        env:
+          LINK_TIMEOUT_MS: '18000'
+          LINK_CONCURRENCY: '6'
+        run: node scripts/verify-yesenin-safe-publication-links-pass29.mjs
+      - name: Upload exact route evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-safe-publication-links-pass29
+          path: artifacts/yesenin-safe-publication-links-pass29.json
+          if-no-files-found: error
+          retention-days: 30
