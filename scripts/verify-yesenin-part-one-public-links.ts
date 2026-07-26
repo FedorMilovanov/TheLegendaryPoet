@@ -7,7 +7,6 @@ interface Route {
   institution: string;
   url: string;
   kind: string;
-  rightsPage?: boolean;
 }
 
 interface Result extends Route {
@@ -18,7 +17,6 @@ interface Result extends Route {
   reachable: boolean;
   hardFailure: boolean;
   accessState: string;
-  rightsConfirmed: boolean;
   error?: string;
 }
 
@@ -28,19 +26,10 @@ const sourceRoutes: Route[] = (yeseninPartOnePublic.sources ?? []).map((source) 
   url: source.url ?? '',
   kind: source.kind,
 }));
-const routes: Route[] = [
-  ...sourceRoutes,
-  {
-    id: 'yesenin-part-one-cover-rights',
-    institution: 'Wikimedia Commons',
-    url: yeseninPartOnePublic.coverSourceUrl ?? '',
-    kind: 'rights',
-    rightsPage: true,
-  },
-];
+const routes = sourceRoutes;
 
-if (sourceRoutes.length !== 64 || routes.length !== 65) {
-  throw new Error(`expected 64 sources plus one rights page, found ${sourceRoutes.length}/${routes.length}`);
+if (sourceRoutes.length !== 64 || routes.length !== 64) {
+  throw new Error(`expected 64 public source routes, found ${sourceRoutes.length}/${routes.length}`);
 }
 const ids = new Set<string>();
 const urls = new Set<string>();
@@ -55,13 +44,12 @@ for (const route of routes) {
 const defaultTimeoutMs = Number(process.env.LINK_TIMEOUT_MS || 30_000);
 const concurrency = Number(process.env.LINK_CONCURRENCY || 3);
 const sleep = (milliseconds: number) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
-const userAgent = 'TheLegendaryPoet-Public-Part-One-Link-Audit/1 (+https://thelegendarypoet.ru)';
-const rightsMarker = /Public domain|PD-RusEmpire|This work was published on territory of the Russian Empire/i;
+const userAgent = 'TheLegendaryPoet-Public-Part-One-Link-Audit/2 (+https://thelegendarypoet.ru)';
 
 async function request(route: Route, attempt = 1): Promise<Result> {
   const slowHost = /rusneb\.ru|imli\.ru/i.test(route.url);
-  const maximumAttempts = slowHost ? 3 : 2;
-  const timeoutMs = slowHost ? Math.max(defaultTimeoutMs, 45_000) : defaultTimeoutMs;
+  const maximumAttempts = slowHost ? 4 : 2;
+  const timeoutMs = slowHost ? Math.max(defaultTimeoutMs, 60_000) : defaultTimeoutMs;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -79,7 +67,6 @@ async function request(route: Route, attempt = 1): Promise<Result> {
     const status = response.status;
     const reachable = (status >= 200 && status < 400) || [401, 403, 429].includes(status);
     const hardFailure = status === 404 || status === 410 || status >= 500;
-    const rightsConfirmed = !route.rightsPage || (status >= 200 && status < 400 && rightsMarker.test(text));
     return {
       ...route,
       attempt,
@@ -88,7 +75,6 @@ async function request(route: Route, attempt = 1): Promise<Result> {
       bytes: Buffer.byteLength(text),
       reachable,
       hardFailure,
-      rightsConfirmed,
       accessState:
         status >= 200 && status < 400
           ? 'open-response'
@@ -100,7 +86,7 @@ async function request(route: Route, attempt = 1): Promise<Result> {
     };
   } catch (error) {
     if (attempt < maximumAttempts) {
-      await sleep(1_500 * attempt);
+      await sleep(2_000 * attempt);
       return request(route, attempt + 1);
     }
     return {
@@ -111,7 +97,6 @@ async function request(route: Route, attempt = 1): Promise<Result> {
       bytes: 0,
       reachable: false,
       hardFailure: true,
-      rightsConfirmed: false,
       accessState: 'network-failure',
       error: error instanceof Error ? error.message : String(error),
     };
@@ -138,7 +123,6 @@ async function runPool(items: Route[], workerCount: number): Promise<Result[]> {
 
 const results = await runPool(routes, concurrency);
 const hardFailures = results.filter((result) => result.hardFailure || !result.reachable);
-const rightsFailures = results.filter((result) => result.rightsPage && !result.rightsConfirmed);
 const report = {
   generatedAt: new Date().toISOString(),
   routeCount: results.length,
@@ -146,14 +130,15 @@ const report = {
   openResponseCount: results.filter((result) => result.accessState === 'open-response').length,
   restrictedResponseCount: results.filter((result) => result.accessState.startsWith('reachable-')).length,
   hardFailureCount: hardFailures.length,
-  coverRightsConfirmed: rightsFailures.length === 0,
+  coverRightsConfirmed: true,
+  coverPolicy: 'Local editorial reconstruction; exact file integrity is enforced by the publication-boundary validator.',
   policy: {
     redirectsAccepted: true,
     accessRestrictedAcceptedAsReachable: true,
     notFoundAndGoneRejected: true,
     stableServerErrorsRejected: true,
     cataloguePageDoesNotProveUnseenContent: true,
-    coverRightsMarkerRequired: 'Public domain / PD-RusEmpire',
+    coverRightsMarkerRequired: 'not applicable: local editorial reconstruction',
   },
   results,
 };
@@ -166,11 +151,11 @@ writeFileSync(
 );
 
 console.log(
-  `Part I public links: ${results.length} routes, ${hardFailures.length} hard failures, rights=${report.coverRightsConfirmed}`,
+  `Part I public links: ${results.length} source routes, ${hardFailures.length} hard failures; local cover integrity is validated separately`,
 );
-if (hardFailures.length > 0 || rightsFailures.length > 0) {
-  for (const result of [...hardFailures, ...rightsFailures]) {
-    console.error(`FAIL ${result.id}: status=${result.status ?? 'ERR'} rights=${result.rightsConfirmed} ${result.url}`);
+if (hardFailures.length > 0) {
+  for (const result of hardFailures) {
+    console.error(`FAIL ${result.id}: status=${result.status ?? 'ERR'} ${result.url}`);
   }
   process.exitCode = 1;
 }

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { essays, getEssayBySlug } from '../src/data/essays/index';
 import type { EssayBlock } from '../src/types/essay';
 
@@ -86,24 +88,31 @@ for (const block of article.blocks) {
   }
 }
 
+const expectedCover = '/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp';
+const expectedCoverSha256 = '29c84251741438878fc89ed6f691e1d6e510f6735a9cea502489d73cfdd6a659';
+if (article.cover !== expectedCover) throw new Error('unexpected cover file');
+if (article.cardCover !== expectedCover) throw new Error('card cover diverges from the approved cover');
+if (article.coverKind !== 'reconstruction') throw new Error('cover must remain labelled as a reconstruction');
+if (article.coverSourceUrl) throw new Error('local editorial reconstruction must not claim an external source page');
+if (!article.coverCredit?.includes('редакционная реконструкция')) {
+  throw new Error('cover credit lost the reconstruction disclosure');
+}
+const coverSha256 = createHash('sha256')
+  .update(readFileSync(`public${expectedCover}`))
+  .digest('hex');
+if (coverSha256 !== expectedCoverSha256) throw new Error(`approved cover bytes changed: ${coverSha256}`);
+
 const allowedImageHostnames = new Set(['cdn.loc.gov', 'tile.loc.gov']);
-for (const [label, imageUrl, itemUrl, credit] of [
-  ['cover', article.cover, article.coverSourceUrl, article.coverCredit],
-  ...imageBlocks.map((block, index) => [
-    `image-${index + 1}`,
-    block.src,
-    block.sourceUrl,
-    block.credit,
-  ]),
-] as Array<[string, string, string | undefined, string | undefined]>) {
-  const image = new URL(imageUrl);
+for (const [index, block] of imageBlocks.entries()) {
+  const label = `image-${index + 1}`;
+  const image = new URL(block.src);
   if (!allowedImageHostnames.has(image.hostname)) {
     throw new Error(`${label} uses a non-approved image host: ${image.hostname}`);
   }
-  if (!itemUrl?.startsWith('https://www.loc.gov/')) {
+  if (!block.sourceUrl?.startsWith('https://www.loc.gov/')) {
     throw new Error(`${label} has no exact Library of Congress item page`);
   }
-  if (!credit?.includes('No known restrictions on publication')) {
+  if (!block.credit?.includes('No known restrictions on publication')) {
     throw new Error(`${label} is missing the exact LOC rights advisory`);
   }
 }
@@ -115,13 +124,10 @@ for (const block of imageBlocks) {
   }
 }
 
-if (!article.coverSourceUrl?.includes('/pictures/item/2014685647/')) {
-  throw new Error('cover must remain anchored to the accepted Bain News Service LOC item');
-}
 if (!imageBlocks[0].sourceUrl?.includes('/pictures/item/2018708234/')) {
   throw new Error('in-body visual must remain anchored to the accepted Genthe LOC item');
 }
 
 console.log(
-  `yesenin-duncan safe publication: ${sectionCount} sections, ${readerTextBlocks} text blocks, ${sources.length} sources, ${imageBlocks.length + 1} LOC visuals`,
+  `yesenin-duncan safe publication: ${sectionCount} sections, ${readerTextBlocks} text blocks, ${sources.length} sources, approved local reconstruction=${coverSha256}, ${imageBlocks.length} LOC in-body visual`,
 );
