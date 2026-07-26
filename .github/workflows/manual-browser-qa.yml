@@ -89,6 +89,7 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
+          qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           --config=playwright.config.mjs
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
