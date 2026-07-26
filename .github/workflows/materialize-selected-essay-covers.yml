@@ -7,13 +7,21 @@ on:
     paths:
       - '.cover-upload/**'
       - '.github/workflows/materialize-selected-essay-covers.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.cover-upload/**'
+      - '.github/workflows/materialize-selected-essay-covers.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   materialize:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
