@@ -6,7 +6,7 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260726-8';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-19';
+const VECTOR_SOURCE = 'reference-derived-contours-v8-20';
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -19,7 +19,7 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('v8.19 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
+test('v8.20 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
@@ -46,18 +46,18 @@ test('v8.19 vector system, optical favicon and platform metadata are coherent', 
   expect(standalone).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
   expect(standalone).toContain('id="mist"');
   expect(standalone).toContain('id="glow"');
-  expect(standalone).toContain('M48 41.4C36.8 40.8');
-  expect(standalone).toContain('M48 5C40 7.6');
-  expect(standalone).toContain('M48.1 17.6C40.3 18');
-  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(77);
+  expect(standalone).toContain('M47.8 41.8C36.6 40.7');
+  expect(standalone).toContain('M46.9 4.3C40.3 7.4');
+  expect(standalone).toContain('M47.5 17.8C40.3 18.2');
+  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(80);
 
   const micro = sources.get('brand-mark-micro.svg');
   expect(micro).toContain('viewBox="0 0 32 32"');
   expect(micro).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
-  expect(micro).toContain('M16 13.7C12.3 13.5');
-  expect(micro).toContain('M16 1.8C13.7 2.7');
-  expect(micro).toContain('M16.1 5.7C13.8 5.8');
-  expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(17);
+  expect(micro).toContain('M15.9 13.8C12.1 13.5');
+  expect(micro).toContain('M15.7 1.7C13.5 2.7');
+  expect(micro).toContain('M15.9 5.7C13.7 5.8');
+  expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(20);
 
   for (const [asset, size] of [
     ['brand-emblem-master.webp', { width: 320, height: 320 }],
@@ -96,7 +96,7 @@ test('standalone and micro marks decode at every optical size', async ({ page })
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('header renders the reference-shaped v8.19 vector and restrained hover', async ({ page }) => {
+test('header renders the asymmetric v8.20 textile vector and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -106,7 +106,7 @@ test('header renders the reference-shaped v8.19 vector and restrained hover', as
   await expect(mark).toHaveAttribute('data-brand-version', VERSION);
   await expect(mark).toHaveAttribute('data-brand-renderer', 'inline-vector');
   await expect(mark).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
-  for (const hook of ['vector', 'figure', 'hood', 'cloak', 'face-void', 'rim-light', 'folds', 'collar', 'energy', 'atmosphere', 'texture']) await expect(mark.locator(`[data-brand-${hook}]`)).toBeVisible();
+  for (const hook of ['vector', 'figure', 'hood', 'cloak', 'face-void', 'rim-light', 'folds', 'collar', 'energy', 'atmosphere', 'texture', 'seams']) await expect(mark.locator(`[data-brand-${hook}]`)).toBeVisible();
   expect(await mark.locator('image, rect, [data-brand-light-core], [data-brand-fallback], [data-brand-book], [data-brand-wing], [data-brand-halo]').count()).toBe(0);
 
   const box = await mark.boundingBox();
@@ -124,27 +124,27 @@ test('header renders the reference-shaped v8.19 vector and restrained hover', as
     return { hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width, faceToHoodWidth: face.width / hood.width, faceToHoodHeight: face.height / hood.height, cloakToHoodWidth: cloak.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height };
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(54.2);
-  expect(geometry.hoodWidth).toBeLessThan(55);
-  expect(geometry.faceWidth).toBeGreaterThan(32.2);
-  expect(geometry.faceWidth).toBeLessThan(33);
-  expect(geometry.cloakWidth).toBeGreaterThan(94.4);
-  expect(geometry.cloakWidth).toBeLessThan(95.2);
-  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.58);
-  expect(geometry.faceToHoodWidth).toBeLessThan(0.62);
-  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.75);
-  expect(geometry.faceToHoodHeight).toBeLessThan(0.8);
-  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.72);
-  expect(geometry.cloakToHoodWidth).toBeLessThan(1.76);
-  expect(geometry.hoodTop).toBeGreaterThan(4.8);
-  expect(geometry.hoodTop).toBeLessThan(5.2);
+  expect(geometry.hoodWidth).toBeGreaterThan(54.8);
+  expect(geometry.hoodWidth).toBeLessThan(55.7);
+  expect(geometry.faceWidth).toBeGreaterThan(31.8);
+  expect(geometry.faceWidth).toBeLessThan(32.7);
+  expect(geometry.cloakWidth).toBeGreaterThan(94.7);
+  expect(geometry.cloakWidth).toBeLessThan(95.7);
+  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.57);
+  expect(geometry.faceToHoodWidth).toBeLessThan(0.6);
+  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.72);
+  expect(geometry.faceToHoodHeight).toBeLessThan(0.76);
+  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.7);
+  expect(geometry.cloakToHoodWidth).toBeLessThan(1.75);
+  expect(geometry.hoodTop).toBeGreaterThan(3.6);
+  expect(geometry.hoodTop).toBeLessThan(4.5);
   expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.9);
 
   const readState = () => mark.evaluate((node) => {
     const read = (selector) => { const element = node.querySelector(selector); if (!element) return null; const style = getComputedStyle(element); return { opacity: Number(style.opacity), transform: style.transform, filter: style.filter }; };
     const rimPath = node.querySelector('[data-brand-rim-light] path');
     const rimStyle = rimPath ? getComputedStyle(rimPath) : null;
-    return { vector: read('[data-brand-vector]'), rim: read('[data-brand-rim-light]'), folds: read('[data-brand-folds]'), energy: read('[data-brand-energy]'), atmosphere: read('[data-brand-atmosphere]'), rimDash: rimStyle ? { array: rimStyle.strokeDasharray, offset: rimStyle.strokeDashoffset } : null };
+    return { vector: read('[data-brand-vector]'), rim: read('[data-brand-rim-light]'), folds: read('[data-brand-folds]'), energy: read('[data-brand-energy]'), atmosphere: read('[data-brand-atmosphere]'), seams: read('[data-brand-seams]'), rimDash: rimStyle ? { array: rimStyle.strokeDasharray, offset: rimStyle.strokeDashoffset } : null };
   });
 
   const before = await readState();
@@ -158,19 +158,16 @@ test('header renders the reference-shaped v8.19 vector and restrained hover', as
   expect(after.rim?.opacity).toBeGreaterThan(before.rim?.opacity ?? 0);
   expect(after.energy?.opacity).toBeGreaterThan(before.energy?.opacity ?? 0);
   expect(after.atmosphere?.opacity).toBeGreaterThan(before.atmosphere?.opacity ?? 0);
+  expect(after.seams?.opacity).toBeGreaterThan(before.seams?.opacity ?? 0);
   expect(after.rimDash).not.toEqual(before.rimDash);
   expect(pageErrors).toEqual([]);
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the v8.19 vector emblem`, async ({ page }) => {
+  test(`${route}: header and footer use the v8.20 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
-
-    const marks = [
-      page.locator('header [data-brand-mark]').first(),
-      page.locator('footer [data-brand-mark]').first(),
-    ];
+    const marks = [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()];
     for (const mark of marks) {
       await expect(mark).toBeAttached();
       await expect(mark).toHaveAttribute('data-brand-version', VERSION);
