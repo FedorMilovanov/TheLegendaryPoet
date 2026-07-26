@@ -1,0 +1,110 @@
+name: Materialize selected essay covers
+
+on:
+  push:
+    branches:
+      - agent/publish-selected-yesenin-covers
+    paths:
+      - '.cover-upload/**'
+      - '.github/workflows/materialize-selected-essay-covers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout cover branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/publish-selected-yesenin-covers
+          fetch-depth: 0
+
+      - name: Decode and verify selected artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/images/essays/yesenin
+          cat .cover-upload/yesenin-part-1/*.b64 | base64 --decode > public/images/essays/yesenin/yesenin-part-1-editorial.webp
+          cat .cover-upload/yesenin-duncan/*.b64 | base64 --decode > public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
+          echo '85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860  public/images/essays/yesenin/yesenin-part-1-editorial.webp' | sha256sum -c -
+          echo '29c84251741438878fc89ed6f691e1d6e510f6735a9cea502489d73cfdd6a659  public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp' | sha256sum -c -
+          file public/images/essays/yesenin/yesenin-part-1-editorial.webp
+          file public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
+
+      - name: Point essays at approved local reconstructions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          part = Path('src/data/essays/yeseninPartOnePublic.ts')
+          text = part.read_text(encoding='utf-8')
+          replacements = {
+              '  "cover": "https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg",':
+                  '  "cover": "/images/essays/yesenin/yesenin-part-1-editorial.webp",',
+              '  "cardCover": "https://upload.wikimedia.org/wikipedia/commons/d/de/Esenin1914.jpg",':
+                  '  "cardCover": "/images/essays/yesenin/yesenin-part-1-editorial.webp",',
+              '  "coverAlt": "Сергей Александрович Есенин в 1914 году",':
+                  '  "coverAlt": "Молодой Сергей Есенин у письменного стола — редакционная кинематографическая реконструкция раннего периода",',
+              '  "coverKind": "archive",':
+                  '  "coverKind": "reconstruction",',
+              '  "coverCredit": "Сергей Есенин, 1914 · Wikimedia Commons · Public domain (PD-RusEmpire; pre-1931 publication in the United States)",':
+                  '  "coverCredit": "THE LEGENDARY POET · редакционная реконструкция на основе предоставленных портретных референсов",',
+              '  "coverSourceUrl": "https://commons.wikimedia.org/wiki/File:Esenin1914.jpg",\n': '',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Part I metadata marker missing: {old}')
+              text = text.replace(old, new, 1)
+          part.write_text(text, encoding='utf-8')
+
+          duncan = Path('src/data/essays/yeseninDuncanFirstMeeting.ts')
+          text = duncan.read_text(encoding='utf-8')
+          replacements = {
+              "  cover: 'https://cdn.loc.gov/service/pnp/ggbain/05600/05654v.jpg',":
+                  "  cover: '/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp',",
+              "  cardCover: 'https://cdn.loc.gov/service/pnp/ggbain/05600/05654v.jpg',":
+                  "  cardCover: '/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp',",
+              "  coverAlt: 'Айседора Дункан. Фотография Bain News Service, начало XX века',":
+                  "  coverAlt: 'Сергей Есенин и Айседора Дункан в мастерской московского художника — редакционная реконструкция первой встречи',",
+              "  coverKind: 'archive',":
+                  "  coverKind: 'reconstruction',",
+              "  coverCredit:\n    'Bain News Service · Library of Congress · LC-DIG-ggbain-05654 · No known restrictions on publication',":
+                  "  coverCredit:\n    'THE LEGENDARY POET · редакционная реконструкция на основе предоставленных портретных референсов',",
+              "  coverSourceUrl: 'https://www.loc.gov/pictures/item/2014685647/',\n": '',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Duncan metadata marker missing: {old}')
+              text = text.replace(old, new, 1)
+          duncan.write_text(text, encoding='utf-8')
+
+          audit = Path('docs/ESSAY_COVER_AUDIT_2026-07-26.md')
+          text = audit.read_text(encoding='utf-8')
+          replacements = {
+              'У всех шести публичных исследований есть рабочая hero-обложка, карточная обложка и alt-текст. Четыре материала уже используют самостоятельные локальные редакционные изображения. Два материала законно опубликованы с архивным изображением, но требуют отдельной кинематографической обложки для единого премиального каталога.':
+                  'У всех шести публичных исследований есть рабочая локальная hero-обложка, карточная обложка и alt-текст. После ручного выбора владельцем проекта обе статьи о Есенине получили самостоятельные кинематографические редакционные реконструкции.',
+              '| Сергей Есенин. Часть I: 1895–1921 | один удалённый архивный портрет для hero и card | заменить |':
+                  '| Сергей Есенин. Часть I: 1895–1921 | локальная кинематографическая реконструкция | готово |',
+              '| Есенин и Айседора Дункан: первая встреча | один удалённый портрет Дункан для hero и card | заменить |':
+                  '| Есенин и Айседора Дункан: первая встреча | локальная кинематографическая реконструкция | готово |',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Audit marker missing: {old}')
+              text = text.replace(old, new, 1)
+          audit.write_text(text, encoding='utf-8')
+
+      - name: Remove transport chunks and commit production files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .cover-upload
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'assets(essays): publish selected Yesenin cover artwork'
+          git push origin HEAD:agent/publish-selected-yesenin-covers
