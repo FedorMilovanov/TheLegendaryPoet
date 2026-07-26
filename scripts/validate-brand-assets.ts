@@ -88,7 +88,7 @@ assert.match(component, /useReducedMotion\(\)/, 'BrandMark must respect reduced 
 for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure', 'data-brand-hood', 'data-brand-cloak', 'data-brand-face-void', 'data-brand-rim-light', 'data-brand-folds', 'data-brand-collar', 'data-brand-atmosphere', 'data-brand-energy', 'data-brand-texture']) assert.match(component, new RegExp(hook), `${hook} is missing`);
 assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
-assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-6"/, 'v8.6 contour provenance is missing');
+assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-7"/, 'v8.7 contour provenance is missing');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept its parent link');
 assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger footprint');
 assert.match(component, /const cloakPath = 'M48 41\.2C37\.2 40\.8/, 'runtime mantle geometry changed');
@@ -96,18 +96,18 @@ assert.match(component, /const hoodPath = 'M48 7\.5C42 9\.5/, 'runtime hood geom
 assert.match(component, /const voidPath = 'M48\.2 20\.7C42\.6 20\.9/, 'runtime face void geometry changed');
 assert.match(component, /const foldPaths = \[/, 'runtime fold system is missing');
 assert.match(component, /const rimPaths = \[/, 'runtime broken-rim system is missing');
-assert.ok((component.match(/\['M/g) || []).length >= 40, 'runtime SVG lost layered path data');
+assert.ok((component.match(/\['M/g) || []).length >= 45, 'runtime SVG lost layered path data');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,/i, 'BrandMark embeds raster artwork');
 assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|coreGradientId|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
 
 assertCompleteSvg(standaloneSvg, 'public/brand-emblem.svg', '0 0 96 96');
-assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-6"/, 'standalone contour provenance is missing');
+assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-7"/, 'standalone contour provenance is missing');
 assert.match(standaloneSvg, /id="mist"/, 'standalone SVG lost atmospheric depth');
 assert.match(standaloneSvg, /id="glow"/, 'standalone SVG lost contour glow');
 assert.match(standaloneSvg, /M48 41\.2C37\.2 40\.8/, 'standalone mantle geometry changed');
 assert.match(standaloneSvg, /M48 7\.5C42 9\.5/, 'standalone hood geometry changed');
 assert.match(standaloneSvg, /M48\.2 20\.7C42\.6 20\.9/, 'standalone face void changed');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 52, 'standalone SVG lost layered path depth');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 57, 'standalone SVG lost layered path depth');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
 
 assertCompleteSvg(microSvg, 'public/brand-mark-micro.svg', '0 0 32 32');
@@ -145,6 +145,6 @@ const expectedPngSizes: Record<string, { width: number; height: number }> = { 'p
 const minimumPngBytes: Record<string, number> = { 'public/favicon-16.png': 250, 'public/favicon-32.png': 500, 'public/apple-touch-icon.png': 5_000, 'public/icon-192.png': 5_000, 'public/icon-512.png': 20_000, 'public/icon-maskable-512.png': 20_000, 'public/mstile-150x150.png': 5_000 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) { assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`); assert.ok(fs.statSync(path.resolve(file)).size >= minimumPngBytes[file], `${file}: generated asset is unexpectedly small`); }
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
-assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
+assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share image is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
-console.log('brand validation: v8.6 narrow reference-proportioned hood, subdued cowl, optical micro mark and platform fallbacks are consistent');
+console.log('brand validation: v8.7 near-black reference-proportioned cloth, restrained cowl, layered seams and platform fallbacks are consistent');
