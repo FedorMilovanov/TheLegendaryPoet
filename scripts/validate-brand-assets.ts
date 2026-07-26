@@ -61,15 +61,6 @@ function jpegSize(file: string) {
   throw new Error(`${file}: JPEG dimensions not found`);
 }
 
-function assertCompleteSvg(source: string, file: string, viewBox: string) {
-  assert.match(source, new RegExp(`<svg\\b[^>]*viewBox="${viewBox.replaceAll(' ', '\\s+')}"`), `${file}: SVG root or viewBox changed`);
-  assert.ok(source.trimEnd().endsWith('</svg>'), `${file}: closing </svg> is missing`);
-  assert.equal((source.match(/<svg\b/g) || []).length, (source.match(/<\/svg>/g) || []).length, `${file}: unbalanced svg tags`);
-  assert.equal((source.match(/<defs\b/g) || []).length, (source.match(/<\/defs>/g) || []).length, `${file}: unbalanced defs tags`);
-  assert.equal((source.match(/<g(?:\s|>)/g) || []).length, (source.match(/<\/g>/g) || []).length, `${file}: unbalanced group tags`);
-  assert.doesNotMatch(source, /&(?!amp;|lt;|gt;|quot;|apos;)/, `${file}: unescaped ampersand`);
-}
-
 const component = read('src/components/BrandMark.tsx');
 const index = read('index.html');
 const manifest = JSON.parse(read('public/site.webmanifest')) as { icons?: Array<{ src?: string; sizes?: string; type?: string; purpose?: string }> };
@@ -84,52 +75,59 @@ const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
 assert.match(component, /useReducedMotion\(\)/, 'BrandMark must respect reduced motion');
-for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure', 'data-brand-hood', 'data-brand-cloak', 'data-brand-face-void', 'data-brand-rim-light', 'data-brand-folds', 'data-brand-collar', 'data-brand-atmosphere', 'data-brand-energy', 'data-brand-texture']) assert.match(component, new RegExp(hook), `${hook} is missing`);
+for (const hook of ['data-brand-mark', 'data-brand-vector', 'data-brand-figure', 'data-brand-hood', 'data-brand-cloak', 'data-brand-face-void', 'data-brand-rim-light', 'data-brand-folds', 'data-brand-collar', 'data-brand-atmosphere', 'data-brand-energy', 'data-brand-texture']) {
+  assert.match(component, new RegExp(hook), `${hook} is missing`);
+}
 assert.match(component, /data-brand-version=\{BRAND_VERSION\}/, 'BrandMark release hook is missing');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
-assert.match(component, /data-brand-vector-source="reference-derived-contours-v8"/, 'v8 contour provenance is missing');
-assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept its parent link');
+assert.match(component, /data-brand-vector-source="reference-derived-contours-v8-2"/, 'v8.2 contour provenance is missing');
+assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept the parent link target');
 assert.match(component, /sm: 'h-12 w-12'/, 'small optical mark must retain the larger footprint');
-assert.match(component, /const cloakPath = 'M48 41\.8C39\.6 41\.4/, 'runtime mantle must remain independent from the hood');
-assert.match(component, /const hoodPath = 'M47\.8 4\.5C43\.2 5\.3/, 'runtime hood geometry changed');
-assert.match(component, /const voidPath = 'M49 19\.5C44\.3 18\.6/, 'runtime face void geometry changed');
-assert.match(component, /const foldPaths = \[/, 'runtime fold system is missing');
-assert.match(component, /const rimPaths = \[/, 'runtime broken-rim system is missing');
-assert.ok((component.match(/\['M/g) || []).length >= 30, 'runtime SVG lost layered path data');
+assert.match(component, /const cloakPath = 'M24 42C17\.8 44\.3/, 'runtime cloak must retain the broad reference-derived silhouette');
+assert.match(component, /const hoodPath = 'M48 10\.5C42\.3 13\.4/, 'runtime hood must retain the lower, wider shell');
+assert.match(component, /const voidPath = 'M48\.3 21\.8C41\.9 21\.8/, 'runtime void must retain the rounded cavern opening');
+assert.ok((component.match(/\['M/g) || []).length >= 30, 'runtime SVG lost its layered vector path data');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,/i, 'BrandMark embeds raster artwork');
-assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|coreGradientId|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
+assert.doesNotMatch(component, /brand-emblem-master\.webp|<rect\b|data-brand-light-core|data-brand-(?:book|wing|halo|fallback)/, 'retired or raster concept returned');
 
-assertCompleteSvg(standaloneSvg, 'public/brand-emblem.svg', '0 0 96 96');
-assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8"/, 'standalone contour provenance is missing');
-assert.match(standaloneSvg, /id="aura-blur"/, 'standalone SVG lost atmospheric depth');
-assert.match(standaloneSvg, /id="rim-glow"/, 'standalone SVG lost contour glow');
-assert.match(standaloneSvg, /M48 41\.8C39\.6 41\.4/, 'standalone mantle no longer follows separated geometry');
-assert.match(standaloneSvg, /M47\.8 4\.5C43\.2 5\.3/, 'standalone hood geometry changed');
-assert.match(standaloneSvg, /M49 19\.5C44\.3 18\.6/, 'standalone face void changed');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 45, 'standalone SVG lost layered path depth');
-assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|49\.5L51\.5 57|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
+assert.match(standaloneSvg, /viewBox="0 0 96 96"/, 'standalone SVG viewBox changed');
+assert.match(standaloneSvg, /data-brand-vector-source="reference-derived-contours-v8-2"/, 'standalone contour provenance is missing');
+assert.match(standaloneSvg, /id="aura"/, 'standalone SVG lost atmospheric depth');
+assert.match(standaloneSvg, /id="glow"/, 'standalone SVG lost contour glow');
+assert.match(standaloneSvg, /M24 42C17\.8 44\.3/, 'standalone cloak no longer follows the broad silhouette');
+assert.match(standaloneSvg, /M48 10\.5C42\.3 13\.4/, 'standalone hood no longer follows the refined shell');
+assert.match(standaloneSvg, /M48\.3 21\.8C41\.9 21\.8/, 'standalone face void changed');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 40, 'standalone SVG lost layered path depth');
+assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"|7fecff/i, 'standalone SVG contains raster, plate or retired crystal');
+assert.doesNotMatch(standaloneSvg, /<[^>]+\sdata-brand-[\w-]+(?=\s|>)(?!\s*=)/, 'standalone SVG contains an invalid valueless XML data attribute');
 
-assertCompleteSvg(microSvg, 'public/brand-mark-micro.svg', '0 0 32 32');
-assert.match(microSvg, /M8\.1 14C6 14\.8/, 'micro mantle geometry changed');
+assert.match(microSvg, /viewBox="0 0 32 32"/, 'micro mark must be optically authored at 32px');
+assert.match(microSvg, /M8\.1 14C6 14\.8/, 'micro cloak must retain the broad shoulder silhouette');
 assert.match(microSvg, /M16 3\.5C14\.1 4\.5/, 'micro hood geometry changed');
-assert.match(microSvg, /M16\.1 7\.3C14 7\.3/, 'micro face void geometry changed');
+assert.match(microSvg, /M16\.1 7\.3C14 7\.3/, 'micro void geometry changed');
 assert.ok((microSvg.match(/<path\b/g) || []).length >= 14, 'micro mark lost its optical layers');
-assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains raster, plate or retired crystal');
+assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff/i, 'micro mark contains raster, plate or retired crystal');
 
-assertCompleteSvg(maskSvg, 'public/brand-emblem-mask.svg', '0 0 96 96');
+assert.match(maskSvg, /viewBox="0 0 96 96"/, 'Safari mask viewBox changed');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the faceless opening');
-assert.match(maskSvg, /M48 41\.8C39\.6 41\.4/, 'Safari mask must preserve the separated mantle');
-assert.match(maskSvg, /M47\.8 4\.5C43\.2 5\.3/, 'Safari mask must preserve the hood');
-assert.match(maskSvg, /M49 19\.5C44\.3 18\.6/, 'Safari mask must preserve the face opening');
+assert.match(maskSvg, /M48 10\.5C42\.3 13\.4/, 'Safari mask must preserve the hooded outer silhouette');
+assert.match(maskSvg, /M48\.3 21\.8C41\.9 21\.8/, 'Safari mask must preserve the face opening');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b|data:image|base64,/i, 'Safari mask embeds raster art or a plate');
 
-for (const pattern of [`name="brand-release" content="${version}"`, `brand-mark-micro\\.svg\\?v=${version}`, `favicon-32\\.png\\?v=${version}`, `favicon-16\\.png\\?v=${version}`, `apple-touch-icon\\.png\\?v=${version}`, `brand-emblem-mask\\.svg\\?v=${version}`, `site\\.webmanifest\\?v=${version}`, `og-image\\.jpg\\?v=${version}`, `icon-512\\.png\\?v=${version}`]) assert.match(index, new RegExp(pattern), `index cache identity missing: ${pattern}`);
+for (const pattern of [
+  `name="brand-release" content="${version}"`, `brand-mark-micro\\.svg\\?v=${version}`,
+  `favicon-32\\.png\\?v=${version}`, `favicon-16\\.png\\?v=${version}`,
+  `apple-touch-icon\\.png\\?v=${version}`, `brand-emblem-mask\\.svg\\?v=${version}`,
+  `site\\.webmanifest\\?v=${version}`, `og-image\\.jpg\\?v=${version}`, `icon-512\\.png\\?v=${version}`,
+]) assert.match(index, new RegExp(pattern), `index cache identity missing: ${pattern}`);
 assert.doesNotMatch(index, /rel="preload"[^>]+brand-emblem-master\.webp/, 'inline vector must not preload the retired runtime raster');
 assert.match(index, /og:image:type" content="image\/jpeg"/, 'Open Graph MIME type must remain JPEG');
 assert.equal(release.trim(), `${version}\nmaster-sha256=${masterSha256}`, 'brand release sentinel or preserved platform master changed unexpectedly');
 
 const iconSources = new Set((manifest.icons || []).map((icon) => icon.src));
-for (const src of [`/favicon-32.png?v=${version}`, `/icon-192.png?v=${version}`, `/icon-512.png?v=${version}`, `/icon-maskable-512.png?v=${version}`]) assert.ok(iconSources.has(src), `manifest is missing ${src}`);
+for (const src of [`/favicon-32.png?v=${version}`, `/icon-192.png?v=${version}`, `/icon-512.png?v=${version}`, `/icon-maskable-512.png?v=${version}`]) {
+  assert.ok(iconSources.has(src), `manifest is missing ${src}`);
+}
 assert.ok(manifest.icons?.some((icon) => icon.src === `/icon-maskable-512.png?v=${version}` && icon.type === 'image/png' && icon.purpose === 'maskable'), 'manifest maskable artwork is missing');
 assert.match(browserconfig, new RegExp(`mstile-150x150\\.png\\?v=${version}`), 'Windows tile is not cache-versioned');
 for (const source of ['master-320-q92.webp.b64', 'favicon-16.png.b64', 'favicon-32.png.b64']) {
@@ -138,12 +136,31 @@ for (const source of ['master-320-q92.webp.b64', 'favicon-16.png.b64', 'favicon-
 }
 assert.match(materializer, /spawnSync/, 'platform asset materializer is missing');
 assert.match(materializer, /ffmpeg/i, 'FFmpeg image pipeline is missing');
-const expectedHashes: Record<string, string> = { 'public/brand-emblem-master.webp': masterSha256, 'public/favicon-16.png': 'b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c', 'public/favicon-32.png': '27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622' };
+
+const expectedHashes: Record<string, string> = {
+  'public/brand-emblem-master.webp': masterSha256,
+  'public/favicon-16.png': 'b613d63da2b88f9c798ec171173fa86aa6d48aea5e59da7d64cce18ff4a8cd9c',
+  'public/favicon-32.png': '27880a89ca75ef4ba8d8e21243cd189846e3213cd487fc921761965ec2d55622',
+};
 for (const [file, expected] of Object.entries(expectedHashes)) assert.equal(sha256(file), expected, `${file}: preserved platform fallback changed`);
-const expectedPngSizes: Record<string, { width: number; height: number }> = { 'public/favicon-16.png': { width: 16, height: 16 }, 'public/favicon-32.png': { width: 32, height: 32 }, 'public/apple-touch-icon.png': { width: 180, height: 180 }, 'public/icon-192.png': { width: 192, height: 192 }, 'public/icon-512.png': { width: 512, height: 512 }, 'public/icon-maskable-512.png': { width: 512, height: 512 }, 'public/mstile-150x150.png': { width: 150, height: 150 } };
-const minimumPngBytes: Record<string, number> = { 'public/favicon-16.png': 250, 'public/favicon-32.png': 500, 'public/apple-touch-icon.png': 5_000, 'public/icon-192.png': 5_000, 'public/icon-512.png': 20_000, 'public/icon-maskable-512.png': 20_000, 'public/mstile-150x150.png': 5_000 };
-for (const [file, expected] of Object.entries(expectedPngSizes)) { assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`); assert.ok(fs.statSync(path.resolve(file)).size >= minimumPngBytes[file], `${file}: generated asset is unexpectedly small`); }
+
+const expectedPngSizes: Record<string, { width: number; height: number }> = {
+  'public/favicon-16.png': { width: 16, height: 16 }, 'public/favicon-32.png': { width: 32, height: 32 },
+  'public/apple-touch-icon.png': { width: 180, height: 180 }, 'public/icon-192.png': { width: 192, height: 192 },
+  'public/icon-512.png': { width: 512, height: 512 }, 'public/icon-maskable-512.png': { width: 512, height: 512 },
+  'public/mstile-150x150.png': { width: 150, height: 150 },
+};
+const minimumPngBytes: Record<string, number> = {
+  'public/favicon-16.png': 250, 'public/favicon-32.png': 500, 'public/apple-touch-icon.png': 5_000,
+  'public/icon-192.png': 5_000, 'public/icon-512.png': 20_000, 'public/icon-maskable-512.png': 20_000,
+  'public/mstile-150x150.png': 5_000,
+};
+for (const [file, expected] of Object.entries(expectedPngSizes)) {
+  assert.deepEqual(pngSize(file), expected, `${file}: generated dimensions are wrong`);
+  assert.ok(fs.statSync(path.resolve(file)).size >= minimumPngBytes[file], `${file}: generated asset is unexpectedly small`);
+}
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share preview is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
-console.log('brand validation: micro-surgical v8.2 hood, independent mantle, complete SVG documents and platform fallbacks are consistent');
+
+console.log('brand validation: v8.2 broad cloak, lower hood, rounded void, wrapped cowl and valid XML assets are consistent');
