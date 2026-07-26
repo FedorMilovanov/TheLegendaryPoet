@@ -37,7 +37,15 @@ jobs:
           set -euo pipefail
           mkdir -p public/images/essays/yesenin
           cat .cover-upload/yesenin-part-1/*.b64 | base64 --decode > public/images/essays/yesenin/yesenin-part-1-editorial.webp
-          cat .cover-upload/yesenin-duncan/*.b64 | base64 --decode > public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
+          cat \
+            .cover-upload/yesenin-duncan/001.b64 \
+            .cover-upload/yesenin-duncan/002.b64 \
+            .cover-upload/yesenin-duncan/003.b64 \
+            .cover-upload/yesenin-duncan/004a.b64 \
+            .cover-upload/yesenin-duncan/004b.b64 \
+            .cover-upload/yesenin-duncan/005.b64 \
+            .cover-upload/yesenin-duncan/006.b64 \
+            | base64 --decode > public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
           echo '85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860  public/images/essays/yesenin/yesenin-part-1-editorial.webp' | sha256sum -c -
           echo '29c84251741438878fc89ed6f691e1d6e510f6735a9cea502489d73cfdd6a659  public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp' | sha256sum -c -
           file public/images/essays/yesenin/yesenin-part-1-editorial.webp
