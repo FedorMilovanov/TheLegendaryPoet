@@ -1,0 +1,73 @@
+name: Yesenin Part I safe publication
+
+on:
+  push:
+    branches:
+      - publish/yesenin-part-one-safe
+    paths:
+      - 'src/data/essays/yeseninPartOnePublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'scripts/validate-yesenin-part-one-safe-publication.ts'
+      - 'scripts/verify-yesenin-part-one-public-links.ts'
+      - 'public/sitemap.xml'
+      - '.github/workflows/yesenin-part-one-safe-publication.yml'
+  pull_request:
+    paths:
+      - 'src/data/essays/yeseninPartOnePublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'scripts/validate-yesenin-part-one-safe-publication.ts'
+      - 'scripts/verify-yesenin-part-one-public-links.ts'
+      - 'public/sitemap.xml'
+      - '.github/workflows/yesenin-part-one-safe-publication.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-build-and-audit-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate publication boundary
+        run: npx tsx scripts/validate-yesenin-part-one-safe-publication.ts
+      - name: Audit all 64 source links and cover rights page
+        env:
+          LINK_TIMEOUT_MS: '30000'
+          LINK_CONCURRENCY: '3'
+        run: npx tsx scripts/verify-yesenin-part-one-public-links.ts
+      - name: Upload exact public-link evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-public-links
+          path: artifacts/yesenin-part-one-public-links.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Validate all essays
+        run: npm run validate:essays
+      - name: Validate citation topology
+        run: npm run validate:citations
+      - name: Validate literary style
+        run: npm run validate:literary-style
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+      - name: Regenerate sitemap
+        run: npm run sitemap
+      - name: Require public route in sitemap
+        run: grep -F 'https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921' public/sitemap.xml
+      - name: Require stable generated output
+        run: git diff --exit-code -- public/sitemap.xml public/prerendered src/generated/brandArtifacts.ts
