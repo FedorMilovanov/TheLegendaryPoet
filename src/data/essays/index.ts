@@ -1,6 +1,7 @@
 import type { Essay, EssaySource } from '../../types/essay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
+import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -29,9 +30,12 @@ import {
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
   return sources.filter((source) => {
-    const key = source.url
-      ? source.url.replace(/^http:/, 'https:').replace(/\/$/, '')
-      : `${source.id ?? ''}:${source.title}`;
+    const secureUrl = source.url?.startsWith('http:')
+      ? `https:${source.url.slice(5)}`
+      : source.url;
+    const key = secureUrl?.endsWith('/')
+      ? secureUrl.slice(0, -1)
+      : secureUrl ?? `${source.id ?? ''}:${source.title}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -86,6 +90,7 @@ const brikCaseWithSourceLibrary: Essay = {
 
 export const essays: Essay[] = [
   yeseninWithArchiveLayer,
+  yeseninDuncanFirstMeetingPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
   brikCaseWithSourceLibrary,
