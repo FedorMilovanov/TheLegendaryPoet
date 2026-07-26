@@ -101,6 +101,9 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   page.on('pageerror', (error) => pageErrors.push(String(error)));
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.addStyleTag({
+    content: '[data-custom-cursor-dot], [data-custom-cursor-ring] { display: none !important; }',
+  });
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toBeVisible();
   await expect(mark).toHaveAttribute('data-brand-version', VERSION);
