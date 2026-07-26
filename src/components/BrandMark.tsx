@@ -11,58 +11,57 @@ const sizes = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-24 w-24' };
 const premiumEase = [0.16, 1, 0.3, 1] as const;
 const BRAND_VERSION = 'cloak-20260726-8';
 
-const cloakPath = 'M22 42C14.2 44.8 8.5 51.8 4.8 63.4C1.3 74.4 0.8 87 3.4 94.5C15.9 95.1 29.5 95.4 48 95.7C66.4 95.4 80 95.1 92.6 94.5C95.2 86.9 94.7 74.4 91.2 63.4C87.5 51.8 81.8 44.8 74 42C65.6 39 57.4 38.6 48 40.4C38.6 38.6 30.4 39 22 42Z';
-const hoodPath = 'M48 3.2C40.4 6.2 35.2 14.6 31.5 25.1C28.7 33.1 28.5 38.3 23.1 44.7C30.4 42.7 37.4 43.4 42.9 46.5C45.5 48 47.2 50 48.2 52.2C49.6 49.8 51.6 47.8 54.5 46.2C60.1 43.1 66.8 42.4 73.6 44.1C68.7 38.3 68 32.9 65.2 24.9C61.6 14.5 55.8 6.3 48 3.2Z';
-const voidPath = 'M48.2 17.2C40.7 17.2 35.6 22.2 33.7 30C31.9 37.5 33.5 43.7 38.3 47.8C41 50.1 44.4 51.4 48 51.5C52.3 51.4 56.4 49.8 59.2 46.9C63.2 42.8 64.2 36.5 62.1 29.6C59.8 22.1 55 17.2 48.2 17.2Z';
+const cloakPath = 'M18 43C10 46 4 54 1.5 67C-0.2 77 0.4 89 2.5 95.5C16 96 32 95.6 48 95.8C65 95.7 80 96.1 93.5 95C96 86 95 74 92 64C88.5 52 81.5 45.5 74 42.5C66 39.5 58 38 48.4 40.2C39.1 38.2 27.8 39.6 18 43Z';
+const hoodPath = 'M48 2.5C40 5.4 34.5 13.5 30.3 24.5C27.5 32 26.6 37.3 20.5 44.6C27.5 41.5 36 41.4 42.5 45C45.3 46.7 47.2 49.4 48.3 52.8C50 49.2 52.5 46.7 55.5 45C62.5 41.2 69 41.4 76 44.6C70.5 38 69.4 32 66.3 23.6C62.4 13 56.2 5.2 48 2.5Z';
+const voidPath = 'M48.1 15.3C39.8 15.3 34 20.5 31.7 29C29.8 36.2 31.2 43.4 36.8 48.1C39.8 50.7 43.7 52.3 48 52.5C52.7 52.3 57.2 50.4 60.2 47.1C64.2 42.6 65.3 35.6 62.8 28.7C60.1 20.6 55 15.3 48.1 15.3Z';
 
 const atmosphereFills = [
-  ['M12 91C9 67 17 47 30 34C37 27 39 14 48 5C57 14 60 27 67 34C80 47 87 67 84 91C72 70 59 57 48 54C37 57 24 70 12 91Z', '#55ddfb', 0.16],
-  ['M2 94C7 70 16 52 31 40C20 60 16 77 15 96Z', '#3dd7f3', 0.14],
-  ['M94 94C89 70 80 52 65 40C76 60 80 77 81 96Z', '#218aa5', 0.08],
+  ['M8 94C5 69 14 48 29 34C36 27 39 13 48 4C58 13 61 27 68 34C83 49 91 69 88 94C75 71 61 58 48 54C35 58 21 72 8 94Z', '#58def9', 0.18],
+  ['M0 94C4 69 14 50 29 39C17 59 13 78 13 96Z', '#43d6ef', 0.16],
+  ['M96 94C92 69 82 50 67 39C79 59 83 78 83 96Z', '#208ba5', 0.09],
 ] as const;
 
 const atmosphereStrokes = [
-  ['M18 42C12 49 9 58 8 68', '#7fe8fb', 0.22, 2.2],
-  ['M78 42C84 49 87 58 88 69', '#2b9db9', 0.11, 1.7],
+  ['M17 42C10 50 7 60 6 71', '#7fe8fb', 0.25, 2.3],
+  ['M79 42C86 50 89 60 90 72', '#2b9db9', 0.11, 1.7],
 ] as const;
 
 const foldFills = [
-  ['M3.8 93.8C8 72.9 17.4 54.9 31.2 44.3C24.7 61.9 21.8 79.1 22.3 95.1Z', '#153b56'],
-  ['M92.2 93.8C88 72.9 78.6 54.9 64.8 44.3C71.3 61.9 74.2 79.1 73.7 95.1Z', '#04131f'],
-  ['M19.1 95.2C24.2 70.9 33.1 53.5 42.6 45.6C37.8 62.9 35.3 79.3 35.3 95.5Z', '#0b2639'],
-  ['M76.9 95.2C71.8 70.9 62.9 53.5 53.4 45.6C58.2 62.9 60.7 79.3 60.7 95.5Z', '#010810'],
-  ['M34.6 95.5C38.3 72.6 43 56.5 47.5 47.3C45.4 65.5 44.4 81.1 44.2 95.6Z', '#04111c'],
-  ['M61.4 95.5C57.7 72.6 53 56.5 48.5 47.3C50.6 65.5 51.6 81.1 51.8 95.6Z', '#000205'],
+  ['M2.5 95C6.2 73 15.9 54.8 31.2 43.5C23.9 62.1 20.5 79.8 20.8 95.7Z', '#173d57'],
+  ['M93.5 95C89.8 73 80.1 54.8 64.8 43.5C72.1 62.1 75.5 79.8 75.2 95.7Z', '#03121e'],
+  ['M16.6 95.7C22.2 70.9 32.5 52.8 42.7 44.8C37.7 62.8 34.6 79.8 34.8 95.8Z', '#0b273a'],
+  ['M79.4 95.7C73.8 70.9 63.5 52.8 53.3 44.8C58.3 62.8 61.4 79.8 61.2 95.8Z', '#01070d'],
+  ['M33.7 95.8C38 72.3 43.1 55.8 47.4 46.4C45 65.1 43.7 81.1 43.9 95.9Z', '#03101a'],
+  ['M62.3 95.8C58 72.3 52.9 55.8 48.6 46.4C51 65.1 52.3 81.1 52.1 95.9Z', '#000204'],
 ] as const;
 
 const foldStrokes = [
-  ['M7 88C15.2 67.5 27.4 52.7 42.1 45.6C30.2 60.7 23 77.4 20.8 94', '#62cadf', 0.1, 0.52],
-  ['M89 88C80.8 67.5 68.6 52.7 53.9 45.6C65.8 60.7 73 77.4 75.2 94', '#1e6577', 0.04, 0.42],
+  ['M9.6 88C15.6 66.5 27.2 51.5 42.5 44.7', '#74d8ea', 0.08, 0.45],
+  ['M86.4 88C80.4 66.5 68.8 51.5 53.5 44.7', '#1f6576', 0.03, 0.4],
 ] as const;
 
 const cowlPaths = [
-  ['M20 44.7C29.7 41.9 39.6 43.7 48.3 48.6C57.9 42.8 67 42 76 45.3C71.5 51.2 64.4 55 55.9 57.6C52.7 58.6 50.1 59.8 48 61.1C45.5 59.6 42.7 58.3 39.3 57.2C31 54.4 24.5 50.6 20 44.7Z', 'cowlA'],
-  ['M25.6 49.8C34.8 48.5 41.8 50.5 48.2 54.4C55 50.1 62.6 48.6 70.8 50.4C65.3 55.3 57.7 59.3 48 63.5C38.7 59.6 31.2 55.5 25.6 49.8Z', 'cowlB'],
-  ['M34 55.5C39.6 54.1 44.3 54.6 48.1 56.5C52 54.6 56.5 54.3 61.8 55.9C56.4 58.1 51.8 60.7 48 63.9C44 60.8 39.3 58 34 55.5Z', '#000307'],
+  ['M18.5 44.4C28 41.7 38.5 43.2 48.6 48.4C58 52.9 66.5 54.4 75.8 51.4C71.2 57.1 63.5 59.6 55.2 58.9C44 58 36.3 52.4 26.4 50.8C22.6 50.2 19.9 47.7 18.5 44.4Z', 'cowlA'],
+  ['M74.8 45.1C66.5 42.5 57.7 43.7 49 48.7C42.5 52.4 36.3 55.6 29 56.7C34.4 60.2 41.4 60.5 49.6 56.5C58.8 51.9 66.2 49.7 74.2 50.9C75.1 48.9 75.3 46.8 74.8 45.1Z', 'cowlB'],
 ] as const;
 
 const texturePaths = [
-  ['M31.7 36.8C33.8 24.3 39.1 11.8 47.7 4', '#d6faff', 0.15, 0.5],
-  ['M64.2 36.4C62.1 24.2 56.8 11.8 48.3 4', '#3ba8bf', 0.06, 0.45],
+  ['M30.8 36.9C33.1 23.8 38.8 10.9 47.7 3.2', '#dcfbff', 0.17, 0.52],
+  ['M65 36.3C62.6 23.7 56.9 10.8 48.3 3.2', '#3a9fb6', 0.06, 0.44],
 ] as const;
 
 const rimPaths = [
-  ['M23.5 44.4C27.7 40.2 29.2 35.7 31 28.6C33.7 17.7 39 7.2 47.8 3.5', 'rim', 1, 1.18],
-  ['M48.2 3.6C55.1 6.6 60.6 15.7 64.1 27.4', '#83e8fa', 0.48, 0.7],
-  ['M65.5 32.3C66.4 37.3 68.3 40.4 72.3 43.5', '#44b8d2', 0.23, 0.56],
-  ['M18.9 45.6C11.9 51.8 7.3 63.6 4.2 82.9', '#9decfb', 0.38, 0.78],
-  ['M3.9 87C3.5 89.4 3.4 91.4 3.5 93.3', '#52c8e1', 0.2, 0.62],
-  ['M77.1 45.4C84.1 51.7 88.7 63.6 91.8 82.7', '#2c95ae', 0.12, 0.55],
+  ['M20.8 44.4C25.7 39.2 27.2 34.3 29.6 26.5C33 15.3 38.9 5.7 47.8 2.8', 'rim', 1, 1.15],
+  ['M48.2 2.9C55.5 5.7 61.4 14.4 65.1 25.6', '#8ceafa', 0.5, 0.68],
+  ['M66.1 30.9C67.2 36.5 69.5 40.2 73.7 43.6', '#43b7d0', 0.24, 0.55],
+  ['M16.4 46.2C9.2 53.3 4.8 66.1 2.1 86.1', '#a6f0ff', 0.42, 0.78],
+  ['M1.8 89.2C1.6 91.3 1.7 93.2 2.1 94.5', '#55c9df', 0.22, 0.58],
+  ['M79.6 46C86.8 53.2 91.2 66 93.9 85.8', '#2a91a9', 0.11, 0.5],
 ] as const;
 
 const energyPaths = [
-  ['M13.6 73C11.5 59.2 14.7 46.5 21.5 37.1', '#55d6ef', 0.2, 0.48],
-  ['M82.4 73C84.5 59.2 81.3 46.5 74.5 37.1', '#288ba5', 0.09, 0.4],
+  ['M11.8 73C9.9 58.7 13.7 45.6 21.4 36.3', '#58d9f1', 0.22, 0.5],
+  ['M84.2 73C86.1 58.7 82.3 45.6 74.6 36.3', '#288ca6', 0.09, 0.4],
 ] as const;
 
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
@@ -79,7 +78,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
       data-brand-mark
       data-brand-version={BRAND_VERSION}
       data-brand-renderer="inline-vector"
-      data-brand-vector-source="reference-derived-contours-v8-3"
+      data-brand-vector-source="reference-derived-contours-v8-4"
       className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
       initial={false}
       animate="idle"
@@ -101,13 +100,13 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         <title id={ids.title}>THE LEGENDARY POET</title>
         <desc id={ids.description}>Безликая мистическая фигура в глубоком капюшоне и тяжёлом плаще, окружённая холодной разорванной энергией</desc>
         <defs>
-          <linearGradient id={ids.cloak} x1="5" y1="43" x2="89" y2="95" gradientUnits="userSpaceOnUse"><stop stopColor="#173c57"/><stop offset=".18" stopColor="#0b2639"/><stop offset=".54" stopColor="#04121e"/><stop offset=".86" stopColor="#010408"/><stop offset="1" stopColor="#000103" stopOpacity=".38"/></linearGradient>
-          <linearGradient id={ids.hood} x1="28" y1="3" x2="68" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#28546c"/><stop offset=".22" stopColor="#15374e"/><stop offset=".58" stopColor="#081c2a"/><stop offset="1" stopColor="#010308"/></linearGradient>
-          <linearGradient id={ids.hoodLeft} x1="28" y1="3" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#214b63"/><stop offset=".55" stopColor="#123246"/><stop offset="1" stopColor="#040b12"/></linearGradient>
-          <linearGradient id={ids.cowlA} x1="19" y1="44" x2="76" y2="61" gradientUnits="userSpaceOnUse"><stop stopColor="#1d465d"/><stop offset=".42" stopColor="#0f3044"/><stop offset=".76" stopColor="#061a27"/><stop offset="1" stopColor="#010307"/></linearGradient>
-          <linearGradient id={ids.cowlB} x1="71" y1="49" x2="25" y2="64" gradientUnits="userSpaceOnUse"><stop stopColor="#102e42"/><stop offset=".44" stopColor="#071d2b"/><stop offset=".8" stopColor="#020a11"/><stop offset="1" stopColor="#000104"/></linearGradient>
-          <linearGradient id={ids.rim} x1="24" y1="4" x2="13" y2="88" gradientUnits="userSpaceOnUse"><stop stopColor="#f6ffff"/><stop offset=".13" stopColor="#c8f9ff"/><stop offset=".37" stopColor="#6fe4ff"/><stop offset=".68" stopColor="#2fc0e3" stopOpacity=".58"/><stop offset="1" stopColor="#11627b" stopOpacity="0"/></linearGradient>
-          <filter id={ids.aura} x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation={compact ? 3.0 : 3.6}/></filter>
+          <linearGradient id={ids.cloak} x1="2" y1="42" x2="94" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#1a405b"/><stop offset=".18" stopColor="#0b293d"/><stop offset=".54" stopColor="#04131f"/><stop offset=".86" stopColor="#010408"/><stop offset="1" stopColor="#000103" stopOpacity=".38"/></linearGradient>
+          <linearGradient id={ids.hood} x1="25" y1="2" x2="71" y2="54" gradientUnits="userSpaceOnUse"><stop stopColor="#2b5871"/><stop offset=".22" stopColor="#15394f"/><stop offset=".58" stopColor="#071d2b"/><stop offset="1" stopColor="#010308"/></linearGradient>
+          <linearGradient id={ids.hoodLeft} x1="25" y1="2" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#2d6078"/><stop offset=".55" stopColor="#153a4f"/><stop offset="1" stopColor="#050d15"/></linearGradient>
+          <linearGradient id={ids.cowlA} x1="18" y1="44" x2="76" y2="59" gradientUnits="userSpaceOnUse"><stop stopColor="#20495f"/><stop offset=".42" stopColor="#103147"/><stop offset=".76" stopColor="#061925"/><stop offset="1" stopColor="#010307"/></linearGradient>
+          <linearGradient id={ids.cowlB} x1="75" y1="44" x2="28" y2="61" gradientUnits="userSpaceOnUse"><stop stopColor="#123348"/><stop offset=".44" stopColor="#082030"/><stop offset=".8" stopColor="#020a11"/><stop offset="1" stopColor="#000104"/></linearGradient>
+          <linearGradient id={ids.rim} x1="21" y1="3" x2="5" y2="92" gradientUnits="userSpaceOnUse"><stop stopColor="#f6ffff"/><stop offset=".13" stopColor="#c8f9ff"/><stop offset=".37" stopColor="#6fe4ff"/><stop offset=".68" stopColor="#2fc0e3" stopOpacity=".58"/><stop offset="1" stopColor="#11627b" stopOpacity="0"/></linearGradient>
+          <filter id={ids.aura} x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation={compact ? 2.9 : 3.2}/></filter>
           <filter id={ids.glow} x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation={compact ? 0.58 : 0.72} result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
 
@@ -128,8 +127,8 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           </motion.g>
 
           <motion.path data-brand-hood d={hoodPath} fill={`url(#${ids.hood})`} stroke="#2e5f75" strokeOpacity=".8" strokeWidth={compact ? 0.82 : 0.9} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.04 : -0.12 } }}/>
-          <path d="M48 3.6C41.8 9.3 37.5 17.7 34.7 27.8C32.9 34.4 31.8 39.3 27.8 43.7C33 42.9 38.8 44.4 43.4 47.3C45.7 48.8 47.2 50.4 48.2 52.1C45.5 41.4 42.9 31.3 43.1 22.3C43.2 14.7 44.8 8.5 48 3.6Z" fill={`url(#${ids.hoodLeft})`} fillOpacity=".72"/>
-          <path d="M48.1 3.7C54.2 9.2 58.6 17.5 61.2 27.4C63 34 64 39.2 68.1 43.3C62.9 42.8 57.7 44.3 53.4 47.4C51.2 49 49.5 50.6 48.2 52.2C51 41.5 53.1 31.1 52.9 22.2C52.8 14.8 51.2 8.6 48.1 3.7Z" fill="#061622" fillOpacity=".82"/>
+          <path d="M48 2.9C41.3 8.4 36.6 17 33.3 27.6C31.2 34.5 30.1 39.4 25.5 43.8C31.2 42.5 37.9 43.7 43 46.8C45.7 48.5 47.3 50.6 48.3 52.7C45.3 41.1 42.8 30.4 43 21C43.1 13.6 44.7 7.5 48 2.9Z" fill={`url(#${ids.hoodLeft})`} fillOpacity=".72"/>
+          <path d="M48.2 2.9C54.7 8.1 59.6 16.6 62.7 27.1C64.8 34.1 65.8 39.3 70.4 43.7C64.8 42.8 58.9 43.8 53.8 46.9C51.3 48.5 49.6 50.6 48.3 52.8C51.2 41.2 53.2 30.1 53 21C52.9 13.7 51.4 7.6 48.2 2.9Z" fill="#061620" fillOpacity=".84"/>
           <path data-brand-face-void d={voidPath} fill="#000"/>
 
           <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.96 : 1 }, hover: { opacity: 1, transition: { duration: 0.72, ease: premiumEase } } }}>
