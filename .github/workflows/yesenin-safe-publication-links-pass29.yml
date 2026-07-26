@@ -31,6 +31,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Normalize IMLI catalogue route to primary domain
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/verify-yesenin-safe-publication-links-pass29.mjs')
+          source = path.read_text(encoding='utf-8')
+          old = 'https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a/821-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-1'
+          new = 'https://imli.ru/nauchnye-otdely/otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya/1497-publikatcii-otdela-otdel-novejshej-russkoj-literatury-i-literatury-russkogo-zarubezhya'
+          if source.count(old) != 1:
+              raise SystemExit('expected one legacy IMLI route')
+          path.write_text(source.replace(old, new), encoding='utf-8')
+          PY
       - name: Verify sixty publication and research routes
         env:
           LINK_TIMEOUT_MS: '30000'
