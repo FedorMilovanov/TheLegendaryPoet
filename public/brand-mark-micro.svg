@@ -1,16 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" focusable="false" aria-labelledby="micro-title micro-description">
   <title id="micro-title">THE LEGENDARY POET</title>
-  <desc id="micro-description">Упрощённый знак безликой фигуры в капюшоне для малых размеров</desc>
+  <desc id="micro-description">Упрощённый знак безликой фигуры в высоком капюшоне для малых размеров</desc>
   <defs>
-    <linearGradient id="micro-shell" x1="7" y1="3" x2="25" y2="30" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#123b5a"/>
-      <stop offset="0.48" stop-color="#081d30"/>
-      <stop offset="1" stop-color="#020916"/>
+    <linearGradient id="micro-cloak" x1="5" y1="14" x2="27" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#143452"/>
+      <stop offset=".42" stop-color="#07192c"/>
+      <stop offset="1" stop-color="#01050d"/>
+    </linearGradient>
+    <linearGradient id="micro-hood" x1="10" y1="2" x2="23" y2="15" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1b4668"/>
+      <stop offset=".45" stop-color="#0a2137"/>
+      <stop offset="1" stop-color="#020812"/>
     </linearGradient>
   </defs>
-  <path d="M4 29c.7-7 2.7-12.2 6.2-15.6C9.2 11.7 9 9.6 9.6 7.7 10.5 4.5 12.8 2.5 16 2c3.2.5 5.5 2.5 6.4 5.7.6 1.9.4 4-.6 5.7C25.3 16.8 27.3 22 28 29A27 27 0 0 1 16 32 27 27 0 0 1 4 29Z" fill="url(#micro-shell)" stroke="#48d9ff" stroke-width="1.6" stroke-linejoin="round"/>
-  <path d="M10.4 13.2c.1-4.8 2.2-7.7 5.6-8.4 3.4.7 5.5 3.6 5.6 8.4-1.6-.8-3.45-1.2-5.6-1.2s-4 .4-5.6 1.2Z" fill="#00030a"/>
-  <path d="M10.8 12.1C11.5 7.4 13.2 4.6 16 3.5" fill="none" stroke="#d6fbff" stroke-width="1.15" stroke-linecap="round"/>
-  <path d="m16 17.6 1.65 3.4L16 25l-1.65-4 1.65-3.4Z" fill="#7fecff"/>
-  <path d="M16 19.4v3.6" stroke="#f2ffff" stroke-width="0.9" stroke-linecap="round"/>
+  <path d="M2.2 32C3.1 24.2 6.3 17.9 11.2 13.5C12.6 12.3 14.2 11.7 16 11.7C17.8 11.7 19.4 12.3 20.8 13.5C25.7 17.9 28.9 24.2 29.8 32Z" fill="url(#micro-cloak)" stroke="#2fc7ec" stroke-opacity=".5" stroke-width=".8"/>
+  <path d="M9.2 14.3C9.4 8.6 11.6 3.7 16 1C20.4 3.7 22.6 8.6 22.8 14.3C20.6 13.8 18.4 13.2 16 13.2C13.6 13.2 11.4 13.8 9.2 14.3ZM10.8 13.1C11.6 9.3 13.3 6.2 16 4.7C18.7 6.2 20.4 9.3 21.2 13.1C19.7 14.8 17.9 16 16 16.9C14.1 16 12.3 14.8 10.8 13.1Z" fill="url(#micro-hood)" fill-rule="evenodd" stroke="#54d9f7" stroke-opacity=".55" stroke-width=".65"/>
+  <path d="M10.8 13.1C11.6 9.3 13.3 6.2 16 4.7C18.7 6.2 20.4 9.3 21.2 13.1C19.7 14.8 17.9 16 16 16.9C14.1 16 12.3 14.8 10.8 13.1Z" fill="#000207"/>
+  <path d="M9.8 13.5C10.4 8.4 12.6 4.2 16 1.9" fill="none" stroke="#c7f7ff" stroke-width="1" stroke-linecap="round"/>
+  <path d="M6.2 19.2C9.3 15.8 12.6 14.4 16 15.2C13.4 18.1 11.5 22.1 10.3 27.3" fill="none" stroke="#4dd6f5" stroke-opacity=".5" stroke-width=".8" stroke-linecap="round"/>
+  <path d="M25.8 19.2C22.7 15.8 19.4 14.4 16 15.2C18.6 18.1 20.5 22.1 21.7 27.3" fill="none" stroke="#2fafd2" stroke-opacity=".28" stroke-width=".75" stroke-linecap="round"/>
 </svg>
