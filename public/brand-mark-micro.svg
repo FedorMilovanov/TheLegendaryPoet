@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" focusable="false" aria-labelledby="mt md" data-brand-vector-source="reference-derived-contours-v8-10">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" focusable="false" aria-labelledby="mt md" data-brand-vector-source="reference-derived-contours-v8-19">
 <title id="mt">THE LEGENDARY POET</title><desc id="md">Безликая фигура в глубоком капюшоне и тяжёлом плаще</desc>
 <defs>
-  <linearGradient id="mc" x1="1" y1="13" x2="31" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#14384f"/><stop offset=".4" stop-color="#071c2b"/><stop offset=".8" stop-color="#02080e"/><stop offset="1" stop-color="#000103"/></linearGradient>
-  <linearGradient id="mh" x1="8" y1="1.5" x2="24" y2="18" gradientUnits="userSpaceOnUse"><stop stop-color="#244c63"/><stop offset=".42" stop-color="#0e2e43"/><stop offset="1" stop-color="#02060c"/></linearGradient>
+  <linearGradient id="mc" x1="1" y1="13" x2="31" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#1b4b65"/><stop offset=".4" stop-color="#0a2739"/><stop offset=".8" stop-color="#031018"/><stop offset="1" stop-color="#000103"/></linearGradient>
+  <linearGradient id="mh" x1="8" y1="1.5" x2="24" y2="18" gradientUnits="userSpaceOnUse"><stop stop-color="#2f6179"/><stop offset=".42" stop-color="#12394f"/><stop offset="1" stop-color="#02060c"/></linearGradient>
 </defs>
 <path d="M16 13.7C12.3 13.5 8.7 14.2 5.6 16.2C3 17.9 1.4 22.1.6 26.9C.3 28.9.4 30.7.8 31.8C5.8 31.9 10.9 31.9 16 32C21.1 31.9 26.2 31.9 31.2 31.8C31.6 30.7 31.7 28.9 31.4 26.9C30.6 22.1 29 17.9 26.4 16.2C23.3 14.2 19.7 13.5 16 13.7Z" fill="url(#mc)"/>
 <path d="M.8 31.7C2.3 24.2 5.8 18.6 11.6 15.6C7.7 20.3 5.1 26 4 31.9Z" fill="#0b2a40"/>
@@ -15,8 +15,10 @@
 <path d="M5.4 16C9 15.1 12.4 15.7 15.7 17.3C18.5 18.7 21.5 19.1 25.7 18C23.8 19.5 21.1 20 18.4 19.6C15.2 19.2 12.4 17.9 9.4 17.5C7.7 17.3 6.4 16.7 5.4 16Z" fill="#08202e"/>
 <path d="M27.1 16.6C23.5 15.2 20.2 15.6 16.7 17.4C13.7 18.9 11.1 19.7 8.4 19.1C10.3 20.8 13 21.5 16.3 20.7C19.5 19.9 22 18.9 24.8 19.1C25.9 18.5 26.7 17.6 27.1 16.6Z" fill="#03111a"/>
 <path d="M7 18.3C10.3 17.5 13.4 17.9 16.2 19.2C18.8 20.4 21.5 20.4 24.7 19.3C22.5 21 19.7 21.7 16.4 21.4C13.1 21.1 10 19.9 7 18.3Z" fill="#01060b"/>
-<path d="M7.6 14.7C9.5 13.6 10.4 12.3 10.8 10.8" fill="none" stroke="#c9f8ff" stroke-opacity=".66" stroke-width=".46" stroke-linecap="round"/>
-<path d="M10.7 10.1C11.7 6.7 13.5 2.9 15.9 2" fill="none" stroke="#e8feff" stroke-width=".55" stroke-linecap="butt"/>
-<path d="M16.1 2C18.3 3 19.8 5.7 20.7 8.8" fill="none" stroke="#73deef" stroke-opacity=".44" stroke-width=".36" stroke-linecap="round"/>
-<path d="M4.3 18.1C2.6 20.9 1.4 24.4.7 28.6" fill="none" stroke="#91ebfa" stroke-opacity=".34" stroke-width=".4" stroke-linecap="round"/>
+<path d="M7.6 14.7C9.5 13.6 10.4 12.3 10.8 10.8" fill="none" stroke="#c9f8ff" stroke-opacity=".82" stroke-width=".5" stroke-linecap="round"/>
+<path d="M10.7 10.1C11.7 6.7 13.5 2.9 15.9 2" fill="none" stroke="#f1ffff" stroke-width=".62" stroke-linecap="butt"/>
+<path d="M16.1 2C18.3 3 19.8 5.7 20.7 8.8" fill="none" stroke="#73deef" stroke-opacity=".58" stroke-width=".42" stroke-linecap="round"/>
+<path d="M4.3 18.1C2.6 20.9 1.4 24.4.7 28.6" fill="none" stroke="#91ebfa" stroke-opacity=".48" stroke-width=".46" stroke-linecap="round"/>
+<path d="M24.2 14.7C26.4 16.3 28.2 20.1 29.4 25.7" fill="none" stroke="#3aa6bd" stroke-opacity=".3" stroke-width=".36" stroke-linecap="round"/>
+<path d="M3.4 29.5C6.5 22.1 10.5 17.6 15 15.8" fill="none" stroke="#70d6e8" stroke-opacity=".24" stroke-width=".32" stroke-linecap="round"/>
 </svg>
