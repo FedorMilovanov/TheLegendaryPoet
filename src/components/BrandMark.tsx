@@ -8,300 +8,64 @@ interface BrandMarkProps {
 }
 
 const sizes = {
-  sm: 'h-11 w-11',
+  sm: 'h-12 w-12',
   md: 'h-16 w-16',
   lg: 'h-24 w-24',
 };
 
 const premiumEase = [0.16, 1, 0.3, 1] as const;
-const BRAND_VERSION = 'cloak-20260726-6';
+const BRAND_VERSION = 'cloak-20260726-8';
 
-/**
- * Reference-shaped faceless poet emblem.
- *
- * The figure deliberately fills the optical square: a broad mantle, high hood,
- * deep black opening, crossed shoulder cloth and radial heavy folds. No raster
- * wrapper, plate, chest light, face, eyes, book, wings or halo are present.
- */
+/** Mystical reference-derived faceless poet emblem, authored only as SVG paths. */
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
   const reducedMotion = useReducedMotion();
   const id = useId().replace(/:/g, '');
   const compact = size === 'sm';
-
   const titleId = `${id}-brand-title`;
   const descriptionId = `${id}-brand-description`;
-  const cloakGradientId = `${id}-cloak-gradient`;
+  const baseGradientId = `${id}-base-gradient`;
   const hoodGradientId = `${id}-hood-gradient`;
-  const leftFoldGradientId = `${id}-left-fold-gradient`;
-  const rightFoldGradientId = `${id}-right-fold-gradient`;
-  const collarLeftGradientId = `${id}-collar-left-gradient`;
-  const collarRightGradientId = `${id}-collar-right-gradient`;
+  const cowlLeftGradientId = `${id}-cowl-left-gradient`;
+  const cowlRightGradientId = `${id}-cowl-right-gradient`;
+  const foldLeftGradientId = `${id}-fold-left-gradient`;
+  const foldRightGradientId = `${id}-fold-right-gradient`;
   const rimGradientId = `${id}-rim-gradient`;
-  const auraGradientId = `${id}-aura-gradient`;
   const voidGradientId = `${id}-void-gradient`;
   const auraBlurFilterId = `${id}-aura-blur-filter`;
   const rimGlowFilterId = `${id}-rim-glow-filter`;
 
   return (
-    <motion.span
-      data-brand-mark
-      data-brand-version={BRAND_VERSION}
-      data-brand-renderer="inline-vector"
-      className={cn(
-        'relative inline-flex shrink-0 items-center justify-center overflow-visible',
-        sizes[size],
-        className,
-      )}
-      initial={false}
-      animate="idle"
-      whileHover={reducedMotion ? undefined : 'hover'}
-    >
-      <motion.svg
-        data-brand-vector
-        className="h-full w-full overflow-visible"
-        viewBox="0 0 96 96"
-        role="img"
-        aria-labelledby={`${titleId} ${descriptionId}`}
-        focusable="false"
-        style={{ pointerEvents: 'none' }}
-        variants={{
-          idle: {
-            y: 0,
-            scale: 1,
-            filter: compact
-              ? 'drop-shadow(0 2px 3px rgba(0, 4, 13, 0.6))'
-              : 'drop-shadow(0 4px 8px rgba(0, 4, 13, 0.68))',
-          },
-          hover: {
-            y: compact ? -0.5 : -0.8,
-            scale: compact ? 1.018 : 1.025,
-            filter: compact
-              ? 'drop-shadow(0 4px 7px rgba(0, 8, 20, 0.7)) drop-shadow(0 0 5px rgba(46, 216, 255, 0.2))'
-              : 'drop-shadow(0 7px 14px rgba(0, 8, 20, 0.74)) drop-shadow(0 0 10px rgba(46, 216, 255, 0.24))',
-            transition: { duration: 0.72, ease: premiumEase },
-          },
-        }}
-      >
+    <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector" data-brand-vector-source="reference-derived-contours-v8" className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)} initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
+      <motion.svg data-brand-vector className="h-full w-full overflow-visible" viewBox="0 0 96 96" role="img" aria-labelledby={`${titleId} ${descriptionId}`} focusable="false" style={{ pointerEvents: 'none' }} variants={{ idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 5px rgba(0, 4, 13, 0.72)) drop-shadow(0 0 4px rgba(46, 216, 255, 0.1))' : 'drop-shadow(0 5px 11px rgba(0, 4, 13, 0.74)) drop-shadow(0 0 7px rgba(46, 216, 255, 0.12))' }, hover: { y: compact ? -0.55 : -0.85, scale: compact ? 1.02 : 1.027, filter: compact ? 'drop-shadow(0 5px 9px rgba(0, 7, 18, 0.8)) drop-shadow(0 0 7px rgba(65, 220, 255, 0.22))' : 'drop-shadow(0 8px 17px rgba(0, 7, 18, 0.82)) drop-shadow(0 0 13px rgba(65, 220, 255, 0.24))', transition: { duration: 0.78, ease: premiumEase } } }}>
         <title id={titleId}>THE LEGENDARY POET</title>
-        <desc id={descriptionId}>
-          Безликая фигура в высоком остром капюшоне и широком тяжёлом плаще,
-          окружённая холодным голубым контровым светом
-        </desc>
-
+        <desc id={descriptionId}>Мистическая безликая фигура в глубоком тканевом капюшоне и тяжёлом чёрно-синем плаще, окружённая холодной спектральной энергией</desc>
         <defs>
-          <linearGradient id={cloakGradientId} x1="12" y1="45" x2="82" y2="96" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#173550" />
-            <stop offset="0.22" stopColor="#0b1c2e" />
-            <stop offset="0.58" stopColor="#030a13" />
-            <stop offset="1" stopColor="#000208" />
-          </linearGradient>
-          <linearGradient id={hoodGradientId} x1="29" y1="7" x2="68" y2="47" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#1c4262" />
-            <stop offset="0.18" stopColor="#102941" />
-            <stop offset="0.55" stopColor="#06121f" />
-            <stop offset="1" stopColor="#01040b" />
-          </linearGradient>
-          <linearGradient id={leftFoldGradientId} x1="5" y1="57" x2="47" y2="92" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#1e4564" stopOpacity="0.92" />
-            <stop offset="0.35" stopColor="#0b1f33" stopOpacity="0.86" />
-            <stop offset="1" stopColor="#020711" stopOpacity="0.18" />
-          </linearGradient>
-          <linearGradient id={rightFoldGradientId} x1="91" y1="57" x2="49" y2="92" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#102b43" stopOpacity="0.78" />
-            <stop offset="0.42" stopColor="#061524" stopOpacity="0.8" />
-            <stop offset="1" stopColor="#000207" stopOpacity="0.18" />
-          </linearGradient>
-          <linearGradient id={collarLeftGradientId} x1="14" y1="48" x2="49" y2="66" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#244c69" />
-            <stop offset="0.42" stopColor="#102942" />
-            <stop offset="1" stopColor="#020812" />
-          </linearGradient>
-          <linearGradient id={collarRightGradientId} x1="82" y1="48" x2="47" y2="66" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#183a55" />
-            <stop offset="0.45" stopColor="#0a1c30" />
-            <stop offset="1" stopColor="#01050c" />
-          </linearGradient>
-          <linearGradient id={rimGradientId} x1="22" y1="10" x2="79" y2="68" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#f1feff" />
-            <stop offset="0.12" stopColor="#a8f3ff" />
-            <stop offset="0.38" stopColor="#45ddff" stopOpacity="0.9" />
-            <stop offset="0.75" stopColor="#1fb6e9" stopOpacity="0.38" />
-            <stop offset="1" stopColor="#0b7aa4" stopOpacity="0" />
-          </linearGradient>
-          <radialGradient id={auraGradientId} cx="0" cy="0" r="1" gradientTransform="translate(48 48) rotate(90) scale(48 40)" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#aaf5ff" stopOpacity="0.44" />
-            <stop offset="0.2" stopColor="#47dcff" stopOpacity="0.28" />
-            <stop offset="0.55" stopColor="#148caf" stopOpacity="0.12" />
-            <stop offset="1" stopColor="#061726" stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id={voidGradientId} cx="0" cy="0" r="1" gradientTransform="translate(48 36) rotate(90) scale(22 18)" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#000000" />
-            <stop offset="0.78" stopColor="#000105" />
-            <stop offset="1" stopColor="#06101b" />
-          </radialGradient>
-          <filter id={auraBlurFilterId} x="-70%" y="-70%" width="240%" height="240%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur stdDeviation="5" />
-          </filter>
-          <filter id={rimGlowFilterId} x="-100%" y="-100%" width="300%" height="300%" colorInterpolationFilters="sRGB">
-            <feGaussianBlur stdDeviation="1.25" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <linearGradient id={baseGradientId} x1="8" y1="40" x2="86" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#173650"/><stop offset="0.18" stopColor="#0d2437"/><stop offset="0.5" stopColor="#050f19"/><stop offset="0.8" stopColor="#01050b"/><stop offset="1" stopColor="#000104"/></linearGradient>
+          <linearGradient id={hoodGradientId} x1="29" y1="3" x2="67" y2="49" gradientUnits="userSpaceOnUse"><stop stopColor="#1b405b"/><stop offset="0.22" stopColor="#102a40"/><stop offset="0.52" stopColor="#071724"/><stop offset="0.8" stopColor="#020912"/><stop offset="1" stopColor="#000207"/></linearGradient>
+          <linearGradient id={cowlLeftGradientId} x1="16" y1="47" x2="51" y2="65" gradientUnits="userSpaceOnUse"><stop stopColor="#244960"/><stop offset="0.35" stopColor="#133149"/><stop offset="0.74" stopColor="#061522"/><stop offset="1" stopColor="#01050a"/></linearGradient>
+          <linearGradient id={cowlRightGradientId} x1="80" y1="47" x2="45" y2="65" gradientUnits="userSpaceOnUse"><stop stopColor="#17364b"/><stop offset="0.4" stopColor="#0a2032"/><stop offset="0.76" stopColor="#03101a"/><stop offset="1" stopColor="#000207"/></linearGradient>
+          <linearGradient id={foldLeftGradientId} x1="5" y1="55" x2="44" y2="95" gradientUnits="userSpaceOnUse"><stop stopColor="#17405d" stopOpacity="0.86"/><stop offset="0.42" stopColor="#0a2338" stopOpacity="0.75"/><stop offset="1" stopColor="#020711" stopOpacity="0.08"/></linearGradient>
+          <linearGradient id={foldRightGradientId} x1="91" y1="55" x2="52" y2="95" gradientUnits="userSpaceOnUse"><stop stopColor="#0e2d43" stopOpacity="0.72"/><stop offset="0.44" stopColor="#061827" stopOpacity="0.72"/><stop offset="1" stopColor="#000207" stopOpacity="0.06"/></linearGradient>
+          <linearGradient id={rimGradientId} x1="28" y1="3" x2="73" y2="64" gradientUnits="userSpaceOnUse"><stop stopColor="#f3feff"/><stop offset="0.1" stopColor="#c4f8ff"/><stop offset="0.3" stopColor="#6ce7ff"/><stop offset="0.58" stopColor="#31c5ed" stopOpacity="0.68"/><stop offset="1" stopColor="#117ca2" stopOpacity="0"/></linearGradient>
+          <radialGradient id={voidGradientId} cx="0" cy="0" r="1" gradientTransform="translate(48 37) rotate(90) scale(19 19)" gradientUnits="userSpaceOnUse"><stop stopColor="#000000"/><stop offset="0.9" stopColor="#000103"/><stop offset="1" stopColor="#02060b"/></radialGradient>
+          <filter id={auraBlurFilterId} x="-100%" y="-100%" width="300%" height="300%" colorInterpolationFilters="sRGB"><feGaussianBlur stdDeviation={compact ? 3.2 : 4}/></filter>
+          <filter id={rimGlowFilterId} x="-100%" y="-100%" width="300%" height="300%" colorInterpolationFilters="sRGB"><feGaussianBlur stdDeviation={compact ? 0.72 : 0.9} result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
-
-        <motion.g
-          data-brand-atmosphere
-          aria-hidden="true"
-          variants={{
-            idle: { opacity: compact ? 0.16 : 0.56, scale: compact ? 0.985 : 0.97 },
-            hover: {
-              opacity: compact ? 0.28 : 0.78,
-              scale: compact ? 1.01 : 1.04,
-              transition: { duration: 0.86, ease: premiumEase },
-            },
-          }}
-          style={{ transformOrigin: '48px 48px' }}
-        >
-          {!compact && (
-            <>
-              <path
-                d="M5 92C8 69 18 48 34 29C40 21 44 15 48 10C52 15 56 21 62 29C78 48 88 69 91 92C79 77 67 66 56 59C52 56 49 54 48 53C47 54 44 56 40 59C29 66 17 77 5 92Z"
-                fill={`url(#${auraGradientId})`}
-                filter={`url(#${auraBlurFilterId})`}
-              />
-              <g fill="none" stroke="#45dcff" strokeLinecap="round" opacity="0.2" filter={`url(#${auraBlurFilterId})`}>
-                <path d="M24 45C25 27 33 12 48 2C63 12 71 27 72 45" strokeWidth="3.4" />
-                <path d="M2 96C8 70 20 51 36 43" strokeWidth="3" />
-                <path d="M94 96C88 70 76 51 60 43" strokeWidth="3" />
-              </g>
-            </>
-          )}
+        <motion.g data-brand-atmosphere aria-hidden="true" filter={`url(#${auraBlurFilterId})`} variants={{ idle: { opacity: compact ? 0.5 : 0.68, scale: compact ? 0.99 : 0.975 }, hover: { opacity: compact ? 0.72 : 0.9, scale: compact ? 1.018 : 1.045, transition: { duration: 0.92, ease: premiumEase } } }} style={{ transformOrigin: '48px 48px' }}>
+          <path d="M24 69C20 50 28 32 40 20C44 16 46 10 48 5C50 10 52 16 56 20C68 32 76 50 72 69C64 58 56 53 48 50C40 53 32 58 24 69Z" fill="#87eaff" fillOpacity="0.23"/><path d="M6 91C7 70 18 52 34 43C25 58 20 72 19 89Z" fill="#2ed8ff" fillOpacity="0.14"/><path d="M90 91C89 70 78 52 62 43C71 58 76 72 77 89Z" fill="#1596bb" fillOpacity="0.09"/><path d="M11 91C12 69 20 50 34 37C41 30 43 16 48 6C53 16 55 30 62 37C76 50 84 69 85 91C73 75 62 64 53 59C50 57 49 56 48 55C47 56 46 57 43 59C34 64 23 75 11 91Z" fill="#2ed8ff" fillOpacity="0.11"/>
+          <g fill="none" strokeLinecap="round"><path d="M18 78C9 58 15 36 32 18" stroke="#4cd9fb" strokeOpacity="0.26" strokeWidth="2.7"/><path d="M78 78C87 58 81 36 64 18" stroke="#20a5cc" strokeOpacity="0.16" strokeWidth="2.2"/><path d="M5 91C13 70 25 55 39 47" stroke="#66def8" strokeOpacity="0.2" strokeWidth="2.6"/><path d="M91 91C83 70 71 55 57 47" stroke="#1686a5" strokeOpacity="0.11" strokeWidth="2"/><path d="M31 31C34 17 40 8 48 3C56 8 62 17 65 31" stroke="#7ae5ff" strokeOpacity="0.2" strokeWidth="2.3"/></g>
         </motion.g>
-
-        <motion.g
-          data-brand-energy
-          aria-hidden="true"
-          fill="none"
-          strokeLinecap="round"
-          variants={{
-            idle: { opacity: compact ? 0.2 : 0.34 },
-            hover: { opacity: compact ? 0.34 : 0.58, transition: { duration: 0.78, ease: premiumEase } },
-          }}
-        >
-          <path d="M12 78C8 57 16 35 31 20" stroke="#3ddcff" strokeOpacity="0.2" strokeWidth={compact ? 0.75 : 1.05} />
-          <path d="M84 78C88 57 80 35 65 20" stroke="#3ddcff" strokeOpacity="0.16" strokeWidth={compact ? 0.72 : 1} />
-        </motion.g>
-
-        <motion.g
-          data-brand-figure
-          variants={{
-            idle: { y: 0 },
-            hover: { y: compact ? -0.08 : -0.24, transition: { duration: 0.72, ease: premiumEase } },
-          }}
-        >
-          <path
-            data-brand-cloak
-            d="M1.5 96C4.8 78.5 10.2 64.3 18.2 55.2C24.8 47.7 32.4 43.7 39.2 41.3C42 40.3 44.8 39.8 48 39.8C51.2 39.8 54 40.3 56.8 41.3C63.6 43.7 71.2 47.7 77.8 55.2C85.8 64.3 91.2 78.5 94.5 96Z"
-            fill={`url(#${cloakGradientId})`}
-            stroke="#214662"
-            strokeWidth={compact ? 0.82 : 0.9}
-            strokeOpacity="0.72"
-          />
-
-          <motion.g
-            data-brand-folds
-            variants={{
-              idle: { opacity: compact ? 0.94 : 0.98, scale: 1 },
-              hover: {
-                opacity: 1,
-                scale: compact ? 1.002 : 1.006,
-                transition: { duration: 0.76, ease: premiumEase },
-              },
-            }}
-            style={{ transformOrigin: '48px 71px' }}
-          >
-            <motion.path d="M1.5 96C6.8 76 16 58.7 31.2 48.4C35.4 45.5 39.6 43.7 44.2 42.6C37.1 51.7 31.4 68.6 27.8 96Z" fill={`url(#${leftFoldGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.24 } }} />
-            <motion.path d="M94.5 96C89.2 76 80 58.7 64.8 48.4C60.6 45.5 56.4 43.7 51.8 42.6C58.9 51.7 64.6 68.6 68.2 96Z" fill={`url(#${rightFoldGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.24 } }} />
-            <path d="M17 96C20.7 76.7 29.2 59.6 42.1 47.7C36.7 61.4 33.8 77.4 33.2 96Z" fill="#0a1b2c" fillOpacity="0.94" />
-            <path d="M79 96C75.3 76.7 66.8 59.6 53.9 47.7C59.3 61.4 62.2 77.4 62.8 96Z" fill="#01050c" fillOpacity="0.98" />
-            <path d="M33.2 96C35.7 76.1 40.6 59.1 48 47.1C44.8 63.7 43.3 80 43.4 96Z" fill="#06111e" />
-            <path d="M62.8 96C60.3 76.1 55.4 59.1 48 47.1C51.2 63.7 52.7 80 52.6 96Z" fill="#000309" />
-            <path d="M43.4 96C44.1 77 45.6 60.5 48 47.1C50.4 60.5 51.9 77 52.6 96Z" fill="#000106" />
-          </motion.g>
-
-          <motion.g
-            data-brand-collar
-            variants={{
-              idle: { opacity: compact ? 0.96 : 1 },
-              hover: { opacity: 1, transition: { duration: 0.68, ease: premiumEase } },
-            }}
-          >
-            <motion.path d="M13.5 58C23.7 48.4 36.1 44.6 48 48.3C42.2 52.2 35.5 58.9 28.2 68.5C22.4 64.3 17.5 60.8 13.5 58Z" fill={`url(#${collarLeftGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.16 } }} />
-            <motion.path d="M82.5 58C72.3 48.4 59.9 44.6 48 48.3C53.8 52.2 60.5 58.9 67.8 68.5C73.6 64.3 78.5 60.8 82.5 58Z" fill={`url(#${collarRightGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.16 } }} />
-            {!compact && (
-              <>
-                <path d="M8 70.5C21.8 56.6 35.5 50.5 48 52.2C39.3 60.4 31.6 70.5 24.8 82.8C18.2 77.5 12.6 73.4 8 70.5Z" fill="#0d2237" fillOpacity="0.86" />
-                <path d="M88 70.5C74.2 56.6 60.5 50.5 48 52.2C56.7 60.4 64.4 70.5 71.2 82.8C77.8 77.5 83.4 73.4 88 70.5Z" fill="#01050c" fillOpacity="0.94" />
-              </>
-            )}
-          </motion.g>
-
-          <path
-            data-brand-hood
-            d="M25 43.5C25.5 28.1 32.4 12.6 48 3.2C63.6 12.6 70.5 28.1 71 43.5C65.8 42.6 61.1 41.4 57.1 39.9C53.7 38.6 50.8 38 48 38C45.2 38 42.3 38.6 38.9 39.9C34.9 41.4 30.2 42.6 25 43.5ZM29.5 40.4C32.1 28.7 38.2 18.7 48 13.8C57.8 18.7 63.9 28.7 66.5 40.4C63.2 45 58.9 48.7 53.5 51.2C51 52.4 49.2 53.8 48 55.5C46.8 53.8 45 52.4 42.5 51.2C37.1 48.7 32.8 45 29.5 40.4Z"
-            fill={`url(#${hoodGradientId})`}
-            fillRule="evenodd"
-            stroke="#2a5470"
-            strokeWidth={compact ? 0.84 : 0.9}
-            strokeOpacity="0.8"
-          />
-          <path
-            data-brand-face-void
-            d="M29.5 40.4C32.1 28.7 38.2 18.7 48 13.8C57.8 18.7 63.9 28.7 66.5 40.4C63.2 45 58.9 48.7 53.5 51.2C51 52.4 49.2 53.8 48 55.5C46.8 53.8 45 52.4 42.5 51.2C37.1 48.7 32.8 45 29.5 40.4Z"
-            fill={`url(#${voidGradientId})`}
-          />
-
-          <motion.g
-            data-brand-rim-light
-            aria-hidden="true"
-            fill="none"
-            strokeLinecap="round"
-            variants={{
-              idle: { opacity: compact ? 0.72 : 0.82 },
-              hover: { opacity: 1, transition: { duration: 0.7, ease: premiumEase } },
-            }}
-          >
-            <motion.path d="M25.8 41.7C27.9 25.7 35.8 11.2 48 4.5" stroke={`url(#${rimGradientId})`} strokeWidth={compact ? 1.22 : 1.5} filter={compact ? undefined : `url(#${rimGlowFilterId})`} variants={{ idle: { pathLength: 0.84 }, hover: { pathLength: 1 } }} />
-            <motion.path d="M70.2 41.7C68.1 25.7 60.2 11.2 48 4.5" stroke="#55ddff" strokeOpacity="0.62" strokeWidth={compact ? 0.9 : 1.05} variants={{ idle: { pathLength: 0.78 }, hover: { pathLength: 1 } }} />
-            <path d="M48 5.5V33.5" stroke="#c4f8ff" strokeOpacity={compact ? 0.32 : 0.42} strokeWidth={compact ? 0.62 : 0.72} />
-            <motion.path d="M15.2 56.8C24.8 48.2 36.5 44.8 48 48.2" stroke="#83ecff" strokeOpacity="0.72" strokeWidth={compact ? 0.86 : 1.05} variants={{ idle: { pathLength: 0.76 }, hover: { pathLength: 1 } }} />
-            <motion.path d="M80.8 56.8C71.2 48.2 59.5 44.8 48 48.2" stroke="#42d3f8" strokeOpacity="0.42" strokeWidth={compact ? 0.72 : 0.82} variants={{ idle: { pathLength: 0.7 }, hover: { pathLength: 1 } }} />
-            <motion.path d="M3.5 94C8.9 74.7 17.7 59.3 31 49.2" stroke="#56dcff" strokeOpacity="0.34" strokeWidth={compact ? 0.68 : 0.86} variants={{ idle: { pathLength: 0.68 }, hover: { pathLength: 1 } }} />
-            {!compact && <motion.path d="M92.5 94C87.1 74.7 78.3 59.3 65 49.2" stroke="#2bbfe9" strokeOpacity="0.2" strokeWidth="0.72" variants={{ idle: { pathLength: 0.62 }, hover: { pathLength: 1 } }} />}
-          </motion.g>
-
-          {!compact && (
-            <motion.g
-              data-brand-seams
-              aria-hidden="true"
-              fill="none"
-              strokeLinecap="round"
-              variants={{
-                idle: { opacity: 0.28 },
-                hover: { opacity: 0.48, transition: { duration: 0.78, ease: premiumEase } },
-              }}
-            >
-              <path d="M34.2 27C38.2 20.6 42.8 15.8 48 12.7" stroke="#d3fbff" strokeOpacity="0.28" strokeWidth="0.65" />
-              <path d="M61.8 27C57.8 20.6 53.2 15.8 48 12.7" stroke="#48d7ff" strokeOpacity="0.16" strokeWidth="0.6" />
-              <motion.path d="M11.5 89.5C17.4 70.7 27 56.4 41.7 48.5" stroke="#69e5ff" strokeOpacity="0.28" strokeWidth="0.72" variants={{ idle: { pathLength: 0.68 }, hover: { pathLength: 1 } }} />
-              <motion.path d="M84.5 89.5C78.6 70.7 69 56.4 54.3 48.5" stroke="#2ac6ee" strokeOpacity="0.15" strokeWidth="0.64" variants={{ idle: { pathLength: 0.64 }, hover: { pathLength: 1 } }} />
-              <motion.path d="M28.2 95C30.8 74.7 35.9 59.1 43.8 49.4" stroke="#7beaff" strokeOpacity="0.2" strokeWidth="0.62" variants={{ idle: { pathLength: 0.58 }, hover: { pathLength: 0.94 } }} />
-              <motion.path d="M67.8 95C65.2 74.7 60.1 59.1 52.2 49.4" stroke="#34ccef" strokeOpacity="0.11" strokeWidth="0.58" variants={{ idle: { pathLength: 0.58 }, hover: { pathLength: 0.94 } }} />
-              <path d="M48 53V94" stroke="#3bd1f6" strokeOpacity="0.1" strokeWidth="0.52" />
-            </motion.g>
-          )}
+        <motion.g data-brand-energy aria-hidden="true" fill="none" strokeLinecap="round" variants={{ idle: { opacity: compact ? 0.28 : 0.34 }, hover: { opacity: compact ? 0.52 : 0.62, transition: { duration: 0.8, ease: premiumEase } } }}><path d="M14 80C10 62 15 44 28 30" stroke="#39cbee" strokeOpacity="0.32" strokeWidth={compact ? 0.54 : 0.62}/><path d="M82 80C86 62 81 44 68 30" stroke="#1a94b7" strokeOpacity="0.23" strokeWidth={compact ? 0.48 : 0.55}/><path d="M21 54C16 43 20 31 31 22" stroke="#67ddf7" strokeOpacity="0.28" strokeWidth={compact ? 0.46 : 0.52}/><path d="M75 54C80 43 76 31 65 22" stroke="#2aa6c7" strokeOpacity="0.18" strokeWidth={compact ? 0.42 : 0.48}/>{!compact && <><path d="M29 17C35 9 41 5 48 2" stroke="#a9f2ff" strokeOpacity="0.22" strokeWidth="0.5"/><path d="M67 17C61 9 55 5 48 2" stroke="#40bdd8" strokeOpacity="0.13" strokeWidth="0.44"/></>}</motion.g>
+        <motion.g data-brand-figure variants={{ idle: { y: 0 }, hover: { y: compact ? -0.1 : -0.28, transition: { duration: 0.74, ease: premiumEase } } }}>
+          <path data-brand-cloak d="M48 2C42.8 3.8 39.7 9.2 37.8 16.4C35.9 23.5 35.2 29.9 34.5 34.8C34 37.8 31.5 40.7 27.7 42.9C24.5 43.8 21.2 45.3 18.7 48.1C13.5 55.2 8.3 65.3 3 75.1C1.4 82.2 1.8 88.9 2.7 92C11.7 92.7 20.7 93.4 29 94.1C36.2 94.8 42.3 95.2 48 96C53.7 95.2 59.8 94.8 67 94.1C75.3 93.4 84.3 92.7 93.3 92C94.2 88.9 94.6 82.2 93 75.1C87.7 65.3 82.5 55.2 77.3 48.1C74.8 45.3 71.5 43.8 68.3 42.9C64.5 40.7 62 37.8 61.5 34.8C60.8 29.9 60.1 23.5 58.2 16.4C56.3 9.2 53.2 3.8 48 2Z" fill={`url(#${baseGradientId})`} stroke="#17384f" strokeOpacity="0.72" strokeWidth={compact ? 0.76 : 0.82}/>
+          <motion.g data-brand-folds variants={{ idle: { opacity: compact ? 0.95 : 1, scale: 1 }, hover: { opacity: 1, scale: compact ? 1.002 : 1.006, transition: { duration: 0.8, ease: premiumEase } } }} style={{ transformOrigin: '48px 72px' }}><motion.path d="M5.6 90.2C8.9 72 18.2 57.4 34.6 48.8C39.3 46.3 43.2 47.6 45.5 50.4C35.4 61.3 27.9 76.2 23.8 92.6Z" fill={`url(#${foldLeftGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.22 } }}/><motion.path d="M90.2 90.1C86.8 72.1 78.1 57.7 62.5 49C57.6 46.3 53.6 47.5 50.6 50.5C60.5 61.1 68.3 76 72.6 93.3Z" fill={`url(#${foldRightGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.2 } }}/><path d="M14.5 91.3C19 72.5 28.9 57.9 42.1 50.9C36.9 63.2 32.8 78.1 31.2 94.1Z" fill="#092033" fillOpacity="0.96"/><path d="M82 91.6C77.5 72.6 67.5 58.2 53.9 50.9C59.2 63.5 63.4 78.3 65.2 93.9Z" fill="#020912" fillOpacity="0.98"/><path d="M29.4 94.1C32.5 74.9 38.5 60.2 45.7 51.2C42.4 64.7 40.2 79.4 40.2 93.8Z" fill="#06131f"/><path d="M66.2 93.9C63.1 74.8 57.4 60.1 50.3 51.2C53.6 64.8 55.8 79.4 55.9 94Z" fill="#01050b"/><path d="M40.2 93.8C41.7 75.8 44.4 61.4 48 51.7C51.6 61.4 54.3 75.8 55.9 94Z" fill="#000206"/>{!compact && <><path d="M7.1 87C15.3 69.2 26.1 57.6 39.6 51.7C28.9 62.4 20.4 76.4 15.9 91.4Z" fill="#133248" fillOpacity="0.26"/><path d="M88.3 87.4C80.4 69.5 69.7 57.7 56.5 51.8C67.3 62.6 75.5 76.8 80.1 91.7Z" fill="#091e2d" fillOpacity="0.17"/></>}</motion.g>
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.97 : 1 }, hover: { opacity: 1, transition: { duration: 0.72, ease: premiumEase } } }}><motion.path d="M15.6 55.1C23.1 48.4 31.7 45.7 39.9 46.9C44 47.3 47.4 49.2 50.3 52.1C42.2 51.7 34.2 54.6 26.3 59.8C22.4 59 19.1 57.3 15.6 55.1Z" fill={`url(#${cowlLeftGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : -0.14 } }}/><motion.path d="M80.4 54.5C73.2 48.9 64.3 46.1 56.1 46.9C52 47.3 48.6 49.2 45.7 52.1C53.8 51.7 61.8 54.6 69.7 59.8C73.6 59 76.9 57.3 80.4 54.5Z" fill={`url(#${cowlRightGradientId})`} variants={{ idle: { x: 0 }, hover: { x: compact ? 0 : 0.14 } }}/><path d="M20.2 57.4C28.5 52 37.4 49.9 48 52.2C41.4 53.7 35.5 56.4 30.2 60.1C26.4 59.7 23.1 58.8 20.2 57.4Z" fill="#19394f" fillOpacity="0.86"/><path d="M75.8 57.4C67.5 52 58.6 49.9 48 52.2C54.6 53.7 60.5 56.4 65.8 60.1C69.6 59.7 72.9 58.8 75.8 57.4Z" fill="#071824" fillOpacity="0.95"/><path d="M28.8 60.4C35.8 55.9 42.3 54 48 55C53.7 54 60.2 55.9 67.2 60.4C60.4 59.5 54 60 48 62.1C42 60 35.6 59.5 28.8 60.4Z" fill="#020910"/></motion.g>
+          {!compact && <g data-brand-texture aria-hidden="true" fill="none" strokeLinecap="round"><path d="M18.9 54.4C25.4 51.1 31.8 49.7 37.8 50.4" stroke="#71d9ef" strokeOpacity="0.13" strokeWidth="0.5"/><path d="M24.6 58.5C30 55.4 35.4 54 40.4 54.5" stroke="#4dbbd4" strokeOpacity="0.09" strokeWidth="0.46"/><path d="M77.2 53.9C70.5 51.1 64.1 49.9 58.2 50.5" stroke="#2490a8" strokeOpacity="0.07" strokeWidth="0.45"/></g>}
+          <motion.path data-brand-hood d="M48 2.4C43.1 3.8 39.6 8.2 37.5 14.8C35.2 21.9 34.2 29.2 34.1 34.7C33.7 37.4 31.7 40 28.6 42.5C34.1 41.8 39.1 42.1 43.1 43.8C45.2 44.7 46.8 46.1 48 47.9C49.2 46.1 50.8 44.7 52.9 43.8C56.9 42.1 61.9 41.8 67.4 42.5C64.3 40 62.3 37.4 61.9 34.7C61.8 29.2 60.8 21.9 58.5 14.8C56.4 8.2 52.9 3.8 48 2.4Z" fill={`url(#${hoodGradientId})`} stroke="#28516b" strokeOpacity="0.8" strokeWidth={compact ? 0.82 : 0.88} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.05 : -0.16 } }}/>
+          <path data-brand-face-void d="M48 18.2C41 21.3 35.7 28.2 32.6 37.4C31.7 40.4 33.6 43.4 37.5 46.3C42 49.7 45.7 51.4 48 54.5C50.3 51.4 54 49.7 58.5 46.3C62.4 43.4 64.3 40.4 63.4 37.4C60.3 28.2 55 21.3 48 18.2Z" fill={`url(#${voidGradientId})`}/>
+          <g data-brand-hood-seams aria-hidden="true" fill="none" strokeLinecap="round"><path d="M34.4 35.8C35.6 27.8 40.2 20.8 48 16.5" stroke="#7bdef4" strokeOpacity="0.21" strokeWidth={compact ? 0.54 : 0.62}/><path d="M61.6 35.8C60.4 27.8 55.8 20.8 48 16.5" stroke="#2ba1bd" strokeOpacity="0.1" strokeWidth={compact ? 0.46 : 0.53}/>{!compact && <><path d="M35.8 29.2C38.4 22.6 42.5 17.5 48 14.3" stroke="#9be9f8" strokeOpacity="0.18" strokeWidth="0.56"/><path d="M60.2 29.2C57.6 22.6 53.5 17.5 48 14.3" stroke="#2b9cb5" strokeOpacity="0.08" strokeWidth="0.48"/><path d="M38 21.8C40.7 17.2 44 13.8 48 11.4" stroke="#d5fbff" strokeOpacity="0.14" strokeWidth="0.48"/><path d="M58 21.8C55.3 17.2 52 13.8 48 11.4" stroke="#3da9bf" strokeOpacity="0.065" strokeWidth="0.42"/></>}</g>
+          <motion.g data-brand-rim-light aria-hidden="true" fill="none" strokeLinecap="round" filter={`url(#${rimGlowFilterId})`} variants={{ idle: { opacity: compact ? 0.78 : 0.86 }, hover: { opacity: 1, transition: { duration: 0.75, ease: premiumEase } } }}><motion.path d="M28.9 41.6C32.1 38.6 33.7 35.9 34 32.8C34.6 23.1 38.5 9.1 48 2.8" stroke={`url(#${rimGradientId})`} strokeWidth={compact ? 1.15 : 1.42} variants={{ idle: { pathLength: 0.82 }, hover: { pathLength: 1 } }}/><motion.path d="M67.1 41.6C63.9 38.6 62.3 35.9 62 32.8C61.4 23.1 57.5 9.1 48 2.8" stroke="#4bc9e6" strokeOpacity="0.47" strokeWidth={compact ? 0.72 : 0.86} variants={{ idle: { pathLength: 0.76 }, hover: { pathLength: 1 } }}/><motion.path d="M18.3 49.2C13.2 56.4 9 66.5 6.6 78.8" stroke="#8ce5f6" strokeOpacity="0.34" strokeWidth={compact ? 0.68 : 0.82} variants={{ idle: { pathLength: 0.7 }, hover: { pathLength: 1 } }}/>{!compact && <motion.path d="M77.7 49.2C82.8 56.4 87 66.5 89.4 78.8" stroke="#2ca3bf" strokeOpacity="0.13" strokeWidth="0.58" variants={{ idle: { pathLength: 0.64 }, hover: { pathLength: 1 } }}/>}<path d="M6.4 88.8C6.7 84.8 6.7 81.4 6.6 78.8" stroke="#45bcd5" strokeOpacity="0.22" strokeWidth={compact ? 0.58 : 0.68}/></motion.g>
+          {!compact && <motion.g data-brand-seams aria-hidden="true" fill="none" strokeLinecap="round" variants={{ idle: { opacity: 0.76 }, hover: { opacity: 1, transition: { duration: 0.8, ease: premiumEase } } }}><path d="M20.4 56.9C27.1 52.5 34.4 50.6 41.1 51.1" stroke="#8ae3f4" strokeOpacity="0.16" strokeWidth="0.58"/><path d="M75.6 56.9C68.9 52.5 61.6 50.6 54.9 51.1" stroke="#2b9eb9" strokeOpacity="0.07" strokeWidth="0.48"/><motion.path d="M11 86.8C18 70.2 28.2 58.1 41.2 52" stroke="#59c4dc" strokeOpacity="0.13" strokeWidth="0.56" variants={{ idle: { pathLength: 0.68 }, hover: { pathLength: 1 } }}/><motion.path d="M84.8 87.1C77.8 70.4 67.7 58.2 54.8 52" stroke="#1f8298" strokeOpacity="0.06" strokeWidth="0.48" variants={{ idle: { pathLength: 0.62 }, hover: { pathLength: 1 } }}/><motion.path d="M25.6 92.8C30 74.2 37.3 60.2 44.7 52.3" stroke="#61cde5" strokeOpacity="0.11" strokeWidth="0.5" variants={{ idle: { pathLength: 0.58 }, hover: { pathLength: 0.94 } }}/><motion.path d="M70.3 92.7C65.9 74.1 58.7 60.2 51.3 52.3" stroke="#1e7d91" strokeOpacity="0.05" strokeWidth="0.43" variants={{ idle: { pathLength: 0.56 }, hover: { pathLength: 0.92 } }}/></motion.g>}
         </motion.g>
       </motion.svg>
     </motion.span>
