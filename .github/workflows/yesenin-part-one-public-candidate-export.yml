@@ -1,0 +1,41 @@
+name: Yesenin Part I public candidate export
+
+on:
+  push:
+    branches:
+      - research/export-yesenin-part-one-public-candidate
+    paths:
+      - 'scripts/export-yesenin-part-one-public-candidate.ts'
+      - '.github/workflows/yesenin-part-one-public-candidate-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-static-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact canonical-derived head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --silent
+      - name: Validate canonical typed article
+        run: npx tsx scripts/validate-yesenin-part-one-unpublished-article.ts
+      - name: Validate public historical claim boundaries
+        run: npx tsx scripts/validate-public-claims.ts
+      - name: Export static public candidate
+        run: npx tsx scripts/export-yesenin-part-one-public-candidate.ts
+      - name: Upload candidate JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-part-one-public-candidate
+          path: artifacts/yesenin-part-one-public-candidate.json
+          if-no-files-found: error
+          retention-days: 14
