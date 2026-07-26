@@ -43,6 +43,7 @@ for (const forbidden of [
   /бесспорно 3 октября/iu,
   /Есенин присутствовал на вечере 7 ноября/iu,
   /первые слова были/iu,
+  /его трагический финал — предрешён/iu,
 ]) {
   if (forbidden.test(searchable)) throw new Error(`forbidden public claim matched: ${forbidden}`);
 }
@@ -53,6 +54,7 @@ for (const required of [
   'не доказывает присутствие Есенина',
   'принадлежит мемуарной традиции, а не стенограмме',
   'Открытый доступ к цифровой копии не означает автоматического разрешения',
+  'его трагический финал ещё не был предрешён',
 ]) {
   if (!searchable.includes(required)) throw new Error(`required source boundary is missing: ${required}`);
 }
