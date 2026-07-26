@@ -6,7 +6,7 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260726-8';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-7';
+const VECTOR_SOURCE = 'reference-derived-contours-v8-10';
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -19,7 +19,7 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('v8.7 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
+test('v8.10 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
@@ -46,16 +46,17 @@ test('v8.7 vector system, optical favicon and platform metadata are coherent', a
   expect(standalone).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
   expect(standalone).toContain('id="mist"');
   expect(standalone).toContain('id="glow"');
-  expect(standalone).toContain('M48 41.2C37.2 40.8');
-  expect(standalone).toContain('M48 7.5C42 9.5');
-  expect(standalone).toContain('M48.2 20.7C42.6 20.9');
-  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(57);
+  expect(standalone).toContain('M48 41.4C36.8 40.8');
+  expect(standalone).toContain('M48 5C40 7.6');
+  expect(standalone).toContain('M48.1 17.6C40.3 18');
+  expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(67);
 
   const micro = sources.get('brand-mark-micro.svg');
   expect(micro).toContain('viewBox="0 0 32 32"');
-  expect(micro).toContain('M5.6 16.4C3 18.2');
-  expect(micro).toContain('M16 2.5C14 3.2');
-  expect(micro).toContain('M16.1 6.9C14.2 7');
+  expect(micro).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
+  expect(micro).toContain('M16 13.7C12.3 13.5');
+  expect(micro).toContain('M16 1.8C13.7 2.7');
+  expect(micro).toContain('M16.1 5.7C13.8 5.8');
 
   for (const [asset, size] of [
     ['brand-emblem-master.webp', { width: 320, height: 320 }],
@@ -94,7 +95,7 @@ test('standalone and micro marks decode at every optical size', async ({ page })
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('header renders the reference-shaped v8.7 vector and restrained hover', async ({ page }) => {
+test('header renders the reference-shaped v8.10 vector and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -122,20 +123,20 @@ test('header renders the reference-shaped v8.7 vector and restrained hover', asy
     return { hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width, faceToHoodWidth: face.width / hood.width, faceToHoodHeight: face.height / hood.height, cloakToHoodWidth: cloak.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height };
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(49.2);
-  expect(geometry.hoodWidth).toBeLessThan(49.6);
-  expect(geometry.faceWidth).toBeGreaterThan(26.8);
-  expect(geometry.faceWidth).toBeLessThan(27.3);
-  expect(geometry.cloakWidth).toBeGreaterThan(93.7);
-  expect(geometry.cloakWidth).toBeLessThan(94.2);
-  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.54);
-  expect(geometry.faceToHoodWidth).toBeLessThan(0.56);
-  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.69);
-  expect(geometry.faceToHoodHeight).toBeLessThan(0.72);
-  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.89);
-  expect(geometry.cloakToHoodWidth).toBeLessThan(1.91);
-  expect(geometry.hoodTop).toBeGreaterThan(7.3);
-  expect(geometry.hoodTop).toBeLessThan(7.7);
+  expect(geometry.hoodWidth).toBeGreaterThan(54.2);
+  expect(geometry.hoodWidth).toBeLessThan(55);
+  expect(geometry.faceWidth).toBeGreaterThan(32.2);
+  expect(geometry.faceWidth).toBeLessThan(33);
+  expect(geometry.cloakWidth).toBeGreaterThan(94.4);
+  expect(geometry.cloakWidth).toBeLessThan(95.2);
+  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.58);
+  expect(geometry.faceToHoodWidth).toBeLessThan(0.62);
+  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.75);
+  expect(geometry.faceToHoodHeight).toBeLessThan(0.8);
+  expect(geometry.cloakToHoodWidth).toBeGreaterThan(1.72);
+  expect(geometry.cloakToHoodWidth).toBeLessThan(1.76);
+  expect(geometry.hoodTop).toBeGreaterThan(4.8);
+  expect(geometry.hoodTop).toBeLessThan(5.2);
   expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.9);
 
   const readState = () => mark.evaluate((node) => {
@@ -161,12 +162,10 @@ test('header renders the reference-shaped v8.7 vector and restrained hover', asy
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the v8.7 vector emblem`, async ({ page }) => {
+  test(`${route}: header and footer use the v8.10 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
 
-    // Assert the two production surfaces directly. Counting every transient mark and
-    // then re-counting inside the loop races React route hydration on fast pages.
     const marks = [
       page.locator('header [data-brand-mark]').first(),
       page.locator('footer [data-brand-mark]').first(),
