@@ -151,7 +151,7 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
   const energy = mark.locator('[data-brand-energy]');
   const before = {
     vector: await vector.getAttribute('style'),
-    rim: await rim.getAttribute('style'),
+    rimOpacity: await rim.evaluate((node) => getComputedStyle(node).opacity),
     folds: await folds.getAttribute('style'),
     energy: await energy.getAttribute('style'),
   };
@@ -171,12 +171,13 @@ test('header renders the deep reference-shaped vector and restrained hover', asy
 
   const after = {
     vector: await vector.getAttribute('style'),
-    rim: await rim.getAttribute('style'),
+    rimOpacity: await rim.evaluate((node) => getComputedStyle(node).opacity),
     folds: await folds.getAttribute('style'),
     energy: await energy.getAttribute('style'),
   };
   expect(after.vector).not.toBe(before.vector);
-  expect(after.rim).not.toBe(before.rim);
+  expect(after.rimOpacity).not.toBe(before.rimOpacity);
+  expect(Number(after.rimOpacity)).toBeGreaterThan(Number(before.rimOpacity));
   expect(after.folds).not.toBe(before.folds);
   expect(after.energy).not.toBe(before.energy);
 
