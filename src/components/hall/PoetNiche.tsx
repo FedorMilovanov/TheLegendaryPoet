@@ -33,6 +33,7 @@ export function PoetNiche({
   position,
   rotationY,
   active,
+  muted,
   onSelect,
   onFocus,
 }: {
@@ -40,6 +41,7 @@ export function PoetNiche({
   position: [number, number, number]
   rotationY: number
   active: boolean
+  muted: boolean
   onSelect: () => void
   onFocus: (id: string | null) => void
 }) {
@@ -52,7 +54,7 @@ export function PoetNiche({
   texture.anisotropy = 8
 
   // audio whisper — looks for /audio/poet-{shortKey}.mp3 (silent if absent)
-  usePoetWhisper(poet.shortKey, hovered, position)
+  usePoetWhisper(poet.shortKey, hovered, position, muted)
 
   useFrame((_, dt) => {
     if (!group.current) return

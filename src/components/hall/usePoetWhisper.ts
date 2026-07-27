@@ -1,103 +1,273 @@
 // Poet whisper — 3D positional audio on hover
-// Looks for /audio/poet-{id}.mp3 , /audio/{id}.mp3 , or poet.voiceClip
-// Silent fail if file missing — no 404 spam in console
-import { useEffect, useRef } from 'react'
+// Looks for /audio/poet-{id}.mp3 or /audio/{id}.mp3 and fails silently when absent.
+import { useCallback, useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
+import { asset } from '../../utils/asset'
+import {
+  createDeferredAudioStop,
+  type DeferredAudioStopController,
+} from '../../utils/deferredAudioStop'
 
 let audioCtx: AudioContext | null = null
 const buffers = new Map<string, AudioBuffer>()
+const pendingBuffers = new Map<string, Promise<AudioBuffer | null>>()
+const unavailableBuffers = new Set<string>()
 
-async function loadBuffer(url: string): Promise<AudioBuffer | null> {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    if (audioCtx.state === 'suspended') await audioCtx.resume()
-    if (buffers.has(url)) return buffers.get(url)!
-    const res = await fetch(url, { method: 'HEAD' })
-    if (!res.ok) return null
-    const ab = await fetch(url).then(r => r.arrayBuffer())
-    const buf = await audioCtx.decodeAudioData(ab)
-    buffers.set(url, buf)
-    return buf
-  } catch { return null }
+type LegacyAudioWindow = Window & {
+  webkitAudioContext?: typeof AudioContext
 }
 
-export function usePoetWhisper(poetId: string, active: boolean, position: [number, number, number]) {
+function ensureAudioContext(): AudioContext | null {
+  if (audioCtx) return audioCtx
+  const AudioContextCtor = window.AudioContext ?? (window as LegacyAudioWindow).webkitAudioContext
+  if (!AudioContextCtor) return null
+  audioCtx = new AudioContextCtor()
+  return audioCtx
+}
+
+async function loadBuffer(url: string): Promise<AudioBuffer | null> {
+  const cached = buffers.get(url)
+  if (cached) return cached
+  if (unavailableBuffers.has(url)) return null
+
+  const pending = pendingBuffers.get(url)
+  if (pending) return pending
+
+  const request = (async () => {
+    const context = ensureAudioContext()
+    if (!context) return null
+
+    try {
+      // Decoding is valid while the context is suspended. Resume belongs to the
+      // actual playback attempt so autoplay rejection never invalidates or
+      // refetches an already decoded asset.
+      const response = await fetch(url)
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 410) unavailableBuffers.add(url)
+        return null
+      }
+      const buffer = await context.decodeAudioData(await response.arrayBuffer())
+      buffers.set(url, buffer)
+      return buffer
+    } catch {
+      return null
+    } finally {
+      pendingBuffers.delete(url)
+    }
+  })()
+
+  pendingBuffers.set(url, request)
+  return request
+}
+
+function safeDisconnect(node: AudioNode | null) {
+  if (!node) return
+  try {
+    node.disconnect()
+  } catch {
+    // A node may already be disconnected by its onended cleanup.
+  }
+}
+
+/**
+ * One listener bridge per Hall scene. Poet niches own their individual sources,
+ * while camera position and orientation are written once per frame globally.
+ */
+export function useHallAudioListener() {
   const { camera } = useThree()
-  const srcRef = useRef<PannerNode | null>(null)
+  const directionRef = useRef(new THREE.Vector3())
+  const upRef = useRef(new THREE.Vector3())
+
+  useFrame(() => {
+    const context = audioCtx
+    if (!context) return
+    const listener = context.listener
+    const now = context.currentTime
+    const cameraPosition = camera.position
+    const direction = camera.getWorldDirection(directionRef.current)
+    const up = upRef.current.set(0, 1, 0).applyQuaternion(camera.quaternion)
+
+    listener.positionX.setValueAtTime(cameraPosition.x, now)
+    listener.positionY.setValueAtTime(cameraPosition.y, now)
+    listener.positionZ.setValueAtTime(cameraPosition.z, now)
+    listener.forwardX.setValueAtTime(direction.x, now)
+    listener.forwardY.setValueAtTime(direction.y, now)
+    listener.forwardZ.setValueAtTime(direction.z, now)
+    listener.upX.setValueAtTime(up.x, now)
+    listener.upY.setValueAtTime(up.y, now)
+    listener.upZ.setValueAtTime(up.z, now)
+  })
+}
+
+export function usePoetWhisper(
+  poetId: string,
+  active: boolean,
+  position: readonly [number, number, number],
+  muted: boolean,
+) {
+  const pannerRef = useRef<PannerNode | null>(null)
   const gainRef = useRef<GainNode | null>(null)
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null)
+  const currentPoetRef = useRef<string | null>(null)
+  const latestPositionRef = useRef(position)
+  const stopControllerRef = useRef<DeferredAudioStopController<AudioBufferSourceNode> | null>(null)
 
-  useEffect(() => {
-    // global mute
-    if ((window as any).__TLP_AUDIO_MUTED) return
-    if (!active) {
-      if (gainRef.current && audioCtx) {
-        gainRef.current.gain.cancelScheduledValues(audioCtx.currentTime)
-        gainRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35)
-      }
-      setTimeout(() => {
-        audioSourceRef.current?.stop()
-        audioSourceRef.current = null
-      }, 380)
+  latestPositionRef.current = position
+  if (!stopControllerRef.current) {
+    stopControllerRef.current = createDeferredAudioStop<AudioBufferSourceNode>()
+  }
+
+  const clearCapturedNodes = useCallback((
+    source: AudioBufferSourceNode,
+    gain: GainNode | null,
+    panner: PannerNode | null,
+  ) => {
+    safeDisconnect(source)
+    safeDisconnect(gain)
+    safeDisconnect(panner)
+    if (audioSourceRef.current !== source) return
+    audioSourceRef.current = null
+    gainRef.current = null
+    pannerRef.current = null
+    currentPoetRef.current = null
+  }, [])
+
+  const stopCurrentImmediately = useCallback(() => {
+    stopControllerRef.current?.cancel()
+    const source = audioSourceRef.current
+    const gain = gainRef.current
+    const panner = pannerRef.current
+    if (!source) {
+      safeDisconnect(gain)
+      safeDisconnect(panner)
+      gainRef.current = null
+      pannerRef.current = null
+      currentPoetRef.current = null
+      return
+    }
+    try {
+      source.stop()
+    } catch {
+      // Stopping an already-ended source is harmless for lifecycle cleanup.
+    }
+    clearCapturedNodes(source, gain, panner)
+  }, [clearCapturedNodes])
+
+  const fadeOutCurrent = useCallback(() => {
+    const context = audioCtx
+    const source = audioSourceRef.current
+    const gain = gainRef.current
+    const panner = pannerRef.current
+    if (!context || !source || !gain) {
+      stopCurrentImmediately()
       return
     }
 
-    let cancelled = false
-    ;(async () => {
-      const candidates = [
-        `/audio/poet-${poetId}.mp3`,
-        `/audio/${poetId}.mp3`,
-      ]
-      let buf: AudioBuffer | null = null
-      for (const url of candidates) {
-        buf = await loadBuffer(url)
-        if (buf) break
-      }
-      if (!buf || cancelled) return
-      if (!audioCtx) return
-      await audioCtx.resume()
+    stopControllerRef.current?.cancel()
+    const now = context.currentTime
+    gain.gain.cancelScheduledValues(now)
+    gain.gain.setValueAtTime(gain.gain.value, now)
+    gain.gain.linearRampToValueAtTime(0, now + 0.35)
+    stopControllerRef.current?.schedule(source, 380, (stoppedSource) => {
+      clearCapturedNodes(stoppedSource, gain, panner)
+    })
+  }, [clearCapturedNodes, stopCurrentImmediately])
 
-      const panner = audioCtx.createPanner()
+  const resumeCurrent = useCallback((requestedPoetId: string) => {
+    const context = audioCtx
+    const source = audioSourceRef.current
+    const gain = gainRef.current
+    if (!context || !source || !gain || currentPoetRef.current !== requestedPoetId) return false
+
+    stopControllerRef.current?.cancel()
+    const now = context.currentTime
+    gain.gain.cancelScheduledValues(now)
+    gain.gain.setValueAtTime(gain.gain.value, now)
+    gain.gain.linearRampToValueAtTime(0.72, now + 0.18)
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (!active || muted) {
+      fadeOutCurrent()
+      return
+    }
+
+    if (audioSourceRef.current && currentPoetRef.current !== poetId) {
+      stopCurrentImmediately()
+    }
+    if (resumeCurrent(poetId)) return
+
+    let cancelled = false
+    void (async () => {
+      const candidates = [
+        asset(`/audio/poet-${poetId}.mp3`),
+        asset(`/audio/${poetId}.mp3`),
+      ]
+      let buffer: AudioBuffer | null = null
+      for (const url of candidates) {
+        buffer = await loadBuffer(url)
+        if (buffer || cancelled) break
+      }
+
+      const context = audioCtx
+      if (!buffer || !context || cancelled) return
+      try {
+        if (context.state === 'suspended') await context.resume()
+      } catch {
+        return
+      }
+      if (cancelled) return
+
+      stopCurrentImmediately()
+      const panner = context.createPanner()
       panner.panningModel = 'HRTF'
       panner.distanceModel = 'inverse'
       panner.refDistance = 1.8
       panner.maxDistance = 12
       panner.rolloffFactor = 1.2
-      panner.positionX.value = position[0]
-      panner.positionY.value = position[1]
-      panner.positionZ.value = position[2]
+      const [sourceX, sourceY, sourceZ] = latestPositionRef.current
+      panner.positionX.setValueAtTime(sourceX, context.currentTime)
+      panner.positionY.setValueAtTime(sourceY, context.currentTime)
+      panner.positionZ.setValueAtTime(sourceZ, context.currentTime)
 
-      const gain = audioCtx.createGain()
-      gain.gain.value = 0
-      gain.gain.linearRampToValueAtTime(0.72, audioCtx.currentTime + 0.6)
+      const gain = context.createGain()
+      gain.gain.setValueAtTime(0, context.currentTime)
+      gain.gain.linearRampToValueAtTime(0.72, context.currentTime + 0.6)
 
-      const src = audioCtx.createBufferSource()
-      src.buffer = buf
-      src.loop = false
-      src.connect(gain).connect(panner).connect(audioCtx.destination)
-      src.start()
+      const source = context.createBufferSource()
+      source.buffer = buffer
+      source.loop = false
+      source.connect(gain).connect(panner).connect(context.destination)
+      source.onended = () => {
+        if (audioSourceRef.current === source) stopControllerRef.current?.cancel()
+        clearCapturedNodes(source, gain, panner)
+      }
 
-      srcRef.current = panner
+      pannerRef.current = panner
       gainRef.current = gain
-      audioSourceRef.current = src
+      audioSourceRef.current = source
+      currentPoetRef.current = poetId
+      source.start()
     })()
 
-    return () => { cancelled = true }
-  }, [active, poetId, position])
-
-  // update listener to camera
-  useEffect(() => {
-    if (!audioCtx || !audioCtx.listener.positionX) return
-    const l = audioCtx.listener
-    const p = camera.position
-    if (l.positionX) {
-      l.positionX.value = p.x; l.positionY.value = p.y; l.positionZ.value = p.z
-      const dir = new THREE.Vector3()
-      camera.getWorldDirection(dir)
-      if (l.forwardX) {
-        l.forwardX.value = dir.x; l.forwardY.value = dir.y; l.forwardZ.value = dir.z
-      }
+    return () => {
+      cancelled = true
     }
-  })
+  }, [active, fadeOutCurrent, muted, poetId, resumeCurrent, stopCurrentImmediately])
+
+  const x = position[0]
+  const y = position[1]
+  const z = position[2]
+  useEffect(() => {
+    const context = audioCtx
+    const panner = pannerRef.current
+    if (!context || !panner) return
+    panner.positionX.setValueAtTime(x, context.currentTime)
+    panner.positionY.setValueAtTime(y, context.currentTime)
+    panner.positionZ.setValueAtTime(z, context.currentTime)
+  }, [x, y, z])
+
+  useEffect(() => () => stopCurrentImmediately(), [stopCurrentImmediately])
 }

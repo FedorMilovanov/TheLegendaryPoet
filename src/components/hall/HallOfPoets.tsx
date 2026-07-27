@@ -8,8 +8,10 @@ import { useAppNavigate } from '../ui/Link'
 import { HallEnvironment } from './HallEnvironment'
 import { PoetNiche } from './PoetNiche'
 import { useHallNavigation } from './useHallNavigation'
+import { useHallAudioListener } from './usePoetWhisper'
 import { FirstPersonControls } from './FirstPersonControls'
 import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
+import { shouldIgnoreHallShortcut } from './hallInputGuard'
 import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessing'
 
 import { poets as allPoetsRaw } from '@/data/poets'
@@ -44,8 +46,17 @@ function normalizePoet(p: RawPoet, shortKey: string): NormPoet {
   return { id: p.id, shortKey, name, years, portrait, quote }
 }
 
-function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id: string) => void }) {
+function HallScene({
+  fpsMode,
+  audioMuted,
+  onOpenPoet,
+}: {
+  fpsMode: boolean
+  audioMuted: boolean
+  onOpenPoet: (id: string) => void
+}) {
   const [focused, setFocused] = useState<string | null>(null)
+  useHallAudioListener()
 
   // Resolve POET_ORDER (short keys = portrait basename) against the real poet
   // records (whose ids are like "alexander-pushkin" and portraits live in `photo`).
@@ -66,8 +77,8 @@ function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id:
   // FPS interact: E → открыть сфокусированную нишу
   useEffect(() => {
     if (!fpsMode) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'KeyE') return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.code !== 'KeyE' || shouldIgnoreHallShortcut(event)) return
       const id = focused || poets[0]?.id
       if (id) onOpenPoet(id)
     }
@@ -79,15 +90,16 @@ function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id:
     <>
       {fpsMode && <FirstPersonControls enabled={fpsMode} />}
       <HallEnvironment />
-      {poets.map((poet, i) => {
-        const t = getNicheTransform(i)
+      {poets.map((poet, index) => {
+        const transform = getNicheTransform(index)
         return (
           <PoetNiche
             key={poet.id}
             poet={poet}
-            position={t.position}
-            rotationY={t.rotationY}
+            position={transform.position}
+            rotationY={transform.rotationY}
             active={focused === poet.id}
+            muted={audioMuted}
             onFocus={setFocused}
             onSelect={() => onOpenPoet(poet.id)}
           />
@@ -141,20 +153,14 @@ export default function HallOfPoets() {
   }, [navigate])
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if (e.code === 'KeyF') setFpsMode(f => !f)
-      if (e.code === 'KeyM') setAudioMuted(m => !m)
+    const onKey = (event: KeyboardEvent) => {
+      if (shouldIgnoreHallShortcut(event)) return
+      if (event.code === 'KeyF') setFpsMode(value => !value)
+      if (event.code === 'KeyM') setAudioMuted(value => !value)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-
-  // global audio mute flag for usePoetWhisper
-  useEffect(() => {
-    try { (window as any).__TLP_AUDIO_MUTED = audioMuted } catch {}
-  }, [audioMuted])
 
   return (
     <section className="relative h-[100vh] w-full overflow-hidden bg-[#020811]" aria-label="Зал Поэтов — 3D" data-lenis-prevent>
@@ -173,7 +179,7 @@ export default function HallOfPoets() {
         <color attach="background" args={[PALETTE.bg]} />
         <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(RENDER.dpr[1])}>
           <Suspense fallback={null}>
-            <HallScene fpsMode={fpsMode} onOpenPoet={onOpenPoet} />
+            <HallScene fpsMode={fpsMode} audioMuted={audioMuted} onOpenPoet={onOpenPoet} />
             <Preload all />
             <PostProcessing />
           </Suspense>
@@ -188,18 +194,18 @@ export default function HallOfPoets() {
           {titleCase('Зал Поэтов')}
         </h1>
         <p className="mt-3 text-cyan-100/70 text-sm md:text-[15px]">
-          {fpsMode 
+          {fpsMode
             ? 'WASD + мышь — ходить · Shift бег · E — открыть · F — выйти · M — звук'
             : 'Скролл / drag / ← → — неф · F — FPS ходьба · Клик — досье · M — звук · K — поиск'
           }
         </p>
         <div className="mt-2 inline-flex items-center gap-3 rounded-full border border-cyan-400/25 bg-black/35 px-3 py-1 text-[11px] text-cyan-200/80 backdrop-blur pointer-events-auto">
           <span className={`h-1.5 w-1.5 rounded-full ${fpsMode ? 'bg-emerald-400' : 'bg-cyan-400'}`} />
-          <button onClick={() => setFpsMode(f => !f)} className="hover:text-white">
+          <button type="button" onClick={() => setFpsMode(value => !value)} className="hover:text-white">
             {fpsMode ? 'FPS Walk' : 'Rail Dolly'}
           </button>
           <span className="opacity-30">|</span>
-          <button onClick={() => setAudioMuted(m => !m)} className="hover:text-white">
+          <button type="button" onClick={() => setAudioMuted(value => !value)} className="hover:text-white">
             {audioMuted ? '🔇 Звук выкл' : '🔊 Звук вкл'}
           </button>
           <span className="opacity-60 hidden sm:inline">F / M</span>
