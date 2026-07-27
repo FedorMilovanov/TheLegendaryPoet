@@ -15,6 +15,7 @@
     <meta name="msapplication-config" content="%BASE_URL%browserconfig.xml?v=cloak-20260726-8" />
     <meta name="apple-mobile-web-app-title" content="Legendary Poet" />
     <link rel="canonical" href="https://thelegendarypoet.ru/" />
+    <link rel="alternate" type="application/atom+xml" title="THE LEGENDARY POET — новые публикации" href="https://thelegendarypoet.ru/feed.xml" />
 
     <!-- Yandex ownership is fixed below. Google/Bing/Pinterest tags are injected
          from search-verification.json (or optional build-time overrides). -->
@@ -51,10 +52,17 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": "https://thelegendarypoet.ru/#organization",
       "name": "THE LEGENDARY POET",
       "url": "https://thelegendarypoet.ru/",
-      "logo": "https://thelegendarypoet.ru/icon-512.png?v=cloak-20260726-8",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://thelegendarypoet.ru/icon-512.png?v=cloak-20260726-8",
+        "width": 512,
+        "height": 512
+      },
       "description": "Проект о великих поэтах: биографии, тексты и глубокий литературный и христианский разбор.",
+      "email": "oldpoet2025@gmail.com",
       "sameAs": ["https://youtube.com/@TheLegendaryPoet", "https://rutube.ru/channel/74579453", "https://vk.com/thelegendarypoet"]
     }
     </script>
@@ -62,10 +70,12 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
+      "@id": "https://thelegendarypoet.ru/#website",
       "name": "THE LEGENDARY POET",
       "url": "https://thelegendarypoet.ru/",
       "inLanguage": "ru-RU",
-      "description": "Проект о великих русских поэтах: биографии, тексты, литературный и христианский разбор."
+      "description": "Проект о великих русских поэтах: биографии, тексты, литературный и христианский разбор.",
+      "publisher": { "@id": "https://thelegendarypoet.ru/#organization" }
     }
     </script>
   </head>
