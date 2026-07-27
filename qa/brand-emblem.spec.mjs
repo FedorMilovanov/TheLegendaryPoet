@@ -58,7 +58,7 @@ test('v8.21 vector system, optical favicon and platform metadata are coherent', 
   expect(micro).toContain('M15.9 13.8C12.1 13.5');
   expect(micro).toContain('M15.7 1.7C13.5 2.7');
   expect(micro).toContain('M15.9 5.7C13.9 5.8');
-  expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(19);
+  expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(20);
 
   for (const [asset, size] of [
     ['brand-emblem-master.webp', { width: 320, height: 320 }],
