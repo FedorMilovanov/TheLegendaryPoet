@@ -5,6 +5,25 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'hover-stability');
 const MAX_IMAGES_PER_SURFACE = 6;
+const INTERACTIVE_MEDIA_SELECTOR = [
+  'img.hover-media',
+  'img[class*="group-hover:scale-"]',
+  'img[class*="hover:scale-"]',
+  'img[class*="group-focus-within:scale-"]',
+  'img[class*="focus-visible:scale-"]',
+  'img[class*="group-hover:rotate-"]',
+  'img[class*="hover:rotate-"]',
+  'img[class*="group-hover:translate-"]',
+  'img[class*="hover:translate-"]',
+  'img[class*="group-hover:saturate-"]',
+  'img[class*="hover:saturate-"]',
+  'img[class*="group-hover:brightness-"]',
+  'img[class*="hover:brightness-"]',
+  'img[class*="group-hover:contrast-"]',
+  'img[class*="hover:contrast-"]',
+  'img[class*="group-hover:opacity-"]',
+  'img[class*="hover:opacity-"]',
+].join(',');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const surfaces = [
@@ -16,7 +35,7 @@ const surfaces = [
 ];
 
 async function getVisibleImages(page) {
-  const images = page.locator('img.hover-media');
+  const images = page.locator(INTERACTIVE_MEDIA_SELECTOR);
   const visibleImages = [];
   for (let index = 0; index < await images.count(); index += 1) {
     const image = images.nth(index);
@@ -39,6 +58,7 @@ async function imageSnapshot(image) {
       display: style.display,
       transform: style.transform,
       transitionProperty: style.transitionProperty,
+      backfaceVisibility: style.backfaceVisibility,
     };
   });
 }
@@ -76,6 +96,7 @@ function assertStableSamples(initial, samples) {
     expect(sample.opacity).toBeGreaterThanOrEqual(0.9);
     expect(sample.visibility).not.toBe('hidden');
     expect(sample.display).not.toBe('none');
+    expect(sample.backfaceVisibility).toBe('hidden');
   }
 }
 
@@ -88,18 +109,15 @@ for (const surface of surfaces) {
     expect(response?.status()).toBeLessThan(400);
     await page.waitForLoadState('networkidle').catch(() => undefined);
 
-    const unprotected = await page.locator('img').evaluateAll((images) => images
-      .filter((image) => {
-        const classes = typeof image.className === 'string' ? image.className : '';
-        const interactive = /(?:group-hover|hover|group-focus-within|focus-visible):(?:scale|rotate|translate|skew|saturate|brightness|contrast|opacity)(?:-|\[)/.test(classes);
-        return interactive && !classes.split(/\s+/).includes('hover-media');
-      })
+    const unprotected = await page.locator(INTERACTIVE_MEDIA_SELECTOR).evaluateAll((images) => images
+      .filter((image) => getComputedStyle(image).backfaceVisibility !== 'hidden')
       .map((image) => ({
         alt: image.getAttribute('alt') ?? '',
         className: image.className,
         src: image.getAttribute('src') ?? '',
+        backfaceVisibility: getComputedStyle(image).backfaceVisibility,
       })));
-    expect(unprotected, `interactive artwork without hover-media on ${surface.path}`).toEqual([]);
+    expect(unprotected, `interactive artwork without compositor protection on ${surface.path}`).toEqual([]);
 
     if (surface.minimum > 0) {
       await expect.poll(
@@ -120,6 +138,7 @@ for (const surface of surfaces) {
       const initial = await imageSnapshot(image);
       expect(initial.opacity).toBeGreaterThanOrEqual(0.9);
       expect(initial.transitionProperty).not.toContain('all');
+      expect(initial.backfaceVisibility).toBe('hidden');
       const samples = await samplePointerInteraction(page, image, finePointer);
       assertStableSamples(initial, samples);
 
