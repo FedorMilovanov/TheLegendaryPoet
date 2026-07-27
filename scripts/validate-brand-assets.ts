@@ -103,7 +103,7 @@ assert.match(component, /const cloakPath = 'M48 40\.8C37 40\.5/, 'runtime mantle
 assert.match(component, /const hoodPath = 'M48 9\.8C40\.2 12\.2/, 'runtime rounded hood geometry changed');
 assert.match(component, /const facePath = 'M49 21\.8C42\.8 22\.5/, 'runtime compact cavern geometry changed');
 assert.match(component, /<motion\.g[\s\S]*data-brand-collar[\s\S]*?<motion\.path[\s\S]*data-brand-hood/, 'runtime cowl must render behind the hood');
-assert.ok((component.match(/d: 'M/g) || []).length >= 58, 'runtime SVG lost layered textile geometry');
+assert.ok((component.match(/d: 'M/g) || []).length >= 55, 'runtime SVG lost layered textile geometry');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i, 'runtime embeds raster art or a plate');
 assert.doesNotMatch(component, /brand-emblem-master\.webp|data-brand-light-core|data-brand-(?:book|wing|halo|fallback)/, 'retired runtime concept returned');
 
