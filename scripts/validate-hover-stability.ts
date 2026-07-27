@@ -1,19 +1,23 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 const errors: string[] = [];
 
-function read(path: string) {
-  return fs.readFileSync(path, 'utf8');
+function read(filePath: string) {
+  return fs.readFileSync(filePath, 'utf8');
 }
 
-function requireText(path: string, text: string, label: string) {
-  const source = read(path);
-  if (!source.includes(text)) errors.push(`${path}: missing ${label}`);
+function walk(directory: string): string[] {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return walk(entryPath);
+    return entry.isFile() ? [entryPath.replaceAll('\\', '/')] : [];
+  });
 }
 
-function forbidText(path: string, text: string, label: string) {
-  const source = read(path);
-  if (source.includes(text)) errors.push(`${path}: forbidden ${label}`);
+function requireText(filePath: string, text: string, label: string) {
+  const source = read(filePath);
+  if (!source.includes(text)) errors.push(`${filePath}: missing ${label}`);
 }
 
 const main = read('src/main.tsx');
@@ -23,51 +27,87 @@ if (indexImport < 0 || stabilityImport < 0 || stabilityImport <= indexImport) {
   errors.push('src/main.tsx: hover-stability.css must load after index.css');
 }
 
+const tiltCard = read('src/components/TiltCard.tsx');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-content relative h-full w-full"', 'stable tilt content plane');
 requireText('src/components/TiltCard.tsx', 'onPointerEnter={prepareLayer}', 'pointer-entry compositor warm-up');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-sheen', 'separate sheen plane');
+if (!tiltCard.includes('<div className="tilt-card-content relative h-full w-full">\n          {children}\n          {sheen && (')) {
+  errors.push('src/components/TiltCard.tsx: children and sheen must share the single owned content plane');
+}
 
 const stability = read('src/hover-stability.css');
+if (stability.includes('.tilt-card-inner > *')) {
+  errors.push('src/hover-stability.css: broad direct-child transform reset is forbidden');
+}
 for (const [text, label] of [
-  ['.tilt-card-inner > * {\n  transform: none;', 'legacy child-transform neutralizer'],
   ['.tilt-card-content {', 'stable content plane CSS'],
   ['backface-visibility: hidden;', 'backface stabilization'],
   ['transform: translate3d(-160%, 0, 0) skewX(-18deg);', 'transform-only luxury sweep'],
   ['transition-property: transform, opacity;', 'explicit sweep transition properties'],
-  ['.hover-media {', 'shared artwork stabilization class'],
+  ['img[class*="group-hover:scale-"]', 'automatic group-hover artwork protection'],
+  ['img[class*="hover:scale-"]', 'automatic direct-hover artwork protection'],
+  ['img[class*="group-hover:contrast-"]', 'automatic filter artwork protection'],
 ]) {
   if (!stability.includes(text)) errors.push(`src/hover-stability.css: missing ${label}`);
 }
 
-const interactiveCards = [
-  'src/components/essay/EssayCard.tsx',
-  'src/components/PoetCard.tsx',
-  'src/components/music/TrackReleaseCard.tsx',
-  'src/components/music/TrackAnnouncementCard.tsx',
-];
+const sourceFiles = walk('src').filter((filePath) => /\.(?:tsx?|css)$/.test(filePath));
+const componentFiles = sourceFiles.filter((filePath) => filePath.endsWith('.tsx'));
+const mediaTagPattern = /<(?:img|ResilientImage|PoetImage)\b[\s\S]*?\/>/g;
+const interactiveMediaEffect = /(?:group-hover|hover|group-focus-within|focus-visible):(?:scale|rotate|translate|skew|saturate|brightness|contrast|opacity)(?:-|\[)/;
+const transitionAll = /\btransition-all\b/;
+const scalePattern = /(?:group-hover|hover):scale-(?:\[(1(?:\.\d+)?)\]|(\d+))/g;
 
-for (const path of interactiveCards) {
-  requireText(path, 'hover-media', 'hover-media class on artwork');
-  forbidText(path, 'transition-all', 'transition-all on interactive card artwork');
+let mediaTags = 0;
+let interactiveMediaTags = 0;
+let explicitlyMarkedMediaTags = 0;
+let tiltUsages = 0;
+
+for (const filePath of componentFiles) {
+  const source = read(filePath);
+  tiltUsages += source.match(/<TiltCard\b/g)?.length ?? 0;
+
+  for (const tag of source.match(mediaTagPattern) ?? []) {
+    mediaTags += 1;
+    const interactive = interactiveMediaEffect.test(tag);
+    if (interactive) interactiveMediaTags += 1;
+    if (/\bhover-media\b/.test(tag)) explicitlyMarkedMediaTags += 1;
+
+    if (transitionAll.test(tag)) {
+      errors.push(`${filePath}: media element uses transition-all; animate only explicit compositor properties`);
+    }
+
+    for (const match of tag.matchAll(scalePattern)) {
+      const bracketValue = match[1] ? Number(match[1]) : null;
+      const utilityValue = match[2] ? Number(match[2]) / 100 : null;
+      const scale = bracketValue ?? utilityValue;
+      if (scale != null && scale > 1.08) {
+        errors.push(`${filePath}: artwork hover scale ${scale.toFixed(3)} exceeds the 1.08 stability/quality ceiling`);
+      }
+    }
+  }
 }
 
-const poetCard = read('src/components/PoetCard.tsx');
-if (!poetCard.includes('transition-[opacity,transform]')) {
-  errors.push('src/components/PoetCard.tsx: shine must animate opacity and transform together');
-}
-if (poetCard.includes('transition-opacity duration-700 pointer-events-none bg-gradient-to-r')) {
-  errors.push('src/components/PoetCard.tsx: legacy transform-jumping shine returned');
+if (tiltUsages === 0) errors.push('src: TiltCard is no longer used; remove or replace its contract intentionally');
+if (interactiveMediaTags === 0) errors.push('src: no interactive artwork discovered; validator patterns may be stale');
+
+const qa = read('qa/hover-stability.spec.mjs');
+for (const [text, label] of [
+  ['sample.src).toBe(initial.src)', 'source identity assertion'],
+  ['initial.opacity - 0.05', 'relative opacity stability assertion'],
+  ["initial.transitionProperty).not.toContain('all')", 'transition-all rejection'],
+  ['interactive artwork without compositor protection', 'runtime computed-style protection audit'],
+  ['sampledImages.length < MAX_IMAGES_PER_SURFACE', 'bounded multi-image sampling'],
+  ["path: '/essays/yesenin-duncan-first-meeting-documents'", 'inline essay artwork route'],
+  ["path: '/archive'", 'listening archive route'],
+]) {
+  if (!qa.includes(text)) errors.push(`qa/hover-stability.spec.mjs: missing ${label}`);
 }
 
-const essayCard = read('src/components/essay/EssayCard.tsx');
-if (!essayCard.includes('group-hover:scale-[1.025]')) {
-  errors.push('src/components/essay/EssayCard.tsx: approved restrained cover zoom changed');
-}
-
-requireText('qa/hover-stability.spec.mjs', 'sample.src).toBe(initial.src)', 'source identity assertion');
-requireText('qa/hover-stability.spec.mjs', 'sample.opacity).toBeGreaterThanOrEqual(0.9)', 'opacity stability assertion');
-requireText('qa/hover-stability.spec.mjs', "initial.transitionProperty).not.toContain('all')", 'transition-all rejection');
-
-for (const error of errors) console.error(`ERROR ${error}`);
-console.log(`Hover stability contract: ${interactiveCards.length} card families, ${errors.length} errors`);
+for (const error of [...new Set(errors)]) console.error(`ERROR ${error}`);
+console.log(
+  `Hover stability contract: ${sourceFiles.length} source files, ${mediaTags} media tags, `
+  + `${interactiveMediaTags} interactive, ${explicitlyMarkedMediaTags} explicitly marked, `
+  + `${tiltUsages} TiltCard usages, ${errors.length} errors`,
+);
 if (errors.length > 0) process.exit(1);

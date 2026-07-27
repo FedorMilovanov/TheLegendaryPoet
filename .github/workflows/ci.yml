@@ -45,6 +45,22 @@ jobs:
           path: interaction-runtime.log
           if-no-files-found: error
           retention-days: 3
+      - name: Validate universal hover and compositor contract
+        id: hover_stability
+        run: |
+          set +e
+          npm run validate:hover-stability > hover-stability.log 2>&1
+          status=$?
+          cat hover-stability.log
+          exit $status
+      - name: Upload hover stability diagnostics
+        if: ${{ failure() && steps.hover_stability.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: hover-stability-diagnostics
+          path: hover-stability.log
+          if-no-files-found: error
+          retention-days: 3
       - name: Typecheck
         id: typecheck
         run: |

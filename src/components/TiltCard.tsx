@@ -123,13 +123,15 @@ export default function TiltCard({
         }}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
-        <div className="tilt-card-content relative h-full w-full">{children}</div>
-        {sheen && (
-          <span
-            aria-hidden="true"
-            className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_40%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
-          />
-        )}
+        <div className="tilt-card-content relative h-full w-full">
+          {children}
+          {sheen && (
+            <span
+              aria-hidden="true"
+              className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_40%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
