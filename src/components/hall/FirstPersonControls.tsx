@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { CAMERA, HALL } from './hallConfig'
 import { isHallOverlayOpen, shouldIgnoreHallShortcut } from './hallInputGuard'
+import { resolveHallVelocity } from './hallMovement'
 
 type MoveState = { f: number; b: number; l: number; r: number; run: boolean }
 
@@ -85,26 +86,13 @@ export function FirstPersonControls({ enabled }: { enabled: boolean }) {
       return
     }
 
-    let directionX = move.current.r - move.current.l
-    let directionZ = move.current.b - move.current.f
-    const directionLength = Math.hypot(directionX, directionZ)
-    if (directionLength > 0) {
-      directionX /= directionLength
-      directionZ /= directionLength
-    }
-
     const speed = (move.current.run ? 4.8 : 2.6) * dt
-    const yaw = euler.current.y
-    const sinYaw = Math.sin(yaw)
-    const cosYaw = Math.cos(yaw)
-
-    // Resolve local forward/right movement directly into world XZ. Keeping the
-    // single velocity scratch vector avoids allocating direction, forward and
-    // right Vector3 instances on every animation frame.
-    velocity.current.set(
-      (-sinYaw * directionZ + cosYaw * directionX) * speed,
-      0,
-      (-cosYaw * directionZ - sinYaw * directionX) * speed,
+    resolveHallVelocity(
+      velocity.current,
+      move.current.r - move.current.l,
+      move.current.b - move.current.f,
+      euler.current.y,
+      speed,
     )
     camera.position.add(velocity.current)
 
