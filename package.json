@@ -25,7 +25,7 @@
     "validate:community-store": "tsx scripts/validate-community-store.ts",
     "validate:community-target-store": "tsx scripts/validate-community-target-store.ts",
     "validate:app-shell": "tsx scripts/validate-app-shell.ts",
-    "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts",
+    "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:build-output": "tsx scripts/validate-build-output.ts",
     "validate:style": "tsx scripts/validate-literary-style.ts",
