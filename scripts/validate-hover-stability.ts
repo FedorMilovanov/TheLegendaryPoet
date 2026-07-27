@@ -94,7 +94,7 @@ if (interactiveMediaTags === 0) errors.push('src: no interactive artwork discove
 const qa = read('qa/hover-stability.spec.mjs');
 for (const [text, label] of [
   ['sample.src).toBe(initial.src)', 'source identity assertion'],
-  ['sample.opacity).toBeGreaterThanOrEqual(0.9)', 'opacity stability assertion'],
+  ['initial.opacity - 0.05', 'relative opacity stability assertion'],
   ["initial.transitionProperty).not.toContain('all')", 'transition-all rejection'],
   ['interactive artwork without compositor protection', 'runtime computed-style protection audit'],
   ['sampledImages.length < MAX_IMAGES_PER_SURFACE', 'bounded multi-image sampling'],
