@@ -44,7 +44,15 @@ function normalizePoet(p: RawPoet, shortKey: string): NormPoet {
   return { id: p.id, shortKey, name, years, portrait, quote }
 }
 
-function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id: string) => void }) {
+function HallScene({
+  fpsMode,
+  audioMuted,
+  onOpenPoet,
+}: {
+  fpsMode: boolean
+  audioMuted: boolean
+  onOpenPoet: (id: string) => void
+}) {
   const [focused, setFocused] = useState<string | null>(null)
 
   // Resolve POET_ORDER (short keys = portrait basename) against the real poet
@@ -88,6 +96,7 @@ function HallScene({ fpsMode, onOpenPoet }: { fpsMode: boolean; onOpenPoet: (id:
             position={t.position}
             rotationY={t.rotationY}
             active={focused === poet.id}
+            muted={audioMuted}
             onFocus={setFocused}
             onSelect={() => onOpenPoet(poet.id)}
           />
@@ -151,11 +160,6 @@ export default function HallOfPoets() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // global audio mute flag for usePoetWhisper
-  useEffect(() => {
-    try { (window as any).__TLP_AUDIO_MUTED = audioMuted } catch {}
-  }, [audioMuted])
-
   return (
     <section className="relative h-[100vh] w-full overflow-hidden bg-[#020811]" aria-label="Зал Поэтов — 3D" data-lenis-prevent>
       <Canvas
@@ -173,7 +177,7 @@ export default function HallOfPoets() {
         <color attach="background" args={[PALETTE.bg]} />
         <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(RENDER.dpr[1])}>
           <Suspense fallback={null}>
-            <HallScene fpsMode={fpsMode} onOpenPoet={onOpenPoet} />
+            <HallScene fpsMode={fpsMode} audioMuted={audioMuted} onOpenPoet={onOpenPoet} />
             <Preload all />
             <PostProcessing />
           </Suspense>
