@@ -1,12 +1,10 @@
 import { useId } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '../utils/cn';
-
 interface BrandMarkProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
-
 type VectorPath = Readonly<{
   d: string;
   fill?: string;
@@ -16,18 +14,15 @@ type VectorPath = Readonly<{
   strokeWidth?: number;
   strokeLinecap?: 'round' | 'butt';
 }>;
-
 const sizes = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-24 w-24' };
 const premiumEase = [0.16, 1, 0.3, 1] as const;
 const BRAND_VERSION = 'cloak-20260726-8';
 const VECTOR_SOURCE = 'reference-derived-contours-v8-24';
-
 const cloakPath = 'M48 40.8C37 40.5 27 42.3 18.5 47C11.2 51 6 60 3.2 70C1.2 77.8.8 87 1.5 96H94.5C95.2 87 94.8 77.8 92.8 70C90 60 84.8 51 77.5 47C69 42.3 59 40.5 48 40.8Z';
 const hoodPath = 'M48 9.8C40.2 12.2 35.5 20.8 32.8 30.8C31.2 36.8 29.4 42.5 27.5 46.4C32.3 43.8 37 44.7 41.5 47.5C44.5 49.4 46.8 51.2 48 53.3C49.5 51.2 52 49.2 55.2 47.4C59.6 44.8 64.2 43.8 68.8 46.2C66.6 41.7 64.8 36.8 63.2 30.8C60.5 20.7 55.7 12.1 48 9.8Z';
 const hoodLeftPath = 'M48 10.5C42.5 14.4 38 22 35.2 31.5C33.5 37 31.8 41.8 29.5 45.1C34.4 43.3 39.2 44.5 43.7 48C45.5 49.4 47 51 48 52.7C45 41.8 43.2 31 44.5 21.8C45.2 16.7 46.6 12.4 48 10.5Z';
 const hoodRightPath = 'M48.4 10.7C53.8 14.5 58 22 60.7 31.3C62.2 36.8 63.9 41.2 66.5 44.8C61.8 43.5 57.2 44.7 52.7 47.8C50.8 49.1 49.3 50.8 48 52.7C51.2 41.2 52.8 31 51.6 22C51 16.8 49.7 12.6 48.4 10.7Z';
 const facePath = 'M49 21.8C42.8 22.5 38 26.4 34.2 32.7C32.5 35.5 32.7 38.1 34.4 40.6C37.2 44.3 41.2 47.2 47.7 50.3C51.5 47.8 55.2 45 58.2 41.5C60.2 39.2 61.5 36.5 60.4 33.8C57.6 27 54.1 23.2 49 21.8Z';
-
 const atmospherePaths: readonly VectorPath[] = [
   { d: 'M11 95C6 73 14 52 30 38C40 29 43 17 48 8C53 17 56 29 66 38C82 52 90 73 83 95C70 69 59 56 48 52C36 56 24 70 11 95Z', fill: '#62e3ff', fillOpacity: 0.3 },
   { d: 'M0 96C4 74 14 56 30 42C18 63 12 81 11 96Z', fill: '#32cde8', fillOpacity: 0.17 },
@@ -35,12 +30,10 @@ const atmospherePaths: readonly VectorPath[] = [
   { d: 'M28 30C33 19 40 11 47 9', stroke: '#b5f6ff', strokeOpacity: 0.1, strokeWidth: 1.6, strokeLinecap: 'round' },
   { d: 'M69 31C64 20 56 12 49 9', stroke: '#349bb3', strokeOpacity: 0.035, strokeWidth: 1.15, strokeLinecap: 'round' },
 ];
-
 const energyPaths: readonly VectorPath[] = [
   { d: 'M13 57C10 62 9 68 9 74', stroke: '#63d8ec', strokeOpacity: 0.05, strokeWidth: 0.34, strokeLinecap: 'round' },
   { d: 'M83 57C86 62 87 68 87 74', stroke: '#26778b', strokeOpacity: 0.02, strokeWidth: 0.3, strokeLinecap: 'round' },
 ];
-
 const foldPaths: readonly VectorPath[] = [
   { d: 'M1.6 96C4.8 77.5 13 58.5 31 47C36 44 41 45 46 50C34 61 24 78 18 96Z', fill: '#081f2e' },
   { d: 'M94.4 96C91.2 77.5 83 58.5 65 47C60 44 55 45 50 50C62 61 72 78 78 96Z', fill: '#020a11' },
@@ -61,22 +54,20 @@ const foldPaths: readonly VectorPath[] = [
   { d: 'M24 96C27.8 77.3 36 62.2 46 56.2C39.3 69.3 35.8 83.5 35.4 96Z', fill: '#0a2a3a', fillOpacity: 0.14 },
   { d: 'M71 96C67.8 79.5 60.8 66.8 49.4 57.2C56.8 71 59.8 84.5 59.2 96Z', fill: '#01080e', fillOpacity: 0.07 },
 ];
-
 const collarPaths: readonly VectorPath[] = [
-  { d: 'M15.8 48.2C26.4 43.8 36.3 45 46.2 51.2C39.8 53.1 33.1 56 27.1 60.1C22.8 57 19.2 52.8 15.8 48.2Z', fill: '#0d3448', fillOpacity: 0.88 },
-  { d: 'M80.2 49C70.9 44.9 60.8 45.5 49.7 51.3C56.3 53.2 62 55.1 67.1 57.3C72.8 55.7 77.1 52.7 80.2 49Z', fill: '#031019', fillOpacity: 0.9 },
-  { d: 'M19.8 54C29.1 50.7 38.2 53.1 46.9 59.4C40.6 61.3 35 64.8 29.6 69.5C25.4 65.2 22 59.7 19.8 54Z', fill: '#092a3c', fillOpacity: 0.96 },
-  { d: 'M73.8 54.3C65.5 51.5 57.3 53 49.1 58.2C54.5 60 59.4 62.2 63.9 64.8C68.5 62.3 71.7 58.6 73.8 54.3Z', fill: '#01080e', fillOpacity: 0.97 },
-  { d: 'M28.3 61.5C34.4 58.2 40.5 59.2 46.6 63.4C41.8 65.2 37.6 68.3 34 72.1Z', fill: '#061c29', fillOpacity: 0.95 },
-  { d: 'M62.6 59.6C57.4 57.8 52.9 58.8 49 61.8C53.2 63.1 56.8 65 59.8 67.1Z', fill: '#01060a', fillOpacity: 0.98 },
-  { d: 'M16.4 49C27.7 46.1 37.4 50 46.5 59.1', stroke: '#1a5169', strokeOpacity: 0.68, strokeWidth: 2.35, strokeLinecap: 'round' },
-  { d: 'M79.3 49.7C69.2 46.9 59.9 50.4 49.3 58', stroke: '#082432', strokeOpacity: 0.8, strokeWidth: 1.8, strokeLinecap: 'round' },
-  { d: 'M25.4 56.2C33.1 53.9 40 56 46.7 61.3', stroke: '#5aa9ba', strokeOpacity: 0.14, strokeWidth: 0.46, strokeLinecap: 'round' },
-  { d: 'M67 56C60.6 54.9 55.2 56.2 49.8 59.8', stroke: '#154657', strokeOpacity: 0.05, strokeWidth: 0.32, strokeLinecap: 'round' },
-  { d: 'M21.2 52.6C29.4 54.8 36.7 58.5 42.3 64.4', stroke: '#16465a', strokeOpacity: 0.16, strokeWidth: 0.5, strokeLinecap: 'round' },
-  { d: 'M70.4 52.9C63.7 54.2 58.5 56.7 54.2 60.2', stroke: '#0b2c3c', strokeOpacity: 0.06, strokeWidth: 0.38, strokeLinecap: 'round' },
+  { d: 'M15.5 48.3C25.7 44 34.8 44.9 43.9 50.2C38.6 52.5 32.7 55.8 27 60.4C22.7 57.3 18.8 52.9 15.5 48.3Z', fill: '#0d3448', fillOpacity: 0.9 },
+  { d: 'M80.4 49.1C71.7 45.2 62.3 45.6 52 50.9C57.6 52.4 62.6 54.2 67 56.4C72.9 55.3 77.3 52.6 80.4 49.1Z', fill: '#031019', fillOpacity: 0.92 },
+  { d: 'M19.4 54.1C28.4 50.8 36.6 52.8 44.2 58.2C38.6 60.7 33.8 64.6 29.3 69.7C25.2 65.4 21.8 59.8 19.4 54.1Z', fill: '#092a3c', fillOpacity: 0.97 },
+  { d: 'M74 54.5C66.4 51.8 59 52.8 51.2 57.4C56 59.1 60.2 61.1 64 63.7C68.7 61.7 72 58.3 74 54.5Z', fill: '#01080e', fillOpacity: 0.98 },
+  { d: 'M28 61.7C33.7 58.5 39.2 59.2 44 62.7C40 64.8 36.5 68 33.6 72.2Z', fill: '#061c29', fillOpacity: 0.96 },
+  { d: 'M62.8 59.8C58.2 58 54.3 58.6 51.3 61.2C54.7 62.4 57.7 64 60 66.1Z', fill: '#01060a', fillOpacity: 0.99 },
+  { d: 'M16.2 49C26.8 46.2 35.3 49.3 43.9 57.4', stroke: '#1a5169', strokeOpacity: 0.68, strokeWidth: 2.2, strokeLinecap: 'round' },
+  { d: 'M79.2 49.8C69.8 47.1 61.3 49.7 52 56.7', stroke: '#082432', strokeOpacity: 0.8, strokeWidth: 1.65, strokeLinecap: 'round' },
+  { d: 'M24.8 56.3C31.8 54 37.9 55.6 43.9 60', stroke: '#5aa9ba', strokeOpacity: 0.14, strokeWidth: 0.46, strokeLinecap: 'round' },
+  { d: 'M68 55.8C62.1 54.8 57.2 55.9 52.1 59.1', stroke: '#154657', strokeOpacity: 0.05, strokeWidth: 0.32, strokeLinecap: 'round' },
+  { d: 'M21 52.7C28.7 54.8 35.2 58.1 40.7 63.6', stroke: '#16465a', strokeOpacity: 0.16, strokeWidth: 0.5, strokeLinecap: 'round' },
+  { d: 'M71 52.9C64.8 54 59.7 56.1 55.3 59.5', stroke: '#0b2c3c', strokeOpacity: 0.06, strokeWidth: 0.38, strokeLinecap: 'round' },
 ];
-
 const hoodLayerPaths: readonly VectorPath[] = [
   { d: 'M47.5 12.6C42.4 16.5 38.7 23.1 36.1 31.2C39.7 28.4 43.4 26 47.6 23.9', stroke: '#17475d', strokeOpacity: 0.62, strokeWidth: 1.2, strokeLinecap: 'round' },
   { d: 'M48.6 15.5C52.6 18.9 55.7 24.1 58 30.5C54.9 28.2 52.1 26.4 48.4 25', stroke: '#0b2b3b', strokeOpacity: 0.5, strokeWidth: 1.05, strokeLinecap: 'round' },
@@ -85,7 +76,11 @@ const hoodLayerPaths: readonly VectorPath[] = [
   { d: 'M50.6 18.4C53.2 20.8 55 23.8 56.1 27.2', stroke: '#1d576a', strokeOpacity: 0.2, strokeWidth: 0.58, strokeLinecap: 'round' },
   { d: 'M43.4 17.2C41.2 19.4 39.6 22.3 38.6 25.5', stroke: '#2d6377', strokeOpacity: 0.22, strokeWidth: 0.52, strokeLinecap: 'round' },
 ];
-
+const faceDepthPaths: readonly VectorPath[] = [
+  { d: 'M34.2 32.7C36.4 28.6 40.1 25.1 45.4 23.2C41.7 27.2 39.5 31.4 39 35.7C38.6 39.6 40.5 42.8 44.2 45.8C39.8 43.8 36.7 41.8 34.6 39.2C33.2 37.4 33 34.9 34.2 32.7Z', fill: '#04131d' },
+  { d: 'M60.4 33.8C58.3 28.8 55.3 25.4 51.2 23.3C54.4 27.2 56.2 31 56.5 34.8C56.8 38.3 55.2 41.4 51.7 44.6C55 42.8 57.5 40.7 59.2 38.2C60.2 36.7 60.7 35.2 60.4 33.8Z', fill: '#01070c' },
+  { d: 'M39.7 42.5C42.2 45 44.8 46.8 47.5 48.2C50.4 46.5 53.1 44.5 55.3 42.1C53.6 45.7 50.8 48.2 47.6 50.3C44.3 48.7 41.4 46.2 39.7 42.5Z', fill: '#020a10' },
+];
 const texturePaths: readonly VectorPath[] = [
   { d: 'M47.5 22.4C42.8 24.4 38.8 28.3 35.8 33.5C34.4 36.2 34.6 38.9 36.2 41.5', stroke: '#72d7e8', strokeOpacity: 0.13, strokeWidth: 0.34, strokeLinecap: 'round' },
   { d: 'M49.2 22.4C53.9 24.5 57.2 28.2 59.5 33.4', stroke: '#226d80', strokeOpacity: 0.04, strokeWidth: 0.28, strokeLinecap: 'round' },
@@ -96,16 +91,14 @@ const texturePaths: readonly VectorPath[] = [
   { d: 'M63.3 34.2C64.3 38.4 66 42.1 68.2 45', stroke: '#2b8ea2', strokeOpacity: 0.065, strokeWidth: 0.34, strokeLinecap: 'round' },
   { d: 'M30.2 45.2C34.4 43.4 39 44.2 43.2 46.7', stroke: '#71cadc', strokeOpacity: 0.05, strokeWidth: 0.34, strokeLinecap: 'round' },
 ];
-
 const rimPaths: readonly VectorPath[] = [
   { d: 'M23.5 47.6C26 45.8 27.8 43.2 29 40', stroke: '#bff7ff', strokeOpacity: 0.56, strokeWidth: 0.78, strokeLinecap: 'round' },
   { d: 'M29.1 35.5C31.5 27.2 35.4 18.6 40.2 14', stroke: '#d8fbff', strokeOpacity: 0.52, strokeWidth: 0.68, strokeLinecap: 'round' },
-  { d: 'M42 11.8C44.1 10.2 46.1 9.6 47.8 9.3', stroke: '#f4ffff', strokeOpacity: 0.68, strokeWidth: 0.62, strokeLinecap: 'round' },
-  { d: 'M49.8 9.9C52.2 11.2 54.4 13.3 56 15.8', stroke: '#71dced', strokeOpacity: 0.18, strokeWidth: 0.4, strokeLinecap: 'round' },
+  { d: 'M42.8 11.5C44.2 10.4 45.6 9.8 46.9 9.5', stroke: '#f4ffff', strokeOpacity: 0.58, strokeWidth: 0.56, strokeLinecap: 'round' },
+  { d: 'M50.1 10.2C52.1 11.3 53.8 13 55.2 15.1', stroke: '#71dced', strokeOpacity: 0.16, strokeWidth: 0.38, strokeLinecap: 'round' },
   { d: 'M59 21.8C60.6 25 61.8 28.5 62.7 32', stroke: '#4bbbd0', strokeOpacity: 0.09, strokeWidth: 0.34, strokeLinecap: 'round' },
   { d: 'M64 36C65 39.7 66.8 42.5 69.2 44.8', stroke: '#36a7bf', strokeOpacity: 0.07, strokeWidth: 0.36, strokeLinecap: 'round' },
 ];
-
 const seamPaths: readonly VectorPath[] = [
   { d: 'M4 94C11 74 24 59 43 51.7', stroke: '#72cbdc', strokeOpacity: 0.16, strokeWidth: 0.42, strokeLinecap: 'round' },
   { d: 'M16 96C23 76 34 60 46 52', stroke: '#5cb1c3', strokeOpacity: 0.13, strokeWidth: 0.36, strokeLinecap: 'round' },
@@ -122,73 +115,33 @@ const seamPaths: readonly VectorPath[] = [
   { d: 'M12.8 62C24.5 54.7 35.3 54.5 44.6 61.2', stroke: '#5ab0c2', strokeOpacity: 0.055, strokeWidth: 0.34, strokeLinecap: 'round' },
   { d: 'M81.5 61C70.8 54.2 61 54.8 51.6 60.2', stroke: '#174f60', strokeOpacity: 0.018, strokeWidth: 0.28, strokeLinecap: 'round' },
 ];
-
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
   const reducedMotion = useReducedMotion();
   const id = useId().replace(/:/g, '');
   const compact = size === 'sm';
   const ids = {
-    title: `${id}-brand-title`,
-    description: `${id}-brand-description`,
-    mantle: `${id}-mantle`,
-    hood: `${id}-hood`,
-    hoodLeft: `${id}-hood-left`,
-    mist: `${id}-mist`,
-    glow: `${id}-glow`,
+    title: `${id}-brand-title`, description: `${id}-brand-description`, mantle: `${id}-mantle`,
+    hood: `${id}-hood`, hoodLeft: `${id}-hood-left`, mist: `${id}-mist`, glow: `${id}-glow`,
   };
-
   const renderPath = (path: VectorPath, index: number, compactStroke = false) => (
-    <path
-      key={`${index}-${path.d}`}
-      d={path.d}
-      fill={path.fill ?? 'none'}
-      fillOpacity={path.fillOpacity}
-      stroke={path.stroke}
-      strokeOpacity={path.strokeOpacity}
+    <path key={`${index}-${path.d}`} d={path.d} fill={path.fill ?? 'none'} fillOpacity={path.fillOpacity}
+      stroke={path.stroke} strokeOpacity={path.strokeOpacity}
       strokeWidth={path.strokeWidth === undefined ? undefined : compactStroke && compact ? path.strokeWidth * 0.84 : path.strokeWidth}
-      strokeLinecap={path.strokeLinecap}
-    />
+      strokeLinecap={path.strokeLinecap}/>
   );
-
   return (
-    <motion.span
-      data-brand-mark
-      data-brand-version={BRAND_VERSION}
-      data-brand-renderer="inline-vector"
+    <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector"
       data-brand-vector-source={VECTOR_SOURCE}
       className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
-      initial={false}
-      animate="idle"
-      whileHover={reducedMotion ? undefined : 'hover'}
-    >
-      <motion.svg
-        data-brand-vector
-        className="h-full w-full overflow-visible"
-        viewBox="0 0 96 96"
-        role="img"
-        aria-labelledby={`${ids.title} ${ids.description}`}
-        focusable="false"
-        style={{ pointerEvents: 'none' }}
+      initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
+      <motion.svg data-brand-vector className="h-full w-full overflow-visible" viewBox="0 0 96 96" role="img"
+        aria-labelledby={`${ids.title} ${ids.description}`} focusable="false" style={{ pointerEvents: 'none' }}
         variants={{
-          idle: {
-            y: 0,
-            scale: 1,
-            filter: compact
-              ? 'drop-shadow(0 3px 5px rgba(0,4,13,.78)) drop-shadow(0 0 5px rgba(46,216,255,.14))'
-              : 'drop-shadow(0 5px 11px rgba(0,4,13,.8)) drop-shadow(0 0 8px rgba(46,216,255,.15))',
-          },
-          hover: {
-            y: compact ? -0.5 : -0.8,
-            scale: compact ? 1.018 : 1.025,
-            filter: compact
-              ? 'drop-shadow(0 5px 9px rgba(0,7,18,.84)) drop-shadow(0 0 8px rgba(65,220,255,.25))'
-              : 'drop-shadow(0 8px 17px rgba(0,7,18,.86)) drop-shadow(0 0 14px rgba(65,220,255,.26))',
-            transition: { duration: 0.78, ease: premiumEase },
-          },
-        }}
-      >
+          idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 5px rgba(0,4,13,.78)) drop-shadow(0 0 5px rgba(46,216,255,.14))' : 'drop-shadow(0 5px 11px rgba(0,4,13,.8)) drop-shadow(0 0 8px rgba(46,216,255,.15))' },
+          hover: { y: compact ? -0.5 : -0.8, scale: compact ? 1.018 : 1.025, filter: compact ? 'drop-shadow(0 5px 9px rgba(0,7,18,.84)) drop-shadow(0 0 8px rgba(65,220,255,.25))' : 'drop-shadow(0 8px 17px rgba(0,7,18,.86)) drop-shadow(0 0 14px rgba(65,220,255,.26))', transition: { duration: 0.78, ease: premiumEase } },
+        }}>
         <title id={ids.title}>THE LEGENDARY POET</title>
-        <desc id={ids.description}>Безликая фигура в округлом асимметричном капюшоне, с тяжёлой левой драпировкой, утопленным правым плечом и почти чёрной мантией</desc>
+        <desc id={ids.description}>Безликая фигура в асимметричном капюшоне, с суженным глубоким проёмом, разорванным воротом и тяжёлой почти чёрной мантией</desc>
         <defs>
           <linearGradient id={ids.mantle} x1="2" y1="42" x2="92" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#12364b"/><stop offset=".18" stopColor="#081f2e"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
           <linearGradient id={ids.hood} x1="28" y1="9" x2="69" y2="54" gradientUnits="userSpaceOnUse"><stop stopColor="#1b455a"/><stop offset=".28" stopColor="#0d2c3d"/><stop offset=".62" stopColor="#04131e"/><stop offset="1" stopColor="#010307"/></linearGradient>
@@ -196,50 +149,33 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
           <filter id={ids.mist} x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation={compact ? 3.4 : 4.1}/></filter>
           <filter id={ids.glow} x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation={compact ? 0.52 : 0.62} result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
-
-        <motion.g data-brand-atmosphere aria-hidden="true" filter={`url(#${ids.mist})`} variants={{ idle: { opacity: compact ? 0.64 : 0.78, scale: 0.985 }, hover: { opacity: compact ? 0.88 : 1, scale: 1.035, transition: { duration: 0.9, ease: premiumEase } } }} style={{ transformOrigin: '48px 48px' }}>
+        <motion.g data-brand-atmosphere aria-hidden="true" filter={`url(#${ids.mist})`}
+          variants={{ idle: { opacity: compact ? 0.64 : 0.78, scale: 0.985 }, hover: { opacity: compact ? 0.88 : 1, scale: 1.035, transition: { duration: 0.9, ease: premiumEase } } }} style={{ transformOrigin: '48px 48px' }}>
           {atmospherePaths.map((path, index) => renderPath(path, index, true))}
         </motion.g>
-
         <motion.g data-brand-energy aria-hidden="true" variants={{ idle: { opacity: compact ? 0.42 : 0.66 }, hover: { opacity: 1, transition: { duration: 0.78, ease: premiumEase } } }}>
           {energyPaths.map((path, index) => renderPath(path, index, true))}
         </motion.g>
-
         <motion.g data-brand-figure variants={{ idle: { y: 0 }, hover: { y: compact ? -0.08 : -0.22, transition: { duration: 0.74, ease: premiumEase } } }}>
           <path data-brand-cloak d={cloakPath} fill={`url(#${ids.mantle})`} stroke="#17394c" strokeOpacity=".54" strokeWidth={compact ? 0.56 : 0.62}/>
-
           <motion.g data-brand-folds variants={{ idle: { opacity: compact ? 0.96 : 1 }, hover: { opacity: 1, transition: { duration: 0.76, ease: premiumEase } } }}>
             {foldPaths.map((path, index) => renderPath(path, index))}
           </motion.g>
-
-          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.7 : 0.94 }, hover: { opacity: compact ? 0.86 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.7 : 0.95 }, hover: { opacity: compact ? 0.86 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
             {collarPaths.map((path, index) => renderPath(path, index, true))}
           </motion.g>
-
           <motion.path data-brand-hood d={hoodPath} fill={`url(#${ids.hood})`} stroke="#28546a" strokeOpacity=".72" strokeWidth={compact ? 0.66 : 0.74} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.04 : -0.12 } }}/>
           <path d={hoodLeftPath} fill={`url(#${ids.hoodLeft})`} fillOpacity=".86"/>
           <path d={hoodRightPath} fill="#020a10"/>
-
-          <g data-brand-hood-layers>
-            {hoodLayerPaths.map((path, index) => renderPath(path, index, true))}
-          </g>
-
+          <g data-brand-hood-layers>{hoodLayerPaths.map((path, index) => renderPath(path, index, true))}</g>
           <path data-brand-face-void d={facePath} fill="#000"/>
-
-          <g data-brand-texture aria-hidden="true">
-            {texturePaths.slice(0, compact ? 6 : texturePaths.length).map((path, index) => renderPath(path, index, true))}
-          </g>
-
+          <g data-brand-face-depth aria-hidden="true">{faceDepthPaths.map((path, index) => renderPath(path, index))}</g>
+          <g data-brand-texture aria-hidden="true">{texturePaths.slice(0, compact ? 6 : texturePaths.length).map((path, index) => renderPath(path, index, true))}</g>
           <motion.g data-brand-rim-light aria-hidden="true" filter={`url(#${ids.glow})`} variants={{ idle: { opacity: compact ? 0.8 : 0.88 }, hover: { opacity: 1, transition: { duration: 0.74, ease: premiumEase } } }}>
-            {rimPaths.map((path, index) => (
-              <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.84 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index < 4 ? { idle: { pathLength: index === 2 ? 0.82 : 0.68 }, hover: { pathLength: 1 } } : undefined}/>
-            ))}
+            {rimPaths.map((path, index) => <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.84 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index < 4 ? { idle: { pathLength: index === 2 ? 0.82 : 0.68 }, hover: { pathLength: 1 } } : undefined}/>) }
           </motion.g>
-
           <motion.g data-brand-seams aria-hidden="true" variants={{ idle: { opacity: compact ? 0.5 : 0.72 }, hover: { opacity: compact ? 0.7 : 0.94, transition: { duration: 0.78, ease: premiumEase } } }}>
-            {seamPaths.slice(0, compact ? 7 : seamPaths.length).map((path, index) => (
-              <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.82 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index >= 2 ? { idle: { pathLength: 0.62 }, hover: { pathLength: 1 } } : undefined}/>
-            ))}
+            {seamPaths.slice(0, compact ? 7 : seamPaths.length).map((path, index) => <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.82 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index >= 2 ? { idle: { pathLength: 0.62 }, hover: { pathLength: 1 } } : undefined}/>) }
           </motion.g>
         </motion.g>
       </motion.svg>
