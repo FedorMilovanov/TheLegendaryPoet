@@ -47,7 +47,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         backgroundColor: 'var(--track-surface)',
         backgroundImage: 'linear-gradient(145deg, color-mix(in srgb, var(--track-surface) 92%, black), rgba(5,5,5,.93))',
       }}
-      className="group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition duration-500 hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
+      className="group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition-[transform,border-color,box-shadow] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
     >
       <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[232px]">
         <Link to={`/music/${track.id}`} className="block h-full w-full" aria-label={`Открыть публикацию «${track.title}»`}>
@@ -58,7 +58,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
               alt={`Обложка трека «${track.title}»`}
               sizes="(min-width: 640px) 190px, 100vw"
               style={coverTransition}
-              className="relative h-full w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.045] group-hover:saturate-[1.08]"
+              className="hover-media relative h-full w-full object-cover transition-[transform,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035] group-hover:saturate-[1.06]"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-white/[0.04] sm:bg-gradient-to-r sm:from-transparent sm:to-black/65" />
@@ -69,7 +69,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
           onClick={toggle}
           disabled={unavailable}
           aria-label={unavailable ? `Аудиофайл «${track.title}» недоступен` : trackError ? `Повторить загрузку «${track.title}»` : trackPlaying ? `Поставить «${track.title}» на паузу` : `Воспроизвести «${track.title}»`}
-          className="absolute bottom-4 left-4 z-10 inline-flex h-13 w-13 items-center justify-center rounded-full border border-white/25 text-black shadow-[0_0_28px_color-mix(in_srgb,var(--track-accent)_34%,transparent)] transition duration-300 hover:scale-110 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/35 disabled:shadow-none"
+          className="absolute bottom-4 left-4 z-10 inline-flex h-13 w-13 items-center justify-center rounded-full border border-white/25 text-black shadow-[0_0_28px_color-mix(in_srgb,var(--track-accent)_34%,transparent)] transition-[transform,filter,background-color] duration-250 hover:scale-110 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/35 disabled:shadow-none"
           style={{ backgroundColor: unavailable ? undefined : trackError ? '#fbbf24' : 'var(--track-accent)' }}
         >
           {trackBusy && !trackPlaying
@@ -101,7 +101,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         </div>
 
         <Link to={`/music/${track.id}`} className="relative block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-          <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition group-hover:text-[var(--track-accent)]">{track.title}</h3>
+          <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition-colors duration-300 group-hover:text-[var(--track-accent)]">{track.title}</h3>
           <p className="mt-2 text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--track-accent) 70%, white)' }}>{track.poet}</p>
         </Link>
         {track.description && <p className="relative mt-4 line-clamp-3 text-sm leading-relaxed text-white/46">{track.description}</p>}
@@ -125,9 +125,9 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         )}
 
         <FeedbackMiniSummary targetType="track" targetId={track.id} />
-        <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/45 transition hover:text-white">
+        <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/45 transition-colors duration-300 hover:text-white">
           <span>{trackError ? 'Открыть и повторить' : position > 1 && !completed ? 'Продолжить публикацию' : 'Открыть публикацию'}</span>
-          <ArrowRight size={17} className="transition group-hover:translate-x-1" style={{ color: 'var(--track-secondary)' }} />
+          <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-1" style={{ color: 'var(--track-secondary)' }} />
         </Link>
       </div>
     </article>
