@@ -19,11 +19,6 @@
   transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Direct children start neutral; named content and sheen layers own their depth. */
-.tilt-card-inner > * {
-  transform: none;
-}
-
 .tilt-card-content {
   transform: translateZ(0);
   transform-style: preserve-3d;
