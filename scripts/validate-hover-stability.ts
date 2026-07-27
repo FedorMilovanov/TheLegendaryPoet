@@ -27,13 +27,19 @@ if (indexImport < 0 || stabilityImport < 0 || stabilityImport <= indexImport) {
   errors.push('src/main.tsx: hover-stability.css must load after index.css');
 }
 
+const tiltCard = read('src/components/TiltCard.tsx');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-content relative h-full w-full"', 'stable tilt content plane');
 requireText('src/components/TiltCard.tsx', 'onPointerEnter={prepareLayer}', 'pointer-entry compositor warm-up');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-sheen', 'separate sheen plane');
+if (!tiltCard.includes('<div className="tilt-card-content relative h-full w-full">\n          {children}\n          {sheen && (')) {
+  errors.push('src/components/TiltCard.tsx: children and sheen must share the single owned content plane');
+}
 
 const stability = read('src/hover-stability.css');
+if (stability.includes('.tilt-card-inner > *')) {
+  errors.push('src/hover-stability.css: broad direct-child transform reset is forbidden');
+}
 for (const [text, label] of [
-  ['.tilt-card-inner > * {\n  transform: none;', 'direct-child transform reset'],
   ['.tilt-card-content {', 'stable content plane CSS'],
   ['backface-visibility: hidden;', 'backface stabilization'],
   ['transform: translate3d(-160%, 0, 0) skewX(-18deg);', 'transform-only luxury sweep'],
