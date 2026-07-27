@@ -1,5 +1,7 @@
 import type Lenis from 'lenis';
 
+const FIXED_HEADER_OFFSET = 96;
+
 /**
  * Bridges the Lenis instance (owned by SmoothScroll) to anchor navigation and
  * to modal surfaces that must temporarily freeze the page behind them.
@@ -57,8 +59,13 @@ export function scrollToId(id: string) {
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   if (activeLenis) {
-    activeLenis.scrollTo(el, { offset: -96, duration: prefersReduced ? 0 : 1.1 });
-  } else {
-    el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+    activeLenis.scrollTo(el, { offset: -FIXED_HEADER_OFFSET, duration: prefersReduced ? 0 : 1.1 });
+    return;
   }
+
+  const top = el.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: prefersReduced ? 'auto' : 'smooth',
+  });
 }
