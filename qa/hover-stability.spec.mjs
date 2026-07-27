@@ -55,6 +55,7 @@ async function imageSnapshot(image) {
     return {
       connected: node.isConnected,
       src: node.currentSrc || node.src,
+      complete: node.complete,
       naturalWidth: node.naturalWidth,
       naturalHeight: node.naturalHeight,
       state: node.dataset.imageState ?? 'native',
@@ -66,6 +67,29 @@ async function imageSnapshot(image) {
       backfaceVisibility: style.backfaceVisibility,
     };
   });
+}
+
+async function ensureNativeImageReady(image) {
+  await image.scrollIntoViewIfNeeded();
+  await expect(image).toBeVisible();
+  await image.evaluate(async (node) => {
+    node.loading = 'eager';
+    if (node.complete) return;
+    await Promise.race([
+      new Promise((resolve) => {
+        node.addEventListener('load', resolve, { once: true });
+        node.addEventListener('error', resolve, { once: true });
+      }),
+      new Promise((resolve) => setTimeout(resolve, 12_000)),
+    ]);
+  });
+  await expect.poll(
+    async () => {
+      const snapshot = await imageSnapshot(image);
+      return snapshot.complete && snapshot.naturalWidth > 0;
+    },
+    { timeout: 15_000, message: 'native image completed with intrinsic dimensions' },
+  ).toBe(true);
 }
 
 async function samplePointerInteraction(page, image, finePointer) {
@@ -96,6 +120,7 @@ function assertStableSamples(initial, samples) {
   for (const sample of samples) {
     expect(sample.connected).toBe(true);
     expect(sample.src).toBe(initial.src);
+    expect(sample.complete).toBe(true);
     expect(sample.naturalWidth).toBe(initial.naturalWidth);
     expect(sample.naturalHeight).toBe(initial.naturalHeight);
     expect(sample.state).not.toBe('failed');
@@ -136,13 +161,11 @@ for (const surface of surfaces) {
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
     for (const image of sampledImages) {
-      await image.scrollIntoViewIfNeeded();
-      await expect(image).toBeVisible();
-      await expect.poll(async () => (await imageSnapshot(image)).naturalWidth).toBeGreaterThan(0);
-      await expect.poll(async () => (await imageSnapshot(image)).state).not.toBe('loading');
+      await ensureNativeImageReady(image);
 
       const initial = await imageSnapshot(image);
       expect(initial.opacity).toBeGreaterThan(0);
+      expect(initial.state).not.toBe('failed');
       expect(initial.transitionProperty).not.toContain('all');
       expect(initial.backfaceVisibility).toBe('hidden');
       const samples = await samplePointerInteraction(page, image, finePointer);
