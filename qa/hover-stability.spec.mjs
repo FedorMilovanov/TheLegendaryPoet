@@ -94,9 +94,15 @@ async function ensureNativeImageReady(image) {
   await expect.poll(
     async () => {
       const snapshot = await imageSnapshot(image);
-      return snapshot.complete && snapshot.naturalWidth > 0;
+      return snapshot.connected
+        && snapshot.complete
+        && snapshot.naturalWidth > 0
+        && snapshot.state !== 'failed'
+        && snapshot.opacity > 0
+        && snapshot.visibility !== 'hidden'
+        && snapshot.display !== 'none';
     },
-    { timeout: 15_000, message: 'native image completed with intrinsic dimensions' },
+    { timeout: 15_000, message: 'native image completed and its reveal transition settled visibly' },
   ).toBe(true);
 }
 
