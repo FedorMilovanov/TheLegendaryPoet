@@ -120,7 +120,7 @@ assert.match(microSvg, new RegExp(`data-brand-vector-source="${vectorSource}"`),
 assert.match(microSvg, /M15\.9 13\.8C12\.1 13\.5/, 'micro mantle geometry changed');
 assert.match(microSvg, /M15\.7 1\.7C13\.5 2\.7/, 'micro hood geometry changed');
 assert.match(microSvg, /M15\.9 5\.7C13\.9 5\.8/, 'micro pointed face void geometry changed');
-assert.ok((microSvg.match(/<path\b/g) || []).length >= 19, 'micro mark lost its optical layers');
+assert.ok((microSvg.match(/<path\b/g) || []).length >= 20, 'micro mark lost its optical layers');
 assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,|7fecff|f2ffff|17\.6 1\.65 3\.4/i, 'micro mark contains raster, plate or retired crystal');
 
 assertCompleteSvg(maskSvg, 'public/brand-emblem-mask.svg', '0 0 96 96');
@@ -153,4 +153,4 @@ for (const [file, expected] of Object.entries(expectedPngSizes)) { assert.deepEq
 assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 'share image dimensions are wrong');
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share image is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
-console.log('brand validation: v8.21 pointed face void, tucked split cowl, broken rim and preserved platform fallbacks are consistent');
+console.log('brand validation: v8.21 pointed face void, tucked split cowl, compact ridge and preserved platform fallbacks are consistent');
