@@ -103,6 +103,7 @@ expect(hookSource.includes('muted: boolean'), 'whisper hook must receive reactiv
 expect(hookSource.includes('[active, muted, poetId, x, y, z]'), 'whisper effect must depend on primitive coordinates rather than an unstable position array');
 expect(hookSource.includes('bufferRequests.set(url, request)'), 'audio fetch and decode results must be cached per candidate URL');
 expect(!hookSource.includes("method: 'HEAD'"), 'whisper loading must not issue a duplicate HEAD request before every audio GET');
+expect((hookSource.match(/await context\.resume\(\)/g) ?? []).length === 1, 'autoplay resume must occur only after decode so rejection cannot poison the buffer cache');
 expect(!hookSource.includes('__TLP_AUDIO_MUTED'), 'whisper hook must not read a non-reactive global mute flag');
 expect(!hookSource.includes('playbackRef.current = null'), 'StrictMode effect replay must not null the render-owned playback controller');
 expect(nicheSource.includes('usePoetWhisper(poet.shortKey, hovered, position, muted)'), 'every niche must pass mute state into its whisper lifecycle');
@@ -123,4 +124,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall audio runtime validation passed: audio races, StrictMode, input ownership, request caching and overlay guards are enforced.');
+console.log('Hall audio runtime validation passed: audio races, autoplay retry, StrictMode, input ownership, request caching and overlay guards are enforced.');
