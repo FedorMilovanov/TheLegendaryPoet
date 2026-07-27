@@ -1,34 +1,33 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-reset-v9-0",
-  "candidateRevision": "v9.0 measured against clean-base reference v2",
+  "candidateSource": "canonical-reference-v2-reset-v9-7",
+  "candidateRevision": "v9.7 clean-base geometry rewrite draft",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.46,
+  "overallScore": 0.61,
   "scores": {
-    "macroProportions": 0.55,
-    "hoodAndCavern": 0.5,
-    "collarAndFolds": 0.37,
-    "cloakSilhouette": 0.51,
-    "rimAndAura": 0.31,
-    "microReadability": 0.74
+    "macroProportions": 0.72,
+    "hoodAndCavern": 0.7,
+    "collarAndFolds": 0.52,
+    "cloakSilhouette": 0.69,
+    "rimAndAura": 0.44,
+    "microReadability": 0.77
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "42f5ae2cd319c8baea5fa008434a2ca612913690",
-    "public/brand-emblem.svg": "c6e4cf47277c551e6b299d19c502dbaf8a929ee5",
-    "public/brand-mark-micro.svg": "b8f2bb9a8f677cdb3d38d7f9bfaaa44114e2cb08",
-    "public/brand-emblem-mask.svg": "c2ab9f5ab5ed1b2b41e752b99a4a810f256c3caa"
+    "src/components/BrandMark.tsx": "ead9c3ab349033beab83163b83b8bacf4fe5b0ee",
+    "public/brand-emblem.svg": "25f669e04cbf79a6a295cd4bb73df9c439b8190d",
+    "public/brand-mark-micro.svg": "889d27cea5916b712e4fb68123c136f14fd307f3",
+    "public/brand-emblem-mask.svg": "51edb6254220a0b375450bb1ca3c563600e541f3"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the current v9.0 candidate still contains lower aura and smoke strokes that violate the new clean-base reference",
-    "the face cavern is too narrow, smooth and droplet-like compared with the broad black void in reference v2",
-    "the collar reads as a clean crossed X instead of a heavy gathered cowl",
-    "the cloak folds are regular vector wedges rather than deep irregular fabric masses",
-    "the shoulder and cloak silhouette is too compact and rounded",
-    "the upper and side electrical aura is sparse while too much emphasis remains near the lower edge"
+    "the macro silhouette and broad cavern are closer, but the candidate remains flatter and more diagrammatic than the painterly reference",
+    "the gathered cowl is broader than v9.0 but still too orderly and centrally knotted",
+    "large folds remain cleaner and more radial than the reference cloth",
+    "upper and side aura is correctly separated from the clean lower edge but remains too sparse",
+    "exact-head live header must remain under visual review before acceptance"
   ],
-  "nextRequiredAction": "replace the v9.0 geometry rather than polishing it: build v9.3 from canonical reference v2 with a broader void, gathered cowl, irregular large folds, denser upper-side aura and no lower smoke; keep PR draft"
+  "nextRequiredAction": "continue v9.8 from reference v2: deepen irregular cowl and fold masses, roughen broken rim highlights and strengthen upper-side electrical bloom without lower smoke; keep PR draft"
 }
