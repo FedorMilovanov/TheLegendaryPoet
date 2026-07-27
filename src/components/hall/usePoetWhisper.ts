@@ -29,7 +29,6 @@ function loadBuffer(url: string): Promise<AudioBuffer | null> {
     try {
       const context = getAudioContext()
       if (!context) return null
-      if (context.state === 'suspended') await context.resume()
       const response = await fetch(url)
       if (!response.ok) return null
       return await context.decodeAudioData(await response.arrayBuffer())
@@ -40,6 +39,8 @@ function loadBuffer(url: string): Promise<AudioBuffer | null> {
 
   // Successful buffers and missing assets are both cached for this page load,
   // preventing repeated HEAD + GET pairs and repeated 404s on every hover.
+  // AudioContext.resume() is deliberately not part of this promise: autoplay
+  // rejection must not poison the decoded asset cache for the rest of the page.
   bufferRequests.set(url, request)
   return request
 }
@@ -93,7 +94,13 @@ export function usePoetWhisper(
 
       const context = getAudioContext()
       if (!context) return
-      if (context.state === 'suspended') await context.resume()
+      try {
+        if (context.state === 'suspended') await context.resume()
+      } catch {
+        // Hover is not guaranteed to grant autoplay. Keep the decoded buffer in
+        // cache so a later user-activated hover can retry without refetching.
+        return
+      }
       if (cancelled) return
 
       const panner = context.createPanner()
