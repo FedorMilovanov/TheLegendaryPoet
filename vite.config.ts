@@ -2,10 +2,34 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function searchVerificationPlugin(): Plugin {
+  const verificationTags: Array<[string, string | undefined]> = [
+    ['google-site-verification', process.env.VITE_GOOGLE_SITE_VERIFICATION],
+    ['msvalidate.01', process.env.VITE_BING_SITE_VERIFICATION],
+    ['p:domain_verify', process.env.VITE_PINTEREST_SITE_VERIFICATION],
+  ];
+
+  return {
+    name: 'search-verification-meta',
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        return verificationTags
+          .filter((entry): entry is [string, string] => Boolean(entry[1]?.trim()))
+          .map<HtmlTagDescriptor>(([name, content]) => ({
+            tag: 'meta',
+            attrs: { name, content: content.trim() },
+            injectTo: 'head',
+          }));
+      },
+    },
+  };
+}
 
 // https://vite.dev/config/
 // The production site is served from the root of the custom domain.
@@ -14,7 +38,7 @@ const __dirname = path.dirname(__filename);
 // route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
-  plugins: [react(), tailwindcss()],
+  plugins: [searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
