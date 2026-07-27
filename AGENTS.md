@@ -29,6 +29,14 @@ This is the user-approved clean-base image: the electrical aura is concentrated 
 9. Inspect the actual built homepage header and footer, not only an isolated SVG render.
 10. Keep the PR draft and `not-reference-approved` while any blocking deviation remains.
 
+## CI and visual progress policy
+
+- Technical CI remains strict for reference integrity, provenance, synchronized blob locks, valid scores, required evidence and runtime correctness.
+- An honest `not-reference-approved` decision is a work-in-progress status, not a technical failure. CI should remain green and report the current percentage and progress label.
+- A claimed `reference-accepted` decision remains blocking unless every acceptance threshold is met and the blocking-deviation list is empty.
+- Green CI proves technical integrity only. It never proves visual fidelity or permission to merge the emblem.
+- The PR stays draft until the user explicitly accepts the exact-head visual comparison.
+
 ## Hard stop conditions
 
 Stop micro-polishing and redesign the base geometry when any of these appears:
@@ -64,4 +72,4 @@ Stop micro-polishing and redesign the base geometry when any of these appears:
 - explicit remaining deviations;
 - explicit `reference-accepted` or `not-reference-approved` decision.
 
-Never weaken these rules to make a candidate pass. Change the candidate.
+Never weaken reference integrity or invent acceptance to obtain a green result. Report unfinished visual fidelity as non-blocking progress and change the candidate, not the evidence or score.
