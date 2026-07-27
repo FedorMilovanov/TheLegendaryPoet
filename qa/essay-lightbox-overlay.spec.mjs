@@ -23,7 +23,6 @@ test.describe('essay image lightbox overlay ownership', () => {
     const opener = page.getByRole('button', { name: /^Увеличить изображение:/ }).first();
     await opener.scrollIntoViewIfNeeded();
     await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    const scrollBefore = await page.evaluate(() => window.scrollY);
     await opener.click();
 
     const lightbox = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
@@ -32,6 +31,8 @@ test.describe('essay image lightbox overlay ownership', () => {
     await expect(close).toBeFocused();
     await expect.poll(() => overlayDebug(page)).toMatchObject({ depth: 1, topLabel: 'essay-image-lightbox' });
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
+    const lockedScrollY = await page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top || '0')));
+    expect(lockedScrollY).toBeGreaterThan(0);
 
     await page.keyboard.press('Control+K');
     const search = page.getByRole('dialog', { name: 'Поиск по сайту' });
@@ -49,7 +50,7 @@ test.describe('essay image lightbox overlay ownership', () => {
     await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
     await expect(lightbox).toBeHidden({ timeout: 2_000 });
     await expect(opener).toBeFocused();
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollBefore, 0);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(lockedScrollY, 0);
     await expect.poll(() => overlayDebug(page)).toMatchObject({ depth: 0, lastEscapeLabel: 'essay-image-lightbox' });
 
     await page.screenshot({
