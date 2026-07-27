@@ -56,7 +56,7 @@ const VECTOR_BODY = `<defs>
     <path d="M82.2 95.4C76.5 77.4 67.3 61.6 52.8 50.8C60.2 64.1 65.2 79.9 66.6 95.6Z" fill="url(#__FOLD_RIGHT__)" opacity=".9"/>
     <path d="M73.2 95.6C68.8 79.4 61.3 64.7 51.4 53.2C56.9 68 59.9 82.6 59.8 95.7Z" fill="#01070d"/>
     <path d="M64.8 96C60.8 77.2 54.8 62.1 49 54.2C51.7 69.6 53.3 83.8 52.6 96Z" fill="#000307"/>
-    <path d="M43.8 96C42.6 77.2 44.7 62.8 47.3 54.8C47.8 70.3 47 84.6 46.4 96Z" fill="#061821" fill-opacity=".52"/>
+    <path d="M41.8 96C42.6 77.2 44.7 62.8 47.3 54.8C47.8 70.3 47 84.6 46.4 96Z" fill="#061821" fill-opacity=".52"/>
     <path d="M54.2 96C53.4 77.2 51.3 62.8 48.7 54.8C48.2 70.3 49 84.6 49.6 96Z" fill="#000205"/>
     <path d="M10.4 88C20.3 67.6 31.8 55.4 44.7 50.9C34.8 61.8 25.4 76.8 19.2 94.4Z" fill="#1a465a" fill-opacity=".15"/>
     <path d="M85.6 88C75.8 67.6 64.1 55.5 51.3 50.9C61.2 61.9 70.6 76.8 76.8 94.4Z" fill="#0d2c3a" fill-opacity=".075"/>
@@ -118,11 +118,11 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
   const compact = size === 'sm';
   const id = useId().replace(/:/g, '');
   const markup = useMemo(() => VECTOR_BODY
-    .replaceAll('__CLOAK__', `${id}-cloak`)
-    .replaceAll('__HOOD__', `${id}-hood`)
-    .replaceAll('__FOLD_LEFT__', `${id}-fold-left`)
-    .replaceAll('__FOLD_RIGHT__', `${id}-fold-right`)
-    .replaceAll('__GLOW__', `${id}-glow`), [id]);
+    .split('__CLOAK__').join(`${id}-cloak`)
+    .split('__HOOD__').join(`${id}-hood`)
+    .split('__FOLD_LEFT__').join(`${id}-fold-left`)
+    .split('__FOLD_RIGHT__').join(`${id}-fold-right`)
+    .split('__GLOW__').join(`${id}-glow`), [id]);
   return (
     <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector" data-brand-vector-source={VECTOR_SOURCE}
       className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)} initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
