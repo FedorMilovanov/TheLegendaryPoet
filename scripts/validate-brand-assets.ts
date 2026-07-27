@@ -82,7 +82,7 @@ const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
 
 const version = 'cloak-20260726-8';
-const vectorSource = 'reference-derived-contours-v8-24';
+const vectorSource = 'canonical-reference-reset-v9-0';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 
 assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/, 'BrandMark must keep unique SVG ids');
@@ -94,40 +94,40 @@ for (const hook of [
   'data-brand-seams', 'data-brand-hood-layers',
 ]) assert.match(component, new RegExp(hook), `${hook} is missing`);
 
-assert.match(component, /const VECTOR_SOURCE = 'reference-derived-contours-v8-24'/, 'v8.24 provenance constant is missing');
-assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/, 'BrandMark must expose v8.24 provenance');
+assert.match(component, /const VECTOR_SOURCE = 'canonical-reference-reset-v9-0'/, 'v9 canonical-reference provenance constant is missing');
+assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/, 'BrandMark must expose v9 provenance');
 assert.match(component, /data-brand-renderer="inline-vector"/, 'BrandMark must declare its vector renderer');
 assert.match(component, /pointerEvents: 'none'/, 'BrandMark SVG must not intercept its parent link');
 assert.match(component, /sm: 'h-12 w-12'/, 'small optical footprint changed');
-assert.match(component, /const cloakPath = 'M48 40\.8C37 40\.5/, 'runtime mantle geometry changed');
-assert.match(component, /const hoodPath = 'M48 9\.8C40\.2 12\.2/, 'runtime rounded hood geometry changed');
-assert.match(component, /const facePath = 'M49 21\.8C42\.8 22\.5/, 'runtime compact cavern geometry changed');
-assert.match(component, /<motion\.g[\s\S]*data-brand-collar[\s\S]*?<motion\.path[\s\S]*data-brand-hood/, 'runtime cowl must render behind the hood');
-assert.ok((component.match(/d: 'M/g) || []).length >= 55, 'runtime SVG lost layered textile geometry');
+assert.match(component, /data-brand-cloak d="M48 36\.8C40\.5 36\.8/, 'runtime diagonal cloak geometry changed');
+assert.match(component, /data-brand-hood d="M48 9\.7C42\.3 11\.8/, 'runtime compact hood geometry changed');
+assert.match(component, /data-brand-face-void d="M48 17\.7C43\.9 18\.3/, 'runtime broad cavern geometry changed');
+assert.ok(component.indexOf('data-brand-collar') < component.indexOf('data-brand-hood'), 'runtime collar must render behind the hood');
+assert.ok((component.match(/<(?:motion\.)?path\b/g) || []).length >= 40, 'runtime SVG lost optical cloth or atmosphere geometry');
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i, 'runtime embeds raster art or a plate');
 assert.doesNotMatch(component, /brand-emblem-master\.webp|data-brand-light-core|data-brand-(?:book|wing|halo|fallback)/, 'retired runtime concept returned');
 
 assertCompleteSvg(standaloneSvg, 'public/brand-emblem.svg', '0 0 96 96');
 assert.match(standaloneSvg, new RegExp(`data-brand-vector-source="${vectorSource}"`), 'standalone provenance is missing');
-assert.match(standaloneSvg, /M48 40\.8C37 40\.5/, 'standalone mantle geometry changed');
-assert.match(standaloneSvg, /M48 9\.8C40\.2 12\.2/, 'standalone rounded hood geometry changed');
-assert.match(standaloneSvg, /M49 21\.8C42\.8 22\.5/, 'standalone compact cavern geometry changed');
-assert.ok(standaloneSvg.indexOf('data-brand-collar') < standaloneSvg.indexOf('data-brand-hood'), 'standalone cowl must render behind hood');
-assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 60, 'standalone SVG lost cloth or atmosphere depth');
+assert.match(standaloneSvg, /M48 36\.8C40\.5 36\.8/, 'standalone diagonal cloak geometry changed');
+assert.match(standaloneSvg, /M48 9\.7C42\.3 11\.8/, 'standalone compact hood geometry changed');
+assert.match(standaloneSvg, /M48 17\.7C43\.9 18\.3/, 'standalone broad cavern geometry changed');
+assert.ok(standaloneSvg.indexOf('data-brand-collar') < standaloneSvg.indexOf('data-brand-hood'), 'standalone collar must render behind hood');
+assert.ok((standaloneSvg.match(/<path\b/g) || []).length >= 80, 'standalone SVG lost reference-driven cloth or atmosphere depth');
 assert.doesNotMatch(standaloneSvg, /<(?:image|rect)\b|data:image|base64,|id="core"/i, 'standalone SVG contains raster, plate or retired core');
 
 assertCompleteSvg(microSvg, 'public/brand-mark-micro.svg', '0 0 32 32');
 assert.match(microSvg, new RegExp(`data-brand-vector-source="${vectorSource}"`), 'micro provenance is missing');
-assert.match(microSvg, /M16 13\.6C12\.3 13\.5/, 'micro mantle geometry changed');
-assert.match(microSvg, /M16 3\.3C13\.4 4\.1/, 'micro rounded hood geometry changed');
-assert.match(microSvg, /M16\.3 7\.3C14\.3 7\.5/, 'micro compact cavern geometry changed');
-assert.ok((microSvg.match(/<path\b/g) || []).length >= 24, 'micro mark lost optical layers');
+assert.match(microSvg, /M16 12\.3C13\.5 12\.2/, 'micro diagonal cloak geometry changed');
+assert.match(microSvg, /M16 3\.2C14\.1 3\.9/, 'micro compact hood geometry changed');
+assert.match(microSvg, /M16 5\.9C14\.6 6\.1/, 'micro broad cavern geometry changed');
+assert.ok((microSvg.match(/<path\b/g) || []).length >= 30, 'micro mark lost optical layers');
 assert.doesNotMatch(microSvg, /<(?:image|rect)\b|data:image|base64,/i, 'micro mark contains raster or a plate');
 
 assertCompleteSvg(maskSvg, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(maskSvg, /fill-rule="evenodd"/, 'Safari mask must preserve the face opening');
-assert.match(maskSvg, /M48 9\.8C40\.2 12\.2/, 'Safari mask hood changed');
-assert.match(maskSvg, /M49 21\.8C42\.8 22\.5/, 'Safari mask face opening changed');
+assert.match(maskSvg, /M48 9\.7C42\.3 11\.8/, 'Safari mask hood changed');
+assert.match(maskSvg, /M48 17\.7C43\.9 18\.3/, 'Safari mask face opening changed');
 assert.doesNotMatch(maskSvg, /<(?:image|rect)\b|data:image|base64,/i, 'Safari mask embeds raster art or a plate');
 
 for (const pattern of [
@@ -193,4 +193,4 @@ assert.deepEqual(jpegSize('public/og-image.jpg'), { width: 1200, height: 630 }, 
 assert.ok(fs.statSync(path.resolve('public/og-image.jpg')).size > 5_000, 'share image is unexpectedly small');
 assert.equal(fs.existsSync(path.resolve('public/og-image.png')), false, 'retired PNG share card must stay removed');
 
-console.log('brand validation: v8.24 rounded asymmetric hood, shorter cavern, tucked cowl and platform fallbacks are consistent');
+console.log('brand validation: v9.0 canonical-reference geometry reset is structurally coherent; reference acceptance remains a separate gate');
