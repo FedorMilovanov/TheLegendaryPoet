@@ -17,6 +17,7 @@ export function useHallNavigation(
   const targetX = useRef(CAMERA.minX)
   const currentX = useRef(CAMERA.minX)
   const lookAt = useRef(new THREE.Vector3(0, 1.62, 0))
+  const lastSaveAt = useRef(0)
 
   // restore camera position
   useEffect(() => {
@@ -112,10 +113,8 @@ export function useHallNavigation(
     camera.lookAt(lookAt.current)
 
     const now = performance.now()
-    ;(useHallNavigation as typeof useHallNavigation & { _lastSave?: number })._lastSave ||= 0
-    const navigationWithSave = useHallNavigation as typeof useHallNavigation & { _lastSave?: number }
-    if (now - (navigationWithSave._lastSave ?? 0) > 400) {
-      navigationWithSave._lastSave = now
+    if (now - lastSaveAt.current > 400) {
+      lastSaveAt.current = now
       try { sessionStorage.setItem(STORAGE_X, String(currentX.current)) } catch {}
     }
   })
