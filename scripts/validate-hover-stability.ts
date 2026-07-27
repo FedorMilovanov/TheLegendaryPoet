@@ -76,6 +76,7 @@ for (const [text, label] of [
   ["image.addEventListener('load', synchronize)", 'native load listener'],
   ["image.addEventListener('error', synchronize)", 'native error listener'],
   ["image.naturalWidth > 0 ? 'ready' : 'error'", 'cached-image completeness synchronization'],
+  ["snapshot.src === src ? snapshot.state : 'loading'", 'source-bound native state'],
 ]) {
   if (!nativeImageHook.includes(text)) errors.push(`src/hooks/useNativeImageState.ts: missing ${label}`);
 }
@@ -92,6 +93,23 @@ if (essayBlocks.includes('onLoad={() => setLoaded(true)}')) {
   errors.push('src/components/essay/blocks.tsx: synthetic onLoad must not be the sole readiness source');
 }
 
+const resilientImage = read('src/components/media/ResilientImage.tsx');
+for (const [text, label] of [
+  ["useNativeImageState(currentSrc)", 'shared native lifecycle source'],
+  ["nativeState === 'ready'", 'native readiness-derived public state'],
+  ["nativeState !== 'error'", 'native failure-driven fallback chain'],
+  ['data-image-state={state}', 'runtime resilient image state marker'],
+  ['data-image-source-index={hasActiveCandidate ? sourceIndex : undefined}', 'fallback source observability'],
+]) {
+  if (!resilientImage.includes(text)) errors.push(`src/components/media/ResilientImage.tsx: missing ${label}`);
+}
+for (const [legacy, label] of [
+  ["onLoad={(event) => {\n        if (state !== 'failed') setState", 'synthetic-only load state transition'],
+  ["onError={(event) => {\n        onError?.(event);\n        if (sourceIndex + 1", 'synthetic-only fallback transition'],
+]) {
+  if (resilientImage.includes(legacy)) errors.push(`src/components/media/ResilientImage.tsx: forbidden ${label}`);
+}
+
 const sourceFiles = walk('src').filter((filePath) => /\.(?:tsx?|css)$/.test(filePath));
 const componentFiles = sourceFiles.filter((filePath) => filePath.endsWith('.tsx'));
 const mediaTagPattern = /<(?:img|ResilientImage|PoetImage)\b[\s\S]*?\/>/g;
@@ -103,10 +121,18 @@ let mediaTags = 0;
 let interactiveMediaTags = 0;
 let explicitlyMarkedMediaTags = 0;
 let tiltUsages = 0;
+let statefulNativeImageImplementations = 0;
 
 for (const filePath of componentFiles) {
   const source = read(filePath);
   tiltUsages += source.match(/<TiltCard\b/g)?.length ?? 0;
+
+  if (source.includes('data-image-state={')) {
+    statefulNativeImageImplementations += 1;
+    if (!source.includes('useNativeImageState(')) {
+      errors.push(`${filePath}: data-image-state implementation must use the shared native lifecycle hook`);
+    }
+  }
 
   for (const tag of source.match(mediaTagPattern) ?? []) {
     mediaTags += 1;
@@ -131,6 +157,9 @@ for (const filePath of componentFiles) {
 
 if (tiltUsages === 0) errors.push('src: TiltCard is no longer used; remove or replace its contract intentionally');
 if (interactiveMediaTags === 0) errors.push('src: no interactive artwork discovered; validator patterns may be stale');
+if (statefulNativeImageImplementations < 2) {
+  errors.push('src: expected shared native lifecycle coverage for resilient and essay image implementations');
+}
 
 const qa = read('qa/hover-stability.spec.mjs');
 for (const [text, label] of [
@@ -151,6 +180,7 @@ for (const error of [...new Set(errors)]) console.error(`ERROR ${error}`);
 console.log(
   `Hover stability contract: ${sourceFiles.length} source files, ${mediaTags} media tags, `
   + `${interactiveMediaTags} interactive, ${explicitlyMarkedMediaTags} explicitly marked, `
-  + `${tiltUsages} TiltCard usages, ${errors.length} errors`,
+  + `${statefulNativeImageImplementations} native-state implementations, ${tiltUsages} TiltCard usages, `
+  + `${errors.length} errors`,
 );
 if (errors.length > 0) process.exit(1);
