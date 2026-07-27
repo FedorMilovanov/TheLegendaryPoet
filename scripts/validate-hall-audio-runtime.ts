@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { Vector3 } from 'three';
 import { createDeferredAudioStop } from '../src/utils/deferredAudioStop';
+import { resolveHallVelocity } from '../src/components/hall/hallMovement';
 
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -8,6 +10,7 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
+const closeTo = (actual: number, expected: number) => Math.abs(actual - expected) < 1e-9;
 
 type FakeAudioSource = {
   id: string;
@@ -62,6 +65,19 @@ for (const callback of [...scheduledStops.values()]) callback();
 expect(cancelledSource.stopCalls === 0, 'cancelling a fade must prevent a later source stop');
 expect(scheduledStops.size === 0, 'cancelling a fade must remove its timer');
 
+const movementTarget = new Vector3();
+const forwardResult = resolveHallVelocity(movementTarget, 0, -1, 0, 2);
+expect(forwardResult === movementTarget, 'Hall movement must mutate and return the caller-owned vector');
+expect(closeTo(movementTarget.x, 0) && closeTo(movementTarget.z, 2), 'zero-yaw forward input must preserve the existing +Z motion');
+resolveHallVelocity(movementTarget, 1, 0, 0, 2);
+expect(closeTo(movementTarget.x, 2) && closeTo(movementTarget.z, 0), 'zero-yaw right input must move along +X');
+resolveHallVelocity(movementTarget, 1, -1, 0, 2);
+expect(closeTo(movementTarget.length(), 2), 'diagonal Hall input must remain normalized to the requested speed');
+resolveHallVelocity(movementTarget, 0, -1, Math.PI / 2, 2);
+expect(closeTo(movementTarget.x, 2) && closeTo(movementTarget.z, 0), 'quarter-turn yaw must rotate forward input onto +X');
+resolveHallVelocity(movementTarget, 0, 0, 1.25, 2);
+expect(closeTo(movementTarget.lengthSq(), 0), 'idle input must zero the reusable velocity target');
+
 const fakeHallWindow = { __TLP_MODAL_OPEN: false };
 Object.defineProperty(globalThis, 'window', { configurable: true, value: fakeHallWindow });
 const hallInput = await import('../src/components/hall/hallInputGuard');
@@ -99,6 +115,7 @@ const nicheSource = read('src/components/hall/PoetNiche.tsx');
 const whisperSource = read('src/components/hall/usePoetWhisper.ts');
 const deferredStopSource = read('src/utils/deferredAudioStop.ts');
 const inputGuardSource = read('src/components/hall/hallInputGuard.ts');
+const movementSource = read('src/components/hall/hallMovement.ts');
 const firstPersonSource = read('src/components/hall/FirstPersonControls.tsx');
 const navigationSource = read('src/components/hall/useHallNavigation.ts');
 const loadBufferStart = whisperSource.indexOf('async function loadBuffer');
@@ -131,13 +148,15 @@ expect(deferredStopSource.includes('cancel();'), 'replacement scheduling must ca
 expect(inputGuardSource.includes('event.isComposing'), 'Hall input must yield during IME composition');
 expect(inputGuardSource.includes('event.ctrlKey'), 'Hall input must yield to modifier chords');
 expect(!inputGuardSource.includes('select, button'), 'ordinary Hall buttons must not disable F/M shortcuts');
+expect(movementSource.includes('Math.hypot(directionX, directionZ)'), 'Hall movement must normalize diagonals without allocating vectors');
+expect(movementSource.includes('return target.set('), 'Hall movement must write into caller-owned scratch storage');
 expect(firstPersonSource.includes('shouldIgnoreHallShortcut(event)'), 'FPS movement must use the shared shortcut guard');
 expect(firstPersonSource.includes('clearMove(move.current)'), 'FPS movement must clear latched keys when ownership changes');
 expect(firstPersonSource.includes('document.exitPointerLock()'), 'FPS mode must release pointer lock when an overlay owns input');
 expect(firstPersonFrameStart >= 0 && firstPersonFrameEnd > firstPersonFrameStart, 'FPS frame callback must remain inspectable');
 expect(!firstPersonFrameSource.includes('new THREE.Vector3'), 'FPS frame loop must not allocate temporary Vector3 instances');
-expect(firstPersonFrameSource.includes('Math.hypot(directionX, directionZ)'), 'FPS diagonal normalization must remain allocation-free');
-expect(firstPersonFrameSource.includes('velocity.current.set('), 'FPS movement must reuse its instance-local velocity vector');
+expect(firstPersonFrameSource.includes('resolveHallVelocity('), 'FPS frame loop must use the executable movement transform');
+expect(firstPersonFrameSource.includes('velocity.current,'), 'FPS movement must reuse its instance-local velocity vector');
 expect(navigationSource.includes('if (!enabled || isHallOverlayOpen()) return'), 'rail camera writes must pause beneath overlays');
 expect(navigationSource.includes('const lastSaveAt = useRef(0)'), 'rail persistence timing must remain instance-local');
 expect(!navigationSource.includes('useHallNavigation as any'), 'rail persistence must not attach mutable state to the hook function');
@@ -153,4 +172,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall runtime validation passed: audio/input ownership and allocation-free FPS/rail frame loops are enforced.');
+console.log('Hall runtime validation passed: audio/input ownership and executable allocation-free FPS/rail movement are enforced.');
