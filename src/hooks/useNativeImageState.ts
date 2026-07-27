@@ -2,27 +2,41 @@ import { useEffect, useRef, useState } from 'react';
 
 export type NativeImageState = 'loading' | 'ready' | 'error';
 
+type NativeImageSnapshot = {
+  src: string;
+  state: NativeImageState;
+};
+
 /**
  * Tracks the browser's native image lifecycle without relying exclusively on
- * React's synthetic `onLoad` event. Cached or prerendered images may already be
- * complete before hydration attaches handlers, so the hook synchronizes from
- * `complete` and `naturalWidth` after listeners are installed.
+ * React's synthetic events. Cached, eager or prerendered images may already be
+ * complete before hydration attaches handlers, so each source is synchronized
+ * from `complete` and `naturalWidth` after native listeners are installed.
  */
 export function useNativeImageState(src: string) {
   const ref = useRef<HTMLImageElement>(null);
-  const [state, setState] = useState<NativeImageState>('loading');
+  const [snapshot, setSnapshot] = useState<NativeImageSnapshot>({ src, state: 'loading' });
 
   useEffect(() => {
     const image = ref.current;
-    setState('loading');
-    if (!image) return;
+    let active = true;
+
+    const publish = (state: NativeImageState) => {
+      if (!active) return;
+      setSnapshot((current) => (
+        current.src === src && current.state === state ? current : { src, state }
+      ));
+    };
+
+    publish('loading');
+    if (!image) return () => { active = false; };
 
     const synchronize = () => {
       if (!image.complete) {
-        setState('loading');
+        publish('loading');
         return;
       }
-      setState(image.naturalWidth > 0 ? 'ready' : 'error');
+      publish(image.naturalWidth > 0 ? 'ready' : 'error');
     };
 
     image.addEventListener('load', synchronize);
@@ -30,10 +44,13 @@ export function useNativeImageState(src: string) {
     synchronize();
 
     return () => {
+      active = false;
       image.removeEventListener('load', synchronize);
       image.removeEventListener('error', synchronize);
     };
   }, [src]);
+
+  const state = snapshot.src === src ? snapshot.state : 'loading';
 
   return {
     ref,
