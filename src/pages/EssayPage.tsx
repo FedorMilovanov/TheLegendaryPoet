@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
+import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
 import { getAllEssays, getEssayBySlug } from '../data/essays';
 import { poets } from '../data/poets';
@@ -13,28 +14,61 @@ import SourceLibrary from '../components/essay/SourceLibrary';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { articleRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
+import { buildArticlePageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { titleCase } from '../utils/titleCase';
 
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
   const essay = slug ? getEssayBySlug(slug) : undefined;
+  const poet = essay?.poetId ? poets.find((candidate) => candidate.id === essay.poetId) : undefined;
   const articleRef = useRef<HTMLElement>(null);
+  const routePath = `/essays/${slug ?? ''}`;
+  const breadcrumbs: SeoBreadcrumb[] = essay
+    ? [
+        { name: 'Главная', path: '/' },
+        { name: 'Статьи', path: '/articles' },
+        { name: essay.title, path: routePath },
+      ]
+    : [
+        { name: 'Главная', path: '/' },
+        { name: 'Статьи', path: '/articles' },
+        { name: 'Материал не найден', path: routePath },
+      ];
 
   useSeo({
     title: essay ? `${essay.title} — THE LEGENDARY POET` : 'Статья не найдена — THE LEGENDARY POET',
     description: essay ? essay.excerpt : 'Статья не найдена.',
-    path: `/essays/${slug ?? ''}`,
+    path: routePath,
     type: 'article',
     image: essay?.cover,
+    imageAlt: essay?.coverAlt || essay?.title,
     publishedTime: essay?.date,
+    modifiedTime: essay?.dateModified || essay?.date,
     author: essay?.author,
     keywords: essay?.tags.join(','),
+    breadcrumbs,
+    robots: essay ? undefined : 'noindex,follow',
+    jsonLd: essay
+      ? buildArticlePageSchema({
+          title: essay.title,
+          description: essay.excerpt,
+          path: routePath,
+          image: essay.cover,
+          author: essay.author,
+          tags: essay.tags,
+          datePublished: essay.date,
+          dateModified: essay.dateModified || essay.date,
+          breadcrumbs,
+          poet: poet ? { id: poet.id, name: poet.fullName || poet.name } : undefined,
+        })
+      : undefined,
   });
 
   if (!essay) {
     return (
-      <div className="min-h-screen bg-[#050505] pt-32 pb-24 text-white">
+      <div className="min-h-screen bg-[#050505] pb-24 pt-32 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
+          <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
           <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
           <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
         </div>
@@ -43,7 +77,6 @@ export default function EssayPage() {
   }
 
   const toc = getEssayToc(essay.blocks);
-  const poet = essay.poetId ? poets.find((p) => p.id === essay.poetId) : undefined;
   const seriesEntries = essay.series
     ? getAllEssays()
         .filter((entry) => entry.series?.id === essay.series?.id)
@@ -55,10 +88,11 @@ export default function EssayPage() {
   const primarySourceCount = essay.sources?.filter((source) => source.kind === 'primary').length ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#050505] pt-28 pb-24 text-white">
+    <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
       <ReadingProgress />
       <SectionChip toc={toc} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Breadcrumbs items={breadcrumbs} className="mb-4" />
         <Link
           to="/articles"
           className="mb-8 inline-flex min-h-11 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300/70 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
