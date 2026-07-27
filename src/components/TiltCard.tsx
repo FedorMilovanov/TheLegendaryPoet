@@ -21,6 +21,16 @@ export default function TiltCard({
   const enabledRef = useRef(false);
   const visibleRef = useRef(true);
 
+  const prepareLayer = useCallback(() => {
+    const node = ref.current;
+    if (!node || !enabledRef.current || !visibleRef.current) return;
+    if (settleTimerRef.current != null) {
+      window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+    node.style.willChange = 'transform';
+  }, []);
+
   const reset = useCallback(() => {
     if (frameRef.current != null) {
       cancelAnimationFrame(frameRef.current);
@@ -36,7 +46,7 @@ export default function TiltCard({
     settleTimerRef.current = window.setTimeout(() => {
       if (ref.current) ref.current.style.willChange = 'auto';
       settleTimerRef.current = null;
-    }, 420);
+    }, 360);
   }, []);
 
   useEffect(() => {
@@ -96,11 +106,7 @@ export default function TiltCard({
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-    ref.current.style.willChange = 'transform';
-    if (settleTimerRef.current != null) {
-      window.clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = null;
-    }
+    prepareLayer();
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
@@ -108,6 +114,7 @@ export default function TiltCard({
     <div className="tilt-card-wrapper relative h-full w-full">
       <div
         ref={ref}
+        onPointerEnter={prepareLayer}
         onPointerMove={handlePointerMove}
         onPointerLeave={reset}
         onPointerCancel={reset}
@@ -116,11 +123,11 @@ export default function TiltCard({
         }}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
-        {children}
+        <div className="tilt-card-content relative h-full w-full">{children}</div>
         {sheen && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-500 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.12),transparent_38%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
+            className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_40%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
           />
         )}
       </div>

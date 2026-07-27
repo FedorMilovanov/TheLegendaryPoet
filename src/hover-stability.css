@@ -1,0 +1,96 @@
+/*
+ * Hover/compositor stability layer.
+ *
+ * Keep 3D tilt on one dedicated element and keep card/image hover transforms on
+ * separate descendants. This avoids replacing translateZ() with a different
+ * transform on hover — the old collision caused a one-frame layer teardown and
+ * visible cover flashes in Chromium/WebKit.
+ */
+.tilt-card-wrapper {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-inner {
+  transform: translateZ(0) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Neutralise the legacy direct-child translateZ rule from index.css. */
+.tilt-card-inner > * {
+  transform: none;
+}
+
+.tilt-card-content {
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.tilt-card-sheen {
+  transform: translateZ(1px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Do not animate layout-affecting `left`/`all` for the sweep highlight. */
+.luxury-card::before {
+  left: 0;
+  transform: translate3d(-160%, 0, 0) skewX(-18deg);
+  transition-property: transform, opacity;
+  transition-duration: 620ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.luxury-card:hover::before,
+.luxury-card:focus-within::before {
+  left: 0;
+  transform: translate3d(160%, 0, 0) skewX(-18deg);
+}
+
+.luxury-card {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition-property: transform, border-color, box-shadow, background-color;
+  transition-duration: 280ms, 260ms, 320ms, 260ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card:hover,
+.luxury-card:focus-within {
+  transform: translate3d(0, -4px, 0) scale(1.003);
+}
+
+.hover-media {
+  transform-origin: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: auto;
+}
+
+/* View-transition media must remain on a stable plane while the pointer moves. */
+[style*="view-transition-name"].hover-media,
+[style*="view-transition-name"] .hover-media {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
+  .tilt-card-inner,
+  .tilt-card-content,
+  .tilt-card-sheen {
+    transform: none !important;
+  }
+
+  .luxury-card:hover,
+  .luxury-card:focus-within {
+    transform: none;
+  }
+}
