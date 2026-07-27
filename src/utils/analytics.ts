@@ -1,50 +1,112 @@
 /**
- * Optional analytics: Yandex.Metrika and Google Analytics (gtag).
+ * Optional analytics with explicit prior consent.
  *
- * Both are OFF unless the corresponding build-time variable is set as a GitHub
- * repo *Variable* (Vite inlines VITE_* at build), exactly like the Supabase
- * keys:
- *   VITE_YANDEX_METRIKA_ID   e.g. "99999999"
- *   VITE_GA_ID               e.g. "G-XXXXXXX"
- * With neither set this is a complete no-op — no network, no globals.
+ * Repository variables consumed by the production build:
+ *   VITE_YANDEX_METRIKA_ID
+ *   VITE_GA_ID
+ *
+ * When neither variable is configured, this module is a complete no-op and the
+ * consent interface remains hidden.
  */
+
+export type AnalyticsConsent = 'granted' | 'denied';
+
+const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
+export const ANALYTICS_CONSENT_EVENT = 'tlp:analytics-consent-change';
+
 let started = false;
 
+function metrikaId() {
+  return (import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined)?.trim();
+}
+
+function gaId() {
+  return (import.meta.env.VITE_GA_ID as string | undefined)?.trim();
+}
+
+export function hasConfiguredAnalytics() {
+  return Boolean(metrikaId() || gaId());
+}
+
+export function getAnalyticsConsent(): AnalyticsConsent | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = window.localStorage.getItem(CONSENT_STORAGE_KEY);
+    return value === 'granted' || value === 'denied' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setAnalyticsConsent(value: AnalyticsConsent) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, value);
+  } catch {
+    // Consent still applies to the current page even when storage is blocked.
+  }
+  window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
+}
+
 export function initAnalytics() {
-  if (started || typeof window === 'undefined') return;
+  if (started || typeof window === 'undefined' || getAnalyticsConsent() !== 'granted') return;
+
+  const yandexId = metrikaId();
+  const googleId = gaId();
+  if (!yandexId && !googleId) return;
   started = true;
 
-  const metrikaId = import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined;
-  const gaId = import.meta.env.VITE_GA_ID as string | undefined;
-
-  if (metrikaId) {
-    // Yandex.Metrika counter
+  if (yandexId) {
     (function (m: any, e: Document, t: string, r: string, i: string) {
       m[i] = m[i] || function (...args: unknown[]) { (m[i].a = m[i].a || []).push(args); };
       m[i].l = 1 * (new Date() as unknown as number);
-      const k = e.createElement(t) as HTMLScriptElement;
-      const a = e.getElementsByTagName(t)[0];
-      k.async = true;
-      k.src = r;
-      a.parentNode?.insertBefore(k, a);
+      const script = e.createElement(t) as HTMLScriptElement;
+      const firstScript = e.getElementsByTagName(t)[0];
+      script.async = true;
+      script.src = r;
+      firstScript?.parentNode?.insertBefore(script, firstScript);
     })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-    (window as any).ym(Number(metrikaId), 'init', {
+
+    (window as any).ym(Number(yandexId), 'init', {
       clickmap: true,
       trackLinks: true,
       accurateTrackBounce: true,
       webvisor: true,
+      defer: true,
     });
   }
 
-  if (gaId) {
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-    document.head.appendChild(s);
+  if (googleId) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleId)}`;
+    document.head.appendChild(script);
+
     (window as any).dataLayer = (window as any).dataLayer || [];
     function gtag(...args: unknown[]) { (window as any).dataLayer.push(args); }
     (window as any).gtag = gtag;
     gtag('js', new Date());
-    gtag('config', gaId);
+    gtag('config', googleId, { send_page_view: false });
+  }
+}
+
+export function trackPageView(path: string, title: string) {
+  if (typeof window === 'undefined' || getAnalyticsConsent() !== 'granted') return;
+  initAnalytics();
+  if (!started) return;
+
+  const url = new URL(path, window.location.origin).href;
+  const yandexId = metrikaId();
+  const googleId = gaId();
+
+  if (yandexId && typeof (window as any).ym === 'function') {
+    (window as any).ym(Number(yandexId), 'hit', url, { title, referer: document.referrer || undefined });
+  }
+  if (googleId && typeof (window as any).gtag === 'function') {
+    (window as any).gtag('event', 'page_view', {
+      page_title: title,
+      page_location: url,
+      page_path: path,
+    });
   }
 }
