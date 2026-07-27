@@ -1,45 +1,81 @@
 // Poet whisper — 3D positional audio on hover
-// Looks for /audio/poet-{id}.mp3 , /audio/{id}.mp3 , or poet.voiceClip
-// Silent fail if file missing — no 404 spam in console
+// Looks for /audio/poet-{id}.mp3 or /audio/{id}.mp3.
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useThree } from '@react-three/fiber'
+import {
+  createWhisperPlaybackController,
+  type WhisperPlaybackController,
+} from './whisperPlayback'
 
 let audioCtx: AudioContext | null = null
-const buffers = new Map<string, AudioBuffer>()
+const bufferRequests = new Map<string, Promise<AudioBuffer | null>>()
 
-async function loadBuffer(url: string): Promise<AudioBuffer | null> {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    if (audioCtx.state === 'suspended') await audioCtx.resume()
-    if (buffers.has(url)) return buffers.get(url)!
-    const res = await fetch(url, { method: 'HEAD' })
-    if (!res.ok) return null
-    const ab = await fetch(url).then(r => r.arrayBuffer())
-    const buf = await audioCtx.decodeAudioData(ab)
-    buffers.set(url, buf)
-    return buf
-  } catch { return null }
+function getAudioContext() {
+  if (audioCtx) return audioCtx
+  const AudioContextConstructor = window.AudioContext || (window as Window & {
+    webkitAudioContext?: typeof AudioContext
+  }).webkitAudioContext
+  if (!AudioContextConstructor) return null
+  audioCtx = new AudioContextConstructor()
+  return audioCtx
 }
 
-export function usePoetWhisper(poetId: string, active: boolean, position: [number, number, number]) {
+function loadBuffer(url: string): Promise<AudioBuffer | null> {
+  const cached = bufferRequests.get(url)
+  if (cached) return cached
+
+  const request = (async () => {
+    try {
+      const context = getAudioContext()
+      if (!context) return null
+      if (context.state === 'suspended') await context.resume()
+      const response = await fetch(url)
+      if (!response.ok) return null
+      return await context.decodeAudioData(await response.arrayBuffer())
+    } catch {
+      return null
+    }
+  })()
+
+  // Successful buffers and missing assets are both cached for this page load,
+  // preventing repeated HEAD + GET pairs and repeated 404s on every hover.
+  bufferRequests.set(url, request)
+  return request
+}
+
+function createPlaybackController(): WhisperPlaybackController | null {
+  if (typeof window === 'undefined') return null
+  return createWhisperPlaybackController({
+    schedule: (callback, delayMs) => window.setTimeout(callback, delayMs),
+    cancel: (handle) => window.clearTimeout(handle),
+  })
+}
+
+export function usePoetWhisper(
+  poetId: string,
+  active: boolean,
+  position: [number, number, number],
+  muted: boolean,
+) {
   const { camera } = useThree()
-  const srcRef = useRef<PannerNode | null>(null)
-  const gainRef = useRef<GainNode | null>(null)
-  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null)
+  const playbackRef = useRef<WhisperPlaybackController | null>(null)
+  const [x, y, z] = position
+
+  if (!playbackRef.current) playbackRef.current = createPlaybackController()
+
+  useEffect(() => () => {
+    playbackRef.current?.dispose()
+    playbackRef.current = null
+  }, [])
 
   useEffect(() => {
-    // global mute
-    if ((window as any).__TLP_AUDIO_MUTED) return
-    if (!active) {
-      if (gainRef.current && audioCtx) {
-        gainRef.current.gain.cancelScheduledValues(audioCtx.currentTime)
-        gainRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.35)
-      }
-      setTimeout(() => {
-        audioSourceRef.current?.stop()
-        audioSourceRef.current = null
-      }, 380)
+    const playback = playbackRef.current
+    if (!playback) return
+
+    if (!active || muted) {
+      if (audioCtx) playback.fadeOut(audioCtx.currentTime)
+      else playback.stop()
       return
     }
 
@@ -49,55 +85,63 @@ export function usePoetWhisper(poetId: string, active: boolean, position: [numbe
         `/audio/poet-${poetId}.mp3`,
         `/audio/${poetId}.mp3`,
       ]
-      let buf: AudioBuffer | null = null
+      let buffer: AudioBuffer | null = null
       for (const url of candidates) {
-        buf = await loadBuffer(url)
-        if (buf) break
+        buffer = await loadBuffer(url)
+        if (buffer) break
       }
-      if (!buf || cancelled) return
-      if (!audioCtx) return
-      await audioCtx.resume()
+      if (!buffer || cancelled) return
 
-      const panner = audioCtx.createPanner()
+      const context = getAudioContext()
+      if (!context) return
+      if (context.state === 'suspended') await context.resume()
+      if (cancelled) return
+
+      const panner = context.createPanner()
       panner.panningModel = 'HRTF'
       panner.distanceModel = 'inverse'
       panner.refDistance = 1.8
       panner.maxDistance = 12
       panner.rolloffFactor = 1.2
-      panner.positionX.value = position[0]
-      panner.positionY.value = position[1]
-      panner.positionZ.value = position[2]
+      panner.positionX.value = x
+      panner.positionY.value = y
+      panner.positionZ.value = z
 
-      const gain = audioCtx.createGain()
+      const gain = context.createGain()
       gain.gain.value = 0
-      gain.gain.linearRampToValueAtTime(0.72, audioCtx.currentTime + 0.6)
+      gain.gain.linearRampToValueAtTime(0.72, context.currentTime + 0.6)
 
-      const src = audioCtx.createBufferSource()
-      src.buffer = buf
-      src.loop = false
-      src.connect(gain).connect(panner).connect(audioCtx.destination)
-      src.start()
-
-      srcRef.current = panner
-      gainRef.current = gain
-      audioSourceRef.current = src
+      const source = context.createBufferSource()
+      source.buffer = buffer
+      source.loop = false
+      source.connect(gain).connect(panner).connect(context.destination)
+      playback.replace({ source, gain, panner })
+      source.onended = () => playback.complete(source)
+      source.start()
     })()
 
-    return () => { cancelled = true }
-  }, [active, poetId, position])
+    return () => {
+      cancelled = true
+      if (audioCtx) playback.fadeOut(audioCtx.currentTime)
+      else playback.stop()
+    }
+  }, [active, muted, poetId, x, y, z])
 
-  // update listener to camera
+  // Update listener to camera. This effect intentionally runs every frame-like
+  // React render, but it does not restart or replace the audio source.
   useEffect(() => {
     if (!audioCtx || !audioCtx.listener.positionX) return
-    const l = audioCtx.listener
-    const p = camera.position
-    if (l.positionX) {
-      l.positionX.value = p.x; l.positionY.value = p.y; l.positionZ.value = p.z
-      const dir = new THREE.Vector3()
-      camera.getWorldDirection(dir)
-      if (l.forwardX) {
-        l.forwardX.value = dir.x; l.forwardY.value = dir.y; l.forwardZ.value = dir.z
-      }
+    const listener = audioCtx.listener
+    const point = camera.position
+    listener.positionX.value = point.x
+    listener.positionY.value = point.y
+    listener.positionZ.value = point.z
+    const direction = new THREE.Vector3()
+    camera.getWorldDirection(direction)
+    if (listener.forwardX) {
+      listener.forwardX.value = direction.x
+      listener.forwardY.value = direction.y
+      listener.forwardZ.value = direction.z
     }
   })
 }
