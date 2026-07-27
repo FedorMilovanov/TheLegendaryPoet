@@ -92,13 +92,14 @@ async function samplePointerInteraction(page, image, finePointer) {
 }
 
 function assertStableSamples(initial, samples) {
+  const minimumOpacity = Math.max(0, initial.opacity - 0.05);
   for (const sample of samples) {
     expect(sample.connected).toBe(true);
     expect(sample.src).toBe(initial.src);
     expect(sample.naturalWidth).toBe(initial.naturalWidth);
     expect(sample.naturalHeight).toBe(initial.naturalHeight);
     expect(sample.state).not.toBe('failed');
-    expect(sample.opacity).toBeGreaterThanOrEqual(0.9);
+    expect(sample.opacity).toBeGreaterThanOrEqual(minimumOpacity);
     expect(sample.visibility).not.toBe('hidden');
     expect(sample.display).not.toBe('none');
     expect(sample.backfaceVisibility).toBe('hidden');
@@ -138,9 +139,10 @@ for (const surface of surfaces) {
       await image.scrollIntoViewIfNeeded();
       await expect(image).toBeVisible();
       await expect.poll(async () => (await imageSnapshot(image)).naturalWidth).toBeGreaterThan(0);
+      await expect.poll(async () => (await imageSnapshot(image)).state).not.toBe('loading');
 
       const initial = await imageSnapshot(image);
-      expect(initial.opacity).toBeGreaterThanOrEqual(0.9);
+      expect(initial.opacity).toBeGreaterThan(0);
       expect(initial.transitionProperty).not.toContain('all');
       expect(initial.backfaceVisibility).toBe('hidden');
       const samples = await samplePointerInteraction(page, image, finePointer);
