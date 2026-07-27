@@ -1,18 +1,12 @@
 {
-  "referenceId": "canonical-hooded-figure-v1",
-  "visualAuthority": "user-supplied canonical reference",
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "visualAuthority": "user-approved canonical reference with a clean smoke-free lower edge",
   "status": "immutable",
   "projectFile": "qa/reference/brand-emblem-canonical-reference.webp",
-  "projectDimensions": {
-    "width": 256,
-    "height": 256
-  },
-  "projectSha256": "6ed4068636a63532de6269b2660cec186364399f3a0f4519430d9e08c751b0ad",
-  "sourceDimensions": {
-    "width": 1254,
-    "height": 1254
-  },
-  "sourceSha256": "9a0bb7d233910e7469e0b2fcace587df72550b98ced3af870adf9e717e59b61a",
-  "derivation": "Lanczos downsample to 256x256 WebP quality 85; no crop, repaint, recolour or compositional edit",
-  "replacementPolicy": "The file, source hash or reference id may change only after explicit user approval of a new canonical reference."
+  "projectDimensions": { "width": 256, "height": 256 },
+  "projectSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
+  "sourceDimensions": { "width": 1254, "height": 1254 },
+  "sourceSha256": "a780a19917fb9d5d280f0a8c3629b3f1d97b599da62add6e18b14252ed577b67",
+  "derivation": "User-approved 1254x1254 generated reference; Lanczos downsample to 256x256 WebP quality 92 with no crop or repaint after approval.",
+  "replacementPolicy": "The canonical file, source identity or reference id may change only after explicit user approval of a replacement reference."
 }
