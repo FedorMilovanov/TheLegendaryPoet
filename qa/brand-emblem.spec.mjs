@@ -1,12 +1,105 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-const BASE_URL=process.env.QA_BASE_URL||'http://127.0.0.1:4173';const ARTIFACT_DIR=path.resolve('qa-artifacts');const VERSION='cloak-20260726-8';const VECTOR_SOURCE='canonical-reference-v2-reset-v9-7';const routes=['/','/poets','/ratings','/articles','/music','/archive','/about'];fs.mkdirSync(ARTIFACT_DIR,{recursive:true});
 
-test('v9.7 clean-base assets are coherent and raster-free',async({page,request})=>{const response=await page.goto(BASE_URL,{waitUntil:'domcontentloaded'});expect(response?.status()).toBeLessThan(400);for(const asset of ['brand-emblem.svg','brand-mark-micro.svg','brand-emblem-mask.svg']){const r=await request.get(`${BASE_URL}/${asset}?verify=${Date.now()}`);expect(r.status(),asset).toBe(200);const source=await r.text();expect(source).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);expect(source).toMatch(/<path\b/);expect(source).toMatch(/<\/svg>\s*$/);expect(source).not.toMatch(/<image\b|data:image|base64,|<rect\b/i);}const standalone=await(await request.get(`${BASE_URL}/brand-emblem.svg`)).text();expect(standalone).toContain('M48 37.2C40.6 37.1');expect(standalone).toContain('M48 9.8C42 11.8');expect(standalone).toContain('M48 17.4C42.3 18.2');expect(standalone).not.toContain('M18 91C24 85');const micro=await(await request.get(`${BASE_URL}/brand-mark-micro.svg`)).text();expect(micro).toContain('M16 5.9C14.1 6.2');});
+const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
+const ARTIFACT_DIR = path.resolve('qa-artifacts');
+const VERSION = 'cloak-20260728-10';
+const VECTOR_SOURCE = 'canonical-reference-v2-reset-v10-6';
+const routes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
+fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
-test('standalone and micro marks decode at every optical size',async({page})=>{await page.setViewportSize({width:900,height:320});await page.setContent(`<style>html,body{margin:0;min-height:100%;background:#050810;color:#d9f8ff;font:12px system-ui}main{min-height:320px;display:flex;align-items:center;gap:22px;padding:28px}figure{margin:0;display:grid;justify-items:center;gap:9px}.tile{display:grid;place-items:center;width:204px;height:204px;background:#03070d;border:1px solid rgba(70,215,255,.12)}.small{width:102px;height:102px}img{display:block;object-fit:contain}</style><main>${[192,96,56,44].map(size=>`<figure><div class="tile ${size<192?'small':''}"><img data-optical="${size}" width="${size}" height="${size}" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>${size}px</figcaption></figure>`).join('')} ${[32,16].map(size=>`<figure><div class="tile small"><img data-optical="${size}" width="${size}" height="${size}" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>${size}px</figcaption></figure>`).join('')}</main>`);const results=await page.locator('img').evaluateAll(async images=>Promise.all(images.map(async image=>{try{await image.decode();return{ok:true,size:image.dataset.optical};}catch(error){return{ok:false,error:String(error)}}})));expect(results.filter(x=>!x.ok),JSON.stringify(results)).toEqual([]);for(const size of [192,96,56,44,32,16]){const box=await page.locator(`img[data-optical="${size}"]`).boundingBox();expect(Math.round(box?.width||0)).toBe(size);expect(Math.round(box?.height||0)).toBe(size);}await page.screenshot({path:path.join(ARTIFACT_DIR,'brand-emblem-optical-size-matrix.png'),fullPage:true});});
+test('v10.6 clean-base assets are coherent and raster-free', async ({ page, request }) => {
+  const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  expect(response?.status()).toBeLessThan(400);
+  for (const asset of ['brand-emblem.svg', 'brand-mark-micro.svg', 'brand-emblem-mask.svg']) {
+    const r = await request.get(`${BASE_URL}/${asset}?verify=${Date.now()}`);
+    expect(r.status(), asset).toBe(200);
+    const source = await r.text();
+    expect(source).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
+    expect(source).toMatch(/<path\b/);
+    expect(source).toMatch(/<\/svg>\s*$/);
+    expect(source).not.toMatch(/<image\b|data:image|base64,|<rect\b/i);
+  }
+  const standalone = await (await request.get(`${BASE_URL}/brand-emblem.svg`)).text();
+  expect(standalone).toContain('M48 35.2C40.3 35.2');
+  expect(standalone).toContain('M48 8.7C42.4 10.6');
+  expect(standalone).toContain('M48 16.2L42.8 18.5');
+  expect(standalone).not.toContain('M18 91C24 85');
+  const micro = await (await request.get(`${BASE_URL}/brand-mark-micro.svg`)).text();
+  expect(micro).toContain('M16 5.5L14.2 6.3');
+});
 
-test('live header uses v9.7 geometry and hover remains compositor-only',async({page})=>{const errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.goto(BASE_URL,{waitUntil:'domcontentloaded'});await page.addStyleTag({content:'[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}'});const mark=page.locator('header [data-brand-mark]').first();await expect(mark).toBeVisible();await expect(mark).toHaveAttribute('data-brand-version',VERSION);await expect(mark).toHaveAttribute('data-brand-vector-source',VECTOR_SOURCE);for(const hook of ['vector','figure','hood','cloak','face-void','rim-light','folds','collar','energy','atmosphere','texture','seams','hood-layers'])await expect(mark.locator(`[data-brand-${hook}]`)).toBeAttached();expect(await mark.locator('image,rect').count()).toBe(0);const geometry=await mark.evaluate(node=>{const b=s=>node.querySelector(s)?.getBBox();const hood=b('[data-brand-hood]'),face=b('[data-brand-face-void]'),cloak=b('[data-brand-cloak]');return hood&&face&&cloak?{hoodWidth:hood.width,faceWidth:face.width,cloakWidth:cloak.width,ratio:face.width/hood.width,hoodTop:hood.y,cloakBottom:cloak.y+cloak.height}:null;});expect(geometry).not.toBeNull();expect(geometry.hoodWidth).toBeGreaterThan(32);expect(geometry.hoodWidth).toBeLessThan(35);expect(geometry.faceWidth).toBeGreaterThan(29);expect(geometry.faceWidth).toBeLessThan(31.5);expect(geometry.cloakWidth).toBeGreaterThan(79);expect(geometry.cloakWidth).toBeLessThan(83);expect(geometry.ratio).toBeGreaterThan(.86);expect(geometry.ratio).toBeLessThan(.94);expect(geometry.hoodTop).toBeGreaterThan(9.5);expect(geometry.hoodTop).toBeLessThan(10.2);expect(geometry.cloakBottom).toBeGreaterThan(95);const vector=mark.locator('[data-brand-vector]');const before=await vector.evaluate(node=>({transform:getComputedStyle(node).transform,filter:getComputedStyle(node).filter}));const box=await mark.boundingBox();await page.screenshot({path:path.join(ARTIFACT_DIR,'brand-emblem-vector-idle.png'),clip:{x:Math.max(0,(box?.x||0)-28),y:Math.max(0,(box?.y||0)-28),width:(box?.width||56)+56,height:(box?.height||56)+56}});await mark.hover();await page.waitForTimeout(700);const after=await vector.evaluate(node=>({transform:getComputedStyle(node).transform,filter:getComputedStyle(node).filter}));expect(after.transform).not.toBe(before.transform);expect(after.filter).not.toBe(before.filter);await page.screenshot({path:path.join(ARTIFACT_DIR,'brand-emblem-vector-hover.png'),clip:{x:Math.max(0,(box?.x||0)-28),y:Math.max(0,(box?.y||0)-28),width:(box?.width||56)+56,height:(box?.height||56)+56}});expect(errors).toEqual([]);});
+test('standalone and micro marks decode at every optical size', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 320 });
+  await page.setContent(`<style>html,body{margin:0;min-height:100%;background:#050810;color:#d9f8ff;font:12px system-ui}main{min-height:320px;display:flex;align-items:center;gap:22px;padding:28px}figure{margin:0;display:grid;justify-items:center;gap:9px}.tile{display:grid;place-items:center;width:204px;height:204px;background:#03070d;border:1px solid rgba(70,215,255,.12)}.small{width:102px;height:102px}img{display:block;object-fit:contain}</style><main>${[192,96,56,44].map(size=>`<figure><div class="tile ${size<192?'small':''}"><img data-optical="${size}" width="${size}" height="${size}" src="${BASE_URL}/brand-emblem.svg?v=${VERSION}"></div><figcaption>${size}px</figcaption></figure>`).join('')} ${[32,16].map(size=>`<figure><div class="tile small"><img data-optical="${size}" width="${size}" height="${size}" src="${BASE_URL}/brand-mark-micro.svg?v=${VERSION}"></div><figcaption>${size}px</figcaption></figure>`).join('')}</main>`);
+  const results = await page.locator('img').evaluateAll(async images => Promise.all(images.map(async image => {
+    try { await image.decode(); return { ok: true, size: image.dataset.optical }; }
+    catch (error) { return { ok: false, error: String(error) }; }
+  })));
+  expect(results.filter(x => !x.ok), JSON.stringify(results)).toEqual([]);
+  for (const size of [192,96,56,44,32,16]) {
+    const box = await page.locator(`img[data-optical="${size}"]`).boundingBox();
+    expect(Math.round(box?.width || 0)).toBe(size);
+    expect(Math.round(box?.height || 0)).toBe(size);
+  }
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
+});
 
-for(const route of routes)test(`${route}: header and footer use v9.7`,async({page})=>{const response=await page.goto(`${BASE_URL}${route}`,{waitUntil:'domcontentloaded'});expect(response?.status()).toBeLessThan(400);for(const mark of [page.locator('header [data-brand-mark]').first(),page.locator('footer [data-brand-mark]').first()]){await expect(mark).toBeAttached();await expect(mark).toHaveAttribute('data-brand-vector-source',VECTOR_SOURCE);expect(await mark.locator('image,rect').count()).toBe(0);}});
+test('live header uses v10.6 geometry and hover remains compositor-only', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+  const mark = page.locator('header [data-brand-mark]').first();
+  await expect(mark).toBeVisible();
+  await expect(mark).toHaveAttribute('data-brand-version', VERSION);
+  await expect(mark).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
+  for (const hook of ['vector','figure','hood','cloak','face-void','rim-light','folds','collar','energy','atmosphere','texture','seams','hood-layers']) {
+    await expect(mark.locator(`[data-brand-${hook}]`)).toBeAttached();
+  }
+  expect(await mark.locator('image,rect').count()).toBe(0);
+  const geometry = await mark.evaluate(node => {
+    const b = selector => node.querySelector(selector)?.getBBox();
+    const hood = b('[data-brand-hood]');
+    const face = b('[data-brand-face-void]');
+    const cloak = b('[data-brand-cloak]');
+    return hood && face && cloak ? {
+      hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width,
+      ratio: face.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height,
+    } : null;
+  });
+  expect(geometry).not.toBeNull();
+  expect(geometry.hoodWidth).toBeGreaterThan(31.5);
+  expect(geometry.hoodWidth).toBeLessThan(33.5);
+  expect(geometry.faceWidth).toBeGreaterThan(24.5);
+  expect(geometry.faceWidth).toBeLessThan(26);
+  expect(geometry.cloakWidth).toBeGreaterThan(82);
+  expect(geometry.cloakWidth).toBeLessThan(87);
+  expect(geometry.ratio).toBeGreaterThan(.75);
+  expect(geometry.ratio).toBeLessThan(.82);
+  expect(geometry.hoodTop).toBeGreaterThan(8.4);
+  expect(geometry.hoodTop).toBeLessThan(9);
+  expect(geometry.cloakBottom).toBeGreaterThan(95);
+  const vector = mark.locator('[data-brand-vector]');
+  const before = await vector.evaluate(node => ({ transform: getComputedStyle(node).transform, filter: getComputedStyle(node).filter }));
+  const box = await mark.boundingBox();
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-idle.png'), clip: { x: Math.max(0,(box?.x||0)-28), y: Math.max(0,(box?.y||0)-28), width:(box?.width||56)+56, height:(box?.height||56)+56 } });
+  await mark.hover();
+  await page.waitForTimeout(700);
+  const after = await vector.evaluate(node => ({ transform: getComputedStyle(node).transform, filter: getComputedStyle(node).filter }));
+  expect(after.transform).not.toBe(before.transform);
+  expect(after.filter).not.toBe(before.filter);
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-vector-hover.png'), clip: { x: Math.max(0,(box?.x||0)-28), y: Math.max(0,(box?.y||0)-28), width:(box?.width||56)+56, height:(box?.height||56)+56 } });
+  expect(errors).toEqual([]);
+});
+
+for (const route of routes) test(`${route}: header and footer use v10.6`, async ({ page }) => {
+  const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
+  expect(response?.status()).toBeLessThan(400);
+  for (const mark of [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()]) {
+    await expect(mark).toBeAttached();
+    await expect(mark).toHaveAttribute('data-brand-vector-source', VECTOR_SOURCE);
+    expect(await mark.locator('image,rect').count()).toBe(0);
+  }
+});

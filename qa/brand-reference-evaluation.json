@@ -1,34 +1,34 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-v2-reset-v9-7",
-  "candidateRevision": "v9.8 clean-render correction after exact-head texture rejection",
+  "candidateSource": "canonical-reference-v2-reset-v10-6",
+  "candidateRevision": "v10.6 direct-main macro and cowl reset",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.59,
+  "overallScore": 0.66,
   "scores": {
-    "macroProportions": 0.72,
-    "hoodAndCavern": 0.7,
-    "collarAndFolds": 0.5,
-    "cloakSilhouette": 0.69,
-    "rimAndAura": 0.4,
-    "microReadability": 0.77
+    "macroProportions": 0.8,
+    "hoodAndCavern": 0.78,
+    "collarAndFolds": 0.58,
+    "cloakSilhouette": 0.78,
+    "rimAndAura": 0.47,
+    "microReadability": 0.78
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "558b4854e7bd4a26685b97815a100c7373d83030",
-    "public/brand-emblem.svg": "e5793019d3861f158671c58d5c04f7474656fa50",
-    "public/brand-mark-micro.svg": "889d27cea5916b712e4fb68123c136f14fd307f3",
-    "public/brand-emblem-mask.svg": "51edb6254220a0b375450bb1ca3c563600e541f3"
+    "src/components/BrandMark.tsx": "f637f41f41e75af11ca1e1b01df2e9e058befe94",
+    "public/brand-emblem.svg": "fd6199b711120d20f3415a616d6673084781692e",
+    "public/brand-mark-micro.svg": "5c7e423efe13de8b619bbb37c11945fd76bfc06d",
+    "public/brand-emblem-mask.svg": "d750927a06c297f599e89776d8e553fdf38fadde"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the rejected colored scanline texture is removed, but the candidate remains flatter and more diagrammatic than the painterly reference",
-    "the face cavern is still too vertically oval rather than a broad natural void",
-    "the cowl remains too orderly and converges into a clean central knot",
-    "the large folds are cleaner and more radial than the reference cloth masses",
-    "the upper and side electrical aura is still sparse compared with reference v2",
-    "the exact-head live header must remain under visual review before acceptance"
+    "the silhouette, hood ratio and angular face cavern are closer, but the candidate remains flatter and more graphic than the painterly reference",
+    "the cowl now overlaps the hood base but still reads as smooth crossing ribbons instead of crushed heavy cloth",
+    "the large cloak folds remain too clean and radial compared with the irregular reference cloth masses",
+    "the upper-side aura is smoke-free at the bottom but remains too curvilinear and orderly instead of torn electrical bloom",
+    "the face cavern is still more regular and larger than the natural black opening in the reference",
+    "the exact-main live header must remain under visual review before acceptance"
   ],
-  "nextRequiredAction": "continue v9.9 from reference v2: widen and irregularize the face cavern, rebuild the cowl as crushed cloth, break radial fold regularity and strengthen upper-side electrical bloom without lower smoke; keep PR draft"
+  "nextRequiredAction": "continue v10.7 directly in main from reference v2: crush and shorten the cowl layers, break radial fold regularity, reduce face-cavern regularity and replace clean aura curves with denser torn upper-side energy without lower smoke"
 }

@@ -10,66 +10,54 @@ The only visual authority for the THE LEGENDARY POET emblem is:
 
 Reference id: `canonical-hooded-figure-v2-clean-base`.
 
-This is the user-approved clean-base image: the electrical aura is concentrated around the hood, shoulders and side edges, while the bottom remains dark and free of a required smoke pool. The superseded v1 reference and every v8/v9 SVG candidate are historical implementations only. They are not artistic references.
+The approved reference has a high layered hood, a broad black face cavern, heavy gathered cloth, a wide cloak, cold upper/side electrical energy and a clean lower edge with no required smoke beneath the cloak. Older SVGs are implementation history only, never artistic references.
 
-## Mandatory workflow for every emblem change
+## Direct-main workflow
 
-1. Open the canonical reference before editing any brand file.
-2. Keep the reference visible beside the candidate throughout the entire pass.
-3. Open the latest `brand-reference-comparison-matrix.png` and `brand-reference-live-site-comparison.png`.
-4. Judge macro geometry first: hood/body ratio, face-cavern width, shoulder position, cloak spread, collar construction and the clean lower edge.
-5. Work from the canonical reference. **Do not iterate from the previous SVG alone.**
-6. Update `qa/brand-reference-evaluation.json` in the same final tree as every change to:
-   - `src/components/BrandMark.tsx`;
-   - `public/brand-emblem.svg`;
-   - `public/brand-mark-micro.svg`;
-   - `public/brand-emblem-mask.svg`.
-7. Run static brand validation and exact-head browser QA.
-8. Inspect reference/candidate at 192, 96, 56, 32 and 16 px.
-9. Inspect the actual built homepage header and footer, not only an isolated SVG render.
-10. Keep the PR draft and `not-reference-approved` while any blocking deviation remains.
+All emblem marathon work is committed directly to `main`. Do not create temporary brand branches or draft PRs that can be abandoned.
 
-## CI and visual progress policy
+Every emblem pass must be one atomic Git tree based on the latest `main` and must update together:
 
-- Technical CI remains strict for reference integrity, provenance, synchronized blob locks, valid scores, required evidence and runtime correctness.
-- An honest `not-reference-approved` decision is a work-in-progress status, not a technical failure. CI should remain green and report the current percentage and progress label.
-- A claimed `reference-accepted` decision remains blocking unless every acceptance threshold is met and the blocking-deviation list is empty.
-- Green CI proves technical integrity only. It never proves visual fidelity or permission to merge the emblem.
-- The PR stays draft until the user explicitly accepts the exact-head visual comparison.
+- `src/components/BrandMark.tsx`;
+- `public/brand-emblem.svg`;
+- `public/brand-mark-micro.svg`;
+- `public/brand-emblem-mask.svg`;
+- `qa/brand-reference-evaluation.json` with exact Git blob locks;
+- affected validators, Browser QA and cache/version markers.
 
-## Hard stop conditions
+Before moving `main`, confirm that its head has not advanced. Never force-push and never overwrite unrelated work. If `main` advances, rebuild the atomic tree on the new head.
 
-Stop micro-polishing and redesign the base geometry when any of these appears:
+## Mandatory visual loop
 
-- the face becomes a narrow oval or droplet;
-- the hood/body ratio moves away from the v2 reference;
-- the shoulders become a rounded poncho or compact bust;
-- the cowl becomes a clean X, bow, moustache or thin necktie;
+1. Open the canonical reference before editing.
+2. Keep it visible beside the candidate throughout the pass.
+3. Judge macro geometry before detail: hood/body ratio, face width, shoulder spread, cowl construction, three large fold families and the smoke-free lower edge.
+4. Never iterate from the preceding SVG alone.
+5. Run strict static validation and exact-main Browser QA.
+6. Inspect `REFERENCE / CURRENT CANDIDATE` at 192, 96, 56, 32 and 16 px.
+7. Inspect `REFERENCE / CURRENT SVG / EXACT-MAIN LIVE SITE` and the actual homepage header/footer.
+8. Record all remaining deviations honestly and keep `not-reference-approved` until the user accepts the exact-main visuals.
+
+## Hard stops
+
+Reset the base geometry instead of micro-polishing when:
+
+- the face becomes a narrow oval, droplet or tidy mask;
+- the hood/body ratio drifts from the reference;
+- the cloak becomes a compact bust, dome or poncho;
+- the cowl becomes a clean X, bow, moustache or necktie;
 - folds become identical radial wedges;
-- glow is used to hide weak cloth geometry;
-- a smoke pool, mist ring or bright aura is added below the cloak hem;
-- old v1 smoke is restored merely because it existed in the superseded reference;
-- validators freeze old coordinates that conflict with v2;
-- a green CI result is described as evidence of visual fidelity.
+- glow hides weak cloth construction;
+- smoke, mist or a bright pool appears under the cloak;
+- tests freeze old coordinates that conflict with the reference;
+- green CI is presented as proof of visual fidelity.
 
-## Required visual invariants
+## Evidence required after every main commit
 
-- High layered pointed hood.
-- Broad empty black face cavern with no eyes or features.
-- Heavy gathered cowl beneath the face.
-- Wide triangular cloak with three readable major fold families.
-- Near-symmetric architectural core.
-- Bright icy rim around the hood and upper side edges.
-- Electrical aura around the head, shoulders and sides.
-- Dark calm lower edge without required smoke.
-- No text, book, wings, halo, crystal, cross or religious symbol inside the emblem.
+- `qa-artifacts/brand-reference-comparison-matrix.png`;
+- `qa-artifacts/brand-reference-live-site-comparison.png`;
+- `qa-artifacts/brand-live-site-home-first-viewport.png`;
+- the exact `main` SHA and workflow artifact digest;
+- an explicit visual decision and remaining deviations.
 
-## Required evidence in every brand PR
-
-- exact-head `qa-artifacts/brand-reference-comparison-matrix.png`;
-- exact-head `qa-artifacts/brand-reference-live-site-comparison.png`;
-- current candidate revision and Git blob locks;
-- explicit remaining deviations;
-- explicit `reference-accepted` or `not-reference-approved` decision.
-
-Never weaken reference integrity or invent acceptance to obtain a green result. Report unfinished visual fidelity as non-blocking progress and change the candidate, not the evidence or score.
+Green CI proves technical integrity only. Change the candidate, never weaken the reference, evidence or score.
