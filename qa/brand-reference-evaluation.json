@@ -1,18 +1,18 @@
 {
-  "referenceId": "canonical-hooded-figure-v1",
-  "reviewedAgainstReferenceSha256": "6ed4068636a63532de6269b2660cec186364399f3a0f4519430d9e08c751b0ad",
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-reset-v9-0",
-  "candidateRevision": "v9.0 reference-reset draft",
+  "candidateRevision": "v9.0 measured against clean-base reference v2",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.62,
+  "overallScore": 0.46,
   "scores": {
-    "macroProportions": 0.74,
-    "hoodAndCavern": 0.68,
-    "collarAndFolds": 0.54,
-    "cloakSilhouette": 0.73,
-    "rimAndAura": 0.43,
-    "microReadability": 0.8
+    "macroProportions": 0.55,
+    "hoodAndCavern": 0.5,
+    "collarAndFolds": 0.37,
+    "cloakSilhouette": 0.51,
+    "rimAndAura": 0.31,
+    "microReadability": 0.74
   },
   "candidateGitBlobShas": {
     "src/components/BrandMark.tsx": "42f5ae2cd319c8baea5fa008434a2ca612913690",
@@ -21,12 +21,14 @@
     "public/brand-emblem-mask.svg": "c2ab9f5ab5ed1b2b41e752b99a4a810f256c3caa"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
+  "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "face cavern is broad now but still too smooth and droplet-like at the lower point",
-    "collar overlap is structurally restored but reads as a clean crossed X instead of crushed heavy cloth",
-    "major folds are present but remain too radial, regular and diagrammatic",
-    "icy rim is too uniform and neon-clean compared with the broken luminous edge in the reference",
-    "spectral aura is too sparse and line-based; the reference has denser torn smoke and electric bloom"
+    "the current v9.0 candidate still contains lower aura and smoke strokes that violate the new clean-base reference",
+    "the face cavern is too narrow, smooth and droplet-like compared with the broad black void in reference v2",
+    "the collar reads as a clean crossed X instead of a heavy gathered cowl",
+    "the cloak folds are regular vector wedges rather than deep irregular fabric masses",
+    "the shoulder and cloak silhouette is too compact and rounded",
+    "the upper and side electrical aura is sparse while too much emphasis remains near the lower edge"
   ],
-  "nextRequiredAction": "continue v9.1 from the canonical reference: shorten and roughen the face cavern, crush the collar into heavier layered cloth, break fold regularity, and replace line wisps with denser smoky electric aura; keep the PR draft and do not merge"
+  "nextRequiredAction": "replace the v9.0 geometry rather than polishing it: build v9.3 from canonical reference v2 with a broader void, gathered cowl, irregular large folds, denser upper-side aura and no lower smoke; keep PR draft"
 }
