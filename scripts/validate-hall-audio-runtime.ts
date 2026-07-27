@@ -96,6 +96,9 @@ expect(finalSource.state.stopped === 1, 'final disposal must stop the active sou
 const hookSource = fs.readFileSync('src/components/hall/usePoetWhisper.ts', 'utf8');
 const nicheSource = fs.readFileSync('src/components/hall/PoetNiche.tsx', 'utf8');
 const hallSource = fs.readFileSync('src/components/hall/HallOfPoets.tsx', 'utf8');
+const fpsSource = fs.readFileSync('src/components/hall/FirstPersonControls.tsx', 'utf8');
+const railSource = fs.readFileSync('src/components/hall/useHallNavigation.ts', 'utf8');
+const guardSource = fs.readFileSync('src/components/hall/hallInputGuard.ts', 'utf8');
 expect(hookSource.includes('muted: boolean'), 'whisper hook must receive reactive mute state');
 expect(hookSource.includes('[active, muted, poetId, x, y, z]'), 'whisper effect must depend on primitive coordinates rather than an unstable position array');
 expect(hookSource.includes('bufferRequests.set(url, request)'), 'audio fetch and decode results must be cached per candidate URL');
@@ -104,8 +107,15 @@ expect(!hookSource.includes('__TLP_AUDIO_MUTED'), 'whisper hook must not read a 
 expect(!hookSource.includes('playbackRef.current = null'), 'StrictMode effect replay must not null the render-owned playback controller');
 expect(nicheSource.includes('usePoetWhisper(poet.shortKey, hovered, position, muted)'), 'every niche must pass mute state into its whisper lifecycle');
 expect(hallSource.includes('muted={audioMuted}'), 'hall scene must propagate its mute state to every niche');
-expect(hallSource.includes('__TLP_MODAL_OPEN'), 'hall keyboard shortcuts must pause behind a modal surface');
+expect((hallSource.match(/shouldIgnoreHallShortcut\(event\)/g) ?? []).length >= 2, 'global F/M and FPS E shortcuts must share the same overlay/editable guard');
 expect(!hallSource.includes('__TLP_AUDIO_MUTED ='), 'hall must not mirror mute state into a stale global variable');
+expect(guardSource.includes('__TLP_MODAL_OPEN'), 'the shared Hall guard must use the canonical overlay signal');
+expect(guardSource.includes("closest('input, textarea, select, button, [contenteditable=\"true\"]')"), 'the Hall guard must cover nested editable and control targets');
+expect(fpsSource.includes('down && shouldIgnoreHallShortcut(event)'), 'FPS keydown must not capture movement behind overlays or editable controls');
+expect(fpsSource.includes('if (isHallOverlayOpen())'), 'FPS frame updates and pointer lock must stop while an overlay owns input');
+expect(fpsSource.includes('Keyup always clears state'), 'FPS keyup must clear latched movement even after focus enters an overlay');
+expect(railSource.includes('shouldIgnoreHallShortcut(event)'), 'rail keyboard navigation must use the shared Hall input guard');
+expect(railSource.includes('!enabled || isHallOverlayOpen()'), 'rail frame updates must pause while an overlay owns input');
 
 if (failures.length > 0) {
   console.error('\nHall audio runtime validation failed:');
@@ -113,4 +123,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall audio runtime validation passed: mute propagation, StrictMode stability, request caching and race-safe Web Audio finalization are enforced.');
+console.log('Hall audio runtime validation passed: audio races, StrictMode, input ownership, request caching and overlay guards are enforced.');
