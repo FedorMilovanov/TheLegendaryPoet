@@ -1,5 +1,6 @@
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
@@ -7,11 +8,28 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+type SearchVerificationConfig = {
+  google?: string;
+  bing?: string;
+  pinterest?: string;
+};
+
+function readSearchVerificationConfig(): SearchVerificationConfig {
+  const configPath = path.join(__dirname, 'search-verification.json');
+  try {
+    return JSON.parse(fs.readFileSync(configPath, 'utf8')) as SearchVerificationConfig;
+  } catch (error) {
+    console.warn(`Unable to read ${configPath}; verification tags will use environment variables only.`, error);
+    return {};
+  }
+}
+
 function searchVerificationPlugin(): Plugin {
+  const config = readSearchVerificationConfig();
   const verificationTags: Array<[string, string | undefined]> = [
-    ['google-site-verification', process.env.VITE_GOOGLE_SITE_VERIFICATION],
-    ['msvalidate.01', process.env.VITE_BING_SITE_VERIFICATION],
-    ['p:domain_verify', process.env.VITE_PINTEREST_SITE_VERIFICATION],
+    ['google-site-verification', process.env.VITE_GOOGLE_SITE_VERIFICATION || config.google],
+    ['msvalidate.01', process.env.VITE_BING_SITE_VERIFICATION || config.bing],
+    ['p:domain_verify', process.env.VITE_PINTEREST_SITE_VERIFICATION || config.pinterest],
   ];
 
   return {
