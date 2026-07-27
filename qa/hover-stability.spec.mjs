@@ -48,6 +48,14 @@ for (const surface of surfaces) {
     const response = await page.goto(`${BASE_URL}${surface.path}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
 
+    // Routes are lazy-loaded and can legitimately show the branded loading shell
+    // for a moment after DOMContentLoaded. Wait for an actual card image rather
+    // than racing the route chunk and reporting a false visual failure.
+    await expect.poll(
+      async () => Boolean(await firstVisibleImage(page, surface.image)),
+      { timeout: 15_000, message: `visible hover image on ${surface.path}` },
+    ).toBe(true);
+
     const image = await firstVisibleImage(page, surface.image);
     expect(image, `visible hover image on ${surface.path}`).not.toBeNull();
     await image.scrollIntoViewIfNeeded();
