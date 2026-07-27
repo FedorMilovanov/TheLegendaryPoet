@@ -35,9 +35,14 @@ const essaySlugs = [
   ),
 ].sort();
 
-const staticRoutes = ['/', '/hall', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
+// Personal archive and unfinished hall are intentionally noindex and therefore
+// must not be advertised in the sitemap.
+const staticRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/about'];
 const urls = [
-  ...staticRoutes.map((route) => ({ loc: route, priority: route === '/' ? '1.0' : route === '/ratings' || route === '/music' ? '0.9' : '0.8' })),
+  ...staticRoutes.map((route) => ({
+    loc: route,
+    priority: route === '/' ? '1.0' : route === '/ratings' || route === '/music' ? '0.9' : '0.8',
+  })),
   ...essaySlugs.map((slug) => ({ loc: `/essays/${slug}`, priority: '0.9' })),
   ...trackIds.map((id) => ({ loc: `/music/${id}`, priority: '0.9' })),
   ...poetIds.map((id) => ({ loc: `/poets/${id}`, priority: '0.7' })),
