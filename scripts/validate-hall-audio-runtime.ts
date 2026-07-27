@@ -57,7 +57,10 @@ const second = createNodes('second');
 controller.replace(first.nodes);
 controller.fadeOut(10, 0.35);
 expect(first.state.cancelledAt[0] === 10, 'fade must cancel stale gain automation at the current context time');
-expect(first.state.ramps[0]?.[0] === 0 && first.state.ramps[0]?.[1] === 10.35, 'fade must ramp the captured source to zero');
+expect(
+  first.state.ramps[0]?.[0] === 0 && Math.abs((first.state.ramps[0]?.[1] ?? 0) - 10.35) < 1e-9,
+  'fade must ramp the captured source to zero',
+);
 expect(scheduled.size === 1, 'fade must schedule exactly one delayed source finalizer');
 
 controller.replace(second.nodes);
@@ -98,6 +101,7 @@ expect(hookSource.includes('[active, muted, poetId, x, y, z]'), 'whisper effect 
 expect(hookSource.includes('bufferRequests.set(url, request)'), 'audio fetch and decode results must be cached per candidate URL');
 expect(!hookSource.includes("method: 'HEAD'"), 'whisper loading must not issue a duplicate HEAD request before every audio GET');
 expect(!hookSource.includes('__TLP_AUDIO_MUTED'), 'whisper hook must not read a non-reactive global mute flag');
+expect(!hookSource.includes('playbackRef.current = null'), 'StrictMode effect replay must not null the render-owned playback controller');
 expect(nicheSource.includes('usePoetWhisper(poet.shortKey, hovered, position, muted)'), 'every niche must pass mute state into its whisper lifecycle');
 expect(hallSource.includes('muted={audioMuted}'), 'hall scene must propagate its mute state to every niche');
 expect(hallSource.includes('__TLP_MODAL_OPEN'), 'hall keyboard shortcuts must pause behind a modal surface');
@@ -109,4 +113,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall audio runtime validation passed: mute propagation, stable dependencies, request caching and race-safe Web Audio finalization are enforced.');
+console.log('Hall audio runtime validation passed: mute propagation, StrictMode stability, request caching and race-safe Web Audio finalization are enforced.');
