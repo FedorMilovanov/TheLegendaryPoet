@@ -97,6 +97,13 @@ img[class*="hover:opacity-"] {
   -webkit-backface-visibility: hidden;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .tilt-card-inner,
+  .luxury-card {
+    transition: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
   .tilt-card-inner,
   .tilt-card-content,

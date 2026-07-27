@@ -37,6 +37,14 @@ const surfaces = [
   { name: 'ratings', path: '/ratings', minimum: 0 },
 ];
 
+async function isRenderableImage(image) {
+  return image.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const rect = node.getBoundingClientRect();
+    return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
+  });
+}
+
 async function getSampledImages(page) {
   const images = page.locator(INTERACTIVE_MEDIA_SELECTOR);
   const sampledImages = [];
@@ -44,7 +52,7 @@ async function getSampledImages(page) {
   for (let index = 0; index < count && sampledImages.length < MAX_IMAGES_PER_SURFACE; index += 1) {
     const image = images.nth(index);
     await image.scrollIntoViewIfNeeded().catch(() => undefined);
-    if (await image.isVisible()) sampledImages.push(image);
+    if (await image.isVisible() && await isRenderableImage(image)) sampledImages.push(image);
   }
   return sampledImages;
 }
@@ -92,6 +100,43 @@ async function ensureNativeImageReady(image) {
   ).toBe(true);
 }
 
+async function prepareImageForSampling(image, finePointer) {
+  await ensureNativeImageReady(image);
+  await expect.poll(
+    async () => (await imageSnapshot(image)).state,
+    { timeout: 4_000, message: 'component image state settled after native completion' },
+  ).not.toBe('loading');
+
+  let initial = await imageSnapshot(image);
+  expect(initial.state).not.toBe('failed');
+
+  if (initial.opacity <= 0.01) {
+    const className = await image.getAttribute('class') ?? '';
+    const intentionalReveal = /(?:group-hover|hover|group-focus-within|focus-visible):opacity-(?!0(?:\s|$))/.test(className);
+
+    if (!intentionalReveal) {
+      await expect.poll(
+        async () => (await imageSnapshot(image)).opacity,
+        { timeout: 4_000, message: 'loaded interactive artwork became painted' },
+      ).toBeGreaterThan(0.01);
+      initial = await imageSnapshot(image);
+      return { initial, enforceOpacity: true };
+    }
+
+    if (finePointer) {
+      await image.hover();
+      await expect.poll(
+        async () => (await imageSnapshot(image)).opacity,
+        { timeout: 2_000, message: 'intentional hover-reveal artwork became painted' },
+      ).toBeGreaterThan(0.01);
+      initial = await imageSnapshot(image);
+    }
+    return { initial, enforceOpacity: false };
+  }
+
+  return { initial, enforceOpacity: true };
+}
+
 async function samplePointerInteraction(page, image, finePointer) {
   const samples = [];
   const box = await image.boundingBox();
@@ -115,8 +160,8 @@ async function samplePointerInteraction(page, image, finePointer) {
   return samples;
 }
 
-function assertStableSamples(initial, samples) {
-  const minimumOpacity = Math.max(0, initial.opacity - 0.05);
+function assertStableSamples(initial, samples, enforceOpacity) {
+  const minimumOpacity = Math.max(0.01, initial.opacity - 0.05);
   for (const sample of samples) {
     expect(sample.connected).toBe(true);
     expect(sample.src).toBe(initial.src);
@@ -124,7 +169,7 @@ function assertStableSamples(initial, samples) {
     expect(sample.naturalWidth).toBe(initial.naturalWidth);
     expect(sample.naturalHeight).toBe(initial.naturalHeight);
     expect(sample.state).not.toBe('failed');
-    expect(sample.opacity).toBeGreaterThanOrEqual(minimumOpacity);
+    if (enforceOpacity) expect(sample.opacity).toBeGreaterThanOrEqual(minimumOpacity);
     expect(sample.visibility).not.toBe('hidden');
     expect(sample.display).not.toBe('none');
     expect(sample.backfaceVisibility).toBe('hidden');
@@ -158,18 +203,15 @@ for (const surface of surfaces) {
     expect(unprotected, `interactive artwork without compositor protection on ${surface.path}`).toEqual([]);
 
     const sampledImages = await getSampledImages(page);
+    expect(sampledImages.length, `renderable interactive artwork on ${surface.path}`).toBeGreaterThanOrEqual(surface.minimum);
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
     for (const image of sampledImages) {
-      await ensureNativeImageReady(image);
-
-      const initial = await imageSnapshot(image);
-      expect(initial.opacity).toBeGreaterThan(0);
-      expect(initial.state).not.toBe('failed');
+      const { initial, enforceOpacity } = await prepareImageForSampling(image, finePointer);
       expect(initial.transitionProperty).not.toContain('all');
       expect(initial.backfaceVisibility).toBe('hidden');
       const samples = await samplePointerInteraction(page, image, finePointer);
-      assertStableSamples(initial, samples);
+      assertStableSamples(initial, samples, enforceOpacity);
 
       const compositor = await image.evaluate((node) => {
         const inner = node.closest('.tilt-card-inner');

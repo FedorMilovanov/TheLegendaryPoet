@@ -698,7 +698,6 @@ html.theme-light .brand-mark:hover { filter: drop-shadow(0 0 20px rgba(184, 100,
   background: linear-gradient(145deg, rgba(4, 11, 20, 0.88) 0%, rgba(1, 4, 8, 0.97) 100%);
   border: 1px solid rgba(0, 212, 255, 0.11);
   backdrop-filter: blur(28px) saturate(130%);
-  transition: border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), background 0.5s ease;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.03);
   overflow: hidden;
 }
@@ -707,12 +706,9 @@ html.theme-light .brand-mark:hover { filter: drop-shadow(0 0 20px rgba(184, 100,
   content: "";
   position: absolute;
   top: 0;
-  left: -150%;
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.04), transparent);
-  transform: skewX(-18deg);
-  transition: all 0.85s ease-out;
   pointer-events: none;
   z-index: 1;
 }
@@ -721,9 +717,7 @@ html.theme-light .brand-mark:hover { filter: drop-shadow(0 0 20px rgba(184, 100,
   border-color: rgba(0, 212, 255, 0.3);
   background: linear-gradient(145deg, rgba(6, 18, 30, 0.92) 0%, rgba(2, 7, 14, 0.98) 100%);
   box-shadow: 0 30px 65px rgba(0, 0, 0, 0.82), 0 0 42px rgba(0, 212, 255, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.055);
-  transform: translateY(-5px) scale(1.005);
 }
-.luxury-card:hover::before { left: 150%; transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1); }
 
 select option { background-color: #03070d !important; color: #fff !important; padding: 12px !important; }
 
@@ -746,10 +740,6 @@ select option { background-color: #03070d !important; color: #fff !important; pa
   animation: shimmer-text-flow 9s linear infinite;
 }
 @keyframes shimmer-text-flow { to { background-position: 300% center; } }
-
-.tilt-card-wrapper { perspective: 1100px; transform-style: preserve-3d; }
-.tilt-card-inner { transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)); transition: transform 0.08s linear; will-change: transform; transform-style: preserve-3d; }
-.tilt-card-inner > * { transform: translateZ(28px); }
 
 .glow-hover { transition: all 0.35s ease; }
 .glow-hover:hover { box-shadow: 0 0 28px rgba(0, 212, 255, 0.18), 0 20px 55px rgba(0, 0, 0, 0.45); }
@@ -814,8 +804,6 @@ select option { background-color: #03070d !important; color: #fff !important; pa
 
 @media (prefers-reduced-motion: reduce) {
   .neon-blue-gradient, .gold-gradient, .shimmer-text, .holographic-text, .aurora, .ambient-glow { animation: none !important; }
-  .luxury-card { transition: none !important; }
-  .tilt-card-inner { transform: none !important; }
 }
 
 .page-wipe { background: linear-gradient(135deg, #020811 0%, #040c1a 50%, #020811 100%); }
