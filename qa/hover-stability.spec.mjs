@@ -37,6 +37,13 @@ const surfaces = [
   { name: 'ratings', path: '/ratings', minimum: 0 },
 ];
 
+async function isPaintedImage(image) {
+  return image.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return Number(style.opacity) > 0.01 && style.visibility !== 'hidden' && style.display !== 'none';
+  });
+}
+
 async function getSampledImages(page) {
   const images = page.locator(INTERACTIVE_MEDIA_SELECTOR);
   const sampledImages = [];
@@ -44,7 +51,7 @@ async function getSampledImages(page) {
   for (let index = 0; index < count && sampledImages.length < MAX_IMAGES_PER_SURFACE; index += 1) {
     const image = images.nth(index);
     await image.scrollIntoViewIfNeeded().catch(() => undefined);
-    if (await image.isVisible()) sampledImages.push(image);
+    if (await image.isVisible() && await isPaintedImage(image)) sampledImages.push(image);
   }
   return sampledImages;
 }
@@ -116,7 +123,7 @@ async function samplePointerInteraction(page, image, finePointer) {
 }
 
 function assertStableSamples(initial, samples) {
-  const minimumOpacity = Math.max(0, initial.opacity - 0.05);
+  const minimumOpacity = Math.max(0.01, initial.opacity - 0.05);
   for (const sample of samples) {
     expect(sample.connected).toBe(true);
     expect(sample.src).toBe(initial.src);
@@ -158,13 +165,14 @@ for (const surface of surfaces) {
     expect(unprotected, `interactive artwork without compositor protection on ${surface.path}`).toEqual([]);
 
     const sampledImages = await getSampledImages(page);
+    expect(sampledImages.length, `painted interactive artwork on ${surface.path}`).toBeGreaterThanOrEqual(surface.minimum);
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
     for (const image of sampledImages) {
       await ensureNativeImageReady(image);
 
       const initial = await imageSnapshot(image);
-      expect(initial.opacity).toBeGreaterThan(0);
+      expect(initial.opacity).toBeGreaterThan(0.01);
       expect(initial.state).not.toBe('failed');
       expect(initial.transitionProperty).not.toContain('all');
       expect(initial.backfaceVisibility).toBe('hidden');
