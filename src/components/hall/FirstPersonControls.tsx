@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { CAMERA, HALL } from './hallConfig'
 import { isHallOverlayOpen, shouldIgnoreHallShortcut } from './hallInputGuard'
+import { resolveHallVelocity } from './hallMovement'
 
 type MoveState = { f: number; b: number; l: number; r: number; run: boolean }
 
@@ -80,25 +81,19 @@ export function FirstPersonControls({ enabled }: { enabled: boolean }) {
     if (!enabled) return
     if (isHallOverlayOpen()) {
       clearMove(move.current)
+      velocity.current.set(0, 0, 0)
       if (document.pointerLockElement === gl.domElement) document.exitPointerLock()
       return
     }
 
     const speed = (move.current.run ? 4.8 : 2.6) * dt
-    const dir = new THREE.Vector3(
+    resolveHallVelocity(
+      velocity.current,
       move.current.r - move.current.l,
-      0,
-      move.current.b - move.current.f
+      move.current.b - move.current.f,
+      euler.current.y,
+      speed,
     )
-    if (dir.lengthSq() > 0) dir.normalize()
-
-    // move in camera local XZ
-    const yaw = euler.current.y
-    const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw))
-    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw))
-    velocity.current.copy(forward.multiplyScalar(dir.z * speed))
-      .add(right.multiplyScalar(dir.x * speed))
-
     camera.position.add(velocity.current)
 
     // clamp to hall bounds
