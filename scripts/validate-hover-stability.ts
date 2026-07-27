@@ -97,7 +97,9 @@ for (const [text, label] of [
   ['sample.opacity).toBeGreaterThanOrEqual(0.9)', 'opacity stability assertion'],
   ["initial.transitionProperty).not.toContain('all')", 'transition-all rejection'],
   ['interactive artwork without compositor protection', 'runtime computed-style protection audit'],
-  ['visibleImages.slice(0, MAX_IMAGES_PER_SURFACE)', 'multi-image sampling'],
+  ['sampledImages.length < MAX_IMAGES_PER_SURFACE', 'bounded multi-image sampling'],
+  ["path: '/essays/yesenin-duncan-first-meeting-documents'", 'inline essay artwork route'],
+  ["path: '/archive'", 'listening archive route'],
 ]) {
   if (!qa.includes(text)) errors.push(`qa/hover-stability.spec.mjs: missing ${label}`);
 }
