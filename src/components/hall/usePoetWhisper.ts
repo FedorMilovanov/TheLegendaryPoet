@@ -68,20 +68,47 @@ function safeDisconnect(node: AudioNode | null) {
   }
 }
 
+/**
+ * One listener bridge per Hall scene. Poet niches own their individual sources,
+ * while camera position and orientation are written once per frame globally.
+ */
+export function useHallAudioListener() {
+  const { camera } = useThree()
+  const directionRef = useRef(new THREE.Vector3())
+  const upRef = useRef(new THREE.Vector3())
+
+  useFrame(() => {
+    const context = audioCtx
+    if (!context) return
+    const listener = context.listener
+    const now = context.currentTime
+    const cameraPosition = camera.position
+    const direction = camera.getWorldDirection(directionRef.current)
+    const up = upRef.current.set(0, 1, 0).applyQuaternion(camera.quaternion)
+
+    listener.positionX.setValueAtTime(cameraPosition.x, now)
+    listener.positionY.setValueAtTime(cameraPosition.y, now)
+    listener.positionZ.setValueAtTime(cameraPosition.z, now)
+    listener.forwardX.setValueAtTime(direction.x, now)
+    listener.forwardY.setValueAtTime(direction.y, now)
+    listener.forwardZ.setValueAtTime(direction.z, now)
+    listener.upX.setValueAtTime(up.x, now)
+    listener.upY.setValueAtTime(up.y, now)
+    listener.upZ.setValueAtTime(up.z, now)
+  })
+}
+
 export function usePoetWhisper(
   poetId: string,
   active: boolean,
   position: readonly [number, number, number],
   muted: boolean,
 ) {
-  const { camera } = useThree()
   const pannerRef = useRef<PannerNode | null>(null)
   const gainRef = useRef<GainNode | null>(null)
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null)
   const currentPoetRef = useRef<string | null>(null)
   const latestPositionRef = useRef(position)
-  const directionRef = useRef(new THREE.Vector3())
-  const upRef = useRef(new THREE.Vector3())
   const stopControllerRef = useRef<DeferredAudioStopController<AudioBufferSourceNode> | null>(null)
 
   latestPositionRef.current = position
@@ -239,26 +266,6 @@ export function usePoetWhisper(
     panner.positionY.setValueAtTime(y, context.currentTime)
     panner.positionZ.setValueAtTime(z, context.currentTime)
   }, [x, y, z])
-
-  useFrame(() => {
-    const context = audioCtx
-    if (!context) return
-    const listener = context.listener
-    const now = context.currentTime
-    const cameraPosition = camera.position
-    const direction = camera.getWorldDirection(directionRef.current)
-    const up = upRef.current.set(0, 1, 0).applyQuaternion(camera.quaternion)
-
-    listener.positionX.setValueAtTime(cameraPosition.x, now)
-    listener.positionY.setValueAtTime(cameraPosition.y, now)
-    listener.positionZ.setValueAtTime(cameraPosition.z, now)
-    listener.forwardX.setValueAtTime(direction.x, now)
-    listener.forwardY.setValueAtTime(direction.y, now)
-    listener.forwardZ.setValueAtTime(direction.z, now)
-    listener.upX.setValueAtTime(up.x, now)
-    listener.upY.setValueAtTime(up.y, now)
-    listener.upZ.setValueAtTime(up.z, now)
-  })
 
   useEffect(() => () => stopCurrentImmediately(), [stopCurrentImmediately])
 }
