@@ -104,6 +104,12 @@ const navigationSource = read('src/components/hall/useHallNavigation.ts');
 const loadBufferStart = whisperSource.indexOf('async function loadBuffer');
 const loadBufferEnd = whisperSource.indexOf('function safeDisconnect');
 const loadBufferSource = whisperSource.slice(loadBufferStart, loadBufferEnd);
+const firstPersonFrameStart = firstPersonSource.indexOf('useFrame((_, dt) =>');
+const firstPersonFrameEnd = firstPersonSource.indexOf('\n\n  return null', firstPersonFrameStart);
+const firstPersonFrameSource = firstPersonSource.slice(firstPersonFrameStart, firstPersonFrameEnd);
+const navigationFrameStart = navigationSource.indexOf('useFrame((_, dt) =>');
+const navigationFrameEnd = navigationSource.indexOf('\n\n  useEffect(() =>', navigationFrameStart);
+const navigationFrameSource = navigationSource.slice(navigationFrameStart, navigationFrameEnd);
 
 expect(hallSource.includes('audioMuted={audioMuted}'), 'HallScene must receive mute state through React props');
 expect(hallSource.includes('useHallAudioListener()'), 'HallScene must mount one shared 3D listener bridge');
@@ -128,15 +134,23 @@ expect(!inputGuardSource.includes('select, button'), 'ordinary Hall buttons must
 expect(firstPersonSource.includes('shouldIgnoreHallShortcut(event)'), 'FPS movement must use the shared shortcut guard');
 expect(firstPersonSource.includes('clearMove(move.current)'), 'FPS movement must clear latched keys when ownership changes');
 expect(firstPersonSource.includes('document.exitPointerLock()'), 'FPS mode must release pointer lock when an overlay owns input');
+expect(firstPersonFrameStart >= 0 && firstPersonFrameEnd > firstPersonFrameStart, 'FPS frame callback must remain inspectable');
+expect(!firstPersonFrameSource.includes('new THREE.Vector3'), 'FPS frame loop must not allocate temporary Vector3 instances');
+expect(firstPersonFrameSource.includes('Math.hypot(directionX, directionZ)'), 'FPS diagonal normalization must remain allocation-free');
+expect(firstPersonFrameSource.includes('velocity.current.set('), 'FPS movement must reuse its instance-local velocity vector');
 expect(navigationSource.includes('if (!enabled || isHallOverlayOpen()) return'), 'rail camera writes must pause beneath overlays');
 expect(navigationSource.includes('const lastSaveAt = useRef(0)'), 'rail persistence timing must remain instance-local');
 expect(!navigationSource.includes('useHallNavigation as any'), 'rail persistence must not attach mutable state to the hook function');
+expect(navigationSource.includes('const lookTarget = useRef(new THREE.Vector3())'), 'rail navigation must own one reusable look-target vector');
+expect(navigationFrameStart >= 0 && navigationFrameEnd > navigationFrameStart, 'rail frame callback must remain inspectable');
+expect(!navigationFrameSource.includes('new THREE.Vector3'), 'rail frame loop must not allocate a look-target vector');
+expect(navigationFrameSource.includes('lookTarget.current.set('), 'rail frame loop must mutate the reusable look target');
 expect(navigationSource.includes('el.style.touchAction = previousTouchAction'), 'rail cleanup must restore the canvas touch contract');
 
 if (failures.length > 0) {
-  console.error('\nHall audio and input runtime validation failed:');
+  console.error('\nHall audio, input and frame-allocation validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log('Hall runtime validation passed: one listener bridge, decode/playback separation, source-safe fades and unified input ownership are enforced.');
+console.log('Hall runtime validation passed: audio/input ownership and allocation-free FPS/rail frame loops are enforced.');
