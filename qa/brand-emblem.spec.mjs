@@ -6,7 +6,7 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260726-8';
 const MASTER_SHA256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-22';
+const VECTOR_SOURCE = 'reference-derived-contours-v8-23';
 const coreRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -19,7 +19,7 @@ async function imageSize(page, url) {
   }, url);
 }
 
-test('v8.22 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
+test('v8.23 vector system, optical favicon and platform metadata are coherent', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   await expect(page.locator('meta[name="brand-release"]')).toHaveAttribute('content', VERSION);
@@ -46,7 +46,7 @@ test('v8.22 vector system, optical favicon and platform metadata are coherent', 
   expect(standalone).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
   expect(standalone).toContain('M48 40.8C37 40.5');
   expect(standalone).toContain('M48 11C42 13.5');
-  expect(standalone).toContain('M48 23C43.2 26.1');
+  expect(standalone).toContain('M48 23C43.5 25.8');
   expect(standalone.indexOf('data-brand-collar')).toBeLessThan(standalone.indexOf('data-brand-hood'));
   expect((standalone.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(60);
 
@@ -55,7 +55,7 @@ test('v8.22 vector system, optical favicon and platform metadata are coherent', 
   expect(micro).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
   expect(micro).toContain('M16 13.6C12.3 13.5');
   expect(micro).toContain('M16 3.7C14 4.5');
-  expect(micro).toContain('M16 7.7C14.4 8.7');
+  expect(micro).toContain('M16 7.7C14.5 8.6');
   expect((micro.match(/<path\b/g) || []).length).toBeGreaterThanOrEqual(20);
 
   for (const [asset, size] of [
@@ -103,7 +103,7 @@ test('standalone and micro marks decode at every optical size', async ({ page })
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('header renders the v8.22 reference-proportion hood and restrained hover', async ({ page }) => {
+test('header renders the v8.23 compact hood, short diamond void and restrained hover', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -146,18 +146,18 @@ test('header renders the v8.22 reference-proportion hood and restrained hover', 
     };
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(38.5);
-  expect(geometry.hoodWidth).toBeLessThan(39.5);
-  expect(geometry.faceWidth).toBeGreaterThan(24.5);
-  expect(geometry.faceWidth).toBeLessThan(26.5);
-  expect(geometry.cloakWidth).toBeGreaterThan(92.5);
-  expect(geometry.cloakWidth).toBeLessThan(94);
-  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.62);
-  expect(geometry.faceToHoodWidth).toBeLessThan(0.69);
-  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.77);
-  expect(geometry.faceToHoodHeight).toBeLessThan(0.84);
-  expect(geometry.cloakToHoodWidth).toBeGreaterThan(2.35);
-  expect(geometry.cloakToHoodWidth).toBeLessThan(2.42);
+  expect(geometry.hoodWidth).toBeGreaterThan(35.8);
+  expect(geometry.hoodWidth).toBeLessThan(36.2);
+  expect(geometry.faceWidth).toBeGreaterThan(22.8);
+  expect(geometry.faceWidth).toBeLessThan(23.4);
+  expect(geometry.cloakWidth).toBeGreaterThan(93.4);
+  expect(geometry.cloakWidth).toBeLessThan(93.9);
+  expect(geometry.faceToHoodWidth).toBeGreaterThan(0.63);
+  expect(geometry.faceToHoodWidth).toBeLessThan(0.66);
+  expect(geometry.faceToHoodHeight).toBeGreaterThan(0.63);
+  expect(geometry.faceToHoodHeight).toBeLessThan(0.66);
+  expect(geometry.cloakToHoodWidth).toBeGreaterThan(2.58);
+  expect(geometry.cloakToHoodWidth).toBeLessThan(2.63);
   expect(geometry.hoodTop).toBeGreaterThan(10.8);
   expect(geometry.hoodTop).toBeLessThan(11.2);
   expect(geometry.cloakBottom).toBeGreaterThanOrEqual(95.9);
@@ -213,7 +213,7 @@ test('header renders the v8.22 reference-proportion hood and restrained hover', 
 });
 
 for (const route of coreRoutes) {
-  test(`${route}: header and footer use the v8.22 vector emblem`, async ({ page }) => {
+  test(`${route}: header and footer use the v8.23 vector emblem`, async ({ page }) => {
     const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
     const marks = [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()];
