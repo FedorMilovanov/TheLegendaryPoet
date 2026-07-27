@@ -66,7 +66,8 @@ function collectHtmlFiles(dir, relative = '') {
 }
 
 const htmlFiles = collectHtmlFiles(DIST);
-const duplicateRouteFiles = htmlFiles.filter((file) => !file.endsWith('/index.html') && file !== 'index.html' && file !== '404.html');
+const allowedRootHtml = /^(?:index|404|yandex_[a-z0-9_-]+)\.html$/i;
+const duplicateRouteFiles = htmlFiles.filter((file) => !file.endsWith('/index.html') && !allowedRootHtml.test(file));
 expect(duplicateRouteFiles.length === 0, `duplicate route HTML files found: ${duplicateRouteFiles.join(', ')}`);
 
 expect(/<meta name="robots" content="noindex,follow"\s*\/?>/.test(notFoundHtml), '404.html must be noindex,follow');
