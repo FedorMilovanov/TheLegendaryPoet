@@ -62,12 +62,11 @@ export function usePoetWhisper(
   const playbackRef = useRef<WhisperPlaybackController | null>(null)
   const [x, y, z] = position
 
+  // A ref-owned controller survives React StrictMode's development-only
+  // effect setup/cleanup replay. The audio effect itself always fades or stops
+  // its source, so a separate effect must not dispose and null the controller
+  // between the two StrictMode setups.
   if (!playbackRef.current) playbackRef.current = createPlaybackController()
-
-  useEffect(() => () => {
-    playbackRef.current?.dispose()
-    playbackRef.current = null
-  }, [])
 
   useEffect(() => {
     const playback = playbackRef.current
