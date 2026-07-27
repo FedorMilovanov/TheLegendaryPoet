@@ -91,6 +91,7 @@ jobs:
           qa/mobile-platforms.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
+          qa/brand-reference-comparison.spec.mjs
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           --config=playwright.config.mjs

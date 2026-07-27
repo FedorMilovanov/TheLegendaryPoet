@@ -1,0 +1,33 @@
+{
+  "referenceId": "canonical-hooded-figure-v1",
+  "reviewedAgainstReferenceSha256": "6ed4068636a63532de6269b2660cec186364399f3a0f4519430d9e08c751b0ad",
+  "candidateSource": "reference-derived-contours-v8-24",
+  "candidateRevision": "v8.27 production baseline",
+  "status": "legacy-baseline-not-reference-approved",
+  "reviewerDecision": "not-reference-approved",
+  "overallScore": 0.28,
+  "scores": {
+    "macroProportions": 0.3,
+    "hoodAndCavern": 0.25,
+    "collarAndFolds": 0.2,
+    "cloakSilhouette": 0.3,
+    "rimAndAura": 0.15,
+    "microReadability": 0.8
+  },
+  "candidateGitBlobShas": {
+    "src/components/BrandMark.tsx": "fc03e502cb9077004fde13dfed819c0515b02449",
+    "public/brand-emblem.svg": "3be91275ced525af996382db0321c3d995547652",
+    "public/brand-mark-micro.svg": "e8dfd0cbbc34443196da249bfff7d97eabebe315",
+    "public/brand-emblem-mask.svg": "c07245c1cfc71bf3bc1627aa01baf0d3b96820d7"
+  },
+  "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
+  "blockingDeviations": [
+    "hood is too large relative to the body",
+    "face cavity is too narrow and droplet-like",
+    "collar is split away from the reference central overlap",
+    "cloak is too rounded and compact",
+    "three major fold families are not structurally readable",
+    "continuous two-sided icy rim and broad aura are missing"
+  ],
+  "nextRequiredAction": "v9 geometry reset from the canonical reference; do not continue v8.x micro-polish"
+}

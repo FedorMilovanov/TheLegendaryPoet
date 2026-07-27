@@ -1,0 +1,45 @@
+{
+  "referenceId": "canonical-hooded-figure-v1",
+  "purpose": "Macro targets are stop-gates, not permission to ignore visual comparison.",
+  "targets": {
+    "hoodHeightToVisibleFigureHeight": {
+      "target": 0.33,
+      "allowed": [0.28, 0.38]
+    },
+    "hoodWidthToCloakWidth": {
+      "target": 0.31,
+      "allowed": [0.25, 0.37]
+    },
+    "faceCavernWidthToHoodWidth": {
+      "target": 0.72,
+      "allowed": [0.62, 0.82]
+    },
+    "cloakWidthToHoodWidth": {
+      "minimum": 2.7
+    },
+    "coreSymmetryError": {
+      "maximum": 0.1,
+      "note": "Asymmetry belongs to folds, smoke and energy; not the primary body architecture."
+    }
+  },
+  "requiredStructures": [
+    "broad pentagonal black face cavern",
+    "diagonal angular cloak silhouette",
+    "broad central collar overlap",
+    "left diagonal fold family",
+    "right diagonal fold family",
+    "central vertical fold family",
+    "continuous icy rim on both sides",
+    "broad spectral aura"
+  ],
+  "forbiddenDrift": [
+    "narrow vertical face droplet",
+    "oversized hood on a compact bust",
+    "rounded dome or poncho silhouette",
+    "artificially split collar with empty centre",
+    "thin central necktie",
+    "arbitrary structural asymmetry",
+    "decorative micro-detail used to avoid macro redesign",
+    "extra glow used to conceal incorrect geometry"
+  ]
+}

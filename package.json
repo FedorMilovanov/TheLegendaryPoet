@@ -32,7 +32,8 @@
     "check:content": "npm run validate:library && npm run validate:essays && npm run validate:covers && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style",
     "sitemap": "node scripts/gen-sitemap.mjs",
     "prerender": "tsx scripts/prerender-og.mjs",
-    "validate:brand": "npm run brand:materialize && tsx scripts/validate-brand-assets.ts",
+    "validate:brand-reference": "tsx scripts/validate-brand-reference-contract.ts",
+    "validate:brand": "npm run brand:materialize && npm run validate:brand-reference && tsx scripts/validate-brand-assets.ts",
     "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run typecheck"
   },
   "dependencies": {
