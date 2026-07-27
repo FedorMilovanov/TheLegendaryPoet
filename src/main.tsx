@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./audio-player.css";
 import "./essay-motion.css";
+import "./hover-stability.css";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
