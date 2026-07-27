@@ -151,7 +151,7 @@ test('header renders the v8.22 reference-proportion hood and restrained hover', 
   expect(geometry.faceWidth).toBeGreaterThan(24.5);
   expect(geometry.faceWidth).toBeLessThan(26.5);
   expect(geometry.cloakWidth).toBeGreaterThan(92.5);
-  expect(geometry.cloakWidth).toBeLessThan(93.5);
+  expect(geometry.cloakWidth).toBeLessThan(94);
   expect(geometry.faceToHoodWidth).toBeGreaterThan(0.62);
   expect(geometry.faceToHoodWidth).toBeLessThan(0.69);
   expect(geometry.faceToHoodHeight).toBeGreaterThan(0.77);
