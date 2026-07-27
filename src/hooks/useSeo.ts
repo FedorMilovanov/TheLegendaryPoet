@@ -63,16 +63,24 @@ export function useSeo({
   publishedTime,
   author,
   keywords,
-  robots = DEFAULT_ROBOTS,
+  robots,
   jsonLd,
 }: SeoOptions) {
+  const robotsValue = robots ?? (
+    path === '/archive'
+      ? 'noindex,nofollow'
+      : path === '/hall'
+        ? 'noindex,follow'
+        : DEFAULT_ROBOTS
+  );
+
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
     const img = absUrl(image || `/og-image.jpg?v=${BRAND_VERSION}`);
     document.title = title;
     ensureMeta('description', description);
-    ensureMeta('robots', robots);
-    ensureMeta('googlebot', robots);
+    ensureMeta('robots', robotsValue);
+    ensureMeta('googlebot', robotsValue);
     ensureLink('canonical', url);
     if (keywords) ensureMeta('keywords', keywords);
     else removeMeta('keywords');
@@ -124,5 +132,5 @@ export function useSeo({
       document.head.appendChild(ld);
     }
     ld.textContent = JSON.stringify(schema);
-  }, [title, description, path, type, image, publishedTime, author, keywords, robots, jsonLd]);
+  }, [title, description, path, type, image, publishedTime, author, keywords, robotsValue, jsonLd]);
 }
