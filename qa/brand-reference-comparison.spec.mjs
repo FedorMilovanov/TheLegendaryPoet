@@ -10,7 +10,7 @@ const VERSION = 'cloak-20260726-8';
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
-test('canonical reference is rendered beside every emblem optical size', async ({ page }) => {
+test('canonical reference is rendered beside every v9.0 emblem optical size', async ({ page }) => {
   await page.setViewportSize({ width: 1240, height: 900 });
   const sizes = [192, 96, 56, 32, 16];
   const columns = sizes.map((size) => {
@@ -20,7 +20,7 @@ test('canonical reference is rendered beside every emblem optical size', async (
     return `<section class="column">
       <h2>${size} px</h2>
       <figure><div class="tile reference"><img data-kind="reference" data-size="${size}" src="${REFERENCE_DATA_URL}" width="${size}" height="${size}" alt="Canonical reference at ${size} pixels"></div><figcaption>REFERENCE</figcaption></figure>
-      <figure><div class="tile candidate"><img data-kind="candidate" data-size="${size}" src="${candidate}" width="${size}" height="${size}" alt="Candidate emblem at ${size} pixels"></div><figcaption>CANDIDATE</figcaption></figure>
+      <figure><div class="tile candidate"><img data-kind="candidate" data-size="${size}" src="${candidate}" width="${size}" height="${size}" alt="Candidate emblem at ${size} pixels"></div><figcaption>CANDIDATE v9.0</figcaption></figure>
     </section>`;
   }).join('');
 
@@ -36,9 +36,9 @@ test('canonical reference is rendered beside every emblem optical size', async (
       footer{margin-top:20px;padding-top:15px;border-top:1px solid rgba(101,218,244,.12);color:#8ebcca;font-size:12px}
     </style>
     <main>
-      <header><div><h1>CANONICAL REFERENCE / CURRENT CANDIDATE</h1><p>Judge macro silhouette first: hood-to-body ratio, broad face cavern, diagonal cloak spread, central collar overlap, major fold families and continuous two-sided rim.</p></div><div class="decision">v8.27: NOT REFERENCE APPROVED</div></header>
+      <header><div><h1>CANONICAL REFERENCE / v9.0 GEOMETRY RESET</h1><p>Judge macro silhouette first: hood-to-body ratio, broad face cavern, diagonal cloak spread, central collar overlap, major fold families and continuous two-sided rim.</p></div><div class="decision">v9.0: NOT REFERENCE APPROVED</div></header>
       <div class="matrix">${columns}</div>
-      <footer>Generated from the exact checked-out head. A green run proves rendering only; it does not prove visual fidelity.</footer>
+      <footer>Generated from the exact checked-out head. A green browser run proves rendering only; the reference acceptance gate remains intentionally blocked.</footer>
     </main>`);
 
   const images = page.locator('img');
