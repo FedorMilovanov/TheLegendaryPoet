@@ -80,25 +80,32 @@ export function FirstPersonControls({ enabled }: { enabled: boolean }) {
     if (!enabled) return
     if (isHallOverlayOpen()) {
       clearMove(move.current)
+      velocity.current.set(0, 0, 0)
       if (document.pointerLockElement === gl.domElement) document.exitPointerLock()
       return
     }
 
+    let directionX = move.current.r - move.current.l
+    let directionZ = move.current.b - move.current.f
+    const directionLength = Math.hypot(directionX, directionZ)
+    if (directionLength > 0) {
+      directionX /= directionLength
+      directionZ /= directionLength
+    }
+
     const speed = (move.current.run ? 4.8 : 2.6) * dt
-    const dir = new THREE.Vector3(
-      move.current.r - move.current.l,
-      0,
-      move.current.b - move.current.f
-    )
-    if (dir.lengthSq() > 0) dir.normalize()
-
-    // move in camera local XZ
     const yaw = euler.current.y
-    const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw))
-    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw))
-    velocity.current.copy(forward.multiplyScalar(dir.z * speed))
-      .add(right.multiplyScalar(dir.x * speed))
+    const sinYaw = Math.sin(yaw)
+    const cosYaw = Math.cos(yaw)
 
+    // Resolve local forward/right movement directly into world XZ. Keeping the
+    // single velocity scratch vector avoids allocating direction, forward and
+    // right Vector3 instances on every animation frame.
+    velocity.current.set(
+      (-sinYaw * directionZ + cosYaw * directionX) * speed,
+      0,
+      (-cosYaw * directionZ - sinYaw * directionX) * speed,
+    )
     camera.position.add(velocity.current)
 
     // clamp to hall bounds
