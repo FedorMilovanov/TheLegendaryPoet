@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ImgHTMLAttributes, type SyntheticEvent } from 'react';
+import { useNativeImageState } from '../../hooks/useNativeImageState';
 import { asset } from '../../utils/asset';
 
 const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
@@ -21,9 +22,10 @@ function resolveSource(source: string) {
 }
 
 /**
- * Native image element with a deterministic local-asset resolver, optional
- * fallback source, source-change reset and honest terminal failure state.
- * Parents keep full control of aspect ratio and visual fallback surfaces.
+ * Native image element with deterministic local-asset resolution and a finite
+ * source fallback chain. Readiness comes from the shared native lifecycle hook,
+ * so eager or cached images cannot remain stuck in `loading` when a synthetic
+ * React event is delivered before or during hydration.
  */
 export default function ResilientImage({
   src,
@@ -45,45 +47,59 @@ export default function ResilientImage({
       .map(resolveSource);
     return [...new Set(sources)];
   }, [fallbackSrc, src]);
+
   const [sourceIndex, setSourceIndex] = useState(0);
-  const [state, setState] = useState<ImageLoadState>(candidates.length > 0 ? 'loading' : 'failed');
+  const [terminalFailure, setTerminalFailure] = useState(candidates.length === 0);
+  const finalErrorReportedRef = useRef(false);
 
   useEffect(() => {
     setSourceIndex(0);
-    setState(candidates.length > 0 ? 'loading' : 'failed');
+    setTerminalFailure(candidates.length === 0);
+    finalErrorReportedRef.current = false;
   }, [candidates]);
+
+  const hasActiveCandidate = !terminalFailure && sourceIndex < candidates.length;
+  const currentSrc = hasActiveCandidate ? candidates[sourceIndex] : TRANSPARENT_PIXEL;
+  const { ref, state: nativeState } = useNativeImageState(currentSrc);
+
+  const state: ImageLoadState = !hasActiveCandidate
+    ? 'failed'
+    : nativeState === 'ready'
+      ? (sourceIndex > 0 ? 'fallback' : 'loaded')
+      : 'loading';
 
   useEffect(() => {
     onStateChange?.(state);
   }, [onStateChange, state]);
 
-  const currentSrc = state === 'failed'
-    ? TRANSPARENT_PIXEL
-    : candidates[sourceIndex] ?? TRANSPARENT_PIXEL;
+  useEffect(() => {
+    if (!hasActiveCandidate || nativeState !== 'error') return;
+
+    if (sourceIndex + 1 < candidates.length) {
+      setSourceIndex((index) => index + 1);
+      return;
+    }
+
+    setTerminalFailure(true);
+    if (!finalErrorReportedRef.current) {
+      finalErrorReportedRef.current = true;
+      onFinalError?.();
+    }
+  }, [candidates.length, hasActiveCandidate, nativeState, onFinalError, sourceIndex]);
 
   return (
     <img
       {...props}
+      ref={ref}
       src={currentSrc}
       loading={priority ? 'eager' : (loading ?? 'lazy')}
       decoding={decoding}
       fetchPriority={priority ? 'high' : (fetchPriority ?? 'auto')}
       draggable={draggable ?? false}
       data-image-state={state}
-      onLoad={(event) => {
-        if (state !== 'failed') setState(sourceIndex > 0 ? 'fallback' : 'loaded');
-        onLoad?.(event);
-      }}
-      onError={(event) => {
-        onError?.(event);
-        if (sourceIndex + 1 < candidates.length) {
-          setSourceIndex((index) => index + 1);
-          setState('loading');
-          return;
-        }
-        setState('failed');
-        onFinalError?.();
-      }}
+      data-image-source-index={hasActiveCandidate ? sourceIndex : undefined}
+      onLoad={onLoad}
+      onError={onError}
     />
   );
 }
