@@ -17,6 +17,7 @@ export function useHallNavigation(
   const targetX = useRef(CAMERA.minX)
   const currentX = useRef(CAMERA.minX)
   const lookAt = useRef(new THREE.Vector3(0, 1.62, 0))
+  const lookTarget = useRef(new THREE.Vector3())
   const lastSaveAt = useRef(0)
 
   // restore camera position
@@ -108,8 +109,8 @@ export function useHallNavigation(
     if (!enabled || isHallOverlayOpen()) return
     currentX.current = THREE.MathUtils.damp(currentX.current, targetX.current, 1 / CAMERA.dollySmoothing, dt)
     camera.position.set(currentX.current, CAMERA.height, CAMERA.zOffset)
-    const lookTarget = new THREE.Vector3(currentX.current + 5.5, 1.62, 0)
-    lookAt.current.lerp(lookTarget, 1 - Math.pow(1 - CAMERA.lookAtSmoothing, dt * 60))
+    lookTarget.current.set(currentX.current + 5.5, 1.62, 0)
+    lookAt.current.lerp(lookTarget.current, 1 - Math.pow(1 - CAMERA.lookAtSmoothing, dt * 60))
     camera.lookAt(lookAt.current)
 
     const now = performance.now()
