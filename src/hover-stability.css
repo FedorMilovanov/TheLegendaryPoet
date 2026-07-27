@@ -1,10 +1,10 @@
 /*
- * Hover/compositor stability layer.
+ * Hover/compositor stability contract.
  *
- * Keep 3D tilt on one dedicated element and keep card/image hover transforms on
- * separate descendants. This avoids replacing translateZ() with a different
- * transform on hover — the old collision caused a one-frame layer teardown and
- * visible cover flashes in Chromium/WebKit.
+ * Tilt, card movement, artwork zoom and sheen live on separate composited planes.
+ * The media selectors intentionally discover Tailwind hover/focus transforms by
+ * class name, so a new interactive image receives the same protection without
+ * remembering a component-specific marker class.
  */
 .tilt-card-wrapper {
   perspective: 1200px;
@@ -19,7 +19,7 @@
   transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Neutralise the legacy direct-child translateZ rule from index.css. */
+/* Direct children start neutral; named content and sheen layers own their depth. */
 .tilt-card-inner > * {
   transform: none;
 }
@@ -37,7 +37,7 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Do not animate layout-affecting `left`/`all` for the sweep highlight. */
+/* Do not animate layout-affecting `left` or a broad `all` property set. */
 .luxury-card::before {
   left: 0;
   transform: translate3d(-160%, 0, 0) skewX(-18deg);
@@ -68,14 +68,34 @@
   transform: translate3d(0, -4px, 0) scale(1.003);
 }
 
-.hover-media {
+/*
+ * Universal media plane. `.hover-media` remains a readable opt-in, while the
+ * attribute selectors automatically cover newly added Tailwind-driven artwork.
+ */
+.hover-media,
+img[class*="group-hover:scale-"],
+img[class*="hover:scale-"],
+img[class*="group-focus-within:scale-"],
+img[class*="focus-visible:scale-"],
+img[class*="group-hover:rotate-"],
+img[class*="hover:rotate-"],
+img[class*="group-hover:translate-"],
+img[class*="hover:translate-"],
+img[class*="group-hover:saturate-"],
+img[class*="hover:saturate-"],
+img[class*="group-hover:brightness-"],
+img[class*="hover:brightness-"],
+img[class*="group-hover:contrast-"],
+img[class*="hover:contrast-"],
+img[class*="group-hover:opacity-"],
+img[class*="hover:opacity-"] {
   transform-origin: center;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   image-rendering: auto;
 }
 
-/* View-transition media must remain on a stable plane while the pointer moves. */
+/* View-transition artwork stays on the same stable media plane. */
 [style*="view-transition-name"].hover-media,
 [style*="view-transition-name"] .hover-media {
   backface-visibility: hidden;
