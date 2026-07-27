@@ -2,16 +2,17 @@ import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Archive, ArrowLeft, CalendarDays, ChevronDown, Clock3, Disc3, FileCheck2, Fingerprint, Headphones, Hourglass, Quote, Sparkles } from 'lucide-react';
 import { Link } from '../components/ui/Link';
+import Breadcrumbs from '../components/seo/Breadcrumbs';
 import CommunityPanel from '../components/community/CommunityPanel';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
 import TrackReleaseCard from '../components/music/TrackReleaseCard';
-import { formatAudioTime, formatIsoDuration, parseAudioMoment } from '../components/music/audioPresentation';
+import { formatAudioTime, parseAudioMoment } from '../components/music/audioPresentation';
 import { getTrackTheme, getTrackThemeStyle } from '../components/music/trackTheme';
 import { getRelatedMusicTracks, isPlayableMusicTrack } from '../data/musicCatalog';
 import { trackRatingDimensions } from '../data/ratingDimensions';
 import { allMusicTracks, musicTracks } from '../data/poets';
-import { siteConfig } from '../config/site';
 import { useSeo } from '../hooks/useSeo';
+import { buildMusicPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { asset } from '../utils/asset';
 
 const releaseDateFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -35,53 +36,47 @@ export default function TrackDetailPage() {
   const relatedTracks = track ? getRelatedMusicTracks(musicTracks, track, 2) : [];
   const sharedTime = playable ? parseAudioMoment(searchParams.get('t'), track?.durationSeconds) : undefined;
   const scheduledDate = formatReleaseDate(track?.scheduledFor);
-
-  const jsonLd = track
-    ? track.availability === 'coming-soon'
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'CreativeWork',
-          name: track.title,
-          description: track.description,
-          creator: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
-          author: { '@type': 'Person', name: track.poet },
-          image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
-          url: `${siteConfig.url}/music/${track.id}`,
-          isFamilyFriendly: true,
-          inLanguage: 'ru-RU',
-        }
-      : {
-          '@context': 'https://schema.org',
-          '@type': 'MusicRecording',
-          name: track.title,
-          description: track.description,
-          byArtist: { '@type': 'MusicGroup', name: 'The Legendary Poet', url: siteConfig.url },
-          lyricist: { '@type': 'Person', name: track.poet },
-          duration: track.durationSeconds ? formatIsoDuration(track.durationSeconds) : undefined,
-          datePublished: track.publishedAt,
-          image: track.coverUrl ? `${siteConfig.url}${track.coverUrl}` : undefined,
-          contentUrl: playable && track.audioUrl ? `${siteConfig.url}${track.audioUrl}` : undefined,
-          encodingFormat: playable ? 'audio/mpeg' : undefined,
-          url: `${siteConfig.url}/music/${track.id}`,
-          isFamilyFriendly: true,
-          copyrightHolder: { '@type': 'Organization', name: 'The Legendary Poet' },
-          inLanguage: 'ru-RU',
-        }
-    : undefined;
+  const routePath = `/music/${id ?? ''}`;
+  const breadcrumbs: SeoBreadcrumb[] = track
+    ? [
+        { name: 'Главная', path: '/' },
+        { name: 'Музыка', path: '/music' },
+        { name: track.title, path: routePath },
+      ]
+    : [
+        { name: 'Главная', path: '/' },
+        { name: 'Музыка', path: '/music' },
+        { name: 'Публикация не найдена', path: routePath },
+      ];
+  const title = track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET';
+  const description = track?.description ?? 'Музыкальная публикация не найдена.';
 
   useSeo({
-    title: track ? `${track.title} — ${track.poet} — THE LEGENDARY POET` : 'Трек не найден — THE LEGENDARY POET',
-    description: track?.description ?? 'Музыкальная публикация не найдена.',
-    path: `/music/${id ?? ''}`,
-    type: 'website',
+    title,
+    description,
+    path: routePath,
+    type: track?.availability === 'published' ? 'music.song' : 'website',
     image: track?.wideCoverUrl ?? track?.coverUrl,
-    jsonLd,
+    imageAlt: track ? `Обложка: ${track.title} — ${track.poet}` : undefined,
+    breadcrumbs,
+    robots: track && track.availability === 'published' ? undefined : 'noindex,follow',
+    jsonLd: track
+      ? buildMusicPageSchema({
+          title,
+          description,
+          path: routePath,
+          image: track.wideCoverUrl || track.coverUrl,
+          breadcrumbs,
+          track,
+        })
+      : undefined,
   });
 
   if (!track) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-center">
-        <div>
+        <div className="w-full max-w-4xl">
+          <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
           <h1 className="font-serif text-4xl text-white">Трек не найден</h1>
           <Link to="/music" className="mt-6 inline-flex text-luxury-gold">Вернуться в музыку</Link>
         </div>
@@ -123,6 +118,7 @@ export default function TrackDetailPage() {
 
         <div className="relative z-10 mx-auto grid min-h-[68vh] max-w-7xl items-end gap-10 px-4 pb-20 sm:px-6 lg:grid-cols-[1fr_310px] lg:px-8">
           <div className="max-w-4xl">
+            <Breadcrumbs items={breadcrumbs} className="mb-4" />
             <Link to="/music" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-black/28 px-4 text-xs font-bold text-white/72 shadow-lg backdrop-blur-xl transition hover:border-white/32 hover:bg-black/42 hover:text-white"><ArrowLeft size={15} /> Все музыкальные публикации</Link>
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-black/34 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-xl" style={{ color: 'var(--track-accent)' }}><Disc3 size={14} /> {releaseLabel} · {track.releaseYear}</span>

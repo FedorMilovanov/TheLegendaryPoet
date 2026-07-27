@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutle
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
-import { initAnalytics } from './utils/analytics';
 import { musicTracks } from './data/poets';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -17,6 +16,7 @@ import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
 import BrandMark from './components/BrandMark';
 import RouteLoadingShell from './components/RouteLoadingShell';
+import AnalyticsConsentBanner, { AnalyticsRouteTracker } from './components/AnalyticsConsent';
 import AudioChromeBoundary from './components/music/AudioChromeBoundary';
 import GlobalMiniPlayer from './components/music/GlobalMiniPlayer';
 import ImmersivePlayer from './components/music/ImmersivePlayer';
@@ -25,6 +25,7 @@ import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 import {
   AboutPage,
   ArticlesPage,
+  EditorialPolicyPage,
   EssayPage,
   HallPage,
   HomePage,
@@ -33,6 +34,7 @@ import {
   NotFoundPage,
   PoetDetailPage,
   PoetsPage,
+  PrivacyPage,
   RatingsPage,
   TrackDetailPage,
 } from './routes/routeModules';
@@ -160,6 +162,8 @@ function AppRoutes() {
         <Route path="/music" element={<MusicPage />} />
         <Route path="/music/:id" element={<TrackDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/editorial-policy" element={<EditorialPolicyPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/archive" element={<MyArchivePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
@@ -181,17 +185,19 @@ function RoutedApp() {
   const location = useLocation();
   return (
     <>
+      <AnalyticsRouteTracker />
       <ErrorBoundary resetKey={location.pathname}>
         <AppRoutes />
       </ErrorBoundary>
       <AudioChrome />
+      <AnalyticsConsentBanner />
     </>
   );
 }
 
 function App() {
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
-  useEffect(() => { void hydrateFromRemote(); initAnalytics(); }, []);
+  useEffect(() => { void hydrateFromRemote(); }, []);
   return (
     <AudioPlayerProvider tracks={musicTracks}>
       <Router basename={basename}>

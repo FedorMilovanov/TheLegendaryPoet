@@ -1,24 +1,32 @@
 import { useEffect } from 'react';
 import { siteConfig } from '../config/site';
+import {
+  buildArticlePageSchema,
+  buildWebPageSchema,
+  type JsonLdNode,
+  type SeoBreadcrumb,
+} from '../lib/seoSchema';
 
-const BRAND_VERSION = 'cloak-20260726-8';
 const DEFAULT_ROBOTS = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
 
 interface SeoOptions {
   title: string;
   description: string;
   path: string;
-  type?: 'website' | 'article' | 'profile';
+  type?: 'website' | 'article' | 'profile' | 'music.song';
   image?: string;
+  imageAlt?: string;
   publishedTime?: string;
+  modifiedTime?: string;
   author?: string;
   keywords?: string;
+  breadcrumbs?: SeoBreadcrumb[];
   robots?: string;
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: JsonLdNode;
 }
 
 function absUrl(pathOrUrl: string) {
-  if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
 }
 
@@ -31,7 +39,7 @@ function imageMime(url: string) {
 }
 
 function ensureMeta(key: string, value: string, kind: 'name' | 'property' = 'name') {
-  let el = document.head.querySelector(`meta[${kind}="${key}"]`);
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${kind}="${key}"]`);
   if (!el) {
     el = document.createElement('meta');
     el.setAttribute(kind, key);
@@ -45,13 +53,13 @@ function removeMeta(key: string, kind: 'name' | 'property' = 'name') {
 }
 
 function ensureLink(rel: string, href: string) {
-  let el = document.head.querySelector(`link[rel="${rel}"]`);
+  let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
   if (!el) {
     el = document.createElement('link');
-    el.setAttribute('rel', rel);
+    el.rel = rel;
     document.head.appendChild(el);
   }
-  el.setAttribute('href', href);
+  el.href = href;
 }
 
 export function useSeo({
@@ -60,9 +68,12 @@ export function useSeo({
   path,
   type = 'website',
   image,
+  imageAlt,
   publishedTime,
+  modifiedTime,
   author,
   keywords,
+  breadcrumbs = [],
   robots,
   jsonLd,
 }: SeoOptions) {
@@ -76,14 +87,18 @@ export function useSeo({
 
   useEffect(() => {
     const url = `${siteConfig.url}${path}`;
-    const img = absUrl(image || `/og-image.jpg?v=${BRAND_VERSION}`);
+    const img = absUrl(image || '/og-image.jpg');
+    const resolvedImageAlt = imageAlt || title;
+
     document.title = title;
     ensureMeta('description', description);
     ensureMeta('robots', robotsValue);
     ensureMeta('googlebot', robotsValue);
     ensureLink('canonical', url);
-    if (keywords) ensureMeta('keywords', keywords);
-    else removeMeta('keywords');
+
+    // Search engines ignore meta keywords. Remove stale tags instead of emitting noise.
+    removeMeta('keywords');
+
     ensureMeta('og:title', title, 'property');
     ensureMeta('og:description', description, 'property');
     ensureMeta('og:url', url, 'property');
@@ -91,46 +106,55 @@ export function useSeo({
     ensureMeta('og:image', img, 'property');
     ensureMeta('og:image:secure_url', img, 'property');
     ensureMeta('og:image:type', imageMime(img), 'property');
+    ensureMeta('og:image:alt', resolvedImageAlt, 'property');
+    ensureMeta('twitter:card', 'summary_large_image');
     ensureMeta('twitter:title', title);
     ensureMeta('twitter:description', description);
     ensureMeta('twitter:image', img);
+    ensureMeta('twitter:image:alt', resolvedImageAlt);
+
     if (type === 'article' && publishedTime) ensureMeta('article:published_time', publishedTime, 'property');
     else removeMeta('article:published_time', 'property');
+    if (type === 'article' && modifiedTime) ensureMeta('article:modified_time', modifiedTime, 'property');
+    else removeMeta('article:modified_time', 'property');
     if (type === 'article' && author) ensureMeta('article:author', author, 'property');
     else removeMeta('article:author', 'property');
 
-    const schema = jsonLd || (type === 'article' ? {
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: title,
-      description,
-      image: img,
-      url,
-      inLanguage: 'ru-RU',
-      datePublished: publishedTime,
-      author: { '@type': 'Organization', name: author || siteConfig.name },
-      publisher: {
-        '@type': 'Organization',
-        name: siteConfig.name,
-        logo: { '@type': 'ImageObject', url: `${siteConfig.url}/icon-512.png?v=${BRAND_VERSION}` },
-      },
-      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    } : {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: title,
-      description,
-      url,
-      inLanguage: 'ru-RU',
-      isPartOf: { '@type': 'WebSite', name: siteConfig.name, url: `${siteConfig.url}/` },
-    });
-    let ld = document.getElementById('route-jsonld');
+    const schema = jsonLd || (type === 'article'
+      ? buildArticlePageSchema({
+          title,
+          description,
+          path,
+          image: img,
+          author: author || siteConfig.name,
+          datePublished: publishedTime,
+          dateModified: modifiedTime || publishedTime,
+          tags: keywords ? keywords.split(',').map((item) => item.trim()).filter(Boolean) : [],
+          breadcrumbs,
+        })
+      : buildWebPageSchema({ title, description, path, image: img, breadcrumbs }));
+
+    let ld = document.getElementById('route-jsonld') as HTMLScriptElement | null;
     if (!ld) {
       ld = document.createElement('script');
       ld.id = 'route-jsonld';
-      (ld as HTMLScriptElement).type = 'application/ld+json';
+      ld.type = 'application/ld+json';
       document.head.appendChild(ld);
     }
     ld.textContent = JSON.stringify(schema);
-  }, [title, description, path, type, image, publishedTime, author, keywords, robotsValue, jsonLd]);
+  }, [
+    title,
+    description,
+    path,
+    type,
+    image,
+    imageAlt,
+    publishedTime,
+    modifiedTime,
+    author,
+    keywords,
+    breadcrumbs,
+    robotsValue,
+    jsonLd,
+  ]);
 }

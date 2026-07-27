@@ -77,8 +77,12 @@ jobs:
           path: typecheck.log
           if-no-files-found: error
           retention-days: 3
-      - name: Generate sitemap
-        run: npm run sitemap
+      - name: Generate sitemap and Atom feed
+        run: npm run seo:generate
+      - name: Snapshot deterministic discovery files
+        run: |
+          cp public/sitemap.xml /tmp/sitemap.xml
+          cp public/feed.xml /tmp/feed.xml
       - name: Install FFmpeg for deterministic brand assets
         run: |
           sudo apt-get update
@@ -134,7 +138,11 @@ jobs:
           path: build-output-audit.log
           if-no-files-found: error
           retention-days: 3
-      - name: Prerender social pages
+      - name: Prerender canonical pages
         run: npm run prerender
-      - name: Verify generated output is stable
-        run: git diff --exit-code -- public/sitemap.xml
+      - name: Verify discovery output and production SEO contract
+        run: |
+          npm run seo:generate
+          cmp /tmp/sitemap.xml public/sitemap.xml
+          cmp /tmp/feed.xml public/feed.xml
+          npm run validate:seo-output
