@@ -17,7 +17,7 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
 
   return (
     <Link to={`/essays/${essay.slug}`} className="group block h-full">
-      <TiltCard intensity={feature ? 5 : 7}>
+      <TiltCard intensity={feature ? 4 : 6}>
         <div className={`luxury-card relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-luxury-gold/15 bg-[#060606] ${feature ? 'md:flex-row' : ''}`}>
           <EssayCover
             src={essay.cardCover || essay.cover}
@@ -27,13 +27,13 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
             focusY="30%"
             overlayFrom="#060606"
             ornamentClass="text-8xl"
-            imgClassName="transition-transform duration-[900ms] ease-out group-hover:scale-105"
+            imgClassName="hover-media transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.025]"
             className={feature ? 'md:w-1/2 aspect-[16/10] md:aspect-auto' : 'aspect-[16/10]'}
             sharedName={`essay-cover-${essay.id}`}
           />
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
-            <h3 className={`font-serif font-bold text-white transition-colors group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
+            <h3 className={`font-serif font-bold text-white transition-colors duration-300 group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
               {titleCase(essay.title)}
             </h3>
             {essay.subtitle && feature && (
@@ -46,8 +46,8 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
               <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-luxury-gray-light/50">
                 <Clock size={12} className="text-luxury-gold/50" /> {essay.readTime} мин
               </span>
-              <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-luxury-gold transition-colors group-hover:text-luxury-gold-light">
-                Читать <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+              <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-luxury-gold transition-colors duration-300 group-hover:text-luxury-gold-light">
+                Читать <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
               </span>
             </div>
           </div>
