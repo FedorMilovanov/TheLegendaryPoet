@@ -71,6 +71,27 @@ for (const [text, label] of [
   if (!stability.includes(text)) errors.push(`src/hover-stability.css: missing ${label}`);
 }
 
+const nativeImageHook = read('src/hooks/useNativeImageState.ts');
+for (const [text, label] of [
+  ["image.addEventListener('load', synchronize)", 'native load listener'],
+  ["image.addEventListener('error', synchronize)", 'native error listener'],
+  ["image.naturalWidth > 0 ? 'ready' : 'error'", 'cached-image completeness synchronization'],
+]) {
+  if (!nativeImageHook.includes(text)) errors.push(`src/hooks/useNativeImageState.ts: missing ${label}`);
+}
+
+const essayBlocks = read('src/components/essay/blocks.tsx');
+for (const [text, label] of [
+  ["useNativeImageState(imageSrc)", 'shared native image readiness hook'],
+  ['data-image-state={imageState}', 'runtime image state marker'],
+  ["imageReady ? 'opacity-100' : 'opacity-0'", 'readiness-driven visibility'],
+]) {
+  if (!essayBlocks.includes(text)) errors.push(`src/components/essay/blocks.tsx: missing ${label}`);
+}
+if (essayBlocks.includes('onLoad={() => setLoaded(true)}')) {
+  errors.push('src/components/essay/blocks.tsx: synthetic onLoad must not be the sole readiness source');
+}
+
 const sourceFiles = walk('src').filter((filePath) => /\.(?:tsx?|css)$/.test(filePath));
 const componentFiles = sourceFiles.filter((filePath) => filePath.endsWith('.tsx'));
 const mediaTagPattern = /<(?:img|ResilientImage|PoetImage)\b[\s\S]*?\/>/g;
@@ -115,6 +136,8 @@ const qa = read('qa/hover-stability.spec.mjs');
 for (const [text, label] of [
   ['sample.src).toBe(initial.src)', 'source identity assertion'],
   ['initial.opacity - 0.05', 'relative opacity stability assertion'],
+  ['component image state settled after native completion', 'native/component readiness synchronization'],
+  ['loaded interactive artwork became painted', 'post-load painted-state assertion'],
   ["initial.transitionProperty).not.toContain('all')", 'transition-all rejection'],
   ['interactive artwork without compositor protection', 'runtime computed-style protection audit'],
   ['sampledImages.length < MAX_IMAGES_PER_SURFACE', 'bounded multi-image sampling'],

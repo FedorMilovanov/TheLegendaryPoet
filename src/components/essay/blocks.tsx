@@ -16,6 +16,7 @@ import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
 import { asset } from '../../utils/asset';
+import { useNativeImageState } from '../../hooks/useNativeImageState';
 import TiltCard from '../TiltCard';
 
 /**
@@ -116,7 +117,6 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
 
 function ImageBlock({ block }: { block: Block<'image'> }) {
   const [open, setOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -125,6 +125,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const reduceMotion = useReducedMotion();
   const layout = block.layout ?? 'wide';
   const imageSrc = asset(block.src);
+  const { ref: imageRef, state: imageState, ready: imageReady } = useNativeImageState(imageSrc);
   const frameClass =
     layout === 'portrait'
       ? 'mx-auto max-w-xl aspect-[4/5]'
@@ -180,19 +181,26 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         transition={{ type: 'spring', stiffness: 250, damping: 30, mass: 0.8 }}
         className="absolute inset-0"
       >
-        {!loaded && (
-          <span className="absolute inset-0 overflow-hidden bg-[#0d0d0d]">
-            <span className="absolute inset-y-0 -left-1/2 w-1/2 animate-[shimmer_1.7s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.055] to-transparent motion-reduce:animate-none" />
+        {!imageReady && (
+          <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#0d0d0d]">
+            {imageState === 'error' ? (
+              <span className="px-6 text-center text-[11px] uppercase tracking-[0.16em] text-luxury-gray-light/45">
+                Изображение временно недоступно
+              </span>
+            ) : (
+              <span className="absolute inset-y-0 -left-1/2 w-1/2 animate-[shimmer_1.7s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.055] to-transparent motion-reduce:animate-none" />
+            )}
           </span>
         )}
         <img
+          ref={imageRef}
           src={imageSrc}
           alt={block.alt}
           loading="lazy"
           decoding="async"
           sizes={sizes}
-          onLoad={() => setLoaded(true)}
-          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          data-image-state={imageState}
+          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${imageReady ? 'opacity-100' : 'opacity-0'}`}
           style={{ objectPosition: block.objectPosition || '50% 50%' }}
         />
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-white/[0.035]" />
