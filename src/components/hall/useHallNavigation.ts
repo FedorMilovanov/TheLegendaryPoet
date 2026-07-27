@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { CAMERA } from './hallConfig'
+import { isHallOverlayOpen, shouldIgnoreHallShortcut } from './hallInputGuard'
 
 const STORAGE_X = 'tlp_hall_cam_x'
 
@@ -40,40 +41,42 @@ export function useHallNavigation(
 
     const step = () => 4.2
 
-    const modalOpen = () => Boolean((window as { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN)
-    const onWheel = (e: WheelEvent) => {
-      if (modalOpen()) return // let the open palette/modal scroll, not the hall
-      e.preventDefault()
+    const onWheel = (event: WheelEvent) => {
+      if (isHallOverlayOpen()) return // let the open palette/modal scroll, not the hall
+      event.preventDefault()
       targetX.current = THREE.MathUtils.clamp(
-        targetX.current + (e.deltaY > 0 ? 1 : -1) * 1.85,
+        targetX.current + (event.deltaY > 0 ? 1 : -1) * 1.85,
         CAMERA.minX, CAMERA.maxX
       )
     }
-    const onKey = (e: KeyboardEvent) => {
-      if (modalOpen()) return
-      const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+    const onKey = (event: KeyboardEvent) => {
+      if (shouldIgnoreHallShortcut(event)) return
       // F is handled globally for FPS toggle
-      if (e.code === 'KeyF') return
-      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') targetX.current = Math.min(CAMERA.maxX, targetX.current + step())
-      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') targetX.current = Math.max(CAMERA.minX, targetX.current - step())
-      if (e.key >= '1' && e.key <= '9') {
-        const idx = parseInt(e.key,10) -1
+      if (event.code === 'KeyF') return
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') targetX.current = Math.min(CAMERA.maxX, targetX.current + step())
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') targetX.current = Math.max(CAMERA.minX, targetX.current - step())
+      if (event.key >= '1' && event.key <= '9') {
+        const idx = parseInt(event.key,10) -1
         if (idx < poetCount) {
           const pair = Math.floor(idx/2)
           targetX.current = -18 + pair * 5.8
         }
       }
-      if (e.key === '0' && poetCount >= 10) {
+      if (event.key === '0' && poetCount >= 10) {
         const pair = Math.floor(9/2)
         targetX.current = -18 + pair * 5.8
       }
     }
-    const onDown = (e: PointerEvent) => { if (modalOpen()) return; dragging = true; lastX = e.clientX; (e.target as Element).setPointerCapture?.(e.pointerId) }
-    const onMove = (e: PointerEvent) => {
-      if (!dragging) return
-      const dx = e.clientX - lastX
-      lastX = e.clientX
+    const onDown = (event: PointerEvent) => {
+      if (isHallOverlayOpen()) return
+      dragging = true
+      lastX = event.clientX
+      ;(event.target as Element).setPointerCapture?.(event.pointerId)
+    }
+    const onMove = (event: PointerEvent) => {
+      if (!dragging || isHallOverlayOpen()) return
+      const dx = event.clientX - lastX
+      lastX = event.clientX
       targetX.current = THREE.MathUtils.clamp(targetX.current - dx * 0.016, CAMERA.minX, CAMERA.maxX)
     }
     const onUp = () => { dragging = false }
@@ -95,7 +98,7 @@ export function useHallNavigation(
   }, [gl, poetCount, enabled])
 
   useFrame((_, dt) => {
-    if (!enabled) return
+    if (!enabled || isHallOverlayOpen()) return
     currentX.current = THREE.MathUtils.damp(currentX.current, targetX.current, 1 / CAMERA.dollySmoothing, dt)
     camera.position.set(currentX.current, CAMERA.height, CAMERA.zOffset)
     const lookTarget = new THREE.Vector3(currentX.current + 5.5, 1.62, 0)
@@ -111,7 +114,7 @@ export function useHallNavigation(
   })
 
   useEffect(() => {
-    if (!enabled || focusedPoetIndex == null) return
+    if (!enabled || focusedPoetIndex == null || isHallOverlayOpen()) return
     const pair = Math.floor(focusedPoetIndex / 2)
     targetX.current = THREE.MathUtils.clamp(-18 + pair * 5.8, CAMERA.minX, CAMERA.maxX)
   }, [focusedPoetIndex, enabled])
