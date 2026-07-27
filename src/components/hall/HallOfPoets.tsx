@@ -10,6 +10,7 @@ import { PoetNiche } from './PoetNiche'
 import { useHallNavigation } from './useHallNavigation'
 import { FirstPersonControls } from './FirstPersonControls'
 import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
+import { shouldIgnoreHallShortcut } from './hallInputGuard'
 import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessing'
 
 import { poets as allPoetsRaw } from '@/data/poets'
@@ -75,7 +76,7 @@ function HallScene({
   useEffect(() => {
     if (!fpsMode) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.code !== 'KeyE') return
+      if (event.code !== 'KeyE' || shouldIgnoreHallShortcut(event)) return
       const id = focused || poets[0]?.id
       if (id) onOpenPoet(id)
     }
@@ -151,18 +152,7 @@ export default function HallOfPoets() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      const tag = target?.tagName
-      const modalOpen = Boolean((window as Window & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN)
-      if (
-        modalOpen ||
-        event.repeat ||
-        target?.isContentEditable ||
-        tag === 'INPUT' ||
-        tag === 'TEXTAREA' ||
-        tag === 'SELECT' ||
-        tag === 'BUTTON'
-      ) return
+      if (shouldIgnoreHallShortcut(event)) return
       if (event.code === 'KeyF') setFpsMode(value => !value)
       if (event.code === 'KeyM') setAudioMuted(value => !value)
     }
