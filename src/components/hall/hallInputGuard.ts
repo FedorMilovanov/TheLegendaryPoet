@@ -1,4 +1,4 @@
-const EDITABLE_SELECTOR = 'input, textarea, select, button, [contenteditable="true"]'
+const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"]'
 
 type ClosestCapableTarget = EventTarget & {
   closest?: (selector: string) => Element | null
@@ -17,8 +17,9 @@ export function isEditableHallTarget(target: EventTarget | null) {
 
 /**
  * Hall shortcuts are global by necessity, but never own keystrokes while a
- * modal, editable control, IME composition or browser/OS modifier chord owns
- * the interaction.
+ * modal, text-entry control, IME composition or browser/OS modifier chord owns
+ * the interaction. Ordinary Hall buttons are deliberately not text-entry
+ * controls, so F/M remain available immediately after clicking one.
  */
 export function shouldIgnoreHallShortcut(event: KeyboardEvent) {
   return (
