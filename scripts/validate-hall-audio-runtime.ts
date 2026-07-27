@@ -67,6 +67,9 @@ Object.defineProperty(globalThis, 'window', { configurable: true, value: fakeHal
 const hallInput = await import('../src/components/hall/hallInputGuard');
 const plainTarget = { closest: () => null } as unknown as EventTarget;
 const editableTarget = { closest: () => ({}) } as unknown as EventTarget;
+const buttonTarget = {
+  closest: (selector: string) => selector.includes('button') ? {} : null,
+} as unknown as EventTarget;
 const shortcutEvent = (overrides: Partial<KeyboardEvent> = {}) => ({
   defaultPrevented: false,
   repeat: false,
@@ -82,7 +85,8 @@ expect(!hallInput.shouldIgnoreHallShortcut(shortcutEvent()), 'an unowned Hall sh
 fakeHallWindow.__TLP_MODAL_OPEN = true;
 expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent()), 'an open overlay must own Hall shortcuts');
 fakeHallWindow.__TLP_MODAL_OPEN = false;
-expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ target: editableTarget })), 'editable controls must own their keystrokes');
+expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ target: editableTarget })), 'text-entry controls must own their keystrokes');
+expect(!hallInput.shouldIgnoreHallShortcut(shortcutEvent({ target: buttonTarget })), 'Hall shortcuts must remain active after an ordinary button click');
 expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ repeat: true })), 'repeated keydown must not toggle Hall modes repeatedly');
 expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ isComposing: true })), 'IME composition must own Hall keystrokes');
 expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ defaultPrevented: true })), 'already-handled events must not reach Hall shortcuts');
@@ -97,6 +101,9 @@ const deferredStopSource = read('src/utils/deferredAudioStop.ts');
 const inputGuardSource = read('src/components/hall/hallInputGuard.ts');
 const firstPersonSource = read('src/components/hall/FirstPersonControls.tsx');
 const navigationSource = read('src/components/hall/useHallNavigation.ts');
+const loadBufferStart = whisperSource.indexOf('async function loadBuffer');
+const loadBufferEnd = whisperSource.indexOf('function safeDisconnect');
+const loadBufferSource = whisperSource.slice(loadBufferStart, loadBufferEnd);
 
 expect(hallSource.includes('audioMuted={audioMuted}'), 'HallScene must receive mute state through React props');
 expect(hallSource.includes('useHallAudioListener()'), 'HallScene must mount one shared 3D listener bridge');
@@ -111,15 +118,19 @@ expect((whisperSource.match(/useFrame\(\(\) =>/g) ?? []).length === 1, 'camera l
 expect(whisperSource.includes('latestPositionRef.current = position'), 'poet whispers must track coordinates without array-identity restarts');
 expect(!whisperSource.includes('muted, poetId, position, resumeCurrent'), 'startup must not depend on a recreated position array');
 expect(!whisperSource.includes("fetch(url, { method: 'HEAD' })"), 'audio candidates must not be double-requested through HEAD plus GET');
+expect(!loadBufferSource.includes('.resume()'), 'buffer download and decode must not depend on autoplay permission');
 expect(!whisperSource.includes('__TLP_AUDIO_MUTED'), 'the hook must not read global mute state');
 expect(deferredStopSource.includes('source.stop()'), 'deferred cleanup must stop its captured concrete source');
 expect(deferredStopSource.includes('cancel();'), 'replacement scheduling must cancel the previous timer');
 expect(inputGuardSource.includes('event.isComposing'), 'Hall input must yield during IME composition');
 expect(inputGuardSource.includes('event.ctrlKey'), 'Hall input must yield to modifier chords');
+expect(!inputGuardSource.includes('select, button'), 'ordinary Hall buttons must not disable F/M shortcuts');
 expect(firstPersonSource.includes('shouldIgnoreHallShortcut(event)'), 'FPS movement must use the shared shortcut guard');
 expect(firstPersonSource.includes('clearMove(move.current)'), 'FPS movement must clear latched keys when ownership changes');
 expect(firstPersonSource.includes('document.exitPointerLock()'), 'FPS mode must release pointer lock when an overlay owns input');
 expect(navigationSource.includes('if (!enabled || isHallOverlayOpen()) return'), 'rail camera writes must pause beneath overlays');
+expect(navigationSource.includes('const lastSaveAt = useRef(0)'), 'rail persistence timing must remain instance-local');
+expect(!navigationSource.includes('useHallNavigation as any'), 'rail persistence must not attach mutable state to the hook function');
 expect(navigationSource.includes('el.style.touchAction = previousTouchAction'), 'rail cleanup must restore the canvas touch contract');
 
 if (failures.length > 0) {
@@ -128,4 +139,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall runtime validation passed: one listener bridge, explicit mute ownership, source-safe fades and unified input ownership are enforced.');
+console.log('Hall runtime validation passed: one listener bridge, decode/playback separation, source-safe fades and unified input ownership are enforced.');
