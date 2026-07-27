@@ -1,33 +1,34 @@
 {
-  "referenceId": "canonical-hooded-figure-v1",
-  "reviewedAgainstReferenceSha256": "6ed4068636a63532de6269b2660cec186364399f3a0f4519430d9e08c751b0ad",
-  "candidateSource": "reference-derived-contours-v8-24",
-  "candidateRevision": "v8.27 production baseline",
-  "status": "legacy-baseline-not-reference-approved",
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
+  "candidateSource": "canonical-reference-v2-reset-v9-7",
+  "candidateRevision": "v9.8 clean-render correction after exact-head texture rejection",
+  "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.28,
+  "overallScore": 0.59,
   "scores": {
-    "macroProportions": 0.3,
-    "hoodAndCavern": 0.25,
-    "collarAndFolds": 0.2,
-    "cloakSilhouette": 0.3,
-    "rimAndAura": 0.15,
-    "microReadability": 0.8
+    "macroProportions": 0.72,
+    "hoodAndCavern": 0.7,
+    "collarAndFolds": 0.5,
+    "cloakSilhouette": 0.69,
+    "rimAndAura": 0.4,
+    "microReadability": 0.77
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "fc03e502cb9077004fde13dfed819c0515b02449",
-    "public/brand-emblem.svg": "3be91275ced525af996382db0321c3d995547652",
-    "public/brand-mark-micro.svg": "e8dfd0cbbc34443196da249bfff7d97eabebe315",
-    "public/brand-emblem-mask.svg": "c07245c1cfc71bf3bc1627aa01baf0d3b96820d7"
+    "src/components/BrandMark.tsx": "558b4854e7bd4a26685b97815a100c7373d83030",
+    "public/brand-emblem.svg": "e5793019d3861f158671c58d5c04f7474656fa50",
+    "public/brand-mark-micro.svg": "889d27cea5916b712e4fb68123c136f14fd307f3",
+    "public/brand-emblem-mask.svg": "51edb6254220a0b375450bb1ca3c563600e541f3"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
+  "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "hood is too large relative to the body",
-    "face cavity is too narrow and droplet-like",
-    "collar is split away from the reference central overlap",
-    "cloak is too rounded and compact",
-    "three major fold families are not structurally readable",
-    "continuous two-sided icy rim and broad aura are missing"
+    "the rejected colored scanline texture is removed, but the candidate remains flatter and more diagrammatic than the painterly reference",
+    "the face cavern is still too vertically oval rather than a broad natural void",
+    "the cowl remains too orderly and converges into a clean central knot",
+    "the large folds are cleaner and more radial than the reference cloth masses",
+    "the upper and side electrical aura is still sparse compared with reference v2",
+    "the exact-head live header must remain under visual review before acceptance"
   ],
-  "nextRequiredAction": "v9 geometry reset from the canonical reference; do not continue v8.x micro-polish"
+  "nextRequiredAction": "continue v9.9 from reference v2: widen and irregularize the face cavern, rebuild the cowl as crushed cloth, break radial fold regularity and strengthen upper-side electrical bloom without lower smoke; keep PR draft"
 }

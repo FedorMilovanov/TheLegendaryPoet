@@ -1,183 +1,137 @@
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '../utils/cn';
-interface BrandMarkProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-type VectorPath = Readonly<{
-  d: string;
-  fill?: string;
-  fillOpacity?: number;
-  stroke?: string;
-  strokeOpacity?: number;
-  strokeWidth?: number;
-  strokeLinecap?: 'round' | 'butt';
-}>;
+
+interface BrandMarkProps { size?: 'sm' | 'md' | 'lg'; className?: string; }
 const sizes = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-24 w-24' };
 const premiumEase = [0.16, 1, 0.3, 1] as const;
 const BRAND_VERSION = 'cloak-20260726-8';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-24';
-const cloakPath = 'M48 40.8C37 40.5 27 42.3 18.5 47C11.2 51 6 60 3.2 70C1.2 77.8.8 87 1.5 96H94.5C95.2 87 94.8 77.8 92.8 70C90 60 84.8 51 77.5 47C69 42.3 59 40.5 48 40.8Z';
-const hoodPath = 'M48 9.8C40.2 12.2 35.5 20.8 32.8 30.8C31.2 36.8 29.4 42.5 27.5 46.4C32.3 43.8 37 44.7 41.5 47.5C44.5 49.4 46.8 51.2 48 53.3C49.5 51.2 52 49.2 55.2 47.4C59.6 44.8 64.2 43.8 68.8 46.2C66.6 41.7 64.8 36.8 63.2 30.8C60.5 20.7 55.7 12.1 48 9.8Z';
-const hoodLeftPath = 'M48 10.5C42.5 14.4 38 22 35.2 31.5C33.5 37 31.8 41.8 29.5 45.1C34.4 43.3 39.2 44.5 43.7 48C45.5 49.4 47 51 48 52.7C45 41.8 43.2 31 44.5 21.8C45.2 16.7 46.6 12.4 48 10.5Z';
-const hoodRightPath = 'M48.4 10.7C53.8 14.5 58 22 60.7 31.3C62.2 36.8 63.9 41.2 66.5 44.8C61.8 43.5 57.2 44.7 52.7 47.8C50.8 49.1 49.3 50.8 48 52.7C51.2 41.2 52.8 31 51.6 22C51 16.8 49.7 12.6 48.4 10.7Z';
-const facePath = 'M49 21.8C42.8 22.5 38 26.4 34.2 32.7C32.5 35.5 32.7 38.1 34.4 40.6C37.2 44.3 41.2 47.2 47.7 50.3C51.5 47.8 55.2 45 58.2 41.5C60.2 39.2 61.5 36.5 60.4 33.8C57.6 27 54.1 23.2 49 21.8Z';
-const atmospherePaths: readonly VectorPath[] = [
-  { d: 'M11 95C6 73 14 52 30 38C40 29 43 17 48 8C53 17 56 29 66 38C82 52 90 73 83 95C70 69 59 56 48 52C36 56 24 70 11 95Z', fill: '#62e3ff', fillOpacity: 0.3 },
-  { d: 'M0 96C4 74 14 56 30 42C18 63 12 81 11 96Z', fill: '#32cde8', fillOpacity: 0.17 },
-  { d: 'M96 96C92 74 82 56 66 42C78 63 84 81 85 96Z', fill: '#167b93', fillOpacity: 0.07 },
-  { d: 'M28 30C33 19 40 11 47 9', stroke: '#b5f6ff', strokeOpacity: 0.1, strokeWidth: 1.6, strokeLinecap: 'round' },
-  { d: 'M69 31C64 20 56 12 49 9', stroke: '#349bb3', strokeOpacity: 0.035, strokeWidth: 1.15, strokeLinecap: 'round' },
-];
-const energyPaths: readonly VectorPath[] = [
-  { d: 'M13 57C10 62 9 68 9 74', stroke: '#63d8ec', strokeOpacity: 0.05, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M83 57C86 62 87 68 87 74', stroke: '#26778b', strokeOpacity: 0.02, strokeWidth: 0.3, strokeLinecap: 'round' },
-];
-const foldPaths: readonly VectorPath[] = [
-  { d: 'M1.6 96C4.8 77.5 13 58.5 31 47C36 44 41 45 46 50C34 61 24 78 18 96Z', fill: '#081f2e' },
-  { d: 'M94.4 96C91.2 77.5 83 58.5 65 47C60 44 55 45 50 50C62 61 72 78 78 96Z', fill: '#020a11' },
-  { d: 'M9.5 96C15.5 75 26 58 42 49C35 64 31 80 30 96Z', fill: '#041520' },
-  { d: 'M86.5 96C80.5 75 70 58 54 49C61 64 65 80 66 96Z', fill: '#01050a' },
-  { d: 'M22.5 96C27.8 77 36 61 46.6 51C42.2 67.5 39.8 82.5 40 96Z', fill: '#03101a' },
-  { d: 'M73.5 96C68.2 77 60 61 49.4 51C53.8 67.5 56.2 82.5 56 96Z', fill: '#01050a' },
-  { d: 'M33 96C36 76 41 62 46.5 55C43.5 70 43.2 83 44 96Z', fill: '#04131d' },
-  { d: 'M63 96C60 76 55 62 49.5 55C52.5 70 52.8 83 52 96Z', fill: '#01070d' },
-  { d: 'M44 96C44.7 77 46 63 47.4 56C48 63 48.2 77 48.1 96Z', fill: '#02080d' },
-  { d: 'M52 96C51.3 77 50 63 48.6 56C48 63 47.8 77 47.9 96Z', fill: '#010509' },
-  { d: 'M7 91C17 73 29 59.5 43.5 52.5C33 65 24 78.5 18 96Z', fill: '#0c3044', fillOpacity: 0.16 },
-  { d: 'M89 91C79 73 67 59.5 52.5 52.5C63 65 72 78.5 78 96Z', fill: '#04131d', fillOpacity: 0.1 },
-  { d: 'M18 95C26 76 36 61.5 46 53C39 68 34 82 32 96Z', fill: '#082434', fillOpacity: 0.14 },
-  { d: 'M78 95C70 76 60 61.5 50 53C57 68 62 82 64 96Z', fill: '#020b12', fillOpacity: 0.1 },
-  { d: 'M2.5 88C13.5 68.5 27 55.5 43.5 50.8C31 63.8 22.5 79.5 18.8 96Z', fill: '#0d3448', fillOpacity: 0.18 },
-  { d: 'M93.5 84C82.5 67 70.5 56.2 53.2 51.2C67 63.7 75.3 78.2 78.7 96Z', fill: '#020b12', fillOpacity: 0.075 },
-  { d: 'M24 96C27.8 77.3 36 62.2 46 56.2C39.3 69.3 35.8 83.5 35.4 96Z', fill: '#0a2a3a', fillOpacity: 0.14 },
-  { d: 'M71 96C67.8 79.5 60.8 66.8 49.4 57.2C56.8 71 59.8 84.5 59.2 96Z', fill: '#01080e', fillOpacity: 0.07 },
-];
-const collarPaths: readonly VectorPath[] = [
-  { d: 'M15.5 48.3C25.7 44 34.8 44.9 43.9 50.2C38.6 52.5 32.7 55.8 27 60.4C22.7 57.3 18.8 52.9 15.5 48.3Z', fill: '#0d3448', fillOpacity: 0.9 },
-  { d: 'M80.4 49.1C71.7 45.2 62.3 45.6 52 50.9C57.6 52.4 62.6 54.2 67 56.4C72.9 55.3 77.3 52.6 80.4 49.1Z', fill: '#031019', fillOpacity: 0.92 },
-  { d: 'M19.4 54.1C28.4 50.8 36.6 52.8 44.2 58.2C38.6 60.7 33.8 64.6 29.3 69.7C25.2 65.4 21.8 59.8 19.4 54.1Z', fill: '#092a3c', fillOpacity: 0.97 },
-  { d: 'M74 54.5C66.4 51.8 59 52.8 51.2 57.4C56 59.1 60.2 61.1 64 63.7C68.7 61.7 72 58.3 74 54.5Z', fill: '#01080e', fillOpacity: 0.98 },
-  { d: 'M28 61.7C33.7 58.5 39.2 59.2 44 62.7C40 64.8 36.5 68 33.6 72.2Z', fill: '#061c29', fillOpacity: 0.96 },
-  { d: 'M62.8 59.8C58.2 58 54.3 58.6 51.3 61.2C54.7 62.4 57.7 64 60 66.1Z', fill: '#01060a', fillOpacity: 0.99 },
-  { d: 'M16.2 49C26.8 46.2 35.3 49.3 43.9 57.4', stroke: '#1a5169', strokeOpacity: 0.68, strokeWidth: 2.2, strokeLinecap: 'round' },
-  { d: 'M79.2 49.8C69.8 47.1 61.3 49.7 52 56.7', stroke: '#082432', strokeOpacity: 0.8, strokeWidth: 1.65, strokeLinecap: 'round' },
-  { d: 'M24.8 56.3C31.8 54 37.9 55.6 43.9 60', stroke: '#5aa9ba', strokeOpacity: 0.14, strokeWidth: 0.46, strokeLinecap: 'round' },
-  { d: 'M68 55.8C62.1 54.8 57.2 55.9 52.1 59.1', stroke: '#154657', strokeOpacity: 0.05, strokeWidth: 0.32, strokeLinecap: 'round' },
-  { d: 'M21 52.7C28.7 54.8 35.2 58.1 40.7 63.6', stroke: '#16465a', strokeOpacity: 0.16, strokeWidth: 0.5, strokeLinecap: 'round' },
-  { d: 'M71 52.9C64.8 54 59.7 56.1 55.3 59.5', stroke: '#0b2c3c', strokeOpacity: 0.06, strokeWidth: 0.38, strokeLinecap: 'round' },
-];
-const hoodLayerPaths: readonly VectorPath[] = [
-  { d: 'M47.5 12.6C42.4 16.5 38.7 23.1 36.1 31.2C39.7 28.4 43.4 26 47.6 23.9', stroke: '#17475d', strokeOpacity: 0.62, strokeWidth: 1.2, strokeLinecap: 'round' },
-  { d: 'M48.6 15.5C52.6 18.9 55.7 24.1 58 30.5C54.9 28.2 52.1 26.4 48.4 25', stroke: '#0b2b3b', strokeOpacity: 0.5, strokeWidth: 1.05, strokeLinecap: 'round' },
-  { d: 'M47.2 18.6C43.7 21.2 41.2 24.9 39.3 29.4', stroke: '#24576b', strokeOpacity: 0.4, strokeWidth: 0.78, strokeLinecap: 'round' },
-  { d: 'M48.2 10.8C47.8 14.6 48.1 18.7 47.4 23.4', stroke: '#8ee5f2', strokeOpacity: 0.12, strokeWidth: 0.48, strokeLinecap: 'round' },
-  { d: 'M50.6 18.4C53.2 20.8 55 23.8 56.1 27.2', stroke: '#1d576a', strokeOpacity: 0.2, strokeWidth: 0.58, strokeLinecap: 'round' },
-  { d: 'M43.4 17.2C41.2 19.4 39.6 22.3 38.6 25.5', stroke: '#2d6377', strokeOpacity: 0.22, strokeWidth: 0.52, strokeLinecap: 'round' },
-];
-const faceDepthPaths: readonly VectorPath[] = [
-  { d: 'M34.2 32.7C36.4 28.6 40.1 25.1 45.4 23.2C41.7 27.2 39.5 31.4 39 35.7C38.6 39.6 40.5 42.8 44.2 45.8C39.8 43.8 36.7 41.8 34.6 39.2C33.2 37.4 33 34.9 34.2 32.7Z', fill: '#04131d' },
-  { d: 'M60.4 33.8C58.3 28.8 55.3 25.4 51.2 23.3C54.4 27.2 56.2 31 56.5 34.8C56.8 38.3 55.2 41.4 51.7 44.6C55 42.8 57.5 40.7 59.2 38.2C60.2 36.7 60.7 35.2 60.4 33.8Z', fill: '#01070c' },
-  { d: 'M39.7 42.5C42.2 45 44.8 46.8 47.5 48.2C50.4 46.5 53.1 44.5 55.3 42.1C53.6 45.7 50.8 48.2 47.6 50.3C44.3 48.7 41.4 46.2 39.7 42.5Z', fill: '#020a10' },
-];
-const texturePaths: readonly VectorPath[] = [
-  { d: 'M47.5 22.4C42.8 24.4 38.8 28.3 35.8 33.5C34.4 36.2 34.6 38.9 36.2 41.5', stroke: '#72d7e8', strokeOpacity: 0.13, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M49.2 22.4C53.9 24.5 57.2 28.2 59.5 33.4', stroke: '#226d80', strokeOpacity: 0.04, strokeWidth: 0.28, strokeLinecap: 'round' },
-  { d: 'M28.8 44.8C31.5 36 34.4 24.8 40.3 16.4', stroke: '#d9fbff', strokeOpacity: 0.43, strokeWidth: 0.68, strokeLinecap: 'round' },
-  { d: 'M31.2 38C34 27 39.5 16.5 47.2 10.8', stroke: '#bff7ff', strokeOpacity: 0.34, strokeWidth: 0.56, strokeLinecap: 'round' },
-  { d: 'M35.1 31C38.3 21.5 42.4 14.9 47.1 11.8', stroke: '#d7fbff', strokeOpacity: 0.17, strokeWidth: 0.44, strokeLinecap: 'round' },
-  { d: 'M49.2 10.9C54.4 14.4 58.4 21.7 61.1 31', stroke: '#59c1d3', strokeOpacity: 0.1, strokeWidth: 0.38, strokeLinecap: 'round' },
-  { d: 'M63.3 34.2C64.3 38.4 66 42.1 68.2 45', stroke: '#2b8ea2', strokeOpacity: 0.065, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M30.2 45.2C34.4 43.4 39 44.2 43.2 46.7', stroke: '#71cadc', strokeOpacity: 0.05, strokeWidth: 0.34, strokeLinecap: 'round' },
-];
-const rimPaths: readonly VectorPath[] = [
-  { d: 'M23.5 47.6C26 45.8 27.8 43.2 29 40', stroke: '#bff7ff', strokeOpacity: 0.56, strokeWidth: 0.78, strokeLinecap: 'round' },
-  { d: 'M29.1 35.5C31.5 27.2 35.4 18.6 40.2 14', stroke: '#d8fbff', strokeOpacity: 0.52, strokeWidth: 0.68, strokeLinecap: 'round' },
-  { d: 'M42.8 11.5C44.2 10.4 45.6 9.8 46.9 9.5', stroke: '#f4ffff', strokeOpacity: 0.58, strokeWidth: 0.56, strokeLinecap: 'round' },
-  { d: 'M50.1 10.2C52.1 11.3 53.8 13 55.2 15.1', stroke: '#71dced', strokeOpacity: 0.16, strokeWidth: 0.38, strokeLinecap: 'round' },
-  { d: 'M59 21.8C60.6 25 61.8 28.5 62.7 32', stroke: '#4bbbd0', strokeOpacity: 0.09, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M64 36C65 39.7 66.8 42.5 69.2 44.8', stroke: '#36a7bf', strokeOpacity: 0.07, strokeWidth: 0.36, strokeLinecap: 'round' },
-];
-const seamPaths: readonly VectorPath[] = [
-  { d: 'M4 94C11 74 24 59 43 51.7', stroke: '#72cbdc', strokeOpacity: 0.16, strokeWidth: 0.42, strokeLinecap: 'round' },
-  { d: 'M16 96C23 76 34 60 46 52', stroke: '#5cb1c3', strokeOpacity: 0.13, strokeWidth: 0.36, strokeLinecap: 'round' },
-  { d: 'M29 96C33 77 40 61 47 53', stroke: '#5aa6b6', strokeOpacity: 0.14, strokeWidth: 0.32, strokeLinecap: 'round' },
-  { d: 'M91 94C84 73 71 57 53 51', stroke: '#286d7f', strokeOpacity: 0.04, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M80 96C73 76 62 60 50 52', stroke: '#195669', strokeOpacity: 0.03, strokeWidth: 0.28, strokeLinecap: 'round' },
-  { d: 'M9 91C16 72 27 58 42 51', stroke: '#64bfd1', strokeOpacity: 0.06, strokeWidth: 0.32, strokeLinecap: 'round' },
-  { d: 'M87 91C80 72 69 58 54 51', stroke: '#1d6274', strokeOpacity: 0.022, strokeWidth: 0.28, strokeLinecap: 'round' },
-  { d: 'M22 95C27 76 35 61 45 52', stroke: '#69c5d7', strokeOpacity: 0.04, strokeWidth: 0.3, strokeLinecap: 'round' },
-  { d: 'M74 95C69 76 61 61 51 52', stroke: '#1a5768', strokeOpacity: 0.02, strokeWidth: 0.26, strokeLinecap: 'round' },
-  { d: 'M38 95C40.5 77 44.2 62 47.4 54.8', stroke: '#4d98aa', strokeOpacity: 0.08, strokeWidth: 0.28, strokeLinecap: 'round' },
-  { d: 'M58 95C55.5 77 51.8 62 48.6 54.8', stroke: '#1e6071', strokeOpacity: 0.03, strokeWidth: 0.25, strokeLinecap: 'round' },
-  { d: 'M17.5 50.5C27.5 48.1 37.1 51.4 45.2 57', stroke: '#78cad9', strokeOpacity: 0.075, strokeWidth: 0.32, strokeLinecap: 'round' },
-  { d: 'M12.8 62C24.5 54.7 35.3 54.5 44.6 61.2', stroke: '#5ab0c2', strokeOpacity: 0.055, strokeWidth: 0.34, strokeLinecap: 'round' },
-  { d: 'M81.5 61C70.8 54.2 61 54.8 51.6 60.2', stroke: '#174f60', strokeOpacity: 0.018, strokeWidth: 0.28, strokeLinecap: 'round' },
-];
+const VECTOR_SOURCE = 'canonical-reference-v2-reset-v9-7';
+const VECTOR_BODY = `<defs>
+  <linearGradient id="__CLOAK__" x1="15" y1="39" x2="80" y2="96" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#102c3d"/><stop offset=".2" stop-color="#071b27"/><stop offset=".48" stop-color="#03101a"/><stop offset=".76" stop-color="#01060b"/><stop offset="1" stop-color="#000103"/>
+  </linearGradient>
+  <linearGradient id="__HOOD__" x1="34" y1="9" x2="62" y2="48" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#204b61"/><stop offset=".22" stop-color="#123449"/><stop offset=".48" stop-color="#082333"/><stop offset=".75" stop-color="#03101a"/><stop offset="1" stop-color="#000307"/>
+  </linearGradient>
+  <linearGradient id="__FOLD_LEFT__" x1="9" y1="47" x2="46" y2="96" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#173b4e"/><stop offset=".32" stop-color="#0a2432"/><stop offset=".68" stop-color="#04121b"/><stop offset="1" stop-color="#010409"/>
+  </linearGradient>
+  <linearGradient id="__FOLD_RIGHT__" x1="87" y1="47" x2="50" y2="96" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#0f2b3a"/><stop offset=".32" stop-color="#071c28"/><stop offset=".7" stop-color="#020c13"/><stop offset="1" stop-color="#000205"/>
+  </linearGradient>
+  <radialGradient id="aura" cx="50%" cy="34%" r="54%">
+    <stop offset=".08" stop-color="#ecffff" stop-opacity=".46"/><stop offset=".3" stop-color="#7deeff" stop-opacity=".33"/><stop offset=".58" stop-color="#25cafa" stop-opacity=".18"/><stop offset="1" stop-color="#006da9" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="mist" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4.2"/></filter>
+  <filter id="soft" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.25"/></filter>
+  <filter id="__GLOW__" x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation=".65" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<g data-brand-atmosphere="" aria-hidden="true">
+  <path d="M48 5C37 5 30 15 28 30C26 42 29 52 36 59C39 62 43 64 48 65C53 64 57 62 60 59C67 52 70 42 68 30C66 15 59 5 48 5Z" fill="#39d4ff" fill-opacity=".025"/>
+  <path d="M23 61C16 54 18 45 24 38C29 32 28 25 24 20C21 16 23 12 28 9" fill="none" stroke="#69e5ff" stroke-opacity=".16" stroke-width=".48" stroke-linecap="round"/>
+  <path d="M73 61C80 54 78 45 72 38C67 32 68 25 72 20C75 16 73 12 68 9" fill="none" stroke="#55ddff" stroke-opacity=".13" stroke-width=".44" stroke-linecap="round"/>
+  <path d="M28 49C23 44 24 38 28 33C32 28 31 22 28 18C26 15 27 12 31 10" fill="none" stroke="#8cefff" stroke-opacity=".12" stroke-width=".34" stroke-linecap="round"/>
+  <path d="M68 49C73 44 72 38 68 33C64 28 65 22 68 18C70 15 69 12 65 10" fill="none" stroke="#72e8ff" stroke-opacity=".1" stroke-width=".32" stroke-linecap="round"/>
+  <path d="M32 31C27 26 29 20 34 16C38 13 37 8 35 4" fill="none" stroke="#d7fdff" stroke-opacity=".19" stroke-width=".38" stroke-linecap="round"/>
+  <path d="M64 31C69 26 67 20 62 16C58 13 59 8 61 4" fill="none" stroke="#a8f5ff" stroke-opacity=".15" stroke-width=".35" stroke-linecap="round"/>
+  <path d="M17 55L13 51L16 47L13 43L16 39" fill="none" stroke="#b8f8ff" stroke-opacity=".18" stroke-width=".2" stroke-linecap="round"/>
+  <path d="M79 55L83 51L80 47L83 43L80 39" fill="none" stroke="#8befff" stroke-opacity=".15" stroke-width=".19" stroke-linecap="round"/>
+</g>
+<g data-brand-energy="" aria-hidden="true" fill="none" stroke-linecap="round">
+  <path d="M26 28L23 25L26 21L24 18" stroke="#e5ffff" stroke-opacity=".2" stroke-width=".19"/>
+  <path d="M70 28L73 25L70 21L72 18" stroke="#b2f7ff" stroke-opacity=".16" stroke-width=".18"/>
+</g>
+
+<g data-brand-figure="">
+  <path data-brand-cloak="" d="M48 37.2C40.6 37.1 34.2 39 28.7 42.5C22.5 46.4 18.5 52.4 15.4 60.5L8.3 80.8C6.5 86 6.3 90.8 8 94.7C19.3 95.4 31 95.7 40.8 95.5C44 95.4 46.4 94.8 48 93.4C49.6 94.8 52 95.4 55.2 95.5C65 95.7 76.7 95.4 88 94.7C89.7 90.8 89.5 86 87.7 80.8L80.6 60.5C77.5 52.4 73.5 46.4 67.3 42.5C61.8 39 55.4 37.1 48 37.2Z" fill="url(#__CLOAK__)" stroke="#23566b" stroke-opacity=".48" stroke-width=".55"/>
+
+  <g data-brand-folds="">
+    <path d="M8 95C12 80 18.2 64.5 29.6 48.2C34.4 43 40 43.7 46.3 49.2C35.4 58.8 26.5 74.5 20 95.3Z" fill="#071b26"/>
+    <path d="M13.8 95.4C19.5 77.4 28.7 61.6 43.2 50.8C35.8 64.1 30.8 79.9 29.4 95.6Z" fill="url(#__FOLD_LEFT__)" opacity=".88"/>
+    <path d="M22.8 95.6C27.2 79.4 34.7 64.7 44.6 53.2C39.1 68 36.1 82.6 36.2 95.7Z" fill="#04121b"/>
+    <path d="M31.2 96C35.2 77.2 41.2 62.1 47 54.2C44.3 69.6 42.7 83.8 43.4 96Z" fill="#08202b" fill-opacity=".69"/>
+    <path d="M88 95C83.7 79.7 77.5 64.2 66.4 48.1C61.7 43.3 56.1 43.8 49.7 49.2C60.8 59 69.4 74.8 76 95.3Z" fill="#01050a"/>
+    <path d="M82.2 95.4C76.5 77.4 67.3 61.6 52.8 50.8C60.2 64.1 65.2 79.9 66.6 95.6Z" fill="url(#__FOLD_RIGHT__)" opacity=".9"/>
+    <path d="M73.2 95.6C68.8 79.4 61.3 64.7 51.4 53.2C56.9 68 59.9 82.6 59.8 95.7Z" fill="#01070d"/>
+    <path d="M64.8 96C60.8 77.2 54.8 62.1 49 54.2C51.7 69.6 53.3 83.8 52.6 96Z" fill="#000307"/>
+    <path d="M41.8 96C42.6 77.2 44.7 62.8 47.3 54.8C47.8 70.3 47 84.6 46.4 96Z" fill="#061821" fill-opacity=".52"/>
+    <path d="M54.2 96C53.4 77.2 51.3 62.8 48.7 54.8C48.2 70.3 49 84.6 49.6 96Z" fill="#000205"/>
+    <path d="M10.4 88C20.3 67.6 31.8 55.4 44.7 50.9C34.8 61.8 25.4 76.8 19.2 94.4Z" fill="#1a465a" fill-opacity=".15"/>
+    <path d="M85.6 88C75.8 67.6 64.1 55.5 51.3 50.9C61.2 61.9 70.6 76.8 76.8 94.4Z" fill="#0d2c3a" fill-opacity=".075"/>
+  </g>
+
+  <g data-brand-collar="">
+    <path d="M24.8 42.2C31.5 38.5 39.1 39.3 48 44.7C56.9 39.3 64.5 38.5 71.2 42.2C67.8 46 63.1 48.5 57.5 49.7C53.2 50.6 50.1 52 48 54C45.9 52 42.8 50.6 38.5 49.7C32.9 48.5 28.2 46 24.8 42.2Z" fill="#0c2533"/>
+    <path d="M27.7 45.7C34 42.7 40.2 44.1 48 49.3C55.8 44.1 62 42.7 68.3 45.7C63.9 50.7 57.2 54 48 55.5C38.8 54 32.1 50.7 27.7 45.7Z" fill="#06141d"/>
+    <path d="M33.1 48.7C38.1 46.7 42.9 48.2 48 52.1C53.1 48.2 57.9 46.7 62.9 48.7C59.2 53.1 54.3 56 48 57.1C41.7 56 36.8 53.1 33.1 48.7Z" fill="#030a10"/>
+    <path d="M24.2 44C30.6 41.9 37.1 43.3 43.7 47.6C39.1 49.1 34.7 49.1 30.6 47.2C28.1 46 26 44.9 24.2 44Z" fill="#1b4053" fill-opacity=".7"/>
+    <path d="M71.8 44C65.4 41.9 58.9 43.3 52.3 47.6C56.9 49.1 61.3 49.1 65.4 47.2C67.9 46 70 44.9 71.8 44Z" fill="#02080d" fill-opacity=".95"/>
+    <path d="M27 41.7C34.2 39.9 40.8 42.2 47.2 46.4" fill="none" stroke="#b0ebf3" stroke-opacity=".12" stroke-width=".54" stroke-linecap="round"/>
+    <path d="M69 41.7C61.8 39.9 55.2 42.2 48.8 46.4" fill="none" stroke="#4d8d9d" stroke-opacity=".08" stroke-width=".47" stroke-linecap="round"/>
+  </g>
+
+  <path data-brand-hood="" d="M48 9.8C42 11.8 38.5 18.1 36.8 25.2C35.6 30.5 33.5 35.1 31.2 38.7C35.8 38.8 40 40.3 43.8 42.8C46 44.2 47.3 45.7 48 46.7C48.7 45.7 50 44.2 52.2 42.8C56 40.3 60.2 38.8 64.8 38.7C62.5 35.1 60.4 30.5 59.2 25.2C57.5 18.1 54 11.8 48 9.8Z" fill="url(#__HOOD__)" stroke="#3e899e" stroke-opacity=".6" stroke-width=".62"/>
+  <g data-brand-hood-layers="">
+    <path d="M48 10.4C44 13.1 41.3 18.2 39.7 24.4C38.5 29 36.5 33.7 34.4 36.8C39.2 37.3 43.5 40.2 47.8 46C46 35.7 45.2 27.5 46 19.8C46.4 15.6 47.2 12.1 48 10.4Z" fill="#173b50"/>
+    <path d="M48 10.4C52 13.1 54.7 18.2 56.3 24.4C57.5 29 59.5 33.7 61.6 36.8C56.8 37.3 52.5 40.2 48.2 46C50 35.7 50.8 27.5 50 19.8C49.6 15.6 48.8 12.1 48 10.4Z" fill="#020911"/>
+    <path d="M48 11.9C44.8 14.2 42.3 18.2 40.5 23.3C42.8 21.1 45.3 19.5 48 18.5C50.7 19.5 53.2 21.1 55.5 23.3C53.7 18.2 51.2 14.2 48 11.9Z" fill="#0e2939"/>
+    <path d="M48 13.8C45.5 15.4 43.7 17.8 42.3 20.7C44.2 19.5 46 18.8 48 18.4C50 18.8 51.8 19.5 53.7 20.7C52.3 17.8 50.5 15.4 48 13.8Z" fill="#071821"/>
+    <path d="M40.2 24.4C42.5 18.9 45.2 15.2 48 13C50.8 15.2 53.5 18.9 55.8 24.4" fill="none" stroke="#a9eaf3" stroke-opacity=".22" stroke-width=".48" stroke-linecap="round"/>
+  </g>
+
+  <path data-brand-face-void="" d="M48 17.4C42.3 18.2 38.1 21.7 35.5 27L32.9 32.4C35.2 36.8 40.2 40.7 48 42.4C55.8 40.7 60.8 36.8 63.1 32.4L60.5 27C57.9 21.7 53.7 18.2 48 17.4Z" fill="#000"/>
+  <g data-brand-face-depth=""><path d="M35.5 27C38 22.3 41.9 18.8 46.1 17.7C42.7 22 40.8 26.1 40.8 30.2C40.8 34.4 43.3 38.4 47.6 42.2C41.7 40.5 37.2 37.4 33.2 32.2Z" fill="#010509"/><path d="M60.5 27C58 22.3 54.1 18.8 49.9 17.7C53.3 22 55.2 26.1 55.2 30.2C55.2 34.4 52.7 38.4 48.4 42.2C54.3 40.5 58.8 37.4 62.8 32.2Z" fill="#000204"/></g>
+
+  <g data-brand-texture="" fill="none" stroke-linecap="round">
+    <path d="M8.5 88C16 70.2 28 56 45.2 49.7" stroke="#93dce8" stroke-opacity=".16" stroke-width=".48"/>
+    <path d="M16 95C23.4 75.8 33 60.6 46.2 51.2" stroke="#76c8d7" stroke-opacity=".12" stroke-width=".42"/>
+    <path d="M28 96C33.2 77.4 39.4 62.4 47.1 52.5" stroke="#5ca7b7" stroke-opacity=".095" stroke-width=".37"/>
+    <path d="M87.5 88C80 70.2 68 56 50.8 49.7" stroke="#3b8192" stroke-opacity=".07" stroke-width=".42"/>
+    <path d="M80 95C72.6 75.8 63 60.6 49.8 51.2" stroke="#245e70" stroke-opacity=".05" stroke-width=".36"/>
+    <path d="M68 96C62.8 77.4 56.6 62.4 48.9 52.5" stroke="#194b5b" stroke-opacity=".04" stroke-width=".32"/>
+    <path d="M32.8 31.5C35.4 21.2 40 13.3 47 9.9" stroke="#f4ffff" stroke-opacity=".35" stroke-width=".55"/>
+    <path d="M63.2 31.5C60.6 21.2 56 13.3 49 9.9" stroke="#73d3e2" stroke-opacity=".13" stroke-width=".4"/>
+  </g>
+
+  <g data-brand-rim-light="" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#__GLOW__)">
+    <path d="M31.4 38.6C33.7 35 35.7 30.4 36.9 25.2C38.4 18.7 41.4 12.7 46 10.5" stroke="#f6ffff" stroke-opacity=".86" stroke-width=".57"/>
+    <path d="M47 10C47.4 9.9 47.7 9.8 48 9.7" stroke="#fff" stroke-opacity=".94" stroke-width=".61"/>
+    <path d="M48 9.7C53.6 11.6 57.1 18 58.9 25.3C59.9 29.8 61.5 34 63.8 38" stroke="#b7f7ff" stroke-opacity=".72" stroke-width=".53"/>
+    <path d="M31.2 38.8C29.4 41 27.9 42.4 26.4 43.4C21.2 47.1 17.8 52.2 15 59.1" stroke="#d9fdff" stroke-opacity=".55" stroke-width=".49"/>
+    <path d="M14.2 61.2L11.2 69.7" stroke="#a9f2ff" stroke-opacity=".32" stroke-width=".4"/>
+    <path d="M64.2 38.8C66.1 41 67.7 42.4 69.2 43.4C74.4 47.1 77.8 52.2 80.6 59.1" stroke="#8beaff" stroke-opacity=".45" stroke-width=".47"/>
+    <path d="M81.4 61.2L84.4 69.7" stroke="#61ddff" stroke-opacity=".26" stroke-width=".38"/>
+  </g>
+
+  <g data-brand-seams="" fill="none" stroke-linecap="round">
+    <path d="M17 61C26.8 53.1 36.2 49.4 46.1 51.7" stroke="#b5edf4" stroke-opacity=".095" stroke-width=".38"/>
+    <path d="M79 61C69.2 53.1 59.8 49.4 49.9 51.7" stroke="#3e8293" stroke-opacity=".045" stroke-width=".33"/>
+    <path d="M10.5 78C22.2 64.7 34.1 56.5 46.6 53.3" stroke="#8bd2df" stroke-opacity=".07" stroke-width=".35"/>
+    <path d="M85.5 78C73.8 64.7 61.9 56.5 49.4 53.3" stroke="#2c6474" stroke-opacity=".035" stroke-width=".3"/>
+  </g>
+</g>`;
+
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
   const reducedMotion = useReducedMotion();
-  const id = useId().replace(/:/g, '');
   const compact = size === 'sm';
-  const ids = {
-    title: `${id}-brand-title`, description: `${id}-brand-description`, mantle: `${id}-mantle`,
-    hood: `${id}-hood`, hoodLeft: `${id}-hood-left`, mist: `${id}-mist`, glow: `${id}-glow`,
-  };
-  const renderPath = (path: VectorPath, index: number, compactStroke = false) => (
-    <path key={`${index}-${path.d}`} d={path.d} fill={path.fill ?? 'none'} fillOpacity={path.fillOpacity}
-      stroke={path.stroke} strokeOpacity={path.strokeOpacity}
-      strokeWidth={path.strokeWidth === undefined ? undefined : compactStroke && compact ? path.strokeWidth * 0.84 : path.strokeWidth}
-      strokeLinecap={path.strokeLinecap}/>
-  );
+  const id = useId().replace(/:/g, '');
+  const markup = useMemo(() => VECTOR_BODY
+    .split('__CLOAK__').join(`${id}-cloak`)
+    .split('__HOOD__').join(`${id}-hood`)
+    .split('__FOLD_LEFT__').join(`${id}-fold-left`)
+    .split('__FOLD_RIGHT__').join(`${id}-fold-right`)
+    .split('__GLOW__').join(`${id}-glow`), [id]);
   return (
-    <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector"
-      data-brand-vector-source={VECTOR_SOURCE}
-      className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
-      initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
+    <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector" data-brand-vector-source={VECTOR_SOURCE}
+      className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)} initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
       <motion.svg data-brand-vector className="h-full w-full overflow-visible" viewBox="0 0 96 96" role="img"
-        aria-labelledby={`${ids.title} ${ids.description}`} focusable="false" style={{ pointerEvents: 'none' }}
-        variants={{
-          idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 5px rgba(0,4,13,.78)) drop-shadow(0 0 5px rgba(46,216,255,.14))' : 'drop-shadow(0 5px 11px rgba(0,4,13,.8)) drop-shadow(0 0 8px rgba(46,216,255,.15))' },
-          hover: { y: compact ? -0.5 : -0.8, scale: compact ? 1.018 : 1.025, filter: compact ? 'drop-shadow(0 5px 9px rgba(0,7,18,.84)) drop-shadow(0 0 8px rgba(65,220,255,.25))' : 'drop-shadow(0 8px 17px rgba(0,7,18,.86)) drop-shadow(0 0 14px rgba(65,220,255,.26))', transition: { duration: 0.78, ease: premiumEase } },
-        }}>
-        <title id={ids.title}>THE LEGENDARY POET</title>
-        <desc id={ids.description}>Безликая фигура в асимметричном капюшоне, с суженным глубоким проёмом, разорванным воротом и тяжёлой почти чёрной мантией</desc>
-        <defs>
-          <linearGradient id={ids.mantle} x1="2" y1="42" x2="92" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#12364b"/><stop offset=".18" stopColor="#081f2e"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
-          <linearGradient id={ids.hood} x1="28" y1="9" x2="69" y2="54" gradientUnits="userSpaceOnUse"><stop stopColor="#1b455a"/><stop offset=".28" stopColor="#0d2c3d"/><stop offset=".62" stopColor="#04131e"/><stop offset="1" stopColor="#010307"/></linearGradient>
-          <linearGradient id={ids.hoodLeft} x1="28" y1="11" x2="49" y2="53" gradientUnits="userSpaceOnUse"><stop stopColor="#173f55"/><stop offset=".52" stopColor="#082737"/><stop offset="1" stopColor="#021018"/></linearGradient>
-          <filter id={ids.mist} x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation={compact ? 3.4 : 4.1}/></filter>
-          <filter id={ids.glow} x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation={compact ? 0.52 : 0.62} result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-        <motion.g data-brand-atmosphere aria-hidden="true" filter={`url(#${ids.mist})`}
-          variants={{ idle: { opacity: compact ? 0.64 : 0.78, scale: 0.985 }, hover: { opacity: compact ? 0.88 : 1, scale: 1.035, transition: { duration: 0.9, ease: premiumEase } } }} style={{ transformOrigin: '48px 48px' }}>
-          {atmospherePaths.map((path, index) => renderPath(path, index, true))}
-        </motion.g>
-        <motion.g data-brand-energy aria-hidden="true" variants={{ idle: { opacity: compact ? 0.42 : 0.66 }, hover: { opacity: 1, transition: { duration: 0.78, ease: premiumEase } } }}>
-          {energyPaths.map((path, index) => renderPath(path, index, true))}
-        </motion.g>
-        <motion.g data-brand-figure variants={{ idle: { y: 0 }, hover: { y: compact ? -0.08 : -0.22, transition: { duration: 0.74, ease: premiumEase } } }}>
-          <path data-brand-cloak d={cloakPath} fill={`url(#${ids.mantle})`} stroke="#17394c" strokeOpacity=".54" strokeWidth={compact ? 0.56 : 0.62}/>
-          <motion.g data-brand-folds variants={{ idle: { opacity: compact ? 0.96 : 1 }, hover: { opacity: 1, transition: { duration: 0.76, ease: premiumEase } } }}>
-            {foldPaths.map((path, index) => renderPath(path, index))}
-          </motion.g>
-          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.7 : 0.95 }, hover: { opacity: compact ? 0.86 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
-            {collarPaths.map((path, index) => renderPath(path, index, true))}
-          </motion.g>
-          <motion.path data-brand-hood d={hoodPath} fill={`url(#${ids.hood})`} stroke="#28546a" strokeOpacity=".72" strokeWidth={compact ? 0.66 : 0.74} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.04 : -0.12 } }}/>
-          <path d={hoodLeftPath} fill={`url(#${ids.hoodLeft})`} fillOpacity=".86"/>
-          <path d={hoodRightPath} fill="#020a10"/>
-          <g data-brand-hood-layers>{hoodLayerPaths.map((path, index) => renderPath(path, index, true))}</g>
-          <path data-brand-face-void d={facePath} fill="#000"/>
-          <g data-brand-face-depth aria-hidden="true">{faceDepthPaths.map((path, index) => renderPath(path, index))}</g>
-          <g data-brand-texture aria-hidden="true">{texturePaths.slice(0, compact ? 6 : texturePaths.length).map((path, index) => renderPath(path, index, true))}</g>
-          <motion.g data-brand-rim-light aria-hidden="true" filter={`url(#${ids.glow})`} variants={{ idle: { opacity: compact ? 0.8 : 0.88 }, hover: { opacity: 1, transition: { duration: 0.74, ease: premiumEase } } }}>
-            {rimPaths.map((path, index) => <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.84 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index < 4 ? { idle: { pathLength: index === 2 ? 0.82 : 0.68 }, hover: { pathLength: 1 } } : undefined}/>) }
-          </motion.g>
-          <motion.g data-brand-seams aria-hidden="true" variants={{ idle: { opacity: compact ? 0.5 : 0.72 }, hover: { opacity: compact ? 0.7 : 0.94, transition: { duration: 0.78, ease: premiumEase } } }}>
-            {seamPaths.slice(0, compact ? 7 : seamPaths.length).map((path, index) => <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.82 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index >= 2 ? { idle: { pathLength: 0.62 }, hover: { pathLength: 1 } } : undefined}/>) }
-          </motion.g>
-        </motion.g>
+        aria-labelledby={`${id}-brand-title ${id}-brand-description`} focusable="false" style={{ pointerEvents: 'none' }}
+        variants={{ idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 6px rgba(0,4,13,.82)) drop-shadow(0 0 6px rgba(46,216,255,.17))' : 'drop-shadow(0 5px 12px rgba(0,4,13,.84)) drop-shadow(0 0 10px rgba(46,216,255,.18))' }, hover: { y: compact ? -0.5 : -0.8, scale: compact ? 1.018 : 1.025, filter: compact ? 'drop-shadow(0 5px 10px rgba(0,7,18,.86)) drop-shadow(0 0 10px rgba(65,220,255,.27))' : 'drop-shadow(0 8px 18px rgba(0,7,18,.88)) drop-shadow(0 0 16px rgba(65,220,255,.28))', transition: { duration: 0.78, ease: premiumEase } } }}>
+        <title id={`${id}-brand-title`}>THE LEGENDARY POET</title>
+        <desc id={`${id}-brand-description`}>Безликая фигура в высоком многослойном капюшоне, с широкой чёрной пустотой, тяжёлым собранным воротом и чистым тёмным низом</desc>
+        <g dangerouslySetInnerHTML={{ __html: markup }} />
       </motion.svg>
     </motion.span>
   );

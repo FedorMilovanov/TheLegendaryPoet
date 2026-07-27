@@ -1,0 +1,152 @@
+name: Brand visual progress
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - qa/brand-reference-evaluation.json
+      - src/components/BrandMark.tsx
+      - public/brand-emblem.svg
+      - public/brand-mark-micro.svg
+      - public/brand-emblem-mask.svg
+      - .github/workflows/brand-progress.yml
+
+permissions:
+  contents: read
+  checks: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  publish:
+    if: ${{ startsWith(github.head_ref, 'fix/brand-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish visible progress state
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('node:fs');
+            const evaluation = JSON.parse(
+              fs.readFileSync('qa/brand-reference-evaluation.json', 'utf8'),
+            );
+
+            const accepted = evaluation.reviewerDecision === 'reference-accepted';
+            const percent = Math.round(evaluation.overallScore * 100);
+
+            let marker = '⚪';
+            let label = 'EARLY DRAFT';
+            if (accepted) {
+              marker = '🟢';
+              label = 'REFERENCE ACCEPTED';
+            } else if (percent >= 82) {
+              marker = '🟡';
+              label = 'AWAITING APPROVAL';
+            } else if (percent >= 70) {
+              marker = '🟠';
+              label = 'ADVANCED CANDIDATE';
+            } else if (percent >= 50) {
+              marker = '🔵';
+              label = 'IN PROGRESS';
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const head_sha = context.payload.pull_request.head.sha;
+            const progressTitle = `${marker} ${percent}% — ${label}`;
+            const deviations = evaluation.blockingDeviations.length
+              ? evaluation.blockingDeviations.map((item) => `- ${item}`).join('\n')
+              : '- none';
+
+            await github.rest.checks.create({
+              owner,
+              repo,
+              name: 'Brand visual approval',
+              head_sha,
+              status: 'completed',
+              conclusion: accepted ? 'success' : 'neutral',
+              output: {
+                title: progressTitle,
+                summary: [
+                  `**Revision:** ${evaluation.candidateRevision}`,
+                  `**Decision:** ${evaluation.reviewerDecision}`,
+                  `**Next action:** ${evaluation.nextRequiredAction}`,
+                  '',
+                  '### Current visual deviations',
+                  deviations,
+                  '',
+                  accepted
+                    ? 'The final visual candidate is accepted.'
+                    : 'Technical CI may be green, but visual approval is still pending.',
+                ].join('\n'),
+              },
+            });
+
+            const { data: pull } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issue_number,
+            });
+            const baseTitle = pull.title.replace(
+              /^(?:⚪|🔵|🟠|🟡|🟢)\s+\d+%\s+·\s+.*?\s+—\s+/u,
+              '',
+            );
+            const nextTitle = `${marker} ${percent}% · ${label} — ${baseTitle}`;
+            if (pull.title !== nextTitle) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: issue_number,
+                title: nextTitle,
+              });
+            }
+
+            const signature = '<!-- brand-progress-status -->';
+            const commentBody = [
+              signature,
+              `## ${progressTitle}`,
+              '',
+              `- **Revision:** \`${evaluation.candidateRevision}\``,
+              `- **Decision:** \`${evaluation.reviewerDecision}\``,
+              `- **Next action:** ${evaluation.nextRequiredAction}`,
+              '',
+              '<details><summary>Current visual deviations</summary>',
+              '',
+              deviations,
+              '',
+              '</details>',
+              '',
+              accepted
+                ? '> 🟢 Final visual approval recorded.'
+                : '> This is a neutral work-in-progress state, not a failure. Green is reserved for the accepted final candidate.',
+            ].join('\n');
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 },
+            );
+            const existing = comments.find((comment) =>
+              comment.body?.startsWith(signature),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: commentBody,
+              });
+            }
+
+            core.notice(`${progressTitle}; visual check is ${accepted ? 'green' : 'neutral'}.`);

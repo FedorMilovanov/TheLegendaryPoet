@@ -1,45 +1,35 @@
 {
-  "referenceId": "canonical-hooded-figure-v1",
-  "purpose": "Macro targets are stop-gates, not permission to ignore visual comparison.",
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "purpose": "Every emblem marathon is judged against the approved clean-base reference before CI or implementation stability can be discussed.",
   "targets": {
-    "hoodHeightToVisibleFigureHeight": {
-      "target": 0.33,
-      "allowed": [0.28, 0.38]
-    },
-    "hoodWidthToCloakWidth": {
-      "target": 0.31,
-      "allowed": [0.25, 0.37]
-    },
-    "faceCavernWidthToHoodWidth": {
-      "target": 0.72,
-      "allowed": [0.62, 0.82]
-    },
-    "cloakWidthToHoodWidth": {
-      "minimum": 2.7
-    },
-    "coreSymmetryError": {
-      "maximum": 0.1,
-      "note": "Asymmetry belongs to folds, smoke and energy; not the primary body architecture."
-    }
+    "hoodHeightToVisibleFigureHeight": { "target": 0.31, "allowed": [0.27, 0.36] },
+    "hoodWidthToCloakWidth": { "target": 0.37, "allowed": [0.32, 0.43] },
+    "faceCavernWidthToHoodWidth": { "target": 0.78, "allowed": [0.68, 0.86] },
+    "cloakWidthToHoodWidth": { "minimum": 2.3 },
+    "coreSymmetryError": { "maximum": 0.08, "note": "The architecture is nearly symmetric; irregularity belongs to cloth highlights and electrical aura." }
   },
   "requiredStructures": [
-    "broad pentagonal black face cavern",
-    "diagonal angular cloak silhouette",
-    "broad central collar overlap",
+    "high layered pointed hood",
+    "broad deep black face cavern with a rounded pentagonal base",
+    "heavy gathered cowl below the face rather than a crossed necktie",
+    "wide triangular cloak silhouette that fades into a clean dark base",
     "left diagonal fold family",
     "right diagonal fold family",
     "central vertical fold family",
-    "continuous icy rim on both sides",
-    "broad spectral aura"
+    "bright icy rim around hood and upper side edges",
+    "electrical spectral aura concentrated behind the hood, shoulders and side edges",
+    "clean lower edge with no required smoke beneath the cloak"
   ],
   "forbiddenDrift": [
     "narrow vertical face droplet",
-    "oversized hood on a compact bust",
-    "rounded dome or poncho silhouette",
-    "artificially split collar with empty centre",
-    "thin central necktie",
-    "arbitrary structural asymmetry",
+    "small hood on a huge rounded bust",
+    "rounded poncho or bell silhouette",
+    "clean crossed X collar or thin central necktie",
+    "regular fan of identical vector wedges",
+    "flat neon outline used instead of fabric volume",
+    "large smoke pool or glowing mist under the cloak hem",
+    "bottom aura added merely to imitate the superseded v1 reference",
     "decorative micro-detail used to avoid macro redesign",
-    "extra glow used to conceal incorrect geometry"
+    "green CI presented as proof of visual similarity"
   ]
 }
