@@ -13,13 +13,13 @@ interface PoetCardProps {
 const PoetCard = ({ poet }: PoetCardProps) => {
   return (
     <Link to={`/poets/${poet.id}`} className="group block h-full">
-      <TiltCard intensity={8}>
+      <TiltCard intensity={6}>
         <div className="overflow-hidden h-full flex flex-col border border-cyan-400/15 bg-[#050505]/70 breath-hover relative z-10 rounded-2xl">
           {/* Glowing Background Accent on hover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none" />
 
-          {/* Shine Effect */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1000" />
+          {/* Shine Effect: opacity and movement share one transition, so it never jumps. */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
 
           {/* Image Box */}
           <div className="relative h-72 overflow-hidden bg-[#050505] flex-shrink-0">
@@ -33,7 +33,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
               height={1000}
               sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
               style={vtShared(`poet-portrait-${poet.id}`)}
-              className="w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
+              className="hover-media w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-[1.055] transition-[transform,opacity,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
             />
 
             {/* Top Badges */}
@@ -80,7 +80,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
                   <Calendar size={14} className="text-cyan-400/50" />
                   <span>{poet.birthYear} — {poet.deathYear || 'н.в.'}</span>
                 </div>
-                <div className="flex items-center gap-1 text-cyan-400 text-sm font-semibold group-hover:text-cyan-300 transition-colors">
+                <div className="flex items-center gap-1 text-cyan-400 text-sm font-semibold group-hover:text-cyan-300 transition-colors duration-300">
                   <span>Подробнее</span>
                   <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform duration-300" />
                 </div>
