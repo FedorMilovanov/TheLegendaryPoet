@@ -56,31 +56,34 @@ const foldPaths: readonly VectorPath[] = [
   { d: 'M89 91C79 73 67 59.5 52.5 52.5C63 65 72 78.5 78 96Z', fill: '#04131d', fillOpacity: 0.1 },
   { d: 'M18 95C26 76 36 61.5 46 53C39 68 34 82 32 96Z', fill: '#082434', fillOpacity: 0.14 },
   { d: 'M78 95C70 76 60 61.5 50 53C57 68 62 82 64 96Z', fill: '#020b12', fillOpacity: 0.1 },
-  { d: 'M4 82C15 65 27 55 42.5 50.5C29.8 61.8 20.8 77 16.2 96Z', fill: '#0b2b3d', fillOpacity: 0.13 },
-  { d: 'M92 82C81 65 69 55 53.5 50.5C66.2 61.8 75.2 77 79.8 96Z', fill: '#031019', fillOpacity: 0.08 },
-  { d: 'M27 96C31 78 38 64 46.1 56.5C40.4 70 37.1 83.2 36.5 96Z', fill: '#092535', fillOpacity: 0.1 },
-  { d: 'M69 96C65 78 58 64 49.9 56.5C55.6 70 58.9 83.2 59.5 96Z', fill: '#020a10', fillOpacity: 0.08 },
+  { d: 'M2.5 88C13.5 68.5 27 55.5 43.5 50.8C31 63.8 22.5 79.5 18.8 96Z', fill: '#0d3448', fillOpacity: 0.18 },
+  { d: 'M93.5 84C82.5 67 70.5 56.2 53.2 51.2C67 63.7 75.3 78.2 78.7 96Z', fill: '#020b12', fillOpacity: 0.075 },
+  { d: 'M24 96C27.8 77.3 36 62.2 46 56.2C39.3 69.3 35.8 83.5 35.4 96Z', fill: '#0a2a3a', fillOpacity: 0.14 },
+  { d: 'M71 96C67.8 79.5 60.8 66.8 49.4 57.2C56.8 71 59.8 84.5 59.2 96Z', fill: '#01080e', fillOpacity: 0.07 },
 ];
 
 const collarPaths: readonly VectorPath[] = [
-  { d: 'M17.8 48C27.8 43.9 36.8 44.7 46.7 50.6C40.1 52.2 34.1 54.6 28.2 57.4C24.5 54.5 21.2 51.5 17.8 48Z', fill: '#0c3043', fillOpacity: 0.82 },
-  { d: 'M78.2 48.5C69.6 44.6 60.6 44.8 49.3 50.8C55.6 52.9 61.4 55.2 67.6 57.4C71.9 54.9 75.5 52 78.2 48.5Z', fill: '#04141f', fillOpacity: 0.86 },
-  { d: 'M21 53.2C30 50.8 38.7 52.8 47.5 58.2C41.6 59.7 36.1 62.6 30.9 66.2C27.1 62.2 23.8 57.8 21 53.2Z', fill: '#082536', fillOpacity: 0.92 },
-  { d: 'M75 54C66.4 51.2 57.8 52.7 48.6 58C54.6 60.1 60 62.8 65.1 65.7C69.3 62.2 72.6 58.2 75 54Z', fill: '#020b12', fillOpacity: 0.94 },
-  { d: 'M30.5 61C36.3 57.9 42 58.4 47.9 62.5C43 64 38.7 66.4 35 69.4Z', fill: '#051a27', fillOpacity: 0.92 },
-  { d: 'M65 60.7C59.5 58.2 54 58.8 48.4 62.3C53.3 63.9 57.5 66 61.2 68.6Z', fill: '#01070c', fillOpacity: 0.96 },
-  { d: 'M18.5 49C28 46.5 38.5 50 47 57.8', stroke: '#17485f', strokeOpacity: 0.62, strokeWidth: 2.2, strokeLinecap: 'round' },
-  { d: 'M77.2 49.5C68 47.2 58.5 50.5 49 57.8', stroke: '#092637', strokeOpacity: 0.78, strokeWidth: 2, strokeLinecap: 'round' },
-  { d: 'M28.5 56C35.1 54.3 41 56 47.3 60.2', stroke: '#4a9daf', strokeOpacity: 0.12, strokeWidth: 0.42, strokeLinecap: 'round' },
-  { d: 'M67.8 56.5C61.4 54.7 55.5 56.2 48.7 60.1', stroke: '#1e6072', strokeOpacity: 0.055, strokeWidth: 0.36, strokeLinecap: 'round' },
+  { d: 'M15.8 48.2C26.4 43.8 36.3 45 46.2 51.2C39.8 53.1 33.1 56 27.1 60.1C22.8 57 19.2 52.8 15.8 48.2Z', fill: '#0d3448', fillOpacity: 0.88 },
+  { d: 'M80.2 49C70.9 44.9 60.8 45.5 49.7 51.3C56.3 53.2 62 55.1 67.1 57.3C72.8 55.7 77.1 52.7 80.2 49Z', fill: '#031019', fillOpacity: 0.9 },
+  { d: 'M19.8 54C29.1 50.7 38.2 53.1 46.9 59.4C40.6 61.3 35 64.8 29.6 69.5C25.4 65.2 22 59.7 19.8 54Z', fill: '#092a3c', fillOpacity: 0.96 },
+  { d: 'M73.8 54.3C65.5 51.5 57.3 53 49.1 58.2C54.5 60 59.4 62.2 63.9 64.8C68.5 62.3 71.7 58.6 73.8 54.3Z', fill: '#01080e', fillOpacity: 0.97 },
+  { d: 'M28.3 61.5C34.4 58.2 40.5 59.2 46.6 63.4C41.8 65.2 37.6 68.3 34 72.1Z', fill: '#061c29', fillOpacity: 0.95 },
+  { d: 'M62.6 59.6C57.4 57.8 52.9 58.8 49 61.8C53.2 63.1 56.8 65 59.8 67.1Z', fill: '#01060a', fillOpacity: 0.98 },
+  { d: 'M16.4 49C27.7 46.1 37.4 50 46.5 59.1', stroke: '#1a5169', strokeOpacity: 0.68, strokeWidth: 2.35, strokeLinecap: 'round' },
+  { d: 'M79.3 49.7C69.2 46.9 59.9 50.4 49.3 58', stroke: '#082432', strokeOpacity: 0.8, strokeWidth: 1.8, strokeLinecap: 'round' },
+  { d: 'M25.4 56.2C33.1 53.9 40 56 46.7 61.3', stroke: '#5aa9ba', strokeOpacity: 0.14, strokeWidth: 0.46, strokeLinecap: 'round' },
+  { d: 'M67 56C60.6 54.9 55.2 56.2 49.8 59.8', stroke: '#154657', strokeOpacity: 0.05, strokeWidth: 0.32, strokeLinecap: 'round' },
+  { d: 'M21.2 52.6C29.4 54.8 36.7 58.5 42.3 64.4', stroke: '#16465a', strokeOpacity: 0.16, strokeWidth: 0.5, strokeLinecap: 'round' },
+  { d: 'M70.4 52.9C63.7 54.2 58.5 56.7 54.2 60.2', stroke: '#0b2c3c', strokeOpacity: 0.06, strokeWidth: 0.38, strokeLinecap: 'round' },
 ];
 
 const hoodLayerPaths: readonly VectorPath[] = [
   { d: 'M47.5 12.6C42.4 16.5 38.7 23.1 36.1 31.2C39.7 28.4 43.4 26 47.6 23.9', stroke: '#17475d', strokeOpacity: 0.62, strokeWidth: 1.2, strokeLinecap: 'round' },
   { d: 'M48.6 15.5C52.6 18.9 55.7 24.1 58 30.5C54.9 28.2 52.1 26.4 48.4 25', stroke: '#0b2b3b', strokeOpacity: 0.5, strokeWidth: 1.05, strokeLinecap: 'round' },
   { d: 'M47.2 18.6C43.7 21.2 41.2 24.9 39.3 29.4', stroke: '#24576b', strokeOpacity: 0.4, strokeWidth: 0.78, strokeLinecap: 'round' },
-  { d: 'M48 10.8C47.7 14.8 47.8 19 48.3 23.6', stroke: '#8ee5f2', strokeOpacity: 0.12, strokeWidth: 0.48, strokeLinecap: 'round' },
-  { d: 'M50.2 18C53.1 20.6 55.1 24 56.4 27.9', stroke: '#1d576a', strokeOpacity: 0.2, strokeWidth: 0.58, strokeLinecap: 'round' },
+  { d: 'M48.2 10.8C47.8 14.6 48.1 18.7 47.4 23.4', stroke: '#8ee5f2', strokeOpacity: 0.12, strokeWidth: 0.48, strokeLinecap: 'round' },
+  { d: 'M50.6 18.4C53.2 20.8 55 23.8 56.1 27.2', stroke: '#1d576a', strokeOpacity: 0.2, strokeWidth: 0.58, strokeLinecap: 'round' },
+  { d: 'M43.4 17.2C41.2 19.4 39.6 22.3 38.6 25.5', stroke: '#2d6377', strokeOpacity: 0.22, strokeWidth: 0.52, strokeLinecap: 'round' },
 ];
 
 const texturePaths: readonly VectorPath[] = [
@@ -116,6 +119,8 @@ const seamPaths: readonly VectorPath[] = [
   { d: 'M38 95C40.5 77 44.2 62 47.4 54.8', stroke: '#4d98aa', strokeOpacity: 0.08, strokeWidth: 0.28, strokeLinecap: 'round' },
   { d: 'M58 95C55.5 77 51.8 62 48.6 54.8', stroke: '#1e6071', strokeOpacity: 0.03, strokeWidth: 0.25, strokeLinecap: 'round' },
   { d: 'M17.5 50.5C27.5 48.1 37.1 51.4 45.2 57', stroke: '#78cad9', strokeOpacity: 0.075, strokeWidth: 0.32, strokeLinecap: 'round' },
+  { d: 'M12.8 62C24.5 54.7 35.3 54.5 44.6 61.2', stroke: '#5ab0c2', strokeOpacity: 0.055, strokeWidth: 0.34, strokeLinecap: 'round' },
+  { d: 'M81.5 61C70.8 54.2 61 54.8 51.6 60.2', stroke: '#174f60', strokeOpacity: 0.018, strokeWidth: 0.28, strokeLinecap: 'round' },
 ];
 
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
@@ -183,7 +188,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         }}
       >
         <title id={ids.title}>THE LEGENDARY POET</title>
-        <desc id={ids.description}>Безликая фигура в округлом асимметричном тканевом капюшоне, диагональном многослойном вороте и тяжёлой почти чёрной мантии</desc>
+        <desc id={ids.description}>Безликая фигура в округлом асимметричном капюшоне, с тяжёлой левой драпировкой, утопленным правым плечом и почти чёрной мантией</desc>
         <defs>
           <linearGradient id={ids.mantle} x1="2" y1="42" x2="92" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#12364b"/><stop offset=".18" stopColor="#081f2e"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
           <linearGradient id={ids.hood} x1="28" y1="9" x2="69" y2="54" gradientUnits="userSpaceOnUse"><stop stopColor="#1b455a"/><stop offset=".28" stopColor="#0d2c3d"/><stop offset=".62" stopColor="#04131e"/><stop offset="1" stopColor="#010307"/></linearGradient>
@@ -207,7 +212,7 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
             {foldPaths.map((path, index) => renderPath(path, index))}
           </motion.g>
 
-          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.68 : 0.9 }, hover: { opacity: compact ? 0.84 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.7 : 0.94 }, hover: { opacity: compact ? 0.86 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
             {collarPaths.map((path, index) => renderPath(path, index, true))}
           </motion.g>
 
