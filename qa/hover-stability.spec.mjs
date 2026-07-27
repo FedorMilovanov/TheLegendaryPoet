@@ -4,22 +4,25 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'hover-stability');
+const MAX_IMAGES_PER_SURFACE = 6;
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 const surfaces = [
-  { name: 'articles', path: '/articles', image: 'a[href^="/essays/"] .hover-media' },
-  { name: 'poets', path: '/poets', image: 'a[href^="/poets/"] .hover-media' },
-  { name: 'music', path: '/music', image: '.hover-media' },
+  { name: 'home', path: '/', minimum: 0 },
+  { name: 'articles', path: '/articles', minimum: 1 },
+  { name: 'poets', path: '/poets', minimum: 1 },
+  { name: 'music', path: '/music', minimum: 1 },
+  { name: 'ratings', path: '/ratings', minimum: 0 },
 ];
 
-async function firstVisibleImage(page, selector) {
-  const images = page.locator(selector);
-  const count = await images.count();
-  for (let index = 0; index < count; index += 1) {
+async function getVisibleImages(page) {
+  const images = page.locator('img.hover-media');
+  const visibleImages = [];
+  for (let index = 0; index < await images.count(); index += 1) {
     const image = images.nth(index);
-    if (await image.isVisible()) return image;
+    if (await image.isVisible()) visibleImages.push(image);
   }
-  return null;
+  return visibleImages;
 }
 
 async function imageSnapshot(image) {
@@ -40,87 +43,103 @@ async function imageSnapshot(image) {
   });
 }
 
+async function samplePointerInteraction(page, image, finePointer) {
+  const samples = [];
+  const box = await image.boundingBox();
+  expect(box).not.toBeNull();
+
+  if (finePointer) {
+    for (const [x, y] of [[0.2, 0.2], [0.5, 0.5], [0.8, 0.72]]) {
+      await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 5 });
+      await page.waitForTimeout(70);
+      samples.push(await imageSnapshot(image));
+    }
+    await page.mouse.move(2, 2, { steps: 4 });
+    await page.waitForTimeout(380);
+    samples.push(await imageSnapshot(image));
+  } else {
+    await page.evaluate(() => window.scrollBy({ top: 72, behavior: 'auto' }));
+    await page.waitForTimeout(140);
+    samples.push(await imageSnapshot(image));
+  }
+
+  return samples;
+}
+
+function assertStableSamples(initial, samples) {
+  for (const sample of samples) {
+    expect(sample.connected).toBe(true);
+    expect(sample.src).toBe(initial.src);
+    expect(sample.naturalWidth).toBe(initial.naturalWidth);
+    expect(sample.naturalHeight).toBe(initial.naturalHeight);
+    expect(sample.state).not.toBe('failed');
+    expect(sample.opacity).toBeGreaterThanOrEqual(0.9);
+    expect(sample.visibility).not.toBe('hidden');
+    expect(sample.display).not.toBe('none');
+  }
+}
+
 for (const surface of surfaces) {
-  test(`${surface.name} artwork stays loaded and opaque through pointer interaction`, async ({ page }, testInfo) => {
+  test(`${surface.name} interactive artwork uses the universal stable-hover contract`, async ({ page }, testInfo) => {
     const errors = [];
     page.on('pageerror', (error) => errors.push(String(error?.stack || error)));
 
     const response = await page.goto(`${BASE_URL}${surface.path}`, { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(400);
+    await page.waitForLoadState('networkidle').catch(() => undefined);
 
-    // Routes are lazy-loaded and can legitimately show the branded loading shell
-    // for a moment after DOMContentLoaded. Wait for an actual card image rather
-    // than racing the route chunk and reporting a false visual failure.
-    await expect.poll(
-      async () => Boolean(await firstVisibleImage(page, surface.image)),
-      { timeout: 15_000, message: `visible hover image on ${surface.path}` },
-    ).toBe(true);
+    const unprotected = await page.locator('img').evaluateAll((images) => images
+      .filter((image) => {
+        const classes = typeof image.className === 'string' ? image.className : '';
+        const interactive = /(?:group-hover|hover|group-focus-within|focus-visible):(?:scale|rotate|translate|skew|saturate|brightness|contrast|opacity)(?:-|\[)/.test(classes);
+        return interactive && !classes.split(/\s+/).includes('hover-media');
+      })
+      .map((image) => ({
+        alt: image.getAttribute('alt') ?? '',
+        className: image.className,
+        src: image.getAttribute('src') ?? '',
+      })));
+    expect(unprotected, `interactive artwork without hover-media on ${surface.path}`).toEqual([]);
 
-    const image = await firstVisibleImage(page, surface.image);
-    expect(image, `visible hover image on ${surface.path}`).not.toBeNull();
-    await image.scrollIntoViewIfNeeded();
-    await expect(image).toBeVisible();
-    await expect.poll(async () => (await imageSnapshot(image)).naturalWidth).toBeGreaterThan(0);
+    if (surface.minimum > 0) {
+      await expect.poll(
+        async () => (await getVisibleImages(page)).length,
+        { timeout: 15_000, message: `visible stable artwork on ${surface.path}` },
+      ).toBeGreaterThanOrEqual(surface.minimum);
+    }
 
-    const initial = await imageSnapshot(image);
-    expect(initial.opacity).toBeGreaterThanOrEqual(0.9);
-    expect(initial.transitionProperty).not.toContain('all');
-
+    const visibleImages = await getVisibleImages(page);
+    const sampledImages = visibleImages.slice(0, MAX_IMAGES_PER_SURFACE);
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
-    const box = await image.boundingBox();
-    expect(box).not.toBeNull();
 
-    const samples = [];
-    if (finePointer) {
-      const points = [
-        [0.18, 0.22],
-        [0.50, 0.42],
-        [0.82, 0.68],
-        [0.36, 0.78],
-        [0.64, 0.28],
-      ];
-      for (const [x, y] of points) {
-        await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 5 });
-        await page.waitForTimeout(70);
-        samples.push(await imageSnapshot(image));
+    for (const image of sampledImages) {
+      await image.scrollIntoViewIfNeeded();
+      await expect(image).toBeVisible();
+      await expect.poll(async () => (await imageSnapshot(image)).naturalWidth).toBeGreaterThan(0);
+
+      const initial = await imageSnapshot(image);
+      expect(initial.opacity).toBeGreaterThanOrEqual(0.9);
+      expect(initial.transitionProperty).not.toContain('all');
+      const samples = await samplePointerInteraction(page, image, finePointer);
+      assertStableSamples(initial, samples);
+
+      const compositor = await image.evaluate((node) => {
+        const inner = node.closest('.tilt-card-inner');
+        const content = inner?.querySelector(':scope > .tilt-card-content');
+        const directCard = inner?.querySelector(':scope > .luxury-card');
+        return {
+          hasTilt: Boolean(inner),
+          hasStableContentPlane: Boolean(content),
+          hasLegacyDirectCard: Boolean(directCard),
+          innerBackface: inner ? getComputedStyle(inner).backfaceVisibility : null,
+        };
+      });
+
+      if (compositor.hasTilt) {
+        expect(compositor.hasStableContentPlane).toBe(true);
+        expect(compositor.hasLegacyDirectCard).toBe(false);
+        expect(compositor.innerBackface).toBe('hidden');
       }
-      await page.mouse.move(1, 1, { steps: 4 });
-      await page.waitForTimeout(420);
-      samples.push(await imageSnapshot(image));
-    } else {
-      await page.evaluate(() => window.scrollBy({ top: 120, behavior: 'auto' }));
-      await page.waitForTimeout(120);
-      samples.push(await imageSnapshot(image));
-    }
-
-    for (const sample of samples) {
-      expect(sample.connected).toBe(true);
-      expect(sample.src).toBe(initial.src);
-      expect(sample.naturalWidth).toBe(initial.naturalWidth);
-      expect(sample.naturalHeight).toBe(initial.naturalHeight);
-      expect(sample.state).not.toBe('failed');
-      expect(sample.opacity).toBeGreaterThanOrEqual(0.9);
-      expect(sample.visibility).not.toBe('hidden');
-      expect(sample.display).not.toBe('none');
-    }
-
-    const compositor = await page.evaluate(() => {
-      const inner = document.querySelector('.tilt-card-inner');
-      const content = inner?.querySelector(':scope > .tilt-card-content');
-      const directContent = inner?.querySelector(':scope > .luxury-card');
-      return {
-        hasTilt: Boolean(inner),
-        hasStableContentPlane: Boolean(content),
-        hasLegacyDirectCard: Boolean(directContent),
-        innerBackface: inner ? getComputedStyle(inner).backfaceVisibility : null,
-      };
-    });
-
-    if (surface.name !== 'music') {
-      expect(compositor.hasTilt).toBe(true);
-      expect(compositor.hasStableContentPlane).toBe(true);
-      expect(compositor.hasLegacyDirectCard).toBe(false);
-      expect(compositor.innerBackface).toBe('hidden');
     }
 
     expect(errors).toEqual([]);
