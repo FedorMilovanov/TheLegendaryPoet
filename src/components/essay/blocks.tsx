@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
@@ -17,6 +17,7 @@ import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
 import { asset } from '../../utils/asset';
 import { useNativeImageState } from '../../hooks/useNativeImageState';
+import { useDialogSurface } from '../../hooks/useDialogSurface';
 import TiltCard from '../TiltCard';
 
 /**
@@ -118,8 +119,8 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
 function ImageBlock({ block }: { block: Block<'image'> }) {
   const [open, setOpen] = useState(false);
   const [zoomed, setZoomed] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const captionId = useId();
   const layoutId = `essay-image-${useId().replace(/:/g, '')}`;
   const reduceMotion = useReducedMotion();
@@ -136,37 +137,21 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
     ? '(max-width: 768px) 92vw, 576px'
     : '(max-width: 1024px) 92vw, 768px';
 
-  useEffect(() => {
-    if (!open) return;
+  const closeLightbox = useCallback(() => {
+    setZoomed(false);
+    setOpen(false);
+  }, []);
 
-    const previousOverflow = document.body.style.overflow;
-    const focusFrame = requestAnimationFrame(() => closeRef.current?.focus());
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setOpen(false);
-      }
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        closeRef.current?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      cancelAnimationFrame(focusFrame);
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-      setZoomed(false);
-      requestAnimationFrame(() => triggerRef.current?.focus());
-    };
-  }, [open]);
+  useDialogSurface({
+    open,
+    dialogRef,
+    initialFocusRef: closeRef,
+    onClose: closeLightbox,
+    label: 'essay-image-lightbox',
+  });
 
   const image = (
     <motion.button
-      ref={triggerRef}
       type="button"
       onClick={() => setOpen(true)}
       whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
@@ -222,17 +207,19 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={block.alt}
             aria-describedby={captionId}
+            tabIndex={-1}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
             animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
             transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 sm:p-5"
-            onMouseDown={(event) => {
-              if (event.currentTarget === event.target) setOpen(false);
+            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
+            onPointerDown={(event) => {
+              if (event.currentTarget === event.target) closeLightbox();
             }}
           >
             <motion.div
@@ -289,7 +276,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
             <motion.button
               ref={closeRef}
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={closeLightbox}
               whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
               whileTap={reduceMotion ? undefined : { scale: 0.92 }}
               className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
