@@ -8,6 +8,7 @@ import { useAppNavigate } from '../ui/Link'
 import { HallEnvironment } from './HallEnvironment'
 import { PoetNiche } from './PoetNiche'
 import { useHallNavigation } from './useHallNavigation'
+import { useHallAudioListener } from './usePoetWhisper'
 import { FirstPersonControls } from './FirstPersonControls'
 import { POET_ORDER, getNicheTransform, RENDER, PALETTE } from './hallConfig'
 import { EffectComposer, N8AO, Bloom, Vignette } from '@react-three/postprocessing'
@@ -54,6 +55,7 @@ function HallScene({
   onOpenPoet: (id: string) => void
 }) {
   const [focused, setFocused] = useState<string | null>(null)
+  useHallAudioListener()
 
   // Resolve POET_ORDER (short keys = portrait basename) against the real poet
   // records (whose ids are like "alexander-pushkin" and portraits live in `photo`).
