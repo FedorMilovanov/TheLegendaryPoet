@@ -68,13 +68,15 @@ const whisperSource = read('src/components/hall/usePoetWhisper.ts');
 const deferredStopSource = read('src/utils/deferredAudioStop.ts');
 
 expect(hallSource.includes('audioMuted={audioMuted}'), 'HallScene must receive mute state through React props');
+expect(hallSource.includes('useHallAudioListener()'), 'HallScene must mount one shared 3D listener bridge');
 expect(!hallSource.includes('__TLP_AUDIO_MUTED'), 'Hall audio must not depend on a mutable Window flag');
 expect(nicheSource.includes('muted: boolean'), 'each poet niche must declare explicit mute ownership');
 expect(nicheSource.includes('usePoetWhisper(poet.shortKey, hovered, position, muted)'), 'poet niches must pass mute state into the hook');
 expect(whisperSource.includes('createDeferredAudioStop'), 'poet whispers must use source-safe delayed stop ownership');
+expect(whisperSource.includes('export function useHallAudioListener()'), 'the listener bridge must be an explicit Hall-level hook');
+expect((whisperSource.match(/useFrame\(\(\) =>/g) ?? []).length === 1, 'camera listener writes must run through exactly one frame callback implementation');
 expect(whisperSource.includes('latestPositionRef.current = position'), 'poet whispers must track coordinates without array-identity restarts');
 expect(!whisperSource.includes('muted, poetId, position, resumeCurrent'), 'startup must not depend on a recreated position array');
-expect(whisperSource.includes('useFrame(() =>'), 'listener orientation must follow the moving 3D camera every frame');
 expect(!whisperSource.includes("fetch(url, { method: 'HEAD' })"), 'audio candidates must not be double-requested through HEAD plus GET');
 expect(!whisperSource.includes('__TLP_AUDIO_MUTED'), 'the hook must not read global mute state');
 expect(deferredStopSource.includes('source.stop()'), 'deferred cleanup must stop its captured concrete source');
@@ -86,4 +88,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall audio runtime validation passed: mute ownership, source capture, timer cancellation and 3D listener updates are race-safe.');
+console.log('Hall audio runtime validation passed: one listener bridge, explicit mute ownership, source capture and timer cancellation are race-safe.');
