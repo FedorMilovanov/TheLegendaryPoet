@@ -39,7 +39,9 @@ async function loadBuffer(url: string): Promise<AudioBuffer | null> {
     if (!context) return null
 
     try {
-      if (context.state === 'suspended') await context.resume()
+      // Decoding is valid while the context is suspended. Resume belongs to the
+      // actual playback attempt so autoplay rejection never invalidates or
+      // refetches an already decoded asset.
       const response = await fetch(url)
       if (!response.ok) {
         if (response.status === 404 || response.status === 410) unavailableBuffers.add(url)
