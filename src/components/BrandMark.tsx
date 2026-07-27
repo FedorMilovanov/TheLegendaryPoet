@@ -20,13 +20,13 @@ type VectorPath = Readonly<{
 const sizes = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-24 w-24' };
 const premiumEase = [0.16, 1, 0.3, 1] as const;
 const BRAND_VERSION = 'cloak-20260726-8';
-const VECTOR_SOURCE = 'reference-derived-contours-v8-22';
+const VECTOR_SOURCE = 'reference-derived-contours-v8-23';
 
 const cloakPath = 'M48 40.8C37 40.5 27 42.3 18.5 47C11.2 51 6 60 3.2 70C1.2 77.8.8 87 1.5 96H94.5C95.2 87 94.8 77.8 92.8 70C90 60 84.8 51 77.5 47C69 42.3 59 40.5 48 40.8Z';
-const hoodPath = 'M48 11C42 13.5 38 19.5 35 27.5C32.5 34 31.5 39 28.5 44.5C34.5 42.8 40 44 44.2 47C46 48.3 47.2 49.8 48 51.5C49 49.8 50.5 48.2 52.5 46.8C56.7 43.9 62 42.8 67.5 44.5C64.5 39 63.5 34 61 27.5C58 19.5 54 13.5 48 11Z';
-const hoodLeftPath = 'M48 11.5C43.7 16 40.5 21.5 38.2 28.5C36.2 34.7 35 39.2 32.5 43.5C37.2 43.3 41.4 44.8 44.5 47.2C46.2 48.5 47.3 50 48 51.5C45.8 42 44.5 33.7 44.8 26C45 19.5 46.2 14.5 48 11.5Z';
-const hoodRightPath = 'M48.2 11.5C52.5 15 55.8 21 58.2 28.5C60 34 61 39 63.5 43.5C59 43.2 55 44.7 52 47.2C50.5 48.5 49.2 50 48 51.5C50 42 51.3 33.7 51 26C50.8 19.5 49.8 14.5 48.2 11.5Z';
-const facePath = 'M48 23C43.2 26.1 39 31 35.8 36.7C34.1 40 36 43.8 39.1 47.3C42 50.6 45 53.3 48 55.6C51.2 53 54.2 50 57 46.8C60 43.3 61.7 39.8 60.1 36.4C57.1 30.7 52.8 25.8 48 23Z';
+const hoodPath = 'M48 11C42 13.5 38.5 19.5 35.5 27.5C33.2 34 32.5 39 30 43.5C35.5 42.3 40.7 43.6 44.5 46.5C46.2 47.8 47.3 49.2 48 50.8C49 49.2 50.4 47.7 52.3 46.4C56.2 43.5 61.3 42.2 66 43.5C63.5 39 62.8 34 60.5 27.5C57.5 19.5 54 13.5 48 11Z';
+const hoodLeftPath = 'M48 11.5C43.8 16 40.8 21.5 38.6 28.5C36.8 34.3 35.8 38.8 33.5 42.5C37.6 42.6 41.4 44 44.7 46.8C46.2 48 47.3 49.4 48 50.8C45.8 42 44.5 33.7 44.8 26C45 19.5 46.2 14.5 48 11.5Z';
+const hoodRightPath = 'M48.2 11.5C52.5 15 55.5 21 57.8 28.5C59.6 34 60.5 38.8 62.5 42.5C58.5 42.4 54.8 43.9 51.8 46.8C50.4 48 49.2 49.4 48 50.8C50 42 51.3 33.7 51 26C50.8 19.5 49.8 14.5 48.2 11.5Z';
+const facePath = 'M48 23C43.5 25.8 39.8 29.8 37 34.5C35.5 37.2 36.5 40 39.5 42.7C42.1 45 45 46.9 48 48.6C51 46.8 53.9 44.8 56.5 42.3C59 39.8 60.2 37.2 58.8 34.3C56 29.7 52.3 25.8 48 23Z';
 
 const atmospherePaths: readonly VectorPath[] = [
   { d: 'M11 95C6 73 14 52 30 38C40 29 43 17 48 8C53 17 56 29 66 38C82 52 90 73 83 95C70 69 59 56 48 52C36 56 24 70 11 95Z', fill: '#62e3ff', fillOpacity: 0.34 },
@@ -48,8 +48,9 @@ const foldPaths: readonly VectorPath[] = [
   { d: 'M86.5 96C80.5 75 70 58 54 49C61 64 65 80 66 96Z', fill: '#01050a' },
   { d: 'M22.5 96C27.8 77 36 61 46.6 51C42.2 67.5 39.8 82.5 40 96Z', fill: '#03101a' },
   { d: 'M73.5 96C68.2 77 60 61 49.4 51C53.8 67.5 56.2 82.5 56 96Z', fill: '#01050a' },
-  { d: 'M40 96C41.8 76.5 45 61 47.6 54.5C49.4 65 50.2 80 49.7 96Z', fill: '#04131d' },
-  { d: 'M49.7 96C51.2 78 52 65 48.4 54.6C54 64 58 80 59.2 96Z', fill: '#01070d' },
+  { d: 'M32 96C35.5 77 40.5 63 46.7 54.4C43.7 68.5 43.2 82 44.2 96Z', fill: '#04131d' },
+  { d: 'M64 96C60.5 77 55.5 63 49.3 54.4C52.3 68.5 52.8 82 51.8 96Z', fill: '#01070d' },
+  { d: 'M44.2 96C44.9 77 46.5 63.5 48 55C49.5 63.5 51.1 77 51.8 96Z', fill: '#02080d' },
   { d: 'M7 91C17 73 29 59.5 43.5 52.5C33 65 24 78.5 18 96Z', fill: '#0c3044', fillOpacity: 0.18 },
   { d: 'M89 91C79 73 67 59.5 52.5 52.5C63 65 72 78.5 78 96Z', fill: '#04131d', fillOpacity: 0.12 },
   { d: 'M18 95C26 76 36 61.5 46 53C39 68 34 82 32 96Z', fill: '#082434', fillOpacity: 0.16 },
@@ -57,14 +58,12 @@ const foldPaths: readonly VectorPath[] = [
 ];
 
 const collarPaths: readonly VectorPath[] = [
-  { d: 'M15 48C27 43.8 38 45 47 50.7C38 54 29 55 20 52C17.5 51.2 16 49.5 15 48Z', fill: '#123b52' },
-  { d: 'M81 48.5C69 44 59 45.2 49 51.3C58 54 67 55 76 52.5C78.5 51.8 80 50 81 48.5Z', fill: '#071d2a' },
-  { d: 'M13 51.5C24 47.5 34.8 48.5 44.5 53.5C35 55.3 25.5 55.1 17.5 52.8Z', fill: '#0a2738', fillOpacity: 0.72 },
-  { d: 'M83 52C72 47.8 61.5 48.8 51.5 54C61 55.7 70.5 55.5 78.5 53.2Z', fill: '#031019', fillOpacity: 0.75 },
-  { d: 'M20 53C29 50.5 38 51.8 47.3 57C39.5 59.2 31 58.7 24 56C22 55.2 21 54 20 53Z', fill: '#0a2c3e' },
-  { d: 'M76 53.5C67 50.8 58 52 48.7 57.4C56.5 59.5 65 59 72 56.5C74 55.8 75 54.5 76 53.5Z', fill: '#031019' },
-  { d: 'M29 58C36 56 42 57 48 61.5C42 63 36 62.2 32 60.5Z', fill: '#061b27' },
-  { d: 'M67 58.5C60 56.2 54 57.2 48 61.7C54 63.2 60 62.7 64 61Z', fill: '#01060b' },
+  { d: 'M23 45C31 41.8 39 43 47 48C40 50.8 33 51.4 26 49.5C24.5 48.6 23.5 46.5 23 45Z', fill: '#123b52' },
+  { d: 'M73 45.5C65 42.2 57 43.2 49 48.5C56 51 63 51.6 70 50C71.5 49.2 72.5 47 73 45.5Z', fill: '#071d2a' },
+  { d: 'M18 50C29 46.8 38 48 47 53C39 55 30 54.8 22 52.5C20.2 52 19 50.8 18 50Z', fill: '#0a2738', fillOpacity: 0.78 },
+  { d: 'M78 50.5C67 47 58 48.2 49 53.5C57 55.4 66 55.2 74 53C75.8 52.5 77 51.3 78 50.5Z', fill: '#031019', fillOpacity: 0.8 },
+  { d: 'M27 54C34 51.8 41 52.6 47.7 56.7C41.5 58.6 35 58.2 30 56.4Z', fill: '#082738' },
+  { d: 'M69 54.4C62 52 55 52.8 48.3 57C54.5 58.9 61 58.5 66 56.8Z', fill: '#020b12' },
 ];
 
 const hoodLayerPaths: readonly VectorPath[] = [
@@ -174,63 +173,33 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
         <title id={ids.title}>THE LEGENDARY POET</title>
         <desc id={ids.description}>Безликая фигура в узком слоистом капюшоне и тяжёлой почти чёрной мантии, окружённая разорванной холодной энергией</desc>
         <defs>
-          <linearGradient id={ids.mantle} x1="2" y1="42" x2="92" y2="96" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#12364b"/><stop offset=".18" stopColor="#081f2e"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/>
-          </linearGradient>
-          <linearGradient id={ids.hood} x1="31" y1="10" x2="66" y2="52" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#1c455b"/><stop offset=".3" stopColor="#0d2e40"/><stop offset=".62" stopColor="#04141f"/><stop offset="1" stopColor="#010307"/>
-          </linearGradient>
-          <linearGradient id={ids.hoodLeft} x1="31" y1="11" x2="49" y2="51" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#174056"/><stop offset=".5" stopColor="#0a293a"/><stop offset="1" stopColor="#031019"/>
-          </linearGradient>
+          <linearGradient id={ids.mantle} x1="2" y1="42" x2="92" y2="96" gradientUnits="userSpaceOnUse"><stop stopColor="#12364b"/><stop offset=".18" stopColor="#081f2e"/><stop offset=".48" stopColor="#031019"/><stop offset=".78" stopColor="#01060b"/><stop offset="1" stopColor="#000102"/></linearGradient>
+          <linearGradient id={ids.hood} x1="31" y1="10" x2="66" y2="52" gradientUnits="userSpaceOnUse"><stop stopColor="#1c455b"/><stop offset=".3" stopColor="#0d2e40"/><stop offset=".62" stopColor="#04141f"/><stop offset="1" stopColor="#010307"/></linearGradient>
+          <linearGradient id={ids.hoodLeft} x1="31" y1="11" x2="49" y2="51" gradientUnits="userSpaceOnUse"><stop stopColor="#174056"/><stop offset=".5" stopColor="#0a293a"/><stop offset="1" stopColor="#031019"/></linearGradient>
           <filter id={ids.mist} x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation={compact ? 3.4 : 4.1}/></filter>
           <filter id={ids.glow} x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation={compact ? 0.52 : 0.62} result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
 
-        <motion.g
-          data-brand-atmosphere
-          aria-hidden="true"
-          filter={`url(#${ids.mist})`}
-          variants={{ idle: { opacity: compact ? 0.68 : 0.82, scale: 0.985 }, hover: { opacity: compact ? 0.9 : 1, scale: 1.035, transition: { duration: 0.9, ease: premiumEase } } }}
-          style={{ transformOrigin: '48px 48px' }}
-        >
+        <motion.g data-brand-atmosphere aria-hidden="true" filter={`url(#${ids.mist})`} variants={{ idle: { opacity: compact ? 0.68 : 0.82, scale: 0.985 }, hover: { opacity: compact ? 0.9 : 1, scale: 1.035, transition: { duration: 0.9, ease: premiumEase } } }} style={{ transformOrigin: '48px 48px' }}>
           {atmospherePaths.map((path, index) => renderPath(path, index, true))}
         </motion.g>
 
-        <motion.g
-          data-brand-energy
-          aria-hidden="true"
-          variants={{ idle: { opacity: compact ? 0.45 : 0.7 }, hover: { opacity: 1, transition: { duration: 0.78, ease: premiumEase } } }}
-        >
+        <motion.g data-brand-energy aria-hidden="true" variants={{ idle: { opacity: compact ? 0.45 : 0.7 }, hover: { opacity: 1, transition: { duration: 0.78, ease: premiumEase } } }}>
           {energyPaths.map((path, index) => renderPath(path, index, true))}
         </motion.g>
 
         <motion.g data-brand-figure variants={{ idle: { y: 0 }, hover: { y: compact ? -0.08 : -0.22, transition: { duration: 0.74, ease: premiumEase } } }}>
           <path data-brand-cloak d={cloakPath} fill={`url(#${ids.mantle})`} stroke="#17394c" strokeOpacity=".54" strokeWidth={compact ? 0.56 : 0.62}/>
 
-          <motion.g
-            data-brand-folds
-            variants={{ idle: { opacity: compact ? 0.96 : 1 }, hover: { opacity: 1, transition: { duration: 0.76, ease: premiumEase } } }}
-          >
+          <motion.g data-brand-folds variants={{ idle: { opacity: compact ? 0.96 : 1 }, hover: { opacity: 1, transition: { duration: 0.76, ease: premiumEase } } }}>
             {foldPaths.map((path, index) => renderPath(path, index))}
           </motion.g>
 
-          <motion.g
-            data-brand-collar
-            variants={{ idle: { opacity: compact ? 0.68 : 0.9 }, hover: { opacity: compact ? 0.82 : 1, transition: { duration: 0.7, ease: premiumEase } } }}
-          >
+          <motion.g data-brand-collar variants={{ idle: { opacity: compact ? 0.68 : 0.9 }, hover: { opacity: compact ? 0.82 : 1, transition: { duration: 0.7, ease: premiumEase } } }}>
             {collarPaths.map((path, index) => renderPath(path, index))}
           </motion.g>
 
-          <motion.path
-            data-brand-hood
-            d={hoodPath}
-            fill={`url(#${ids.hood})`}
-            stroke="#28546a"
-            strokeOpacity=".78"
-            strokeWidth={compact ? 0.66 : 0.75}
-            variants={{ idle: { y: 0 }, hover: { y: compact ? -0.04 : -0.12 } }}
-          />
+          <motion.path data-brand-hood d={hoodPath} fill={`url(#${ids.hood})`} stroke="#28546a" strokeOpacity=".78" strokeWidth={compact ? 0.66 : 0.75} variants={{ idle: { y: 0 }, hover: { y: compact ? -0.04 : -0.12 } }}/>
           <path d={hoodLeftPath} fill={`url(#${ids.hoodLeft})`} fillOpacity=".82"/>
           <path d={hoodRightPath} fill="#020a10"/>
 
@@ -244,42 +213,15 @@ export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
             {texturePaths.slice(0, compact ? 6 : texturePaths.length).map((path, index) => renderPath(path, index, true))}
           </g>
 
-          <motion.g
-            data-brand-rim-light
-            aria-hidden="true"
-            filter={`url(#${ids.glow})`}
-            variants={{ idle: { opacity: compact ? 0.82 : 0.9 }, hover: { opacity: 1, transition: { duration: 0.74, ease: premiumEase } } }}
-          >
+          <motion.g data-brand-rim-light aria-hidden="true" filter={`url(#${ids.glow})`} variants={{ idle: { opacity: compact ? 0.82 : 0.9 }, hover: { opacity: 1, transition: { duration: 0.74, ease: premiumEase } } }}>
             {rimPaths.map((path, index) => (
-              <motion.path
-                key={`${index}-${path.d}`}
-                d={path.d}
-                fill="none"
-                stroke={path.stroke}
-                strokeOpacity={path.strokeOpacity}
-                strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.84 : path.strokeWidth}
-                strokeLinecap={path.strokeLinecap}
-                variants={index < 4 ? { idle: { pathLength: index === 2 ? 0.82 : 0.68 }, hover: { pathLength: 1 } } : undefined}
-              />
+              <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.84 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index < 4 ? { idle: { pathLength: index === 2 ? 0.82 : 0.68 }, hover: { pathLength: 1 } } : undefined}/>
             ))}
           </motion.g>
 
-          <motion.g
-            data-brand-seams
-            aria-hidden="true"
-            variants={{ idle: { opacity: compact ? 0.54 : 0.76 }, hover: { opacity: compact ? 0.72 : 0.96, transition: { duration: 0.78, ease: premiumEase } } }}
-          >
+          <motion.g data-brand-seams aria-hidden="true" variants={{ idle: { opacity: compact ? 0.54 : 0.76 }, hover: { opacity: compact ? 0.72 : 0.96, transition: { duration: 0.78, ease: premiumEase } } }}>
             {seamPaths.slice(0, compact ? 7 : seamPaths.length).map((path, index) => (
-              <motion.path
-                key={`${index}-${path.d}`}
-                d={path.d}
-                fill="none"
-                stroke={path.stroke}
-                strokeOpacity={path.strokeOpacity}
-                strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.82 : path.strokeWidth}
-                strokeLinecap={path.strokeLinecap}
-                variants={index >= 2 ? { idle: { pathLength: 0.62 }, hover: { pathLength: 1 } } : undefined}
-              />
+              <motion.path key={`${index}-${path.d}`} d={path.d} fill="none" stroke={path.stroke} strokeOpacity={path.strokeOpacity} strokeWidth={path.strokeWidth === undefined ? undefined : compact ? path.strokeWidth * 0.82 : path.strokeWidth} strokeLinecap={path.strokeLinecap} variants={index >= 2 ? { idle: { pathLength: 0.62 }, hover: { pathLength: 1 } } : undefined}/>
             ))}
           </motion.g>
         </motion.g>
