@@ -1,0 +1,33 @@
+name: Temporary native image migration
+
+on:
+  push:
+    branches: [agent/remove-legacy-hover-css]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/remove-legacy-hover-css
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply exact native image readiness migration
+        run: node scripts/apply-native-image-readiness.mjs
+      - name: Commit architectural fix
+        run: |
+          if git diff --quiet -- src/components/essay/blocks.tsx qa/hover-stability.spec.mjs scripts/validate-hover-stability.ts; then
+            echo "No migration diff produced"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/essay/blocks.tsx qa/hover-stability.spec.mjs scripts/validate-hover-stability.ts
+          git commit -m "fix(images): synchronize cached image readiness"
+          git push origin HEAD:agent/remove-legacy-hover-css
