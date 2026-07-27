@@ -27,6 +27,25 @@ if (indexImport < 0 || stabilityImport < 0 || stabilityImport <= indexImport) {
   errors.push('src/main.tsx: hover-stability.css must load after index.css');
 }
 
+const indexCss = read('src/index.css');
+for (const [legacy, label] of [
+  ['.tilt-card-wrapper { perspective: 1100px;', 'legacy TiltCard wrapper implementation'],
+  ['.tilt-card-inner > * { transform: translateZ(28px); }', 'legacy direct-child depth rule'],
+  ['left: -150%;', 'layout-driven sheen start'],
+  ['transition: all 0.85s ease-out;', 'legacy sheen transition-all'],
+  ['transform: translateY(-5px) scale(1.005);', 'legacy card hover transform'],
+  ['.luxury-card:hover::before { left: 150%;', 'legacy layout-driven sheen hover'],
+]) {
+  if (indexCss.includes(legacy)) errors.push(`src/index.css: forbidden ${label}`);
+}
+for (const [required, label] of [
+  ['.luxury-card {', 'luxury-card visual base'],
+  ['.luxury-card::before {', 'luxury-card sheen visual base'],
+  ['.luxury-card:hover {', 'luxury-card visual hover state'],
+]) {
+  if (!indexCss.includes(required)) errors.push(`src/index.css: missing ${label}`);
+}
+
 const tiltCard = read('src/components/TiltCard.tsx');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-content relative h-full w-full"', 'stable tilt content plane');
 requireText('src/components/TiltCard.tsx', 'onPointerEnter={prepareLayer}', 'pointer-entry compositor warm-up');
@@ -44,6 +63,7 @@ for (const [text, label] of [
   ['backface-visibility: hidden;', 'backface stabilization'],
   ['transform: translate3d(-160%, 0, 0) skewX(-18deg);', 'transform-only luxury sweep'],
   ['transition-property: transform, opacity;', 'explicit sweep transition properties'],
+  ['.tilt-card-inner,\n  .luxury-card {\n    transition: none !important;', 'central reduced-motion transition ownership'],
   ['img[class*="group-hover:scale-"]', 'automatic group-hover artwork protection'],
   ['img[class*="hover:scale-"]', 'automatic direct-hover artwork protection'],
   ['img[class*="group-hover:contrast-"]', 'automatic filter artwork protection'],
