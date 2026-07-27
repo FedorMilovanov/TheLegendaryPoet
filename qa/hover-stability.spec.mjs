@@ -5,6 +5,7 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'hover-stability');
 const MAX_IMAGES_PER_SURFACE = 6;
+const MAX_CANDIDATES_PER_SURFACE = 16;
 const INTERACTIVE_MEDIA_SELECTOR = [
   'img.hover-media',
   'img[class*="group-hover:scale-"]',
@@ -29,19 +30,23 @@ fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 const surfaces = [
   { name: 'home', path: '/', minimum: 0 },
   { name: 'articles', path: '/articles', minimum: 1 },
+  { name: 'essay', path: '/essays/yesenin-duncan-first-meeting-documents', minimum: 1 },
   { name: 'poets', path: '/poets', minimum: 1 },
   { name: 'music', path: '/music', minimum: 1 },
+  { name: 'archive', path: '/archive', minimum: 0 },
   { name: 'ratings', path: '/ratings', minimum: 0 },
 ];
 
-async function getVisibleImages(page) {
+async function getSampledImages(page) {
   const images = page.locator(INTERACTIVE_MEDIA_SELECTOR);
-  const visibleImages = [];
-  for (let index = 0; index < await images.count(); index += 1) {
+  const sampledImages = [];
+  const count = Math.min(await images.count(), MAX_CANDIDATES_PER_SURFACE);
+  for (let index = 0; index < count && sampledImages.length < MAX_IMAGES_PER_SURFACE; index += 1) {
     const image = images.nth(index);
-    if (await image.isVisible()) visibleImages.push(image);
+    await image.scrollIntoViewIfNeeded().catch(() => undefined);
+    if (await image.isVisible()) sampledImages.push(image);
   }
-  return visibleImages;
+  return sampledImages;
 }
 
 async function imageSnapshot(image) {
@@ -109,6 +114,13 @@ for (const surface of surfaces) {
     expect(response?.status()).toBeLessThan(400);
     await page.waitForLoadState('networkidle').catch(() => undefined);
 
+    if (surface.minimum > 0) {
+      await expect.poll(
+        async () => page.locator(INTERACTIVE_MEDIA_SELECTOR).count(),
+        { timeout: 15_000, message: `interactive artwork on ${surface.path}` },
+      ).toBeGreaterThanOrEqual(surface.minimum);
+    }
+
     const unprotected = await page.locator(INTERACTIVE_MEDIA_SELECTOR).evaluateAll((images) => images
       .filter((image) => getComputedStyle(image).backfaceVisibility !== 'hidden')
       .map((image) => ({
@@ -119,15 +131,7 @@ for (const surface of surfaces) {
       })));
     expect(unprotected, `interactive artwork without compositor protection on ${surface.path}`).toEqual([]);
 
-    if (surface.minimum > 0) {
-      await expect.poll(
-        async () => (await getVisibleImages(page)).length,
-        { timeout: 15_000, message: `visible stable artwork on ${surface.path}` },
-      ).toBeGreaterThanOrEqual(surface.minimum);
-    }
-
-    const visibleImages = await getVisibleImages(page);
-    const sampledImages = visibleImages.slice(0, MAX_IMAGES_PER_SURFACE);
+    const sampledImages = await getSampledImages(page);
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
     for (const image of sampledImages) {
