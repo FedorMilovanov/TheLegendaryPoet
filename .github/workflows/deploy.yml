@@ -125,8 +125,8 @@ jobs:
       - name: Validate content, literary style, brand assets, and types
         run: npm run check
 
-      - name: Generate sitemap
-        run: npm run sitemap
+      - name: Generate sitemap and Atom feed
+        run: npm run seo:generate
 
       - name: Build
         run: npm run build
@@ -134,9 +134,14 @@ jobs:
           VITE_BASE: /
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          VITE_GA_ID: ${{ vars.VITE_GA_ID }}
+          VITE_YANDEX_METRIKA_ID: ${{ vars.VITE_YANDEX_METRIKA_ID }}
 
-      - name: Prerender OG pages
+      - name: Prerender canonical pages and 404
         run: npm run prerender
+
+      - name: Validate production SEO output
+        run: npm run validate:seo-output
 
       - name: Resolve and verify release proof
         id: release
@@ -191,9 +196,6 @@ jobs:
             echo "master_sha256=" >> "$GITHUB_OUTPUT"
             echo "emblem_sha256=" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: SPA fallback
-        run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
 
