@@ -98,8 +98,10 @@ export interface Essay {
   /** Short summary for cards / SEO. */
   excerpt: string;
   author: string;
-  /** ISO-ish date string, e.g. "2026-07-12". */
+  /** Verified ISO publication date, e.g. "2026-07-12". */
   date: string;
+  /** Verified ISO date of a substantive editorial update. Never auto-fill at build time. */
+  dateModified?: string;
   readTime: number;
   /** Cover image path (public/…); has a graceful gradient fallback if missing. */
   cover: string;

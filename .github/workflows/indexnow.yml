@@ -26,6 +26,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate the exact canonical URL set
+        run: npm run sitemap
 
       - name: Notify IndexNow about canonical URLs
-        run: node scripts/submit-indexnow.mjs
+        run: npm run indexnow

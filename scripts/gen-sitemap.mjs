@@ -1,58 +1,113 @@
-// Regenerate public/sitemap.xml from the data modules so routes stay accurate.
+// Generate the canonical sitemap from the same typed data used by the application.
 import fs from 'node:fs';
 import path from 'node:path';
+import { getAllEssays } from '../src/data/essays/index.ts';
+import { allMusicTracks, poets } from '../src/data/poets.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
-const libDir = path.resolve('src/data/library');
-const essaysDir = path.resolve('src/data/essays');
-const readLibraryFile = (file) => fs.readFileSync(path.join(libDir, file), 'utf8');
+const OUTPUT = path.resolve('public/sitemap.xml');
+const POLICY_DATE = '2026-07-28';
 
-const poetFiles = fs
-  .readdirSync(libDir)
-  .filter((file) => file.endsWith('.ts') && !['index.ts', 'articles.ts', 'musicTracks.ts'].includes(file))
-  .sort();
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
-const poetIds = poetFiles
-  .map((file) => (readLibraryFile(file).match(/^\s*id:\s*['"]([a-z0-9-]+)['"]/m) || [])[1])
-  .filter(Boolean)
-  .sort();
+function absoluteUrl(pathOrUrl) {
+  if (!pathOrUrl) return undefined;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${BASE}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
 
-const trackIds = [...readLibraryFile('musicTracks.ts').matchAll(/^\s*id:\s*['"]([a-z0-9-]+)['"]/gm)]
-  .map((match) => match[1])
-  .filter(Boolean)
-  .sort();
+function validDate(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+}
 
-const essaySlugs = [
-  ...new Set(
-    fs
-      .readdirSync(essaysDir)
-      .filter((file) => file.endsWith('.ts') && file !== 'index.ts')
-      .map((file) => {
-        const source = fs.readFileSync(path.join(essaysDir, file), 'utf8');
-        return (source.match(/^\s*['"]?slug['"]?\s*:\s*['"]([a-z0-9-]+)['"]/m) || [])[1];
-      })
-      .filter(Boolean),
-  ),
-].sort();
+function latestDate(values) {
+  return values.map(validDate).filter(Boolean).sort().at(-1);
+}
 
-// Personal archive and unfinished hall are intentionally noindex and therefore
-// must not be advertised in the sitemap.
-const staticRoutes = ['/', '/poets', '/ratings', '/articles', '/music', '/about'];
+function renderUrl({ loc, lastmod, image }) {
+  const lines = ['  <url>', `    <loc>${escapeXml(`${BASE}${loc}`)}</loc>`];
+  if (lastmod) lines.push(`    <lastmod>${escapeXml(lastmod)}</lastmod>`);
+  if (image?.loc) {
+    lines.push('    <image:image>');
+    lines.push(`      <image:loc>${escapeXml(absoluteUrl(image.loc))}</image:loc>`);
+    if (image.title) lines.push(`      <image:title>${escapeXml(image.title)}</image:title>`);
+    if (image.caption) lines.push(`      <image:caption>${escapeXml(image.caption)}</image:caption>`);
+    lines.push('    </image:image>');
+  }
+  lines.push('  </url>');
+  return lines.join('\n');
+}
+
+const essays = getAllEssays();
+const publishedTracks = allMusicTracks.filter((track) => track.availability === 'published');
+const latestEssayDate = latestDate(essays.map((essay) => essay.dateModified || essay.date));
+const latestMusicDate = latestDate(publishedTracks.map((track) => track.publishedAt));
+const latestSiteDate = latestDate([latestEssayDate, latestMusicDate, POLICY_DATE]);
+
 const urls = [
-  ...staticRoutes.map((route) => ({
-    loc: route,
-    priority: route === '/' ? '1.0' : route === '/ratings' || route === '/music' ? '0.9' : '0.8',
+  { loc: '/', lastmod: latestSiteDate, image: { loc: '/og-image.jpg', title: 'THE LEGENDARY POET', caption: 'Поэзия, анализ и история русской литературы' } },
+  { loc: '/poets', lastmod: latestSiteDate },
+  { loc: '/ratings', lastmod: latestSiteDate },
+  { loc: '/articles', lastmod: latestEssayDate },
+  { loc: '/music', lastmod: latestMusicDate },
+  { loc: '/about', lastmod: POLICY_DATE },
+  { loc: '/editorial-policy', lastmod: POLICY_DATE },
+  { loc: '/privacy', lastmod: POLICY_DATE },
+  ...essays.map((essay) => ({
+    loc: `/essays/${essay.slug}`,
+    lastmod: validDate(essay.dateModified || essay.date),
+    image: {
+      loc: essay.cover,
+      title: essay.title,
+      caption: essay.coverAlt || essay.excerpt,
+    },
   })),
-  ...essaySlugs.map((slug) => ({ loc: `/essays/${slug}`, priority: '0.9' })),
-  ...trackIds.map((id) => ({ loc: `/music/${id}`, priority: '0.9' })),
-  ...poetIds.map((id) => ({ loc: `/poets/${id}`, priority: '0.7' })),
+  ...publishedTracks.map((track) => ({
+    loc: `/music/${track.id}`,
+    lastmod: validDate(track.publishedAt),
+    image: {
+      loc: track.wideCoverUrl || track.coverUrl,
+      title: `${track.title} — ${track.poet}`,
+      caption: track.description,
+    },
+  })),
+  ...poets.map((poet) => {
+    const relatedDates = [
+      ...essays.filter((essay) => essay.poetId === poet.id).map((essay) => essay.dateModified || essay.date),
+      ...publishedTracks.filter((track) => track.poetId === poet.id).map((track) => track.publishedAt),
+    ];
+    return {
+      loc: `/poets/${poet.id}`,
+      lastmod: latestDate(relatedDates),
+      image: {
+        loc: poet.photo,
+        title: poet.fullName || poet.name,
+        caption: poet.shortBio,
+      },
+    };
+  }),
 ];
 
+const seen = new Set();
+for (const item of urls) {
+  if (!item.loc.startsWith('/') || item.loc.includes('.html')) throw new Error(`Invalid canonical sitemap route: ${item.loc}`);
+  if (seen.has(item.loc)) throw new Error(`Duplicate sitemap route: ${item.loc}`);
+  seen.add(item.loc);
+}
+
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(({ loc, priority }) => `  <url><loc>${BASE}${loc}</loc><changefreq>monthly</changefreq><priority>${priority}</priority></url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${urls.map(renderUrl).join('\n')}
 </urlset>
 `;
 
-fs.writeFileSync('public/sitemap.xml', xml);
-console.log(`sitemap.xml: ${urls.length} urls (${poetIds.length} poets, ${essaySlugs.length} essays, ${trackIds.length} tracks)`);
+fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
+fs.writeFileSync(OUTPUT, xml);
+console.log(`sitemap.xml: ${urls.length} canonical URLs, ${urls.filter((item) => item.image?.loc).length} image entries`);

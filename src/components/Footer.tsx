@@ -1,9 +1,11 @@
+import type { ComponentType } from 'react';
 import { Link } from './ui/Link';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Mail } from './PremiumIcons';
 import BrandMark from './BrandMark';
 import { getWordOfDay } from '../utils/dailyContent';
 import { titleCase } from '../utils/titleCase';
+import { siteConfig } from '../config/site';
 
 const footerLinks = [
   { label: 'Поэты', path: '/poets' },
@@ -14,17 +16,23 @@ const footerLinks = [
   { label: 'О проекте', path: '/about' },
 ];
 
+const trustLinks = [
+  { label: 'Редакционная политика', path: '/editorial-policy' },
+  { label: 'Конфиденциальность', path: '/privacy' },
+  { label: 'RSS / Atom', href: '/feed.xml' },
+];
+
 interface SocialLink {
-  Icon: React.ComponentType<{ className?: string }>;
+  Icon: ComponentType<{ className?: string }>;
   href: string;
   label: string;
   hoverBg: string;
 }
 
 const socials: SocialLink[] = [
-  { Icon: YouTubeIcon, href: 'https://youtube.com/@TheLegendaryPoet', label: 'YouTube', hoverBg: 'hover:bg-red-500/10' },
-  { Icon: RutubeIcon, href: 'https://rutube.ru/channel/74579453', label: 'Rutube', hoverBg: 'hover:bg-sky-500/10' },
-  { Icon: VKIcon, href: 'https://vk.com/thelegendarypoet', label: 'VK', hoverBg: 'hover:bg-blue-500/10' },
+  { Icon: YouTubeIcon, href: siteConfig.channels.youtube, label: 'YouTube', hoverBg: 'hover:bg-red-500/10' },
+  { Icon: RutubeIcon, href: siteConfig.channels.rutube, label: 'Rutube', hoverBg: 'hover:bg-sky-500/10' },
+  { Icon: VKIcon, href: siteConfig.channels.vk, label: 'VK', hoverBg: 'hover:bg-blue-500/10' },
 ];
 
 export default function Footer() {
@@ -35,35 +43,24 @@ export default function Footer() {
     <footer className="relative mt-20 border-t border-cyan-400/8 bg-[#050505]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-
-          {/* Brand + Word of Day */}
           <div className="sm:col-span-2">
             <Link to="/" className="group mb-5 inline-flex min-h-11 items-center gap-3">
               <BrandMark size="sm" />
               <span className="flex flex-col leading-tight">
-                <span className="font-serif text-lg font-semibold neon-blue-gradient neon-glow-text">
-                  THE LEGENDARY POET
-                </span>
-                <span className="text-[10px] tracking-[0.16em] text-cyan-200/45">
-                  ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ
-                </span>
+                <span className="neon-blue-gradient neon-glow-text font-serif text-lg font-semibold">THE LEGENDARY POET</span>
+                <span className="text-[10px] tracking-[0.16em] text-cyan-200/45">ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ</span>
               </span>
             </Link>
             <p className="mb-5 max-w-lg text-sm leading-relaxed text-cyan-100/50">
-              Проект о великих поэтах, их биографиях, текстах и историческом контексте.
-              Отдельные материалы затрагивают веру, культуру и нравственную оценку.
+              Проект о великих поэтах, их биографиях, текстах и историческом контексте. Отдельные материалы затрагивают веру, культуру и нравственную оценку.
             </p>
 
-            {/* Word of Day */}
             <div className="mb-6 max-w-sm border-l-2 border-cyan-400/15 pl-4">
               <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/60">Слово дня</div>
               <div className="font-serif text-xl italic text-white">«{wordOfDay.word}»</div>
-              <div className="mt-1 text-xs text-cyan-100/35">
-                {wordOfDay.poet.name}, «{wordOfDay.poem.title}»
-              </div>
+              <div className="mt-1 text-xs text-cyan-100/35">{wordOfDay.poet.name}, «{wordOfDay.poem.title}»</div>
             </div>
 
-            {/* Socials */}
             <div className="flex items-center gap-2">
               {socials.map(({ Icon, href, label, hoverBg }) => (
                 <a
@@ -78,8 +75,8 @@ export default function Footer() {
                 </a>
               ))}
               <a
-                href="mailto:contact@legendarypoet.com"
-                aria-label="Email"
+                href={`mailto:${siteConfig.contactEmail}`}
+                aria-label={`Email: ${siteConfig.contactEmail}`}
                 className="group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-luxury-gold/10"
               >
                 <Mail size={18} className="text-cyan-200/50 transition-transform duration-300 group-hover/social:scale-110 group-hover/social:text-luxury-gold" />
@@ -87,13 +84,10 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Sections */}
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">
-              Разделы
-            </h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">Разделы</h4>
             <ul className="space-y-1">
-              {footerLinks.map(item => (
+              {footerLinks.map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
@@ -107,22 +101,33 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Info */}
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">
-              Информация
-            </h4>
-            <ul className="space-y-2 text-sm text-cyan-200/50">
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">Информация</h4>
+            <ul className="space-y-1">
+              {trustLinks.map((item) => (
+                <li key={item.path || item.href}>
+                  {'path' in item ? (
+                    <Link to={item.path!} className="inline-flex min-h-11 items-center text-sm text-cyan-200/50 transition hover:text-cyan-300">
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a href={item.href} className="inline-flex min-h-11 items-center text-sm text-cyan-200/50 transition hover:text-cyan-300">
+                      {item.label}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <ul className="mt-5 space-y-2 text-sm text-cyan-200/40">
               <li>© {year} THE LEGENDARY POET</li>
               <li>Все права защищены</li>
-              <li className="text-cyan-200/30 italic">Редакторская сборка</li>
+              <li className="italic text-cyan-200/30">Независимая редакция</li>
             </ul>
           </div>
         </div>
 
         <div className="my-8 h-px bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent" />
-
-        <p className="text-center text-[11px] text-cyan-200/25 tracking-wide">
+        <p className="text-center text-[11px] tracking-wide text-cyan-200/25">
           THE LEGENDARY POET — независимый редакторский проект о поэзии, истории и культурном контексте.
         </p>
       </div>

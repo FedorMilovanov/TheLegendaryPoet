@@ -1,8 +1,19 @@
+import { useLocation } from 'react-router-dom';
 import { Link } from '../components/ui/Link';
 import { ArrowLeft, Search, Sparkles } from '../components/PremiumIcons';
+import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
 
 export default function NotFoundPage() {
+  const location = useLocation();
+
+  useSeo({
+    title: 'Страница не найдена — THE LEGENDARY POET',
+    description: 'Запрошенная страница не существует или была перемещена.',
+    path: location.pathname,
+    robots: 'noindex,follow',
+  });
+
   return (
     <div className="min-h-screen bg-[#050505] px-4 pb-24 pt-32 text-white">
       <div className="mx-auto max-w-3xl text-center">
