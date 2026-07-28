@@ -44,6 +44,12 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   });
 }
 
+const lermontovRoadWithCover: Essay = {
+  ...lermontovRoadEssay,
+  coverKind: 'restoration',
+  coverCredit: 'Архивный портрет · цифровая реставрация проекта',
+};
+
 const yeseninWithArchiveLayer: Essay = {
   ...yeseninKutezhiVisual,
   coverKind: 'reconstruction',
@@ -93,7 +99,7 @@ const brikCaseWithSourceLibrary: Essay = {
 };
 
 export const essays: Essay[] = [
-  lermontovRoadEssay,
+  lermontovRoadWithCover,
   yeseninWithArchiveLayer,
   yeseninPartOnePublic,
   yeseninDuncanFirstMeetingPublished,
