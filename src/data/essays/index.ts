@@ -6,6 +6,7 @@ import { yeseninPartOnePublic } from './yeseninPartOnePublic';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
+import { lermontovRoadEssay } from './lermontovRoadEssay';
 import {
   brikDocumentSources,
   mayakovskyEarlySources,
@@ -92,6 +93,7 @@ const brikCaseWithSourceLibrary: Essay = {
 };
 
 export const essays: Essay[] = [
+  lermontovRoadEssay,
   yeseninWithArchiveLayer,
   yeseninPartOnePublic,
   yeseninDuncanFirstMeetingPublished,
