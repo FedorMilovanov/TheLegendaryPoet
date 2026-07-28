@@ -1,161 +1,30 @@
 import { useId, useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '../utils/cn';
-
 interface BrandMarkProps { size?: 'sm' | 'md' | 'lg'; className?: string; }
 const sizes = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-24 w-24' };
 const premiumEase = [0.16, 1, 0.3, 1] as const;
-const BRAND_VERSION = 'cloak-20260728-14';
-const VECTOR_SOURCE = 'canonical-reference-v2-reset-v12-7';
-
-const VECTOR_BODY = `<defs>
-  <linearGradient id="__CLOAK__" x1="16" y1="40" x2="75" y2="96" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#0c2632"/><stop offset=".22" stop-color="#071923"/><stop offset=".52" stop-color="#02090f"/><stop offset=".8" stop-color="#010407"/><stop offset="1" stop-color="#000102"/>
-  </linearGradient>
-  <linearGradient id="__HOOD__" x1="39" y1="11" x2="58" y2="38" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#173e4f"/><stop offset=".26" stop-color="#0d2b39"/><stop offset=".56" stop-color="#051720"/><stop offset=".84" stop-color="#01080d"/><stop offset="1" stop-color="#000204"/>
-  </linearGradient>
-  <linearGradient id="__LEFTMASS__" x1="22" y1="44" x2="36" y2="94" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#10303d"/><stop offset=".45" stop-color="#061821"/><stop offset="1" stop-color="#010307"/>
-  </linearGradient>
-  <linearGradient id="__RIGHTMASS__" x1="69" y1="45" x2="63" y2="96" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#071c26"/><stop offset=".46" stop-color="#030d13"/><stop offset="1" stop-color="#000204"/>
-  </linearGradient>
-  <filter id="__MIST4__" x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation="3.8"/></filter>
-  <filter id="__MIST2__" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="1.8"/></filter>
-  <filter id="__GLOW__" x="-160%" y="-160%" width="420%" height="420%"><feGaussianBlur stdDeviation=".75" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-
-<!-- broken upper/side atmosphere only; lower edge remains clean -->
-<g data-brand-atmosphere="" aria-hidden="true" fill-rule="evenodd">
-  <path d="M45.75 19.12L46.12 19.88L45.00 21.00L47.25 20.25L49.12 21.75L47.62 19.88L45.75 19.50L47.62 19.12L47.25 18.75ZM26.25 17.62L27.75 19.50L27.38 21.00L26.25 20.62L27.00 22.88L29.25 25.50L29.25 26.62L27.75 27.00L28.88 32.25L26.25 34.50L21.75 32.25L24.75 35.62L22.88 39.75L21.38 39.00L21.00 39.75L18.75 37.88L18.75 34.50L17.62 34.12L16.50 31.12L15.38 30.75L15.75 33.00L17.25 34.88L16.88 37.12L18.38 39.75L17.62 41.25L16.88 40.88L19.88 43.12L21.00 46.12L20.62 48.00L19.50 49.12L19.12 48.38L19.88 50.25L18.75 50.62L18.38 51.75L16.50 50.62L16.50 48.75L13.50 47.62L15.00 52.88L17.25 53.62L16.88 54.75L15.75 54.00L16.12 55.12L15.00 56.62L16.12 57.75L15.75 63.75L12.75 66.75L10.12 65.62L10.50 63.75L9.00 63.75L9.75 66.75L11.62 69.00L12.75 74.62L17.62 67.12L17.25 65.62L19.12 61.50L24.38 56.62L31.12 52.88L24.75 56.25L23.25 55.12L25.88 49.88L25.12 49.88L26.25 48.00L25.50 47.62L27.75 45.00L26.62 45.00L27.75 41.25L30.75 37.88L34.50 39.00L31.88 37.88L32.62 36.75L34.50 36.75L33.75 36.00L34.12 34.50L38.62 36.38L36.75 34.88L38.62 32.25L37.12 29.25L39.38 27.38L39.75 23.25L42.00 17.62L43.12 17.25L42.00 20.62L43.12 17.25L44.62 15.75L45.38 16.12L44.25 18.38L45.75 16.88L48.75 17.62L47.62 16.88L48.75 15.75L51.00 18.38L51.75 22.50L52.12 20.25L53.25 22.50L53.25 25.12L52.12 23.25L53.25 25.50L52.88 26.25L55.88 28.88L55.88 30.38L54.75 31.88L57.00 34.50L54.75 35.62L58.88 34.50L58.88 36.00L60.00 36.75L58.12 37.50L61.12 37.12L60.75 38.62L61.50 39.00L60.38 39.75L62.62 38.25L64.50 40.12L64.88 42.75L66.38 44.62L66.38 46.50L64.50 46.12L67.50 48.38L68.25 50.25L67.50 51.00L69.75 54.75L69.00 55.88L68.25 54.75L69.00 56.25L68.25 56.62L57.75 51.00L68.25 56.62L73.88 61.12L75.75 64.88L75.38 66.38L81.00 76.12L81.38 71.25L83.25 67.50L83.62 63.00L82.12 64.12L82.50 66.38L79.88 67.12L77.25 63.00L77.25 60.38L79.88 55.88L80.25 53.62L78.00 54.38L76.88 52.12L75.38 52.88L73.88 51.00L74.62 47.62L76.12 45.75L76.88 46.12L78.38 45.00L78.75 43.12L77.25 45.00L75.38 44.62L74.25 42.75L71.62 44.25L70.88 43.12L71.25 39.75L69.00 37.88L69.38 35.25L72.00 33.75L74.62 27.75L72.75 28.88L72.38 32.25L70.50 34.50L69.00 30.75L68.25 31.88L66.00 31.88L66.00 31.12L65.25 31.12L65.62 28.12L64.12 28.50L62.62 27.00L63.75 23.62L63.00 19.50L63.75 17.62L65.25 16.50L65.62 14.25L65.25 15.75L61.88 18.00L60.38 21.75L58.12 19.12L57.38 16.88L57.75 13.88L55.88 12.38L55.12 10.50L54.38 12.00L52.88 11.62L46.50 6.00L44.62 9.00L40.88 10.88L39.38 13.50L37.88 13.50L37.88 15.75L36.75 15.75L36.38 14.25L36.00 15.38L34.88 15.00L36.00 16.50L35.25 22.12L32.62 24.00L29.62 22.12L27.38 17.62Z" fill="#20bff2" fill-opacity=".15" filter="url(#__MIST2__)"/>
-  <path d="M27.75 21.00L28.50 22.50L28.12 23.25L30.75 25.50L30.38 27.38L31.12 30.00L29.62 30.75L28.88 29.62L29.62 31.12L29.62 33.75L27.00 36.38L25.12 35.62L25.88 36.75L25.88 39.00L25.12 39.00L23.62 41.62L22.50 42.00L22.12 40.88L19.88 41.25L18.75 39.00L19.12 41.25L21.00 42.75L20.62 43.12L22.12 45.38L22.12 48.00L21.00 49.50L20.62 52.50L17.62 52.50L18.38 53.25L18.38 56.25L16.88 56.62L18.00 57.38L17.62 61.88L16.12 64.50L16.12 67.12L15.00 68.25L15.38 69.00L13.12 69.38L11.62 67.50L12.75 69.00L12.38 69.75L13.12 70.12L13.12 71.25L14.25 72.00L19.50 60.75L26.25 55.50L22.12 58.50L21.75 58.12L22.88 54.38L24.75 51.38L24.38 51.75L24.00 51.00L25.12 49.50L25.12 48.00L27.00 46.12L26.25 45.38L28.88 38.62L31.50 37.50L31.88 36.38L34.12 36.75L33.38 36.00L33.75 33.75L37.88 36.00L35.62 34.12L36.38 33.75L37.12 34.50L36.75 33.00L37.88 33.00L38.25 31.88L37.12 30.75L37.12 29.25L39.38 26.62L39.00 27.00L38.62 26.25L41.25 18.38L43.88 15.00L44.62 15.00L44.62 15.75L46.50 14.62L46.12 16.50L47.62 16.88L46.50 15.38L47.62 15.00L48.75 15.75L49.12 15.00L51.00 16.50L51.38 19.12L51.38 18.38L52.12 18.38L54.38 25.88L54.00 26.25L53.25 25.50L56.25 29.25L55.12 31.88L56.25 32.62L55.88 33.38L57.75 33.75L55.88 35.25L60.00 33.75L60.38 34.12L59.25 36.00L60.75 36.75L59.25 37.50L61.50 37.12L61.50 37.88L63.38 38.25L65.25 40.12L66.00 42.00L65.25 43.12L67.12 46.12L66.38 46.88L65.62 46.50L67.50 48.00L69.00 51.75L68.62 52.12L67.88 51.38L70.12 54.38L71.25 57.38L70.50 57.75L69.00 56.25L69.00 57.00L68.25 56.62L74.25 61.50L77.25 69.00L79.50 72.75L79.50 70.88L81.75 69.00L80.25 69.00L79.88 70.12L78.75 69.75L79.12 68.62L78.75 69.00L78.00 68.25L76.12 62.62L76.50 58.50L79.12 55.12L77.62 55.88L77.25 54.38L76.50 56.25L75.75 55.50L75.00 56.25L73.50 55.88L73.50 54.00L72.38 52.50L72.38 49.50L74.25 47.25L74.62 45.75L73.50 47.62L72.75 46.88L71.62 48.00L70.88 47.62L71.25 46.12L69.75 46.12L70.12 40.88L69.75 40.50L69.00 41.25L67.12 37.88L68.62 35.25L67.88 33.75L68.25 33.00L65.25 34.50L63.38 31.50L63.75 29.62L60.75 27.75L60.75 25.88L62.25 25.12L62.62 18.38L62.62 21.38L60.00 23.62L56.62 19.88L55.88 17.25L56.25 16.12L55.50 16.50L54.75 15.38L55.12 13.88L54.00 14.25L50.62 10.88L46.88 8.62L47.25 9.00L46.50 9.75L43.88 10.50L41.62 12.38L38.62 17.62L37.50 18.00L36.75 17.25L37.12 19.12L36.38 20.25L36.38 23.62L34.50 24.75L33.38 26.62L30.75 24.00L29.25 23.62Z" fill="#43d7ff" fill-opacity=".20" filter="url(#__MIST2__)"/>
-  <path d="M44.62 11.25L43.88 12.38L42.38 13.12L40.50 15.75L40.12 18.00L37.50 21.38L37.50 24.00L34.12 28.50L30.00 24.38L31.88 26.62L31.50 28.50L32.62 30.38L31.50 31.50L30.00 31.50L31.12 32.25L30.38 34.12L28.12 36.75L27.38 36.75L27.38 39.00L25.88 40.50L26.25 41.25L24.75 44.25L22.50 45.00L22.12 42.75L20.25 42.00L22.12 43.50L22.12 44.62L23.62 46.50L21.38 54.38L19.88 55.12L19.12 54.38L19.88 55.50L19.88 57.75L18.38 58.12L19.50 59.62L18.75 60.38L19.12 61.12L18.38 62.25L21.00 59.25L20.62 58.88L21.38 58.12L21.75 56.25L23.62 53.25L23.62 51.38L25.88 46.88L25.50 46.50L27.75 40.12L29.62 37.50L31.12 37.12L31.88 36.00L33.00 36.38L32.62 36.00L33.38 35.25L33.38 33.75L37.12 35.62L35.25 34.12L35.62 33.00L36.75 33.75L36.75 32.25L37.88 31.88L36.75 29.62L38.62 27.38L38.25 26.62L39.75 23.25L39.75 21.75L40.50 21.00L40.50 19.50L43.12 15.00L45.75 13.50L47.25 13.50L49.50 15.00L49.88 14.62L52.50 18.75L52.88 21.38L54.75 25.88L54.38 27.38L56.25 29.25L55.50 31.88L56.62 32.25L56.25 33.00L58.50 33.00L57.00 34.88L58.88 33.75L60.00 33.75L60.38 34.50L59.62 35.62L61.50 36.38L60.38 37.12L61.50 36.75L64.50 38.62L66.00 41.62L66.00 43.88L67.50 46.50L67.50 47.25L66.75 47.25L68.25 48.75L69.38 51.38L69.38 52.50L68.62 52.50L71.25 56.25L72.00 58.50L71.62 58.88L75.00 62.25L75.75 64.50L74.62 60.00L75.00 58.12L76.50 57.38L76.88 56.25L76.12 57.38L75.00 57.38L73.50 58.88L72.75 57.38L72.00 57.38L71.25 52.50L72.00 48.75L71.25 49.88L69.75 48.75L68.62 46.12L68.62 43.12L66.00 38.25L67.50 34.50L66.00 35.62L64.88 35.62L63.75 34.50L64.12 33.75L63.38 34.12L62.25 33.00L62.62 30.00L61.88 30.38L58.88 28.50L59.62 26.62L59.25 25.88L60.38 24.75L61.50 24.75L61.88 24.00L61.12 24.75L60.38 24.00L58.88 24.00L58.50 24.75L57.00 24.00L57.38 23.62L55.50 20.62L55.50 18.38L54.38 18.00L52.50 13.88L51.38 13.50L49.12 11.25L49.12 10.50L48.38 10.88L47.62 9.75L47.25 10.50ZM32.62 27.38L33.38 28.12L33.00 29.25L32.25 28.50Z" fill="#d8fbff" fill-opacity=".23" filter="url(#__GLOW__)"/>
-</g>
-<g data-brand-energy="" aria-hidden="true"></g>
-
-<g data-brand-figure="">
-  <!-- wide, reference-led cloak with a calm lower edge -->
-  <path data-brand-cloak="" d="M47.8 34.8C42.2 34.6 36.2 35.6 30.4 39.1C24.7 42.5 20.8 48.8 17.3 57.5L5.8 91.8C4.9 94.5 6.3 95.7 9.1 95.8C20.4 96 32.9 96 42.4 95.7C45.8 95.6 47.4 94.9 48.1 93.8C49 94.9 50.7 95.6 54.1 95.7C63.8 96 76 96 86.9 95.8C89.5 95.7 90.8 94.4 89.9 91.8L79 58.4C76.2 49.9 72.4 43.8 66.8 40.1C61.1 36.3 54.9 34.9 47.8 34.8Z" fill="url(#__CLOAK__)" stroke="#234c59" stroke-opacity=".28" stroke-width=".38"/>
-  <path d="M6.2 90.5C19 92.4 33.1 93.2 47.9 93.1C62.5 93.2 76.5 92.5 89.4 90.6L89.9 95.8H5.9Z" fill="#000204"/>
-
-  <!-- three irregular cloth families, with the right side deliberately quieter -->
-  <g data-brand-folds="">
-    <path d="M6.1 95.8C10.4 77.5 17.7 57.5 30.8 39.4C35 36.1 39.4 37.1 44.3 41.2C34.6 52.5 26.8 70.1 20.6 95.9Z" fill="#01070b"/>
-    <path d="M12.6 95.9C18.2 76.4 25.4 56.7 43.9 41.2C36.8 57.5 33.1 75.1 32.3 96Z" fill="url(#__LEFTMASS__)" opacity=".54"/>
-    <path d="M24.4 96C29.2 74.9 35.3 57.1 45.8 43.1C40.5 62.2 39.5 79.6 40.8 96Z" fill="#061720" fill-opacity=".48"/>
-    <path d="M38.9 96C40.8 76.3 43.9 59.2 47.4 45C46.4 64.7 46.8 82.5 47.9 96Z" fill="#01070b"/>
-
-    <path d="M89.7 95.8C85.3 78.3 77.9 59.2 66 40.2C61.8 36.9 57.1 37.7 51.1 42.2C61.8 53.9 70.5 71.2 76.8 95.9Z" fill="#000306"/>
-    <path d="M84.2 95.9C78.5 76.8 71.5 58.6 52.1 41.9C60.7 58.2 64.6 75.3 65.1 96Z" fill="url(#__RIGHTMASS__)" opacity=".36"/>
-    <path d="M73.2 96C68.8 75.2 62.5 57.6 50.4 43.7C56.5 62.7 58.8 79.8 57.7 96Z" fill="#00070b" fill-opacity=".84"/>
-    <path d="M58.3 96C55.8 76.9 52.4 60.2 48.8 45.2C50.6 65.4 51 82.5 50.2 96Z" fill="#000204"/>
-
-    <path d="M11.9 89C20.2 65.4 31.5 49.6 44.5 42.4C35.3 57 27.8 74.5 21.9 95.2Z" fill="#1b4b59" fill-opacity=".045"/>
-    <path d="M84.6 89.4C76.7 67.4 65.5 51.2 51.2 42.9C61.2 57.5 68.9 75.1 74.9 95.2Z" fill="#0a2b35" fill-opacity=".025"/>
-  </g>
-
-  <!-- hood proportions reset from the canonical reference -->
-  <path data-brand-hood="" d="M48 12.1C43.8 13.3 40.6 17.2 38.8 22.2C37 27.3 35.3 31.2 32.9 34.9C36.8 34.6 40.8 35.8 44.2 38.1C45.8 39.2 47 40.4 47.9 41.6C49.1 40.2 50.7 38.8 52.5 37.8C55.8 35.9 59.4 34.8 63.1 35.1C60.8 31.2 59 27 57.3 22.1C55.5 17.1 52.3 13.3 48 12.1Z" fill="url(#__HOOD__)" stroke="#3f8190" stroke-opacity=".38" stroke-width=".44"/>
-  <g data-brand-hood-layers="">
-    <path d="M48 12.7C44.8 14.4 42.1 18 40.4 22.6C38.7 27.1 37 31 34.8 34.1C38.7 34.4 42.4 36.7 47.2 41.2C45.7 33.4 45.8 27.2 46.5 21.2C46.9 17.4 47.6 14.4 48 12.7Z" fill="#123746"/>
-    <path d="M48 12.7C51.3 14.3 54 17.9 55.7 22.4C57.2 26.5 59 30.7 61.2 34.1C57.6 34.2 53.8 36.5 48.6 41.2C50.1 33.5 50.2 27.1 49.5 21.1C49.1 17.4 48.4 14.4 48 12.7Z" fill="#01080d"/>
-    <path d="M48 13.9C45.1 15.4 42.8 18.3 41.1 21.9C43.2 20.4 45.5 19.3 47.9 18.7C50.5 19.3 52.8 20.4 54.8 22C53.2 18.3 50.9 15.4 48 13.9Z" fill="#092631"/>
-    <path d="M47.6 15.5C45.8 16.5 44.2 18 43 19.8C44.6 19.2 46.2 18.8 47.9 18.6C49.8 18.8 51.5 19.3 53.1 20.1C51.9 18.1 50.1 16.5 47.6 15.5Z" fill="#04131a"/>
-    <path d="M43.2 22.2C40.8 24.8 39.4 28 39 31.3C40.1 34.2 42.2 36.6 45.3 38.8" fill="none" stroke="#275564" stroke-opacity=".38" stroke-width=".42" stroke-linecap="round"/>
-    <path d="M52 22.3C54.3 24.4 55.7 27.2 56.1 30.1C55.6 33 54.1 35.3 51.7 37.2" fill="none" stroke="#12323e" stroke-opacity=".26" stroke-width=".38" stroke-linecap="round"/>
-  </g>
-
-  <!-- irregular cavern; angled entrance and unequal inner walls -->
-  <path data-brand-face-void="" d="M47.6 19.6L44.1 21.4L41.4 26.1L40.6 29.9L42.4 33.3L46.1 36.7L48 37.3L51.8 34.6L54.3 31.1L54 27.1L52.1 23.4L49.3 20.4Z" fill="#000"/>
-  <g data-brand-face-depth="">
-    <path d="M47.6 19.6L44.1 21.4L41.4 26.1L40.6 29.9L42.4 33.3L44.9 35.7C43.8 33 43.6 30.6 44.1 27.9C44.7 24.8 45.9 22 47.6 19.6Z" fill="#010408"/>
-    <path d="M47.6 19.6L49.3 20.4L52.1 23.4L54 27.1L54.3 31.1L51.8 34.6L50.2 36.2C51.5 33.4 51.9 30.9 51.5 28.5C51 25.2 49.8 22.4 47.6 19.6Z" fill="#000102"/>
-  </g>
-
-  <!-- crushed cowl: offset overlapping pieces, not a closed ring -->
-  <path data-brand-neck-shadow="" d="M36 34.5C42.1 35.3 49.4 36.1 56.8 34.8C60.4 35.3 63.5 36.7 65.7 38.6C61 41.5 55.2 42.8 48.3 42.8C41.2 42.8 35.1 41.4 30.4 38.7C32 36.7 33.9 35.3 36 34.5Z" fill="#01060a"/>
-  <g data-brand-collar="">
-    <path d="M27.2 34.9C33.4 32.8 38.8 33.2 44.7 35.8C50.2 38.3 55.3 38.7 63.6 36.3C60.6 39.1 56.4 40.2 51.2 40.1L47.1 39.6C41.5 39 34.4 37.6 27.2 34.9Z" fill="#061820"/>
-    <path d="M67.4 35.9C60.9 34.7 56.2 35.7 50.7 38.4C46.2 40.6 41.7 41.5 35 40.3C38.1 43.3 42.6 44 47.8 42.9C55.1 41.6 61.7 39.2 67.4 35.9Z" fill="#01080d"/>
-    <path d="M31.2 38.3C36.3 37 40.8 37.6 45.7 39.6C50 41.4 53.3 41.5 58.3 40.4C55.7 42.4 52.1 43 48 42.4C42.1 41.9 36.4 40.4 31.2 38.3Z" fill="#031017"/>
-    <path d="M25.9 37.4C28.9 35.5 31.9 34.6 35.2 34.3L32.6 39.5C30 39.2 27.8 38.5 25.9 37.4Z" fill="#071d25"/>
-    <path d="M62.9 36.2C65.2 36.1 67.4 36.8 69.4 38.1C67.3 39.6 65 40.6 62.4 41L60.7 37.2C61.4 36.8 62.1 36.5 62.9 36.2Z" fill="#020b11"/>
-    <path d="M29.1 35.2C34.7 33.6 39.7 34.1 45.2 36.6C50.6 39 55.8 39.2 62.9 36.8" fill="none" stroke="#6ea6b2" stroke-opacity=".05" stroke-width=".25" stroke-linecap="round"/>
-    <path d="M36.1 38.2L39.2 39.9L36.8 40.9M57.8 37.4L54.9 39.1L57.1 40.2" fill="none" stroke="#123944" stroke-opacity=".18" stroke-width=".34" stroke-linecap="round"/>
-  </g>
-
-  <g data-brand-texture="" fill="none" stroke-linecap="round">
-    <path d="M8.2 90C16.7 68.2 27.2 53.2 43.1 46.8" stroke="#75bdc8" stroke-opacity=".075" stroke-width=".34"/>
-    <path d="M16.3 95C22.2 75.9 30.5 60 44.5 49.1" stroke="#4e95a3" stroke-opacity=".055" stroke-width=".29"/>
-    <path d="M27.3 95.7C31.5 77.5 37.4 61.8 45.8 51.5" stroke="#356f7d" stroke-opacity=".043" stroke-width=".26"/>
-    <path d="M87.2 90C78.7 69 67.4 53.8 52.6 47" stroke="#295d6a" stroke-opacity=".038" stroke-width=".3"/>
-    <path d="M79.7 95C73.7 76.3 65.4 60.4 51.4 49.5" stroke="#174653" stroke-opacity=".027" stroke-width=".26"/>
-  </g>
-
-  <!-- fragmented rim, never a full neon tube -->
-  <g data-brand-rim-light="" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#__GLOW__)">
-    <path d="M33.1 34.7C35.1 31.4 36.7 27.6 38.3 23.1" stroke="#d9fbff" stroke-opacity=".56" stroke-width=".4"/>
-    <path d="M39.2 21.1C41 16.7 43.9 13.3 47.3 12.2" stroke="#e7feff" stroke-opacity=".64" stroke-width=".43"/>
-    <path d="M47.6 12.2L48.1 12.1" stroke="#f5ffff" stroke-opacity=".72" stroke-width=".48"/>
-    <path d="M48.3 12.2C52.1 13.5 54.9 16.8 56.6 21.1" stroke="#9beafa" stroke-opacity=".48" stroke-width=".38"/>
-    <path d="M57.5 23.3C59 27.7 60.7 31.5 63 35" stroke="#7eddf3" stroke-opacity=".39" stroke-width=".35"/>
-    <path d="M32.5 35.3C28.8 37.6 26.1 40.6 23.9 44.6" stroke="#d7fbff" stroke-opacity=".30" stroke-width=".30"/>
-    <path d="M21.5 49.5L18 57" stroke="#a8efff" stroke-opacity=".16" stroke-width=".24"/>
-    <path d="M64.4 35.7C68 38.1 70.8 41.1 72.8 45" stroke="#72d9f0" stroke-opacity=".22" stroke-width=".27"/>
-    <path d="M75.2 50.4L77.9 56.8" stroke="#4fc9ec" stroke-opacity=".12" stroke-width=".21"/>
-  </g>
-
-  <g data-brand-seams="" fill="none" stroke-linecap="round">
-    <path d="M16.2 61.3C24.1 54.3 33.8 49.3 43.6 49.9" stroke="#80c3cc" stroke-opacity=".04" stroke-width=".24"/>
-    <path d="M78.9 62C70.8 55.1 61.4 50 52 50.2" stroke="#244f5b" stroke-opacity=".025" stroke-width=".22"/>
-    <path d="M11.1 78.6C20.6 66.2 31.6 57.6 44.7 53.5" stroke="#5194a0" stroke-opacity=".032" stroke-width=".23"/>
-    <path d="M84.6 79.1C75 66.7 64.1 58 51.3 53.8" stroke="#173f4b" stroke-opacity=".019" stroke-width=".21"/>
-  </g>
-</g>
-`;
-
+const BRAND_VERSION = 'cloak-20260728-15';
+const VECTOR_SOURCE = 'canonical-reference-v2-macro-reset-v13-4';
+const VECTOR_BODY = `<defs><linearGradient id="__CLOAK__" x1="24" y1="39" x2="67" y2="94" gradientUnits="userSpaceOnUse"><stop stop-color="#0d2732"/><stop offset=".22" stop-color="#071a23"/><stop offset=".5" stop-color="#020a0f"/><stop offset=".8" stop-color="#010407"/><stop offset="1" stop-color="#000102"/></linearGradient><linearGradient id="__HOOD__" x1="39" y1="10" x2="57" y2="35" gradientUnits="userSpaceOnUse"><stop stop-color="#1a4556"/><stop offset=".28" stop-color="#0c2b39"/><stop offset=".6" stop-color="#04151e"/><stop offset=".86" stop-color="#01070b"/><stop offset="1" stop-color="#000204"/></linearGradient><linearGradient id="__LEFTFOLD__" x1="26" y1="42" x2="30" y2="95" gradientUnits="userSpaceOnUse"><stop stop-color="#10313d"/><stop offset=".44" stop-color="#061820"/><stop offset="1" stop-color="#010307"/></linearGradient><linearGradient id="__RIGHTFOLD__" x1="67" y1="43" x2="64" y2="95" gradientUnits="userSpaceOnUse"><stop stop-color="#071d26"/><stop offset=".48" stop-color="#030d13"/><stop offset="1" stop-color="#000204"/></linearGradient><filter id="__MIST5__" x="-160%" y="-160%" width="420%" height="420%"><feGaussianBlur stdDeviation="4.6"/></filter><filter id="__MIST2__" x="-140%" y="-140%" width="380%" height="380%"><feGaussianBlur stdDeviation="1.7"/></filter><filter id="__GLOW__" x="-160%" y="-160%" width="420%" height="420%"><feGaussianBlur stdDeviation=".72" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g data-brand-atmosphere="" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><g filter="url(#__MIST5__)" stroke="#2bc9f5" stroke-opacity=".23" stroke-width="4.2"><path d="M45.5 10.8C41 7.5 38 4.2 33.2 3.5C29.5 3 27.6 5.1 24 4.2M41.3 16.8C36 13.8 33.5 10.4 28.7 10.1C24.5 9.8 21.8 12 18 11.2M38 23.3C32.7 20.3 29.8 17.3 25.2 17.7C20.4 18 18.3 21.8 13.6 20.9M34.4 30.7C29.2 28 25.4 25.2 21.2 27.2C17.7 28.9 15 32.4 10.7 31.7M30.5 38.6C25.4 37 21 34.8 17.7 37.8C14.8 40.4 12.4 44.6 8.7 44.8M26.7 47.2C21.8 46.8 17.7 45 14.8 49C12.4 52.3 10.8 56.8 7.2 58M22.9 56.5C18.7 57.3 15.4 56.6 12.6 60.6C10.9 63.1 9.4 67 6.8 68.7M50.7 10.9C55.1 7.7 58.5 4.8 63.1 4.5C66.8 4.3 68.8 6.6 72.4 5.8M54.8 16.8C60.1 14.2 63.2 10.9 67.9 11.2C72.1 11.5 74.3 14.1 78.2 13.5M58.1 23.5C63.4 20.7 66.4 18.1 71 18.9C75.6 19.6 77.8 23 82.3 22.6M61.6 30.8C66.9 28.4 70.3 26 74.6 28.1C78.1 29.8 80.6 33.3 84.8 33M65.5 38.8C70.6 37.2 74.8 35.2 78.3 38.1C81.3 40.7 83.5 44.9 87.4 45.2M69.3 47.4C74.2 47 78.3 45.4 81.1 49.4C83.5 52.8 85.1 57.1 88.7 58.4M73.1 56.7C77.3 57.5 80.5 56.9 83.4 60.9C85.1 63.4 86.4 67.3 89.3 69"/></g><g filter="url(#__MIST2__)" stroke="#77e3ff" stroke-opacity=".27" stroke-width="1.05"><path d="M45.3 11L41.2 8.6L39.4 5.5L35.2 4.2L31.8 5.2L28 4.7M41 17L36.8 14.9L34.4 11.3L30.4 10.7L27.1 12.1L23.1 11.8M37.8 23.7L33.2 21.2L30.1 18.6L26.4 18.4L23.4 20.3L19.2 21M34.2 31L29.5 28.8L25.8 26.6L22.2 27.9L19.9 30.7L15.7 32M30.3 38.9L25.8 37.4L21.8 35.9L18.7 38.6L16.4 42.2L12.2 44.2M26.5 47.5L22.2 47L18.3 45.9L15.5 49.6L13.8 53.7L10.4 57.2M50.8 11.1L54.8 8.8L57 5.8L61 5L64.3 6.3L68.1 5.9M55 17L59.3 15.2L61.8 11.8L65.8 11.4L69 13L72.9 13.2M58.2 23.8L62.8 21.5L65.9 19.1L69.6 19.1L72.7 21.1L76.8 22M61.8 31.1L66.5 29L70.2 27L73.8 28.5L76.1 31.3L80.3 32.8M65.7 39.1L70.2 37.7L74.2 36.3L77.4 39L79.7 42.7L83.8 44.6M69.5 47.7L73.8 47.2L77.7 46.2L80.5 50L82.2 54L85.7 57.5"/></g><g fill="none" filter="url(#__GLOW__)" stroke-linecap="round" stroke-linejoin="round"><path d="M41.5 14L38.4 12.5L36.7 9.6L33.7 8.7L31.7 6.8" stroke="#dffcff" stroke-opacity=".20" stroke-width=".28"/><path d="M37.9 21L34.4 19.5L32.1 16.5L28.9 16.4L26.8 14.7" stroke="#b8f3ff" stroke-opacity=".19" stroke-width=".27"/><path d="M33.8 29L30.1 27.7L27.4 25.2L24.2 26.2L21.8 24.9" stroke="#9cecff" stroke-opacity=".15" stroke-width=".25"/><path d="M28.8 38.4L25.2 37.6L22.2 35.9L19.7 38.2" stroke="#83e4ff" stroke-opacity=".11" stroke-width=".23"/><path d="M54.5 14.2L57.4 13L59.3 10.4L62.1 9.6" stroke="#d2f9ff" stroke-opacity=".16" stroke-width=".27"/><path d="M58.1 21.1L61.5 19.8L63.6 17.1L66.7 17.4L68.4 15.9" stroke="#9beaff" stroke-opacity=".17" stroke-width=".25"/><path d="M62.2 29.2L65.8 28.1L68.6 25.8L71.5 27" stroke="#78dcf5" stroke-opacity=".13" stroke-width=".24"/><path d="M67.1 38.7L70.8 38L73.7 36.5L76 39" stroke="#5bcbea" stroke-opacity=".09" stroke-width=".22"/><path d="M34.4 19.5L32.7 21.5M28.9 16.4L27.8 18.6M65.8 28.1L64.2 30.4M73.7 36.5L75.8 35.2" stroke="#dffcff" stroke-opacity=".09" stroke-width=".19"/></g></g><g data-brand-energy="" aria-hidden="true"/><g data-brand-figure=""><path data-brand-cloak="" d="M48 32.8C42.6 32.7 37.4 34.2 32.9 37.4C28.3 40.7 24.8 47 21.9 55.5L11.4 90.7C10.5 93.8 12.1 95.3 15.1 95.5C24.8 95.9 35.4 95.9 43.2 95.6C46 95.5 47.5 94.7 48.1 93.6C49 94.7 50.6 95.5 53.6 95.6C61.7 95.9 72.3 95.9 81.1 95.5C84 95.3 85.5 93.8 84.6 90.7L74.6 56.4C72.1 47.8 68.7 41.6 64.1 38.1C59.5 34.6 54.2 32.9 48 32.8Z" fill="url(#__CLOAK__)" stroke="#244f5c" stroke-opacity=".26" stroke-width=".38"/><path d="M11.8 89.8C22.1 92.2 34.1 93.2 48 93.1C61.7 93.2 73.7 92.2 84.2 89.8L84.8 95.7H11.2Z" fill="#000204"/><g data-brand-folds=""><path d="M11.6 95.6C15.4 77.2 21.9 56.7 33.1 37.7C36.2 34.9 40 35.5 44.1 39.4C35.7 51.4 28.9 70 23.8 95.8Z" fill="#01070b"/><path d="M17.2 95.8C21.6 76.4 27.9 55.9 43.9 39.2C37.5 56.3 34.6 74.5 34.5 95.9Z" fill="url(#__LEFTFOLD__)" opacity=".52"/><path d="M27.7 95.9C31.5 74.8 36.5 56.4 45.8 41.2C41.2 61.1 40.3 79.2 41.5 96Z" fill="#061720" fill-opacity=".48"/><path d="M40 96C42 75.4 44.6 57.9 47.4 43.5C46.6 64.2 47 82.1 48 96Z" fill="#01070b"/><path d="M84.4 95.6C80.5 77.8 74.3 58.1 63.9 38.4C60.6 35.4 56.8 35.7 51.3 40.2C60.5 52.2 67.8 70.5 72.8 95.8Z" fill="#000306"/><path d="M79 95.8C74.6 76.9 68.4 56.8 52 39.8C59.1 56.6 62.5 74.7 62.3 95.9Z" fill="url(#__RIGHTFOLD__)" opacity=".34"/><path d="M68.5 95.9C64.7 75.2 59.5 56.8 50.2 41.5C55.2 61.2 56.7 79.2 55.7 96Z" fill="#00070b" fill-opacity=".83"/><path d="M56 96C53.8 75.6 51.4 58.2 48.7 43.7C50.1 64.3 50.4 82.2 49.8 96Z" fill="#000204"/><path d="M15.2 88.3C22.9 65.2 33.1 49.3 44.6 40.7C36.7 56.8 30.1 74.3 25.1 94.7Z" fill="#1b4b59" fill-opacity=".05"/><path d="M80.8 88.7C73.5 67.2 63.7 51.2 51.1 41.1C59.8 57 66.4 74.6 71.3 94.8Z" fill="#0a2b35" fill-opacity=".027"/></g><path data-brand-hood="" d="M48 9.8C44.5 10.8 41.9 14.4 40.2 19.1C38.5 23.8 36.8 28.2 34.8 32.2C38.9 31.3 43 32.4 46 34.7C46.8 35.3 47.5 36.1 48 37C48.7 36 49.6 35.1 50.8 34.3C53.7 32.3 57.2 31.4 61.3 32.2C59.2 28.2 57.5 23.8 55.8 19C54.1 14.4 51.5 10.8 48 9.8Z" fill="url(#__HOOD__)" stroke="#3e8291" stroke-opacity=".38" stroke-width=".42"/><g data-brand-hood-layers=""><path d="M48 10.4C45.2 11.9 43 15.2 41.4 19.4C39.9 23.7 38.4 27.7 36.4 30.9C39.9 31.1 43.4 33.1 47.5 36.7C46.1 29.7 46.2 23.9 46.8 18.4C47.1 14.8 47.7 11.9 48 10.4Z" fill="#123746"/><path d="M48 10.4C50.8 11.9 53 15.2 54.6 19.3C56.1 23.5 57.6 27.6 59.6 30.9C56.3 31 52.8 33 48.4 36.8C49.8 29.8 49.8 24 49.2 18.5C48.9 14.8 48.3 11.9 48 10.4Z" fill="#01080d"/><path d="M48 11.7C45.5 13 43.6 15.7 42.2 19C44 17.6 45.9 16.7 48 16.2C50.1 16.7 52.1 17.7 53.8 19.1C52.4 15.7 50.5 13 48 11.7Z" fill="#092631"/><path d="M47.7 13.2C46.1 14 44.8 15.4 43.7 17C45.1 16.4 46.5 16.1 48 15.9C49.6 16.1 51 16.6 52.3 17.2C51.3 15.5 49.8 14.1 47.7 13.2Z" fill="#04131a"/><path d="M43.1 18.6C41.2 21 40 24.2 39.7 27.5" fill="none" stroke="#285866" stroke-opacity=".34" stroke-width=".34" stroke-linecap="round"/><path d="M52.7 18.8C54.5 21.2 55.5 24.2 55.7 27.2" fill="none" stroke="#12323e" stroke-opacity=".23" stroke-width=".31" stroke-linecap="round"/></g><path data-brand-face-void="" d="M47.8 15.9L44.1 17.8L40.7 22.3L39.1 27.3L40.4 31.2L44.4 34.9L48 36.1L52.6 32.8L56.2 28.2L55.2 23.2L52.5 19L49.2 16.4Z" fill="#000"/><g data-brand-face-depth=""><path d="M47.8 15.9L44.1 17.8L40.7 22.3L39.1 27.3L40.4 31.2L44.4 34.9C42.9 31.9 42.5 29 43 25.9C43.5 22.3 45.1 18.9 47.8 15.9Z" fill="#010408"/><path d="M47.8 15.9L49.2 16.4L52.5 19L55.2 23.2L56.2 28.2L52.6 32.8L50.4 34.8C52 31.7 52.6 28.9 52.1 25.9C51.6 22.3 50.2 18.9 47.8 15.9Z" fill="#000102"/></g><path data-brand-neck-shadow="" d="M34.6 31C39.2 31.3 43.5 32.6 48 35.5C52 32.8 56.5 31.5 61.3 31.6C64.7 31.7 67.6 33 69.7 35.3C64.3 39.8 57.1 42.3 48.2 42.2C39.8 42 32.3 39.7 26.2 35.2C28.5 33 31.3 31.6 34.6 31Z" fill="#010609"/><g data-brand-collar=""><path d="M26.3 35.1C31.3 32.1 36 31.3 40.7 32.4C43.3 33 45.8 34.2 48 36C43.3 35.7 38.8 36.5 34.6 38.4C31.2 37.8 28.4 36.7 26.3 35.1Z" fill="#0a2732"/><path d="M29.4 37.7C33.9 34.8 38.4 34 42.8 35.1C44.8 35.6 46.6 36.4 48.2 37.4C43.9 37.6 40.1 38.7 36.6 40.5C33.8 40 31.4 39 29.4 37.7Z" fill="#071b24"/><path d="M33.6 39.9C37.2 37.2 41 36.6 44.7 37.6L48.2 39.2C44.8 39.6 41.8 40.6 39.2 42.1C36.9 41.8 35 41.1 33.6 39.9Z" fill="#031017"/><path d="M69.6 35.3C65 32.5 60.5 31.9 56 33C53.2 33.7 50.6 34.8 48 36.3C52.5 36.1 56.9 37 61 38.8C64.3 38.2 67.2 37 69.6 35.3Z" fill="#05151d"/><path d="M66.4 38C62.2 35.2 58 34.5 53.7 35.7C51.6 36.3 49.8 37.1 48.1 38C52.1 38.1 55.9 39.2 59.3 40.9C62 40.4 64.4 39.4 66.4 38Z" fill="#01080d"/><path d="M62.2 40.2C58.8 37.7 55.2 37.1 51.6 38.1L48.1 39.7C51.4 40 54.3 41 56.9 42.3C59 41.9 60.8 41.2 62.2 40.2Z" fill="#02090e"/><path d="M38.5 41C42 39.1 45.1 38.6 48.1 39.5C51 38.7 54.1 39.2 57.6 41C55 42.5 51.8 43.2 48.1 43C44.4 43.2 41.2 42.5 38.5 41Z" fill="#01070b"/><path d="M28.2 34.7C33.6 32.1 38.6 31.9 44 33.7" fill="none" stroke="#76aeb8" stroke-opacity=".06" stroke-width=".25"/><path d="M67.7 35C62.7 32.4 57.8 32.5 52.5 34.2" fill="none" stroke="#315c68" stroke-opacity=".042" stroke-width=".23"/><path d="M33.4 37.4L37.1 35.7M38 40.2L42 37.9M62.7 37.7L58.8 36M58 40.4L54.1 38.1" fill="none" stroke="#194552" stroke-opacity=".18" stroke-width=".3"/><path d="M27.8 35.2C31.2 33.7 34.7 33.3 38.1 34M30.5 37.7C34 36.2 37.4 36 40.8 36.8M34.7 39.7C37.7 38.7 40.4 38.7 43 39.5" fill="none" stroke="#82bfca" stroke-opacity=".07" stroke-width=".24"/><path d="M68.1 35.4C64.8 34 61.4 33.7 58.1 34.5M65.4 38C62 36.6 58.7 36.4 55.5 37.2M61.2 40C58.4 39 55.7 39 53.1 39.8" fill="none" stroke="#477985" stroke-opacity=".052" stroke-width=".23"/></g><g data-brand-texture="" fill="none" stroke-linecap="round"><path d="M14 90C21.4 68.7 30.7 53.2 43.3 45" stroke="#75bdc8" stroke-opacity=".07" stroke-width=".32"/><path d="M21.2 95C26.3 76.4 33.1 60.6 44.7 47.4" stroke="#4e95a3" stroke-opacity=".05" stroke-width=".28"/><path d="M31 95.7C34.4 77.7 39 62.2 45.9 49.7" stroke="#356f7d" stroke-opacity=".04" stroke-width=".25"/><path d="M81.7 90C74.5 69.3 65 53.7 52.5 45.2" stroke="#295d6a" stroke-opacity=".035" stroke-width=".29"/><path d="M74.9 95C69.8 76.8 62.8 61 51.3 47.7" stroke="#174653" stroke-opacity=".025" stroke-width=".25"/></g><g data-brand-rim-light="" fill="none" stroke-linejoin="round" stroke-linecap="round" filter="url(#__GLOW__)"><path d="M35.4 31.5C37.2 28 38.6 24 40 19.6" stroke="#dbfcff" stroke-opacity=".65" stroke-width=".38"/><path d="M40.8 17.6C42.3 13.9 44.8 10.9 47.6 9.9" stroke="#e9feff" stroke-opacity=".73" stroke-width=".4"/><path d="M47.8 9.9L48.2 9.8" stroke="#f7ffff" stroke-opacity=".82" stroke-width=".45"/><path d="M48.3 9.9C51.3 10.9 53.8 14 55.2 17.7" stroke="#9beafa" stroke-opacity=".55" stroke-width=".36"/><path d="M56 19.8C57.5 24.2 58.8 28.2 60.7 31.6" stroke="#7eddf3" stroke-opacity=".44" stroke-width=".33"/><path d="M34.6 32C31.6 34.1 29.2 36.9 27.2 40.7" stroke="#d7fbff" stroke-opacity=".36" stroke-width=".28"/><path d="M25 45.1L22.1 52" stroke="#a8efff" stroke-opacity=".20" stroke-width=".22"/><path d="M61.3 32.2C64.4 34.4 66.9 37.3 68.8 41" stroke="#72d9f0" stroke-opacity=".29" stroke-width=".25"/><path d="M71 45.5L73.5 52" stroke="#4fc9ec" stroke-opacity=".16" stroke-width=".2"/><path d="M34.6 32C31.2 33.3 28.2 35.3 25.8 38.1" stroke="#c9f8ff" stroke-opacity=".34" stroke-width=".31"/><path d="M61.2 32.1C64.7 33.5 67.6 35.5 70 38.4" stroke="#76dff3" stroke-opacity=".27" stroke-width=".28"/></g><g data-brand-seams="" fill="none" stroke-linecap="round"><path d="M20.9 59.6C27.8 52.8 35.8 48.2 44 48.8" stroke="#80c3cc" stroke-opacity=".035" stroke-width=".23"/><path d="M75 60.2C68.2 53.6 60.2 48.8 52 49" stroke="#244f5b" stroke-opacity=".022" stroke-width=".21"/><path d="M16.2 78C24.2 65.7 33.5 57.2 44.9 53.3" stroke="#5194a0" stroke-opacity=".028" stroke-width=".22"/><path d="M79.8 78.5C71.7 66.3 62.4 57.8 51.2 53.5" stroke="#173f4b" stroke-opacity=".017" stroke-width=".2"/></g></g>`;
 export default function BrandMark({ size = 'sm', className }: BrandMarkProps) {
   const reducedMotion = useReducedMotion();
   const compact = size === 'sm';
   const id = useId().replace(/:/g, '');
   const markup = useMemo(() => VECTOR_BODY
-    .split('__CLOAK__').join(`${id}-cloak`)
-    .split('__HOOD__').join(`${id}-hood`)
-    .split('__LEFTMASS__').join(`${id}-left-mass`)
-    .split('__RIGHTMASS__').join(`${id}-right-mass`)
-    .split('__MIST4__').join(`${id}-mist4`)
-    .split('__MIST2__').join(`${id}-mist2`)
+    .split('__CLOAK__').join(`${id}-cloak`).split('__HOOD__').join(`${id}-hood`)
+    .split('__LEFTFOLD__').join(`${id}-left-fold`).split('__RIGHTFOLD__').join(`${id}-right-fold`)
+    .split('__MIST5__').join(`${id}-mist5`).split('__MIST2__').join(`${id}-mist2`)
     .split('__GLOW__').join(`${id}-glow`), [id]);
-
-  return (
-    <motion.span
-      data-brand-mark
-      data-brand-version={BRAND_VERSION}
-      data-brand-renderer="inline-vector"
-      data-brand-vector-source={VECTOR_SOURCE}
-      className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)}
-      initial={false}
-      animate="idle"
-      whileHover={reducedMotion ? undefined : 'hover'}
-    >
-      <motion.svg
-        data-brand-vector
-        className="h-full w-full overflow-visible"
-        viewBox="0 0 96 96"
-        role="img"
-        aria-labelledby={`${id}-brand-title ${id}-brand-description`}
-        focusable="false"
-        style={{ pointerEvents: 'none' }}
-        variants={{
-          idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 6px rgba(0,4,13,.82)) drop-shadow(0 0 6px rgba(46,216,255,.16))' : 'drop-shadow(0 5px 12px rgba(0,4,13,.84)) drop-shadow(0 0 10px rgba(46,216,255,.17))' },
-          hover: { y: compact ? -0.5 : -0.8, scale: compact ? 1.018 : 1.025, filter: compact ? 'drop-shadow(0 5px 10px rgba(0,7,18,.86)) drop-shadow(0 0 10px rgba(65,220,255,.25))' : 'drop-shadow(0 8px 18px rgba(0,7,18,.88)) drop-shadow(0 0 16px rgba(65,220,255,.26))', transition: { duration: 0.78, ease: premiumEase } },
-        }}
-      >
-        <title id={`${id}-brand-title`}>THE LEGENDARY POET</title>
-        <desc id={`${id}-brand-description`}>Безликая фигура в высоком многослойном капюшоне, с глубокой неровной пустотой лица, смятым перекрывающимся клобуком, тяжёлыми асимметричными складками и рваной верхне-боковой аурой без нижнего дыма</desc>
-        <g dangerouslySetInnerHTML={{ __html: markup }} />
-      </motion.svg>
-    </motion.span>
-  );
+  return <motion.span data-brand-mark data-brand-version={BRAND_VERSION} data-brand-renderer="inline-vector" data-brand-vector-source={VECTOR_SOURCE}
+    className={cn('relative inline-flex shrink-0 items-center justify-center overflow-visible', sizes[size], className)} initial={false} animate="idle" whileHover={reducedMotion ? undefined : 'hover'}>
+    <motion.svg data-brand-vector className="h-full w-full overflow-visible" viewBox="0 0 96 96" role="img"
+      aria-labelledby={`${id}-brand-title ${id}-brand-description`} focusable="false" style={{ pointerEvents: 'none' }}
+      variants={{ idle: { y: 0, scale: 1, filter: compact ? 'drop-shadow(0 3px 6px rgba(0,4,13,.82)) drop-shadow(0 0 6px rgba(46,216,255,.16))' : 'drop-shadow(0 5px 12px rgba(0,4,13,.84)) drop-shadow(0 0 10px rgba(46,216,255,.17))' },
+        hover: { y: compact ? -0.5 : -0.8, scale: compact ? 1.018 : 1.025, filter: compact ? 'drop-shadow(0 5px 10px rgba(0,7,18,.86)) drop-shadow(0 0 10px rgba(65,220,255,.25))' : 'drop-shadow(0 8px 18px rgba(0,7,18,.88)) drop-shadow(0 0 16px rgba(65,220,255,.26))', transition: { duration: 0.78, ease: premiumEase } } }}>
+      <title id={`${id}-brand-title`}>THE LEGENDARY POET</title>
+      <desc id={`${id}-brand-description`}>Безликая фигура в компактном высоком капюшоне, с широкой трапециевидной пустотой лица, смятым многорядным плечевым клобуком, тяжёлой суженной мантией и органической дымчато-электрической верхне-боковой аурой без нижнего дыма</desc>
+      <g dangerouslySetInnerHTML={{ __html: markup }}/>
+    </motion.svg>
+  </motion.span>;
 }

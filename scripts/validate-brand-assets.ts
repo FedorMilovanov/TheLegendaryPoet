@@ -74,8 +74,8 @@ const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
 const evaluation = JSON.parse(read('qa/brand-reference-evaluation.json')) as { candidateSource: string; candidateRevision: string; reviewerDecision: string };
 
-const version = 'cloak-20260728-14';
-const vectorSource = 'canonical-reference-v2-reset-v12-7';
+const version = 'cloak-20260728-15';
+const vectorSource = 'canonical-reference-v2-macro-reset-v13-4';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 const hooks = ['data-brand-mark','data-brand-vector','data-brand-figure','data-brand-hood','data-brand-cloak','data-brand-face-void','data-brand-rim-light','data-brand-folds','data-brand-collar','data-brand-atmosphere','data-brand-energy','data-brand-texture','data-brand-seams','data-brand-hood-layers','data-brand-neck-shadow'];
 
@@ -87,37 +87,46 @@ assert.match(component, new RegExp(`const BRAND_VERSION = '${version}'`));
 assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/);
 assert.match(component, /pointerEvents: 'none'/);
 assert.match(component, /sm: 'h-12 w-12'/);
-assert.match(component, /M47\.8 34\.8C42\.2 34\.6/);
-assert.match(component, /M48 12\.1C43\.8 13\.3/);
-assert.match(component, /M47\.6 19\.6L44\.1 21\.4/);
-assert.ok((component.match(/d="M/g) || []).length >= 48);
+assert.match(component, /M48 32\.8C42\.6 32\.7/);
+assert.match(component, /M48 9\.8C44\.5 10\.8/);
+assert.match(component, /M47\.8 15\.9L44\.1 17\.8/);
+assert.ok((component.match(/d="M/g) || []).length >= 64);
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i);
 
 assertCompleteSvg(standalone, 'public/brand-emblem.svg', '0 0 96 96');
 assert.match(standalone, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(standalone, /M47\.8 34\.8C42\.2 34\.6/);
-assert.match(standalone, /M48 12\.1C43\.8 13\.3/);
-assert.match(standalone, /M47\.6 19\.6L44\.1 21\.4/);
-assert.ok((standalone.match(/<path\b/g) || []).length >= 48);
+assert.match(standalone, /M48 32\.8C42\.6 32\.7/);
+assert.match(standalone, /M48 9\.8C44\.5 10\.8/);
+assert.match(standalone, /M47\.8 15\.9L44\.1 17\.8/);
+assert.ok((standalone.match(/<path\b/g) || []).length >= 64);
 assert.doesNotMatch(standalone, /<(?:image|rect)\b|data:image|base64,/i);
 assert.doesNotMatch(standalone, /M18 91C24 85/);
+const atmosphereStart = standalone.indexOf('<g data-brand-atmosphere=');
+const atmosphereEnd = standalone.indexOf('<g data-brand-energy=', atmosphereStart);
+assert.ok(atmosphereStart >= 0 && atmosphereEnd > atmosphereStart, 'standalone atmosphere layer must precede the figure');
+const atmosphereSource = standalone.slice(atmosphereStart, atmosphereEnd);
+for (const match of atmosphereSource.matchAll(/d="([^"]+)"/g)) {
+  const coordinates = (match[1].match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  const yCoordinates = coordinates.filter((_, index) => index % 2 === 1);
+  assert.ok(yCoordinates.every(value => value <= 70), 'upper-side atmosphere must not become lower-edge smoke');
+}
 
 assertCompleteSvg(micro, 'public/brand-mark-micro.svg', '0 0 32 32');
 assert.match(micro, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(micro, /M16 11\.7C14 11\.6/);
-assert.match(micro, /M16 3\.9C14\.6 4\.3/);
-assert.match(micro, /M15\.9 6\.5L14\.7 7\.1/);
-assert.ok((micro.match(/<path\b/g) || []).length >= 22);
+assert.match(micro, /M16 10\.9C14\.2 10\.8/);
+assert.match(micro, /M16 3\.2C14\.8 3\.5/);
+assert.match(micro, /M15\.9 5\.3L14\.7 5\.9/);
+assert.ok((micro.match(/<path\b/g) || []).length >= 26);
 assert.doesNotMatch(micro, /<(?:image|rect)\b|data:image|base64,/i);
 
 assertCompleteSvg(mask, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(mask, /fill-rule="evenodd"/);
-assert.match(mask, /M48 12\.1C43\.8 13\.3/);
-assert.match(mask, /M47\.6 19\.6L44\.1 21\.4/);
+assert.match(mask, /M48 9\.8C44\.5 10\.8/);
+assert.match(mask, /M47\.8 15\.9L44\.1 17\.8/);
 assert.doesNotMatch(mask, /<(?:image|rect)\b|data:image|base64,/i);
 
 assert.equal(evaluation.candidateSource, vectorSource);
-assert.match(evaluation.candidateRevision, /v12\.7/);
+assert.match(evaluation.candidateRevision, /v13\.4/);
 assert.equal(evaluation.reviewerDecision, 'not-reference-approved');
 
 for (const pattern of [
@@ -158,4 +167,4 @@ const expectedPngSizes: Record<string,{width:number;height:number}> = {
 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) assert.deepEqual(pngSize(file), expected);
 assert.deepEqual(jpegSize('public/og-image.jpg'), {width:1200,height:630});
-console.log('brand validation: v12.7 canonical reset, reduced cavern, darker crushed cowl, irregular upper-side atmosphere and clean lower edge are consistent');
+console.log('brand validation: v13.4 reference-scale macro reset, broad cavern, gathered cowl, organic upper-side atmosphere and clean lower edge are consistent');
