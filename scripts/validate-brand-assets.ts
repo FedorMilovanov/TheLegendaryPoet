@@ -70,8 +70,8 @@ const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
 
-const version = 'cloak-20260728-10';
-const vectorSource = 'canonical-reference-v2-reset-v10-6';
+const version = 'cloak-20260728-11';
+const vectorSource = 'canonical-reference-v2-reset-v11-2';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 const hooks = ['data-brand-mark','data-brand-vector','data-brand-figure','data-brand-hood','data-brand-cloak','data-brand-face-void','data-brand-rim-light','data-brand-folds','data-brand-collar','data-brand-atmosphere','data-brand-energy','data-brand-texture','data-brand-seams','data-brand-hood-layers','data-brand-neck-shadow'];
 
@@ -82,17 +82,17 @@ assert.match(component, new RegExp(`const VECTOR_SOURCE = '${vectorSource}'`));
 assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/);
 assert.match(component, /pointerEvents: 'none'/);
 assert.match(component, /sm: 'h-12 w-12'/);
-assert.match(component, /M48 35\.2C40\.3 35\.2/);
-assert.match(component, /M48 8\.7C42\.4 10\.6/);
-assert.match(component, /M48 16\.2L42\.8 18\.5/);
+assert.match(component, /M48 37C40\.6 37/);
+assert.match(component, /M48 10\.2C42\.7 11\.9/);
+assert.match(component, /M48 18C44\.5 18\.5/);
 assert.ok((component.match(/d="M/g) || []).length >= 65);
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i);
 
 assertCompleteSvg(standalone, 'public/brand-emblem.svg', '0 0 96 96');
 assert.match(standalone, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(standalone, /M48 35\.2C40\.3 35\.2/);
-assert.match(standalone, /M48 8\.7C42\.4 10\.6/);
-assert.match(standalone, /M48 16\.2L42\.8 18\.5/);
+assert.match(standalone, /M48 37C40\.6 37/);
+assert.match(standalone, /M48 10\.2C42\.7 11\.9/);
+assert.match(standalone, /M48 18C44\.5 18\.5/);
 assert.ok((standalone.match(/<path\b/g) || []).length >= 65);
 assert.doesNotMatch(standalone, /<(?:image|rect)\b|data:image|base64,/i);
 assert.doesNotMatch(standalone, /M18 91C24 85/);
@@ -107,8 +107,8 @@ assert.doesNotMatch(micro, /<(?:image|rect)\b|data:image|base64,/i);
 
 assertCompleteSvg(mask, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(mask, /fill-rule="evenodd"/);
-assert.match(mask, /M48 8\.7C42\.4 10\.6/);
-assert.match(mask, /M48 16\.2L42\.8 18\.5/);
+assert.match(mask, /M48 10\.2C42\.7 11\.9/);
+assert.match(mask, /M48 18C44\.5 18\.5/);
 assert.doesNotMatch(mask, /<(?:image|rect)\b|data:image|base64,/i);
 
 for (const pattern of [
@@ -149,4 +149,4 @@ const expectedPngSizes: Record<string,{width:number;height:number}> = {
 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) assert.deepEqual(pngSize(file), expected);
 assert.deepEqual(jpegSize('public/og-image.jpg'), {width:1200,height:630});
-console.log('brand validation: v10.6 reference-v2 geometry, clean lower edge and platform fallbacks are consistent');
+console.log('brand validation: v11.2 reference-v2 geometry, clean lower edge and platform fallbacks are consistent');
