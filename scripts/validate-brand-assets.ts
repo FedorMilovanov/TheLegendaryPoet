@@ -74,8 +74,8 @@ const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
 const evaluation = JSON.parse(read('qa/brand-reference-evaluation.json')) as { candidateSource: string; candidateRevision: string; reviewerDecision: string };
 
-const version = 'cloak-20260728-12';
-const vectorSource = 'canonical-reference-v2-reset-v11-5';
+const version = 'cloak-20260728-13';
+const vectorSource = 'canonical-reference-v2-traced-v12-6';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 const hooks = ['data-brand-mark','data-brand-vector','data-brand-figure','data-brand-hood','data-brand-cloak','data-brand-face-void','data-brand-rim-light','data-brand-folds','data-brand-collar','data-brand-atmosphere','data-brand-energy','data-brand-texture','data-brand-seams','data-brand-hood-layers','data-brand-neck-shadow'];
 
@@ -87,37 +87,37 @@ assert.match(component, new RegExp(`const BRAND_VERSION = '${version}'`));
 assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/);
 assert.match(component, /pointerEvents: 'none'/);
 assert.match(component, /sm: 'h-12 w-12'/);
-assert.match(component, /M48 36\.8C39\.5 36\.8/);
-assert.match(component, /M48 9\.1C42\.8 10\.8/);
-assert.match(component, /M48 17\.5C44\.2 18\.1/);
-assert.ok((component.match(/d="M/g) || []).length >= 42);
+assert.match(component, /M48 35\.8C42\.1 35\.8/);
+assert.match(component, /M48 9\.2C42\.7 10\.9/);
+assert.match(component, /M47 20\.1L42\.8 23\.3/);
+assert.ok((component.match(/d="M/g) || []).length >= 50);
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i);
 
 assertCompleteSvg(standalone, 'public/brand-emblem.svg', '0 0 96 96');
 assert.match(standalone, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(standalone, /M48 36\.8C39\.5 36\.8/);
-assert.match(standalone, /M48 9\.1C42\.8 10\.8/);
-assert.match(standalone, /M48 17\.5C44\.2 18\.1/);
-assert.ok((standalone.match(/<path\b/g) || []).length >= 42);
+assert.match(standalone, /M48 35\.8C42\.1 35\.8/);
+assert.match(standalone, /M48 9\.2C42\.7 10\.9/);
+assert.match(standalone, /M47 20\.1L42\.8 23\.3/);
+assert.ok((standalone.match(/<path\b/g) || []).length >= 50);
 assert.doesNotMatch(standalone, /<(?:image|rect)\b|data:image|base64,/i);
 assert.doesNotMatch(standalone, /M18 91C24 85/);
 
 assertCompleteSvg(micro, 'public/brand-mark-micro.svg', '0 0 32 32');
 assert.match(micro, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(micro, /M16 11\.9C13\.2 11\.9/);
-assert.match(micro, /M16 3C14\.3 3\.6/);
-assert.match(micro, /M16 5\.7C14\.7 5\.9/);
-assert.ok((micro.match(/<path\b/g) || []).length >= 20);
+assert.match(micro, /M16 11\.8C13\.8 11\.8/);
+assert.match(micro, /M16 3C14\.2 3\.6/);
+assert.match(micro, /M15\.7 6\.7L14\.3 7\.8/);
+assert.ok((micro.match(/<path\b/g) || []).length >= 24);
 assert.doesNotMatch(micro, /<(?:image|rect)\b|data:image|base64,/i);
 
 assertCompleteSvg(mask, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(mask, /fill-rule="evenodd"/);
-assert.match(mask, /M48 9\.1C42\.8 10\.8/);
-assert.match(mask, /M48 17\.5C44\.2 18\.1/);
+assert.match(mask, /M48 9\.2C42\.7 10\.9/);
+assert.match(mask, /M47 20\.1L42\.8 23\.3/);
 assert.doesNotMatch(mask, /<(?:image|rect)\b|data:image|base64,/i);
 
 assert.equal(evaluation.candidateSource, vectorSource);
-assert.match(evaluation.candidateRevision, /v11\.5/);
+assert.match(evaluation.candidateRevision, /v12\.6/);
 assert.equal(evaluation.reviewerDecision, 'not-reference-approved');
 
 for (const pattern of [
@@ -158,4 +158,4 @@ const expectedPngSizes: Record<string,{width:number;height:number}> = {
 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) assert.deepEqual(pngSize(file), expected);
 assert.deepEqual(jpegSize('public/og-image.jpg'), {width:1200,height:630});
-console.log('brand validation: v11.5 reference-v2 macro reset, smoke-free lower edge and platform fallbacks are consistent');
+console.log('brand validation: v12.6 traced reference geometry, compact cowl, clean lower edge and platform fallbacks are consistent');
