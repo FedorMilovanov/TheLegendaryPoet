@@ -47,7 +47,8 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
 const lermontovRoadWithCover: Essay = {
   ...lermontovRoadEssay,
   coverKind: 'restoration',
-  coverCredit: 'Архивный портрет · цифровая реставрация проекта',
+  coverCredit: 'П. Е. Заболотский · цифровая реставрация проекта',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mikhail_Lermontov_1837.jpg',
 };
 
 const yeseninWithArchiveLayer: Essay = {
