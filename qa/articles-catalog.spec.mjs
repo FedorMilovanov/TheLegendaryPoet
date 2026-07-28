@@ -10,7 +10,7 @@ async function essayLinks(page) {
   return page.locator('a[href^="/essays/"]');
 }
 
-test('articles catalog exposes only six premium longforms', async ({ page }, testInfo) => {
+test('articles catalog exposes the complete premium longform library', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
 
@@ -18,13 +18,17 @@ test('articles catalog exposes only six premium longforms', async ({ page }, tes
   expect(response.status()).toBeLessThan(400);
 
   await expect(page.getByRole('heading', { level: 1, name: /Исследования.*большие статьи/i })).toBeVisible();
-  await expect(await essayLinks(page)).toHaveCount(6);
+  await expect(await essayLinks(page)).toHaveCount(7);
   await expect(page.locator('a[href^="/articles/article-"]')).toHaveCount(0);
   await expect(page.getByText('Тайна русской души в поэзии: христианский взгляд')).toHaveCount(0);
   await expect(page.getByText('Музыка слов: как поэзия становится песней')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Выхожу один я на дорогу/i })).toHaveAttribute(
+    'href',
+    '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
+  );
 
   const cards = await essayLinks(page);
-  await expect(cards.locator('img')).toHaveCount(6);
+  await expect(cards.locator('img')).toHaveCount(7);
   const emptyAlts = await cards.locator('img').evaluateAll((images) => images.filter((image) => !image.getAttribute('alt')?.trim()).length);
   expect(emptyAlts).toBe(0);
 
@@ -32,8 +36,10 @@ test('articles catalog exposes only six premium longforms', async ({ page }, tes
   await expect(await essayLinks(page)).toHaveCount(3);
   await page.getByRole('button', { name: 'Владимир Маяковский', exact: true }).click();
   await expect(await essayLinks(page)).toHaveCount(3);
+  await page.getByRole('button', { name: 'Михаил Лермонтов', exact: true }).click();
+  await expect(await essayLinks(page)).toHaveCount(1);
   await page.getByRole('button', { name: 'Все материалы', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(6);
+  await expect(await essayLinks(page)).toHaveCount(7);
 
   const state = await page.evaluate(() => ({
     pathname: location.pathname,

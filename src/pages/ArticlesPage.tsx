@@ -9,6 +9,12 @@ import Reveal from '../components/Reveal';
 import { useSeo } from '../hooks/useSeo';
 import { titleCase } from '../utils/titleCase';
 
+const poetCategoryIds = new Set([
+  'sergei-yesenin',
+  'vladimir-mayakovsky',
+  'mikhail-lermontov',
+]);
+
 const categories = [
   { value: '', label: 'Все материалы' },
   { value: 'biography', label: 'Большие биографии' },
@@ -16,13 +22,12 @@ const categories = [
   { value: 'fate', label: 'Судьба и нравственный анализ' },
   { value: 'sergei-yesenin', label: 'Сергей Есенин' },
   { value: 'vladimir-mayakovsky', label: 'Владимир Маяковский' },
+  { value: 'mikhail-lermontov', label: 'Михаил Лермонтов' },
 ];
 
 function matchesCategory(essay: Essay, category: string) {
   if (!category) return true;
-  if (category === 'sergei-yesenin' || category === 'vladimir-mayakovsky') {
-    return essay.poetId === category;
-  }
+  if (poetCategoryIds.has(category)) return essay.poetId === category;
 
   const searchable = [essay.kicker ?? '', essay.title, ...essay.tags].join(' ').toLocaleLowerCase('ru-RU');
   if (category === 'biography') return Boolean(essay.series) || /биограф/.test(searchable);

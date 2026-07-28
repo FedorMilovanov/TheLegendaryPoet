@@ -1,28 +1,215 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://thelegendarypoet.ru/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://thelegendarypoet.ru/ratings</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/articles</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://thelegendarypoet.ru/music</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/brik-case</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/essays/yesenin-kutezhi</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/music/blok-rossiya</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/music/pushkin-tucha</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/afanasy-fet</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/alexander-blok</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/alexander-pushkin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/anna-akhmatova</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/boris-pasternak</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/fyodor-tyutchev</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/mikhail-lermontov</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/nikolay-gumilev</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://thelegendarypoet.ru/poets/vladimir-mayakovsky</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://thelegendarypoet.ru/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/og-image.jpg</image:loc>
+      <image:title>THE LEGENDARY POET</image:title>
+      <image:caption>Поэзия, анализ и история русской литературы</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets</loc>
+    <lastmod>2026-07-29</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/ratings</loc>
+    <lastmod>2026-07-29</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/articles</loc>
+    <lastmod>2026-07-29</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/music</loc>
+    <lastmod>2026-07-23</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/about</loc>
+    <lastmod>2026-07-28</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/editorial-policy</loc>
+    <lastmod>2026-07-28</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/privacy</loc>
+    <lastmod>2026-07-28</lastmod>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/vykhozhu-odin-ya-na-dorogu-lermontov</loc>
+    <lastmod>2026-07-29</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/lermontov.jpg</image:loc>
+      <image:title>«Выхожу один я на дорогу…»: свобода, покой и живая тишина Лермонтова</image:title>
+      <image:caption>Михаил Юрьевич Лермонтов — портрет русского поэта</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/yesenin-kutezhi</loc>
+    <lastmod>2026-07-12</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/yesenin-kutezhi.jpg</image:loc>
+      <image:title>Есенин: маска «Москвы кабацкой» и цена саморазрушения</image:title>
+      <image:caption>Сергей Есенин в дыму кабака — тёмный портрет в сине-золотых тонах</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</loc>
+    <lastmod>2026-07-26</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-part-1-editorial.webp</image:loc>
+      <image:title>Сергей Есенин. Часть I: 1895–1921</image:title>
+      <image:caption>Молодой Сергей Есенин у письменного стола — редакционная кинематографическая реконструкция раннего периода</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents</loc>
+    <lastmod>2026-07-26</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp</image:loc>
+      <image:title>Есенин и Айседора Дункан: что документы говорят о первой встрече</image:title>
+      <image:caption>Сергей Есенин и Айседора Дункан в мастерской московского художника — редакционная реконструкция первой встречи</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</loc>
+    <lastmod>2026-07-22</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-1-hero.webp</image:loc>
+      <image:title>Маяковский. Часть I: бунтарь, футурист, влюблённый</image:title>
+      <image:caption>Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</loc>
+    <lastmod>2026-07-16</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-2-hero.webp</image:loc>
+      <image:title>Маяковский. Часть II: революция, ЛЕФ и последний кризис</image:title>
+      <image:caption>Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/essays/brik-case</loc>
+    <lastmod>2026-07-17</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/essays/briks/brik-archive-hero.webp</image:loc>
+      <image:title>Маяковский и Брики: любовь, союз и зависимость</image:title>
+      <image:caption>Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</loc>
+    <lastmod>2026-07-23</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/music/yesenin-ya-ustalym-wide.webp</image:loc>
+      <image:title>Я усталым таким ещё не был — Сергей Есенин</image:title>
+      <image:caption>Первая официальная музыкальная публикация проекта — тёмная кинематографическая интерпретация исповедальной лирики Сергея Есенина.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/music/pushkin-tucha</loc>
+    <lastmod>2026-07-23</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/music/pushkin-tucha-wide.webp</image:loc>
+      <image:title>Туча — Александр Пушкин</image:title>
+      <image:caption>Грозовая электронно-симфоническая интерпретация пушкинской «Тучи»: от напряжения последней бури к ясному, освобождённому небу.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/music/blok-rossiya</loc>
+    <lastmod>2026-07-23</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/music/blok-rossiya-wide.webp</image:loc>
+      <image:title>Россия — Александр Блок</image:title>
+      <image:caption>Тёмная атмосферная версия блоковской «России», в которой дорожная тоска, бедность и любовь к родине проходят через электронный шум и кинематографический размах.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/fyodor-tyutchev</loc>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/tyutchev.jpg</image:loc>
+      <image:title>Фёдор Иванович Тютчев</image:title>
+      <image:caption>Дипломат и поэт философской лирики, у которого природа открывается то как гармония, то как древний хаос. Тютчев поздно получил широкое признание; его любовная поэзия сохранила беспощадное свидетельство о цене собственной двойной жизни.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/vladimir-mayakovsky</loc>
+    <lastmod>2026-07-22</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/mayakovsky.jpg</image:loc>
+      <image:title>Владимир Владимирович Маяковский</image:title>
+      <image:caption>Футуристический оратор и один из самых ранимых лириков своего поколения. Маяковский добровольно связал поэзию с Революцией, годами жил в мучительной любовной зависимости и весной 1930 года оказался в узле личного, творческого и духовного кризиса.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/alexander-pushkin</loc>
+    <lastmod>2026-07-23</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/pushkin.jpg</image:loc>
+      <image:title>Александр Сергеевич Пушкин</image:title>
+      <image:caption>Создатель современного русского литературного языка, поэт, прозаик и историк. Пушкин прошёл через ссылку, надзор, светскую славу и многолетний конфликт с двором; погиб на дуэли в тридцать семь лет, а в поздних произведениях всё серьёзнее писал о милости, совести и молитве.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/mikhail-lermontov</loc>
+    <lastmod>2026-07-29</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/lermontov.jpg</image:loc>
+      <image:title>Михаил Юрьевич Лермонтов</image:title>
+      <image:caption>Поэт мятежного одиночества и автор «Героя нашего времени». Лермонтов соединял редкую психологическую зоркость с язвительностью и дуэльной культурой своего круга; погиб у Машука в двадцать шесть лет на дуэли с Николаем Мартыновым, вызову которого предшествовали публичные насмешки поэта.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/boris-pasternak</loc>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/pasternak.jpg</image:loc>
+      <image:title>Борис Леонидович Пастернак</image:title>
+      <image:caption>Поэт, прозаик и переводчик, автор «Доктора Живаго». Пастернак пережил сталинский террор, принудительный отказ от Нобелевской премии и последние годы травли; его позднее творчество всё настойчивее обращалось к Евангелию, не превращаясь в простую исповедальную схему.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/afanasy-fet</loc>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/fet.jpg</image:loc>
+      <image:title>Афанасий Афанасьевич Фет</image:title>
+      <image:caption>Поэт музыкального мгновения и один из главных защитников «чистого искусства». Лишённый в юности имени и дворянства, Фет десятилетиями добивался их возвращения; в частной жизни практический расчёт соседствовал с лирикой редкой нежности и памятью о погибшей Марии Лазич.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/nikolay-gumilev</loc>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/gumilev.jpg</image:loc>
+      <image:title>Николай Степанович Гумилёв</image:title>
+      <image:caption>Основатель акмеизма, африканский путешественник и дважды награждённый Георгиевским крестом фронтовик. Гумилёв вернулся в революционный Петроград, открыто сохранял монархические убеждения и был расстрелян ЧК по сфабрикованному политическому делу.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc>
+    <lastmod>2026-07-26</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/yesenin.jpg</image:loc>
+      <image:title>Сергей Александрович Есенин</image:title>
+      <image:caption>Поэт русской деревни, соединивший песенную простоту с редкой силой исповеди. Имажинистская бравада, алкогольная зависимость и духовный разрыв вошли в позднюю лирику и стали частью трагической биографии, завершившейся самоубийством в тридцать лет.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/anna-akhmatova</loc>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/akhmatova.jpg</image:loc>
+      <image:title>Анна Андреевна Ахматова (Горенко)</image:title>
+      <image:caption>Поэт акмеизма и автор «Реквиема», превратившая личное горе и опыт тюремных очередей в голос матерей и заключённых. Ахматова пережила расстрел первого мужа, многократные аресты сына, запрет на печать и послевоенную травлю, сохранив редкую точность свидетельства.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://thelegendarypoet.ru/poets/alexander-blok</loc>
+    <lastmod>2026-07-23</lastmod>
+    <image:image>
+      <image:loc>https://thelegendarypoet.ru/images/blok.jpg</image:loc>
+      <image:title>Александр Александрович Блок</image:title>
+      <image:caption>Крупнейший лирик русского символизма. Блок прошёл путь от мистики Прекрасной Дамы к «страшному миру», принял революцию как историческую стихию и в последние годы оказался в тяжёлом творческом и физическом кризисе.</image:caption>
+    </image:image>
+  </url>
 </urlset>

@@ -6,6 +6,7 @@ import { yeseninPartOnePublic } from './yeseninPartOnePublic';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
+import { lermontovRoadEssay } from './lermontovRoadEssay';
 import {
   brikDocumentSources,
   mayakovskyEarlySources,
@@ -42,6 +43,13 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
     return true;
   });
 }
+
+const lermontovRoadWithCover: Essay = {
+  ...lermontovRoadEssay,
+  coverKind: 'restoration',
+  coverCredit: 'П. Е. Заболотский · цифровая реставрация проекта',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mikhail_Lermontov_1837.jpg',
+};
 
 const yeseninWithArchiveLayer: Essay = {
   ...yeseninKutezhiVisual,
@@ -92,6 +100,7 @@ const brikCaseWithSourceLibrary: Essay = {
 };
 
 export const essays: Essay[] = [
+  lermontovRoadWithCover,
   yeseninWithArchiveLayer,
   yeseninPartOnePublic,
   yeseninDuncanFirstMeetingPublished,
