@@ -4,12 +4,12 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
-const VERSION = 'cloak-20260728-11';
-const VECTOR_SOURCE = 'canonical-reference-v2-reset-v11-2';
+const VERSION = 'cloak-20260728-12';
+const VECTOR_SOURCE = 'canonical-reference-v2-reset-v11-5';
 const routes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
-test('v11.2 clean-base assets are coherent and raster-free', async ({ page, request }) => {
+test('v11.5 clean-base assets are coherent and raster-free', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   for (const asset of ['brand-emblem.svg', 'brand-mark-micro.svg', 'brand-emblem-mask.svg']) {
@@ -22,12 +22,12 @@ test('v11.2 clean-base assets are coherent and raster-free', async ({ page, requ
     expect(source).not.toMatch(/<image\b|data:image|base64,|<rect\b/i);
   }
   const standalone = await (await request.get(`${BASE_URL}/brand-emblem.svg`)).text();
-  expect(standalone).toContain('M48 37C40.6 37');
-  expect(standalone).toContain('M48 10.2C42.7 11.9');
-  expect(standalone).toContain('M48 18C44.5 18.5');
+  expect(standalone).toContain('M48 36.8C39.5 36.8');
+  expect(standalone).toContain('M48 9.1C42.8 10.8');
+  expect(standalone).toContain('M48 17.5C44.2 18.1');
   expect(standalone).not.toContain('M18 91C24 85');
   const micro = await (await request.get(`${BASE_URL}/brand-mark-micro.svg`)).text();
-  expect(micro).toContain('M16 6L14.7 6.5');
+  expect(micro).toContain('M16 11.9C13.2 11.9');
 });
 
 test('standalone and micro marks decode at every optical size', async ({ page }) => {
@@ -46,7 +46,7 @@ test('standalone and micro marks decode at every optical size', async ({ page })
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('live header uses v11.2 geometry and hover remains compositor-only', async ({ page }) => {
+test('live header uses v11.5 geometry and hover remains compositor-only', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -70,17 +70,17 @@ test('live header uses v11.2 geometry and hover remains compositor-only', async 
     } : null;
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(29.5);
-  expect(geometry.hoodWidth).toBeLessThan(31.5);
-  expect(geometry.faceWidth).toBeGreaterThan(17.5);
-  expect(geometry.faceWidth).toBeLessThan(19.5);
-  expect(geometry.cloakWidth).toBeGreaterThan(84);
-  expect(geometry.cloakWidth).toBeLessThan(87);
-  expect(geometry.ratio).toBeGreaterThan(.58);
-  expect(geometry.ratio).toBeLessThan(.66);
-  expect(geometry.hoodTop).toBeGreaterThan(9.8);
-  expect(geometry.hoodTop).toBeLessThan(10.6);
-  expect(geometry.cloakBottom).toBeGreaterThan(95);
+  expect(geometry.hoodWidth).toBeGreaterThan(32);
+  expect(geometry.hoodWidth).toBeLessThan(33.5);
+  expect(geometry.faceWidth).toBeGreaterThan(21.5);
+  expect(geometry.faceWidth).toBeLessThan(23);
+  expect(geometry.cloakWidth).toBeGreaterThan(83);
+  expect(geometry.cloakWidth).toBeLessThan(86);
+  expect(geometry.ratio).toBeGreaterThan(.65);
+  expect(geometry.ratio).toBeLessThan(.72);
+  expect(geometry.hoodTop).toBeGreaterThan(8.8);
+  expect(geometry.hoodTop).toBeLessThan(9.5);
+  expect(geometry.cloakBottom).toBeGreaterThan(95.5);
   const vector = mark.locator('[data-brand-vector]');
   const before = await vector.evaluate(node => ({ transform: getComputedStyle(node).transform, filter: getComputedStyle(node).filter }));
   const box = await mark.boundingBox();
@@ -94,7 +94,7 @@ test('live header uses v11.2 geometry and hover remains compositor-only', async 
   expect(errors).toEqual([]);
 });
 
-for (const route of routes) test(`${route}: header and footer use v11.2`, async ({ page }) => {
+for (const route of routes) test(`${route}: header and footer use v11.5`, async ({ page }) => {
   const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   for (const mark of [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()]) {

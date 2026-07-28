@@ -15,24 +15,26 @@ function crc32(buffer: Buffer) {
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
+
 function pngSize(file: string) {
   const buffer = readBuffer(file);
-  assert.equal(buffer.subarray(0,8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
   let offset = 8;
   let dimensions: { width: number; height: number } | null = null;
   while (offset + 12 <= buffer.length) {
     const length = buffer.readUInt32BE(offset);
-    const type = buffer.subarray(offset+4, offset+8).toString('ascii');
+    const type = buffer.subarray(offset + 4, offset + 8).toString('ascii');
     const dataEnd = offset + 8 + length;
     assert.ok(dataEnd + 4 <= buffer.length);
-    assert.equal(crc32(buffer.subarray(offset+4, dataEnd)), buffer.readUInt32BE(dataEnd));
-    if (type === 'IHDR') dimensions = { width: buffer.readUInt32BE(offset+8), height: buffer.readUInt32BE(offset+12) };
+    assert.equal(crc32(buffer.subarray(offset + 4, dataEnd)), buffer.readUInt32BE(dataEnd));
+    if (type === 'IHDR') dimensions = { width: buffer.readUInt32BE(offset + 8), height: buffer.readUInt32BE(offset + 12) };
     offset = dataEnd + 4;
     if (type === 'IEND') break;
   }
   assert.ok(dimensions);
   return dimensions;
 }
+
 function jpegSize(file: string) {
   const buffer = readBuffer(file);
   assert.equal(buffer[0], 0xff); assert.equal(buffer[1], 0xd8);
@@ -44,12 +46,13 @@ function jpegSize(file: string) {
     const marker = buffer[offset];
     if (marker === 0xda || marker === undefined) break;
     if (marker === 0xd8 || marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { offset += 1; continue; }
-    const length = buffer.readUInt16BE(offset+1);
-    if (sof.has(marker)) return { height: buffer.readUInt16BE(offset+4), width: buffer.readUInt16BE(offset+6) };
+    const length = buffer.readUInt16BE(offset + 1);
+    if (sof.has(marker)) return { height: buffer.readUInt16BE(offset + 4), width: buffer.readUInt16BE(offset + 6) };
     offset += 1 + length;
   }
   throw new Error(`${file}: JPEG dimensions not found`);
 }
+
 function assertCompleteSvg(source: string, file: string, viewBox: string) {
   const escaped = viewBox.split(' ').join('\\s+');
   assert.match(source, new RegExp(`<svg\\b[^>]*viewBox="${escaped}"`), `${file}: viewBox changed`);
@@ -69,9 +72,10 @@ const manifest = JSON.parse(read('public/site.webmanifest')) as { icons?: Array<
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
+const evaluation = JSON.parse(read('qa/brand-reference-evaluation.json')) as { candidateSource: string; candidateRevision: string; reviewerDecision: string };
 
-const version = 'cloak-20260728-11';
-const vectorSource = 'canonical-reference-v2-reset-v11-2';
+const version = 'cloak-20260728-12';
+const vectorSource = 'canonical-reference-v2-reset-v11-5';
 const masterSha256 = 'f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7';
 const hooks = ['data-brand-mark','data-brand-vector','data-brand-figure','data-brand-hood','data-brand-cloak','data-brand-face-void','data-brand-rim-light','data-brand-folds','data-brand-collar','data-brand-atmosphere','data-brand-energy','data-brand-texture','data-brand-seams','data-brand-hood-layers','data-brand-neck-shadow'];
 
@@ -79,37 +83,42 @@ assert.match(component, /useId\(\)\.replace\(\/:\/g, ''\)/);
 assert.match(component, /useReducedMotion\(\)/);
 for (const hook of hooks) assert.match(component, new RegExp(hook), `${hook} missing`);
 assert.match(component, new RegExp(`const VECTOR_SOURCE = '${vectorSource}'`));
+assert.match(component, new RegExp(`const BRAND_VERSION = '${version}'`));
 assert.match(component, /data-brand-vector-source=\{VECTOR_SOURCE\}/);
 assert.match(component, /pointerEvents: 'none'/);
 assert.match(component, /sm: 'h-12 w-12'/);
-assert.match(component, /M48 37C40\.6 37/);
-assert.match(component, /M48 10\.2C42\.7 11\.9/);
-assert.match(component, /M48 18C44\.5 18\.5/);
-assert.ok((component.match(/d="M/g) || []).length >= 65);
+assert.match(component, /M48 36\.8C39\.5 36\.8/);
+assert.match(component, /M48 9\.1C42\.8 10\.8/);
+assert.match(component, /M48 17\.5C44\.2 18\.1/);
+assert.ok((component.match(/d="M/g) || []).length >= 42);
 assert.doesNotMatch(component, /<(?:motion\.)?image\b|<img\b|data:image|base64,|<rect\b/i);
 
 assertCompleteSvg(standalone, 'public/brand-emblem.svg', '0 0 96 96');
 assert.match(standalone, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(standalone, /M48 37C40\.6 37/);
-assert.match(standalone, /M48 10\.2C42\.7 11\.9/);
-assert.match(standalone, /M48 18C44\.5 18\.5/);
-assert.ok((standalone.match(/<path\b/g) || []).length >= 65);
+assert.match(standalone, /M48 36\.8C39\.5 36\.8/);
+assert.match(standalone, /M48 9\.1C42\.8 10\.8/);
+assert.match(standalone, /M48 17\.5C44\.2 18\.1/);
+assert.ok((standalone.match(/<path\b/g) || []).length >= 42);
 assert.doesNotMatch(standalone, /<(?:image|rect)\b|data:image|base64,/i);
 assert.doesNotMatch(standalone, /M18 91C24 85/);
 
 assertCompleteSvg(micro, 'public/brand-mark-micro.svg', '0 0 32 32');
 assert.match(micro, new RegExp(`data-brand-vector-source="${vectorSource}"`));
-assert.match(micro, /M16 11\.8C13\.4 11\.8/);
-assert.match(micro, /M16 3C14\.1 3\.7/);
-assert.match(micro, /M16 5\.5L14\.2 6\.3/);
-assert.ok((micro.match(/<path\b/g) || []).length >= 25);
+assert.match(micro, /M16 11\.9C13\.2 11\.9/);
+assert.match(micro, /M16 3C14\.3 3\.6/);
+assert.match(micro, /M16 5\.7C14\.7 5\.9/);
+assert.ok((micro.match(/<path\b/g) || []).length >= 20);
 assert.doesNotMatch(micro, /<(?:image|rect)\b|data:image|base64,/i);
 
 assertCompleteSvg(mask, 'public/brand-emblem-mask.svg', '0 0 96 96');
 assert.match(mask, /fill-rule="evenodd"/);
-assert.match(mask, /M48 10\.2C42\.7 11\.9/);
-assert.match(mask, /M48 18C44\.5 18\.5/);
+assert.match(mask, /M48 9\.1C42\.8 10\.8/);
+assert.match(mask, /M48 17\.5C44\.2 18\.1/);
 assert.doesNotMatch(mask, /<(?:image|rect)\b|data:image|base64,/i);
+
+assert.equal(evaluation.candidateSource, vectorSource);
+assert.match(evaluation.candidateRevision, /v11\.5/);
+assert.equal(evaluation.reviewerDecision, 'not-reference-approved');
 
 for (const pattern of [
   `name="brand-release" content="${version}"`,
@@ -149,4 +158,4 @@ const expectedPngSizes: Record<string,{width:number;height:number}> = {
 };
 for (const [file, expected] of Object.entries(expectedPngSizes)) assert.deepEqual(pngSize(file), expected);
 assert.deepEqual(jpegSize('public/og-image.jpg'), {width:1200,height:630});
-console.log('brand validation: v11.2 reference-v2 geometry, clean lower edge and platform fallbacks are consistent');
+console.log('brand validation: v11.5 reference-v2 macro reset, smoke-free lower edge and platform fallbacks are consistent');
