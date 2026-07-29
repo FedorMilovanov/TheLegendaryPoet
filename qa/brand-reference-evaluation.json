@@ -2,7 +2,7 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v17.0 black-monolith reset: removed the escaping crisp energy fragment, replaced the grey segmented figure with an almost-black cloak and hood, narrowed the hood, reshaped the face cavern into a compact irregular trapezoid, hid the throat under an organic gathered cowl, retained three broad cloak families and rebuilt the upper-side energy as curved blurred paths only",
+  "candidateRevision": "v17.0 black-monolith reset with nonvisual ES2020-compatible literal replacement: removed the escaping crisp energy fragment, replaced the grey segmented figure with an almost-black cloak and hood, narrowed the hood, reshaped the face cavern into a compact irregular trapezoid, hid the throat under an organic gathered cowl, retained three broad cloak families and rebuilt the upper-side energy as curved blurred paths only; split/join now replaces replaceAll without changing generated SVG markup",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
   "overallScore": 0.86,
@@ -15,7 +15,7 @@
     "microReadability": 0.84
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "31c5f009879483867784d774c52dc55fbbd72d64",
+    "src/components/BrandMark.tsx": "33339dcfc1ff5d991505fd2291d62e3c8a4d4e6e",
     "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
     "public/brand-emblem-mask.svg": "656ee719e4e51dd68b9f9d470f18c4cc6c945e95",
