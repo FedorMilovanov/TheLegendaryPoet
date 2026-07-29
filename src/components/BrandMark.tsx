@@ -8,7 +8,7 @@ interface BrandMarkProps { size?: 'sm' | 'md' | 'lg'; className?: string; }
 const sizes={sm:'h-12 w-12',md:'h-16 w-16',lg:'h-24 w-24'};
 const premiumEase=[.16,1,.3,1] as const;
 const BRAND_VERSION='cloak-20260729-20';
-const VECTOR_SOURCE='canonical-reference-v2-black-monolith-v17-0';
+const VECTOR_SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
 const RAW_BODY=rawVector.slice(rawVector.indexOf('<defs>'),rawVector.lastIndexOf('</svg>'));
 const ids=['cloak','hood','left','right','mist','soft','glow'] as const;
 const replaceEvery=(value:string,search:string,replacement:string)=>value.split(search).join(replacement);
