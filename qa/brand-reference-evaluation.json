@@ -1,33 +1,33 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-v2-throat-aura-textile-v16-0",
-  "candidateRevision": "v16.0 throat-pinch and volumetric-aura pass: raised the hood, lowered the cloak origin, introduced an explicit narrow throat channel, deepened the face cavern, consolidated the cloak into three heavy broken families and replaced the regular side ribs with segmented blurred upper-side energy while preserving layered pointer depth",
+  "candidateSource": "canonical-reference-v2-tapered-aura-cowl-v16-1",
+  "candidateRevision": "v16.1 corrective reference pass: replaced the oversized smooth cyan cocoon with a tapered broken upper-side aura, narrowed and shortened the face cavern, reduced the throat to a true central pinch and changed the cowl from horizontal pointed wings into overlapping descending cloth while preserving the heavy smoke-free cloak and layered pointer depth",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.82,
+  "overallScore": 0.84,
   "scores": {
-    "macroProportions": 0.87,
-    "hoodAndCavern": 0.82,
-    "collarAndFolds": 0.8,
-    "cloakSilhouette": 0.85,
-    "rimAndAura": 0.78,
-    "microReadability": 0.83
+    "macroProportions": 0.89,
+    "hoodAndCavern": 0.84,
+    "collarAndFolds": 0.83,
+    "cloakSilhouette": 0.86,
+    "rimAndAura": 0.82,
+    "microReadability": 0.84
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "42ccc5f254d76702c6136d3888d3562078b80322",
-    "public/brand-emblem.svg": "5df6d8597173a8371ce16bdf02e412aa07fe5da5",
-    "public/brand-mark-micro.svg": "0a58e550e45ef7360c8446287bfc209a165175f1",
-    "public/brand-emblem-mask.svg": "3d821f5464428dfb890ff9f1b28fe14199c96755"
+    "src/components/BrandMark.tsx": "d952c451f729d7a158a322e5db6db19ab51cd279",
+    "public/brand-emblem.svg": "857fe381b349ad63dd9e2cf345a3a48654305191",
+    "public/brand-mark-micro.svg": "86ab93230e44753e60897021dfc095d2fb5c8684",
+    "public/brand-emblem-mask.svg": "6266646b07acb6be9480c3e302329a8ee46195fb"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the upper-side aura is denser and less rib-like than v15, but remains cleaner and less turbulent than the painted reference",
-    "the throat pinch is explicit and narrow, while the surrounding cowl is still more designed than crushed",
-    "the face cavern is deeper and broader but its edge remains cleaner and more symmetrical than the canonical reference",
-    "the three major cloth families are heavier and darker, yet large-size rendering still reveals vector planes",
-    "the exact-main workflow must produce the v16 optical, hover, reduced-motion and live-header evidence for the published commit"
+    "the aura now tapers around the hood and shoulders with dark interruptions, but its turbulence is still cleaner and more diagrammatic than the painted reference",
+    "the narrow throat and descending cowl remove the v16 bow/cross reading, while the cloth still lacks the reference’s accidental crushed breaks",
+    "the shortened cavern is closer in proportion, but its black boundary remains more regular than the canonical reference",
+    "the cloak stays very dark and broad with three dominant families, although large-size planes still reveal vector construction",
+    "the exact-main workflow must produce the v16.1 optical, hover, reduced-motion and live-header evidence for the corrective commit"
   ],
-  "nextRequiredAction": "publish the synchronized v16.0 tree, inspect exact-main 192/96/56/32/16 and live header artifacts, then continue sculpting the cowl and turbulent aura from the canonical reference"
+  "nextRequiredAction": "publish the synchronized v16.1 corrective tree, inspect the exact-main optical and live-header evidence, then continue from the canonical reference only if the cowl or turbulent aura still reads too clean"
 }
