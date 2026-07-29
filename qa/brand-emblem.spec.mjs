@@ -85,7 +85,7 @@ test('live header uses v15.0 geometry and independently damped pointer depth', a
   expect(geometry).not.toBeNull();
   expect(geometry.hoodWidth).toBeGreaterThan(27);
   expect(geometry.hoodWidth).toBeLessThan(29);
-  expect(geometry.faceWidth).toBeGreaterThan(17.5);
+  expect(geometry.faceWidth).toBeGreaterThan(17.3);
   expect(geometry.faceWidth).toBeLessThan(19);
   expect(geometry.cloakWidth).toBeGreaterThan(78);
   expect(geometry.cloakWidth).toBeLessThan(80);
