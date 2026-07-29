@@ -15,7 +15,7 @@
     "microReadability": 0.8
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "24b4b0996b11c566fbd860461d1dbc3d84cc669f",
+    "src/components/BrandMark.tsx": "15acf0969c70acd61d995bcc7a1e248611b58a1a",
     "public/brand-emblem.svg": "bdcbf9e993655d32e1561385ec412e123e944842",
     "public/brand-mark-micro.svg": "6ec76b8ebb690b5976ed3679997d108b1398e47b",
     "public/brand-emblem-mask.svg": "638145681e68eb405716872078aaa58d05820019"
