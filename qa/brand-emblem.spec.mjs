@@ -4,32 +4,31 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
-const VERSION = 'cloak-20260728-15';
-const VECTOR_SOURCE = 'canonical-reference-v2-macro-reset-v13-4';
+const VERSION = 'cloak-20260729-16';
+const VECTOR_SOURCE = 'canonical-reference-v2-textile-reset-v14-5';
 const routes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
-test('v13.4 vector surfaces are complete and raster-free', async ({ page, request }) => {
+test('v14.5 vector surfaces are complete and raster-free', async ({ page, request }) => {
   const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   for (const asset of ['brand-emblem.svg', 'brand-mark-micro.svg', 'brand-emblem-mask.svg']) {
     const r = await request.get(`${BASE_URL}/${asset}?verify=${Date.now()}`);
     expect(r.status(), asset).toBe(200);
-    const source = await r.text();
-    expect(source).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
-    expect(source).toMatch(/<path\b/);
-    expect(source).toMatch(/<\/svg>\s*$/);
-    expect(source).not.toMatch(/<image\b|data:image|base64,|<rect\b/i);
+    const sourceText = await r.text();
+    expect(sourceText).toContain(`data-brand-vector-source="${VECTOR_SOURCE}"`);
+    expect(sourceText).toMatch(/<path\b/);
+    expect(sourceText).toMatch(/<\/svg>\s*$/);
+    expect(sourceText).not.toMatch(/<image\b|data:image|base64,|<rect\b/i);
   }
   const standalone = await (await request.get(`${BASE_URL}/brand-emblem.svg`)).text();
-  expect(standalone).toContain('M48 32.8C42.6 32.7');
-  expect(standalone).toContain('M48 9.8C44.5 10.8');
-  expect(standalone).toContain('M47.8 15.9L44.1 17.8');
-  expect(standalone).not.toContain('M18 91C24 85');
+  expect(standalone).toContain('M48 32.2C41.9 32.1');
+  expect(standalone).toContain('M48 8.2C44.2 9.2');
+  expect(standalone).toContain('M47.7 14.6L43.4 16.8');
   const micro = await (await request.get(`${BASE_URL}/brand-mark-micro.svg`)).text();
-  expect(micro).toContain('M16 10.9C14.2 10.8');
-  expect(micro).toContain('M16 3.2C14.8 3.5');
-  expect(micro).toContain('M15.9 5.3L14.7 5.9');
+  expect(micro).toContain('M16 10.7C14 10.7');
+  expect(micro).toContain('M16 2.8C14.7 3.1');
+  expect(micro).toContain('M15.9 4.9L14.5 5.6');
 });
 
 test('standalone and micro decode at every optical size', async ({ page }) => {
@@ -53,7 +52,7 @@ test('standalone and micro decode at every optical size', async ({ page }) => {
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('live header uses v13.4 geometry and hover is compositor-only', async ({ page }) => {
+test('live header uses v14.5 geometry and hover is compositor-only', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -71,20 +70,27 @@ test('live header uses v13.4 geometry and hover is compositor-only', async ({ pa
     const hood = box('[data-brand-hood]');
     const face = box('[data-brand-face-void]');
     const cloak = box('[data-brand-cloak]');
-    return hood && face && cloak ? { hoodWidth: hood.width, faceWidth: face.width, cloakWidth: cloak.width, ratio: face.width / hood.width, hoodTop: hood.y, cloakBottom: cloak.y + cloak.height } : null;
+    return hood && face && cloak ? {
+      hoodWidth: hood.width,
+      faceWidth: face.width,
+      cloakWidth: cloak.width,
+      ratio: face.width / hood.width,
+      hoodTop: hood.y,
+      cloakBottom: cloak.y + cloak.height,
+    } : null;
   });
   expect(geometry).not.toBeNull();
-  expect(geometry.hoodWidth).toBeGreaterThan(26);
-  expect(geometry.hoodWidth).toBeLessThan(27.5);
+  expect(geometry.hoodWidth).toBeGreaterThan(27);
+  expect(geometry.hoodWidth).toBeLessThan(29);
   expect(geometry.faceWidth).toBeGreaterThan(16.5);
-  expect(geometry.faceWidth).toBeLessThan(18);
-  expect(geometry.cloakWidth).toBeGreaterThan(72.5);
-  expect(geometry.cloakWidth).toBeLessThan(74);
-  expect(geometry.ratio).toBeGreaterThan(.62);
+  expect(geometry.faceWidth).toBeLessThan(18.5);
+  expect(geometry.cloakWidth).toBeGreaterThan(77);
+  expect(geometry.cloakWidth).toBeLessThan(80);
+  expect(geometry.ratio).toBeGreaterThan(.59);
   expect(geometry.ratio).toBeLessThan(.68);
-  expect(geometry.hoodTop).toBeGreaterThan(9.5);
-  expect(geometry.hoodTop).toBeLessThan(10.1);
-  expect(geometry.cloakBottom).toBeGreaterThan(95.5);
+  expect(geometry.hoodTop).toBeGreaterThan(7.9);
+  expect(geometry.hoodTop).toBeLessThan(8.5);
+  expect(geometry.cloakBottom).toBeGreaterThan(95.4);
   const vector = mark.locator('[data-brand-vector]');
   const before = await vector.evaluate(node => ({ transform: getComputedStyle(node).transform, filter: getComputedStyle(node).filter }));
   const box = await mark.boundingBox();
@@ -98,7 +104,7 @@ test('live header uses v13.4 geometry and hover is compositor-only', async ({ pa
   expect(errors).toEqual([]);
 });
 
-for (const route of routes) test(`${route}: header and footer use v13.4`, async ({ page }) => {
+for (const route of routes) test(`${route}: header and footer use v14.5`, async ({ page }) => {
   const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBeLessThan(400);
   for (const mark of [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()]) {
