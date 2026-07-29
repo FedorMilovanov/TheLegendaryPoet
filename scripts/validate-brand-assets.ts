@@ -6,6 +6,10 @@ import path from 'node:path';
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const readBuffer = (file: string) => fs.readFileSync(path.resolve(file));
 const sha256 = (file: string) => crypto.createHash('sha256').update(readBuffer(file)).digest('hex');
+const gitBlobSha = (file: string) => {
+  const body = readBuffer(file);
+  return crypto.createHash('sha1').update(`blob ${body.length}\0`).update(body).digest('hex');
+};
 
 function crc32(buffer: Buffer) {
   let crc = 0xffffffff;
@@ -59,7 +63,8 @@ function assertCompleteSvg(sourceText: string, file: string, viewBox: string) {
   assert.ok(sourceText.trimEnd().endsWith('</svg>'));
   assert.equal((sourceText.match(/<svg\b/g) || []).length, (sourceText.match(/<\/svg>/g) || []).length);
   assert.equal((sourceText.match(/<defs\b/g) || []).length, (sourceText.match(/<\/defs>/g) || []).length);
-  assert.equal((sourceText.match(/<g(?:\s|>)/g) || []).length, (sourceText.match(/<\/g>/g) || []).length);
+  const openingGroups = (sourceText.match(/<g(?:\s[^>]*)?>/g) || []).filter(tag => !/\/\s*>$/.test(tag));
+  assert.equal(openingGroups.length, (sourceText.match(/<\/g>/g) || []).length, `${file}: unbalanced non-self-closing groups`);
   assert.doesNotMatch(sourceText, /<[^>]+\sdata-brand-[\w-]+(?=\s|>)(?!\s*=)/);
 }
 
@@ -72,7 +77,12 @@ const manifest = JSON.parse(read('public/site.webmanifest')) as { icons?: Array<
 const browserconfig = read('public/browserconfig.xml');
 const materializer = read('scripts/materialize-brand-art.mjs');
 const release = read('public/brand-release.txt');
-const evaluation = JSON.parse(read('qa/brand-reference-evaluation.json')) as { candidateSource: string; candidateRevision: string; reviewerDecision: string };
+const evaluation = JSON.parse(read('qa/brand-reference-evaluation.json')) as {
+  candidateSource: string;
+  candidateRevision: string;
+  reviewerDecision: string;
+  candidateGitBlobShas: Record<string, string>;
+};
 
 const version = 'cloak-20260729-16';
 const vectorSource = 'canonical-reference-v2-textile-reset-v14-5';
@@ -128,6 +138,9 @@ assert.doesNotMatch(mask, /<(?:image|rect)\b|data:image|base64,/i);
 assert.equal(evaluation.candidateSource, vectorSource);
 assert.match(evaluation.candidateRevision, /v14\.5/);
 assert.equal(evaluation.reviewerDecision, 'not-reference-approved');
+for (const file of ['src/components/BrandMark.tsx','public/brand-emblem.svg','public/brand-mark-micro.svg','public/brand-emblem-mask.svg']) {
+  assert.equal(gitBlobSha(file), evaluation.candidateGitBlobShas[file], `${file}: Git blob differs from the reviewed reference lock`);
+}
 
 for (const pattern of [
   `name="brand-release" content="${version}"`,
