@@ -59,6 +59,12 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install FFmpeg materializer dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+
       - name: Install project dependencies
         run: npm ci
 
