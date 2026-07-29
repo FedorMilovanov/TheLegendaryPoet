@@ -47,6 +47,14 @@
 
 ## Есенин
 
+- **Новое досье по Есенину и Айседоре Дункан:** [`ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md`](ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md)
+- **Полный межпроектный индекс из 80+ ссылок и правовых статусов:** https://github.com/FedorMilovanov/Research/blob/main/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md
+- ИМЛИ РАН, каталог Есенина и официальные PDF: https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a
+- «Летопись жизни и творчества С. А. Есенина», том 3, книга 1 — ключевой академический источник для 1921 — 10 мая 1922: https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a/823-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-3
+- ФЭБ, электронное научное издание: http://feb-web.ru/feb/esenin/default.asp
+- РВБ, ПСС в 7 томах: https://rvb.ru/20vek/esenin/pss7/
+- Президентская библиотека, коллекция С. А. Есенина: https://www.prlib.ru/section/2062561
+- Library of Congress, поиск фотографий Айседоры Дункан в коллекции Арнольда Генте: https://www.loc.gov/pictures/search/?q=Isadora%20Duncan&co=agc
 - https://ilibrary.ru/text/1298/p.1/index.html — «Гой ты, Русь, моя родная»
 - https://ru.wikisource.org/wiki/Инония_(Есенин)
 - https://rvb.ru/20vek/esenin/pss7/vol2/notes/179.html — комментарии к «Инонии»
