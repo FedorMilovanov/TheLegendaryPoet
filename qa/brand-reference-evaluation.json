@@ -1,33 +1,33 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-v2-textile-reset-v14-5",
-  "candidateRevision": "v14.5 textile reset with wider reference-scale cloak, broader cavern, overlapping broken cowl pieces, three heavy fold families and upper-side-only aura",
+  "candidateSource": "canonical-reference-v2-crushed-depth-parallax-v15-0",
+  "candidateRevision": "v15.0 crushed-depth and layered-pointer pass: retained the wide smoke-free silhouette, rebuilt the cavern and gathered cowl, broke the fold fan, reduced the aura into upper-side wisps, and added independently damped pointer depth for eleven SVG layers",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.8,
+  "overallScore": 0.79,
   "scores": {
-    "macroProportions": 0.86,
-    "hoodAndCavern": 0.8,
-    "collarAndFolds": 0.72,
+    "macroProportions": 0.85,
+    "hoodAndCavern": 0.79,
+    "collarAndFolds": 0.74,
     "cloakSilhouette": 0.83,
-    "rimAndAura": 0.75,
+    "rimAndAura": 0.73,
     "microReadability": 0.8
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "71f2f84dc096a5315ff6b09d66ad0d6bab4d51f6",
-    "public/brand-emblem.svg": "c00541e58ef1b6930603722d8b07be4787aea3b8",
-    "public/brand-mark-micro.svg": "6eea65f800157f57c49f7bee7018ffc50575f4b3",
-    "public/brand-emblem-mask.svg": "c715d4a57cf9a890dec1b8afd7cb40bde01a86cf"
+    "src/components/BrandMark.tsx": "11539f04dc83d38fc703a5759c766598d5ddb581",
+    "public/brand-emblem.svg": "a9faa65a59de9ea2a2da886d49d66bacee7f3cb8",
+    "public/brand-mark-micro.svg": "32bd51ab9250b85934894cdf24e6adcfc7a5674d",
+    "public/brand-emblem-mask.svg": "638145681e68eb405716872078aaa58d05820019"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the cowl is split into offset cloth pieces but still reads as cleaner stacked vector bands than the crushed textile in the canonical reference",
-    "the face cavern is broad enough but its boundary remains more controlled and polygonal than the irregular painted depth of the reference",
-    "the three cloak families preserve the correct scale but remain smoother and more radial than the heavy broken folds in the reference",
-    "the aura is confined to the upper and side field but is still more deliberate and cloudy than the chaotic electrical bloom in the reference",
-    "the exact-main workflow must produce the required browser matrices, live homepage evidence and artifact digest for the published commit"
+    "the cowl is now gathered around a central cloth mass instead of a crossed ribbon, but the painted reference still has rougher and less controllable textile breaks",
+    "the face cavern boundary is broader and curved, yet it remains cleaner and more symmetrical than the irregular painted depth of the canonical reference",
+    "the large cloak families are offset and broken but still read as designed vector planes at large sizes",
+    "the aura is restricted to the upper and side field and no longer forms a lower smoke pool, but its cyan wisps still need a denser and more volumetric reference match",
+    "the exact-main workflow must produce the reference matrix, live homepage evidence, layered-hover screenshot, reduced-motion proof and artifact digest for the published commit"
   ],
-  "nextRequiredAction": "run exact-main Browser QA for v14.5, inspect the live header and optical matrix, then retain the clean lower edge and macro scale while roughening the cowl, cavern boundary and major fold breaks"
+  "nextRequiredAction": "publish the synchronized v15.0 tree, inspect the exact-main 192/96/56/32/16 matrices and directional layered hover on the live header, then keep the interaction contract while refining cloth and aura from the canonical reference rather than from this SVG"
 }
