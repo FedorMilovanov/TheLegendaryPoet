@@ -1,6 +1,23 @@
-name: Brand exact-main QA
+name: Brand vector QA
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/components/BrandMark.tsx'
+      - 'public/brand-emblem.svg'
+      - 'public/brand-mark-micro.svg'
+      - 'public/brand-emblem-mask.svg'
+      - 'public/brand-release.txt'
+      - 'public/site.webmanifest'
+      - 'public/browserconfig.xml'
+      - 'index.html'
+      - 'qa/brand-reference-evaluation.json'
+      - 'qa/brand-emblem.spec.mjs'
+      - 'qa/brand-reference-comparison.spec.mjs'
+      - 'scripts/validate-brand-assets.ts'
+      - 'scripts/validate-hover-stability.ts'
+      - '.github/workflows/brand-qa.yml'
   push:
     branches: [main]
     paths:
@@ -16,18 +33,22 @@ on:
       - 'qa/brand-emblem.spec.mjs'
       - 'qa/brand-reference-comparison.spec.mjs'
       - 'scripts/validate-brand-assets.ts'
+      - 'scripts/validate-hover-stability.ts'
       - '.github/workflows/brand-qa.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  EVIDENCE_SCOPE: ${{ github.event_name == 'push' && 'exact-main' || 'exact-pr' }}
+
 jobs:
-  exact-main-brand:
+  brand-vector-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 24
     steps:
-      - name: Checkout exact main commit
+      - name: Checkout exact tested commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
@@ -38,11 +59,23 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Install FFmpeg materializer dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          ffmpeg -version
+
       - name: Install project dependencies
         run: npm ci
 
       - name: Validate locked brand surfaces
         run: npm run validate:brand
+
+      - name: Validate hover stability contract
+        run: npm run validate:hover-stability
+
+      - name: Typecheck layered SVG interaction
+        run: npm run typecheck
 
       - name: Build exact commit
         run: npm run build
@@ -52,7 +85,7 @@ jobs:
           npm install --no-save @playwright/test@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Start exact-main preview
+      - name: Start exact preview
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/brand-preview.log 2>&1 &
           echo $! > /tmp/brand-preview.pid
@@ -65,7 +98,7 @@ jobs:
           cat /tmp/brand-preview.log
           exit 1
 
-      - name: Run exact-main Browser QA
+      - name: Run exact Browser QA
         env:
           QA_BASE_URL: http://127.0.0.1:4173
         run: npx playwright test qa/brand-emblem.spec.mjs qa/brand-reference-comparison.spec.mjs --reporter=line
@@ -75,17 +108,18 @@ jobs:
         run: |
           mkdir -p qa-artifacts
           {
+            echo "scope=${EVIDENCE_SCOPE}"
             echo "commit=${GITHUB_SHA}"
             echo "workflow_run=${GITHUB_RUN_ID}"
             echo "workflow_attempt=${GITHUB_RUN_ATTEMPT}"
             sha256sum qa-artifacts/* 2>/dev/null || true
           } > qa-artifacts/brand-qa-manifest.txt
 
-      - name: Upload exact-main evidence
+      - name: Upload exact evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: brand-exact-main-${{ github.sha }}
+          name: brand-${{ env.EVIDENCE_SCOPE }}-${{ github.sha }}
           path: qa-artifacts
           if-no-files-found: error
           retention-days: 30
