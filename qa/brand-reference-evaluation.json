@@ -15,9 +15,9 @@
     "microReadability": 0.8
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "11539f04dc83d38fc703a5759c766598d5ddb581",
-    "public/brand-emblem.svg": "a9faa65a59de9ea2a2da886d49d66bacee7f3cb8",
-    "public/brand-mark-micro.svg": "32bd51ab9250b85934894cdf24e6adcfc7a5674d",
+    "src/components/BrandMark.tsx": "24b4b0996b11c566fbd860461d1dbc3d84cc669f",
+    "public/brand-emblem.svg": "bdcbf9e993655d32e1561385ec412e123e944842",
+    "public/brand-mark-micro.svg": "6ec76b8ebb690b5976ed3679997d108b1398e47b",
     "public/brand-emblem-mask.svg": "638145681e68eb405716872078aaa58d05820019"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
