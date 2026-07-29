@@ -1,33 +1,33 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-v2-crushed-depth-parallax-v15-0",
-  "candidateRevision": "v15.0 crushed-depth and layered-pointer pass: retained the wide smoke-free silhouette, rebuilt the cavern and gathered cowl, broke the fold fan, reduced the aura into upper-side wisps, and added independently damped pointer depth for eleven SVG layers",
+  "candidateSource": "canonical-reference-v2-throat-aura-textile-v16-0",
+  "candidateRevision": "v16.0 throat-pinch and volumetric-aura pass: raised the hood, lowered the cloak origin, introduced an explicit narrow throat channel, deepened the face cavern, consolidated the cloak into three heavy broken families and replaced the regular side ribs with segmented blurred upper-side energy while preserving layered pointer depth",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.79,
+  "overallScore": 0.82,
   "scores": {
-    "macroProportions": 0.85,
-    "hoodAndCavern": 0.79,
-    "collarAndFolds": 0.74,
-    "cloakSilhouette": 0.83,
-    "rimAndAura": 0.73,
-    "microReadability": 0.8
+    "macroProportions": 0.87,
+    "hoodAndCavern": 0.82,
+    "collarAndFolds": 0.8,
+    "cloakSilhouette": 0.85,
+    "rimAndAura": 0.78,
+    "microReadability": 0.83
   },
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "15acf0969c70acd61d995bcc7a1e248611b58a1a",
-    "public/brand-emblem.svg": "bdcbf9e993655d32e1561385ec412e123e944842",
-    "public/brand-mark-micro.svg": "6ec76b8ebb690b5976ed3679997d108b1398e47b",
-    "public/brand-emblem-mask.svg": "638145681e68eb405716872078aaa58d05820019"
+    "src/components/BrandMark.tsx": "42ccc5f254d76702c6136d3888d3562078b80322",
+    "public/brand-emblem.svg": "5df6d8597173a8371ce16bdf02e412aa07fe5da5",
+    "public/brand-mark-micro.svg": "0a58e550e45ef7360c8446287bfc209a165175f1",
+    "public/brand-emblem-mask.svg": "3d821f5464428dfb890ff9f1b28fe14199c96755"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the cowl is now gathered around a central cloth mass instead of a crossed ribbon, but the painted reference still has rougher and less controllable textile breaks",
-    "the face cavern boundary is broader and curved, yet it remains cleaner and more symmetrical than the irregular painted depth of the canonical reference",
-    "the large cloak families are offset and broken but still read as designed vector planes at large sizes",
-    "the aura is restricted to the upper and side field and no longer forms a lower smoke pool, but its cyan wisps still need a denser and more volumetric reference match",
-    "the exact-main workflow must produce the reference matrix, live homepage evidence, layered-hover screenshot, reduced-motion proof and artifact digest for the published commit"
+    "the upper-side aura is denser and less rib-like than v15, but remains cleaner and less turbulent than the painted reference",
+    "the throat pinch is explicit and narrow, while the surrounding cowl is still more designed than crushed",
+    "the face cavern is deeper and broader but its edge remains cleaner and more symmetrical than the canonical reference",
+    "the three major cloth families are heavier and darker, yet large-size rendering still reveals vector planes",
+    "the exact-main workflow must produce the v16 optical, hover, reduced-motion and live-header evidence for the published commit"
   ],
-  "nextRequiredAction": "publish the synchronized v15.0 tree, inspect the exact-main 192/96/56/32/16 matrices and directional layered hover on the live header, then keep the interaction contract while refining cloth and aura from the canonical reference rather than from this SVG"
+  "nextRequiredAction": "publish the synchronized v16.0 tree, inspect exact-main 192/96/56/32/16 and live header artifacts, then continue sculpting the cowl and turbulent aura from the canonical reference"
 }
