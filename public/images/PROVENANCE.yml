@@ -1,0 +1,114 @@
+schema_version: 1
+reviewed_at: 2026-07-30
+scope: public/images
+policy:
+  purpose: >-
+    Distinguish locally produced editorial artwork from archival evidence. A local
+    cover or reconstruction is never treated as a primary-source photograph.
+  public_source_rule: >-
+    Archival originals require an item-level source URL, rights statement, credit
+    line, access date, and SHA-256. Project-created editorial visuals may be used
+    as site artwork, but their generation/restoration record must remain explicit.
+  pending_rule: >-
+    PENDING-GENERATION-RECORD is not a rights clearance. It is an honest queue for
+    recovering the original generation prompt, source/reference set, creator/tool
+    record, and approval date before reuse outside this project.
+
+assets:
+  - path: public/images/essays/yesenin-kutezhi.jpg
+    role: essay_hero
+    origin_class: local_editorial_reconstruction
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Local reconstruction for the essay about the mask of “Moscow of Taverns”.
+
+  - path: public/images/essays/yesenin-kutezhi-card.jpg
+    role: essay_card
+    origin_class: derivative_crop_of_local_editorial_reconstruction
+    parent_asset: public/images/essays/yesenin-kutezhi.jpg
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+
+  - path: public/images/sections/articles-cover.jpg
+    role: section_cover
+    origin_class: local_project_artwork
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    required_follow_up: recover original design/generation record and approval date
+
+  - path: public/images/music/pushkin-tucha-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    required_follow_up: recover prompt/reference/approval record
+
+  - path: public/images/music/pushkin-tucha-wide.webp
+    role: music_wide_cover
+    origin_class: derivative_layout_of_local_project_artwork
+    parent_asset: public/images/music/pushkin-tucha-cover.webp
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+
+  - path: public/images/music/yesenin-ya-ustalym-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    required_follow_up: recover prompt/reference/approval record
+
+  - path: public/images/music/yesenin-ya-ustalym-wide.webp
+    role: music_wide_cover
+    origin_class: derivative_layout_of_local_project_artwork
+    parent_asset: public/images/music/yesenin-ya-ustalym-cover.webp
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+
+  - path: public/images/music/blok-rossiya-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    required_follow_up: recover prompt/reference/approval record
+
+  - path: public/images/music/blok-rossiya-wide.webp
+    role: music_wide_cover
+    origin_class: derivative_layout_of_local_project_artwork
+    parent_asset: public/images/music/blok-rossiya-cover.webp
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+
+  - path: public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
+    role: essay_hero
+    origin_class: local_artistic_reconstruction
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+
+  - path: public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp
+    role: essay_hero
+    origin_class: local_digital_restoration_or_editorial_reconstruction
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    required_follow_up: retain restoration source/reference record if recovered
+
+  - path: public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
+    role: essay_hero
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    sha256: 29c84251741438878fc89ed6f691e1d6e510f6735a9cea502489d73cfdd6a659
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: The audit preserves the approved prompt and states that archival references are not authors of this reconstruction.
+
+  - path: public/images/essays/yesenin/yesenin-part-1-editorial.webp
+    role: essay_hero
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    sha256: 85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: The audit preserves the approved prompt and production checksum.
