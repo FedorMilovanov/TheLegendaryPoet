@@ -25,6 +25,28 @@
 **Список поэтов и число записей:** Пушкин (7), Лермонтов (8), Тютчев (7), Фет (8),
 Гумилёв (8), Ахматова (8), Маяковский (6), Есенин (7), Пастернак (7), Блок (9).
 
+## Академический и открытый PDF-архив
+
+- Политика получения, обработки и прав: [`IMLI_RUSSIAN_LITERATURE_ARCHIVE.md`](IMLI_RUSSIAN_LITERATURE_ARCHIVE.md)
+- Межпроектный master index: https://github.com/FedorMilovanov/Research/blob/main/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md
+- Финальный строгий корпус 40 PDF: https://github.com/FedorMilovanov/Research/blob/main/SOURCE_LIBRARY/COMMONS_RUSSIAN_LITERATURE_40PLUS_PDF_PASS_2026-07-30.md
+- Проверенный processing-индекс всех 40 файлов: https://github.com/FedorMilovanov/Research/blob/main/SOURCE_LIBRARY/processed/COMMONS_STRICT_40_PROCESSING_INDEX_2026-07-30.md
+- Текущий издательский каталог ИМЛИ РАН: https://ed-imli.ru/index.php/en/russian-literature
+- Историческая электронная библиотека ИМЛИ РАН: https://biblio.imli.ru/
+
+Строгий открытый корпус содержит 40 PDF, 12 434 страницы, полный SHA-256 control,
+визуальную проверку первых страниц и классификацию текстового слоя. Он включает
+Айседору Дункан, Блока, Маяковского, Пушкина, Лермонтова, Бунина, Тютчева,
+Гумилёва, Ахматову, Брюсова, Бальмонта, Северянина, антологии, `Современник` и
+`Русский архив`. Это вспомогательный корпус старых изданий и периодики, а не замена
+академическим комментариям ИМЛИ, ФЭБ и РВБ.
+
+**Граница использования.** Доступность PDF или открытая карточка не означают
+автоматического разрешения вырезать иллюстрацию для сайта. PDF хранится неизменённым;
+цитата получает страницу и библиографию; каждый production-визуал проходит отдельную
+проверку provenance, credit line и прав. OCR для scan-first книг выполняется точечно,
+а не массово без исследовательской задачи.
+
 ## Тексты стихотворений (сверка)
 
 - Викитека (ru.wikisource.org) — академические редакции
@@ -36,6 +58,7 @@
 
 ## Пушкин
 
+- Строгий PDF-корпус: 8 томов, переводов и биографических изданий; состав и SHA — в processing-индексе Research.
 - https://rvb.ru/pushkin/01text/01versus/0423_36/1836/0617.htm — «Я памятник себе воздвиг нерукотворный»
 - https://rvb.ru/pushkin/01text/01versus/0423_36/1830/0528.htm — «В часы забав иль праздной скуки»
 - https://ru.wikisource.org/wiki/Отцы_пустынники_и_жёны_непорочны_(Пушкин)
@@ -47,7 +70,7 @@
 
 ## Есенин
 
-- **Новое досье по Есенину и Айседоре Дункан:** [`ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md`](ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md)
+- **Досье по Есенину и Айседоре Дункан:** [`ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md`](ESENIN_DUNCAN_RESEARCH_DOSSIER_2026-07-30.md)
 - **Полный межпроектный индекс из 80+ ссылок и правовых статусов:** https://github.com/FedorMilovanov/Research/blob/main/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md
 - ИМЛИ РАН, каталог Есенина и официальные PDF: https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a
 - «Летопись жизни и творчества С. А. Есенина», том 3, книга 1 — ключевой академический источник для 1921 — 10 мая 1922: https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a/823-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-3
@@ -55,6 +78,7 @@
 - РВБ, ПСС в 7 томах: https://rvb.ru/20vek/esenin/pss7/
 - Президентская библиотека, коллекция С. А. Есенина: https://www.prlib.ru/section/2062561
 - Library of Congress, поиск фотографий Айседоры Дункан в коллекции Арнольда Генте: https://www.loc.gov/pictures/search/?q=Isadora%20Duncan&co=agc
+- В строгом PDF-корпусе находятся три книги Айседоры Дункан; надёжный отдельный PDF Есенина через Commons не найден и не заменён случайным совпадением.
 - https://ilibrary.ru/text/1298/p.1/index.html — «Гой ты, Русь, моя родная»
 - https://ru.wikisource.org/wiki/Инония_(Есенин)
 - https://rvb.ru/20vek/esenin/pss7/vol2/notes/179.html — комментарии к «Инонии»
@@ -65,12 +89,15 @@
 
 ## Ахматова
 
+- Строгий PDF-корпус: первое издание `Вечера` (1912), scan-first, требует проверки конкретной страницы.
 - https://slova.org.ru/ahmatova/rekviem/ — «Реквием», полный текст
 - https://imwerden.de/pdf/akhmatova_requiem_1969__txt.pdf — «Реквием»
 - https://ru.wikipedia.org/wiki/Реквием_(поэма)
 
 ## Блок
 
+- Строгий PDF-корпус: `Стихи о Прекрасной даме` (1905).
+- ИМЛИ РАН, историческая категория Блока: https://biblio.imli.ru/index.php/ruslit/514-blok-a-a
 - https://www.culture.ru/poems/2160/noch-ulica-fonar-apteka-otryvok-iz-cikla-plyaski-smerti
 - https://ru.wikisource.org/wiki/Ночь,_улица,_фонарь,_аптека_(Блок)
 - https://www.culture.ru/poems/284/neznakomka
