@@ -1,22 +1,34 @@
 // HallEnvironment v1.2 — target: reference_hall_target_v2.jpg
 // Nero Marquina high-gloss, golden frames, cyan floor uplights, end-wall "ВЕЛИКИЕ РУССКИЕ ПОЭТЫ"
 import * as THREE from 'three'
-import { useRef } from 'react'
+import { memo, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { MeshReflectorMaterial, Text } from '@react-three/drei'
 import { HALL, PALETTE } from './hallConfig'
 
-export function HallEnvironment() {
-  const dust = useRef<THREE.Points>(null!)
+const WALL_SIDES = [-1, 1] as const
+const COLUMN_INDICES = Array.from({ length: 11 }, (_, index) => index)
+const OCULUS_X = [-12, 0, 12] as const
+const NICHE_LIGHT_INDICES = Array.from({ length: 10 }, (_, index) => index)
+const DUST_PARTICLE_COUNT = 140
 
-  const dustPositions = useRef(
-    Float32Array.from({ length: 140 * 3 }, (_, i) => {
-      const a = i % 3
-      if (a === 0) return THREE.MathUtils.randFloatSpread(HALL.length)
-      if (a === 1) return THREE.MathUtils.randFloat(0.4, HALL.height - 0.4)
-      return THREE.MathUtils.randFloatSpread(HALL.width - 1.2)
-    })
-  ).current
+function createDustPositions() {
+  return Float32Array.from({ length: DUST_PARTICLE_COUNT * 3 }, (_, index) => {
+    const axis = index % 3
+    if (axis === 0) return THREE.MathUtils.randFloatSpread(HALL.length)
+    if (axis === 1) return THREE.MathUtils.randFloat(0.4, HALL.height - 0.4)
+    return THREE.MathUtils.randFloatSpread(HALL.width - 1.2)
+  })
+}
+
+/**
+ * Static Hall geometry does not depend on focused poet, mute state or navigation
+ * mode. Memoization prevents those parent updates from rebuilding the scene,
+ * while context updates can still propagate through the R3F reconciler.
+ */
+export const HallEnvironment = memo(function HallEnvironment() {
+  const dust = useRef<THREE.Points>(null!)
+  const dustPositions = useMemo(createDustPositions, [])
 
   useFrame((_state, dt) => {
     if (dust.current) {
@@ -55,7 +67,7 @@ export function HallEnvironment() {
       {/* Walls — dark veined marble. Rotated to face the nave so the portraits
           read as mounted on a visible surface (a plain +z plane back-face-culls
           on the +z wall). DoubleSide as a belt-and-braces guard. */}
-      {[-1, 1].map((side) => (
+      {WALL_SIDES.map((side) => (
         <mesh
           key={side}
           position={[0, HALL.height / 2, side * HALL.width / 2]}
@@ -68,11 +80,11 @@ export function HallEnvironment() {
       ))}
 
       {/* Columns / pilasters between niches */}
-      {Array.from({ length: 11 }).map((_, i) => {
-        const x = -21 + i * 2.9
+      {COLUMN_INDICES.map((index) => {
+        const x = -21 + index * 2.9
         return (
-          <group key={i}>
-            {[-1,1].map(side => (
+          <group key={index}>
+            {WALL_SIDES.map(side => (
               <mesh key={side} position={[x, HALL.height/2, side * (HALL.width/2 - 0.18)]}>
                 <cylinderGeometry args={[0.18, 0.21, HALL.height, 24]} />
                 <meshStandardMaterial color="#2a313a" roughness={0.55} metalness={0.35} />
@@ -83,8 +95,8 @@ export function HallEnvironment() {
       })}
 
       {/* Oculus god rays — 3 skylights, stronger */}
-      {[-12, 0, 12].map((x, i) => (
-        <group key={i} position={[x, HALL.height-0.05, 0]}>
+      {OCULUS_X.map((x) => (
+        <group key={x} position={[x, HALL.height-0.05, 0]}>
           <mesh>
             <cylinderGeometry args={[0.5, 2.1, HALL.height, 48, 1, true]} />
             <meshBasicMaterial color="#e6d6b0" transparent opacity={0.02} side={THREE.DoubleSide} depthWrite={false} />
@@ -99,13 +111,13 @@ export function HallEnvironment() {
       ))}
 
       {/* Pedestal cyan uplights under each niche — reference look */}
-      {Array.from({length: 10}).map((_,i)=>{
-        const side = i % 2 === 0 ? -1 : 1
-        const pair = Math.floor(i/2)
+      {NICHE_LIGHT_INDICES.map((index) => {
+        const side = index % 2 === 0 ? -1 : 1
+        const pair = Math.floor(index / 2)
         const x = -18 + pair * 5.8
         const z = side * (HALL.width/2 - 0.9)
         return (
-          <pointLight key={i} position={[x, 0.28, z]} intensity={1.5} distance={2.6} color="#ffc888" decay={2.2} />
+          <pointLight key={index} position={[x, 0.28, z]} intensity={1.5} distance={2.6} color="#ffc888" decay={2.2} />
         )
       })}
 
@@ -164,4 +176,4 @@ export function HallEnvironment() {
       </points>
     </group>
   )
-}
+})

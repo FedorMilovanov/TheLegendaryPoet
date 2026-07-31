@@ -111,6 +111,7 @@ expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ metaKey: true })), 'Me
 expect(hallInput.shouldIgnoreHallShortcut(shortcutEvent({ altKey: true })), 'Alt chords must remain available to the platform');
 
 const hallSource = read('src/components/hall/HallOfPoets.tsx');
+const environmentSource = read('src/components/hall/HallEnvironment.tsx');
 const nicheSource = read('src/components/hall/PoetNiche.tsx');
 const whisperSource = read('src/components/hall/usePoetWhisper.ts');
 const deferredStopSource = read('src/utils/deferredAudioStop.ts');
@@ -127,12 +128,21 @@ const firstPersonFrameSource = firstPersonSource.slice(firstPersonFrameStart, fi
 const navigationFrameStart = navigationSource.indexOf('useFrame((_, dt) =>');
 const navigationFrameEnd = navigationSource.indexOf('\n\n  useEffect(() =>', navigationFrameStart);
 const navigationFrameSource = navigationSource.slice(navigationFrameStart, navigationFrameEnd);
+const environmentComponentStart = environmentSource.indexOf('export const HallEnvironment');
+const environmentStaticPrefix = environmentSource.slice(0, environmentComponentStart);
 
 expect(hallSource.includes('audioMuted={audioMuted}'), 'HallScene must receive mute state through React props');
 expect(hallSource.includes('useHallAudioListener()'), 'HallScene must mount one shared 3D listener bridge');
 expect(hallSource.includes("event.code !== 'KeyE' || shouldIgnoreHallShortcut(event)"), 'FPS selection must yield E to the current interaction owner');
 expect(hallSource.includes('if (shouldIgnoreHallShortcut(event)) return'), 'global F and M shortcuts must use the shared guard');
 expect(!hallSource.includes('__TLP_AUDIO_MUTED'), 'Hall audio must not depend on a mutable Window flag');
+expect(environmentSource.includes('export const HallEnvironment = memo(function HallEnvironment()'), 'static Hall geometry must ignore unrelated parent renders');
+expect(environmentSource.includes('const dustPositions = useMemo(createDustPositions, [])'), 'dust positions must be created lazily once per environment instance');
+expect(!/useRef\(\s*Float32Array\.from/.test(environmentSource), 'dust generation must not execute eagerly on every render');
+expect((environmentSource.match(/Float32Array\.from/g) ?? []).length === 1, 'Hall dust must have one canonical buffer factory');
+expect(environmentStaticPrefix.includes('const WALL_SIDES = [-1, 1] as const'), 'static wall-side data must live outside render');
+expect(environmentStaticPrefix.includes('const COLUMN_INDICES = Array.from'), 'static column indices must live outside render');
+expect(environmentStaticPrefix.includes('const NICHE_LIGHT_INDICES = Array.from'), 'static niche-light indices must live outside render');
 expect(nicheSource.includes('muted: boolean'), 'each poet niche must declare explicit mute ownership');
 expect(nicheSource.includes('usePoetWhisper(poet.shortKey, hovered, position, muted)'), 'poet niches must pass mute state into the hook');
 expect(whisperSource.includes('createDeferredAudioStop'), 'poet whispers must use source-safe delayed stop ownership');
@@ -167,9 +177,9 @@ expect(navigationFrameSource.includes('lookTarget.current.set('), 'rail frame lo
 expect(navigationSource.includes('el.style.touchAction = previousTouchAction'), 'rail cleanup must restore the canvas touch contract');
 
 if (failures.length > 0) {
-  console.error('\nHall audio, input and frame-allocation validation failed:');
+  console.error('\nHall audio, input, environment and frame-allocation validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log('Hall runtime validation passed: audio/input ownership and executable allocation-free FPS/rail movement are enforced.');
+console.log('Hall runtime validation passed: static environment, audio/input ownership and allocation-free FPS/rail movement are enforced.');
