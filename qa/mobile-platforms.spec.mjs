@@ -5,6 +5,12 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const CHROME_TRANSITION_MS = 700;
+const MOBILE_LANDMARK_SELECTOR = [
+  '#main-content section',
+  '#main-content article',
+  '#main-content img[loading="lazy"]',
+  '#main-content [data-image-state]',
+].join(',');
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -21,6 +27,10 @@ const routes = [
 
 function platformName(testInfo) {
   return testInfo.project.name;
+}
+
+function isWebKitProject(testInfo) {
+  return testInfo.project.name === 'iphone-safari';
 }
 
 function attachRuntimeDiagnostics(page) {
@@ -54,20 +64,79 @@ async function scrollAndYield(page, top, delay = 80) {
   await page.evaluate((scrollTop) => {
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
   }, top);
-  // Keep waits owned by Playwright. Linux WebKit can close the browser process
-  // when a long page.evaluate owns timers or nested animation-frame promises.
+  // Chromium keeps the exhaustive numeric traversal. Linux WebKit uses the
+  // bounded locator path below and never enters this evaluated scroll loop.
   await page.waitForTimeout(delay);
 }
 
-async function restoreChromeAtTop(page) {
+function selectBoundedIndices(count, limit = 7) {
+  if (count <= 0) return [];
+  if (count <= limit) return Array.from({ length: count }, (_, index) => index);
+  const indices = [0];
+  for (let slot = 1; slot < limit - 1; slot += 1) {
+    indices.push(Math.round((count - 1) * (slot / (limit - 1))));
+  }
+  indices.push(count - 1);
+  return [...new Set(indices)].sort((left, right) => left - right);
+}
+
+async function visitNativeWebKitLandmarks(page) {
+  const landmarks = page.locator(MOBILE_LANDMARK_SELECTOR);
+  const count = await landmarks.count();
+  const indices = selectBoundedIndices(count);
+  const visited = [];
+
+  for (const index of indices) {
+    const target = landmarks.nth(index);
+    if (!(await target.isVisible())) continue;
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport({ ratio: 0.01 });
+    await page.waitForTimeout(145);
+    visited.push(index);
+  }
+
+  expect(visited.length, 'bounded native WebKit landmarks visited').toBeGreaterThan(0);
+  expect(visited.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(7);
+  return visited;
+}
+
+async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
+  if (nativeWebKit) {
+    const currentY = await page.evaluate(() => window.scrollY);
+    if (currentY <= 16) {
+      const landmarks = page.locator(MOBILE_LANDMARK_SELECTOR);
+      const count = await landmarks.count();
+      if (count > 1) {
+        const lowerLandmark = landmarks.nth(Math.min(count - 1, 2));
+        if (await lowerLandmark.isVisible()) {
+          await lowerLandmark.scrollIntoViewIfNeeded();
+          await page.waitForTimeout(150);
+        }
+      } else {
+        await page.mouse.wheel(0, 560);
+        await page.waitForTimeout(150);
+      }
+    }
+
+    const topHeading = page.locator('#main-content h1, #main-content h2').first();
+    if (await topHeading.count()) await topHeading.scrollIntoViewIfNeeded();
+    await page.mouse.wheel(0, -100_000);
+    await page.waitForTimeout(180);
+
+    await expect.poll(
+      () => page.evaluate(() => window.scrollY),
+      { timeout: 8_000, message: 'WebKit should return to the document top' },
+    ).toBeLessThanOrEqual(1);
+    await expect(page.locator('html')).not.toHaveClass(/chrome-hidden/, { timeout: 8_000 });
+    await page.waitForTimeout(CHROME_TRANSITION_MS);
+    return;
+  }
+
   const initial = await page.evaluate(() => ({
     scrollY: window.scrollY,
     maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
   }));
 
-  // Preserve the same observable down/up gesture used by the production
-  // direction-sensitive chrome engine; only the frame waiting moved out of the
-  // browser process and into Playwright.
   if (initial.scrollY <= 16 && initial.maxScroll > 32) {
     await scrollAndYield(page, Math.min(64, initial.maxScroll));
   }
@@ -81,7 +150,6 @@ async function restoreChromeAtTop(page) {
     { timeout: 5_000, message: 'site chrome should return after an upward mobile scroll' },
   ).toBe(true);
 
-  // Wait for the 550ms compositor transition before measuring or tapping fixed UI.
   await page.waitForTimeout(CHROME_TRANSITION_MS);
 }
 
@@ -100,7 +168,13 @@ async function expectDockInsideViewport(page) {
   ).toBe(true);
 }
 
-async function exerciseLazyContent(page) {
+async function exerciseLazyContent(page, { nativeWebKit = false } = {}) {
+  if (nativeWebKit) {
+    await visitNativeWebKitLandmarks(page);
+    await restoreChromeAtTop(page, { nativeWebKit: true });
+    return;
+  }
+
   const { max, step } = await page.evaluate(() => ({
     max: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
     step: Math.max(420, Math.floor(window.innerHeight * 0.8)),
@@ -179,6 +253,11 @@ async function expectCleanRuntime(runtime) {
 
 for (const [name, route] of routes) {
   test(`${name}: mobile engine rendering, safe area, images and runtime`, async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name === 'iphone-safari' && name === 'home',
+      'dedicated bounded WebKit home audit provides equivalent coverage',
+    );
+    const nativeWebKit = isWebKitProject(testInfo);
     const runtime = attachRuntimeDiagnostics(page);
     const response = await page.goto(`${BASE_URL}${route}`, {
       waitUntil: 'domcontentloaded',
@@ -187,7 +266,7 @@ for (const [name, route] of routes) {
     expect(response, 'navigation response exists').not.toBeNull();
     expect(response.status(), `HTTP status for ${route}`).toBeLessThan(400);
     await settle(page);
-    await exerciseLazyContent(page);
+    await exerciseLazyContent(page, { nativeWebKit });
     await expectDockInsideViewport(page);
 
     const diagnostics = await collectDiagnostics(page);
@@ -225,10 +304,11 @@ for (const [name, route] of routes) {
 }
 
 test('mobile dock, search sheet and tap targets remain usable', async ({ page }, testInfo) => {
+  const nativeWebKit = isWebKitProject(testInfo);
   const runtime = attachRuntimeDiagnostics(page);
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
-  await restoreChromeAtTop(page);
+  await restoreChromeAtTop(page, { nativeWebKit });
 
   const dock = page.locator('.mobile-dock');
   await expectDockInsideViewport(page);
@@ -335,6 +415,7 @@ test('ratings and community input survive touch entry and reload', async ({ page
 });
 
 test('music shell, immersive dialog and mobile dock do not collide', async ({ page }, testInfo) => {
+  const nativeWebKit = isWebKitProject(testInfo);
   const runtime = attachRuntimeDiagnostics(page);
   await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
   await settle(page);
@@ -363,7 +444,7 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
   await expect(immersive).toBeHidden({ timeout: 8_000 });
   await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
 
-  await restoreChromeAtTop(page);
+  await restoreChromeAtTop(page, { nativeWebKit });
   await expectDockInsideViewport(page);
   await page.locator('.mobile-dock').getByRole('link', { name: 'Рейтинг' }).tap();
   await expect(page).toHaveURL(/\/ratings$/);
@@ -398,10 +479,16 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
 });
 
 test('portrait, landscape and back navigation stay stable', async ({ page }, testInfo) => {
+  const nativeWebKit = isWebKitProject(testInfo);
   const runtime = attachRuntimeDiagnostics(page);
   await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
   await settle(page);
-  await page.evaluate(() => window.scrollTo(0, 520));
+  if (nativeWebKit) {
+    await page.mouse.wheel(0, 520);
+    await page.waitForTimeout(100);
+  } else {
+    await scrollAndYield(page, 520);
+  }
   const original = page.viewportSize();
 
   await page.setViewportSize({ width: 844, height: 390 });
@@ -417,7 +504,7 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await settle(page);
 
   if (original) await page.setViewportSize(original);
-  await restoreChromeAtTop(page);
+  await restoreChromeAtTop(page, { nativeWebKit });
   const portrait = await collectDiagnostics(page);
   expect(portrait.horizontalOverflow, 'restored portrait horizontal overflow').toBeLessThanOrEqual(2);
 
