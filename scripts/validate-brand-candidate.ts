@@ -25,6 +25,8 @@ type CandidateEvaluation = {
   referenceId: string;
   activeCandidateId: string;
   activeCandidateFile: string;
+  activeMicroCandidateId: string;
+  activeMicroCandidateFile: string;
   productionSource: string;
   productionReplacement: boolean;
   status: string;
@@ -66,37 +68,25 @@ assert.doesNotMatch(candidate, /<(?:image|rect|foreignObject|canvas)\b|data:imag
 assert.doesNotMatch(candidate, /<animate(?:Transform|Motion)?\b|@keyframes/i, 'candidate must remain static until geometry is accepted');
 assert.equal((candidate.match(/<g(?:\s[^>]*)?>/g) ?? []).filter((tag) => !/\/\s*>$/.test(tag)).length, (candidate.match(/<\/g>/g) ?? []).length, 'unbalanced candidate groups');
 assert.ok((candidate.match(/<path\b/g) ?? []).length > 70, 'candidate lacks authored geometry and branch depth');
-
 for (const hook of ['atmosphere', 'aura-haze', 'aura-branches', 'figure', 'cloak', 'folds', 'hood', 'hood-layers', 'hood-seams', 'inner-rim', 'face-void', 'face-depth', 'neck-shadow', 'collar', 'throat', 'upper-folds', 'rim-light', 'cloth-highlights', 'texture']) {
   assert.ok(candidate.includes(`data-brand-${hook}`), `v19 candidate missing semantic layer: ${hook}`);
 }
-
-for (const geometryToken of [
-  'M48 11.2C41.6 11.9',
-  'M48 20C42.9 20.4',
-  'M17.1 40.9C26.4 35.8',
-  'M18.4 41.2C28.2 37.4',
-  'M22.6 46C31.2 42.5',
-  'M48 34.8C38.9 34.1',
-  'M10.8 96C17.1 78.8',
-  'M85.2 96C79 79.2',
-  'M38.8 8.4L35.4 10.1',
-  'M57.2 8.1L60.6 9.8',
-]) assert.ok(candidate.includes(geometryToken), `v19.11 candidate geometry drifted: ${geometryToken}`);
-
-assert.match(candidate, /широк(?:ой|ая).*ч[её]рн/i, 'candidate description must preserve the broad pure-black face void target');
-assert.match(candidate, /диагональ/i, 'candidate description must preserve diagonal cloth target');
-assert.ok(candidate.includes('filter="url(#wide)"'), 'macro aura field missing');
-assert.ok(candidate.includes('data-brand-face-void="" data-brand-depth="deep"'), 'face cavern is not an independent deep layer');
-assert.equal((candidate.match(/data-brand-aura-(?:haze|branches)/g) ?? []).length, 2, 'aura haze/branch separation is missing');
+for (const geometryToken of ['M48 11.2C41.6 11.9', 'M48 20C42.9 20.4', 'M17.1 40.9C26.4 35.8', 'M18.4 41.2C28.2 37.4', 'M22.6 46C31.2 42.5', 'M48 34.8C38.9 34.1', 'M10.8 96C17.1 78.8', 'M85.2 96C79 79.2', 'M38.8 8.4L35.4 10.1', 'M57.2 8.1L60.6 9.8']) {
+  assert.ok(candidate.includes(geometryToken), `v19.11 candidate geometry drifted: ${geometryToken}`);
+}
+assert.match(candidate, /широк(?:ой|ая).*ч[её]рн/i);
+assert.match(candidate, /диагональ/i);
+assert.ok(candidate.includes('filter="url(#wide)"'));
+assert.ok(candidate.includes('data-brand-face-void="" data-brand-depth="deep"'));
+assert.equal((candidate.match(/data-brand-aura-(?:haze|branches)/g) ?? []).length, 2);
 
 assert.equal(microId, 'v19.14-reference-micro-redraw');
 assert.match(micro, /<svg\b[^>]*viewBox="0 0 32 32"/);
 assert.match(micro, new RegExp(`data-brand-micro-candidate="${microId}"`));
-assert.ok(micro.trimEnd().endsWith('</svg>'), 'micro candidate is truncated');
-assert.doesNotMatch(micro, /<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i, 'raster shortcut in micro candidate');
-assert.doesNotMatch(micro, /<animate(?:Transform|Motion)?\b|@keyframes/i, 'micro candidate must remain static');
-assert.ok((micro.match(/<path\b/g) ?? []).length >= 16, 'micro candidate lacks optical geometry');
+assert.ok(micro.trimEnd().endsWith('</svg>'));
+assert.doesNotMatch(micro, /<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
+assert.doesNotMatch(micro, /<animate(?:Transform|Motion)?\b|@keyframes/i);
+assert.ok((micro.match(/<path\b/g) ?? []).length >= 16);
 for (const hook of ['atmosphere', 'figure', 'cloak', 'folds', 'hood', 'face', 'cowl', 'rim']) {
   assert.ok(micro.includes(`data-brand-micro-${hook}`), `micro candidate missing semantic layer: ${hook}`);
 }
@@ -120,30 +110,33 @@ assert.match(ledger.evidenceStatus, /production remains unchanged/i);
 assert.equal(evaluation.referenceId, 'canonical-hooded-figure-v2-clean-base');
 assert.equal(evaluation.activeCandidateId, candidateId);
 assert.equal(evaluation.activeCandidateFile, candidateFile);
+assert.equal(evaluation.activeMicroCandidateId, microId);
+assert.equal(evaluation.activeMicroCandidateFile, microFile);
 assert.equal(evaluation.productionSource, ledger.visualBaseline);
 assert.equal(evaluation.productionReplacement, false);
 assert.equal(evaluation.status, 'candidate-under-reference-review');
 assert.equal(evaluation.ownerDecision, 'not-reference-approved');
 assert.deepEqual(evaluation.reviewedOpticalSizes, [256, 192, 128, 96, 64, 56, 44, 32, 24, 16]);
-assert.equal(evaluation.passHistory.length, 13);
-assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10', 'v19.11', 'v19.12', 'v19.13']);
+assert.equal(evaluation.passHistory.length, 15);
+assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10', 'v19.11', 'v19.12', 'v19.13', 'v19.14', 'v19.15']);
 assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.11')?.result, 'active-main-candidate');
+assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.14')?.result, 'active-micro-candidate');
 assert.equal(evaluation.passHistory.at(-1)?.result, 'reviewed-not-promoted');
-assert.ok(evaluation.confirmedImprovements.some((item) => /dark gaps|тёмн/i.test(item)));
+assert.ok(evaluation.confirmedImprovements.some((item) => /32, 24 and 16 pixel/i.test(item)));
 assert.ok(evaluation.remainingBlockers.length >= 6);
-assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.14')));
+assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.16')));
 assert.match(evaluation.promotionRule, /owner explicitly approves/i);
 
-assert.ok(browserQa.includes(candidateFile.replace('public/', '')), 'Browser QA does not load the full-size candidate');
-assert.ok(browserQa.includes(candidateArtifact), 'Browser QA does not emit the full-size triple comparison');
-assert.ok(browserQa.includes("const CANDIDATE_ID = ledger.geometryCandidate.id"), 'Browser QA candidate identity is not sourced from the ledger');
-assert.ok(browserQa.includes('REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDIDATE'), 'dynamic full-size comparison heading missing');
-assert.ok(microQa.includes("const candidate = ledger.microCandidate.file"), 'micro QA identity is not sourced from the ledger');
-assert.ok(microQa.includes(microArtifact), 'micro QA does not emit the optical matrix');
+assert.ok(browserQa.includes(candidateFile.replace('public/', '')));
+assert.ok(browserQa.includes(candidateArtifact));
+assert.ok(browserQa.includes("const CANDIDATE_ID = ledger.geometryCandidate.id"));
+assert.ok(browserQa.includes('REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDIDATE'));
+assert.ok(microQa.includes("const candidate = ledger.microCandidate.file"));
+assert.ok(microQa.includes(microArtifact));
 assert.match(playwrightConfig, /brand-v19-micro/);
 
-assert.doesNotMatch(production, /v19\.11-reference-geometry-reset/, 'unreviewed full-size candidate leaked into production SVG');
-assert.doesNotMatch(productionMicro, /v19\.14-reference-micro-redraw/, 'unreviewed micro candidate leaked into production micro SVG');
-assert.doesNotMatch(component, /brand-emblem-v19-(?:micro-)?candidate/, 'unreviewed candidate leaked into BrandMark');
+assert.doesNotMatch(production, /v19\.11-reference-geometry-reset/);
+assert.doesNotMatch(productionMicro, /v19\.14-reference-micro-redraw/);
+assert.doesNotMatch(component, /brand-emblem-v19-(?:micro-)?candidate/);
 
-console.log('brand candidate validation: v19.11 full-size and v19.14 micro candidates are QA-visible and isolated from production');
+console.log('brand candidate validation: fifteen passes are locked; v19.11 full-size and v19.14 micro remain isolated from production');
