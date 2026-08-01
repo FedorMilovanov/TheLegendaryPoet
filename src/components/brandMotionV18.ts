@@ -1,6 +1,6 @@
 export const BRAND_MOTION_CSS = `
 [data-brand-mark]{--brand-root-y:0px;--brand-root-scale:1;--brand-far-x:0px;--brand-far-y:0px;--brand-energy-x:0px;--brand-energy-y:0px;--brand-energy-r:0deg;--brand-figure-x:0px;--brand-figure-y:0px;--brand-folds-x:0px;--brand-folds-y:0px;--brand-hood-x:0px;--brand-hood-y:0px;--brand-hood-layers-x:0px;--brand-hood-layers-y:0px;--brand-face-x:0px;--brand-face-y:0px;--brand-collar-x:0px;--brand-collar-y:0px;--brand-rim-x:0px;--brand-rim-y:0px;--brand-texture-x:0px;--brand-texture-y:0px;--brand-aura-opacity:1;--brand-energy-opacity:1;--brand-rim-opacity:1}
-[data-brand-mark] [data-brand-vector]{transform:translate3d(0,var(--brand-root-y),0) scale(var(--brand-root-scale));transform-origin:center;filter:drop-shadow(0 5px 12px rgba(0,4,13,.84)) drop-shadow(0 0 10px rgba(46,216,255,.18));transition:filter 620ms cubic-bezier(.16,1,.3,1)}
+[data-brand-mark] [data-brand-vector]{transform:translate3d(0,var(--brand-root-y),0) scale(var(--brand-root-scale));transform-origin:center;filter:drop-shadow(0 5px 12px rgba(0,4,13,.84)) drop-shadow(0 0 10px rgba(46,216,255,.18));transition:filter 520ms cubic-bezier(.16,1,.3,1)}
 [data-brand-mark] [data-brand-depth]{transform-box:fill-box;transform-origin:center}
 [data-brand-mark] [data-brand-atmosphere]{transform:translate3d(var(--brand-far-x),var(--brand-far-y),0);opacity:var(--brand-aura-opacity)}
 [data-brand-mark] [data-brand-energy]{transform:translate3d(var(--brand-energy-x),var(--brand-energy-y),0) rotate(var(--brand-energy-r));opacity:var(--brand-energy-opacity)}
@@ -15,15 +15,17 @@ export const BRAND_MOTION_CSS = `
 @media (hover:hover) and (pointer:fine){
 [data-brand-mark][data-brand-interaction="active"] [data-brand-vector],[data-brand-mark][data-brand-interaction="settling"] [data-brand-vector]{will-change:transform,filter}
 [data-brand-mark][data-brand-interaction="active"] [data-brand-depth],[data-brand-mark][data-brand-interaction="settling"] [data-brand-depth]{will-change:transform,opacity}
-[data-brand-mark][data-brand-interaction="active"] [data-brand-vector]{filter:drop-shadow(0 8px 18px rgba(0,7,18,.88)) drop-shadow(0 0 17px rgba(65,220,255,.28))}
+[data-brand-mark][data-brand-interaction="active"] [data-brand-vector]{filter:brightness(1.1) saturate(1.08) drop-shadow(0 10px 21px rgba(0,7,18,.9)) drop-shadow(0 0 22px rgba(65,220,255,.42)) drop-shadow(0 0 7px rgba(184,247,255,.22))}
+[data-brand-mark][data-brand-interaction="active"] [data-brand-rim-light]{filter:brightness(1.34)}
+[data-brand-mark][data-brand-interaction="active"] [data-brand-energy]{filter:brightness(1.22)}
+[data-brand-mark][data-brand-interaction="settling"] [data-brand-vector]{filter:brightness(1.035) saturate(1.03) drop-shadow(0 7px 16px rgba(0,7,18,.88)) drop-shadow(0 0 15px rgba(65,220,255,.27))}
 }
-a:focus-visible [data-brand-mark] [data-brand-rim-light],button:focus-visible [data-brand-mark] [data-brand-rim-light]{opacity:1;filter:brightness(1.24)}
-a:focus-visible [data-brand-mark] [data-brand-atmosphere],button:focus-visible [data-brand-mark] [data-brand-atmosphere]{opacity:1}
+a:focus-visible [data-brand-mark] [data-brand-vector],button:focus-visible [data-brand-mark] [data-brand-vector]{filter:brightness(1.075) saturate(1.05) drop-shadow(0 0 17px rgba(65,220,255,.34))}
+a:focus-visible [data-brand-mark] [data-brand-rim-light],button:focus-visible [data-brand-mark] [data-brand-rim-light]{opacity:1;filter:brightness(1.3)}
 @media (prefers-reduced-motion:reduce){
 [data-brand-mark] [data-brand-vector],[data-brand-mark] [data-brand-depth]{transform:none!important;transition:none!important;will-change:auto!important}
-[data-brand-mark][data-brand-interaction="active"] [data-brand-atmosphere]{opacity:1}
-[data-brand-mark][data-brand-interaction="active"] [data-brand-energy]{opacity:1}
-[data-brand-mark][data-brand-interaction="active"] [data-brand-rim-light]{opacity:1;filter:brightness(1.18)}
+[data-brand-mark][data-brand-interaction="active"] [data-brand-vector]{filter:brightness(1.065) saturate(1.04) drop-shadow(0 0 15px rgba(65,220,255,.28))}
+[data-brand-mark][data-brand-interaction="active"] [data-brand-rim-light]{opacity:1;filter:brightness(1.22)}
 }`;
 
 export type BrandMotionController = {
@@ -40,6 +42,10 @@ const px = (value: number) => `${value.toFixed(3)}px`;
 const number = (value: number) => value.toFixed(4);
 const degrees = (value: number) => `${value.toFixed(3)}deg`;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const phase = (value: number, start: number, end: number) => {
+  const t = clamp((value - start) / (end - start), 0, 1);
+  return t * t * (3 - 2 * t);
+};
 
 export function createBrandMotionController(node: HTMLElement): BrandMotionController {
   let bounds: Bounds = { left: 0, top: 0, width: 1, height: 1 };
@@ -73,33 +79,37 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
   };
 
   const write = () => {
+    const auraWake = phase(wake, 0, 0.46);
+    const figureWake = phase(wake, 0.14, 0.82);
+    const detailWake = phase(wake, 0.38, 1);
     const style = node.style;
-    style.setProperty('--brand-root-y', px(-0.58 * wake));
-    style.setProperty('--brand-root-scale', number(1 + 0.019 * wake));
-    style.setProperty('--brand-far-x', px(-x * 1.25));
-    style.setProperty('--brand-far-y', px(-y * 0.82 - wake * 0.2));
-    style.setProperty('--brand-energy-x', px(x * 1.55));
-    style.setProperty('--brand-energy-y', px(y * 1.05 - wake * 0.14));
-    style.setProperty('--brand-energy-r', degrees(x * 0.28));
-    style.setProperty('--brand-figure-x', px(x * 0.13));
-    style.setProperty('--brand-figure-y', px(y * 0.09 - wake * 0.1));
-    style.setProperty('--brand-folds-x', px(x * 0.42));
-    style.setProperty('--brand-folds-y', px(y * 0.29 + wake * 0.08));
-    style.setProperty('--brand-hood-x', px(x * 0.58));
-    style.setProperty('--brand-hood-y', px(y * 0.4 - wake * 0.13));
-    style.setProperty('--brand-hood-layers-x', px(x * 0.86));
-    style.setProperty('--brand-hood-layers-y', px(y * 0.58 - wake * 0.16));
-    style.setProperty('--brand-face-x', px(-x * 0.2));
-    style.setProperty('--brand-face-y', px(-y * 0.13 + wake * 0.06));
-    style.setProperty('--brand-collar-x', px(x * 0.64));
-    style.setProperty('--brand-collar-y', px(y * 0.44 + wake * 0.08));
-    style.setProperty('--brand-rim-x', px(x * 1.02));
-    style.setProperty('--brand-rim-y', px(y * 0.68 - wake * 0.07));
-    style.setProperty('--brand-texture-x', px(x * 0.31));
-    style.setProperty('--brand-texture-y', px(y * 0.22));
-    style.setProperty('--brand-aura-opacity', number(0.92 + wake * 0.08));
-    style.setProperty('--brand-energy-opacity', number(0.9 + wake * 0.1));
-    style.setProperty('--brand-rim-opacity', number(0.9 + wake * 0.1));
+
+    style.setProperty('--brand-root-y', px(-1.05 * figureWake));
+    style.setProperty('--brand-root-scale', number(1 + 0.034 * figureWake));
+    style.setProperty('--brand-far-x', px(-x * 2.45 * auraWake));
+    style.setProperty('--brand-far-y', px((-y * 1.65 - 0.42) * auraWake));
+    style.setProperty('--brand-energy-x', px(x * 2.85 * auraWake));
+    style.setProperty('--brand-energy-y', px((y * 1.9 - 0.3) * auraWake));
+    style.setProperty('--brand-energy-r', degrees(x * 0.62 * auraWake));
+    style.setProperty('--brand-figure-x', px(x * 0.24 * figureWake));
+    style.setProperty('--brand-figure-y', px((y * 0.17 - 0.18) * figureWake));
+    style.setProperty('--brand-folds-x', px(x * 0.82 * figureWake));
+    style.setProperty('--brand-folds-y', px((y * 0.56 + 0.16) * figureWake));
+    style.setProperty('--brand-hood-x', px(x * 1.08 * figureWake));
+    style.setProperty('--brand-hood-y', px((y * 0.72 - 0.24) * figureWake));
+    style.setProperty('--brand-hood-layers-x', px(x * 1.62 * detailWake));
+    style.setProperty('--brand-hood-layers-y', px((y * 1.05 - 0.3) * detailWake));
+    style.setProperty('--brand-face-x', px(-x * 0.42 * detailWake));
+    style.setProperty('--brand-face-y', px((-y * 0.27 + 0.13) * detailWake));
+    style.setProperty('--brand-collar-x', px(x * 1.18 * figureWake));
+    style.setProperty('--brand-collar-y', px((y * 0.78 + 0.14) * figureWake));
+    style.setProperty('--brand-rim-x', px(x * 1.92 * detailWake));
+    style.setProperty('--brand-rim-y', px((y * 1.22 - 0.18) * detailWake));
+    style.setProperty('--brand-texture-x', px(x * 0.58 * detailWake));
+    style.setProperty('--brand-texture-y', px(y * 0.4 * detailWake));
+    style.setProperty('--brand-aura-opacity', number(0.94 + 0.06 * auraWake));
+    style.setProperty('--brand-energy-opacity', number(0.92 + 0.08 * auraWake));
+    style.setProperty('--brand-rim-opacity', number(0.92 + 0.08 * detailWake));
   };
 
   const schedule = () => {
@@ -112,10 +122,10 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     const dt = Math.min(0.032, Math.max(0.001, lastTime ? (time - lastTime) / 1000 : 1 / 60));
     lastTime = time;
 
-    const stiffness = active ? 118 : 86;
-    const damping = active ? 17 : 15;
-    const wakeStiffness = active ? 92 : 72;
-    const wakeDamping = active ? 15 : 14;
+    const stiffness = active ? 132 : 90;
+    const damping = active ? 18 : 15.5;
+    const wakeStiffness = active ? 122 : 76;
+    const wakeDamping = active ? 15.5 : 14.5;
 
     velocityX += (targetX - x) * stiffness * dt;
     velocityY += (targetY - y) * stiffness * dt;
@@ -131,7 +141,7 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     const positionError = Math.abs(targetX - x) + Math.abs(targetY - y);
     const velocity = Math.abs(velocityX) + Math.abs(velocityY);
     const wakeError = Math.abs(targetWake - wake) + Math.abs(velocityWake);
-    if (positionError >= 0.002 || velocity >= 0.004 || wakeError >= 0.0025) {
+    if (positionError >= 0.0018 || velocity >= 0.0038 || wakeError >= 0.0022) {
       schedule();
       return;
     }
