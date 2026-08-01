@@ -20,20 +20,9 @@ const sizes = {
 };
 
 const BRAND_VERSION = 'cloak-20260801-21';
-const VECTOR_SOURCE = 'square-closeup-reference-v18-2';
+const VECTOR_SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
 const RAW_BODY = rawVector.slice(rawVector.indexOf('<defs>'), rawVector.lastIndexOf('</svg>'));
-const ids = [
-  'cloak',
-  'hood',
-  'hoodL',
-  'hoodR',
-  'foldL',
-  'foldR',
-  'aura',
-  'auraBlur',
-  'rimGlow',
-  'organicEnergy',
-] as const;
+const ids = ['cloak', 'hood', 'left', 'right', 'mist', 'soft', 'glow'] as const;
 
 const replaceEvery = (value: string, search: string, replacement: string) =>
   value.split(search).join(replacement);
@@ -61,11 +50,9 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
 
   useEffect(() => {
     const node = markRef.current;
-    if (!node || reducedMotion) {
-      controllerRef.current?.destroy();
-      controllerRef.current = null;
-      return;
-    }
+    controllerRef.current?.destroy();
+    controllerRef.current = null;
+    if (!node || reducedMotion) return;
 
     const controller = createBrandMotionController(node);
     controllerRef.current = controller;
@@ -132,9 +119,8 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
       >
         <title id={`${id}-brand-title`}>THE LEGENDARY POET</title>
         <desc id={`${id}-brand-description`}>
-          Монументальная почти чёрная фигура в высоком многослойном капюшоне с широкой
-          безликой пустотой, тяжёлым собранным плащом и холодной электрической аурой за
-          головой и плечами
+          Монументальная почти чёрная фигура в высоком капюшоне с глубокой безликой
+          пустотой, тяжёлым плащом и холодной верхне-боковой энергией
         </desc>
         <style>{BRAND_MOTION_CSS}</style>
         <g dangerouslySetInnerHTML={{ __html: markup }} />
