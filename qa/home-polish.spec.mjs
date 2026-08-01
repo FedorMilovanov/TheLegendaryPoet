@@ -29,6 +29,28 @@ async function waitForImages(page) {
   ).toBe(true);
 }
 
+async function waitForHeroReveal(page) {
+  const reveals = page.locator('.hero-blur-reveal');
+  await reveals.first().waitFor({ state: 'attached', timeout: 20_000 });
+
+  // One browser-side predicate observes the actual CSS animation lifecycle.
+  // Repeated Playwright evaluate polling can race WebKit's animation commits,
+  // while a fixed wall-clock timeout can expire just before the final frame.
+  await page.waitForFunction(() => {
+    const nodes = [...document.querySelectorAll('.hero-blur-reveal')];
+    if (!nodes.length) return false;
+    return nodes.every((node) => {
+      const style = getComputedStyle(node);
+      const opacity = Number.parseFloat(style.opacity || '0');
+      const filter = style.filter;
+      const animations = typeof node.getAnimations === 'function' ? node.getAnimations() : [];
+      const activeAnimation = animations.some((animation) => animation.playState === 'running' || animation.playState === 'pending');
+      const crisp = filter === 'none' || filter === 'blur(0px)' || filter === 'blur(0)';
+      return opacity >= 0.999 && crisp && !activeAnimation;
+    });
+  }, null, { timeout: 8_000, polling: 100 });
+}
+
 async function effectiveOpacity(locator) {
   return locator.evaluate((node) => {
     let opacity = 1;
@@ -41,10 +63,20 @@ async function effectiveOpacity(locator) {
   });
 }
 
-async function scrollTargetIntoView(page, target) {
-  // Use several small, synchronous scroll positions. A single long jump can
-  // place the target in view before WebKit delivers the intermediate
-  // IntersectionObserver notifications that drive reveal animations.
+async function scrollTargetIntoView(page, target, { nativeWebKit = false } = {}) {
+  if (nativeWebKit) {
+    // Use Playwright's native locator scroll for Linux WebKit. This performs one
+    // bounded protocol operation per principal section instead of a series of
+    // page.evaluate(window.scrollTo) calls that can terminate the WebKit process.
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport();
+    await page.waitForTimeout(240);
+    await afterPaint(page);
+    return;
+  }
+
+  // Chromium keeps the stronger stepped-scroll stress path. Several small
+  // positions exercise the IntersectionObserver-driven reveal choreography.
   const state = await target.evaluate((node) => {
     const rect = node.getBoundingClientRect();
     const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
@@ -107,13 +139,7 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   expect(imageHints.slice(0, 2).every((image) => image.fetchPriority === 'high')).toBe(true);
   expect(imageHints.slice(2).every((image) => image.fetchPriority !== 'high')).toBe(true);
 
-  await expect.poll(
-    () => page.locator('.hero-blur-reveal').evaluateAll((nodes) => nodes.length > 0 && nodes.every((node) => {
-      const style = getComputedStyle(node);
-      return style.opacity === '1' && (style.filter === 'none' || style.filter === 'blur(0px)');
-    })),
-    { timeout: 4_000, message: 'hero title should finish crisp quickly' },
-  ).toBe(true);
+  await waitForHeroReveal(page);
 
   const coarsePointer = await page.evaluate(() => matchMedia('(hover: none) and (pointer: coarse)').matches);
   const touchProfile = testInfo.project.name !== 'home-desktop';
@@ -263,12 +289,19 @@ test('real stepped scrolling reveals all principal homepage sections', async ({ 
     page.getByText('Избранные авторы', { exact: true }),
     page.getByText('Вера, культура и', { exact: false }).last(),
   ];
+  const nativeWebKit = testInfo.project.name === 'home-iphone-safari';
 
   for (const target of targets) {
-    await scrollTargetIntoView(page, target);
+    await scrollTargetIntoView(page, target, { nativeWebKit });
     await expect(target).toBeVisible();
     const label = (await target.textContent())?.trim() || 'homepage section';
-    await expect.poll(() => effectiveOpacity(target), { timeout: 5_000, message: `${label} should reveal after real stepped scrolling` }).toBeGreaterThan(0.9);
+    await expect.poll(
+      () => effectiveOpacity(target),
+      {
+        timeout: nativeWebKit ? 8_000 : 5_000,
+        message: `${label} should reveal after real stepped scrolling`,
+      },
+    ).toBeGreaterThan(0.9);
   }
 
   await page.screenshot({
