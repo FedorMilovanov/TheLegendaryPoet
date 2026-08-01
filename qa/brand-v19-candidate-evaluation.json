@@ -3,30 +3,112 @@
   "referenceFile": "qa/reference/brand-emblem-canonical-reference.webp",
   "activeCandidateId": "v19.11-reference-geometry-reset",
   "activeCandidateFile": "public/brand-emblem-v19-candidate.svg",
+  "activeOpticalCandidateId": "v19.17-reference-optical-redraw",
+  "activeOpticalCandidateFile": "public/brand-emblem-v19-optical-candidate.svg",
   "activeMicroCandidateId": "v19.14-reference-micro-redraw",
   "activeMicroCandidateFile": "public/brand-emblem-v19-micro-candidate.svg",
   "productionSource": "canonical-reference-v2-black-monolith-v17-0",
   "productionReplacement": false,
   "status": "candidate-under-reference-review",
   "ownerDecision": "not-reference-approved",
-  "reviewedOpticalSizes": [256, 192, 128, 96, 64, 56, 44, 32, 24, 16],
+  "reviewedOpticalSizes": [
+    256,
+    192,
+    128,
+    96,
+    64,
+    56,
+    44,
+    32,
+    24,
+    16
+  ],
   "passHistory": [
-    {"pass":"v19.1","result":"rejected-as-production","finding":"macro reset established a separate layered candidate, but the cyan aura read as thick tubes, the hood was too tall and narrow, and the cowl formed a clean ritual X"},
-    {"pass":"v19.2","result":"working-pass","finding":"broader hood, face void and shoulder mass improved the crop, but aura wings and symmetric cowl remained dominant"},
-    {"pass":"v19.3","result":"working-pass","finding":"thick aura ribbons were replaced with a field and branches; the cloth still read as geometric vertical armour"},
-    {"pass":"v19.4","result":"working-pass","finding":"neon intensity was reduced and the aura moved behind the figure; cowl and lower folds remained too diagrammatic"},
-    {"pass":"v19.5","result":"working-pass","finding":"large diagonal cloth masses replaced the strongest vertical wedges; the face cavity remained too oval"},
-    {"pass":"v19.6","result":"promoted-to-main-candidate","finding":"pentagonal face cavern, nested hood seams, controlled halo and diagonal cloth produced the first candidate worth exact-main comparison"},
-    {"pass":"v19.7","result":"working-pass","finding":"face width, upper halo and side rim were corrected for 96 and 56 pixel readability"},
-    {"pass":"v19.8","result":"working-pass","finding":"hood apex and face opening were moved downward to match the canonical vertical landmarks rather than the previous needle-like silhouette"},
-    {"pass":"v19.9","result":"working-pass","finding":"upper cloth contrast, inner hood edge, side rim and aura energy were strengthened without adding a lower smoke pool"},
-    {"pass":"v19.10","result":"working-pass","finding":"the large symmetric wing/X collar was replaced with layered horizontal crushing, asymmetric gathered planes and a lower draped cowl"},
-    {"pass":"v19.11","result":"active-main-candidate","finding":"continuous cyan ribbons were replaced by separate haze and fine branch families with irregular forks, varied widths and deliberate dark gaps; branch energy now sits farther behind the hood rather than forming a second designed outline"},
-    {"pass":"v19.12","result":"reviewed-not-promoted","finding":"additional overlapping shoulder and cowl planes improved textile compression at 256 and 192 pixels, but the gain was too subtle at 96 and 56 pixels and made the upper mass slightly busier without solving the remaining macro gap"},
-    {"pass":"v19.13","result":"reviewed-not-promoted","finding":"a broader pentagonal face cavity and interrupted rim segments improved local fidelity, but the combined candidate still remained too designed and did not earn promotion over the cleaner v19.11 evidence baseline"},
-    {"pass":"v19.14","result":"active-micro-candidate","finding":"a dedicated 32-viewBox optical redraw reduced the mark to one hood silhouette, one broad black void, heavy shoulders, three cloth masses and a short rim; it remains isolated from the production micro asset"},
-    {"pass":"v19.15","result":"reviewed-not-promoted","finding":"a radical wider face cavern and thicker hood frame increased presence but overpowered the cloth, turned the hood into a smooth arch and reduced the reference-like balance of void, cowl and shoulders"},
-    {"pass":"v19.16","result":"reviewed-not-promoted","finding":"a full gathered-cowl reconstruction added descending rolls and deeper overlaps, but at reduced sizes the upper cloth still collapsed into a broad horizontal shelf and did not beat the active v19.11 candidate"}
+    {
+      "pass": "v19.1",
+      "result": "rejected-as-production",
+      "finding": "macro reset established a separate layered candidate, but the cyan aura read as thick tubes, the hood was too tall and narrow, and the cowl formed a clean ritual X"
+    },
+    {
+      "pass": "v19.2",
+      "result": "working-pass",
+      "finding": "broader hood, face void and shoulder mass improved the crop, but aura wings and symmetric cowl remained dominant"
+    },
+    {
+      "pass": "v19.3",
+      "result": "working-pass",
+      "finding": "thick aura ribbons were replaced with a field and branches; the cloth still read as geometric vertical armour"
+    },
+    {
+      "pass": "v19.4",
+      "result": "working-pass",
+      "finding": "neon intensity was reduced and the aura moved behind the figure; cowl and lower folds remained too diagrammatic"
+    },
+    {
+      "pass": "v19.5",
+      "result": "working-pass",
+      "finding": "large diagonal cloth masses replaced the strongest vertical wedges; the face cavity remained too oval"
+    },
+    {
+      "pass": "v19.6",
+      "result": "promoted-to-main-candidate",
+      "finding": "pentagonal face cavern, nested hood seams, controlled halo and diagonal cloth produced the first candidate worth exact-main comparison"
+    },
+    {
+      "pass": "v19.7",
+      "result": "working-pass",
+      "finding": "face width, upper halo and side rim were corrected for 96 and 56 pixel readability"
+    },
+    {
+      "pass": "v19.8",
+      "result": "working-pass",
+      "finding": "hood apex and face opening were moved downward to match the canonical vertical landmarks rather than the previous needle-like silhouette"
+    },
+    {
+      "pass": "v19.9",
+      "result": "working-pass",
+      "finding": "upper cloth contrast, inner hood edge, side rim and aura energy were strengthened without adding a lower smoke pool"
+    },
+    {
+      "pass": "v19.10",
+      "result": "working-pass",
+      "finding": "the large symmetric wing/X collar was replaced with layered horizontal crushing, asymmetric gathered planes and a lower draped cowl"
+    },
+    {
+      "pass": "v19.11",
+      "result": "active-main-candidate",
+      "finding": "continuous cyan ribbons were replaced by separate haze and fine branch families with irregular forks, varied widths and deliberate dark gaps; branch energy now sits farther behind the hood rather than forming a second designed outline"
+    },
+    {
+      "pass": "v19.12",
+      "result": "reviewed-not-promoted",
+      "finding": "additional overlapping shoulder and cowl planes improved textile compression at 256 and 192 pixels, but the gain was too subtle at 96 and 56 pixels and made the upper mass slightly busier without solving the remaining macro gap"
+    },
+    {
+      "pass": "v19.13",
+      "result": "reviewed-not-promoted",
+      "finding": "a broader pentagonal face cavity and interrupted rim segments improved local fidelity, but the combined candidate still remained too designed and did not earn promotion over the cleaner v19.11 evidence baseline"
+    },
+    {
+      "pass": "v19.14",
+      "result": "active-micro-candidate",
+      "finding": "a dedicated 32-viewBox optical redraw reduced the mark to one hood silhouette, one broad black void, heavy shoulders, three cloth masses and a short rim; it remains isolated from the production micro asset"
+    },
+    {
+      "pass": "v19.15",
+      "result": "reviewed-not-promoted",
+      "finding": "a radical wider face cavern and thicker hood frame increased presence but overpowered the cloth, turned the hood into a smooth arch and reduced the reference-like balance of void, cowl and shoulders"
+    },
+    {
+      "pass": "v19.16",
+      "result": "reviewed-not-promoted",
+      "finding": "a full gathered-cowl reconstruction added descending rolls and deeper overlaps, but at reduced sizes the upper cloth still collapsed into a broad horizontal shelf and did not beat the active v19.11 candidate"
+    },
+    {
+      "pass": "v19.17",
+      "result": "active-optical-candidate",
+      "finding": "a dedicated 64-viewBox redraw preserves the hood, broad pentagonal void, gathered cowl, three diagonal cloak masses and interrupted rim at 96, 64, 56 and 44 pixels without carrying full-size branch and texture noise"
+    }
   ],
   "confirmedImprovements": [
     "hood apex and face cavity occupy reference-led vertical bands",
@@ -36,22 +118,23 @@
     "large cloth masses are diagonal and retain a dark central volume",
     "aura is confined to the head and upper sides with no glowing floor or lower smoke",
     "aura separates diffuse haze from fine irregular branches and preserves dark gaps",
-    "32, 24 and 16 pixel review uses dedicated optical geometry rather than shrinking every full-size path",
-    "both candidates remain semantic layered SVGs with no raster runtime"
+    "96, 64, 56 and 44 pixel review uses dedicated optical geometry rather than shrinking every full-size path",
+    "32, 24 and 16 pixel review uses dedicated micro geometry",
+    "all candidates remain semantic layered SVGs with no raster runtime"
   ],
   "remainingBlockers": [
     "the painted reference still has richer accidental textile compression and less controlled edge rhythm",
-    "electrical branches need additional non-symmetric secondary forks and local intensity clustering",
-    "hood and shoulder rim need more irregular bright-dark interruptions rather than a continuous designed contour",
-    "the full-size cowl remains too horizontal and shelf-like compared with the gathered reference cloth",
-    "56 and 44 pixel cloth hierarchy still loses several important gathered-cowl planes",
-    "both candidates still require exact-main Chromium and WebKit comparison artifacts"
+    "the active full-size cowl remains too horizontal and shelf-like compared with the gathered reference cloth",
+    "full-size electrical branches need stronger non-symmetric local clustering",
+    "the 96 and 64 pixel optical cowl still needs one more asymmetry pass before promotion",
+    "the 56 and 44 pixel rim must be checked in Chromium and WebKit for clipping and blur loss",
+    "all three candidates still require exact-main comparison artifacts and zero-flaky CI"
   ],
   "nextPasses": [
-    "v19.17 96/64/56/44 optical companion derived from the locked micro silhouette",
     "v19.18 candidate motion layer mapping without production activation",
     "v19.19 exact-main Chromium and WebKit candidate evidence",
-    "v19.20 macro geometry decision gate"
+    "v19.20 macro geometry decision gate",
+    "v19.21 production integration only after explicit owner approval"
   ],
-  "promotionRule": "Do not replace BrandMark or either production SVG until exact-main reference/production/candidate evidence shows a clear visual win and the owner explicitly approves the candidate."
+  "promotionRule": "Do not replace BrandMark or any production SVG until exact-main reference/production/candidate evidence shows a clear visual win, all required workflows are zero-flaky green and the owner explicitly approves the candidate."
 }
