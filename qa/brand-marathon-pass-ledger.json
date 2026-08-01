@@ -4,9 +4,9 @@
   "primaryReferenceDescription": "square close-up bust with monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue upper aura",
   "supplementalReferences": [{"name":"Siluette dans la brume sombre.png","role":"supplemental mood only","mayInfluenceGeometry":false,"mayInfluenceApproval":false}],
   "status": "active",
-  "latestCandidate": "v19.10 reference-led hood and crushed-cowl refinement stored beside production",
+  "latestCandidate": "v19.11 reference-led irregular-aura refinement stored beside production",
   "geometryCandidate": {
-    "id": "v19.10-reference-geometry-reset",
+    "id": "v19.11-reference-geometry-reset",
     "file": "public/brand-emblem-v19-candidate.svg",
     "productionReplacement": false,
     "targets": [
@@ -15,9 +15,9 @@
       "broad shoulder mass close to the square crop",
       "horizontal crushed multi-plane cowl without a clean X or necktie",
       "large diagonal cloth families with a dark central mass",
-      "irregular upper-side electrical aura without cyan slabs",
+      "irregular branched upper-side electrical aura with deliberate dark gaps",
       "nested hood seams and continuous icy rim into the upper cloak sides",
-      "readability at 256, 96 and 56 pixels without promoting the candidate to production"
+      "readability at 256, 96, 64, 56 and 44 pixels without promoting the candidate to production"
     ],
     "comparisonArtifact": "qa-artifacts/brand-v19-candidate-comparison-matrix.png",
     "decision": "pending exact-main visual review"
@@ -28,7 +28,7 @@
   "completedPasses": [1, 19, 20, 21, 22, 23],
   "activePasses": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 24],
   "plannedPasses": 24,
-  "evidenceStatus": "v19.10 triple comparison requested on exact main; production remains unchanged",
+  "evidenceStatus": "v19.11 triple comparison requested on exact main; production remains unchanged",
   "mergePolicy": "keep every candidate in main for evidence, but do not replace the live visual baseline until a reference-led geometry candidate is demonstrably better in exact comparison artifacts",
   "rules": {"compareEveryPassToPrimaryReference":true,"previousSvgIsNotAReference":true,"noRasterRuntime":true,"noGlowToHideGeometry":true,"noPermanentIdleLoop":true,"reducedMotionRequired":true,"exactVisualEvidenceRequired":true,"noVisualRegression":true}
 }
