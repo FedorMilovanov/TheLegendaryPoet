@@ -50,29 +50,31 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-async function restoreChromeAtTop(page) {
-  await page.evaluate(async () => {
-    const afterPaint = () => new Promise((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(resolve));
-    });
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+async function scrollAndYield(page, top) {
+  await page.evaluate((scrollTop) => {
+    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+  }, top);
+  // Yield from the Playwright side. Linux WebKit has closed the entire browser
+  // process when a long page.evaluate owns multiple nested rAF promises.
+  await page.waitForTimeout(80);
+}
 
-    // Safari/WebKit can coalesce a long sequence of programmatic scrolls. Give
-    // the direction-sensitive chrome engine an observable down/up gesture rather
-    // than mutating its class from the test.
-    if (window.scrollY <= 16 && maxScroll > 32) {
-      window.scrollTo({ top: Math.min(64, maxScroll), left: 0, behavior: 'auto' });
-      await afterPaint();
-    }
-    window.scrollTo({
-      top: Math.max(0, window.scrollY - 96),
-      left: 0,
-      behavior: 'auto',
-    });
-    await afterPaint();
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    await afterPaint();
-  });
+async function restoreChromeAtTop(page) {
+  const initial = await page.evaluate(() => ({
+    scrollY: window.scrollY,
+    maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
+  }));
+
+  // Preserve the same observable down/up gesture used by the production
+  // direction-sensitive chrome engine; only the frame waiting moved out of the
+  // browser process and into Playwright.
+  if (initial.scrollY <= 16 && initial.maxScroll > 32) {
+    await scrollAndYield(page, Math.min(64, initial.maxScroll));
+  }
+
+  const currentY = await page.evaluate(() => window.scrollY);
+  await scrollAndYield(page, Math.max(0, currentY - 96));
+  await scrollAndYield(page, 0);
 
   await expect.poll(
     () => page.evaluate(() => window.scrollY <= 1 && !document.documentElement.classList.contains('chrome-hidden')),
