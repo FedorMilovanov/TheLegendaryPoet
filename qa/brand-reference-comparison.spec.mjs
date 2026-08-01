@@ -26,6 +26,23 @@ async function decodeAll(page) {
   expect(ok.every(Boolean)).toBe(true);
 }
 
+async function waitForLiveHome(page) {
+  const title = page.locator('.hero-title-lockup');
+  await expect(title).toBeVisible({ timeout: 20_000 });
+  await expect(title).toContainText('LEGENDARY');
+  const windows = page.locator('[data-hero-poet-window]');
+  await expect(windows).toHaveCount(6);
+  await expect(windows.first()).toBeVisible();
+  await page.waitForFunction(() => {
+    const images = [...document.querySelectorAll('[data-hero-poet-window] img')];
+    const shells = [...document.querySelectorAll('[data-hero-poet-window-shell]')];
+    return images.length === 6
+      && images.every((image) => image.complete && image.naturalWidth > 0)
+      && shells.length === 6
+      && shells.every((shell) => Number.parseFloat(getComputedStyle(shell).opacity) >= 0.99);
+  }, null, { timeout: 20_000 });
+}
+
 async function captureMark(page, box, label, x, y, delay) {
   if (x !== null && y !== null) await page.mouse.move(box.x + box.width * x, box.y + box.height * y);
   if (delay) await page.waitForTimeout(delay);
@@ -91,6 +108,7 @@ test('reference, idle, entry phase and centered depth-first awakening are shown 
   await page.setViewportSize({ width: 1440, height: 1000 });
   expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+  await waitForLiveHome(page);
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
   await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
@@ -117,6 +135,7 @@ test('v18.4 matrix enforces directional depth against centered full and exact re
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+  await waitForLiveHome(page);
   const mark = page.locator('header [data-brand-mark]').first();
   const box = await mark.boundingBox();
   const frames = [];
