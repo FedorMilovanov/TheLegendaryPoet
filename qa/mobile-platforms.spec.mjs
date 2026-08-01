@@ -50,13 +50,13 @@ async function settle(page) {
   await page.waitForTimeout(700);
 }
 
-async function scrollAndYield(page, top) {
+async function scrollAndYield(page, top, delay = 80) {
   await page.evaluate((scrollTop) => {
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
   }, top);
-  // Yield from the Playwright side. Linux WebKit has closed the entire browser
-  // process when a long page.evaluate owns multiple nested rAF promises.
-  await page.waitForTimeout(80);
+  // Keep waits owned by Playwright. Linux WebKit can close the browser process
+  // when a long page.evaluate owns timers or nested animation-frame promises.
+  await page.waitForTimeout(delay);
 }
 
 async function restoreChromeAtTop(page) {
@@ -101,14 +101,13 @@ async function expectDockInsideViewport(page) {
 }
 
 async function exerciseLazyContent(page) {
-  await page.evaluate(async () => {
-    const max = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-    const step = Math.max(420, Math.floor(window.innerHeight * 0.8));
-    for (let y = 0; y < max; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((resolve) => setTimeout(resolve, 35));
-    }
-  });
+  const { max, step } = await page.evaluate(() => ({
+    max: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+    step: Math.max(420, Math.floor(window.innerHeight * 0.8)),
+  }));
+  for (let y = 0; y < max; y += step) {
+    await scrollAndYield(page, y, 35);
+  }
   await restoreChromeAtTop(page);
 }
 
