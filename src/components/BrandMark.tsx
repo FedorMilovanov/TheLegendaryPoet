@@ -19,7 +19,7 @@ const sizes = {
   lg: 'h-24 w-24',
 };
 
-const BRAND_VERSION = 'cloak-20260801-21';
+const BRAND_VERSION = 'cloak-20260801-22';
 const VECTOR_SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
 const RAW_BODY = rawVector.slice(rawVector.indexOf('<defs>'), rawVector.lastIndexOf('</svg>'));
 const ids = ['cloak', 'hood', 'left', 'right', 'mist', 'soft', 'glow'] as const;
@@ -74,7 +74,8 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
       data-brand-renderer="inline-vector"
       data-brand-vector-source={VECTOR_SOURCE}
       data-brand-interaction="idle"
-      data-brand-parallax="spring-depth-v2"
+      data-brand-parallax="spring-awakening-v3"
+      data-brand-awakening="aura-rim-cloth-v1"
       data-brand-compact={compact ? 'true' : 'false'}
       className={cn(
         'relative inline-flex shrink-0 items-center justify-center overflow-visible',
