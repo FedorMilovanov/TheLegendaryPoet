@@ -111,7 +111,7 @@ Acceptance remains `not-reference-approved` until the owner accepts the exact vi
 
 Each numbered pass is a real review gate, not a version-number inflation exercise. Several passes may be included in one atomic commit only when the comparison evidence still makes each decision independently inspectable.
 
-## Primary and official source run (60 links)
+## Primary and official source run (69 links)
 
 ### SVG platform and specifications
 
