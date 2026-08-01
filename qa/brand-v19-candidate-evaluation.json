@@ -3,6 +3,8 @@
   "referenceFile": "qa/reference/brand-emblem-canonical-reference.webp",
   "activeCandidateId": "v19.11-reference-geometry-reset",
   "activeCandidateFile": "public/brand-emblem-v19-candidate.svg",
+  "activeMicroCandidateId": "v19.14-reference-micro-redraw",
+  "activeMicroCandidateFile": "public/brand-emblem-v19-micro-candidate.svg",
   "productionSource": "canonical-reference-v2-black-monolith-v17-0",
   "productionReplacement": false,
   "status": "candidate-under-reference-review",
@@ -21,7 +23,9 @@
     {"pass":"v19.10","result":"working-pass","finding":"the large symmetric wing/X collar was replaced with layered horizontal crushing, asymmetric gathered planes and a lower draped cowl"},
     {"pass":"v19.11","result":"active-main-candidate","finding":"continuous cyan ribbons were replaced by separate haze and fine branch families with irregular forks, varied widths and deliberate dark gaps; branch energy now sits farther behind the hood rather than forming a second designed outline"},
     {"pass":"v19.12","result":"reviewed-not-promoted","finding":"additional overlapping shoulder and cowl planes improved textile compression at 256 and 192 pixels, but the gain was too subtle at 96 and 56 pixels and made the upper mass slightly busier without solving the remaining macro gap"},
-    {"pass":"v19.13","result":"reviewed-not-promoted","finding":"a broader pentagonal face cavity and interrupted rim segments improved local fidelity, but the combined candidate still remained too designed and did not earn promotion over the cleaner v19.11 evidence baseline"}
+    {"pass":"v19.13","result":"reviewed-not-promoted","finding":"a broader pentagonal face cavity and interrupted rim segments improved local fidelity, but the combined candidate still remained too designed and did not earn promotion over the cleaner v19.11 evidence baseline"},
+    {"pass":"v19.14","result":"active-micro-candidate","finding":"a dedicated 32-viewBox optical redraw reduced the mark to one hood silhouette, one broad black void, heavy shoulders, three cloth masses and a short rim; it remains isolated from the production micro asset"},
+    {"pass":"v19.15","result":"reviewed-not-promoted","finding":"a radical wider face cavern and thicker hood frame increased presence but overpowered the cloth, turned the hood into a smooth arch and reduced the reference-like balance of void, cowl and shoulders"}
   ],
   "confirmedImprovements": [
     "hood apex and face cavity occupy reference-led vertical bands",
@@ -31,21 +35,22 @@
     "large cloth masses are diagonal and retain a dark central volume",
     "aura is confined to the head and upper sides with no glowing floor or lower smoke",
     "aura separates diffuse haze from fine irregular branches and preserves dark gaps",
-    "candidate remains a semantic layered SVG with no raster runtime"
+    "32, 24 and 16 pixel review now uses dedicated optical geometry rather than shrinking every full-size path",
+    "both candidates remain semantic layered SVGs with no raster runtime"
   ],
   "remainingBlockers": [
     "the painted reference still has richer accidental textile compression and less controlled edge rhythm",
     "electrical branches need additional non-symmetric secondary forks and local intensity clustering",
     "hood and shoulder rim need more irregular bright-dark interruptions rather than a continuous designed contour",
+    "the full-size cowl remains too horizontal and shelf-like compared with the gathered reference cloth",
     "56 and 44 pixel cloth hierarchy still loses several important gathered-cowl planes",
-    "32, 24 and 16 pixel sizes require a dedicated candidate micro redraw before production promotion",
-    "the candidate has not yet passed exact-main Chromium and WebKit comparison artifacts"
+    "both candidates still require exact-main Chromium and WebKit comparison artifacts"
   ],
   "nextPasses": [
-    "v19.14 dedicated 32/24/16 candidate micro redraw",
-    "v19.15 96/64/56/44 optical correction after micro silhouette lock",
-    "v19.16 candidate motion layer mapping without production activation",
-    "v19.17 exact-main Chromium and WebKit candidate evidence"
+    "v19.16 gathered cowl and shoulder transition reset",
+    "v19.17 96/64/56/44 optical correction against the locked micro silhouette",
+    "v19.18 candidate motion layer mapping without production activation",
+    "v19.19 exact-main Chromium and WebKit candidate evidence"
   ],
-  "promotionRule": "Do not replace BrandMark or the production SVG until exact-main reference/production/candidate evidence shows a clear visual win and the owner explicitly approves the candidate."
+  "promotionRule": "Do not replace BrandMark or either production SVG until exact-main reference/production/candidate evidence shows a clear visual win and the owner explicitly approves the candidate."
 }
