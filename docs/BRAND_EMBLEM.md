@@ -1,108 +1,86 @@
 # Эмблема THE LEGENDARY POET
 
-## Главный канонический референс
+## Канонический референс
 
-Единственный художественный эталон производственной эмблемы:
+Единственный художественный эталон:
 
 `qa/reference/brand-emblem-canonical-reference.webp`
 
 Reference id: `canonical-hooded-figure-v2-clean-base`.
 
-Это **квадратный крупный погрудный образ**, а не длинная фигура в полный рост. Канон фиксирует:
+Это квадратный крупный погрудный образ: высокий многослойный капюшон, огромная абсолютно чёрная пустота лица, широкие плечи, тяжёлый смятый клобук, три главные семьи складок, ледяной контур и электрическая синяя аура за головой и верхней частью фигуры. Нижний край тёмный и чистый — без обязательного дыма.
 
-- монументальный высокий многослойный капюшон;
-- огромную абсолютно чёрную пустоту лица;
-- широкие тяжёлые плечи;
-- собранный смятый клобук без банта, X или галстука;
-- три главные семьи складок: левая диагональная, правая диагональная и центральная вертикальная;
-- холодный ледяной контур по капюшону и верхним бокам;
-- электрическую синюю ауру за головой и верхней частью фигуры;
-- чистый тёмный низ без обязательного дыма или светящейся подушки.
+`Siluette dans la brume sombre.png` — только дополнительный mood reference. Он не влияет на production-геометрию, оптические пропорции или approval score.
 
-Исходный пользовательский файл указан в `qa/reference/brand-reference-manifest.json` как `Figure mystérieuse dans une lueur bleue.png` и закреплён SHA-256.
+## Текущий этап
 
-`Siluette dans la brume sombre.png` — только дополнительный mood reference. Он не может влиять на геометрию, оптические пропорции или решение о принятии эмблемы.
+- visual baseline: `canonical-reference-v2-black-monolith-v17-0`;
+- interaction: `spring-awakening-v3`;
+- awakening sequence: `aura-rim-cloth-v1`;
+- release: `cloak-20260801-22`;
+- decision: **NOT REFERENCE APPROVED**.
 
-## Текущий безопасный этап марафона
+Production SVG, micro mark и Safari mask пока сохранены без художественной замены. Ранние geometry-reset кандидаты не доказали превосходство над v17, поэтому живой baseline не ухудшается. Геометрический score остаётся 0.86.
 
-Первый инженерный этап намеренно **не меняет утверждённую production-геометрию v17.0**. Существующий SVG сохранён байт-в-байт, потому что ранние reset-кандидаты ещё не доказали визуальное превосходство и не должны ухудшать живой сайт.
+## Фазовое «оживание» v18.3
 
-Текущая ревизия:
+Новый hover построен не как один `scale()`, а как последовательность:
 
-- visual source id: `canonical-reference-v2-black-monolith-v17-0`;
-- interaction architecture: `spring-depth-v2`;
-- release marker: `cloak-20260801-21`;
-- решение: **NOT REFERENCE APPROVED**.
+1. аура и внешняя энергия реагируют первыми;
+2. затем поднимается и набирает массу фигура;
+3. позже расходятся капюшон, контур, воротник и текстурные слои;
+4. пустота лица получает обратный микропараллакс;
+5. после ухода курсора система проходит `settling` и точно возвращается в `idle`.
 
-Оценка геометрии не повышена. Улучшена только архитектура взаимодействия; оставшиеся визуальные расхождения зафиксированы в `qa/brand-reference-evaluation.json`.
+Технический контракт:
+
+- bounds читаются при входе и через `ResizeObserver`, не на каждом pointer move;
+- работает один `requestAnimationFrame` loop только во время активности/возврата;
+- React state не используется в hot loop;
+- `will-change` включается временно;
+- touch не запускает pointer depth;
+- keyboard focus получает стационарное усиление света;
+- `prefers-reduced-motion` полностью убирает геометрическое движение;
+- вечной idle-анимации нет.
 
 ## Производственные поверхности
 
-Синхронно обновляются и блокируются Git blob SHA:
+- `src/components/brandEmblemV18.svg` — сохранённый авторский SVG baseline;
+- `src/components/BrandMark.tsx` — React wrapper и interaction ownership;
+- `src/components/brandMotionV18.ts` — фазовая пружинная физика;
+- `public/brand-emblem.svg` — автономный SVG;
+- `public/brand-mark-micro.svg` — отдельная оптика 16–32 px;
+- `public/brand-emblem-mask.svg` — Safari mask с настоящей пустотой лица.
 
-- `src/components/brandEmblemV18.svg` — сохранённый production SVG, используемый новой React-обёрткой;
-- `src/components/BrandMark.tsx` — React-обёртка, pointer ownership и доступное описание;
-- `src/components/brandMotionV18.ts` — контроллер интерактивного пробуждения;
-- `public/brand-emblem.svg` — автономный SVG, байт-в-байт равный авторскому источнику;
-- `public/brand-mark-micro.svg` — отдельная оптическая геометрия для 16–32 px;
-- `public/brand-emblem-mask.svg` — Safari mask с настоящим вырезом лица.
+Runtime не содержит `<image>`, Base64, canvas, raster plate или perpetual animation.
 
-Runtime SVG не содержит `<image>`, base64, `<rect>`, canvas или растровой подложки.
+## Исследование и марафон
 
-## Архитектура «оживания»
+`docs/research/BRAND_EMBLEM_SVG_MOTION_MARATHON_2026.md` содержит 69 официальных/первичных источников, performance budget и 24-проходную программу.
 
-Hover больше не является набором прямых pointer-offsets и не запускает вечную анимацию.
+Завершены проходы 1, 19, 20, 21, 22 и 23: provenance, pointer physics, layer depth, cloth awakening foundation, energy awakening и accessibility ownership. Художественные проходы 2–18 остаются активными. Проход 24 — exact-head Chromium/WebKit evidence и owner approval gate.
 
-`brandMotionV18.ts` реализует:
+## Обязательные артефакты
 
-- чтение bounds при входе и изменении размера, а не на каждом pointer frame;
-- один `requestAnimationFrame`-цикл только во время взаимодействия и возврата;
-- затухающую пружинную физику по X, Y и интенсивности пробуждения;
-- независимую глубину ауры, энергии, фигуры, складок, капюшона, пустоты лица, воротника, контура и текстуры;
-- состояние `active → settling → idle` без остаточных смещений;
-- временный `will-change` только во время активности и возврата;
-- исключение touch-перемещения;
-- keyboard focus-visible усиление света;
-- reduced-motion режим без геометрического движения, только с ограниченным усилением света;
-- отсутствие React state updates внутри pointer hot loop.
+- `brand-reference-comparison-matrix.png` — reference/baseline на 256–16 px;
+- `brand-reference-live-site-comparison.png` — reference, idle, entry phase, full awakening;
+- `brand-interaction-state-matrix.png` — idle, 120 ms entry, full state, четыре направления и settled return;
+- `brand-live-site-home-first-viewport.png`;
+- `brand-emblem-optical-size-matrix.png`;
+- `brand-emblem-reduced-motion.png`.
 
-Цель эффекта — ощущение, что фигура собирает силу и обретает глубину, а не дёргается вслед за курсором.
-
-## 24-проходный марафон
-
-Исследовательский и инженерный контракт находится в:
-
-`docs/research/BRAND_EMBLEM_SVG_MOTION_MARATHON_2026.md`
-
-Там зафиксированы 69 официальных и первичных источников, performance budget и 24 самостоятельных художественно-технических прохода.
-
-Завершены безопасные фундаментальные проходы: идентичность референса, pointer physics, layer-depth response, cloth awakening foundation и reduced-motion ownership. Геометрические проходы капюшона, пустоты лица, клобука, складок, контура и ауры остаются активными и должны разрабатываться рядом с квадратным референсом.
-
-## Обязательная проверка каждого глубокого прохода
-
-Browser QA создаёт:
-
-- `brand-reference-comparison-matrix.png` — основной референс и production/candidate на 256/192/128/96/64/56/44/32/24/16 px;
-- `brand-reference-live-site-comparison.png` — референс, автономный SVG и реальный header idle/hover;
-- `brand-interaction-state-matrix.png` — idle, четыре направления pointer depth и settled return;
-- `brand-live-site-home-first-viewport.png` — фактический первый экран production-сборки;
-- `brand-emblem-optical-size-matrix.png` — декодирование production и micro SVG;
-- `brand-emblem-reduced-motion.png` — отдельное reduced-motion доказательство.
-
-Проверки обязательны минимум в Chromium и WebKit. Зелёный CI доказывает только техническую целостность. Кандидат остаётся `not-reference-approved`, пока владелец не примет exact-head визуальные артефакты.
+Зелёный CI подтверждает только техническую целостность. Художественное принятие остаётся отдельным решением владельца.
 
 ## Запрещено
 
-- работать от предыдущего SVG без открытого квадратного референса;
+- работать без открытого квадратного референса;
 - использовать длинный силуэт как источник пропорций;
-- заменять production-геометрию кандидатом, который визуально хуже текущего baseline;
-- повышать score без новой сравнительной матрицы;
+- заменять baseline художественно худшим кандидатом;
+- повышать visual score из-за улучшения анимации;
 - скрывать слабую геометрию свечением;
-- превращать пустоту лица в узкую каплю или аккуратную маску;
-- превращать клобук в X, бант, усы или галстук;
-- заменять тяжёлую ткань одинаковыми радиальными клиньями;
-- добавлять дым или яркую подушку под нижний край;
-- встраивать растровое изображение в runtime-эмблему;
-- запускать вечный idle-loop;
-- выполнять layout read/write на каждом pointer event;
-- ослаблять тесты ради принятия художественно слабого кандидата.
+- превращать лицо в узкую каплю, а клобук — в X/бант/галстук;
+- использовать одинаковые радиальные клинья вместо ткани;
+- добавлять нижний дым;
+- встраивать растровый runtime;
+- запускать perpetual idle loop;
+- ослаблять проверки ради слияния.
