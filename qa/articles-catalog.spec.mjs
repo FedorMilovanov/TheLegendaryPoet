@@ -10,6 +10,23 @@ async function essayLinks(page) {
   return page.locator('a[href^="/essays/"]');
 }
 
+async function expectLegacyRedirect(context, sourcePath, destination) {
+  // Each legacy route gets a fresh page in the same project context. WebKit can
+  // keep a client-side replace navigation alive briefly after toHaveURL passes;
+  // reusing that page lets the previous redirect interrupt the next page.goto.
+  const probe = await context.newPage();
+  try {
+    const response = await probe.goto(`${BASE_URL}${sourcePath}`, { waitUntil: 'domcontentloaded' });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBeLessThan(400);
+    await expect(probe).toHaveURL(destination, { timeout: 12_000 });
+    await probe.waitForTimeout(120);
+    await expect(probe).toHaveURL(destination);
+  } finally {
+    await probe.close();
+  }
+}
+
 test('articles catalog exposes the complete premium longform library', async ({ page }, testInfo) => {
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
@@ -56,13 +73,8 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   });
 });
 
-test('legacy mini-article URLs redirect to canonical destinations', async ({ page }) => {
-  await page.goto(`${BASE_URL}/articles/article-2`, { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/essays\/yesenin-kutezhi$/);
-
-  await page.goto(`${BASE_URL}/articles/article-main-2`, { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/music$/);
-
-  await page.goto(`${BASE_URL}/articles/unknown-old-id`, { waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/articles$/);
+test('legacy mini-article URLs redirect to canonical destinations', async ({ context }) => {
+  await expectLegacyRedirect(context, '/articles/article-2', /\/essays\/yesenin-kutezhi$/);
+  await expectLegacyRedirect(context, '/articles/article-main-2', /\/music$/);
+  await expectLegacyRedirect(context, '/articles/unknown-old-id', /\/articles$/);
 });
