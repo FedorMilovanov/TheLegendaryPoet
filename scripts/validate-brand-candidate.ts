@@ -157,15 +157,16 @@ assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.18')));
 assert.match(evaluation.promotionRule, /zero-flaky green/i);
 assert.match(evaluation.promotionRule, /owner explicitly approves/i);
 
-assert.ok(browserQa.includes(candidateFile.replace('public/', '')));
-assert.ok(browserQa.includes(candidateArtifact));
+assert.ok(browserQa.includes("const CANDIDATE = ledger.geometryCandidate.file"));
 assert.ok(browserQa.includes("const CANDIDATE_ID = ledger.geometryCandidate.id"));
+assert.ok(browserQa.includes(candidateArtifact));
 assert.ok(browserQa.includes('REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDIDATE'));
 assert.ok(opticalQa.includes("const candidate = ledger.opticalCandidate.file"));
 assert.ok(opticalQa.includes(opticalArtifact));
 assert.ok(microQa.includes("const candidate = ledger.microCandidate.file"));
 assert.ok(microQa.includes(microArtifact));
-assert.match(playwrightConfig, /brand-v19-(?:optical|micro)/);
+assert.match(playwrightConfig, /brand-v19-micro/);
+assert.match(playwrightConfig, /brand-v19-optical/);
 
 for (const productionSource of [production, productionPublic, productionMicro, component]) {
   assert.doesNotMatch(productionSource, /v19\.11-reference-geometry-reset/);
