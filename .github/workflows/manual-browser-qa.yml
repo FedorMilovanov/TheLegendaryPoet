@@ -92,6 +92,8 @@ jobs:
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
+          qa/brand-v19-optical.spec.mjs
+          qa/brand-v19-micro.spec.mjs
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           --config=playwright.config.mjs
