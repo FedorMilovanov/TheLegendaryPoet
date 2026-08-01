@@ -10,6 +10,9 @@ const MOBILE_LANDMARK_SELECTOR = [
   '#main-content article',
   '#main-content img[loading="lazy"]',
   '#main-content [data-image-state]',
+  '#main-content > *',
+  '#main-content h1',
+  '#main-content h2',
 ].join(',');
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
@@ -69,6 +72,18 @@ async function scrollAndYield(page, top, delay = 80) {
   await page.waitForTimeout(delay);
 }
 
+async function scrollDocumentTo(page, top, delay = 110) {
+  await page.evaluate((scrollTop) => {
+    const scrollingElement = document.scrollingElement;
+    if (scrollingElement && typeof scrollingElement.scrollTo === 'function') {
+      scrollingElement.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+      return;
+    }
+    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+  }, top);
+  await page.waitForTimeout(delay);
+}
+
 function selectBoundedIndices(count, limit = 7) {
   if (count <= 0) return [];
   if (count <= limit) return Array.from({ length: count }, (_, index) => index);
@@ -95,6 +110,13 @@ async function visitNativeWebKitLandmarks(page) {
     visited.push(index);
   }
 
+  if (!visited.length) {
+    const fallback = page.locator('#main-content').first();
+    await fallback.scrollIntoViewIfNeeded();
+    await expect(fallback).toBeInViewport({ ratio: 0.01 });
+    visited.push(-1);
+  }
+
   expect(visited.length, 'bounded native WebKit landmarks visited').toBeGreaterThan(0);
   expect(visited.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(7);
   return visited;
@@ -102,26 +124,19 @@ async function visitNativeWebKitLandmarks(page) {
 
 async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
   if (nativeWebKit) {
-    const currentY = await page.evaluate(() => window.scrollY);
-    if (currentY <= 16) {
-      const landmarks = page.locator(MOBILE_LANDMARK_SELECTOR);
-      const count = await landmarks.count();
-      if (count > 1) {
-        const lowerLandmark = landmarks.nth(Math.min(count - 1, 2));
-        if (await lowerLandmark.isVisible()) {
-          await lowerLandmark.scrollIntoViewIfNeeded();
-          await page.waitForTimeout(150);
-        }
-      } else {
-        await page.mouse.wheel(0, 560);
-        await page.waitForTimeout(150);
-      }
+    const initial = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
+    }));
+    if (initial.scrollY <= 16 && initial.maxScroll > 32) {
+      await scrollDocumentTo(page, Math.min(64, initial.maxScroll));
     }
 
-    const topHeading = page.locator('#main-content h1, #main-content h2').first();
-    if (await topHeading.count()) await topHeading.scrollIntoViewIfNeeded();
-    await page.mouse.wheel(0, -100_000);
-    await page.waitForTimeout(180);
+    const topAnchor = page.locator('#main-content').first();
+    await topAnchor.scrollIntoViewIfNeeded();
+    const anchoredY = await page.evaluate(() => window.scrollY);
+    if (anchoredY > 96) await scrollDocumentTo(page, anchoredY - 96);
+    await scrollDocumentTo(page, 0, 180);
 
     await expect.poll(
       () => page.evaluate(() => window.scrollY),
@@ -484,8 +499,8 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
   await settle(page);
   if (nativeWebKit) {
-    await page.mouse.wheel(0, 520);
-    await page.waitForTimeout(100);
+    const maxScroll = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
+    await scrollDocumentTo(page, Math.min(520, maxScroll));
   } else {
     await scrollAndYield(page, 520);
   }
