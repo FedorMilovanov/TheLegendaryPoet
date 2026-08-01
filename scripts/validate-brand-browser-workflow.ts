@@ -42,6 +42,12 @@ assert.match(mobilePlatforms, /document\.scrollingElement/);
 assert.match(mobilePlatforms, /page\.locator\('#main-content'\)\.first\(\)/);
 assert.match(mobilePlatforms, /visited\.push\(-1\)/);
 assert.match(mobilePlatforms, /if \(nativeWebKit\)/);
+assert.match(mobilePlatforms, /readChromeTopState/);
+assert.match(mobilePlatforms, /expectStableChromeAtTop/);
+assert.match(mobilePlatforms, /stableSamples/);
+assert.match(mobilePlatforms, /Math\.min\(48, settledMaxScroll\)/);
+assert.match(mobilePlatforms, /toBeGreaterThanOrEqual\(3\)/);
+assert.doesNotMatch(mobilePlatforms, /classList\.remove\(['"]chrome-hidden/);
 assert.doesNotMatch(mobilePlatforms, /page\.mouse\.wheel/);
 
 assert.match(webkitHome, /WebKit home route keeps lazy content, runtime and mobile chrome stable/);
@@ -71,4 +77,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: full-size, optical, micro and bounded supported WebKit home gates execute under zero-flaky Chromium/Android/WebKit QA');
+console.log('brand browser workflow: full-size, optical, micro and stable bounded WebKit gates execute under zero-flaky Chromium/Android/WebKit QA');
