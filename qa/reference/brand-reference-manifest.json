@@ -1,6 +1,6 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
-  "visualAuthority": "user-approved canonical reference: square full-length hooded figure with a long triangular cloak and clean dark lower edge",
+  "visualAuthority": "user-approved canonical reference: square close-up hooded bust with a clean dark lower crop",
   "status": "immutable",
   "projectFile": "qa/reference/brand-emblem-canonical-reference.webp",
   "projectDimensions": { "width": 256, "height": 256 },
@@ -8,7 +8,7 @@
   "sourceTitle": "Figure mystérieuse dans une lueur bleue.png",
   "sourceDimensions": { "width": 1254, "height": 1254 },
   "sourceSha256": "a780a19917fb9d5d280f0a8c3629b3f1d97b599da62add6e18b14252ed577b67",
-  "compositionLock": "square full-length cloaked figure: small high pointed hood above a long widening triangular cloak, deep black face void, restrained upper cowl, vertical fabric mass, icy edge light and electric-blue aura behind the hood and both outer sides",
+  "compositionLock": "square close-up bust: monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue aura behind the head and upper body",
   "supplementalReferences": [
     {
       "title": "Siluette dans la brume sombre.png",
