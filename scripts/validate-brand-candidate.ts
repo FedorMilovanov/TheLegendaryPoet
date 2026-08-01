@@ -117,14 +117,14 @@ assert.equal(evaluation.productionReplacement, false);
 assert.equal(evaluation.status, 'candidate-under-reference-review');
 assert.equal(evaluation.ownerDecision, 'not-reference-approved');
 assert.deepEqual(evaluation.reviewedOpticalSizes, [256, 192, 128, 96, 64, 56, 44, 32, 24, 16]);
-assert.equal(evaluation.passHistory.length, 15);
-assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10', 'v19.11', 'v19.12', 'v19.13', 'v19.14', 'v19.15']);
+assert.equal(evaluation.passHistory.length, 16);
+assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10', 'v19.11', 'v19.12', 'v19.13', 'v19.14', 'v19.15', 'v19.16']);
 assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.11')?.result, 'active-main-candidate');
 assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.14')?.result, 'active-micro-candidate');
 assert.equal(evaluation.passHistory.at(-1)?.result, 'reviewed-not-promoted');
 assert.ok(evaluation.confirmedImprovements.some((item) => /32, 24 and 16 pixel/i.test(item)));
 assert.ok(evaluation.remainingBlockers.length >= 6);
-assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.16')));
+assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.17')));
 assert.match(evaluation.promotionRule, /owner explicitly approves/i);
 
 assert.ok(browserQa.includes(candidateFile.replace('public/', '')));
@@ -139,4 +139,4 @@ assert.doesNotMatch(production, /v19\.11-reference-geometry-reset/);
 assert.doesNotMatch(productionMicro, /v19\.14-reference-micro-redraw/);
 assert.doesNotMatch(component, /brand-emblem-v19-(?:micro-)?candidate/);
 
-console.log('brand candidate validation: fifteen passes are locked; v19.11 full-size and v19.14 micro remain isolated from production');
+console.log('brand candidate validation: sixteen passes are locked; v19.11 full-size and v19.14 micro remain isolated from production');
