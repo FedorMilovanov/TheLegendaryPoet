@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="opt-title opt-desc" data-brand-optical-candidate="v19.17-reference-optical-redraw">
+<title id="opt-title">THE LEGENDARY POET — v19.17 optical candidate</title>
+<desc id="opt-desc">Оптическая SVG-версия квадратного погрудного образа для 96, 64, 56 и 44 пикселей: массивный слоистый капюшон, широкая чисто чёрная пятиугольная пустота, тяжёлый смятый клобук, широкие плечи, крупные диагональные складки и прерывистая холодная аура только сверху и по бокам.</desc>
+<defs>
+  <linearGradient id="o-cloak" x1="13" y1="25" x2="47" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#081a22"/><stop offset=".28" stop-color="#031017"/><stop offset=".64" stop-color="#010509"/><stop offset="1" stop-color="#000102"/></linearGradient>
+  <linearGradient id="o-hood" x1="25" y1="5" x2="39" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#0c2833"/><stop offset=".3" stop-color="#071a23"/><stop offset=".66" stop-color="#02090e"/><stop offset="1" stop-color="#000204"/></linearGradient>
+  <linearGradient id="o-fold-l" x1="8" y1="31" x2="39" y2="61" gradientUnits="userSpaceOnUse"><stop stop-color="#0a2430"/><stop offset=".5" stop-color="#031018"/><stop offset="1" stop-color="#000204"/></linearGradient>
+  <linearGradient id="o-fold-r" x1="56" y1="31" x2="27" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#071c26"/><stop offset=".5" stop-color="#020b11"/><stop offset="1" stop-color="#000204"/></linearGradient>
+  <radialGradient id="o-halo" cx="0" cy="0" r="1" gradientTransform="translate(32 20) rotate(90) scale(23 27)" gradientUnits="userSpaceOnUse"><stop stop-color="#6beaff" stop-opacity=".46"/><stop offset=".38" stop-color="#23b7d8" stop-opacity=".22"/><stop offset="1" stop-color="#03131b" stop-opacity="0"/></radialGradient>
+  <filter id="o-wide" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3.7"/></filter>
+  <filter id="o-soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation=".9"/></filter>
+  <filter id="o-glow" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation=".32" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<g data-brand-optical-atmosphere="" aria-hidden="true">
+  <ellipse cx="32" cy="20.5" rx="21.5" ry="17.5" fill="url(#o-halo)" filter="url(#o-wide)" opacity=".64"/>
+  <path d="M13 25C16 13 24 6.5 31 6C23.5 12.5 21 20 19 29Z" fill="#23bad8" opacity=".08" filter="url(#o-soft)"/>
+  <path d="M51.5 27C49.5 16 42.5 8 34.5 6.5C41.7 12.6 44.4 20 46 29.5Z" fill="#1caecf" opacity=".07" filter="url(#o-soft)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#o-soft)">
+    <path d="M25.5 6.7L22.8 8.2L21.7 11.2L19.1 12.6L18.2 16.1L15.4 17.8L14.5 21.1L11.8 23.2L10.9 27.1L8.2 29.2" stroke="#49d8ef" stroke-opacity=".2" stroke-width="1.15"/>
+    <path d="M21.2 15.4L18.2 14.7L16.2 17.1L14.2 18L13.2 21.3L10.9 22.6L9.8 26L7.4 27.6" stroke="#9af2ff" stroke-opacity=".15" stroke-width=".58"/>
+    <path d="M38.8 6.5L41.5 8L42.6 11L45.2 12.4L46.1 15.9L48.9 17.6L49.8 20.9L52.5 23L53.4 26.9L56.1 29" stroke="#46d4ed" stroke-opacity=".19" stroke-width="1.1"/>
+    <path d="M42.8 15.2L45.8 14.5L47.8 16.9L49.8 17.8L50.8 21.1L53.1 22.4L54.2 25.8L56.6 27.4" stroke="#8eeeff" stroke-opacity=".14" stroke-width=".56"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#o-glow)">
+    <path d="M25.3 7.1L23.2 8.6L22.1 11.5L19.8 12.9L18.9 16L16.2 17.8" stroke="#e3fdff" stroke-opacity=".32" stroke-width=".18"/>
+    <path d="M21.8 11.8L19.7 10.7L17.9 11.9L16.1 11.2" stroke="#79e6f7" stroke-opacity=".18" stroke-width=".14"/>
+    <path d="M15.8 18.2L13.8 20L13.1 22.9L10.7 24.4L10.1 27.2" stroke="#d4fbff" stroke-opacity=".25" stroke-width=".16"/>
+    <path d="M38.7 6.9L40.8 8.4L41.9 11.3L44.2 12.7L45.1 15.8L47.8 17.6" stroke="#d7fbff" stroke-opacity=".29" stroke-width=".17"/>
+    <path d="M42.2 11.6L44.3 10.5L46.1 11.7L47.9 11" stroke="#72e1f4" stroke-opacity=".17" stroke-width=".13"/>
+    <path d="M48.2 18L50.2 19.8L50.9 22.7L53.3 24.2L53.9 27" stroke="#c9f9ff" stroke-opacity=".22" stroke-width=".15"/>
+  </g>
+</g>
+<g data-brand-optical-figure="">
+  <path data-brand-optical-cloak="" d="M32 24C25.6 23.6 19 25 13.6 28.1C8.9 30.9 6 35.4 4.3 41.3L1.8 61.1C1.5 63 3.4 64 6.9 64H57.2C60.6 64 62.5 63 62.2 61L59.7 41.3C58 35.5 55.1 31 50.4 28.2C45 25.1 38.4 23.6 32 24Z" fill="url(#o-cloak)"/>
+  <path d="M2 60.3C11.4 62.2 21.5 63 32 62.6C42.6 63 52.7 62.2 62 60.3L62.4 64H1.6Z" fill="#000102"/>
+  <g data-brand-optical-folds="">
+    <path d="M2.6 64C6.4 51.2 11.6 39.5 20.1 31.6C24 28 27.9 27.2 31.2 29C25.2 35.4 20.8 43.5 17.8 52.5C16.1 57.4 14.4 61.3 12.4 64Z" fill="#000204"/>
+    <path d="M7.3 64C11.5 52.3 17.7 40.9 26.5 32.7C28.6 30.8 30.5 29.7 31.8 29.5C27.3 37.8 24.8 47.2 23.5 56.4C23 59.8 22.7 62.3 22.5 64Z" fill="url(#o-fold-l)" opacity=".62"/>
+    <path d="M10 40.4C15.5 33.8 22.4 31.2 29.3 33.5C23.7 36.5 19.4 41.6 16.2 48.4C14.3 52.3 12.9 56.2 11.7 60C12.4 51.9 11.8 45.3 10 40.4Z" fill="#0a2530" opacity=".28"/>
+    <path d="M61.4 64C57.6 51.4 52.4 39.7 43.9 31.8C40 28.2 36.1 27.4 32.8 29.2C38.8 35.6 43.2 43.7 46.2 52.7C47.9 57.6 49.6 61.4 51.6 64Z" fill="#000204"/>
+    <path d="M56.7 64C52.5 52.5 46.3 41 37.5 32.9C35.4 31 33.5 29.9 32.2 29.7C36.7 38 39.2 47.4 40.5 56.6C41 60 41.3 62.3 41.5 64Z" fill="url(#o-fold-r)" opacity=".53"/>
+    <path d="M54 40.6C48.5 34 41.6 31.4 34.7 33.7C40.3 36.7 44.6 41.8 47.8 48.6C49.7 52.5 51.1 56.4 52.3 60.2C51.6 52.1 52.2 45.5 54 40.6Z" fill="#071c26" opacity=".24"/>
+    <path d="M22 64C23.6 51.7 26.8 39.4 31.9 30.4C29.5 41.1 28.7 52.3 29.2 64Z" fill="#000204"/>
+    <path d="M42 64C40.4 51.9 37.2 39.6 32.1 30.6C34.5 41.3 35.3 52.5 34.8 64Z" fill="#01060a" opacity=".56"/>
+    <path d="M29.2 64C28.8 53 29.7 41.5 32 31.8C34.3 41.5 35.2 53 34.8 64Z" fill="#000102"/>
+  </g>
+  <path data-brand-optical-hood="" d="M32 6.7C27.8 7.3 25.1 10.5 23.9 14.8C22.9 18.4 22.2 21.1 20.4 24.2C24.8 24.8 28.3 26.3 32 28.5C35.8 26.2 39.3 24.7 43.6 24.1C41.8 21 41.1 18.3 40.1 14.7C38.9 10.5 36.2 7.3 32 6.7Z" fill="url(#o-hood)" stroke="#4c96a8" stroke-opacity=".17" stroke-width=".2"/>
+  <g data-brand-optical-hood-layers="">
+    <path d="M31.9 7.5C29.1 8.6 27.4 11.1 26.5 14.8C25.8 18 25.1 21 23.7 23.6C26.1 24.3 28.5 25.7 31 27.5C30.2 22.9 30.4 18.5 31 14.2C31.4 11.4 31.7 8.8 31.9 7.5Z" fill="#0b2934"/>
+    <path d="M32.1 7.5C35 8.5 36.7 11.1 37.6 14.8C38.3 18 39 20.9 40.4 23.5C38 24.3 35.6 25.7 33 27.5C33.8 22.9 33.6 18.4 33 14.1C32.6 11.3 32.3 8.7 32.1 7.5Z" fill="#01070b"/>
+    <path d="M32 8.8C29.8 9.6 28.4 11.5 27.6 13.9C29 13.2 30.5 12.8 32 12.7C33.6 12.8 35.1 13.3 36.4 14.1C35.6 11.5 34.2 9.6 32 8.8Z" fill="#061b24"/>
+    <path d="M32 10.5C30.4 11.1 29.2 12.2 28.4 13.8C29.6 13.4 30.8 13.1 32.1 13.1C33.3 13.2 34.5 13.5 35.6 14C34.8 12.3 33.6 11.1 32 10.5Z" fill="#01070b"/>
+  </g>
+  <path data-brand-optical-face="" d="M32 12.7C28.4 13 26 15.8 25 19.4L24.4 23.5C25.9 26.2 28.5 28.6 32 30.2C35.6 28.5 38.2 26.1 39.6 23.3L39 19.2C37.9 15.7 35.5 13 32 12.7Z" fill="#000"/>
+  <path d="M32 12.7C28.4 13 26 15.8 25 19.4L24.4 23.5C25.9 26.2 28.5 28.6 32 30.2C30.7 27.5 30.2 24.8 30.5 22.1C30.7 18.5 31.2 15.4 32 12.7Z" fill="#010305"/>
+  <path d="M32 12.7C35.5 13 37.9 15.7 39 19.2L39.6 23.3C38.2 26.1 35.6 28.5 32 30.2C33.4 27.4 33.9 24.7 33.6 21.9C33.4 18.4 32.8 15.3 32 12.7Z" fill="#000102"/>
+  <g data-brand-optical-cowl="">
+    <path d="M11.8 29.3C18.3 25.5 24.1 25 29.5 27.1C30.5 27.5 31.3 28 32 28.7C33 27.7 34.1 27 35.4 26.5C40.7 24.6 46.5 25.8 52.4 29.8C47.5 30.2 43.1 31.9 39.3 35C36.8 33.7 34.4 33.4 32.1 34.2C29.5 33.1 26.8 33.3 23.8 34.8C20 32 16 30.2 11.8 29.3Z" fill="#01060a"/>
+    <path d="M13.4 28.7C18.3 25.5 23 25.2 27.6 27.4C24.2 28.3 21.2 30 18.6 32.5C16.6 31.1 14.8 29.8 13.4 28.7Z" fill="#09212b"/>
+    <path d="M20.2 26.6C24.1 25.3 27.7 26.3 30.8 29.2C27.9 29.4 25.2 30.4 22.7 32.2C21.5 30.1 20.7 28.2 20.2 26.6Z" fill="#061820"/>
+    <path d="M50.8 29.4C46.5 26.1 42.3 25.3 38.1 27.1C41 28 43.5 29.7 45.6 32.1C47.6 31 49.3 30.1 50.8 29.4Z" fill="#02090e"/>
+    <path d="M43.7 27C40.3 25.6 36.7 26.5 33.5 29.2C36 29.7 38.5 30.8 40.8 32.6C42 30.5 43 28.6 43.7 27Z" fill="#01060a"/>
+    <path d="M15.7 32.2C22.2 29.3 27.8 30.2 32.4 34.4C36.4 30.7 41.3 30.1 47.4 32.7C43.9 33.7 40.8 35.4 38 37.8C35.6 39.9 33.7 42 32.2 44.3C30.4 41.8 28.2 39.6 25.7 37.7C22.6 35.3 19.2 33.5 15.7 32.2Z" fill="#000306"/>
+    <path d="M20.2 32.7C24.8 31.3 29 32.5 32.5 35.8C35.8 32.9 39.5 32 43.8 33.3C41.1 34.5 38.6 36.2 36.4 38.4C34.5 40.2 33.1 42.1 32.1 44C30.8 42 29.2 40.1 27.2 38.4C25 36.4 22.7 34.5 20.2 32.7Z" fill="#000204"/>
+    <path d="M23.6 35.1C27 34.2 30 35.3 32.5 38C34.9 35.6 37.5 34.8 40.5 35.6C38.6 36.8 36.8 38.2 35.3 39.8C34 41.1 32.9 42.6 32.1 44.1C31 42.5 29.8 41 28.4 39.7C26.9 38.2 25.3 36.6 23.6 35.1Z" fill="#02080c"/>
+    <path d="M29 27.8C30.1 28.5 31.1 29.5 32 30.8C33 29.4 34.1 28.4 35.3 27.7C34.8 30.5 33.7 32.7 32.1 34.5C30.5 32.8 29.5 30.6 29 27.8Z" fill="#000204"/>
+  </g>
+  <g data-brand-optical-rim="" fill="none" stroke-linecap="round" filter="url(#o-glow)">
+    <path d="M20.7 24C21.8 20.8 22.3 17.7 23.1 15" stroke="#66d7ea" stroke-opacity=".34" stroke-width=".28"/>
+    <path d="M23.8 12.7C25 9.4 27.6 7.2 30.4 6.6" stroke="#dffcff" stroke-opacity=".56" stroke-width=".34"/>
+    <path d="M31.4 6.3C33.8 6.3 35.8 7.8 37.2 10" stroke="#f4ffff" stroke-opacity=".63" stroke-width=".36"/>
+    <path d="M38.2 11.7C39.3 14.1 39.8 17.1 40.6 19.8" stroke="#9cecf8" stroke-opacity=".38" stroke-width=".3"/>
+    <path d="M41.5 22.3C42.1 23.5 42.7 24.2 43.6 24.8" stroke="#57c8df" stroke-opacity=".23" stroke-width=".24"/>
+    <path d="M19.4 25.2C16.3 26.1 13.7 28.1 11.8 31" stroke="#82e6f6" stroke-opacity=".25" stroke-width=".24"/>
+    <path d="M44.4 25.3C47.6 26.3 50.2 28.2 52.1 31.1" stroke="#4fc9df" stroke-opacity=".21" stroke-width=".23"/>
+    <path d="M10.8 33.2C8.9 36.3 7.7 40.1 6.8 44" stroke="#32bdd8" stroke-opacity=".14" stroke-width=".2"/>
+    <path d="M53.2 33.4C55.1 36.5 56.3 40.3 57.2 44.2" stroke="#2ab4d0" stroke-opacity=".13" stroke-width=".19"/>
+  </g>
+</g>
+</svg>
