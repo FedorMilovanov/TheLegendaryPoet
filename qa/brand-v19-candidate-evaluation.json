@@ -19,7 +19,9 @@
     {"pass":"v19.8","result":"working-pass","finding":"hood apex and face opening were moved downward to match the canonical vertical landmarks rather than the previous needle-like silhouette"},
     {"pass":"v19.9","result":"working-pass","finding":"upper cloth contrast, inner hood edge, side rim and aura energy were strengthened without adding a lower smoke pool"},
     {"pass":"v19.10","result":"working-pass","finding":"the large symmetric wing/X collar was replaced with layered horizontal crushing, asymmetric gathered planes and a lower draped cowl"},
-    {"pass":"v19.11","result":"active-main-candidate","finding":"continuous cyan ribbons were replaced by separate haze and fine branch families with irregular forks, varied widths and deliberate dark gaps; branch energy now sits farther behind the hood rather than forming a second designed outline"}
+    {"pass":"v19.11","result":"active-main-candidate","finding":"continuous cyan ribbons were replaced by separate haze and fine branch families with irregular forks, varied widths and deliberate dark gaps; branch energy now sits farther behind the hood rather than forming a second designed outline"},
+    {"pass":"v19.12","result":"reviewed-not-promoted","finding":"additional overlapping shoulder and cowl planes improved textile compression at 256 and 192 pixels, but the gain was too subtle at 96 and 56 pixels and made the upper mass slightly busier without solving the remaining macro gap"},
+    {"pass":"v19.13","result":"reviewed-not-promoted","finding":"a broader pentagonal face cavity and interrupted rim segments improved local fidelity, but the combined candidate still remained too designed and did not earn promotion over the cleaner v19.11 evidence baseline"}
   ],
   "confirmedImprovements": [
     "hood apex and face cavity occupy reference-led vertical bands",
@@ -28,7 +30,7 @@
     "cowl is composed from multiple gathered layers instead of one clean X",
     "large cloth masses are diagonal and retain a dark central volume",
     "aura is confined to the head and upper sides with no glowing floor or lower smoke",
-    "aura now separates diffuse haze from fine irregular branches and preserves dark gaps",
+    "aura separates diffuse haze from fine irregular branches and preserves dark gaps",
     "candidate remains a semantic layered SVG with no raster runtime"
   ],
   "remainingBlockers": [
@@ -36,15 +38,14 @@
     "electrical branches need additional non-symmetric secondary forks and local intensity clustering",
     "hood and shoulder rim need more irregular bright-dark interruptions rather than a continuous designed contour",
     "56 and 44 pixel cloth hierarchy still loses several important gathered-cowl planes",
-    "32, 24 and 16 pixel sizes still require a dedicated candidate micro redraw before production promotion",
+    "32, 24 and 16 pixel sizes require a dedicated candidate micro redraw before production promotion",
     "the candidate has not yet passed exact-main Chromium and WebKit comparison artifacts"
   ],
   "nextPasses": [
-    "v19.12 textile compression and accidental highlight families",
-    "v19.13 irregular rim interruptions and localized aura clusters",
-    "v19.14 96/64/56/44 optical correction",
-    "v19.15 dedicated 32/24/16 candidate micro redraw",
-    "v19.16 candidate motion layer mapping without production activation"
+    "v19.14 dedicated 32/24/16 candidate micro redraw",
+    "v19.15 96/64/56/44 optical correction after micro silhouette lock",
+    "v19.16 candidate motion layer mapping without production activation",
+    "v19.17 exact-main Chromium and WebKit candidate evidence"
   ],
   "promotionRule": "Do not replace BrandMark or the production SVG until exact-main reference/production/candidate evidence shows a clear visual win and the owner explicitly approves the candidate."
 }
