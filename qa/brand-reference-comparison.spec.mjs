@@ -26,7 +26,7 @@ async function decodeAll(page) {
   expect(ok.every(Boolean)).toBe(true);
 }
 
-async function captureMark(page, mark, box, label, x, y, delay) {
+async function captureMark(page, box, label, x, y, delay) {
   if (x !== null && y !== null) await page.mouse.move(box.x + box.width * x, box.y + box.height * y);
   if (delay) await page.waitForTimeout(delay);
   const clip = { x: Math.max(0, box.x - 48), y: Math.max(0, box.y - 48), width: box.width + 96, height: box.height + 96 };
@@ -42,7 +42,7 @@ test('square reference remains beside preserved art at every optical size', asyn
   await page.screenshot({ path: path.join(DIR, 'brand-reference-comparison-matrix.png'), fullPage: true });
 });
 
-test('reference, idle, entry phase and depth-first awakening are shown together', async ({ page }) => {
+test('reference, idle, entry phase and centered depth-first awakening are shown together', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
@@ -57,40 +57,41 @@ test('reference, idle, entry phase and depth-first awakening are shown together'
   await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
   await page.waitForTimeout(120);
   const entry = await page.screenshot({ clip });
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
   await page.waitForTimeout(680);
   await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
   const full = await page.screenshot({ clip });
 
   await page.setViewportSize({ width: 1500, height: 760 });
-  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / ENTRY / DEPTH-FIRST AWAKENING</h1><div class=sub><span class=decision>NOT REFERENCE APPROVED</span> — the root stays contained while aura, counter-parallax, face depth, cloth and rim separate internally.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${entry.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${full.toString('base64')}"></div></div></main>`);
+  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / ENTRY / CENTERED DEPTH-FIRST AWAKENING</h1><div class=sub><span class=decision>NOT REFERENCE APPROVED</span> — the root stays contained while aura, face depth, cloth and rim separate internally. FULL is sampled at the exact centre.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${entry.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${full.toString('base64')}"></div></div></main>`);
   await decodeAll(page);
   await page.screenshot({ path: path.join(DIR, 'brand-reference-live-site-comparison.png'), fullPage: true });
 });
 
-test('v18.4 matrix exposes four directional counter-parallax states and exact return', async ({ page }) => {
+test('v18.4 matrix compares four directions with a centered full state and exact return', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
   const mark = page.locator('header [data-brand-mark]').first();
   const box = await mark.boundingBox();
   const frames = [];
-  frames.push(await captureMark(page, mark, box, 'IDLE', null, null, 0));
-  frames.push(await captureMark(page, mark, box, 'ENTRY 120MS', 0.84, 0.18, 120));
-  frames.push(await captureMark(page, mark, box, 'FULL', null, null, 680));
+  frames.push(await captureMark(page, box, 'IDLE', null, null, 0));
+  frames.push(await captureMark(page, box, 'ENTRY 120MS', 0.84, 0.18, 120));
+  frames.push(await captureMark(page, box, 'FULL CENTER', 0.5, 0.5, 680));
   for (const [label, x, y] of [
     ['TOP LEFT', 0.16, 0.16],
     ['TOP RIGHT', 0.84, 0.16],
     ['LOWER LEFT', 0.16, 0.82],
     ['LOWER RIGHT', 0.84, 0.82],
-  ]) frames.push(await captureMark(page, mark, box, label, x, y, 580));
+  ]) frames.push(await captureMark(page, box, label, x, y, 580));
 
   await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100));
   await page.waitForTimeout(2500);
   await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
-  frames.push(await captureMark(page, mark, box, 'SETTLED', null, null, 0));
+  frames.push(await captureMark(page, box, 'SETTLED', null, null, 0));
 
   await page.setViewportSize({ width: 1780, height: 600 });
-  await page.setContent(`<style>${css}</style><main><h1>v18.4 DEPTH-FIRST AWAKENING STATES</h1><div class=sub>Aura → counter-parallax depth → cloth and rim detail. The whole mark stays contained; directions must be visibly distinct and the final state returns exactly to idle.</div><div class=states>${frames.map(([label, data]) => `<div class=state><b>${label}</b><img src="data:image/png;base64,${data}"></div>`).join('')}</div></main>`);
+  await page.setContent(`<style>${css}</style><main><h1>v18.4 DEPTH-FIRST AWAKENING STATES</h1><div class=sub>Aura → counter-parallax depth → cloth and rim detail. Every corner is compared against FULL CENTER; the final state returns exactly to idle.</div><div class=states>${frames.map(([label, data]) => `<div class=state><b>${label}</b><img src="data:image/png;base64,${data}"></div>`).join('')}</div></main>`);
   await decodeAll(page);
   await page.screenshot({ path: path.join(DIR, 'brand-interaction-state-matrix.png'), fullPage: true });
 });
