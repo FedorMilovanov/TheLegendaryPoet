@@ -84,6 +84,25 @@ async function scrollDocumentTo(page, top, delay = 110) {
   await page.waitForTimeout(delay);
 }
 
+async function readChromeTopState(page) {
+  return page.evaluate(() => ({
+    scrollY: window.scrollY,
+    hidden: document.documentElement.classList.contains('chrome-hidden'),
+  }));
+}
+
+async function expectStableChromeAtTop(page, timeout = 8_000) {
+  let stableSamples = 0;
+  await expect.poll(
+    async () => {
+      const state = await readChromeTopState(page);
+      stableSamples = state.scrollY <= 1 && !state.hidden ? stableSamples + 1 : 0;
+      return stableSamples;
+    },
+    { timeout, message: 'site chrome should remain visible at the document top' },
+  ).toBeGreaterThanOrEqual(3);
+}
+
 function selectBoundedIndices(count, limit = 7) {
   if (count <= 0) return [];
   if (count <= limit) return Array.from({ length: count }, (_, index) => index);
@@ -137,13 +156,19 @@ async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
     const anchoredY = await page.evaluate(() => window.scrollY);
     if (anchoredY > 96) await scrollDocumentTo(page, anchoredY - 96);
     await scrollDocumentTo(page, 0, 180);
-
-    await expect.poll(
-      () => page.evaluate(() => window.scrollY),
-      { timeout: 8_000, message: 'WebKit should return to the document top' },
-    ).toBeLessThanOrEqual(1);
-    await expect(page.locator('html')).not.toHaveClass(/chrome-hidden/, { timeout: 8_000 });
     await page.waitForTimeout(CHROME_TRANSITION_MS);
+
+    // Always produce one final, bounded down/up direction signal. Some Linux
+    // WebKit pages commit a delayed layout after the first top assertion and
+    // can briefly re-add chrome-hidden. Three consecutive samples prove that
+    // the actual scroll controller has settled instead of passing one frame.
+    const settledMaxScroll = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
+    if (settledMaxScroll > 32) {
+      await scrollDocumentTo(page, Math.min(48, settledMaxScroll));
+      await scrollDocumentTo(page, 0, 180);
+    }
+    await page.waitForTimeout(CHROME_TRANSITION_MS);
+    await expectStableChromeAtTop(page);
     return;
   }
 
