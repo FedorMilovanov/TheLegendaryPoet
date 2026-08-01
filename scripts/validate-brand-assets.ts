@@ -22,11 +22,48 @@ for(const [svg,file,box] of [[source,sourceFile,'0 0 96 96'],[standalone,standal
 assert.equal(source,standalone,'authored and standalone SVG differ');
 for(const svg of [source,standalone,micro,mask])assert.ok(svg.includes(`data-brand-vector-source="${SOURCE}"`));
 
-for(const token of ["import rawVector from './brandEmblemV18.svg?raw'","from './brandMotionV18'",`const BRAND_VERSION = '${VERSION}'`,`const VECTOR_SOURCE = '${SOURCE}'`,'createBrandMotionController(node)','controllerRef.current?.enter(event.clientX, event.clientY)','controllerRef.current?.move(event.clientX, event.clientY)','controllerRef.current?.leave()','controllerRef.current?.cancel()',"event.pointerType === 'touch'",'useReducedMotion()','data-brand-parallax="spring-awakening-v3"','data-brand-awakening="aura-rim-cloth-v1"',"style={{ pointerEvents: 'none' }}"])assert.ok(component.includes(token),`component missing ${token}`);
+for(const token of [
+  "import rawVector from './brandEmblemV18.svg?raw'",
+  "from './brandMotionV18'",
+  `const BRAND_VERSION = '${VERSION}'`,
+  `const VECTOR_SOURCE = '${SOURCE}'`,
+  'createBrandMotionController(node)',
+  'controllerRef.current?.enter(event.clientX, event.clientY)',
+  'controllerRef.current?.move(event.clientX, event.clientY)',
+  'controllerRef.current?.leave()',
+  'controllerRef.current?.cancel()',
+  "event.pointerType === 'touch'",
+  'useReducedMotion()',
+  'data-brand-parallax="spring-awakening-v4"',
+  'data-brand-awakening="aura-depth-cloth-v2"',
+  "style={{ pointerEvents: 'none' }}",
+])assert.ok(component.includes(token),`component missing ${token}`);
 assert.doesNotMatch(component,/useState\s*\(/,'pointer movement entered React state');
-assert.doesNotMatch(component,/brandMotionV17|layered-v1|spring-depth-v2/,'retired motion identity remains');
+assert.doesNotMatch(component,/brandMotionV17|layered-v1|spring-depth-v2|spring-awakening-v3/,'retired motion identity remains');
 
-for(const token of ['requestAnimationFrame(step)','cancelAnimationFrame(frame)','new ResizeObserver(readBounds)','node.getBoundingClientRect()',"node.dataset.brandInteraction = 'active'","node.dataset.brandInteraction = 'settling'","node.dataset.brandInteraction = 'idle'",'const phase =','const auraWake = phase(wake, 0, 0.46)','const figureWake = phase(wake, 0.14, 0.82)','const detailWake = phase(wake, 0.38, 1)','brightness(1.1)','@media (prefers-reduced-motion:reduce)','a:focus-visible [data-brand-mark]'])assert.ok(motion.includes(token),`motion missing ${token}`);
+for(const token of [
+  'requestAnimationFrame(step)',
+  'cancelAnimationFrame(frame)',
+  'new ResizeObserver(readBounds)',
+  'node.getBoundingClientRect()',
+  "node.dataset.brandInteraction = 'active'",
+  "node.dataset.brandInteraction = 'settling'",
+  "node.dataset.brandInteraction = 'idle'",
+  'const phase =',
+  'const auraWake = phase(wake, 0, 0.42)',
+  'const figureWake = phase(wake, 0.12, 0.78)',
+  'const detailWake = phase(wake, 0.32, 1)',
+  '--brand-far-scale',
+  '--brand-energy-scale',
+  '--brand-folds-scale-x',
+  '--brand-hood-layers-scale',
+  '--brand-face-scale',
+  '--brand-rim-brightness',
+  '1 - 0.022 * detailWake',
+  'brightness(1.08)',
+  '@media (prefers-reduced-motion:reduce)',
+  'a:focus-visible [data-brand-mark]',
+])assert.ok(motion.includes(token),`motion missing ${token}`);
 assert.equal((motion.match(/getBoundingClientRect\(\)/g)??[]).length,1,'bounds read site count');
 assert.equal((motion.match(/requestAnimationFrame\(/g)??[]).length,1,'rAF scheduling site count');
 assert.doesNotMatch(motion,/setInterval|setTimeout|while\s*\(true\)/,'timer/idle loop shortcut');
@@ -38,8 +75,8 @@ assert.ok(mask.includes('fill-rule="evenodd"'));
 for(const token of ['M16 12.2C13.5 12','M15.8 2.6C14.6 2.9','M15.8 5.4C14.9 5.6'])assert.ok(micro.includes(token));
 
 assert.equal(evaluation.candidateSource,SOURCE);
-assert.match(evaluation.candidateRevision,/v18\.3 phased awakening/i);
+assert.match(evaluation.candidateRevision,/v18\.4 depth-first awakening/i);
 assert.equal(evaluation.reviewerDecision,'not-reference-approved');
 for(const file of [componentFile,motionFile,sourceFile,standaloneFile,microFile,maskFile])assert.equal(blob(file),evaluation.candidateGitBlobShas[file],`${file}: blob lock`);
 for(const file of ['index.html','public/site.webmanifest','public/browserconfig.xml','public/brand-release.txt'])assert.ok(read(file).includes(VERSION),`${file}: release marker`);
-console.log('brand validation: preserved visual baseline plus phased aura-rim-cloth awakening v3 are locked');
+console.log('brand validation: preserved visual baseline plus v18.4 aura-depth-cloth awakening are locked');
