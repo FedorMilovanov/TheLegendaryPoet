@@ -42,21 +42,35 @@ async function effectiveOpacity(locator) {
 }
 
 async function scrollTargetIntoView(page, target) {
-  // Keep the browser-side work synchronous and tiny. Linux WebKit has closed
-  // its process while Locator.scrollIntoViewIfNeeded owns repeated native
-  // scrolling across a long animated page.
-  const scrollTop = await target.evaluate((node) => {
+  // Use several small, synchronous scroll positions. A single long jump can
+  // place the target in view before WebKit delivers the intermediate
+  // IntersectionObserver notifications that drive reveal animations.
+  const state = await target.evaluate((node) => {
     const rect = node.getBoundingClientRect();
     const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
     const maxScroll = Math.max(0, documentHeight - window.innerHeight);
     const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
     const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
-    return Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
+    return {
+      from: window.scrollY,
+      top: Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset)),
+      viewportHeight: window.innerHeight,
+    };
   });
-  await page.evaluate((top) => {
-    window.scrollTo({ top, left: 0, behavior: 'auto' });
-  }, scrollTop);
+  const distance = state.top - state.from;
+  const stepDistance = Math.max(180, state.viewportHeight * 0.42);
+  const steps = Math.max(3, Math.min(12, Math.ceil(Math.abs(distance) / stepDistance)));
+  for (let index = 1; index <= steps; index += 1) {
+    const progress = index / steps;
+    const eased = 1 - ((1 - progress) ** 2);
+    const top = state.from + distance * eased;
+    await page.evaluate((nextTop) => {
+      window.scrollTo({ top: nextTop, left: 0, behavior: 'auto' });
+    }, top);
+    await page.waitForTimeout(72);
+  }
   await afterPaint(page);
+  await page.waitForTimeout(120);
 }
 
 function percentile(values, fraction) {
@@ -253,7 +267,8 @@ test('real stepped scrolling reveals all principal homepage sections', async ({ 
   for (const target of targets) {
     await scrollTargetIntoView(page, target);
     await expect(target).toBeVisible();
-    await expect.poll(() => effectiveOpacity(target), { timeout: 5_000 }).toBeGreaterThan(0.9);
+    const label = (await target.textContent())?.trim() || 'homepage section';
+    await expect.poll(() => effectiveOpacity(target), { timeout: 5_000, message: `${label} should reveal after real stepped scrolling` }).toBeGreaterThan(0.9);
   }
 
   await page.screenshot({
