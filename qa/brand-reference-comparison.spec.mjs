@@ -6,15 +6,17 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260801-22';
 const SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
+const CANDIDATE = 'brand-emblem-v19-candidate.svg';
+const CANDIDATE_ID = 'v19.1-reference-geometry-reset';
 const reference = `data:image/webp;base64,${fs.readFileSync(path.resolve('qa/reference/brand-emblem-canonical-reference.webp')).toString('base64')}`;
 fs.mkdirSync(DIR, { recursive: true });
 
 const css = `
 *{box-sizing:border-box}html,body{margin:0;background:#03070d;color:#d9f8ff;font:14px system-ui}
-main{padding:28px}h1{margin:0 0 8px}.sub{color:#8ebcca;margin-bottom:22px;max-width:1180px;line-height:1.5}
-.decision{color:#ffb27a;font-weight:800}.safe{color:#8be7c5;font-weight:800}
-.grid{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:14px}.col{display:grid;justify-items:center;gap:8px}
-.tile{width:204px;height:204px;display:grid;place-items:center;background:#010306;border:1px solid #18313a;overflow:hidden}small{color:#8ebcca}
+main{padding:28px}h1{margin:0 0 8px}.sub{color:#8ebcca;margin-bottom:22px;max-width:1280px;line-height:1.5}
+.decision{color:#ffb27a;font-weight:800}.safe{color:#8be7c5;font-weight:800}.candidate{color:#8fdfff;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(210px,1fr));gap:14px}.col{display:grid;justify-items:center;gap:8px}
+.tile{width:214px;height:214px;display:grid;place-items:center;background:#010306;border:1px solid #18313a;overflow:hidden}small{color:#8ebcca;text-align:center}
 .top{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.panel{min-height:310px;display:grid;place-items:center;background:#010306;border:1px solid #18313a;overflow:hidden;padding:16px}.panel img{max-width:100%;max-height:100%;object-fit:contain}
 .states{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}.state{display:grid;gap:7px;text-align:center}.state img{width:100%;height:205px;object-fit:contain;background:#010306;border:1px solid #18313a}
 `;
@@ -94,6 +96,33 @@ async function pixelDifference(page, a, b) {
     };
   }, { left: a, right: b });
 }
+
+test('v19 candidate is a genuine layered SVG and not a raster shortcut', async ({ request }) => {
+  const response = await request.get(`${BASE_URL}/${CANDIDATE}?v=${Date.now()}`);
+  const svg = await response.text();
+  expect(response.status()).toBe(200);
+  expect(svg).toContain(`data-brand-candidate="${CANDIDATE_ID}"`);
+  expect(svg).toMatch(/viewBox="0 0 96 96"/);
+  expect(svg).not.toMatch(/<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
+  expect((svg.match(/<path\b/g) ?? []).length).toBeGreaterThan(35);
+  for (const hook of ['atmosphere', 'figure', 'cloak', 'folds', 'hood', 'hood-layers', 'face-void', 'face-depth', 'collar', 'rim-light', 'texture']) {
+    expect(svg, `candidate missing ${hook}`).toContain(`data-brand-${hook}`);
+  }
+});
+
+test('reference, current production and v19 candidate remain together at every optical size', async ({ page }) => {
+  await page.setViewportSize({ width: 1340, height: 2600 });
+  const sizes = [256, 192, 128, 96, 64, 56, 44, 32, 24, 16];
+  const columns = sizes.map((size) => `<section class=col>
+    <b>${size}px</b>
+    <div class=tile><img width=${size} height=${size} src="${reference}"></div><small>PRIMARY SQUARE REFERENCE</small>
+    <div class=tile><img width=${size} height=${size} src="${BASE_URL}/${size <= 32 ? 'brand-mark-micro.svg' : 'brand-emblem.svg'}?v=${VERSION}"></div><small>CURRENT PRODUCTION</small>
+    <div class=tile><img width=${size} height=${size} src="${BASE_URL}/${CANDIDATE}?v=${VERSION}"></div><small>V19.1 GEOMETRY CANDIDATE</small>
+  </section>`).join('');
+  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / PRODUCTION / V19.1 CANDIDATE</h1><div class=sub><span class=candidate>REFERENCE-LED CANDIDATE:</span> larger hood and face cavern, broader shoulder mass, crushed cowl, diagonal cloth and irregular upper-side aura. Production remains unchanged until this row is demonstrably stronger. Status: <span class=decision>NOT REFERENCE APPROVED</span>.</div><div class=grid>${columns}</div></main>`);
+  await decodeAll(page);
+  await page.screenshot({ path: path.join(DIR, 'brand-v19-candidate-comparison-matrix.png'), fullPage: true });
+});
 
 test('square reference remains beside preserved art at every optical size', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1800 });
