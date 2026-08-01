@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(mobile-platforms|yesenin-part-one|articles-catalog|hover-stability|brand-v19-micro|brand-v19-optical)\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-v19-micro|brand-v19-optical)\.spec\.mjs/;
+const genericHomeRouteAudit = /^home: mobile engine rendering, safe area, images and runtime$/;
 
 export default defineConfig({
   testDir: './qa',
@@ -24,7 +25,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-core',
-      testIgnore: /mobile-platforms\.spec\.mjs/,
+      testIgnore: /(mobile-platforms|mobile-home-webkit)\.spec\.mjs/,
       use: {
         browserName: 'chromium',
       },
@@ -43,6 +44,9 @@ export default defineConfig({
     {
       name: 'iphone-safari',
       testMatch: mobileSpec,
+      // Linux WebKit receives an equivalent home audit with bounded strategic
+      // scroll positions. Every other generic route audit remains active.
+      grepInvert: genericHomeRouteAudit,
       use: {
         ...devices['iPhone 15 Pro'],
         browserName: 'webkit',
