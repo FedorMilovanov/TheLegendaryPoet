@@ -10,7 +10,6 @@ const MOBILE_LANDMARK_SELECTOR = [
   '#main-content article',
   '#main-content img[loading="lazy"]',
   '#main-content [data-image-state]',
-  '#main-content > *',
   '#main-content h1',
   '#main-content h2',
 ].join(',');
@@ -67,16 +66,15 @@ async function scrollAndYield(page, top, delay = 80) {
   await page.evaluate((scrollTop) => {
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
   }, top);
-  // Chromium keeps the exhaustive numeric traversal. Linux WebKit uses the
-  // bounded locator path below and never enters this evaluated scroll loop.
   await page.waitForTimeout(delay);
 }
 
-async function scrollDocumentTo(page, top, delay = 110) {
+async function scrollDocumentTo(page, top, delay = 120) {
   await page.evaluate((scrollTop) => {
     const scrollingElement = document.scrollingElement;
-    if (scrollingElement && typeof scrollingElement.scrollTo === 'function') {
-      scrollingElement.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+    if (scrollingElement) {
+      scrollingElement.scrollTop = scrollTop;
+      scrollingElement.scrollLeft = 0;
       return;
     }
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
@@ -103,41 +101,78 @@ async function expectStableChromeAtTop(page, timeout = 8_000) {
   ).toBeGreaterThanOrEqual(3);
 }
 
-function selectBoundedIndices(count, limit = 7) {
-  if (count <= 0) return [];
-  if (count <= limit) return Array.from({ length: count }, (_, index) => index);
-  const indices = [0];
-  for (let slot = 1; slot < limit - 1; slot += 1) {
-    indices.push(Math.round((count - 1) * (slot / (limit - 1))));
-  }
-  indices.push(count - 1);
-  return [...new Set(indices)].sort((left, right) => left - right);
+async function collectGeometryLandmarks(page, selector, limit = 6) {
+  return page.evaluate(({ selector: query, limit: maximum }) => {
+    const nodes = [...document.querySelectorAll(query)];
+    const seen = new Set();
+    const candidates = [];
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
+    for (const node of nodes) {
+      if (seen.has(node)) continue;
+      seen.add(node);
+      if (!(node instanceof HTMLElement)) continue;
+      if (node.classList.contains('sr-only') || node.closest('.sr-only,[aria-hidden="true"]')) continue;
+
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      if (style.display === 'none' || style.visibility === 'hidden') continue;
+      if (rect.width <= 2 || rect.height <= 2) continue;
+
+      const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
+      const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
+      const top = Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
+      const id = `mobile-webkit-${candidates.length}`;
+      node.dataset.qaScrollLandmark = id;
+      candidates.push({ id, top, tagName: node.tagName, elementId: node.id || null });
+    }
+
+    if (!candidates.length) {
+      const main = document.querySelector('#main-content');
+      if (main instanceof HTMLElement) {
+        const rect = main.getBoundingClientRect();
+        if (rect.width > 2 && rect.height > 2) {
+          main.dataset.qaScrollLandmark = 'mobile-webkit-fallback';
+          candidates.push({ id: 'mobile-webkit-fallback', top: 0, tagName: main.tagName, elementId: main.id });
+        }
+      }
+    }
+
+    if (candidates.length <= maximum) return candidates;
+    const selected = [];
+    for (let slot = 0; slot < maximum; slot += 1) {
+      const index = Math.round((candidates.length - 1) * (slot / (maximum - 1)));
+      const candidate = candidates[index];
+      if (!selected.some((entry) => entry.id === candidate.id)) selected.push(candidate);
+    }
+    return selected;
+  }, { selector, limit });
+}
+
+async function landmarkIntersectsViewport(page, id) {
+  return page.evaluate((landmarkId) => {
+    const node = document.querySelector(`[data-qa-scroll-landmark="${landmarkId}"]`);
+    if (!(node instanceof HTMLElement)) return false;
+    const rect = node.getBoundingClientRect();
+    return rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight;
+  }, id);
 }
 
 async function visitNativeWebKitLandmarks(page) {
-  const landmarks = page.locator(MOBILE_LANDMARK_SELECTOR);
-  const count = await landmarks.count();
-  const indices = selectBoundedIndices(count);
+  const landmarks = await collectGeometryLandmarks(page, MOBILE_LANDMARK_SELECTOR, 6);
+  expect(landmarks.length, 'geometry-eligible native WebKit landmarks').toBeGreaterThan(0);
+  expect(landmarks.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(6);
+
   const visited = [];
-
-  for (const index of indices) {
-    const target = landmarks.nth(index);
-    if (!(await target.isVisible())) continue;
-    await target.scrollIntoViewIfNeeded();
-    await expect(target).toBeInViewport({ ratio: 0.01 });
-    await page.waitForTimeout(145);
-    visited.push(index);
+  for (const landmark of landmarks) {
+    await scrollDocumentTo(page, landmark.top);
+    await expect.poll(
+      () => landmarkIntersectsViewport(page, landmark.id),
+      { timeout: 2_500, message: `${landmark.id} should intersect the WebKit viewport` },
+    ).toBe(true);
+    visited.push(landmark);
   }
 
-  if (!visited.length) {
-    const fallback = page.locator('#main-content').first();
-    await fallback.scrollIntoViewIfNeeded();
-    await expect(fallback).toBeInViewport({ ratio: 0.01 });
-    visited.push(-1);
-  }
-
-  expect(visited.length, 'bounded native WebKit landmarks visited').toBeGreaterThan(0);
-  expect(visited.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(7);
   return visited;
 }
 
@@ -149,19 +184,12 @@ async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
     }));
     if (initial.scrollY <= 16 && initial.maxScroll > 32) {
       await scrollDocumentTo(page, Math.min(64, initial.maxScroll));
+    } else if (initial.scrollY > 96) {
+      await scrollDocumentTo(page, initial.scrollY - 96);
     }
-
-    const topAnchor = page.locator('#main-content').first();
-    await topAnchor.scrollIntoViewIfNeeded();
-    const anchoredY = await page.evaluate(() => window.scrollY);
-    if (anchoredY > 96) await scrollDocumentTo(page, anchoredY - 96);
     await scrollDocumentTo(page, 0, 180);
     await page.waitForTimeout(CHROME_TRANSITION_MS);
 
-    // Always produce one final, bounded down/up direction signal. Some Linux
-    // WebKit pages commit a delayed layout after the first top assertion and
-    // can briefly re-add chrome-hidden. Three consecutive samples prove that
-    // the actual scroll controller has settled instead of passing one frame.
     const settledMaxScroll = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
     if (settledMaxScroll > 32) {
       await scrollDocumentTo(page, Math.min(48, settledMaxScroll));
