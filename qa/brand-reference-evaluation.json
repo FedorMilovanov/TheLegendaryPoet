@@ -2,7 +2,7 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v18.3 phased awakening over the unchanged v17.0 visual baseline: preserved production geometry byte-for-byte, strengthened the cached-bounds spring controller, sequenced aura then figure then rim/detail activation, increased controlled depth separation, added brighter but bounded active-state light and preserved active/settling/idle, keyboard, touch and reduced-motion ownership",
+  "candidateRevision": "v18.4 depth-first awakening over the unchanged v17.0 visual baseline: preserved production geometry byte-for-byte, reduced whole-mark enlargement inside the header slot, moved emphasis into counter-parallax and independent scale separation for atmosphere, energy, hood, inner hood, face void, folds and cowl, retained phased aura-figure-detail timing and clean active/settling/idle ownership",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
   "overallScore": 0.86,
@@ -18,8 +18,8 @@
   "marathonPassesCompleted": [1, 19, 20, 21, 22, 23],
   "marathonPassesActive": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 24],
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "4e0b8da37e46564e20162ae33a0e95ee6403679f",
-    "src/components/brandMotionV18.ts": "4c409136a3d5fc5f6fb39537728e01b49e7417d3",
+    "src/components/BrandMark.tsx": "044456f2b76db6e5631172b75fa34a0a31a7006b",
+    "src/components/brandMotionV18.ts": "bdc24563c229de7ba7584d9ecd8187026cea3e0e",
     "src/components/brandEmblemV18.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
@@ -33,7 +33,7 @@
     "the gathered collar remains cleaner and less crushed than the reference cloth and still needs a dedicated geometry pass",
     "the cloak has three broad families, but secondary overlaps, accidental textile highlights and local compression remain underdeveloped",
     "the upper-side aura remains smoother and more regular than the canonical electrical field",
-    "the strengthened phased awakening requires fresh exact Chromium and WebKit entry, full-hover, directional, settling, keyboard and reduced-motion evidence before merge"
+    "the v18.4 counter-parallax and independent layer scaling require fresh exact Chromium and WebKit entry, full-hover, directional, settling, keyboard and reduced-motion evidence before merge"
   ],
-  "nextRequiredAction": "run exact-head CI and Chromium/WebKit evidence for v18.3, reject any neon overshoot or silhouette distortion, then continue the geometry passes from the square reference without replacing production art until a candidate is objectively better"
+  "nextRequiredAction": "run exact-head CI and Chromium/WebKit evidence for v18.4, verify stronger directional depth without header-label collision or neon overshoot, then continue the geometry passes from the square reference without replacing production art until a candidate is objectively better"
 }
