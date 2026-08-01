@@ -41,6 +41,24 @@ async function effectiveOpacity(locator) {
   });
 }
 
+async function scrollTargetIntoView(page, target) {
+  // Keep the browser-side work synchronous and tiny. Linux WebKit has closed
+  // its process while Locator.scrollIntoViewIfNeeded owns repeated native
+  // scrolling across a long animated page.
+  const scrollTop = await target.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+    const maxScroll = Math.max(0, documentHeight - window.innerHeight);
+    const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
+    const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
+    return Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
+  });
+  await page.evaluate((top) => {
+    window.scrollTo({ top, left: 0, behavior: 'auto' });
+  }, scrollTop);
+  await afterPaint(page);
+}
+
 function percentile(values, fraction) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -233,8 +251,7 @@ test('real stepped scrolling reveals all principal homepage sections', async ({ 
   ];
 
   for (const target of targets) {
-    await target.scrollIntoViewIfNeeded();
-    await afterPaint(page);
+    await scrollTargetIntoView(page, target);
     await expect(target).toBeVisible();
     await expect.poll(() => effectiveOpacity(target), { timeout: 5_000 }).toBeGreaterThan(0.9);
   }
