@@ -1,35 +1,39 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v17.0 black-monolith reset with nonvisual ES2020-compatible literal replacement and validator-readable VECTOR_SOURCE declaration: removed the escaping crisp energy fragment, replaced the grey segmented figure with an almost-black cloak and hood, narrowed the hood, reshaped the face cavern into a compact irregular trapezoid, hid the throat under an organic gathered cowl, retained three broad cloak families and rebuilt the upper-side energy as curved blurred paths only; split/join now replaces replaceAll without changing generated SVG markup",
+  "candidateSource": "square-closeup-reference-v18-1",
+  "candidateRevision": "v18.1 measured square-closeup reset: rebuilt the bust, hood, face void, cloak mass, three primary fold families and upper aura from the square canonical reference; replaced direct pointer offsets with a cached-bounds damped spring controller; added hover-only turbulence/displacement updates, settling state, touch exclusion and reduced-motion opacity fallback",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.86,
+  "overallScore": 0.79,
   "scores": {
-    "macroProportions": 0.9,
-    "hoodAndCavern": 0.86,
-    "collarAndFolds": 0.84,
-    "cloakSilhouette": 0.9,
-    "rimAndAura": 0.84,
-    "microReadability": 0.84
+    "macroProportions": 0.84,
+    "hoodAndCavern": 0.82,
+    "collarAndFolds": 0.72,
+    "cloakSilhouette": 0.84,
+    "rimAndAura": 0.76,
+    "microReadability": 0.76,
+    "interactionQuality": 0.83
   },
+  "marathonPassesCompleted": [1, 2, 3, 4, 5, 6, 19],
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "5864d3951516db669095194f38c6b349753e3111",
-    "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
-    "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
-    "public/brand-emblem-mask.svg": "656ee719e4e51dd68b9f9d470f18c4cc6c945e95",
-    "src/components/brandEmblemV17.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
-    "src/components/brandMotionV17.ts": "b6aa1ea9c84343abba5cd2d8f7f037e332a44046"
+    "src/components/BrandMark.tsx": "0072616dae9e86e0c9f41a391047b37639046fb2",
+    "src/components/brandMotionV18.ts": "4e1ed7c399b79c1c13b1ffb8ff95111905293539",
+    "src/components/brandEmblemV18.svg": "7ad32359aa6101e09fe761db44bb2aac12d6549f",
+    "public/brand-emblem.svg": "7ad32359aa6101e09fe761db44bb2aac12d6549f",
+    "public/brand-mark-micro.svg": "719572a365cce3d35a83c08f95894c4a29fc455b",
+    "public/brand-emblem-mask.svg": "54151bcb4575f88d6d1354aa67a2e0b965762fcd"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the figure is now genuinely almost black instead of grey, but the painted reference still has richer accidental textile highlights and deeper local contrast",
-    "the hood is narrower and the face cavern is compact rather than a long ninja-mask oval, while its boundary remains more controlled than the reference",
-    "the throat is hidden under a continuous gathered cowl and the previous bow/cross reading is reduced, but the cowl is still cleaner and less crushed than the painted cloth",
-    "the aura no longer contains crisp straight fragments that can escape as a visual bug, although its curved turbulence is still smoother than the canonical electrical field",
-    "the exact-main workflow must produce v17.0 optical, hover, reduced-motion and live-header evidence before any approval decision"
+    "the composition is now explicitly the square close-up bust rather than the superseded tall silhouette, but the hood and shoulder architecture are still more regular and vector-clean than the painted reference",
+    "the face void is broad and dominant, yet its lower boundary remains too controlled and needs a more organic five-sided collapse into the gathered cloth",
+    "the cowl no longer uses the old thin throat or compact v17 construction, but it still reads as layered graphic bands instead of crushed heavy fabric",
+    "the three primary fold families are structurally present, while secondary overlaps, local compression and accidental textile highlights remain underdeveloped",
+    "the aura is correctly concentrated behind the head and upper shoulders and now has hover-only organic displacement, but branch density, dark interruptions and asymmetrical electrical turbulence still lag behind the reference",
+    "the dedicated micro mark has been redrawn, but exact 32, 24 and 16 px browser evidence is still required",
+    "the spring-depth controller requires exact Chromium and WebKit hover, settling, reduced-motion and performance evidence before its interaction score can rise"
   ],
-  "nextRequiredAction": "publish the synchronized v17.0 black-monolith tree, inspect exact-main evidence at 192/96/56/32/16 and the live header, then continue reference-led refinement of the cowl turbulence and cloth highlights without re-lightening the figure"
+  "nextRequiredAction": "run exact-head static validation and Browser QA for v18.1, inspect the square reference matrix and live header, then continue passes 7 through 15 with a manual cowl/fold/aura refinement rather than adding decorative glow"
 }
