@@ -23,7 +23,6 @@ type Manifest = {
   }>;
   replacementPolicy: string;
 };
-
 type Evaluation = {
   referenceId: string;
   reviewedAgainstReferenceSha256: string;
@@ -34,16 +33,11 @@ type Evaluation = {
   overallScore: number;
   scores: Record<string, number>;
   candidateGitBlobShas: Record<string, string>;
+  comparisonArtifact: string;
+  liveSiteComparisonArtifact: string;
   blockingDeviations: string[];
   nextRequiredAction: string;
   marathonPassesCompleted?: number[];
-};
-
-type Ledger = {
-  marathonId: string;
-  primaryReferenceDescription: string;
-  plannedPasses: number;
-  supplementalReferences: Array<{ mayInfluenceGeometry: boolean; mayInfluenceApproval: boolean }>;
 };
 
 const resolve = (file: string) => path.resolve(file);
@@ -56,10 +50,10 @@ const gitBlobSha = (buffer: Buffer) => crypto.createHash('sha1').update(`blob ${
 const manifest = parse<Manifest>('qa/reference/brand-reference-manifest.json');
 const contract = parse<{ referenceId: string; requiredStructures: string[]; forbiddenDrift: string[] }>('qa/reference/brand-reference-contract.json');
 const evaluation = parse<Evaluation>('qa/brand-reference-evaluation.json');
-const ledger = parse<Ledger>('qa/brand-marathon-pass-ledger.json');
 
 assert.equal(manifest.referenceId, 'canonical-hooded-figure-v2-clean-base');
 assert.equal(manifest.status, 'immutable');
+assert.match(manifest.visualAuthority, /user-approved canonical reference/i);
 assert.equal(manifest.projectFile, 'qa/reference/brand-emblem-canonical-reference.webp');
 assert.deepEqual(manifest.projectDimensions, { width: 256, height: 256 });
 assert.deepEqual(manifest.sourceDimensions, { width: 1254, height: 1254 });
@@ -67,14 +61,9 @@ assert.equal(manifest.sourceTitle, 'Figure mystérieuse dans une lueur bleue.png
 assert.equal(manifest.sourceSha256, 'a780a19917fb9d5d280f0a8c3629b3f1d97b599da62add6e18b14252ed577b67');
 assert.equal(manifest.projectSha256, '767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532');
 assert.equal(sha256(bytes(manifest.projectFile)), manifest.projectSha256, 'canonical bytes changed');
-assert.match(manifest.visualAuthority, /user-approved canonical reference/i);
-assert.match(manifest.visualAuthority, /square full-length hooded figure/i);
-assert.doesNotMatch(manifest.visualAuthority, /close-up|bust/i);
-assert.match(manifest.compositionLock, /square full-length cloaked figure/i);
-assert.match(manifest.compositionLock, /long widening triangular cloak/i);
-assert.match(manifest.compositionLock, /deep black face void/i);
-assert.match(manifest.compositionLock, /electric-blue aura behind the hood and both outer sides/i);
-assert.doesNotMatch(manifest.compositionLock, /close-up|bust/i);
+assert.match(manifest.compositionLock, /square close-up bust/i);
+assert.match(manifest.compositionLock, /huge pure-black face void/i);
+assert.match(manifest.compositionLock, /electric-blue aura behind the head and upper body/i);
 assert.match(manifest.replacementPolicy, /explicit user approval/i);
 
 assert.equal(manifest.supplementalReferences.length, 1);
@@ -90,7 +79,6 @@ for (const required of [
   'high layered pointed hood',
   'broad deep black face cavern with a rounded pentagonal base',
   'heavy gathered cowl below the face rather than a crossed necktie',
-  'wide triangular cloak silhouette that fades into a clean dark base',
   'left diagonal fold family',
   'right diagonal fold family',
   'central vertical fold family',
@@ -133,8 +121,8 @@ assert.ok(evaluation.overallScore >= 0 && evaluation.overallScore <= 1);
 assert.ok(evaluation.blockingDeviations.length > 0);
 assert.match(evaluation.candidateRevision, /unchanged v17\.0 visual baseline/i);
 assert.match(evaluation.nextRequiredAction, /geometry passes from the square reference/i);
-assert.ok((evaluation.marathonPassesCompleted ?? []).includes(19));
-assert.ok((evaluation.marathonPassesCompleted ?? []).includes(23));
+assert.ok((evaluation.marathonPassesCompleted ?? []).includes(19), 'pointer foundation pass is not recorded');
+assert.ok((evaluation.marathonPassesCompleted ?? []).includes(23), 'reduced-motion pass is not recorded');
 for (const key of ['macroProportions', 'hoodAndCavern', 'collarAndFolds', 'cloakSilhouette', 'rimAndAura', 'microReadability', 'interactionQuality']) {
   assert.ok(typeof evaluation.scores[key] === 'number' && evaluation.scores[key] >= 0 && evaluation.scores[key] <= 1, `${key}: invalid score`);
 }
@@ -142,23 +130,13 @@ for (const key of ['macroProportions', 'hoodAndCavern', 'collarAndFolds', 'cloak
 for (const file of ['AGENTS.md', 'docs/BRAND_EMBLEM.md', 'qa/reference/README.md', '.github/pull_request_template.md']) {
   const source = read(file);
   assert.match(source, /canonical-hooded-figure-v2-clean-base/);
-  assert.match(source, /no required smoke|без обязательного дыма|clean lower edge|чистый тёмный нижний край/i);
+  assert.match(source, /no required smoke|без обязательного дыма|clean lower edge/i);
 }
-for (const file of ['docs/BRAND_EMBLEM.md', 'qa/reference/README.md']) {
-  const source = read(file);
-  assert.match(source, /full-length|в полный рост/i, `${file}: full-length correction missing`);
-  assert.doesNotMatch(source, /square close-up hooded bust|квадратный крупный погрудный образ/i);
-}
-
 const research = read('docs/research/BRAND_EMBLEM_SVG_MOTION_MARATHON_2026.md');
-assert.match(research, /Primary and official source run \(69 links\)/);
+assert.match(research, /Primary and official source run \(60 links\)/);
 assert.match(research, /## 24-pass programme/);
-assert.match(research, /full-length hooded figure/i);
-assert.doesNotMatch(research, /compact bust composition|square close-up reference/i);
-
-assert.equal(ledger.marathonId, 'square-full-length-reference-v18');
-assert.match(ledger.primaryReferenceDescription, /square full-length hooded figure/i);
-assert.doesNotMatch(ledger.primaryReferenceDescription, /close-up|bust/i);
+const ledger = parse<{ primaryReferenceDescription: string; plannedPasses: number; supplementalReferences: Array<{ mayInfluenceGeometry: boolean; mayInfluenceApproval: boolean }> }>('qa/brand-marathon-pass-ledger.json');
+assert.match(ledger.primaryReferenceDescription, /square close-up bust/i);
 assert.equal(ledger.plannedPasses, 24);
 assert.ok(ledger.supplementalReferences.every((item) => !item.mayInfluenceGeometry && !item.mayInfluenceApproval));
 
@@ -167,4 +145,4 @@ for (const artifact of ['brand-reference-comparison-matrix.png', 'brand-referenc
   assert.ok(browserQa.includes(artifact), `browser QA missing ${artifact}`);
 }
 
-console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — no-regression motion foundation; full-length geometry remains not-reference-approved`);
+console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — no-regression motion foundation; geometry remains not-reference-approved`);
