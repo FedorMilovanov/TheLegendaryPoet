@@ -7,11 +7,13 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const workflow = read('.github/workflows/manual-browser-qa.yml');
 const playwright = read('playwright.config.mjs');
 const homePlaywright = read('playwright.home-polish.config.mjs');
+const mobilePlatformsSpec = 'qa/mobile-platforms.spec.mjs';
+const webkitHomeSpec = 'qa/mobile-home-webkit.spec.mjs';
 const opticalSpec = 'qa/brand-v19-optical.spec.mjs';
 const microSpec = 'qa/brand-v19-micro.spec.mjs';
 
-for (const spec of [opticalSpec, microSpec]) {
-  assert.ok(fs.existsSync(path.resolve(spec)), `${spec}: candidate browser spec is missing`);
+for (const spec of [mobilePlatformsSpec, webkitHomeSpec, opticalSpec, microSpec]) {
+  assert.ok(fs.existsSync(path.resolve(spec)), `${spec}: browser spec is missing`);
   assert.ok(workflow.includes(spec), `${spec}: spec exists but is not executed by Manual Browser QA`);
 }
 
@@ -20,9 +22,28 @@ assert.match(workflow, /--config=playwright\.config\.mjs/);
 assert.match(workflow, /--workers=1/);
 assert.match(playwright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 assert.match(playwright, /retries:\s*process\.env\.CI\s*\?\s*1\s*:\s*0/);
+assert.match(playwright, /mobile-home-webkit/);
+assert.match(playwright, /genericHomeRouteAudit/);
+assert.match(playwright, /grepInvert:\s*genericHomeRouteAudit/);
 assert.match(playwright, /brand-v19-micro/);
 assert.match(playwright, /brand-v19-optical/);
 assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
+
+const mobilePlatforms = read(mobilePlatformsSpec);
+const webkitHome = read(webkitHomeSpec);
+assert.match(mobilePlatforms, /home: mobile engine rendering, safe area, images and runtime/);
+assert.match(webkitHome, /WebKit home route keeps lazy content, runtime and mobile chrome stable/);
+assert.match(webkitHome, /test\.skip\(testInfo\.project\.name !== 'iphone-safari'/);
+assert.match(webkitHome, /strategic lazy-content positions/);
+assert.match(webkitHome, /bounded WebKit scroll positions/);
+assert.match(webkitHome, /failedResilientImages/);
+assert.match(webkitHome, /visibleBusyRegions/);
+assert.match(webkitHome, /horizontalOverflow/);
+assert.match(webkitHome, /supportsSafeArea/);
+assert.match(webkitHome, /expectDockInsideViewport/);
+assert.match(webkitHome, /runtime\.pageErrors/);
+assert.match(webkitHome, /runtime\.consoleErrors/);
+assert.match(webkitHome, /runtime\.localRequestFailures/);
 
 const optical = read(opticalSpec);
 const micro = read(microSpec);
@@ -33,4 +54,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: full-size, optical and micro gates execute under zero-flaky Chromium/Android/WebKit QA');
+console.log('brand browser workflow: full-size, optical, micro and equivalent WebKit home gates execute under zero-flaky Chromium/Android/WebKit QA');
