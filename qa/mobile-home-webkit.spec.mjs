@@ -41,6 +41,18 @@ async function settleHydratedShell(page) {
   await page.waitForTimeout(450);
 }
 
+async function scrollDocumentTo(page, top) {
+  await page.evaluate((scrollTop) => {
+    const scrollingElement = document.scrollingElement;
+    if (scrollingElement && typeof scrollingElement.scrollTo === 'function') {
+      scrollingElement.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+      return;
+    }
+    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+  }, top);
+  await page.waitForTimeout(110);
+}
+
 function selectBoundedIndices(count, limit = 8) {
   if (count <= 0) return [];
   if (count <= limit) return Array.from({ length: count }, (_, index) => index);
@@ -66,14 +78,14 @@ async function visitStrategicLazyContent(page) {
     await target.scrollIntoViewIfNeeded();
     await expect(target).toBeInViewport({ ratio: 0.01 });
     await page.waitForTimeout(150);
-    visited.push(await target.evaluate((node) => ({
-      index,
+    const details = await target.evaluate((node) => ({
       tagName: node.tagName,
       id: node.id || null,
       className: typeof node.className === 'string' ? node.className : null,
       imageState: node.getAttribute('data-image-state'),
       loading: node.getAttribute('loading'),
-    })));
+    }));
+    visited.push({ index, ...details });
   }
 
   expect(visited.length, 'visited strategic lazy-content landmarks').toBeGreaterThan(0);
@@ -83,10 +95,17 @@ async function visitStrategicLazyContent(page) {
 async function restoreChromeAtTop(page) {
   const heroHeading = page.getByRole('heading', { level: 1, name: 'THE LEGENDARY POET' });
   await heroHeading.scrollIntoViewIfNeeded();
-  // A native protocol wheel completes the upward direction signal without a
-  // series of page.evaluate(window.scrollTo) calls inside Linux WebKit.
-  await page.mouse.wheel(0, -100_000);
-  await page.waitForTimeout(180);
+
+  const state = await page.evaluate(() => ({
+    currentY: window.scrollY,
+    maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
+  }));
+  if (state.currentY <= 16 && state.maxScroll > 32) {
+    await scrollDocumentTo(page, Math.min(64, state.maxScroll));
+  } else if (state.currentY > 96) {
+    await scrollDocumentTo(page, state.currentY - 96);
+  }
+  await scrollDocumentTo(page, 0);
 
   await expect.poll(
     () => page.evaluate(() => window.scrollY),
