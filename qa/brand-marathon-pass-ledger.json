@@ -1,0 +1,27 @@
+{
+  "marathonId": "square-closeup-reference-v18",
+  "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
+  "primaryReferenceDescription": "square close-up bust with monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue upper aura",
+  "supplementalReferences": [
+    {
+      "name": "Siluette dans la brume sombre.png",
+      "role": "supplemental mood only",
+      "mayInfluenceGeometry": false,
+      "mayInfluenceApproval": false
+    }
+  ],
+  "status": "active",
+  "ownerDecision": "not-reference-approved",
+  "completedPasses": [1],
+  "activePasses": [2, 3, 4, 5, 6, 19],
+  "plannedPasses": 24,
+  "rules": {
+    "compareEveryPassToPrimaryReference": true,
+    "previousSvgIsNotAReference": true,
+    "noRasterRuntime": true,
+    "noGlowToHideGeometry": true,
+    "noPermanentIdleLoop": true,
+    "reducedMotionRequired": true,
+    "exactVisualEvidenceRequired": true
+  }
+}
