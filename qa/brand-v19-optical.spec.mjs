@@ -25,12 +25,13 @@ async function decodeAll(page) {
 
 async function alphaBounds(page, selector) {
   return page.locator(selector).evaluate((image) => {
-    const width = image.naturalWidth;
-    const height = image.naturalHeight;
+    const width = image.width;
+    const height = image.height;
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) throw new Error('2D canvas context is unavailable');
     context.drawImage(image, 0, 0, width, height);
     const data = context.getImageData(0, 0, width, height).data;
     let left = width;
@@ -104,6 +105,8 @@ test('reference, production and v19.17 optical candidate remain readable at medi
 
   for (const size of sizes) {
     const bounds = await alphaBounds(page, `img[data-optical-size="${size}"]`);
+    expect(bounds.width, `${size}px rendered width`).toBe(size);
+    expect(bounds.height, `${size}px rendered height`).toBe(size);
     expect(bounds.visible, `${size}px candidate has visible pixels`).toBeGreaterThan(size * size * 0.08);
     expect(bounds.occupiedWidth / bounds.width, `${size}px occupied width`).toBeGreaterThan(0.72);
     expect(bounds.occupiedHeight / bounds.height, `${size}px occupied height`).toBeGreaterThan(0.8);
