@@ -6,12 +6,15 @@ export default defineConfig({
   testDir: './qa',
   timeout: 45_000,
   expect: {
-    timeout: 12_000,
+    // Prerendered content can appear before the client shell has hydrated on
+    // Linux WebKit. Assertions still require the real element and behavior;
+    // this only gives the shell a deterministic hydration window.
+    timeout: 20_000,
   },
-  // A failed test is retried in a fresh worker/browser only on CI. This keeps
-  // WebKit process exits distinct from product failures without masking a
-  // reproducible assertion: a real regression fails twice and remains red.
+  // A browser-process exit still gets one fresh worker/browser attempt, but a
+  // test that needs that retry is not accepted as green CI.
   retries: process.env.CI ? 1 : 0,
+  failOnFlakyTests: Boolean(process.env.CI),
   fullyParallel: false,
   workers: 1,
   outputDir: 'test-results',
