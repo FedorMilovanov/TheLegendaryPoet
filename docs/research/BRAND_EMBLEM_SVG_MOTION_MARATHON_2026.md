@@ -4,20 +4,22 @@ Status: active research baseline for the 20+ pass emblem marathon.
 
 ## Visual authority
 
-The only primary artistic authority is the square close-up hooded figure stored at:
+The only primary artistic authority is the immutable square image stored at:
 
 `qa/reference/brand-emblem-canonical-reference.webp`
 
-It is the compact bust composition with the monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue aura behind the head and upper body.
+The pinned bytes show a **full-length hooded figure**: a small high pointed hood above a long widening triangular cloak, a deep black face void, restrained upper cowl, predominantly vertical fabric mass, icy edge light and electric-blue aura behind the hood and both outer sides.
 
-The older tall full-body silhouette is supplemental mood material only. It must not influence the production emblem geometry, optical ratios, lower edge or approval score.
+An earlier prose description incorrectly called this image a close-up bust. That text is rejected. When prose and the immutable image disagree, the image plus its SHA-256 are authoritative.
+
+`Siluette dans la brume sombre.png` is supplemental mood material only. It must not replace the pinned reference or influence approval scoring.
 
 ## Engineering conclusion
 
 The emblem should remain a layered inline SVG, not a raster wrapper and not a canvas/WebGL replacement. The production architecture will use:
 
 1. one canonical authored SVG geometry source;
-2. semantic layers for silhouette, hood shell, inner hood, void, cowl, three primary fold families, rim, aura field and restrained texture;
+2. semantic layers for silhouette, hood shell, inner hood, void, cowl, vertical cloak mass, secondary folds, rim, aura field and restrained texture;
 3. pointer input captured once at the outer interactive element;
 4. one requestAnimationFrame write phase with no layout read after style mutation;
 5. normalized pointer coordinates passed through damped motion values rather than direct twitchy translation;
@@ -36,22 +38,23 @@ The emblem should remain a layered inline SVG, not a raster wrapper and not a ca
 - No identical radial fold wedges.
 - No single flat `scale()` presented as an epic interaction.
 - No pointer handler that performs repeated geometry reads and writes in the same frame.
-- No animated `d` morph for the whole figure at header size; it is expensive, unstable and visually unnecessary.
+- No animated `d` morph for the whole figure at header size.
 - No uncontrolled animated blur over the whole SVG.
-- No forced GPU layer explosion through permanent `will-change` on every path.
+- No permanent `will-change` on every path.
+- No bust-shaped redesign derived from the rejected prose description.
 
 ## Motion system target
 
 The hover should read as awakening, not wobbling:
 
-- **Approach:** pointer enters; aura wakes first, then rim, then cloth depth.
-- **Presence:** the figure lifts by less than one CSS pixel at normal header size while depth layers separate optically.
-- **Breath:** cowl and two major fold groups receive very small scale/translation changes with different damping; no obvious periodic loop.
-- **Void:** the black face cavity deepens through a tiny inverse parallax and local shadow/opacity response, never by exposing features.
-- **Energy:** selected curved aura branches gain opacity and a limited turbulence/displacement response; the silhouette remains stable.
-- **Exit:** spring/damped return, no snap, no residual inline variables.
+- **Approach:** aura wakes first, then figure mass, then rim and cloth detail.
+- **Presence:** the full-length silhouette gains depth without losing its long vertical stance.
+- **Cloth:** outer cloak, central mass and selected folds separate by different damped amounts; no periodic idle breathing.
+- **Void:** the black face cavity deepens through tiny inverse parallax and local contrast, never by exposing features.
+- **Energy:** curved aura branches gain opacity and limited organic displacement while the silhouette remains stable.
+- **Exit:** spring return with no snap and no residual inline variables.
 - **Keyboard:** focus-visible receives a deliberate non-pointer awakening state.
-- **Reduced motion:** removes parallax, lift, displacement and breathing; a short opacity/rim emphasis may remain.
+- **Reduced motion:** removes parallax, lift, displacement and cloth separation; a short opacity/rim emphasis may remain.
 
 ## Performance budget
 
@@ -65,7 +68,7 @@ At the live header size:
 - no continuous animation while idle;
 - no lower-page brand instances running animation when not interacted with;
 - no more than a small fixed number of filtered groups;
-- stable 60 Hz and high-refresh behavior based on time/damping rather than frame count.
+- stable high-refresh behavior based on elapsed time rather than frame count.
 
 ## Visual QA contract
 
@@ -73,7 +76,7 @@ Every artistic pass must produce and inspect:
 
 - reference/candidate at 256, 192, 128, 96, 64, 56 and 44 px;
 - optical micro candidate at 32, 24 and 16 px;
-- idle, pointer top-left, pointer top-right, pointer lower-left, pointer lower-right;
+- idle, entry, full awakening, pointer top-left, top-right, lower-left and lower-right;
 - keyboard focus-visible;
 - pointer leave after full settling;
 - reduced-motion state;
@@ -84,34 +87,34 @@ Acceptance remains `not-reference-approved` until the owner accepts the exact vi
 
 ## 24-pass programme
 
-1. Reference identity and supplemental-reference separation.
-2. Measured crop, silhouette and negative-space landmarks.
-3. Bust width and shoulder apex reset.
-4. Hood outer contour reset.
-5. Face void width, depth and lower pentagonal shape.
+1. Reference-byte identity and supplemental-reference separation.
+2. Measured full-length crop, silhouette and negative-space landmarks.
+3. Overall figure height, hem width and vertical-axis reset.
+4. Small high hood outer contour and apex placement.
+5. Face void width, depth and lower shape.
 6. Inner hood layering and apex seam.
-7. Cowl mass without X/bow/necktie reading.
-8. Left primary diagonal cloth family.
-9. Right primary diagonal cloth family.
-10. Central vertical cloth family.
-11. Secondary fabric compression and overlap.
+7. Restrained cowl mass without X/bow/necktie reading.
+8. Left outer cloak edge from shoulder to hem.
+9. Right outer cloak edge and asymmetric cloth interruptions.
+10. Central long vertical fabric mass.
+11. Secondary fold compression and sparse diagonal overlap.
 12. Almost-black tonal hierarchy and local contrast.
-13. Icy rim continuity around hood and shoulders.
-14. Aura macro-field placement behind head and shoulders.
-15. Aura branch irregularity and dark interruptions.
-16. Clean lower crop and icon-safe silhouette.
+13. Icy rim continuity from hood into both outer cloak edges.
+14. Aura macro-field placement behind hood and full side silhouette.
+15. Aura branch irregularity, dark interruptions and lower-side decay.
+16. Clean dark hem and icon-safe triangular silhouette.
 17. 96/64/56/44 px optical correction.
 18. Dedicated 32/24/16 px micro redraw.
 19. Pointer physics foundation and cached bounds.
 20. Layer depth and void response.
-21. Cloth awakening and restrained breathing response.
-22. Aura turbulence/displacement and rim drawing.
+21. Full-length cloth awakening without idle breathing.
+22. Aura turbulence/displacement and phased rim drawing.
 23. Focus-visible, touch and reduced-motion states.
 24. Performance trace, visual regression, live-site evidence and final owner gate.
 
-Each numbered pass is a real review gate, not a version-number inflation exercise. Several passes may be included in one atomic commit only when the comparison evidence still makes each decision independently inspectable.
+Each numbered pass is a real review gate, not version-number inflation. Several passes may share one atomic commit only when the comparison evidence still makes every decision independently inspectable.
 
-## Primary and official source run (60 links)
+## Primary and official source run (69 links)
 
 ### SVG platform and specifications
 
@@ -199,4 +202,4 @@ Each numbered pass is a real review gate, not a version-number inflation exercis
 
 ## Research decision
 
-The next implementation pass is **not** another glow polish over v17. It is a measured v18 geometry and interaction reset against the square close-up reference, with the existing v17 implementation treated only as replaceable production plumbing.
+The next geometry pass is not another glow polish and not a bust reset. It is a measured full-length silhouette pass against the pinned square reference: figure height, small hood placement, long cloak taper, clean hem, icy outer rim and irregular side aura. The current v17 production geometry remains in place until a candidate is visibly superior in exact comparison matrices.
