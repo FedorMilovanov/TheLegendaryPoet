@@ -1,0 +1,9 @@
+{
+  "gate": "brand-v19.17-zero-flaky",
+  "testedMainSha": "a793cc3db1871f445973b873032d964165e57a21",
+  "fullSizeCandidate": "v19.11-reference-geometry-reset",
+  "opticalCandidate": "v19.17-reference-optical-redraw",
+  "microCandidate": "v19.14-reference-micro-redraw",
+  "productionReplacement": false,
+  "requiredResult": "all required pull-request workflows green with zero flaky tests"
+}
