@@ -5,11 +5,11 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
 const ledger = JSON.parse(fs.readFileSync(path.resolve('qa/brand-marathon-pass-ledger.json'), 'utf8'));
-const candidateFile = ledger.opticalCandidate.file;
-const candidate = candidateFile.replace(/^public\//, '');
+const candidate = ledger.opticalCandidate.file;
+const candidatePath = candidate.replace(/^public\//, '');
 const candidateId = ledger.opticalCandidate.id;
 const sizes = ledger.opticalCandidate.opticalSizes;
-const candidateData = `data:image/svg+xml;base64,${fs.readFileSync(path.resolve(candidateFile)).toString('base64')}`;
+const candidateData = `data:image/svg+xml;base64,${fs.readFileSync(path.resolve(candidate)).toString('base64')}`;
 const reference = `data:image/webp;base64,${fs.readFileSync(path.resolve('qa/reference/brand-emblem-canonical-reference.webp')).toString('base64')}`;
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -68,7 +68,7 @@ async function alphaBounds(page, selector) {
 
 test('v19.17 optical candidate is semantic SVG and isolated from production', async ({ request }) => {
   const [candidateResponse, publicProductionResponse, microProductionResponse] = await Promise.all([
-    request.get(`${BASE_URL}/${candidate}?v=${Date.now()}`),
+    request.get(`${BASE_URL}/${candidatePath}?v=${Date.now()}`),
     request.get(`${BASE_URL}/brand-emblem.svg?v=${Date.now()}`),
     request.get(`${BASE_URL}/brand-mark-micro.svg?v=${Date.now()}`),
   ]);
