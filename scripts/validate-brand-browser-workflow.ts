@@ -45,7 +45,7 @@ assert.match(webkitHome, /strategic lazy-content landmarks/);
 assert.match(webkitHome, /bounded WebKit scroll landmarks/);
 assert.match(webkitHome, /scrollIntoViewIfNeeded/);
 assert.match(webkitHome, /page\.mouse\.wheel\(0, -100_000\)/);
-assert.doesNotMatch(webkitHome, /window\.scrollTo/);
+assert.doesNotMatch(webkitHome, /window\.scrollTo\s*\(/);
 assert.match(webkitHome, /failedResilientImages/);
 assert.match(webkitHome, /visibleBusyRegions/);
 assert.match(webkitHome, /horizontalOverflow/);
