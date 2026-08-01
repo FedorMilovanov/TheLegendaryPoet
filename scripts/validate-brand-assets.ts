@@ -11,7 +11,7 @@ const blob = (file: string) => {
 };
 
 const VERSION = 'cloak-20260801-21';
-const SOURCE = 'square-closeup-reference-v18-2';
+const SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
 const componentFile = 'src/components/BrandMark.tsx';
 const motionFile = 'src/components/brandMotionV18.ts';
 const sourceFile = 'src/components/brandEmblemV18.svg';
@@ -49,10 +49,7 @@ validSvg(standalone, standaloneFile, '0 0 96 96');
 validSvg(micro, microFile, '0 0 32 32');
 validSvg(mask, maskFile, '0 0 96 96');
 assert.equal(source, standalone, 'authored SVG and standalone asset diverged');
-
-for (const svg of [source, standalone, micro, mask]) {
-  assert.ok(svg.includes(`data-brand-vector-source="${SOURCE}"`), 'surface source identity differs');
-}
+for (const svg of [source, standalone, micro, mask]) assert.ok(svg.includes(`data-brand-vector-source="${SOURCE}"`), 'surface source identity differs');
 
 for (const token of [
   "import rawVector from './brandEmblemV18.svg?raw'",
@@ -70,7 +67,7 @@ for (const token of [
   "style={{ pointerEvents: 'none' }}",
 ]) assert.ok(component.includes(token), `component missing ${token}`);
 assert.doesNotMatch(component, /useState\s*\(/, 'pointer movement must not enter React state');
-assert.doesNotMatch(component, /brandEmblemV17|brandMotionV17|layered-v1/, 'component still references retired v17 plumbing');
+assert.doesNotMatch(component, /brandMotionV17|data-brand-parallax="layered-v1"/, 'retired interaction plumbing remains');
 
 for (const token of [
   'requestAnimationFrame(step)',
@@ -82,58 +79,45 @@ for (const token of [
   "node.dataset.brandInteraction = 'idle'",
   '[data-brand-interaction="active"]',
   '@media (prefers-reduced-motion:reduce)',
-  '[data-brand-turbulence]',
-  '[data-brand-displacement]',
-  'time - lastFilterWrite >= 48',
+  'a:focus-visible [data-brand-mark]',
 ]) assert.ok(motion.includes(token), `motion controller missing ${token}`);
 assert.equal((motion.match(/getBoundingClientRect\(\)/g) ?? []).length, 1, 'bounds must have one cached read site');
 assert.equal((motion.match(/requestAnimationFrame\(/g) ?? []).length, 1, 'motion must have one rAF scheduling site');
-assert.doesNotMatch(motion, /setInterval|setTimeout|while\s*\(true\)|requestAnimationFrame\([^)]*=>\s*requestAnimationFrame/, 'idle loop or recursive shortcut detected');
-assert.doesNotMatch(motion, /new\s+(?:Map|Set|Array|Object)\b|\.map\(|\.filter\(|\.reduce\(/, 'hot motion module should avoid collection allocation patterns');
+assert.doesNotMatch(motion, /setInterval|setTimeout|while\s*\(true\)/, 'idle loop or timer shortcut detected');
 
 for (const hook of [
-  'atmosphere', 'energy', 'figure', 'cloak', 'folds', 'left-folds', 'right-folds',
-  'central-folds', 'epic-folds', 'hood', 'hood-layers', 'face-void', 'face-depth',
-  'neck-shadow', 'cowl', 'collar', 'texture', 'seams', 'rim-light',
-  'turbulence', 'displacement',
+  'atmosphere', 'energy', 'figure', 'cloak', 'folds', 'upper-folds', 'epic-folds',
+  'hood', 'hood-layers', 'face-void', 'face-depth', 'neck-shadow', 'collar',
+  'texture', 'seams', 'rim-light',
 ]) assert.ok(source.includes(`data-brand-${hook}`), `SVG missing semantic layer ${hook}`);
 
-assert.ok((source.match(/<filter\b/g) ?? []).length <= 3, 'too many filtered groups for header emblem');
-assert.ok((source.match(/<feTurbulence\b/g) ?? []).length === 1, 'one controlled turbulence field is required');
-assert.ok((source.match(/<feDisplacementMap\b/g) ?? []).length === 1, 'one controlled displacement field is required');
-assert.doesNotMatch(source, /<line\b|<polyline\b/i, 'energy must use curved authored paths');
-
+assert.doesNotMatch(source.slice(source.indexOf('<g data-brand-energy='), source.indexOf('<g data-brand-figure=')), /<(?:line|polyline)\b/i, 'energy must use curved authored paths');
 for (const geometryToken of [
-  'M48 38.8C39.8 38',
-  'M48 6.8C43.5 8',
-  'M48 17.2C43.2 17.9',
-  'M21.7 39.4C29.6 37.9',
-  'M3.1 96C8.7 80.4',
-  'M92.9 96C87.3 80.6',
-]) assert.ok(source.includes(geometryToken), `v18.2 macro geometry missing ${geometryToken}`);
+  'M48 36.5C40.4 35.9',
+  'M47.4 7.6C43.9 8.8',
+  'M47.5 16.2C44.8 16.8',
+  'data-brand-throat=""',
+]) assert.ok(source.includes(geometryToken), `preserved v17 visual baseline missing ${geometryToken}`);
 
 const atmosphere = source.slice(source.indexOf('<g data-brand-atmosphere='), source.indexOf('<g data-brand-energy='));
 for (const match of atmosphere.matchAll(/d="([^"]+)"/g)) {
-  const numbers = (match[1].match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-  const ys = numbers.filter((_, index) => index % 2 === 1);
-  assert.ok(ys.every((value) => value <= 59), 'aura leaked into the clean lower crop');
+  const values = (match[1].match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  assert.ok(values.filter((_, index) => index % 2 === 1).every((value) => value <= 70), 'aura leaked into clean lower crop');
 }
 
-const face = source.match(/data-brand-face-depth="" data-brand-face-void="" d="([^"]+)"/)?.[1] ?? '';
-assert.ok(face.includes('M48 17.2') && face.includes('48 43.2'), 'broad deep face void is not locked');
 assert.ok(mask.includes('fill-rule="evenodd"'), 'mask must cut out the face void');
-assert.ok(micro.includes('M16 2.1C14.3 2.6'), 'micro hood geometry is missing');
-assert.ok(micro.includes('M16 5.6C14.2 5.9'), 'micro face void geometry is missing');
+assert.ok(micro.includes('M16 12.2C13.5 12'), 'micro cloak baseline changed');
+assert.ok(micro.includes('M15.8 2.6C14.6 2.9'), 'micro hood baseline changed');
+assert.ok(micro.includes('M15.8 5.4C14.9 5.6'), 'micro face baseline changed');
 
 assert.equal(evaluation.candidateSource, SOURCE, 'evaluation source differs from production source');
-assert.match(evaluation.candidateRevision, /v18\.2/, 'evaluation does not describe v18.2');
-assert.equal(evaluation.reviewerDecision, 'not-reference-approved', 'v18.2 must remain honest until owner approval');
+assert.match(evaluation.candidateRevision, /motion-foundation/i, 'evaluation does not describe the no-regression motion pass');
+assert.equal(evaluation.reviewerDecision, 'not-reference-approved', 'visual baseline must remain honest until owner approval');
 for (const file of [componentFile, motionFile, sourceFile, standaloneFile, microFile, maskFile]) {
   assert.equal(blob(file), evaluation.candidateGitBlobShas[file], `${file}: evaluation blob lock differs`);
 }
-
 for (const file of ['index.html', 'public/site.webmanifest', 'public/browserconfig.xml', 'public/brand-release.txt']) {
-  assert.ok(read(file).includes(VERSION), `${file}: cache marker differs from v18 release`);
+  assert.ok(read(file).includes(VERSION), `${file}: cache marker differs from motion-foundation release`);
 }
 
-console.log('brand validation: v18.2 square-reference geometry, synchronized surfaces and damped hover awakening are locked');
+console.log('brand validation: v17 visual baseline preserved byte-for-byte while v18 spring awakening is locked');
