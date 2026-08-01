@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(mobile-platforms|yesenin-part-one|articles-catalog|hover-stability|brand-v19-(?:micro|optical))\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|yesenin-part-one|articles-catalog|hover-stability|brand-v19-micro|brand-v19-optical)\.spec\.mjs/;
 
 export default defineConfig({
   testDir: './qa',
