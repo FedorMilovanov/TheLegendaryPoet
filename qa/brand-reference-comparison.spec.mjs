@@ -33,6 +33,51 @@ async function captureMark(page, box, label, x, y, delay) {
   return [label, (await page.screenshot({ clip })).toString('base64')];
 }
 
+async function pixelDifference(page, a, b) {
+  return page.evaluate(async ({ left, right }) => {
+    const load = (src) => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = src;
+    });
+    const [imageA, imageB] = await Promise.all([
+      load(`data:image/png;base64,${left}`),
+      load(`data:image/png;base64,${right}`),
+    ]);
+    const width = Math.min(imageA.naturalWidth, imageB.naturalWidth);
+    const height = Math.min(imageA.naturalHeight, imageB.naturalHeight);
+    const read = (image) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.drawImage(image, 0, 0, width, height);
+      return context.getImageData(0, 0, width, height).data;
+    };
+    const dataA = read(imageA);
+    const dataB = read(imageB);
+    let total = 0;
+    let overFive = 0;
+    const pixels = width * height;
+    for (let index = 0; index < dataA.length; index += 4) {
+      const difference = (
+        Math.abs(dataA[index] - dataB[index])
+        + Math.abs(dataA[index + 1] - dataB[index + 1])
+        + Math.abs(dataA[index + 2] - dataB[index + 2])
+      ) / 3;
+      total += difference;
+      if (difference > 5) overFive += 1;
+    }
+    return {
+      meanPixelDifference: total / pixels,
+      percentPixelsOverFive: (overFive / pixels) * 100,
+      width,
+      height,
+    };
+  }, { left: a, right: b });
+}
+
 test('square reference remains beside preserved art at every optical size', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1800 });
   const sizes = [256, 192, 128, 96, 64, 56, 44, 32, 24, 16];
@@ -68,7 +113,7 @@ test('reference, idle, entry phase and centered depth-first awakening are shown 
   await page.screenshot({ path: path.join(DIR, 'brand-reference-live-site-comparison.png'), fullPage: true });
 });
 
-test('v18.4 matrix compares four directions with a centered full state and exact return', async ({ page }) => {
+test('v18.4 matrix enforces directional depth against centered full and exact return', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
@@ -89,6 +134,29 @@ test('v18.4 matrix compares four directions with a centered full state and exact
   await page.waitForTimeout(2500);
   await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
   frames.push(await captureMark(page, box, 'SETTLED', null, null, 0));
+
+  const fullCenter = frames[2][1];
+  const metrics = {};
+  for (const [label, data] of frames.slice(3, 7)) {
+    const result = await pixelDifference(page, fullCenter, data);
+    metrics[label] = result;
+    expect(result.meanPixelDifference, `${label}: directional mean difference`).toBeGreaterThan(0.4);
+    expect(result.percentPixelsOverFive, `${label}: changed pixel share`).toBeGreaterThan(3);
+  }
+  const returnMetrics = await pixelDifference(page, frames[0][1], frames[7][1]);
+  expect(returnMetrics.meanPixelDifference, 'settled versus idle mean difference').toBeLessThan(0.8);
+  expect(returnMetrics.percentPixelsOverFive, 'settled versus idle changed pixel share').toBeLessThan(2);
+  fs.writeFileSync(path.join(DIR, 'brand-interaction-metrics.json'), JSON.stringify({
+    baseline: 'FULL CENTER',
+    directional: metrics,
+    settledVersusIdle: returnMetrics,
+    thresholds: {
+      directionalMeanMinimum: 0.4,
+      directionalPixelsOverFiveMinimumPercent: 3,
+      settledMeanMaximum: 0.8,
+      settledPixelsOverFiveMaximumPercent: 2,
+    },
+  }, null, 2));
 
   await page.setViewportSize({ width: 1780, height: 600 });
   await page.setContent(`<style>${css}</style><main><h1>v18.4 DEPTH-FIRST AWAKENING STATES</h1><div class=sub>Aura → counter-parallax depth → cloth and rim detail. Every corner is compared against FULL CENTER; the final state returns exactly to idle.</div><div class=states>${frames.map(([label, data]) => `<div class=state><b>${label}</b><img src="data:image/png;base64,${data}"></div>`).join('')}</div></main>`);
