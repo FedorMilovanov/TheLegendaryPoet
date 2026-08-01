@@ -34,8 +34,8 @@ Production-геометрия `v17.0` пока сохранена без худ�
 Текущая ревизия:
 
 - visual source id: `canonical-reference-v2-black-monolith-v17-0`;
-- interaction architecture: `spring-awakening-v3`;
-- awakening sequence: `aura-rim-cloth-v1`;
+- interaction architecture: `spring-awakening-v4`;
+- awakening sequence: `aura-depth-cloth-v2`;
 - release marker: `cloak-20260801-22`;
 - решение: **NOT REFERENCE APPROVED**.
 
@@ -54,15 +54,19 @@ Production-геометрия `v17.0` пока сохранена без худ�
 
 Runtime SVG не содержит `<image>`, base64, `<rect>`, canvas или растровой подложки.
 
-## Архитектура «оживания»
+## Архитектура «оживания» v18.4
 
 `brandMotionV18.ts` реализует:
 
 - чтение bounds при входе и изменении размера, а не на каждом pointer frame;
 - один `requestAnimationFrame`-цикл только во время взаимодействия и возврата;
 - затухающую пружинную физику по X, Y и интенсивности пробуждения;
-- последовательность «аура → масса фигуры → контур и ткань»;
-- независимую глубину ауры, энергии, фигуры, складок, капюшона, пустоты лица, воротника, контура и текстуры;
+- последовательность «аура → внутренняя глубина → ткань и контур»;
+- уменьшенный общий подъём и масштаб всей эмблемы, чтобы знак не наезжал на название в шапке;
+- усиленный counter-parallax между дальней аурой и ближней энергией;
+- независимый масштаб и сдвиг складок, внешнего капюшона и внутренних слоёв;
+- обратный параллакс и небольшое сжатие чёрной пустоты лица для ощущения глубины;
+- отдельную реакцию клобука, текстуры и ледяного контура;
 - состояние `active → settling → idle` без остаточных смещений;
 - временный `will-change` только во время активности и возврата;
 - исключение touch-параллакса;
@@ -70,7 +74,7 @@ Runtime SVG не содержит `<image>`, base64, `<rect>`, canvas или р�
 - reduced-motion режим без геометрического движения;
 - отсутствие React state updates внутри pointer hot loop.
 
-Цель эффекта — ощущение, что фигура собирает силу и обретает глубину, а не дёргается вслед за курсором.
+Цель эффекта — ощущение, что фигура собирает силу и раскрывает внутреннюю пространственную структуру, а не просто увеличивается или дёргается вслед за курсором.
 
 ## 24-проходный марафон
 
@@ -85,8 +89,8 @@ Runtime SVG не содержит `<image>`, base64, `<rect>`, canvas или р�
 Browser QA создаёт:
 
 - `brand-reference-comparison-matrix.png` — основной референс и production/candidate на 256/192/128/96/64/56/44/32/24/16 px;
-- `brand-reference-live-site-comparison.png` — референс, idle, entry и full awakening;
-- `brand-interaction-state-matrix.png` — idle, фазы, четыре направления pointer depth и settled return;
+- `brand-reference-live-site-comparison.png` — референс, idle, entry и depth-first awakening;
+- `brand-interaction-state-matrix.png` — idle, фазы, четыре направления counter-parallax и settled return;
 - `brand-live-site-home-first-viewport.png` — фактический первый экран production-сборки;
 - `brand-emblem-optical-size-matrix.png` — production и micro SVG;
 - `brand-emblem-reduced-motion.png` — отдельное reduced-motion доказательство.
