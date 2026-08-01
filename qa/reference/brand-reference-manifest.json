@@ -1,12 +1,23 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
-  "visualAuthority": "user-approved canonical reference with a clean smoke-free lower edge",
+  "visualAuthority": "user-approved canonical reference: square close-up hooded bust with a clean dark lower crop",
   "status": "immutable",
   "projectFile": "qa/reference/brand-emblem-canonical-reference.webp",
   "projectDimensions": { "width": 256, "height": 256 },
   "projectSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
+  "sourceTitle": "Figure mystérieuse dans une lueur bleue.png",
   "sourceDimensions": { "width": 1254, "height": 1254 },
   "sourceSha256": "a780a19917fb9d5d280f0a8c3629b3f1d97b599da62add6e18b14252ed577b67",
-  "derivation": "User-approved 1254x1254 generated reference; Lanczos downsample to 256x256 WebP quality 92 with no crop or repaint after approval.",
-  "replacementPolicy": "The canonical file, source identity or reference id may change only after explicit user approval of a replacement reference."
+  "compositionLock": "square close-up bust: monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue aura behind the head and upper body",
+  "supplementalReferences": [
+    {
+      "title": "Siluette dans la brume sombre.png",
+      "role": "supplemental mood material only",
+      "mayInfluenceProductionGeometry": false,
+      "mayInfluenceOpticalRatios": false,
+      "mayInfluenceApprovalScore": false
+    }
+  ],
+  "derivation": "User-approved 1254x1254 generated square reference; Lanczos downsample to 256x256 WebP quality 92 with no crop or repaint after approval.",
+  "replacementPolicy": "The canonical file, source identity, composition lock or reference id may change only after explicit user approval of a replacement reference."
 }
