@@ -8,6 +8,10 @@ export default defineConfig({
   expect: {
     timeout: 12_000,
   },
+  // A failed test is retried in a fresh worker/browser only on CI. This keeps
+  // WebKit process exits distinct from product failures without masking a
+  // reproducible assertion: a real regression fails twice and remains red.
+  retries: process.env.CI ? 1 : 0,
   fullyParallel: false,
   workers: 1,
   outputDir: 'test-results',
