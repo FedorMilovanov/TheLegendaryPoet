@@ -1,0 +1,88 @@
+{
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "referenceFile": "qa/reference/brand-emblem-canonical-reference.webp",
+  "activeCandidateId": "v19.10-reference-geometry-reset",
+  "activeCandidateFile": "public/brand-emblem-v19-candidate.svg",
+  "productionSource": "canonical-reference-v2-black-monolith-v17-0",
+  "productionReplacement": false,
+  "status": "candidate-under-reference-review",
+  "ownerDecision": "not-reference-approved",
+  "reviewedOpticalSizes": [256, 192, 128, 96, 64, 56, 44, 32, 24, 16],
+  "passHistory": [
+    {
+      "pass": "v19.1",
+      "result": "rejected-as-production",
+      "finding": "macro reset established a separate layered candidate, but the cyan aura read as thick tubes, the hood was too tall and narrow, and the cowl formed a clean ritual X"
+    },
+    {
+      "pass": "v19.2",
+      "result": "working-pass",
+      "finding": "broader hood, face void and shoulder mass improved the crop, but aura wings and symmetric cowl remained dominant"
+    },
+    {
+      "pass": "v19.3",
+      "result": "working-pass",
+      "finding": "thick aura ribbons were replaced with a field and branches; the cloth still read as geometric vertical armour"
+    },
+    {
+      "pass": "v19.4",
+      "result": "working-pass",
+      "finding": "neon intensity was reduced and the aura moved behind the figure; cowl and lower folds remained too diagrammatic"
+    },
+    {
+      "pass": "v19.5",
+      "result": "working-pass",
+      "finding": "large diagonal cloth masses replaced the strongest vertical wedges; the face cavity remained too oval"
+    },
+    {
+      "pass": "v19.6",
+      "result": "promoted-to-main-candidate",
+      "finding": "pentagonal face cavern, nested hood seams, controlled halo and diagonal cloth produced the first candidate worth exact-main comparison"
+    },
+    {
+      "pass": "v19.7",
+      "result": "working-pass",
+      "finding": "face width, upper halo and side rim were corrected for 96 and 56 pixel readability"
+    },
+    {
+      "pass": "v19.8",
+      "result": "working-pass",
+      "finding": "hood apex and face opening were moved downward to match the canonical vertical landmarks rather than the previous needle-like silhouette"
+    },
+    {
+      "pass": "v19.9",
+      "result": "working-pass",
+      "finding": "upper cloth contrast, inner hood edge, side rim and aura energy were strengthened without adding a lower smoke pool"
+    },
+    {
+      "pass": "v19.10",
+      "result": "active-main-candidate",
+      "finding": "the large symmetric wing/X collar was replaced with layered horizontal crushing, asymmetric gathered planes and a lower draped cowl"
+    }
+  ],
+  "confirmedImprovements": [
+    "hood apex and face cavity now occupy reference-led vertical bands",
+    "face cavity is broad and pure black rather than a narrow droplet",
+    "shoulder mass fills the square crop without becoming a rounded poncho",
+    "cowl is composed from multiple gathered layers instead of one clean X",
+    "large cloth masses are diagonal and retain a dark central volume",
+    "aura is confined to the head and upper sides with no glowing floor or lower smoke",
+    "candidate remains a semantic layered SVG with no raster runtime"
+  ],
+  "remainingBlockers": [
+    "the painted reference still has richer accidental textile compression and less controlled edge rhythm",
+    "electrical branches remain too sparse and too evenly distributed compared with the canonical aura",
+    "hood and shoulder rim need more irregular bright-dark interruptions rather than a continuous designed contour",
+    "56 and 44 pixel cloth hierarchy still loses several important gathered-cowl planes",
+    "32, 24 and 16 pixel sizes still require a dedicated candidate micro redraw before production promotion",
+    "the candidate has not yet passed exact-main Chromium and WebKit comparison artifacts"
+  ],
+  "nextPasses": [
+    "v19.11 irregular aura branch density and dark interruptions",
+    "v19.12 textile compression and accidental highlight families",
+    "v19.13 96/64/56/44 optical correction",
+    "v19.14 dedicated 32/24/16 candidate micro redraw",
+    "v19.15 candidate motion layer mapping without production activation"
+  ],
+  "promotionRule": "Do not replace BrandMark or the production SVG until exact-main reference/production/candidate evidence shows a clear visual win and the owner explicitly approves the candidate."
+}
