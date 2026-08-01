@@ -18,6 +18,22 @@ type Ledger = {
   evidenceStatus: string;
 };
 
+type CandidateEvaluation = {
+  referenceId: string;
+  activeCandidateId: string;
+  activeCandidateFile: string;
+  productionSource: string;
+  productionReplacement: boolean;
+  status: string;
+  ownerDecision: string;
+  reviewedOpticalSizes: number[];
+  passHistory: Array<{ pass: string; result: string; finding: string }>;
+  confirmedImprovements: string[];
+  remainingBlockers: string[];
+  nextPasses: string[];
+  promotionRule: string;
+};
+
 const resolve = (file: string) => path.resolve(file);
 const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
 const parse = <T>(file: string): T => JSON.parse(read(file)) as T;
@@ -29,6 +45,7 @@ const production = read('src/components/brandEmblemV18.svg');
 const component = read('src/components/BrandMark.tsx');
 const browserQa = read('qa/brand-reference-comparison.spec.mjs');
 const ledger = parse<Ledger>('qa/brand-marathon-pass-ledger.json');
+const evaluation = parse<CandidateEvaluation>('qa/brand-v19-candidate-evaluation.json');
 const candidateId = ledger.geometryCandidate.id;
 
 assert.equal(candidateId, 'v19.10-reference-geometry-reset');
@@ -70,6 +87,22 @@ assert.ok(ledger.geometryCandidate.targets.length >= 8);
 assert.equal(ledger.ownerDecision, 'not-reference-approved');
 assert.match(ledger.evidenceStatus, /production remains unchanged/i);
 
+assert.equal(evaluation.referenceId, 'canonical-hooded-figure-v2-clean-base');
+assert.equal(evaluation.activeCandidateId, candidateId);
+assert.equal(evaluation.activeCandidateFile, candidateFile);
+assert.equal(evaluation.productionSource, ledger.visualBaseline);
+assert.equal(evaluation.productionReplacement, false);
+assert.equal(evaluation.status, 'candidate-under-reference-review');
+assert.equal(evaluation.ownerDecision, 'not-reference-approved');
+assert.deepEqual(evaluation.reviewedOpticalSizes, [256, 192, 128, 96, 64, 56, 44, 32, 24, 16]);
+assert.equal(evaluation.passHistory.length, 10);
+assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10']);
+assert.equal(evaluation.passHistory.at(-1)?.result, 'active-main-candidate');
+assert.ok(evaluation.confirmedImprovements.length >= 7);
+assert.ok(evaluation.remainingBlockers.length >= 6);
+assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.11')));
+assert.match(evaluation.promotionRule, /owner explicitly approves/i);
+
 assert.ok(browserQa.includes(candidateFile.replace('public/', '')), 'Browser QA does not load the v19 candidate');
 assert.ok(browserQa.includes(artifact), 'Browser QA does not emit the v19 triple comparison');
 assert.ok(browserQa.includes("const CANDIDATE_ID = ledger.geometryCandidate.id"), 'Browser QA candidate identity is not sourced from the ledger');
@@ -78,4 +111,4 @@ assert.ok(browserQa.includes('REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDID
 assert.doesNotMatch(production, /v19\.10-reference-geometry-reset/, 'unreviewed candidate leaked into production SVG');
 assert.doesNotMatch(component, /brand-emblem-v19-candidate/, 'unreviewed candidate leaked into BrandMark');
 
-console.log('brand candidate validation: v19.10 is layered, reference-led, QA-visible and isolated from production');
+console.log('brand candidate validation: ten reference-led passes are locked; v19.10 remains isolated from production');
