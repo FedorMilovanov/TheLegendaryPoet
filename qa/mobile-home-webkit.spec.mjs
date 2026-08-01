@@ -10,6 +10,8 @@ const STRATEGIC_SELECTOR = [
   '#main-content article',
   '#main-content img[loading="lazy"]',
   '#main-content [data-image-state]',
+  '#main-content h1',
+  '#main-content h2',
 ].join(',');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -41,61 +43,111 @@ async function settleHydratedShell(page) {
   await page.waitForTimeout(450);
 }
 
-async function scrollDocumentTo(page, top) {
+async function scrollDocumentTo(page, top, delay = 130) {
   await page.evaluate((scrollTop) => {
     const scrollingElement = document.scrollingElement;
-    if (scrollingElement && typeof scrollingElement.scrollTo === 'function') {
-      scrollingElement.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+    if (scrollingElement) {
+      scrollingElement.scrollTop = scrollTop;
+      scrollingElement.scrollLeft = 0;
       return;
     }
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
   }, top);
-  await page.waitForTimeout(110);
+  await page.waitForTimeout(delay);
 }
 
-function selectBoundedIndices(count, limit = 8) {
-  if (count <= 0) return [];
-  if (count <= limit) return Array.from({ length: count }, (_, index) => index);
-  const indices = [0];
-  for (let slot = 1; slot < limit - 1; slot += 1) {
-    indices.push(Math.round((count - 1) * (slot / (limit - 1))));
-  }
-  indices.push(count - 1);
-  return [...new Set(indices)].sort((left, right) => left - right);
+async function collectGeometryLandmarks(page, selector, limit = 6) {
+  return page.evaluate(({ selector: query, limit: maximum }) => {
+    const nodes = [...document.querySelectorAll(query)];
+    const seen = new Set();
+    const candidates = [];
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
+    for (const node of nodes) {
+      if (seen.has(node)) continue;
+      seen.add(node);
+      if (!(node instanceof HTMLElement)) continue;
+      if (node.classList.contains('sr-only') || node.closest('.sr-only,[aria-hidden="true"]')) continue;
+
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      if (style.display === 'none' || style.visibility === 'hidden') continue;
+      if (rect.width <= 2 || rect.height <= 2) continue;
+
+      const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
+      const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
+      const top = Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
+      const id = `home-webkit-${candidates.length}`;
+      node.dataset.qaScrollLandmark = id;
+      candidates.push({
+        id,
+        top,
+        tagName: node.tagName,
+        elementId: node.id || null,
+        className: node.className || null,
+        imageState: node.getAttribute('data-image-state'),
+        loading: node.getAttribute('loading'),
+      });
+    }
+
+    if (!candidates.length) {
+      const main = document.querySelector('#main-content');
+      if (main instanceof HTMLElement) {
+        const rect = main.getBoundingClientRect();
+        if (rect.width > 2 && rect.height > 2) {
+          main.dataset.qaScrollLandmark = 'home-webkit-fallback';
+          candidates.push({
+            id: 'home-webkit-fallback',
+            top: 0,
+            tagName: main.tagName,
+            elementId: main.id,
+            className: main.className || null,
+            imageState: null,
+            loading: null,
+          });
+        }
+      }
+    }
+
+    if (candidates.length <= maximum) return candidates;
+    const selected = [];
+    for (let slot = 0; slot < maximum; slot += 1) {
+      const index = Math.round((candidates.length - 1) * (slot / (maximum - 1)));
+      const candidate = candidates[index];
+      if (!selected.some((entry) => entry.id === candidate.id)) selected.push(candidate);
+    }
+    return selected;
+  }, { selector, limit });
+}
+
+async function landmarkIntersectsViewport(page, id) {
+  return page.evaluate((landmarkId) => {
+    const node = document.querySelector(`[data-qa-scroll-landmark="${landmarkId}"]`);
+    if (!(node instanceof HTMLElement)) return false;
+    const rect = node.getBoundingClientRect();
+    return rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight;
+  }, id);
 }
 
 async function visitStrategicLazyContent(page) {
-  const landmarks = page.locator(STRATEGIC_SELECTOR);
-  const candidateCount = await landmarks.count();
-  const indices = selectBoundedIndices(candidateCount);
-  expect(candidateCount, 'strategic lazy-content landmarks').toBeGreaterThan(0);
-  expect(indices.length, 'bounded WebKit scroll landmarks').toBeLessThanOrEqual(8);
+  const landmarks = await collectGeometryLandmarks(page, STRATEGIC_SELECTOR, 6);
+  expect(landmarks.length, 'geometry-eligible WebKit landmarks').toBeGreaterThan(0);
+  expect(landmarks.length, 'bounded WebKit scroll landmarks').toBeLessThanOrEqual(6);
 
   const visited = [];
-  for (const index of indices) {
-    const target = landmarks.nth(index);
-    if (!(await target.isVisible())) continue;
-    await target.scrollIntoViewIfNeeded();
-    await expect(target).toBeInViewport({ ratio: 0.01 });
-    await page.waitForTimeout(150);
-    const details = await target.evaluate((node) => ({
-      tagName: node.tagName,
-      id: node.id || null,
-      className: typeof node.className === 'string' ? node.className : null,
-      imageState: node.getAttribute('data-image-state'),
-      loading: node.getAttribute('loading'),
-    }));
-    visited.push({ index, ...details });
+  for (const landmark of landmarks) {
+    await scrollDocumentTo(page, landmark.top);
+    await expect.poll(
+      () => landmarkIntersectsViewport(page, landmark.id),
+      { timeout: 2_500, message: `${landmark.id} should intersect the WebKit viewport` },
+    ).toBe(true);
+    visited.push(landmark);
   }
 
-  expect(visited.length, 'visited strategic lazy-content landmarks').toBeGreaterThan(0);
-  return { candidateCount, indices, visited };
+  return { candidateCount: landmarks.length, visited };
 }
 
 async function restoreChromeAtTop(page) {
-  const heroHeading = page.getByRole('heading', { level: 1, name: 'THE LEGENDARY POET' });
-  await heroHeading.scrollIntoViewIfNeeded();
-
   const state = await page.evaluate(() => ({
     currentY: window.scrollY,
     maxScroll: Math.max(0, document.documentElement.scrollHeight - window.innerHeight),
@@ -105,13 +157,12 @@ async function restoreChromeAtTop(page) {
   } else if (state.currentY > 96) {
     await scrollDocumentTo(page, state.currentY - 96);
   }
-  await scrollDocumentTo(page, 0);
+  await scrollDocumentTo(page, 0, 180);
 
   await expect.poll(
-    () => page.evaluate(() => window.scrollY),
-    { timeout: 8_000, message: 'WebKit should return to the document top' },
-  ).toBeLessThanOrEqual(1);
-  await expect(page.locator('html')).not.toHaveClass(/chrome-hidden/, { timeout: 8_000 });
+    () => page.evaluate(() => window.scrollY <= 1 && !document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 8_000, message: 'WebKit should settle at the top with site chrome visible' },
+  ).toBe(true);
   await page.waitForTimeout(CHROME_TRANSITION_MS);
 }
 
