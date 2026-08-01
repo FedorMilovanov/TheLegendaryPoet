@@ -6,8 +6,10 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260801-22';
 const SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
-const CANDIDATE = 'brand-emblem-v19-candidate.svg';
-const CANDIDATE_ID = 'v19.6-reference-geometry-reset';
+const ledger = JSON.parse(fs.readFileSync(path.resolve('qa/brand-marathon-pass-ledger.json'), 'utf8'));
+const CANDIDATE = ledger.geometryCandidate.file.replace(/^public\//, '');
+const CANDIDATE_ID = ledger.geometryCandidate.id;
+const CANDIDATE_LABEL = CANDIDATE_ID.match(/^v\d+\.\d+/)?.[0].toUpperCase() ?? 'V19';
 const reference = `data:image/webp;base64,${fs.readFileSync(path.resolve('qa/reference/brand-emblem-canonical-reference.webp')).toString('base64')}`;
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -72,27 +74,27 @@ async function pixelDifference(page, left, right) {
   }, { a: left, b: right });
 }
 
-test('v19.6 is a layered SVG candidate isolated from production', async ({ request }) => {
+test(`${CANDIDATE_LABEL} is a layered SVG candidate isolated from production`, async ({ request }) => {
   const response = await request.get(`${BASE_URL}/${CANDIDATE}?v=${Date.now()}`);
   const svg = await response.text();
   expect(response.status()).toBe(200);
   expect(svg).toContain(`data-brand-candidate="${CANDIDATE_ID}"`);
   expect(svg).toMatch(/viewBox="0 0 96 96"/);
   expect(svg).not.toMatch(/<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
-  expect((svg.match(/<path\b/g) ?? []).length).toBeGreaterThan(50);
-  for (const hook of ['atmosphere', 'figure', 'cloak', 'folds', 'hood', 'hood-layers', 'hood-seams', 'face-void', 'face-depth', 'collar', 'rim-light', 'texture']) {
+  expect((svg.match(/<path\b/g) ?? []).length).toBeGreaterThan(60);
+  for (const hook of ['atmosphere', 'figure', 'cloak', 'folds', 'hood', 'hood-layers', 'hood-seams', 'inner-rim', 'face-void', 'face-depth', 'collar', 'rim-light', 'cloth-highlights', 'texture']) {
     expect(svg, `candidate missing ${hook}`).toContain(`data-brand-${hook}`);
   }
 });
 
-test('REFERENCE / PRODUCTION / V19.6 CANDIDATE stay together at every optical size', async ({ page }) => {
+test(`REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDIDATE stay together at every optical size`, async ({ page }) => {
   await page.setViewportSize({ width: 1340, height: 2600 });
   const sizes = [256, 192, 128, 96, 64, 56, 44, 32, 24, 16];
   const columns = sizes.map((size) => `<section class=col><b>${size}px</b>
     <div class=tile><img width=${size} height=${size} src="${reference}"></div><small>PRIMARY SQUARE REFERENCE</small>
     <div class=tile><img width=${size} height=${size} src="${BASE_URL}/${size <= 32 ? 'brand-mark-micro.svg' : 'brand-emblem.svg'}?v=${VERSION}"></div><small>CURRENT PRODUCTION</small>
-    <div class=tile><img width=${size} height=${size} src="${BASE_URL}/${CANDIDATE}?v=${VERSION}"></div><small>V19.6 GEOMETRY CANDIDATE</small></section>`).join('');
-  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / PRODUCTION / V19.6 CANDIDATE</h1><div class=sub><span class=candidate>REFERENCE-LED CANDIDATE:</span> broader face cavern and shoulders, less needle-like hood, crushed multi-plane cowl, diagonal cloth, restrained irregular upper aura. Production remains unchanged. <span class=decision>NOT REFERENCE APPROVED</span>.</div><div class=grid>${columns}</div></main>`);
+    <div class=tile><img width=${size} height=${size} src="${BASE_URL}/${CANDIDATE}?v=${VERSION}"></div><small>${CANDIDATE_LABEL} GEOMETRY CANDIDATE</small></section>`).join('');
+  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / PRODUCTION / ${CANDIDATE_LABEL} CANDIDATE</h1><div class=sub><span class=candidate>REFERENCE-LED CANDIDATE:</span> canonical hood and face landmarks, broader shoulders, crushed multi-plane cowl, diagonal cloth, restrained irregular upper aura. Production remains unchanged. <span class=decision>NOT REFERENCE APPROVED</span>.</div><div class=grid>${columns}</div></main>`);
   await decodeAll(page);
   await page.screenshot({ path: path.join(DIR, 'brand-v19-candidate-comparison-matrix.png'), fullPage: true });
 });
@@ -124,7 +126,7 @@ test('reference, idle, entry and centered awakening are shown together', async (
   await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
   const full = await page.screenshot({ clip });
   await page.setViewportSize({ width: 1500, height: 760 });
-  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / ENTRY / CENTERED AWAKENING</h1><div class=sub><span class=decision>NOT REFERENCE APPROVED</span> — production motion remains independently evidenced while v19.6 geometry is reviewed.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${entry.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${full.toString('base64')}"></div></div></main>`);
+  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / ENTRY / CENTERED AWAKENING</h1><div class=sub><span class=decision>NOT REFERENCE APPROVED</span> — production motion remains independently evidenced while ${CANDIDATE_LABEL} geometry is reviewed.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${entry.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${full.toString('base64')}"></div></div></main>`);
   await decodeAll(page);
   await page.screenshot({ path: path.join(DIR, 'brand-reference-live-site-comparison.png'), fullPage: true });
 });
@@ -138,9 +140,7 @@ test('v18.4 production motion keeps directional depth and exact return', async (
   const frames = [await captureMark(page, box, 'IDLE')];
   frames.push(await captureMark(page, box, 'ENTRY 120MS', .84, .18, 120));
   frames.push(await captureMark(page, box, 'FULL CENTER', .5, .5, 680));
-  for (const [label, x, y] of [['TOP LEFT', .16, .16], ['TOP RIGHT', .84, .16], ['LOWER LEFT', .16, .82], ['LOWER RIGHT', .84, .82]]) {
-    frames.push(await captureMark(page, box, label, x, y, 580));
-  }
+  for (const [label, x, y] of [['TOP LEFT', .16, .16], ['TOP RIGHT', .84, .16], ['LOWER LEFT', .16, .82], ['LOWER RIGHT', .84, .82]]) frames.push(await captureMark(page, box, label, x, y, 580));
   await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100)); await page.waitForTimeout(2500);
   await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
   frames.push(await captureMark(page, box, 'SETTLED'));
