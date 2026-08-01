@@ -20,7 +20,7 @@ const sizes = {
 };
 
 const BRAND_VERSION = 'cloak-20260801-21';
-const VECTOR_SOURCE = 'square-closeup-reference-v18-1';
+const VECTOR_SOURCE = 'square-closeup-reference-v18-2';
 const RAW_BODY = rawVector.slice(rawVector.indexOf('<defs>'), rawVector.lastIndexOf('</svg>'));
 const ids = [
   'cloak',
