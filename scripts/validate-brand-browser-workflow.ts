@@ -35,17 +35,24 @@ assert.match(mobilePlatforms, /test\(`\$\{name\}: mobile engine rendering, safe 
 assert.match(mobilePlatforms, /testInfo\.project\.name === 'iphone-safari' && name === 'home'/);
 assert.match(mobilePlatforms, /dedicated bounded WebKit home audit provides equivalent coverage/);
 assert.match(mobilePlatforms, /visitNativeWebKitLandmarks/);
+assert.match(mobilePlatforms, /selectBoundedIndices/);
 assert.match(mobilePlatforms, /scrollIntoViewIfNeeded/);
-assert.match(mobilePlatforms, /page\.mouse\.wheel\(0, -100_000\)/);
+assert.match(mobilePlatforms, /scrollDocumentTo/);
+assert.match(mobilePlatforms, /document\.scrollingElement/);
+assert.match(mobilePlatforms, /page\.locator\('#main-content'\)\.first\(\)/);
+assert.match(mobilePlatforms, /visited\.push\(-1\)/);
 assert.match(mobilePlatforms, /if \(nativeWebKit\)/);
+assert.doesNotMatch(mobilePlatforms, /page\.mouse\.wheel/);
 
 assert.match(webkitHome, /WebKit home route keeps lazy content, runtime and mobile chrome stable/);
 assert.match(webkitHome, /test\.skip\(testInfo\.project\.name !== 'iphone-safari'/);
 assert.match(webkitHome, /strategic lazy-content landmarks/);
 assert.match(webkitHome, /bounded WebKit scroll landmarks/);
 assert.match(webkitHome, /scrollIntoViewIfNeeded/);
-assert.match(webkitHome, /page\.mouse\.wheel\(0, -100_000\)/);
-assert.doesNotMatch(webkitHome, /window\.scrollTo\s*\(/);
+assert.match(webkitHome, /scrollDocumentTo/);
+assert.match(webkitHome, /document\.scrollingElement/);
+assert.match(webkitHome, /visited\.push\(\{ index, \.\.\.details \}\)/);
+assert.doesNotMatch(webkitHome, /page\.mouse\.wheel/);
 assert.match(webkitHome, /failedResilientImages/);
 assert.match(webkitHome, /visibleBusyRegions/);
 assert.match(webkitHome, /horizontalOverflow/);
@@ -64,4 +71,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: full-size, optical, micro and bounded equivalent WebKit home gates execute under zero-flaky Chromium/Android/WebKit QA');
+console.log('brand browser workflow: full-size, optical, micro and bounded supported WebKit home gates execute under zero-flaky Chromium/Android/WebKit QA');
