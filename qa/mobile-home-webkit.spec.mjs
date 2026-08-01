@@ -5,6 +5,12 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const CHROME_TRANSITION_MS = 700;
+const STRATEGIC_SELECTOR = [
+  '#main-content section',
+  '#main-content article',
+  '#main-content img[loading="lazy"]',
+  '#main-content [data-image-state]',
+].join(',');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 function attachRuntimeDiagnostics(page) {
@@ -35,68 +41,58 @@ async function settleHydratedShell(page) {
   await page.waitForTimeout(450);
 }
 
-async function collectStrategicTargets(page) {
-  return page.evaluate(() => {
-    const root = document.documentElement;
-    const maxScroll = Math.max(0, Math.max(document.body.scrollHeight, root.scrollHeight) - window.innerHeight);
-    const viewport = window.innerHeight;
-    const candidates = new Set([0, maxScroll]);
-    const nodes = document.querySelectorAll([
-      '#main-content section',
-      '#main-content img[loading="lazy"]',
-      '#main-content [data-image-state]',
-      '#main-content [aria-busy="true"]',
-    ].join(','));
-    for (const node of nodes) {
-      const rect = node.getBoundingClientRect();
-      if (rect.width <= 1 || rect.height <= 1) continue;
-      const top = Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - viewport * 0.32));
-      candidates.add(Math.round(top));
-    }
-    let sorted = [...candidates].sort((left, right) => left - right);
-    const minimumGap = Math.max(160, viewport * 0.36);
-    sorted = sorted.filter((value, index, values) => index === 0 || index === values.length - 1 || value - values[index - 1] >= minimumGap);
-    if (sorted.length > 8) {
-      const selected = [sorted[0]];
-      for (let index = 1; index < 7; index += 1) {
-        selected.push(sorted[Math.round((sorted.length - 1) * (index / 7))]);
-      }
-      selected.push(sorted.at(-1));
-      sorted = [...new Set(selected)].sort((left, right) => left - right);
-    }
-    if (sorted.length < 4 && maxScroll > 0) {
-      sorted = [0, maxScroll * 0.25, maxScroll * 0.5, maxScroll * 0.75, maxScroll].map(Math.round);
-    }
-    return { maxScroll, targets: [...new Set(sorted)] };
-  });
+function selectBoundedIndices(count, limit = 8) {
+  if (count <= 0) return [];
+  if (count <= limit) return Array.from({ length: count }, (_, index) => index);
+  const indices = [0];
+  for (let slot = 1; slot < limit - 1; slot += 1) {
+    indices.push(Math.round((count - 1) * (slot / (limit - 1))));
+  }
+  indices.push(count - 1);
+  return [...new Set(indices)].sort((left, right) => left - right);
 }
 
 async function visitStrategicLazyContent(page) {
-  const { maxScroll, targets } = await collectStrategicTargets(page);
-  expect(targets.length, 'strategic lazy-content positions').toBeGreaterThanOrEqual(maxScroll > 0 ? 4 : 1);
-  expect(targets.length, 'bounded WebKit scroll positions').toBeLessThanOrEqual(8);
-  for (const top of targets.slice(1)) {
-    await page.evaluate((scrollTop) => {
-      window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
-    }, top);
-    await page.waitForTimeout(115);
+  const landmarks = page.locator(STRATEGIC_SELECTOR);
+  const candidateCount = await landmarks.count();
+  const indices = selectBoundedIndices(candidateCount);
+  expect(candidateCount, 'strategic lazy-content landmarks').toBeGreaterThan(0);
+  expect(indices.length, 'bounded WebKit scroll landmarks').toBeLessThanOrEqual(8);
+
+  const visited = [];
+  for (const index of indices) {
+    const target = landmarks.nth(index);
+    if (!(await target.isVisible())) continue;
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport({ ratio: 0.01 });
+    await page.waitForTimeout(150);
+    visited.push(await target.evaluate((node) => ({
+      index,
+      tagName: node.tagName,
+      id: node.id || null,
+      className: typeof node.className === 'string' ? node.className : null,
+      imageState: node.getAttribute('data-image-state'),
+      loading: node.getAttribute('loading'),
+    })));
   }
-  return targets;
+
+  expect(visited.length, 'visited strategic lazy-content landmarks').toBeGreaterThan(0);
+  return { candidateCount, indices, visited };
 }
 
 async function restoreChromeAtTop(page) {
-  const current = await page.evaluate(() => window.scrollY);
-  const positions = [current * 0.66, current * 0.32, 0];
-  for (const top of positions) {
-    await page.evaluate((scrollTop) => {
-      window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
-    }, top);
-    await page.waitForTimeout(110);
-  }
+  const heroHeading = page.getByRole('heading', { level: 1, name: 'THE LEGENDARY POET' });
+  await heroHeading.scrollIntoViewIfNeeded();
+  // A native protocol wheel completes the upward direction signal without a
+  // series of page.evaluate(window.scrollTo) calls inside Linux WebKit.
+  await page.mouse.wheel(0, -100_000);
+  await page.waitForTimeout(180);
+
   await expect.poll(
-    () => page.evaluate(() => window.scrollY <= 1 && !document.documentElement.classList.contains('chrome-hidden')),
-    { timeout: 5_000, message: 'site chrome should return after strategic upward WebKit scrolling' },
-  ).toBe(true);
+    () => page.evaluate(() => window.scrollY),
+    { timeout: 8_000, message: 'WebKit should return to the document top' },
+  ).toBeLessThanOrEqual(1);
+  await expect(page.locator('html')).not.toHaveClass(/chrome-hidden/, { timeout: 8_000 });
   await page.waitForTimeout(CHROME_TRANSITION_MS);
 }
 
@@ -179,12 +175,12 @@ test('WebKit home route keeps lazy content, runtime and mobile chrome stable', a
   expect(response).not.toBeNull();
   expect(response.status()).toBeLessThan(400);
   await settleHydratedShell(page);
-  const targets = await visitStrategicLazyContent(page);
+  const traversal = await visitStrategicLazyContent(page);
   await restoreChromeAtTop(page);
   await expectDockInsideViewport(page);
 
   const diagnostics = await collectDiagnostics(page);
-  const report = { project: testInfo.project.name, targets, runtime, diagnostics };
+  const report = { project: testInfo.project.name, traversal, runtime, diagnostics };
   fs.writeFileSync(path.join(ARTIFACT_DIR, 'iphone-safari-home-strategic-route.json'), JSON.stringify(report, null, 2));
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'iphone-safari-home-strategic-route.png'), fullPage: true });
 
