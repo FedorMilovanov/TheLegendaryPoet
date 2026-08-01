@@ -1,39 +1,40 @@
 {
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "candidateSource": "square-closeup-reference-v18-1",
-  "candidateRevision": "v18.1 measured square-closeup reset: rebuilt the bust, hood, face void, cloak mass, three primary fold families and upper aura from the square canonical reference; replaced direct pointer offsets with a cached-bounds damped spring controller; added hover-only turbulence/displacement updates, settling state, touch exclusion and reduced-motion opacity fallback",
+  "candidateSource": "square-closeup-reference-v18-2",
+  "candidateRevision": "v18.2 measured square-closeup reset: rebuilt the bust, narrowed and raised the hood, widened the dominant black face void, raised the gathered cowl, preserved three primary fold families and concentrated the electrical aura behind the head and shoulders; replaced direct pointer offsets with a cached-bounds damped spring controller and hover-only turbulence/displacement response",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
-  "overallScore": 0.79,
+  "overallScore": 0.8,
   "scores": {
-    "macroProportions": 0.84,
-    "hoodAndCavern": 0.82,
-    "collarAndFolds": 0.72,
+    "macroProportions": 0.86,
+    "hoodAndCavern": 0.84,
+    "collarAndFolds": 0.73,
     "cloakSilhouette": 0.84,
     "rimAndAura": 0.76,
     "microReadability": 0.76,
     "interactionQuality": 0.83
   },
   "marathonPassesCompleted": [1, 2, 3, 4, 5, 6, 19],
+  "marathonPassesActive": [7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 21, 22],
   "candidateGitBlobShas": {
-    "src/components/BrandMark.tsx": "0072616dae9e86e0c9f41a391047b37639046fb2",
+    "src/components/BrandMark.tsx": "f0ac635b3d35e83cfba7e18cb03596968ee96b49",
     "src/components/brandMotionV18.ts": "4e1ed7c399b79c1c13b1ffb8ff95111905293539",
-    "src/components/brandEmblemV18.svg": "7ad32359aa6101e09fe761db44bb2aac12d6549f",
-    "public/brand-emblem.svg": "7ad32359aa6101e09fe761db44bb2aac12d6549f",
-    "public/brand-mark-micro.svg": "719572a365cce3d35a83c08f95894c4a29fc455b",
-    "public/brand-emblem-mask.svg": "54151bcb4575f88d6d1354aa67a2e0b965762fcd"
+    "src/components/brandEmblemV18.svg": "795d80169a6f9e6a81e93a5f7fc4abe5bb41a32f",
+    "public/brand-emblem.svg": "795d80169a6f9e6a81e93a5f7fc4abe5bb41a32f",
+    "public/brand-mark-micro.svg": "e9fb0d6c289b0caa372c63a432084ff5d73537ef",
+    "public/brand-emblem-mask.svg": "6ee0f28de06f596eb2df6e57226aa13f15d7545b"
   },
   "comparisonArtifact": "qa-artifacts/brand-reference-comparison-matrix.png",
   "liveSiteComparisonArtifact": "qa-artifacts/brand-reference-live-site-comparison.png",
   "blockingDeviations": [
-    "the composition is now explicitly the square close-up bust rather than the superseded tall silhouette, but the hood and shoulder architecture are still more regular and vector-clean than the painted reference",
-    "the face void is broad and dominant, yet its lower boundary remains too controlled and needs a more organic five-sided collapse into the gathered cloth",
-    "the cowl no longer uses the old thin throat or compact v17 construction, but it still reads as layered graphic bands instead of crushed heavy fabric",
+    "the composition is now explicitly the square close-up bust rather than the superseded tall silhouette, but the hood and shoulder architecture remain more regular and vector-clean than the painted reference",
+    "the face void is broad and dominant, yet its lower boundary is still too controlled and needs a more organic five-sided collapse into the gathered cloth",
+    "the cowl has been raised and enlarged, but it still reads as layered graphic bands instead of crushed heavy fabric with accidental overlap",
     "the three primary fold families are structurally present, while secondary overlaps, local compression and accidental textile highlights remain underdeveloped",
-    "the aura is correctly concentrated behind the head and upper shoulders and now has hover-only organic displacement, but branch density, dark interruptions and asymmetrical electrical turbulence still lag behind the reference",
-    "the dedicated micro mark has been redrawn, but exact 32, 24 and 16 px browser evidence is still required",
+    "the aura is correctly concentrated behind the head and upper shoulders and now has hover-only organic displacement, but branch density, dark interruptions and asymmetric electrical turbulence still lag behind the reference",
+    "the dedicated micro mark is synchronized to v18.2, but exact 32, 24 and 16 px browser evidence is still required",
     "the spring-depth controller requires exact Chromium and WebKit hover, settling, reduced-motion and performance evidence before its interaction score can rise"
   ],
-  "nextRequiredAction": "run exact-head static validation and Browser QA for v18.1, inspect the square reference matrix and live header, then continue passes 7 through 15 with a manual cowl/fold/aura refinement rather than adding decorative glow"
+  "nextRequiredAction": "run exact-head static validation and Browser QA for v18.2, inspect the square reference matrix and live header, then continue passes 7 through 15 with manual cowl, fold and aura refinement rather than decorative glow"
 }
