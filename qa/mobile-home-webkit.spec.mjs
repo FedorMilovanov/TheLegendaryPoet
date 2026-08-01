@@ -1,0 +1,210 @@
+import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
+const ARTIFACT_DIR = path.resolve('qa-artifacts');
+const CHROME_TRANSITION_MS = 700;
+fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+
+function attachRuntimeDiagnostics(page) {
+  const result = { pageErrors: [], consoleErrors: [], localRequestFailures: [] };
+  page.on('pageerror', (error) => result.pageErrors.push(String(error?.stack || error)));
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    if (/Failed to load resource/i.test(text)) return;
+    result.consoleErrors.push(text);
+  });
+  page.on('requestfailed', (request) => {
+    const url = request.url();
+    if (!url.startsWith(BASE_URL)) return;
+    const failure = request.failure()?.errorText || 'unknown failure';
+    if (/ERR_ABORTED/i.test(failure)) return;
+    if ((request.resourceType() === 'media' || /\.mp3(?:$|\?)/i.test(url)) && /cancelled/i.test(failure)) return;
+    result.localRequestFailures.push(`${request.method()} ${url}: ${failure}`);
+  });
+  return result;
+}
+
+async function settleHydratedShell(page) {
+  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  const dock = page.locator('.mobile-dock');
+  await dock.waitFor({ state: 'visible', timeout: 20_000 });
+  await expect(dock.locator('a, button')).toHaveCount(5, { timeout: 20_000 });
+  await page.waitForTimeout(450);
+}
+
+async function collectStrategicTargets(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement;
+    const maxScroll = Math.max(0, Math.max(document.body.scrollHeight, root.scrollHeight) - window.innerHeight);
+    const viewport = window.innerHeight;
+    const candidates = new Set([0, maxScroll]);
+    const nodes = document.querySelectorAll([
+      '#main-content section',
+      '#main-content img[loading="lazy"]',
+      '#main-content [data-image-state]',
+      '#main-content [aria-busy="true"]',
+    ].join(','));
+    for (const node of nodes) {
+      const rect = node.getBoundingClientRect();
+      if (rect.width <= 1 || rect.height <= 1) continue;
+      const top = Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - viewport * 0.32));
+      candidates.add(Math.round(top));
+    }
+    let sorted = [...candidates].sort((left, right) => left - right);
+    const minimumGap = Math.max(160, viewport * 0.36);
+    sorted = sorted.filter((value, index, values) => index === 0 || index === values.length - 1 || value - values[index - 1] >= minimumGap);
+    if (sorted.length > 8) {
+      const selected = [sorted[0]];
+      for (let index = 1; index < 7; index += 1) {
+        selected.push(sorted[Math.round((sorted.length - 1) * (index / 7))]);
+      }
+      selected.push(sorted.at(-1));
+      sorted = [...new Set(selected)].sort((left, right) => left - right);
+    }
+    if (sorted.length < 4 && maxScroll > 0) {
+      sorted = [0, maxScroll * 0.25, maxScroll * 0.5, maxScroll * 0.75, maxScroll].map(Math.round);
+    }
+    return { maxScroll, targets: [...new Set(sorted)] };
+  });
+}
+
+async function visitStrategicLazyContent(page) {
+  const { maxScroll, targets } = await collectStrategicTargets(page);
+  expect(targets.length, 'strategic lazy-content positions').toBeGreaterThanOrEqual(maxScroll > 0 ? 4 : 1);
+  expect(targets.length, 'bounded WebKit scroll positions').toBeLessThanOrEqual(8);
+  for (const top of targets.slice(1)) {
+    await page.evaluate((scrollTop) => {
+      window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+    }, top);
+    await page.waitForTimeout(115);
+  }
+  return targets;
+}
+
+async function restoreChromeAtTop(page) {
+  const current = await page.evaluate(() => window.scrollY);
+  const positions = [current * 0.66, current * 0.32, 0];
+  for (const top of positions) {
+    await page.evaluate((scrollTop) => {
+      window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+    }, top);
+    await page.waitForTimeout(110);
+  }
+  await expect.poll(
+    () => page.evaluate(() => window.scrollY <= 1 && !document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'site chrome should return after strategic upward WebKit scrolling' },
+  ).toBe(true);
+  await page.waitForTimeout(CHROME_TRANSITION_MS);
+}
+
+async function expectDockInsideViewport(page) {
+  const dock = page.locator('.mobile-dock');
+  await expect(dock).toBeVisible();
+  await expect.poll(
+    () => dock.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left >= -1
+        && rect.right <= window.innerWidth + 1
+        && rect.top >= -1
+        && rect.bottom <= window.innerHeight + 1;
+    }),
+    { timeout: 5_000, message: 'mobile dock should finish returning inside the WebKit visual viewport' },
+  ).toBe(true);
+}
+
+async function collectDiagnostics(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement;
+    const dockElement = document.querySelector('.mobile-dock');
+    const dockRect = dockElement?.getBoundingClientRect();
+    const dockStyle = dockElement ? getComputedStyle(dockElement) : null;
+    const visibleImages = [...document.images].filter((image) => {
+      const rect = image.getBoundingClientRect();
+      const style = getComputedStyle(image);
+      return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 2 && rect.height > 2;
+    });
+    return {
+      title: document.title,
+      pathname: location.pathname,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      maxTouchPoints: navigator.maxTouchPoints,
+      coarsePointer: matchMedia('(pointer: coarse)').matches,
+      touchEventSurface: 'ontouchstart' in window || typeof TouchEvent === 'function',
+      viewport: { width: innerWidth, height: innerHeight },
+      visualViewport: window.visualViewport
+        ? {
+            width: window.visualViewport.width,
+            height: window.visualViewport.height,
+            offsetTop: window.visualViewport.offsetTop,
+            offsetLeft: window.visualViewport.offsetLeft,
+            scale: window.visualViewport.scale,
+          }
+        : null,
+      supportsDynamicViewport: CSS.supports('height: 100dvh'),
+      supportsSafeArea: CSS.supports('padding-bottom: env(safe-area-inset-bottom)'),
+      horizontalOverflow: Math.max(document.body.scrollWidth, root.scrollWidth) - root.clientWidth,
+      brokenImages: visibleImages
+        .filter((image) => image.complete && image.naturalWidth === 0)
+        .map((image) => image.currentSrc || image.src || image.alt || '<unknown>'),
+      failedResilientImages: [...document.querySelectorAll('[data-image-state="failed"]')].length,
+      visibleBusyRegions: [...document.querySelectorAll('[aria-busy="true"]')].filter((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      }).length,
+      chromeHidden: root.classList.contains('chrome-hidden'),
+      dock: dockRect && dockStyle && dockRect.width > 0
+        ? {
+            left: dockRect.left,
+            right: dockRect.right,
+            top: dockRect.top,
+            bottom: dockRect.bottom,
+            width: dockRect.width,
+            height: dockRect.height,
+            computedBottom: dockStyle.bottom,
+            transform: dockStyle.transform,
+          }
+        : null,
+    };
+  });
+}
+
+test('WebKit home route keeps lazy content, runtime and mobile chrome stable', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'iphone-safari', 'WebKit-specific equivalent of the generic home route audit');
+  const runtime = attachRuntimeDiagnostics(page);
+  const response = await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  expect(response).not.toBeNull();
+  expect(response.status()).toBeLessThan(400);
+  await settleHydratedShell(page);
+  const targets = await visitStrategicLazyContent(page);
+  await restoreChromeAtTop(page);
+  await expectDockInsideViewport(page);
+
+  const diagnostics = await collectDiagnostics(page);
+  const report = { project: testInfo.project.name, targets, runtime, diagnostics };
+  fs.writeFileSync(path.join(ARTIFACT_DIR, 'iphone-safari-home-strategic-route.json'), JSON.stringify(report, null, 2));
+  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'iphone-safari-home-strategic-route.png'), fullPage: true });
+
+  expect(diagnostics.pathname).toBe('/');
+  expect(diagnostics.horizontalOverflow).toBeLessThanOrEqual(2);
+  expect(diagnostics.brokenImages).toEqual([]);
+  expect(diagnostics.failedResilientImages).toBe(0);
+  expect(diagnostics.visibleBusyRegions).toBe(0);
+  expect(diagnostics.visualViewport).not.toBeNull();
+  expect(diagnostics.coarsePointer).toBe(true);
+  expect(diagnostics.maxTouchPoints > 0 || diagnostics.touchEventSurface).toBe(true);
+  expect(diagnostics.supportsDynamicViewport).toBe(true);
+  expect(diagnostics.supportsSafeArea).toBe(true);
+  expect(diagnostics.chromeHidden).toBe(false);
+  expect(diagnostics.dock).not.toBeNull();
+  expect(diagnostics.dock.left).toBeGreaterThanOrEqual(-1);
+  expect(diagnostics.dock.right).toBeLessThanOrEqual(diagnostics.viewport.width + 1);
+  expect(diagnostics.dock.top).toBeGreaterThanOrEqual(-1);
+  expect(diagnostics.dock.bottom).toBeLessThanOrEqual(diagnostics.viewport.height + 1);
+  expect(runtime.pageErrors).toEqual([]);
+  expect(runtime.consoleErrors).toEqual([]);
+  expect(runtime.localRequestFailures).toEqual([]);
+});
