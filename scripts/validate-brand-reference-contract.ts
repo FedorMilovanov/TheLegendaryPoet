@@ -133,7 +133,7 @@ for (const file of ['AGENTS.md', 'docs/BRAND_EMBLEM.md', 'qa/reference/README.md
   assert.match(source, /no required smoke|без обязательного дыма|clean lower edge/i);
 }
 const research = read('docs/research/BRAND_EMBLEM_SVG_MOTION_MARATHON_2026.md');
-assert.match(research, /Primary and official source run \(60 links\)/);
+assert.match(research, /Primary and official source run \(69 links\)/);
 assert.match(research, /## 24-pass programme/);
 const ledger = parse<{ primaryReferenceDescription: string; plannedPasses: number; supplementalReferences: Array<{ mayInfluenceGeometry: boolean; mayInfluenceApproval: boolean }> }>('qa/brand-marathon-pass-ledger.json');
 assert.match(ledger.primaryReferenceDescription, /square close-up bust/i);
