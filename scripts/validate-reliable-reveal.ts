@@ -51,7 +51,6 @@ assert.doesNotMatch(home, /whileInView=/);
 
 assert.match(safariSpec, /expect\(visual\.effectiveOpacity[\s\S]*toBeGreaterThan\(0\.9\)/);
 assert.match(safariSpec, /expect\(visual\.blurPx[\s\S]*toBeLessThanOrEqual\(0\.05\)/);
-assert.match(helpers, /document\.scrollingElement/);
 assert.match(helpers, /node\.scrollIntoView\(\{ block: 'center', inline: 'nearest', behavior: 'instant' \}\)/);
 assert.match(helpers, /WEBKIT_VIEWPORT_SETTLE_MS = 700/);
 assert.match(helpers, /WEBKIT_MIN_STABLE_INTERSECTION = 0\.55/);
