@@ -36,7 +36,8 @@ assert.match(spec, /toBe\(false\)/);
 assert.match(spec, /spring motion has bounded trajectory, size-normalized depth and fast exact return/);
 assert.match(spec, /samples\.length[\s\S]*toBeGreaterThanOrEqual\(12\)/);
 assert.match(spec, /sampleSpanMs[\s\S]*toBeGreaterThanOrEqual\(900\)/);
-assert.match(spec, /first95\.elapsed/);
+assert.match(spec, /activation\.elapsed \+ 120/);
+assert.match(spec, /first95AfterActivationMs/);
 assert.match(spec, /peak[\s\S]*expectedEnergy \* 1\.06/);
 assert.match(spec, /maxJump/);
 assert.match(spec, /data-brand-interaction', 'idle'/);
@@ -45,8 +46,15 @@ assert.match(spec, /reduced motion keeps all depth transforms inert/);
 
 assert.match(motion, /motionScale = clamp\(Math\.min\(bounds\.width, bounds\.height\) \/ 64, 0\.65, 1\.6\)/);
 assert.match(motion, /const scaled = \(value: number\) => value \* motionScale/);
+assert.match(motion, /const stiffness = active \? 136 : 180/);
+assert.match(motion, /const damping = active \? 18\.5 : 20/);
+assert.match(motion, /const wakeStiffness = active \? 126 : 220/);
+assert.match(motion, /const wakeDamping = active \? 15\.8 : 22/);
+assert.match(motion, /const positionTolerance = active \? 0\.0018 : 0\.006/);
+assert.match(motion, /const velocityTolerance = active \? 0\.0038 : 0\.15/);
+assert.match(motion, /const wakeTolerance = active \? 0\.0022 : 0\.08/);
 assert.match(motion, /--brand-motion-scale/);
 assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
 assert.match(mark, /data-brand-parallax="spring-awakening-v4"/);
 
-console.log('brand deep audit: exact-head Chromium geometry, trajectory, size normalization and reduced-motion gates are locked');
+console.log('brand deep audit: exact-head Chromium geometry, trajectory, bounded exact-idle return, size normalization and reduced-motion gates are locked');
