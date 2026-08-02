@@ -78,6 +78,48 @@ if (/Для большой биографии достаточно следую�
   throw new Error('chapter 2 conclusion overstates the first-meeting date');
 }
 
+const chapter3 = drafts.get('YESENIN_PART_II_DRAFT_CH03_MARRIAGE_PASSPORT_PUBLIC_COUPLE_V01_2026-08.md')!;
+for (const required of [
+  '2 мая в Москве состоялся брак',
+  'yes2-marriage-date-1922-05-02',
+  'yes2-foreign-passport-5072-1922-05-08',
+  'yes2-departure-moscow-germany-1922-05-10',
+  'yes2-public-couple-photo-nyt-1922-08-13',
+  'yes2-false-divorce-caption-world-illustration-1923-no11',
+  'исходная немецкая полоса пока не найдена',
+]) {
+  if (!chapter3.includes(required)) throw new Error(`chapter 3 lost source/reception boundary: ${required}`);
+}
+for (const retired of [
+  'yes2-1922-marriage-registration',
+  'yes2-1922-passport-5072',
+  'yes2-1922-may10-departure',
+  'Уже летом 1922 года в печати появлялись сообщения о распаде пары',
+]) {
+  if (chapter3.includes(retired)) throw new Error(`chapter 3 restored retired source/wording: ${retired}`);
+}
+
+const chapter4 = drafts.get('YESENIN_PART_II_DRAFT_CH04_BERLIN_V01_2026-08.md')!;
+for (const required of [
+  'yes2-berlin-arrival-nakanune-1922-05-11',
+  'yes2-berlin-house-of-arts-nakanune-1922-05-14',
+  'yes2-berlin-house-of-arts-rul-1922',
+  'yes2-berlin-bluthner-1922-06-01',
+  'yes2-berlin-departure-before-1922-06-21',
+  'Брюссель, два парижских этапа',
+  'планы Гааги, Рима и Лондона',
+]) {
+  if (!chapter4.includes(required)) throw new Error(`chapter 4 lost Berlin/Europe source boundary: ${required}`);
+}
+for (const retired of [
+  'yes2-1922-berlin-arrival',
+  'yes2-1922-house-of-arts',
+  'yes2-1922-bluthner-june1',
+  'yes2-1922-leave-berlin',
+]) {
+  if (chapter4.includes(retired)) throw new Error(`chapter 4 restored retired provisional source: ${retired}`);
+}
+
 const chapter5 = drafts.get('YESENIN_PART_II_DRAFT_CH05_EUROPE_ROUTE_V01_2026-08.md')!;
 for (const required of [
   'Гаага остаётся целью дипломатической просьбы',
@@ -169,5 +211,5 @@ for (const forbiddenRegistration of [
 }
 
 console.log(
-  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal-bridge, immigration, source-type and medical boundaries intact.`,
+  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, source-type and medical boundaries intact.`,
 );
