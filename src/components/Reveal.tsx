@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
-import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none';
 
@@ -26,8 +26,9 @@ interface ReliableInViewResult<T extends HTMLElement> {
 }
 
 const BOOTSTRAP_CHECK_DELAYS_MS = [0, 80, 240, 600, 1_200, 2_200] as const;
+const REVEAL_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
-function makeVariants(direction: Direction, distance: number, blur: boolean): Variants {
+function hiddenTransform(direction: Direction, distance: number) {
   const offsets: Record<Direction, { x: number; y: number }> = {
     up: { x: 0, y: distance },
     down: { x: 0, y: -distance },
@@ -36,10 +37,7 @@ function makeVariants(direction: Direction, distance: number, blur: boolean): Va
     none: { x: 0, y: 0 },
   };
   const { x, y } = offsets[direction];
-  return {
-    hidden: { opacity: 0, x, y, filter: blur ? 'blur(6px)' : 'none' },
-    visible: { opacity: 1, x: 0, y: 0, filter: 'blur(0px)' },
-  };
+  return `translate3d(${x}px, ${y}px, 0)`;
 }
 
 export function useReliableInView<T extends HTMLElement>({
@@ -160,24 +158,30 @@ export default function Reveal({
 }: RevealProps) {
   const { ref, inView } = useReliableInView<HTMLDivElement>({ threshold, once });
   const prefersReduced = useReducedMotion();
-  const effectiveDir = prefersReduced ? 'none' : direction;
-  const effectiveBlur = prefersReduced ? false : blur;
-  const variants = makeVariants(effectiveDir, distance, effectiveBlur);
+  const revealed = Boolean(prefersReduced || inView);
+  const transition = prefersReduced
+    ? 'none'
+    : [
+        `opacity ${duration}s ${REVEAL_EASING} ${delay}s`,
+        `transform ${duration}s ${REVEAL_EASING} ${delay}s`,
+        `filter ${duration}s ${REVEAL_EASING} ${delay}s`,
+      ].join(', ');
+  const style: CSSProperties = {
+    opacity: revealed ? 1 : 0,
+    transform: revealed ? 'translate3d(0, 0, 0)' : hiddenTransform(direction, distance),
+    filter: !revealed && blur && !prefersReduced ? 'blur(6px)' : 'blur(0px)',
+    transition,
+    willChange: revealed ? 'auto' : 'opacity, transform, filter',
+  };
 
   return (
-    <motion.div
+    <div
       ref={ref}
       className={className}
-      initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
-      variants={variants}
-      transition={{
-        duration: prefersReduced ? 0 : duration,
-        delay: prefersReduced ? 0 : delay,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      data-reveal-state={revealed ? 'visible' : 'hidden'}
+      style={style}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
