@@ -11,7 +11,7 @@
     }
   ],
   "status": "active",
-  "latestCandidate": "v19.17 optical medium companion beside v19.11 full-size and v19.14 micro candidates",
+  "latestCandidate": "v19 family audited: v19.11 full-size, v19.17 optical and v19.14 micro all remain isolated and not reference-approved",
   "geometryCandidate": {
     "id": "v19.11-reference-geometry-reset",
     "file": "public/brand-emblem-v19-candidate.svg",
@@ -27,18 +27,13 @@
       "readability at 256, 192 and 128 pixels without promoting the candidate to production"
     ],
     "comparisonArtifact": "qa-artifacts/brand-v19-candidate-comparison-matrix.png",
-    "decision": "pending exact-main visual review"
+    "decision": "rejected for production after exact-main audit: hood/cloak ratio passes, but hood height and face-cavern width fail the canonical contract; cowl and aura remain too regular"
   },
   "opticalCandidate": {
     "id": "v19.17-reference-optical-redraw",
     "file": "public/brand-emblem-v19-optical-candidate.svg",
     "productionReplacement": false,
-    "opticalSizes": [
-      96,
-      64,
-      56,
-      44
-    ],
+    "opticalSizes": [96, 64, 56, 44],
     "targets": [
       "single monumental hood silhouette at medium header sizes",
       "broad pure-black pentagonal face void",
@@ -48,17 +43,13 @@
       "reduced aura branch density that remains legible without becoming noise"
     ],
     "comparisonArtifact": "qa-artifacts/brand-v19-optical-candidate-matrix.png",
-    "decision": "pending exact-main optical review"
+    "decision": "rejected for production after exact-main audit: hood/cloak ratio passes, but hood height and face-cavern width fail; horizontal cowl reads more like armor than gathered cloth"
   },
   "microCandidate": {
     "id": "v19.14-reference-micro-redraw",
     "file": "public/brand-emblem-v19-micro-candidate.svg",
     "productionReplacement": false,
-    "opticalSizes": [
-      32,
-      24,
-      16
-    ],
+    "opticalSizes": [32, 24, 16],
     "targets": [
       "single readable hood silhouette",
       "broad black face void",
@@ -67,42 +58,17 @@
       "short icy rim without fine branch noise"
     ],
     "comparisonArtifact": "qa-artifacts/brand-v19-micro-candidate-matrix.png",
-    "decision": "pending exact-main optical review"
+    "decision": "rejected for production after exact-main audit: all four macro-ratio gates fail and 24/16px identity collapses mainly to a cyan hood arc"
   },
   "visualBaseline": "canonical-reference-v2-black-monolith-v17-0",
-  "interactionArchitecture": "spring-awakening-v4 / aura-depth-cloth-v2",
+  "interactionArchitecture": "spring-awakening-v4 + rendered-box-v1 / aura-depth-cloth-v2",
   "ownerDecision": "not-reference-approved",
-  "completedPasses": [
-    1,
-    17,
-    19,
-    20,
-    21,
-    22,
-    23
-  ],
-  "activePasses": [
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    18,
-    24
-  ],
+  "completedPasses": [1, 17, 19, 20, 21, 22, 23, 24],
+  "activePasses": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18],
   "plannedPasses": 24,
-  "evidenceStatus": "v19.11 full-size, v19.17 optical and v19.14 micro comparisons requested on exact main; production remains unchanged",
-  "mergePolicy": "keep every candidate in main for evidence, but do not replace the live visual baseline until reference-led full-size, optical and micro candidates are demonstrably better in exact comparison artifacts",
+  "evidenceStatus": "exact-head CI and Chromium/Android/iPhone Safari evidence passed; deep audit proves technical stability but rejects production v17, v19.11, v19.17 and v19.14 as canonical geometry replacements",
+  "deepAudit": "qa/brand-reference-audit.json",
+  "mergePolicy": "keep every candidate in main for evidence, but do not replace the live visual baseline until reference-led full-size, optical and micro candidates pass the numeric contract and are demonstrably better in exact comparison artifacts",
   "rules": {
     "compareEveryPassToPrimaryReference": true,
     "previousSvgIsNotAReference": true,
@@ -111,6 +77,9 @@
     "noPermanentIdleLoop": true,
     "reducedMotionRequired": true,
     "exactVisualEvidenceRequired": true,
-    "noVisualRegression": true
+    "noVisualRegression": true,
+    "greenCiIsNotVisualApproval": true,
+    "numericReferenceContractRequired": true,
+    "sizeNormalizedMotionRequired": true
   }
 }
