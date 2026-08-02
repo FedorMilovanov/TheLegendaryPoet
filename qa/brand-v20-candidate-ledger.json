@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.4-reference-drapery",
+    "id": "v20.5-reference-silhouette",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -11,7 +11,7 @@
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.2-reference-micro-rim",
+    "id": "v20.3-reference-micro-silhouette",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -27,6 +27,11 @@
     {
       "full": "v20.4-reference-drapery",
       "micro": "v20.2-reference-micro-rim",
+      "verdict": "numeric pass; exact overlay retained an oversized black cavity, dominant smooth rim, tidy cowl and panel-separated cloak; micro read as a cyan A at 16–20px"
+    },
+    {
+      "full": "v20.5-reference-silhouette",
+      "micro": "v20.3-reference-micro-silhouette",
       "verdict": "current QA-only iteration; exact committed overlay and optical evidence pending"
     }
   ],
