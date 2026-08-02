@@ -1,113 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="v205-title v205-desc" data-brand-v20-candidate="v20.5-reference-silhouette" data-brand-reference-decision="not-reference-approved">
-<title id="v205-title">THE LEGENDARY POET — v20.5 reference-led silhouette master</title>
-<desc id="v205-desc">Static QA-only hooded monolith rebuilt around broader layered hood, tapered black face cavern, crushed asymmetric cowl, continuous low-contrast cloak mass and an irregular upper electrical field.</desc>
-<defs>
-  <linearGradient id="v205-cloak" x1="18" y1="39" x2="71" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#081820"/><stop offset=".28" stop-color="#031019"/><stop offset=".68" stop-color="#010509"/><stop offset="1" stop-color="#000102"/></linearGradient>
-  <linearGradient id="v205-hood" x1="39" y1="8" x2="58" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#0a222c"/><stop offset=".36" stop-color="#04131b"/><stop offset=".74" stop-color="#010509"/><stop offset="1" stop-color="#000102"/></linearGradient>
-  <linearGradient id="v205-left" x1="9" y1="49" x2="43" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#0b2630"/><stop offset=".42" stop-color="#04131b"/><stop offset="1" stop-color="#000103"/></linearGradient>
-  <linearGradient id="v205-right" x1="84" y1="47" x2="53" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#091f29"/><stop offset=".47" stop-color="#030e15"/><stop offset="1" stop-color="#000103"/></linearGradient>
-  <radialGradient id="v205-aura" cx="0" cy="0" r="1" gradientTransform="translate(48 31) rotate(90) scale(35 38)" gradientUnits="userSpaceOnUse"><stop stop-color="#75eeff" stop-opacity=".34"/><stop offset=".38" stop-color="#24b4d0" stop-opacity=".17"/><stop offset="1" stop-color="#04131b" stop-opacity="0"/></radialGradient>
-  <filter id="v205-haze" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4"/></filter>
-  <filter id="v205-soft" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="1.05"/></filter>
-  <filter id="v205-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation=".34" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-
-<g data-brand-field-rear="" data-brand-depth="far" aria-hidden="true">
-  <ellipse cx="48" cy="31" rx="33" ry="32" fill="url(#v205-aura)" filter="url(#v205-haze)" opacity=".32"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#v205-soft)">
-    <path d="M40.6 8.7C36.8 9.5 37 12.7 33.6 14.3C30.3 15.8 31.1 19.6 27.2 21.5C23.8 23.2 24.7 27.7 20.5 30C17.1 31.8 18.1 36.6 13.5 39.5C10.5 41.4 10.5 45.2 6.8 48.1" stroke="#69e7fb" stroke-opacity=".3" stroke-width="1.45"/>
-    <path d="M36.2 12.8C32.4 11.4 30.8 14.9 27.4 15.5C24.3 16 24.3 20.1 20.7 21.4C17.4 22.6 18 27 13.9 29C10.8 30.5 10.3 34.3 6.5 37.2" stroke="#a8f4ff" stroke-opacity=".14" stroke-width=".8"/>
-    <path d="M31.7 20.5C28.3 19.2 26.4 22.7 23.6 23.3C20.3 24 21 28.2 17.1 29.9C13.8 31.3 14.2 35.5 10 37.7C7.6 39 6.7 42 4.2 43.8" stroke="#2bb9d5" stroke-opacity=".25" stroke-width="1.16"/>
-    <path d="M26.2 29C22.8 28.2 21.7 31.4 18.7 32.3C15.8 33.2 16.7 37.1 12.9 39.1C9.8 40.8 10 45 5.8 47.8" stroke="#70e6fa" stroke-opacity=".17" stroke-width=".74"/>
-    <path d="M55.7 8.6C59.5 9.2 59.6 12.4 63.1 13.9C66.8 15.5 65.7 19.7 70 21.3C73.1 22.5 72.8 26.8 77 29.2C80.6 31.3 79.4 36 84 38.7C87.6 40.8 87.4 44.9 91.8 48.4" stroke="#5bdef4" stroke-opacity=".28" stroke-width="1.34"/>
-    <path d="M61.6 14.1C65.1 12.6 66.7 16 69.8 16.4C73.1 16.9 72.5 21.1 76.4 22.2C79.7 23.2 78.8 27.6 83.3 29.2C86.1 30.2 86.4 34 90 36.1" stroke="#9cf1ff" stroke-opacity=".13" stroke-width=".77"/>
-    <path d="M67.1 21.5C70.7 20.1 72.4 23.4 75.4 24C78.7 24.7 78 28.9 82.2 30.5C85.7 31.8 84.9 35.9 89.1 38.1C91.6 39.4 91.5 42 94 43.8" stroke="#25adca" stroke-opacity=".23" stroke-width="1.08"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="v206-title v206-desc" data-brand-v20-candidate="v20.6-reference-monolith" data-brand-reference-decision="not-reference-approved">
+  <title id="v206-title">THE LEGENDARY POET — v20.6 reference monolith</title>
+  <desc id="v206-desc">Static QA-only reference-led master with a pointed layered hood, broad angular black face cavern, crushed overlapping cowl, monolithic triangular cloak, broad asymmetric folds and sparse irregular electrical field.</desc>
+  <defs>
+    <linearGradient id="v206-cloak-gradient" x1="20" y1="40" x2="63" y2="95" gradientUnits="userSpaceOnUse"><stop stop-color="#07171f"/><stop offset=".28" stop-color="#031018"/><stop offset=".66" stop-color="#01060a"/><stop offset="1" stop-color="#000102"/></linearGradient>
+    <linearGradient id="v206-hood-gradient" x1="39" y1="7" x2="57" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#0a222d"/><stop offset=".32" stop-color="#05151d"/><stop offset=".7" stop-color="#01070b"/><stop offset="1" stop-color="#000204"/></linearGradient>
+    <linearGradient id="v206-fold-left" x1="11" y1="50" x2="42" y2="93" gradientUnits="userSpaceOnUse"><stop stop-color="#0a2732"/><stop offset=".48" stop-color="#04131b"/><stop offset="1" stop-color="#000204"/></linearGradient>
+    <linearGradient id="v206-fold-right" x1="83" y1="47" x2="53" y2="94" gradientUnits="userSpaceOnUse"><stop stop-color="#081e28"/><stop offset=".5" stop-color="#020d14"/><stop offset="1" stop-color="#000204"/></linearGradient>
+  </defs>
+  <g data-brand-field-rear="" data-brand-depth="far" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M39.4 8.8C35.8 9.9 36.7 13.1 32.8 15.1C29.4 16.8 30.7 20.7 26.3 23.1C22.8 25 24.3 29.5 19.4 32.2C15.8 34.2 17.2 38.8 12.6 42.1C9.4 44.4 9.2 48.1 5.6 51" stroke="#31b9d5" stroke-opacity=".23" stroke-width=".42"/>
+    <path d="M31.7 14.2C28.5 12.5 26.9 16.2 23.7 16.9C20.5 17.6 21.1 21.9 17.2 23.4C13.7 24.8 14.7 29.4 10.2 31.8C7.8 33.1 7 36.2 4.2 38.4" stroke="#75e4f6" stroke-opacity=".13" stroke-width=".45"/>
+    <path d="M27.8 25.4C24.5 24.2 22.6 27.6 19.7 28.2C16.6 28.9 17.6 33.1 13.5 35C10.5 36.4 10.2 40.3 6.5 43" stroke="#9ceefa" stroke-opacity=".16" stroke-width=".58"/>
+    <path d="M56.8 8.2C60.6 8.8 60 12.5 64.3 14C68 15.3 66.9 19.9 71.5 21.7C75.4 23.2 74.1 27.8 78.9 30.5C82.5 32.5 81.6 37.3 86.3 40C89.8 42 89.2 46.1 93.4 49.2" stroke="#48cce4" stroke-opacity=".21" stroke-width=".64"/>
+    <path d="M65.3 16.5C68.3 14.6 70.1 18.2 73.2 18.5C76.6 18.9 75.7 23.4 79.9 24.4C83 25.2 82.3 29.4 86.1 31.3C89.1 32.8 89.7 36 92.3 37.8" stroke="#a7f3ff" stroke-opacity=".12" stroke-width=".42"/>
   </g>
-</g>
-
-<g data-brand-figure="" data-brand-depth="base">
-  <path id="v205-cloak" data-brand-cloak="" d="M48 34.8C37.1 34.6 27.1 37.4 19.4 43.3C12.3 48.8 8.6 60.8 5.3 74.4L1.5 96H94.7L90.7 74.7C87.2 60.8 83.2 48.8 75.6 43.4C68.2 38 58.5 34.6 48 34.8Z" fill="url(#v205-cloak)"/>
-  <g data-brand-folds-far="" data-brand-depth="mid">
-    <path d="M1.5 96C6.4 79.1 13.1 62.4 25.9 49.7C29.2 46.4 32.6 44.3 36.2 42.8C30.1 56.9 25.5 75.1 24 96Z" fill="#000204"/>
-    <path d="M94.7 96C90.4 79.4 83.5 62.5 70.6 49.4C67.5 46.2 64.4 44.2 60.8 42.8C67.4 57.1 72 74.9 73.5 96Z" fill="#000204"/>
-    <path d="M7.4 96C12 77.8 20.9 59.7 34.1 46.5C29.7 61.4 27.3 78.2 27.4 96Z" fill="url(#v205-left)" opacity=".72"/>
-    <path d="M88.3 96C84 77.5 74.8 59.6 61.9 46.3C66.9 61.7 69.5 78.3 68.9 96Z" fill="url(#v205-right)" opacity=".68"/>
-    <path d="M12.6 68.2C17.7 58.2 25.1 49.6 35.5 45.6C29.4 56.3 24.9 68.7 22.3 83.7C19.8 77.6 16.6 72.4 12.6 68.2Z" fill="#0b2832" opacity=".24"/>
-    <path d="M82.8 67.5C77.9 57.7 70.7 49.7 61.1 45.7C66.8 56.8 71.4 69.2 74.1 83.9C76.4 77.3 79.3 71.9 82.8 67.5Z" fill="#08202a" opacity=".22"/>
+  <g data-brand-figure="" data-brand-depth="base">
+    <path id="v206-cloak" data-brand-cloak="" d="M48.1 34.7C38.2 34.5 30.4 37.1 23 41.8C16.1 46.2 10.2 57.4 5.4 73.6L.9 96H95.1L90.7 73C86.3 56.7 80.1 45.6 72.7 41.2C65.7 37 57.8 34.5 48.1 34.7Z" fill="url(#v206-cloak-gradient)"/>
+    <g data-brand-folds-far="" data-brand-depth="mid">
+      <path d="M.9 96C6.6 75.8 13.5 58.7 28.9 45.2C33.2 41.4 37.3 39.5 41.5 39.2C31.8 54.4 26.6 73.3 25.1 96Z" fill="#000204"/>
+      <path d="M95.1 96C90.4 76.4 82.5 57.1 66.9 44.4C63.5 41.6 59.8 39.7 56.4 39.1C65.7 54.5 71.3 73.8 72.7 96Z" fill="#000204"/>
+      <path d="M7.1 96C12.5 76 21.2 56.3 38.6 42.7C31.7 58.8 27.7 76 27 96Z" fill="url(#v206-fold-left)" opacity=".68"/>
+      <path d="M90.1 96C85.1 75 74.9 55.5 58.4 42.2C65.5 58.7 69.7 76.1 69.5 96Z" fill="url(#v206-fold-right)" opacity=".57"/>
+      <path d="M9.8 84.2C17.2 63.9 28.2 49.8 41.9 43.5C31.9 56.9 24.2 73.6 19.3 94.8Z" fill="#0a2630" opacity=".2"/>
+      <path d="M86.4 78.5C79.7 60.9 69.7 49.1 56.8 42.9C66.2 55.9 74 73.6 78.2 94.7Z" fill="#071b24" opacity=".16"/>
+    </g>
+    <g data-brand-folds-near="" data-brand-depth="near">
+      <path d="M19.1 96C25.5 75.7 34.3 59.3 46.6 48.3C39.7 64.9 36 80.7 36 96Z" fill="#01070b"/>
+      <path d="M77.5 96C71.8 75.7 62.6 58.4 50.2 47.8C57.1 64.4 61 80.7 60.5 96Z" fill="#01060a"/>
+      <path d="M36 96C37.8 77.5 42.1 62.2 47.8 51.8C44.6 69.4 44.1 83 44.9 96Z" fill="#000204"/>
+      <path d="M60.5 96C59 77.8 54.9 62 49.1 51C52.5 68.4 52.7 82.8 51.7 96Z" fill="#000204"/>
+      <path d="M44.9 96C44.5 80.1 45.5 65.8 48.2 53.4C50.6 66 51.7 80.6 51.7 96Z" fill="#000102"/>
+      <path d="M3.4 96C11.9 77.5 23.9 60.1 40.9 49.4C27.9 65.2 19.3 80.2 13.1 96Z" fill="#09202a" opacity=".08"/>
+      <path d="M92.7 96C84.6 76.7 72.5 59.3 55.1 48.7C68.8 65.6 77.5 81 83.4 96Z" fill="#061820" opacity=".075"/>
+    </g>
+    <path id="v206-hood" data-brand-hood="" data-brand-depth="mid" d="M48.1 7.2L44.7 8.8C41.6 10.6 39.5 13.7 38 17.4C36.3 21.7 35.5 25.6 34.1 29C33 31.6 31.6 33.7 30.2 35.2C35.6 37.7 41.5 38.8 48.1 39C54.8 38.6 61 37.1 66.2 34.5C64.5 32.7 63 29.9 61.7 26.2C60.2 21.9 59.2 18.3 57.2 14.7C55.6 11.9 53.5 9.8 51.4 8.6L48.1 7.2Z" fill="url(#v206-hood-gradient)"/>
+    <g data-brand-hood-layers="" data-brand-depth="near">
+      <path d="M48 8.8C43.6 10.2 40.7 14 39 19.4C37.5 24.1 36.4 28.3 33.8 32.1C37.8 30.3 42.5 29.1 48 29C53.7 29.2 58.3 30.1 62.4 31.5C59.8 27.7 58.7 23.4 57 18.8C55.1 13.7 52.1 10.1 48 8.8Z" fill="#061821"/>
+      <path d="M47.7 10.6C43.9 11.9 41.5 15.4 40 20.5C38.8 24.5 38 27.6 36.1 30.7C39.8 29 43.8 28 48 27.8C52.4 28 56.2 28.9 59.9 30.2C58.2 27.2 57.2 24 56 20.1C54.5 15.2 51.5 11.7 47.7 10.6Z" fill="#02090e"/>
+      <path d="M48.2 12C45.2 13 43.1 16.2 41.8 20.8C40.8 24.2 40.1 26.8 38.7 29C41.5 27.8 44.6 27.1 48 26.9C51.6 27.1 54.5 27.9 57.3 29.1C56.1 26.6 55.3 24.1 54.2 20.5C52.9 16.1 51 13.1 48.2 12Z" fill="#000407"/>
+    </g>
+    <path id="v206-face" data-brand-face-void="" data-brand-depth="counter" d="M48.1 13.5L44.1 16C41.9 18.1 40.6 21.2 39.7 24.5L38.2 29.1L35.4 32.6L39.2 35.3L47.8 37.4L55.4 35.8L60.8 32.1L58.1 28.8L56.7 24C55.7 20.5 54.2 17.5 52.1 15.6L48.1 13.5Z" fill="#000"/>
+    <g data-brand-cowl="" data-brand-depth="near">
+      <path d="M29.6 34.3C34.8 37.7 40.8 40.3 47.8 41.5C55.2 40.5 61.4 37.5 66.7 33.5L63.7 40.5C59.4 44.6 54.4 47 48.1 47.9C41.2 47 35.6 44.4 31.6 40.5Z" fill="#071923"/>
+      <path d="M24.7 38.8C31.8 43.3 39.2 47.2 47.9 49.2C57 47.4 64.7 43 72 37.7L67.3 46.5C62 51.3 55.6 54.3 48 55.2C39.8 54.1 33.1 50.7 28.1 46Z" fill="#020a10"/>
+      <path d="M29.2 45.6C35.5 50.5 41.2 53.6 48 55.5C54.5 53.8 60.7 50.2 66.7 44.2L63.1 51.5C58.8 56.1 53.7 58.9 48.1 59.8C41.6 58.9 36.2 55.8 32 51.6Z" fill="#000305"/>
+      <path d="M25.4 39.8C30.4 41 34.6 43.7 38.7 47.7C33.8 46.7 29.7 44.8 26.7 42.7Z" fill="#0b2630" opacity=".35"/>
+      <path d="M56.2 48.7C61.5 45.2 67 40.8 71.4 37.3C68.6 43.3 65.3 47.5 60.7 50.8Z" fill="#081e28" opacity=".28"/>
+      <path d="M39 50.3C42.4 52.7 45.5 54.2 48.3 55L45.7 59.1C42.7 57.1 40.3 54.2 39 50.3Z" fill="#06141c"/>
+    </g>
+    <g data-brand-rim="" data-brand-depth="front" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M46.8 8.6C42.8 10.7 40.6 14.2 39.1 18.5" stroke="#b6f6ff" stroke-opacity=".72" stroke-width=".42"/>
+      <path d="M49.4 8.2C53.1 10.1 55.5 13.5 57.2 17.8" stroke="#e1fdff" stroke-opacity=".78" stroke-width=".4"/>
+      <path d="M37.5 22.1C36.6 26.1 35.6 29.8 32.4 33.6" stroke="#85e5f2" stroke-opacity=".55" stroke-width=".36"/>
+      <path d="M59.1 21C60.2 25.7 61.9 30.1 64.3 33.1" stroke="#9beef8" stroke-opacity=".48" stroke-width=".34"/>
+      <path d="M28.8 37.3C24.2 40.5 21 44.5 18.3 49.5" stroke="#55c8dc" stroke-opacity=".3" stroke-width=".35"/>
+      <path d="M67.7 36.4C72.1 39 76.2 43.4 78.8 48.5" stroke="#6ed7e6" stroke-opacity=".28" stroke-width=".34"/>
+    </g>
   </g>
-  <g data-brand-folds-near="" data-brand-depth="near">
-    <path d="M21.1 96C24.6 77.1 33.6 58.5 44.9 47.1C39.7 62.8 36.9 79.8 37.2 96Z" fill="#01070b"/>
-    <path d="M75.8 96C72.1 76.8 63.3 58.6 51.3 47C56.9 63.2 59.7 79.8 59.4 96Z" fill="#01070b"/>
-    <path d="M37.2 96C38.2 77.8 41.7 61.2 47.1 48.9C44.7 65.7 44.1 81.7 45 96Z" fill="#000204"/>
-    <path d="M59.4 96C58.6 77.8 54.8 61.4 48.9 48.9C51.5 65.4 52.1 81.6 51.2 96Z" fill="#000204"/>
-    <path d="M45 96C44.3 80.3 45.4 64.2 48 50.4C50.8 64.3 51.8 80.2 51.2 96Z" fill="#000102"/>
-    <path d="M10.2 89.5C18.5 72.3 28.2 59.3 40.1 51.7C31.3 63.9 23.8 78.7 18.2 95.5Z" fill="#0a222b" opacity=".12"/>
-    <path d="M84.9 89.2C77.2 72.8 67.4 59 55.8 51.4C64.5 64.1 72.2 78.8 77.8 95.7Z" fill="#071a22" opacity=".11"/>
-    <path d="M27.4 96C29.2 77.5 34.8 62.2 43.8 51.8C38.9 65.8 36.6 80.5 36.8 96Z" fill="#0a222b" opacity=".14"/>
-    <path d="M68.9 96C67 77.4 61.1 62.2 52.1 51.8C57.2 66.1 59.5 80.8 59.2 96Z" fill="#071a22" opacity=".12"/>
+  <g data-brand-field-mid="" data-brand-depth="near" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M38.4 10.1L35.5 12.1L34.5 15.6L31.1 17.4L30 21.2L26.7 23.4" stroke="#d4fbff" stroke-opacity=".36" stroke-width=".27"/>
+    <path d="M24.9 26.4L22.2 29.1L21.1 33L17.7 35.2L16.5 39.1L12.7 41.9" stroke="#a8f3fc" stroke-opacity=".24" stroke-width=".23"/>
+    <path d="M58 9.4L61.1 11.2L62.2 14.8L65.8 16.3L66.8 20.4L70.6 22" stroke="#defdff" stroke-opacity=".34" stroke-width=".25"/>
+    <path d="M73.7 26.1L76.2 28.5L77.2 32.6L80.9 34.6L81.6 39.2L85.9 41.4" stroke="#8eeaf7" stroke-opacity=".2" stroke-width=".21"/>
   </g>
-  <path id="v205-hood" data-brand-hood="" data-brand-depth="mid" d="M48 7.5L44.4 9.2C41.8 11.2 40 13.9 38.5 17.5C36.8 21.6 36.2 25.2 34.8 28.9C33.7 31.8 32 34.1 30.4 35.5C35.5 37.6 41.5 38.6 48.1 38.8C54.6 38.5 60.8 37 65.8 34.8C63.8 32.7 62.2 30 61 26.4C59.6 22.3 58.8 18.6 56.9 15C55.4 12.4 53.5 10.3 51.5 9L48 7.5Z" fill="url(#v205-hood)"/>
-  <g data-brand-hood-layers="" data-brand-depth="near">
-    <path d="M48 9.1C44 10.4 41.2 14 39.4 19.4C37.8 24.3 36.8 28.5 34.1 32.3C38.1 30.5 42.5 29.4 48 29.2C53.6 29.4 58.2 30.5 62 31.8C59.6 28.1 58.5 23.7 56.9 19C55.2 13.8 52.1 10.3 48 9.1Z" fill="#061821"/>
-    <path d="M47.8 10.9C44.3 12.1 41.9 15.5 40.4 20.6C39.3 24.4 38.4 27.6 36.6 30.6C40.2 29 44 28.1 48 27.9C52.3 28.1 56 29 59.5 30.1C57.8 27 56.8 23.9 55.7 20.2C54.2 15.3 51.5 12 47.8 10.9Z" fill="#01070b"/>
-    <path d="M48 12.2C45.3 13.2 43.4 16.2 42.1 20.7C41 24.5 40.2 27 39.2 29.1C42 27.9 44.9 27.2 48 27C51.3 27.2 54.1 27.9 56.8 29C55.8 26.7 55 24.3 53.9 20.6C52.6 16.2 50.7 13.2 48 12.2Z" fill="#010509"/>
-  </g>
-  <path id="v205-face" data-brand-face-void="" data-brand-depth="counter" d="M48 15C45.2 15.6 43.1 17.8 41.6 20.9C40.2 23.8 39.3 27 37.8 30.1L34.8 32.9C37.9 35.5 42.3 37.1 48 37.4C53.2 37.1 57.5 35.4 61.2 32.5L58.4 29.8C57.1 26.9 56.2 23.6 54.6 20.7C53 17.7 50.8 15.6 48 15Z" fill="#000"/>
-  <g data-brand-hood-seams="" data-brand-depth="front" fill="none" stroke-linecap="round">
-    <path d="M44.3 11.8C41.9 15 40.5 19.2 39.4 23.7C38.8 26.1 38 28.5 36.9 30.8" stroke="#23505d" stroke-opacity=".38" stroke-width=".42"/>
-    <path d="M51.7 11.7C54.1 14.8 55.5 19 56.6 23.5C57.2 26 58 28.2 59.1 30.5" stroke="#1d4653" stroke-opacity=".34" stroke-width=".4"/>
-  </g>
-  <g data-brand-cowl="" data-brand-depth="near">
-    <path d="M19.8 38.5C29.6 40.6 39.4 45.2 49.6 53.4C42.1 50.7 34.4 49.8 26.2 52.5C22.9 48.2 20.8 43.7 19.8 38.5Z" fill="#071a22"/>
-    <path d="M76.1 37.3C66.7 40.7 57.2 45.4 46.2 54C54.2 50.7 62 49.7 70.2 51.8C73.3 47.5 75.2 42.7 76.1 37.3Z" fill="#061820"/>
-    <path d="M23.3 35.1C31.3 38.3 39.8 41.7 48.5 44.8C55.1 44.1 61.5 41.2 69.3 35.4C66.2 40.4 61.5 44.4 55.5 46.8C47.9 49.8 38.4 47.1 31.2 43.1C27.1 40.8 24.5 38.1 23.3 35.1Z" fill="#0a2029"/>
-    <path d="M72.7 38.1C65.4 43.7 57 47.2 47.6 49.2C39.7 50.7 30.9 47.5 21.4 40.1C24 45.6 29.2 49.9 36.4 52.4C44.7 55.3 54.4 53.3 62 49C67 46.2 70.5 42.6 72.7 38.1Z" fill="#02090e"/>
-    <path d="M18.6 43C26.2 47.4 34.6 51.1 43.5 53C52 54.8 63.3 51.2 77.1 40.7C74.7 47.2 69.5 52 62.4 54.9C53.6 58.4 42.8 57 33.8 53.8C26.6 51.3 21.5 47.8 18.6 43Z" fill="#010509"/>
-    <path d="M22.2 39.4C30.6 42.4 39.1 46.9 46.6 52.1" fill="none" stroke="#244653" stroke-opacity=".36" stroke-width=".55" stroke-linecap="round"/>
-    <path d="M49.2 51.8C57.7 46.7 65 42.1 74 38.6" fill="none" stroke="#1b3d49" stroke-opacity=".33" stroke-width=".52" stroke-linecap="round"/>
-    <path d="M27 37.1C33.6 39.8 40 42.2 46.8 44.3" fill="none" stroke="#1a3a46" stroke-opacity=".29" stroke-width=".48" stroke-linecap="round"/>
-    <path d="M50.4 46.4C57.2 44.2 63.3 40.9 68.9 36.7" fill="none" stroke="#173440" stroke-opacity=".27" stroke-width=".46" stroke-linecap="round"/>
-  </g>
-  <g data-brand-rim="" data-brand-depth="front" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#v205-glow)">
-    <path d="M48 7.5L44.8 9.2C42.4 11.1 40.7 13.7 39.3 17.2" stroke="#e6fdff" stroke-opacity=".72" stroke-width=".52"/>
-    <path d="M39.2 16.6C37.7 20.4 37.2 24.2 35.9 27.8" stroke="#c9f8ff" stroke-opacity=".62" stroke-width=".48"/>
-    <path d="M35 29.7C34 32.2 32.6 34.2 31.1 35.5" stroke="#9ae9f8" stroke-opacity=".5" stroke-width=".43"/>
-    <path d="M48 7.5L51.3 9C53.4 10.4 55.2 12.5 56.5 15.2" stroke="#d9fbff" stroke-opacity=".68" stroke-width=".5"/>
-    <path d="M55.2 13.4C57.5 16.9 58.6 21 59.8 24.8" stroke="#b9f3ff" stroke-opacity=".59" stroke-width=".47"/>
-    <path d="M60.6 27.1C61.8 30.5 63.2 33.1 65.1 34.9" stroke="#8fe5f6" stroke-opacity=".47" stroke-width=".41"/>
-    <path d="M31.1 35.5C27.1 37.7 22.9 40.6 19.4 43.3C16.2 46.8 14 51.2 12.1 56.3" stroke="#75ddee" stroke-opacity=".45" stroke-width=".43"/>
-    <path d="M65.1 34.9C69.1 37 72.5 39.9 75.6 43.4C79.1 47.7 81.3 52.2 83.1 57.2" stroke="#66d4e8" stroke-opacity=".42" stroke-width=".41"/>
-  </g>
-  <g data-brand-cloth-highlights="" data-brand-depth="front" fill="none" stroke-linecap="round">
-    <path d="M15.6 55.2C25.3 55.9 34.6 61.5 41.8 71" stroke="#1b3b47" stroke-opacity=".31" stroke-width=".65"/>
-    <path d="M79.1 54.8C70.3 56.5 61.9 61.8 54.2 71.4" stroke="#173641" stroke-opacity=".28" stroke-width=".61"/>
-    <path d="M11.9 68.4C21.5 72.7 30.2 80.1 37.8 90.1" stroke="#142f3a" stroke-opacity=".24" stroke-width=".56"/>
-    <path d="M83 68.2C73.8 73.1 65.3 80.2 58 90.4" stroke="#102a34" stroke-opacity=".21" stroke-width=".53"/>
-    <path d="M33.8 52.5C28.5 65.2 26.3 79.5 26.9 92.3" stroke="#173540" stroke-opacity=".18" stroke-width=".45"/>
-    <path d="M62.4 52.1C67.3 65 69.5 79.3 68.7 92.4" stroke="#132f39" stroke-opacity=".16" stroke-width=".43"/>
-    <path d="M47.3 55.3C45.5 68.4 45 80.8 45.6 92.6" stroke="#102832" stroke-opacity=".15" stroke-width=".4"/>
-    <path d="M25.7 57.4C34.2 63.1 42.1 70.5 48.8 80.3" stroke="#173641" stroke-opacity=".16" stroke-width=".44"/>
-    <path d="M70.8 56.6C62 63.4 54.7 71.3 48.1 82.1" stroke="#112f3a" stroke-opacity=".14" stroke-width=".42"/>
-  </g>
-</g>
-<g data-brand-field-mid="" data-brand-depth="front" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#v205-glow)">
-  <path d="M40.3 9.2L37.7 10.9L36.5 14.4L33.5 16.2L32.5 19.7L29.2 21.8L28.3 25.8" stroke="#e5feff" stroke-opacity=".46" stroke-width=".24"/>
-  <path d="M33.5 16.2L30.7 14.2L28.5 15.2L26.4 12.9" stroke="#8cecff" stroke-opacity=".28" stroke-width=".18"/>
-  <path d="M29.2 21.8L26.8 20.4L24.4 22.2L22.3 21.2" stroke="#7de8fb" stroke-opacity=".23" stroke-width=".17"/>
-  <path d="M28.3 25.8L25.1 28.1L24 31.7L20.6 34L19.6 38.2L15.8 40.6" stroke="#d2faff" stroke-opacity=".39" stroke-width=".23"/>
-  <path d="M19.6 38.2L16.5 36.9L14.4 39.5L11.3 39" stroke="#70def2" stroke-opacity=".23" stroke-width=".17"/>
-  <path d="M55.8 9.1L58.7 10.7L59.6 14L62.8 15.8L63.9 19.5L67.2 21.6L68.1 25.4" stroke="#dcfdff" stroke-opacity=".42" stroke-width=".23"/>
-  <path d="M62.8 15.8L65.3 13.4L68 14.5L69.7 12.6" stroke="#86e9fa" stroke-opacity=".25" stroke-width=".18"/>
-  <path d="M67.2 21.6L69.7 20.2L72.2 22L74.4 20.8" stroke="#75e3f7" stroke-opacity=".21" stroke-width=".17"/>
-  <path d="M68.1 25.4L71.3 27.7L72.5 31.5L76.1 33.8L77.1 37.8L81.2 40.4" stroke="#c9f9ff" stroke-opacity=".35" stroke-width=".22"/>
-  <path d="M77.1 37.8L80.4 36.3L82.6 38.9L85.8 38.2" stroke="#65d9ef" stroke-opacity=".21" stroke-width=".16"/>
-</g>
-<g data-brand-field-front="" data-brand-depth="front" aria-hidden="true" fill="none" stroke-linecap="round" filter="url(#v205-glow)">
-  <path d="M36 21C33.8 22.2 32.1 24.4 31 27.1" stroke="#f1ffff" stroke-opacity=".46" stroke-width=".18"/>
-  <path d="M60 20.8C62.4 22 63.8 24.2 65 26.9" stroke="#e9feff" stroke-opacity=".4" stroke-width=".18"/>
-  <path d="M20.1 43.6C17.5 46.3 15.8 49.5 14.3 53.5" stroke="#b7f4ff" stroke-opacity=".31" stroke-width=".18"/>
-  <path d="M75.8 43.5C78.6 46.1 80.2 49.7 81.7 53.8" stroke="#a3ecfa" stroke-opacity=".28" stroke-width=".17"/>
-  <path d="M11.8 55.7C9.9 58.2 9 61.2 8.2 64.2" stroke="#79e1f3" stroke-opacity=".19" stroke-width=".15"/>
-  <path d="M83.3 56.6C85.1 59.1 86.1 62 86.9 64.9" stroke="#6ed9ed" stroke-opacity=".17" stroke-width=".15"/>
-</g>
 </svg>
