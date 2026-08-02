@@ -1,0 +1,88 @@
+name: Site route integrity audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: site-route-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  route-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      QA_BASE_URL: http://127.0.0.1:4173
+      PLAYWRIGHT_HTML_OPEN: never
+    steps:
+      - name: Checkout exact tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install FFmpeg for deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Generate canonical route inventory and build production site
+        env:
+          VITE_BASE: /
+        run: |
+          npm run sitemap
+          npm run build
+
+      - name: Install isolated Chromium runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium
+
+      - name: Start production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > route-audit-preview.log 2>&1 &
+          echo $! > route-audit-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat route-audit-preview.log
+          exit 1
+
+      - name: Crawl at least 35 canonical, utility, redirect and not-found URLs
+        run: >-
+          npx playwright test
+          qa/site-route-integrity.spec.mjs
+          --config=playwright.route-audit.config.mjs
+          --reporter=line,html
+
+      - name: Upload route integrity evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-route-integrity-evidence
+          path: |
+            qa-artifacts/site-route-integrity
+            playwright-report/site-route-integrity
+            test-results/site-route-integrity
+            route-audit-preview.log
+            public/sitemap.xml
+          if-no-files-found: warn
+          retention-days: 7

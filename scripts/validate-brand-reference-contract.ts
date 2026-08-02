@@ -97,6 +97,7 @@ for (const forbidden of [
 const candidateFiles = [
   'src/components/BrandMark.tsx',
   'src/components/brandMotionV18.ts',
+  'src/components/brandMotionFrameInvariant.ts',
   'src/components/brandEmblemV18.svg',
   'public/brand-emblem.svg',
   'public/brand-mark-micro.svg',
@@ -120,6 +121,7 @@ assert.equal(evaluation.reviewerDecision, 'not-reference-approved');
 assert.ok(evaluation.overallScore >= 0 && evaluation.overallScore <= 1);
 assert.ok(evaluation.blockingDeviations.length > 0);
 assert.match(evaluation.candidateRevision, /unchanged v17\.0 visual baseline/i);
+assert.match(evaluation.candidateRevision, /frame-rate-invariant bounded-substep integration/i);
 assert.match(evaluation.nextRequiredAction, /geometry passes from the square reference/i);
 assert.ok((evaluation.marathonPassesCompleted ?? []).includes(19), 'pointer foundation pass is not recorded');
 assert.ok((evaluation.marathonPassesCompleted ?? []).includes(23), 'reduced-motion pass is not recorded');
@@ -145,4 +147,4 @@ for (const artifact of ['brand-reference-comparison-matrix.png', 'brand-referenc
   assert.ok(browserQa.includes(artifact), `browser QA missing ${artifact}`);
 }
 
-console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — no-regression motion foundation; geometry remains not-reference-approved`);
+console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — no-regression frame-invariant motion foundation; geometry remains not-reference-approved`);
