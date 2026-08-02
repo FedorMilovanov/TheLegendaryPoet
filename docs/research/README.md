@@ -29,11 +29,24 @@ The detailed Part II outline establishes a usable writing order, but full reader
 
 ## Yesenin 1921–1925
 
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1921_PASS_01_2026-08.md` — first controlled year segment: publications, failed foreign-travel request, Turkestan, `Пугачев`, Imagist infrastructure, Duncan meeting boundary, divorce and exact poster/publication corrections.
 - `YESENIN_EUROPE_AMERICA_ROUTE_SOURCE_MAP_1922_1923_2026-08.md` — broad route and source map.
 - `YESENIN_FOREIGN_WORK_MATRIX_1922_1923_2026-08.md` — work/publication matrix.
 - `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md` — late New York anchors and the qualified 3–4 February 1923 departure interval.
 
-### Critical date correction
+### 1921 chronology consequence
+
+Part II must not begin by presenting Duncan as the origin of the entire late crisis. The first chapter now has a source-backed sequence: early books and unrealised projects; the 26 February self-description; the failed April foreign-travel request; Turkestan and `Пугачев`; public readings and group conflicts; only then the probable Duncan meeting.
+
+Standing anti-regression examples from the pass:
+
+- a poster proves announcement, not attendance: the 17 October poster announced Yesenin, while a diary source says he read elsewhere;
+- an imprint year may differ from physical release: Moscow `Пугачов` says 1922 but appeared in December 1921;
+- an autograph date may mark copying rather than composition;
+- a travel petition does not prove completed travel;
+- a group act does not automatically represent every member.
+
+### Critical US date correction
 
 The broad route map currently contains an exact `4 February 1923` US departure row. Read it together with `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md`: academic references differ between leaving New York on 3 February and a US-period endpoint on 4 February. Until a transport/passenger record closes the gap, new prose must use `3–4 February 1923` and must not treat the departure as proven deportation.
 
