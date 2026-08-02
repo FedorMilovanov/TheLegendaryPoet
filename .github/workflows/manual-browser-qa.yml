@@ -17,7 +17,7 @@ permissions:
 jobs:
   browser-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 90
     env:
       QA_BASE_URL: http://127.0.0.1:4173
       PLAYWRIGHT_HTML_OPEN: never
@@ -81,7 +81,7 @@ jobs:
           cat preview.log
           exit 1
 
-      - name: Run Chromium, Android Chrome and iPhone Safari QA
+      - name: Run Chromium and Android Chrome QA
         run: >-
           npx playwright test
           qa/manual-e2e.spec.mjs
@@ -89,7 +89,6 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
-          qa/mobile-home-webkit.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
@@ -98,25 +97,22 @@ jobs:
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
-          --reporter=line,html
+          --reporter=line
+
+      - name: Run iPhone Safari QA in fresh browser processes
+        if: ${{ always() && steps.production_build.outcome == 'success' }}
+        run: node scripts/run-webkit-process-isolated.mjs
 
       - name: Run dedicated premium homepage and pointer-performance matrix
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         id: home_polish
         run: |
-          set +e
-          npx playwright test \
-            qa/home-polish.spec.mjs \
-            qa/home-labels.spec.mjs \
-            qa/home-ambient.spec.mjs \
-            --config=playwright.home-polish.config.mjs \
-            --workers=1 \
-            --reporter=line > home-polish.log 2>&1
-          status=$?
-          cat home-polish.log
-          exit $status
+          set -o pipefail
+          node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
 
       - name: Upload visual QA evidence
         if: ${{ always() }}
