@@ -1,13 +1,14 @@
 {
   "auditId": "brand-reference-motion-deep-audit-2026-08-02",
   "auditedMainSha": "f068596e6096b3bf7f07ad3c2f9b4b998d517f5a",
-  "testedAuditHead": "0d9dea730e6fd272d430347588548d62e3b983c1",
+  "testedImplementationHead": "018086fbd4d73a0fca973b480b60dcf3b3596f2e",
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "referenceDecision": "not-reference-approved",
   "method": {
     "geometry": "exact-head Chromium SVG getBBox ratios against qa/reference/brand-reference-contract.json",
     "visual": "exact-head Playwright matrices reviewed at 256, 192, 128, 96, 64, 56, 44, 32, 24 and 16 pixels",
-    "motion": "source audit, exact-head endpoint evidence, pointer-performance evidence, deterministic spring integration and dedicated exact-head Chromium trajectory sampling",
+    "motion": "one exported frame-rate-invariant controller, deterministic 15-144Hz simulation, exact-head Chromium trajectory sampling with interpolated crossings and interval-normalized smoothness",
+    "siteBreadth": "production sitemap-derived Chromium crawl plus utility, legacy redirect and 404 scenarios",
     "rule": "green CI proves stability, not reference similarity"
   },
   "contractMeasurements": [
@@ -90,6 +91,15 @@
     "finding": "production and v19.11 remain substantially darker and much more regular than the canonical electrical field; v19.11 gains mass but introduces an armor-like horizontal cowl and still undersizes the face cavern"
   },
   "motionEvidence": {
+    "architecture": {
+      "identity": "spring-awakening-v5 / rendered-box-v1 / bounded-substeps-v1",
+      "controllerCount": 1,
+      "cssOwnership": "src/components/brandMotionV18.ts contains CSS only",
+      "controllerOwnership": "src/components/brandMotionFrameInvariant.ts owns the only requestAnimationFrame loop and spring integration",
+      "framePolicy": "consume real wall-clock time up to 100ms in stable substeps no larger than 1/60s; do not discard elapsed time",
+      "clockPolicy": "reset the integration clock whenever RAF reaches a settled state",
+      "reducedMotion": "remove all depth transforms and cancel controller ownership"
+    },
     "currentPointerPerformance": {
       "samples": 109,
       "p95FrameLatencyMs": 1.1,
@@ -97,34 +107,63 @@
       "interactionLongTasks": 0
     },
     "springSimulation": {
-      "refreshRatesHz": [30, 60, 90, 120, 144],
-      "entry95PercentRangeMs": [243, 350],
-      "exactIdleReturnRangeMs": [500, 583],
-      "exactIdleAt15HzMs": 1000,
-      "returnOvershootMaximumPercent": 2.25,
-      "cornerReversalZeroCrossRangeMs": [125, 150],
-      "frameGapPolicy": "dt is capped at 32 ms, so long stalls cannot cause a visual teleport; settling uses a subpixel position and low-velocity cutoff before an exact zero write"
+      "refreshRatesHz": [15, 20, 30, 60, 120, 144],
+      "entry95PercentRangeMs": [266.7, 316.7],
+      "entry95SpreadMs": 50,
+      "exactIdleReturnRangeMs": [562.5, 600],
+      "maximumOvershootPercent": 1.12,
+      "rule": "all rates use the same spring constants; bounded substeps make wall-clock convergence independent of sparse RAF cadence"
     },
     "exactHeadBrowser": {
-      "head": "0d9dea730e6fd272d430347588548d62e3b983c1",
-      "sampleCount": 23,
-      "sampleSpanMs": 1116.6,
-      "activationElapsedMs": 114.5,
-      "first95AfterActivationMs": 599.9,
-      "exactIdleSettleMs": 931,
-      "maximumSampleJumpPx": 0.468,
-      "headerRenderedSizePx": 59.52,
+      "head": "018086fbd4d73a0fca973b480b60dcf3b3596f2e",
+      "first95AfterActivationMs": 351.216,
+      "exactIdleSettleMs": 927,
+      "maximumObservedJumpPx": 0.776,
+      "maximumEquivalent60HzJumpPx": 0.226476,
+      "peakEnergyPx": 2.321,
+      "expectedEnergyPx": 2.30826,
+      "overshootPercent": 0.552,
       "headerMotionScale": 0.93,
-      "footerRenderedSizePx": 48,
       "footerMotionScale": 0.75,
-      "normalizedAmplitudeRatioObserved": 1.2406015038,
-      "normalizedAmplitudeRatioExpected": 1.2400000493
+      "normalizedAmplitudeRatioObserved": 1.23886205,
+      "normalizedAmplitudeRatioExpected": 1.24000005,
+      "timingMeasurement": "0.5%, 95% and 120ms values are linearly interpolated between real samples rather than assigned to the nearest sparse sample",
+      "smoothnessMeasurement": "both absolute observed displacement and displacement normalized to an equivalent 60Hz interval are bounded"
     },
     "blockingDefectsFound": [
       "translations were fixed pixels across transformed 48, 64 and 96 pixel marks, so relative depth changed with rendered size",
-      "the original settling constants and strict numerical epsilon retained an invisible RAF tail beyond 1.2 seconds on a throttled CI renderer"
+      "the original settling constants and strict numerical epsilon retained an invisible RAF tail beyond 1.2 seconds on a throttled CI renderer",
+      "the original 32ms one-step clamp discarded elapsed wall-clock time when RAF was sparse, making entry speed depend on runner load",
+      "the old browser test treated a 50-100ms sampling gap as one 16.7ms frame and used nearest-sample timing, producing false smoothness and convergence failures"
     ],
-    "correction": "spring-awakening-v4 with rendered-box-v1 scales all translation channels from the rendered bounding box around a neutral 64 pixel design size; active entry remains unchanged, while the return spring is crisper and snaps only after remaining displacement is subpixel and velocity is visually negligible"
+    "correction": "spring-awakening-v5 keeps the established visual spring constants, scales translations by the rendered box, consumes elapsed time through bounded 60Hz-or-smaller substeps, resets its clock on every settled stop and is measured with interpolated timing crossings plus interval-normalized and absolute smoothness gates"
+  },
+  "siteRouteEvidence": {
+    "head": "018086fbd4d73a0fca973b480b60dcf3b3596f2e",
+    "workflow": "Site route integrity audit",
+    "tests": 38,
+    "firstAttemptPasses": 38,
+    "inventory": {
+      "canonicalFromProductionSitemap": 28,
+      "utilityRoutes": 2,
+      "legacyRedirects": 6,
+      "notFoundScenarios": 1,
+      "inventoryContractTest": 1
+    },
+    "checks": [
+      "same-origin 4xx/5xx responses",
+      "page and chunk-load errors",
+      "canonical title and description ownership",
+      "main content, primary heading, header, footer and brand shell",
+      "visible viewport image decoding",
+      "persistent busy states",
+      "horizontal overflow",
+      "unknown internal route links",
+      "legacy redirect destinations",
+      "healthy application shell on 404"
+    ],
+    "productionDefectFoundAndFixed": "PoetsPage inherited the root canonical because it did not own route SEO metadata; /poets now declares its title, description and canonical through the shared useSeo hook",
+    "antiHack": "canonical routes come from the generated production sitemap; the crawler cannot be kept green by manually omitting a newly added poet, essay or track"
   },
   "revisedScores": {
     "macroProportions": 0.66,
@@ -144,5 +183,5 @@
     "the aura remains too regular and mirror-like; reference irregularity is materially higher",
     "at 24 and 16 pixels the identity collapses primarily to a cyan hood arc rather than a broad black cavern and heavy shoulder mass"
   ],
-  "nextRequiredAction": "produce a new reference-led geometry family from shared landmarks: widen the face cavern to at least 0.68 of hood width, reduce hood-height ratio into 0.27-0.36, preserve hood/cloak width in 0.32-0.43, and redesign micro separately before any production replacement"
+  "nextRequiredAction": "produce a new reference-led v20 geometry family from shared landmarks: widen the face cavern to at least 0.68 of hood width, reduce hood-height ratio into 0.27-0.36, preserve hood/cloak width in 0.32-0.43, build a separate micro master, and attach the already validated motion controller only after static geometry approval"
 }
