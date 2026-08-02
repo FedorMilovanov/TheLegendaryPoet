@@ -32,6 +32,7 @@ import {
 import {
   applyEssayMythChecks,
   mayakovskyPartOneMythRules,
+  mayakovskyPartTwoMythRules,
 } from './essayMythChecks';
 
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
@@ -94,7 +95,10 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   coverCredit: 'Осип Брик · реставрация проекта',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
   blocks: placeEssayImages(
-    attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
+    attachEssayCitations(
+      applyEssayMythChecks(mayakovskyPartTwo.blocks, mayakovskyPartTwoMythRules),
+      mayakovskyPartTwoCitationRules,
+    ),
     mayakovskyPartTwoPlacements,
   ),
   sources: [...mayakovskyLateSources, ...mayakovskyLateSupplementalSources],
