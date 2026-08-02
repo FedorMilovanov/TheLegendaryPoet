@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
+const MOTION_METRICS_PATH = path.join(DIR, 'brand-motion-quality-metrics.json');
 const contract = JSON.parse(fs.readFileSync(path.resolve('qa/reference/brand-reference-contract.json'), 'utf8'));
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -35,6 +36,9 @@ const sources = [
 ];
 
 const within = (value, range) => value >= range.allowed[0] && value <= range.allowed[1];
+const writeMotionMetrics = (payload) => {
+  fs.writeFileSync(MOTION_METRICS_PATH, `${JSON.stringify(payload, null, 2)}\n`);
+};
 
 async function measureSvg(page, request, source) {
   const response = await request.get(`${BASE_URL}/${source.file}?audit=${Date.now()}`);
@@ -85,8 +89,9 @@ async function waitForHome(page) {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
   const header = page.locator('header [data-brand-mark]').first();
-  await expect(header).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
+  await expect(header).toHaveAttribute('data-brand-parallax', 'spring-awakening-v5');
   await expect(header).toHaveAttribute('data-brand-motion-normalization', 'rendered-box-v1');
+  await expect(header).toHaveAttribute('data-brand-motion-timestep', 'bounded-substeps-v1');
   await page.addStyleTag({ content: `
     [data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}
     header a:has(> [data-brand-mark]) > :not([data-brand-mark]){visibility:hidden!important}
@@ -157,14 +162,47 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   await page.mouse.move(headerBox.x + headerBox.width * 0.84, headerBox.y + headerBox.height * 0.18);
   await page.waitForTimeout(1_180);
   const samples = await page.evaluate(() => window.__tlpBrandMotionSamples || []);
-  expect(samples.length, 'trajectory must contain independent rendered samples').toBeGreaterThanOrEqual(12);
-  const sampleSpanMs = samples.at(-1).elapsed - samples[0].elapsed;
-  expect(sampleSpanMs, 'trajectory must cover the full entry and settled interval').toBeGreaterThanOrEqual(900);
+  const frameIntervalsMs = samples.slice(1).map((sample, index) => sample.elapsed - samples[index].elapsed);
+  const maxFrameIntervalMs = Math.max(0, ...frameIntervalsMs);
+  const sampleSpanMs = samples.length > 1 ? samples.at(-1).elapsed - samples[0].elapsed : 0;
 
   const scale = Math.max(0.65, Math.min(1.6, Math.min(headerBox.width, headerBox.height) / 64));
   const targetX = 0.68;
   const expectedEnergy = 3.65 * targetX * scale;
   const final = await readMotion(header);
+  const activation = samples.find((sample) => Math.abs(sample.energyX) >= expectedEnergy * 0.005) || null;
+  const entryTargetElapsed = activation ? activation.elapsed + 120 : null;
+  const entry = activation
+    ? samples.reduce((best, sample) => Math.abs(sample.elapsed - entryTargetElapsed) < Math.abs(best.elapsed - entryTargetElapsed) ? sample : best, samples[0])
+    : null;
+  const first95 = activation
+    ? samples.find((sample) => sample.elapsed >= activation.elapsed && sample.energyX >= expectedEnergy * 0.95) || null
+    : null;
+  const first95AfterActivationMs = activation && first95 ? first95.elapsed - activation.elapsed : null;
+  const peak = Math.max(0, ...samples.filter((sample) => !activation || sample.elapsed >= activation.elapsed).map((sample) => sample.energyX));
+  const maxJump = Math.max(0, ...samples.slice(1).map((sample, index) => Math.abs(sample.energyX - samples[index].energyX)));
+
+  writeMotionMetrics({
+    status: 'trajectory-sampled',
+    header: {
+      box: headerBox,
+      expectedScale: scale,
+      expectedEnergy,
+      final,
+      samples,
+      frameIntervalsMs,
+      maxFrameIntervalMs,
+      sampleSpanMs,
+      activationElapsedMs: activation?.elapsed ?? null,
+      entry120: entry,
+      first95AfterActivationMs,
+      maxJump,
+      peak,
+    },
+  });
+
+  expect(samples.length, 'trajectory must contain independent rendered samples').toBeGreaterThanOrEqual(12);
+  expect(sampleSpanMs, 'trajectory must cover the full entry and settled interval').toBeGreaterThanOrEqual(900);
   expect(final.motionScale).toBeCloseTo(scale, 2);
   expect(final.energyX).toBeCloseTo(expectedEnergy, 1);
   expect(final.faceX).toBeLessThan(0);
@@ -178,22 +216,18 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   expect(final.textureX).toBeGreaterThan(Math.abs(final.faceX));
   expect(Math.abs(final.faceX)).toBeGreaterThan(final.figureX);
 
-  const activation = samples.find((sample) => Math.abs(sample.energyX) >= expectedEnergy * 0.005);
   expect(activation, 'pointer activation must produce a measurable first motion sample').toBeTruthy();
-  const positive = samples.filter((sample) => sample.elapsed >= activation.elapsed && sample.energyX > expectedEnergy * 0.05);
+  const positive = activation
+    ? samples.filter((sample) => sample.elapsed >= activation.elapsed && sample.energyX > expectedEnergy * 0.05)
+    : [];
   expect(positive.length).toBeGreaterThan(5);
-  const entryTargetElapsed = activation.elapsed + 120;
-  const entry = samples.reduce((best, sample) => Math.abs(sample.elapsed - entryTargetElapsed) < Math.abs(best.elapsed - entryTargetElapsed) ? sample : best, samples[0]);
+  expect(entry).toBeTruthy();
   expect(entry.energyX / expectedEnergy).toBeGreaterThan(0.2);
   expect(entry.energyX / expectedEnergy).toBeLessThan(0.75);
-  const first95 = samples.find((sample) => sample.elapsed >= activation.elapsed && sample.energyX >= expectedEnergy * 0.95);
   expect(first95).toBeTruthy();
-  const first95AfterActivationMs = first95.elapsed - activation.elapsed;
   expect(first95AfterActivationMs).toBeGreaterThan(150);
   expect(first95AfterActivationMs).toBeLessThan(650);
-  const peak = Math.max(...samples.filter((sample) => sample.elapsed >= activation.elapsed).map((sample) => sample.energyX));
   expect(peak).toBeLessThanOrEqual(expectedEnergy * 1.06);
-  const maxJump = Math.max(...samples.slice(1).map((sample, index) => Math.abs(sample.energyX - samples[index].energyX)));
   expect(maxJump).toBeLessThan(0.55 * scale);
   expect(samples.every((sample) => Number.isFinite(sample.energyX) && Number.isFinite(sample.faceX) && Number.isFinite(sample.rootScale))).toBe(true);
 
@@ -222,14 +256,19 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   const expectedRatio = scale / footerScale;
   expect(observedRatio).toBeCloseTo(expectedRatio, 1);
 
-  fs.writeFileSync(path.join(DIR, 'brand-motion-quality-metrics.json'), JSON.stringify({
+  writeMotionMetrics({
+    status: 'passed',
     header: {
       box: headerBox,
       expectedScale: scale,
+      expectedEnergy,
       final,
       samples,
+      frameIntervalsMs,
+      maxFrameIntervalMs,
       sampleSpanMs,
       activationElapsedMs: activation.elapsed,
+      entry120: entry,
       first95AfterActivationMs,
       settleMs,
       maxJump,
@@ -237,7 +276,7 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
     },
     footer: { box: footerResult.box, expectedScale: footerScale, final: footerResult.state },
     normalizedAmplitudeRatio: { observed: observedRatio, expected: expectedRatio },
-  }, null, 2));
+  });
 });
 
 test('reduced motion keeps all depth transforms inert', async ({ page }) => {
