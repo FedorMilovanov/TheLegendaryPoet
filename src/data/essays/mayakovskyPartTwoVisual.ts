@@ -144,6 +144,28 @@ const illustratedMovement = insertArchiveImages(movement, {
   ],
 });
 
+const mythCheckedMovement = illustratedMovement.flatMap<EssayBlock>((block) => {
+  if (
+    block.type !== 'paragraph' ||
+    !block.text.includes('И выставка «20 лет работы» не пустовала')
+  ) {
+    return [block];
+  }
+
+  return [
+    block,
+    {
+      type: 'note',
+      variant: 'myth',
+      claim: 'На выставку «20 лет работы» никто не пришёл, и Маяковский увидел совершенно пустой зал',
+      verdict: 'partly-true',
+      origin: 'поздние драматические пересказы последних месяцев поэта, в которых отсутствие поддержки литературных организаций превращается в полное отсутствие публики',
+      text: 'Хроника открытия 1 февраля 1930 года сообщает о представителях заводов, учащихся и рабочих; небольшой зал был **переполнен молодёжью**. При этом литературные организации действительно не пришли поздравить автора. Позднее сам Маяковский говорил, что выставка посещалась плохо, и связывал это также с недостаточной рекламой. Поэтому здесь нельзя выбирать между двумя удобными крайностями: открытие не было пустым, но профессиональная изоляция и слабая последующая посещаемость были реальны.',
+      sourceIds: ['chronicle-1930', 'red-presnya-speech', 'museum-invited-list'],
+    },
+  ];
+});
+
 export const mayakovskyPartTwo: Essay = {
   ...baseMayakovsky,
   id: 'essay-mayakovsky-gromovoy',
@@ -152,7 +174,8 @@ export const mayakovskyPartTwo: Essay = {
   title: 'Маяковский. Часть II: революция, ЛЕФ и последний кризис',
   subtitle: 'РОСТА, общий дом Бриков, зарубежные поездки, поздняя сатира и несколько кризисов, сошедшихся весной 1930 года.',
   excerpt: 'Вторая часть документальной биографии: сознательное служение революции, ЛЕФ, путешествия, поздняя лирика, «Баня», выставка «20 лет работы» и трагический финал.',
-  readTime: 27,
+  dateModified: '2026-08-02',
+  readTime: 29,
   series: { id: 'mayakovsky-biography', label: 'Владимир Маяковский', part: 2, total: 2 },
-  blocks: [...bridge, ...illustratedMovement],
+  blocks: [...bridge, ...mythCheckedMovement],
 };
