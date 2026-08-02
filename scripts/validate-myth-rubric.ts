@@ -56,6 +56,11 @@ const requiredMyths: Record<string, RequiredMyth[]> = {
       verdict: 'partly-true',
       sourceIds: ['chronicle-1930', 'red-presnya-speech', 'museum-invited-list'],
     },
+    {
+      claimIncludes: 'сразу после его смерти',
+      verdict: 'false',
+      sourceIds: ['museum-stalin-brik-1935', 'rgali-brik-stalin-letter-1935'],
+    },
   ],
   'brik-case': [
     {
