@@ -25,6 +25,8 @@ interface ReliableInViewResult<T extends HTMLElement> {
   inView: boolean;
 }
 
+const BOOTSTRAP_CHECK_DELAYS_MS = [0, 80, 240, 600, 1_200, 2_200] as const;
+
 function makeVariants(direction: Direction, distance: number, blur: boolean): Variants {
   const offsets: Record<Direction, { x: number; y: number }> = {
     up: { x: 0, y: distance },
@@ -55,6 +57,7 @@ export function useReliableInView<T extends HTMLElement>({
     let revealed = false;
     let disposed = false;
     let frame = 0;
+    const delayedChecks: number[] = [];
 
     const setVisible = (visible: boolean) => {
       if (disposed) return;
@@ -114,18 +117,28 @@ export function useReliableInView<T extends HTMLElement>({
     resizeObserver?.observe(element);
 
     window.addEventListener('scroll', scheduleGeometryCheck, { passive: true });
+    document.addEventListener('scroll', scheduleGeometryCheck, { capture: true, passive: true });
     window.addEventListener('resize', scheduleGeometryCheck, { passive: true });
+    window.addEventListener('pageshow', scheduleGeometryCheck);
+    document.addEventListener('visibilitychange', scheduleGeometryCheck);
     window.visualViewport?.addEventListener('scroll', scheduleGeometryCheck, { passive: true });
     window.visualViewport?.addEventListener('resize', scheduleGeometryCheck, { passive: true });
-    scheduleGeometryCheck();
+
+    for (const delay of BOOTSTRAP_CHECK_DELAYS_MS) {
+      delayedChecks.push(window.setTimeout(scheduleGeometryCheck, delay));
+    }
 
     return () => {
       disposed = true;
       if (frame) window.cancelAnimationFrame(frame);
+      for (const timer of delayedChecks) window.clearTimeout(timer);
       observer.disconnect();
       resizeObserver?.disconnect();
       window.removeEventListener('scroll', scheduleGeometryCheck);
+      document.removeEventListener('scroll', scheduleGeometryCheck, true);
       window.removeEventListener('resize', scheduleGeometryCheck);
+      window.removeEventListener('pageshow', scheduleGeometryCheck);
+      document.removeEventListener('visibilitychange', scheduleGeometryCheck);
       window.visualViewport?.removeEventListener('scroll', scheduleGeometryCheck);
       window.visualViewport?.removeEventListener('resize', scheduleGeometryCheck);
     };
