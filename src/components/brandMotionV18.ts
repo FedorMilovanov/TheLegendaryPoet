@@ -150,10 +150,13 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     const dt = Math.min(0.032, Math.max(0.001, lastTime ? (time - lastTime) / 1000 : 1 / 60));
     lastTime = time;
 
-    const stiffness = active ? 136 : 92;
-    const damping = active ? 18.5 : 15.8;
-    const wakeStiffness = active ? 126 : 78;
-    const wakeDamping = active ? 15.8 : 14.6;
+    // Entry stays deliberate and layered. Return is intentionally crisper so
+    // an already invisible velocity/wake tail cannot retain compositor layers
+    // or the settling state for more than a second on a throttled RAF runner.
+    const stiffness = active ? 136 : 180;
+    const damping = active ? 18.5 : 20;
+    const wakeStiffness = active ? 126 : 220;
+    const wakeDamping = active ? 15.8 : 22;
 
     velocityX += (targetX - x) * stiffness * dt;
     velocityY += (targetY - y) * stiffness * dt;
@@ -169,11 +172,20 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     const positionError = Math.abs(targetX - x) + Math.abs(targetY - y);
     const velocity = Math.abs(velocityX) + Math.abs(velocityY);
     const wakeError = Math.abs(targetWake - wake) + Math.abs(velocityWake);
-    if (positionError >= 0.0018 || velocity >= 0.0038 || wakeError >= 0.0022) {
+    const positionTolerance = active ? 0.0018 : 0.006;
+    const velocityTolerance = active ? 0.0038 : 0.15;
+    const wakeTolerance = active ? 0.0022 : 0.08;
+    if (
+      positionError >= positionTolerance
+      || velocity >= velocityTolerance
+      || wakeError >= wakeTolerance
+    ) {
       schedule();
       return;
     }
 
+    // Snap only after the remaining rendered displacement is subpixel and the
+    // next-frame velocity is visually negligible; this removes residual drift.
     x = targetX;
     y = targetY;
     wake = targetWake;
