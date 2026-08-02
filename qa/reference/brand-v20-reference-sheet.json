@@ -89,10 +89,10 @@
         "hoodApexYToCanvas": 0.120833,
         "cloakShoulderYToCanvas": 0.392854,
         "figureCenterXToCanvas": 0.502188,
-        "fieldWidthToCanvas": 0.8845,
-        "fieldHeightToCanvas": 0.7413,
-        "fieldTopYToCanvas": 0.0691,
-        "fieldCenterXToCanvas": 0.5109
+        "fieldWidthToCanvas": 0.882292,
+        "fieldHeightToCanvas": 0.733333,
+        "fieldTopYToCanvas": 0.072917,
+        "fieldCenterXToCanvas": 0.510938
       },
       "fieldVisibility": {
         "minimumRearBranches": 8,
