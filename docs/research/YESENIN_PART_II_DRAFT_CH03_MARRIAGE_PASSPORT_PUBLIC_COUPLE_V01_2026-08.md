@@ -3,14 +3,14 @@
 **Глава:** `Брак, паспорт и публичная пара`  
 **Версия:** V01  
 **Статус:** `PARTIAL WORKING DRAFT / НЕ ПУБЛИКОВАТЬ`  
-**Основание:** chronology 1921–1922, route source map, claim matrix, authoring packet chapter 3  
+**Основание:** chronology 1921–1922, route source map, claim matrix, authoring packet chapter 3, `YESENIN_PART_II_SOURCE_PASS_CH01_CH02_GAPS_2026-08.md`  
 **Публичный route:** запрещён
 
 > Редакторская пометка: раздел о конкретной газетной подписи/слухе остаётся без прямой цитаты до закрепления точного номера, даты и полосы.
 
 ## Рабочий текст
 
-Юридическая последовательность весны 1922 года проста и поэтому особенно полезна для биографии. 2 мая в Москве был зарегистрирован брак Сергея Есенина и Айседоры Дункан. 8 мая поэту выдали заграничный паспорт № 5072. Утром 10 мая супруги вылетели в сторону Кёнигсберга и Германии. Между регистрацией и отъездом прошло восемь дней: они не «сбежали из загса прямо в Европу», как могла бы подсказать поздняя романтическая сцена. `[source: yes2-1922-marriage-registration; yes2-1922-passport-5072; yes2-1922-may10-departure]`
+Юридическая последовательность весны 1922 года проста и поэтому особенно полезна для биографии. 2 мая в Москве состоялся брак Сергея Есенина и Айседоры Дункан. 8 мая поэту выдали заграничный паспорт № 5072. Утром 10 мая супруги вылетели в сторону Кёнигсберга и Германии. Между браком и отъездом прошло восемь дней: они не «сбежали из загса прямо в Европу», как могла бы подсказать поздняя романтическая сцена. Академический фотокомментарий закрепляет дату брака, но не заменяет регистрационную запись; паспортный и транспортный бинарники остаются отдельными source gates. `[sources: yes2-marriage-date-1922-05-02; yes2-foreign-passport-5072-1922-05-08; yes2-departure-moscow-germany-1922-05-10]`
 
 Брак имел очевидное практическое значение. Он создавал законную форму совместной поездки, помогал оформлять документы и позволял представлять Есенина и Дункан за границей как супружескую пару. Но практическая функция не раскрывает единственный мотив. В документах нет тайного соглашения, по которому поэт женился только ради паспорта, а танцовщица — только ради нового рекламного образа. Влечение, темперамент, желание путешествовать, публичное самолюбие и стремление начать другую жизнь могли существовать одновременно с юридической выгодой.
 
@@ -29,6 +29,8 @@
 ## Source gate before V02
 
 - [x] sequence 2 May / 8 May / 10 May preserved;
+- [x] canonical academic event source IDs applied;
+- [x] marriage date source separated from registry binary;
 - [x] marriage benefit not converted into sole motive;
 - [x] prior family/legal context kept compact;
 - [x] public-couple construction separated from legal facts;
@@ -37,6 +39,8 @@
 - [ ] marriage registry item/page and rights pinned;
 - [ ] passport no. 5072 facsimile/archive item pinned;
 - [ ] exact departure/transport document pinned;
+- [ ] Duncan school/touring and Yesenin public-infrastructure source rows added to paragraph 4;
+- [ ] exact public-couple press objects pinned;
 - [ ] false-divorce newspaper issue/date/page pinned;
 - [ ] dated pair photograph representation chain closed;
 - [ ] literary-style review before V02;
