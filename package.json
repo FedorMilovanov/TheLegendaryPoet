@@ -40,8 +40,9 @@
     "validate:brand-reference": "tsx scripts/validate-brand-reference-contract.ts",
     "validate:brand-candidate": "tsx scripts/validate-brand-candidate.ts",
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
+    "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand-deep-audit": "tsx scripts/validate-brand-deep-audit.ts",
-    "validate:brand": "npm run brand:materialize && npm run validate:brand-reference && npm run validate:brand-candidate && npm run validate:brand-browser-workflow && npm run validate:brand-deep-audit && tsx scripts/validate-brand-assets.ts",
+    "validate:brand": "npm run brand:materialize && npm run validate:brand-reference && npm run validate:brand-candidate && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && npm run validate:brand-deep-audit && tsx scripts/validate-brand-assets.ts",
     "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
