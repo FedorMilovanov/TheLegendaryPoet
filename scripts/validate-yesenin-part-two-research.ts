@@ -50,9 +50,29 @@ for (const [name, text] of drafts) {
   }
 }
 
+const chapter1 = drafts.get('YESENIN_PART_II_DRAFT_CH01_1921_V01_2026-08.md')!;
+for (const required of [
+  'yes2-1921-ionov-polemic-letter-before-sep15',
+  'yes2-1921-pir-editor-letter-before-sep15',
+  'yes2-1921-oct17-poster',
+  'yes2-1921-oct17-machtet-diary',
+  'коллективные полемические письма',
+]) {
+  if (!chapter1.includes(required)) throw new Error(`chapter 1 lost source-gap closure: ${required}`);
+}
+for (const retired of ['yes2-1921-oct17-poster-correction', 'подписывал новые программные тексты']) {
+  if (chapter1.includes(retired)) throw new Error(`chapter 1 restored retired wording/source: ${retired}`);
+}
+
 const chapter2 = drafts.get('YESENIN_PART_II_DRAFT_CH02_DUNCAN_MEETING_V01_2026-08.md')!;
-if (!chapter2.includes('осенью 1921 года, вероятнее всего в начале октября')) {
-  throw new Error('chapter 2 lost the qualified first-meeting date in its conclusion');
+for (const required of [
+  'осенью 1921 года, вероятнее всего в начале октября',
+  'yes2-marriage-date-1922-05-02',
+  'yes2-foreign-passport-5072-1922-05-08',
+  'yes2-departure-moscow-germany-1922-05-10',
+  'Свадебная фотография подтверждает день события на академическом уровне, но не заменяет регистрационную запись',
+]) {
+  if (!chapter2.includes(required)) throw new Error(`chapter 2 lost qualification/source boundary: ${required}`);
 }
 if (/Для большой биографии достаточно следующей границы:\s*в начале октября 1921/iu.test(chapter2)) {
   throw new Error('chapter 2 conclusion overstates the first-meeting date');
@@ -149,5 +169,5 @@ for (const forbiddenRegistration of [
 }
 
 console.log(
-  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, immigration, source-type and medical boundaries intact.`,
+  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal-bridge, immigration, source-type and medical boundaries intact.`,
 );
