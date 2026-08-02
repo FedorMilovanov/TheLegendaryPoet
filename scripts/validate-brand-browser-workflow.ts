@@ -13,7 +13,8 @@ const mobilePlatforms = read('qa/mobile-platforms.spec.mjs');
 const webkitEntrypoint = read('qa/mobile-home-webkit.spec.mjs');
 const isolatedWebKit = read('qa/mobile-webkit-isolated.spec.mjs');
 const isolatedHelpers = read('qa/mobile-webkit-isolated.helpers.mjs');
-const webkitRunner = read('scripts/run-webkit-process-isolated.mjs');
+const webkitBaseRunner = read('scripts/run-webkit-process-isolated.mjs');
+const webkitHomeRunner = read('scripts/run-webkit-home-reveal-process-isolated.mjs');
 const homeRunner = read('scripts/run-home-polish-process-isolated.mjs');
 const optical = read('qa/brand-v19-optical.spec.mjs');
 const micro = read('qa/brand-v19-micro.spec.mjs');
@@ -28,6 +29,7 @@ for (const file of [
   'qa/mobile-webkit-isolated.spec.mjs',
   'qa/mobile-webkit-isolated.helpers.mjs',
   'scripts/run-webkit-process-isolated.mjs',
+  'scripts/run-webkit-home-reveal-process-isolated.mjs',
   'scripts/run-home-polish-process-isolated.mjs',
   'qa/brand-v19-optical.spec.mjs',
   'qa/brand-v19-micro.spec.mjs',
@@ -35,11 +37,18 @@ for (const file of [
 
 assert.match(workflow, /env:\s*[\s\S]*TESTED_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
 assert.match(workflow, /jobs:\s*[\s\S]*browser-qa:/);
+assert.match(workflow, /webkit-home-reveal-qa:/);
 assert.match(workflow, /premium-home-qa:/);
+assert.doesNotMatch(workflow, /\bneeds:/, 'all three acceptance jobs must execute independently');
+
+const webkitMarker = '\n  webkit-home-reveal-qa:';
 const premiumMarker = '\n  premium-home-qa:';
+const webkitIndex = workflow.indexOf(webkitMarker);
 const premiumIndex = workflow.indexOf(premiumMarker);
-assert.ok(premiumIndex > 0, 'premium-home-qa must be a separate top-level job');
-const coreJob = workflow.slice(0, premiumIndex);
+assert.ok(webkitIndex > 0, 'webkit-home-reveal-qa must be a separate top-level job');
+assert.ok(premiumIndex > webkitIndex, 'premium-home-qa must be a separate top-level job after Safari home QA');
+const coreJob = workflow.slice(0, webkitIndex);
+const webkitHomeJob = workflow.slice(webkitIndex, premiumIndex);
 const premiumJob = workflow.slice(premiumIndex);
 
 assert.match(coreJob, /runs-on: ubuntu-latest/);
@@ -48,14 +57,31 @@ assert.match(coreJob, /Checkout exact browser tested head/);
 assert.match(coreJob, /ref: \$\{\{ env\.TESTED_SHA \}\}/);
 assert.match(coreJob, /Verify exact browser checkout identity/);
 assert.match(coreJob, /test "\$actual" = "\$TESTED_SHA"/);
+assert.match(coreJob, /Build production site/);
+assert.match(coreJob, /Start production preview/);
 assert.match(coreJob, /Run Chromium and Android Chrome QA/);
 assert.match(coreJob, /--project=chromium-core/);
 assert.match(coreJob, /--project=android-pixel7/);
 assert.match(coreJob, /--workers=1/);
-assert.match(coreJob, /Run iPhone Safari QA in fresh browser processes/);
+assert.match(coreJob, /Run base iPhone Safari QA in fresh browser processes/);
 assert.match(coreJob, /node scripts\/run-webkit-process-isolated\.mjs/);
-assert.doesNotMatch(coreJob, /run-home-polish-process-isolated/);
+assert.doesNotMatch(coreJob, /run-webkit-home-reveal-process-isolated|run-home-polish-process-isolated/);
 assert.doesNotMatch(coreJob, /--project=iphone-safari/);
+
+assert.match(webkitHomeJob, /runs-on: ubuntu-latest/);
+assert.match(webkitHomeJob, /timeout-minutes: 45/);
+assert.match(webkitHomeJob, /Checkout exact Safari home tested head/);
+assert.match(webkitHomeJob, /ref: \$\{\{ env\.TESTED_SHA \}\}/);
+assert.match(webkitHomeJob, /Verify exact Safari home checkout identity/);
+assert.match(webkitHomeJob, /test "\$actual" = "\$TESTED_SHA"/);
+assert.match(webkitHomeJob, /Build Safari home production site/);
+assert.match(webkitHomeJob, /Install isolated Safari home Playwright runtime/);
+assert.match(webkitHomeJob, /npx playwright install --with-deps webkit/);
+assert.match(webkitHomeJob, /Start Safari home production preview/);
+assert.match(webkitHomeJob, /Run Safari home reveal and route QA on a fresh runner/);
+assert.match(webkitHomeJob, /node scripts\/run-webkit-home-reveal-process-isolated\.mjs/);
+assert.match(webkitHomeJob, /manual-browser-webkit-home-evidence-\$\{\{ env\.TESTED_SHA \}\}/);
+assert.doesNotMatch(webkitHomeJob, /run-webkit-process-isolated|run-home-polish-process-isolated/);
 
 assert.match(premiumJob, /runs-on: ubuntu-latest/);
 assert.match(premiumJob, /timeout-minutes: 45/);
@@ -71,9 +97,7 @@ assert.match(premiumJob, /node scripts\/run-home-polish-process-isolated\.mjs/);
 assert.match(premiumJob, /set -o pipefail/);
 assert.match(premiumJob, /tee home-polish\.log/);
 assert.match(premiumJob, /manual-browser-premium-evidence-\$\{\{ env\.TESTED_SHA \}\}/);
-assert.doesNotMatch(premiumJob, /run-webkit-process-isolated/);
-assert.doesNotMatch(workflow, /needs:\s*browser-qa/,
-  'premium acceptance must execute independently rather than being skipped after a core-job failure');
+assert.doesNotMatch(premiumJob, /run-webkit-(?:home-reveal-)?process-isolated/);
 
 for (const spec of [
   'qa/mobile-platforms.spec.mjs',
@@ -123,18 +147,34 @@ assert.match(isolatedHelpers, /visibleBusyRegions/);
 assert.match(isolatedHelpers, /horizontalOverflow/);
 assert.doesNotMatch(isolatedHelpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classList\.remove\(['"]chrome-hidden/);
 
-assert.match(webkitRunner, /spawnSync/);
-assert.match(webkitRunner, /--project=iphone-safari/);
-assert.match(webkitRunner, /--config=playwright\.config\.mjs/);
-assert.match(webkitRunner, /--workers=1/);
-assert.match(webkitRunner, /fresh-process Safari contours passed/);
-assert.doesNotMatch(webkitRunner, /--retries(?:=|\s)/);
+assert.match(webkitBaseRunner, /spawnSync/);
+assert.match(webkitBaseRunner, /--project=iphone-safari/);
+assert.match(webkitBaseRunner, /--config=playwright\.config\.mjs/);
+assert.match(webkitBaseRunner, /--workers=1/);
+assert.match(webkitBaseRunner, /fresh-process base Safari contours passed/);
+assert.doesNotMatch(webkitBaseRunner, /--retries(?:=|\s)/);
+for (const contour of ['mobile-platforms', 'yesenin-part-one', 'optical-matrix', 'micro-matrix']) {
+  assert.match(webkitBaseRunner, new RegExp(contour));
+}
+for (const route of ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings']) {
+  assert.match(webkitBaseRunner, new RegExp(`hover-\\$\\{route\\}|${route} interactive artwork`));
+}
+assert.doesNotMatch(webkitBaseRunner, /home principal section|representative lazy landmark|home-dock-search/);
+
+assert.match(webkitHomeRunner, /spawnSync/);
+assert.match(webkitHomeRunner, /--project=iphone-safari/);
+assert.match(webkitHomeRunner, /--config=playwright\.config\.mjs/);
+assert.match(webkitHomeRunner, /--workers=1/);
+assert.match(webkitHomeRunner, /fresh-process home and route Safari contours passed/);
+assert.doesNotMatch(webkitHomeRunner, /--retries(?:=|\s)/);
 for (const slug of ['poet-count', 'poem-of-day', 'featured-poets', 'faith-culture']) {
-  assert.match(webkitRunner, new RegExp(`home principal section ${slug}`));
+  assert.match(webkitHomeRunner, new RegExp(`home principal section ${slug}`));
 }
 for (const route of ['poets', 'ratings', 'articles', 'music', 'archive', 'about', 'not-found']) {
-  assert.match(webkitRunner, new RegExp(`route-\\$\\{route\\}|WebKit ${route} route`));
+  assert.match(webkitHomeRunner, new RegExp(`route-\\$\\{route\\}|WebKit ${route} route`));
 }
+assert.match(webkitHomeRunner, /home dock, search sheet and tap targets/);
+assert.doesNotMatch(webkitHomeRunner, /mobile-platforms|yesenin-part-one|hoverRoutes|brand-v19-optical|brand-v19-micro/);
 
 assert.match(homeRunner, /spawnSync/);
 for (const contour of ['home-desktop', 'home-pixel7', 'iphone-ambient', 'iphone-labels', 'iphone-first-viewport', 'iphone-reduced-motion']) {
@@ -150,4 +190,4 @@ assert.match(optical, /occupiedWidth/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: exact-head core and premium jobs use separate hosted runners; zero-flaky Chromium/Android, fresh-process Safari and premium contours remain mandatory');
+console.log('brand browser workflow: exact-head Chromium/Android, base Safari, Safari home/route and premium acceptance execute on three independent hosted runners with zero-flaky enforcement');
