@@ -116,7 +116,7 @@ jobs:
           --workers=1
           --reporter=line
 
-      - name: Run iPhone Safari QA in fresh browser processes
+      - name: Run base iPhone Safari QA in fresh browser processes
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs
 
@@ -132,6 +132,88 @@ jobs:
             preview.log
             production-build.log
             manual-browser-tested-head.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  webkit-home-reveal-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Safari home tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact Safari home checkout identity
+        shell: bash
+        run: |
+          actual="$(git rev-parse HEAD)"
+          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > webkit-home-tested-head.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Safari home project dependencies
+        run: npm ci
+
+      - name: Install FFmpeg for Safari home deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Build Safari home production site
+        id: webkit_home_build
+        env:
+          VITE_BASE: /
+        run: |
+          set +e
+          {
+            npm run sitemap
+            npm run build
+          } > webkit-home-production-build.log 2>&1
+          status=$?
+          cat webkit-home-production-build.log
+          exit $status
+
+      - name: Install isolated Safari home Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps webkit
+
+      - name: Start Safari home production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > webkit-home-preview.log 2>&1 &
+          echo $! > webkit-home-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat webkit-home-preview.log
+          exit 1
+
+      - name: Run Safari home reveal and route QA on a fresh runner
+        if: ${{ always() && steps.webkit_home_build.outcome == 'success' }}
+        run: node scripts/run-webkit-home-reveal-process-isolated.mjs
+
+      - name: Upload Safari home browser QA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-browser-webkit-home-evidence-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            webkit-home-preview.log
+            webkit-home-production-build.log
+            webkit-home-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
 
