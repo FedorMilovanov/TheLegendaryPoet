@@ -125,6 +125,7 @@ for (const section of HOME_SECTIONS) {
     await surface.scrollIntoViewIfNeeded();
     await expect(surface).toBeInViewport();
     const visual = await waitForStableRevealSurface(surface, section.label);
+    await expect(target).toBeVisible();
 
     const diagnostics = await collectDiagnostics(page);
     let topDiagnostics = null;
@@ -147,7 +148,6 @@ for (const section of HOME_SECTIONS) {
     });
 
     expect(visual).not.toBeNull();
-    await expect(target).toBeVisible();
     expect(diagnostics.pathname).toBe('/');
     expectDiagnostics(diagnostics);
     if (topDiagnostics) expectDiagnostics(topDiagnostics, { requireTopChrome: true });
