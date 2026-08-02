@@ -5,7 +5,6 @@ import {
   attachRuntimeDiagnostics,
   chooseRepresentativeLandmark,
   collectDiagnostics,
-  effectiveOpacity,
   expectCleanRuntime,
   expectDiagnostics,
   expectDockInsideViewport,
@@ -13,6 +12,13 @@ import {
   scrollLocatorIntoViewport,
   writeArtifact,
 } from './mobile-webkit-isolated.helpers.mjs';
+
+const HOME_SECTIONS = [
+  { slug: 'poet-count', label: 'Поэтов в базе', exact: true },
+  { slug: 'poem-of-day', label: 'Стихотворение дня', exact: true },
+  { slug: 'featured-poets', label: 'Избранные авторы', exact: true, verifyChromeReset: true },
+  { slug: 'faith-culture', label: 'Вера, культура и', exact: false },
+];
 
 const ROUTES = [
   ['poets', '/poets'],
@@ -24,105 +30,108 @@ const ROUTES = [
   ['not-found', '/mobile-platform-route-that-does-not-exist'],
 ];
 
-const HOME_SECTIONS = [
-  {
-    slug: 'poet-count',
-    label: 'Поэтов в базе',
-    locate: (page) => page.getByText('Поэтов в базе', { exact: true }),
-  },
-  {
-    slug: 'poem-of-day',
-    label: 'Стихотворение дня',
-    locate: (page) => page.getByText('Стихотворение дня', { exact: true }),
-  },
-  {
-    slug: 'featured-poets',
-    label: 'Избранные авторы',
-    locate: (page) => page.getByText('Избранные авторы', { exact: true }),
-  },
-  {
-    slug: 'faith-culture',
-    label: 'Вера, культура и',
-    locate: (page) => page.getByText('Вера, культура и', { exact: false }).last(),
-  },
-];
-
 function onlySafari(testInfo, reason) {
   test.skip(testInfo.project.name !== 'iphone-safari', reason);
 }
 
+async function locateHomeRevealSurface(page, { slug, label, exact }) {
+  const target = exact
+    ? page.getByText(label, { exact: true }).first()
+    : page.getByText(label, { exact: false }).last();
+  await target.waitFor({ state: 'attached', timeout: 20_000 });
+
+  const marked = await target.evaluate((node, key) => {
+    let current = node;
+    let animatedSurface = null;
+    while (current && current.id !== 'main-content') {
+      const inlineStyle = current.getAttribute('style') || '';
+      if (/(?:^|;)\s*(?:opacity|filter|transform)\s*:/.test(inlineStyle)) {
+        animatedSurface = current;
+        break;
+      }
+      current = current.parentElement;
+    }
+    const surface = animatedSurface || node.closest('section') || node;
+    if (!(surface instanceof HTMLElement)) return false;
+    surface.dataset.qaHomeRevealSurface = key;
+    if (node instanceof HTMLElement) node.dataset.qaHomeRevealLabel = key;
+    return true;
+  }, slug);
+  expect(marked, `${label} reveal surface should be discoverable`).toBe(true);
+
+  return {
+    target: page.locator(`[data-qa-home-reveal-label="${slug}"]`),
+    surface: page.locator(`[data-qa-home-reveal-surface="${slug}"]`),
+  };
+}
+
+async function inspectRevealSurface(surface) {
+  return surface.evaluate((node) => {
+    let effectiveOpacity = 1;
+    let current = node;
+    while (current && current !== document.documentElement) {
+      effectiveOpacity *= Number.parseFloat(getComputedStyle(current).opacity || '1');
+      current = current.parentElement;
+    }
+    const style = getComputedStyle(node);
+    const rect = node.getBoundingClientRect();
+    return {
+      effectiveOpacity,
+      filter: style.filter,
+      intersectsViewport: rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight,
+      width: rect.width,
+      height: rect.height,
+    };
+  });
+}
+
 for (const section of HOME_SECTIONS) {
   test(`WebKit home principal section ${section.slug} reveals in a fresh context`, async ({ page }, testInfo) => {
-    onlySafari(testInfo, 'one bounded WebKit home section per fresh page/context');
+    onlySafari(testInfo, 'one native WebKit home scroll per fresh page/context');
     const runtime = attachRuntimeDiagnostics(page);
     await gotoRoute(page, '/');
+    const { target, surface } = await locateHomeRevealSurface(page, section);
 
-    const target = section.locate(page);
-    await scrollLocatorIntoViewport(page, target, section.label);
-    await expect.poll(
-      () => effectiveOpacity(target),
-      {
-        timeout: 8_000,
-        intervals: [120, 180, 240, 320],
-        message: `${section.label} should reveal after bounded WebKit scrolling`,
-      },
-    ).toBeGreaterThan(0.9);
+    // One protocol-level locator scroll per fresh context drives WebKit's real
+    // IntersectionObserver without recreating the previous cumulative stress.
+    // The assertion targets the Framer Motion reveal surface, not its inner text.
+    await surface.scrollIntoViewIfNeeded();
+    await expect(surface).toBeInViewport();
+    await page.waitForTimeout(1_400);
 
+    const visual = await inspectRevealSurface(surface);
     const diagnostics = await collectDiagnostics(page);
+    let topDiagnostics = null;
+    if (section.verifyChromeReset) {
+      await gotoRoute(page, '/');
+      await expectDockInsideViewport(page);
+      topDiagnostics = await collectDiagnostics(page);
+    }
     writeArtifact(`iphone-safari-home-${section.slug}.json`, {
       project: testInfo.project.name,
-      section: section.label,
-      runtime,
+      section,
+      visual,
       diagnostics,
+      topDiagnostics,
+      runtime,
     });
     await page.screenshot({
       path: path.join(ARTIFACT_DIR, `iphone-safari-home-${section.slug}.png`),
       fullPage: false,
     });
 
+    expect(visual.intersectsViewport, `${section.label} reveal surface should intersect the viewport`).toBe(true);
+    expect(visual.width, `${section.label} reveal width`).toBeGreaterThan(2);
+    expect(visual.height, `${section.label} reveal height`).toBeGreaterThan(2);
+    expect(visual.effectiveOpacity, `${section.label} reveal surface should finish visibly`).toBeGreaterThan(0.9);
+    expect(visual.filter === 'none' || visual.filter === 'blur(0px)' || visual.filter === 'blur(0)').toBe(true);
+    await expect(target).toBeVisible();
     expect(diagnostics.pathname).toBe('/');
     expectDiagnostics(diagnostics);
+    if (topDiagnostics) expectDiagnostics(topDiagnostics, { requireTopChrome: true });
     expectCleanRuntime(runtime);
   });
 }
-
-test('WebKit home mobile chrome returns after one lower landmark and a navigation reset in a fresh context', async ({ page }, testInfo) => {
-  onlySafari(testInfo, 'isolated WebKit home chrome reset probe');
-  const runtime = attachRuntimeDiagnostics(page);
-  await gotoRoute(page, '/');
-
-  const lowerTarget = page.getByText('Избранные авторы', { exact: true });
-  await scrollLocatorIntoViewport(page, lowerTarget, 'Избранные авторы');
-  await expect.poll(
-    () => effectiveOpacity(lowerTarget),
-    {
-      timeout: 8_000,
-      intervals: [120, 180, 240, 320],
-      message: 'lower homepage landmark should reveal before the chrome reset',
-    },
-  ).toBeGreaterThan(0.9);
-  const lowerDiagnostics = await collectDiagnostics(page);
-
-  // A navigation reset is safer in Linux WebKit than another sequence of
-  // upward scroll commands. The lower state has already been observed above.
-  await gotoRoute(page, '/');
-  await expectDockInsideViewport(page);
-  const topDiagnostics = await collectDiagnostics(page);
-  writeArtifact('iphone-safari-home-chrome-reset.json', {
-    project: testInfo.project.name,
-    runtime,
-    lowerDiagnostics,
-    topDiagnostics,
-  });
-  await page.screenshot({
-    path: path.join(ARTIFACT_DIR, 'iphone-safari-home-chrome-reset.png'),
-    fullPage: false,
-  });
-
-  expectDiagnostics(lowerDiagnostics);
-  expectDiagnostics(topDiagnostics, { requireTopChrome: true });
-  expectCleanRuntime(runtime);
-});
 
 for (const [name, route] of ROUTES) {
   test(`WebKit ${name} route keeps one representative lazy landmark and runtime stable`, async ({ page }, testInfo) => {
