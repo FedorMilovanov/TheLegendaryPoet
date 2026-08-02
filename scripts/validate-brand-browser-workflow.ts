@@ -36,9 +36,6 @@ assert.match(playwright, /brand-v19-optical/);
 assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all principal homepage sections\//);
 
-// Hero acceptance observes the rendered endpoint rather than WebKit's stale
-// animation playState. Three consecutive samples are required; retry-passed is
-// still rejected globally by failOnFlakyTests.
 assert.match(homePolishSpec, /let stableSamples = 0/);
 assert.match(homePolishSpec, /stableSamples = visuallyFinal \? stableSamples \+ 1 : 0/);
 assert.match(homePolishSpec, /opacity >= 0\.995/);
@@ -70,7 +67,7 @@ assert.match(isolatedWebKit, /locateHomeRevealSurface/);
 assert.match(isolatedWebKit, /data-qa-home-reveal-surface/);
 assert.match(isolatedWebKit, /inspectRevealSurface/);
 assert.match(isolatedWebKit, /waitForStableRevealSurface/);
-assert.match(isolatedWebKit, /stableSamples/);
+assert.match(isolatedWebKit, /stableSamples = ready \? stableSamples \+ 1 : 0/);
 assert.match(isolatedWebKit, /visual\.blurPx <= 0\.05/);
 assert.match(isolatedWebKit, /toBeGreaterThanOrEqual\(3\)/);
 assert.match(isolatedWebKit, /verifyChromeReset:\s*true/);
@@ -89,7 +86,7 @@ assert.equal(
 assert.doesNotMatch(isolatedWebKit, /WebKit home route keeps all principal sections/);
 assert.doesNotMatch(isolatedWebKit, /fullPage:\s*true/);
 assert.doesNotMatch(isolatedWebKit, /page\.mouse\.wheel/);
-assert.doesNotMatch(isolatedWebKit, /expect\.poll\([\s\S]*effectiveOpacity/);
+assert.doesNotMatch(isolatedWebKit, /effectiveOpacity\(target\)/);
 
 assert.match(isolatedHelpers, /document\.scrollingElement/);
 assert.match(isolatedHelpers, /scrollingElement\.scrollTop = scrollTop/);
