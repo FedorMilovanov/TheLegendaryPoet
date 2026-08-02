@@ -22,14 +22,7 @@ type Sheet = {
   candidates: Candidate[];
   promotionPolicy: string;
 };
-
-const root = (file: string) => path.resolve(file);
-const read = (file: string) => fs.readFileSync(root(file), 'utf8');
-const contract = JSON.parse(read('qa/reference/brand-reference-contract.json')) as Contract;
-const sheet = JSON.parse(read('qa/reference/brand-v20-reference-sheet.json')) as Sheet;
-const full = read('public/brand-emblem-v20-candidate.svg');
-const micro = read('public/brand-emblem-v20-micro-candidate.svg');
-const ledger = JSON.parse(read('qa/brand-v20-candidate-ledger.json')) as {
+type Ledger = {
   family: string;
   fullSizeCandidate: Candidate;
   microCandidate: Candidate;
@@ -38,6 +31,14 @@ const ledger = JSON.parse(read('qa/brand-v20-candidate-ledger.json')) as {
   promotionBlockers: string[];
   promotionPolicy: string;
 };
+
+const root = (file: string) => path.resolve(file);
+const read = (file: string) => fs.readFileSync(root(file), 'utf8');
+const contract = JSON.parse(read('qa/reference/brand-reference-contract.json')) as Contract;
+const sheet = JSON.parse(read('qa/reference/brand-v20-reference-sheet.json')) as Sheet;
+const ledger = JSON.parse(read('qa/brand-v20-candidate-ledger.json')) as Ledger;
+const full = read('public/brand-emblem-v20-candidate.svg');
+const micro = read('public/brand-emblem-v20-micro-candidate.svg');
 const packageJson = read('package.json');
 const vectorWorkflow = read('.github/workflows/brand-qa.yml');
 const deepWorkflow = read('.github/workflows/brand-deep-audit.yml');
@@ -53,17 +54,22 @@ assert.equal(
 
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
-assert.equal(fullSheet.id, 'v20.5-reference-silhouette');
+assert.equal(fullSheet.id, 'v20.6-reference-monolith');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
-
-assert.equal(microSheet.id, 'v20.3-reference-micro-silhouette');
+assert.equal(microSheet.id, 'v20.4-reference-micro-monolith');
 assert.equal(microSheet.file, 'public/brand-emblem-v20-micro-candidate.svg');
 assert.deepEqual(microSheet.designGrid, [32, 32]);
 assert.deepEqual(microSheet.reviewSizes, [16, 20, 24, 32, 48]);
 
-function validateCandidate(source: string, candidate: Candidate, idAttribute: string, minimumPaths: number, requiredHooks: string[]) {
+function validateCandidate(
+  source: string,
+  candidate: Candidate,
+  idAttribute: string,
+  pathRange: readonly [number, number],
+  requiredHooks: string[],
+) {
   assert.match(source, new RegExp(`${idAttribute}="${candidate.id}"`));
   assert.match(source, new RegExp(`viewBox="0 0 ${candidate.designGrid[0]} ${candidate.designGrid[1]}"`));
   assert.equal(candidate.numericGeometryEligible, true);
@@ -72,14 +78,22 @@ function validateCandidate(source: string, candidate: Candidate, idAttribute: st
   assert.match(source, /data-brand-reference-decision="not-reference-approved"/);
   assert.doesNotMatch(source, /<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
   assert.doesNotMatch(source, /<animate(?:Transform|Motion)?\b|@keyframes|requestAnimationFrame/i);
+  assert.doesNotMatch(
+    source,
+    /<ellipse\b|<filter\b|<feGaussianBlur\b|\bfilter=/i,
+    `${candidate.id}: blur, halo ellipses and filter effects must not conceal geometry`,
+  );
   const pathCount = (source.match(/<path\b/g) ?? []).length;
-  assert.ok(pathCount >= minimumPaths, `${candidate.id}: expected at least ${minimumPaths} authored paths, received ${pathCount}`);
+  assert.ok(
+    pathCount >= pathRange[0] && pathCount <= pathRange[1],
+    `${candidate.id}: semantic path count ${pathCount} must stay inside ${pathRange[0]}–${pathRange[1]} instead of growing decorative noise`,
+  );
   for (const hook of requiredHooks) {
     assert.ok(source.includes(hook), `${candidate.id}: missing semantic hook ${hook}`);
   }
 }
 
-validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 60, [
+validateCandidate(full, fullSheet, 'data-brand-v20-candidate', [36, 48], [
   'data-brand-cloak',
   'data-brand-hood',
   'data-brand-face-void',
@@ -90,8 +104,7 @@ validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 60, [
   'data-brand-field-mid',
   'data-brand-field-rear',
 ]);
-
-validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', 26, [
+validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', [18, 24], [
   'data-brand-micro-cloak',
   'data-brand-micro-hood',
   'data-brand-micro-face',
@@ -106,7 +119,6 @@ function inRange(value: number, target: RatioTarget) {
   if (typeof target.minimum === 'number') return value >= target.minimum;
   return false;
 }
-
 for (const candidate of sheet.candidates) {
   assert.ok(inRange(candidate.ratios.hoodHeightToVisibleFigureHeight, contract.targets.hoodHeightToVisibleFigureHeight));
   assert.ok(inRange(candidate.ratios.hoodWidthToCloakWidth, contract.targets.hoodWidthToCloakWidth));
@@ -136,7 +148,8 @@ assert.equal(ledger.fullSizeCandidate.reviewerDecision, 'not-reference-approved'
 assert.equal(ledger.microCandidate.reviewerDecision, 'not-reference-approved');
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.3-reference-monolith' && /rejected/.test(entry.verdict)));
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.4-reference-drapery' && /oversized black cavity/.test(entry.verdict)));
-assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id));
+assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.5-reference-silhouette' && /rejected/.test(entry.verdict)));
+assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id && /current QA-only/.test(entry.verdict)));
 assert.ok(ledger.promotionBlockers.length >= 5);
 assert.match(ledger.promotionPolicy, /Never treat numericGeometryEligible, CI success or motion quality as reference approval/);
 
@@ -163,4 +176,4 @@ assert.match(evidenceSpec, /v20 full-size and independent micro masters pass num
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.5 full-size and v20.3 independent micro masters pass the canonical numeric geometry contract, remain static QA-only assets, and cannot enter production without explicit visual approval');
+console.log('brand v20 validation: v20.6 full-size and v20.4 independent micro masters pass canonical numeric geometry, use bounded semantic complexity without blur or halo concealment, remain static QA-only assets, and cannot enter production without explicit visual approval');
