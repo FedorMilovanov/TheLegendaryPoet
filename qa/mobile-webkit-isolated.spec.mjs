@@ -24,48 +24,101 @@ const ROUTES = [
   ['not-found', '/mobile-platform-route-that-does-not-exist'],
 ];
 
+const HOME_SECTIONS = [
+  {
+    slug: 'poet-count',
+    label: 'Поэтов в базе',
+    locate: (page) => page.getByText('Поэтов в базе', { exact: true }),
+  },
+  {
+    slug: 'poem-of-day',
+    label: 'Стихотворение дня',
+    locate: (page) => page.getByText('Стихотворение дня', { exact: true }),
+  },
+  {
+    slug: 'featured-poets',
+    label: 'Избранные авторы',
+    locate: (page) => page.getByText('Избранные авторы', { exact: true }),
+  },
+  {
+    slug: 'faith-culture',
+    label: 'Вера, культура и',
+    locate: (page) => page.getByText('Вера, культура и', { exact: false }).last(),
+  },
+];
+
 function onlySafari(testInfo, reason) {
   test.skip(testInfo.project.name !== 'iphone-safari', reason);
 }
 
-test('WebKit home route keeps all principal sections, lazy content and mobile chrome stable', async ({ page }, testInfo) => {
-  onlySafari(testInfo, 'isolated WebKit equivalent of generic and premium home scroll audits');
+for (const section of HOME_SECTIONS) {
+  test(`WebKit home principal section ${section.slug} reveals in a fresh context`, async ({ page }, testInfo) => {
+    onlySafari(testInfo, 'one bounded WebKit home section per fresh page/context');
+    const runtime = attachRuntimeDiagnostics(page);
+    await gotoRoute(page, '/');
+
+    const target = section.locate(page);
+    await scrollLocatorIntoViewport(page, target, section.label);
+    await expect.poll(
+      () => effectiveOpacity(target),
+      {
+        timeout: 8_000,
+        intervals: [120, 180, 240, 320],
+        message: `${section.label} should reveal after bounded WebKit scrolling`,
+      },
+    ).toBeGreaterThan(0.9);
+
+    const diagnostics = await collectDiagnostics(page);
+    writeArtifact(`iphone-safari-home-${section.slug}.json`, {
+      project: testInfo.project.name,
+      section: section.label,
+      runtime,
+      diagnostics,
+    });
+    await page.screenshot({
+      path: path.join(ARTIFACT_DIR, `iphone-safari-home-${section.slug}.png`),
+      fullPage: false,
+    });
+
+    expect(diagnostics.pathname).toBe('/');
+    expectDiagnostics(diagnostics);
+    expectCleanRuntime(runtime);
+  });
+}
+
+test('WebKit home mobile chrome returns after one lower landmark and a navigation reset in a fresh context', async ({ page }, testInfo) => {
+  onlySafari(testInfo, 'isolated WebKit home chrome reset probe');
   const runtime = attachRuntimeDiagnostics(page);
   await gotoRoute(page, '/');
 
-  const targets = [
-    ['Поэтов в базе', page.getByText('Поэтов в базе', { exact: true })],
-    ['Стихотворение дня', page.getByText('Стихотворение дня', { exact: true })],
-    ['Избранные авторы', page.getByText('Избранные авторы', { exact: true })],
-    ['Вера, культура и', page.getByText('Вера, культура и', { exact: false }).last()],
-  ];
-  const visited = [];
-  for (const [label, target] of targets) {
-    await scrollLocatorIntoViewport(page, target, label);
-    await page.waitForTimeout(520);
-    expect(await effectiveOpacity(target), `${label} should reveal after bounded WebKit scrolling`).toBeGreaterThan(0.9);
-    visited.push(label);
-  }
-
+  const lowerTarget = page.getByText('Избранные авторы', { exact: true });
+  await scrollLocatorIntoViewport(page, lowerTarget, 'Избранные авторы');
+  await expect.poll(
+    () => effectiveOpacity(lowerTarget),
+    {
+      timeout: 8_000,
+      intervals: [120, 180, 240, 320],
+      message: 'lower homepage landmark should reveal before the chrome reset',
+    },
+  ).toBeGreaterThan(0.9);
   const lowerDiagnostics = await collectDiagnostics(page);
+
+  // A navigation reset is safer in Linux WebKit than another sequence of
+  // upward scroll commands. The lower state has already been observed above.
   await gotoRoute(page, '/');
   await expectDockInsideViewport(page);
   const topDiagnostics = await collectDiagnostics(page);
-  writeArtifact('iphone-safari-home-principal-sections.json', {
+  writeArtifact('iphone-safari-home-chrome-reset.json', {
     project: testInfo.project.name,
-    visited,
     runtime,
     lowerDiagnostics,
     topDiagnostics,
   });
   await page.screenshot({
-    path: path.join(ARTIFACT_DIR, 'iphone-safari-home-principal-sections.png'),
+    path: path.join(ARTIFACT_DIR, 'iphone-safari-home-chrome-reset.png'),
     fullPage: false,
   });
 
-  expect(visited).toEqual(['Поэтов в базе', 'Стихотворение дня', 'Избранные авторы', 'Вера, культура и']);
-  expect(lowerDiagnostics.pathname).toBe('/');
-  expect(topDiagnostics.pathname).toBe('/');
   expectDiagnostics(lowerDiagnostics);
   expectDiagnostics(topDiagnostics, { requireTopChrome: true });
   expectCleanRuntime(runtime);
