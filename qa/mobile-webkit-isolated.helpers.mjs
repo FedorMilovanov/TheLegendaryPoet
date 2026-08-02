@@ -12,6 +12,7 @@ const STRATEGIC_SELECTOR = [
   '#main-content h1',
   '#main-content h2',
 ].join(',');
+const WEBKIT_VIEWPORT_STABILITY_MS = 1_200;
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -49,7 +50,7 @@ export async function gotoRoute(page, route) {
   await page.waitForTimeout(420);
 }
 
-async function scrollDocumentTo(page, top, delay = 280) {
+async function scrollDocumentTo(page, top, delay = 320) {
   await page.evaluate((scrollTop) => {
     window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
     const scrollingElement = document.scrollingElement;
@@ -69,33 +70,52 @@ async function scrollDocumentTo(page, top, delay = 280) {
   await page.waitForTimeout(delay);
 }
 
+async function readViewportState(target) {
+  return target.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const viewportTop = window.visualViewport?.offsetTop ?? 0;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const viewportBottom = viewportTop + viewportHeight;
+    const viewportCenter = viewportTop + viewportHeight / 2;
+    const targetCenter = rect.top + rect.height / 2;
+    return {
+      intersects: rect.width > 2
+        && rect.height > 2
+        && rect.bottom > viewportTop
+        && rect.top < viewportBottom,
+      centerDelta: targetCenter - viewportCenter,
+      viewportHeight,
+    };
+  });
+}
+
 export async function scrollLocatorIntoViewport(page, target, label) {
   await target.waitFor({ state: 'attached', timeout: 20_000 });
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const top = await target.evaluate((node) => {
       const rect = node.getBoundingClientRect();
       const scrollingElement = document.scrollingElement;
       const currentScroll = scrollingElement?.scrollTop ?? window.scrollY;
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const visualViewport = window.visualViewport;
+      const viewportTop = visualViewport?.offsetTop ?? 0;
+      const viewportHeight = visualViewport?.height ?? window.innerHeight;
       const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
       const maxScroll = Math.max(0, documentHeight - viewportHeight);
       const visibleHeight = Math.min(rect.height, viewportHeight * 0.65);
-      const centerOffset = Math.max(24, (viewportHeight - visibleHeight) / 2);
-      return Math.min(maxScroll, Math.max(0, currentScroll + rect.top - centerOffset));
+      const desiredRectTop = viewportTop + Math.max(24, (viewportHeight - visibleHeight) / 2);
+      return Math.min(maxScroll, Math.max(0, currentScroll + rect.top - desiredRectTop));
     });
     await scrollDocumentTo(page, top);
-    const intersects = await target.evaluate((node) => {
-      const rect = node.getBoundingClientRect();
-      const viewportTop = window.visualViewport?.offsetTop ?? 0;
-      const viewportBottom = viewportTop + (window.visualViewport?.height ?? window.innerHeight);
-      return rect.width > 2
-        && rect.height > 2
-        && rect.bottom > viewportTop
-        && rect.top < viewportBottom;
-    });
-    if (intersects) return;
+
+    const first = await readViewportState(target);
+    if (!first.intersects) continue;
+
+    await page.waitForTimeout(WEBKIT_VIEWPORT_STABILITY_MS);
+    const second = await readViewportState(target);
+    const centered = Math.abs(second.centerDelta) <= Math.max(48, second.viewportHeight * 0.3);
+    if (second.intersects && centered) return;
   }
-  expect(false, `${label} should intersect the WebKit viewport`).toBe(true);
+  expect(false, `${label} should remain stably centered in the WebKit visual viewport`).toBe(true);
 }
 
 export async function effectiveOpacity(target) {
