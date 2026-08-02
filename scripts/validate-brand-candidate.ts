@@ -47,30 +47,19 @@ type Ledger = {
   mergePolicy: string;
 };
 
-type Audit = {
-  referenceId: string;
-  activeCandidateId: string;
-  activeCandidateFile: string;
-  activeOpticalCandidateId: string;
-  activeOpticalCandidateFile: string;
-  activeMicroCandidateId: string;
-  activeMicroCandidateFile: string;
-  primaryReference: string;
-  productionSource: string;
+type GreenGate = {
+  gate: string;
+  testedMainSha: string;
+  fullSizeCandidate: string;
+  opticalCandidate: string;
+  microCandidate: string;
   productionReplacement: boolean;
-  status: string;
-  ownerDecision: string;
-  reviewedOpticalSizes: number[];
-  passHistory: Array<{ pass: string; result: string }>;
-  confirmedImprovements: string[];
-  remainingBlockers: string[];
-  nextPasses: string[];
-  promotionRule: string;
+  requiredResult: string;
 };
 
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const ledger = JSON.parse(read('qa/brand-marathon-pass-ledger.json')) as Ledger;
-const evaluation = JSON.parse(read('qa/brand-v19-green-gate.json')) as Audit;
+const greenGate = JSON.parse(read('qa/brand-v19-green-gate.json')) as GreenGate;
 const production = read('src/components/brandEmblemV18.svg');
 const productionPublic = read('public/brand-emblem.svg');
 const productionMicro = read('public/brand-mark-micro.svg');
@@ -156,29 +145,18 @@ assert.ok(ledger.geometryCandidate.targets.length >= 8);
 assert.equal(ledger.ownerDecision, 'not-reference-approved');
 assert.match(ledger.evidenceStatus, /production geometry remains unchanged/i);
 
-assert.equal(evaluation.referenceId, 'canonical-hooded-figure-v2-clean-base');
-assert.equal(evaluation.activeCandidateId, candidateId);
-assert.equal(evaluation.activeCandidateFile, candidateFile);
-assert.equal(evaluation.activeOpticalCandidateId, opticalId);
-assert.equal(evaluation.activeOpticalCandidateFile, opticalFile);
-assert.equal(evaluation.activeMicroCandidateId, microId);
-assert.equal(evaluation.activeMicroCandidateFile, microFile);
-assert.equal(evaluation.productionSource, ledger.visualBaseline);
-assert.equal(evaluation.productionReplacement, false);
-assert.equal(evaluation.status, 'candidate-under-reference-review');
-assert.equal(evaluation.ownerDecision, 'not-reference-approved');
-assert.deepEqual(evaluation.reviewedOpticalSizes, [256, 192, 128, 96, 64, 56, 44, 32, 24, 16]);
-assert.equal(evaluation.passHistory.length, 17);
-assert.deepEqual(evaluation.passHistory.map((item) => item.pass), ['v19.1', 'v19.2', 'v19.3', 'v19.4', 'v19.5', 'v19.6', 'v19.7', 'v19.8', 'v19.9', 'v19.10', 'v19.11', 'v19.12', 'v19.13', 'v19.14', 'v19.15', 'v19.16', 'v19.17']);
-assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.11')?.result, 'active-main-candidate');
-assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.17')?.result, 'active-optical-candidate');
-assert.equal(evaluation.passHistory.find((item) => item.pass === 'v19.14')?.result, 'active-micro-candidate');
-assert.ok(evaluation.confirmedImprovements.some((item) => /96, 64, 56 and 44 pixel/i.test(item)));
-assert.ok(evaluation.confirmedImprovements.some((item) => /32, 24 and 16 pixel/i.test(item)));
-assert.ok(evaluation.remainingBlockers.length >= 6);
-assert.ok(evaluation.nextPasses.some((item) => item.startsWith('v19.18')));
-assert.match(evaluation.promotionRule, /zero-flaky green/i);
-assert.match(evaluation.promotionRule, /owner explicitly approves/i);
+// The historical green gate is intentionally compact. It records the exact
+// candidate family and zero-flaky promotion rule; canonical reference identity,
+// detailed pass history and artistic blockers live in the ledger and reference
+// evaluation rather than being duplicated into this one-purpose file.
+assert.equal(greenGate.gate, 'brand-v19.17-zero-flaky');
+assert.match(greenGate.testedMainSha, /^[0-9a-f]{40}$/);
+assert.equal(greenGate.fullSizeCandidate, candidateId);
+assert.equal(greenGate.opticalCandidate, opticalId);
+assert.equal(greenGate.microCandidate, microId);
+assert.equal(greenGate.productionReplacement, false);
+assert.match(greenGate.requiredResult, /all required pull-request workflows green/i);
+assert.match(greenGate.requiredResult, /zero flaky tests/i);
 
 assert.ok(browserQa.includes("const CANDIDATE = ledger.geometryCandidate.file"));
 assert.ok(browserQa.includes("const CANDIDATE_ID = ledger.geometryCandidate.id"));
@@ -198,4 +176,4 @@ for (const productionSource of [production, productionPublic, productionMicro, c
   assert.doesNotMatch(productionSource, /brand-emblem-v19-(?:optical-|micro-)?candidate/);
 }
 
-console.log('brand candidate validation: seventeen passes are locked; v19.11 full-size, v19.17 optical 64-grid master and v19.14 micro remain isolated from production');
+console.log('brand candidate validation: the real compact green-gate schema, v19.11 full-size, v19.17 optical 64-grid master and v19.14 micro are locked and isolated from production');
