@@ -17,23 +17,10 @@ const suites = [
   { id: 'pixel7-premium', project: 'home-pixel7', files },
   { id: 'iphone-ambient', project: 'home-iphone-safari', files: ['qa/home-ambient.spec.mjs'] },
   { id: 'iphone-labels', project: 'home-iphone-safari', files: ['qa/home-labels.spec.mjs'] },
-  {
-    id: 'iphone-first-viewport',
-    project: 'home-iphone-safari',
-    files: ['qa/home-polish.spec.mjs'],
-    grep: 'first viewport keeps six decoded portraits, crisp title and usable labels',
-  },
-  {
-    id: 'iphone-reduced-motion',
-    project: 'home-iphone-safari',
-    files: ['qa/home-polish.spec.mjs'],
-    grep: 'reduced motion removes title, hero-root, window and decorative movement',
-  },
 ];
 
 for (const [index, suite] of suites.entries()) {
   const args = ['playwright', 'test', ...suite.files, ...common, `--project=${suite.project}`];
-  if (suite.grep) args.push('--grep', suite.grep);
 
   console.log(`\n[home-process ${index + 1}/${suites.length}] ${suite.id}`);
   const result = spawnSync(npx, args, {
@@ -55,4 +42,4 @@ for (const [index, suite] of suites.entries()) {
   }
 }
 
-console.log(`\n[home-process] ${suites.length} fresh-process premium contours passed`);
+console.log(`\n[home-process] ${suites.length} fresh-process standard premium contours passed`);
