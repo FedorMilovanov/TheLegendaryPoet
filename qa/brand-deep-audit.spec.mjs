@@ -178,16 +178,20 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   expect(final.textureX).toBeGreaterThan(Math.abs(final.faceX));
   expect(Math.abs(final.faceX)).toBeGreaterThan(final.figureX);
 
-  const positive = samples.filter((sample) => sample.energyX > expectedEnergy * 0.05);
+  const activation = samples.find((sample) => Math.abs(sample.energyX) >= expectedEnergy * 0.005);
+  expect(activation, 'pointer activation must produce a measurable first motion sample').toBeTruthy();
+  const positive = samples.filter((sample) => sample.elapsed >= activation.elapsed && sample.energyX > expectedEnergy * 0.05);
   expect(positive.length).toBeGreaterThan(5);
-  const entry = samples.reduce((best, sample) => Math.abs(sample.elapsed - 120) < Math.abs(best.elapsed - 120) ? sample : best, samples[0]);
+  const entryTargetElapsed = activation.elapsed + 120;
+  const entry = samples.reduce((best, sample) => Math.abs(sample.elapsed - entryTargetElapsed) < Math.abs(best.elapsed - entryTargetElapsed) ? sample : best, samples[0]);
   expect(entry.energyX / expectedEnergy).toBeGreaterThan(0.2);
   expect(entry.energyX / expectedEnergy).toBeLessThan(0.75);
-  const first95 = samples.find((sample) => sample.energyX >= expectedEnergy * 0.95);
+  const first95 = samples.find((sample) => sample.elapsed >= activation.elapsed && sample.energyX >= expectedEnergy * 0.95);
   expect(first95).toBeTruthy();
-  expect(first95.elapsed).toBeGreaterThan(150);
-  expect(first95.elapsed).toBeLessThan(650);
-  const peak = Math.max(...samples.map((sample) => sample.energyX));
+  const first95AfterActivationMs = first95.elapsed - activation.elapsed;
+  expect(first95AfterActivationMs).toBeGreaterThan(150);
+  expect(first95AfterActivationMs).toBeLessThan(650);
+  const peak = Math.max(...samples.filter((sample) => sample.elapsed >= activation.elapsed).map((sample) => sample.energyX));
   expect(peak).toBeLessThanOrEqual(expectedEnergy * 1.06);
   const maxJump = Math.max(...samples.slice(1).map((sample, index) => Math.abs(sample.energyX - samples[index].energyX)));
   expect(maxJump).toBeLessThan(0.55 * scale);
@@ -219,7 +223,18 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   expect(observedRatio).toBeCloseTo(expectedRatio, 1);
 
   fs.writeFileSync(path.join(DIR, 'brand-motion-quality-metrics.json'), JSON.stringify({
-    header: { box: headerBox, expectedScale: scale, final, samples, sampleSpanMs, settleMs, maxJump, peak },
+    header: {
+      box: headerBox,
+      expectedScale: scale,
+      final,
+      samples,
+      sampleSpanMs,
+      activationElapsedMs: activation.elapsed,
+      first95AfterActivationMs,
+      settleMs,
+      maxJump,
+      peak,
+    },
     footer: { box: footerResult.box, expectedScale: footerScale, final: footerResult.state },
     normalizedAmplitudeRatio: { observed: observedRatio, expected: expectedRatio },
   }, null, 2));
