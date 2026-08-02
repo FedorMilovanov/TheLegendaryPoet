@@ -8,12 +8,18 @@ const common = [
   '--reporter=line',
 ];
 
+const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];
+
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
   { id: 'optical-matrix', file: 'qa/brand-v19-optical.spec.mjs' },
   { id: 'micro-matrix', file: 'qa/brand-v19-micro.spec.mjs' },
-  { id: 'hover-stability', file: 'qa/hover-stability.spec.mjs' },
+  ...hoverRoutes.map((route) => ({
+    id: `hover-${route}`,
+    file: 'qa/hover-stability.spec.mjs',
+    grep: `${route} interactive artwork uses the universal stable-hover contract`,
+  })),
   {
     id: 'home-poet-count',
     file: 'qa/mobile-home-webkit.spec.mjs',
