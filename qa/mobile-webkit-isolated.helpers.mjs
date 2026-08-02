@@ -49,34 +49,49 @@ export async function gotoRoute(page, route) {
   await page.waitForTimeout(420);
 }
 
-async function scrollDocumentTo(page, top, delay = 220) {
+async function scrollDocumentTo(page, top, delay = 280) {
   await page.evaluate((scrollTop) => {
+    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
     const scrollingElement = document.scrollingElement;
     if (scrollingElement) {
       scrollingElement.scrollTop = scrollTop;
       scrollingElement.scrollLeft = 0;
-      return;
     }
-    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
   }, top);
+  await page.waitForFunction(
+    (expectedTop) => {
+      const actualTop = document.scrollingElement?.scrollTop ?? window.scrollY;
+      return Math.abs(actualTop - expectedTop) <= 3;
+    },
+    top,
+    { timeout: 3_000 },
+  );
   await page.waitForTimeout(delay);
 }
 
 export async function scrollLocatorIntoViewport(page, target, label) {
   await target.waitFor({ state: 'attached', timeout: 20_000 });
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     const top = await target.evaluate((node) => {
       const rect = node.getBoundingClientRect();
+      const scrollingElement = document.scrollingElement;
+      const currentScroll = scrollingElement?.scrollTop ?? window.scrollY;
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
       const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-      const maxScroll = Math.max(0, documentHeight - window.innerHeight);
-      const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
-      const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
-      return Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
+      const maxScroll = Math.max(0, documentHeight - viewportHeight);
+      const visibleHeight = Math.min(rect.height, viewportHeight * 0.65);
+      const centerOffset = Math.max(24, (viewportHeight - visibleHeight) / 2);
+      return Math.min(maxScroll, Math.max(0, currentScroll + rect.top - centerOffset));
     });
     await scrollDocumentTo(page, top);
     const intersects = await target.evaluate((node) => {
       const rect = node.getBoundingClientRect();
-      return rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight;
+      const viewportTop = window.visualViewport?.offsetTop ?? 0;
+      const viewportBottom = viewportTop + (window.visualViewport?.height ?? window.innerHeight);
+      return rect.width > 2
+        && rect.height > 2
+        && rect.bottom > viewportTop
+        && rect.top < viewportBottom;
     });
     if (intersects) return;
   }
