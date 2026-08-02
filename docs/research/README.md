@@ -30,6 +30,7 @@ The detailed Part II outline establishes a usable writing order, but full reader
 ## Yesenin 1921–1925
 
 - `YESENIN_DAY_LEVEL_CHRONOLOGY_1921_PASS_01_2026-08.md` — first controlled year segment: publications, failed foreign-travel request, Turkestan, `Пугачев`, Imagist infrastructure, Duncan meeting boundary, divorce and exact poster/publication corrections.
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1922_PASS_01_2026-08.md` — marriage/passport sequence, Berlin publishing, documented European stops versus plans, New York arrival, immigration/press boundary and foreign-work categories.
 - `YESENIN_EUROPE_AMERICA_ROUTE_SOURCE_MAP_1922_1923_2026-08.md` — broad route and source map.
 - `YESENIN_FOREIGN_WORK_MATRIX_1922_1923_2026-08.md` — work/publication matrix.
 - `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md` — late New York anchors and the qualified 3–4 February 1923 departure interval.
@@ -45,6 +46,20 @@ Standing anti-regression examples from the pass:
 - an autograph date may mark copying rather than composition;
 - a travel petition does not prove completed travel;
 - a group act does not automatically represent every member.
+
+### 1922 chronology consequence
+
+The foreign year is not a single scandal narrative. It is controlled through four layers: Moscow legal/logistical preparation; Berlin publishing and performance; European stops separated from planned cities; American tour and political reception.
+
+Standing anti-regression examples from the pass:
+
+- legal marriage does not prove one secret motive;
+- passport issuance is not a completed route;
+- a city named in future tense remains a plan;
+- synchronised press may preserve a false divorce rumour;
+- `published abroad` does not mean `written abroad`;
+- immigration scrutiny is not deportation;
+- an advertised tour city needs its own completion witness.
 
 ### Critical US date correction
 
