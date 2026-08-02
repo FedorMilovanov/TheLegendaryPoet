@@ -45,7 +45,7 @@ assert.match(vectorWorkflow, /ref: \$\{\{ env\.TESTED_SHA \}\}/);
 assert.match(vectorWorkflow, /Verify exact checkout identity/);
 assert.match(vectorWorkflow, /actual_sha="\$\(git rev-parse HEAD\)"/);
 assert.match(vectorWorkflow, /test "\$actual_sha" = "\$TESTED_SHA"/);
-assert.match(vectorWorkflow, /tested_commit=\$\(git rev-parse HEAD\)/);
+assert.match(vectorWorkflow, /echo "tested_commit=\$\(git rev-parse HEAD\)"/);
 assert.match(vectorWorkflow, /brand-\$\{\{ env\.EVIDENCE_SCOPE \}\}-\$\{\{ env\.TESTED_SHA \}\}/);
 for (const scopedFile of [
   'src/components/brandMotionV18.ts',
