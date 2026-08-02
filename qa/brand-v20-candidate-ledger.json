@@ -3,11 +3,12 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.9-reference-canonical-crop",
+    "id": "v20.10-reference-field-envelope",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
     "compositionEligible": true,
+    "visibleFieldEligible": true,
     "reviewerDecision": "not-reference-approved",
     "requiredReviewSizes": [64, 96, 128, 256]
   },
@@ -26,14 +27,19 @@
     {"full":"v20.6-reference-monolith","micro":"v20.4-reference-micro-monolith","verdict":"numeric pass; exact overlay showed a meaningful monolithic improvement but rejected the stacked chevron cowl, still-regular long panels and overly sparse field; dark 16–20px micro evidence remained nearly invisible"},
     {"full":"v20.7-reference-draped-monolith","micro":"v20.5-reference-micro-optical","verdict":"numeric pass; exact overlay confirmed the broader cavern and improved field but rejected a broad clean shawl across the shoulders, an overly large cowl zone and residual symmetric panel structure; dark micro identity improved but remained weak at 16–20px"},
     {"full":"v20.8-reference-compressed-cowl","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"numeric pass; exact overlay improved cowl compression and micro anchors but exposed a missing composition contract: cloak occupied 98.3% of the canvas instead of the canonical 76.9%, the apex sat too high and the entire bust was oversized in the square"},
-    {"full":"v20.9-reference-canonical-crop","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"current QA-only iteration: internal geometry is unchanged from v20.8 while an explicit canonical crop transform aligns occupied width, figure height, apex, shoulder line and centre position; exact committed composition evidence pending"}
+    {"full":"v20.9-reference-canonical-crop","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"internal and composition pass; exact overlay accepted the canonical crop correction but rejected an electrical field restricted mostly to the hood and upper shoulders, overly clean cloth planes and weak shoulder volume at 64–96px"},
+    {"full":"v20.10-reference-field-envelope","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"current QA-only iteration: canonical figure placement is retained, visible field branches extend down both side edges with opacity and stroke-width floors, and the cowl is rebuilt from compressed overlapping layers; exact committed field-envelope, overlay and optical evidence pending"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
     "motion": "existing production controller remains detached until static approval",
     "production": "src/components/brandEmblemV18.svg, public/brand-emblem.svg, public/brand-mark-micro.svg and BrandMark.tsx remain unchanged"
   },
-  "evidenceArtifacts": ["qa-artifacts/brand-v20-contract-metrics.json","qa-artifacts/brand-v20-reference-comparison.png","qa-artifacts/brand-v20-micro-diagnostics.png"],
+  "evidenceArtifacts": [
+    "qa-artifacts/brand-v20-contract-metrics.json",
+    "qa-artifacts/brand-v20-reference-comparison.png",
+    "qa-artifacts/brand-v20-micro-diagnostics.png"
+  ],
   "promotionBlockers": [
     "explicit human overlay verdict is missing",
     "full-size optical review must pass at 64, 96, 128 and 256px",
@@ -41,5 +47,5 @@
     "motion has not been attached to the v20 semantic groups",
     "all required workflows have not yet passed on one exact v20 head"
   ],
-  "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, CI success or motion quality as reference approval."
+  "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, visibleFieldEligible, CI success or motion quality as reference approval."
 }
