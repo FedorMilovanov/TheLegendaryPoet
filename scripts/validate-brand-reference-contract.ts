@@ -89,6 +89,10 @@ assert.deepEqual(contract.compositionTargets, {
   hoodApexYToCanvas: { target: 0.121, allowed: [0.1, 0.145] },
   cloakShoulderYToCanvas: { target: 0.406, allowed: [0.37, 0.43] },
   figureCenterXToCanvas: { target: 0.5, allowed: [0.47, 0.53] },
+  fieldWidthToCanvas: { target: 0.82, allowed: [0.76, 0.9] },
+  fieldHeightToCanvas: { target: 0.77, allowed: [0.68, 0.82] },
+  fieldTopYToCanvas: { target: 0.047, allowed: [0.02, 0.09] },
+  fieldCenterXToCanvas: { target: 0.5, allowed: [0.46, 0.54] },
 });
 for (const [name, target] of Object.entries(contract.compositionTargets)) {
   assert.ok(target.allowed[0] <= target.target && target.target <= target.allowed[1], `${name}: invalid composition range`);
@@ -165,4 +169,4 @@ for (const artifact of ['brand-reference-comparison-matrix.png', 'brand-referenc
   assert.ok(browserQa.includes(artifact), `browser QA missing ${artifact}`);
 }
 
-console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — internal ratios plus canonical square composition are locked; production geometry remains not-reference-approved`);
+console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — internal ratios, square composition and visible field envelope are locked; production geometry remains not-reference-approved`);
