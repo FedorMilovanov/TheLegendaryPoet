@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.5-reference-silhouette",
+    "id": "v20.6-reference-monolith",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -11,7 +11,7 @@
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.3-reference-micro-silhouette",
+    "id": "v20.4-reference-micro-monolith",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -32,7 +32,12 @@
     {
       "full": "v20.5-reference-silhouette",
       "micro": "v20.3-reference-micro-silhouette",
-      "verdict": "current QA-only iteration; exact committed overlay and optical evidence pending"
+      "verdict": "numeric pass; visual review rejected the remaining smooth oval cavern, ribbon-like horizontal cowl, regular panel fan and overly mirrored field topology"
+    },
+    {
+      "full": "v20.6-reference-monolith",
+      "micro": "v20.4-reference-micro-monolith",
+      "verdict": "current QA-only iteration: angular pentagonal cavern, three overlapping sagging cowl masses, triangular cloak, reduced broad fold hierarchy, broken micro rim and sparse non-mirrored field; exact committed overlay and optical evidence pending"
     }
   ],
   "separationOfConcerns": {
