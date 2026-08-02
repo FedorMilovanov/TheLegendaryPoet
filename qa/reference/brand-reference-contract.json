@@ -8,6 +8,13 @@
     "cloakWidthToHoodWidth": { "minimum": 2.3 },
     "coreSymmetryError": { "maximum": 0.08, "note": "The architecture is nearly symmetric; irregularity belongs to cloth highlights and electrical aura." }
   },
+  "compositionTargets": {
+    "cloakWidthToCanvas": { "target": 0.77, "allowed": [0.72, 0.82] },
+    "occupiedFigureHeightToCanvas": { "target": 0.875, "allowed": [0.84, 0.91] },
+    "hoodApexYToCanvas": { "target": 0.121, "allowed": [0.10, 0.145] },
+    "cloakShoulderYToCanvas": { "target": 0.406, "allowed": [0.37, 0.43] },
+    "figureCenterXToCanvas": { "target": 0.5, "allowed": [0.47, 0.53] }
+  },
   "requiredStructures": [
     "high layered pointed hood",
     "broad deep black face cavern with a rounded pentagonal base",
