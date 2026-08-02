@@ -20,7 +20,14 @@ async function measure(page, request, source) {
   const response = await request.get(`${BASE_URL}/${path.basename(source.file)}?v20=${Date.now()}`);
   expect(response.status(), source.file).toBe(200);
   await page.setContent(await response.text());
-  await expect(page.locator('svg')).toHaveAttribute('data-brand-reference-decision', 'not-reference-approved');
+  const svg = page.locator('svg');
+  await expect(svg).toHaveAttribute('data-brand-reference-decision', 'not-reference-approved');
+  await svg.evaluate((node) => {
+    node.style.width = '960px';
+    node.style.height = '960px';
+    node.style.display = 'block';
+    node.style.maxWidth = 'none';
+  });
 
   const boxes = {};
   for (const [name, selector] of Object.entries(source.selectors)) {
@@ -45,13 +52,50 @@ async function measure(page, request, source) {
     faceCavernWidthToHoodWidth: within(ratios.faceCavernWidthToHoodWidth, contract.targets.faceCavernWidthToHoodWidth),
     cloakWidthToHoodWidth: ratios.cloakWidthToHoodWidth >= contract.targets.cloakWidthToHoodWidth.minimum,
   };
+
+  let renderedBoxes = null;
+  let composition = null;
+  let compositionPasses = null;
+  if (source.composition) {
+    ({ renderedBoxes, composition } = await page.evaluate((selectors) => {
+      const root = document.querySelector('svg').getBoundingClientRect();
+      const toBox = (selector) => {
+        const rect = document.querySelector(selector).getBoundingClientRect();
+        return {
+          x: (rect.left - root.left) / root.width,
+          y: (rect.top - root.top) / root.height,
+          width: rect.width / root.width,
+          height: rect.height / root.height,
+        };
+      };
+      const hood = toBox(selectors.hood);
+      const face = toBox(selectors.face);
+      const cloak = toBox(selectors.cloak);
+      return {
+        renderedBoxes: { hood, face, cloak },
+        composition: {
+          cloakWidthToCanvas: cloak.width,
+          occupiedFigureHeightToCanvas: cloak.y + cloak.height - hood.y,
+          hoodApexYToCanvas: hood.y,
+          cloakShoulderYToCanvas: cloak.y,
+          figureCenterXToCanvas: cloak.x + cloak.width / 2,
+        },
+      };
+    }, source.selectors));
+    compositionPasses = Object.fromEntries(Object.entries(composition).map(([name, value]) => [name, within(value, contract.compositionTargets[name])]));
+  }
+
   return {
     id: source.id,
     file: source.file,
     boxes,
     ratios,
     passes,
+    renderedBoxes,
+    composition,
+    compositionPasses,
     numericGeometryEligible: Object.values(passes).every(Boolean),
+    compositionEligible: compositionPasses ? Object.values(compositionPasses).every(Boolean) : null,
     reviewerDecision: 'not-reference-approved',
     productionReplacement: false,
   };
@@ -61,26 +105,28 @@ test('v20 full-size and independent micro masters pass numeric geometry without 
   const results = [];
   for (const source of sources) {
     const result = await measure(page, request, source);
-    expect(result.passes).toEqual({
-      hoodHeightToVisibleFigureHeight: true,
-      hoodWidthToCloakWidth: true,
-      faceCavernWidthToHoodWidth: true,
-      cloakWidthToHoodWidth: true,
-    });
+    expect(Object.values(result.passes).every(Boolean), `${source.id}: internal geometry`).toBe(true);
     expect(result.numericGeometryEligible).toBe(true);
     expect(result.reviewerDecision).toBe('not-reference-approved');
     expect(result.productionReplacement).toBe(false);
-    for (const [name, value] of Object.entries(result.ratios)) {
-      expect(value, `${source.id}: ${name}`).toBeCloseTo(source.ratios[name], 3);
+    for (const [name, value] of Object.entries(result.ratios)) expect(value, `${source.id}: ${name}`).toBeCloseTo(source.ratios[name], 3);
+    if (source.composition) {
+      expect(Object.values(result.compositionPasses).every(Boolean), `${source.id}: rendered composition`).toBe(true);
+      expect(result.compositionEligible).toBe(true);
+      for (const [name, value] of Object.entries(result.composition)) expect(value, `${source.id}: ${name}`).toBeCloseTo(source.composition[name], 3);
+    } else {
+      expect(result.composition).toBeNull();
+      expect(result.compositionEligible).toBeNull();
     }
     results.push(result);
   }
   fs.writeFileSync(path.join(DIR, 'brand-v20-contract-metrics.json'), `${JSON.stringify({
     referenceId: sheet.referenceId,
     referenceSha256: sheet.referenceSha256,
-    contract: contract.targets,
+    internalContract: contract.targets,
+    compositionContract: contract.compositionTargets,
     results,
-    conclusion: 'numeric-pass / visual-approval-pending / production-unchanged',
+    conclusion: 'numeric-and-composition-pass / visual-approval-pending / production-unchanged',
   }, null, 2)}\n`);
 });
 
@@ -95,7 +141,7 @@ test('v20 canonical comparison and optical-size evidence are rendered from exact
     *{box-sizing:border-box}body{margin:0;background:#05080c;color:#d9f8ff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}main{padding:32px}h1{margin:0 0 8px;font-size:25px}.status{margin-bottom:26px;color:#7fdff3}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.card,.sizes{border:1px solid #173440;background:#020406}.card{min-height:430px;padding:18px}.label{margin-bottom:14px;color:#a9ecf8;font-weight:700}.stage{height:352px;display:grid;place-items:center;position:relative;overflow:hidden;background:#010204}.stage img{width:320px;height:320px;object-fit:contain}.overlay img{position:absolute;inset:16px}.overlay .candidate{opacity:.58}.sizes{margin-top:24px;display:flex;align-items:flex-end;gap:24px;padding:20px}.sample{min-width:132px;text-align:center}.sample b{display:block;margin-bottom:12px;color:#78ddef}.well{height:280px;display:flex;align-items:flex-start;justify-content:center;background:#010204;padding-top:20px}
   </style></head><body><main>
     <h1>CANONICAL REFERENCE / ${full.id} / LANDMARK OVERLAY</h1>
-    <div class="status">numeric-pass · not-reference-approved · production unchanged</div>
+    <div class="status">numeric-and-composition-pass · not-reference-approved · production unchanged</div>
     <section class="grid">
       <article class="card"><div class="label">CANONICAL 256×256</div><div class="stage"><img src="${reference}"></div></article>
       <article class="card"><div class="label">${full.id} FULL MASTER 256×256</div><div class="stage"><img src="${fullUrl}"></div></article>
