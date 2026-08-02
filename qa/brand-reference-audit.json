@@ -98,14 +98,17 @@
     "springSimulation": {
       "refreshRatesHz": [30, 60, 90, 120, 144],
       "entry95PercentRangeMs": [243, 350],
-      "returnToOnePercentRangeMs": [472, 733],
-      "directionOvershootMaximumPercent": 1.12,
-      "wakeOvershootMaximumPercent": 3.7,
+      "exactIdleReturnRangeMs": [500, 583],
+      "exactIdleAt15HzMs": 1000,
+      "returnOvershootMaximumPercent": 2.25,
       "cornerReversalZeroCrossRangeMs": [125, 150],
-      "frameGapPolicy": "dt is capped at 32 ms, so long stalls slow wall-clock convergence instead of causing a visual teleport"
+      "frameGapPolicy": "dt is capped at 32 ms, so long stalls cannot cause a visual teleport; settling uses a subpixel position and low-velocity cutoff before an exact zero write"
     },
-    "blockingDefect": "translations were fixed pixels across transformed 48, 64 and 96 pixel marks, so relative depth changed with rendered size",
-    "correction": "spring-awakening-v4 with rendered-box-v1 scales all translation channels from the rendered bounding box around a neutral 64 pixel design size"
+    "blockingDefectsFound": [
+      "translations were fixed pixels across transformed 48, 64 and 96 pixel marks, so relative depth changed with rendered size",
+      "the original settling constants and strict numerical epsilon retained an invisible RAF tail beyond 1.2 seconds on a throttled CI renderer"
+    ],
+    "correction": "spring-awakening-v4 with rendered-box-v1 scales all translation channels from the rendered bounding box around a neutral 64 pixel design size; active entry remains unchanged, while the return spring is crisper and snaps only after remaining displacement is subpixel and velocity is visually negligible"
   },
   "revisedScores": {
     "macroProportions": 0.66,
