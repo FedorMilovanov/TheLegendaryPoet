@@ -61,14 +61,16 @@
     "decision": "pending exact-main optical review resolved: rejected for production after exact-main audit because all four macro-ratio gates fail and 24/16px identity collapses mainly to a cyan hood arc"
   },
   "visualBaseline": "canonical-reference-v2-black-monolith-v17-0",
-  "interactionArchitecture": "spring-awakening-v4 + rendered-box-v1 / aura-depth-cloth-v2",
+  "interactionArchitecture": "spring-awakening-v5 + rendered-box-v1 + bounded-substeps-v1 / aura-depth-cloth-v2; one controller module, CSS-only layer contract, real elapsed time consumed in <=1/60s substeps",
+  "siteBreadthArchitecture": "production sitemap-derived Chromium crawl: 28 canonical routes + 2 utility routes + 6 legacy redirects + 1 not-found scenario, with an additional inventory contract test",
   "ownerDecision": "not-reference-approved",
   "completedPasses": [1, 17, 19, 20, 21, 22, 23, 24],
   "activePasses": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18],
   "plannedPasses": 24,
-  "evidenceStatus": "production remains unchanged; exact-head CI and Chromium/Android/iPhone Safari evidence passed, while the deep audit proves technical stability but rejects production v17, v19.11, v19.17 and v19.14 as canonical geometry replacements",
+  "evidenceStatus": "production geometry remains unchanged; exact-head CI, deep Chromium motion/reference evidence and the 38-test sitemap/utility/redirect/404 crawl pass, while the numeric and visual audit still rejects production v17, v19.11, v19.17 and v19.14 as canonical geometry replacements",
   "deepAudit": "qa/brand-reference-audit.json",
-  "mergePolicy": "keep every candidate in main for evidence, but do not replace the live visual baseline until reference-led full-size, optical and micro candidates pass the numeric contract and are demonstrably better in exact comparison artifacts",
+  "remediationPlan": "docs/brand-reference-remediation-plan.md",
+  "mergePolicy": "keep every candidate in main for evidence, but do not replace the live visual baseline until a new reference-led full-size master and independent micro master pass the numeric contract, exact comparison artifacts and an explicit human reference-approved verdict",
   "rules": {
     "compareEveryPassToPrimaryReference": true,
     "previousSvgIsNotAReference": true,
@@ -80,6 +82,11 @@
     "noVisualRegression": true,
     "greenCiIsNotVisualApproval": true,
     "numericReferenceContractRequired": true,
-    "sizeNormalizedMotionRequired": true
+    "sizeNormalizedMotionRequired": true,
+    "frameRateInvariantMotionRequired": true,
+    "singleControllerOwnershipRequired": true,
+    "sitemapDerivedRouteBreadthRequired": true,
+    "noManualCanonicalRouteOmissions": true,
+    "noRetryDependentAcceptance": true
   }
 }
