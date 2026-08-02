@@ -84,7 +84,7 @@ test('v20 full-size and independent micro masters pass numeric geometry without 
   }, null, 2)}\n`);
 });
 
-const decodeAll = (page) => page.locator('img').evaluateAll(async (images) => Promise.all(images.map((image) => image.decode()));
+const decodeAll = (page) => page.locator('img').evaluateAll(async (images) => Promise.all(images.map((image) => image.decode())));
 
 test('v20 canonical comparison and optical-size evidence are rendered from exact committed assets', async ({ page }) => {
   const reference = `data:image/webp;base64,${referenceData}`;
