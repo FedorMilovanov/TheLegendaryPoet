@@ -84,15 +84,14 @@ test('reference proportions are measured and no current SVG is silently approval
 async function waitForHome(page) {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
-  await expect(page.locator('header [data-brand-mark]').first()).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
-  await expect(page.locator('header [data-brand-mark]').first()).toHaveAttribute('data-brand-motion-normalization', 'rendered-box-v1');
+  const header = page.locator('header [data-brand-mark]').first();
+  await expect(header).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
+  await expect(header).toHaveAttribute('data-brand-motion-normalization', 'rendered-box-v1');
   await page.addStyleTag({ content: `
     [data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}
     header a:has(> [data-brand-mark]) > :not([data-brand-mark]){visibility:hidden!important}
   ` });
 }
-
-const numeric = (value) => Number.parseFloat(value || '0');
 
 async function readMotion(mark) {
   return mark.evaluate((node) => {
@@ -154,11 +153,13 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   const headerBox = await header.boundingBox();
   expect(headerBox).not.toBeNull();
 
-  await startSampling(header, 900);
+  await startSampling(header, 1_100);
   await page.mouse.move(headerBox.x + headerBox.width * 0.84, headerBox.y + headerBox.height * 0.18);
-  await page.waitForTimeout(950);
+  await page.waitForTimeout(1_180);
   const samples = await page.evaluate(() => window.__tlpBrandMotionSamples || []);
-  expect(samples.length).toBeGreaterThan(20);
+  expect(samples.length, 'trajectory must contain independent rendered samples').toBeGreaterThanOrEqual(12);
+  const sampleSpanMs = samples.at(-1).elapsed - samples[0].elapsed;
+  expect(sampleSpanMs, 'trajectory must cover the full entry and settled interval').toBeGreaterThanOrEqual(900);
 
   const scale = Math.max(0.65, Math.min(1.6, Math.min(headerBox.width, headerBox.height) / 64));
   const targetX = 0.68;
@@ -217,12 +218,11 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   const expectedRatio = scale / footerScale;
   expect(observedRatio).toBeCloseTo(expectedRatio, 1);
 
-  const audit = {
-    header: { box: headerBox, expectedScale: scale, final, samples, settleMs, maxJump, peak },
+  fs.writeFileSync(path.join(DIR, 'brand-motion-quality-metrics.json'), JSON.stringify({
+    header: { box: headerBox, expectedScale: scale, final, samples, sampleSpanMs, settleMs, maxJump, peak },
     footer: { box: footerResult.box, expectedScale: footerScale, final: footerResult.state },
     normalizedAmplitudeRatio: { observed: observedRatio, expected: expectedRatio },
-  };
-  fs.writeFileSync(path.join(DIR, 'brand-motion-quality-metrics.json'), JSON.stringify(audit, null, 2));
+  }, null, 2));
 });
 
 test('reduced motion keeps all depth transforms inert', async ({ page }) => {
@@ -231,11 +231,12 @@ test('reduced motion keeps all depth transforms inert', async ({ page }) => {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
   const box = await mark.boundingBox();
+  expect(box).not.toBeNull();
   await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
   await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
   const transforms = await mark.locator('[data-brand-depth]').evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).transform));
   expect(transforms.every((value) => value === 'none')).toBe(true);
   const state = await readMotion(mark);
-  expect(numeric(state.energyX)).toBe(0);
-  expect(numeric(state.faceX)).toBe(0);
+  expect(state.energyX).toBe(0);
+  expect(state.faceX).toBe(0);
 });
