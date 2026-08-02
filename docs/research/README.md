@@ -34,11 +34,48 @@ This directory contains the active research and production ledgers for the curre
 
 The broad route map currently contains an exact `4 February 1923` US departure row. Read it together with `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md`: academic references differ between leaving New York on 3 February and a US-period endpoint on 4 February. Until a transport/passenger record closes the gap, new prose must use `3–4 February 1923` and must not treat the departure as proven deportation.
 
+## Independent Yesenin source gates
+
+### Galina Benislavskaya
+
+- `BENISLAVSKAYA_SOURCE_GATE_PASS_26_2026-08.md` — correspondence terminology, reverse-letter acquisition boundary, diary copy/autograph distinction and article claim matrix.
+
+Critical wording:
+
+- not `35 letters`;
+- academic corpus = `35 letters, notes and telegrams`, one separate dedicatory inscription and 14 known letters from Benislavskaya to Yesenin;
+- the 14 reverse-letter texts are not reported as fully acquired until the legal page delivery and page-level matrix are complete;
+- the published “diary” has a copy-based textual history and must not be called a directly inspected autograph.
+
+### Yesenin and Russian Imagism
+
+- `YESENIN_IMAGISM_SOURCE_GATE_PASS_01_2026-08.md` — first-Declaration publication priority, two-witness requirement and acquisition queue.
+
+Critical chronology:
+
+- `Сирена` no. 4–5 bears the printed date 30 January 1919 but actually appeared on 17–18 April;
+- `Советская страна` no. 3 appeared on 10 February and was the first released publication;
+- the two texts are not identical;
+- both physical witnesses are required before a first-publication/variant investigation;
+- the accepted RGALI leaflet of 12 June 1921 is a later movement witness, not an image of the 1919 Declaration.
+
+These topics remain independent articles. Part II uses only compact biographical context and must not absorb their full source investigations.
+
 ## PDF acquisition
 
 - `PDF_ACQUISITION_PASS_03_YESENIN_1921_1925_2026-08.md` — 40+ discovery pass, cross-library deduplication, seven accepted binary-pending candidates and explicit hold/reject decisions.
 
 No PDF is reported as acquired until its actual bytes, first page, page count and SHA-256 are verified. An empty Drive batch folder is not progress.
+
+Drive exact-title checks also found no current copy of:
+
+- Shubnikova-Guseva's monograph on Yesenin and Benislavskaya;
+- `Дневник. Воспоминания. Письма к Есенину`;
+- the required `Сергей Есенин в стихах и жизни. Книга 3: Письма. Документы`;
+- `Сирена` 1919 no. 4–5;
+- `Советская страна` 1919 no. 3.
+
+This confirms acquisition gaps, not permission to use pirate or rights-unclear scans.
 
 ## Myth and visual work
 
