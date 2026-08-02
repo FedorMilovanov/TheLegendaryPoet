@@ -1,113 +1,65 @@
 # Brand v20 reference-led geometry pass
 
-## Current status
+## Current QA-only pair
 
-The current QA-only pair is:
+- `v20.7-reference-draped-monolith` — full-size 96-grid master;
+- `v20.5-reference-micro-optical` — independent 32-grid master.
 
-- `v20.6-reference-monolith` — full-size 96-grid master;
-- `v20.4-reference-micro-monolith` — independent 32-grid optical master.
+Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release manifests and the validated motion controller are unchanged.
 
-Both candidates pass the four macro geometry ratios, but both remain
-`not-reference-approved`. Production SVG files, release manifests,
-`BrandMark.tsx` and the validated motion controller are unchanged.
+## Honest iteration history
 
-## Iteration record
+- **v20.3 / v20.1:** rejected for dome aura, horizontal cowl and panel-like folds.
+- **v20.4 / v20.2:** rejected for oversized smooth cavity, dominant continuous rim, tidy cowl and an `A`-like micro sign.
+- **v20.5 / v20.3:** rejected for an oval cavern, ribbon cowl, regular panel fan and mirrored field.
+- **v20.6 / v20.4:** meaningful monolithic improvement, but exact evidence still showed a stacked-chevron cowl, regular long panels and overly sparse field; the dark 16–20px micro render was nearly invisible.
+- **v20.7 / v20.5:** current QA-only iteration. The face cavern is wider, cowl masses cross and overlap unequally, field branches fork irregularly, and micro uses four separated optical anchors rather than a continuous outline.
 
-### v20.3 / v20.1
+## Exact geometry submitted for browser verification
 
-The first exact Chromium overlay proved that the numeric architecture was valid,
-but the full-size image still had a dome-like aura, a horizontal cowl and
-panel-like straight folds. The micro master remained too quiet on dark
-backgrounds at 16–20px. That pair was rejected as a visual replacement.
-
-### v20.4 / v20.2
-
-The second exact overlay removed the dome and introduced crossed drapery, but
-still showed an oversized smooth black cavity, a dominant continuous hood rim,
-a tidy cowl and lower cloth divided into visible vector panels. At the smallest
-sizes the micro electrical branches formed an `A`-like cyan sign instead of one
-hooded silhouette. That pair was rejected as a visual replacement.
-
-### v20.5 / v20.3
-
-The third pair passed the contract but retained four visual blockers: the face
-cavern remained too smooth and oval, the cowl still read as a horizontal ribbon,
-the lower folds formed a regular fan and the electrical field remained too
-mirrored. It was retained as evidence and rejected as a production replacement.
-
-### v20.6 / v20.4
-
-The current refinement changes the macro construction rather than decorating the
-previous paths:
-
-- the full face cavern has an angular pentagonal base and deliberate left/right imbalance;
-- the cowl is three sagging overlapping masses rather than one horizontal band;
-- the cloak is a continuous triangular monolith with a small hierarchy of broad folds;
-- the dome ellipse, Gaussian blur and glow filters are removed completely;
-- rear, mid and front field groups use sparse non-mirrored branches;
-- the rim is interrupted and no longer substitutes for cloth volume;
-- the micro master has an independent triangular cloak and broken hood rim;
-- the micro identity is carried by black negative space and shoulder mass rather than a cyan `A` outline.
-
-The authored complexity is deliberately bounded: full-size uses 42 semantic
-paths and micro uses 21. The validator enforces ranges instead of rewarding an
-ever-growing decorative path count.
-
-## Canonical landmark sheet
-
-Review anchors are stored in
-`qa/reference/brand-v20-reference-sheet.json`. Aura pixels are excluded from
-figure geometry. Exact browser `getBBox()` remains the candidate measurement
-source.
-
-| Ratio | Canonical estimate | Allowed | v20.6 full | v20.4 micro |
+| Ratio | Canonical | Allowed | v20.7 full | v20.5 micro |
 |---|---:|---:|---:|---:|
-| hood height / visible figure height | 0.357 | 0.27–0.36 | 0.358 | 0.358 |
-| hood width / cloak width | 0.386 | 0.32–0.43 | 0.382 | 0.389 |
-| face cavern width / hood width | 0.789 | 0.68–0.86 | 0.706 | 0.705 |
-| cloak width / hood width | 2.592 | ≥2.30 | 2.617 | 2.574 |
+| hood height / visible figure | 0.357 | 0.27–0.36 | 0.358 | 0.358 |
+| hood width / cloak width | 0.386 | 0.32–0.43 | 0.383 | 0.392 |
+| face cavern / hood width | 0.789 | 0.68–0.86 | 0.757 | 0.742 |
+| cloak / hood width | 2.592 | ≥2.30 | 2.608 | 2.548 |
 
-## Structural anti-hack gates
+Browser `getBBox()` remains the acceptance source; these authored measurements must be reproduced by the exact-head artifact.
 
-The v20 validator now rejects:
+## Structural corrections in v20.7
 
-- raster or embedded image content;
-- runtime SVG animation;
-- aura ellipses used as a visual dome;
-- SVG filters and Gaussian blur used to conceal silhouette errors;
-- missing semantic front, mid or rear field layers;
-- decorative path-count growth outside the bounded full and micro ranges;
-- any production import of a v20 candidate;
-- any decision other than `not-reference-approved` before explicit review.
+- broadened the black negative space toward the canonical face/hood ratio;
+- replaced stacked horizontal chevrons with crossing drapery masses whose centres and edges are unequal;
+- kept the cloak one continuous dark triangle while reducing the visible regular fan;
+- added forks and interruptions to the electrical field without filters or blur;
+- extended only short shoulder rim segments instead of outlining the whole body;
+- retained rear, mid and front semantic field groups for later normalized motion.
 
-## Browser infrastructure
+## Independent micro correction
 
-Manual Browser QA now has two independent exact-head hosted jobs:
+The v20.5 micro master does not scale the full SVG. It widens the cavern, uses crossing cowl masses and adds four short high-value edge anchors: two at the hood and two at the shoulders. The segments are intentionally separated so dark-background readability can improve without recreating a cyan `A`.
 
-1. core Chromium/Android and 23 fresh-process Safari contours;
-2. six premium homepage/pointer contours on a separate fresh runner.
+## Anti-hack gates
 
-The split removes accumulated runner state without changing retries, visual
-thresholds, production animation or `failOnFlakyTests`. Both jobs must pass.
+The validator rejects raster content, runtime animation, aura ellipses, SVG filters, Gaussian blur, missing semantic layers, production imports and path-count inflation. Full authored complexity must remain between 36 and 48 paths; micro between 18 and 24.
 
-## Evidence required before promotion
+## Browser acceptance architecture
 
-1. Exact Chromium `getBBox()` results from the committed v20.6 and v20.4 files.
-2. Full-size raster matrix at 64, 96, 128 and 256px.
-3. Micro raster matrix at 16, 20, 24, 32 and 48px on dark and light backgrounds.
-4. Canonical reference / candidate / overlay comparison.
-5. Explicit human silhouette verdict.
-6. Existing motion controller attached only after static approval.
-7. All required workflows green on one exact head with zero flaky tests.
+Manual Browser QA uses two independent exact-head hosted jobs:
 
-## Remaining visual questions
+1. core Chromium/Android plus 23 fresh-process Safari contours;
+2. six premium homepage/pointer contours on a separate runner with its own checkout, build and preview.
 
-Exact committed evidence must decide whether:
+Both jobs remain mandatory. Retries, `failOnFlakyTests` and visual thresholds are unchanged.
 
-- the angular face cavern is broad enough without becoming an empty oversized oval;
-- the three cowl masses read as compressed cloth rather than stacked chevrons;
-- the lower cloak reads as one heavy body rather than dark vector panels;
-- the sparse field retains enough energy while remaining irregular;
-- the broken micro rim preserves the hood at 16–20px without returning to an `A` sign.
+## Promotion blockers
 
-Until those questions are resolved, `productionReplacement` remains `false`.
+Production replacement is prohibited until one exact head provides:
+
+1. matching browser geometry metrics;
+2. canonical / candidate / overlay evidence;
+3. 64, 96, 128 and 256px full-size evidence;
+4. 16, 20, 24, 32 and 48px micro evidence on dark and light backgrounds;
+5. an explicit human `reference-approved` verdict;
+6. motion attachment only after static approval;
+7. every required workflow green with zero flaky acceptance.
