@@ -21,11 +21,11 @@ assert.equal(sheet.referenceFile, 'qa/reference/brand-emblem-canonical-reference
 assert.equal(crypto.createHash('sha256').update(fs.readFileSync(sheet.referenceFile)).digest('hex'), sheet.referenceSha256);
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
-assert.equal(fullSheet.id, 'v20.7-reference-draped-monolith');
+assert.equal(fullSheet.id, 'v20.8-reference-compressed-cowl');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
-assert.equal(microSheet.id, 'v20.5-reference-micro-optical');
+assert.equal(microSheet.id, 'v20.6-reference-micro-shoulder-anchors');
 assert.equal(microSheet.file, 'public/brand-emblem-v20-micro-candidate.svg');
 assert.deepEqual(microSheet.designGrid, [32, 32]);
 assert.deepEqual(microSheet.reviewSizes, [16, 20, 24, 32, 48]);
@@ -65,6 +65,7 @@ const historicalLocks: Array<[string, RegExp]> = [
   ['v20.4-reference-drapery', /oversized black cavity/],
   ['v20.5-reference-silhouette', /smooth oval cavern/],
   ['v20.6-reference-monolith', /stacked chevron cowl/],
+  ['v20.7-reference-draped-monolith', /broad clean shawl/],
 ];
 for (const [id, blocker] of historicalLocks) assert.ok(ledger.iterationHistory.some((entry) => entry.full === id && blocker.test(entry.verdict)), `${id}: historical blocker is missing`);
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id && /current QA-only/.test(entry.verdict)));
@@ -80,4 +81,4 @@ assert.match(evidenceSpec, /numeric-pass \/ visual-approval-pending \/ productio
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.7 full-size and v20.5 independent micro pass numeric geometry, bounded semantic complexity and anti-blur gates while remaining QA-only and not-reference-approved');
+console.log('brand v20 validation: v20.8 full-size and v20.6 independent micro pass numeric geometry, bounded semantic complexity and anti-blur gates while remaining QA-only and not-reference-approved');
