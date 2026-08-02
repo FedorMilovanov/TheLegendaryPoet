@@ -28,6 +28,10 @@ import {
   mayakovskyPartTwoPlacements,
   placeEssayImages,
 } from './essayVisualLayout';
+import {
+  applyEssayMythChecks,
+  mayakovskyPartOneMythRules,
+} from './essayMythChecks';
 
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
@@ -63,13 +67,18 @@ const yeseninWithArchiveLayer: Essay = {
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
+  dateModified: '2026-08-02',
+  readTime: 24,
   cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
   coverKind: 'reconstruction',
   coverCredit: 'THE LEGENDARY POET',
   blocks: placeEssayImages(
-    attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
+    applyEssayMythChecks(
+      attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
+      mayakovskyPartOneMythRules,
+    ),
     mayakovskyPartOnePlacements,
   ),
   sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
