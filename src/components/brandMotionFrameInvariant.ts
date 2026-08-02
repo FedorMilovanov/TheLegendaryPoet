@@ -222,10 +222,8 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
 
     snapBrandMotionState(state, targets);
     write();
-    if (!active) {
-      node.dataset.brandInteraction = 'idle';
-      lastTime = 0;
-    }
+    lastTime = 0;
+    if (!active) node.dataset.brandInteraction = 'idle';
   };
 
   const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(readBounds);
