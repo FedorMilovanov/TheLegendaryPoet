@@ -6,16 +6,18 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const deepWorkflowPath = '.github/workflows/brand-deep-audit.yml';
 const manualWorkflowPath = '.github/workflows/manual-browser-qa.yml';
 const deepSpecPath = 'qa/brand-deep-audit.spec.mjs';
+const comparisonSpecPath = 'qa/brand-reference-comparison.spec.mjs';
 const motionPath = 'src/components/brandMotionFrameInvariant.ts';
 const simulationPath = 'scripts/validate-brand-motion-frame-invariance.ts';
 
-for (const file of [deepWorkflowPath, manualWorkflowPath, deepSpecPath, motionPath, simulationPath]) {
+for (const file of [deepWorkflowPath, manualWorkflowPath, deepSpecPath, comparisonSpecPath, motionPath, simulationPath]) {
   assert.ok(fs.existsSync(path.resolve(file)), `${file}: required brand audit file is missing`);
 }
 
 const workflow = read(deepWorkflowPath);
 const manual = read(manualWorkflowPath);
 const spec = read(deepSpecPath);
+const comparison = read(comparisonSpecPath);
 const motion = read(motionPath);
 const simulation = read(simulationPath);
 const mark = read('src/components/BrandMark.tsx');
@@ -61,6 +63,13 @@ assert.match(spec, /normalizedAmplitudeRatio/);
 assert.match(spec, /reduced motion keeps all depth transforms inert/);
 assert.match(spec, /data-brand-motion-timestep', 'bounded-substeps-v1'/);
 
+assert.match(comparison, /data-brand-parallax', 'spring-awakening-v5'/);
+assert.match(comparison, /data-brand-motion-timestep', 'bounded-substeps-v1'/);
+assert.match(comparison, /v18\.6 production motion keeps directional depth and exact return/);
+assert.match(comparison, /v18\.6 FRAME-RATE-INVARIANT AWAKENING STATES/);
+assert.doesNotMatch(comparison, /spring-awakening-v4/);
+assert.doesNotMatch(comparison, /v18\.4 production motion/);
+
 assert.match(motion, /import \{ BRAND_MOTION_CSS \} from '\.\/brandMotionV18'/);
 assert.match(motion, /maxFrameDeltaSeconds: 0\.1/);
 assert.match(motion, /maxSubstepSeconds: 1 \/ 60/);
@@ -95,4 +104,4 @@ assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
 assert.match(mark, /data-brand-parallax="spring-awakening-v5"/);
 assert.match(mark, /data-brand-motion-timestep="bounded-substeps-v1"/);
 
-console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, interpolated timing crossings, interval-normalized plus absolute smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
+console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, v18.6 vector identity, interpolated timing crossings, interval-normalized plus absolute smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
