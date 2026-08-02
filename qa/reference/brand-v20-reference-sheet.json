@@ -1,0 +1,86 @@
+{
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "referenceFile": "qa/reference/brand-emblem-canonical-reference.webp",
+  "measurementMethod": {
+    "kind": "manual landmark extraction constrained by luminous rim, black negative-space boundary and occupied cloak silhouette",
+    "canvas": [256, 256],
+    "notes": [
+      "Aura is excluded from figure geometry.",
+      "The cloak box follows the dark monolithic silhouette, not the outer electrical field.",
+      "The face box follows the dominant black cavern inside the hood.",
+      "Pixel landmarks are review anchors; browser getBBox() remains the exact candidate gate."
+    ]
+  },
+  "referenceLandmarks": {
+    "occupiedFigure": { "x": 29, "y": 31, "width": 197, "height": 224 },
+    "cloak": { "x": 29, "y": 104, "width": 197, "height": 151 },
+    "hood": { "x": 90, "y": 31, "width": 76, "height": 80 },
+    "faceCavern": { "x": 98, "y": 49, "width": 60, "height": 59 },
+    "shoulderEnvelope": { "left": [29, 211], "right": [226, 213] },
+    "hoodApex": [128, 31],
+    "cowlBand": { "topY": 104, "bottomY": 129 },
+    "foldFamilies": {
+      "leftDiagonalDegrees": [-49, -40, -31],
+      "rightDiagonalDegrees": [31, 40, 50],
+      "centralDegrees": [-4, 0, 5]
+    }
+  },
+  "referenceRatios": {
+    "hoodHeightToVisibleFigureHeight": 0.357143,
+    "hoodWidthToCloakWidth": 0.385787,
+    "faceCavernWidthToHoodWidth": 0.789474,
+    "cloakWidthToHoodWidth": 2.592105
+  },
+  "contract": {
+    "hoodHeightToVisibleFigureHeight": [0.27, 0.36],
+    "hoodWidthToCloakWidth": [0.32, 0.43],
+    "faceCavernWidthToHoodWidth": [0.68, 0.86],
+    "cloakWidthToHoodWidthMinimum": 2.3
+  },
+  "candidates": [
+    {
+      "id": "v20.3-reference-monolith",
+      "file": "public/brand-emblem-v20-candidate.svg",
+      "designGrid": [96, 96],
+      "reviewSizes": [64, 96, 128, 256],
+      "boxes": {
+        "cloak": { "x": 1.5, "y": 34.7801, "width": 93.2, "height": 61.2199 },
+        "hood": { "x": 31.1, "y": 7.5, "width": 34.0, "height": 31.3 },
+        "faceCavern": { "x": 34.1, "y": 12.7, "width": 27.8, "height": 25.8 }
+      },
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.353672,
+        "hoodWidthToCloakWidth": 0.364807,
+        "faceCavernWidthToHoodWidth": 0.817647,
+        "cloakWidthToHoodWidth": 2.741176
+      },
+      "numericGeometryEligible": true,
+      "productionReplacement": false,
+      "reviewerDecision": "not-reference-approved",
+      "reason": "All macro-ratio gates pass naturally, but overlay, optical-size and human silhouette review are still required before promotion."
+    },
+    {
+      "id": "v20.1-reference-micro",
+      "file": "public/brand-emblem-v20-micro-candidate.svg",
+      "designGrid": [32, 32],
+      "reviewSizes": [16, 20, 24, 32, 48],
+      "boxes": {
+        "cloak": { "x": 0.6, "y": 11.5932, "width": 30.8, "height": 20.4068 },
+        "hood": { "x": 10.4, "y": 2.5, "width": 11.2, "height": 10.5 },
+        "faceCavern": { "x": 11.5, "y": 4.1, "width": 9.0, "height": 8.6 }
+      },
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.355932,
+        "hoodWidthToCloakWidth": 0.363636,
+        "faceCavernWidthToHoodWidth": 0.803571,
+        "cloakWidthToHoodWidth": 2.75
+      },
+      "numericGeometryEligible": true,
+      "productionReplacement": false,
+      "reviewerDecision": "not-reference-approved",
+      "reason": "Independent micro geometry passes macro ratios, but dark/light raster review at every optical size remains mandatory."
+    }
+  ],
+  "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
+  "referenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532"
+}
