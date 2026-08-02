@@ -1,9 +1,10 @@
-# Сергей Есенин. Часть II — индекс paragraph/source‑аудита, pass 01
+# Сергей Есенин. Часть II — единый индекс paragraph/source‑аудита
 
 **Дата:** 3 августа 2026 года  
-**Статус:** `CHAPTERS 1–8 AUDITED / CHAPTERS 9–14 NEXT / НЕ ПУБЛИКОВАТЬ`  
+**Статус:** `CHAPTERS 1–12 AUDITED / CHAPTERS 13–14 NEXT / НЕ ПУБЛИКОВАТЬ`  
 **Каноническая ветка:** `editorial/longform-marathon-2026-08`  
-**Канонический PR:** `#271`
+**Канонический PR:** `#271`  
+**Принцип:** этот файл обновляется на месте; не создавать параллельные `FINAL/LATEST/PASS-02` индексы без отдельной необходимости.
 
 ## 1. Завершённые audit waves
 
@@ -23,11 +24,7 @@
 - 2/8/10 мая 1922 года получили отдельные source rows;
 - свадебная фотография не подменяет регистрационный документ.
 
-Открыто:
-
-- физические документы, rights and SHA;
-- exact Chronicle pages;
-- reused source IDs самостоятельной статьи о встрече.
+Открыто: физические документы, rights/SHA, exact Chronicle pages и reused source IDs самостоятельной статьи о встрече.
 
 ### Главы 3–4
 
@@ -40,109 +37,100 @@
 Закрыто:
 
 - provisional 2/8/10 May IDs retired;
-- public pair photograph separated from later false-divorce caption;
-- exact known rumour carrier pinned: `Всемирная иллюстрация`, 1923, № 11, p. 26;
-- Berlin arrival/Nakanune chain pinned at academic level;
-- House of Arts political press lines split;
-- Blüthner Hall event pinned at programme-target level;
-- Grzhebin document provenance qualified;
-- departure/no-return comment pinned;
+- public-pair photograph separated from later false-divorce caption;
+- known rumour carrier pinned: `Всемирная иллюстрация`, 1923, № 11, p. 26;
+- Berlin arrival, House of Arts, Blüthner Hall, Grzhebin and departure source classes split;
 - Brussels and two Paris periods inserted; Hague/Rome/London remain plans.
 
-Открыто:
-
-- upstream German rumour source;
-- primary Berlin newspaper/programme scans;
-- translation bundle split;
-- physical Berlin volume and rights.
+Открыто: upstream German rumour source, primary Berlin scans/programmes, translation objects, physical Berlin volume and rights.
 
 ### Главы 5–6
 
-Файл:
-
-- `YESENIN_PART_II_PARAGRAPH_SOURCE_AUDIT_CH05_CH06_PASS_01_2026-08.md`.
+Файл: `YESENIN_PART_II_PARAGRAPH_SOURCE_AUDIT_CH05_CH06_PASS_01_2026-08.md`.
 
 Результат:
 
 - immediate factual regressions: `0`;
-- canonical alias regressions: `0`;
 - plan/completion, event/programme, press/legal and departure/period distinctions remain intact.
 
-Открыто:
-
-- `Paris` manifest;
-- immigration file;
-- arrival/departure press scans;
-- Carnegie programmes;
-- Boston/Cleveland/other-city programmes;
-- `George Washington` manifest;
-- documentary visual rights.
+Открыто: manifests, immigration file, press scans, programmes, city-level tour records and visual rights.
 
 ### Главы 7–8
 
-Файл:
-
-- `YESENIN_PART_II_CLAIM_SOURCE_AUDIT_CH07_CH08_PASS_01_2026-08.md`.
+Файл: `YESENIN_PART_II_CLAIM_SOURCE_AUDIT_CH07_CH08_PASS_01_2026-08.md`.
 
 Результат:
 
-- immediate factual regressions: `0`;
 - work categories remain distinct;
-- canonical source reuse mapped across chapters;
-- return‑year literary, relational, economic and legal lines remain separate.
+- canonical source reuse mapped;
+- return-year literary, relational, economic and legal lines remain separate.
 
-Открыто:
+Открыто: translation ledger, physical editions, manuscript/newspaper binaries, arrival/event objects, accounts and two separate legal files.
 
-- translation bundle split into five evidence objects;
-- physical Grzhebin/French editions;
-- `Страна Негодяев` manuscript witness matrix;
-- `Железный Миргород` manuscript/newspaper binaries;
-- 3 August arrival transport object;
-- 21 August event programme/report;
-- `Стойло Пегаса` account item matrix;
-- September cafe legal file;
-- November four‑poets protocol/case matrix.
+### Главы 9–10
+
+Файл: `YESENIN_PART_II_SOURCE_PASS_CH09_CH10_2026-08.md`.
+
+Закрыто в самих черновиках:
+
+- project/book/textological history of `Москва кабацкая` split;
+- account corpus no longer collapsed to an uncontested `52` total;
+- more than 100 preserved accounts, signature classes and third-person charges identified;
+- 15 September account note and legal chain separated;
+- September cafe case not fused with the November four-poets case;
+- censorship correcture described only at academic-comment level;
+- `Сирена` actual release fixed to 17–18 April;
+- physical 1919 witnesses remain required for variant analysis;
+- `Правда`, `Новый зритель` and 4 October leaflet source/binary classes separated.
+
+Открыто: physical July 1924 book/correcture/legal pages, selected quotations, full 1919 issues, newspaper/leaflet scans and rights.
+
+### Главы 11–12
+
+Файл: `YESENIN_PART_II_SOURCE_PASS_CH11_CH12_2026-08.md`.
+
+Закрыто в самих черновиках:
+
+- five exact Benislavskaya aliases migrated to canonical `yes2-benislavskaya-*` IDs;
+- October autographs and December photostats distinguished;
+- content/postmark/Tiflis-postmark dating bases retained;
+- reverse correspondence and copy-based diary remain visibly incomplete;
+- Tiflis, Baku and Batum remain separate route bins;
+- failed Tabriz attempt, Tehran plan and poetic Persia remain separate from physical Iran travel;
+- late-May Persian author book separated from the August/final cycle;
+- spring medical narrative remains qualified;
+- Sofia trip is not called a proven honeymoon or proof of stability.
+
+Открыто: pages 236–280, all 14 reverse letters, diary archive matrix, daily Caucasus route, medical file, first-edition binaries, transport/address evidence and rights.
 
 ---
 
-## 2. Executable protections already active
+## 2. Executable protections active
 
-`scripts/validate-yesenin-part-two-research.ts` is included in `check:content` and currently protects:
+`scripts/validate-yesenin-part-two-research.ts` is included in `check:content` and protects:
 
-- explicit non‑public status of all 14 drafts;
+- explicit non-public status of all 14 drafts;
 - no chapter 15/16 prose;
 - no Part II public module/registration;
 - qualified Duncan meeting date;
-- chapter 1 September and 17 October source splits;
-- chapter 2–3 legal sequence and representation boundaries;
-- chapter 3 press rumour boundary;
-- chapter 4 Berlin event/source splits;
-- chapter 5 plan/completion boundaries;
-- chapter 6 immigration/departure and canonical IDs;
-- chapter 10 two‑witness/contested-break boundary;
-- chapter 11 reverse-letter/diary boundary;
+- source splits and retired aliases in chapters 1–4;
+- Europe/US route, immigration and departure boundaries;
+- chapter 9 account/legal/censorship distinctions;
+- chapter 10 physical-witness and missing-scan distinctions;
+- chapter 11 canonical letter IDs and autograph/photostat distinction;
+- chapter 12 Iran-route, book/cycle and medical boundaries;
 - chapter 13 diagnosis/repentance boundary;
 - chapter 14 medical boundary.
 
-Green results from an earlier SHA do not apply to a moved head.
+Green evidence from an earlier SHA does not apply to a moved head.
 
 ---
 
 ## 3. Next audit waves
 
-### Wave 5 — главы 9–10
-
-- `Москва кабацкая`: book project versus physical edition; role versus dependence; accounts versus consumption; censorship and legal files.
-- Imagism: infrastructure versus poetics; 1919 physical-witness boundary; `Правда` letter versus responses; no duplicate independent article.
-
-### Wave 6 — главы 11–12
-
-- Benislavskaya: one-sided correspondence, work functions, copy-based diary, reverse-letter gap.
-- Caucasus: exact city/date route, books versus cycles, Persia plan versus geography, medical claims.
-
 ### Wave 7 — главы 13–14
 
-- late poetry: exact witnesses/variants, quotation basis, biography versus lyrical subject, moral/theological claims.
+- late poetry: exact witnesses/variants, quotation basis, biography versus lyrical subject, moral/theological claims;
 - Sofia/clinic: authorised manuscripts, marriage record, contract, certificate, bankbook, clinic file and discharge mechanism.
 
 ### Wave 8 — chapter 15 acquisition audit only
@@ -166,28 +154,27 @@ Only after all source, moral/theological and literary audits.
 
 ## 4. Definition of paragraph/source closure
 
-A chapter does not become V02 merely because an audit file exists.
+A chapter does not become V02 merely because an audit file exists. Required:
 
-Required:
-
-- every high‑load factual sentence has claim ID;
+- every high-load factual sentence has claim ID;
 - every claim has canonical source ID;
 - exact text/comment/physical representation classes are separated;
-- source gaps are either closed or visible in the prose/gate list;
+- source gaps are either closed or visible in prose/gates;
 - aliases do not enter future reader data;
 - no internal research ledger is exposed as historical proof;
 - documentary visual slot has item/provenance/rights status;
 - literary compression and theological review complete;
-- final‑head validators pass.
+- final-head validators pass.
 
 ## 5. Current verdict
 
 ```yaml
 current_working_chapters: 14
-chapters_paragraph_or_claim_audited: 8
-chapters_remaining_for_audit: 6
+chapters_paragraph_or_claim_audited: 12
+chapters_remaining_for_audit: 2
 immediate_regressions_found_so_far: 1
 immediate_regressions_fixed: 1
+confirmed_alias_migrations_applied: 8
 source_gap_closures_applied_to_prose: true
 public_route_created: false
 part_ii_data_module_created: false
