@@ -33,6 +33,7 @@ import {
   applyEssayMythChecks,
   mayakovskyPartOneMythRules,
   mayakovskyPartTwoMythRules,
+  yeseninPartOneMythRules,
 } from './essayMythChecks';
 
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
@@ -65,6 +66,13 @@ const yeseninWithArchiveLayer: Essay = {
     ...(yeseninKutezhiVisual.sources ?? []),
     ...yeseninArchiveSources,
   ]),
+};
+
+const yeseninPartOneWithMythChecks: Essay = {
+  ...yeseninPartOnePublic,
+  dateModified: '2026-08-02',
+  readTime: 43,
+  blocks: applyEssayMythChecks(yeseninPartOnePublic.blocks, yeseninPartOneMythRules),
 };
 
 const mayakovskyPartOneWithLocalCover: Essay = {
@@ -116,7 +124,7 @@ const brikCaseWithSourceLibrary: Essay = {
 export const essays: Essay[] = [
   lermontovRoadWithCover,
   yeseninWithArchiveLayer,
-  yeseninPartOnePublic,
+  yeseninPartOneWithMythChecks,
   yeseninDuncanFirstMeetingPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
