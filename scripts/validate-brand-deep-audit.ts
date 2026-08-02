@@ -59,6 +59,7 @@ assert.match(motion, /maxSubstepSeconds: 1 \/ 60/);
 assert.match(motion, /while \(remaining > 0\.000_001\)/);
 assert.match(motion, /Math\.min\(BRAND_MOTION_TIMESTEP\.maxSubstepSeconds, remaining\)/);
 assert.match(motion, /elapsedSeconds = lastTime \? Math\.max\(0, \(time - lastTime\) \/ 1000\) : 1 \/ 60/);
+assert.match(motion, /snapBrandMotionState\(state, targets\);[\s\S]*write\(\);[\s\S]*lastTime = 0;/);
 assert.match(motion, /motionScale = clamp\(Math\.min\(bounds\.width, bounds\.height\) \/ 64, 0\.65, 1\.6\)/);
 assert.match(motion, /const scaled = \(value: number\) => value \* motionScale/);
 assert.match(motion, /stiffness: 136/);
@@ -86,4 +87,4 @@ assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
 assert.match(mark, /data-brand-parallax="spring-awakening-v5"/);
 assert.match(mark, /data-brand-motion-timestep="bounded-substeps-v1"/);
 
-console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, bounded exact-idle return, diagnostics, size normalization and reduced-motion gates are locked');
+console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
