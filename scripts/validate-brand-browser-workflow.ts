@@ -41,8 +41,12 @@ assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all
 // still rejected globally by failOnFlakyTests.
 assert.match(homePolishSpec, /let stableSamples = 0/);
 assert.match(homePolishSpec, /stableSamples = visuallyFinal \? stableSamples \+ 1 : 0/);
+assert.match(homePolishSpec, /opacity >= 0\.995/);
+assert.match(homePolishSpec, /blurPx <= 0\.05/);
 assert.match(homePolishSpec, /toBeGreaterThanOrEqual\(3\)/);
 assert.doesNotMatch(homePolishSpec, /page\.waitForFunction/);
+assert.doesNotMatch(homePolishSpec, /getAnimations/);
+assert.doesNotMatch(homePolishSpec, /activeAnimation/);
 
 const mobilePlatforms = read(mobilePlatformsSpec);
 assert.match(mobilePlatforms, /\['home', '\/'\]/);
@@ -59,11 +63,16 @@ const isolatedWebKit = read(isolatedWebKitSpec);
 const isolatedHelpers = read(isolatedWebKitHelpers);
 assert.match(webkitEntrypoint, /import '\.\/mobile-webkit-isolated\.spec\.mjs'/);
 assert.match(isolatedWebKit, /WebKit home principal section \$\{section\.slug\} reveals in a fresh context/);
+assert.match(isolatedWebKit, /one native WebKit home scroll per fresh page\/context/);
 assert.match(isolatedWebKit, /WebKit home dock, search sheet and tap targets remain usable in a fresh context/);
 assert.match(isolatedWebKit, /WebKit \$\{name\} route keeps one representative lazy landmark and runtime stable/);
 assert.match(isolatedWebKit, /locateHomeRevealSurface/);
 assert.match(isolatedWebKit, /data-qa-home-reveal-surface/);
 assert.match(isolatedWebKit, /inspectRevealSurface/);
+assert.match(isolatedWebKit, /waitForStableRevealSurface/);
+assert.match(isolatedWebKit, /stableSamples/);
+assert.match(isolatedWebKit, /visual\.blurPx <= 0\.05/);
+assert.match(isolatedWebKit, /toBeGreaterThanOrEqual\(3\)/);
 assert.match(isolatedWebKit, /verifyChromeReset:\s*true/);
 assert.match(isolatedWebKit, /Поэтов в базе/);
 assert.match(isolatedWebKit, /Стихотворение дня/);
@@ -77,6 +86,7 @@ assert.equal(
   1,
   'isolated WebKit homepage suite must keep exactly one native locator-scroll call inside the per-section fresh-context test',
 );
+assert.doesNotMatch(isolatedWebKit, /WebKit home route keeps all principal sections/);
 assert.doesNotMatch(isolatedWebKit, /fullPage:\s*true/);
 assert.doesNotMatch(isolatedWebKit, /page\.mouse\.wheel/);
 assert.doesNotMatch(isolatedWebKit, /expect\.poll\([\s\S]*effectiveOpacity/);
