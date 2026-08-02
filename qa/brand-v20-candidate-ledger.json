@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.6-reference-monolith",
+    "id": "v20.7-reference-draped-monolith",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -11,7 +11,7 @@
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.4-reference-micro-monolith",
+    "id": "v20.5-reference-micro-optical",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -19,37 +19,18 @@
     "requiredReviewSizes": [16, 20, 24, 32, 48]
   },
   "iterationHistory": [
-    {
-      "full": "v20.3-reference-monolith",
-      "micro": "v20.1-reference-micro",
-      "verdict": "numeric pass; exact overlay rejected the dome-like aura, horizontal cowl and panel-like folds"
-    },
-    {
-      "full": "v20.4-reference-drapery",
-      "micro": "v20.2-reference-micro-rim",
-      "verdict": "numeric pass; exact overlay retained an oversized black cavity, dominant smooth rim, tidy cowl and panel-separated cloak; micro read as a cyan A at 16–20px"
-    },
-    {
-      "full": "v20.5-reference-silhouette",
-      "micro": "v20.3-reference-micro-silhouette",
-      "verdict": "numeric pass; visual review rejected the remaining smooth oval cavern, ribbon-like horizontal cowl, regular panel fan and overly mirrored field topology"
-    },
-    {
-      "full": "v20.6-reference-monolith",
-      "micro": "v20.4-reference-micro-monolith",
-      "verdict": "current QA-only iteration: angular pentagonal cavern, three overlapping sagging cowl masses, triangular cloak, reduced broad fold hierarchy, broken micro rim and sparse non-mirrored field; exact committed overlay and optical evidence pending"
-    }
+    {"full":"v20.3-reference-monolith","micro":"v20.1-reference-micro","verdict":"numeric pass; exact overlay rejected the dome-like aura, horizontal cowl and panel-like folds"},
+    {"full":"v20.4-reference-drapery","micro":"v20.2-reference-micro-rim","verdict":"numeric pass; exact overlay retained an oversized black cavity, dominant smooth rim, tidy cowl and panel-separated cloak; micro read as a cyan A at 16–20px"},
+    {"full":"v20.5-reference-silhouette","micro":"v20.3-reference-micro-silhouette","verdict":"numeric pass; visual review rejected the remaining smooth oval cavern, ribbon-like horizontal cowl, regular panel fan and overly mirrored field topology"},
+    {"full":"v20.6-reference-monolith","micro":"v20.4-reference-micro-monolith","verdict":"numeric pass; exact overlay showed a meaningful monolithic improvement but rejected the stacked chevron cowl, still-regular long panels and overly sparse field; dark 16–20px micro evidence remained nearly invisible"},
+    {"full":"v20.7-reference-draped-monolith","micro":"v20.5-reference-micro-optical","verdict":"current QA-only iteration: face cavern widened toward the canonical ratio, cowl rebuilt as crossing unequal drapery masses, field gained irregular forks, and micro uses four separated optical edge anchors; exact committed overlay and dark/light evidence pending"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
     "motion": "existing production controller remains detached until static approval",
     "production": "src/components/brandEmblemV18.svg, public/brand-emblem.svg, public/brand-mark-micro.svg and BrandMark.tsx remain unchanged"
   },
-  "evidenceArtifacts": [
-    "qa-artifacts/brand-v20-contract-metrics.json",
-    "qa-artifacts/brand-v20-reference-comparison.png",
-    "qa-artifacts/brand-v20-micro-diagnostics.png"
-  ],
+  "evidenceArtifacts": ["qa-artifacts/brand-v20-contract-metrics.json","qa-artifacts/brand-v20-reference-comparison.png","qa-artifacts/brand-v20-micro-diagnostics.png"],
   "promotionBlockers": [
     "explicit human overlay verdict is missing",
     "full-size optical review must pass at 64, 96, 128 and 256px",
