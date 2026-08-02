@@ -53,12 +53,12 @@ assert.equal(
 
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
-assert.equal(fullSheet.id, 'v20.4-reference-drapery');
+assert.equal(fullSheet.id, 'v20.5-reference-silhouette');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
 
-assert.equal(microSheet.id, 'v20.2-reference-micro-rim');
+assert.equal(microSheet.id, 'v20.3-reference-micro-silhouette');
 assert.equal(microSheet.file, 'public/brand-emblem-v20-micro-candidate.svg');
 assert.deepEqual(microSheet.designGrid, [32, 32]);
 assert.deepEqual(microSheet.reviewSizes, [16, 20, 24, 32, 48]);
@@ -72,13 +72,14 @@ function validateCandidate(source: string, candidate: Candidate, idAttribute: st
   assert.match(source, /data-brand-reference-decision="not-reference-approved"/);
   assert.doesNotMatch(source, /<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
   assert.doesNotMatch(source, /<animate(?:Transform|Motion)?\b|@keyframes|requestAnimationFrame/i);
-  assert.ok((source.match(/<path\b/g) ?? []).length >= minimumPaths);
+  const pathCount = (source.match(/<path\b/g) ?? []).length;
+  assert.ok(pathCount >= minimumPaths, `${candidate.id}: expected at least ${minimumPaths} authored paths, received ${pathCount}`);
   for (const hook of requiredHooks) {
     assert.ok(source.includes(hook), `${candidate.id}: missing semantic hook ${hook}`);
   }
 }
 
-validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 48, [
+validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 60, [
   'data-brand-cloak',
   'data-brand-hood',
   'data-brand-face-void',
@@ -90,7 +91,7 @@ validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 48, [
   'data-brand-field-rear',
 ]);
 
-validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', 24, [
+validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', 26, [
   'data-brand-micro-cloak',
   'data-brand-micro-hood',
   'data-brand-micro-face',
@@ -126,7 +127,6 @@ for (const productionFile of [
 
 assert.match(sheet.promotionPolicy, /Numeric eligibility is necessary but never sufficient/);
 assert.match(sheet.promotionPolicy, /explicit human reference-approved decision/);
-
 assert.equal(ledger.family, 'brand-v20-reference-led');
 assert.equal(ledger.fullSizeCandidate.id, fullSheet.id);
 assert.equal(ledger.microCandidate.id, microSheet.id);
@@ -135,13 +135,13 @@ assert.equal(ledger.microCandidate.productionReplacement, false);
 assert.equal(ledger.fullSizeCandidate.reviewerDecision, 'not-reference-approved');
 assert.equal(ledger.microCandidate.reviewerDecision, 'not-reference-approved');
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.3-reference-monolith' && /rejected/.test(entry.verdict)));
+assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.4-reference-drapery' && /oversized black cavity/.test(entry.verdict)));
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id));
 assert.ok(ledger.promotionBlockers.length >= 5);
 assert.match(ledger.promotionPolicy, /Never treat numericGeometryEligible, CI success or motion quality as reference approval/);
 
 assert.match(packageJson, /"validate:brand-v20": "tsx scripts\/validate-brand-v20\.ts"/);
 assert.match(packageJson, /validate:brand-candidate && npm run validate:brand-v20 && npm run validate:brand-browser-workflow/);
-
 for (const candidatePath of [
   'public/brand-emblem-v20-candidate.svg',
   'public/brand-emblem-v20-micro-candidate.svg',
@@ -158,10 +158,9 @@ assert.match(deepWorkflow, /qa\/brand-v20-reference\.spec\.mjs/);
 assert.match(deepWorkflow, /brand-v20-contract-metrics\.json/);
 assert.match(deepWorkflow, /brand-v20-reference-comparison\.png/);
 assert.match(deepWorkflow, /brand-v20-micro-diagnostics\.png/);
-
 assert.match(evidenceSpec, /numeric-pass \/ visual-approval-pending \/ production-unchanged/);
 assert.match(evidenceSpec, /v20 full-size and independent micro masters pass numeric geometry without receiving visual approval/);
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.4 full-size and v20.2 independent micro masters pass the canonical numeric geometry contract, remain static QA-only assets, and cannot enter production without explicit visual approval');
+console.log('brand v20 validation: v20.5 full-size and v20.3 independent micro masters pass the canonical numeric geometry contract, remain static QA-only assets, and cannot enter production without explicit visual approval');
