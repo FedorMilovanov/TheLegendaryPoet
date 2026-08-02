@@ -9,6 +9,7 @@ const safariSpec = read('qa/mobile-webkit-isolated.spec.mjs');
 const helpers = read('qa/mobile-webkit-isolated.helpers.mjs');
 const packageJson = read('package.json');
 
+assert.match(reveal, /type CSSProperties/);
 assert.match(reveal, /export function useReliableInView/);
 assert.match(reveal, /new IntersectionObserver/);
 assert.match(reveal, /element\.getBoundingClientRect\(\)/);
@@ -29,6 +30,17 @@ assert.match(reveal, /window\.clearTimeout\(timer\)/);
 assert.match(reveal, /document\.removeEventListener\('scroll', scheduleGeometryCheck, true\)/);
 assert.match(reveal, /observer\.disconnect\(\)/);
 assert.match(reveal, /resizeObserver\?\.disconnect\(\)/);
+
+assert.match(reveal, /REVEAL_EASING = 'cubic-bezier\(0\.16, 1, 0\.3, 1\)'/);
+assert.match(reveal, /const style: CSSProperties = \{/);
+assert.match(reveal, /opacity: revealed \? 1 : 0/);
+assert.match(reveal, /transform: revealed \? 'translate3d\(0, 0, 0\)' : hiddenTransform\(direction, distance\)/);
+assert.match(reveal, /filter: !revealed && blur && !prefersReduced \? 'blur\(6px\)' : 'blur\(0px\)'/);
+assert.match(reveal, /transition,/);
+assert.match(reveal, /willChange: revealed \? 'auto' : 'opacity, transform, filter'/);
+assert.match(reveal, /data-reveal-state=\{revealed \? 'visible' : 'hidden'\}/);
+assert.match(reveal, /<div[\s\S]*ref=\{ref\}[\s\S]*style=\{style\}/);
+assert.doesNotMatch(reveal, /<motion\.div|initial=|animate=|variants=|makeVariants/);
 assert.doesNotMatch(reveal, /setInterval|classList\.(?:add|remove)|style\.opacity\s*=|setAttribute\(['"]style/);
 
 assert.match(home, /import Reveal, \{ useReliableInView \} from '\.\.\/components\/Reveal'/);
@@ -44,4 +56,4 @@ assert.doesNotMatch(helpers, /classList\.(?:add|remove)|style\.opacity\s*=/);
 assert.match(packageJson, /"validate:reliable-reveal": "tsx scripts\/validate-reliable-reveal\.ts"/);
 assert.match(packageJson, /validate:brand-v20 && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
 
-console.log('reliable reveal validation: IntersectionObserver is backed by real viewport geometry, document/window/visualViewport signals, bounded hydration checks, strict opacity evidence and no forced visual-state mutation');
+console.log('reliable reveal validation: real viewport geometry drives React-owned CSS opacity, transform and filter transitions with bounded Safari signals, measurable final computed state and no forced visual mutation');
