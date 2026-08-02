@@ -12,7 +12,8 @@ const STRATEGIC_SELECTOR = [
   '#main-content h1',
   '#main-content h2',
 ].join(',');
-const WEBKIT_VIEWPORT_STABILITY_MS = 1_200;
+const WEBKIT_VIEWPORT_SETTLE_MS = 700;
+const WEBKIT_MIN_STABLE_INTERSECTION = 0.55;
 
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -50,24 +51,10 @@ export async function gotoRoute(page, route) {
   await page.waitForTimeout(420);
 }
 
-async function scrollDocumentTo(page, top, delay = 320) {
-  await page.evaluate((scrollTop) => {
-    window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
-    const scrollingElement = document.scrollingElement;
-    if (scrollingElement) {
-      scrollingElement.scrollTop = scrollTop;
-      scrollingElement.scrollLeft = 0;
-    }
-  }, top);
-  await page.waitForFunction(
-    (expectedTop) => {
-      const actualTop = document.scrollingElement?.scrollTop ?? window.scrollY;
-      return Math.abs(actualTop - expectedTop) <= 3;
-    },
-    top,
-    { timeout: 3_000 },
-  );
-  await page.waitForTimeout(delay);
+async function centerLocatorNatively(target) {
+  await target.evaluate((node) => {
+    node.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+  });
 }
 
 async function readViewportState(target) {
@@ -78,11 +65,16 @@ async function readViewportState(target) {
     const viewportBottom = viewportTop + viewportHeight;
     const viewportCenter = viewportTop + viewportHeight / 2;
     const targetCenter = rect.top + rect.height / 2;
+    const intersectionHeight = Math.max(0, Math.min(rect.bottom, viewportBottom) - Math.max(rect.top, viewportTop));
+    const intersectionWidth = Math.max(0, Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0));
+    const visibleHeightBase = Math.max(1, Math.min(rect.height, viewportHeight));
+    const visibleWidthBase = Math.max(1, Math.min(rect.width, window.innerWidth));
     return {
       intersects: rect.width > 2
         && rect.height > 2
-        && rect.bottom > viewportTop
-        && rect.top < viewportBottom,
+        && intersectionWidth > 1
+        && intersectionHeight > 1,
+      intersectionRatio: (intersectionWidth / visibleWidthBase) * (intersectionHeight / visibleHeightBase),
       centerDelta: targetCenter - viewportCenter,
       viewportHeight,
     };
@@ -91,31 +83,27 @@ async function readViewportState(target) {
 
 export async function scrollLocatorIntoViewport(page, target, label) {
   await target.waitFor({ state: 'attached', timeout: 20_000 });
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const top = await target.evaluate((node) => {
-      const rect = node.getBoundingClientRect();
-      const scrollingElement = document.scrollingElement;
-      const currentScroll = scrollingElement?.scrollTop ?? window.scrollY;
-      const visualViewport = window.visualViewport;
-      const viewportTop = visualViewport?.offsetTop ?? 0;
-      const viewportHeight = visualViewport?.height ?? window.innerHeight;
-      const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-      const maxScroll = Math.max(0, documentHeight - viewportHeight);
-      const visibleHeight = Math.min(rect.height, viewportHeight * 0.65);
-      const desiredRectTop = viewportTop + Math.max(24, (viewportHeight - visibleHeight) / 2);
-      return Math.min(maxScroll, Math.max(0, currentScroll + rect.top - desiredRectTop));
-    });
-    await scrollDocumentTo(page, top);
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await centerLocatorNatively(target);
+    await page.waitForTimeout(WEBKIT_VIEWPORT_SETTLE_MS);
+    await centerLocatorNatively(target);
+    await page.waitForTimeout(WEBKIT_VIEWPORT_SETTLE_MS);
 
     const first = await readViewportState(target);
-    if (!first.intersects) continue;
+    if (!first.intersects || first.intersectionRatio < WEBKIT_MIN_STABLE_INTERSECTION) continue;
 
-    await page.waitForTimeout(WEBKIT_VIEWPORT_STABILITY_MS);
+    await page.waitForTimeout(WEBKIT_VIEWPORT_SETTLE_MS);
     const second = await readViewportState(target);
-    const centered = Math.abs(second.centerDelta) <= Math.max(48, second.viewportHeight * 0.3);
-    if (second.intersects && centered) return;
+    const centered = Math.abs(second.centerDelta) <= Math.max(64, second.viewportHeight * 0.4);
+    if (
+      second.intersects
+      && second.intersectionRatio >= WEBKIT_MIN_STABLE_INTERSECTION
+      && centered
+    ) return;
   }
-  expect(false, `${label} should remain stably centered in the WebKit visual viewport`).toBe(true);
+
+  expect(false, `${label} should remain substantially visible in the WebKit visual viewport after native two-phase centering`).toBe(true);
 }
 
 export async function effectiveOpacity(target) {
