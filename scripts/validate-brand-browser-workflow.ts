@@ -66,8 +66,9 @@ const isolatedWebKit = read(isolatedWebKitSpec);
 const isolatedHelpers = read(isolatedWebKitHelpers);
 assert.match(webkitEntrypoint, /import '\.\/mobile-webkit-isolated\.spec\.mjs'/);
 assert.match(isolatedWebKit, /WebKit home principal section \$\{section\.slug\} reveals in a fresh context/);
-assert.match(isolatedWebKit, /one native WebKit home scroll per fresh page\/context/);
+assert.match(isolatedWebKit, /one bounded WebKit document scroll per fresh page\/context/);
 assert.match(isolatedWebKit, /WEBKIT_REVEAL_SETTLE_MS = 1_800/);
+assert.match(isolatedWebKit, /await scrollLocatorIntoViewport\(page, surface, `\$\{section\.label\} reveal surface`\)/);
 assert.match(isolatedWebKit, /await page\.waitForTimeout\(WEBKIT_REVEAL_SETTLE_MS\)/);
 assert.match(isolatedWebKit, /const visual = await inspectRevealSurface\(surface\)/);
 assert.match(isolatedWebKit, /expect\(visual\.effectiveOpacity/);
@@ -85,11 +86,7 @@ assert.match(isolatedWebKit, /Вера, культура и/);
 assert.match(isolatedWebKit, /fullPage:\s*false/);
 assert.match(isolatedWebKit, /await gotoRoute\(page, route\);[\s\S]*await chooseRepresentativeLandmark\(page\)/);
 assert.match(isolatedWebKit, /await gotoRoute\(page, route\);[\s\S]*expectDockInsideViewport\(page\)/);
-assert.equal(
-  (isolatedWebKit.match(/scrollIntoViewIfNeeded/g) || []).length,
-  1,
-  'isolated WebKit homepage suite must keep exactly one native locator-scroll call inside the per-section fresh-context test',
-);
+assert.doesNotMatch(isolatedWebKit, /surface\.scrollIntoViewIfNeeded/);
 assert.doesNotMatch(isolatedWebKit, /waitForStableRevealSurface/);
 assert.doesNotMatch(isolatedWebKit, /verifyChromeReset/);
 assert.doesNotMatch(isolatedWebKit, /WebKit home route keeps all principal sections/);
@@ -121,4 +118,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: zero-flaky Chromium/Android plus deterministic isolated WebKit route, homepage, hero, optical and micro gates');
+console.log('brand browser workflow: zero-flaky Chromium/Android plus deterministic bounded WebKit route, homepage, hero, optical and micro gates');
