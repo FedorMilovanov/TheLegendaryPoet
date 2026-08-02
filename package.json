@@ -30,6 +30,7 @@
     "validate:build-output": "tsx scripts/validate-build-output.ts",
     "validate:seo-output": "node scripts/validate-seo-output.mjs",
     "validate:style": "tsx scripts/validate-literary-style.ts",
+    "validate:route-audit": "tsx scripts/validate-site-route-audit.ts",
     "check:content": "npm run validate:library && npm run validate:essays && npm run validate:covers && npm run validate:citations && npm run validate:yesenin-archive && npm run validate:audio:available && npm run validate:music && npm run validate:music-runtime && npm run validate:audio-session && npm run validate:archive-store && npm run validate:community-store && npm run validate:community-target-store && npm run validate:style",
     "sitemap": "tsx scripts/gen-sitemap.mjs",
     "feed": "tsx scripts/gen-feed.mjs",
@@ -41,7 +42,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-deep-audit": "tsx scripts/validate-brand-deep-audit.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:brand-reference && npm run validate:brand-candidate && npm run validate:brand-browser-workflow && npm run validate:brand-deep-audit && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run typecheck"
+    "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
