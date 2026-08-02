@@ -191,12 +191,49 @@ const chapter11 = drafts.get('YESENIN_PART_II_DRAFT_CH11_BENISLAVSKAYA_V01_2026-
 for (const required of [
   'не получил полный текст всех четырнадцати писем Бениславской',
   'yes2-return-benislavskaya-sep8',
+  'yes2-benislavskaya-1924-10-17',
+  'yes2-benislavskaya-1924-10-20',
+  'yes2-benislavskaya-1924-10-29',
+  'yes2-benislavskaya-1924-12-17',
+  'yes2-benislavskaya-1924-12-20',
+  'автографам ИМЛИ',
+  'по фотокопиям автографов',
   'Опубликованные фрагменты происходят из копийной традиции',
 ]) {
   if (!chapter11.includes(required)) throw new Error(`chapter 11 lost required boundary/source: ${required}`);
 }
-if (chapter11.includes('ye2-benislavskaya-note-1923-09-08')) {
-  throw new Error('chapter 11 still uses the duplicate 8 September note alias');
+for (const retiredAlias of [
+  'ye2-benislavskaya-note-1923-09-08',
+  'ye2-benislavskaya-letter-1924-10-17',
+  'ye2-benislavskaya-letter-1924-10-20',
+  'ye2-benislavskaya-letter-1924-10-29',
+  'ye2-benislavskaya-letter-1924-12-17',
+  'ye2-benislavskaya-letter-1924-12-20',
+]) {
+  if (chapter11.includes(retiredAlias)) throw new Error(`chapter 11 still uses duplicate alias: ${retiredAlias}`);
+}
+
+const chapter12 = drafts.get('YESENIN_PART_II_DRAFT_CH12_CAUCASUS_V01_2026-08.md')!;
+for (const required of [
+  'планы оставались планами',
+  'не подтверждает его физического присутствия в Иране',
+  'yes2-benislavskaya-1924-10-17',
+  'yes2-benislavskaya-1924-10-20',
+  'yes2-benislavskaya-1924-10-29',
+  'yes2-benislavskaya-1924-12-17',
+  'yes2-benislavskaya-1924-12-20',
+  'полного медицинского дела проект не получил',
+  'Возможная госпитализация остаётся квалифицированной',
+  'физическая книга конца мая и полный финальный цикл — разные source objects',
+  'не была доказанным «медовым месяцем»',
+]) {
+  if (!chapter12.includes(required)) throw new Error(`chapter 12 lost Caucasus/source boundary: ${required}`);
+}
+for (const forbidden of [
+  /Есенин (?:побывал|был|жил) в (?:Персии|Иране)/iu,
+  /точн(?:ый|ым) диагноз(?:ом)?[^.]{0,100}(?:Баку|Кавказ)/iu,
+]) {
+  if (forbidden.test(chapter12)) throw new Error(`chapter 12 restored an unsupported route/medical claim: ${forbidden}`);
 }
 
 const chapter13 = drafts.get('YESENIN_PART_II_DRAFT_CH13_LATE_POETRY_V01_2026-08.md')!;
@@ -245,5 +282,5 @@ for (const forbiddenRegistration of [
 }
 
 console.log(
-  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, account/censorship, physical-witness and medical boundaries intact.`,
+  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, account/censorship, physical-witness, Benislavskaya representation, Caucasus-route and medical boundaries intact.`,
 );
