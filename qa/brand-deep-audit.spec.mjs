@@ -162,8 +162,20 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   await page.mouse.move(headerBox.x + headerBox.width * 0.84, headerBox.y + headerBox.height * 0.18);
   await page.waitForTimeout(1_180);
   const samples = await page.evaluate(() => window.__tlpBrandMotionSamples || []);
-  const frameIntervalsMs = samples.slice(1).map((sample, index) => sample.elapsed - samples[index].elapsed);
+  const sampleTransitions = samples.slice(1).map((sample, index) => {
+    const previous = samples[index];
+    const intervalMs = Math.max(1, sample.elapsed - previous.elapsed);
+    const observedJump = Math.abs(sample.energyX - previous.energyX);
+    return {
+      intervalMs,
+      observedJump,
+      equivalent60HzJump: observedJump * ((1000 / 60) / intervalMs),
+    };
+  });
+  const frameIntervalsMs = sampleTransitions.map((transition) => transition.intervalMs);
   const maxFrameIntervalMs = Math.max(0, ...frameIntervalsMs);
+  const maxObservedJump = Math.max(0, ...sampleTransitions.map((transition) => transition.observedJump));
+  const maxEquivalent60HzJump = Math.max(0, ...sampleTransitions.map((transition) => transition.equivalent60HzJump));
   const sampleSpanMs = samples.length > 1 ? samples.at(-1).elapsed - samples[0].elapsed : 0;
 
   const scale = Math.max(0.65, Math.min(1.6, Math.min(headerBox.width, headerBox.height) / 64));
@@ -180,7 +192,6 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
     : null;
   const first95AfterActivationMs = activation && first95 ? first95.elapsed - activation.elapsed : null;
   const peak = Math.max(0, ...samples.filter((sample) => !activation || sample.elapsed >= activation.elapsed).map((sample) => sample.energyX));
-  const maxJump = Math.max(0, ...samples.slice(1).map((sample, index) => Math.abs(sample.energyX - samples[index].energyX)));
 
   writeMotionMetrics({
     status: 'trajectory-sampled',
@@ -190,13 +201,15 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
       expectedEnergy,
       final,
       samples,
+      sampleTransitions,
       frameIntervalsMs,
       maxFrameIntervalMs,
       sampleSpanMs,
       activationElapsedMs: activation?.elapsed ?? null,
       entry120: entry,
       first95AfterActivationMs,
-      maxJump,
+      maxObservedJump,
+      maxEquivalent60HzJump,
       peak,
     },
   });
@@ -228,7 +241,11 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   expect(first95AfterActivationMs).toBeGreaterThan(150);
   expect(first95AfterActivationMs).toBeLessThan(650);
   expect(peak).toBeLessThanOrEqual(expectedEnergy * 1.06);
-  expect(maxJump).toBeLessThan(0.55 * scale);
+  // RAF samples can be 16–100ms apart on a loaded CI runner. Smoothness is a
+  // displacement-rate contract, so normalize every observed interval to the
+  // equivalent displacement of one 60Hz frame instead of treating a 100ms
+  // sample gap as a single rendered frame.
+  expect(maxEquivalent60HzJump).toBeLessThan(0.55 * scale);
   expect(samples.every((sample) => Number.isFinite(sample.energyX) && Number.isFinite(sample.faceX) && Number.isFinite(sample.rootScale))).toBe(true);
 
   const leaveStarted = Date.now();
@@ -264,6 +281,7 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
       expectedEnergy,
       final,
       samples,
+      sampleTransitions,
       frameIntervalsMs,
       maxFrameIntervalMs,
       sampleSpanMs,
@@ -271,7 +289,8 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
       entry120: entry,
       first95AfterActivationMs,
       settleMs,
-      maxJump,
+      maxObservedJump,
+      maxEquivalent60HzJump,
       peak,
     },
     footer: { box: footerResult.box, expectedScale: footerScale, final: footerResult.state },
