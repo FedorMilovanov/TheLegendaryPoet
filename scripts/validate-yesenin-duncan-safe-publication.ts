@@ -15,15 +15,48 @@ const sectionCount = article.blocks.filter((block) => block.type === 'section').
 const readerTextBlocks = article.blocks.filter((block) =>
   ['lead', 'paragraph', 'note'].includes(block.type),
 ).length;
+const mythBlocks = article.blocks.filter(
+  (block): block is Extract<EssayBlock, { type: 'note'; variant: 'myth' }> =>
+    block.type === 'note' && block.variant === 'myth',
+);
 const imageBlocks = article.blocks.filter(
   (block): block is Extract<EssayBlock, { type: 'image' }> => block.type === 'image',
 );
 
 if (sectionCount !== 9) throw new Error(`expected 9 sections, found ${sectionCount}`);
-if (readerTextBlocks !== 25) {
-  throw new Error(`expected 25 reader-facing text blocks, found ${readerTextBlocks}`);
+if (readerTextBlocks !== 27) {
+  throw new Error(`expected 27 reader-facing text blocks, found ${readerTextBlocks}`);
+}
+if (mythBlocks.length !== 2) {
+  throw new Error(`expected two verified myth checks, found ${mythBlocks.length}`);
 }
 if (imageBlocks.length !== 1) throw new Error(`expected one in-body image, found ${imageBlocks.length}`);
+
+const exactDateMyth = mythBlocks.find((block) => block.claim.includes('точно 3 октября 1921 года'));
+if (!exactDateMyth) throw new Error('exact-date myth check is missing');
+if (exactDateMyth.verdict !== 'unproven') {
+  throw new Error(`exact-date myth must remain unproven, found ${exactDateMyth.verdict}`);
+}
+for (const sourceId of [
+  'yd1-pss-duncan-chronology',
+  'yd1-mcvay-isadora-yesenin',
+  'ye1-schneider-memoir-commentary',
+]) {
+  if (!exactDateMyth.sourceIds?.includes(sourceId)) {
+    throw new Error(`exact-date myth lost required source: ${sourceId}`);
+  }
+}
+
+const transcriptMyth = mythBlocks.find((block) => block.claim.includes('точной стенограммой'));
+if (!transcriptMyth) throw new Error('memoir-transcript myth check is missing');
+if (transcriptMyth.verdict !== 'unproven') {
+  throw new Error(`memoir-transcript myth must remain unproven, found ${transcriptMyth.verdict}`);
+}
+for (const sourceId of ['ye1-mariengof-memoir', 'yd1-mcvay-isadora-yesenin']) {
+  if (!transcriptMyth.sourceIds?.includes(sourceId)) {
+    throw new Error(`memoir-transcript myth lost required source: ${sourceId}`);
+  }
+}
 
 const searchable = [
   article.kicker ?? '',
@@ -41,8 +74,6 @@ const searchable = [
 for (const forbidden of [
   /непубличн/iu,
   /черновик/iu,
-  /точно 3 октября/iu,
-  /бесспорно 3 октября/iu,
   /Есенин присутствовал на вечере 7 ноября/iu,
   /первые слова были/iu,
   /его трагический финал — предрешён/iu,
@@ -129,5 +160,5 @@ if (!imageBlocks[0].sourceUrl?.includes('/pictures/item/2018708234/')) {
 }
 
 console.log(
-  `yesenin-duncan safe publication: ${sectionCount} sections, ${readerTextBlocks} text blocks, ${sources.length} sources, approved local reconstruction=${coverSha256}, ${imageBlocks.length} LOC in-body visual`,
+  `yesenin-duncan safe publication: ${sectionCount} sections, ${readerTextBlocks} text blocks, ${mythBlocks.length} myth checks, ${sources.length} sources, approved local reconstruction=${coverSha256}, ${imageBlocks.length} LOC in-body visual`,
 );
