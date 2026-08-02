@@ -75,6 +75,7 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
       data-brand-vector-source={VECTOR_SOURCE}
       data-brand-interaction="idle"
       data-brand-parallax="spring-awakening-v4"
+      data-brand-motion-normalization="rendered-box-v1"
       data-brand-awakening="aura-depth-cloth-v2"
       data-brand-compact={compact ? 'true' : 'false'}
       className={cn(
