@@ -71,10 +71,11 @@ jobs:
           cat brand-deep-preview.log
           exit 1
 
-      - name: Run exact geometry and trajectory audit
+      - name: Run exact geometry, v20 evidence and trajectory audit
         run: >-
           npx playwright test
           qa/brand-deep-audit.spec.mjs
+          qa/brand-v20-reference.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --workers=1
@@ -88,6 +89,9 @@ jobs:
           path: |
             qa-artifacts/brand-reference-contract-metrics.json
             qa-artifacts/brand-motion-quality-metrics.json
+            qa-artifacts/brand-v20-contract-metrics.json
+            qa-artifacts/brand-v20-reference-comparison.png
+            qa-artifacts/brand-v20-micro-diagnostics.png
             test-results
             brand-deep-preview.log
           if-no-files-found: warn
