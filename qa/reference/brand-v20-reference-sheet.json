@@ -39,14 +39,14 @@
   },
   "candidates": [
     {
-      "id": "v20.3-reference-monolith",
+      "id": "v20.4-reference-drapery",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
       "boxes": {
         "cloak": { "x": 1.5, "y": 34.7801, "width": 93.2, "height": 61.2199 },
         "hood": { "x": 31.1, "y": 7.5, "width": 34.0, "height": 31.3 },
-        "faceCavern": { "x": 34.1, "y": 12.7, "width": 27.8, "height": 25.8 }
+        "faceCavern": { "x": 34.1, "y": 14.2, "width": 27.8, "height": 23.9 }
       },
       "ratios": {
         "hoodHeightToVisibleFigureHeight": 0.353672,
@@ -57,17 +57,17 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "All macro-ratio gates pass naturally, but overlay, optical-size and human silhouette review are still required before promotion."
+      "reason": "Macro-ratio gates remain natural while the v20.4 pass replaces the dome aura, horizontal cowl and straight panel folds with asymmetric field branches, crossed drapery and curved cloth planes. Exact overlay review is still mandatory."
     },
     {
-      "id": "v20.1-reference-micro",
+      "id": "v20.2-reference-micro-rim",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
       "designGrid": [32, 32],
       "reviewSizes": [16, 20, 24, 32, 48],
       "boxes": {
         "cloak": { "x": 0.6, "y": 11.5932, "width": 30.8, "height": 20.4068 },
         "hood": { "x": 10.4, "y": 2.5, "width": 11.2, "height": 10.5 },
-        "faceCavern": { "x": 11.5, "y": 4.1, "width": 9.0, "height": 8.6 }
+        "faceCavern": { "x": 11.5, "y": 4.5, "width": 9.0, "height": 8.3 }
       },
       "ratios": {
         "hoodHeightToVisibleFigureHeight": 0.355932,
@@ -78,7 +78,7 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "Independent micro geometry passes macro ratios, but dark/light raster review at every optical size remains mandatory."
+      "reason": "Independent micro geometry retains the macro ratios while increasing the compact rim and crossed cowl for 16–20px dark-background recognition. Exact dark/light raster evidence remains mandatory."
     }
   ],
   "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
