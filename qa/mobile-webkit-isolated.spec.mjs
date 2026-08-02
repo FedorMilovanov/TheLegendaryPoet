@@ -92,17 +92,16 @@ async function inspectRevealSurface(surface) {
 
 for (const section of HOME_SECTIONS) {
   test(`WebKit home principal section ${section.slug} reveals in a fresh context`, async ({ page }, testInfo) => {
-    onlySafari(testInfo, 'one native WebKit home scroll per fresh page/context');
+    onlySafari(testInfo, 'one bounded WebKit document scroll per fresh page/context');
     const runtime = attachRuntimeDiagnostics(page);
     await gotoRoute(page, '/');
     const { target, surface } = await locateHomeRevealSurface(page, section);
 
-    // One native locator scroll drives WebKit's real IntersectionObserver. The
-    // fixed settle window is deliberately longer than the Framer Motion reveal
-    // and is followed by one final protocol read, avoiding repeated evaluate
-    // calls that produced WebKit NotFoundError/process exits in CI.
-    await surface.scrollIntoViewIfNeeded();
-    await expect(surface).toBeInViewport();
+    // A locator action waits for Framer Motion's transformed surface to become
+    // stable and can terminate Linux WebKit. The shared helper performs at most
+    // two direct scrollingElement assignments and already proves all isolated
+    // Safari routes without actionability or cumulative scroll stress.
+    await scrollLocatorIntoViewport(page, surface, `${section.label} reveal surface`);
     await page.waitForTimeout(WEBKIT_REVEAL_SETTLE_MS);
     const visual = await inspectRevealSurface(surface);
     await expect(target).toBeVisible();
