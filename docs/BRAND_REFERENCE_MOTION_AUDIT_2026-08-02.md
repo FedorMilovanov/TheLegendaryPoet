@@ -9,7 +9,7 @@
 
 The merged zero-flaky run is valid evidence of implementation stability. It is not evidence that the emblem matches the canonical reference. The current production art and all three v19 candidate tiers remain below the reference bar.
 
-The production motion architecture is technically strong: a single requestAnimationFrame controller, no React render loop, no interaction long tasks, deterministic active/settling/idle ownership, bounded timestep and a correct reduced-motion path. The major motion defect was optical rather than computational: every translation channel used a fixed number of pixels, while the mark is rendered at different effective sizes. This audit normalizes translation amplitude to the rendered bounding box and adds trajectory gates.
+The production motion architecture is technically strong: a single requestAnimationFrame controller, no React render loop, no interaction long tasks, deterministic active/settling/idle ownership, bounded timestep and a correct reduced-motion path. The audit found two motion defects: translation amplitude was fixed in pixels across differently rendered marks, and the original return spring retained an invisible numerical tail in `settling` on throttled renderers. Translation is now normalized to the rendered bounding box; active entry remains unchanged, while the return spring reaches exact idle inside a bounded interval after only subpixel motion remains.
 
 ## 1. Reference contract audit
 
@@ -128,12 +128,12 @@ The architecture of the figure should remain nearly symmetric, but the cloth hig
 The exact integration was simulated at 30, 60, 90, 120 and 144 Hz:
 
 - 95% entry: about 243–350 ms;
-- return to 1%: about 472–733 ms;
-- directional overshoot: at most about 1.12%;
-- wake overshoot: at most about 3.7%, visually clamped by phase functions;
+- exact return to `idle`: about 500–583 ms;
+- exact return at a severely throttled 15 Hz: about 1000 ms;
+- return overshoot: at most about 2.25%;
 - corner reversal crosses the center in about 125–150 ms.
 
-These values are controlled and suitable for a premium hover response.
+The active spring is unchanged. The return uses higher stiffness/damping and an explicit visual epsilon: the controller performs the final exact-zero write only after remaining position is subpixel and velocity/wake are visually negligible. This avoids both a visible snap and a long compositor-owning tail.
 
 ### Proven defect: fixed-pixel optical drift
 
@@ -147,18 +147,18 @@ The header additionally scales a 48 px mark to about 59.5 px, while the footer l
 
 ### Correction
 
-`spring-awakening-v4` now uses `rendered-box-v1`, which derives a bounded motion scale from the actual rendered box around a neutral 64 px design size. All translation channels use that scale; scale-only channels remain unchanged.
+`spring-awakening-v4` now uses `rendered-box-v1`, which derives a bounded motion scale from the actual rendered box around a neutral 64 px design size. All translation channels use that scale; scale-only channels remain unchanged. The return spring uses `180/20` for directional stiffness/damping and `220/22` for wake stiffness/damping; active entry remains `136/18.5` and `126/15.8`.
 
 The new browser audit checks:
 
 - real geometry ratios for production, full-size, optical and micro SVGs;
 - explicit non-eligibility for reference approval;
-- 120 ms entry state;
+- 120 ms entry state measured from the first real motion sample;
 - 95% convergence window;
 - maximum per-frame displacement;
 - bounded overshoot;
 - depth ordering and counter-parallax signs;
-- return to idle in under 1.2 seconds;
+- exact return to idle in under 1.2 seconds;
 - no residual drift after idle;
 - proportional motion between the transformed header mark and footer mark;
 - reduced-motion transform removal.
