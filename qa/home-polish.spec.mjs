@@ -280,6 +280,10 @@ test('desktop pointer pipeline remains responsive over premium poet depth', asyn
 });
 
 test('real stepped scrolling reveals all principal homepage sections', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'home-iphone-safari',
+    'dedicated bounded WebKit home audit covers principal sections without duplicating process-heavy traversal',
+  );
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
 
