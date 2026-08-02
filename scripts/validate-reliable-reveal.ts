@@ -18,11 +18,18 @@ assert.match(reveal, /intersectionRatio >= boundedThreshold/);
 assert.match(reveal, /window\.requestAnimationFrame\(checkGeometry\)/);
 assert.match(reveal, /new ResizeObserver\(scheduleGeometryCheck\)/);
 assert.match(reveal, /window\.addEventListener\('scroll', scheduleGeometryCheck/);
+assert.match(reveal, /document\.addEventListener\('scroll', scheduleGeometryCheck, \{ capture: true, passive: true \}\)/);
+assert.match(reveal, /window\.addEventListener\('pageshow', scheduleGeometryCheck\)/);
+assert.match(reveal, /document\.addEventListener\('visibilitychange', scheduleGeometryCheck\)/);
 assert.match(reveal, /window\.visualViewport\?\.addEventListener\('scroll', scheduleGeometryCheck/);
 assert.match(reveal, /window\.visualViewport\?\.addEventListener\('resize', scheduleGeometryCheck/);
+assert.match(reveal, /BOOTSTRAP_CHECK_DELAYS_MS = \[0, 80, 240, 600, 1_200, 2_200\]/);
+assert.match(reveal, /window\.setTimeout\(scheduleGeometryCheck, delay\)/);
+assert.match(reveal, /window\.clearTimeout\(timer\)/);
+assert.match(reveal, /document\.removeEventListener\('scroll', scheduleGeometryCheck, true\)/);
 assert.match(reveal, /observer\.disconnect\(\)/);
 assert.match(reveal, /resizeObserver\?\.disconnect\(\)/);
-assert.doesNotMatch(reveal, /classList\.(?:add|remove)|style\.opacity\s*=|setAttribute\(['"]style/);
+assert.doesNotMatch(reveal, /setInterval|classList\.(?:add|remove)|style\.opacity\s*=|setAttribute\(['"]style/);
 
 assert.match(home, /import Reveal, \{ useReliableInView \} from '\.\.\/components\/Reveal'/);
 assert.doesNotMatch(home, /\buseInView\b/);
@@ -37,4 +44,4 @@ assert.doesNotMatch(helpers, /classList\.(?:add|remove)|style\.opacity\s*=/);
 assert.match(packageJson, /"validate:reliable-reveal": "tsx scripts\/validate-reliable-reveal\.ts"/);
 assert.match(packageJson, /validate:brand-v20 && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
 
-console.log('reliable reveal validation: IntersectionObserver is backed by real viewport geometry, Safari scroll/visualViewport/resize signals, strict opacity evidence and no forced visual-state mutation');
+console.log('reliable reveal validation: IntersectionObserver is backed by real viewport geometry, document/window/visualViewport signals, bounded hydration checks, strict opacity evidence and no forced visual-state mutation');
