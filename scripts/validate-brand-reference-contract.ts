@@ -39,16 +39,24 @@ type Evaluation = {
   nextRequiredAction: string;
   marathonPassesCompleted?: number[];
 };
+type Contract = {
+  referenceId: string;
+  targets: Record<string, { target?: number; allowed?: [number, number]; minimum?: number; maximum?: number }>;
+  compositionTargets: Record<string, { target: number; allowed: [number, number] }>;
+  requiredStructures: string[];
+  forbiddenDrift: string[];
+};
 
 const resolve = (file: string) => path.resolve(file);
 const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
 const bytes = (file: string) => fs.readFileSync(resolve(file));
 const parse = <T>(file: string): T => JSON.parse(read(file)) as T;
 const sha256 = (buffer: Buffer) => crypto.createHash('sha256').update(buffer).digest('hex');
-const gitBlobSha = (buffer: Buffer) => crypto.createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
+const gitBlobSha = (buffer: Buffer) =>
+  crypto.createHash('sha1').update(`blob ${buffer.length}\0`).update(buffer).digest('hex');
 
 const manifest = parse<Manifest>('qa/reference/brand-reference-manifest.json');
-const contract = parse<{ referenceId: string; requiredStructures: string[]; forbiddenDrift: string[] }>('qa/reference/brand-reference-contract.json');
+const contract = parse<Contract>('qa/reference/brand-reference-contract.json');
 const evaluation = parse<Evaluation>('qa/brand-reference-evaluation.json');
 
 assert.equal(manifest.referenceId, 'canonical-hooded-figure-v2-clean-base');
@@ -75,6 +83,16 @@ assert.equal(supplemental.mayInfluenceOpticalRatios, false);
 assert.equal(supplemental.mayInfluenceApprovalScore, false);
 
 assert.equal(contract.referenceId, manifest.referenceId);
+assert.deepEqual(contract.compositionTargets, {
+  cloakWidthToCanvas: { target: 0.77, allowed: [0.72, 0.82] },
+  occupiedFigureHeightToCanvas: { target: 0.875, allowed: [0.84, 0.91] },
+  hoodApexYToCanvas: { target: 0.121, allowed: [0.1, 0.145] },
+  cloakShoulderYToCanvas: { target: 0.406, allowed: [0.37, 0.43] },
+  figureCenterXToCanvas: { target: 0.5, allowed: [0.47, 0.53] },
+});
+for (const [name, target] of Object.entries(contract.compositionTargets)) {
+  assert.ok(target.allowed[0] <= target.target && target.target <= target.allowed[1], `${name}: invalid composition range`);
+}
 for (const required of [
   'high layered pointed hood',
   'broad deep black face cavern with a rounded pentagonal base',
@@ -147,4 +165,4 @@ for (const artifact of ['brand-reference-comparison-matrix.png', 'brand-referenc
   assert.ok(browserQa.includes(artifact), `browser QA missing ${artifact}`);
 }
 
-console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — no-regression frame-invariant motion foundation; geometry remains not-reference-approved`);
+console.log(`brand reference progress: ${Math.round(evaluation.overallScore * 100)}% — internal ratios plus canonical square composition are locked; production geometry remains not-reference-approved`);
