@@ -1,12 +1,13 @@
 {
   "auditId": "brand-reference-motion-deep-audit-2026-08-02",
   "auditedMainSha": "f068596e6096b3bf7f07ad3c2f9b4b998d517f5a",
+  "testedAuditHead": "0d9dea730e6fd272d430347588548d62e3b983c1",
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "referenceDecision": "not-reference-approved",
   "method": {
-    "geometry": "SVG getBBox ratios against qa/reference/brand-reference-contract.json; browser artifact is authoritative",
+    "geometry": "exact-head Chromium SVG getBBox ratios against qa/reference/brand-reference-contract.json",
     "visual": "exact-head Playwright matrices reviewed at 256, 192, 128, 96, 64, 56, 44, 32, 24 and 16 pixels",
-    "motion": "source audit, exact-head endpoint evidence, pointer-performance evidence and deterministic spring integration at 30/60/90/120/144 Hz",
+    "motion": "source audit, exact-head endpoint evidence, pointer-performance evidence, deterministic spring integration and dedicated exact-head Chromium trajectory sampling",
     "rule": "green CI proves stability, not reference similarity"
   },
   "contractMeasurements": [
@@ -14,10 +15,10 @@
       "id": "production-v17",
       "file": "public/brand-emblem.svg",
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.3303,
-        "hoodWidthToCloakWidth": 0.2784,
-        "faceCavernWidthToHoodWidth": 0.6404,
-        "cloakWidthToHoodWidth": 3.5921
+        "hoodHeightToVisibleFigureHeight": 0.3302830356,
+        "hoodWidthToCloakWidth": 0.2819521639,
+        "faceCavernWidthToHoodWidth": 0.6403507246,
+        "cloakWidthToHoodWidth": 3.5467009231
       },
       "passes": {
         "hoodHeightToVisibleFigureHeight": true,
@@ -31,10 +32,10 @@
       "id": "v19.11-full-size",
       "file": "public/brand-emblem-v19-candidate.svg",
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.3738,
-        "hoodWidthToCloakWidth": 0.3882,
-        "faceCavernWidthToHoodWidth": 0.6384,
-        "cloakWidthToHoodWidth": 2.5763
+        "hoodHeightToVisibleFigureHeight": 0.3738207629,
+        "hoodWidthToCloakWidth": 0.3919487842,
+        "faceCavernWidthToHoodWidth": 0.6255703054,
+        "cloakWidthToHoodWidth": 2.5513537489
       },
       "passes": {
         "hoodHeightToVisibleFigureHeight": false,
@@ -48,10 +49,10 @@
       "id": "v19.17-optical",
       "file": "public/brand-emblem-v19-optical-candidate.svg",
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.3805,
-        "hoodWidthToCloakWidth": 0.3803,
-        "faceCavernWidthToHoodWidth": 0.6552,
-        "cloakWidthToHoodWidth": 2.6293
+        "hoodHeightToVisibleFigureHeight": 0.3804537503,
+        "hoodWidthToCloakWidth": 0.3837134574,
+        "faceCavernWidthToHoodWidth": 0.6551723968,
+        "cloakWidthToHoodWidth": 2.6061113591
       },
       "passes": {
         "hoodHeightToVisibleFigureHeight": false,
@@ -65,10 +66,10 @@
       "id": "v19.14-micro",
       "file": "public/brand-emblem-v19-micro-candidate.svg",
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.4306,
-        "hoodWidthToCloakWidth": 0.4643,
-        "faceCavernWidthToHoodWidth": 0.6462,
-        "cloakWidthToHoodWidth": 2.1538
+        "hoodHeightToVisibleFigureHeight": 0.4305555761,
+        "hoodWidthToCloakWidth": 0.4642857143,
+        "faceCavernWidthToHoodWidth": 0.6307692895,
+        "cloakWidthToHoodWidth": 2.1538461538
       },
       "passes": {
         "hoodHeightToVisibleFigureHeight": false,
@@ -103,6 +104,21 @@
       "returnOvershootMaximumPercent": 2.25,
       "cornerReversalZeroCrossRangeMs": [125, 150],
       "frameGapPolicy": "dt is capped at 32 ms, so long stalls cannot cause a visual teleport; settling uses a subpixel position and low-velocity cutoff before an exact zero write"
+    },
+    "exactHeadBrowser": {
+      "head": "0d9dea730e6fd272d430347588548d62e3b983c1",
+      "sampleCount": 23,
+      "sampleSpanMs": 1116.6,
+      "activationElapsedMs": 114.5,
+      "first95AfterActivationMs": 599.9,
+      "exactIdleSettleMs": 931,
+      "maximumSampleJumpPx": 0.468,
+      "headerRenderedSizePx": 59.52,
+      "headerMotionScale": 0.93,
+      "footerRenderedSizePx": 48,
+      "footerMotionScale": 0.75,
+      "normalizedAmplitudeRatioObserved": 1.2406015038,
+      "normalizedAmplitudeRatioExpected": 1.2400000493
     },
     "blockingDefectsFound": [
       "translations were fixed pixels across transformed 48, 64 and 96 pixel marks, so relative depth changed with rendered size",
