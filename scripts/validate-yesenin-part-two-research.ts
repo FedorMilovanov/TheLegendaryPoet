@@ -145,12 +145,46 @@ for (const retiredAlias of [
   if (chapter6.includes(retiredAlias)) throw new Error(`chapter 6 still uses retired alias: ${retiredAlias}`);
 }
 
-const chapter10 = drafts.get('YESENIN_PART_II_DRAFT_CH10_IMAGISM_V01_2026-08.md')!;
-if (!chapter10.includes('Полное сравнение вариантов требует обоих физических выпусков')) {
-  throw new Error('chapter 10 lost the two-physical-witness boundary');
+const chapter9 = drafts.get('YESENIN_PART_II_DRAFT_CH09_MOSKVA_KABATSKAYA_V01_2026-08.md')!;
+for (const required of [
+  'более ста счетов',
+  'пятьдесят четыре несут подпись Есенина',
+  'двадцать один подписан Бениславской',
+  'yes2-kabatskaya-accounts-corpus',
+  'yes2-kabatskaya-account-note-1923-09-15',
+  'yes2-kabatskaya-sep15-legal-chain',
+  'yes2-kabatskaya-censorship-correcture',
+  'производство приостановили до розыска',
+  'не приобретены и не проверены как бинарники',
+]) {
+  if (!chapter9.includes(required)) throw new Error(`chapter 9 lost account/legal/censorship boundary: ${required}`);
 }
-if (!chapter10.includes('Другие участники не признали за этим письмом окончательной власти')) {
-  throw new Error('chapter 10 turned the Pravda letter into an uncontested group closure');
+for (const retired of [
+  'yes2-kabatskaya-project-history',
+  'yes2-kabatskaya-physical-book',
+  'yes2-kabatskaya-accounts]',
+  'yes2-kabatskaya-sep15-case',
+]) {
+  if (chapter9.includes(retired)) throw new Error(`chapter 9 restored retired provisional source: ${retired}`);
+}
+if (/сохранил(?:ось|ись)\s+(?:ровно\s+)?52\s+счет/iu.test(chapter9)) {
+  throw new Error('chapter 9 collapsed the wider account corpus to an uncontested 52-item total');
+}
+
+const chapter10 = drafts.get('YESENIN_PART_II_DRAFT_CH10_IMAGISM_V01_2026-08.md')!;
+for (const required of [
+  '17–18 апреля',
+  'Полное сравнение вариантов требует обоих физических выпусков',
+  'Академический комментарий указывает, что 9 сентября',
+  'Полоса ещё не приобретена',
+  'сам бинарник проектом ещё не приобретён',
+  'yes2-imagism-response-new-spectator-1924-09-09',
+  'yes2-imagism-continues-leaflet-1924-10-04',
+]) {
+  if (!chapter10.includes(required)) throw new Error(`chapter 10 lost physical-witness/source-class boundary: ${required}`);
+}
+if (/9 сентября[^.]{0,160}опубликовал ответ[^.]{0,200}(?:без|не).*полос/iu.test(chapter10)) {
+  throw new Error('chapter 10 describes the New Spectator response without its missing-scan boundary');
 }
 
 const chapter11 = drafts.get('YESENIN_PART_II_DRAFT_CH11_BENISLAVSKAYA_V01_2026-08.md')!;
@@ -211,5 +245,5 @@ for (const forbiddenRegistration of [
 }
 
 console.log(
-  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, source-type and medical boundaries intact.`,
+  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, account/censorship, physical-witness and medical boundaries intact.`,
 );
