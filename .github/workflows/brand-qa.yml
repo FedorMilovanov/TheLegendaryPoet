@@ -11,6 +11,8 @@ on:
       - 'public/brand-emblem.svg'
       - 'public/brand-mark-micro.svg'
       - 'public/brand-emblem-mask.svg'
+      - 'public/brand-emblem-v20-candidate.svg'
+      - 'public/brand-emblem-v20-micro-candidate.svg'
       - 'public/brand-release.txt'
       - 'public/site.webmanifest'
       - 'public/browserconfig.xml'
@@ -18,15 +20,21 @@ on:
       - 'qa/brand-reference-evaluation.json'
       - 'qa/brand-reference-audit.json'
       - 'qa/brand-marathon-pass-ledger.json'
+      - 'qa/brand-v20-candidate-ledger.json'
+      - 'qa/reference/brand-v20-reference-sheet.json'
       - 'qa/brand-emblem.spec.mjs'
       - 'qa/brand-reference-comparison.spec.mjs'
+      - 'qa/brand-v20-reference.spec.mjs'
       - 'scripts/validate-brand-assets.ts'
       - 'scripts/validate-brand-reference-contract.ts'
       - 'scripts/validate-brand-candidate.ts'
+      - 'scripts/validate-brand-v20.ts'
       - 'scripts/validate-brand-deep-audit.ts'
       - 'scripts/validate-brand-motion-frame-invariance.ts'
       - 'scripts/validate-hover-stability.ts'
+      - 'docs/BRAND_V20_REFERENCE_PASS.md'
       - '.github/workflows/brand-qa.yml'
+      - '.github/workflows/brand-deep-audit.yml'
   push:
     branches: [main]
     paths:
@@ -37,6 +45,8 @@ on:
       - 'public/brand-emblem.svg'
       - 'public/brand-mark-micro.svg'
       - 'public/brand-emblem-mask.svg'
+      - 'public/brand-emblem-v20-candidate.svg'
+      - 'public/brand-emblem-v20-micro-candidate.svg'
       - 'public/brand-release.txt'
       - 'public/site.webmanifest'
       - 'public/browserconfig.xml'
@@ -44,15 +54,21 @@ on:
       - 'qa/brand-reference-evaluation.json'
       - 'qa/brand-reference-audit.json'
       - 'qa/brand-marathon-pass-ledger.json'
+      - 'qa/brand-v20-candidate-ledger.json'
+      - 'qa/reference/brand-v20-reference-sheet.json'
       - 'qa/brand-emblem.spec.mjs'
       - 'qa/brand-reference-comparison.spec.mjs'
+      - 'qa/brand-v20-reference.spec.mjs'
       - 'scripts/validate-brand-assets.ts'
       - 'scripts/validate-brand-reference-contract.ts'
       - 'scripts/validate-brand-candidate.ts'
+      - 'scripts/validate-brand-v20.ts'
       - 'scripts/validate-brand-deep-audit.ts'
       - 'scripts/validate-brand-motion-frame-invariance.ts'
       - 'scripts/validate-hover-stability.ts'
+      - 'docs/BRAND_V20_REFERENCE_PASS.md'
       - '.github/workflows/brand-qa.yml'
+      - '.github/workflows/brand-deep-audit.yml'
   workflow_dispatch:
 
 permissions:
@@ -127,7 +143,12 @@ jobs:
       - name: Run exact Browser QA
         env:
           QA_BASE_URL: http://127.0.0.1:4173
-        run: npx playwright test qa/brand-emblem.spec.mjs qa/brand-reference-comparison.spec.mjs --reporter=line
+        run: >-
+          npx playwright test
+          qa/brand-emblem.spec.mjs
+          qa/brand-reference-comparison.spec.mjs
+          qa/brand-v20-reference.spec.mjs
+          --reporter=line
 
       - name: Record artifact manifest
         if: always()
