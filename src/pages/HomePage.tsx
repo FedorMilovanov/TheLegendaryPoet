@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from '../components/ui/Link';
-import { motion, useInView, useSpring, useTransform } from 'framer-motion';
+import { motion, useSpring, useTransform } from 'framer-motion';
 import { poets, musicTracks } from '../data/poets';
 import { getAllEssays } from '../data/essays';
 import PoetCard from '../components/PoetCard';
@@ -9,7 +9,7 @@ import { BookMonogramIcon, RutubeIcon, YouTubeIcon, VKIcon } from '../components
 import HeroPoetWindow from '../components/home/HeroPoetWindow';
 import { ArrowRight, Quote, BookOpen, FileText, AudioWaveform, Star, Sparkles } from '../components/PremiumIcons';
 import KineticText from '../components/KineticText';
-import Reveal from '../components/Reveal';
+import Reveal, { useReliableInView } from '../components/Reveal';
 import PoemOfDay from '../components/PoemOfDay';
 import { asset } from '../utils/asset';
 import { useSeo } from '../hooks/useSeo';
@@ -160,8 +160,7 @@ function HeroSection() {
 }
 
 function AnimatedCounter({ value }: { value: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const { ref, inView: isInView } = useReliableInView<HTMLDivElement>({ once: true, threshold: 0.1 });
   const springValue = useSpring(0, { stiffness: 40, damping: 15, restDelta: 0.001 });
   const displayValue = useTransform(springValue, (latest: number) => Math.floor(latest));
   useEffect(() => {
@@ -186,12 +185,20 @@ function StatsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {stats.map((stat, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} viewport={{ once: true }} className="luxury-card group rounded-2xl border border-cyan-400/10 bg-[#061018]/60 p-8 text-center backdrop-blur-lg glow-hover">
+            <Reveal
+              key={stat.label}
+              direction="up"
+              delay={idx * 0.1}
+              duration={0.5}
+              distance={20}
+              blur={false}
+              className="luxury-card group rounded-2xl border border-cyan-400/10 bg-[#061018]/60 p-8 text-center backdrop-blur-lg glow-hover"
+            >
               <motion.div whileHover={{ scale: 1.18, rotate: -4 }} transition={{ type: 'spring', stiffness: 440, damping: 16 }} className="mx-auto mb-4 flex h-14 w-14 items-center justify-center text-cyan-300 drop-shadow-[0_0_18px_rgba(0,212,255,0.38)]"><stat.icon size={38} /></motion.div>
               <div className="mx-auto mb-4 h-px w-14 bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
               <div className="mb-2 font-serif text-4xl font-bold tracking-tight text-white"><AnimatedCounter value={stat.getValue()} /></div>
               <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-100/45">{stat.label}</div>
-            </motion.div>
+            </Reveal>
           ))}
         </div>
       </div>
