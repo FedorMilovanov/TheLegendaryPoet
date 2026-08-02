@@ -4,10 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 type RatioTarget = { allowed?: [number, number]; minimum?: number };
-type Contract = {
-  referenceId: string;
-  targets: Record<string, RatioTarget>;
-};
+type Contract = { referenceId: string; targets: Record<string, RatioTarget> };
 type Candidate = {
   id: string;
   file: string;
@@ -32,11 +29,11 @@ const contract = JSON.parse(read('qa/reference/brand-reference-contract.json')) 
 const sheet = JSON.parse(read('qa/reference/brand-v20-reference-sheet.json')) as Sheet;
 const full = read('public/brand-emblem-v20-candidate.svg');
 const micro = read('public/brand-emblem-v20-micro-candidate.svg');
-
 const ledger = JSON.parse(read('qa/brand-v20-candidate-ledger.json')) as {
   family: string;
   fullSizeCandidate: Candidate;
   microCandidate: Candidate;
+  iterationHistory: Array<{ full: string; micro: string; verdict: string }>;
   evidenceArtifacts: string[];
   promotionBlockers: string[];
   promotionPolicy: string;
@@ -54,13 +51,14 @@ assert.equal(
   'v20 measurement sheet must remain bound to the exact canonical reference bytes',
 );
 
+assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
-assert.equal(fullSheet.id, 'v20.3-reference-monolith');
+assert.equal(fullSheet.id, 'v20.4-reference-drapery');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
 
-assert.equal(microSheet.id, 'v20.1-reference-micro');
+assert.equal(microSheet.id, 'v20.2-reference-micro-rim');
 assert.equal(microSheet.file, 'public/brand-emblem-v20-micro-candidate.svg');
 assert.deepEqual(microSheet.designGrid, [32, 32]);
 assert.deepEqual(microSheet.reviewSizes, [16, 20, 24, 32, 48]);
@@ -80,7 +78,7 @@ function validateCandidate(source: string, candidate: Candidate, idAttribute: st
   }
 }
 
-validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 40, [
+validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 48, [
   'data-brand-cloak',
   'data-brand-hood',
   'data-brand-face-void',
@@ -92,7 +90,7 @@ validateCandidate(full, fullSheet, 'data-brand-v20-candidate', 40, [
   'data-brand-field-rear',
 ]);
 
-validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', 16, [
+validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', 24, [
   'data-brand-micro-cloak',
   'data-brand-micro-hood',
   'data-brand-micro-face',
@@ -122,7 +120,7 @@ for (const productionFile of [
   'src/components/BrandMark.tsx',
 ]) {
   const production = read(productionFile);
-  assert.doesNotMatch(production, /v20\.(?:1|3)-reference-/);
+  assert.doesNotMatch(production, /v20\.\d+-reference-/);
   assert.doesNotMatch(production, /brand-emblem-v20-(?:micro-)?candidate/);
 }
 
@@ -136,6 +134,8 @@ assert.equal(ledger.fullSizeCandidate.productionReplacement, false);
 assert.equal(ledger.microCandidate.productionReplacement, false);
 assert.equal(ledger.fullSizeCandidate.reviewerDecision, 'not-reference-approved');
 assert.equal(ledger.microCandidate.reviewerDecision, 'not-reference-approved');
+assert.ok(ledger.iterationHistory.some((entry) => entry.full === 'v20.3-reference-monolith' && /rejected/.test(entry.verdict)));
+assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id));
 assert.ok(ledger.promotionBlockers.length >= 5);
 assert.match(ledger.promotionPolicy, /Never treat numericGeometryEligible, CI success or motion quality as reference approval/);
 
@@ -164,4 +164,4 @@ assert.match(evidenceSpec, /v20 full-size and independent micro masters pass num
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: full-size and independent micro masters pass the canonical numeric geometry contract, remain static QA-only assets, and cannot enter production without explicit visual approval');
+console.log('brand v20 validation: v20.4 full-size and v20.2 independent micro masters pass the canonical numeric geometry contract, remain static QA-only assets, and cannot enter production without explicit visual approval');
