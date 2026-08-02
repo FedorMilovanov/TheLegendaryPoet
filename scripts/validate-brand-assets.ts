@@ -71,6 +71,7 @@ for(const token of [
   '@media (prefers-reduced-motion:reduce)',
   'a:focus-visible [data-brand-mark]',
 ])assert.ok(motionCss.includes(token),`motion CSS missing ${token}`);
+assert.doesNotMatch(motionCss,/createBrandMotionController|requestAnimationFrame|cancelAnimationFrame|ResizeObserver|Math\.min\(0\.032/,'CSS module must not retain a second spring controller');
 assert.equal((motion.match(/getBoundingClientRect\(\)/g)??[]).length,1,'bounds read site count');
 assert.equal((motion.match(/requestAnimationFrame\(/g)??[]).length,1,'rAF scheduling site count');
 assert.doesNotMatch(motion,/setInterval|setTimeout|while\s*\(true\)/,'timer/idle loop shortcut');
@@ -85,7 +86,8 @@ for(const token of ['M16 12.2C13.5 12','M15.8 2.6C14.6 2.9','M15.8 5.4C14.9 5.6'
 assert.equal(evaluation.candidateSource,SOURCE);
 assert.match(evaluation.candidateRevision,/v18\.4 depth-first awakening/i);
 assert.match(evaluation.candidateRevision,/v18\.6 frame-rate-invariant/i);
+assert.match(evaluation.candidateRevision,/obsolete duplicate controller has been removed/i);
 assert.equal(evaluation.reviewerDecision,'not-reference-approved');
 for(const file of [componentFile,motionCssFile,motionFile,sourceFile,standaloneFile,microFile,maskFile])assert.equal(blob(file),evaluation.candidateGitBlobShas[file],`${file}: blob lock`);
 for(const file of ['index.html','public/site.webmanifest','public/browserconfig.xml','public/brand-release.txt'])assert.ok(read(file).includes(VERSION),`${file}: release marker`);
-console.log('brand validation: preserved visual baseline plus v18.6 frame-invariant aura-depth-cloth awakening are locked');
+console.log('brand validation: preserved visual baseline plus one frame-invariant v18.6 controller and a CSS-only layer contract are locked');
