@@ -3,10 +3,11 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.8-reference-compressed-cowl",
+    "id": "v20.9-reference-canonical-crop",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
+    "compositionEligible": true,
     "reviewerDecision": "not-reference-approved",
     "requiredReviewSizes": [64, 96, 128, 256]
   },
@@ -24,7 +25,8 @@
     {"full":"v20.5-reference-silhouette","micro":"v20.3-reference-micro-silhouette","verdict":"numeric pass; visual review rejected the remaining smooth oval cavern, ribbon-like horizontal cowl, regular panel fan and overly mirrored field topology"},
     {"full":"v20.6-reference-monolith","micro":"v20.4-reference-micro-monolith","verdict":"numeric pass; exact overlay showed a meaningful monolithic improvement but rejected the stacked chevron cowl, still-regular long panels and overly sparse field; dark 16–20px micro evidence remained nearly invisible"},
     {"full":"v20.7-reference-draped-monolith","micro":"v20.5-reference-micro-optical","verdict":"numeric pass; exact overlay confirmed the broader cavern and improved field but rejected a broad clean shawl across the shoulders, an overly large cowl zone and residual symmetric panel structure; dark micro identity improved but remained weak at 16–20px"},
-    {"full":"v20.8-reference-compressed-cowl","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"current QA-only iteration: cowl height reduced, clean X and ribbon ends removed, cloak highlights darkened into one monolithic body, field widened with two low-opacity structural branches, and micro uses six separated optical anchors; exact committed overlay and diagnostics pending"}
+    {"full":"v20.8-reference-compressed-cowl","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"numeric pass; exact overlay improved cowl compression and micro anchors but exposed a missing composition contract: cloak occupied 98.3% of the canvas instead of the canonical 76.9%, the apex sat too high and the entire bust was oversized in the square"},
+    {"full":"v20.9-reference-canonical-crop","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"current QA-only iteration: internal geometry is unchanged from v20.8 while an explicit canonical crop transform aligns occupied width, figure height, apex, shoulder line and centre position; exact committed composition evidence pending"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
@@ -39,5 +41,5 @@
     "motion has not been attached to the v20 semantic groups",
     "all required workflows have not yet passed on one exact v20 head"
   ],
-  "promotionPolicy": "Never treat numericGeometryEligible, CI success or motion quality as reference approval."
+  "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, CI success or motion quality as reference approval."
 }
