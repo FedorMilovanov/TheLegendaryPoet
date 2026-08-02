@@ -75,14 +75,41 @@ async function inspectRevealSurface(surface) {
     }
     const style = getComputedStyle(node);
     const rect = node.getBoundingClientRect();
+    const filter = style.filter || 'none';
+    const blurMatch = /blur\(([-\d.]+)px\)/.exec(filter);
+    const blurPx = blurMatch ? Math.abs(Number.parseFloat(blurMatch[1])) : 0;
     return {
       effectiveOpacity,
-      filter: style.filter,
+      filter,
+      blurPx,
       intersectsViewport: rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight,
       width: rect.width,
       height: rect.height,
     };
   });
+}
+
+async function waitForStableRevealSurface(surface, label) {
+  let stableSamples = 0;
+  let visual = null;
+  await expect.poll(
+    async () => {
+      visual = await inspectRevealSurface(surface);
+      const ready = visual.intersectsViewport
+        && visual.width > 2
+        && visual.height > 2
+        && visual.effectiveOpacity > 0.9
+        && visual.blurPx <= 0.05;
+      stableSamples = ready ? stableSamples + 1 : 0;
+      return stableSamples;
+    },
+    {
+      timeout: 8_000,
+      intervals: [120, 180, 240, 320],
+      message: `${label} reveal surface should remain visually final for three samples`,
+    },
+  ).toBeGreaterThanOrEqual(3);
+  return visual;
 }
 
 for (const section of HOME_SECTIONS) {
@@ -97,9 +124,8 @@ for (const section of HOME_SECTIONS) {
     // The assertion targets the Framer Motion reveal surface, not its inner text.
     await surface.scrollIntoViewIfNeeded();
     await expect(surface).toBeInViewport();
-    await page.waitForTimeout(1_400);
+    const visual = await waitForStableRevealSurface(surface, section.label);
 
-    const visual = await inspectRevealSurface(surface);
     const diagnostics = await collectDiagnostics(page);
     let topDiagnostics = null;
     if (section.verifyChromeReset) {
@@ -120,11 +146,7 @@ for (const section of HOME_SECTIONS) {
       fullPage: false,
     });
 
-    expect(visual.intersectsViewport, `${section.label} reveal surface should intersect the viewport`).toBe(true);
-    expect(visual.width, `${section.label} reveal width`).toBeGreaterThan(2);
-    expect(visual.height, `${section.label} reveal height`).toBeGreaterThan(2);
-    expect(visual.effectiveOpacity, `${section.label} reveal surface should finish visibly`).toBeGreaterThan(0.9);
-    expect(visual.filter === 'none' || visual.filter === 'blur(0px)' || visual.filter === 'blur(0)').toBe(true);
+    expect(visual).not.toBeNull();
     await expect(target).toBeVisible();
     expect(diagnostics.pathname).toBe('/');
     expectDiagnostics(diagnostics);
