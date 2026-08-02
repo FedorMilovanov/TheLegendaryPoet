@@ -9,10 +9,11 @@ const playwright = read('playwright.config.mjs');
 const homePlaywright = read('playwright.home-polish.config.mjs');
 const mobilePlatformsSpec = 'qa/mobile-platforms.spec.mjs';
 const webkitHomeSpec = 'qa/mobile-home-webkit.spec.mjs';
+const homePolishSpec = 'qa/home-polish.spec.mjs';
 const opticalSpec = 'qa/brand-v19-optical.spec.mjs';
 const microSpec = 'qa/brand-v19-micro.spec.mjs';
 
-for (const spec of [mobilePlatformsSpec, webkitHomeSpec, opticalSpec, microSpec]) {
+for (const spec of [mobilePlatformsSpec, webkitHomeSpec, homePolishSpec, opticalSpec, microSpec]) {
   assert.ok(fs.existsSync(path.resolve(spec)), `${spec}: browser spec is missing`);
   assert.ok(workflow.includes(spec), `${spec}: spec exists but is not executed by Manual Browser QA`);
 }
@@ -30,24 +31,30 @@ assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 
 const mobilePlatforms = read(mobilePlatformsSpec);
 const webkitHome = read(webkitHomeSpec);
+const homePolish = read(homePolishSpec);
 assert.match(mobilePlatforms, /\['home', '\/'\]/);
 assert.match(mobilePlatforms, /test\(`\$\{name\}: mobile engine rendering, safe area, images and runtime`/);
 assert.match(mobilePlatforms, /testInfo\.project\.name === 'iphone-safari' && name === 'home'/);
 assert.match(mobilePlatforms, /dedicated bounded WebKit home audit provides equivalent coverage/);
 assert.match(mobilePlatforms, /collectGeometryLandmarks/);
+assert.match(mobilePlatforms, /readLiveLandmarkState/);
 assert.match(mobilePlatforms, /landmarkIntersectsViewport/);
 assert.match(mobilePlatforms, /visitNativeWebKitLandmarks/);
 assert.match(mobilePlatforms, /node\.classList\.contains\('sr-only'\)/);
 assert.match(mobilePlatforms, /rect\.width <= 2 \|\| rect\.height <= 2/);
 assert.match(mobilePlatforms, /data-qa-scroll-landmark/);
+assert.match(mobilePlatforms, /liveTop/);
 assert.match(mobilePlatforms, /scrollDocumentTo/);
 assert.match(mobilePlatforms, /document\.scrollingElement/);
 assert.match(mobilePlatforms, /scrollingElement\.scrollTop = scrollTop/);
 assert.match(mobilePlatforms, /if \(nativeWebKit\)/);
 assert.match(mobilePlatforms, /expectStableChromeAtTop/);
 assert.match(mobilePlatforms, /stableSamples/);
-assert.match(mobilePlatforms, /Math\.min\(48, settledMaxScroll\)/);
+assert.match(mobilePlatforms, /test\('mobile dock, search sheet and tap targets remain usable'/);
+assert.match(mobilePlatforms, /if \(nativeWebKit\) \{\s*await expectStableChromeAtTop\(page\);/);
 assert.match(mobilePlatforms, /toBeGreaterThanOrEqual\(3\)/);
+assert.doesNotMatch(mobilePlatforms, /settledMaxScroll/);
+assert.doesNotMatch(mobilePlatforms, /Math\.min\(48,/);
 assert.doesNotMatch(mobilePlatforms, /#main-content > \*/);
 assert.doesNotMatch(mobilePlatforms, /scrollIntoViewIfNeeded/);
 assert.doesNotMatch(mobilePlatforms, /classList\.remove\(['"]chrome-hidden/);
@@ -56,15 +63,18 @@ assert.doesNotMatch(mobilePlatforms, /page\.mouse\.wheel/);
 assert.match(webkitHome, /WebKit home route keeps lazy content, runtime and mobile chrome stable/);
 assert.match(webkitHome, /test\.skip\(testInfo\.project\.name !== 'iphone-safari'/);
 assert.match(webkitHome, /collectGeometryLandmarks/);
+assert.match(webkitHome, /readLiveLandmarkState/);
 assert.match(webkitHome, /landmarkIntersectsViewport/);
 assert.match(webkitHome, /geometry-eligible WebKit landmarks/);
 assert.match(webkitHome, /bounded WebKit scroll landmarks/);
 assert.match(webkitHome, /node\.classList\.contains\('sr-only'\)/);
 assert.match(webkitHome, /rect\.width <= 2 \|\| rect\.height <= 2/);
 assert.match(webkitHome, /data-qa-scroll-landmark/);
+assert.match(webkitHome, /liveTop/);
 assert.match(webkitHome, /scrollDocumentTo/);
 assert.match(webkitHome, /document\.scrollingElement/);
 assert.match(webkitHome, /scrollingElement\.scrollTop = scrollTop/);
+assert.doesNotMatch(webkitHome, /landmark\.top/);
 assert.doesNotMatch(webkitHome, /scrollIntoViewIfNeeded/);
 assert.doesNotMatch(webkitHome, /page\.mouse\.wheel/);
 assert.match(webkitHome, /failedResilientImages/);
@@ -76,6 +86,10 @@ assert.match(webkitHome, /runtime\.pageErrors/);
 assert.match(webkitHome, /runtime\.consoleErrors/);
 assert.match(webkitHome, /runtime\.localRequestFailures/);
 
+assert.match(homePolish, /real stepped scrolling reveals all principal homepage sections/);
+assert.match(homePolish, /testInfo\.project\.name === 'home-iphone-safari'/);
+assert.match(homePolish, /dedicated bounded WebKit home audit covers principal sections without duplicating process-heavy traversal/);
+
 const optical = read(opticalSpec);
 const micro = read(microSpec);
 assert.match(optical, /brand-v19-optical-candidate-matrix\.png/);
@@ -85,4 +99,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: full-size, optical, micro and geometry-filtered bounded WebKit gates execute under zero-flaky Chromium/Android/WebKit QA');
+console.log('brand browser workflow: full-size, optical, micro and live-geometry bounded WebKit gates execute under zero-flaky Chromium/Android/WebKit QA');
