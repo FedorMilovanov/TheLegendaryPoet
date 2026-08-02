@@ -36,11 +36,17 @@ assert.match(playwright, /brand-v19-optical/);
 assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all principal homepage sections\//);
 
-assert.match(homePolishSpec, /let stableSamples = 0/);
-assert.match(homePolishSpec, /stableSamples = visuallyFinal \? stableSamples \+ 1 : 0/);
-assert.match(homePolishSpec, /opacity >= 0\.995/);
-assert.match(homePolishSpec, /blurPx <= 0\.05/);
-assert.match(homePolishSpec, /toBeGreaterThanOrEqual\(3\)/);
+// Hero acceptance reads the CSS schedule once, yields on the Playwright side,
+// and performs one final rendered-state read. This keeps the exact visual
+// thresholds without repeated WebKit protocol polling.
+assert.match(homePolishSpec, /animationDuration/);
+assert.match(homePolishSpec, /animationDelay/);
+assert.match(homePolishSpec, /maxTotalMs/);
+assert.match(homePolishSpec, /const settleMs = Math\.max\(1_800, Math\.ceil\(timing\.maxTotalMs \+ 700\)\)/);
+assert.match(homePolishSpec, /await page\.waitForTimeout\(settleMs\)/);
+assert.match(homePolishSpec, /expect\(state\.opacity\)\.toBeGreaterThanOrEqual\(0\.995\)/);
+assert.match(homePolishSpec, /expect\(state\.blurPx\)\.toBeLessThanOrEqual\(0\.05\)/);
+assert.doesNotMatch(homePolishSpec, /hero blur reveal should remain visually final/);
 assert.doesNotMatch(homePolishSpec, /page\.waitForFunction/);
 assert.doesNotMatch(homePolishSpec, /getAnimations/);
 assert.doesNotMatch(homePolishSpec, /activeAnimation/);
@@ -61,16 +67,17 @@ const isolatedHelpers = read(isolatedWebKitHelpers);
 assert.match(webkitEntrypoint, /import '\.\/mobile-webkit-isolated\.spec\.mjs'/);
 assert.match(isolatedWebKit, /WebKit home principal section \$\{section\.slug\} reveals in a fresh context/);
 assert.match(isolatedWebKit, /one native WebKit home scroll per fresh page\/context/);
+assert.match(isolatedWebKit, /WEBKIT_REVEAL_SETTLE_MS = 1_800/);
+assert.match(isolatedWebKit, /await page\.waitForTimeout\(WEBKIT_REVEAL_SETTLE_MS\)/);
+assert.match(isolatedWebKit, /const visual = await inspectRevealSurface\(surface\)/);
+assert.match(isolatedWebKit, /expect\(visual\.effectiveOpacity/);
+assert.match(isolatedWebKit, /expect\(visual\.blurPx/);
 assert.match(isolatedWebKit, /WebKit home dock, search sheet and tap targets remain usable in a fresh context/);
+assert.match(isolatedWebKit, /await expectDockInsideViewport\(page\)/);
 assert.match(isolatedWebKit, /WebKit \$\{name\} route keeps one representative lazy landmark and runtime stable/);
 assert.match(isolatedWebKit, /locateHomeRevealSurface/);
 assert.match(isolatedWebKit, /data-qa-home-reveal-surface/);
 assert.match(isolatedWebKit, /inspectRevealSurface/);
-assert.match(isolatedWebKit, /waitForStableRevealSurface/);
-assert.match(isolatedWebKit, /stableSamples = ready \? stableSamples \+ 1 : 0/);
-assert.match(isolatedWebKit, /visual\.blurPx <= 0\.05/);
-assert.match(isolatedWebKit, /toBeGreaterThanOrEqual\(3\)/);
-assert.match(isolatedWebKit, /verifyChromeReset:\s*true/);
 assert.match(isolatedWebKit, /Поэтов в базе/);
 assert.match(isolatedWebKit, /Стихотворение дня/);
 assert.match(isolatedWebKit, /Избранные авторы/);
@@ -83,6 +90,8 @@ assert.equal(
   1,
   'isolated WebKit homepage suite must keep exactly one native locator-scroll call inside the per-section fresh-context test',
 );
+assert.doesNotMatch(isolatedWebKit, /waitForStableRevealSurface/);
+assert.doesNotMatch(isolatedWebKit, /verifyChromeReset/);
 assert.doesNotMatch(isolatedWebKit, /WebKit home route keeps all principal sections/);
 assert.doesNotMatch(isolatedWebKit, /fullPage:\s*true/);
 assert.doesNotMatch(isolatedWebKit, /page\.mouse\.wheel/);
@@ -112,4 +121,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: zero-flaky Chromium/Android plus isolated fresh-context WebKit route, homepage, hero, optical and micro gates');
+console.log('brand browser workflow: zero-flaky Chromium/Android plus deterministic isolated WebKit route, homepage, hero, optical and micro gates');
