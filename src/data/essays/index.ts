@@ -15,6 +15,7 @@ import {
 import {
   brikSupplementalSources,
   mayakovskyEarlySupplementalSources,
+  mayakovskyLateSupplementalSources,
 } from './mayakovskySupplementalSources';
 import {
   attachEssayCitations,
@@ -96,7 +97,7 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
   ),
-  sources: mayakovskyLateSources,
+  sources: [...mayakovskyLateSources, ...mayakovskyLateSupplementalSources],
 };
 
 const brikCaseWithSourceLibrary: Essay = {
