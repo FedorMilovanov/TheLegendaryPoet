@@ -139,13 +139,19 @@ assert.match(isolatedWebKit, /expectDockInsideViewport/);
 assert.match(isolatedWebKit, /data-qa-home-reveal-surface/);
 assert.match(isolatedWebKit, /fullPage:\s*false/);
 assert.doesNotMatch(isolatedWebKit, /surface\.scrollIntoViewIfNeeded|waitForStableRevealSurface|page\.mouse\.wheel|fullPage:\s*true/);
-assert.match(isolatedHelpers, /document\.scrollingElement/);
-assert.match(isolatedHelpers, /scrollingElement\.scrollTop = scrollTop/);
+assert.match(isolatedHelpers, /node\.scrollIntoView\(\{ block: 'center', inline: 'nearest', behavior: 'instant' \}\)/);
+assert.match(isolatedHelpers, /WEBKIT_VIEWPORT_SETTLE_MS = 700/);
+assert.match(isolatedHelpers, /WEBKIT_MIN_STABLE_INTERSECTION = 0\.55/);
+assert.match(isolatedHelpers, /intersectionRatio: \(intersectionWidth \/ visibleWidthBase\) \* \(intersectionHeight \/ visibleHeightBase\)/);
+assert.match(isolatedHelpers, /await centerLocatorNatively\(target\);[\s\S]*await page\.waitForTimeout\(WEBKIT_VIEWPORT_SETTLE_MS\);[\s\S]*await centerLocatorNatively\(target\)/);
+assert.match(isolatedHelpers, /first\.intersectionRatio < WEBKIT_MIN_STABLE_INTERSECTION/);
+assert.match(isolatedHelpers, /second\.intersectionRatio >= WEBKIT_MIN_STABLE_INTERSECTION/);
+assert.match(isolatedHelpers, /Math\.abs\(second\.centerDelta\) <= Math\.max\(64, second\.viewportHeight \* 0\.4\)/);
 assert.match(isolatedHelpers, /chooseRepresentativeLandmark/);
 assert.match(isolatedHelpers, /failedResilientImages/);
 assert.match(isolatedHelpers, /visibleBusyRegions/);
 assert.match(isolatedHelpers, /horizontalOverflow/);
-assert.doesNotMatch(isolatedHelpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classList\.remove\(['"]chrome-hidden/);
+assert.doesNotMatch(isolatedHelpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classList\.remove\(['"]chrome-hidden|style\.opacity\s*=/);
 
 assert.match(webkitBaseRunner, /spawnSync/);
 assert.match(webkitBaseRunner, /--project=iphone-safari/);
@@ -190,4 +196,4 @@ assert.match(optical, /occupiedWidth/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: exact-head Chromium/Android, base Safari, Safari home/route and premium acceptance execute on three independent hosted runners with zero-flaky enforcement');
+console.log('brand browser workflow: exact-head Chromium/Android, base Safari, Safari home/route and premium acceptance execute on three independent hosted runners with native two-phase centering and zero-flaky enforcement');
