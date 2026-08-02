@@ -4,16 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 type Target = { allowed?: [number, number]; minimum?: number };
-type Candidate = {
-  id: string;
-  file: string;
-  designGrid: [number, number];
-  reviewSizes: number[];
-  ratios: Record<string, number>;
-  numericGeometryEligible: boolean;
-  productionReplacement: boolean;
-  reviewerDecision: string;
-};
+type Candidate = { id: string; file: string; designGrid: [number, number]; reviewSizes: number[]; ratios: Record<string, number>; numericGeometryEligible: boolean; productionReplacement: boolean; reviewerDecision: string };
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const contract = JSON.parse(read('qa/reference/brand-reference-contract.json')) as { referenceId: string; targets: Record<string, Target> };
 const sheet = JSON.parse(read('qa/reference/brand-v20-reference-sheet.json')) as { referenceId: string; referenceFile: string; referenceSha256: string; candidates: Candidate[]; promotionPolicy: string };
@@ -52,12 +43,8 @@ function validateCandidate(source: string, candidate: Candidate, idAttr: string,
   assert.ok(count >= range[0] && count <= range[1], `${candidate.id}: semantic path count ${count} must remain in ${range[0]}–${range[1]}`);
   for (const hook of hooks) assert.ok(source.includes(hook), `${candidate.id}: missing ${hook}`);
 }
-validateCandidate(full, fullSheet, 'data-brand-v20-candidate', [36, 48], [
-  'data-brand-cloak','data-brand-hood','data-brand-face-void','data-brand-cowl','data-brand-folds-near','data-brand-folds-far','data-brand-field-front','data-brand-field-mid','data-brand-field-rear',
-]);
-validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', [18, 24], [
-  'data-brand-micro-cloak','data-brand-micro-hood','data-brand-micro-face','data-brand-micro-cowl','data-brand-micro-folds','data-brand-micro-field-front','data-brand-micro-field-rear',
-]);
+validateCandidate(full, fullSheet, 'data-brand-v20-candidate', [36, 48], ['data-brand-cloak','data-brand-hood','data-brand-face-void','data-brand-cowl','data-brand-folds-near','data-brand-folds-far','data-brand-field-front','data-brand-field-mid','data-brand-field-rear']);
+validateCandidate(micro, microSheet, 'data-brand-v20-micro-candidate', [18, 24], ['data-brand-micro-cloak','data-brand-micro-hood','data-brand-micro-face','data-brand-micro-cowl','data-brand-micro-folds','data-brand-micro-field-front','data-brand-micro-field-rear']);
 
 const passes = (value: number, target: Target) => target.allowed ? value >= target.allowed[0] && value <= target.allowed[1] : value >= Number(target.minimum);
 for (const candidate of sheet.candidates) {
@@ -66,27 +53,26 @@ for (const candidate of sheet.candidates) {
   assert.ok(passes(candidate.ratios.faceCavernWidthToHoodWidth, contract.targets.faceCavernWidthToHoodWidth));
   assert.ok(passes(candidate.ratios.cloakWidthToHoodWidth, contract.targets.cloakWidthToHoodWidth));
 }
-for (const file of ['src/components/brandEmblemV18.svg','public/brand-emblem.svg','public/brand-mark-micro.svg','src/components/BrandMark.tsx']) {
-  const production = read(file);
-  assert.doesNotMatch(production, /v20\.\d+-reference-|brand-emblem-v20-(?:micro-)?candidate/);
-}
+for (const file of ['src/components/brandEmblemV18.svg','public/brand-emblem.svg','public/brand-mark-micro.svg','src/components/BrandMark.tsx']) assert.doesNotMatch(read(file), /v20\.\d+-reference-|brand-emblem-v20-(?:micro-)?candidate/);
 
 assert.equal(ledger.family, 'brand-v20-reference-led');
 assert.equal(ledger.fullSizeCandidate.id, fullSheet.id);
 assert.equal(ledger.microCandidate.id, microSheet.id);
 assert.equal(ledger.fullSizeCandidate.reviewerDecision, 'not-reference-approved');
 assert.equal(ledger.microCandidate.reviewerDecision, 'not-reference-approved');
-for (const rejected of ['v20.3-reference-monolith','v20.4-reference-drapery','v20.5-reference-silhouette','v20.6-reference-monolith']) {
-  assert.ok(ledger.iterationHistory.some((entry) => entry.full === rejected && /reject|rejected|отклон/i.test(entry.verdict)));
-}
+const historicalLocks: Array<[string, RegExp]> = [
+  ['v20.3-reference-monolith', /dome-like aura/],
+  ['v20.4-reference-drapery', /oversized black cavity/],
+  ['v20.5-reference-silhouette', /smooth oval cavern/],
+  ['v20.6-reference-monolith', /stacked chevron cowl/],
+];
+for (const [id, blocker] of historicalLocks) assert.ok(ledger.iterationHistory.some((entry) => entry.full === id && blocker.test(entry.verdict)), `${id}: historical blocker is missing`);
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id && /current QA-only/.test(entry.verdict)));
 assert.ok(ledger.promotionBlockers.length >= 5);
 assert.match(sheet.promotionPolicy, /Numeric eligibility is necessary but never sufficient/);
 assert.match(ledger.promotionPolicy, /Never treat numericGeometryEligible, CI success or motion quality as reference approval/);
 assert.match(packageJson, /"validate:brand-v20": "tsx scripts\/validate-brand-v20\.ts"/);
-for (const candidatePath of ['public/brand-emblem-v20-candidate.svg','public/brand-emblem-v20-micro-candidate.svg','qa/reference/brand-v20-reference-sheet.json','qa/brand-v20-candidate-ledger.json','qa/brand-v20-reference.spec.mjs','scripts/validate-brand-v20.ts','docs/BRAND_V20_REFERENCE_PASS.md']) {
-  assert.ok(vectorWorkflow.includes(candidatePath), `brand vector workflow scope missing ${candidatePath}`);
-}
+for (const candidatePath of ['public/brand-emblem-v20-candidate.svg','public/brand-emblem-v20-micro-candidate.svg','qa/reference/brand-v20-reference-sheet.json','qa/brand-v20-candidate-ledger.json','qa/brand-v20-reference.spec.mjs','scripts/validate-brand-v20.ts','docs/BRAND_V20_REFERENCE_PASS.md']) assert.ok(vectorWorkflow.includes(candidatePath), `brand vector workflow scope missing ${candidatePath}`);
 assert.match(vectorWorkflow, /qa\/brand-v20-reference\.spec\.mjs/);
 assert.match(deepWorkflow, /qa\/brand-v20-reference\.spec\.mjs/);
 assert.match(deepWorkflow, /brand-v20-contract-metrics\.json/);
