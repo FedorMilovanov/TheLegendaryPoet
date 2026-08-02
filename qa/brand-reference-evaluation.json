@@ -2,7 +2,7 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v18.5 size-normalized awakening over the unchanged v17.0 visual baseline: production geometry remains byte-for-byte unchanged; all translation channels now scale from the real rendered bounding box around a neutral 64px design size, while exact reference-ratio evidence rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
+  "candidateRevision": "v18.4 depth-first awakening advanced to v18.5 size-normalized awakening over the unchanged v17.0 visual baseline: production geometry remains byte-for-byte unchanged; all translation channels now scale from the real rendered bounding box around a neutral 64px design size, while exact reference-ratio evidence rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
   "overallScore": 0.63,
