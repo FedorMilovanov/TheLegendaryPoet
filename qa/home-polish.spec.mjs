@@ -33,33 +33,59 @@ async function waitForHeroReveal(page) {
   const reveals = page.locator('.hero-blur-reveal');
   await reveals.first().waitFor({ state: 'attached', timeout: 20_000 });
 
-  // WebKit can keep an animation object in the running state after the element
-  // has visually reached its fill-mode frame. The acceptance gate therefore
-  // requires three consecutive samples of the rendered final state instead of
-  // trusting animation.playState or a fixed wall-clock delay.
-  let stableSamples = 0;
-  await expect.poll(
-    async () => {
-      const visuallyFinal = await reveals.evaluateAll((nodes) => {
-        if (!nodes.length) return false;
-        return nodes.every((node) => {
-          const style = getComputedStyle(node);
-          const opacity = Number.parseFloat(style.opacity || '0');
-          const filter = style.filter || 'none';
-          const blurMatch = /blur\(([-\d.]+)px\)/.exec(filter);
-          const blurPx = blurMatch ? Math.abs(Number.parseFloat(blurMatch[1])) : 0;
-          return opacity >= 0.995 && blurPx <= 0.05;
-        });
-      });
-      stableSamples = visuallyFinal ? stableSamples + 1 : 0;
-      return stableSamples;
-    },
-    {
-      timeout: 12_000,
-      intervals: [100, 140, 180, 240],
-      message: 'hero blur reveal should remain visually final for three consecutive samples',
-    },
-  ).toBeGreaterThanOrEqual(3);
+  // Read the real CSS schedule once, wait on the Playwright side, then perform
+  // one final rendered-state read. Repeated evaluateAll polling can terminate
+  // Linux WebKit even after the visual animation has already completed.
+  const timing = await reveals.evaluateAll((nodes) => {
+    const parseTime = (value) => {
+      const trimmed = value.trim();
+      if (trimmed.endsWith('ms')) return Number.parseFloat(trimmed) || 0;
+      if (trimmed.endsWith('s')) return (Number.parseFloat(trimmed) || 0) * 1000;
+      return 0;
+    };
+    const parseList = (value) => value.split(',').map(parseTime);
+    const maximumSchedule = (durations, delays) => {
+      const width = Math.max(durations.length, delays.length, 1);
+      let maximum = 0;
+      for (let index = 0; index < width; index += 1) {
+        const duration = durations[index % Math.max(1, durations.length)] || 0;
+        const delay = delays[index % Math.max(1, delays.length)] || 0;
+        maximum = Math.max(maximum, duration + delay);
+      }
+      return maximum;
+    };
+
+    const schedules = nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return maximumSchedule(parseList(style.animationDuration), parseList(style.animationDelay));
+    });
+    return {
+      count: nodes.length,
+      maxTotalMs: Math.max(0, ...schedules),
+      schedules,
+    };
+  });
+
+  expect(timing.count).toBeGreaterThan(0);
+  expect(timing.maxTotalMs).toBeLessThan(6_000);
+  const settleMs = Math.max(1_800, Math.ceil(timing.maxTotalMs + 700));
+  await page.waitForTimeout(settleMs);
+
+  const finalStates = await reveals.evaluateAll((nodes) => nodes.map((node) => {
+    const style = getComputedStyle(node);
+    const opacity = Number.parseFloat(style.opacity || '0');
+    const filter = style.filter || 'none';
+    const blurMatch = /blur\(([-\d.]+)px\)/.exec(filter);
+    return {
+      opacity,
+      blurPx: blurMatch ? Math.abs(Number.parseFloat(blurMatch[1])) : 0,
+    };
+  }));
+  expect(finalStates).toHaveLength(timing.count);
+  for (const state of finalStates) {
+    expect(state.opacity).toBeGreaterThanOrEqual(0.995);
+    expect(state.blurPx).toBeLessThanOrEqual(0.05);
+  }
 }
 
 async function effectiveOpacity(locator) {
