@@ -13,7 +13,11 @@
     "occupiedFigureHeightToCanvas": { "target": 0.875, "allowed": [0.84, 0.91] },
     "hoodApexYToCanvas": { "target": 0.121, "allowed": [0.10, 0.145] },
     "cloakShoulderYToCanvas": { "target": 0.406, "allowed": [0.37, 0.43] },
-    "figureCenterXToCanvas": { "target": 0.5, "allowed": [0.47, 0.53] }
+    "figureCenterXToCanvas": { "target": 0.5, "allowed": [0.47, 0.53] },
+    "fieldWidthToCanvas": { "target": 0.82, "allowed": [0.76, 0.90] },
+    "fieldHeightToCanvas": { "target": 0.77, "allowed": [0.68, 0.82] },
+    "fieldTopYToCanvas": { "target": 0.047, "allowed": [0.02, 0.09] },
+    "fieldCenterXToCanvas": { "target": 0.5, "allowed": [0.46, 0.54] }
   },
   "requiredStructures": [
     "high layered pointed hood",
