@@ -40,7 +40,10 @@ assert.match(spec, /toBe\(false\)/);
 assert.match(spec, /spring motion has bounded trajectory, size-normalized depth and fast exact return/);
 assert.match(spec, /samples\.length[\s\S]*toBeGreaterThanOrEqual\(12\)/);
 assert.match(spec, /sampleSpanMs[\s\S]*toBeGreaterThanOrEqual\(900\)/);
-assert.match(spec, /activation\.elapsed \+ 120/);
+assert.match(spec, /interpolateEnergyAt/);
+assert.match(spec, /interpolatedCrossingElapsed/);
+assert.match(spec, /activationElapsedMs \+ 120/);
+assert.match(spec, /first95ElapsedMs/);
 assert.match(spec, /first95AfterActivationMs/);
 assert.match(spec, /sampleTransitions/);
 assert.match(spec, /frameIntervalsMs/);
@@ -49,7 +52,7 @@ assert.match(spec, /equivalent60HzJump: observedJump \* \(\(1000 \/ 60\) \/ inte
 assert.match(spec, /maxObservedJump/);
 assert.match(spec, /maxEquivalent60HzJump/);
 assert.match(spec, /expect\(maxEquivalent60HzJump\)\.toBeLessThan\(0\.55 \* scale\)/);
-assert.doesNotMatch(spec, /expect\(maxObservedJump\)/);
+assert.match(spec, /expect\(maxObservedJump\)\.toBeLessThan\(1\.25 \* scale\)/);
 assert.match(spec, /status: 'trajectory-sampled'/);
 assert.match(spec, /writeMotionMetrics\([\s\S]*status: 'trajectory-sampled'[\s\S]*expect\(first95AfterActivationMs\)/);
 assert.match(spec, /peak[\s\S]*expectedEnergy \* 1\.06/);
@@ -92,4 +95,4 @@ assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
 assert.match(mark, /data-brand-parallax="spring-awakening-v5"/);
 assert.match(mark, /data-brand-motion-timestep="bounded-substeps-v1"/);
 
-console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, interval-normalized smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
+console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, interpolated timing crossings, interval-normalized plus absolute smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
