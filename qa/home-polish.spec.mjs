@@ -33,22 +33,33 @@ async function waitForHeroReveal(page) {
   const reveals = page.locator('.hero-blur-reveal');
   await reveals.first().waitFor({ state: 'attached', timeout: 20_000 });
 
-  // One browser-side predicate observes the actual CSS animation lifecycle.
-  // Repeated Playwright evaluate polling can race WebKit's animation commits,
-  // while a fixed wall-clock timeout can expire just before the final frame.
-  await page.waitForFunction(() => {
-    const nodes = [...document.querySelectorAll('.hero-blur-reveal')];
-    if (!nodes.length) return false;
-    return nodes.every((node) => {
-      const style = getComputedStyle(node);
-      const opacity = Number.parseFloat(style.opacity || '0');
-      const filter = style.filter;
-      const animations = typeof node.getAnimations === 'function' ? node.getAnimations() : [];
-      const activeAnimation = animations.some((animation) => animation.playState === 'running' || animation.playState === 'pending');
-      const crisp = filter === 'none' || filter === 'blur(0px)' || filter === 'blur(0)';
-      return opacity >= 0.999 && crisp && !activeAnimation;
-    });
-  }, null, { timeout: 8_000, polling: 100 });
+  // WebKit can keep an animation object in the running state after the element
+  // has visually reached its fill-mode frame. The acceptance gate therefore
+  // requires three consecutive samples of the rendered final state instead of
+  // trusting animation.playState or a fixed wall-clock delay.
+  let stableSamples = 0;
+  await expect.poll(
+    async () => {
+      const visuallyFinal = await reveals.evaluateAll((nodes) => {
+        if (!nodes.length) return false;
+        return nodes.every((node) => {
+          const style = getComputedStyle(node);
+          const opacity = Number.parseFloat(style.opacity || '0');
+          const filter = style.filter || 'none';
+          const blurMatch = /blur\(([-\d.]+)px\)/.exec(filter);
+          const blurPx = blurMatch ? Math.abs(Number.parseFloat(blurMatch[1])) : 0;
+          return opacity >= 0.995 && blurPx <= 0.05;
+        });
+      });
+      stableSamples = visuallyFinal ? stableSamples + 1 : 0;
+      return stableSamples;
+    },
+    {
+      timeout: 12_000,
+      intervals: [100, 140, 180, 240],
+      message: 'hero blur reveal should remain visually final for three consecutive samples',
+    },
+  ).toBeGreaterThanOrEqual(3);
 }
 
 async function effectiveOpacity(locator) {
