@@ -39,46 +39,46 @@
   },
   "candidates": [
     {
-      "id": "v20.5-reference-silhouette",
+      "id": "v20.6-reference-monolith",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
       "boxes": {
-        "cloak": { "x": 1.5, "y": 34.7900, "width": 93.2, "height": 61.21 },
-        "hood": { "x": 30.4, "y": 7.5, "width": 35.4, "height": 31.3 },
-        "faceCavern": { "x": 34.8, "y": 15.0, "width": 26.4, "height": 22.4 }
+        "cloak": { "x": 0.9, "y": 34.6888, "width": 94.2, "height": 61.3112 },
+        "hood": { "x": 30.2, "y": 7.2, "width": 36.0, "height": 31.8 },
+        "faceCavern": { "x": 35.4, "y": 13.5, "width": 25.4, "height": 23.9 }
       },
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.353672,
-        "hoodWidthToCloakWidth": 0.379828,
-        "faceCavernWidthToHoodWidth": 0.745763,
-        "cloakWidthToHoodWidth": 2.632768
+        "hoodHeightToVisibleFigureHeight": 0.358108,
+        "hoodWidthToCloakWidth": 0.382166,
+        "faceCavernWidthToHoodWidth": 0.705556,
+        "cloakWidthToHoodWidth": 2.616667
       },
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.5 broadens the layered hood toward the canonical width, tapers the face cavern, reduces rim dominance, crushes the cowl into less regular fabric and lowers contrast between cloak panels. Exact committed overlay review remains mandatory."
+      "reason": "v20.6 removes the dome aura and blur, converts the cavity to an angular pentagonal void, replaces the ribbon collar with three sagging overlapping masses, restores a triangular monolithic cloak and reduces the fold system to broad asymmetric planes. Exact committed overlay review remains mandatory."
     },
     {
-      "id": "v20.3-reference-micro-silhouette",
+      "id": "v20.4-reference-micro-monolith",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
       "designGrid": [32, 32],
       "reviewSizes": [16, 20, 24, 32, 48],
       "boxes": {
-        "cloak": { "x": 0.6, "y": 11.5932, "width": 30.8, "height": 20.4068 },
-        "hood": { "x": 10.4, "y": 2.5, "width": 11.2, "height": 10.5 },
-        "faceCavern": { "x": 11.6, "y": 4.7, "width": 8.8, "height": 8.0 }
+        "cloak": { "x": 0.3, "y": 11.4916, "width": 31.4, "height": 20.5084 },
+        "hood": { "x": 9.9, "y": 2.4, "width": 12.2, "height": 10.6 },
+        "faceCavern": { "x": 11.7, "y": 4.4, "width": 8.6, "height": 8.0 }
       },
       "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.355932,
-        "hoodWidthToCloakWidth": 0.363636,
-        "faceCavernWidthToHoodWidth": 0.785714,
-        "cloakWidthToHoodWidth": 2.75
+        "hoodHeightToVisibleFigureHeight": 0.358108,
+        "hoodWidthToCloakWidth": 0.388535,
+        "faceCavernWidthToHoodWidth": 0.704918,
+        "cloakWidthToHoodWidth": 2.573770
       },
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro master now prioritizes a compact hood-and-shoulder silhouette, tapers the face cavity toward the canonical ratio and suppresses external branch dominance. Exact dark/light optical evidence remains mandatory."
+      "reason": "The independent micro master breaks the former continuous A-like rim, keeps the black cavern open, uses three overlapping cowl masses and removes blur so 16–32px identity is carried by silhouette rather than cyan outline. Exact dark/light optical evidence remains mandatory."
     }
   ],
   "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
