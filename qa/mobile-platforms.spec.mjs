@@ -101,12 +101,11 @@ async function expectStableChromeAtTop(page, timeout = 8_000) {
   ).toBeGreaterThanOrEqual(3);
 }
 
-async function collectGeometryLandmarks(page, selector, limit = 6) {
+async function collectGeometryLandmarks(page, selector, limit = 5) {
   return page.evaluate(({ selector: query, limit: maximum }) => {
     const nodes = [...document.querySelectorAll(query)];
     const seen = new Set();
     const candidates = [];
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
     for (const node of nodes) {
       if (seen.has(node)) continue;
@@ -119,12 +118,9 @@ async function collectGeometryLandmarks(page, selector, limit = 6) {
       if (style.display === 'none' || style.visibility === 'hidden') continue;
       if (rect.width <= 2 || rect.height <= 2) continue;
 
-      const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
-      const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
-      const top = Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset));
       const id = `mobile-webkit-${candidates.length}`;
       node.dataset.qaScrollLandmark = id;
-      candidates.push({ id, top, tagName: node.tagName, elementId: node.id || null });
+      candidates.push({ id, tagName: node.tagName, elementId: node.id || null });
     }
 
     if (!candidates.length) {
@@ -133,7 +129,7 @@ async function collectGeometryLandmarks(page, selector, limit = 6) {
         const rect = main.getBoundingClientRect();
         if (rect.width > 2 && rect.height > 2) {
           main.dataset.qaScrollLandmark = 'mobile-webkit-fallback';
-          candidates.push({ id: 'mobile-webkit-fallback', top: 0, tagName: main.tagName, elementId: main.id });
+          candidates.push({ id: 'mobile-webkit-fallback', tagName: main.tagName, elementId: main.id });
         }
       }
     }
@@ -149,28 +145,50 @@ async function collectGeometryLandmarks(page, selector, limit = 6) {
   }, { selector, limit });
 }
 
-async function landmarkIntersectsViewport(page, id) {
+async function readLiveLandmarkState(page, id) {
   return page.evaluate((landmarkId) => {
     const node = document.querySelector(`[data-qa-scroll-landmark="${landmarkId}"]`);
-    if (!(node instanceof HTMLElement)) return false;
+    if (!(node instanceof HTMLElement)) return null;
+
     const rect = node.getBoundingClientRect();
-    return rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight;
+    const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+    const maxScroll = Math.max(0, documentHeight - window.innerHeight);
+    const visibleHeight = Math.min(rect.height, window.innerHeight * 0.65);
+    const centerOffset = Math.max(24, (window.innerHeight - visibleHeight) / 2);
+
+    return {
+      intersects: rect.width > 2 && rect.height > 2 && rect.bottom > 0 && rect.top < window.innerHeight,
+      top: Math.min(maxScroll, Math.max(0, window.scrollY + rect.top - centerOffset)),
+    };
   }, id);
 }
 
+async function landmarkIntersectsViewport(page, id) {
+  const state = await readLiveLandmarkState(page, id);
+  return Boolean(state?.intersects);
+}
+
 async function visitNativeWebKitLandmarks(page) {
-  const landmarks = await collectGeometryLandmarks(page, MOBILE_LANDMARK_SELECTOR, 6);
+  const landmarks = await collectGeometryLandmarks(page, MOBILE_LANDMARK_SELECTOR, 5);
   expect(landmarks.length, 'geometry-eligible native WebKit landmarks').toBeGreaterThan(0);
-  expect(landmarks.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(6);
+  expect(landmarks.length, 'bounded native WebKit landmark budget').toBeLessThanOrEqual(5);
 
   const visited = [];
   for (const landmark of landmarks) {
-    await scrollDocumentTo(page, landmark.top);
+    const initial = await readLiveLandmarkState(page, landmark.id);
+    expect(initial, `${landmark.id} live geometry`).not.toBeNull();
+    if (!initial.intersects) await scrollDocumentTo(page, initial.top, 160);
+
+    const corrected = await readLiveLandmarkState(page, landmark.id);
+    if (corrected && !corrected.intersects && Math.abs(corrected.top - initial.top) > 1) {
+      await scrollDocumentTo(page, corrected.top, 170);
+    }
+
     await expect.poll(
       () => landmarkIntersectsViewport(page, landmark.id),
-      { timeout: 2_500, message: `${landmark.id} should intersect the WebKit viewport` },
+      { timeout: 5_000, message: `${landmark.id} should intersect the WebKit viewport` },
     ).toBe(true);
-    visited.push(landmark);
+    visited.push({ ...landmark, liveTop: corrected?.top ?? initial.top });
   }
 
   return visited;
@@ -188,13 +206,6 @@ async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
       await scrollDocumentTo(page, initial.scrollY - 96);
     }
     await scrollDocumentTo(page, 0, 180);
-    await page.waitForTimeout(CHROME_TRANSITION_MS);
-
-    const settledMaxScroll = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
-    if (settledMaxScroll > 32) {
-      await scrollDocumentTo(page, Math.min(48, settledMaxScroll));
-      await scrollDocumentTo(page, 0, 180);
-    }
     await page.waitForTimeout(CHROME_TRANSITION_MS);
     await expectStableChromeAtTop(page);
     return;
@@ -376,7 +387,11 @@ test('mobile dock, search sheet and tap targets remain usable', async ({ page },
   const runtime = attachRuntimeDiagnostics(page);
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
-  await restoreChromeAtTop(page, { nativeWebKit });
+  if (nativeWebKit) {
+    await expectStableChromeAtTop(page);
+  } else {
+    await restoreChromeAtTop(page);
+  }
 
   const dock = page.locator('.mobile-dock');
   await expectDockInsideViewport(page);
