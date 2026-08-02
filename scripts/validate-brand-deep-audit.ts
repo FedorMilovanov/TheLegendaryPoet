@@ -6,16 +6,20 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const deepWorkflowPath = '.github/workflows/brand-deep-audit.yml';
 const manualWorkflowPath = '.github/workflows/manual-browser-qa.yml';
 const deepSpecPath = 'qa/brand-deep-audit.spec.mjs';
+const motionPath = 'src/components/brandMotionFrameInvariant.ts';
+const simulationPath = 'scripts/validate-brand-motion-frame-invariance.ts';
 
-for (const file of [deepWorkflowPath, manualWorkflowPath, deepSpecPath]) {
+for (const file of [deepWorkflowPath, manualWorkflowPath, deepSpecPath, motionPath, simulationPath]) {
   assert.ok(fs.existsSync(path.resolve(file)), `${file}: required brand audit file is missing`);
 }
 
 const workflow = read(deepWorkflowPath);
 const manual = read(manualWorkflowPath);
 const spec = read(deepSpecPath);
-const motion = read('src/components/brandMotionV18.ts');
+const motion = read(motionPath);
+const simulation = read(simulationPath);
 const mark = read('src/components/BrandMark.tsx');
+const packageJson = read('package.json');
 
 assert.match(workflow, /name: Brand deep reference and motion audit/);
 assert.match(workflow, /Checkout exact tested head/);
@@ -38,23 +42,48 @@ assert.match(spec, /samples\.length[\s\S]*toBeGreaterThanOrEqual\(12\)/);
 assert.match(spec, /sampleSpanMs[\s\S]*toBeGreaterThanOrEqual\(900\)/);
 assert.match(spec, /activation\.elapsed \+ 120/);
 assert.match(spec, /first95AfterActivationMs/);
+assert.match(spec, /frameIntervalsMs/);
+assert.match(spec, /maxFrameIntervalMs/);
+assert.match(spec, /status: 'trajectory-sampled'/);
+assert.match(spec, /writeMotionMetrics\([\s\S]*status: 'trajectory-sampled'[\s\S]*expect\(first95AfterActivationMs\)/);
 assert.match(spec, /peak[\s\S]*expectedEnergy \* 1\.06/);
 assert.match(spec, /maxJump/);
 assert.match(spec, /data-brand-interaction', 'idle'/);
 assert.match(spec, /normalizedAmplitudeRatio/);
 assert.match(spec, /reduced motion keeps all depth transforms inert/);
+assert.match(spec, /data-brand-motion-timestep', 'bounded-substeps-v1'/);
 
+assert.match(motion, /import \{ BRAND_MOTION_CSS \} from '\.\/brandMotionV18'/);
+assert.match(motion, /maxFrameDeltaSeconds: 0\.1/);
+assert.match(motion, /maxSubstepSeconds: 1 \/ 60/);
+assert.match(motion, /while \(remaining > 0\.000_001\)/);
+assert.match(motion, /Math\.min\(BRAND_MOTION_TIMESTEP\.maxSubstepSeconds, remaining\)/);
+assert.match(motion, /elapsedSeconds = lastTime \? Math\.max\(0, \(time - lastTime\) \/ 1000\) : 1 \/ 60/);
 assert.match(motion, /motionScale = clamp\(Math\.min\(bounds\.width, bounds\.height\) \/ 64, 0\.65, 1\.6\)/);
 assert.match(motion, /const scaled = \(value: number\) => value \* motionScale/);
-assert.match(motion, /const stiffness = active \? 136 : 180/);
-assert.match(motion, /const damping = active \? 18\.5 : 20/);
-assert.match(motion, /const wakeStiffness = active \? 126 : 220/);
-assert.match(motion, /const wakeDamping = active \? 15\.8 : 22/);
-assert.match(motion, /const positionTolerance = active \? 0\.0018 : 0\.006/);
-assert.match(motion, /const velocityTolerance = active \? 0\.0038 : 0\.15/);
-assert.match(motion, /const wakeTolerance = active \? 0\.0022 : 0\.08/);
+assert.match(motion, /stiffness: 136/);
+assert.match(motion, /damping: 18\.5/);
+assert.match(motion, /wakeStiffness: 126/);
+assert.match(motion, /wakeDamping: 15\.8/);
+assert.match(motion, /stiffness: 180/);
+assert.match(motion, /wakeStiffness: 220/);
+assert.match(motion, /phase === 'active' \? 0\.0018 : 0\.006/);
+assert.match(motion, /phase === 'active' \? 0\.0038 : 0\.15/);
+assert.match(motion, /phase === 'active' \? 0\.0022 : 0\.08/);
 assert.match(motion, /--brand-motion-scale/);
-assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
-assert.match(mark, /data-brand-parallax="spring-awakening-v4"/);
+assert.doesNotMatch(motion, /Math\.min\(0\.032/);
 
-console.log('brand deep audit: exact-head Chromium geometry, trajectory, bounded exact-idle return, size normalization and reduced-motion gates are locked');
+assert.match(simulation, /FRAME_RATES = \[15, 20, 30, 60, 120, 144\]/);
+assert.match(simulation, /advanceBrandMotionState/);
+assert.match(simulation, /first95AfterActivationMs/);
+assert.match(simulation, /convergenceSpread <= 80/);
+assert.match(simulation, /returnSettledMs <= 700/);
+assert.match(packageJson, /"validate:brand-motion-timestep": "tsx scripts\/validate-brand-motion-frame-invariance\.ts"/);
+assert.match(packageJson, /validate:brand-motion-timestep && npm run validate:brand-deep-audit/);
+
+assert.match(mark, /from '\.\/brandMotionFrameInvariant'/);
+assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
+assert.match(mark, /data-brand-parallax="spring-awakening-v5"/);
+assert.match(mark, /data-brand-motion-timestep="bounded-substeps-v1"/);
+
+console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, bounded exact-idle return, diagnostics, size normalization and reduced-motion gates are locked');
