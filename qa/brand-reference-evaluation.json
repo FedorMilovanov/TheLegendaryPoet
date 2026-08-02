@@ -2,7 +2,7 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v18.4 depth-first awakening advanced to v18.5 size-normalized awakening over the unchanged v17.0 visual baseline: production geometry remains byte-for-byte unchanged; all translation channels now scale from the real rendered bounding box around a neutral 64px design size, while exact reference-ratio evidence rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
+  "candidateRevision": "v18.4 depth-first awakening advanced to v18.5 size-normalized awakening with a bounded exact-idle return over the unchanged v17.0 visual baseline: production geometry remains byte-for-byte unchanged; all translation channels scale from the real rendered bounding box around a neutral 64px design size, and the visually invisible settling tail now snaps only inside subpixel position and low-velocity tolerances, while exact reference-ratio evidence rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
   "overallScore": 0.63,
@@ -46,7 +46,7 @@
   ],
   "candidateGitBlobShas": {
     "src/components/BrandMark.tsx": "129171f98c0e78b2686a50a763111254f0b8365b",
-    "src/components/brandMotionV18.ts": "c9b08843db58dd23c8c2a6c8b1af32420cfc10f3",
+    "src/components/brandMotionV18.ts": "d203d230b600a894845959268c7d75f7fceabb08",
     "src/components/brandEmblemV18.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
