@@ -20,7 +20,7 @@
   "contract": {"hoodHeightToVisibleFigureHeight":[0.27,0.36],"hoodWidthToCloakWidth":[0.32,0.43],"faceCavernWidthToHoodWidth":[0.68,0.86],"cloakWidthToHoodWidthMinimum":2.3},
   "candidates": [
     {
-      "id": "v20.7-reference-draped-monolith",
+      "id": "v20.8-reference-compressed-cowl",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96,96],
       "reviewSizes": [64,96,128,256],
@@ -29,10 +29,10 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.7 widens the cavern toward the canonical 0.789 ratio, rebuilds the collar as unequal crossing drapery rather than stacked chevrons, adds organic field forks without blur and keeps the cloak a continuous dark body. Exact committed overlay remains mandatory."
+      "reason": "v20.8 preserves the improved cavern ratio while reducing cowl height, eliminating clean X and pointed ribbon ends, darkening long fold planes into a monolithic cloak and widening the electrical field with low-opacity unblurred structural branches. Exact committed overlay remains mandatory."
     },
     {
-      "id": "v20.5-reference-micro-optical",
+      "id": "v20.6-reference-micro-shoulder-anchors",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
       "designGrid": [32,32],
       "reviewSizes": [16,20,24,32,48],
@@ -41,7 +41,7 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro optical master widens the black cavern, uses unequal crossing cowl masses and adds four separated bright edge anchors so dark 16–20px identity can improve without recreating a continuous cyan A outline. Exact diagnostics remain mandatory."
+      "reason": "The independent micro master retains the broad cavern and adds six separated hood and shoulder anchors plus a slightly stronger top-cloak value, improving dark 16–20px identity without recreating a continuous cyan A outline. Exact diagnostics remain mandatory."
     }
   ],
   "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
