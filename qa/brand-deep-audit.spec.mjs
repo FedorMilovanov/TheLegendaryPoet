@@ -40,6 +40,39 @@ const writeMotionMetrics = (payload) => {
   fs.writeFileSync(MOTION_METRICS_PATH, `${JSON.stringify(payload, null, 2)}\n`);
 };
 
+function interpolateEnergyAt(samples, targetElapsed) {
+  if (!samples.length) return null;
+  const upperIndex = samples.findIndex((sample) => sample.elapsed >= targetElapsed);
+  if (upperIndex <= 0) return { elapsed: targetElapsed, energyX: samples[0].energyX, intervalMs: 0 };
+  if (upperIndex < 0) {
+    const last = samples.at(-1);
+    return { elapsed: targetElapsed, energyX: last.energyX, intervalMs: 0 };
+  }
+  const lower = samples[upperIndex - 1];
+  const upper = samples[upperIndex];
+  const intervalMs = Math.max(0.001, upper.elapsed - lower.elapsed);
+  const progress = Math.max(0, Math.min(1, (targetElapsed - lower.elapsed) / intervalMs));
+  return {
+    elapsed: targetElapsed,
+    energyX: lower.energyX + ((upper.energyX - lower.energyX) * progress),
+    intervalMs,
+  };
+}
+
+function interpolatedCrossingElapsed(samples, threshold, fromElapsed = -Infinity) {
+  for (let index = 1; index < samples.length; index += 1) {
+    const lower = samples[index - 1];
+    const upper = samples[index];
+    if (upper.elapsed < fromElapsed || upper.energyX < threshold) continue;
+    if (lower.energyX >= threshold) return Math.max(fromElapsed, lower.elapsed);
+    const delta = upper.energyX - lower.energyX;
+    if (delta <= 0) continue;
+    const progress = Math.max(0, Math.min(1, (threshold - lower.energyX) / delta));
+    return lower.elapsed + ((upper.elapsed - lower.elapsed) * progress);
+  }
+  return null;
+}
+
 async function measureSvg(page, request, source) {
   const response = await request.get(`${BASE_URL}/${source.file}?audit=${Date.now()}`);
   expect(response.status(), source.file).toBe(200);
@@ -181,17 +214,17 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   const scale = Math.max(0.65, Math.min(1.6, Math.min(headerBox.width, headerBox.height) / 64));
   const targetX = 0.68;
   const expectedEnergy = 3.65 * targetX * scale;
+  const activationElapsedMs = interpolatedCrossingElapsed(samples, expectedEnergy * 0.005);
+  const entryTargetElapsed = activationElapsedMs === null ? null : activationElapsedMs + 120;
+  const entry = entryTargetElapsed === null ? null : interpolateEnergyAt(samples, entryTargetElapsed);
+  const first95ElapsedMs = activationElapsedMs === null
+    ? null
+    : interpolatedCrossingElapsed(samples, expectedEnergy * 0.95, activationElapsedMs);
+  const first95AfterActivationMs = activationElapsedMs !== null && first95ElapsedMs !== null
+    ? first95ElapsedMs - activationElapsedMs
+    : null;
+  const peak = Math.max(0, ...samples.filter((sample) => activationElapsedMs === null || sample.elapsed >= activationElapsedMs).map((sample) => sample.energyX));
   const final = await readMotion(header);
-  const activation = samples.find((sample) => Math.abs(sample.energyX) >= expectedEnergy * 0.005) || null;
-  const entryTargetElapsed = activation ? activation.elapsed + 120 : null;
-  const entry = activation
-    ? samples.reduce((best, sample) => Math.abs(sample.elapsed - entryTargetElapsed) < Math.abs(best.elapsed - entryTargetElapsed) ? sample : best, samples[0])
-    : null;
-  const first95 = activation
-    ? samples.find((sample) => sample.elapsed >= activation.elapsed && sample.energyX >= expectedEnergy * 0.95) || null
-    : null;
-  const first95AfterActivationMs = activation && first95 ? first95.elapsed - activation.elapsed : null;
-  const peak = Math.max(0, ...samples.filter((sample) => !activation || sample.elapsed >= activation.elapsed).map((sample) => sample.energyX));
 
   writeMotionMetrics({
     status: 'trajectory-sampled',
@@ -205,8 +238,9 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
       frameIntervalsMs,
       maxFrameIntervalMs,
       sampleSpanMs,
-      activationElapsedMs: activation?.elapsed ?? null,
+      activationElapsedMs,
       entry120: entry,
+      first95ElapsedMs,
       first95AfterActivationMs,
       maxObservedJump,
       maxEquivalent60HzJump,
@@ -229,23 +263,25 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
   expect(final.textureX).toBeGreaterThan(Math.abs(final.faceX));
   expect(Math.abs(final.faceX)).toBeGreaterThan(final.figureX);
 
-  expect(activation, 'pointer activation must produce a measurable first motion sample').toBeTruthy();
-  const positive = activation
-    ? samples.filter((sample) => sample.elapsed >= activation.elapsed && sample.energyX > expectedEnergy * 0.05)
-    : [];
+  expect(activationElapsedMs, 'pointer activation must produce a measurable interpolated crossing').not.toBeNull();
+  const positive = activationElapsedMs === null
+    ? []
+    : samples.filter((sample) => sample.elapsed >= activationElapsedMs && sample.energyX > expectedEnergy * 0.05);
   expect(positive.length).toBeGreaterThan(5);
-  expect(entry).toBeTruthy();
+  expect(entry).not.toBeNull();
   expect(entry.energyX / expectedEnergy).toBeGreaterThan(0.2);
   expect(entry.energyX / expectedEnergy).toBeLessThan(0.75);
-  expect(first95).toBeTruthy();
+  expect(first95ElapsedMs).not.toBeNull();
   expect(first95AfterActivationMs).toBeGreaterThan(150);
   expect(first95AfterActivationMs).toBeLessThan(650);
   expect(peak).toBeLessThanOrEqual(expectedEnergy * 1.06);
   // RAF samples can be 16–100ms apart on a loaded CI runner. Smoothness is a
   // displacement-rate contract, so normalize every observed interval to the
   // equivalent displacement of one 60Hz frame instead of treating a 100ms
-  // sample gap as a single rendered frame.
+  // sample gap as a single rendered frame. Keep a separate absolute cap so a
+  // genuinely large visible leap cannot be hidden by a long interval.
   expect(maxEquivalent60HzJump).toBeLessThan(0.55 * scale);
+  expect(maxObservedJump).toBeLessThan(1.25 * scale);
   expect(samples.every((sample) => Number.isFinite(sample.energyX) && Number.isFinite(sample.faceX) && Number.isFinite(sample.rootScale))).toBe(true);
 
   const leaveStarted = Date.now();
@@ -285,8 +321,9 @@ test('spring motion has bounded trajectory, size-normalized depth and fast exact
       frameIntervalsMs,
       maxFrameIntervalMs,
       sampleSpanMs,
-      activationElapsedMs: activation.elapsed,
+      activationElapsedMs,
       entry120: entry,
+      first95ElapsedMs,
       first95AfterActivationMs,
       settleMs,
       maxObservedJump,
