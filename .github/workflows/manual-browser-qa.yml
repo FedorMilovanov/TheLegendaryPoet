@@ -14,26 +14,27 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  QA_BASE_URL: http://127.0.0.1:4173
+  PLAYWRIGHT_HTML_OPEN: never
+
 jobs:
   browser-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env:
-      QA_BASE_URL: http://127.0.0.1:4173
-      PLAYWRIGHT_HTML_OPEN: never
     steps:
-      - name: Checkout exact tested head
+      - name: Checkout exact browser tested head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ env.TESTED_SHA }}
 
-      - name: Verify exact checkout identity
+      - name: Verify exact browser checkout identity
         shell: bash
         run: |
-          expected='${{ github.event.pull_request.head.sha || github.sha }}'
           actual="$(git rev-parse HEAD)"
-          printf 'expected=%s\nactual=%s\n' "$expected" "$actual"
-          test "$actual" = "$expected"
+          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
+          test "$actual" = "$TESTED_SHA"
           printf 'tested_commit=%s\n' "$actual" > manual-browser-tested-head.txt
 
       - uses: actions/setup-node@v4
@@ -68,15 +69,13 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: production-build-diagnostics-${{ github.event.pull_request.head.sha || github.sha }}
+          name: production-build-diagnostics-${{ env.TESTED_SHA }}
           path: |
             production-build.log
             manual-browser-tested-head.txt
           if-no-files-found: error
           retention-days: 7
 
-      # Keep the browser engines isolated from the app lockfile: this workflow
-      # validates the production build without changing application dependencies.
       - name: Install isolated Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
@@ -121,25 +120,103 @@ jobs:
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs
 
-      - name: Run dedicated premium homepage and pointer-performance matrix
-        if: ${{ always() && steps.production_build.outcome == 'success' }}
-        id: home_polish
-        run: |
-          set -o pipefail
-          node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
-
-      - name: Upload visual QA evidence
+      - name: Upload core browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: manual-browser-qa-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          name: manual-browser-core-evidence-${{ env.TESTED_SHA }}
           path: |
             qa-artifacts
             playwright-report
             test-results
             preview.log
             production-build.log
-            home-polish.log
             manual-browser-tested-head.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  premium-home-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact premium tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact premium checkout identity
+        shell: bash
+        run: |
+          actual="$(git rev-parse HEAD)"
+          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > premium-browser-tested-head.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install premium project dependencies
+        run: npm ci
+
+      - name: Install FFmpeg for premium deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Build premium production site
+        id: premium_build
+        env:
+          VITE_BASE: /
+        run: |
+          set +e
+          {
+            npm run sitemap
+            npm run build
+          } > premium-production-build.log 2>&1
+          status=$?
+          cat premium-production-build.log
+          exit $status
+
+      - name: Install isolated premium Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps chromium webkit
+
+      - name: Start premium production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > premium-preview.log 2>&1 &
+          echo $! > premium-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat premium-preview.log
+          exit 1
+
+      - name: Run dedicated premium homepage and pointer-performance matrix on a fresh runner
+        if: ${{ always() && steps.premium_build.outcome == 'success' }}
+        id: home_polish
+        run: |
+          set -o pipefail
+          node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
+
+      - name: Upload premium browser QA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-browser-premium-evidence-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            premium-preview.log
+            premium-production-build.log
+            home-polish.log
+            premium-browser-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
