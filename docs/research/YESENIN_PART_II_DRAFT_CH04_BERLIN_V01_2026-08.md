@@ -3,7 +3,7 @@
 **Глава:** `Берлин: книги, деньги, чтения и публичный конфликт`  
 **Версия:** V01  
 **Статус:** `PARTIAL WORKING DRAFT / НЕ ПУБЛИКОВАТЬ`  
-**Основание:** chronology 1922, foreign-work matrix, source registry, authoring packet chapter 4  
+**Основание:** chronology 1922, foreign-work matrix, source registry, authoring packet chapter 4, `YESENIN_EUROPE_ROUTE_SOURCE_PASS_02_2026-08.md`  
 **Публичный route:** запрещён
 
 > Редакторская пометка: точные газетные цитаты о Доме искусств и программа вечера 1 июня не вставляются до получения номера, полосы и физического event object.
@@ -30,7 +30,7 @@
 
 До 21 июня Есенин покинул Берлин. Следующее точное письмо приходит из Висбадена, и академические комментарии указывают, что в 1922 году он в Берлин уже не возвращался. Это важно для датировки фотографий, воспоминаний и поздних рассказов: не всякий «берлинский» эпизод можно свободно поместить в любое лето или осень поездки. `[source: yes2-1922-leave-berlin]`
 
-Дальше маршрут становится сложнее. Письма фиксируют Висбаден, Дюссельдорф, Остенде и Венецию; рядом возникают планы Гааги, Брюсселя и Рима. Следующая глава должна поэтому перейти от берлинских книг и залов к другому методу: каждый город будет считаться посещённым только тогда, когда намерение подтверждается следующим документом.
+Дальше маршрут становится сложнее. Письма фиксируют Висбаден, Дюссельдорф, Остенде, Брюссель, два парижских этапа и Венецию с Лидо; рядом остаются планы Гааги, Рима и Лондона, не переведённые в посещённые остановки без completion witness. Следующая глава переходит от берлинских книг и залов к другому методу: каждый город считается посещённым только тогда, когда намерение подтверждается следующим документом. `[sourceIds: ye2-feb-schneider-1922-06-21; ye2-feb-sakharov-1922-07-01; ye2-feb-mariengof-1922-07-09; ye2-feb-schneider-1922-07-13; ye2-feb-mariengof-paris-1922-jul-aug; ye2-feb-esenina-1922-08-10]`
 
 ## Source gate before V02
 
@@ -42,10 +42,13 @@
 - [x] 1 June event not over-specified before programme acquisition;
 - [x] translation promises not treated as published results;
 - [x] departure before 21 June used as route boundary;
+- [x] confirmed Brussels and two Paris periods added to transition;
+- [x] Hague/Rome/London retained as plans without completion witnesses;
 - [ ] exact 11 May editorial/press record pinned;
 - [ ] House of Arts newspaper issue/date/page comparison completed;
 - [ ] exact Grzhebin document page pinned;
 - [ ] 1 June programme/report object pinned;
+- [ ] translation bundle split into promise/work/edition objects;
 - [ ] physical Berlin volume binary/SHA/rights pinned;
 - [ ] exact no-return-to-Berlin comment page pinned;
 - [ ] literary-style review before V02;
