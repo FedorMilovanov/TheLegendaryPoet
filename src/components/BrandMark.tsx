@@ -6,7 +6,7 @@ import {
   BRAND_MOTION_CSS,
   createBrandMotionController,
   type BrandMotionController,
-} from './brandMotionV18';
+} from './brandMotionFrameInvariant';
 
 interface BrandMarkProps {
   size?: 'sm' | 'md' | 'lg';
@@ -74,8 +74,9 @@ export function BrandMark({ size = 'md', className }: BrandMarkProps) {
       data-brand-renderer="inline-vector"
       data-brand-vector-source={VECTOR_SOURCE}
       data-brand-interaction="idle"
-      data-brand-parallax="spring-awakening-v4"
+      data-brand-parallax="spring-awakening-v5"
       data-brand-motion-normalization="rendered-box-v1"
+      data-brand-motion-timestep="bounded-substeps-v1"
       data-brand-awakening="aura-depth-cloth-v2"
       data-brand-compact={compact ? 'true' : 'false'}
       className={cn(
