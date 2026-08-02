@@ -20,65 +20,97 @@ This directory contains the active research and production ledgers for the curre
 - `FACT_CHECK_CHECKLIST_2026-08.md` — reader-text, moral, biblical, visual and technical verification.
 - `MARATHON_WORKLOG_2026-08-02.md` — completed work and open gates.
 
-The detailed Part II outline establishes a usable writing order, but full reader prose remains blocked until the 1921–1925 day-level chronology, page-level claim matrix, December 1925 table and documentary visual count are closed.
+The detailed Part II outline establishes a usable writing order, but full reader prose remains blocked until the 1921–1925 page-level claim matrix, December 1925 forensic table and documentary visual count are closed.
 
 ## Publication planning
 
 - `ARTICLE_RELEASE_QUEUE_2026-08.md` — non-duplicative site/VK release spacing.
 - `VK_ANNOUNCEMENT_DRAFTS_2026-08.md` — complete gated announcement drafts for 5, 7, 9, 11 and 13 August. They are not permission to schedule before route/cover/OG gates pass.
 
-## Yesenin 1921–1925
+## Yesenin 1921–1925 chronology
 
-- `YESENIN_DAY_LEVEL_CHRONOLOGY_1921_PASS_01_2026-08.md` — first controlled year segment: publications, failed foreign-travel request, Turkestan, `Пугачев`, Imagist infrastructure, Duncan meeting boundary, divorce and exact poster/publication corrections.
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1921_PASS_01_2026-08.md` — publications, failed foreign-travel request, Turkestan, `Пугачев`, Imagist infrastructure, Duncan meeting boundary, divorce and poster/publication corrections.
 - `YESENIN_DAY_LEVEL_CHRONOLOGY_1922_PASS_01_2026-08.md` — marriage/passport sequence, Berlin publishing, documented European stops versus plans, New York arrival, immigration/press boundary and foreign-work categories.
 - `YESENIN_DAY_LEVEL_CHRONOLOGY_1923_PASS_01_2026-08.md` — late New York, qualified departure, delayed European return, `Железный Миргород`, Miklashevskaya/Benislavskaya contact, cafe records and two distinct legal cases.
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1924_PASS_01_2026-08.md` — hospitals/Leningrad, physical `Москва кабацкая`, disputed Imagist dissolution, 3 September Caucasus departure, Benislavskaya's editorial authority and the Persia-plan boundary.
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1925_JAN_NOV_PASS_01_2026-08.md` — Caucasus work, `Анна Снегина`, the evolving Persian cycle, publishing contracts, Sofia Tolstaya, the train case, `Черный человек` and clinic admission.
 - `YESENIN_EUROPE_AMERICA_ROUTE_SOURCE_MAP_1922_1923_2026-08.md` — broad route and source map.
 - `YESENIN_FOREIGN_WORK_MATRIX_1922_1923_2026-08.md` — work/publication matrix.
 - `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md` — late New York anchors and the qualified 3–4 February 1923 departure interval.
 
-### 1921 chronology consequence
+December 1925 is intentionally excluded from the broad annual ledger and requires a separate forensic chronology. No final-days prose may be written by extending the November table with ungraded memoir scenes.
 
-Part II must not begin by presenting Duncan as the origin of the entire late crisis. The first chapter now has a source-backed sequence: early books and unrealised projects; the 26 February self-description; the failed April foreign-travel request; Turkestan and `Пугачев`; public readings and group conflicts; only then the probable Duncan meeting.
+### 1921 consequence
 
-Standing anti-regression examples from the pass:
+Part II must not begin by presenting Duncan as the origin of the entire late crisis. The source-backed sequence is: early books and unrealised projects; the 26 February self-description; failed April foreign travel; Turkestan and `Пугачев`; public readings and group conflicts; only then the probable Duncan meeting.
 
-- a poster proves announcement, not attendance: the 17 October poster announced Yesenin, while a diary source says he read elsewhere;
-- an imprint year may differ from physical release: Moscow `Пугачов` says 1922 but appeared in December 1921;
-- an autograph date may mark copying rather than composition;
-- a travel petition does not prove completed travel;
+Standing examples:
+
+- poster = announcement, not attendance;
+- imprint year may differ from physical release;
+- autograph date may mark copying rather than composition;
+- travel petition does not prove completed travel;
 - a group act does not automatically represent every member.
 
-### 1922 chronology consequence
+### 1922 consequence
 
-The foreign year is not a single scandal narrative. It is controlled through four layers: Moscow legal/logistical preparation; Berlin publishing and performance; European stops separated from planned cities; American tour and political reception.
+The foreign year has four layers: Moscow legal/logistical preparation; Berlin publishing and performance; European stops separated from planned cities; American tour and political reception.
 
-Standing anti-regression examples from the pass:
+Standing examples:
 
-- legal marriage does not prove one secret motive;
+- marriage does not prove one secret motive;
 - passport issuance is not a completed route;
-- a city named in future tense remains a plan;
+- a future-tense city remains a plan;
 - synchronised press may preserve a false divorce rumour;
 - `published abroad` does not mean `written abroad`;
 - immigration scrutiny is not deportation;
 - an advertised tour city needs its own completion witness.
 
-### 1923 chronology consequence
+### 1923 consequence
 
-The return year is divided into literary, relational, economic and legal lines instead of one collapse narrative.
+The return year is divided into literary, relational, economic and legal lines.
 
-Standing anti-regression examples from the pass:
+Standing examples:
 
 - `Железный Миргород` has an American subject but a Moscow autograph dated 14 August;
-- the 21 August “report” was a public conversation/performance, not a stenographic policy lecture;
-- manuscript and newspaper versions of the essay differ;
-- printed order of `Любовь хулигана` is not a day-by-day composition calendar;
-- a cafe account proves an account, not personal consumption of every listed item;
-- the September cafe case and the November four-poets case are separate legal files;
+- manuscript and newspaper versions differ;
+- printed order of `Любовь хулигана` is not a composition calendar;
+- a cafe account is not proof of personal consumption of every item;
+- the September cafe case and November four-poets case are separate;
 - Duncan correspondence continues after the Moscow return.
+
+### 1924 consequence
+
+The year is a major transition rather than a preface to death.
+
+Standing examples:
+
+- memoir month can be corrected by stronger hospital/location evidence;
+- hospitalisation does not supply a complete diagnosis;
+- the physical `Москва кабацкая` appeared only after several failed projects;
+- a public dissolution letter did not erase all Imagist networks immediately;
+- Tehran/Tabriz/Constantinople plans do not prove a Persian journey;
+- `Персидские мотивы` was named in October 1924 but completed later;
+- Benislavskaya's wide delegated authority coexisted with detailed authorial instructions.
+
+### January–November 1925 consequence
+
+The last full-year arc must retain work, publishing and relationships alongside legal and medical instability.
+
+Standing examples:
+
+- completed `Анна Снегина` is not the same as the unrealised standalone book;
+- the late-May `Персидские мотивы` book predates the August-completed full cycle;
+- the 30 June collected-works contract is not a 1925 published edition;
+- Sofia Tolstaya's marriage, copying and archival roles do not prove that the marriage “saved” or “destroyed” Yesenin;
+- the 6 September train act begins a case but is not a conviction;
+- `Черный человек` had a multi-year work history and reached its surviving final form on 14 November before clinic admission;
+- certificate no. 1037 proves treatment and incapacity for questioning, not a complete diagnosis;
+- the 29 November poster is another advertisement-without-attendance example.
 
 ### Critical US date correction
 
-The broad route map currently contains an exact `4 February 1923` US departure row. Read it together with `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md`: academic references differ between leaving New York on 3 February and a US-period endpoint on 4 February. Until a transport/passenger record closes the gap, new prose must use `3–4 February 1923` and must not treat the departure as proven deportation.
+The broad route map contains an exact `4 February 1923` US departure row. Read it together with `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md`: academic references differ between leaving New York on 3 February and a US-period endpoint on 4 February. Until a transport/passenger record closes the gap, new prose must use `3–4 February 1923` and must not treat the departure as proven deportation.
 
 ## Independent Yesenin source gates
 
@@ -99,11 +131,11 @@ Critical wording:
 
 Critical chronology:
 
-- `Сирена` no. 4–5 bears the printed date 30 January 1919 but actually appeared on 17–18 April;
+- `Сирена` no. 4–5 bears 30 January 1919 but actually appeared on 17–18 April;
 - `Советская страна` no. 3 appeared on 10 February and was the first released publication;
-- the two texts are not identical;
-- both physical witnesses are required before a first-publication/variant investigation;
-- the accepted RGALI leaflet of 12 June 1921 is a later movement witness, not an image of the 1919 Declaration.
+- the texts differ;
+- both physical witnesses are required;
+- the RGALI leaflet of 12 June 1921 is a later movement witness, not an image of the 1919 Declaration.
 
 ### Yesenin's debut in `Мирок`
 
@@ -120,7 +152,7 @@ Required witness map:
 
 Books 2 and 4 were reported as acquired in prior work, but current Drive keyword search does not surface them. Recover exact artifact/Drive IDs and SHA before any new upload. Books 1, 3, 7 and 12 remain unresolved. Catalogue arithmetic and guessed neighbouring object IDs are forbidden.
 
-Safe wording: `Береза` is Yesenin's first **known** publication, not a claim that every possible lost print has been disproved.
+Safe wording: `Береза` is Yesenin's first **known** publication.
 
 These topics remain independent articles. Part II uses only compact biographical context and must not absorb their full source investigations.
 
@@ -128,13 +160,13 @@ These topics remain independent articles. Part II uses only compact biographical
 
 - `PDF_ACQUISITION_PASS_03_YESENIN_1921_1925_2026-08.md` — 40+ discovery pass, cross-library deduplication, seven accepted binary-pending candidates and explicit hold/reject decisions.
 
-No PDF is reported as acquired until its actual bytes, first page, page count and SHA-256 are verified. An empty Drive batch folder is not progress.
+No PDF is reported as acquired until its actual bytes, first page, page count and SHA-256 are verified. An empty Drive batch folder is not progress. The existing curated archive itself records 40 PDFs with matched checksums and first-page rendering for all files, while also warning that an open PDF licence does not automatically clear every embedded photograph or illustration for separate reuse. fileciteturn92file0L5-L13
 
-Drive exact-title checks also found no current copy of:
+Drive exact-title checks found no current copy of:
 
 - Shubnikova-Guseva's monograph on Yesenin and Benislavskaya;
 - `Дневник. Воспоминания. Письма к Есенину`;
-- the required `Сергей Есенин в стихах и жизни. Книга 3: Письма. Документы`;
+- `Сергей Есенин в стихах и жизни. Книга 3: Письма. Документы`;
 - `Сирена` 1919 no. 4–5;
 - `Советская страна` 1919 no. 3.
 
@@ -144,4 +176,4 @@ This confirms acquisition gaps, not permission to use pirate or rights-unclear s
 
 The myth atlas, visual contact review, rights ledger and metadata corrections remain indexed through their named files in this directory. A myth card requires a repeated claim, origin, documentary answer, qualified verdict and stable source IDs; a visual requires item-level provenance and rights.
 
-Publication requires the project-wide standard in `docs/LONGFORM_EDITORIAL_MARATHON_STANDARD_2026-08.md`, the root agent contract and all applicable source, rights, content, type, build and browser gates.
+Publication requires `docs/LONGFORM_EDITORIAL_MARATHON_STANDARD_2026-08.md`, the root agent contract and all applicable source, rights, content, type, build and browser gates.
