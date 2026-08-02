@@ -13,7 +13,7 @@ The production motion architecture is technically strong: a single requestAnimat
 
 ## 1. Reference contract audit
 
-The repository already defines these hard targets:
+The repository defines these hard targets:
 
 | Ratio | Target |
 |---|---:|
@@ -22,14 +22,14 @@ The repository already defines these hard targets:
 | Face cavern width / hood width | 0.68–0.86 |
 | Cloak width / hood width | ≥ 2.30 |
 
-Measured SVG geometry:
+Exact-head Chromium `getBBox()` measurements:
 
 | SVG | Hood height | Hood / cloak | Face / hood | Cloak / hood | Eligible |
 |---|---:|---:|---:|---:|---|
-| Production v17 | **0.330 pass** | **0.278 fail** | **0.640 fail** | **3.592 pass** | No |
-| v19.11 full-size | **0.374 fail** | **0.388 pass** | **0.638 fail** | **2.576 pass** | No |
-| v19.17 optical | **0.381 fail** | **0.380 pass** | **0.655 fail** | **2.629 pass** | No |
-| v19.14 micro | **0.431 fail** | **0.464 fail** | **0.646 fail** | **2.154 fail** | No |
+| Production v17 | **0.3303 pass** | **0.2820 fail** | **0.6404 fail** | **3.5467 pass** | No |
+| v19.11 full-size | **0.3738 fail** | **0.3919 pass** | **0.6256 fail** | **2.5514 pass** | No |
+| v19.17 optical | **0.3805 fail** | **0.3837 pass** | **0.6552 fail** | **2.6061 pass** | No |
+| v19.14 micro | **0.4306 fail** | **0.4643 fail** | **0.6308 fail** | **2.1538 fail** | No |
 
 ### Meaning
 
@@ -121,9 +121,9 @@ The architecture of the figure should remain nearly symmetric, but the cloth hig
 - aura, figure and detail wake in phases;
 - face uses counter-parallax;
 - reduced motion removes all depth transforms;
-- exact-head pointer test recorded 109 samples, 1.1 ms p95 latency, 5.2 ms maximum and zero interaction long tasks.
+- prior pointer-performance evidence recorded 109 samples, 1.1 ms p95 latency, 5.2 ms maximum and zero interaction long tasks.
 
-### Spring simulation
+### Deterministic spring simulation
 
 The exact integration was simulated at 30, 60, 90, 120 and 144 Hz:
 
@@ -134,6 +134,21 @@ The exact integration was simulated at 30, 60, 90, 120 and 144 Hz:
 - corner reversal crosses the center in about 125–150 ms.
 
 The active spring is unchanged. The return uses higher stiffness/damping and an explicit visual epsilon: the controller performs the final exact-zero write only after remaining position is subpixel and velocity/wake are visually negligible. This avoids both a visible snap and a long compositor-owning tail.
+
+### Exact-head browser trajectory
+
+The dedicated Chromium audit on head `0d9dea730e6fd272d430347588548d62e3b983c1` recorded:
+
+- 23 independent RAF samples over 1116.6 ms;
+- first measurable motion at 114.5 ms after sampler start;
+- 95% amplitude 599.9 ms after actual activation under the throttled CI cadence;
+- exact `idle` 931 ms after pointer leave;
+- maximum sampled energy displacement 0.468 px between adjacent samples;
+- header rendered size 59.52 px and motion scale 0.93;
+- footer rendered size 48 px and motion scale 0.75;
+- observed header/footer amplitude ratio 1.2406015 against expected 1.2400000.
+
+The small difference between deterministic and CI wall-clock entry time is expected: the controller caps integration `dt` at 32 ms, so sparse CI frames slow wall-clock convergence rather than producing a jump.
 
 ### Proven defect: fixed-pixel optical drift
 
@@ -149,7 +164,7 @@ The header additionally scales a 48 px mark to about 59.5 px, while the footer l
 
 `spring-awakening-v4` now uses `rendered-box-v1`, which derives a bounded motion scale from the actual rendered box around a neutral 64 px design size. All translation channels use that scale; scale-only channels remain unchanged. The return spring uses `180/20` for directional stiffness/damping and `220/22` for wake stiffness/damping; active entry remains `136/18.5` and `126/15.8`.
 
-The new browser audit checks:
+The browser audit checks:
 
 - real geometry ratios for production, full-size, optical and micro SVGs;
 - explicit non-eligibility for reference approval;
