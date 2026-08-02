@@ -4,7 +4,7 @@
   "measurementMethod": {
     "kind": "manual landmark extraction constrained by luminous rim, black negative-space boundary and occupied cloak silhouette",
     "canvas": [256, 256],
-    "notes": ["Aura is excluded from figure geometry.","The cloak box follows the dark monolithic silhouette, not the outer electrical field.","The face box follows the dominant black cavern inside the hood.","Pixel landmarks are review anchors; browser getBBox() remains the exact candidate gate."]
+    "notes": ["Aura is excluded from figure geometry.","The cloak box follows the dark monolithic silhouette, not the outer electrical field.","The face box follows the dominant black cavern inside the hood.","Pixel landmarks are review anchors; browser getBBox() and rendered bounds remain the exact candidate gates."]
   },
   "referenceLandmarks": {
     "occupiedFigure": {"x":29,"y":31,"width":197,"height":224},
@@ -17,19 +17,25 @@
     "foldFamilies": {"leftDiagonalDegrees":[-49,-40,-31],"rightDiagonalDegrees":[31,40,50],"centralDegrees":[-4,0,5]}
   },
   "referenceRatios": {"hoodHeightToVisibleFigureHeight":0.357143,"hoodWidthToCloakWidth":0.385787,"faceCavernWidthToHoodWidth":0.789474,"cloakWidthToHoodWidth":2.592105},
+  "referenceComposition": {"cloakWidthToCanvas":0.769531,"occupiedFigureHeightToCanvas":0.875,"hoodApexYToCanvas":0.121094,"cloakShoulderYToCanvas":0.40625,"figureCenterXToCanvas":0.498047},
   "contract": {"hoodHeightToVisibleFigureHeight":[0.27,0.36],"hoodWidthToCloakWidth":[0.32,0.43],"faceCavernWidthToHoodWidth":[0.68,0.86],"cloakWidthToHoodWidthMinimum":2.3},
+  "compositionContract": {"cloakWidthToCanvas":[0.72,0.82],"occupiedFigureHeightToCanvas":[0.84,0.91],"hoodApexYToCanvas":[0.10,0.145],"cloakShoulderYToCanvas":[0.37,0.43],"figureCenterXToCanvas":[0.47,0.53]},
   "candidates": [
     {
-      "id": "v20.8-reference-compressed-cowl",
+      "id": "v20.9-reference-canonical-crop",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96,96],
       "reviewSizes": [64,96,128,256],
       "boxes": {"cloak":{"x":0.8,"y":34.6884,"width":94.4,"height":61.3116},"hood":{"x":30.1,"y":7.2,"width":36.2,"height":31.8},"faceCavern":{"x":34.4,"y":13.3,"width":27.4,"height":24.2}},
       "ratios": {"hoodHeightToVisibleFigureHeight":0.358108,"hoodWidthToCloakWidth":0.383475,"faceCavernWidthToHoodWidth":0.756906,"cloakWidthToHoodWidth":2.607735},
+      "compositionTransform": "translate(10.29 4.76) scale(.79 .95)",
+      "renderedBoxes": {"cloak":{"x":10.922,"y":37.71398,"width":74.576,"height":58.24602},"hood":{"x":34.069,"y":11.6,"width":28.598,"height":30.21},"faceCavern":{"x":37.466,"y":17.395,"width":21.646,"height":22.99}},
+      "composition": {"cloakWidthToCanvas":0.776833,"occupiedFigureHeightToCanvas":0.87875,"hoodApexYToCanvas":0.120833,"cloakShoulderYToCanvas":0.392854,"figureCenterXToCanvas":0.502188},
       "numericGeometryEligible": true,
+      "compositionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.8 preserves the improved cavern ratio while reducing cowl height, eliminating clean X and pointed ribbon ends, darkening long fold planes into a monolithic cloak and widening the electrical field with low-opacity unblurred structural branches. Exact committed overlay remains mandatory."
+      "reason": "v20.9 keeps the accepted internal ratios but explicitly aligns canonical square occupancy: the figure is narrowed, lowered and centred while the electrical field remains broad behind it. Exact committed rendered-bound evidence remains mandatory."
     },
     {
       "id": "v20.6-reference-micro-shoulder-anchors",
@@ -41,9 +47,9 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro master retains the broad cavern and adds six separated hood and shoulder anchors plus a slightly stronger top-cloak value, improving dark 16–20px identity without recreating a continuous cyan A outline. Exact diagnostics remain mandatory."
+      "reason": "The independent micro master retains the broad cavern and six separated hood and shoulder anchors. Micro crop intentionally follows optical readability rather than the full-size square composition contract."
     }
   ],
-  "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
+  "promotionPolicy": "Numeric and composition eligibility are necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
   "referenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532"
 }
