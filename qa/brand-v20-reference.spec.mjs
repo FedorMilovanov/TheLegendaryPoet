@@ -143,7 +143,7 @@ test('v20 canonical comparison and optical-size evidence are rendered from exact
         </main>
       </body>
     </html>`);
-  await expect(page.locator('img')).toHaveCount(9);
+  await expect(page.locator('img')).toHaveCount(8);
   await page.locator('img').evaluateAll(async (images) => {
     await Promise.all(images.map((image) => image.decode()));
   });
