@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.7-reference-draped-monolith",
+    "id": "v20.8-reference-compressed-cowl",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -11,7 +11,7 @@
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.5-reference-micro-optical",
+    "id": "v20.6-reference-micro-shoulder-anchors",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -23,7 +23,8 @@
     {"full":"v20.4-reference-drapery","micro":"v20.2-reference-micro-rim","verdict":"numeric pass; exact overlay retained an oversized black cavity, dominant smooth rim, tidy cowl and panel-separated cloak; micro read as a cyan A at 16–20px"},
     {"full":"v20.5-reference-silhouette","micro":"v20.3-reference-micro-silhouette","verdict":"numeric pass; visual review rejected the remaining smooth oval cavern, ribbon-like horizontal cowl, regular panel fan and overly mirrored field topology"},
     {"full":"v20.6-reference-monolith","micro":"v20.4-reference-micro-monolith","verdict":"numeric pass; exact overlay showed a meaningful monolithic improvement but rejected the stacked chevron cowl, still-regular long panels and overly sparse field; dark 16–20px micro evidence remained nearly invisible"},
-    {"full":"v20.7-reference-draped-monolith","micro":"v20.5-reference-micro-optical","verdict":"current QA-only iteration: face cavern widened toward the canonical ratio, cowl rebuilt as crossing unequal drapery masses, field gained irregular forks, and micro uses four separated optical edge anchors; exact committed overlay and dark/light evidence pending"}
+    {"full":"v20.7-reference-draped-monolith","micro":"v20.5-reference-micro-optical","verdict":"numeric pass; exact overlay confirmed the broader cavern and improved field but rejected a broad clean shawl across the shoulders, an overly large cowl zone and residual symmetric panel structure; dark micro identity improved but remained weak at 16–20px"},
+    {"full":"v20.8-reference-compressed-cowl","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"current QA-only iteration: cowl height reduced, clean X and ribbon ends removed, cloak highlights darkened into one monolithic body, field widened with two low-opacity structural branches, and micro uses six separated optical anchors; exact committed overlay and diagnostics pending"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
