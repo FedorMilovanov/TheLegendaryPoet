@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.3-reference-monolith",
+    "id": "v20.4-reference-drapery",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -11,13 +11,25 @@
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.1-reference-micro",
+    "id": "v20.2-reference-micro-rim",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
     "reviewerDecision": "not-reference-approved",
     "requiredReviewSizes": [16, 20, 24, 32, 48]
   },
+  "iterationHistory": [
+    {
+      "full": "v20.3-reference-monolith",
+      "micro": "v20.1-reference-micro",
+      "verdict": "numeric pass; exact overlay rejected the dome-like aura, horizontal cowl and panel-like folds"
+    },
+    {
+      "full": "v20.4-reference-drapery",
+      "micro": "v20.2-reference-micro-rim",
+      "verdict": "current QA-only iteration; exact committed overlay and optical evidence pending"
+    }
+  ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
     "motion": "existing production controller remains detached until static approval",
