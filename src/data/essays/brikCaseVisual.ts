@@ -1,6 +1,33 @@
-import type { Essay } from '../../types/essay';
+import type { Essay, EssayBlock } from '../../types/essay';
 import { brikCase as baseBrikCase } from './brikCase';
 import { insertArchiveImages } from './visualArchive';
+
+const mythCheckedBlocks = baseBrikCase.blocks.flatMap<EssayBlock>((block) => {
+  if (
+    block.type !== 'paragraph' ||
+    !block.text.includes('утверждение, будто поэта удерживали исключительно как источник денег')
+  ) {
+    return [block];
+  }
+
+  return [
+    block,
+    {
+      type: 'note',
+      variant: 'myth',
+      claim: 'Лиля и Осип Брики удерживали Маяковского исключительно ради денег, гонораров и рукописей',
+      verdict: 'unproven',
+      origin: 'поздние обвинительные биографии и медийные пересказы, которые превращают документированную финансовую взаимозависимость в доказанный тайный заговор',
+      text: 'Переписка действительно показывает денежные поручения, общий быт, крупные покупки, издательскую работу и участие Маяковского в расходах дома. Архив Лили Брик хранит большой корпус писем, рукописей и документов о наследии. Но эти факты доказывают **материальную и литературную взаимозависимость**, а не единый скрытый мотив «держать поэта ради прибыли». Для такого вывода понадобились бы прямые документы о намерении, которых проверенный корпус не даёт. Опровержение финансового заговора не оправдывает прелюбодейный союз и не отменяет эмоциональной зависимости Маяковского.',
+      sourceIds: [
+        'brik-correspondence',
+        'brik-letter-nov-1928',
+        'rgali-lilya-katanyan',
+        'rgali-osip',
+      ],
+    },
+  ];
+});
 
 export const brikCaseVisual: Essay = {
   ...baseBrikCase,
@@ -10,8 +37,9 @@ export const brikCaseVisual: Essay = {
   coverKind: 'archive',
   coverCredit: 'Осип Брик · 1929',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
-  readTime: 24,
-  blocks: insertArchiveImages(baseBrikCase.blocks, {
+  dateModified: '2026-08-02',
+  readTime: 27,
+  blocks: insertArchiveImages(mythCheckedBlocks, {
     'Жуковского, июль 1915-го': [
       {
         type: 'image',
