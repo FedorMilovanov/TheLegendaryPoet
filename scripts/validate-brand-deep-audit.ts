@@ -4,17 +4,19 @@ import path from 'node:path';
 
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const deepWorkflowPath = '.github/workflows/brand-deep-audit.yml';
+const vectorWorkflowPath = '.github/workflows/brand-qa.yml';
 const manualWorkflowPath = '.github/workflows/manual-browser-qa.yml';
 const deepSpecPath = 'qa/brand-deep-audit.spec.mjs';
 const comparisonSpecPath = 'qa/brand-reference-comparison.spec.mjs';
 const motionPath = 'src/components/brandMotionFrameInvariant.ts';
 const simulationPath = 'scripts/validate-brand-motion-frame-invariance.ts';
 
-for (const file of [deepWorkflowPath, manualWorkflowPath, deepSpecPath, comparisonSpecPath, motionPath, simulationPath]) {
+for (const file of [deepWorkflowPath, vectorWorkflowPath, manualWorkflowPath, deepSpecPath, comparisonSpecPath, motionPath, simulationPath]) {
   assert.ok(fs.existsSync(path.resolve(file)), `${file}: required brand audit file is missing`);
 }
 
 const workflow = read(deepWorkflowPath);
+const vectorWorkflow = read(vectorWorkflowPath);
 const manual = read(manualWorkflowPath);
 const spec = read(deepSpecPath);
 const comparison = read(comparisonSpecPath);
@@ -35,6 +37,27 @@ assert.match(workflow, /--workers=1/);
 assert.match(workflow, /brand-reference-contract-metrics\.json/);
 assert.match(workflow, /brand-motion-quality-metrics\.json/);
 assert.doesNotMatch(manual, /qa\/brand-deep-audit\.spec\.mjs/);
+
+assert.match(vectorWorkflow, /name: Brand vector QA/);
+assert.match(vectorWorkflow, /TESTED_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+assert.match(vectorWorkflow, /Checkout exact tested head/);
+assert.match(vectorWorkflow, /ref: \$\{\{ env\.TESTED_SHA \}\}/);
+assert.match(vectorWorkflow, /Verify exact checkout identity/);
+assert.match(vectorWorkflow, /actual_sha="\$\(git rev-parse HEAD\)"/);
+assert.match(vectorWorkflow, /test "\$actual_sha" = "\$TESTED_SHA"/);
+assert.match(vectorWorkflow, /tested_commit=\$\(git rev-parse HEAD\)/);
+assert.match(vectorWorkflow, /brand-\$\{\{ env\.EVIDENCE_SCOPE \}\}-\$\{\{ env\.TESTED_SHA \}\}/);
+for (const scopedFile of [
+  'src/components/brandMotionV18.ts',
+  'src/components/brandMotionFrameInvariant.ts',
+  'qa/brand-reference-audit.json',
+  'qa/brand-marathon-pass-ledger.json',
+  'scripts/validate-brand-deep-audit.ts',
+  'scripts/validate-brand-motion-frame-invariance.ts',
+]) {
+  assert.ok(vectorWorkflow.includes(`- '${scopedFile}'`), `vector workflow trigger missing ${scopedFile}`);
+}
+assert.doesNotMatch(vectorWorkflow, /ref: \$\{\{ github\.sha \}\}/);
 
 assert.match(spec, /reference proportions are measured and no current SVG is silently approval-eligible/);
 assert.match(spec, /approvalEligible/);
@@ -104,4 +127,4 @@ assert.match(mark, /data-brand-motion-normalization="rendered-box-v1"/);
 assert.match(mark, /data-brand-parallax="spring-awakening-v5"/);
 assert.match(mark, /data-brand-motion-timestep="bounded-substeps-v1"/);
 
-console.log('brand deep audit: exact-head geometry, frame-rate-invariant trajectory, v18.6 vector identity, interpolated timing crossings, interval-normalized plus absolute smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
+console.log('brand deep audit: exact-head vector and deep workflows, complete motion trigger scope, exact-head geometry, frame-rate-invariant trajectory, v18.6 vector identity, interpolated timing crossings, interval-normalized plus absolute smoothness, bounded exact-idle return, settled clock reset, diagnostics, size normalization and reduced-motion gates are locked');
