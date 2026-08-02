@@ -27,6 +27,13 @@ const requiredMyths: Record<string, RequiredMyth[]> = {
       sourceIds: ['rvb-text', 'feb-encyclopedia'],
     },
   ],
+  'sergei-yesenin-1895-1921': [
+    {
+      claimIncludes: 'церковно-учительской школе',
+      verdict: 'false',
+      sourceIds: ['ye1-feb-chronicle-1909', 'ye1-feb-chronicle-1912'],
+    },
+  ],
   'yesenin-duncan-first-meeting-documents': [
     {
       claimIncludes: 'точно 3 октября 1921 года',
