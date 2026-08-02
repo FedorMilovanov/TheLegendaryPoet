@@ -7,14 +7,16 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const specPath = 'qa/site-route-integrity.spec.mjs';
 const configPath = 'playwright.route-audit.config.mjs';
 const workflowPath = '.github/workflows/site-route-integrity-audit.yml';
+const ciPath = '.github/workflows/ci.yml';
 
-for (const file of [specPath, configPath, workflowPath]) {
+for (const file of [specPath, configPath, workflowPath, ciPath]) {
   assert.ok(fs.existsSync(path.resolve(file)), `${file}: route audit file is missing`);
 }
 
 const spec = read(specPath);
 const config = read(configPath);
 const workflow = read(workflowPath);
+const ci = read(ciPath);
 
 assert.match(spec, /public\/sitemap\.xml/);
 assert.match(spec, /MIN_CANONICAL_ROUTES = 28/);
@@ -56,4 +58,7 @@ assert.match(workflow, /site-route-integrity-evidence/);
 assert.doesNotMatch(workflow, /--retries=0/);
 assert.doesNotMatch(workflow, /webkit|firefox/i);
 
-console.log('site route audit: production sitemap breadth, behavioral routes, strict runtime evidence and isolated Chromium execution locked');
+assert.match(ci, /Validate site route audit architecture/);
+assert.match(ci, /npm run validate:route-audit/);
+
+console.log('site route audit: production sitemap breadth, behavioral routes, strict runtime evidence, primary-CI lock and isolated Chromium execution locked');
