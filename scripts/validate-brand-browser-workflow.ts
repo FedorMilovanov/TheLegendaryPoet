@@ -12,19 +12,41 @@ const mobilePlatformsSpec = 'qa/mobile-platforms.spec.mjs';
 const webkitHomeEntrypoint = 'qa/mobile-home-webkit.spec.mjs';
 const isolatedWebKitSpec = 'qa/mobile-webkit-isolated.spec.mjs';
 const isolatedWebKitHelpers = 'qa/mobile-webkit-isolated.helpers.mjs';
+const webkitProcessRunnerPath = 'scripts/run-webkit-process-isolated.mjs';
+const homeProcessRunnerPath = 'scripts/run-home-polish-process-isolated.mjs';
 const opticalSpec = 'qa/brand-v19-optical.spec.mjs';
 const microSpec = 'qa/brand-v19-micro.spec.mjs';
 
-for (const spec of [mobilePlatformsSpec, webkitHomeEntrypoint, isolatedWebKitSpec, isolatedWebKitHelpers, opticalSpec, microSpec]) {
-  assert.ok(fs.existsSync(path.resolve(spec)), `${spec}: browser QA file is missing`);
+for (const file of [
+  mobilePlatformsSpec,
+  webkitHomeEntrypoint,
+  isolatedWebKitSpec,
+  isolatedWebKitHelpers,
+  webkitProcessRunnerPath,
+  homeProcessRunnerPath,
+  opticalSpec,
+  microSpec,
+]) {
+  assert.ok(fs.existsSync(path.resolve(file)), `${file}: browser QA file is missing`);
 }
-for (const spec of [mobilePlatformsSpec, webkitHomeEntrypoint, opticalSpec, microSpec]) {
-  assert.ok(workflow.includes(spec), `${spec}: workflow entrypoint is not executed by Manual Browser QA`);
+for (const spec of [mobilePlatformsSpec, opticalSpec, microSpec]) {
+  assert.ok(workflow.includes(spec), `${spec}: Chromium/Android workflow entrypoint is not executed`);
 }
 
-assert.match(workflow, /Run Chromium, Android Chrome and iPhone Safari QA/);
+assert.match(workflow, /timeout-minutes:\s*90/);
+assert.match(workflow, /Run Chromium and Android Chrome QA/);
+assert.match(workflow, /--project=chromium-core/);
+assert.match(workflow, /--project=android-pixel7/);
+assert.match(workflow, /Run iPhone Safari QA in fresh browser processes/);
+assert.match(workflow, /node scripts\/run-webkit-process-isolated\.mjs/);
+assert.match(workflow, /node scripts\/run-home-polish-process-isolated\.mjs/);
+assert.match(workflow, /set -o pipefail/);
+assert.match(workflow, /tee home-polish\.log/);
 assert.match(workflow, /--config=playwright\.config\.mjs/);
 assert.match(workflow, /--workers=1/);
+assert.doesNotMatch(workflow, /Run Chromium, Android Chrome and iPhone Safari QA/);
+assert.doesNotMatch(workflow, /--project=iphone-safari/);
+
 assert.match(playwright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 assert.match(playwright, /retries:\s*process\.env\.CI\s*\?\s*1\s*:\s*0/);
 assert.match(playwright, /mobile-home-webkit/);
@@ -34,6 +56,7 @@ assert.match(playwright, /grepInvert:\s*\[/);
 assert.match(playwright, /brand-v19-micro/);
 assert.match(playwright, /brand-v19-optical/);
 assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
+assert.match(homePlaywright, /retries:\s*process\.env\.CI\s*\?\s*1\s*:\s*0/);
 assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all principal homepage sections\//);
 
 // Hero acceptance reads the CSS schedule once, yields on the Playwright side,
@@ -109,6 +132,40 @@ assert.doesNotMatch(isolatedHelpers, /scrollIntoViewIfNeeded/);
 assert.doesNotMatch(isolatedHelpers, /page\.mouse\.wheel/);
 assert.doesNotMatch(isolatedHelpers, /classList\.remove\(['"]chrome-hidden/);
 
+const webkitRunner = read(webkitProcessRunnerPath);
+assert.match(webkitRunner, /spawnSync/);
+assert.match(webkitRunner, /--project=iphone-safari/);
+assert.match(webkitRunner, /--config=playwright\.config\.mjs/);
+assert.match(webkitRunner, /--workers=1/);
+assert.match(webkitRunner, /qa\/mobile-platforms\.spec\.mjs/);
+assert.match(webkitRunner, /qa\/yesenin-part-one\.spec\.mjs/);
+assert.match(webkitRunner, /qa\/brand-v19-optical\.spec\.mjs/);
+assert.match(webkitRunner, /qa\/brand-v19-micro\.spec\.mjs/);
+assert.match(webkitRunner, /qa\/hover-stability\.spec\.mjs/);
+for (const slug of ['poet-count', 'poem-of-day', 'featured-poets', 'faith-culture']) {
+  assert.match(webkitRunner, new RegExp(`home principal section ${slug}`));
+}
+for (const route of ['poets', 'ratings', 'articles', 'music', 'archive', 'about', 'not-found']) {
+  assert.match(webkitRunner, new RegExp(`route-\\$\\{route\\}|WebKit ${route} route`));
+}
+assert.match(webkitRunner, /home dock, search sheet and tap targets remain usable/);
+assert.match(webkitRunner, /fresh-process Safari contours passed/);
+assert.doesNotMatch(webkitRunner, /--retries(?:=|\s)/);
+
+const homeRunner = read(homeProcessRunnerPath);
+assert.match(homeRunner, /spawnSync/);
+assert.match(homeRunner, /home-desktop/);
+assert.match(homeRunner, /home-pixel7/);
+assert.match(homeRunner, /iphone-ambient/);
+assert.match(homeRunner, /iphone-labels/);
+assert.match(homeRunner, /iphone-first-viewport/);
+assert.match(homeRunner, /iphone-reduced-motion/);
+assert.match(homeRunner, /first viewport keeps six decoded portraits, crisp title and usable labels/);
+assert.match(homeRunner, /reduced motion removes title, hero-root, window and decorative movement/);
+assert.match(homeRunner, /--config=playwright\.home-polish\.config\.mjs/);
+assert.match(homeRunner, /fresh-process premium contours passed/);
+assert.doesNotMatch(homeRunner, /--retries(?:=|\s)/);
+
 const optical = read(opticalSpec);
 const micro = read(microSpec);
 assert.match(optical, /brand-v19-optical-candidate-matrix\.png/);
@@ -118,4 +175,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: zero-flaky Chromium/Android plus deterministic bounded WebKit route, homepage, hero, optical and micro gates');
+console.log('brand browser workflow: zero-flaky Chromium/Android plus fresh-process WebKit route, homepage, hero, optical and micro gates');

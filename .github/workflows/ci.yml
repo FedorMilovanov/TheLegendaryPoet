@@ -61,6 +61,8 @@ jobs:
           path: hover-stability.log
           if-no-files-found: error
           retention-days: 3
+      - name: Validate site route audit architecture
+        run: npm run validate:route-audit
       - name: Typecheck
         id: typecheck
         run: |

@@ -115,7 +115,8 @@ test('reference, idle, entry and centered awakening are shown together', async (
   await waitForLiveHome(page);
   const mark = page.locator('header [data-brand-mark]').first();
   await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
-  await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
+  await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v5');
+  await expect(mark).toHaveAttribute('data-brand-motion-timestep', 'bounded-substeps-v1');
   await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
   await page.screenshot({ path: path.join(DIR, 'brand-live-site-home-first-viewport.png'), fullPage: false });
   const box = await mark.boundingBox(); const clip = markClip(box, 44);
@@ -131,12 +132,14 @@ test('reference, idle, entry and centered awakening are shown together', async (
   await page.screenshot({ path: path.join(DIR, 'brand-reference-live-site-comparison.png'), fullPage: true });
 });
 
-test('v18.4 production motion keeps directional depth and exact return', async ({ page }) => {
+test('v18.6 production motion keeps directional depth and exact return', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
   await waitForLiveHome(page);
   const mark = page.locator('header [data-brand-mark]').first(); const box = await mark.boundingBox();
+  await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v5');
+  await expect(mark).toHaveAttribute('data-brand-motion-timestep', 'bounded-substeps-v1');
   const frames = [await captureMark(page, box, 'IDLE')];
   frames.push(await captureMark(page, box, 'ENTRY 120MS', .84, .18, 120));
   frames.push(await captureMark(page, box, 'FULL CENTER', .5, .5, 680));
@@ -155,7 +158,7 @@ test('v18.4 production motion keeps directional depth and exact return', async (
   expect(returned.percentPixelsOverFive).toBeLessThan(2);
   fs.writeFileSync(path.join(DIR, 'brand-interaction-metrics.json'), JSON.stringify({ baseline: 'FULL CENTER', directional: metrics, settledVersusIdle: returned }, null, 2));
   await page.setViewportSize({ width: 1780, height: 600 });
-  await page.setContent(`<style>${css}</style><main><h1>v18.4 DEPTH-FIRST AWAKENING STATES</h1><div class=sub>Every corner is compared against FULL CENTER; SETTLED must return to IDLE.</div><div class=states>${frames.map(([label, data]) => `<div class=state><b>${label}</b><img src="data:image/png;base64,${data}"></div>`).join('')}</div></main>`);
+  await page.setContent(`<style>${css}</style><main><h1>v18.6 FRAME-RATE-INVARIANT AWAKENING STATES</h1><div class=sub>Every corner is compared against FULL CENTER; SETTLED must return to IDLE.</div><div class=states>${frames.map(([label, data]) => `<div class=state><b>${label}</b><img src="data:image/png;base64,${data}"></div>`).join('')}</div></main>`);
   await decodeAll(page);
   await page.screenshot({ path: path.join(DIR, 'brand-interaction-state-matrix.png'), fullPage: true });
 });

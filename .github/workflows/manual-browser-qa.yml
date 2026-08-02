@@ -17,12 +17,24 @@ permissions:
 jobs:
   browser-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 90
     env:
       QA_BASE_URL: http://127.0.0.1:4173
       PLAYWRIGHT_HTML_OPEN: never
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact checkout identity
+        shell: bash
+        run: |
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          actual="$(git rev-parse HEAD)"
+          printf 'expected=%s\nactual=%s\n' "$expected" "$actual"
+          test "$actual" = "$expected"
+          printf 'tested_commit=%s\n' "$actual" > manual-browser-tested-head.txt
 
       - uses: actions/setup-node@v4
         with:
@@ -56,8 +68,10 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: production-build-diagnostics
-          path: production-build.log
+          name: production-build-diagnostics-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            production-build.log
+            manual-browser-tested-head.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -81,7 +95,7 @@ jobs:
           cat preview.log
           exit 1
 
-      - name: Run Chromium, Android Chrome and iPhone Safari QA
+      - name: Run Chromium and Android Chrome QA
         run: >-
           npx playwright test
           qa/manual-e2e.spec.mjs
@@ -89,7 +103,6 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
-          qa/mobile-home-webkit.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
@@ -98,31 +111,28 @@ jobs:
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
-          --reporter=line,html
+          --reporter=line
+
+      - name: Run iPhone Safari QA in fresh browser processes
+        if: ${{ always() && steps.production_build.outcome == 'success' }}
+        run: node scripts/run-webkit-process-isolated.mjs
 
       - name: Run dedicated premium homepage and pointer-performance matrix
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         id: home_polish
         run: |
-          set +e
-          npx playwright test \
-            qa/home-polish.spec.mjs \
-            qa/home-labels.spec.mjs \
-            qa/home-ambient.spec.mjs \
-            --config=playwright.home-polish.config.mjs \
-            --workers=1 \
-            --reporter=line > home-polish.log 2>&1
-          status=$?
-          cat home-polish.log
-          exit $status
+          set -o pipefail
+          node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
 
       - name: Upload visual QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: manual-browser-qa-evidence
+          name: manual-browser-qa-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             qa-artifacts
             playwright-report
@@ -130,5 +140,6 @@ jobs:
             preview.log
             production-build.log
             home-polish.log
+            manual-browser-tested-head.txt
           if-no-files-found: warn
           retention-days: 7

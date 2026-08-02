@@ -6,6 +6,9 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260801-22';
 const SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
+const PARALLAX = 'spring-awakening-v5';
+const TIMESTEP = 'bounded-substeps-v1';
+const NORMALIZATION = 'rendered-box-v1';
 const routes = ['/', '/poets', '/ratings', '/articles', '/music', '/archive', '/about'];
 const layers = ['atmosphere', 'energy', 'figure', 'folds', 'hood', 'hood-layers', 'face-void', 'face-depth', 'collar', 'rim-light', 'texture', 'seams'];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
@@ -38,7 +41,14 @@ async function variables(mark) {
   });
 }
 
-test('preserved v17 art is served under depth-first awakening v4', async ({ page, request }) => {
+async function expectMotionContract(mark) {
+  await expect(mark).toHaveAttribute('data-brand-parallax', PARALLAX);
+  await expect(mark).toHaveAttribute('data-brand-motion-timestep', TIMESTEP);
+  await expect(mark).toHaveAttribute('data-brand-motion-normalization', NORMALIZATION);
+  await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
+}
+
+test('preserved v17 art is served under frame-invariant awakening v5', async ({ page, request }) => {
   expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
   for (const asset of ['brand-emblem.svg', 'brand-mark-micro.svg', 'brand-emblem-mask.svg']) {
     const response = await request.get(`${BASE_URL}/${asset}?v=${Date.now()}`);
@@ -65,7 +75,7 @@ test('standalone and micro marks decode at all optical gates', async ({ page }) 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('v18.4 keeps the root contained while internal layers separate strongly', async ({ page }) => {
+test('v18.6 keeps the root contained while frame-invariant internal layers separate strongly', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -74,8 +84,7 @@ test('v18.4 keeps the root contained while internal layers separate strongly', a
   await expect(mark).toBeVisible();
   await expect(mark).toHaveAttribute('data-brand-version', VERSION);
   await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
-  await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
-  await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
+  await expectMotionContract(mark);
   for (const hook of ['vector', 'figure', 'hood', 'cloak', 'face-void', 'face-depth', 'rim-light', 'folds', 'upper-folds', 'epic-folds', 'collar', 'throat', 'atmosphere', 'energy', 'texture', 'seams', 'hood-layers', 'neck-shadow']) {
     await expect(mark.locator(`[data-brand-${hook}]`)).toBeAttached();
   }
@@ -140,6 +149,7 @@ test('v18.4 keeps the root contained while internal layers separate strongly', a
 test('touch does not awaken pointer depth', async ({ page }) => {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
+  await expectMotionContract(mark);
   await mark.dispatchEvent('pointerenter', { pointerType: 'touch', clientX: 20, clientY: 20 });
   await mark.dispatchEvent('pointermove', { pointerType: 'touch', clientX: 30, clientY: 10 });
   await page.waitForTimeout(180);
@@ -150,6 +160,7 @@ test('reduced motion is stationary with light-only emphasis', async ({ page }) =
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   const mark = page.locator('header [data-brand-mark]').first();
+  await expectMotionContract(mark);
   const box = await mark.boundingBox();
   const before = await layerState(mark);
   await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.2);
@@ -166,12 +177,11 @@ test('reduced motion is stationary with light-only emphasis', async ({ page }) =
 });
 
 for (const route of routes) {
-  test(`${route}: header and footer use depth-first awakening v4`, async ({ page }) => {
+  test(`${route}: header and footer use frame-invariant awakening v5`, async ({ page }) => {
     expect((await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
     for (const mark of [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()]) {
       await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
-      await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v4');
-      await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
+      await expectMotionContract(mark);
       expect(await mark.locator('image,rect,line,polyline,foreignObject').count()).toBe(0);
     }
   });
