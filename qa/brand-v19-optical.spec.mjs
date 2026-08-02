@@ -5,9 +5,11 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
 const ledger = JSON.parse(fs.readFileSync(path.resolve('qa/brand-marathon-pass-ledger.json'), 'utf8'));
-const candidate = ledger.opticalCandidate.file.replace(/^public\//, '');
+const candidate = ledger.opticalCandidate.file;
+const candidatePath = candidate.replace(/^public\//, '');
 const candidateId = ledger.opticalCandidate.id;
 const sizes = ledger.opticalCandidate.opticalSizes;
+const candidateData = `data:image/svg+xml;base64,${fs.readFileSync(path.resolve(candidate)).toString('base64')}`;
 const reference = `data:image/webp;base64,${fs.readFileSync(path.resolve('qa/reference/brand-emblem-canonical-reference.webp')).toString('base64')}`;
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -66,7 +68,7 @@ async function alphaBounds(page, selector) {
 
 test('v19.17 optical candidate is semantic SVG and isolated from production', async ({ request }) => {
   const [candidateResponse, publicProductionResponse, microProductionResponse] = await Promise.all([
-    request.get(`${BASE_URL}/${candidate}?v=${Date.now()}`),
+    request.get(`${BASE_URL}/${candidatePath}?v=${Date.now()}`),
     request.get(`${BASE_URL}/brand-emblem.svg?v=${Date.now()}`),
     request.get(`${BASE_URL}/brand-mark-micro.svg?v=${Date.now()}`),
   ]);
@@ -96,7 +98,7 @@ test('reference, production and v19.17 optical candidate remain readable at medi
     <h2>${size}px</h2>
     <figure><div><img width=${size} height=${size} src="${reference}"></div><figcaption>REFERENCE</figcaption></figure>
     <figure><div><img width=${size} height=${size} src="${BASE_URL}/brand-emblem.svg?v=${Date.now()}"></div><figcaption>CURRENT PRODUCTION</figcaption></figure>
-    <figure><div><img data-optical-size="${size}" width=${size} height=${size} src="${BASE_URL}/${candidate}?v=${Date.now()}"></div><figcaption>V19.17 OPTICAL</figcaption></figure>
+    <figure><div><img data-optical-size="${size}" width=${size} height=${size} src="${candidateData}"></div><figcaption>V19.17 OPTICAL</figcaption></figure>
   </section>`).join('');
   await page.setContent(`<style>
     *{box-sizing:border-box}html,body{margin:0;background:#03070d;color:#dcf8ff;font:14px system-ui}main{padding:28px}h1{margin:0 0 8px}.sub{color:#8fbcc8;margin-bottom:24px;max-width:1080px;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}section{display:grid;gap:10px;text-align:center}h2{margin:0}figure{margin:0;display:grid;gap:7px}figure div{height:190px;display:grid;place-items:center;background:#010306;border:1px solid #18313a}figcaption{font-size:12px;color:#8fbcc8}

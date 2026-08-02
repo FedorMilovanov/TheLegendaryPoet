@@ -36,6 +36,10 @@ export default defineConfig({
     },
     {
       name: 'home-iphone-safari',
+      // The isolated mobile-home-webkit suite checks these exact four principal
+      // sections without the duplicate cumulative scroll pass that can terminate
+      // Linux WebKit after the core matrix.
+      grepInvert: /real stepped scrolling reveals all principal homepage sections/,
       use: {
         ...devices['iPhone 15 Pro'],
         browserName: 'webkit',

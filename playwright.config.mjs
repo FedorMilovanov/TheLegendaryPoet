@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(mobile-platforms|yesenin-part-one|articles-catalog|hover-stability|brand-v19-micro|brand-v19-optical)\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-v19-micro|brand-v19-optical)\.spec\.mjs/;
 
 export default defineConfig({
   testDir: './qa',
@@ -24,7 +24,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-core',
-      testIgnore: /mobile-platforms\.spec\.mjs/,
+      testIgnore: /(mobile-platforms|mobile-home-webkit)\.spec\.mjs/,
       use: {
         browserName: 'chromium',
       },
@@ -43,6 +43,13 @@ export default defineConfig({
     {
       name: 'iphone-safari',
       testMatch: mobileSpec,
+      // mobile-home-webkit supplies isolated fresh-context equivalents for the
+      // cumulative route-scroll and dock/search tests below. Other Safari tests
+      // in mobile-platforms remain active.
+      grepInvert: [
+        /mobile engine rendering, safe area, images and runtime/,
+        /mobile dock, search sheet and tap targets remain usable/,
+      ],
       use: {
         ...devices['iPhone 15 Pro'],
         browserName: 'webkit',
