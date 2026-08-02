@@ -4,81 +4,44 @@
   "measurementMethod": {
     "kind": "manual landmark extraction constrained by luminous rim, black negative-space boundary and occupied cloak silhouette",
     "canvas": [256, 256],
-    "notes": [
-      "Aura is excluded from figure geometry.",
-      "The cloak box follows the dark monolithic silhouette, not the outer electrical field.",
-      "The face box follows the dominant black cavern inside the hood.",
-      "Pixel landmarks are review anchors; browser getBBox() remains the exact candidate gate."
-    ]
+    "notes": ["Aura is excluded from figure geometry.","The cloak box follows the dark monolithic silhouette, not the outer electrical field.","The face box follows the dominant black cavern inside the hood.","Pixel landmarks are review anchors; browser getBBox() remains the exact candidate gate."]
   },
   "referenceLandmarks": {
-    "occupiedFigure": { "x": 29, "y": 31, "width": 197, "height": 224 },
-    "cloak": { "x": 29, "y": 104, "width": 197, "height": 151 },
-    "hood": { "x": 90, "y": 31, "width": 76, "height": 80 },
-    "faceCavern": { "x": 98, "y": 49, "width": 60, "height": 59 },
-    "shoulderEnvelope": { "left": [29, 211], "right": [226, 213] },
-    "hoodApex": [128, 31],
-    "cowlBand": { "topY": 104, "bottomY": 129 },
-    "foldFamilies": {
-      "leftDiagonalDegrees": [-49, -40, -31],
-      "rightDiagonalDegrees": [31, 40, 50],
-      "centralDegrees": [-4, 0, 5]
-    }
+    "occupiedFigure": {"x":29,"y":31,"width":197,"height":224},
+    "cloak": {"x":29,"y":104,"width":197,"height":151},
+    "hood": {"x":90,"y":31,"width":76,"height":80},
+    "faceCavern": {"x":98,"y":49,"width":60,"height":59},
+    "shoulderEnvelope": {"left":[29,211],"right":[226,213]},
+    "hoodApex": [128,31],
+    "cowlBand": {"topY":104,"bottomY":129},
+    "foldFamilies": {"leftDiagonalDegrees":[-49,-40,-31],"rightDiagonalDegrees":[31,40,50],"centralDegrees":[-4,0,5]}
   },
-  "referenceRatios": {
-    "hoodHeightToVisibleFigureHeight": 0.357143,
-    "hoodWidthToCloakWidth": 0.385787,
-    "faceCavernWidthToHoodWidth": 0.789474,
-    "cloakWidthToHoodWidth": 2.592105
-  },
-  "contract": {
-    "hoodHeightToVisibleFigureHeight": [0.27, 0.36],
-    "hoodWidthToCloakWidth": [0.32, 0.43],
-    "faceCavernWidthToHoodWidth": [0.68, 0.86],
-    "cloakWidthToHoodWidthMinimum": 2.3
-  },
+  "referenceRatios": {"hoodHeightToVisibleFigureHeight":0.357143,"hoodWidthToCloakWidth":0.385787,"faceCavernWidthToHoodWidth":0.789474,"cloakWidthToHoodWidth":2.592105},
+  "contract": {"hoodHeightToVisibleFigureHeight":[0.27,0.36],"hoodWidthToCloakWidth":[0.32,0.43],"faceCavernWidthToHoodWidth":[0.68,0.86],"cloakWidthToHoodWidthMinimum":2.3},
   "candidates": [
     {
-      "id": "v20.6-reference-monolith",
+      "id": "v20.7-reference-draped-monolith",
       "file": "public/brand-emblem-v20-candidate.svg",
-      "designGrid": [96, 96],
-      "reviewSizes": [64, 96, 128, 256],
-      "boxes": {
-        "cloak": { "x": 0.9, "y": 34.6888, "width": 94.2, "height": 61.3112 },
-        "hood": { "x": 30.2, "y": 7.2, "width": 36.0, "height": 31.8 },
-        "faceCavern": { "x": 35.4, "y": 13.5, "width": 25.4, "height": 23.9 }
-      },
-      "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.358108,
-        "hoodWidthToCloakWidth": 0.382166,
-        "faceCavernWidthToHoodWidth": 0.705556,
-        "cloakWidthToHoodWidth": 2.616667
-      },
+      "designGrid": [96,96],
+      "reviewSizes": [64,96,128,256],
+      "boxes": {"cloak":{"x":0.8,"y":34.6884,"width":94.4,"height":61.3116},"hood":{"x":30.1,"y":7.2,"width":36.2,"height":31.8},"faceCavern":{"x":34.4,"y":13.3,"width":27.4,"height":24.2}},
+      "ratios": {"hoodHeightToVisibleFigureHeight":0.358108,"hoodWidthToCloakWidth":0.383475,"faceCavernWidthToHoodWidth":0.756906,"cloakWidthToHoodWidth":2.607735},
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.6 removes the dome aura and blur, converts the cavity to an angular pentagonal void, replaces the ribbon collar with three sagging overlapping masses, restores a triangular monolithic cloak and reduces the fold system to broad asymmetric planes. Exact committed overlay review remains mandatory."
+      "reason": "v20.7 widens the cavern toward the canonical 0.789 ratio, rebuilds the collar as unequal crossing drapery rather than stacked chevrons, adds organic field forks without blur and keeps the cloak a continuous dark body. Exact committed overlay remains mandatory."
     },
     {
-      "id": "v20.4-reference-micro-monolith",
+      "id": "v20.5-reference-micro-optical",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
-      "designGrid": [32, 32],
-      "reviewSizes": [16, 20, 24, 32, 48],
-      "boxes": {
-        "cloak": { "x": 0.3, "y": 11.4916, "width": 31.4, "height": 20.5084 },
-        "hood": { "x": 9.9, "y": 2.4, "width": 12.2, "height": 10.6 },
-        "faceCavern": { "x": 11.7, "y": 4.4, "width": 8.6, "height": 8.0 }
-      },
-      "ratios": {
-        "hoodHeightToVisibleFigureHeight": 0.358108,
-        "hoodWidthToCloakWidth": 0.388535,
-        "faceCavernWidthToHoodWidth": 0.704918,
-        "cloakWidthToHoodWidth": 2.573770
-      },
+      "designGrid": [32,32],
+      "reviewSizes": [16,20,24,32,48],
+      "boxes": {"cloak":{"x":0.2,"y":11.4916,"width":31.6,"height":20.5084},"hood":{"x":9.8,"y":2.4,"width":12.4,"height":10.6},"faceCavern":{"x":11.4,"y":4.3,"width":9.2,"height":8.2}},
+      "ratios": {"hoodHeightToVisibleFigureHeight":0.358108,"hoodWidthToCloakWidth":0.392405,"faceCavernWidthToHoodWidth":0.741935,"cloakWidthToHoodWidth":2.548387},
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro master breaks the former continuous A-like rim, keeps the black cavern open, uses three overlapping cowl masses and removes blur so 16–32px identity is carried by silhouette rather than cyan outline. Exact dark/light optical evidence remains mandatory."
+      "reason": "The independent micro optical master widens the black cavern, uses unequal crossing cowl masses and adds four separated bright edge anchors so dark 16–20px identity can improve without recreating a continuous cyan A outline. Exact diagnostics remain mandatory."
     }
   ],
   "promotionPolicy": "Numeric eligibility is necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
