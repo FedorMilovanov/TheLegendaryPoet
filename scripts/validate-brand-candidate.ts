@@ -48,7 +48,7 @@ type Ledger = {
 };
 
 type Audit = {
-  auditId: string;
+  referenceId: string;
   activeCandidateId: string;
   activeCandidateFile: string;
   activeOpticalCandidateId: string;
@@ -110,7 +110,10 @@ assert.match(ledger.geometryCandidate.decision, /pending exact-main visual revie
 assert.ok(ledger.geometryCandidate.targets.length >= 8);
 
 assert.equal(opticalId, 'v19.17-reference-optical-redraw');
-assert.match(optical, /<svg\b[^>]*viewBox="0 0 96 96"/);
+// v19.17 is an independent medium optical master authored on a 64×64 grid.
+// Rendering targets remain 96/64/56/44px; the viewBox is the vector design
+// coordinate system and must not be rewritten to mimic a rendered CSS size.
+assert.match(optical, /<svg\b[^>]*viewBox="0 0 64 64"/);
 assert.match(optical, new RegExp(`data-brand-optical-candidate="${opticalId}"`));
 assert.ok(optical.trimEnd().endsWith('</svg>'));
 assert.doesNotMatch(optical, /<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i);
@@ -195,4 +198,4 @@ for (const productionSource of [production, productionPublic, productionMicro, c
   assert.doesNotMatch(productionSource, /brand-emblem-v19-(?:optical-|micro-)?candidate/);
 }
 
-console.log('brand candidate validation: seventeen passes are locked; v19.11 full-size, v19.17 optical and v19.14 micro remain isolated from production');
+console.log('brand candidate validation: seventeen passes are locked; v19.11 full-size, v19.17 optical 64-grid master and v19.14 micro remain isolated from production');
