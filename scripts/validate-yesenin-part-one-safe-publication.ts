@@ -9,16 +9,37 @@ if (!article) throw new Error(`public essay is not registered: ${slug}`);
 
 const sections = article.blocks.filter((block) => block.type === 'section');
 const authored = article.blocks.filter((block) => block.type !== 'section');
+const mythBlocks = article.blocks.filter(
+  (block): block is Extract<EssayBlock, { type: 'note'; variant: 'myth' }> =>
+    block.type === 'note' && block.variant === 'myth',
+);
 const images = article.blocks.filter(
   (block): block is Extract<EssayBlock, { type: 'image' }> => block.type === 'image',
 );
 
 if (sections.length !== 12) throw new Error(`expected 12 sections, found ${sections.length}`);
-if (authored.length !== 140) throw new Error(`expected 140 reader-facing blocks, found ${authored.length}`);
-if (article.blocks.length !== 152) throw new Error(`expected 152 render blocks, found ${article.blocks.length}`);
+if (authored.length !== 141) throw new Error(`expected 141 reader-facing blocks, found ${authored.length}`);
+if (article.blocks.length !== 153) throw new Error(`expected 153 render blocks, found ${article.blocks.length}`);
 if (article.blocks.filter((block) => block.type === 'lead').length !== 1) throw new Error('expected one lead');
-if (article.blocks.filter((block) => block.type === 'note').length !== 1) throw new Error('expected one note');
+if (article.blocks.filter((block) => block.type === 'note').length !== 2) throw new Error('expected two notes');
+if (mythBlocks.length !== 1) throw new Error(`expected one myth check, found ${mythBlocks.length}`);
 if (images.length !== 0) throw new Error('closed documentary images entered the public article');
+
+const schoolMyth = mythBlocks[0];
+if (!schoolMyth.claim.includes('церковно-учительской школе')) {
+  throw new Error('Spas-Klepiki school-name myth claim changed');
+}
+if (schoolMyth.verdict !== 'false') {
+  throw new Error(`school-name myth verdict drifted to ${schoolMyth.verdict}`);
+}
+for (const sourceId of ['ye1-feb-chronicle-1909', 'ye1-feb-chronicle-1912']) {
+  if (!schoolMyth.sourceIds?.includes(sourceId)) {
+    throw new Error(`school-name myth lost required source: ${sourceId}`);
+  }
+}
+if (!schoolMyth.text.includes('второклассную учительскую школу духовного ведомства')) {
+  throw new Error('school-name myth lost the exact documented institution name');
+}
 
 const sources = article.sources ?? [];
 if (sources.length !== 64) throw new Error(`expected 64 source cards, found ${sources.length}`);
@@ -77,6 +98,7 @@ for (const required of [
   'ещё не является готовым свидетельством зрелой веры',
   'не принадлежит биографу',
   'видимо, 3 октября 1921 года',
+  'второклассную учительскую школу духовного ведомства',
 ]) {
   if (!readerText.includes(required)) throw new Error(`required public boundary is missing: ${required}`);
 }
@@ -102,5 +124,5 @@ if (article.series?.part !== 1 || article.series.total !== 2) {
 }
 
 console.log(
-  `Yesenin Part I public: ${sections.length} sections, ${authored.length} blocks, ${sources.length} sources, ${images.length} in-body images, approved reconstruction=${coverSha256}`,
+  `Yesenin Part I public: ${sections.length} sections, ${authored.length} blocks, ${mythBlocks.length} myth check, ${sources.length} sources, ${images.length} in-body images, approved reconstruction=${coverSha256}`,
 );
