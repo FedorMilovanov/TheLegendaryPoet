@@ -31,6 +31,7 @@ The detailed Part II outline establishes a usable writing order, but full reader
 
 - `YESENIN_DAY_LEVEL_CHRONOLOGY_1921_PASS_01_2026-08.md` — first controlled year segment: publications, failed foreign-travel request, Turkestan, `Пугачев`, Imagist infrastructure, Duncan meeting boundary, divorce and exact poster/publication corrections.
 - `YESENIN_DAY_LEVEL_CHRONOLOGY_1922_PASS_01_2026-08.md` — marriage/passport sequence, Berlin publishing, documented European stops versus plans, New York arrival, immigration/press boundary and foreign-work categories.
+- `YESENIN_DAY_LEVEL_CHRONOLOGY_1923_PASS_01_2026-08.md` — late New York, qualified departure, delayed European return, `Железный Миргород`, Miklashevskaya/Benislavskaya contact, cafe records and two distinct legal cases.
 - `YESENIN_EUROPE_AMERICA_ROUTE_SOURCE_MAP_1922_1923_2026-08.md` — broad route and source map.
 - `YESENIN_FOREIGN_WORK_MATRIX_1922_1923_2026-08.md` — work/publication matrix.
 - `YESENIN_US_TOUR_DAY_LEVEL_PASS_01_2026-08.md` — late New York anchors and the qualified 3–4 February 1923 departure interval.
@@ -60,6 +61,20 @@ Standing anti-regression examples from the pass:
 - `published abroad` does not mean `written abroad`;
 - immigration scrutiny is not deportation;
 - an advertised tour city needs its own completion witness.
+
+### 1923 chronology consequence
+
+The return year is divided into literary, relational, economic and legal lines instead of one collapse narrative.
+
+Standing anti-regression examples from the pass:
+
+- `Железный Миргород` has an American subject but a Moscow autograph dated 14 August;
+- the 21 August “report” was a public conversation/performance, not a stenographic policy lecture;
+- manuscript and newspaper versions of the essay differ;
+- printed order of `Любовь хулигана` is not a day-by-day composition calendar;
+- a cafe account proves an account, not personal consumption of every listed item;
+- the September cafe case and the November four-poets case are separate legal files;
+- Duncan correspondence continues after the Moscow return.
 
 ### Critical US date correction
 
