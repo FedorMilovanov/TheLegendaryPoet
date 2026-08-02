@@ -22,7 +22,19 @@ jobs:
       QA_BASE_URL: http://127.0.0.1:4173
       PLAYWRIGHT_HTML_OPEN: never
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify exact checkout identity
+        shell: bash
+        run: |
+          expected='${{ github.event.pull_request.head.sha || github.sha }}'
+          actual="$(git rev-parse HEAD)"
+          printf 'expected=%s\nactual=%s\n' "$expected" "$actual"
+          test "$actual" = "$expected"
+          printf 'tested_commit=%s\n' "$actual" > manual-browser-tested-head.txt
 
       - uses: actions/setup-node@v4
         with:
@@ -56,8 +68,10 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: production-build-diagnostics
-          path: production-build.log
+          name: production-build-diagnostics-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            production-build.log
+            manual-browser-tested-head.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -118,7 +132,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: manual-browser-qa-evidence
+          name: manual-browser-qa-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             qa-artifacts
             playwright-report
@@ -126,5 +140,6 @@ jobs:
             preview.log
             production-build.log
             home-polish.log
+            manual-browser-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
