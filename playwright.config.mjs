@@ -43,9 +43,13 @@ export default defineConfig({
     {
       name: 'iphone-safari',
       testMatch: mobileSpec,
-      // The generic home route is skipped inside mobile-platforms only for this
-      // project. mobile-home-webkit supplies the equivalent bounded audit while
-      // every other generic mobile route remains active in Safari.
+      // mobile-home-webkit supplies isolated fresh-context equivalents for the
+      // cumulative route-scroll and dock/search tests below. Other Safari tests
+      // in mobile-platforms remain active.
+      grepInvert: [
+        /mobile engine rendering, safe area, images and runtime/,
+        /mobile dock, search sheet and tap targets remain usable/,
+      ],
       use: {
         ...devices['iPhone 15 Pro'],
         browserName: 'webkit',
