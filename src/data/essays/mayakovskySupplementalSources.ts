@@ -58,6 +58,27 @@ export const mayakovskyEarlySupplementalSources: EssaySource[] = [
   },
 ];
 
+export const mayakovskyLateSupplementalSources: EssaySource[] = [
+  {
+    id: 'museum-stalin-brik-1935',
+    title: 'Письмо Лили Брик Сталину и резолюция о наследии Маяковского',
+    url: 'https://muzeimayakovskogo.ru/museum/istoriya-muzeya/istoriya-muzeya-1938-1940/',
+    kind: 'archive',
+    institution: 'Государственный музей В. В. Маяковского',
+    year: 1935,
+    note: 'Музейная публикация письма и хронологии государственной канонизации через пять лет после смерти поэта.',
+  },
+  {
+    id: 'rgali-brik-stalin-letter-1935',
+    title: 'Письмо Л. Ю. Брик И. В. Сталину об издании произведений Маяковского',
+    url: 'https://www.rgali.ru/storage-unit?fundId=6710&opisId=6349&systemId=175962',
+    kind: 'archive',
+    institution: 'РГАЛИ',
+    year: 1935,
+    note: 'Архивная запись письма от 24 ноября 1935 года; фиксирует документальную дату обращения.',
+  },
+];
+
 export const brikSupplementalSources: EssaySource[] = [
   {
     id: 'brik-photo-mayakovsky-lilya-1915',
