@@ -1,0 +1,129 @@
+{
+  "auditId": "brand-reference-motion-deep-audit-2026-08-02",
+  "auditedMainSha": "f068596e6096b3bf7f07ad3c2f9b4b998d517f5a",
+  "referenceId": "canonical-hooded-figure-v2-clean-base",
+  "referenceDecision": "not-reference-approved",
+  "method": {
+    "geometry": "SVG getBBox ratios against qa/reference/brand-reference-contract.json; browser artifact is authoritative",
+    "visual": "exact-head Playwright matrices reviewed at 256, 192, 128, 96, 64, 56, 44, 32, 24 and 16 pixels",
+    "motion": "source audit, exact-head endpoint evidence, pointer-performance evidence and deterministic spring integration at 30/60/90/120/144 Hz",
+    "rule": "green CI proves stability, not reference similarity"
+  },
+  "contractMeasurements": [
+    {
+      "id": "production-v17",
+      "file": "public/brand-emblem.svg",
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.3303,
+        "hoodWidthToCloakWidth": 0.2784,
+        "faceCavernWidthToHoodWidth": 0.6404,
+        "cloakWidthToHoodWidth": 3.5921
+      },
+      "passes": {
+        "hoodHeightToVisibleFigureHeight": true,
+        "hoodWidthToCloakWidth": false,
+        "faceCavernWidthToHoodWidth": false,
+        "cloakWidthToHoodWidth": true
+      },
+      "approvalEligible": false
+    },
+    {
+      "id": "v19.11-full-size",
+      "file": "public/brand-emblem-v19-candidate.svg",
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.3738,
+        "hoodWidthToCloakWidth": 0.3882,
+        "faceCavernWidthToHoodWidth": 0.6384,
+        "cloakWidthToHoodWidth": 2.5763
+      },
+      "passes": {
+        "hoodHeightToVisibleFigureHeight": false,
+        "hoodWidthToCloakWidth": true,
+        "faceCavernWidthToHoodWidth": false,
+        "cloakWidthToHoodWidth": true
+      },
+      "approvalEligible": false
+    },
+    {
+      "id": "v19.17-optical",
+      "file": "public/brand-emblem-v19-optical-candidate.svg",
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.3805,
+        "hoodWidthToCloakWidth": 0.3803,
+        "faceCavernWidthToHoodWidth": 0.6552,
+        "cloakWidthToHoodWidth": 2.6293
+      },
+      "passes": {
+        "hoodHeightToVisibleFigureHeight": false,
+        "hoodWidthToCloakWidth": true,
+        "faceCavernWidthToHoodWidth": false,
+        "cloakWidthToHoodWidth": true
+      },
+      "approvalEligible": false
+    },
+    {
+      "id": "v19.14-micro",
+      "file": "public/brand-emblem-v19-micro-candidate.svg",
+      "ratios": {
+        "hoodHeightToVisibleFigureHeight": 0.4306,
+        "hoodWidthToCloakWidth": 0.4643,
+        "faceCavernWidthToHoodWidth": 0.6462,
+        "cloakWidthToHoodWidth": 2.1538
+      },
+      "passes": {
+        "hoodHeightToVisibleFigureHeight": false,
+        "hoodWidthToCloakWidth": false,
+        "faceCavernWidthToHoodWidth": false,
+        "cloakWidthToHoodWidth": false
+      },
+      "approvalEligible": false
+    }
+  ],
+  "visualEvidence": {
+    "artifact": "qa-artifacts/brand-v19-candidate-comparison-matrix.png",
+    "at128px": {
+      "reference": { "meanLuminance": 0.0541, "leftRightIrregularity": 0.1233 },
+      "production": { "meanLuminance": 0.0378, "leftRightIrregularity": 0.0146 },
+      "v19.11": { "meanLuminance": 0.0353, "leftRightIrregularity": 0.0308 }
+    },
+    "finding": "production and v19.11 remain substantially darker and much more regular than the canonical electrical field; v19.11 gains mass but introduces an armor-like horizontal cowl and still undersizes the face cavern"
+  },
+  "motionEvidence": {
+    "currentPointerPerformance": {
+      "samples": 109,
+      "p95FrameLatencyMs": 1.1,
+      "maxFrameLatencyMs": 5.2,
+      "interactionLongTasks": 0
+    },
+    "springSimulation": {
+      "refreshRatesHz": [30, 60, 90, 120, 144],
+      "entry95PercentRangeMs": [243, 350],
+      "returnToOnePercentRangeMs": [472, 733],
+      "directionOvershootMaximumPercent": 1.12,
+      "wakeOvershootMaximumPercent": 3.7,
+      "cornerReversalZeroCrossRangeMs": [125, 150],
+      "frameGapPolicy": "dt is capped at 32 ms, so long stalls slow wall-clock convergence instead of causing a visual teleport"
+    },
+    "blockingDefect": "translations were fixed pixels across transformed 48, 64 and 96 pixel marks, so relative depth changed with rendered size",
+    "correction": "spring-awakening-v4 with rendered-box-v1 scales all translation channels from the rendered bounding box around a neutral 64 pixel design size"
+  },
+  "revisedScores": {
+    "macroProportions": 0.66,
+    "hoodAndCavern": 0.58,
+    "collarAndFolds": 0.50,
+    "cloakSilhouette": 0.68,
+    "rimAndAura": 0.55,
+    "microReadability": 0.57,
+    "interactionQuality": 0.90,
+    "overall": 0.63
+  },
+  "blockingDeviations": [
+    "production hood width is below the reference contract and the face cavern is too narrow",
+    "v19.11 and v19.17 broaden the hood but still fail face-cavern width and hood-height ratios",
+    "v19.14 micro fails all four macro-ratio gates and does not preserve the canonical shoulder-to-hood relationship",
+    "the cowl remains cleaner and more horizontal than the crushed gathered cloth in the reference",
+    "the aura remains too regular and mirror-like; reference irregularity is materially higher",
+    "at 24 and 16 pixels the identity collapses primarily to a cyan hood arc rather than a broad black cavern and heavy shoulder mass"
+  ],
+  "nextRequiredAction": "produce a new reference-led geometry family from shared landmarks: widen the face cavern to at least 0.68 of hood width, reduce hood-height ratio into 0.27-0.36, preserve hood/cloak width in 0.32-0.43, and redesign micro separately before any production replacement"
+}
