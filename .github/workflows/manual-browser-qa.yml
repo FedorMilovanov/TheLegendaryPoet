@@ -93,6 +93,7 @@ jobs:
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
+          qa/brand-deep-audit.spec.mjs
           qa/brand-v19-optical.spec.mjs
           qa/brand-v19-micro.spec.mjs
           qa/hover-stability.spec.mjs
