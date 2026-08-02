@@ -1,0 +1,39 @@
+{
+  "family": "brand-v20-reference-led",
+  "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
+  "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
+  "fullSizeCandidate": {
+    "id": "v20.3-reference-monolith",
+    "file": "public/brand-emblem-v20-candidate.svg",
+    "productionReplacement": false,
+    "numericGeometryEligible": true,
+    "reviewerDecision": "not-reference-approved",
+    "requiredReviewSizes": [64, 96, 128, 256]
+  },
+  "microCandidate": {
+    "id": "v20.1-reference-micro",
+    "file": "public/brand-emblem-v20-micro-candidate.svg",
+    "productionReplacement": false,
+    "numericGeometryEligible": true,
+    "reviewerDecision": "not-reference-approved",
+    "requiredReviewSizes": [16, 20, 24, 32, 48]
+  },
+  "separationOfConcerns": {
+    "geometry": "static candidate SVGs only",
+    "motion": "existing production controller remains detached until static approval",
+    "production": "src/components/brandEmblemV18.svg, public/brand-emblem.svg, public/brand-mark-micro.svg and BrandMark.tsx remain unchanged"
+  },
+  "evidenceArtifacts": [
+    "qa-artifacts/brand-v20-contract-metrics.json",
+    "qa-artifacts/brand-v20-reference-comparison.png",
+    "qa-artifacts/brand-v20-micro-diagnostics.png"
+  ],
+  "promotionBlockers": [
+    "explicit human overlay verdict is missing",
+    "full-size optical review must pass at 64, 96, 128 and 256px",
+    "micro dark/light review must pass at 16, 20, 24, 32 and 48px",
+    "motion has not been attached to the v20 semantic groups",
+    "all required workflows have not yet passed on one exact v20 head"
+  ],
+  "promotionPolicy": "Never treat numericGeometryEligible, CI success or motion quality as reference approval."
+}
