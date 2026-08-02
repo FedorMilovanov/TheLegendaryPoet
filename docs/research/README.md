@@ -13,11 +13,14 @@ This directory contains the active research and production ledgers for the curre
 ## Core standards and production ledgers
 
 - `YESENIN_PART_II_SOURCE_MAP_SEED_2026-08.md` — claim/source architecture for the second biography volume.
+- `YESENIN_PART_II_DETAILED_OUTLINE_PASS_01_2026-08.md` — 16-chapter authoring contract with word budgets, claims, source modules, myth checks, visual slots and anti-duplication boundaries. It is not reader text and does not authorise a route.
 - `ESSAY_VISUAL_MARATHON_2026-08.md` — visual dramaturgy for five published essays.
 - `DRIVE_VISUAL_INVENTORY_PASS_01_2026-08.md` — first Google Drive archive audit.
 - `COVER_REPLACEMENT_LEDGER_2026-08.md` — approved generated cover candidates and atomic replacement requirements.
 - `FACT_CHECK_CHECKLIST_2026-08.md` — reader-text, moral, biblical, visual and technical verification.
 - `MARATHON_WORKLOG_2026-08-02.md` — completed work and open gates.
+
+The detailed Part II outline establishes a usable writing order, but full reader prose remains blocked until the 1921–1925 day-level chronology, page-level claim matrix, December 1925 table and documentary visual count are closed.
 
 ## Publication planning
 
@@ -58,6 +61,23 @@ Critical chronology:
 - the two texts are not identical;
 - both physical witnesses are required before a first-publication/variant investigation;
 - the accepted RGALI leaflet of 12 June 1921 is a later movement witness, not an image of the 1919 Declaration.
+
+### Yesenin's debut in `Мирок`
+
+- `YESENIN_MIROK_SOURCE_GATE_PASS_01_2026-08.md` — six exact 1914 periodical witnesses, page locations, pseudonym boundary and acquisition rules.
+
+Required witness map:
+
+1. `Береза` — book 1, January, page 10, signed `Аристон`;
+2. `Пороша` — book 2, February, page 46;
+3. `Село` — book 3, March, page 85, a free translation from Shevchenko;
+4. `Пасхальный благовест` — book 4, April, page 124;
+5. `С добрым утром!` — book 7, July, page 219;
+6. `Сиротка` — book 12, December, pages 364–368.
+
+Books 2 and 4 were reported as acquired in prior work, but current Drive keyword search does not surface them. Recover exact artifact/Drive IDs and SHA before any new upload. Books 1, 3, 7 and 12 remain unresolved. Catalogue arithmetic and guessed neighbouring object IDs are forbidden.
+
+Safe wording: `Береза` is Yesenin's first **known** publication, not a claim that every possible lost print has been disproved.
 
 These topics remain independent articles. Part II uses only compact biographical context and must not absorb their full source investigations.
 
