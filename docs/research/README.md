@@ -14,13 +14,27 @@ This directory contains the active research and production ledgers for the curre
 
 - `YESENIN_PART_II_SOURCE_MAP_SEED_2026-08.md` — claim/source architecture.
 - `YESENIN_PART_II_DETAILED_OUTLINE_PASS_01_2026-08.md` — 16-chapter authoring contract with word budgets, myth checks, visual slots and anti-duplication boundaries.
+- `YESENIN_PART_II_CLAIM_MATRIX_PASS_01_2026-08.md` — 55 high-load claims with safe formulas, statuses and controlling gates.
+- `YESENIN_PART_II_CHAPTER_SOURCE_COVERAGE_PASS_01_2026-08.md` — authoring-readiness map for all 16 chapters.
 - `ESSAY_VISUAL_MARATHON_2026-08.md` — visual dramaturgy for five published essays.
 - `DRIVE_VISUAL_INVENTORY_PASS_01_2026-08.md` — first Google Drive archive audit.
 - `COVER_REPLACEMENT_LEDGER_2026-08.md` — approved cover candidates and atomic replacement requirements.
 - `FACT_CHECK_CHECKLIST_2026-08.md` — reader-text, moral, biblical, visual and technical verification.
 - `MARATHON_WORKLOG_2026-08-02.md` — completed work and open gates.
 
-The outline is ready for controlled authoring, but reader prose remains blocked until the page-level claim matrix, December witness/document acquisition and documentary visual count are sufficient.
+The outline and claim architecture are ready for controlled authoring, but reader prose remains blocked until exact source IDs/pages, December witness/document acquisition and documentary visual coverage are sufficient.
+
+## First authoring packets
+
+These packets are paragraph-level drafting contracts, not finished article prose and not public routes:
+
+- `YESENIN_PART_II_AUTHORING_PACKET_CH01_1921_PASS_01_2026-08.md` — 1921 opening: books, group machinery, Turkestan, `Пугачев`, Duncan boundary and legal transition.
+- `YESENIN_PART_II_AUTHORING_PACKET_CH07_FOREIGN_WORK_PASS_01_2026-08.md` — classification of written, reworked, published, translated, planned and post-return work.
+- `YESENIN_PART_II_AUTHORING_PACKET_CH08_RETURN_1923_PASS_01_2026-08.md` — Moscow return, `Железный Миргород`, Duncan correspondence, Miklashevskaya, Benislavskaya and separate legal cases.
+- `YESENIN_PART_II_AUTHORING_PACKET_CH09_MOSKVA_KABATSKAYA_PASS_01_2026-08.md` — role, market and real dependence without duplicating the independent essay.
+- `YESENIN_PART_II_AUTHORING_PACKET_CH13_LATE_POETRY_PASS_01_2026-08.md` — late-poetry method: exact witness, form, context, what the poem illuminates and what it cannot prove.
+
+Next gate for these five packets: create stable article source IDs, pin exact pages/items and clear at least one documentary visual per chapter before producing reader prose.
 
 ## Publication planning
 
