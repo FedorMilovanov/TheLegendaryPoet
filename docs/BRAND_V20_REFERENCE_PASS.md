@@ -2,10 +2,25 @@
 
 ## Current QA-only pair
 
-- `v20.14-reference-electric-rim-volume` — full-size 96-grid master;
-- `v20.8-reference-micro-spectral-anchors` — independent 32-grid master.
+- `v20.15-reference-emissive-current` — full-size 96-grid master;
+- `v20.9-reference-micro-emissive-current` — independent 32-grid master.
 
 Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release manifests and the validated motion controller are unchanged.
+
+## Latest human correction
+
+The exact v20.14 result was rejected because the light still read as a separate aura behind the figure and its teal-cyan colour did not match the colder saturated electric-blue reference.
+
+v20.15 changes the construction rather than merely recolouring the same field:
+
+- the broad rear aura and the field-envelope acceptance gate are removed;
+- every full-size rear emission path shares the exact figure transform `translate(10.29 4.76) scale(.79 .95)`;
+- broad low-opacity blue strokes lie directly underneath the hood and cloak edges, so the opaque figure masks their inner halves and only edge-origin light remains visible;
+- no rear emission path uses a fill, closed aura mass or detached branch;
+- each rear path carries a named hood or cloak anchor;
+- the active palette moves from teal values to saturated electric blue: `#006eff`, `#0078ff`, `#007dff`, `#0081ff`, `#008cff`, `#009dff`, `#00a8ff` and brighter blue-white cores;
+- diagonal blue currents follow cloth folds inside the figure, reinforcing that the energy originates in the figure rather than surrounding it;
+- the figure remains almost black/deep navy, with the broad black face cavern and soft asymmetric drapery preserved.
 
 ## Honest iteration history
 
@@ -16,17 +31,18 @@ Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release 
 - **v20.7 / v20.5:** rejected for a broad clean shawl, oversized cowl zone and residual symmetric panel structure.
 - **v20.8 / v20.6:** exposed the missing square-composition contract: the cloak occupied 98.3% of the canvas instead of the canonical 76.9%.
 - **v20.9 / v20.6:** corrected the crop; rejected for an upper-only field, clean cloth planes and weak shoulder volume.
-- **v20.10 / v20.6:** exact all-green engineering pass; rejected for wire-like field topology, clean V-shaped cowl and weak small-size shoulder volume.
-- **v20.11 / v20.7:** exact all-green engineering pass; human review rejected detached root-like lines, a Shredder-like figure, light-gray values and incorrect clothing folds.
-- **v20.12 / v20.8:** exact all-green engineering pass; artifact inspection rejected the remaining broad smooth contour sheath and residual panel-like cloak construction.
-- **v20.13 / v20.8:** exact all-green engineering pass; artifact inspection found that the attached field still read as a broad teal hood outline and that the strongest light stopped too high on the silhouette.
-- **v20.14 / v20.8:** current QA-only iteration. Rear aura masses are reduced to faint irregular volume. Segmented electric-rim paths remain attached from the hood through the shoulders and down both cloak edges. The figure remains almost black and uses low-contrast asymmetric drapery.
+- **v20.10 / v20.6:** rejected for wire-like field topology, clean V-shaped cowl and weak small-size shoulder volume.
+- **v20.11 / v20.7:** human review rejected detached root-like lines, a Shredder-like figure, light-gray values and incorrect clothing folds.
+- **v20.12 / v20.8:** rejected for a broad smooth contour sheath and residual panel-like cloak construction.
+- **v20.13 / v20.8:** rejected because the attached field still read as a broad teal hood outline and stopped too high.
+- **v20.14 / v20.8:** rejected because the result still read as a separate aura and the glow colour was not the reference electric blue.
+- **v20.15 / v20.9:** current QA-only correction; rear light is authored on the exact silhouette transform and internal currents follow the cloth.
 
 ## Reference contracts
 
 ### Internal structure
 
-| Ratio | Canonical | Allowed | v20.14 full | v20.8 micro |
+| Ratio | Canonical | Allowed | v20.15 full | v20.9 micro |
 |---|---:|---:|---:|---:|
 | hood height / visible figure | 0.357 | 0.27–0.36 | 0.358 | 0.358 |
 | hood width / cloak width | 0.386 | 0.32–0.43 | 0.383 | 0.392 |
@@ -35,7 +51,7 @@ Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release 
 
 ### Full-size square composition
 
-| Ratio | Canonical | Allowed | v20.14 |
+| Ratio | Canonical | Allowed | v20.15 |
 |---|---:|---:|---:|
 | cloak width / canvas | 0.770 | 0.72–0.82 | 0.777 |
 | occupied figure height / canvas | 0.875 | 0.84–0.91 | 0.879 |
@@ -43,43 +59,28 @@ Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release 
 | cloak shoulder Y / canvas | 0.406 | 0.37–0.43 | 0.393 |
 | figure centre X / canvas | 0.498 | 0.47–0.53 | 0.502 |
 
-### Visible electrical-field envelope
+The canonical outer cyan envelope is retained as descriptive reference evidence only. It no longer forces the candidate to populate a detached rear field.
 
-| Ratio | Canonical | Allowed | v20.14 authored expectation |
-|---|---:|---:|---:|
-| field width / canvas | 0.820 | 0.76–0.90 | 0.858 |
-| field height / canvas | 0.770 | 0.68–0.82 | 0.746 |
-| field top Y / canvas | 0.047 | 0.02–0.09 | 0.073 |
-| field centre X / canvas | 0.500 | 0.46–0.54 | 0.496 |
+### Attached-emission gate
 
-Browser `getBBox()` verifies local path geometry. Browser `getBoundingClientRect()` separately verifies the transformed figure crop and the rendered union of rear, mid and front field groups.
+The browser audit now verifies:
 
-## v20.14 electric-rim-volume correction
-
-The full figure retains the static composition transform `translate(10.29 4.76) scale(.79 .95)`.
-
-Relative to v20.13 it:
-
-- reduces the broad teal rear volume so it no longer carries the primary light;
-- moves the strongest electric light onto segmented paths touching the hood, shoulders and full cloak edge;
-- extends the luminous silhouette down both sides instead of stopping around the upper shoulders;
-- replaces circuit-like stepped accents with short organic attached branches;
-- preserves the almost-black figure, broad face cavern and low-contrast asymmetric drapery;
-- retains ten genuine visible rear paths, opacity ≥`0.12`, width ≥`0.2`, and the bounded 36–48 full path count;
-- leaves production assets and runtime motion untouched.
+- at least eight named full-size rear edge paths and two named micro edge paths;
+- no filled rear aura masses;
+- every rear path intersects the rendered hood/cloak bounds;
+- full-size rear paths use the exact same transform as the figure;
+- maximum full-size stroke overshoot stays within 3% of the canvas;
+- minimum rear opacity is `0.12` and minimum width is `0.2`;
+- saturated electric-blue palette coverage is present and rejected teal aura colours do not return.
 
 ## Independent micro master
 
-The v20.8 micro master remains an independent optical crop. It keeps two compact aura masses attached to the silhouette, six cyan hood/shoulder anchors and a near-black monolithic body, while avoiding detached roots, light-gray cloth and a cyan `A` at 16–20px.
+The v20.9 micro master removes the two filled rear aura shapes. Two broad edge strokes now sit underneath the hood and cloak silhouette, while the visible rim and diagonal cloth currents use the same electric-blue family as the full master.
 
 ## Anti-hack gates
 
-The validators reject raster content, runtime animation, aura ellipses, SVG filters, Gaussian blur, missing semantic layers, production imports, path-count inflation, transparent field-bound fillers and removal of canonical composition or field targets. Numeric, composition, visible-field and CI success remain necessary but never sufficient for artistic approval.
-
-## Browser acceptance architecture
-
-Manual Browser QA uses four independent exact-head hosted jobs: core Chromium/Android plus fresh-process base Safari; home/reveal, route and search Safari; standard premium homepage and pointer performance; and critical iPhone first-viewport/reduced-motion contours. Every job performs its own exact checkout, build and preview. Retries remain diagnostic only because `failOnFlakyTests` is enabled.
+The validators reject raster content, runtime animation, aura ellipses, SVG filters, Gaussian blur, filled rear aura masses, unnamed emission paths, detached emission bounds, mismatched full-size transforms, rejected teal colours, production imports and path-count inflation. Numeric, composition, attached-emission and CI success remain necessary but never sufficient for artistic approval.
 
 ## Promotion blockers
 
-Production replacement is prohibited until one exact v20.14/v20.8 head provides internal geometry evidence, rendered composition evidence, visible-field evidence, canonical overlay, full optical matrix, micro dark/light matrix, an explicit human `reference-approved` verdict, post-approval motion integration and every required workflow green without flaky acceptance.
+Production replacement is prohibited until one exact v20.15/v20.9 head provides geometry evidence, rendered figure-composition evidence, attached-emission evidence, canonical overlay, full optical matrix, micro dark/light matrix, an explicit human `reference-approved` verdict, post-approval motion integration and every required workflow green without flaky acceptance.
