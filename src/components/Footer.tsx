@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { Link } from './ui/Link';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Mail } from './PremiumIcons';
-import BrandMark from './BrandMark';
+import SpectralBrandMark from './SpectralBrandMark';
 import { getWordOfDay } from '../utils/dailyContent';
 import { titleCase } from '../utils/titleCase';
 import { siteConfig } from '../config/site';
@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
             <Link to="/" className="group mb-5 inline-flex min-h-11 items-center gap-3">
-              <BrandMark size="sm" />
+              <SpectralBrandMark size="md" variant="primary" className="scale-[1.06]" />
               <span className="flex flex-col leading-tight">
                 <span className="neon-blue-gradient neon-glow-text font-serif text-lg font-semibold">THE LEGENDARY POET</span>
                 <span className="text-[10px] tracking-[0.16em] text-cyan-200/45">ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ</span>
