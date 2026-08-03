@@ -4,9 +4,9 @@
 **Mode:** continuous link-first research acquisition  
 **Canonical branch:** `editorial/longform-marathon-2026-08`  
 **Canonical PR:** `#271`  
-**Current pass:** `OSR-2026-08-03-P05`  
-**Current registered rows:** `196`  
-**Completed discovery:** four controlled 40+ expansion passes; pass 05 added 45 rows
+**Current pass:** `OSR-2026-08-03-P06`  
+**Current registered rows:** `241`  
+**Completed discovery:** five controlled 40+ expansion passes; pass 06 added 45 rows
 
 ## 1. Canonical searchable registry
 
@@ -23,14 +23,14 @@ The Google Sheet is the working searchable/filterable authority. The Drive folde
 ## 2. Current counters
 
 ```yaml
-registered_sources: 196
-priority_A: 150
-link_registered_or_download_selective: 163
-download_queue_or_binary_pending: 30
-tracked_dashboard_scopes: 46
-latest_source_id: OSR-0196
-latest_pass: OSR-2026-08-03-P05
-binary_uploads_in_pass_05: 0
+registered_sources: 241
+priority_A: 188
+link_registered_or_download_selective: 198
+download_queue_or_binary_pending: 40
+tracked_dashboard_scopes: 56
+latest_source_id: OSR-0241
+latest_pass: OSR-2026-08-03-P06
+binary_uploads_in_pass_06: 0
 ```
 
 The dashboard, article map and pass log were extended together with the source rows. Source IDs remain monotonic and no previous row was renumbered.
@@ -95,7 +95,9 @@ Large size is not a rejection reason when the exact volume matters. It is a reas
 
 The registry now contains controlled research entry points for:
 
-- Pushkin, Derzhavin, Zhukovsky, Batyushkov, Baratynsky, Lermontov, Tyutchev, Fet, Maykov, Polonsky, Apukhtin, Nadson and Nekrasov;
+- Trediakovsky, Lomonosov, Sumarokov, Derzhavin and Karamzin;
+- Zhukovsky, Batyushkov, Vyazemsky, Denis Davydov, Yazykov, Pushkin, Baratynsky and Lermontov;
+- Krylov, Koltsov, Nikitin, Tyutchev, Fet, Maykov, Polonsky, Apukhtin, Nadson and Nekrasov;
 - Blok, Bryusov, Balmont, Gippius, Merezhkovsky, Andrei Bely, Sologub, Vyacheslav Ivanov, Voloshin, Lokhvitskaya and Cherubina de Gabriak;
 - Yesenin, Klyuev, Mayakovsky, Khlebnikov, Severyanin and the Russian avant-garde;
 - Akhmatova, Gumilev, Mandelstam, Tsvetaeva, Parnok, Pasternak, Bunin, Khodasevich and Zabolotsky;
@@ -118,12 +120,21 @@ Earlier priorities remain active, including:
 7. `OSR-0095` — *Neizdannyi Khlebnikov*, issue 12, `BINARY-PENDING`.
 8. `OSR-0136` — Gippius, *Последние стихи, 1914–1918*, `BINARY-PENDING`.
 9. `OSR-0145` — Sologub, *Пламенный круг*.
-
-Pass 05 adds three exact old-edition candidates:
-
 10. `OSR-0153` — Maykov, complete works, volume 1, 1913.
 11. `OSR-0157` — Polonsky, complete poems, volume 1, 1896.
-12. `OSR-0161` — Apukhtin, works, volume 1; catalogue dating must be resolved from the title page.
+12. `OSR-0161` — Apukhtin, works, volume 1; title-page date unresolved.
+
+Pass 06 adds priority primary editions:
+
+13. `OSR-0206` — Sumarokov complete works, part 1, 1781.
+14. `OSR-0207` — Sumarokov complete works, part 3, tragedies, 1781.
+15. `OSR-0215` — Karamzin, works volume 1, poetry, 1814.
+16. `OSR-0219` — Krylov, fables in seven books, 1825.
+17. `OSR-0229` — Denis Davydov, poems, 1832.
+18. `OSR-0232` — Yazykov, poems, 1833.
+19. `OSR-0235` — Koltsov, poems, 1846.
+20. `OSR-0236` — Koltsov, poems and letters, 1901.
+21. `OSR-0239` — Nikitin complete works edited by Gershenzon, 1912.
 
 No timed-out endpoint, viewer page or catalogue card is reported as an uploaded PDF.
 
@@ -134,7 +145,9 @@ Known duplicate controls remain:
 - `OSR-0106` / `OSR-0124` — Severyanin, *Ананасы в шампанском*: the 1915 book is already represented in `BATCH-0001`.
 - `OSR-0114` — Bryusov, *Urbi et Orbi*, 1903: exact Drive master already exists as file ID `1Kj9hZa0kHlgp_wF_lZeiB1556H1WBiqP`.
 
-Pass 05 ran bounded exact-title/name Drive searches for Maykov, Polonsky, Apukhtin, Nadson, Parnok, Khodasevich, Brodsky and Tvardovsky. No project-relevant exact match was returned. Opaque archives and unindexed binary contents were not silently treated as searched.
+Pass 06 ran bounded exact-title Drive searches for the principal classicist, Pushkin-circle and nineteenth-century editions. No project-relevant exact binary match was returned. An unrelated saved HTML conversation surfaced in one Vyazemsky search and was rejected as noise. Opaque archives and unindexed binary contents were not silently treated as searched.
+
+Nikitin's 1912 and 1914 complete works remain separate bibliographic candidates. They must be compared before a single Drive master is selected; neither is to be uploaded automatically as a duplicate pair.
 
 ## 9. Article-building workflow
 
@@ -157,6 +170,7 @@ For every new article or major revision:
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_03_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_04_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_05_40_PLUS_2026-08-03.md`;
+- `docs/research/OPEN_SOURCE_DISCOVERY_PASS_06_40_PLUS_2026-08-03.md`;
 - `docs/research/MULTILINGUAL_OPEN_SOURCE_DISCOVERY_PASS_74_2026-08-03.md`;
 - `FedorMilovanov/Research/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md`.
 
