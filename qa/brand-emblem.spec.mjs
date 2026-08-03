@@ -6,6 +6,9 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const VERSION = 'cloak-20260801-22';
 const SOURCE = 'canonical-reference-v2-black-monolith-v17-0';
+const RASTER_VERSION = 'spectral-raster-20260803-3';
+const RENDERER = 'transparent-raster-semantic-depth-layers';
+const AWAKENING = 'aura-depth-cloth-v3';
 const PARALLAX = 'spring-awakening-v5';
 const TIMESTEP = 'bounded-substeps-v1';
 const NORMALIZATION = 'rendered-box-v1';
@@ -42,13 +45,17 @@ async function variables(mark) {
 }
 
 async function expectMotionContract(mark) {
+  await expect(mark).toHaveAttribute('data-spectral-brand', '');
+  await expect(mark).toHaveAttribute('data-brand-renderer', RENDERER);
+  await expect(mark).toHaveAttribute('data-brand-raster-version', RASTER_VERSION);
   await expect(mark).toHaveAttribute('data-brand-parallax', PARALLAX);
   await expect(mark).toHaveAttribute('data-brand-motion-timestep', TIMESTEP);
   await expect(mark).toHaveAttribute('data-brand-motion-normalization', NORMALIZATION);
-  await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
+  await expect(mark).toHaveAttribute('data-brand-awakening', AWAKENING);
+  expect(await mark.locator('img[data-brand-raster-image]').count()).toBeGreaterThan(0);
 }
 
-test('preserved v17 art is served under frame-invariant awakening v5', async ({ page, request }) => {
+test('legacy vector fallbacks remain intact beside the spectral raster runtime', async ({ page, request }) => {
   expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
   for (const asset of ['brand-emblem.svg', 'brand-mark-micro.svg', 'brand-emblem-mask.svg']) {
     const response = await request.get(`${BASE_URL}/${asset}?v=${Date.now()}`);
@@ -64,10 +71,21 @@ test('preserved v17 art is served under frame-invariant awakening v5', async ({ 
   }
 });
 
-test('standalone and micro marks decode at all optical gates', async ({ page }) => {
+test('spectral raster family decodes at all optical gates', async ({ page, request }) => {
   await page.setViewportSize({ width: 1500, height: 720 });
+  for (const asset of ['brand-emblem-primary.png', 'brand-emblem-simplified.png', 'brand-emblem-micro.png', 'brand-emblem-header.png']) {
+    const response = await request.get(`${BASE_URL}/${asset}?v=${VERSION}`);
+    expect(response.status(), asset).toBe(200);
+    expect(response.headers()['content-type'], asset).toContain('image/png');
+  }
+
   const sizes = [256, 192, 128, 96, 64, 56, 44, 32, 24, 16];
-  await page.setContent(`<style>html,body{margin:0;background:#03070d;color:#d9f8ff;font:12px system-ui}main{display:flex;align-items:end;gap:18px;padding:28px;min-height:460px}figure{margin:0;text-align:center}.tile{width:270px;height:300px;display:grid;place-items:center;background:#010306;border:1px solid #18313a}</style><main>${sizes.map((size) => `<figure><div class=tile><img width=${size} height=${size} src="${BASE_URL}/${size <= 32 ? 'brand-mark-micro.svg' : 'brand-emblem.svg'}?v=${VERSION}"></div>${size}px</figure>`).join('')}</main>`);
+  const sourceFor = (size) => size <= 32
+    ? 'brand-emblem-micro.png'
+    : size <= 64
+      ? 'brand-emblem-simplified.png'
+      : 'brand-emblem-primary.png';
+  await page.setContent(`<style>html,body{margin:0;background:#03070d;color:#d9f8ff;font:12px system-ui}main{display:flex;align-items:end;gap:18px;padding:28px;min-height:460px}figure{margin:0;text-align:center}.tile{width:270px;height:300px;display:grid;place-items:center;background:#010306;border:1px solid #18313a}</style><main>${sizes.map((size) => `<figure><div class=tile><img width=${size} height=${size} src="${BASE_URL}/${sourceFor(size)}?v=${VERSION}"></div>${size}px</figure>`).join('')}</main>`);
   const decoded = await page.locator('img').evaluateAll(async (nodes) => Promise.all(nodes.map(async (node) => {
     try { await node.decode(); return node.naturalWidth > 0; } catch { return false; }
   })));
@@ -75,7 +93,7 @@ test('standalone and micro marks decode at all optical gates', async ({ page }) 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-emblem-optical-size-matrix.png'), fullPage: true });
 });
 
-test('v18.6 keeps the root contained while frame-invariant internal layers separate strongly', async ({ page }) => {
+test('spectral raster keeps the root contained while semantic layers separate deeply', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -177,12 +195,12 @@ test('reduced motion is stationary with light-only emphasis', async ({ page }) =
 });
 
 for (const route of routes) {
-  test(`${route}: header and footer use frame-invariant awakening v5`, async ({ page }) => {
+  test(`${route}: header and footer use spectral raster awakening v3`, async ({ page }) => {
     expect((await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
     for (const mark of [page.locator('header [data-brand-mark]').first(), page.locator('footer [data-brand-mark]').first()]) {
       await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
       await expectMotionContract(mark);
-      expect(await mark.locator('image,rect,line,polyline,foreignObject').count()).toBe(0);
+      expect(await mark.locator('svg,image,rect,line,polyline,foreignObject').count()).toBe(0);
     }
   });
 }
