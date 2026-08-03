@@ -10,112 +10,145 @@ permissions:
   contents: read
 
 jobs:
-  acquire-neb-wave-02:
+  acquire-neb-item:
     if: github.head_ref == 'editorial/longform-marathon-2026-08'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - stem: pamyati-esenina
+            artifact: yesenin-source-pamyati-esenina-diagnostic
+            filename: 02__Pamyati_Esenina__1926__RSL_NEB.pdf
+            minimum_pages: 269
+            item_url: https://rusneb.ru/catalog/000199_000009_007513586/
+            download_url: https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_007513586&doc_type=pdf&name=000199_000009_007513586-%D0%9F%D0%B0%D0%BC%D1%8F%D1%82%D0%B8+%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD%D0%B0+%3A+%D1%81%D0%B1%D0%BE%D1%80%D0%BD%D0%B8%D0%BA
+          - stem: gruzinov
+            artifact: yesenin-source-gruzinov-diagnostic
+            filename: 03__Gruzinov__Esenin_o_literature_i_iskusstve__1927__RSL_NEB.pdf
+            minimum_pages: 22
+            item_url: https://rusneb.ru/catalog/000199_000009_004871570/
+            download_url: https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_004871570&doc_type=pdf&name=000199_000009_004871570-%D0%A1.+%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD+%D1%80%D0%B0%D0%B7%D0%B3%D0%BE%D0%B2%D0%B0%D1%80%D0%B8%D0%B2%D0%B0%D0%B5%D1%82+%D0%BE+%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%82%D1%83%D1%80%D0%B5+%D0%B8+%D0%B8%D1%81%D0%BA%D1%83%D1%81%D1%81%D1%82%D0%B2%D0%B5+%3A+%D0%B2%D0%BE%D1%81%D0%BF%D0%BE%D0%BC%D0%B8%D0%BD%D0%B0%D0%BD%D0%B8%D1%8F
+          - stem: rus-sovetskaya
+            artifact: yesenin-source-rus-sovetskaya-diagnostic
+            filename: 04__Esenin__Rus_sovetskaya__1925__RSL_NEB.pdf
+            minimum_pages: 81
+            item_url: https://rusneb.ru/catalog/000199_000009_009194017/
+            download_url: https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_009194017&doc_type=pdf&name=000199_000009_009194017-%D0%A0%D1%83%D1%81%D1%8C+%D1%81%D0%BE%D0%B2%D0%B5%D1%82%D1%81%D0%BA%D0%B0%D1%8F+%3A+%D0%A1%D1%82%D0%B8%D1%85%D0%B8
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 30
     steps:
       - name: Install PDF verification tools
         run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils
 
-      - name: Download official institutional PDFs
+      - name: Establish institutional browser session
+        env:
+          ITEM_URL: ${{ matrix.item_url }}
         run: |
           set -euo pipefail
           mkdir -p acquisition
+          curl \
+            --fail \
+            --location \
+            --compressed \
+            --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128 Safari/537.36' \
+            --cookie-jar acquisition/cookies.txt \
+            --connect-timeout 30 \
+            --max-time 180 \
+            "$ITEM_URL" \
+            --output acquisition/catalog.html
+          test -s acquisition/catalog.html
 
-          download_pdf() {
-            local url="$1"
-            local output="$2"
-            curl \
-              --fail \
-              --location \
-              --retry 6 \
-              --retry-all-errors \
-              --retry-delay 5 \
-              --connect-timeout 30 \
-              --max-time 1200 \
-              "$url" \
-              --output "$output"
-          }
-
-          download_pdf \
-            'https://dlib.rsl.ru/rsl01007000000/rsl01007513000/rsl01007513586/rsl01007513586.pdf' \
-            'acquisition/01__Pamyati_Esenina__1926__RSL_NEB.pdf'
-
-          download_pdf \
-            'https://dlib.rsl.ru/rsl01004000000/rsl01004871000/rsl01004871570/rsl01004871570.pdf' \
-            'acquisition/02__Gruzinov__Esenin_o_literature_i_iskusstve__1927__RSL_NEB.pdf'
-
-          download_pdf \
-            'https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_009194017&doc_type=pdf' \
-            'acquisition/03__Esenin__Rus_sovetskaya__1925__RSL_NEB.pdf'
-
-      - name: Verify bytes, metadata, checksums and first pages
+      - name: Download item through official session
+        id: download
+        continue-on-error: true
+        env:
+          ITEM_URL: ${{ matrix.item_url }}
+          DOWNLOAD_URL: ${{ matrix.download_url }}
+          FILE_NAME: ${{ matrix.filename }}
         run: |
           set -euo pipefail
+          curl \
+            --fail \
+            --location \
+            --compressed \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 4 \
+            --user-agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128 Safari/537.36' \
+            --header 'Accept: application/pdf,application/octet-stream;q=0.9,*/*;q=0.8' \
+            --cookie acquisition/cookies.txt \
+            --referer "$ITEM_URL" \
+            --connect-timeout 30 \
+            --max-time 1200 \
+            "$DOWNLOAD_URL" \
+            --output "acquisition/$FILE_NAME"
+          file "acquisition/$FILE_NAME" | tee acquisition/download.file.txt
+          head -c 32 "acquisition/$FILE_NAME" | xxd -p | tee acquisition/download.magic.txt
 
-          verify_pdf() {
-            local pdf="$1"
-            local stem="$2"
-            local minimum_pages="$3"
-            local item_url="$4"
-            local source_url="$5"
+      - name: Verify PDF bytes, checksum and first page
+        id: verify
+        if: steps.download.outcome == 'success'
+        continue-on-error: true
+        env:
+          ITEM_URL: ${{ matrix.item_url }}
+          DOWNLOAD_URL: ${{ matrix.download_url }}
+          FILE_NAME: ${{ matrix.filename }}
+          STEM: ${{ matrix.stem }}
+          MINIMUM_PAGES: ${{ matrix.minimum_pages }}
+        run: |
+          set -euo pipefail
+          PDF="acquisition/$FILE_NAME"
+          test "$(head -c 5 "$PDF")" = '%PDF-'
+          pdfinfo "$PDF" | tee "acquisition/$STEM.pdfinfo.txt"
+          PAGES="$(pdfinfo "$PDF" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
+          test -n "$PAGES"
+          test "$PAGES" -ge "$MINIMUM_PAGES"
+          BYTES="$(stat -c%s "$PDF")"
+          test "$BYTES" -gt 100000
+          SHA="$(sha256sum "$PDF" | awk '{print $1}')"
+          pdftoppm -f 1 -singlefile -png -r 160 "$PDF" "acquisition/$STEM.first-page"
+          test -s "acquisition/$STEM.first-page.png"
+          {
+            echo "filename=$FILE_NAME"
+            echo "item_url=$ITEM_URL"
+            echo "download_url=$DOWNLOAD_URL"
+            echo "pdf_pages=$PAGES"
+            echo "file_size_bytes=$BYTES"
+            echo "sha256=$SHA"
+            echo 'first_page_rendered=true'
+            echo 'drive_upload_completed=false'
+          } | tee "acquisition/$STEM.verification.txt"
 
-            test "$(head -c 5 "$pdf")" = '%PDF-'
-            file "$pdf" | tee "acquisition/${stem}.file.txt"
-            pdfinfo "$pdf" | tee "acquisition/${stem}.pdfinfo.txt"
-            local pages
-            pages="$(pdfinfo "$pdf" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
-            test -n "$pages"
-            test "$pages" -ge "$minimum_pages"
-            local bytes
-            bytes="$(stat -c%s "$pdf")"
-            test "$bytes" -gt 100000
-            local sha
-            sha="$(sha256sum "$pdf" | awk '{print $1}')"
-            pdftoppm -f 1 -singlefile -png -r 160 "$pdf" "acquisition/${stem}.first-page"
-            test -s "acquisition/${stem}.first-page.png"
-            {
-              echo "filename=$(basename "$pdf")"
-              echo "item_url=$item_url"
-              echo "download_url=$source_url"
-              echo "pdf_pages=$pages"
-              echo "file_size_bytes=$bytes"
-              echo "sha256=$sha"
-              echo 'first_page_rendered=true'
-              echo 'drive_upload_completed=false'
-            } | tee "acquisition/${stem}.verification.txt"
-          }
+      - name: Record acquisition outcome
+        if: always()
+        env:
+          DOWNLOAD_OUTCOME: ${{ steps.download.outcome }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+          STEM: ${{ matrix.stem }}
+        run: |
+          {
+            echo "stem=$STEM"
+            echo "download_outcome=$DOWNLOAD_OUTCOME"
+            echo "verification_outcome=$VERIFY_OUTCOME"
+            if [ "$VERIFY_OUTCOME" = success ]; then
+              echo 'verified_pdf=true'
+            else
+              echo 'verified_pdf=false'
+            fi
+            echo 'drive_upload_completed=false'
+          } | tee acquisition/OUTCOME.txt
 
-          verify_pdf \
-            'acquisition/01__Pamyati_Esenina__1926__RSL_NEB.pdf' \
-            'pamyati-esenina' \
-            269 \
-            'https://rusneb.ru/catalog/000199_000009_007513586/' \
-            'https://dlib.rsl.ru/rsl01007000000/rsl01007513000/rsl01007513586/rsl01007513586.pdf'
-
-          verify_pdf \
-            'acquisition/02__Gruzinov__Esenin_o_literature_i_iskusstve__1927__RSL_NEB.pdf' \
-            'gruzinov' \
-            22 \
-            'https://rusneb.ru/catalog/000199_000009_004871570/' \
-            'https://dlib.rsl.ru/rsl01004000000/rsl01004871000/rsl01004871570/rsl01004871570.pdf'
-
-          verify_pdf \
-            'acquisition/03__Esenin__Rus_sovetskaya__1925__RSL_NEB.pdf' \
-            'rus-sovetskaya' \
-            81 \
-            'https://rusneb.ru/catalog/000199_000009_009194017/' \
-            'https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_009194017&doc_type=pdf'
-
-          sha256sum acquisition/*.pdf | tee acquisition/SHA256SUMS.txt
-
-      - name: Upload verified acquisition artifact
+      - name: Upload per-item acquisition or diagnostic artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: yesenin-source-neb-wave-02-verified
+          name: ${{ matrix.artifact }}
           path: acquisition/
           if-no-files-found: error
-          retention-days: 3
+          retention-days: 2
+
+      - name: Fail unverified item after diagnostics upload
+        if: steps.verify.outcome != 'success'
+        run: exit 1
