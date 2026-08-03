@@ -1,0 +1,50 @@
+name: Materialize Mayakovsky visual wave
+
+on:
+  push:
+    branches:
+      - editorial/longform-marathon-2026-08
+    paths:
+      - tmp/maya-wave/READY
+
+permissions:
+  contents: write
+
+concurrency:
+  group: materialize-mayakovsky-wave
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical marathon branch
+        uses: actions/checkout@v4
+        with:
+          ref: editorial/longform-marathon-2026-08
+          fetch-depth: 0
+
+      - name: Decode and verify production assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat tmp/maya-wave/package.b64.part* > /tmp/mayakovsky-wave-assets.zip.b64
+          base64 --decode /tmp/mayakovsky-wave-assets.zip.b64 > /tmp/mayakovsky-wave-assets.zip
+          echo "2e25ddcf8f827b1c70551031dc82bd50a17f26eaf97b76fd73c3bef64f2b69c3  /tmp/mayakovsky-wave-assets.zip" | sha256sum --check --strict
+          rm -rf /tmp/mayakovsky-wave
+          mkdir -p /tmp/mayakovsky-wave
+          unzip -q /tmp/mayakovsky-wave-assets.zip -d /tmp/mayakovsky-wave
+          (cd /tmp/mayakovsky-wave && sha256sum --check --strict SHA256SUMS.txt)
+          install -d public/images/essays/mayakovsky/wave
+          install -m 0644 /tmp/mayakovsky-wave/*.webp public/images/essays/mayakovsky/wave/
+
+      - name: Commit verified assets and remove one-shot staging
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r tmp/maya-wave .github/workflows/materialize-mayakovsky-wave.yml
+          git add public/images/essays/mayakovsky/wave
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "assets(essays): materialize verified Mayakovsky visual wave"
+          git push origin HEAD:editorial/longform-marathon-2026-08
