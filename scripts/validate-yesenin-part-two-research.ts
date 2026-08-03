@@ -237,17 +237,43 @@ for (const forbidden of [
 }
 
 const chapter13 = drafts.get('YESENIN_PART_II_DRAFT_CH13_LATE_POETRY_V01_2026-08.md')!;
-if (!/диагноз/iu.test(chapter13) || !/покаян/iu.test(chapter13)) {
-  throw new Error('chapter 13 lost diagnosis/repentance interpretation boundaries');
+for (const required of [
+  'YESENIN_PART_II_SOURCE_PASS_CH13_CH14_2026-08.md',
+  'по свидетельству Екатерины Есениной',
+  'физическое майское издание и окончательный состав',
+  'разные source objects',
+  'закончил сохранившуюся редакцию 14 ноября — до поступления в клинику 26 ноября',
+  'не устанавливает медицинский диагноз',
+  'не равна покаянию',
+  'авторизованный список является отдельным свидетелем, а не автографом поэта',
+  'посмертно 3 января 1926 года',
+]) {
+  if (!chapter13.includes(required)) throw new Error(`chapter 13 lost textological/theological boundary: ${required}`);
+}
+if (chapter13.includes('литерa')) {
+  throw new Error('chapter 13 restored a mixed-script typo in the word литера');
+}
+if (/«Чёрный человек»[^.]{0,300}написан[^.]{0,100}(?:в|во) (?:клинике|больнице)/iu.test(chapter13)) {
+  throw new Error('chapter 13 restored the clinic-origin myth for Black Man');
 }
 
 const chapter14 = drafts.get('YESENIN_PART_II_DRAFT_CH14_SOFIA_CLINIC_PARTIAL_V01_2026-08.md')!;
 for (const required of [
+  'YESENIN_PART_II_SOURCE_PASS_CH13_CH14_2026-08.md',
+  'календарная транскрипция',
+  'оригинальный бланк не найден',
+  'три тома вышли уже в 1926 году, дополнительный четвёртый — в 1927-м',
   'не называет в опубликованной формуле полный диагноз',
-  'не является медицинским диагнозом',
+  'Полное медицинское дело остаётся отдельным архивным acquisition gate',
+  'письмо сохранилось в автографе РГАЛИ, но не было своевременно передано адресату',
+  'операции показывают конкретное практическое поведение, но не измеряют душевное состояние',
   'практические действия не опровергают тяжесть кризиса',
 ]) {
-  if (!chapter14.includes(required)) throw new Error(`chapter 14 lost medical boundary: ${required}`);
+  if (!chapter14.includes(required)) throw new Error(`chapter 14 lost document/medical boundary: ${required}`);
+}
+if (/удостоверение № 1037[^.]{0,250}(?:история болезни|полный диагноз)/iu.test(chapter14) &&
+    !chapter14.includes('Называть её «историей болезни»')) {
+  throw new Error('chapter 14 upgraded certificate 1037 into a medical case history');
 }
 
 const researchFiles = readdirSync(researchDir);
@@ -282,5 +308,5 @@ for (const forbiddenRegistration of [
 }
 
 console.log(
-  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; chapters 15–16 withheld; route/data module absent; uncertainty, source-pair, legal/press, Berlin-event, immigration, account/censorship, physical-witness, Benislavskaya representation, Caucasus-route and medical boundaries intact.`,
+  `Yesenin Part II research: ${currentDrafts.length} non-public drafts; all 14 drafted chapters paragraph/source-audited; chapters 15–16 withheld; route/data module absent; documentary, textological, theological and medical boundaries intact.`,
 );
