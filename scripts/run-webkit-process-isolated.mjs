@@ -13,6 +13,7 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
+  { id: 'mayakovsky-visual-wave', file: 'qa/mayakovsky-visual-wave.spec.mjs' },
   { id: 'optical-matrix', file: 'qa/brand-v19-optical.spec.mjs' },
   { id: 'micro-matrix', file: 'qa/brand-v19-micro.spec.mjs' },
   ...hoverRoutes.map((route) => ({
