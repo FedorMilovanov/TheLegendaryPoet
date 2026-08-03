@@ -2,8 +2,8 @@
 
 ## Current QA-only pair
 
-- `v20.11-reference-volumetric-cowl` — full-size 96-grid master;
-- `v20.7-reference-micro-volumetric-anchors` — independent 32-grid master.
+- `v20.12-reference-spectral-volume` — full-size 96-grid master;
+- `v20.8-reference-micro-spectral-anchors` — independent 32-grid master.
 
 Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release manifests and the validated motion controller are unchanged.
 
@@ -17,7 +17,8 @@ Both remain `not-reference-approved`. Production SVGs, `BrandMark.tsx`, release 
 - **v20.8 / v20.6:** cowl and micro improved, but the overlay exposed a missing composition contract: the cloak occupied 98.3% of the canvas instead of the canonical 76.9%, the apex sat too high and the bust was oversized in the square.
 - **v20.9 / v20.6:** internal geometry and canonical crop passed; exact overlay then exposed a field restricted mostly to the hood and upper shoulders, overly clean cloth planes and weak shoulder volume at 64–96px.
 - **v20.10 / v20.6:** exact all-green engineering pass; artistic review still rejected a wire-like field topology, clean V-shaped cowl and weak small-size shoulder volume.
-- **v20.11 / v20.7:** current QA-only iteration. Canonical crop and field envelope remain locked; the long outer wires are fractured into bounded segments, the cowl is rebuilt as asymmetrically gathered cloth, and full/micro shoulder anchors are strengthened. Exact committed overlay remains the artistic authority.
+- **v20.11 / v20.7:** exact all-green engineering pass; human review rejected detached root-like electrical lines, a Shredder-like figure, an overly light gray reading and clothing folds that did not match the canonical reference.
+- **v20.12 / v20.8:** current QA-only iteration. The luminous field is rebuilt from nested canonical contour bands rather than invented as detached wires. The figure returns to near-black, the cowl loses the Shredder-like armored reading, and the aura is attached to the hood and shoulders. Exact committed overlay remains the artistic authority.
 
 ## Three independent reference contracts
 
@@ -25,7 +26,7 @@ Passing one contract cannot hide failure of another.
 
 ### Internal structure
 
-| Ratio | Canonical | Allowed | v20.11 full | v20.7 micro |
+| Ratio | Canonical | Allowed | v20.12 full | v20.8 micro |
 |---|---:|---:|---:|---:|
 | hood height / visible figure | 0.357 | 0.27–0.36 | 0.358 | 0.358 |
 | hood width / cloak width | 0.386 | 0.32–0.43 | 0.383 | 0.392 |
@@ -34,7 +35,7 @@ Passing one contract cannot hide failure of another.
 
 ### Full-size square composition
 
-| Ratio | Canonical | Allowed | v20.11 |
+| Ratio | Canonical | Allowed | v20.12 |
 |---|---:|---:|---:|
 | cloak width / canvas | 0.770 | 0.72–0.82 | 0.777 |
 | occupied figure height / canvas | 0.875 | 0.84–0.91 | 0.879 |
@@ -44,32 +45,34 @@ Passing one contract cannot hide failure of another.
 
 ### Visible electrical-field envelope
 
-| Ratio | Canonical | Allowed | v20.11 authored expectation |
+| Ratio | Canonical | Allowed | v20.12 authored expectation |
 |---|---:|---:|---:|
-| field width / canvas | 0.820 | 0.76–0.90 | 0.882 |
-| field height / canvas | 0.770 | 0.68–0.82 | 0.733 |
-| field top Y / canvas | 0.047 | 0.02–0.09 | 0.073 |
-| field centre X / canvas | 0.500 | 0.46–0.54 | 0.511 |
+| field width / canvas | 0.820 | 0.76–0.90 | 0.854 |
+| field height / canvas | 0.770 | 0.68–0.82 | 0.747 |
+| field top Y / canvas | 0.047 | 0.02–0.09 | 0.079 |
+| field centre X / canvas | 0.500 | 0.46–0.54 | 0.500 |
 
 Browser `getBBox()` verifies local path geometry. Browser `getBoundingClientRect()` separately verifies the transformed figure crop and the rendered union of rear, mid and front electrical-field groups.
 
-## v20.11 field, cowl and shoulder correction
+## v20.12 spectral-volume correction
 
 The full figure retains the explicit static composition transform:
 
 `translate(10.29 4.76) scale(.79 .95)`
 
-The correction does not alter runtime motion or production assets. Relative to v20.10 it:
+The correction does not alter runtime motion or production assets. Relative to v20.11 it:
 
-- breaks the two long outside field lines into separated energetic segments while preserving the measured envelope;
-- keeps at least eight rear branches, each with stroke opacity at or above `0.12` and stroke width at or above `0.2`;
-- replaces the clean central V with four unequal gathered cloth masses and two discontinuous seam accents;
-- strengthens the shoulder highlight mass and extends the rim anchors without changing cloak, hood or cavern boxes;
+- removes detached branch and root-like wire structures;
+- rebuilds the electrical field from ten nested organic contour layers sampled from the canonical luminous envelope;
+- keeps the rear field contract at ten genuine visible paths, each with stroke opacity at or above `0.12` and stroke width at or above `0.2`;
+- returns the figure, hood and cowl to near-black blue values instead of a light gray reading;
+- replaces panel-like armor folds with soft low-contrast diagonal drapery following the canonical fold directions;
+- preserves the broad black face cavern and exact cloak, hood and face geometry boxes;
 - stays inside the bounded 36–48 full-size path range.
 
 ## Independent micro master
 
-The v20.7 micro master intentionally does not inherit the full-size crop or field-envelope requirements. It keeps the larger occupied mass and six separated hood/shoulder anchors, replaces the crossed cowl with three gathered layers, and strengthens shoulder highlights for 16–20px recognition. The highlights remain discontinuous and cannot form a cyan `A`.
+The v20.8 micro master intentionally remains an independent optical crop. It keeps two compact aura masses attached to the silhouette, six cyan hood/shoulder rim anchors and a near-black monolithic body, while avoiding detached roots, light-gray cloth and a cyan `A` at 16–20px.
 
 ## Anti-hack gates
 
@@ -88,4 +91,4 @@ Every job has its own exact checkout, build and preview. No job depends on anoth
 
 ## Promotion blockers
 
-Production replacement is prohibited until one exact v20.11/v20.7 head provides internal geometry evidence, rendered composition evidence, visible-field evidence, canonical overlay, full optical matrix, micro dark/light matrix, an explicit human `reference-approved` verdict, post-approval motion integration and every required workflow green without flaky acceptance.
+Production replacement is prohibited until one exact v20.12/v20.8 head provides internal geometry evidence, rendered composition evidence, visible-field evidence, canonical overlay, full optical matrix, micro dark/light matrix, an explicit human `reference-approved` verdict, post-approval motion integration and every required workflow green without flaky acceptance.
