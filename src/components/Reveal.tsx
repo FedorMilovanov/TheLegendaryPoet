@@ -26,6 +26,7 @@ interface ReliableInViewResult<T extends HTMLElement> {
 }
 
 const BOOTSTRAP_CHECK_DELAYS_MS = [0, 80, 240, 600, 1_200, 2_200] as const;
+const GEOMETRY_FALLBACK_DELAY_MS = 96;
 const REVEAL_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
 function hiddenTransform(direction: Direction, distance: number) {
@@ -55,6 +56,7 @@ export function useReliableInView<T extends HTMLElement>({
     let revealed = false;
     let disposed = false;
     let frame = 0;
+    let geometryFallbackTimer = 0;
     const delayedChecks: number[] = [];
 
     const setVisible = (visible: boolean) => {
@@ -69,7 +71,6 @@ export function useReliableInView<T extends HTMLElement>({
     };
 
     const checkGeometry = () => {
-      frame = 0;
       if (disposed || (once && revealed)) return;
 
       const rect = element.getBoundingClientRect();
@@ -91,9 +92,28 @@ export function useReliableInView<T extends HTMLElement>({
       setVisible(visible);
     };
 
+    const clearScheduledGeometryCheck = () => {
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      if (geometryFallbackTimer) {
+        window.clearTimeout(geometryFallbackTimer);
+        geometryFallbackTimer = 0;
+      }
+    };
+
+    const flushGeometryCheck = () => {
+      clearScheduledGeometryCheck();
+      checkGeometry();
+    };
+
     const scheduleGeometryCheck = () => {
-      if (disposed || frame || (once && revealed)) return;
-      frame = window.requestAnimationFrame(checkGeometry);
+      if (disposed || (once && revealed)) return;
+      if (!frame) frame = window.requestAnimationFrame(flushGeometryCheck);
+      if (!geometryFallbackTimer) {
+        geometryFallbackTimer = window.setTimeout(flushGeometryCheck, GEOMETRY_FALLBACK_DELAY_MS);
+      }
     };
 
     const observer = new IntersectionObserver(
@@ -128,7 +148,7 @@ export function useReliableInView<T extends HTMLElement>({
 
     return () => {
       disposed = true;
-      if (frame) window.cancelAnimationFrame(frame);
+      clearScheduledGeometryCheck();
       for (const timer of delayedChecks) window.clearTimeout(timer);
       observer.disconnect();
       resizeObserver?.disconnect();
