@@ -18,8 +18,18 @@ const registryPath = join(
   researchDir,
   'YESENIN_PART_II_SOURCE_ID_REGISTRY_PASS_06_DUNCAN_RUSSIAN_DAYS_2026-08.md',
 );
+const gruzinovDerivedPath = join(
+  researchDir,
+  'YESENIN_GRUZINOV_WIKISOURCE_DERIVED_SOURCE_PASS_01_2026-08.md',
+);
 
-for (const path of [acquisitionPassPath, sourcePassPath, pageMapPath, registryPath]) {
+for (const path of [
+  acquisitionPassPath,
+  sourcePassPath,
+  pageMapPath,
+  registryPath,
+  gruzinovDerivedPath,
+]) {
   if (!existsSync(path)) throw new Error(`missing verified source-acquisition control file: ${path}`);
 }
 
@@ -27,6 +37,7 @@ const acquisitionPass = readFileSync(acquisitionPassPath, 'utf8');
 const sourcePass = readFileSync(sourcePassPath, 'utf8');
 const pageMap = readFileSync(pageMapPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
+const gruzinovDerived = readFileSync(gruzinovDerivedPath, 'utf8');
 
 const sha256 = 'f8ebbc91166916ff1a6e228e4b127a850b360eb64959d8441b7aa22bd2a0af17';
 const sourceId = 'yes2-duncan-russian-days-1929-tu';
@@ -135,6 +146,43 @@ for (const forbidden of [
   if (forbidden.test(acquisitionPass)) throw new Error(`general acquisition pass regressed verified master: ${forbidden}`);
 }
 
+for (const required of [
+  'DRIVE-VERIFIED DERIVED TEXT / NOT A 1927 FACSIMILE / ORIGINAL SCAN STILL BINARY-PENDING',
+  'yes2-gruzinov-conversations-wikisource-derived',
+  'source_kind: DERIVED_TEXT_PDF',
+  'facsimile_of_1927_edition: false',
+  'canonical_archival_master: false',
+  'pdf_pages: 41',
+  'file_size_bytes: 297273',
+  '9a9de51a32d73175392aed9bb35ad4e0f6e76aa867a0a2a0728005e1ad4a4cae',
+  'first_page_rendered: true',
+  'derived_folder_id: 1crO4gqDJDE2h7yDrD7U_eVq3tNc-hGp7',
+  'PDF_Drive_file_id: 1SNcIOGipekg8t19CL9V-pkqcRN9YkpmW',
+  'manifest_Drive_file_id: 1InGztTEEe7wrB7hFY331QkOfCaRNJ8Fx',
+  'sha256sums_Drive_file_id: 17PXM_jRpkLTnkvQjh1DriDl0_6NGXfjl',
+  'derived_Drive_uploaded: true',
+  'original_1927_facsimile_acquired: false',
+  'original_1927_facsimile_status: BINARY-PENDING',
+  'do not cite PDF page 1–41 as the pagination of the 1927 edition',
+  'do not close P03-03\'s original-facsimile acquisition gate',
+]) {
+  if (!gruzinovDerived.includes(required)) {
+    throw new Error(`Gruzinov derived source lost representation/Drive boundary: ${required}`);
+  }
+}
+
+for (const forbidden of [
+  /facsimile_of_1927_edition:\s*true/u,
+  /canonical_archival_master:\s*true/u,
+  /original_1927_facsimile_acquired:\s*true/u,
+  /original_1927_facsimile_status:\s*(?:VERIFIED|ACQUIRED|DRIVE-VERIFIED)/iu,
+  /production_visual_rights_closed:\s*true/u,
+]) {
+  if (forbidden.test(gruzinovDerived)) {
+    throw new Error(`Gruzinov derived source overstates facsimile/original status: ${forbidden}`);
+  }
+}
+
 console.log(
-  'Yesenin source acquisitions: 1 Drive-verified institutional master with SHA/pages/render/Drive IDs pinned; memoir conflicts and production-rights HOLD preserved.',
+  'Yesenin source acquisitions: 1 Drive-verified institutional master plus 1 separately stored Drive-verified derived text; SHA/pages/Drive IDs pinned, memoir conflicts and original-facsimile/rights HOLDs preserved.',
 );
