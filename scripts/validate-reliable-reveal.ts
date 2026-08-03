@@ -17,7 +17,14 @@ assert.match(reveal, /element\.getBoundingClientRect\(\)/);
 assert.match(reveal, /window\.visualViewport/);
 assert.match(reveal, /intersectionWidth \* intersectionHeight/);
 assert.match(reveal, /intersectionRatio >= boundedThreshold/);
-assert.match(reveal, /window\.requestAnimationFrame\(checkGeometry\)/);
+assert.match(reveal, /GEOMETRY_FALLBACK_DELAY_MS = 96/);
+assert.match(reveal, /const clearScheduledGeometryCheck = \(\) => \{/);
+assert.match(reveal, /window\.cancelAnimationFrame\(frame\)/);
+assert.match(reveal, /window\.clearTimeout\(geometryFallbackTimer\)/);
+assert.match(reveal, /const flushGeometryCheck = \(\) => \{[\s\S]*clearScheduledGeometryCheck\(\);[\s\S]*checkGeometry\(\);[\s\S]*\}/);
+assert.match(reveal, /window\.requestAnimationFrame\(flushGeometryCheck\)/);
+assert.match(reveal, /window\.setTimeout\(flushGeometryCheck, GEOMETRY_FALLBACK_DELAY_MS\)/);
+assert.match(reveal, /if \(!frame\)[\s\S]*if \(!geometryFallbackTimer\)/);
 assert.match(reveal, /new ResizeObserver\(scheduleGeometryCheck\)/);
 assert.match(reveal, /window\.addEventListener\('scroll', scheduleGeometryCheck/);
 assert.match(reveal, /document\.addEventListener\('scroll', scheduleGeometryCheck, \{ capture: true, passive: true \}\)/);
@@ -27,7 +34,7 @@ assert.match(reveal, /window\.visualViewport\?\.addEventListener\('scroll', sche
 assert.match(reveal, /window\.visualViewport\?\.addEventListener\('resize', scheduleGeometryCheck/);
 assert.match(reveal, /BOOTSTRAP_CHECK_DELAYS_MS = \[0, 80, 240, 600, 1_200, 2_200\]/);
 assert.match(reveal, /window\.setTimeout\(scheduleGeometryCheck, delay\)/);
-assert.match(reveal, /window\.clearTimeout\(timer\)/);
+assert.match(reveal, /clearScheduledGeometryCheck\(\);[\s\S]*for \(const timer of delayedChecks\) window\.clearTimeout\(timer\)/);
 assert.match(reveal, /document\.removeEventListener\('scroll', scheduleGeometryCheck, true\)/);
 assert.match(reveal, /observer\.disconnect\(\)/);
 assert.match(reveal, /resizeObserver\?\.disconnect\(\)/);
@@ -78,4 +85,4 @@ assert.doesNotMatch(helpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classLis
 assert.match(packageJson, /"validate:reliable-reveal": "tsx scripts\/validate-reliable-reveal\.ts"/);
 assert.match(packageJson, /validate:brand-v20 && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
 
-console.log('reliable reveal validation: below-fold content uses real viewport geometry, while touch/compact first viewport remains readable without depending on delayed animation clocks; desktop fine-pointer choreography and strict Safari opacity/blur verdicts stay intact');
+console.log('reliable reveal validation: below-fold geometry races requestAnimationFrame against one bounded timeout fallback, touch/compact first viewport remains readable without animation clocks, and desktop fine-pointer choreography plus strict Safari opacity/blur verdicts stay intact');
