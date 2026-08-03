@@ -144,15 +144,21 @@ function initialRoutePathname() {
   return browserPathname;
 }
 
-export function preloadCurrentRoute() {
+export async function preloadCurrentRoute(): Promise<void> {
   if (!permitsPrefetch()) return;
   const pathname = initialRoutePathname();
   if (!pathname) return;
   const route = prefetchableRoutes.find((candidate) => matchPath({ path: candidate.pattern, end: true }, pathname));
-  // main.tsx calls this only after the complete static module graph has
-  // evaluated. Lazy pages can therefore import the shared Link component and
-  // return to this registry without forming a WebKit module-initialisation wait.
-  if (route) void route.load().catch(() => undefined);
+  if (!route) return;
+
+  // Initial deep links are resolved before React mounts. This avoids a cold
+  // WebKit race where the route chunk can remain behind Suspense long enough
+  // for the page to miss its interactive-media readiness contract.
+  try {
+    await route.load();
+  } catch {
+    // Rendering still owns the normal retry/reload path in loadForRender.
+  }
 }
 
 export function preloadRoute(to: To) {
