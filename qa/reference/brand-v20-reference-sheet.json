@@ -62,7 +62,7 @@
   },
   "candidates": [
     {
-      "id": "v20.13-reference-attached-electric-drapery",
+      "id": "v20.14-reference-electric-rim-volume",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
@@ -103,7 +103,7 @@
       "compositionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.13 removes both the detached root topology and the broad smooth contour sheath. Ten irregular but physically attached aura masses now originate at the hood, shoulders and cloak edge; short electric steps remain connected to the luminous envelope. The figure is near-black, filled armor-like panels are removed from the cloak, and the remaining folds are low-contrast asymmetric drapery strokes. Exact committed overlay and optical evidence remain mandatory."
+      "reason": "v20.14 reduces the rear aura masses to faint irregular volume and transfers the dominant electric light onto segmented rim paths that touch the hood, shoulder and full cloak edge. Short organic accents remain attached to the same envelope. The figure stays near-black, filled armor panels remain removed, and low-contrast asymmetric drapery is preserved. Exact committed overlay and optical evidence remain mandatory."
     },
     {
       "id": "v20.8-reference-micro-spectral-anchors",
