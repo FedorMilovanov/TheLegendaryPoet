@@ -1,39 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="v207m-title v207m-desc" data-brand-v20-micro-candidate="v20.7-reference-micro-volumetric-anchors" data-brand-reference-decision="not-reference-approved">
-  <title id="v207m-title">THE LEGENDARY POET — v20.7 micro volumetric-anchor master</title>
-  <desc id="v207m-desc">Independent QA-only micro master with broad black cavern, gathered layered cowl, heavy shoulder mass and six separated hood and shoulder anchors for dark-background readability without a continuous A outline.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-labelledby="v208m-title v208m-desc" data-brand-v20-micro-candidate="v20.8-reference-micro-spectral-anchors" data-brand-reference-decision="not-reference-approved">
+  <title id="v208m-title">THE LEGENDARY POET — v20.8 micro spectral-anchor master</title>
+  <desc id="v208m-desc">Independent QA-only micro master with an almost-black hooded monolith, soft cloth folds, broad face void and compact electric aura attached to the hood and shoulders.</desc>
   <defs>
-    <linearGradient id="m207-cloak" x1="6" y1="12" x2="23" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#0e3440"/><stop offset=".42" stop-color="#031119"/><stop offset="1" stop-color="#000204"/></linearGradient>
-    <linearGradient id="m207-hood" x1="13" y1="2" x2="19" y2="13" gradientUnits="userSpaceOnUse"><stop stop-color="#0f3540"/><stop offset=".5" stop-color="#04131b"/><stop offset="1" stop-color="#000305"/></linearGradient>
+    <linearGradient id="m208-cloak" x1="7" y1="12" x2="22" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#020b10"/><stop offset=".42" stop-color="#010609"/><stop offset="1" stop-color="#000204"/></linearGradient>
+    <linearGradient id="m208-hood" x1="14" y1="2" x2="18" y2="13" gradientUnits="userSpaceOnUse"><stop stop-color="#031017"/><stop offset=".5" stop-color="#01070b"/><stop offset="1" stop-color="#000305"/></linearGradient>
   </defs>
-  <g data-brand-micro-field-rear="" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12.7 3.2L10.7 4.2L10 6.1L7.9 7.2L7.1 9.5L4.9 10.8M10 6.1L7.9 5.4L6.7 6.8" stroke="#65d9e9" stroke-opacity=".34" stroke-width=".3"/>
-    <path d="M19.4 2.9L21.3 3.8L21.9 5.7L24.2 6.7L24.8 9L27.5 10.3M21.9 5.7L24 5L25.2 6.4" stroke="#7be1ee" stroke-opacity=".3" stroke-width=".25"/>
+  <g data-brand-micro-field-rear="" aria-hidden="true" stroke-linejoin="round">
+    <path d="M14.2 2.6C11.9 3.1 10.7 5 9.6 7.3C8.3 9.9 6.3 11.7 4.8 14.3C3 17.5 2 21.4 1.4 26.7C3.2 23.8 4.7 20.9 6.5 18.4C8.3 15.8 10.2 14 11.5 11.7C12.9 9.3 13.4 5.7 14.8 3.7Z" fill="#0a7895" fill-opacity=".16" stroke="#0a7895" stroke-opacity=".18" stroke-width=".2"/>
+    <path d="M17.8 2.6C20.1 3 21.4 4.9 22.5 7.1C23.9 9.7 25.9 11.5 27.5 14.1C29.3 17.3 30.3 21.2 30.7 26.4C29 23.6 27.4 20.7 25.6 18.2C23.8 15.7 21.8 13.8 20.5 11.6C19.1 9.2 18.6 5.7 17.2 3.7Z" fill="#0a7895" fill-opacity=".15" stroke="#0a7895" stroke-opacity=".17" stroke-width=".2"/>
   </g>
   <g data-brand-micro-figure="">
-    <path id="v207m-cloak" data-brand-micro-cloak="" d="M16 11.5C12.4 11.4 9.5 12.3 7 14C4.6 15.8 2.8 19.6 1.4 25L.2 32H31.8L30.4 24.8C29.1 19.3 27.1 15.4 24.5 13.8C22.2 12.2 19.4 11.4 16 11.5Z" fill="url(#m207-cloak)"/>
-    <g data-brand-micro-folds="">
-      <path d="M.2 32C2.4 25 5.4 18.5 11.9 14.1C8.3 19.7 6.6 25.9 6.3 32Z" fill="#000204"/>
-      <path d="M31.8 32C29.9 25.1 26.5 18.3 20.2 13.9C23.7 19.5 25.5 25.7 25.7 32Z" fill="#000204"/>
-      <path d="M5.4 32C7.4 24.8 10.5 18.5 15 14.7C12.8 20.4 11.6 26.2 11.8 32Z" fill="#04131b"/>
-      <path d="M26.4 32C24.4 24.7 21.2 18.4 17 14.6C19.2 20.2 20.4 26 20 32Z" fill="#030e15"/>
-      <path d="M11.8 32C12.5 25.5 14.2 20.3 15.8 16.9C15 22.4 14.9 27.3 15.2 32Z" fill="#000204"/>
-      <path d="M20 32C19.5 25.5 17.7 20.1 16.3 16.7C17.1 22.4 17 27.3 16.7 32Z" fill="#000204"/>
+    <path id="v208m-cloak" data-brand-micro-cloak="" d="M16 11.5C12.4 11.4 9.5 12.3 7 14C4.6 15.8 2.8 19.6 1.4 25L.2 32H31.8L30.4 24.8C29.1 19.3 27.1 15.4 24.5 13.8C22.2 12.2 19.4 11.4 16 11.5Z" fill="url(#m208-cloak)"/>
+    <g data-brand-micro-folds="" fill="none" stroke-linecap="round">
+      <path d="M14.7 15.8C11.6 18.5 8.3 22.4 5.6 28" stroke="#0a303b" stroke-opacity=".32" stroke-width=".45"/>
+      <path d="M15.6 16.3C13.2 20 11.3 24.7 10.2 30" stroke="#072630" stroke-opacity=".27" stroke-width=".38"/>
+      <path d="M17.3 15.8C20.4 18.4 23.8 22.3 26.5 27.8" stroke="#092e39" stroke-opacity=".3" stroke-width=".44"/>
+      <path d="M16.4 16.3C18.8 20 20.8 24.7 21.9 30" stroke="#07242e" stroke-opacity=".25" stroke-width=".37"/>
+      <path d="M16 17C15.8 21.5 15.8 26.2 16 31" stroke="#061d25" stroke-opacity=".28" stroke-width=".32"/>
+      <path d="M7 29.8C9.1 24.1 12 19.1 15.2 16" stroke="#020b10" stroke-opacity=".7" stroke-width="1.3"/>
     </g>
-    <path id="v207m-hood" data-brand-micro-hood="" d="M16 2.4L14.8 3C13.8 3.5 13 4.5 12.5 5.8C11.9 7.3 11.7 8.5 11.1 9.8C10.8 10.6 10.3 11.2 9.8 11.7C11.6 12.5 13.6 12.9 16 13C18.4 12.9 20.4 12.4 22.2 11.5C21.5 10.8 21 9.9 20.5 8.7C20 7.2 19.6 6 18.9 4.9C18.4 4 17.6 3.2 16 2.4Z" fill="url(#m207-hood)"/>
-    <path id="v207m-face" data-brand-micro-face="" d="M16 4.3L14.5 5.2C13.7 5.9 13.2 7 12.9 8.2L12.4 9.7L11.4 10.8L12.8 11.8L15.9 12.5L18.6 11.9L20.6 10.6L19.6 9.4L19.1 7.8C18.8 6.7 18.2 5.6 17.4 5L16 4.3Z" fill="#000"/>
+    <path id="v208m-hood" data-brand-micro-hood="" d="M16 2.4C14.7 2.7 13.8 3.5 13.1 4.8C12.2 6.5 11.9 8.5 11.1 9.8C10.8 10.6 10.3 11.2 9.8 11.7C11.5 12.5 13.6 12.9 16 13C18.4 12.9 20.4 12.4 22.2 11.5C21.5 10.8 21 9.9 20.5 8.7C20 7.2 19.6 5.8 18.8 4.6C18.1 3.5 17.2 2.7 16 2.4Z" fill="url(#m208-hood)"/>
+    <path id="v208m-face" data-brand-micro-face="" d="M16 4.3C14.7 4.7 13.8 5.5 13.3 6.7C12.9 7.6 12.8 8.7 12.4 9.7L11.4 10.8C12.4 11.7 13.9 12.3 15.9 12.5C17.8 12.4 19.4 11.8 20.6 10.6C20.1 10.1 19.8 9.7 19.6 9.4C19.3 8.8 19.3 7.7 18.9 6.8C18.4 5.6 17.4 4.7 16 4.3Z" fill="#000"/>
     <g data-brand-micro-cowl="">
-      <path d="M8.8 11.4C11.4 12.1 13.8 12.7 15.9 13.5C18.3 14.3 20.5 13.3 23.3 11.5C22.8 13.5 21.7 15 20 15.9C17.5 17.2 14.5 17 12.2 15.8C10.6 14.9 9.5 13.4 8.8 11.4Z" fill="#07202a"/>
-      <path d="M8.9 13.5C11.4 14 13.4 14.9 15.1 16C16.9 17.1 18.8 16.9 21.4 15.4C20.3 18.1 18.5 19.2 16.2 19.1C13.5 19 10.9 17.2 8.9 13.5Z" fill="#01080d"/>
-      <path d="M10.1 16.1C12.2 17 14.1 18 15.7 19.3C17.2 20.4 18.8 20.1 21.4 18.2C20.8 20.4 19.5 21.8 17.7 22.2C15.6 22.7 13.7 21.7 12.3 20.3C11.3 19.3 10.5 17.9 10.1 16.1Z" fill="#000204"/>
+      <path d="M8.8 11.4C11.1 12 13.3 12.6 15.5 13.1C17.9 13.6 20.4 12.9 23.3 11.5C22.8 13.2 21.6 14.5 19.9 15.3C17.4 16.5 14.5 16.3 12.2 15.2C10.5 14.4 9.5 13.1 8.8 11.4Z" fill="#010609"/>
+      <path d="M8.9 13.5C11.1 13.9 13 14.6 14.8 15.5C16.7 16.5 18.8 16.3 21.4 15.1C20.3 17.4 18.5 18.5 16.3 18.4C13.6 18.3 10.9 16.8 8.9 13.5Z" fill="#020b10"/>
+      <path d="M10.1 15.9C12.1 16.6 14 17.5 15.6 18.6C17.2 19.7 18.9 19.5 21.4 17.9C20.8 19.9 19.5 21.2 17.7 21.6C15.7 22 13.8 21.1 12.4 19.8C11.3 18.9 10.5 17.6 10.1 15.9Z" fill="#000204"/>
     </g>
     <g data-brand-micro-rim="" fill="none" stroke-linecap="round">
-      <path d="M15.4 2.8C14.3 3.4 13.6 4.4 13.1 5.8" stroke="#e4fdff" stroke-opacity=".98" stroke-width=".58"/>
-      <path d="M16.7 2.7C17.8 3.3 18.5 4.3 19 5.6" stroke="#cdf8ff" stroke-opacity=".94" stroke-width=".55"/>
-      <path d="M10.5 11.1C9.2 11.8 8.2 12.9 7.4 14.4" stroke="#9eeff8" stroke-opacity=".88" stroke-width=".68"/>
-      <path d="M21.6 10.9C22.9 11.6 24 12.7 24.8 14.2" stroke="#82e3ef" stroke-opacity=".82" stroke-width=".64"/>
-      <path d="M7.5 14.3C6.5 15.4 5.8 16.8 5.4 18.2" stroke="#72dce9" stroke-opacity=".56" stroke-width=".48"/>
-      <path d="M24.6 14.1C25.6 15.2 26.3 16.5 26.8 18" stroke="#63cfdf" stroke-opacity=".5" stroke-width=".46"/>
+      <path d="M15.4 2.8C14.4 3.3 13.7 4.3 13.2 5.6" stroke="#8eeaf3" stroke-opacity=".82" stroke-width=".5"/>
+      <path d="M16.7 2.7C17.7 3.2 18.4 4.2 18.9 5.5" stroke="#94edf5" stroke-opacity=".8" stroke-width=".48"/>
+      <path d="M10.5 11.1C9.3 11.7 8.3 12.7 7.5 14.1" stroke="#71dce8" stroke-opacity=".68" stroke-width=".58"/>
+      <path d="M21.6 10.9C22.8 11.5 23.9 12.5 24.7 13.9" stroke="#6bd7e4" stroke-opacity=".64" stroke-width=".56"/>
+      <path d="M7.5 14.2C6.6 15.3 5.9 16.6 5.5 18" stroke="#50c5d5" stroke-opacity=".46" stroke-width=".43"/>
+      <path d="M24.6 14C25.6 15.1 26.3 16.4 26.8 17.8" stroke="#4bc1d1" stroke-opacity=".42" stroke-width=".41"/>
     </g>
   </g>
-  <g data-brand-micro-field-front="" aria-hidden="true" fill="none" stroke-linecap="round"><path d="M8 14.2L6.7 15.7" stroke="#bdf8ff" stroke-opacity=".32" stroke-width=".2"/><path d="M24.3 14L25.7 15.4" stroke="#a7f1fa" stroke-opacity=".28" stroke-width=".18"/></g>
+  <g data-brand-micro-field-front="" aria-hidden="true" fill="none" stroke-linecap="round"><path d="M8 14.2C7.5 14.7 7.1 15.2 6.7 15.7" stroke="#9feef5" stroke-opacity=".3" stroke-width=".25"/><path d="M24.3 14C24.8 14.5 25.3 15 25.7 15.4" stroke="#93e9f2" stroke-opacity=".28" stroke-width=".24"/></g>
 </svg>
