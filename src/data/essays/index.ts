@@ -3,6 +3,7 @@ import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
 import { yeseninPartOnePublic } from './yeseninPartOnePublic';
+import { yeseninPartTwoPublic } from './yeseninPartTwoPublic';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -142,6 +143,7 @@ export const essays: Essay[] = [
   lermontovRoadWithCover,
   yeseninWithArchiveLayer,
   yeseninPartOneWithMythChecks,
+  yeseninPartTwoPublic,
   yeseninDuncanFirstMeetingPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
