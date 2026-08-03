@@ -160,7 +160,7 @@ for (const [slug, expectedFiles] of Object.entries(expectedArticleAssets)) {
     if (!image.caption.includes('Редакционная реконструкция')) {
       fail(`${slug}/${fileName}: caption does not identify the reconstruction`);
     }
-    if (!/(?:не фотография|не архивная фотография)/i.test(image.caption)) {
+    if (!/(?:не фотография|не архивная фотография|не снимок)/i.test(image.caption)) {
       fail(`${slug}/${fileName}: caption lacks the non-archive boundary`);
     }
   }
