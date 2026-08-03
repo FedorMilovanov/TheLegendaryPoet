@@ -1,0 +1,101 @@
+name: One-shot final image loading contract
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/final-image-loading-contract-once.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-image-loading-contract
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out canonical branch
+        uses: actions/checkout@v4
+        with:
+          ref: editorial/longform-marathon-2026-08
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Apply typed loading strategy and permanent regression gate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          blocks_path = Path('src/components/essay/blocks.tsx')
+          blocks = blocks_path.read_text(encoding='utf-8')
+          old_loading = '          loading="lazy"\n'
+          new_loading = "          loading={block.loading ?? 'lazy'}\n"
+          if blocks.count(old_loading) != 1:
+              raise SystemExit(f'expected one hard-coded lazy loading attribute, found {blocks.count(old_loading)}')
+          blocks_path.write_text(blocks.replace(old_loading, new_loading), encoding='utf-8')
+
+          wave_path = Path('src/data/essays/mayakovskyEditorialWave.ts')
+          wave = wave_path.read_text(encoding='utf-8')
+          asset_names = [
+              'mayakovsky-rosta-workshop-reconstruction.webp',
+              'mayakovsky-dlya-golosa-1923.webp',
+              'mayakovsky-public-reading-reconstruction.webp',
+              'mayakovsky-late-desk-reconstruction.webp',
+              'brik-reading-circle-reconstruction.webp',
+              'brik-triad-interior-reconstruction.webp',
+              'mayakovsky-kruchenykh-stikhi-cover.webp',
+          ]
+          for name in asset_names:
+              src = f"          src: '/images/essays/mayakovsky/editorial-wave/{name}',\n"
+              replacement = src + "          loading: 'eager',\n"
+              if wave.count(src) != 1:
+                  raise SystemExit(f'expected exactly one asset declaration for {name}, found {wave.count(src)}')
+              wave = wave.replace(src, replacement)
+          if wave.count("loading: 'eager'") != 7:
+              raise SystemExit('editorial wave must contain exactly seven eager loading declarations')
+          wave_path.write_text(wave, encoding='utf-8')
+
+          validator_path = Path('scripts/validate-mayakovsky-visual-wave.ts')
+          validator = validator_path.read_text(encoding='utf-8')
+          anchor = "    const expectedSourceUrl = expectedDocuments.get(fileName);\n\n"
+          requirement = "    if (image.loading !== 'eager') {\n      fail(`${slug}/${fileName}: audited editorial-wave image must use loading=eager`);\n    }\n\n"
+          if validator.count(anchor) != 1:
+              raise SystemExit(f'expected one validator image anchor, found {validator.count(anchor)}')
+          if 'audited editorial-wave image must use loading=eager' in validator:
+              raise SystemExit('loading regression gate already exists unexpectedly')
+          validator_path.write_text(validator.replace(anchor, anchor + requirement), encoding='utf-8')
+          PY
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run full repository checks and production build
+        env:
+          VITE_BASE: /
+        run: |
+          npm run check
+          npm run build
+
+      - name: Commit contract and remove one-shot workflow
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/final-image-loading-contract-once.yml
+          git add src/components/essay/blocks.tsx src/data/essays/mayakovskyEditorialWave.ts scripts/validate-mayakovsky-visual-wave.ts
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(webkit): eagerly decode audited editorial-wave images'
+          git push origin HEAD:editorial/longform-marathon-2026-08
