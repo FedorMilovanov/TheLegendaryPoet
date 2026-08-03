@@ -45,11 +45,15 @@ jobs:
 
           validator_path = Path('scripts/validate-yesenin-part-two-publication.ts')
           validator = validator_path.read_text(encoding='utf-8')
-          old_regex = r"/бесспорная предсмертная записка Эрлиху/iu,"
-          new_regex = r"/(?:это|является|была)\s+бесспорн(?:ая|ой)\s+предсмертн(?:ая|ой)\s+записк(?:а|ой)\s+Эрлиху/iu,"
-          if validator.count(old_regex) != 1:
-              raise SystemExit(f'expected exactly one overbroad regex, found {validator.count(old_regex)}')
-          validator_path.write_text(validator.replace(old_regex, new_regex), encoding='utf-8')
+          replacements = {
+              r"/бесспорная предсмертная записка Эрлиху/iu,": r"/(?:это|является|была)\s+бесспорн(?:ая|ой)\s+предсмертн(?:ая|ой)\s+записк(?:а|ой)\s+Эрлиху/iu,",
+              "'Дар не оправдывает разрушение; разрушение не уничтожает дар',": "'Его дар не оправдывает разрушение; разрушение не уничтожает дар',",
+          }
+          for old, new in replacements.items():
+              if validator.count(old) != 1:
+                  raise SystemExit(f'expected exactly one validator target, found {validator.count(old)}: {old}')
+              validator = validator.replace(old, new)
+          validator_path.write_text(validator, encoding='utf-8')
           PY
 
       - name: Install exact dependencies
