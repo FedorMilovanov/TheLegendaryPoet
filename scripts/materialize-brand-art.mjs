@@ -7,26 +7,26 @@ const root = path.resolve();
 const publicDir = path.join(root, 'public');
 const approvedDir = path.join(root, 'qa', 'reference', 'approved-brand');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-const RELEASE = 'approved-rgba-20260803-1';
+const RELEASE = 'approved-rgba-20260803-2';
 
 const approved = {
   header: {
-    source: 'header-rgba.png.b64',
+    sources: ['header-rgba.part00.b64', 'header-rgba.part01.b64', 'header-rgba.part02.b64'],
     output: 'brand-emblem-header.png',
-    sha256: '4c33e0bed07a86356e35ec8c8d0b5a16cd5c690ae763f14062d255a0762416f9',
+    sha256: '26318984aba0d69444f4479edfc3eaec9335e5deb5791a2f673b989fb643776b',
   },
   primary: {
-    source: 'primary-rgba.png.b64',
+    sources: ['primary-rgba.part00.b64', 'primary-rgba.part01.b64', 'primary-rgba.part02.b64'],
     output: 'brand-emblem-primary.png',
-    sha256: 'a44ed31b02ae6cd22d17ef96bce24e6ec1a4b85b49df74bc2fbc85826f7a46be',
+    sha256: 'aed5bbba9313f1414999700b5e6a8f6a4e5ce1a7c3e06e2f857b46b5ae271803',
   },
   simplified: {
-    source: 'simplified-rgba.png.b64',
+    sources: ['simplified-rgba.png.b64'],
     output: 'brand-emblem-simplified.png',
     sha256: 'e2d40570733eb4e3a332fe955a74815b05a7c6ff7481b135afd385c99636a8a7',
   },
   micro: {
-    source: 'micro-rgba.png.b64',
+    sources: ['micro-rgba.png.b64'],
     output: 'brand-emblem-micro.png',
     sha256: 'def54ca3c95795937743737bd12767d33d48c8979b0d7600178f8cf2d445d6e5',
   },
@@ -40,15 +40,15 @@ const written = [];
 const materialized = {};
 
 for (const [role, item] of Object.entries(approved)) {
-  const sourcePath = path.join(approvedDir, item.source);
-  if (!fs.existsSync(sourcePath)) throw new Error(`brand materialize: approved ${role} source is missing`);
-  const encoded = fs.readFileSync(sourcePath, 'utf8').replace(/\s+/g, '');
+  const encoded = item.sources.map((source) => {
+    const sourcePath = path.join(approvedDir, source);
+    if (!fs.existsSync(sourcePath)) throw new Error(`brand materialize: approved ${role} source part is missing: ${source}`);
+    return fs.readFileSync(sourcePath, 'utf8').replace(/\s+/g, '');
+  }).join('');
   const bytes = Buffer.from(encoded, 'base64');
   if (!bytes.subarray(0, 8).equals(pngSignature)) throw new Error(`brand materialize: ${role} is not a PNG`);
   const actualHash = digest(bytes);
-  if (actualHash !== item.sha256) {
-    throw new Error(`brand materialize: approved ${role} integrity mismatch (${actualHash})`);
-  }
+  if (actualHash !== item.sha256) throw new Error(`brand materialize: approved ${role} integrity mismatch (${actualHash})`);
   const outputPath = path.join(publicDir, item.output);
   fs.writeFileSync(outputPath, bytes);
   materialized[role] = outputPath;
