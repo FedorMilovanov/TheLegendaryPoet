@@ -33,11 +33,12 @@ jobs:
       - name: Install exact current lock
         run: npm ci
 
-      - name: Apply explicit patched same-major versions
+      - name: Apply current patched releases
         run: |
-          npm install --save-exact react-router-dom@7.18.2
+          npm install --save-exact react-router-dom@latest
           npm install --save-dev --save-exact vite@7.3.6
           npm audit fix
+          npm ls react-router react-router-dom vite
 
       - name: Verify generated lock and zero high-severity advisories
         run: |
@@ -59,5 +60,5 @@ jobs:
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'chore(deps): upgrade audited router and Vite versions'
+          git commit -m 'chore(deps): upgrade React Router and Vite securely'
           git push origin HEAD:editorial/longform-marathon-2026-08
