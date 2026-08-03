@@ -1,16 +1,21 @@
 name: One-shot Yesenin Part II editorial correction
 
 on:
-  push:
-    branches: [editorial/longform-marathon-2026-08]
+  pull_request:
     paths:
       - .github/workflows/yesenin-part-two-editorial-patch-once.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: yesenin-part-two-editorial-patch
+  cancel-in-progress: false
+
 jobs:
   correct:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Check out canonical branch
