@@ -4,34 +4,44 @@
   "reviewerDecision": "not-reference-approved",
   "approvedSources": {
     "header": {
-      "path": "qa/reference/approved-brand/header-rgba.png.b64",
-      "sha256": "4c33e0bed07a86356e35ec8c8d0b5a16cd5c690ae763f14062d255a0762416f9",
+      "parts": [
+        "qa/reference/approved-brand/header-rgba.part00.b64",
+        "qa/reference/approved-brand/header-rgba.part01.b64",
+        "qa/reference/approved-brand/header-rgba.part02.b64"
+      ],
+      "sha256": "26318984aba0d69444f4479edfc3eaec9335e5deb5791a2f673b989fb643776b",
       "siteRole": "website header"
     },
     "primary": {
-      "path": "qa/reference/approved-brand/primary-rgba.png.b64",
-      "sha256": "a44ed31b02ae6cd22d17ef96bce24e6ec1a4b85b49df74bc2fbc85826f7a46be",
+      "parts": [
+        "qa/reference/approved-brand/primary-rgba.part00.b64",
+        "qa/reference/approved-brand/primary-rgba.part01.b64",
+        "qa/reference/approved-brand/primary-rgba.part02.b64"
+      ],
+      "sha256": "aed5bbba9313f1414999700b5e6a8f6a4e5ce1a7c3e06e2f857b46b5ae271803",
       "siteRole": "large emblem and footer"
     },
     "simplified": {
-      "path": "qa/reference/approved-brand/simplified-rgba.png.b64",
+      "parts": ["qa/reference/approved-brand/simplified-rgba.png.b64"],
       "sha256": "e2d40570733eb4e3a332fe955a74815b05a7c6ff7481b135afd385c99636a8a7",
       "siteRole": "medium UI"
     },
     "micro": {
-      "path": "qa/reference/approved-brand/micro-rgba.png.b64",
+      "parts": ["qa/reference/approved-brand/micro-rgba.png.b64"],
       "sha256": "def54ca3c95795937743737bd12767d33d48c8979b0d7600178f8cf2d445d6e5",
       "siteRole": "compact UI and favicon"
     }
   },
   "removedWrongSources": [
     "qa/reference/brand-emblem-canonical-reference.webp",
+    "qa/reference/approved-brand/header-rgba.png.b64",
+    "qa/reference/approved-brand/primary-rgba.png.b64",
     "all rejected SVG candidates and production SVG fallbacks",
     "the rejected spectral raster atlas"
   ],
   "currentImplementation": {
     "release": "approved-rgba-20260803-1",
-    "materialization": "exact base64 decode of each role-specific transparent PNG; no crop substitution",
+    "materialization": "exact concatenation and base64 decode of each role-specific transparent PNG; no crop substitution",
     "renderer": "approved-rgba-family-subtle-depth",
     "layers": ["base", "faint depth copy"],
     "transparentStage": true,
