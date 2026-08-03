@@ -34,6 +34,16 @@ const heroPoets = heroPoetIds.map(requireHeroPoet);
 
 function HeroTitle() {
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
+  const [revealedWords, setRevealedWords] = useState<ReadonlySet<string>>(() => new Set());
+
+  const markWordRevealed = (key: string) => {
+    setRevealedWords((current) => {
+      if (current.has(key)) return current;
+      const next = new Set(current);
+      next.add(key);
+      return next;
+    });
+  };
 
   const words = [
     { text: 'THE', key: 'the', delay: '0.08s', extra: '' },
@@ -55,6 +65,10 @@ function HeroTitle() {
             key={w.key}
             className={`hero-blur-reveal hero-word-reveal ${w.key === 'legendary' ? 'hero-blur-reveal-strong' : ''}`}
             style={{ animationDelay: w.delay }}
+            data-hero-reveal-state={revealedWords.has(w.key) ? 'ready' : 'animating'}
+            onAnimationEnd={(event) => {
+              if (event.currentTarget === event.target) markWordRevealed(w.key);
+            }}
           >
             <span className={`hero-word-scale ${w.key === 'legendary' ? 'hero-word-scale-legendary' : ''}`}>
               <motion.span

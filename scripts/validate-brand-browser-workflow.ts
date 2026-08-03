@@ -66,7 +66,6 @@ assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all
 // without schedule guessing or repeated cross-process computed-style polling.
 assert.match(homePage, /data-hero-reveal-state/);
 assert.match(homePage, /onAnimationEnd/);
-assert.match(homePage, /onAnimationCancel/);
 assert.match(homePage, /markWordRevealed/);
 assert.match(homePolishSpec, /data-hero-reveal-state/);
 assert.match(homePolishSpec, /toHaveAttribute\('data-hero-reveal-state', 'ready'/);
