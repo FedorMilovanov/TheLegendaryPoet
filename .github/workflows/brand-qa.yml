@@ -82,6 +82,8 @@ jobs:
           npx playwright test
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
+          --project=chromium-core
+          --workers=1
           --reporter=line
       - name: Record artifact manifest
         if: always()
