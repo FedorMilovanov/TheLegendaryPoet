@@ -117,7 +117,7 @@ test('reference, idle, entry and centered awakening are shown together', async (
   await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
   await expect(mark).toHaveAttribute('data-brand-parallax', 'spring-awakening-v5');
   await expect(mark).toHaveAttribute('data-brand-motion-timestep', 'bounded-substeps-v1');
-  await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v2');
+  await expect(mark).toHaveAttribute('data-brand-awakening', 'aura-depth-cloth-v3');
   await page.screenshot({ path: path.join(DIR, 'brand-live-site-home-first-viewport.png'), fullPage: false });
   const box = await mark.boundingBox(); const clip = markClip(box, 44);
   const idle = await page.screenshot({ clip });
