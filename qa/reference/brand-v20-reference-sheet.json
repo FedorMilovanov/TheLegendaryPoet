@@ -62,7 +62,7 @@
   },
   "candidates": [
     {
-      "id": "v20.12-reference-spectral-volume",
+      "id": "v20.13-reference-attached-electric-drapery",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
@@ -89,10 +89,10 @@
         "hoodApexYToCanvas": 0.120833,
         "cloakShoulderYToCanvas": 0.392854,
         "figureCenterXToCanvas": 0.502188,
-        "fieldWidthToCanvas": 0.854496,
-        "fieldHeightToCanvas": 0.746625,
-        "fieldTopYToCanvas": 0.078551,
-        "fieldCenterXToCanvas": 0.499981
+        "fieldWidthToCanvas": 0.858152,
+        "fieldHeightToCanvas": 0.745624,
+        "fieldTopYToCanvas": 0.0725,
+        "fieldCenterXToCanvas": 0.495864
       },
       "fieldVisibility": {
         "minimumRearBranches": 8,
@@ -103,7 +103,7 @@
       "compositionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.12 replaces detached wire and root-like geometry with ten nested organic contour layers derived from the canonical luminous envelope. The figure is returned to near-black, cloth folds are rebuilt as soft diagonal drapery, the broad face cavern is retained, and the aura remains physically attached to the hood and shoulders. Exact committed overlay and optical evidence remain mandatory."
+      "reason": "v20.13 removes both the detached root topology and the broad smooth contour sheath. Ten irregular but physically attached aura masses now originate at the hood, shoulders and cloak edge; short electric steps remain connected to the luminous envelope. The figure is near-black, filled armor-like panels are removed from the cloak, and the remaining folds are low-contrast asymmetric drapery strokes. Exact committed overlay and optical evidence remain mandatory."
     },
     {
       "id": "v20.8-reference-micro-spectral-anchors",
