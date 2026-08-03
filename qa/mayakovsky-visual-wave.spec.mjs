@@ -131,9 +131,14 @@ for (const entry of cases) {
         2,
       ),
     );
-    await page.screenshot({
+
+    // These essays are taller than WebKit's 32,767px full-page screenshot
+    // ceiling. Capture the first audited reconstruction as bounded visual
+    // evidence instead; it retains the image, classification badge and caption
+    // while every article-wide runtime assertion above remains unchanged.
+    await firstReconstruction.scrollIntoViewIfNeeded();
+    await firstReconstruction.screenshot({
       path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-${entry.id}-visual-wave.png`),
-      fullPage: true,
     });
   });
 }
