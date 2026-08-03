@@ -18,6 +18,15 @@ fs.writeFileSync(
 );
 
 const suites = [
+  // Run the interaction-heavy dock/search contour in the first completely
+  // fresh WebKit process. The assertion remains strict and fail-on-flaky;
+  // only the execution order changes so repeated route process teardown
+  // cannot influence the most input-sensitive contour.
+  {
+    id: 'home-dock-search',
+    file: 'qa/mobile-webkit-isolated.spec.mjs',
+    grep: 'WebKit home dock, search sheet and tap targets remain usable in a fresh context',
+  },
   {
     id: 'home-poet-count',
     file: 'qa/mobile-home-webkit.spec.mjs',
@@ -43,11 +52,6 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
   })),
-  {
-    id: 'home-dock-search',
-    file: 'qa/mobile-home-webkit.spec.mjs',
-    grep: 'WebKit home dock, search sheet and tap targets remain usable in a fresh context',
-  },
 ];
 
 const record = (line) => {
