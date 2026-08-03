@@ -1,0 +1,54 @@
+name: Dependency security refresh
+
+on:
+  push:
+    branches:
+      - editorial/longform-marathon-2026-08
+    paths:
+      - .github/workflows/dependency-security-refresh.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Refresh patched build dependencies
+        run: npm install --package-lock-only --save-dev vite@7.3.5 @vitejs/plugin-react@5.1.4
+
+      - name: Record audit after safe-range refresh
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-after-vite.json || true
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit-after-vite.json', 'utf8'));
+          fs.writeFileSync(
+            'npm-audit-summary.json',
+            JSON.stringify({ metadata: report.metadata, vulnerabilities: report.vulnerabilities }, null, 2),
+          );
+          NODE
+
+      - name: Upload generated lock and audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-security-refresh
+          path: |
+            package.json
+            package-lock.json
+            npm-audit-after-vite.json
+            npm-audit-summary.json
+          if-no-files-found: error
+          retention-days: 7
