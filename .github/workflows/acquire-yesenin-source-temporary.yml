@@ -22,9 +22,10 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install project and PDF tools
+      - name: Install isolated browser and PDF tools
         run: |
           npm ci
+          npm install --no-save --package-lock=false playwright@1.62.1
           npx playwright install --with-deps chromium
           sudo apt-get update
           sudo apt-get install -y poppler-utils
@@ -37,7 +38,7 @@ jobs:
           mkdir -p acquisition
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          import { chromium } from '@playwright/test';
+          import { chromium } from 'playwright';
 
           const viewerUrl = 'https://elib-libkids51.cld.bz/Iesenin-S-Plavil-nya-slov';
           const browser = await chromium.launch({ headless: true });
@@ -45,7 +46,7 @@ jobs:
           const page = await context.newPage();
           const responses = [];
 
-          page.on('response', async (response) => {
+          page.on('response', (response) => {
             const headers = response.headers();
             const url = response.url();
             const contentType = headers['content-type'] ?? '';
@@ -54,66 +55,77 @@ jobs:
             }
           });
 
-          await page.goto(viewerUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-          await page.waitForTimeout(12_000);
+          try {
+            await page.goto(viewerUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+            await page.waitForTimeout(12_000);
 
-          const links = await page.locator('a').evaluateAll((nodes) => nodes.map((node) => ({
-            text: (node.textContent ?? '').trim(),
-            href: node.href,
-            download: node.getAttribute('download'),
-          })));
-          const html = await page.content();
-          fs.writeFileSync('acquisition/viewer.html', html);
-          fs.writeFileSync('acquisition/links.json', JSON.stringify(links, null, 2));
-          fs.writeFileSync('acquisition/network-candidates.json', JSON.stringify(responses, null, 2));
-          await page.screenshot({ path: 'acquisition/viewer.png', fullPage: false });
+            const links = await page.locator('a').evaluateAll((nodes) => nodes.map((node) => ({
+              text: (node.textContent ?? '').trim(),
+              href: node.href,
+              download: node.getAttribute('download'),
+            })));
+            const html = await page.content();
+            fs.writeFileSync('acquisition/viewer.html', html);
+            fs.writeFileSync('acquisition/links.json', JSON.stringify(links, null, 2));
+            fs.writeFileSync('acquisition/network-candidates.json', JSON.stringify(responses, null, 2));
+            await page.screenshot({ path: 'acquisition/viewer.png', fullPage: false });
 
-          const candidates = new Set();
-          for (const entry of [...responses, ...links]) {
-            const url = entry.url ?? entry.href;
-            if (url && (/\.pdf(?:$|[?#])/i.test(url) || /download.*pdf|pdf.*download/i.test(url))) candidates.add(url);
-          }
-          for (const match of html.matchAll(/https?:[^"'<>\s]+\.pdf(?:\?[^"'<>\s]*)?/giu)) candidates.add(match[0].replaceAll('&amp;', '&'));
-          for (const match of html.matchAll(/["']([^"']*(?:download|document|publication)[^"']*)["']/giu)) {
-            try {
-              const url = new URL(match[1], viewerUrl).href;
-              if (/pdf|download/i.test(url)) candidates.add(url);
-            } catch {}
-          }
-
-          fs.writeFileSync('acquisition/pdf-candidates.txt', [...candidates].join('\n'));
-
-          let verifiedUrl = null;
-          for (const url of candidates) {
-            try {
-              const response = await context.request.get(url, {
-                headers: { Referer: viewerUrl, Accept: 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.8' },
-                timeout: 180_000,
-              });
-              const body = await response.body();
-              fs.appendFileSync('acquisition/candidate-results.txt', `${response.status()}\t${response.headers()['content-type'] ?? ''}\t${body.length}\t${url}\n`);
-              if (response.ok() && body.subarray(0, 5).toString() === '%PDF-' && body.length > 100_000) {
-                fs.writeFileSync('acquisition/05__Plavilnya_slov__1920__Murmansk_Library.pdf', body);
-                verifiedUrl = url;
-                break;
-              }
-            } catch (error) {
-              fs.appendFileSync('acquisition/candidate-results.txt', `ERROR\t${String(error)}\t${url}\n`);
+            const candidates = new Set();
+            for (const entry of [...responses, ...links]) {
+              const url = entry.url ?? entry.href;
+              if (url && (/\.pdf(?:$|[?#])/i.test(url) || /download.*pdf|pdf.*download/i.test(url))) candidates.add(url);
             }
+            for (const match of html.matchAll(/https?:[^"'<>\s]+\.pdf(?:\?[^"'<>\s]*)?/giu)) {
+              candidates.add(match[0].replaceAll('&amp;', '&'));
+            }
+            for (const match of html.matchAll(/["']([^"']*(?:download|document|publication)[^"']*)["']/giu)) {
+              try {
+                const url = new URL(match[1], viewerUrl).href;
+                if (/pdf|download/i.test(url)) candidates.add(url);
+              } catch {}
+            }
+
+            fs.writeFileSync('acquisition/pdf-candidates.txt', [...candidates].join('\n'));
+
+            let verifiedUrl = null;
+            for (const url of candidates) {
+              try {
+                const response = await context.request.get(url, {
+                  headers: {
+                    Referer: viewerUrl,
+                    Accept: 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.8',
+                  },
+                  timeout: 180_000,
+                });
+                const body = await response.body();
+                fs.appendFileSync(
+                  'acquisition/candidate-results.txt',
+                  `${response.status()}\t${response.headers()['content-type'] ?? ''}\t${body.length}\t${url}\n`,
+                );
+                if (response.ok() && body.subarray(0, 5).toString() === '%PDF-' && body.length > 100_000) {
+                  fs.writeFileSync('acquisition/05__Plavilnya_slov__1920__Murmansk_Library.pdf', body);
+                  verifiedUrl = url;
+                  break;
+                }
+              } catch (error) {
+                fs.appendFileSync('acquisition/candidate-results.txt', `ERROR\t${String(error)}\t${url}\n`);
+              }
+            }
+
+            fs.writeFileSync('acquisition/DISCOVERY.txt', [
+              'institution=Murmansk Regional Children and Youth Library',
+              'catalog_url=https://elib.libkids51.ru/edition/119',
+              `viewer_url=${viewerUrl}`,
+              `pdf_candidate_count=${candidates.size}`,
+              `verified_pdf_url=${verifiedUrl ?? ''}`,
+              `verified_pdf_found=${verifiedUrl ? 'true' : 'false'}`,
+              'drive_upload_completed=false',
+            ].join('\n'));
+
+            if (!verifiedUrl) process.exitCode = 2;
+          } finally {
+            await browser.close();
           }
-
-          fs.writeFileSync('acquisition/DISCOVERY.txt', [
-            'institution=Murmansk Regional Children and Youth Library',
-            'catalog_url=https://elib.libkids51.ru/edition/119',
-            `viewer_url=${viewerUrl}`,
-            `pdf_candidate_count=${candidates.size}`,
-            `verified_pdf_url=${verifiedUrl ?? ''}`,
-            `verified_pdf_found=${verifiedUrl ? 'true' : 'false'}`,
-            'drive_upload_completed=false',
-          ].join('\n'));
-
-          await browser.close();
-          if (!verifiedUrl) process.exit(2);
           NODE
 
       - name: Verify PDF, checksum and first page
