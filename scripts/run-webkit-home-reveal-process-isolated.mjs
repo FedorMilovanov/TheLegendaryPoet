@@ -21,10 +21,12 @@ const suites = [
   // Run the interaction-heavy dock/search contour in the first completely
   // fresh WebKit process. The assertion remains strict and fail-on-flaky;
   // only the execution order changes so repeated route process teardown
-  // cannot influence the most input-sensitive contour.
+  // cannot influence the most input-sensitive contour. Use the historical
+  // mobile-home-webkit entrypoint because the Safari project's testMatch is
+  // intentionally scoped to that stable filename; it imports the isolated spec.
   {
     id: 'home-dock-search',
-    file: 'qa/mobile-webkit-isolated.spec.mjs',
+    file: 'qa/mobile-home-webkit.spec.mjs',
     grep: 'WebKit home dock, search sheet and tap targets remain usable in a fresh context',
   },
   {
