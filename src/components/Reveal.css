@@ -1,0 +1,28 @@
+.reveal-surface {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Viewport reveals are decorative. On a coarse/touch surface the content must
+   be immediately readable and must not depend on a cold IntersectionObserver
+   callback or a transformed blur layer while the user is scrolling. Fine
+   pointers retain the full editorial entrance motion. */
+@media (hover: none) and (pointer: coarse) {
+  .reveal-surface {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-surface {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
