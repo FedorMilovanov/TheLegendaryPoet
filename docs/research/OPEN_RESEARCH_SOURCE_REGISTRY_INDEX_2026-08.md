@@ -5,7 +5,7 @@
 **Canonical PR:** `#271`  
 **Current discovery pass:** `OSR-2026-08-03-P07`  
 **Current acquisition pass:** `OSR-2026-08-03-P08`  
-**Current verification pass:** `AUDIT-2026-08-03-P14`  
+**Current verification pass:** `AUDIT-2026-08-03-P15`  
 **Registered discovery rows:** `287`
 
 ## 1. Canonical registry
@@ -39,13 +39,13 @@ Legacy values such as `READ-OK`, `DOWNLOAD-OK`, `LINK-REGISTERED`, `NEW` and pri
 
 ```yaml
 registered_discovery_rows: 287
-direct_audited_rows: 173
-audit_pending_rows: 114
-verified_keep_link: 72
+direct_audited_rows: 223
+audit_pending_rows: 64
+verified_keep_link: 91
 verified_download_candidates: 10
 drive_verified_binaries: 3
-hold_retry: 58
-hold_rights_or_identity: 25
+hold_retry: 85
+hold_rights_or_identity: 29
 drops_total: 5
 tracked_dashboard_scopes: 66
 latest_source_id: OSR-0287
@@ -53,14 +53,15 @@ latest_source_id: OSR-0287
 
 The discovery total must never be reported as the verified total.
 
-The 173 directly audited rows comprise:
+The 223 directly audited rows comprise:
 
 - 45 world-literature rows `OSR-0242..OSR-0286` from pass 09;
 - 24 Pushkin, Blok and Yesenin academic-corpus rows from pass 10;
 - 22 Mayakovsky, Lermontov, Mandelstam, Khlebnikov, Nekrasov and Tyutchev rows from pass 11;
 - 12 museum, archive, RSL, Presidential Library and thesis rows from pass 12;
 - 14 RSL/NEL and early-edition rows from pass 13;
-- 50 existing RSL/NEL/RVB/FEB/archive/museum rows from pass 14;
+- 50 RSL/NEL/RVB/FEB/archive/museum rows from pass 14;
+- 50 rows `OSR-0166..OSR-0215` from pass 15;
 - 3 previously manifested Yesenin binaries;
 - 3 verified duplicate controls.
 
@@ -80,7 +81,7 @@ DROP-BROKEN: 2
 
 Verified candidates: Folger downloadable Shakespeare texts under the recorded noncommercial condition; Goethe's *Faust I* and *Faust II*; Spanish *Don Quijote*; the ten- and twelve-book representations of *Paradise Lost*; and *Paradise Regained*.
 
-`OSR-0251` remains on rights hold. `OSR-0285` remains on identity hold. The two exact Gallica URLs `OSR-0282` and `OSR-0286` were dropped after direct 404 results.
+`OSR-0251` remains on rights hold. `OSR-0285` remains on identity hold. Exact Gallica URLs `OSR-0282` and `OSR-0286` were dropped after direct 404 results.
 
 ## 5. Pass 10 — Pushkin, Blok and Yesenin
 
@@ -118,10 +119,10 @@ HOLD-RIGHTS: 1
 
 Material corrections and gates:
 
-- Mayakovsky notebook no. 71 was identified as Moscow 1930, 38 leaves, museum identifier `РД-222`;
-- `OSR-0047` was corrected from a broad Mayakovsky/Brik archive description to the Mayakovsky section of S. A. Tregub fund 2872, inventory 1;
-- Khlebnikov issue 12 has a PDF route but no verified reuse licence and remains `HOLD-RIGHTS`;
-- the Harvard Weinstein dissertation is a verified `CC BY 4.0` download candidate;
+- Mayakovsky notebook no. 71: Moscow 1930, 38 leaves, museum identifier `РД-222`;
+- `OSR-0047`: corrected to the Mayakovsky section of S. A. Tregub fund 2872, inventory 1;
+- Khlebnikov issue 12: PDF route confirmed but no reusable-file licence;
+- Harvard Weinstein dissertation: verified `CC BY 4.0` download candidate;
 - all 75 legacy testimony quotations remain `HOLD-DIRECT-READ`.
 
 ## 8. Pass 13 — RSL/NEL and early editions
@@ -133,15 +134,11 @@ HOLD-RIGHTS: 5
 HOLD-RETRY: 1
 ```
 
-Directly retained RSL links cover Tsvetaeva, Gumilev, Fet and Zabolotsky. Rights holds cover the exact Derzhavin, Bryusov, Balmont and Severyanin PDF routes.
+Directly retained RSL links cover Tsvetaeva, Gumilev, Fet and Zabolotsky. Rights holds cover exact Derzhavin, Bryusov, Balmont and Severyanin PDF routes.
 
-Corrections include:
+Corrections include Bryusov volume 7 dating, the `[19??]` imprint of *Mea*, and the sixth-edition identity of Severyanin's *Громокипящий кубок*.
 
-- Bryusov volume 7: the exact item record does not state the previously asserted `1913–1914` date;
-- Bryusov's *Mea*: `[19??]` imprint, with poems covering 1922–1924;
-- Severyanin's *Громокипящий кубок*: sixth edition, 1914.
-
-## 9. Pass 14 — fifty existing rows
+## 9. Pass 14 — first fifty-row marathon
 
 ```yaml
 rows_audited: 50
@@ -153,39 +150,60 @@ new_sources: 0
 binary_uploads: 0
 ```
 
-The pass covered existing Derzhavin, Bryusov, Balmont, Voloshin, Klyuev, Gippius, Andrei Bely, Sologub, Vyacheslav Ivanov, Merezhkovsky, Maikov, Polonsky, Apukhtin and Nadson rows.
-
-New verified download candidates:
+New verified candidates:
 
 - `OSR-0111` — *Specimens of the Russian Poets*, volume 1;
 - `OSR-0112` — *The Bakchesarian Fountain and Other Poems*.
 
-Both are Project Gutenberg United States public-domain representations. They still require exact format selection, jurisdiction note, bytes, completeness, dedupe and SHA-256.
+Both are Project Gutenberg United States public-domain representations and still require exact format selection, jurisdiction note, bytes, completeness, dedupe and SHA-256.
 
-Seventeen NEL/RSL objects expose usable metadata and often PDF routes, but lack an item-level redistribution licence. They remain `OPEN-ACCESS-NO-LICENSE / HOLD-RIGHTS`.
+Major corrections covered Derzhavin's seven-volume representation, Balmont volume 5, Voloshin fund 102 and title/publication dating, Klyuev edition identities, Gippius publication coverage, Bely and Sologub exact titles, and Maikov/Polonsky extents.
 
-Material corrections include:
+## 10. Pass 15 — second fifty-row marathon
 
-- Derzhavin volume 1 belongs to a seven-volume representation and is distinct from the nine-volume parent catalogue;
-- Balmont's exact object is complete poems, volume 5, *Литургия красоты*, second edition;
-- Voloshin's RGALI entry is fund 102, 1896–1933, three inventories and 56 storage units; URL path `7943` is not the fund number;
-- Voloshin's *Anno mundi ardentis* separates title year 1915 from publication year 1916;
-- Klyuev's *Песнослов* is book one, and *Сосен перезвон* is the second edition;
-- Gippius book 2 was published in 1910 and covers poems of 1903–1909;
-- Bely's exact title is *Кубок метелей: Четвертая симфония*;
-- Sologub's exact title is *Пламенный круг: Стихи. Книга восьмая*;
-- Maikov volume 1 is `[1913]`, XVI + 600 pages plus portrait;
-- Polonsky volume 1 is 1896, 480 pages plus portrait;
-- Pertsov's anthology was published in 1896.
+```yaml
+rows_audited: 50
+KEEP-LINK: 19
+HOLD-RIGHTS: 3
+HOLD-IDENTITY: 1
+HOLD-RETRY: 27
+new_sources: 0
+binary_uploads: 0
+```
 
-Nineteen technical failures remain `HOLD-RETRY`, not `DROP-BROKEN`.
+The pass directly audited `OSR-0166..OSR-0215` covering Nadson, Khodasevich, Parnok, Lokhvitskaya, Cherubina de Gabriak, Brodsky, Tvardovsky, Okudzhava, Lomonosov, Sumarokov, Trediakovsky and Karamzin.
 
-## 10. Controlling rights rule
+Material findings and corrections:
+
+- Parnok's 1979 Ardis collected poems: 388 pages plus four illustration leaves, modern apparatus, `KEEP-LINK`;
+- Lokhvitskaya Wikisource corpus: mixed witnesses, not one edition;
+- Lokhvitskaya `Version 3`: page labels 1899, but source basis is a 1979 anthology with a 1989 supplement; `HOLD-IDENTITY`;
+- Cherubina de Gabriak Wikisource corpus: mainly a 1989 anthology plus supplements, auxiliary only;
+- three Culture.ru poem pages: exact pages confirmed, no print-edition basis, active-link attribution required;
+- Brodsky URL: museum-foundation navigation, not a direct collection catalogue; site materials are protected;
+- Tvardovsky archive: fund 1816, 1935–1976, two inventories, 702 units; URL path `7615` is not the fund number;
+- exact *Vasilii Terkin* object: chapter XVI `Бой в болоте`, unpublished variant, fund 618, inventory 2, unit 984, 1942–1944;
+- Tvardovsky estate museum: no authentic exhibits; objects are typological and furniture reconstructed;
+- Okudzhava museum: institutional navigation with active-link requirement and item-level media rights;
+- Lomonosov part 2: 1840, `[6] + 356` pages, online reading, no redistribution licence;
+- Sumarokov parent corpus: ten parts, 1781–1782; parts 1 and 3 confirmed complete but remain `HOLD-RIGHTS`;
+- Trediakovsky RVB basis: second edition of *Избранные произведения*, 1963;
+- exact FEB chapter by G. N. Moiseeva and Yu. V. Stennik: 1980, pages 491–522;
+- Karamzin RVB portal: navigation to modern edited electronic publications, not an unrestricted corpus.
+
+Twenty-seven exact URLs returned HTTP 403, cache misses, decoding failures or internal errors. They remain `HOLD-RETRY`, not direct-read sources and not permanent-death findings.
+
+## 11. Controlling verification and rights rules
 
 ```text
+page title != edition identity
+search snippet != direct reading
+archive URL number != archival fund number
+museum reconstruction != authentic-object provenance
 free viewer access != downloadable file identity
-PDF endpoint != open licence
+PDF or digital-copy endpoint != open licence
 public-domain author text != unrestricted scan, apparatus, database or image reuse
+HTTP 403, timeout, cache miss or decoding failure != verified content
 ```
 
 Every acquisition candidate still requires:
@@ -199,7 +217,7 @@ Every acquisition candidate still requires:
 - SHA-256;
 - a real Drive file ID after upload.
 
-## 11. Verified binaries and duplicate controls
+## 12. Verified binaries and duplicate controls
 
 Directly manifested as `DRIVE-VERIFIED`:
 
@@ -215,7 +233,7 @@ Verified duplicate controls:
 - `OSR-0114` — exact Drive duplicate of Bryusov's *Urbi et Orbi*;
 - `OSR-0124` — exact Drive duplicate of the 1915 Severyanin source in `BATCH-0001`.
 
-## 12. Controlling policy and reports
+## 13. Controlling policy and reports
 
 - `docs/SOURCE_ACQUISITION_AND_DRIVE_POLICY.md`;
 - `docs/RESEARCH_SOURCES.md`;
@@ -224,20 +242,15 @@ Verified duplicate controls:
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_11_MAYAKOVSKY_LERMONTOV_MANDELSTAM_KHLEBNIKOV_NEKRASOV_TYUTCHEV_2026-08-03.md`;
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_12_MUSEUM_ARCHIVE_RSL_THESES_LEGACY_WEAK_SOURCES_2026-08-03.md`;
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_13_RSL_NEL_FIRST_EDITIONS_2026-08-03.md`;
-- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_14_FIFTY_EXISTING_ROWS_2026-08-03.md`.
+- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_14_FIFTY_EXISTING_ROWS_2026-08-03.md`;
+- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_15_FIFTY_EXISTING_ROWS_2026-08-03.md`.
 
 Discovery passes 02–07 remain historical discovery evidence. Acquisition pass 08 records verified Yesenin binary acquisition.
 
-## 13. Next direct-audit order
+## 14. Next direct-audit order
 
-No new-source discovery is authorised while 114 existing rows remain unaudited.
+No new-source discovery is authorised while 64 existing rows remain unaudited.
 
-Continue from existing `OSR-0166` onward through:
+Continue from existing `OSR-0216` through the remaining registered rows, then process retry holds as a separate queue. Exact Culture.ru, Wikisource, weak-mirror and legacy-testimony claims require source-specific authority and identity decisions.
 
-1. remaining RSL/NEL early and modern editions;
-2. remaining university repositories and thesis rows;
-3. eighteenth-century and Pushkin-era book monuments;
-4. exact Culture.ru, Wikisource, `ilibrary.ru` and weak-mirror entries;
-5. all 75 testimony quotations, one exact named source at a time.
-
-Retry holds form a separate queue. A trusted institution, parent portal or matching search snippet does not verify every stored URL, object or quotation.
+All 75 legacy testimony quotations remain `HOLD-DIRECT-READ` until each named book, letter, memoir, article or archival item is directly read.
