@@ -115,6 +115,8 @@ sha256:
 first_page_verified: true | false
 relevant_pages_or_sections:
 duplicate_check:
+Drive_file_id:
+Drive_path:
 acquisition_decision: ACCEPTED | HOLD | REJECTED
 rejection_reason:
 ```
@@ -197,3 +199,38 @@ Drive acquisition is research infrastructure. Uploading a PDF does not:
 - open a public article route;
 - justify a publication date;
 - prove that the article has used or cited it correctly.
+
+## 13. Continuous replenishment and blocker-closure loop
+
+The library is replenished continuously while named research gaps remain, but never by arbitrary volume or quota.
+
+At every continuation:
+
+1. read the active acquisition registry, unresolved `BINARY-PENDING` / `REQUEST-PENDING` rows and the latest Drive manifests;
+2. retry lawful institutional download routes when the environment supports them;
+3. process accessible candidates through MIME, first-page, page-count, size, text-layer, rights and SHA checks;
+4. upload accepted master bytes to the canonical Drive batch;
+5. capture the returned Drive file ID/path;
+6. update the Drive manifest, SHA list and repository source/acquisition ledger in the same pass;
+7. map the acquired object to exact claims/pages or keep it as unused research infrastructure with a stated purpose;
+8. mark duplicate, rejected and externally blocked objects with exact reasons;
+9. continue with other independent candidates when one host, archive or request is blocked;
+10. never claim completion merely because discovery, a catalogue card or a request template exists.
+
+A candidate advances through explicit states:
+
+```text
+DISCOVERED
+→ SHORTLISTED
+→ BINARY-PENDING or REQUEST-PENDING
+→ BYTES-RECEIVED
+→ IDENTITY-VERIFIED
+→ RIGHTS-RECORDED
+→ DEDUPED
+→ ACCEPTED
+→ UPLOADED-TO-DRIVE
+→ MANIFESTED
+→ CLAIM-MAPPED
+```
+
+No state may be skipped in reporting. `UPLOADED-TO-DRIVE` requires a real returned Drive file reference/ID. `MANIFESTED` requires the exact same SHA-256 in the canonical manifest. `CLAIM-MAPPED` requires a concrete article/research use, page range or explicit retained-purpose note.
