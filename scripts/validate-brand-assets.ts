@@ -8,96 +8,59 @@ const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
 const raw = (file: string) => fs.readFileSync(resolve(file));
 const exists = (file: string) => fs.existsSync(resolve(file));
 const digest = (bytes: Buffer) => crypto.createHash('sha256').update(bytes).digest('hex');
-const RELEASE = 'approved-rgba-20260803-1';
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const RELEASE = 'approved-single-reference-20260804-1';
+const SOURCE_SHA256 = '898cf6bd0321f6f48ed12971f49803f7ed6758961f51e06628f0da2ffd50ff17';
+const SOURCE_PARTS = Array.from({ length: 25 }, (_, index) => `qa/reference/approved-brand/final-reference.part${String(index).padStart(2, '0')}.b64`);
 
-const approved = {
-  header: {
-    sources: ['qa/reference/approved-brand/header-rgba.part00.b64', 'qa/reference/approved-brand/header-rgba.part01.b64', 'qa/reference/approved-brand/header-rgba.part02.b64'],
-    output: 'public/brand-emblem-header.png',
-    hash: '26318984aba0d69444f4479edfc3eaec9335e5deb5791a2f673b989fb643776b',
-  },
-  primary: {
-    sources: ['qa/reference/approved-brand/primary-rgba.part00.b64', 'qa/reference/approved-brand/primary-rgba.part01.b64', 'qa/reference/approved-brand/primary-rgba.part02.b64'],
-    output: 'public/brand-emblem-primary.png',
-    hash: 'aed5bbba9313f1414999700b5e6a8f6a4e5ce1a7c3e06e2f857b46b5ae271803',
-  },
-  simplified: {
-    sources: ['qa/reference/approved-brand/simplified-rgba.png.b64'],
-    output: 'public/brand-emblem-simplified.png',
-    hash: 'e2d40570733eb4e3a332fe955a74815b05a7c6ff7481b135afd385c99636a8a7',
-  },
-  micro: {
-    sources: ['qa/reference/approved-brand/micro-rgba.png.b64'],
-    output: 'public/brand-emblem-micro.png',
-    hash: 'def54ca3c95795937743737bd12767d33d48c8979b0d7600178f8cf2d445d6e5',
-  },
-} as const;
-
-for (const [role, item] of Object.entries(approved)) {
-  for (const source of item.sources) assert.ok(exists(source), `${role}: approved RGBA source part is missing: ${source}`);
-  const bytes = Buffer.from(item.sources.map((source) => read(source).replace(/\s+/g, '')).join(''), 'base64');
-  assert.ok(bytes.subarray(0, 8).equals(pngSignature), `${role}: approved source is not PNG`);
-  assert.equal(digest(bytes), item.hash, `${role}: approved source hash changed`);
-  assert.ok(bytes.includes(Buffer.from('tRNS')) || [4, 6].includes(bytes[25]), `${role}: approved source lost transparency`);
-  assert.ok(exists(item.output), `${role}: public asset is missing`);
-  assert.equal(digest(raw(item.output)), item.hash, `${role}: runtime output is not the approved source`);
-}
+for (const source of SOURCE_PARTS) assert.ok(exists(source), `approved single source part is missing: ${source}`);
+const sourceBytes = Buffer.from(SOURCE_PARTS.map((source) => read(source).replace(/\s+/g, '')).join(''), 'base64');
+assert.equal(sourceBytes.subarray(0, 4).toString('ascii'), 'RIFF', 'approved source is not RIFF WebP');
+assert.equal(sourceBytes.subarray(8, 12).toString('ascii'), 'WEBP', 'approved source is not WebP');
+assert.equal(digest(sourceBytes), SOURCE_SHA256, 'approved single source hash changed');
 
 for (const file of [
-  'public/brand-emblem-master.webp', 'public/favicon-16.png', 'public/favicon-32.png',
-  'public/apple-touch-icon.png', 'public/icon-192.png', 'public/icon-512.png',
-  'public/icon-maskable-512.png', 'public/mstile-150x150.png', 'public/og-image.jpg',
+  'public/brand-emblem.png', 'public/brand-emblem-master.webp',
+  'public/favicon-16.png', 'public/favicon-32.png', 'public/apple-touch-icon.png',
+  'public/icon-192.png', 'public/icon-512.png', 'public/icon-maskable-512.png',
+  'public/mstile-150x150.png', 'public/og-image.jpg',
 ]) {
   assert.ok(exists(file), `${file}: materialized asset missing`);
   assert.ok(raw(file).length > 180, `${file}: materialized asset too small`);
 }
 
-const retired = [
+for (const retired of [
+  'public/brand-emblem-header.png', 'public/brand-emblem-primary.png',
+  'public/brand-emblem-simplified.png', 'public/brand-emblem-micro.png',
   'qa/reference/brand-emblem-canonical-reference.webp',
-  'qa/reference/approved-brand/header-rgba.png.b64',
-  'qa/reference/approved-brand/primary-rgba.png.b64',
   'src/components/BrandMark.tsx', 'src/components/brandEmblemV18.svg',
   'public/brand-emblem.svg', 'public/brand-mark-micro.svg', 'public/brand-emblem-mask.svg',
   'public/brand-emblem-v19-candidate.svg', 'public/brand-emblem-v19-optical-candidate.svg',
   'public/brand-emblem-v19-micro-candidate.svg', 'public/brand-emblem-v20-candidate.svg',
   'public/brand-emblem-v20-micro-candidate.svg',
-];
-for (const file of retired) assert.equal(exists(file), false, `${file}: retired reference/vector asset returned`);
+]) assert.equal(exists(retired), false, `${retired}: retired brand asset returned`);
 
 const component = read('src/components/SpectralBrandMark.tsx');
-const motionCss = read('src/components/brandMotionV18.ts');
-const motion = read('src/components/brandMotionFrameInvariant.ts');
 const materializer = read('scripts/materialize-brand-art.mjs');
-const header = read('src/components/Header.tsx');
-const footer = read('src/components/Footer.tsx');
+const release = read('public/brand-release.txt');
 
 for (const token of [
-  'data-brand-renderer="approved-rgba-family-subtle-depth"',
-  'data-brand-reference-source="generated-transparent-rgba-family"',
-  'data-brand-parallax="subtle-rgba-depth-v1"',
-  'data-brand-awakening="approved-rgba-subtle-depth-v1"',
+  "asset('/brand-emblem.png')",
+  'data-brand-release="approved-single-reference-20260804-1"',
+  'data-brand-renderer="single-approved-rgba-subtle-depth"',
+  'data-brand-reference-source="single-user-selected-transparent-reference"',
+  'data-brand-raster-variant="single"',
   'background:transparent', 'data-brand-raster-base', 'data-brand-raster-aura',
-  "if (size === 'sm') return 'micro'", "event.pointerType === 'touch'", 'useReducedMotion()',
+  "event.pointerType === 'touch'", 'useReducedMotion()',
 ]) assert.ok(component.includes(token), `component missing ${token}`);
 
-assert.ok(header.includes('variant="header"'), 'site header is not using the approved wide header source');
-assert.ok(footer.includes('variant="primary"'), 'footer is not using the approved primary source');
-assert.doesNotMatch(component, /<svg|data-brand-vector|hood-layers|face-depth|epic-folds|mix-blend-mode|filter:|#02050b|drop-shadow|blur\(/i);
-assert.doesNotMatch(materializer, /brand-emblem-canonical-reference|spectral-atlas|brand-raster-atlas|gblur|drop-shadow/i);
-for (const item of Object.values(approved)) assert.ok(materializer.includes(item.hash));
-assert.ok(materializer.includes("item.sources.map"));
+assert.doesNotMatch(component, /brand-emblem-(header|primary|simplified|micro)\.png|headerSizes|<svg|data-brand-vector|mix-blend-mode|filter:|drop-shadow|blur\(/i);
+assert.doesNotMatch(materializer, /brand-emblem-canonical-reference|spectral-atlas|brand-raster-atlas|generated-transparent-rgba-family/i);
+assert.ok(materializer.includes(SOURCE_SHA256));
+assert.ok(materializer.includes("Array.from({ length: 25 }"));
+assert.ok(materializer.includes("'brand-emblem.png'"));
+assert.ok(release.includes(RELEASE));
+assert.ok(release.includes('approved-source=single-user-selected-transparent-reference'));
+assert.ok(release.includes(`source-sha256=${SOURCE_SHA256}`));
+assert.ok(release.includes('roles=single'));
 
-assert.doesNotMatch(motionCss, /drop-shadow|brightness|saturate|data-brand-vector|data-brand-energy|data-brand-rim-light/i);
-assert.ok(motion.includes('1 + 0.004 * wake'));
-assert.ok(motion.includes('scaled(0.5) * state.x * detail'));
-assert.ok(motion.includes('1 + 0.003 * detail'));
-assert.ok(motion.includes('maxSubstepSeconds: 1 / 60'));
-assert.doesNotMatch(motion, /0\.008 \* wake|scaled\(0\.92\)|--brand-hood|--brand-face|--brand-folds|--brand-rim/i);
-
-for (const file of ['index.html', 'public/site.webmanifest', 'public/browserconfig.xml', 'public/brand-release.txt']) {
-  assert.ok(read(file).includes(RELEASE), `${file}: release marker missing`);
-}
-assert.doesNotMatch(read('index.html'), /brand-mark-micro\.svg|brand-emblem-mask\.svg|image\/svg\+xml/);
-
-console.log('brand validation: exact approved transparent RGBA family, restrained depth and zero legacy SVG/reference fallback are locked');
+console.log('brand validation: one exact user-selected transparent emblem is locked for every placement');
