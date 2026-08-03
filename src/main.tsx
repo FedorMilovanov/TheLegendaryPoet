@@ -7,13 +7,17 @@ import "./hover-stability.css";
 import App from "./App";
 import { preloadCurrentRoute } from "./routes/routeModules";
 
-// All static imports, including the shared Link -> route registry cycle, have
-// finished evaluating before this point. Warm the current deep-link chunk now,
-// still before React mounts Suspense and begins the first render.
-preloadCurrentRoute();
+async function mountApp() {
+  // Resolve the first route module before React mounts. On cold WebKit runs this
+  // prevents the deep-link page from sitting behind Suspense while the module
+  // graph is still being evaluated. Later navigations remain lazy-loaded.
+  await preloadCurrentRoute();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
+
+void mountApp();
