@@ -22,6 +22,10 @@ const gruzinovDerivedPath = join(
   researchDir,
   'YESENIN_GRUZINOV_WIKISOURCE_DERIVED_SOURCE_PASS_01_2026-08.md',
 );
+const evdokimovDerivedPath = join(
+  researchDir,
+  'YESENIN_EVDOKIMOV_WIKISOURCE_DERIVED_SOURCE_PASS_01_2026-08.md',
+);
 
 for (const path of [
   acquisitionPassPath,
@@ -29,6 +33,7 @@ for (const path of [
   pageMapPath,
   registryPath,
   gruzinovDerivedPath,
+  evdokimovDerivedPath,
 ]) {
   if (!existsSync(path)) throw new Error(`missing verified source-acquisition control file: ${path}`);
 }
@@ -38,6 +43,7 @@ const sourcePass = readFileSync(sourcePassPath, 'utf8');
 const pageMap = readFileSync(pageMapPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
 const gruzinovDerived = readFileSync(gruzinovDerivedPath, 'utf8');
+const evdokimovDerived = readFileSync(evdokimovDerivedPath, 'utf8');
 
 const sha256 = 'f8ebbc91166916ff1a6e228e4b127a850b360eb64959d8441b7aa22bd2a0af17';
 const sourceId = 'yes2-duncan-russian-days-1929-tu';
@@ -183,6 +189,46 @@ for (const forbidden of [
   }
 }
 
+for (const required of [
+  'DRIVE-VERIFIED DERIVED TEXT / ONE MEMOIR ONLY / NOT THE COMPLETE 1926 COLLECTION / ORIGINAL COLLECTION STILL BINARY-PENDING',
+  'yes2-evdokimov-sergey-aleksandrovich-esenin-wikisource-derived',
+  'source_kind: DERIVED_TEXT_PDF',
+  'complete_1926_collection: false',
+  'facsimile_of_1926_collection: false',
+  'canonical_archival_master: false',
+  'pdf_pages: 45',
+  'file_size_bytes: 308180',
+  '278873e845d0505a12f50d629d7ec5715bfed5b20dcef9ebc847d670b021e669',
+  'first_page_rendered: true',
+  'derived_folder_id: 1crO4gqDJDE2h7yDrD7U_eVq3tNc-hGp7',
+  'PDF_Drive_file_id: 1OWLeog5J38-xQIgXMJQS8xr1XbXeQQNw',
+  'manifest_Drive_file_id: 11paU7OEN4xXoe5rORHcTjaBqG9ygkjSO',
+  'sha256sums_Drive_file_id: 1vd_reEM5O27kNTweqP_50GoC-KVMYc83',
+  'derived_Drive_uploaded: true',
+  'complete_1926_collection_acquired: false',
+  'complete_1926_collection_status: BINARY-PENDING',
+  'original_book_pagination_available: false',
+  'do not call this the complete 1926 memoir collection',
+  'do not close P03-02\'s complete-collection gate',
+]) {
+  if (!evdokimovDerived.includes(required)) {
+    throw new Error(`Evdokimov derived source lost representation/Drive boundary: ${required}`);
+  }
+}
+
+for (const forbidden of [
+  /complete_1926_collection:\s*true/u,
+  /facsimile_of_1926_collection:\s*true/u,
+  /canonical_archival_master:\s*true/u,
+  /complete_1926_collection_acquired:\s*true/u,
+  /complete_1926_collection_status:\s*(?:VERIFIED|ACQUIRED|DRIVE-VERIFIED)/iu,
+  /production_visual_rights_closed:\s*true/u,
+]) {
+  if (forbidden.test(evdokimovDerived)) {
+    throw new Error(`Evdokimov derived source overstates collection/facsimile status: ${forbidden}`);
+  }
+}
+
 console.log(
-  'Yesenin source acquisitions: 1 Drive-verified institutional master plus 1 separately stored Drive-verified derived text; SHA/pages/Drive IDs pinned, memoir conflicts and original-facsimile/rights HOLDs preserved.',
+  'Yesenin source acquisitions: 1 Drive-verified institutional master plus 2 separately stored Drive-verified derived texts; SHA/pages/Drive IDs pinned, memoir conflicts and original-facsimile/rights HOLDs preserved.',
 );
