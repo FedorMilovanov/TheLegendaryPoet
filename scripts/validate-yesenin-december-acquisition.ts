@@ -142,7 +142,7 @@ for (const forbidden of [
 for (const required of [
   'FILE-VERIFIED / PRIVATE RESEARCH ONLY / FACSIMILES VERIFIED / ORIGINALS AND RIGHTS STILL PENDING',
   'UYM-2026-08-03-10',
-  'PDF_pages: 416',
+  'pdf_pages: 416',
   'file_size_bytes: 29439518',
   '182d24a0984b88c6d66aeeb846b7ac3b13a0f2edb39245b8b1e03912ba7d4a7c',
   'PDF_page: 37',
