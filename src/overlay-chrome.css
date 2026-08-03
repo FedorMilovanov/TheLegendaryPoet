@@ -1,0 +1,15 @@
+/* Modal surfaces must own the whole viewport.
+   The application chrome lives in independent fixed stacking contexts and can
+   otherwise remain above an inline lightbox rendered inside transformed essay
+   cards. The shared overlay runtime adds `overlay-open` to <html>/<body>, so
+   suppress every non-modal fixed control until the top overlay releases its
+   stack lock. This preserves real pointer access instead of forcing browser
+   tests through an obstructing header. */
+html.overlay-open .site-header,
+html.overlay-open .mobile-dock,
+html.overlay-open .palette-fab,
+html.overlay-open .reading-progress,
+html.overlay-open .scroll-top-btn {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
