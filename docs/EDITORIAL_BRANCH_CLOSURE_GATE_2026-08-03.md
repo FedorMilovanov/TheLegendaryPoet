@@ -4,7 +4,7 @@
 **Branch:** `editorial/longform-marathon-2026-08`  
 **Pull request:** `#271`  
 **Gate owner:** project editorial policy and exact-head evidence  
-**Status:** `CONTENT COMPLETE / MERGE PENDING FINAL EXACT-HEAD QA`
+**Status:** `CONTENT COMPLETE / IMMUTABLE FINAL QA HEAD`
 
 ## 1. Source-registry audit
 
@@ -39,7 +39,7 @@ Chapters 15 and 16 are complete. The December chapter distinguishes contemporary
 
 The original chapter 1–14 files remain controlled non-public research drafts. The public module is a separate reader-safe synthesis with closed citation IDs, permanent source cards and executable publication rules.
 
-The canonical sitemap was regenerated from the article catalog by `npm run sitemap`. It now contains the public Part II route, its 3 August 2026 modification date and the rights-cleared 1925 archive portrait. The one-shot materialization workflow deleted itself after committing the generated XML.
+The canonical sitemap was regenerated from the article catalog by `npm run sitemap`. It contains the public Part II route, its 3 August 2026 modification date and the rights-cleared 1925 archive portrait.
 
 ## 3. Source and forensic boundary
 
@@ -59,13 +59,7 @@ Missing originals therefore remain future research targets, not invented narrati
 
 ### Yesenin Part II
 
-Only three lifetime photographs with public Wikimedia Commons provenance are used. The article does not publish:
-
-- body or autopsy photographs;
-- rope or death-scene imagery;
-- medical or inquiry facsimiles;
-- restricted private research scans;
-- generated forensic reconstruction of the hotel room.
+Only three lifetime photographs with public Wikimedia Commons provenance are used. The article does not publish body or autopsy photographs, rope or death-scene imagery, medical or inquiry facsimiles, restricted private scans or a generated forensic reconstruction of the hotel room.
 
 The public source ledger records representation class, checked pages, Drive IDs and SHA-256 values where applicable without exposing private binaries or claiming rights that the project does not hold.
 
@@ -115,12 +109,12 @@ The final WebKit hardening is implemented in product code rather than hidden in 
 
 - `useNativeImageState` observes lazy images approaching the viewport, promotes only those images to eager loading and waits for the native decoder;
 - cached and prerendered images remain synchronized through `complete` and `naturalWidth`;
-- the homepage title exposes readiness from the actual React `onAnimationEnd` lifecycle;
+- the homepage title exposes readiness from the supported React `onAnimationEnd` lifecycle;
 - premium QA waits for that event-driven state and checks final opacity instead of guessing the CSS schedule;
 - the permanent brand-browser validator forbids the removed `animationDuration`/`maxTotalMs` timer heuristic;
 - reduced-motion behavior remains an independent mandatory WebKit contour.
 
-The hardening passed the complete repository `check`, TypeScript and production build before it was committed. Its temporary workflow removed itself and is absent from this final documentation head.
+The hardening passed the complete repository `check`, TypeScript and production build before it was committed.
 
 ## 8. Permanent publication controls
 
@@ -133,11 +127,11 @@ The hardening passed the complete repository `check`, TypeScript and production 
 - normal essay, citation, myth, cover, literary-style, route, SEO, type, build and browser gates;
 - `docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md`.
 
-Temporary editorial, dependency, sitemap and WebKit-hardening workflows completed their deterministic tasks and removed themselves. No one-shot remediation or generation workflow remains in the branch.
+All temporary editorial, dependency, sitemap and WebKit-hardening workflows completed or were superseded and were removed from the branch. Their absence was verified directly before this sealing commit. No one-shot remediation or generation workflow is part of the immutable final QA head.
 
 ## 9. Final exact-head gate
 
-The branch is now content-complete. Merge is authorised only after one immutable final head passes:
+Merge is authorised only after this immutable head passes:
 
 1. CI;
 2. Articles catalog acceptance;
@@ -150,11 +144,11 @@ The branch is now content-complete. Merge is authorised only after one immutable
 9. Site route integrity audit;
 10. Manual Browser QA.
 
-Pages deployment should remain skipped while the PR is Draft. A queued, cancelled, stale-head or action-required run is not a pass.
+Pages deployment should remain skipped while the PR is Draft. A queued, cancelled, stale-head, action-required or superseded run is not a pass.
 
 ## 10. Closure procedure
 
-After the final exact-head checks are green:
+After the exact-head checks are green:
 
 1. re-read the PR head SHA;
 2. confirm zero unresolved review threads and no blocking review;
@@ -182,4 +176,4 @@ merge_to_main: WAITING_FOR_FINAL_EXACT_HEAD_QA
 branch_deletion: BLOCKED_UNTIL_CONFIRMED_MERGE
 ```
 
-The editorial marathon is substantively complete. The only remaining gate is the final immutable-head verification and protected merge procedure.
+No further content or infrastructure change is authorised on this lane unless an exact-head gate produces a concrete failure.
