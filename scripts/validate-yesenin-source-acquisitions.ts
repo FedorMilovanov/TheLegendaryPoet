@@ -77,18 +77,20 @@ for (const required of [
   '| 213 | 203 |',
   'memoir_claim: beginning of November 1921',
   'project_status: DISPUTED / QUALIFIED',
+  'forbidden: The first meeting certainly occurred in early November.',
   'academic_control: 3 February 1923',
   'academic_control: 3 August 1923',
+  'no deportation order has been acquired',
   'Exact English quotation is not copied into Russian reader prose from this pass',
 ]) {
   if (!pageMap.includes(required)) throw new Error(`Duncan page map lost conflict/page boundary: ${required}`);
 }
 
 for (const forbidden of [
-  /The first meeting certainly occurred in early November/u,
   /project_status:\s*VERIFIED[\s\S]{0,200}beginning of November/iu,
   /memoir_claim:\s*5 August 1923[\s\S]{0,200}status:\s*VERIFIED/iu,
-  /deportation order has been acquired/iu,
+  /project_status:\s*VERIFIED[\s\S]{0,240}deportation/iu,
+  /memoir_claim:\s*end of January[\s\S]{0,200}project_status:\s*VERIFIED/iu,
 ]) {
   if (forbidden.test(pageMap)) throw new Error(`Duncan page map silently upgrades memoir conflict: ${forbidden}`);
 }
