@@ -7,7 +7,7 @@ const root = path.resolve();
 const publicDir = path.join(root, 'public');
 const approvedDir = path.join(root, 'qa', 'reference', 'approved-brand');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-const RELEASE = 'approved-rgba-20260803-2';
+const RELEASE = 'approved-rgba-20260803-1';
 
 const approved = {
   header: {
