@@ -144,6 +144,7 @@ jobs:
           qa/brand-v19-micro.spec.mjs
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
+          qa/mayakovsky-visual-wave.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=android-pixel7
