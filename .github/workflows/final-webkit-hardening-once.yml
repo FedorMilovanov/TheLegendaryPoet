@@ -38,15 +38,19 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          from textwrap import dedent
 
           home_path = Path('src/pages/HomePage.tsx')
           home = home_path.read_text(encoding='utf-8')
-          old_header = """function HeroTitle() {
+
+          old_header = dedent('''\
+          function HeroTitle() {
             const [hoveredWord, setHoveredWord] = useState<string | null>(null);
 
             const words = [
-          """.replace('            ', '')
-          new_header = """function HeroTitle() {
+          ''')
+          new_header = dedent('''\
+          function HeroTitle() {
             const [hoveredWord, setHoveredWord] = useState<string | null>(null);
             const [revealedWords, setRevealedWords] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -60,45 +64,44 @@ jobs:
             };
 
             const words = [
-          """.replace('            ', '')
+          ''')
           if home.count(old_header) != 1:
               raise SystemExit(f'expected one HeroTitle header, found {home.count(old_header)}')
           home = home.replace(old_header, new_header)
 
-          old_span = """          <span
-            key={w.key}
-            className={`hero-blur-reveal hero-word-reveal ${w.key === 'legendary' ? 'hero-blur-reveal-strong' : ''}`}
-            style={{ animationDelay: w.delay }}
-          >"""
-          new_span = """          <span
-            key={w.key}
-            className={`hero-blur-reveal hero-word-reveal ${w.key === 'legendary' ? 'hero-blur-reveal-strong' : ''}`}
-            style={{ animationDelay: w.delay }}
-            data-hero-reveal-state={revealedWords.has(w.key) ? 'ready' : 'animating'}
-            onAnimationEnd={(event) => {
-              if (event.currentTarget === event.target) markWordRevealed(w.key);
-            }}
-            onAnimationCancel={(event) => {
-              if (event.currentTarget === event.target) markWordRevealed(w.key);
-            }}
-          >"""
-          if home.count(old_span) != 1:
-              raise SystemExit(f'expected one hero word span, found {home.count(old_span)}')
-          home_path.write_text(home.replace(old_span, new_span), encoding='utf-8')
+          span_anchor = "            style={{ animationDelay: w.delay }}\n"
+          span_region_start = home.index("      {words.map((w) => {")
+          span_anchor_at = home.index(span_anchor, span_region_start)
+          if home.find(span_anchor, span_anchor_at + len(span_anchor)) != -1:
+              raise SystemExit('hero animation-delay anchor is not unique')
+          readiness = dedent('''\
+                      data-hero-reveal-state={revealedWords.has(w.key) ? 'ready' : 'animating'}
+                      onAnimationEnd={(event) => {
+                        if (event.currentTarget === event.target) markWordRevealed(w.key);
+                      }}
+                      onAnimationCancel={(event) => {
+                        if (event.currentTarget === event.target) markWordRevealed(w.key);
+                      }}
+          ''')
+          # Re-indent the dedented JSX attributes to match the surrounding span.
+          readiness = ''.join(f'            {line}' if line.strip() else line for line in readiness.splitlines(keepends=True))
+          insert_at = span_anchor_at + len(span_anchor)
+          home = home[:insert_at] + readiness + home[insert_at:]
+          home_path.write_text(home, encoding='utf-8')
 
           qa_path = Path('qa/home-polish.spec.mjs')
           qa = qa_path.read_text(encoding='utf-8')
           start = qa.index('async function waitForHeroReveal(page) {')
           end = qa.index('\nasync function effectiveOpacity(locator) {', start)
-          replacement = """async function waitForHeroReveal(page) {
+          replacement = dedent('''\
+          async function waitForHeroReveal(page) {
             const reveals = page.locator('.hero-blur-reveal');
             await expect(reveals).toHaveCount(3, { timeout: 20_000 });
 
-            // The interface exposes completion from the actual CSS animation
-            // event. This avoids long cross-process computed-style polling,
-            // which can terminate Linux WebKit after the animation is already
-            // visually complete, while still requiring every title word to
-            // finish its real entrance choreography.
+            // Completion comes from the actual CSS animation event exposed by
+            // the interface. This removes long cross-process computed-style
+            // polling while still requiring every title word to complete its
+            // real entrance choreography before the visual assertion passes.
             for (let index = 0; index < 3; index += 1) {
               const reveal = reveals.nth(index);
               await expect(reveal).toHaveAttribute('data-hero-reveal-state', 'ready', {
@@ -107,7 +110,7 @@ jobs:
               await expect(reveal).toHaveCSS('opacity', '1');
             }
           }
-          """.replace('            ', '')
+          ''')
           qa_path.write_text(qa[:start] + replacement + qa[end:], encoding='utf-8')
           PY
 
