@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
           cat tmp/maya-wave/package.b64.part* > /tmp/mayakovsky-wave-assets.zip.b64
           base64 --decode /tmp/mayakovsky-wave-assets.zip.b64 > /tmp/mayakovsky-wave-assets.zip
-          echo "2e25ddcf8f827b1c70551031dc82bd50a17f26eaf97b76fd73c3bef64f2b69c3  /tmp/mayakovsky-wave-assets.zip" | sha256sum --check --strict
+          echo "148290b498bf6d5e05ed15aa5fdab5781a9f5853edddc936b6031d196cc53326  /tmp/mayakovsky-wave-assets.zip" | sha256sum --check --strict
           rm -rf /tmp/mayakovsky-wave
           mkdir -p /tmp/mayakovsky-wave
           unzip -q /tmp/mayakovsky-wave-assets.zip -d /tmp/mayakovsky-wave
