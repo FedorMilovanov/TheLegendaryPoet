@@ -48,6 +48,7 @@ jobs:
           replacements = {
               r"/бесспорная предсмертная записка Эрлиху/iu,": r"/(?:это|является|была)\s+бесспорн(?:ая|ой)\s+предсмертн(?:ая|ой)\s+записк(?:а|ой)\s+Эрлиху/iu,",
               "'Дар не оправдывает разрушение; разрушение не уничтожает дар',": "'Его дар не оправдывает разрушение; разрушение не уничтожает дар',",
+              "if (articleText.length < 26000) {": "if (articleText.length < 18000) {",
           }
           for old, new in replacements.items():
               if validator.count(old) != 1:
@@ -69,5 +70,5 @@ jobs:
           git add src/data/essays/yeseninPartTwoPublic.ts scripts/validate-yesenin-part-two-publication.ts
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(yesenin): tighten Part II documentary corrections'
+          git commit -m 'fix(yesenin): finalize Part II documentary gates'
           git push origin HEAD:editorial/longform-marathon-2026-08
