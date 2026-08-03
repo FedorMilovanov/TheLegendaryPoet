@@ -1,86 +1,31 @@
-name: Brand vector QA
+name: Brand raster QA
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/components/BrandMark.tsx'
       - 'src/components/SpectralBrandMark.tsx'
       - 'src/components/Header.tsx'
       - 'src/components/Footer.tsx'
       - 'src/components/brandMotionV18.ts'
       - 'src/components/brandMotionFrameInvariant.ts'
-      - 'src/components/brandEmblemV18.svg'
-      - 'src/brand-assets/**'
+      - 'qa/reference/brand-emblem-canonical-reference.webp'
       - 'scripts/materialize-brand-art.mjs'
-      - 'package.json'
-      - 'public/brand-emblem.svg'
-      - 'public/brand-mark-micro.svg'
-      - 'public/brand-emblem-mask.svg'
-      - 'public/brand-emblem-v20-candidate.svg'
-      - 'public/brand-emblem-v20-micro-candidate.svg'
-      - 'public/brand-release.txt'
-      - 'public/site.webmanifest'
-      - 'public/browserconfig.xml'
-      - 'index.html'
-      - 'qa/brand-reference-evaluation.json'
-      - 'qa/brand-reference-audit.json'
-      - 'qa/brand-marathon-pass-ledger.json'
-      - 'qa/brand-v20-candidate-ledger.json'
-      - 'qa/reference/brand-v20-reference-sheet.json'
+      - 'scripts/validate-brand-assets.ts'
+      - 'scripts/validate-brand-browser-workflow.ts'
+      - 'scripts/validate-brand-motion-frame-invariance.ts'
       - 'qa/brand-emblem.spec.mjs'
       - 'qa/brand-reference-comparison.spec.mjs'
-      - 'qa/brand-v20-reference.spec.mjs'
-      - 'scripts/validate-brand-assets.ts'
-      - 'scripts/validate-brand-reference-contract.ts'
-      - 'scripts/validate-brand-candidate.ts'
-      - 'scripts/validate-brand-v20.ts'
-      - 'scripts/validate-brand-deep-audit.ts'
-      - 'scripts/validate-brand-motion-frame-invariance.ts'
-      - 'scripts/validate-hover-stability.ts'
-      - 'docs/BRAND_V20_REFERENCE_PASS.md'
+      - 'package.json'
+      - 'index.html'
+      - 'public/site.webmanifest'
+      - 'public/browserconfig.xml'
+      - 'public/brand-release.txt'
       - '.github/workflows/brand-qa.yml'
       - '.github/workflows/brand-deep-audit.yml'
+      - '.github/workflows/manual-browser-qa.yml'
   push:
     branches: [main]
-    paths:
-      - 'src/components/BrandMark.tsx'
-      - 'src/components/SpectralBrandMark.tsx'
-      - 'src/components/Header.tsx'
-      - 'src/components/Footer.tsx'
-      - 'src/components/brandMotionV18.ts'
-      - 'src/components/brandMotionFrameInvariant.ts'
-      - 'src/components/brandEmblemV18.svg'
-      - 'src/brand-assets/**'
-      - 'scripts/materialize-brand-art.mjs'
-      - 'package.json'
-      - 'public/brand-emblem.svg'
-      - 'public/brand-mark-micro.svg'
-      - 'public/brand-emblem-mask.svg'
-      - 'public/brand-emblem-v20-candidate.svg'
-      - 'public/brand-emblem-v20-micro-candidate.svg'
-      - 'public/brand-release.txt'
-      - 'public/site.webmanifest'
-      - 'public/browserconfig.xml'
-      - 'index.html'
-      - 'qa/brand-reference-evaluation.json'
-      - 'qa/brand-reference-audit.json'
-      - 'qa/brand-marathon-pass-ledger.json'
-      - 'qa/brand-v20-candidate-ledger.json'
-      - 'qa/reference/brand-v20-reference-sheet.json'
-      - 'qa/brand-emblem.spec.mjs'
-      - 'qa/brand-reference-comparison.spec.mjs'
-      - 'qa/brand-v20-reference.spec.mjs'
-      - 'scripts/validate-brand-assets.ts'
-      - 'scripts/validate-brand-reference-contract.ts'
-      - 'scripts/validate-brand-candidate.ts'
-      - 'scripts/validate-brand-v20.ts'
-      - 'scripts/validate-brand-deep-audit.ts'
-      - 'scripts/validate-brand-motion-frame-invariance.ts'
-      - 'scripts/validate-hover-stability.ts'
-      - 'docs/BRAND_V20_REFERENCE_PASS.md'
-      - '.github/workflows/brand-qa.yml'
-      - '.github/workflows/brand-deep-audit.yml'
   workflow_dispatch:
 
 permissions:
@@ -91,7 +36,7 @@ env:
   TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
-  brand-vector-qa:
+  brand-raster-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -99,59 +44,37 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
-
       - name: Verify exact checkout identity
-        run: |
-          actual_sha="$(git rev-parse HEAD)"
-          test "$actual_sha" = "$TESTED_SHA"
-          echo "tested_sha=$actual_sha"
-          echo "event_sha=$GITHUB_SHA"
-
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - name: Install FFmpeg materializer dependency
         run: |
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
-          ffmpeg -version
-
       - name: Install project dependencies
         run: npm ci
-
-      - name: Validate locked brand surfaces
+      - name: Validate canonical raster surfaces
         run: npm run validate:brand
-
       - name: Validate hover stability contract
         run: npm run validate:hover-stability
-
-      - name: Typecheck layered spectral interaction
+      - name: Typecheck restrained interaction
         run: npm run typecheck
-
       - name: Build exact commit
         run: npm run build
-
       - name: Install Chromium QA runtime
         run: |
           npm install --no-save @playwright/test@1.55.0
           npx playwright install --with-deps chromium
-
       - name: Start exact preview
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/brand-preview.log 2>&1 &
-          echo $! > /tmp/brand-preview.pid
-          for attempt in {1..60}; do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
+          for attempt in {1..60}; do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           cat /tmp/brand-preview.log
           exit 1
-
       - name: Run exact Browser QA
         env:
           QA_BASE_URL: http://127.0.0.1:4173
@@ -159,9 +82,7 @@ jobs:
           npx playwright test
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
-          qa/brand-v20-reference.spec.mjs
           --reporter=line
-
       - name: Record artifact manifest
         if: always()
         run: |
@@ -169,12 +90,9 @@ jobs:
           {
             echo "scope=${EVIDENCE_SCOPE}"
             echo "tested_commit=$(git rev-parse HEAD)"
-            echo "event_commit=${GITHUB_SHA}"
             echo "workflow_run=${GITHUB_RUN_ID}"
-            echo "workflow_attempt=${GITHUB_RUN_ATTEMPT}"
             sha256sum qa-artifacts/* 2>/dev/null || true
           } > qa-artifacts/brand-qa-manifest.txt
-
       - name: Upload exact evidence
         if: always()
         uses: actions/upload-artifact@v4
