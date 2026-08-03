@@ -1,43 +1,59 @@
 {
-  "referenceId": "canonical-hooded-figure-v2-clean-base",
-  "referenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
-  "status": "human-rejected-reset-in-review",
+  "referenceId": "generated-transparent-rgba-family",
+  "status": "approved-source-family-implemented-in-review",
   "reviewerDecision": "not-reference-approved",
-  "humanFeedback": [
-    "the previous glow was excessive on mouse hover",
-    "the old SVG and raster-atlas silhouette read as an armor-plated Shredder rather than the canonical cloaked figure",
-    "the rejected SVG family and its atlas must not remain available as fallbacks or candidates"
-  ],
-  "removedArchitecture": [
-    "inline BrandMark SVG component",
-    "production emblem, micro and mask SVGs",
-    "v19 and v20 SVG candidates and their browser suites, validators, ledgers and documentation",
-    "fifteen-part spectral raster atlas derived from the rejected silhouette",
-    "multi-layer hood, face, fold, collar, rim, seam and energy clip architecture",
-    "drop-shadow, blur and high-brightness hover treatment"
+  "approvedSources": {
+    "header": {
+      "path": "qa/reference/approved-brand/header-rgba.png.b64",
+      "sha256": "4c33e0bed07a86356e35ec8c8d0b5a16cd5c690ae763f14062d255a0762416f9",
+      "siteRole": "website header"
+    },
+    "primary": {
+      "path": "qa/reference/approved-brand/primary-rgba.png.b64",
+      "sha256": "a44ed31b02ae6cd22d17ef96bce24e6ec1a4b85b49df74bc2fbc85826f7a46be",
+      "siteRole": "large emblem and footer"
+    },
+    "simplified": {
+      "path": "qa/reference/approved-brand/simplified-rgba.png.b64",
+      "sha256": "e2d40570733eb4e3a332fe955a74815b05a7c6ff7481b135afd385c99636a8a7",
+      "siteRole": "medium UI"
+    },
+    "micro": {
+      "path": "qa/reference/approved-brand/micro-rgba.png.b64",
+      "sha256": "def54ca3c95795937743737bd12767d33d48c8979b0d7600178f8cf2d445d6e5",
+      "siteRole": "compact UI and favicon"
+    }
+  },
+  "removedWrongSources": [
+    "qa/reference/brand-emblem-canonical-reference.webp",
+    "all rejected SVG candidates and production SVG fallbacks",
+    "the rejected spectral raster atlas"
   ],
   "currentImplementation": {
-    "source": "qa/reference/brand-emblem-canonical-reference.webp",
-    "materialization": "direct deterministic FFmpeg crops from the exact hash-locked canonical reference",
-    "renderer": "reference-raster-subtle-depth",
-    "layers": ["base", "faint aura"],
-    "idleAuraOpacity": 0.025,
-    "desktopHoverAuraOpacity": 0.055,
-    "compactIdleAuraOpacity": 0.012,
-    "compactHoverAuraOpacity": 0.03,
-    "maximumRootScale": 1.008,
-    "maximumAuraScale": 1.006,
+    "release": "approved-rgba-20260803-1",
+    "materialization": "exact base64 decode of each role-specific transparent PNG; no crop substitution",
+    "renderer": "approved-rgba-family-subtle-depth",
+    "layers": ["base", "faint depth copy"],
+    "transparentStage": true,
+    "idleDepthOpacity": 0.008,
+    "desktopHoverDepthOpacity": 0.02,
+    "compactIdleDepthOpacity": 0.004,
+    "compactHoverDepthOpacity": 0.01,
+    "maximumRootScale": 1.004,
+    "maximumDepthScale": 1.003,
     "blur": false,
     "dropShadow": false,
+    "screenBlend": false,
     "touchParallax": false,
     "reducedMotionTranslation": false
   },
   "requiredEvidence": [
-    "canonical reference versus production raster optical-size matrix",
-    "idle versus faint hover versus settled live-site comparison",
-    "exact return to idle",
-    "Chromium, Android Chrome and Safari coverage",
-    "critical iPhone and reduced-motion coverage"
+    "desktop homepage header idle screenshot",
+    "desktop homepage header hover screenshot",
+    "large or footer placement screenshot",
+    "mobile first viewport screenshot",
+    "compact source verification",
+    "exact return to idle"
   ],
-  "approvalGate": "Technical green status does not grant visual approval. Keep the pull request draft and do not merge until the exact screenshots receive an explicit human reference-approved verdict."
+  "approvalGate": "Only exact live-site screenshots can receive visual approval. Keep the pull request draft and do not merge before explicit user acceptance."
 }
