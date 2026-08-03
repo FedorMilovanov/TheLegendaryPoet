@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -8,16 +9,10 @@ const publicDir = path.join(root, 'public');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
 fs.mkdirSync(publicDir, { recursive: true });
 
-const atlasSources = [
-  'spectral-atlas.part01.b64',
-  'spectral-atlas.part02.b64',
-  'spectral-atlas.part03.b64',
-  'spectral-atlas.part04.b64',
-  'spectral-atlas.part05.b64',
-  'spectral-atlas.part06.b64',
-  'spectral-atlas.part07.b64',
-  'spectral-atlas.tail08-15.b64',
-];
+const atlasSources = Array.from(
+  { length: 15 },
+  (_, index) => `spectral-atlas.part${String(index + 1).padStart(2, '0')}.b64`,
+);
 
 const encodedAtlas = atlasSources.map((sourceName) => {
   const sourcePath = path.join(sourceDir, sourceName);
@@ -32,8 +27,22 @@ if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encodedAtlas)) {
 }
 
 const atlasBytes = Buffer.from(encodedAtlas, 'base64');
-if (atlasBytes.length < 10_000 || atlasBytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') {
-  throw new Error('brand materialize: decoded spectral atlas is not a valid PNG');
+const atlasHash = crypto.createHash('sha256').update(atlasBytes).digest('hex');
+const expectedAtlasHash = '247666446e35dc39622cf1fb1c3a44978906d58f322210f8eabb715419b143bb';
+const atlasWidth = atlasBytes.readUInt32BE(16);
+const atlasHeight = atlasBytes.readUInt32BE(20);
+
+if (
+  atlasBytes.length !== 27_096
+  || atlasBytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
+  || atlasWidth !== 768
+  || atlasHeight !== 512
+  || atlasHash !== expectedAtlasHash
+) {
+  throw new Error(
+    `brand materialize: spectral atlas integrity mismatch `
+      + `(bytes=${atlasBytes.length}, size=${atlasWidth}x${atlasHeight}, sha256=${atlasHash})`,
+  );
 }
 
 const written = [];
