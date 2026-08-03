@@ -81,47 +81,51 @@ test('canonical raster family decodes at every optical gate', async ({ page, req
   await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-reference-raster-optical-matrix.png'), fullPage: true });
 });
 
-test('pointer interaction remains subtle and returns exactly to idle', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
-  await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
-  const mark = page.locator('footer [data-brand-mark]').first();
-  await mark.scrollIntoViewIfNeeded();
-  await expect(mark).toBeVisible();
-  await expectRasterContract(mark);
+test.describe('fine-pointer reference interaction', () => {
+  test.skip(({ isMobile }) => Boolean(isMobile), 'mouse hover is intentionally absent on touch projects');
 
-  const box = await mark.boundingBox();
-  const clip = { x: Math.max(0, box.x - 44), y: Math.max(0, box.y - 44), width: box.width + 88, height: box.height + 88 };
-  const idle = await state(mark);
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-reference-raster-idle.png'), clip });
+  test('pointer interaction remains faint and returns exactly to idle', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
+    await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+    const mark = page.locator('footer [data-brand-mark]').first();
+    await mark.scrollIntoViewIfNeeded();
+    await expect(mark).toBeVisible();
+    await expectRasterContract(mark);
 
-  await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
-  await page.waitForTimeout(720);
-  await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
-  const active = await state(mark);
+    const box = await mark.boundingBox();
+    const clip = { x: Math.max(0, box.x - 44), y: Math.max(0, box.y - 44), width: box.width + 88, height: box.height + 88 };
+    const idle = await state(mark);
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-reference-raster-idle.png'), clip });
 
-  expect(Number(active.rootScale)).toBeGreaterThan(1.004);
-  expect(Number(active.rootScale)).toBeLessThanOrEqual(1.009);
-  expect(Math.abs(parseFloat(active.rootY))).toBeLessThan(0.4);
-  expect(Math.abs(parseFloat(active.auraX))).toBeGreaterThan(0.35);
-  expect(Math.abs(parseFloat(active.auraX))).toBeLessThan(1.3);
-  expect(Number(active.auraScale)).toBeLessThanOrEqual(1.007);
-  expect(Number(active.auraOpacity)).toBeGreaterThanOrEqual(0.05);
-  expect(Number(active.auraOpacity)).toBeLessThanOrEqual(0.08);
-  expect(active.auraTransform).not.toBe(active.baseTransform);
-  expect(active.auraFilter).not.toMatch(/drop-shadow|blur\(/i);
-  await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-reference-raster-hover.png'), clip });
+    await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
+    await page.waitForTimeout(720);
+    await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
+    const active = await state(mark);
 
-  await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100));
-  await expect(mark).toHaveAttribute('data-brand-interaction', 'settling');
-  await page.waitForTimeout(2200);
-  await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
-  const settled = await state(mark);
-  expect(settled.rootY).toBe('0.000px');
-  expect(Number(settled.rootScale)).toBeCloseTo(1, 4);
-  expect(settled.auraX).toBe('0.000px');
-  expect(Number(settled.auraScale)).toBeCloseTo(1, 4);
-  expect(idle.rootScale).toBe('1');
+    expect(Number(active.rootScale)).toBeGreaterThan(1.004);
+    expect(Number(active.rootScale)).toBeLessThanOrEqual(1.009);
+    expect(Math.abs(parseFloat(active.rootY))).toBeLessThan(0.4);
+    expect(Math.abs(parseFloat(active.auraX))).toBeGreaterThan(0.35);
+    expect(Math.abs(parseFloat(active.auraX))).toBeLessThan(1.3);
+    expect(Number(active.auraScale)).toBeLessThanOrEqual(1.007);
+    expect(Number(active.auraOpacity)).toBeGreaterThanOrEqual(0.045);
+    expect(Number(active.auraOpacity)).toBeLessThanOrEqual(0.06);
+    expect(active.auraTransform).not.toBe(active.baseTransform);
+    expect(active.auraFilter).not.toMatch(/drop-shadow|blur\(/i);
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-reference-raster-hover.png'), clip });
+
+    await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100));
+    await expect(mark).toHaveAttribute('data-brand-interaction', 'settling');
+    await page.waitForTimeout(2200);
+    await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
+    const settled = await state(mark);
+    expect(settled.rootY).toBe('0.000px');
+    expect(Number(settled.rootScale)).toBeCloseTo(1, 4);
+    expect(settled.auraX).toBe('0.000px');
+    expect(Number(settled.auraScale)).toBeCloseTo(1, 4);
+    expect(idle.rootScale).toBe('1');
+  });
 });
 
 test('touch and reduced motion never move the reference mark', async ({ page }) => {
