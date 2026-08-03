@@ -50,8 +50,8 @@ export const BRAND_MOTION_SPRINGS = {
 
 const px = (value: number) => `${value.toFixed(3)}px`;
 const number = (value: number) => value.toFixed(4);
-const degrees = (value: number) => `${value.toFixed(3)}deg`;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
 export const brandMotionPhase = (value: number, start: number, end: number) => {
   const t = clamp((value - start) / (end - start), 0, 1);
   return t * t * (3 - 2 * t);
@@ -75,12 +75,8 @@ export function advanceBrandMotionState(
   const spring = BRAND_MOTION_SPRINGS[phase];
   let remaining = clamp(elapsedSeconds, 0, BRAND_MOTION_TIMESTEP.maxFrameDeltaSeconds);
 
-  // Consume the real wall-clock interval in bounded stable substeps. The old
-  // one-step 32ms clamp discarded time whenever RAF was sparse, making the same
-  // spring visibly slower on loaded runners and low-refresh devices.
   while (remaining > 0.000_001) {
     const dt = Math.min(BRAND_MOTION_TIMESTEP.maxSubstepSeconds, remaining);
-
     state.velocityX += (targets.x - state.x) * spring.stiffness * dt;
     state.velocityY += (targets.y - state.y) * spring.stiffness * dt;
     state.velocityWake += (targets.wake - state.wake) * spring.wakeStiffness * dt;
@@ -90,7 +86,6 @@ export function advanceBrandMotionState(
     state.x += state.velocityX * dt;
     state.y += state.velocityY * dt;
     state.wake += state.velocityWake * dt;
-
     remaining -= dt;
   }
 }
@@ -123,7 +118,6 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
   let motionScale = 1;
   const targets: BrandMotionTargets = { x: 0, y: 0, wake: 0 };
   const state = createBrandMotionState();
-  const atmosphere = node.querySelector<HTMLElement | SVGElement>('[data-brand-atmosphere]');
   let frame = 0;
   let lastTime = 0;
   let active = false;
@@ -137,7 +131,7 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
       width: Math.max(1, rect.width),
       height: Math.max(1, rect.height),
     };
-    motionScale = clamp(Math.min(bounds.width, bounds.height) / 64, 0.65, 1.6);
+    motionScale = clamp(Math.min(bounds.width, bounds.height) / 64, 0.7, 1.35);
   };
 
   const setTargets = (clientX: number, clientY: number) => {
@@ -146,75 +140,19 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
   };
 
   const write = () => {
-    const auraWake = brandMotionPhase(state.wake, 0, 0.42);
-    const figureWake = brandMotionPhase(state.wake, 0.12, 0.78);
-    const detailWake = brandMotionPhase(state.wake, 0.32, 1);
+    const wake = brandMotionPhase(state.wake, 0, 0.72);
+    const detail = brandMotionPhase(state.wake, 0.22, 1);
     const style = node.style;
     const scaled = (value: number) => value * motionScale;
 
     style.setProperty('--brand-motion-scale', number(motionScale));
-    style.setProperty('--brand-root-y', px(scaled(-0.78) * figureWake));
-    style.setProperty('--brand-root-scale', number(1 + 0.022 * figureWake));
-
-    const farX = px(scaled(-3.15) * state.x * auraWake);
-    const farY = px(scaled(-2 * state.y - 0.5) * auraWake);
-    const farScale = number(1 + 0.042 * auraWake);
-    style.setProperty('--brand-far-x', farX);
-    style.setProperty('--brand-far-y', farY);
-    style.setProperty('--brand-far-scale', farScale);
-
-    // The semantic far plane also receives the resolved transform directly.
-    // This keeps the counter-parallax deterministic across SVG groups and HTML
-    // raster layers instead of depending on CSS cascade order.
-    if (atmosphere) {
-      atmosphere.style.transform = atmosphere instanceof SVGElement
-        ? `translate(${farX}, ${farY}) scale(${farScale})`
-        : `translate3d(${farX}, ${farY}, -18px) scale(${farScale})`;
-    }
-
-    // The luminous layer deliberately travels slightly farther than the hood
-    // and cloth planes. This makes the attached electric rim read as depth,
-    // while remaining inside the root's tightly bounded 2.2% lift.
-    style.setProperty('--brand-energy-x', px(scaled(3.66) * state.x * auraWake));
-    style.setProperty('--brand-energy-y', px(scaled(2.35 * state.y - 0.36) * auraWake));
-    style.setProperty('--brand-energy-r', degrees(state.x * 0.82 * auraWake));
-    style.setProperty('--brand-energy-scale', number(1 + 0.022 * auraWake));
-
-    style.setProperty('--brand-figure-x', px(scaled(0.18) * state.x * figureWake));
-    style.setProperty('--brand-figure-y', px(scaled(0.13 * state.y - 0.14) * figureWake));
-
-    style.setProperty('--brand-folds-x', px(scaled(1.1) * state.x * figureWake));
-    style.setProperty('--brand-folds-y', px(scaled(0.68 * state.y + 0.18) * figureWake));
-    style.setProperty('--brand-folds-scale-x', number(1 + 0.012 * figureWake));
-    style.setProperty('--brand-folds-scale-y', number(1 + 0.018 * figureWake));
-
-    style.setProperty('--brand-hood-x', px(scaled(1.28) * state.x * figureWake));
-    style.setProperty('--brand-hood-y', px(scaled(0.82 * state.y - 0.24) * figureWake));
-    style.setProperty('--brand-hood-scale', number(1 + 0.012 * figureWake));
-
-    style.setProperty('--brand-hood-layers-x', px(scaled(2.02) * state.x * detailWake));
-    style.setProperty('--brand-hood-layers-y', px(scaled(1.24 * state.y - 0.34) * detailWake));
-    style.setProperty('--brand-hood-layers-scale', number(1 + 0.02 * detailWake));
-
-    style.setProperty('--brand-face-x', px(scaled(-0.72) * state.x * detailWake));
-    style.setProperty('--brand-face-y', px(scaled(-0.4 * state.y + 0.16) * detailWake));
-    style.setProperty('--brand-face-scale', number(1 - 0.022 * detailWake));
-
-    style.setProperty('--brand-collar-x', px(scaled(1.38) * state.x * figureWake));
-    style.setProperty('--brand-collar-y', px(scaled(0.9 * state.y + 0.16) * figureWake));
-    style.setProperty('--brand-collar-scale-x', number(1 + 0.014 * figureWake));
-    style.setProperty('--brand-collar-scale-y', number(1 + 0.009 * figureWake));
-
-    style.setProperty('--brand-rim-x', px(scaled(2.55) * state.x * detailWake));
-    style.setProperty('--brand-rim-y', px(scaled(1.5 * state.y - 0.2) * detailWake));
-    style.setProperty('--brand-texture-x', px(scaled(0.86) * state.x * detailWake));
-    style.setProperty('--brand-texture-y', px(scaled(0.54) * state.y * detailWake));
-
-    style.setProperty('--brand-aura-opacity', number(0.92 + 0.08 * auraWake));
-    style.setProperty('--brand-energy-opacity', number(0.9 + 0.1 * auraWake));
-    style.setProperty('--brand-rim-opacity', number(0.9 + 0.1 * detailWake));
-    style.setProperty('--brand-energy-brightness', number(1 + 0.28 * auraWake));
-    style.setProperty('--brand-rim-brightness', number(1 + 0.42 * detailWake));
+    style.setProperty('--brand-root-y', px(scaled(-0.22) * wake));
+    style.setProperty('--brand-root-scale', number(1 + 0.008 * wake));
+    style.setProperty('--brand-figure-x', px(scaled(0.12) * state.x * wake));
+    style.setProperty('--brand-figure-y', px(scaled(0.08 * state.y - 0.04) * wake));
+    style.setProperty('--brand-aura-x', px(scaled(0.92) * state.x * detail));
+    style.setProperty('--brand-aura-y', px(scaled(0.56 * state.y - 0.08) * detail));
+    style.setProperty('--brand-aura-scale', number(1 + 0.006 * detail));
   };
 
   const schedule = () => {
