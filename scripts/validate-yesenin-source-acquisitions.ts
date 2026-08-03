@@ -79,7 +79,7 @@ for (const required of [
   'project_status: DISPUTED / QUALIFIED',
   'academic_control: 3 February 1923',
   'academic_control: 3 August 1923',
-  'No English direct quotation is copied into Russian reader prose',
+  'Exact English quotation is not copied into Russian reader prose from this pass',
 ]) {
   if (!pageMap.includes(required)) throw new Error(`Duncan page map lost conflict/page boundary: ${required}`);
 }
