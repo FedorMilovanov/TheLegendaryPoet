@@ -140,6 +140,26 @@ function permitsPrefetch() {
   return !connection?.saveData && connection?.effectiveType !== 'slow-2g' && connection?.effectiveType !== '2g';
 }
 
+function initialRoutePathname() {
+  if (typeof window === 'undefined') return null;
+  const configuredBase = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const browserPathname = window.location.pathname || '/';
+  if (!configuredBase || configuredBase === '/') return browserPathname;
+  if (browserPathname === configuredBase) return '/';
+  if (browserPathname.startsWith(`${configuredBase}/`)) return browserPathname.slice(configuredBase.length) || '/';
+  return browserPathname;
+}
+
+export function preloadCurrentRoute() {
+  if (!permitsPrefetch()) return;
+  const pathname = initialRoutePathname();
+  if (!pathname) return;
+  const route = prefetchableRoutes.find((candidate) => matchPath({ path: candidate.pattern, end: true }, pathname));
+  // main.tsx invokes this only after the complete static module graph has
+  // evaluated, avoiding a WebKit initialisation cycle through Link.
+  if (route) void route.load().catch(() => undefined);
+}
+
 export function preloadRoute(to: To) {
   if (!permitsPrefetch()) return;
   const pathname = pathnameFromTo(to);
