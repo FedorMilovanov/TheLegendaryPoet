@@ -1,18 +1,18 @@
-# Canonical emblem reference
+# Approved transparent brand family
 
-`brand-emblem-canonical-reference.webp` is the immutable project copy of the user-approved **square close-up hooded bust** reference.
+The only approved source family for the current THE LEGENDARY POET website implementation is stored in `qa/reference/approved-brand/` as exact base64-encoded transparent PNG bytes:
 
-- Reference id: `canonical-hooded-figure-v2-clean-base`
-- Project size: 256×256 WebP
-- Approved source: `Figure mystérieuse dans une lueur bleue.png`
-- Approved source size: 1254×1254
-- Composition: monumental pointed hood, huge pure-black face void, broad shoulders, heavy diagonal cloth and electric-blue aura behind the head and upper body
-- Lower edge: no required smoke or glowing mist below the cloak
+- `header-rgba.png.b64` — wide website header placement;
+- `primary-rgba.png.b64` — large emblem, hero and footer placements;
+- `simplified-rgba.png.b64` — medium navigation and card placements;
+- `micro-rgba.png.b64` — compact UI and favicon source.
 
-The older long full-body file `Siluette dans la brume sombre.png` is supplemental mood material only. It must not influence production geometry, optical ratios or approval scoring.
+Source id: `generated-transparent-rgba-family`.
 
-The square reference must be opened before every emblem edit and must remain visible beside the candidate. The built header/footer, optical sizes and interaction states must also be captured beside the same square reference during exact-head Browser QA.
+These are the four transparent PNG variants generated and selected in the conversation for their specific site roles. They must be materialized byte-for-byte and must not be recreated by cropping, padding or recolouring another reference.
 
-The file may be replaced only after explicit user approval. Any replacement requires synchronized updates to the manifest, contract, validator, comparison tests, documentation and reference evaluation.
+The former square `brand-emblem-canonical-reference.webp` source was the wrong implementation source and has been removed. It must not return as a runtime source, fallback or comparison authority. The rejected SVG and raster-atlas families must also remain absent.
 
-The current SVG candidate is **NOT REFERENCE APPROVED** until the user accepts the exact-head reference/candidate/live-site evidence.
+Every exact-head visual review must show the built website itself: desktop header idle and hover, large/footer placement, mobile first viewport, and compact usage. Isolated optical matrices are supplemental only and never replace live-page evidence.
+
+Technical green status does not grant visual approval. Keep the pull request draft until the user accepts the exact live-site screenshots.
