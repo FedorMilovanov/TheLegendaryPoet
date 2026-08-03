@@ -26,6 +26,10 @@ const evdokimovDerivedPath = join(
   researchDir,
   'YESENIN_EVDOKIMOV_WIKISOURCE_DERIVED_SOURCE_PASS_01_2026-08.md',
 );
+const letopisSourcePath = join(
+  researchDir,
+  'YESENIN_LETOPIS_T3_K2_SOURCE_PASS_01_2026-08.md',
+);
 
 for (const path of [
   acquisitionPassPath,
@@ -34,6 +38,7 @@ for (const path of [
   registryPath,
   gruzinovDerivedPath,
   evdokimovDerivedPath,
+  letopisSourcePath,
 ]) {
   if (!existsSync(path)) throw new Error(`missing verified source-acquisition control file: ${path}`);
 }
@@ -44,6 +49,7 @@ const pageMap = readFileSync(pageMapPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
 const gruzinovDerived = readFileSync(gruzinovDerivedPath, 'utf8');
 const evdokimovDerived = readFileSync(evdokimovDerivedPath, 'utf8');
+const letopisSource = readFileSync(letopisSourcePath, 'utf8');
 
 const sha256 = 'f8ebbc91166916ff1a6e228e4b127a850b360eb64959d8441b7aa22bd2a0af17';
 const sourceId = 'yes2-duncan-russian-days-1929-tu';
@@ -229,6 +235,52 @@ for (const forbidden of [
   }
 }
 
+for (const required of [
+  'DRIVE-VERIFIED OCR RESEARCH COPY / ACADEMIC EDITION / PRODUCTION RIGHTS HOLD',
+  'yes2-letopis-t3-k2-imwerden-ocr',
+  'coverage: 10 May 1922 — 2 August 1923',
+  'stored_representation: ImWerden OCR reproduction of the IMLI RAN academic edition',
+  'pdf_pages: 580',
+  'catalog_description_pages: 568',
+  'file_size_bytes: 53450829',
+  'OCR_TEXT_OVER_PAGE_IMAGES',
+  '89b33c7a472eab0c234877cd8737a1f2e12eebd142d0552a625eeb28d6ce4187',
+  'first_page_rendered: true',
+  'cover_rendered_and_inspected: true',
+  'title_page_pdf_page: 5',
+  `batch_folder_id: ${batchFolderId}`,
+  'PDF_Drive_file_id: 1d_3-aNk4eY5LqLWzU9XUt8J_g6-IynxN',
+  `manifest_Drive_file_id: ${manifestDriveId}`,
+  `sha256sums_Drive_file_id: ${sumsDriveId}`,
+  'Drive_parent_verified: true',
+  'Drive_uploaded: true',
+  'manifest_updated_in_place: true',
+  'checksum_manifest_updated_in_place: true',
+  'canonical_archival_master: false',
+  'original_archive_object: false',
+  'production_visual_rights_closed: false',
+  'production_reuse: HOLD',
+  'acquisition_decision: ACCEPTED_RESEARCH_COPY',
+  'public_download: NOT_CREATED',
+]) {
+  if (!letopisSource.includes(required)) {
+    throw new Error(`Letopis source pass lost verified representation/Drive boundary: ${required}`);
+  }
+}
+
+for (const forbidden of [
+  /canonical_archival_master:\s*true/u,
+  /original_archive_object:\s*true/u,
+  /manuscript_facsimile_master:\s*true/u,
+  /production_visual_rights_closed:\s*true/u,
+  /production_reuse:\s*(?:CLEARED|ALLOWED|true)/iu,
+  /public_download:\s*(?:CREATED|PUBLISHED|true)/iu,
+]) {
+  if (forbidden.test(letopisSource)) {
+    throw new Error(`Letopis source pass overstates original/rights/public status: ${forbidden}`);
+  }
+}
+
 console.log(
-  'Yesenin source acquisitions: 1 Drive-verified institutional master plus 2 separately stored Drive-verified derived texts; SHA/pages/Drive IDs pinned, memoir conflicts and original-facsimile/rights HOLDs preserved.',
+  'Yesenin source acquisitions: 2 Drive-verified research masters/copies plus 2 separately stored Drive-verified derived texts; SHA/pages/Drive IDs pinned, representation, memoir conflicts and original-facsimile/rights HOLDs preserved.',
 );
