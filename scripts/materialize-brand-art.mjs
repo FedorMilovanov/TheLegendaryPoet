@@ -7,53 +7,28 @@ const root = path.resolve();
 const publicDir = path.join(root, 'public');
 const approvedDir = path.join(root, 'qa', 'reference', 'approved-brand');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-const RELEASE = 'approved-rgba-20260803-1';
-
-const approved = {
-  header: {
-    sources: ['header-rgba.part00.b64', 'header-rgba.part01.b64', 'header-rgba.part02.b64'],
-    output: 'brand-emblem-header.png',
-    sha256: '26318984aba0d69444f4479edfc3eaec9335e5deb5791a2f673b989fb643776b',
-  },
-  primary: {
-    sources: ['primary-rgba.part00.b64', 'primary-rgba.part01.b64', 'primary-rgba.part02.b64'],
-    output: 'brand-emblem-primary.png',
-    sha256: 'aed5bbba9313f1414999700b5e6a8f6a4e5ce1a7c3e06e2f857b46b5ae271803',
-  },
-  simplified: {
-    sources: ['simplified-rgba.png.b64'],
-    output: 'brand-emblem-simplified.png',
-    sha256: 'e2d40570733eb4e3a332fe955a74815b05a7c6ff7481b135afd385c99636a8a7',
-  },
-  micro: {
-    sources: ['micro-rgba.png.b64'],
-    output: 'brand-emblem-micro.png',
-    sha256: 'def54ca3c95795937743737bd12767d33d48c8979b0d7600178f8cf2d445d6e5',
-  },
-};
+const RELEASE = 'approved-single-reference-20260804-1';
+const SOURCE_SHA256 = '898cf6bd0321f6f48ed12971f49803f7ed6758961f51e06628f0da2ffd50ff17';
+const SOURCE_PARTS = Array.from({ length: 25 }, (_, index) => `final-reference.part${String(index).padStart(2, '0')}.b64`);
 
 fs.mkdirSync(publicDir, { recursive: true });
 
 const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-const written = [];
-const materialized = {};
-
-for (const [role, item] of Object.entries(approved)) {
-  const encoded = item.sources.map((source) => {
-    const sourcePath = path.join(approvedDir, source);
-    if (!fs.existsSync(sourcePath)) throw new Error(`brand materialize: approved ${role} source part is missing: ${source}`);
-    return fs.readFileSync(sourcePath, 'utf8').replace(/\s+/g, '');
-  }).join('');
-  const bytes = Buffer.from(encoded, 'base64');
-  if (!bytes.subarray(0, 8).equals(pngSignature)) throw new Error(`brand materialize: ${role} is not a PNG`);
-  const actualHash = digest(bytes);
-  if (actualHash !== item.sha256) throw new Error(`brand materialize: approved ${role} integrity mismatch (${actualHash})`);
-  const outputPath = path.join(publicDir, item.output);
-  fs.writeFileSync(outputPath, bytes);
-  materialized[role] = outputPath;
-  written.push(`${item.output} (${bytes.length} B, ${actualHash})`);
+const encoded = SOURCE_PARTS.map((source) => {
+  const sourcePath = path.join(approvedDir, source);
+  if (!fs.existsSync(sourcePath)) throw new Error(`brand materialize: approved source part is missing: ${source}`);
+  return fs.readFileSync(sourcePath, 'utf8').replace(/\s+/g, '');
+}).join('');
+const sourceBytes = Buffer.from(encoded, 'base64');
+const sourceHash = digest(sourceBytes);
+if (sourceHash !== SOURCE_SHA256) throw new Error(`brand materialize: approved source integrity mismatch (${sourceHash})`);
+if (sourceBytes.subarray(0, 4).toString('ascii') !== 'RIFF' || sourceBytes.subarray(8, 12).toString('ascii') !== 'WEBP') {
+  throw new Error('brand materialize: approved source is not WebP');
 }
+
+const sourcePath = path.join(publicDir, '.brand-emblem-approved-source.webp');
+fs.writeFileSync(sourcePath, sourceBytes);
+const written = [];
 
 function runFfmpeg(args, outputName) {
   const outputPath = path.join(publicDir, outputName);
@@ -67,13 +42,14 @@ function runFfmpeg(args, outputName) {
 }
 
 const png = ['-frames:v', '1', '-c:v', 'png', '-compression_level', '9', '-pred', 'mixed'];
-runFfmpeg(['-i', materialized.primary, '-frames:v', '1', '-c:v', 'libwebp', '-lossless', '1', '-compression_level', '6', '-pix_fmt', 'yuva420p'], 'brand-emblem-master.webp');
-runFfmpeg(['-i', materialized.micro, '-vf', 'scale=16:16:flags=lanczos', ...png], 'favicon-16.png');
-runFfmpeg(['-i', materialized.micro, '-vf', 'scale=32:32:flags=lanczos', ...png], 'favicon-32.png');
+const emblem = runFfmpeg(['-i', sourcePath, ...png], 'brand-emblem.png');
+runFfmpeg(['-i', emblem, '-frames:v', '1', '-c:v', 'libwebp', '-lossless', '1', '-compression_level', '6', '-pix_fmt', 'yuva420p'], 'brand-emblem-master.webp');
+runFfmpeg(['-i', emblem, '-vf', 'scale=16:16:flags=lanczos', ...png], 'favicon-16.png');
+runFfmpeg(['-i', emblem, '-vf', 'scale=32:32:flags=lanczos', ...png], 'favicon-32.png');
 
-function renderPlatformIcon(outputName, canvas, mark, source = materialized.simplified) {
+function renderPlatformIcon(outputName, canvas, mark) {
   return runFfmpeg(
-    ['-f', 'lavfi', '-i', `color=c=0x02050b:s=${canvas}x${canvas}:d=1`, '-i', source, '-filter_complex', `[1:v]scale=${mark}:${mark}:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2`, ...png],
+    ['-f', 'lavfi', '-i', `color=c=0x02050b:s=${canvas}x${canvas}:d=1`, '-i', emblem, '-filter_complex', `[1:v]scale=${mark}:${mark}:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2`, ...png],
     outputName,
   );
 }
@@ -83,7 +59,12 @@ renderPlatformIcon('icon-192.png', 192, 168);
 renderPlatformIcon('icon-512.png', 512, 448);
 renderPlatformIcon('icon-maskable-512.png', 512, 396);
 renderPlatformIcon('mstile-150x150.png', 150, 128);
-runFfmpeg(['-f', 'lavfi', '-i', 'color=c=0x02050b:s=1200x630:d=1', '-i', materialized.header, '-filter_complex', '[1:v]scale=620:-1:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2', '-frames:v', '1', '-q:v', '3', '-pix_fmt', 'yuvj420p'], 'og-image.jpg');
+runFfmpeg(['-f', 'lavfi', '-i', 'color=c=0x02050b:s=1200x630:d=1', '-i', emblem, '-filter_complex', '[1:v]scale=500:500:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2', '-frames:v', '1', '-q:v', '3', '-pix_fmt', 'yuvj420p'], 'og-image.jpg');
 
-fs.writeFileSync(path.join(publicDir, 'brand-release.txt'), `${RELEASE}\napproved-source=generated-transparent-rgba-family\nroles=header,primary,simplified,micro\n`);
-console.log(`brand materialize: ${RELEASE}; ${written.join(', ')}`);
+for (const retired of ['brand-emblem-header.png', 'brand-emblem-primary.png', 'brand-emblem-simplified.png', 'brand-emblem-micro.png']) {
+  const retiredPath = path.join(publicDir, retired);
+  if (fs.existsSync(retiredPath)) fs.rmSync(retiredPath);
+}
+fs.rmSync(sourcePath);
+fs.writeFileSync(path.join(publicDir, 'brand-release.txt'), `${RELEASE}\napproved-source=single-user-selected-transparent-reference\nsource-sha256=${SOURCE_SHA256}\nroles=single\n`);
+console.log(`brand materialize: ${RELEASE}; source ${sourceBytes.length} B (${sourceHash}); ${written.join(', ')}`);
