@@ -1,16 +1,21 @@
 name: One-shot dependency remediation
 
 on:
-  push:
-    branches: [editorial/longform-marathon-2026-08]
+  pull_request:
     paths:
       - .github/workflows/dependency-repair-once.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: dependency-remediation
+  cancel-in-progress: false
+
 jobs:
   repair:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Check out canonical branch
@@ -28,12 +33,16 @@ jobs:
       - name: Install exact current lock
         run: npm ci
 
+      - name: Record current audit graph
+        run: npm audit --json > /tmp/npm-audit-before.json || true
+
       - name: Apply npm-supported non-breaking remediation
         run: npm audit fix
 
       - name: Verify generated lock and high-severity boundary
         run: |
           npm ci
+          npm audit --json > /tmp/npm-audit-after.json || true
           npm audit --audit-level=high
 
       - name: Run repository checks
