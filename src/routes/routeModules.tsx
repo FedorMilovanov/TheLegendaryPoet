@@ -144,19 +144,18 @@ function initialRoutePathname() {
   return browserPathname;
 }
 
-function preloadInitialRoute() {
+export function preloadCurrentRoute() {
   if (!permitsPrefetch()) return;
   const pathname = initialRoutePathname();
   if (!pathname) return;
   const route = prefetchableRoutes.find((candidate) => matchPath({ path: candidate.pattern, end: true }, pathname));
-  // Start the direct-entry route import while the application shell is still
-  // initialising. The cached importer keeps the route a real Vite dynamic
-  // entry, but React.lazy no longer has to begin a cold WebKit compilation only
-  // after the first render and Suspense fallback have already mounted.
+  // This function is intentionally invoked from main.tsx only after the full
+  // static module graph has evaluated. Several lazy pages render the shared
+  // Link component, which imports this registry for intent preloading; starting
+  // their dynamic import while this module itself is still evaluating creates
+  // a circular WebKit load that can leave the direct route in Suspense forever.
   if (route) void route.load().catch(() => undefined);
 }
-
-preloadInitialRoute();
 
 export function preloadRoute(to: To) {
   if (!permitsPrefetch()) return;
