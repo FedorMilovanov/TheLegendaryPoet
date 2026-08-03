@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import './Reveal.css';
 
 type Direction = 'up' | 'down' | 'left' | 'right' | 'none';
 
@@ -54,8 +55,15 @@ export default function Reveal({ children, direction = 'up', delay = 0, duration
   const variants = makeVariants(effectiveDir, distance, effectiveBlur);
 
   return (
-    <motion.div ref={ref} className={className} initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={variants}
-      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      ref={ref}
+      data-reveal-surface
+      className={`reveal-surface ${className}`.trim()}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={variants}
+      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: [0.16, 1, 0.3, 1] }}
+    >
       {children}
     </motion.div>
   );
