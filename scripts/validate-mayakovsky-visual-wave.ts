@@ -14,15 +14,15 @@ const expectedAssets = {
   'brik-triad-interior-reconstruction.webp':
     'e47e4e916e7d1cdb364079f6abe186d4c683b2a4b7dc3d56439673e1fe9e9177',
   'mayakovsky-rosta-workshop-reconstruction.webp':
-    'cda598891eaf934e76562f205a37bf574e15bda82b8d5b8e38b2b16f9639dbc3',
+    'f82837970a5cfb80870935917da89d2194bda6d66590b7cc6e8c14ec48cc687f',
   'mayakovsky-public-reading-reconstruction.webp':
-    'fc7c1244e65e1d9f57e973fe0fc5df4e2d2f6a7007b334f227ac66e0cc695a7d',
+    'ca0ca8c5fb70ef2974a35b9d2ba39360a27166260321869057449db8e89390f3',
   'mayakovsky-late-desk-reconstruction.webp':
-    'f0f64b7f2b069f46697a36dc90711947d59c78b960448da439e1975fb575e569',
+    'acdc85f416eda5e6f401b1e81bf3a70269543e37ef39e59f046e8b355d9812c7',
   'mayakovsky-dlya-golosa-1923.webp':
-    'd3dd3426b7b930866d7f597f29b0c82f1420d4276ca8d09cbf9f566adc58b1c6',
+    '4de7da4ddb89ec7bc818ccae774900423eb5c4fdd17901802c105297ad956178',
   'mayakovsky-kruchenykh-stikhi-cover.webp':
-    '277941306257879ea4b225dda873128c314f070d09332008f44282ead1659296',
+    '0c14b6ac71affbb0f8b4ea066ef41e423266eab1b780e9a669251394d5b8e046',
 } as const;
 
 const expectedArticleAssets: Record<string, string[]> = {
