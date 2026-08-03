@@ -10,65 +10,112 @@ permissions:
   contents: read
 
 jobs:
-  acquire-russian-days:
+  acquire-neb-wave-02:
     if: github.head_ref == 'editorial/longform-marathon-2026-08'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Install PDF verification tools
         run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils
 
-      - name: Download official Tufts PDF
+      - name: Download official institutional PDFs
         run: |
           set -euo pipefail
           mkdir -p acquisition
-          curl \
-            --fail \
-            --location \
-            --retry 6 \
-            --retry-all-errors \
-            --retry-delay 5 \
-            --connect-timeout 30 \
-            --max-time 1200 \
-            'https://dl.tufts.edu/downloads/wh247546j?filename=h415pp46s.pdf' \
-            --output acquisition/Isadora_Duncan_Russian_Days_1929_Tufts.pdf
 
-      - name: Verify PDF bytes and render first page
+          download_pdf() {
+            local url="$1"
+            local output="$2"
+            curl \
+              --fail \
+              --location \
+              --retry 6 \
+              --retry-all-errors \
+              --retry-delay 5 \
+              --connect-timeout 30 \
+              --max-time 1200 \
+              "$url" \
+              --output "$output"
+          }
+
+          download_pdf \
+            'https://dlib.rsl.ru/rsl01007000000/rsl01007513000/rsl01007513586/rsl01007513586.pdf' \
+            'acquisition/01__Pamyati_Esenina__1926__RSL_NEB.pdf'
+
+          download_pdf \
+            'https://dlib.rsl.ru/rsl01004000000/rsl01004871000/rsl01004871570/rsl01004871570.pdf' \
+            'acquisition/02__Gruzinov__Esenin_o_literature_i_iskusstve__1927__RSL_NEB.pdf'
+
+          download_pdf \
+            'https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_009194017&doc_type=pdf' \
+            'acquisition/03__Esenin__Rus_sovetskaya__1925__RSL_NEB.pdf'
+
+      - name: Verify bytes, metadata, checksums and first pages
         run: |
           set -euo pipefail
-          PDF='acquisition/Isadora_Duncan_Russian_Days_1929_Tufts.pdf'
-          test "$(head -c 5 "$PDF")" = '%PDF-'
-          file "$PDF" | tee acquisition/file.txt
-          pdfinfo "$PDF" | tee acquisition/pdfinfo.txt
-          PAGES="$(pdfinfo "$PDF" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
-          test -n "$PAGES"
-          test "$PAGES" -ge 384
-          BYTES="$(stat -c%s "$PDF")"
-          test "$BYTES" -gt 1000000
-          SHA="$(sha256sum "$PDF" | awk '{print $1}')"
-          pdftoppm -f 1 -singlefile -png -r 160 "$PDF" acquisition/first-page
-          test -s acquisition/first-page.png
-          {
-            echo 'source_repository=Tufts Digital Library'
-            echo 'item_url=https://dl.tufts.edu/concern/pdfs/h415pp46s'
-            echo 'permanent_url=http://hdl.handle.net/10427/009156'
-            echo 'download_url=https://dl.tufts.edu/downloads/wh247546j?filename=h415pp46s.pdf'
-            echo 'title=Isadora Duncan’s Russian Days and Her Last Years in France'
-            echo 'authors=Irma Duncan; Allan Ross Macdougall'
-            echo 'publication_year=1929'
-            echo "pdf_pages=$PAGES"
-            echo "file_size_bytes=$BYTES"
-            echo "sha256=$SHA"
-            echo 'first_page_rendered=true'
-            echo 'drive_upload_completed=false'
-          } | tee acquisition/VERIFICATION.txt
+
+          verify_pdf() {
+            local pdf="$1"
+            local stem="$2"
+            local minimum_pages="$3"
+            local item_url="$4"
+            local source_url="$5"
+
+            test "$(head -c 5 "$pdf")" = '%PDF-'
+            file "$pdf" | tee "acquisition/${stem}.file.txt"
+            pdfinfo "$pdf" | tee "acquisition/${stem}.pdfinfo.txt"
+            local pages
+            pages="$(pdfinfo "$pdf" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
+            test -n "$pages"
+            test "$pages" -ge "$minimum_pages"
+            local bytes
+            bytes="$(stat -c%s "$pdf")"
+            test "$bytes" -gt 100000
+            local sha
+            sha="$(sha256sum "$pdf" | awk '{print $1}')"
+            pdftoppm -f 1 -singlefile -png -r 160 "$pdf" "acquisition/${stem}.first-page"
+            test -s "acquisition/${stem}.first-page.png"
+            {
+              echo "filename=$(basename "$pdf")"
+              echo "item_url=$item_url"
+              echo "download_url=$source_url"
+              echo "pdf_pages=$pages"
+              echo "file_size_bytes=$bytes"
+              echo "sha256=$sha"
+              echo 'first_page_rendered=true'
+              echo 'drive_upload_completed=false'
+            } | tee "acquisition/${stem}.verification.txt"
+          }
+
+          verify_pdf \
+            'acquisition/01__Pamyati_Esenina__1926__RSL_NEB.pdf' \
+            'pamyati-esenina' \
+            269 \
+            'https://rusneb.ru/catalog/000199_000009_007513586/' \
+            'https://dlib.rsl.ru/rsl01007000000/rsl01007513000/rsl01007513586/rsl01007513586.pdf'
+
+          verify_pdf \
+            'acquisition/02__Gruzinov__Esenin_o_literature_i_iskusstve__1927__RSL_NEB.pdf' \
+            'gruzinov' \
+            22 \
+            'https://rusneb.ru/catalog/000199_000009_004871570/' \
+            'https://dlib.rsl.ru/rsl01004000000/rsl01004871000/rsl01004871570/rsl01004871570.pdf'
+
+          verify_pdf \
+            'acquisition/03__Esenin__Rus_sovetskaya__1925__RSL_NEB.pdf' \
+            'rus-sovetskaya' \
+            81 \
+            'https://rusneb.ru/catalog/000199_000009_009194017/' \
+            'https://rusneb.ru/local/tools/exalead/getFiles.php?book_id=000199_000009_009194017&doc_type=pdf'
+
+          sha256sum acquisition/*.pdf | tee acquisition/SHA256SUMS.txt
 
       - name: Upload verified acquisition artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yesenin-source-russian-days-verified
+          name: yesenin-source-neb-wave-02-verified
           path: acquisition/
           if-no-files-found: error
           retention-days: 3
