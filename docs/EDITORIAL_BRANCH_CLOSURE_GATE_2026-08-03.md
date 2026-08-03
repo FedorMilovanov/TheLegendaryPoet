@@ -4,7 +4,7 @@
 **Branch:** `editorial/longform-marathon-2026-08`  
 **Pull request:** `#271`  
 **Gate owner:** project editorial policy and exact-head evidence  
-**Status:** `ARTICLE COMPLETE / MERGE PENDING FINAL EXACT-HEAD QA`
+**Status:** `CONTENT COMPLETE / MERGE PENDING FINAL EXACT-HEAD QA`
 
 ## 1. Source-registry audit
 
@@ -32,11 +32,14 @@ myth_checks: 4
 public_domain_archive_images: 3
 postmortem_or_graphic_images: 0
 moral_theological_review: complete
+sitemap_materialized: true
 ```
 
 Chapters 15 and 16 are complete. The December chapter distinguishes contemporary acts, published facsimiles, memoir layers, later commission work and unresolved originals. It states the official documentary conclusion without presenting procedural gaps as proof of murder. The final chapter rejects romanticisation, separates compassion from exoneration and leaves final divine judgment to God.
 
 The original chapter 1–14 files remain controlled non-public research drafts. The public module is a separate reader-safe synthesis with closed citation IDs, permanent source cards and executable publication rules.
+
+The canonical sitemap was regenerated from the article catalog by `npm run sitemap`. It now contains the public Part II route, its 3 August 2026 modification date and the rights-cleared 1925 archive portrait. The one-shot materialization workflow deleted itself after committing the generated XML.
 
 ## 3. Source and forensic boundary
 
@@ -54,6 +57,8 @@ Missing originals therefore remain future research targets, not invented narrati
 
 ## 4. Rights and visual closure
 
+### Yesenin Part II
+
 Only three lifetime photographs with public Wikimedia Commons provenance are used. The article does not publish:
 
 - body or autopsy photographs;
@@ -63,6 +68,21 @@ Only three lifetime photographs with public Wikimedia Commons provenance are use
 - generated forensic reconstruction of the hotel room.
 
 The public source ledger records representation class, checked pages, Drive IDs and SHA-256 values where applicable without exposing private binaries or claiming rights that the project does not hold.
+
+### Mayakovsky editorial wave
+
+The final visual acceptance layer contains seven locked production assets:
+
+```yaml
+editorial_reconstructions: 5
+documentary_print_objects: 2
+provenance_ledger: public/images/essays/mayakovsky/editorial-wave/PROVENANCE.yml
+validator: scripts/validate-mayakovsky-visual-wave.ts
+browser_spec: qa/mayakovsky-visual-wave.spec.mjs
+workflow: .github/workflows/mayakovsky-visual-wave-acceptance.yml
+```
+
+All assets are locked to the actual production SHA-256 values. Reconstructions are explicitly labelled as reconstructions, are not given archival source URLs and are not used as primary evidence. The two historical print objects retain item-level Wikimedia Commons URLs and public-domain status.
 
 ## 5. Institutional requests
 
@@ -94,10 +114,12 @@ The two remaining moderate React Router paths are controlled by permanent execut
 - `scripts/validate-yesenin-part-two-publication.ts`;
 - `.github/workflows/yesenin-part-two-safe-publication.yml`;
 - `scripts/validate-router-security.ts`;
+- `scripts/validate-mayakovsky-visual-wave.ts`;
+- `.github/workflows/mayakovsky-visual-wave-acceptance.yml`;
 - normal essay, citation, myth, cover, literary-style, route, SEO, type, build and browser gates;
 - `docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md`.
 
-Temporary editorial and dependency workflows completed their deterministic tasks and removed themselves. No one-shot remediation workflow remains in the branch.
+Temporary editorial, dependency and sitemap workflows completed their deterministic tasks and removed themselves. No one-shot remediation or generation workflow remains in the branch.
 
 ## 8. Final exact-head gate
 
@@ -109,9 +131,10 @@ The branch is now content-complete. Merge is authorised only after one immutable
 4. Yesenin Part I browser acceptance;
 5. Yesenin–Duncan safe publication;
 6. Yesenin Part II safe publication;
-7. Brand deep reference and motion audit;
-8. Site route integrity audit;
-9. Manual Browser QA.
+7. Mayakovsky visual wave acceptance;
+8. Brand deep reference and motion audit;
+9. Site route integrity audit;
+10. Manual Browser QA.
 
 Pages deployment should remain skipped while the PR is Draft. A queued, cancelled, stale-head or action-required run is not a pass.
 
@@ -135,7 +158,9 @@ article_completion: COMPLETE
 source_rights_for_used_material: CLOSED
 forensic_reader_boundary: CLOSED
 visual_dignity_boundary: CLOSED
+mayakovsky_visual_provenance: CLOSED
 dependency_high_severity_gate: CLOSED
+seo_generated_output: MATERIALIZED
 external_research_backlog: NON_BLOCKING_AND_EXPLICIT
 pr_state: OPEN_DRAFT
 merge_to_main: WAITING_FOR_FINAL_EXACT_HEAD_QA
