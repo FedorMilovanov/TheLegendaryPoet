@@ -4,7 +4,7 @@ import { yeseninPartTwoPublic } from '../src/data/essays/yeseninPartTwoPublic';
 import { essays } from '../src/data/essays/index';
 
 const researchDir = 'docs/research';
-const draftNames = [
+const archivedDrafts = [
   'YESENIN_PART_II_DRAFT_CH01_1921_V01_2026-08.md',
   'YESENIN_PART_II_DRAFT_CH02_DUNCAN_MEETING_V01_2026-08.md',
   'YESENIN_PART_II_DRAFT_CH03_MARRIAGE_PASSPORT_PUBLIC_COUPLE_V01_2026-08.md',
@@ -21,7 +21,7 @@ const draftNames = [
   'YESENIN_PART_II_DRAFT_CH14_SOFIA_CLINIC_PARTIAL_V01_2026-08.md',
 ] as const;
 
-for (const name of draftNames) {
+for (const name of archivedDrafts) {
   const path = join(researchDir, name);
   if (!existsSync(path)) throw new Error(`missing controlled research draft: ${path}`);
   const text = readFileSync(path, 'utf8');
@@ -33,55 +33,49 @@ for (const name of draftNames) {
   }
 }
 
-const chapter15Path = join(
-  researchDir,
-  'YESENIN_PART_II_DRAFT_CH15_DECEMBER_1925_FINAL_2026-08.md',
-);
-const chapter16Path = join(
-  researchDir,
-  'YESENIN_PART_II_DRAFT_CH16_FINAL_SYNTHESIS_2026-08.md',
-);
-for (const path of [chapter15Path, chapter16Path]) {
+const readRequired = (name: string): string => {
+  const path = join(researchDir, name);
   if (!existsSync(path)) throw new Error(`missing final reader-safe chapter: ${path}`);
-}
+  return readFileSync(path, 'utf8');
+};
 
-const chapter15 = readFileSync(chapter15Path, 'utf8');
-const chapter16 = readFileSync(chapter16Path, 'utf8');
+const chapter15 = readRequired('YESENIN_PART_II_DRAFT_CH15_DECEMBER_1925_FINAL_2026-08.md');
+const chapter16 = readRequired('YESENIN_PART_II_DRAFT_CH16_FINAL_SYNTHESIS_2026-08.md');
 
-for (const required of [
+for (const marker of [
   'FINAL READER-SAFE DRAFT',
   'механизм прекращения лечения 21 декабря',
-  'не является судебным или медицинским признанием',
+  'не определяет себя как судебное или медицинское признание',
   'есть пробел — значит доказано убийство',
   'В читательской статье не используются фотографии тела',
   'глава пригодна для переноса в типизированный читательский модуль',
 ]) {
-  if (!chapter15.includes(required)) throw new Error(`chapter 15 lost required boundary: ${required}`);
+  if (!chapter15.includes(marker)) throw new Error(`chapter 15 lost required boundary: ${marker}`);
 }
-for (const forbidden of [
+for (const unsafe of [
   /Есенина доказанно убили/iu,
   /точно сбежал из клиники/iu,
   /бесспорная предсмертная записка Эрлиху/iu,
   /фотографи[яи] тела[^\n]{0,80}(?:используется|публикуется)/iu,
 ]) {
-  if (forbidden.test(chapter15)) throw new Error(`chapter 15 contains an unsafe conclusion: ${forbidden}`);
+  if (unsafe.test(chapter15)) throw new Error(`chapter 15 contains an unsafe conclusion: ${unsafe}`);
 }
 
-for (const required of [
+for (const marker of [
   'MORAL/THEOLOGICAL REVIEW COMPLETE',
   'Разрушение не является доказательством избранности',
   'совершенный суд над сердцем принадлежит Богу',
   'Дар не оправдывает разрушение; разрушение не уничтожает дар',
   'глава пригодна для типизированного читательского модуля',
 ]) {
-  if (!chapter16.includes(required)) throw new Error(`chapter 16 lost required boundary: ${required}`);
+  if (!chapter16.includes(marker)) throw new Error(`chapter 16 lost required boundary: ${marker}`);
 }
-for (const forbidden of [
+for (const unsafe of [
   /Есенин (?:спасён|осуждён Богом|в аду|в раю)/iu,
   /страдание оправдывает/iu,
   /талант освобождает от ответственности/iu,
 ]) {
-  if (forbidden.test(chapter16)) throw new Error(`chapter 16 contains an impermissible judgment: ${forbidden}`);
+  if (unsafe.test(chapter16)) throw new Error(`chapter 16 contains an impermissible judgment: ${unsafe}`);
 }
 
 const essay = yeseninPartTwoPublic;
@@ -90,6 +84,7 @@ if (essay.slug !== 'sergei-yesenin-1921-1925') throw new Error('unexpected Part 
 if (essay.series?.part !== 2 || essay.series.total !== 2) {
   throw new Error('Yesenin biography series metadata is not 2 of 2');
 }
+if (essay.readTime < 45) throw new Error('Part II read time was compressed below longform scope');
 if (essay.coverKind !== 'archive') throw new Error('Part II cover must remain an archive image');
 if (!essay.coverSourceUrl?.includes('commons.wikimedia.org/wiki/File:Esenin1925.jpg')) {
   throw new Error('Part II cover lost its public-domain provenance URL');
@@ -97,14 +92,12 @@ if (!essay.coverSourceUrl?.includes('commons.wikimedia.org/wiki/File:Esenin1925.
 if (!essay.coverCredit?.includes('общественное достояние')) {
   throw new Error('Part II cover lost its public-domain credit');
 }
-if (essay.readTime < 45) throw new Error('Part II read time was compressed below longform scope');
 
 const registered = essays.filter((item) => item.slug === essay.slug);
 if (registered.length !== 1 || registered[0] !== essay) {
   throw new Error('Part II is not registered exactly once in the canonical essay catalog');
 }
 
-const sections = essay.blocks.filter((block) => block.type === 'section');
 const expectedHeadings = [
   '1921: слава, групповая машина и внутренняя трещина',
   'Айседора Дункан: встреча после снятия легенды',
@@ -122,14 +115,15 @@ const expectedHeadings = [
   'Софья Толстая и клиника: попытка порядка',
   'Декабрь 1925 года: что устанавливают документы',
   'После легенды: дар и ответственность',
-];
-if (sections.length !== expectedHeadings.length) {
-  throw new Error(`expected 16 sections, found ${sections.length}`);
+] as const;
+const headings = essay.blocks
+  .filter((block) => block.type === 'section')
+  .map((block) => block.heading);
+if (headings.length !== expectedHeadings.length) {
+  throw new Error(`expected 16 sections, found ${headings.length}`);
 }
 for (const heading of expectedHeadings) {
-  if (!sections.some((block) => block.type === 'section' && block.heading === heading)) {
-    throw new Error(`missing final Part II section: ${heading}`);
-  }
+  if (!headings.includes(heading)) throw new Error(`missing final Part II section: ${heading}`);
 }
 
 const proseBlocks = essay.blocks.filter(
@@ -152,26 +146,25 @@ const articleText = [essay.title, essay.subtitle ?? '', essay.excerpt]
 if (articleText.length < 26000) {
   throw new Error(`Part II reader text is below the longform floor: ${articleText.length} characters`);
 }
-
-for (const required of [
+for (const marker of [
   'юридической депортации',
-  'не подтверждают физического присутствия автора в Иране',
+  'не доказывают физического присутствия автора в Иране',
   'механизм окончания лечения 21 декабря',
   'Вопрос не равен доказательству',
   'официальная версия не имела документов» неверно',
   'совершенный суд над сердцем принадлежит Богу',
   'Главное произведение Есенина — не его смерть',
 ]) {
-  if (!articleText.includes(required)) throw new Error(`Part II lost a required reader boundary: ${required}`);
+  if (!articleText.includes(marker)) throw new Error(`Part II lost a required reader boundary: ${marker}`);
 }
-for (const forbidden of [
+for (const unsafe of [
   /Есенина (?:доказанно|точно) убили/iu,
   /Дункан (?:погубила|уничтожила) Есенина/iu,
   /Есенин (?:побывал|жил) в (?:Персии|Иране)/iu,
   /клиника[^.]{0,100}точный диагноз/iu,
   /вне всяких сомнений[^.]{0,100}предсмертн/iu,
 ]) {
-  if (forbidden.test(articleText)) throw new Error(`Part II contains an unsupported claim: ${forbidden}`);
+  if (unsafe.test(articleText)) throw new Error(`Part II contains an unsupported claim: ${unsafe}`);
 }
 
 const myths = essay.blocks.filter((block) => block.type === 'note' && block.variant === 'myth');
