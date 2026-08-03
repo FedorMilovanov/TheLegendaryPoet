@@ -3,20 +3,21 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.14-reference-electric-rim-volume",
+    "id": "v20.15-reference-emissive-current",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
     "compositionEligible": true,
-    "visibleFieldEligible": true,
+    "attachedEmissionEligible": true,
     "reviewerDecision": "not-reference-approved",
     "requiredReviewSizes": [64, 96, 128, 256]
   },
   "microCandidate": {
-    "id": "v20.8-reference-micro-spectral-anchors",
+    "id": "v20.9-reference-micro-emissive-current",
     "file": "public/brand-emblem-v20-micro-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
+    "attachedEmissionEligible": true,
     "reviewerDecision": "not-reference-approved",
     "requiredReviewSizes": [16, 20, 24, 32, 48]
   },
@@ -30,9 +31,10 @@
     {"full":"v20.9-reference-canonical-crop","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"internal and composition pass; exact overlay accepted the canonical crop correction but rejected an electrical field restricted mostly to the hood and upper shoulders, overly clean cloth planes and weak shoulder volume at 64–96px"},
     {"full":"v20.10-reference-field-envelope","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"exact all-green engineering pass; artistic review still rejected a wire-like field topology, clean V-shaped cowl and weak small-size shoulder volume"},
     {"full":"v20.11-reference-volumetric-cowl","micro":"v20.7-reference-micro-volumetric-anchors","verdict":"exact all-green engineering pass; human review rejected detached root-like electrical lines, a Shredder-like figure, an overly light gray reading and clothing folds that did not match the canonical reference"},
-    {"full":"v20.12-reference-spectral-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"exact all-green engineering pass; artifact inspection rejected the remaining broad smooth contour sheath around the hood and residual panel-like cloak construction even though roots, gray values and the detached field were corrected"},
+    {"full":"v20.12-reference-spectral-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"exact all-green engineering pass; artifact inspection rejected the remaining broad smooth contour sheath and residual panel-like cloak construction even though roots, gray values and the detached field were corrected"},
     {"full":"v20.13-reference-attached-electric-drapery","micro":"v20.8-reference-micro-spectral-anchors","verdict":"exact all-green engineering pass; artifact inspection found that the attached aura still read too much as a broad teal hood outline and the strongest light did not continue far enough down the cloak silhouette"},
-    {"full":"v20.14-reference-electric-rim-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"current QA-only iteration: rear aura masses are reduced to faint irregular volume; segmented electric rim paths now remain attached from the hood through the shoulders and down both cloak edges; the figure remains almost black and uses low-contrast asymmetric drapery; exact committed overlay pending"}
+    {"full":"v20.14-reference-electric-rim-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"exact all-green engineering pass; human review rejected the result because it still read as a separate aura behind the figure and the glow colour did not match the saturated electric-blue reference"},
+    {"full":"v20.15-reference-emissive-current","micro":"v20.9-reference-micro-emissive-current","verdict":"current QA-only iteration: the rear aura and field-envelope gate are removed; broad electric-blue strokes share the exact figure transform and are masked by the figure so only edge-origin light remains visible; internal diagonal currents reinforce that the energy comes from the hooded figure rather than surrounding it"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
@@ -49,7 +51,7 @@
     "full-size optical review must pass at 64, 96, 128 and 256px",
     "micro dark/light review must pass at 16, 20, 24, 32 and 48px",
     "motion has not been attached to the v20 semantic groups",
-    "all required workflows have not yet passed on one exact v20.14/v20.8 head"
+    "all required workflows have not yet passed on one exact v20.15/v20.9 head"
   ],
-  "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, visibleFieldEligible, CI success or motion quality as reference approval."
+  "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, attachedEmissionEligible, CI success or motion quality as reference approval."
 }
