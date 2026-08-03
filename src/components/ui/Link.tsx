@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Link as RouterLink,
   NavLink as RouterNavLink,
@@ -20,8 +20,37 @@ import { scheduleRoutePreload } from '../../routes/routeModules';
  * destination chunk only after deliberate pointer, touch, or keyboard intent.
  */
 
+const ABSOLUTE_SCHEME_RE = /^[a-z][a-z\d+.-]*:/i;
+
+function assertSafeInternalPath(pathname: string): void {
+  const value = pathname.trim();
+  if (value.includes('\\')) {
+    throw new Error('Unsafe internal navigation destination: backslashes are forbidden.');
+  }
+  if (value.startsWith('//')) {
+    throw new Error('Unsafe internal navigation destination: protocol-relative URLs are forbidden.');
+  }
+  if (ABSOLUTE_SCHEME_RE.test(value)) {
+    throw new Error('Unsafe internal navigation destination: absolute URL schemes are forbidden.');
+  }
+}
+
+export function assertSafeInternalTo(to: To): To {
+  if (typeof to === 'string') {
+    assertSafeInternalPath(to.split(/[?#]/u, 1)[0] ?? '');
+    return to;
+  }
+  assertSafeInternalPath(to.pathname ?? '');
+  return to;
+}
+
+function useSafeInternalTo(to: To): To {
+  return useMemo(() => assertSafeInternalTo(to), [to]);
+}
+
 function useIntentPreload(to: To) {
-  const resolved = useResolvedPath(to);
+  const safeTo = useSafeInternalTo(to);
+  const resolved = useResolvedPath(safeTo);
   const warmedRef = useRef(false);
 
   useEffect(() => {
@@ -35,17 +64,17 @@ function useIntentPreload(to: To) {
   }, [resolved]);
 }
 
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link({
-  onFocus,
-  onPointerEnter,
-  onTouchStart,
-  ...props
-}, ref) {
-  const preload = useIntentPreload(props.to);
+export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
+  { to, onFocus, onPointerEnter, onTouchStart, ...props },
+  ref,
+) {
+  const safeTo = useSafeInternalTo(to);
+  const preload = useIntentPreload(safeTo);
   return (
     <RouterLink
-      viewTransition
       {...props}
+      to={safeTo}
+      viewTransition
       ref={ref}
       onFocus={(event) => {
         onFocus?.(event);
@@ -63,17 +92,17 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link({
   );
 });
 
-export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink({
-  onFocus,
-  onPointerEnter,
-  onTouchStart,
-  ...props
-}, ref) {
-  const preload = useIntentPreload(props.to);
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(function NavLink(
+  { to, onFocus, onPointerEnter, onTouchStart, ...props },
+  ref,
+) {
+  const safeTo = useSafeInternalTo(to);
+  const preload = useIntentPreload(safeTo);
   return (
     <RouterNavLink
-      viewTransition
       {...props}
+      to={safeTo}
+      viewTransition
       ref={ref}
       onFocus={(event) => {
         onFocus?.(event);
@@ -100,7 +129,7 @@ export function useAppNavigate() {
         navigate(to);
         return;
       }
-      navigate(to, { viewTransition: true, ...options });
+      navigate(assertSafeInternalTo(to), { viewTransition: true, ...options });
     },
     [navigate],
   );
