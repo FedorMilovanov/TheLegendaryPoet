@@ -84,13 +84,10 @@ const yeseninPartOneWithMythChecks: Essay = {
 const yeseninPartTwoLedgerUrl =
   'https://github.com/FedorMilovanov/TheLegendaryPoet/blob/main/docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md';
 
-const yeseninPartTwoWithPublicSourceLedger: Essay = {
-  ...yeseninPartTwoPublic,
-  sources: (yeseninPartTwoPublic.sources ?? []).map((source) => ({
-    ...source,
-    url: source.url ?? `${yeseninPartTwoLedgerUrl}#${source.id ?? 'source'}`,
-  })),
-};
+yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source) => ({
+  ...source,
+  url: source.url ?? `${yeseninPartTwoLedgerUrl}#${source.id ?? 'source'}`,
+}));
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
@@ -154,7 +151,7 @@ export const essays: Essay[] = [
   lermontovRoadWithCover,
   yeseninWithArchiveLayer,
   yeseninPartOneWithMythChecks,
-  yeseninPartTwoWithPublicSourceLedger,
+  yeseninPartTwoPublic,
   yeseninDuncanFirstMeetingPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
