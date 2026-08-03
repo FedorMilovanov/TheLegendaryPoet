@@ -5,9 +5,15 @@ on:
     branches: [main]
     paths:
       - 'src/components/BrandMark.tsx'
+      - 'src/components/SpectralBrandMark.tsx'
+      - 'src/components/Header.tsx'
+      - 'src/components/Footer.tsx'
       - 'src/components/brandMotionV18.ts'
       - 'src/components/brandMotionFrameInvariant.ts'
       - 'src/components/brandEmblemV18.svg'
+      - 'src/brand-assets/**'
+      - 'scripts/materialize-brand-art.mjs'
+      - 'package.json'
       - 'public/brand-emblem.svg'
       - 'public/brand-mark-micro.svg'
       - 'public/brand-emblem-mask.svg'
@@ -39,9 +45,15 @@ on:
     branches: [main]
     paths:
       - 'src/components/BrandMark.tsx'
+      - 'src/components/SpectralBrandMark.tsx'
+      - 'src/components/Header.tsx'
+      - 'src/components/Footer.tsx'
       - 'src/components/brandMotionV18.ts'
       - 'src/components/brandMotionFrameInvariant.ts'
       - 'src/components/brandEmblemV18.svg'
+      - 'src/brand-assets/**'
+      - 'scripts/materialize-brand-art.mjs'
+      - 'package.json'
       - 'public/brand-emblem.svg'
       - 'public/brand-mark-micro.svg'
       - 'public/brand-emblem-mask.svg'
@@ -116,7 +128,7 @@ jobs:
       - name: Validate hover stability contract
         run: npm run validate:hover-stability
 
-      - name: Typecheck layered SVG interaction
+      - name: Typecheck layered spectral interaction
         run: npm run typecheck
 
       - name: Build exact commit
