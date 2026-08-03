@@ -24,28 +24,28 @@ assets:
     role: essay_inline_reconstruction
     origin_class: user_supplied_editorial_reconstruction
     dimensions: 520x293
-    sha256: cda598891eaf934e76562f205a37bf574e15bda82b8d5b8e38b2b16f9639dbc3
+    sha256: f82837970a5cfb80870935917da89d2194bda6d66590b7cc6e8c14ec48cc687f
     credit: THE LEGENDARY POET
     source_use: not_primary_evidence
   - path: mayakovsky-public-reading-reconstruction.webp
     role: essay_inline_reconstruction
     origin_class: user_supplied_editorial_reconstruction
     dimensions: 293x520
-    sha256: fc7c1244e65e1d9f57e973fe0fc5df4e2d2f6a7007b334f227ac66e0cc695a7d
+    sha256: ca0ca8c5fb70ef2974a35b9d2ba39360a27166260321869057449db8e89390f3
     credit: THE LEGENDARY POET
     source_use: not_primary_evidence
   - path: mayakovsky-late-desk-reconstruction.webp
     role: essay_inline_reconstruction
     origin_class: user_supplied_editorial_reconstruction
     dimensions: 520x293
-    sha256: f0f64b7f2b069f46697a36dc90711947d59c78b960448da439e1975fb575e569
+    sha256: acdc85f416eda5e6f401b1e81bf3a70269543e37ef39e59f046e8b355d9812c7
     credit: THE LEGENDARY POET
     source_use: not_primary_evidence
   - path: mayakovsky-dlya-golosa-1923.webp
     role: essay_inline_document
     origin_class: local_optimized_copy_of_public_domain_archive
     dimensions: 420x293
-    sha256: d3dd3426b7b930866d7f597f29b0c82f1420d4276ca8d09cbf9f566adc58b1c6
+    sha256: 4de7da4ddb89ec7bc818ccae774900423eb5c4fdd17901802c105297ad956178
     source_url: https://commons.wikimedia.org/wiki/File:Dlja_golosa._1923-100.jpg
     source_creator: El Lissitzky
     source_date: 1923
@@ -56,7 +56,7 @@ assets:
     role: essay_inline_document
     origin_class: local_optimized_copy_of_public_domain_archive
     dimensions: 220x371
-    sha256: 277941306257879ea4b225dda873128c314f070d09332008f44282ead1659296
+    sha256: 0c14b6ac71affbb0f8b4ea066ef41e423266eab1b780e9a669251394d5b8e046
     source_url: https://commons.wikimedia.org/wiki/File:Mayakovsky_books_kruchyonyx_stixi.png
     source_creator: Alexey Kruchenykh
     source_date: 1915
