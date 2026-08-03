@@ -39,6 +39,7 @@ const ledger = JSON.parse(read('qa/brand-v20-candidate-ledger.json')) as {
   promotionBlockers: string[];
   promotionPolicy: string;
 };
+
 const full = read('public/brand-emblem-v20-candidate.svg');
 const micro = read('public/brand-emblem-v20-micro-candidate.svg');
 const vectorWorkflow = read('.github/workflows/brand-qa.yml');
@@ -52,7 +53,7 @@ assert.equal(crypto.createHash('sha256').update(fs.readFileSync(sheet.referenceF
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
 
-assert.equal(fullSheet.id, 'v20.12-reference-spectral-volume');
+assert.equal(fullSheet.id, 'v20.13-reference-attached-electric-drapery');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
@@ -118,6 +119,7 @@ for (const pathSource of rearPaths) {
   assert.ok(Number.isFinite(opacity) && opacity >= Number(fullSheet.fieldVisibility?.minimumStrokeOpacity), 'rear field contains an invisible opacity filler');
   assert.ok(Number.isFinite(width) && width >= Number(fullSheet.fieldVisibility?.minimumStrokeWidth), 'rear field contains a zero-width bounds filler');
 }
+
 for (const file of ['src/components/brandEmblemV18.svg','public/brand-emblem.svg','public/brand-mark-micro.svg','src/components/BrandMark.tsx']) {
   assert.doesNotMatch(read(file), /v20\.\d+-reference-|brand-emblem-v20-(?:micro-)?candidate/);
 }
@@ -140,6 +142,7 @@ const historicalLocks: Array<[string, RegExp]> = [
   ['v20.9-reference-canonical-crop', /field restricted mostly to the hood and upper shoulders/],
   ['v20.10-reference-field-envelope', /wire-like field topology/],
   ['v20.11-reference-volumetric-cowl', /detached root-like electrical lines/],
+  ['v20.12-reference-spectral-volume', /broad smooth contour sheath/],
 ];
 for (const [id, blocker] of historicalLocks) {
   assert.ok(ledger.iterationHistory.some((entry) => entry.full === id && blocker.test(entry.verdict)), `${id}: historical blocker is missing`);
@@ -172,4 +175,4 @@ assert.match(evidenceSpec, /getBoundingClientRect/);
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.12 uses canonical contour-derived attached electric volume and near-black cloth; v20.8 carries the same optical language at micro scale; both remain QA-only and not-reference-approved');
+console.log('brand v20 validation: v20.13 uses attached irregular electric masses, near-black cloth and non-panel drapery; v20.8 remains the independent micro master; both are QA-only and not-reference-approved');
