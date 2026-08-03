@@ -152,7 +152,7 @@ Do not insert deleted draft lines into the main text.
 - Preserve `октябрю` and `маю` in lowercase as in the academic text.
 - Preserve the ellipsis and dash in `Я один... И — разбитое зеркало...`.
 - Preserve `не бейся` with comma in the title/opening line.
-- Do not silently replace `ё`/`е` inside an exact quotation; the chapter's editorial prose may use project orthography outside quotations.
+- Exact-quotation rule: do not silently replace `ё`/`е` inside an exact quotation; the chapter's editorial prose may use project orthography outside quotations.
 
 ## 5. Theological and moral boundary
 
