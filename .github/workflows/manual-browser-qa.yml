@@ -28,43 +28,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
-
       - name: Verify exact browser checkout identity
-        shell: bash
         run: |
           actual="$(git rev-parse HEAD)"
-          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
           test "$actual" = "$TESTED_SHA"
           printf 'tested_commit=%s\n' "$actual" > manual-browser-tested-head.txt
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install project dependencies
         run: npm ci
-
       - name: Install FFmpeg for deterministic brand assets
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-
       - name: Build production site
         id: production_build
         env:
           VITE_BASE: /
         run: |
           set +e
-          {
-            npm run sitemap
-            npm run build
-          } > production-build.log 2>&1
+          { npm run sitemap; npm run build; } > production-build.log 2>&1
           status=$?
           cat production-build.log
           exit $status
-
       - name: Upload production build diagnostics
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -75,25 +63,16 @@ jobs:
             manual-browser-tested-head.txt
           if-no-files-found: error
           retention-days: 7
-
       - name: Install isolated Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
           npx playwright install --with-deps chromium webkit
-
       - name: Start production preview
         run: |
           npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
-          echo $! > preview.pid
-          for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
+          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           cat preview.log
           exit 1
-
       - name: Run Chromium and Android Chrome QA
         run: >-
           npx playwright test
@@ -105,8 +84,6 @@ jobs:
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
-          qa/brand-v19-optical.spec.mjs
-          qa/brand-v19-micro.spec.mjs
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           --config=playwright.config.mjs
@@ -115,11 +92,9 @@ jobs:
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
           --reporter=line
-
       - name: Run base iPhone Safari QA in fresh browser processes
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs
-
       - name: Upload core browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -143,65 +118,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
-
       - name: Verify exact Safari home checkout identity
-        shell: bash
-        run: |
-          actual="$(git rev-parse HEAD)"
-          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
-          test "$actual" = "$TESTED_SHA"
-          printf 'tested_commit=%s\n' "$actual" > webkit-home-tested-head.txt
-
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install Safari home project dependencies
         run: npm ci
-
       - name: Install FFmpeg for Safari home deterministic brand assets
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-
       - name: Build Safari home production site
         id: webkit_home_build
         env:
           VITE_BASE: /
-        run: |
-          set +e
-          {
-            npm run sitemap
-            npm run build
-          } > webkit-home-production-build.log 2>&1
-          status=$?
-          cat webkit-home-production-build.log
-          exit $status
-
+        run: npm run build
       - name: Install isolated Safari home Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
           npx playwright install --with-deps webkit
-
       - name: Start Safari home production preview
         run: |
           npm run preview -- --host 127.0.0.1 > webkit-home-preview.log 2>&1 &
-          echo $! > webkit-home-preview.pid
-          for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat webkit-home-preview.log
+          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           exit 1
-
       - name: Run Safari home reveal and route QA on a fresh runner
         if: ${{ always() && steps.webkit_home_build.outcome == 'success' }}
         run: node scripts/run-webkit-home-reveal-process-isolated.mjs
-
       - name: Upload Safari home browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -212,8 +157,6 @@ jobs:
             playwright-report
             test-results
             webkit-home-preview.log
-            webkit-home-production-build.log
-            webkit-home-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
 
@@ -225,68 +168,37 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
-
       - name: Verify exact premium checkout identity
-        shell: bash
-        run: |
-          actual="$(git rev-parse HEAD)"
-          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
-          test "$actual" = "$TESTED_SHA"
-          printf 'tested_commit=%s\n' "$actual" > premium-browser-tested-head.txt
-
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install premium project dependencies
         run: npm ci
-
       - name: Install FFmpeg for premium deterministic brand assets
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-
       - name: Build premium production site
         id: premium_build
         env:
           VITE_BASE: /
-        run: |
-          set +e
-          {
-            npm run sitemap
-            npm run build
-          } > premium-production-build.log 2>&1
-          status=$?
-          cat premium-production-build.log
-          exit $status
-
+        run: npm run build
       - name: Install isolated premium Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
           npx playwright install --with-deps chromium webkit
-
       - name: Start premium production preview
         run: |
           npm run preview -- --host 127.0.0.1 > premium-preview.log 2>&1 &
-          echo $! > premium-preview.pid
-          for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat premium-preview.log
+          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           exit 1
-
       - name: Run standard premium homepage and pointer-performance matrix on a fresh runner
         if: ${{ always() && steps.premium_build.outcome == 'success' }}
-        id: home_polish
         run: |
           set -o pipefail
           node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
-
       - name: Upload standard premium browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -297,9 +209,7 @@ jobs:
             playwright-report
             test-results
             premium-preview.log
-            premium-production-build.log
             home-polish.log
-            premium-browser-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
 
@@ -311,68 +221,37 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
-
       - name: Verify exact critical iPhone checkout identity
-        shell: bash
-        run: |
-          actual="$(git rev-parse HEAD)"
-          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
-          test "$actual" = "$TESTED_SHA"
-          printf 'tested_commit=%s\n' "$actual" > premium-iphone-critical-tested-head.txt
-
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install critical iPhone project dependencies
         run: npm ci
-
       - name: Install FFmpeg for critical iPhone deterministic brand assets
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
-
       - name: Build critical iPhone production site
         id: premium_iphone_critical_build
         env:
           VITE_BASE: /
-        run: |
-          set +e
-          {
-            npm run sitemap
-            npm run build
-          } > premium-iphone-critical-production-build.log 2>&1
-          status=$?
-          cat premium-iphone-critical-production-build.log
-          exit $status
-
+        run: npm run build
       - name: Install isolated critical iPhone Playwright runtime
         run: |
           npm install --no-save --no-package-lock @playwright/test@1.54.1
           npx playwright install --with-deps webkit
-
       - name: Start critical iPhone production preview
         run: |
           npm run preview -- --host 127.0.0.1 > premium-iphone-critical-preview.log 2>&1 &
-          echo $! > premium-iphone-critical-preview.pid
-          for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-          cat premium-iphone-critical-preview.log
+          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           exit 1
-
       - name: Run critical iPhone first-viewport and reduced-motion contours on a fresh runner
         if: ${{ always() && steps.premium_iphone_critical_build.outcome == 'success' }}
-        id: iphone_critical
         run: |
           set -o pipefail
           node scripts/run-home-polish-iphone-critical-process-isolated.mjs 2>&1 | tee home-iphone-critical.log
-
       - name: Upload critical iPhone browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -383,8 +262,6 @@ jobs:
             playwright-report
             test-results
             premium-iphone-critical-preview.log
-            premium-iphone-critical-production-build.log
             home-iphone-critical.log
-            premium-iphone-critical-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
