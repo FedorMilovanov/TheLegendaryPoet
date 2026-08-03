@@ -7,6 +7,7 @@ const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const workflow = read('.github/workflows/manual-browser-qa.yml');
 const playwright = read('playwright.config.mjs');
 const homePlaywright = read('playwright.home-polish.config.mjs');
+const homePage = read('src/pages/HomePage.tsx');
 const homePolishSpec = read('qa/home-polish.spec.mjs');
 const mobilePlatformsSpec = 'qa/mobile-platforms.spec.mjs';
 const webkitHomeEntrypoint = 'qa/mobile-home-webkit.spec.mjs';
@@ -59,16 +60,20 @@ assert.match(homePlaywright, /failOnFlakyTests:\s*Boolean\(process\.env\.CI\)/);
 assert.match(homePlaywright, /retries:\s*process\.env\.CI\s*\?\s*1\s*:\s*0/);
 assert.match(homePlaywright, /grepInvert:\s*\/real stepped scrolling reveals all principal homepage sections\//);
 
-// Hero acceptance reads the CSS schedule once, yields on the Playwright side,
-// and performs one final rendered-state read. This keeps the exact visual
-// thresholds without repeated WebKit protocol polling.
-assert.match(homePolishSpec, /animationDuration/);
-assert.match(homePolishSpec, /animationDelay/);
-assert.match(homePolishSpec, /maxTotalMs/);
-assert.match(homePolishSpec, /const settleMs = Math\.max\(1_800, Math\.ceil\(timing\.maxTotalMs \+ 700\)\)/);
-assert.match(homePolishSpec, /await page\.waitForTimeout\(settleMs\)/);
-assert.match(homePolishSpec, /expect\(state\.opacity\)\.toBeGreaterThanOrEqual\(0\.995\)/);
-assert.match(homePolishSpec, /expect\(state\.blurPx\)\.toBeLessThanOrEqual\(0\.05\)/);
+// Hero acceptance is event-driven. The interface publishes completion from
+// the real CSS animation lifecycle and browser QA waits for that state before
+// checking the final rendered opacity. This preserves the visual contract
+// without schedule guessing or repeated cross-process computed-style polling.
+assert.match(homePage, /data-hero-reveal-state/);
+assert.match(homePage, /onAnimationEnd/);
+assert.match(homePage, /onAnimationCancel/);
+assert.match(homePage, /markWordRevealed/);
+assert.match(homePolishSpec, /data-hero-reveal-state/);
+assert.match(homePolishSpec, /toHaveAttribute\('data-hero-reveal-state', 'ready'/);
+assert.match(homePolishSpec, /toHaveCSS\('opacity', '1'\)/);
+assert.doesNotMatch(homePolishSpec, /animationDuration/);
+assert.doesNotMatch(homePolishSpec, /maxTotalMs/);
+assert.doesNotMatch(homePolishSpec, /const settleMs/);
 assert.doesNotMatch(homePolishSpec, /hero blur reveal should remain visually final/);
 assert.doesNotMatch(homePolishSpec, /page\.waitForFunction/);
 assert.doesNotMatch(homePolishSpec, /getAnimations/);
@@ -175,4 +180,4 @@ assert.match(optical, /occupiedHeight/);
 assert.match(micro, /brand-v19-micro-candidate-matrix\.png/);
 assert.match(micro, /iphone-safari|testInfo\.project\.name/);
 
-console.log('brand browser workflow: zero-flaky Chromium/Android plus fresh-process WebKit route, homepage, hero, optical and micro gates');
+console.log('brand browser workflow: zero-flaky Chromium/Android plus event-driven hero readiness and fresh-process WebKit route, homepage, optical and micro gates');
