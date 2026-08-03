@@ -25,18 +25,26 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Replace the exact short documentary answer
+      - name: Apply exact editorial and gate corrections
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('src/data/essays/yeseninPartTwoPublic.ts')
-          text = path.read_text(encoding='utf-8')
-          old = "Документирован кавказский маршрут и планы поездки. Надёжного подтверждения физического пребывания Есенина в Иране нет."
-          new = "Академическая хронология подтверждает работу Есенина в Баку и Тифлисе и фиксирует планы поездки дальше, но не содержит надёжного свидетельства о пересечении иранской границы. География цикла — литературная Персия, созданная на Кавказе; она не является документом физического путешествия автора по Ирану."
-          if text.count(old) != 1:
-              raise SystemExit(f'expected exactly one target phrase, found {text.count(old)}')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          article_path = Path('src/data/essays/yeseninPartTwoPublic.ts')
+          article = article_path.read_text(encoding='utf-8')
+          old_answer = "Документирован кавказский маршрут и планы поездки. Надёжного подтверждения физического пребывания Есенина в Иране нет."
+          new_answer = "Академическая хронология подтверждает работу Есенина в Баку и Тифлисе и фиксирует планы поездки дальше, но не содержит надёжного свидетельства о пересечении иранской границы. География цикла — литературная Персия, созданная на Кавказе; она не является документом физического путешествия автора по Ирану."
+          if article.count(old_answer) != 1:
+              raise SystemExit(f'expected exactly one short myth answer, found {article.count(old_answer)}')
+          article_path.write_text(article.replace(old_answer, new_answer), encoding='utf-8')
+
+          validator_path = Path('scripts/validate-yesenin-part-two-publication.ts')
+          validator = validator_path.read_text(encoding='utf-8')
+          old_regex = r"/бесспорная предсмертная записка Эрлиху/iu,"
+          new_regex = r"/(?:это|является|была)\s+бесспорн(?:ая|ой)\s+предсмертн(?:ая|ой)\s+записк(?:а|ой)\s+Эрлиху/iu,"
+          if validator.count(old_regex) != 1:
+              raise SystemExit(f'expected exactly one overbroad regex, found {validator.count(old_regex)}')
+          validator_path.write_text(validator.replace(old_regex, new_regex), encoding='utf-8')
           PY
 
       - name: Install exact dependencies
@@ -45,12 +53,12 @@ jobs:
       - name: Run all content gates
         run: npm run check:content
 
-      - name: Commit correction and remove one-shot workflow
+      - name: Commit corrections and remove one-shot workflow
         run: |
           set -euo pipefail
           git rm .github/workflows/yesenin-part-two-editorial-patch-once.yml
-          git add src/data/essays/yeseninPartTwoPublic.ts
+          git add src/data/essays/yeseninPartTwoPublic.ts scripts/validate-yesenin-part-two-publication.ts
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(yesenin): expand Persian journey myth correction'
+          git commit -m 'fix(yesenin): tighten Part II documentary corrections'
           git push origin HEAD:editorial/longform-marathon-2026-08
