@@ -1,4 +1,4 @@
-import BrandMark from './BrandMark';
+import SpectralBrandMark from './SpectralBrandMark';
 
 export default function RouteLoadingShell() {
   return (
@@ -15,7 +15,7 @@ export default function RouteLoadingShell() {
 
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-luxury-gold/15 bg-black/25">
-            <BrandMark size="sm" />
+            <SpectralBrandMark size="sm" variant="simplified" interactive={false} priority />
           </div>
           <div className="min-w-0 flex-1">
             <div className="h-2.5 w-28 animate-pulse rounded-full bg-luxury-gold/20 motion-reduce:animate-none" />
