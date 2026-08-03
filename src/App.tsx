@@ -39,14 +39,14 @@ import {
   TrackDetailPage,
 } from './routes/routeModules';
 
-const WipeOverlay = () => (
+const WipeOverlay = ({ onComplete }: { onComplete: () => void }) => (
   <motion.div
     className="page-wipe pointer-events-none fixed inset-0 z-[100] flex items-center justify-center"
     style={{ originY: 1 }}
     initial={{ scaleY: 1 }}
     animate={{ scaleY: 0 }}
-    exit={{ scaleY: 1 }}
     transition={{ duration: 0.72, ease: [0.76, 0, 0.24, 1] }}
+    onAnimationComplete={onComplete}
     aria-hidden="true"
   >
     <motion.div
@@ -116,12 +116,23 @@ function RouteContent() {
 function SiteLayout() {
   useAutoHideChrome();
   const showIntro = useRef(!introPlayed).current;
-  useEffect(() => { introPlayed = true; }, []);
+  const [introVisible, setIntroVisible] = useState(showIntro);
+  const completeIntro = useCallback(() => setIntroVisible(false), []);
+
+  useEffect(() => {
+    introPlayed = true;
+    if (!introVisible) return undefined;
+
+    // WebKit can occasionally skip a motion completion callback under cold-run load.
+    // The overlay is decorative and must never remain mounted over the settled page.
+    const fallback = window.setTimeout(completeIntro, 1_200);
+    return () => window.clearTimeout(fallback);
+  }, [completeIntro, introVisible]);
 
   return (
     <SmoothScroll>
       <div className="relative min-h-screen overflow-x-clip bg-[#050505] selection:bg-luxury-gold/30">
-        {showIntro && <WipeOverlay />}
+        {introVisible && <WipeOverlay onComplete={completeIntro} />}
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
           Перейти к содержанию
         </a>
