@@ -31,13 +31,10 @@ const Header = () => {
             <SpectralBrandMark size="sm" variant="header" priority className="scale-[1.08]" />
 
             <div aria-hidden="true" className="flex min-w-0 flex-col justify-center md:hidden">
-              <span className="whitespace-nowrap text-[7px] font-semibold uppercase tracking-[0.26em] text-cyan-100/50 [text-shadow:0_0_14px_rgba(46,216,255,0.14)]">
-                THE LEGENDARY
+              <span className="whitespace-nowrap font-serif text-[13px] font-semibold uppercase tracking-[0.12em] text-[#f3fbff] [text-shadow:0_0_18px_rgba(46,216,255,0.16)] max-[360px]:text-[11px] max-[360px]:tracking-[0.08em]">
+                THE LEGENDARY POET
               </span>
-              <span className="mt-0.5 whitespace-nowrap font-serif text-[18px] font-semibold leading-[0.86] tracking-[0.16em] text-[#f3fbff] [text-shadow:0_0_18px_rgba(46,216,255,0.16)]">
-                POET
-              </span>
-              <span className="mt-1 h-px w-[72%] bg-[linear-gradient(90deg,rgba(212,175,55,0.78),rgba(46,216,255,0.38),transparent)] shadow-[0_0_8px_rgba(212,175,55,0.16)]" />
+              <span className="mt-1.5 h-px w-[76%] bg-[linear-gradient(90deg,rgba(212,175,55,0.78),rgba(46,216,255,0.38),transparent)] shadow-[0_0_8px_rgba(212,175,55,0.16)]" />
             </div>
 
             <div className="hidden flex-col leading-[1.2] lg:flex">
