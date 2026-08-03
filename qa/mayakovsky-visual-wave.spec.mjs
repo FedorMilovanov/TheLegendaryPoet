@@ -56,7 +56,7 @@ for (const entry of cases) {
     for (let index = 0; index < entry.expectedImages; index += 1) {
       const image = waveImages.nth(index);
       await image.scrollIntoViewIfNeeded();
-      await expect(image).toHaveAttribute('data-image-state', 'loaded', { timeout: 15_000 });
+      await expect(image).toHaveAttribute('data-image-state', 'ready', { timeout: 15_000 });
       const dimensions = await image.evaluate((node) => ({
         complete: node.complete,
         width: node.naturalWidth,
