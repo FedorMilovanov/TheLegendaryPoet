@@ -3,7 +3,7 @@
   "primaryReference": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementSheet": "qa/reference/brand-v20-reference-sheet.json",
   "fullSizeCandidate": {
-    "id": "v20.12-reference-spectral-volume",
+    "id": "v20.13-reference-attached-electric-drapery",
     "file": "public/brand-emblem-v20-candidate.svg",
     "productionReplacement": false,
     "numericGeometryEligible": true,
@@ -30,7 +30,8 @@
     {"full":"v20.9-reference-canonical-crop","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"internal and composition pass; exact overlay accepted the canonical crop correction but rejected an electrical field restricted mostly to the hood and upper shoulders, overly clean cloth planes and weak shoulder volume at 64–96px"},
     {"full":"v20.10-reference-field-envelope","micro":"v20.6-reference-micro-shoulder-anchors","verdict":"exact all-green engineering pass; artistic review still rejected a wire-like field topology, clean V-shaped cowl and weak small-size shoulder volume"},
     {"full":"v20.11-reference-volumetric-cowl","micro":"v20.7-reference-micro-volumetric-anchors","verdict":"exact all-green engineering pass; human review rejected detached root-like electrical lines, a Shredder-like figure, an overly light gray reading and clothing folds that did not match the canonical reference"},
-    {"full":"v20.12-reference-spectral-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"current QA-only iteration: ten nested canonical contour layers replace detached roots; the figure and cowl return to near-black, diagonal folds are softened, and the luminous field is attached to the hood and shoulders; exact committed overlay and optical evidence pending"}
+    {"full":"v20.12-reference-spectral-volume","micro":"v20.8-reference-micro-spectral-anchors","verdict":"exact all-green engineering pass; artifact inspection rejected the remaining broad smooth contour sheath around the hood and residual panel-like cloak construction even though roots, gray values and the detached field were corrected"},
+    {"full":"v20.13-reference-attached-electric-drapery","micro":"v20.8-reference-micro-spectral-anchors","verdict":"current QA-only iteration: the field is rebuilt as ten irregular aura masses originating directly at the hood, shoulders and cloak edge; short electric steps stay attached; filled armor panels are removed and the almost-black cloak uses low-contrast asymmetric drapery strokes; exact committed overlay pending"}
   ],
   "separationOfConcerns": {
     "geometry": "static candidate SVGs only",
@@ -47,7 +48,7 @@
     "full-size optical review must pass at 64, 96, 128 and 256px",
     "micro dark/light review must pass at 16, 20, 24, 32 and 48px",
     "motion has not been attached to the v20 semantic groups",
-    "all required workflows have not yet passed on one exact v20.12/v20.8 head"
+    "all required workflows have not yet passed on one exact v20.13/v20.8 head"
   ],
   "promotionPolicy": "Never treat numericGeometryEligible, compositionEligible, visibleFieldEligible, CI success or motion quality as reference approval."
 }
