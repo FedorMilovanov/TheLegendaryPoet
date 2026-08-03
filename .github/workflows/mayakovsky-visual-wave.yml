@@ -8,6 +8,9 @@ on:
       - 'src/data/essays/index.ts'
       - 'src/types/essay.ts'
       - 'scripts/validate-mayakovsky-visual-wave.ts'
+      - 'qa/mayakovsky-visual-wave.spec.mjs'
+      - 'scripts/run-webkit-process-isolated.mjs'
+      - '.github/workflows/manual-browser-qa.yml'
       - '.github/workflows/mayakovsky-visual-wave.yml'
   workflow_dispatch:
 
