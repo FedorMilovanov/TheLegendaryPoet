@@ -2,13 +2,13 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "referenceFile": "qa/reference/brand-emblem-canonical-reference.webp",
   "measurementMethod": {
-    "kind": "manual landmark extraction constrained by luminous rim, black negative-space boundary, occupied cloak silhouette and visible cyan field envelope",
+    "kind": "manual landmark extraction constrained by luminous rim, black negative-space boundary and occupied cloak silhouette",
     "canvas": [256, 256],
     "notes": [
-      "The cloak box follows the dark monolithic silhouette rather than the electrical field.",
+      "The cloak box follows the dark monolithic silhouette rather than any electrical light.",
       "The face box follows the dominant black cavern inside the hood.",
-      "The field envelope follows visible cyan pixels around the hood, shoulders and side edges.",
-      "Browser getBBox(), rendered bounds and field-group union remain the exact candidate gates."
+      "The canonical cyan field envelope remains descriptive reference evidence, not a candidate gate after human feedback rejected detached aura logic.",
+      "The active candidate gate requires every rear emission path to share the figure transform, carry an explicit silhouette anchor and remain attached to the rendered figure bounds."
     ]
   },
   "referenceLandmarks": {
@@ -38,10 +38,10 @@
     "hoodApexYToCanvas": 0.121094,
     "cloakShoulderYToCanvas": 0.40625,
     "figureCenterXToCanvas": 0.498047,
-    "fieldWidthToCanvas": 0.820313,
-    "fieldHeightToCanvas": 0.769531,
-    "fieldTopYToCanvas": 0.046875,
-    "fieldCenterXToCanvas": 0.5
+    "descriptiveFieldWidthToCanvas": 0.820313,
+    "descriptiveFieldHeightToCanvas": 0.769531,
+    "descriptiveFieldTopYToCanvas": 0.046875,
+    "descriptiveFieldCenterXToCanvas": 0.5
   },
   "contract": {
     "hoodHeightToVisibleFigureHeight": [0.27, 0.36],
@@ -54,15 +54,11 @@
     "occupiedFigureHeightToCanvas": [0.84, 0.91],
     "hoodApexYToCanvas": [0.1, 0.145],
     "cloakShoulderYToCanvas": [0.37, 0.43],
-    "figureCenterXToCanvas": [0.47, 0.53],
-    "fieldWidthToCanvas": [0.76, 0.9],
-    "fieldHeightToCanvas": [0.68, 0.82],
-    "fieldTopYToCanvas": [0.02, 0.09],
-    "fieldCenterXToCanvas": [0.46, 0.54]
+    "figureCenterXToCanvas": [0.47, 0.53]
   },
   "candidates": [
     {
-      "id": "v20.14-reference-electric-rim-volume",
+      "id": "v20.15-reference-emissive-current",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
@@ -88,25 +84,26 @@
         "occupiedFigureHeightToCanvas": 0.87875,
         "hoodApexYToCanvas": 0.120833,
         "cloakShoulderYToCanvas": 0.392854,
-        "figureCenterXToCanvas": 0.502188,
-        "fieldWidthToCanvas": 0.858152,
-        "fieldHeightToCanvas": 0.745624,
-        "fieldTopYToCanvas": 0.0725,
-        "fieldCenterXToCanvas": 0.495864
+        "figureCenterXToCanvas": 0.502188
       },
-      "fieldVisibility": {
-        "minimumRearBranches": 8,
+      "emissionAttachment": {
+        "minimumRearPaths": 8,
         "minimumStrokeOpacity": 0.12,
-        "minimumStrokeWidth": 0.2
+        "minimumStrokeWidth": 0.2,
+        "maximumBoundsOvershootToCanvas": 0.03,
+        "requiredAnchorAttribute": "data-brand-emission-anchor",
+        "requireSameFigureTransform": true,
+        "requireNoRearFill": true
       },
       "numericGeometryEligible": true,
       "compositionEligible": true,
+      "attachedEmissionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.14 reduces the rear aura masses to faint irregular volume and transfers the dominant electric light onto segmented rim paths that touch the hood, shoulder and full cloak edge. Short organic accents remain attached to the same envelope. The figure stays near-black, filled armor panels remain removed, and low-contrast asymmetric drapery is preserved. Exact committed overlay and optical evidence remain mandatory."
+      "reason": "v20.15 removes the authored rear aura and its field-envelope acceptance pressure. Broad low-opacity electric-blue strokes now sit on the exact figure transform behind the hood and cloak edges, so the figure masks their inner halves and the visible light originates at the silhouette. Saturated electric-blue edge currents and diagonal cloth currents replace teal aura masses; no detached branches remain. Exact committed overlay and optical evidence remain mandatory."
     },
     {
-      "id": "v20.8-reference-micro-spectral-anchors",
+      "id": "v20.9-reference-micro-emissive-current",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
       "designGrid": [32, 32],
       "reviewSizes": [16, 20, 24, 32, 48],
@@ -121,12 +118,20 @@
         "faceCavernWidthToHoodWidth": 0.741935,
         "cloakWidthToHoodWidth": 2.548387
       },
+      "emissionAttachment": {
+        "minimumRearPaths": 2,
+        "minimumStrokeOpacity": 0.12,
+        "minimumStrokeWidth": 0.2,
+        "requiredAnchorAttribute": "data-brand-micro-emission-anchor",
+        "requireNoRearFill": true
+      },
       "numericGeometryEligible": true,
+      "attachedEmissionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro master keeps a near-black monolithic silhouette, uses two compact attached aura masses and six cyan hood/shoulder rim anchors, and avoids detached roots, light-gray cloth or a cyan A at 16–20px."
+      "reason": "The independent v20.9 micro master removes the two filled aura masses. Its broad rear strokes track the hood and cloak edges underneath the figure, while electric-blue rim and diagonal cloth currents remain readable at 16–48px."
     }
   ],
-  "promotionPolicy": "Numeric, composition and visible-field eligibility are necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
+  "promotionPolicy": "Numeric geometry, figure composition and attached-emission eligibility are necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
   "referenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532"
 }
