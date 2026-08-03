@@ -9,6 +9,7 @@
 export type EssayImageKind = 'archive' | 'restoration' | 'reconstruction' | 'document';
 export type EssayImageLayout = 'wide' | 'portrait' | 'cinematic';
 export type EssayImagePlacement = 'full' | 'left' | 'right';
+export type EssayImageLoading = 'lazy' | 'eager';
 export type EssayMythVerdict = 'false' | 'partly-true' | 'disputed' | 'unproven';
 
 export interface EssayImageData {
@@ -25,6 +26,12 @@ export interface EssayImageData {
   objectPosition?: string;
   /** Disable pointer tilt for fragile documents or already perspective-heavy art. */
   tilt?: boolean;
+  /**
+   * Loading priority is an editorial decision, not a renderer guess. Keep the
+   * default lazy; use eager only for a small, explicitly audited visual set
+   * whose decode is required for the article's first deliberate reading pass.
+   */
+  loading?: EssayImageLoading;
 }
 
 export interface EssayCitationData {
