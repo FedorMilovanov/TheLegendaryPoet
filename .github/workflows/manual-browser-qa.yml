@@ -280,14 +280,14 @@ jobs:
           cat premium-preview.log
           exit 1
 
-      - name: Run dedicated premium homepage and pointer-performance matrix on a fresh runner
+      - name: Run standard premium homepage and pointer-performance matrix on a fresh runner
         if: ${{ always() && steps.premium_build.outcome == 'success' }}
         id: home_polish
         run: |
           set -o pipefail
           node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
 
-      - name: Upload premium browser QA evidence
+      - name: Upload standard premium browser QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
@@ -300,5 +300,91 @@ jobs:
             premium-production-build.log
             home-polish.log
             premium-browser-tested-head.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  premium-iphone-critical-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact critical iPhone tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact critical iPhone checkout identity
+        shell: bash
+        run: |
+          actual="$(git rev-parse HEAD)"
+          printf 'expected=%s\nactual=%s\n' "$TESTED_SHA" "$actual"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > premium-iphone-critical-tested-head.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install critical iPhone project dependencies
+        run: npm ci
+
+      - name: Install FFmpeg for critical iPhone deterministic brand assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
+      - name: Build critical iPhone production site
+        id: premium_iphone_critical_build
+        env:
+          VITE_BASE: /
+        run: |
+          set +e
+          {
+            npm run sitemap
+            npm run build
+          } > premium-iphone-critical-production-build.log 2>&1
+          status=$?
+          cat premium-iphone-critical-production-build.log
+          exit $status
+
+      - name: Install isolated critical iPhone Playwright runtime
+        run: |
+          npm install --no-save --no-package-lock @playwright/test@1.54.1
+          npx playwright install --with-deps webkit
+
+      - name: Start critical iPhone production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > premium-iphone-critical-preview.log 2>&1 &
+          echo $! > premium-iphone-critical-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat premium-iphone-critical-preview.log
+          exit 1
+
+      - name: Run critical iPhone first-viewport and reduced-motion contours on a fresh runner
+        if: ${{ always() && steps.premium_iphone_critical_build.outcome == 'success' }}
+        id: iphone_critical
+        run: |
+          set -o pipefail
+          node scripts/run-home-polish-iphone-critical-process-isolated.mjs 2>&1 | tee home-iphone-critical.log
+
+      - name: Upload critical iPhone browser QA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-browser-premium-iphone-critical-evidence-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            premium-iphone-critical-preview.log
+            premium-iphone-critical-production-build.log
+            home-iphone-critical.log
+            premium-iphone-critical-tested-head.txt
           if-no-files-found: warn
           retention-days: 7
