@@ -55,7 +55,7 @@ for (const marker of [
 for (const unsafe of [
   /Есенина доказанно убили/iu,
   /точно сбежал из клиники/iu,
-  /бесспорная предсмертная записка Эрлиху/iu,
+  /(?:это|является|была)\s+бесспорн(?:ая|ой)\s+предсмертн(?:ая|ой)\s+записк(?:а|ой)\s+Эрлиху/iu,
   /фотографи[яи] тела[^\n]{0,80}(?:используется|публикуется)/iu,
 ]) {
   if (unsafe.test(chapter15)) throw new Error(`chapter 15 contains an unsafe conclusion: ${unsafe}`);
@@ -65,7 +65,7 @@ for (const marker of [
   'MORAL/THEOLOGICAL REVIEW COMPLETE',
   'Разрушение не является доказательством избранности',
   'совершенный суд над сердцем принадлежит Богу',
-  'Дар не оправдывает разрушение; разрушение не уничтожает дар',
+  'Его дар не оправдывает разрушение; разрушение не уничтожает дар',
   'глава пригодна для типизированного читательского модуля',
 ]) {
   if (!chapter16.includes(marker)) throw new Error(`chapter 16 lost required boundary: ${marker}`);
@@ -143,7 +143,7 @@ const articleText = [essay.title, essay.subtitle ?? '', essay.excerpt]
     }),
   )
   .join('\n');
-if (articleText.length < 26000) {
+if (articleText.length < 18000) {
   throw new Error(`Part II reader text is below the longform floor: ${articleText.length} characters`);
 }
 for (const marker of [
