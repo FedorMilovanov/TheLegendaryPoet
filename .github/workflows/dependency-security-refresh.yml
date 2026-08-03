@@ -1,9 +1,11 @@
 name: Dependency security refresh
 
 on:
-  push:
+  pull_request:
     branches:
-      - editorial/longform-marathon-2026-08
+      - main
+    types:
+      - synchronize
     paths:
       - .github/workflows/dependency-security-refresh.yml
   workflow_dispatch:
