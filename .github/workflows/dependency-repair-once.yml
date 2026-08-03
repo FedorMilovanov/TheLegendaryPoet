@@ -37,7 +37,7 @@ jobs:
         run: |
           npm install --save-exact react-router-dom@6
           npm install --save-dev --save-exact vite@7.3.6
-          npm audit fix
+          npm audit fix || true
           npm ls react-router react-router-dom vite postcss @babel/core
 
       - name: Verify generated lock and zero high-severity advisories
