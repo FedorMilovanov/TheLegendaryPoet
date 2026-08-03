@@ -14,7 +14,7 @@ import SmoothScroll from './components/SmoothScroll';
 import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
-import BrandMark from './components/BrandMark';
+import SpectralBrandMark from './components/SpectralBrandMark';
 import RouteLoadingShell from './components/RouteLoadingShell';
 import AnalyticsConsentBanner, { AnalyticsRouteTracker } from './components/AnalyticsConsent';
 import AudioChromeBoundary from './components/music/AudioChromeBoundary';
@@ -55,7 +55,7 @@ const WipeOverlay = () => (
       transition={{ duration: 0.72, times: [0, 0.25, 0.75, 1] }}
       className="pointer-events-none"
     >
-      <BrandMark size="lg" />
+      <SpectralBrandMark size="lg" variant="primary" interactive={false} priority />
     </motion.div>
   </motion.div>
 );
