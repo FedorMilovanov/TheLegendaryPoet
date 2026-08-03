@@ -53,7 +53,7 @@ assert.equal(crypto.createHash('sha256').update(fs.readFileSync(sheet.referenceF
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
 
-assert.equal(fullSheet.id, 'v20.13-reference-attached-electric-drapery');
+assert.equal(fullSheet.id, 'v20.14-reference-electric-rim-volume');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
@@ -143,6 +143,7 @@ const historicalLocks: Array<[string, RegExp]> = [
   ['v20.10-reference-field-envelope', /wire-like field topology/],
   ['v20.11-reference-volumetric-cowl', /detached root-like electrical lines/],
   ['v20.12-reference-spectral-volume', /broad smooth contour sheath/],
+  ['v20.13-reference-attached-electric-drapery', /broad teal hood outline/],
 ];
 for (const [id, blocker] of historicalLocks) {
   assert.ok(ledger.iterationHistory.some((entry) => entry.full === id && blocker.test(entry.verdict)), `${id}: historical blocker is missing`);
@@ -175,4 +176,4 @@ assert.match(evidenceSpec, /getBoundingClientRect/);
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.13 uses attached irregular electric masses, near-black cloth and non-panel drapery; v20.8 remains the independent micro master; both are QA-only and not-reference-approved');
+console.log('brand v20 validation: v20.14 keeps faint attached aura volume and carries the electric light along the hood, shoulders and cloak edges; v20.8 remains the independent micro master; both are QA-only and not-reference-approved');
