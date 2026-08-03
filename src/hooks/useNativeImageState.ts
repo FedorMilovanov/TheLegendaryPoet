@@ -120,7 +120,7 @@ export function useNativeImageState(src: string) {
     };
 
     function checkProximity() {
-      if (!active || promoted) return;
+      if (!active || promoted || !image) return;
       if (image.complete) {
         synchronize();
         return;
