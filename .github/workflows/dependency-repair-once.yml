@@ -33,16 +33,15 @@ jobs:
       - name: Install exact current lock
         run: npm ci
 
-      - name: Record current audit graph
-        run: npm audit --json > /tmp/npm-audit-before.json || true
-
-      - name: Apply npm-supported non-breaking remediation
-        run: npm audit fix
+      - name: Apply non-forced audited version remediation
+        run: |
+          npm install --save-exact react-router-dom@7.11.0
+          npm install --save-dev --save-exact vite@7.3.6
+          npm audit fix
 
       - name: Verify generated lock and high-severity boundary
         run: |
           npm ci
-          npm audit --json > /tmp/npm-audit-after.json || true
           npm audit --audit-level=high
 
       - name: Run repository checks
@@ -57,11 +56,8 @@ jobs:
           set -euo pipefail
           git rm .github/workflows/dependency-repair-once.yml
           git add package.json package-lock.json
-          if git diff --cached --quiet; then
-            echo 'npm audit fix produced no committable remediation' >&2
-            exit 1
-          fi
+          git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'chore(deps): apply npm-generated audit remediation'
+          git commit -m 'chore(deps): remediate audited router and Vite versions'
           git push origin HEAD:editorial/longform-marathon-2026-08
