@@ -21,9 +21,10 @@
     "materialization": "direct deterministic FFmpeg crops from the exact hash-locked canonical reference",
     "renderer": "reference-raster-subtle-depth",
     "layers": ["base", "faint aura"],
-    "idleAuraOpacity": 0.035,
-    "desktopHoverAuraOpacity": 0.075,
-    "compactHoverAuraOpacity": 0.042,
+    "idleAuraOpacity": 0.025,
+    "desktopHoverAuraOpacity": 0.055,
+    "compactIdleAuraOpacity": 0.012,
+    "compactHoverAuraOpacity": 0.03,
     "maximumRootScale": 1.008,
     "maximumAuraScale": 1.006,
     "blur": false,
@@ -33,7 +34,7 @@
   },
   "requiredEvidence": [
     "canonical reference versus production raster optical-size matrix",
-    "idle versus restrained hover versus settled live-site comparison",
+    "idle versus faint hover versus settled live-site comparison",
     "exact return to idle",
     "Chromium, Android Chrome and Safari coverage",
     "critical iPhone and reduced-motion coverage"
