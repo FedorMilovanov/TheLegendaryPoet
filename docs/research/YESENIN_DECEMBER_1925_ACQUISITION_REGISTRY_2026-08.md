@@ -3,6 +3,7 @@
 **Дата:** 3 августа 2026 года  
 **Статус:** `ACQUISITION CONTROL / NO CHAPTER 15 PROSE / NO PUBLIC ROUTE`  
 **Контролирующая хронология:** `YESENIN_DECEMBER_1925_DAY_LEVEL_SOURCE_MATRIX_PASS_01_2026-08.md`  
+**Discovery pass:** `YESENIN_DECEMBER_1925_DISCOVERY_PASS_40_PLUS_2026-08.md`  
 **Связанные карты:** `YESENIN_LAST_POEM_MYTH_SOURCE_MAP_2026-08.md`, `YESENIN_SOFIA_TOLSTAYA_CLINIC_SOURCE_PASS_01_2026-08.md`  
 **Drive policy:** `docs/SOURCE_ACQUISITION_AND_DRIVE_POLICY.md`
 
@@ -47,13 +48,16 @@ research_need: treatment from 26 November through the documented end of stay; di
 known_basis:
   - certificate no. 1037 confirms treatment since 26 November and inability to be questioned
   - academic comments place the stay through 21 December
+  - academic corpus identifies the last medical history as IMLI, fund 32, inventory 2, storage unit 37
+  - a facsimile reference is recorded for Русская литература, 1974, no. 8
 required_object:
-  - complete archive unit or official item list
+  - complete IMLI f. 32, op. 2, storage unit 37 or official item list
   - cover/inventory sheets
   - all surviving clinical notes, admission and termination records
-current_status: BINARY-PENDING / PROVENANCE-PENDING / RIGHTS-PENDING
-safe_formula_now: Yesenin was treated in the clinic from 26 November; the complete medical file and formal treatment-end mechanism have not been acquired.
+current_status: BIBLIOGRAPHY-PINNED / BINARY-PENDING / RIGHTS-PENDING
+safe_formula_now: Yesenin was treated in the clinic from 26 November; the exact archive target is known, but the complete medical file and formal treatment-end mechanism have not been acquired.
 forbidden_shortcut:
+  - archive cipher means the file has been inspected
   - certificate no. 1037 is the full case history
   - exact diagnosis reconstructed from memoirs
   - 21 December automatically means formal discharge or self-discharge
