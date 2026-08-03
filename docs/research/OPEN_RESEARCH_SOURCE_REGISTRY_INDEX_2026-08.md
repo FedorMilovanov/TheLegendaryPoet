@@ -4,9 +4,10 @@
 **Mode:** continuous link-first research acquisition  
 **Canonical branch:** `editorial/longform-marathon-2026-08`  
 **Canonical PR:** `#271`  
-**Current pass:** `OSR-2026-08-03-P07`  
-**Current registered rows:** `286`  
-**Completed discovery:** six controlled 40+ expansion passes; pass 07 added 45 rows
+**Current discovery pass:** `OSR-2026-08-03-P07`  
+**Current acquisition pass:** `OSR-2026-08-03-P08`  
+**Current registered rows:** `287`  
+**Completed discovery:** six controlled 40+ expansion passes; pass 07 added 45 world-literature rows
 
 ## 1. Canonical searchable registry
 
@@ -23,14 +24,15 @@ The Google Sheet is the working searchable/filterable authority. The Drive folde
 ## 2. Current counters
 
 ```yaml
-registered_sources: 286
-priority_A: 230
+registered_sources: 287
+priority_A: 231
 link_registered_or_download_selective: 236
 download_queue_or_binary_pending: 45
 tracked_dashboard_scopes: 66
-latest_source_id: OSR-0286
-latest_pass: OSR-2026-08-03-P07
-binary_uploads_in_pass_07: 0
+latest_source_id: OSR-0287
+latest_discovery_pass: OSR-2026-08-03-P07
+latest_acquisition_pass: OSR-2026-08-03-P08
+verified_binary_uploads_in_pass_08: 2
 ```
 
 The dashboard, article map and pass log were extended together with the source rows. Source IDs remain monotonic and no previous row was renumbered.
@@ -56,7 +58,7 @@ Item URL
 Direct file URL
 Rights / handling note
 Last checked
-Discovery pass
+Discovery or acquisition pass
 ```
 
 A later pass updates or appends a row; it never silently replaces, renumbers or deletes earlier evidence.
@@ -67,7 +69,7 @@ A later pass updates or appends a row; it never silently replaces, renumbers or 
 - `DOWNLOAD-SELECTIVE` — large corpus exists; acquire only the exact volume, release or edition closing a named gap.
 - `DOWNLOAD-QUEUE` — useful downloadable object awaits MIME, identity, completeness, rights and SHA verification.
 - `BINARY-PENDING` — exact direct file is known, but bytes were not received or verified.
-- `UPLOADED-TO-DRIVE` — only after Drive returns a real file ID for verified bytes.
+- `DRIVE-VERIFIED` / `ACCEPTED-RESEARCH-COPY` — real bytes passed the acquisition gate and have a recorded Drive ID and SHA-256.
 - `LINK-ONLY` / `CATALOG-ONLY` — reading, bibliography and linking are allowed; redistribution is not established.
 - `DUPLICATE-SKIP` — an existing Drive master or bibliographic equivalent blocks a second binary.
 - `HOLD` / `REJECT` — provenance, rights, identity or academic integrity is insufficient.
@@ -112,9 +114,9 @@ Pass 07 begins the systematic foreign canon with:
 
 The `ARTICLE MAP` sheet maps priority sources to concrete article families. Portal home pages are starting points only; final claims must point to exact works, editions, letters, documents, lines, pages, manuscript witnesses or archive objects.
 
-## 7. Current high-priority binary queue
+## 7. Current high-priority binary queue and accepted copies
 
-Earlier priorities remain active, including the Yesenin chronicle volumes, Lermontov volume 1, selected Russian first editions, open dissertations, *Neizdannyi Khlebnikov*, Gippius and Sologub objects, and the controlled classicist/Pushkin-circle queue recorded in passes 02–06.
+Earlier priorities remain active, including the remaining Yesenin chronology gaps, Lermontov volume 1, selected Russian first editions, open dissertations, *Neizdannyi Khlebnikov*, Gippius and Sologub objects, and the controlled classicist/Pushkin-circle queue recorded in passes 02–06.
 
 Pass 07 adds seven core candidates:
 
@@ -127,6 +129,13 @@ Pass 07 adds seven core candidates:
 7. `OSR-0285` — Baudelaire, first edition of *Les Fleurs du mal*, 1857.
 
 Folger downloads, Homer Multitext datasets, Molière collected editions and Victor Hugo poetry/manuscript collections remain selective rather than bulk acquisitions.
+
+Pass 08 accepted two verified Yesenin research copies into existing `BATCH-0002`:
+
+- `OSR-0031` — *Летопись жизни и творчества С. А. Есенина*, том 3, книга 1; Drive ID `13q21pg9dd4EyAIhBVxZXJrxwjYGD0qK-`; SHA-256 `eaccd7e92a90087112a4425d6a211257ad3e80e9e47c05ce9943b7f4b1669014`.
+- `OSR-0287` — *Летопись жизни и творчества С. А. Есенина*, том 5, книга 1; Drive ID `1d7UCOxmX7SUPJkjclZKvNhJAAGhu1gHs`; SHA-256 `1c4a37276fc9e2e8da2a9b19c7b0c8941b6e43a0ec9aec5d42a55589e0145496`.
+
+Both are verified OCR reproductions of IMLI academic editions, not original archive or production-cleared facsimile masters. Production reuse remains `HOLD`.
 
 No timed-out endpoint, viewer page or catalogue card is reported as an uploaded PDF.
 
@@ -171,7 +180,8 @@ For every new article or major revision:
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_05_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_06_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_07_40_PLUS_2026-08-03.md`;
+- `docs/research/OPEN_SOURCE_ACQUISITION_PASS_08_2026-08-03.md`;
 - `docs/research/MULTILINGUAL_OPEN_SOURCE_DISCOVERY_PASS_74_2026-08-03.md`;
 - `FedorMilovanov/Research/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md`.
 
-Every future 40+ pass must append to the same Sheet, record duplicates and failed downloads, and leave a dated repository report with actual Drive IDs for verified uploads.
+Every future discovery pass must append to the same Sheet, record duplicates and failed downloads, and leave a dated repository report. Every binary acquisition pass must record actual Drive IDs, SHA-256 values, rights classification and production-reuse status.
