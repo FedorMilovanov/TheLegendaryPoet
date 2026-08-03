@@ -83,6 +83,7 @@ assert.match(helpers, /Math\.abs\(second\.centerDelta\) <= Math\.max\(64, second
 assert.match(helpers, /substantially visible in the WebKit visual viewport after native two-phase centering/);
 assert.doesNotMatch(helpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classList\.(?:add|remove)|style\.opacity\s*=/);
 assert.match(packageJson, /"validate:reliable-reveal": "tsx scripts\/validate-reliable-reveal\.ts"/);
-assert.match(packageJson, /validate:brand-v20 && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
+assert.match(packageJson, /brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
+assert.doesNotMatch(packageJson, /validate:brand-v20/);
 
 console.log('reliable reveal validation: below-fold geometry races requestAnimationFrame against one bounded timeout fallback, touch/compact first viewport remains readable without animation clocks, and desktop fine-pointer choreography plus strict Safari opacity/blur verdicts stay intact');
