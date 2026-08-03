@@ -79,11 +79,7 @@ jobs:
                       onAnimationEnd={(event) => {
                         if (event.currentTarget === event.target) markWordRevealed(w.key);
                       }}
-                      onAnimationCancel={(event) => {
-                        if (event.currentTarget === event.target) markWordRevealed(w.key);
-                      }}
           ''')
-          # Re-indent the dedented JSX attributes to match the surrounding span.
           readiness = ''.join(f'            {line}' if line.strip() else line for line in readiness.splitlines(keepends=True))
           insert_at = span_anchor_at + len(span_anchor)
           home = home[:insert_at] + readiness + home[insert_at:]
@@ -112,6 +108,13 @@ jobs:
           }
           ''')
           qa_path.write_text(qa[:start] + replacement + qa[end:], encoding='utf-8')
+
+          validator_path = Path('scripts/validate-brand-browser-workflow.ts')
+          validator = validator_path.read_text(encoding='utf-8')
+          unsupported = "assert.match(homePage, /onAnimationCancel/);\n"
+          if validator.count(unsupported) != 1:
+              raise SystemExit(f'expected one unsupported React event contract, found {validator.count(unsupported)}')
+          validator_path.write_text(validator.replace(unsupported, ''), encoding='utf-8')
           PY
 
       - name: Install exact dependencies
@@ -128,7 +131,7 @@ jobs:
         run: |
           set -euo pipefail
           git rm .github/workflows/final-webkit-hardening-once.yml
-          git add src/pages/HomePage.tsx qa/home-polish.spec.mjs
+          git add src/pages/HomePage.tsx qa/home-polish.spec.mjs scripts/validate-brand-browser-workflow.ts
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
