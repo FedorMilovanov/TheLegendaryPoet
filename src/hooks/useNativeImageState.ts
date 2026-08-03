@@ -67,20 +67,18 @@ export function useNativeImageState(src: string) {
         publish('loading');
         return;
       }
-      if (image.naturalWidth > 0) {
+
+      const completedState: NativeImageState = image.naturalWidth > 0 ? 'ready' : 'error';
+      if (completedState === 'ready') {
         stopProximityChecks();
         publish('ready');
         return;
       }
+
       if (!restartingRequest) {
         stopProximityChecks();
         publish('error');
       }
-    };
-
-    const handleLoad = () => synchronize();
-    const handleError = () => {
-      if (!restartingRequest) synchronize();
     };
 
     const restartDormantRequestAsEager = () => {
@@ -137,8 +135,8 @@ export function useNativeImageState(src: string) {
       if (nearViewport) restartDormantRequestAsEager();
     }
 
-    image.addEventListener('load', handleLoad);
-    image.addEventListener('error', handleError);
+    image.addEventListener('load', synchronize);
+    image.addEventListener('error', synchronize);
     synchronize();
 
     if (!image.complete) {
@@ -170,8 +168,8 @@ export function useNativeImageState(src: string) {
       active = false;
       stopProximityChecks();
       if (restartFrame !== undefined) window.cancelAnimationFrame(restartFrame);
-      image.removeEventListener('load', handleLoad);
-      image.removeEventListener('error', handleError);
+      image.removeEventListener('load', synchronize);
+      image.removeEventListener('error', synchronize);
     };
   }, [src]);
 
