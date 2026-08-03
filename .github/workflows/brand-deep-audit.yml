@@ -37,7 +37,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg
-      - name: Validate canonical raster declarations
+      - name: Validate approved transparent RGBA declarations
         run: npm run validate:brand
       - name: Typecheck motion normalization
         run: npm run typecheck
@@ -55,7 +55,7 @@ jobs:
           for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
           cat brand-deep-preview.log
           exit 1
-      - name: Run exact reference and restrained interaction audit
+      - name: Run exact live-site source and restrained interaction audit
         run: >-
           npx playwright test
           qa/brand-emblem.spec.mjs
@@ -64,17 +64,17 @@ jobs:
           --project=chromium-core
           --workers=1
           --reporter=line
-      - name: Upload deep audit evidence
+      - name: Upload real-site brand evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: brand-deep-audit-${{ github.event.pull_request.head.sha || github.sha }}
+          name: brand-live-site-audit-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
-            qa-artifacts/brand-reference-raster-optical-matrix.png
-            qa-artifacts/brand-reference-raster-idle.png
-            qa-artifacts/brand-reference-raster-hover.png
-            qa-artifacts/brand-reference-raster-comparison-matrix.png
-            qa-artifacts/brand-reference-raster-live-comparison.png
+            qa-artifacts/brand-live-desktop-header-idle.png
+            qa-artifacts/brand-live-desktop-header-hover.png
+            qa-artifacts/brand-live-footer-primary.png
+            qa-artifacts/brand-live-mobile-first-viewport.png
+            qa-artifacts/brand-live-site-control-sheet.png
             test-results
             brand-deep-preview.log
           if-no-files-found: warn
