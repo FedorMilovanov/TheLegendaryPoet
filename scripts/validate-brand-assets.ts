@@ -8,7 +8,7 @@ const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
 const raw = (file: string) => fs.readFileSync(resolve(file));
 const exists = (file: string) => fs.existsSync(resolve(file));
 const digest = (bytes: Buffer) => crypto.createHash('sha256').update(bytes).digest('hex');
-const RELEASE = 'approved-rgba-20260803-2';
+const RELEASE = 'approved-rgba-20260803-1';
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const approved = {
