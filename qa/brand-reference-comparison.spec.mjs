@@ -74,29 +74,28 @@ test.describe('loading and browser icon visual evidence', () => {
 
   test('route loading shell uses the same emblem', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-    await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
 
-    let releaseChunk;
+    let releaseChunk = () => undefined;
     const chunkGate = new Promise((resolve) => { releaseChunk = resolve; });
     let delayed = false;
-    await page.route('**/assets/*.js', async (route) => {
-      if (!delayed && /AboutPage/i.test(route.request().url())) {
-        delayed = true;
-        await chunkGate;
-      }
+    await page.route('**/assets/AboutPage-*.js', async (route) => {
+      delayed = true;
+      await chunkGate;
       await route.continue();
     });
 
-    await page.locator('a[href="/about"]').first().evaluate((node) => node.click());
+    const navigation = page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded' });
     const shell = page.getByRole('status', { name: 'Загрузка страницы' });
     await expect(shell).toBeVisible({ timeout: 10_000 });
+    expect(delayed).toBe(true);
     const mark = shell.locator('[data-brand-mark]').first();
     await expectSingle(mark);
     await expect(mark.locator('[data-brand-raster-base] img')).toHaveAttribute('src', /brand-emblem\.png/);
+    await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
     await page.screenshot({ path: path.join(DIR, 'brand-route-loading-shell.png'), fullPage: true });
 
     releaseChunk();
+    await navigation;
     await expect(page).toHaveURL(/\/about$/);
     await expect(shell).toBeHidden({ timeout: 10_000 });
   });
