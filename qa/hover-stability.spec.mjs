@@ -149,25 +149,19 @@ async function prepareImageForSampling(image, finePointer) {
   return { initial, enforceOpacity: true };
 }
 
-async function samplePointerInteraction(page, image, finePointer) {
+async function samplePointerInteraction(page, image) {
   const samples = [];
   const box = await image.boundingBox();
   expect(box).not.toBeNull();
 
-  if (finePointer) {
-    for (const [x, y] of [[0.2, 0.2], [0.5, 0.5], [0.8, 0.72]]) {
-      await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 5 });
-      await page.waitForTimeout(70);
-      samples.push(await imageSnapshot(image));
-    }
-    await page.mouse.move(2, 2, { steps: 4 });
-    await page.waitForTimeout(380);
-    samples.push(await imageSnapshot(image));
-  } else {
-    await page.evaluate(() => window.scrollBy({ top: 72, behavior: 'auto' }));
-    await page.waitForTimeout(140);
+  for (const [x, y] of [[0.2, 0.2], [0.5, 0.5], [0.8, 0.72]]) {
+    await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 5 });
+    await page.waitForTimeout(70);
     samples.push(await imageSnapshot(image));
   }
+  await page.mouse.move(2, 2, { steps: 4 });
+  await page.waitForTimeout(380);
+  samples.push(await imageSnapshot(image));
 
   return samples;
 }
@@ -197,14 +191,16 @@ for (const surface of surfaces) {
     expect(response?.status()).toBeLessThan(400);
     await page.waitForLoadState('networkidle').catch(() => undefined);
 
+    const interactiveMedia = page.locator(INTERACTIVE_MEDIA_SELECTOR);
     if (surface.minimum > 0) {
       await expect.poll(
-        async () => page.locator(INTERACTIVE_MEDIA_SELECTOR).count(),
+        async () => interactiveMedia.count(),
         { timeout: 15_000, message: `interactive artwork on ${surface.path}` },
       ).toBeGreaterThanOrEqual(surface.minimum);
     }
 
-    const unprotected = await page.locator(INTERACTIVE_MEDIA_SELECTOR).evaluateAll((images) => images
+    const interactiveMediaCount = await interactiveMedia.count();
+    const unprotected = await interactiveMedia.evaluateAll((images) => images
       .filter((image) => getComputedStyle(image).backfaceVisibility !== 'hidden')
       .map((image) => ({
         alt: image.getAttribute('alt') ?? '',
@@ -223,7 +219,7 @@ for (const surface of surfaces) {
       const { initial, enforceOpacity } = await prepareImageForSampling(image, finePointer);
       expect(initial.transitionProperty).not.toContain('all');
       expect(initial.backfaceVisibility).toBe('hidden');
-      const samples = await samplePointerInteraction(page, image, finePointer);
+      const samples = await samplePointerInteraction(page, image);
       assertStableSamples(initial, samples, enforceOpacity);
 
       const compositor = await image.evaluate((node) => {
@@ -246,9 +242,31 @@ for (const surface of surfaces) {
     }
 
     expect(errors).toEqual([]);
-    await page.screenshot({
-      path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-${surface.name}.png`),
-      fullPage: false,
-    });
+
+    const evidenceStem = `${testInfo.project.name}-${surface.name}`;
+    if (finePointer) {
+      // Only a fine-pointer project exercises real hover motion, so its visual evidence must
+      // capture the rendered surface. Linux WebKit touch projects already produce dedicated
+      // mobile screenshots elsewhere; a redundant viewport screenshot here can terminate the
+      // WebKit target while adding no hover evidence.
+      await page.screenshot({
+        path: path.join(ARTIFACT_DIR, `${evidenceStem}.png`),
+        fullPage: false,
+      });
+    } else {
+      fs.writeFileSync(
+        path.join(ARTIFACT_DIR, `${evidenceStem}.json`),
+        `${JSON.stringify({
+          project: testInfo.project.name,
+          surface: surface.name,
+          path: surface.path,
+          pointerContract: 'touch-only-static-compositor-audit',
+          interactiveMediaCount,
+          unprotectedInteractiveMediaCount: unprotected.length,
+          sampledHoverImages: sampledImages.length,
+          pageErrors: errors,
+        }, null, 2)}\n`,
+      );
+    }
   });
 }
