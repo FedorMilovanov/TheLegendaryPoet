@@ -62,7 +62,7 @@
   },
   "candidates": [
     {
-      "id": "v20.10-reference-field-envelope",
+      "id": "v20.11-reference-volumetric-cowl",
       "file": "public/brand-emblem-v20-candidate.svg",
       "designGrid": [96, 96],
       "reviewSizes": [64, 96, 128, 256],
@@ -103,10 +103,10 @@
       "compositionEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "v20.10 keeps canonical figure placement while extending a visibly styled, unblurred electrical field from the hood along both side edges. It also replaces the previous angular cowl intersection with compressed overlapping cloth layers. Exact committed field-envelope and overlay evidence remain mandatory."
+      "reason": "v20.11 preserves the canonical figure crop and measured field envelope while replacing the two continuous outer wires with fractured bounded segments, rebuilding the cowl as asymmetrically gathered cloth and strengthening shoulder mass and rim anchors. Exact committed overlay and optical evidence remain mandatory."
     },
     {
-      "id": "v20.6-reference-micro-shoulder-anchors",
+      "id": "v20.7-reference-micro-volumetric-anchors",
       "file": "public/brand-emblem-v20-micro-candidate.svg",
       "designGrid": [32, 32],
       "reviewSizes": [16, 20, 24, 32, 48],
@@ -124,7 +124,7 @@
       "numericGeometryEligible": true,
       "productionReplacement": false,
       "reviewerDecision": "not-reference-approved",
-      "reason": "The independent micro master retains the broad cavern and six separated hood and shoulder anchors. Micro crop intentionally follows optical readability rather than the full-size square and field-envelope contracts."
+      "reason": "The independent micro master retains the broad cavern and six separated hood and shoulder anchors, replaces the crossed cowl with three gathered layers and strengthens shoulder highlights for 16–20px dark-background recognition. Micro crop remains independent from the full-size square and field-envelope contracts."
     }
   ],
   "promotionPolicy": "Numeric, composition and visible-field eligibility are necessary but never sufficient. Production remains unchanged until exact overlay artifacts and an explicit human reference-approved decision exist on one all-green exact head.",
