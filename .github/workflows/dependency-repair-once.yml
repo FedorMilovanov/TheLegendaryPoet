@@ -1,0 +1,58 @@
+name: One-shot dependency remediation
+
+on:
+  push:
+    branches: [editorial/longform-marathon-2026-08]
+    paths:
+      - .github/workflows/dependency-repair-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical branch
+        uses: actions/checkout@v4
+        with:
+          ref: editorial/longform-marathon-2026-08
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact current lock
+        run: npm ci
+
+      - name: Apply npm-supported non-breaking remediation
+        run: npm audit fix
+
+      - name: Verify generated lock and high-severity boundary
+        run: |
+          npm ci
+          npm audit --audit-level=high
+
+      - name: Run repository checks
+        run: |
+          npm run check
+          npm run build
+        env:
+          VITE_BASE: /
+
+      - name: Commit generated dependency files and remove one-shot workflow
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/dependency-repair-once.yml
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo 'npm audit fix produced no committable remediation' >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(deps): apply npm-generated audit remediation'
+          git push origin HEAD:editorial/longform-marathon-2026-08
