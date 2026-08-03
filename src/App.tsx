@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
@@ -39,8 +39,15 @@ import {
   TrackDetailPage,
 } from './routes/routeModules';
 
-const WipeOverlay = ({ onComplete }: { onComplete: () => void }) => (
+const WipeOverlay = ({
+  onComplete,
+  overlayRef,
+}: {
+  onComplete: () => void;
+  overlayRef: RefObject<HTMLDivElement>;
+}) => (
   <motion.div
+    ref={overlayRef}
     className="page-wipe pointer-events-none fixed inset-0 z-[100] flex items-center justify-center"
     style={{ originY: 1 }}
     initial={{ scaleY: 1 }}
@@ -117,14 +124,27 @@ function SiteLayout() {
   useAutoHideChrome();
   const showIntro = useRef(!introPlayed).current;
   const [introVisible, setIntroVisible] = useState(showIntro);
-  const completeIntro = useCallback(() => setIntroVisible(false), []);
+  const introOverlayRef = useRef<HTMLDivElement>(null);
+
+  const completeIntro = useCallback(() => {
+    // Hide the real DOM node synchronously before scheduling React's unmount.
+    // This keeps a decorative transition from covering the page if a cold
+    // WebKit renderer delays the state commit after the timer/callback fires.
+    const overlay = introOverlayRef.current;
+    if (overlay) {
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      overlay.dataset.wipeState = 'complete';
+    }
+    setIntroVisible(false);
+  }, []);
 
   useEffect(() => {
     introPlayed = true;
     if (!introVisible) return undefined;
 
     // WebKit can occasionally skip a motion completion callback under cold-run load.
-    // The overlay is decorative and must never remain mounted over the settled page.
+    // The overlay is decorative and must never remain visible over the settled page.
     const fallback = window.setTimeout(completeIntro, 1_200);
     return () => window.clearTimeout(fallback);
   }, [completeIntro, introVisible]);
@@ -132,7 +152,7 @@ function SiteLayout() {
   return (
     <SmoothScroll>
       <div className="relative min-h-screen overflow-x-clip bg-[#050505] selection:bg-luxury-gold/30">
-        {introVisible && <WipeOverlay onComplete={completeIntro} />}
+        {introVisible && <WipeOverlay overlayRef={introOverlayRef} onComplete={completeIntro} />}
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
           Перейти к содержанию
         </a>
