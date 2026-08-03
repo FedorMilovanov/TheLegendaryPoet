@@ -1,7 +1,7 @@
 # Сергей Есенин. Часть II — единый индекс paragraph/source‑аудита
 
 **Дата:** 3 августа 2026 года  
-**Статус:** `CHAPTERS 1–12 AUDITED / CHAPTERS 13–14 NEXT / НЕ ПУБЛИКОВАТЬ`  
+**Статус:** `ALL 14 WORKING CHAPTERS AUDITED / CHAPTER 15 ACQUISITION ONLY / НЕ ПУБЛИКОВАТЬ`  
 **Каноническая ветка:** `editorial/longform-marathon-2026-08`  
 **Канонический PR:** `#271`  
 **Принцип:** этот файл обновляется на месте; не создавать параллельные `FINAL/LATEST/PASS-02` индексы без отдельной необходимости.
@@ -103,6 +103,28 @@
 
 Открыто: pages 236–280, all 14 reverse letters, diary archive matrix, daily Caucasus route, medical file, first-edition binaries, transport/address evidence and rights.
 
+### Главы 13–14
+
+Файл: `YESENIN_PART_II_SOURCE_PASS_CH13_CH14_2026-08.md`.
+
+Закрыто в самих черновиках:
+
+- `Письмо к женщине` addressee remains attributed to later testimony;
+- academic `Незрело...` reading preserved and mixed-script typo removed;
+- Persian cycle and selected poem-level sources separated;
+- physical May book and final cycle remain different objects;
+- `Чёрный человек` completed before clinic and not used as diagnosis or direct suicide note;
+- `Клён...` draft autograph, Sofia authorised copy and posthumous publication separated;
+- artistic confession not equated with repentance;
+- calendar transcription separated from missing marriage registry image;
+- Sofia document/handwriting types separated;
+- contract and authorial preparation separated from posthumous volumes;
+- Evdokimov memoir-published telegram separated from missing original;
+- certificate no. 1037 separated from complete medical file;
+- bank and Leningrad plans separated from psychological inference.
+
+Открыто: exact quotations, physical editions/manuscripts, registry/certificate/bankbook/telegram binaries, complete medical file, treatment-end mechanism, rights and final literary/theological review.
+
 ---
 
 ## 2. Executable protections active
@@ -119,36 +141,39 @@
 - chapter 10 physical-witness and missing-scan distinctions;
 - chapter 11 canonical letter IDs and autograph/photostat distinction;
 - chapter 12 Iran-route, book/cycle and medical boundaries;
-- chapter 13 diagnosis/repentance boundary;
-- chapter 14 medical boundary.
+- chapter 13 textological, authorised-copy, pre-clinic and repentance boundaries;
+- chapter 14 registry, contract, telegram, certificate, bank and psychological-inference boundaries.
 
 Green evidence from an earlier SHA does not apply to a moved head.
 
 ---
 
-## 3. Next audit waves
+## 3. Next stage
 
-### Wave 7 — главы 13–14
+### Chapter 15 — acquisition/forensic audit only
 
-- late poetry: exact witnesses/variants, quotation basis, biography versus lyrical subject, moral/theological claims;
-- Sofia/clinic: authorised manuscripts, marriage record, contract, certificate, bankbook, clinic file and discharge mechanism.
+No narrative prose. Work only in `YESENIN_DECEMBER_1925_DAY_LEVEL_SOURCE_MATRIX_PASS_01_2026-08.md` and related source/rights ledgers:
 
-### Wave 8 — chapter 15 acquisition audit only
-
-No narrative prose. Audit only:
-
-- medical file;
+- full medical file and treatment-end mechanism;
 - Moscow–Leningrad transport;
-- hotel records;
-- witness matrix;
-- inquiry documents;
-- forensic reports;
-- original/retouched photographs;
-- rights.
+- hotel registration and room records;
+- witness matrix with first statement/date/interest;
+- initial inspection and inquiry documents;
+- forensic act and laboratory reports;
+- original versus retouched photographs;
+- final-poem manuscript/provenance;
+- item-level rights.
 
-### Wave 9 — chapter 16 last
+### Chapter 16 — last
 
-Only after all source, moral/theological and literary audits.
+No final synthesis until:
+
+- chapter 15 source hierarchy closes sufficiently;
+- all 14 drafted chapters pass literary compression;
+- exact quotations are verified;
+- moral/theological review is complete;
+- documentary visuals are rights-cleared;
+- final-head content/type/build/browser checks pass.
 
 ---
 
@@ -170,14 +195,16 @@ A chapter does not become V02 merely because an audit file exists. Required:
 
 ```yaml
 current_working_chapters: 14
-chapters_paragraph_or_claim_audited: 12
-chapters_remaining_for_audit: 2
-immediate_regressions_found_so_far: 1
-immediate_regressions_fixed: 1
+chapters_paragraph_or_claim_audited: 14
+chapters_remaining_for_audit: 0
+immediate_regressions_found_so_far: 2
+immediate_regressions_fixed: 2
 confirmed_alias_migrations_applied: 8
 source_gap_closures_applied_to_prose: true
+chapter_15_mode: acquisition_only
 public_route_created: false
 part_ii_data_module_created: false
 chapter_15_prose_created: false
+chapter_16_prose_created: false
 ready_for_publication: false
 ```
