@@ -14,53 +14,6 @@ permissions:
   contents: read
 
 jobs:
-  # BEGIN MAYAKOVSKY VISUAL WAVE MATERIALIZER
-  materialize_mayakovsky_wave:
-    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'editorial/longform-marathon-2026-08' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Check out the canonical PR branch
-        uses: actions/checkout@v4
-        with:
-          ref: editorial/longform-marathon-2026-08
-          fetch-depth: 0
-
-      - name: Materialize the SHA-verified image package
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f tmp/maya-wave/READY || exit 0
-          cat tmp/maya-wave/package.b64.part* > /tmp/mayakovsky-wave-assets.zip.b64
-          base64 --decode /tmp/mayakovsky-wave-assets.zip.b64 > /tmp/mayakovsky-wave-assets.zip
-          echo "148290b498bf6d5e05ed15aa5fdab5781a9f5853edddc936b6031d196cc53326  /tmp/mayakovsky-wave-assets.zip" | sha256sum --check --strict
-          rm -rf /tmp/mayakovsky-wave
-          mkdir -p /tmp/mayakovsky-wave
-          unzip -q /tmp/mayakovsky-wave-assets.zip -d /tmp/mayakovsky-wave
-          (cd /tmp/mayakovsky-wave && sha256sum --check --strict SHA256SUMS.txt)
-          install -d public/images/essays/mayakovsky/wave
-          install -m 0644 /tmp/mayakovsky-wave/*.webp public/images/essays/mayakovsky/wave/
-
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('.github/workflows/ci.yml')
-          text = path.read_text()
-          start = '  # BEGIN MAYAKOVSKY VISUAL WAVE MATERIALIZER\n'
-          end = '  # END MAYAKOVSKY VISUAL WAVE MATERIALIZER\n'
-          before, remainder = text.split(start, 1)
-          _, after = remainder.split(end, 1)
-          path.write_text(before + after)
-          PY
-
-          git rm -r tmp/maya-wave .github/workflows/materialize-mayakovsky-wave.yml
-          git add .github/workflows/ci.yml public/images/essays/mayakovsky/wave
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "assets(essays): materialize verified Mayakovsky visual wave"
-          git push origin HEAD:editorial/longform-marathon-2026-08
-  # END MAYAKOVSKY VISUAL WAVE MATERIALIZER
-
   verify:
     runs-on: ubuntu-latest
     steps:
