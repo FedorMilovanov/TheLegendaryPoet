@@ -10,6 +10,10 @@ const registryPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_ACQUISITION_REGISTRY_2026-08.md',
 );
+const sourcePassPath = join(
+  researchDir,
+  'YESENIN_DECEMBER_1925_SOURCE_PASS_IMLI_2003_2026-08.md',
+);
 const matrixPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_DAY_LEVEL_SOURCE_MATRIX_PASS_01_2026-08.md',
@@ -23,12 +27,20 @@ const requestPackPath = join(
   'YESENIN_ARCHIVE_REQUEST_PACK_2026-08.md',
 );
 
-for (const path of [discoveryPath, registryPath, matrixPath, witnessPath, requestPackPath]) {
+for (const path of [
+  discoveryPath,
+  registryPath,
+  sourcePassPath,
+  matrixPath,
+  witnessPath,
+  requestPackPath,
+]) {
   if (!existsSync(path)) throw new Error(`missing December forensic control file: ${path}`);
 }
 
 const discovery = readFileSync(discoveryPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
+const sourcePass = readFileSync(sourcePassPath, 'utf8');
 const matrix = readFileSync(matrixPath, 'utf8');
 const witnesses = readFileSync(witnessPath, 'utf8');
 const requestPack = readFileSync(requestPackPath, 'utf8');
@@ -68,7 +80,7 @@ for (const forbidden of [
   /chapter_15_prose_created:\s*true/u,
   /public_route_created:\s*true/u,
 ]) {
-  if (forbidden.test(discovery)) throw new Error(`December discovery overstates acquisition: ${forbidden}`);
+  if (forbidden.test(discovery)) throw new Error(`December discovery overstates its own pass: ${forbidden}`);
 }
 
 const acquisitionObjects = [...registry.matchAll(/^### DEC-ACQ-(\d{2})\s+—/gmu)].map(
@@ -84,23 +96,78 @@ for (let number = 1; number <= 12; number += 1) {
 }
 
 for (const required of [
-  'YESENIN_DECEMBER_1925_DISCOVERY_PASS_40_PLUS_2026-08.md',
-  'IMLI, fund 32, inventory 2, storage unit 37',
-  'archive cipher means the file has been inspected',
-  'narrative_prose_allowed: false',
-  'public_route_allowed: false',
-  'forensic_registry_created: true',
-  'acquisition_objects: 12',
-  'item_verified_objects: 0',
-  'complete_witness_rows: 0',
-  'medical_file_acquired: false',
+  'YESENIN_DECEMBER_1925_SOURCE_PASS_IMLI_2003_2026-08.md',
+  'verified_research_source_files: 1',
+  'verified_published_facsimile_packages: 1',
+  'acquisition_objects_advanced: 6',
+  'original_archive_objects_verified: 0',
+  'medical_facsimile_acquired: true',
+  'medical_file_original_acquired: false',
+  'treatment_end_mechanism_acquired: false',
   'hotel_register_acquired: false',
-  'inquiry_file_acquired: false',
-  'forensic_act_acquired: false',
-  'photo_provenance_closed: false',
+  'inquiry_facsimile_corpus_acquired: true',
+  'inquiry_file_original_acquired: false',
+  'forensic_act_facsimile_acquired: true',
+  'forensic_act_original_acquired: false',
+  'lab_conclusion_2028_verified: true',
+  'production_rights_closed: false',
+  'complete_witness_rows: 0',
   'ready_for_chapter_15_draft: false',
+  'published facsimile called the original',
+  'no reproduction of IMLI book facsimiles until item-level rights are cleared',
 ]) {
   if (!registry.includes(required)) throw new Error(`December registry lost gate: ${required}`);
+}
+
+for (const forbidden of [
+  /original_archive_objects_verified:\s*[1-9]/u,
+  /medical_file_original_acquired:\s*true/u,
+  /treatment_end_mechanism_acquired:\s*true/u,
+  /hotel_register_acquired:\s*true/u,
+  /inquiry_file_original_acquired:\s*true/u,
+  /forensic_act_original_acquired:\s*true/u,
+  /production_rights_closed:\s*true/u,
+  /complete_witness_rows:\s*[1-9]/u,
+  /ready_for_chapter_15_draft:\s*true/u,
+]) {
+  if (forbidden.test(registry)) throw new Error(`December registry overstates original/rights completion: ${forbidden}`);
+}
+
+for (const required of [
+  'FILE-VERIFIED / PRIVATE RESEARCH ONLY / FACSIMILES VERIFIED / ORIGINALS AND RIGHTS STILL PENDING',
+  'Drive intake id:',
+  'UYM-2026-08-03-10',
+  'PDF_pages: 416',
+  'file_size_bytes: 29439518',
+  '182d24a0984b88c6d66aeeb846b7ac3b13a0f2edb39245b8b1e03912ba7d4a7c',
+  'PDF_page: 37',
+  'printed_page: 36',
+  'PDF_pages: 369-371',
+  '| История болезни С. А. Есенина | 373-375 |',
+  '| Доверенность В. И. Эрлиху | 376 |',
+  '| Акт Н. Горбова | 377 |',
+  '| Опрос управляющего В. М. Назарова | 378-379 |',
+  '| Опрос Г. Ф. Устинова | 380-381 |',
+  '| Опрос Е. А. Устиновой | 382 |',
+  '| Опрос В. И. Эрлиха | 383-386 |',
+  '| Опись вещей в номере | 387 |',
+  '| Акт А. Г. Гиляревского | 393-395 |',
+  'verified_research_source_files: 1',
+  'acquisition_objects_advanced: 6',
+  'original_archive_objects_verified: 0',
+  'production_rights_closed: 0',
+  'chapter_15_prose_allowed: false',
+]) {
+  if (!sourcePass.includes(required)) throw new Error(`IMLI source pass lost verification/provenance field: ${required}`);
+}
+
+for (const forbidden of [
+  /original_archive_objects_verified:\s*[1-9]/u,
+  /production_rights_closed:\s*[1-9]/u,
+  /chapter_15_prose_allowed:\s*true/u,
+  /public_route_allowed:\s*true/u,
+]) {
+  if (forbidden.test(sourcePass)) throw new Error(`IMLI source pass overstates original/rights completion: ${forbidden}`);
 }
 
 for (const required of [
@@ -167,7 +234,7 @@ for (const forbidden of [
   /Drive_batch_created:\s*true/u,
   /chapter_15_prose_allowed:\s*true/u,
 ]) {
-  if (forbidden.test(requestPack)) throw new Error(`archive request pack overstates progress: ${forbidden}`);
+  if (forbidden.test(requestPack)) throw new Error(`archive request pack overstates its own request status: ${forbidden}`);
 }
 
 const researchFiles = readdirSync(researchDir);
@@ -175,5 +242,5 @@ const premature = researchFiles.find((name) => /YESENIN_PART_II_DRAFT_CH15/iu.te
 if (premature) throw new Error(`chapter 15 narrative prose appeared before acquisition gates: ${premature}`);
 
 console.log(
-  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 10 partial/pending witness rows, 4 request templates, 4 institutional download cards, 0 sent requests, 0 received/verified files and 0 complete witnesses; chapter 15 prose and public route remain blocked.',
+  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 1 verified IMLI source file/facsimile package, 6 advanced objects, 10 partial/pending witness rows and 0 verified originals/complete witnesses; chapter 15 prose and public route remain blocked.',
 );
