@@ -4,9 +4,9 @@
 **Mode:** continuous link-first research acquisition  
 **Canonical branch:** `editorial/longform-marathon-2026-08`  
 **Canonical PR:** `#271`  
-**Current pass:** `OSR-2026-08-03-P04`  
-**Current registered rows:** `151`  
-**Completed discovery:** three controlled 40+ expansion passes; pass 04 added 45 rows
+**Current pass:** `OSR-2026-08-03-P05`  
+**Current registered rows:** `196`  
+**Completed discovery:** four controlled 40+ expansion passes; pass 05 added 45 rows
 
 ## 1. Canonical searchable registry
 
@@ -23,17 +23,17 @@ The Google Sheet is the working searchable/filterable authority. The Drive folde
 ## 2. Current counters
 
 ```yaml
-registered_sources: 151
-priority_A: 117
-link_registered_or_download_selective: 121
-download_queue_or_binary_pending: 27
-tracked_dashboard_scopes: 35
-latest_source_id: OSR-0151
-latest_pass: OSR-2026-08-03-P04
-binary_uploads_in_pass_04: 0
+registered_sources: 196
+priority_A: 150
+link_registered_or_download_selective: 163
+download_queue_or_binary_pending: 30
+tracked_dashboard_scopes: 46
+latest_source_id: OSR-0196
+latest_pass: OSR-2026-08-03-P05
+binary_uploads_in_pass_05: 0
 ```
 
-The dashboard was repaired during pass 04: two historical merged note ranges had hidden several poet counters. The ranges were unmerged, the full scope list was restored, and the workflow note was moved below the data.
+The dashboard, article map and pass log were extended together with the source rows. Source IDs remain monotonic and no previous row was renumbered.
 
 ## 3. Registry schema
 
@@ -59,7 +59,7 @@ Last checked
 Discovery pass
 ```
 
-Source IDs are monotonic (`OSR-0001`, `OSR-0002`, ...). A later pass updates or appends a row; it never silently replaces, renumbers or deletes earlier evidence.
+A later pass updates or appends a row; it never silently replaces, renumbers or deletes earlier evidence.
 
 ## 4. Action classes
 
@@ -95,18 +95,19 @@ Large size is not a rejection reason when the exact volume matters. It is a reas
 
 The registry now contains controlled research entry points for:
 
-- Pushkin, Derzhavin, Zhukovsky, Batyushkov, Baratynsky, Lermontov, Tyutchev, Fet and Nekrasov;
-- Blok, Bryusov, Balmont, Gippius, Merezhkovsky, Andrei Bely, Sologub, Vyacheslav Ivanov and Voloshin;
+- Pushkin, Derzhavin, Zhukovsky, Batyushkov, Baratynsky, Lermontov, Tyutchev, Fet, Maykov, Polonsky, Apukhtin, Nadson and Nekrasov;
+- Blok, Bryusov, Balmont, Gippius, Merezhkovsky, Andrei Bely, Sologub, Vyacheslav Ivanov, Voloshin, Lokhvitskaya and Cherubina de Gabriak;
 - Yesenin, Klyuev, Mayakovsky, Khlebnikov, Severyanin and the Russian avant-garde;
-- Akhmatova, Gumilev, Mandelstam, Tsvetaeva, Pasternak, Bunin and Zabolotsky;
-- Silver Age comparative research, archival navigation, translation history and computational poetics;
+- Akhmatova, Gumilev, Mandelstam, Tsvetaeva, Parnok, Pasternak, Bunin, Khodasevich and Zabolotsky;
+- Brodsky, Tvardovsky and Okudzhava through official museums, archives and authorial public statements;
+- translation history, archive navigation, comparative research and computational poetics;
 - English, German, Spanish and Italian reception/research layers.
 
 The `ARTICLE MAP` sheet maps priority sources to concrete article families. Portal home pages are starting points only; final claims must point to exact works, letters, documents, pages or archive objects.
 
 ## 7. Current high-priority binary queue
 
-Earlier priorities remain active:
+Earlier priorities remain active, including:
 
 1. `OSR-0031` — Yesenin, *Chronicle*, volume 3, book 1.
 2. `OSR-0032` — Yesenin, *Chronicle*, volume 3, book 2.
@@ -114,33 +115,26 @@ Earlier priorities remain active:
 4. `OSR-0054` — Lermontov scholarly collected works, volume 1.
 5. `OSR-0059` — Bryusov, *Distant and Near*.
 6. `OSR-0060` — Harvard CC BY dissertation on avant-garde objects.
-7. `OSR-0065` — UCL Akhmatova dissertation.
-8. `OSR-0079` — UCL Tsvetaeva/Pushkin dissertation.
-9. `OSR-0092` — official Bunin poetry textology PDF.
-10. `OSR-0095` — *Neizdannyi Khlebnikov*, issue 12, `BINARY-PENDING`.
-11. `OSR-0097` — Ca' Foscari Khlebnikov dissertation.
+7. `OSR-0095` — *Neizdannyi Khlebnikov*, issue 12, `BINARY-PENDING`.
+8. `OSR-0136` — Gippius, *Последние стихи, 1914–1918*, `BINARY-PENDING`.
+9. `OSR-0145` — Sologub, *Пламенный круг*.
 
-Pass 04 adds:
+Pass 05 adds three exact old-edition candidates:
 
-12. `OSR-0108` — Derzhavin, collected works, part 1, 1808.
-13. `OSR-0110` — Derzhavin/Grot, volume 1, 1868.
-14. `OSR-0116` — Bryusov, articles on Pushkin, volume 7.
-15. `OSR-0123` — Severyanin, *Громокипящий кубок*, 1914.
-16. `OSR-0126` — Voloshin, *Anno mundi ardentis*.
-17. `OSR-0127` — Voloshin, *Усобица*.
-18. `OSR-0132` — Klyuev, *Песнь солнценосца. Земля и железо*.
-19. `OSR-0133` — Klyuev, *Сосен перезвон*.
-20. `OSR-0136` — Gippius, *Последние стихи, 1914–1918*, `BINARY-PENDING` after DNS/download failure.
-21. `OSR-0141` — Andrei Bely, *Северная симфония*.
-22. `OSR-0145` — Sologub, *Пламенный круг*.
-23. `OSR-0150` — Merezhkovsky, collected poems, 1883–1910.
+10. `OSR-0153` — Maykov, complete works, volume 1, 1913.
+11. `OSR-0157` — Polonsky, complete poems, volume 1, 1896.
+12. `OSR-0161` — Apukhtin, works, volume 1; catalogue dating must be resolved from the title page.
 
 No timed-out endpoint, viewer page or catalogue card is reported as an uploaded PDF.
 
-## 8. Duplicate control
+## 8. Duplicate and bounded comparison control
 
-- `OSR-0106` / `OSR-0124` — Severyanin, *Ананасы в шампанском*: the 1915 book is already represented in `BATCH-0001`; no second binary.
-- `OSR-0114` — Bryusov, *Urbi et Orbi*, 1903: exact Drive master already exists as file ID `1Kj9hZa0kHlgp_wF_lZeiB1556H1WBiqP`; the NЭБ record is bibliographic control only.
+Known duplicate controls remain:
+
+- `OSR-0106` / `OSR-0124` — Severyanin, *Ананасы в шампанском*: the 1915 book is already represented in `BATCH-0001`.
+- `OSR-0114` — Bryusov, *Urbi et Orbi*, 1903: exact Drive master already exists as file ID `1Kj9hZa0kHlgp_wF_lZeiB1556H1WBiqP`.
+
+Pass 05 ran bounded exact-title/name Drive searches for Maykov, Polonsky, Apukhtin, Nadson, Parnok, Khodasevich, Brodsky and Tvardovsky. No project-relevant exact match was returned. Opaque archives and unindexed binary contents were not silently treated as searched.
 
 ## 9. Article-building workflow
 
@@ -162,6 +156,7 @@ For every new article or major revision:
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_02_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_03_40_PLUS_2026-08-03.md`;
 - `docs/research/OPEN_SOURCE_DISCOVERY_PASS_04_40_PLUS_2026-08-03.md`;
+- `docs/research/OPEN_SOURCE_DISCOVERY_PASS_05_40_PLUS_2026-08-03.md`;
 - `docs/research/MULTILINGUAL_OPEN_SOURCE_DISCOVERY_PASS_74_2026-08-03.md`;
 - `FedorMilovanov/Research/SOURCE_LIBRARY/MASTER_OPEN_ACCESS_SOURCE_INDEX_2026-07-30.md`.
 
