@@ -14,14 +14,19 @@ const matrixPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_DAY_LEVEL_SOURCE_MATRIX_PASS_01_2026-08.md',
 );
+const witnessPath = join(
+  researchDir,
+  'YESENIN_DECEMBER_1925_WITNESS_MATRIX_PASS_01_2026-08.md',
+);
 
-for (const path of [discoveryPath, registryPath, matrixPath]) {
+for (const path of [discoveryPath, registryPath, matrixPath, witnessPath]) {
   if (!existsSync(path)) throw new Error(`missing December forensic control file: ${path}`);
 }
 
 const discovery = readFileSync(discoveryPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
 const matrix = readFileSync(matrixPath, 'utf8');
+const witnesses = readFileSync(witnessPath, 'utf8');
 
 const queryNumbers = [...discovery.matchAll(/^([1-9]|[1-3][0-9]|40)\.\s+`/gmu)].map(
   (match) => Number(match[1]),
@@ -74,6 +79,9 @@ for (let number = 1; number <= 12; number += 1) {
 }
 
 for (const required of [
+  'YESENIN_DECEMBER_1925_DISCOVERY_PASS_40_PLUS_2026-08.md',
+  'IMLI, fund 32, inventory 2, storage unit 37',
+  'archive cipher means the file has been inspected',
   'narrative_prose_allowed: false',
   'public_route_allowed: false',
   'forensic_registry_created: true',
@@ -99,10 +107,36 @@ for (const required of [
   if (!matrix.includes(required)) throw new Error(`December source matrix lost hard stop: ${required}`);
 }
 
+for (const required of [
+  'No row in pass 01 is `COMPLETE`',
+  'written: 28 January 1926 according to academic comments',
+  'later book reduces the reported transfer formula to Тебе',
+  'first_publication: Сергей Александрович Есенин. Воспоминания',
+  'Красная газета, evening edition, 29 December 1925, no. 314',
+  'A memoir is not a hotel register',
+  'witness_rows_created: 10',
+  'complete_witness_rows: 0',
+  'partial_rows: 3',
+  'presence_reported_rows: 4',
+  'document_witness_pending_rows: 3',
+  'composite_everyone_remembered_paragraph_allowed: false',
+  'chapter_15_prose_allowed: false',
+]) {
+  if (!witnesses.includes(required)) throw new Error(`December witness matrix lost boundary: ${required}`);
+}
+
+for (const forbidden of [
+  /complete_witness_rows:\s*[1-9]/u,
+  /composite_everyone_remembered_paragraph_allowed:\s*true/u,
+  /chapter_15_prose_allowed:\s*true/u,
+]) {
+  if (forbidden.test(witnesses)) throw new Error(`December witness matrix overstates completion: ${forbidden}`);
+}
+
 const researchFiles = readdirSync(researchDir);
 const premature = researchFiles.find((name) => /YESENIN_PART_II_DRAFT_CH15/iu.test(name));
 if (premature) throw new Error(`chapter 15 narrative prose appeared before acquisition gates: ${premature}`);
 
 console.log(
-  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 0 verified binaries, 0 witness rows; chapter 15 prose and public route remain blocked.',
+  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 10 partial/pending witness rows, 0 verified binaries and 0 complete witnesses; chapter 15 prose and public route remain blocked.',
 );
