@@ -3,91 +3,84 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const read=(file:string)=>fs.readFileSync(path.resolve(file),'utf8');
-const raw=(file:string)=>fs.readFileSync(path.resolve(file));
-const blob=(file:string)=>{const bytes=raw(file);return crypto.createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')};
-const VERSION='cloak-20260801-22',SOURCE='canonical-reference-v2-black-monolith-v17-0';
-const componentFile='src/components/BrandMark.tsx',motionCssFile='src/components/brandMotionV18.ts',motionFile='src/components/brandMotionFrameInvariant.ts',sourceFile='src/components/brandEmblemV18.svg',standaloneFile='public/brand-emblem.svg',microFile='public/brand-mark-micro.svg',maskFile='public/brand-emblem-mask.svg';
-const component=read(componentFile),motionCss=read(motionCssFile),motion=read(motionFile),source=read(sourceFile),standalone=read(standaloneFile),micro=read(microFile),mask=read(maskFile);
-const evaluation=JSON.parse(read('qa/brand-reference-evaluation.json')) as {candidateSource:string;candidateRevision:string;reviewerDecision:string;candidateGitBlobShas:Record<string,string>};
+const resolve = (file: string) => path.resolve(file);
+const read = (file: string) => fs.readFileSync(resolve(file), 'utf8');
+const raw = (file: string) => fs.readFileSync(resolve(file));
+const exists = (file: string) => fs.existsSync(resolve(file));
+const sha256 = (file: string) => crypto.createHash('sha256').update(raw(file)).digest('hex');
 
-function validSvg(svg:string,file:string,viewBox:string){
-  assert.match(svg,new RegExp(`<svg\\b[^>]*viewBox="${viewBox.split(' ').join('\\s+')}"`),`${file}: viewBox`);
-  assert.ok(svg.trimEnd().endsWith('</svg>'),`${file}: truncated`);
-  assert.equal((svg.match(/<g(?:\s[^>]*)?>/g)??[]).filter(tag=>!/\/\s*>$/.test(tag)).length,(svg.match(/<\/g>/g)??[]).length,`${file}: groups`);
-  assert.doesNotMatch(svg,/<(?:image|rect|foreignObject|canvas)\b|data:image|base64,/i,`${file}: raster shortcut`);
-  assert.doesNotMatch(svg,/<animate(?:Transform|Motion)?\b|@keyframes/i,`${file}: perpetual animation`);
+const RELEASE = 'reference-raster-20260803-1';
+const REFERENCE = 'qa/reference/brand-emblem-canonical-reference.webp';
+const REFERENCE_HASH = '767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532';
+const component = read('src/components/SpectralBrandMark.tsx');
+const motionCss = read('src/components/brandMotionV18.ts');
+const motion = read('src/components/brandMotionFrameInvariant.ts');
+const materializer = read('scripts/materialize-brand-art.mjs');
+
+assert.ok(exists(REFERENCE), 'canonical reference is missing');
+assert.equal(sha256(REFERENCE), REFERENCE_HASH, 'canonical reference hash changed');
+
+for (const file of [
+  'public/brand-emblem-primary.png',
+  'public/brand-emblem-simplified.png',
+  'public/brand-emblem-micro.png',
+  'public/brand-emblem-header.png',
+  'public/brand-emblem-master.webp',
+  'public/favicon-16.png',
+  'public/favicon-32.png',
+  'public/apple-touch-icon.png',
+  'public/icon-192.png',
+  'public/icon-512.png',
+  'public/icon-maskable-512.png',
+  'public/mstile-150x150.png',
+  'public/og-image.jpg',
+]) {
+  assert.ok(exists(file), `${file}: materialized asset missing`);
+  assert.ok(raw(file).length > 180, `${file}: materialized asset too small`);
 }
-for(const [svg,file,box] of [[source,sourceFile,'0 0 96 96'],[standalone,standaloneFile,'0 0 96 96'],[micro,microFile,'0 0 32 32'],[mask,maskFile,'0 0 96 96']] as const)validSvg(svg,file,box);
-assert.equal(source,standalone,'authored and standalone SVG differ');
-for(const svg of [source,standalone,micro,mask])assert.ok(svg.includes(`data-brand-vector-source="${SOURCE}"`));
 
-for(const token of [
-  "import rawVector from './brandEmblemV18.svg?raw'",
-  "from './brandMotionFrameInvariant'",
-  `const BRAND_VERSION = '${VERSION}'`,
-  `const VECTOR_SOURCE = '${SOURCE}'`,
-  'createBrandMotionController(node)',
-  'controllerRef.current?.enter(event.clientX, event.clientY)',
-  'controllerRef.current?.move(event.clientX, event.clientY)',
-  'controllerRef.current?.leave()',
-  'controllerRef.current?.cancel()',
-  "event.pointerType === 'touch'",
+const retired = [
+  'src/components/BrandMark.tsx',
+  'src/components/brandEmblemV18.svg',
+  'public/brand-emblem.svg',
+  'public/brand-mark-micro.svg',
+  'public/brand-emblem-mask.svg',
+  'public/brand-emblem-v19-candidate.svg',
+  'public/brand-emblem-v19-optical-candidate.svg',
+  'public/brand-emblem-v19-micro-candidate.svg',
+  'public/brand-emblem-v20-candidate.svg',
+  'public/brand-emblem-v20-micro-candidate.svg',
+];
+for (const file of retired) assert.equal(exists(file), false, `${file}: retired Shredder/vector asset returned`);
+
+assert.doesNotMatch(materializer, /spectral-atlas|brand-raster-atlas|gblur|drop-shadow/i);
+assert.ok(materializer.includes(REFERENCE_HASH));
+assert.ok(materializer.includes('brand-emblem-canonical-reference.webp'));
+
+for (const token of [
+  'data-brand-renderer="reference-raster-subtle-depth"',
+  'data-brand-reference-source="canonical-hooded-figure-v2-clean-base"',
+  'data-brand-parallax="subtle-reference-depth-v1"',
+  'data-brand-awakening="reference-subtle-depth-v1"',
+  'data-brand-raster-base',
+  'data-brand-raster-aura',
+  'event.pointerType === \'touch\'',
   'useReducedMotion()',
-  'data-brand-parallax="spring-awakening-v5"',
-  'data-brand-motion-normalization="rendered-box-v1"',
-  'data-brand-motion-timestep="bounded-substeps-v1"',
-  'data-brand-awakening="aura-depth-cloth-v2"',
-  "style={{ pointerEvents: 'none' }}",
-])assert.ok(component.includes(token),`component missing ${token}`);
-assert.doesNotMatch(component,/useState\s*\(/,'pointer movement entered React state');
-assert.doesNotMatch(component,/brandMotionV17|layered-v1|spring-depth-v2|spring-awakening-v3/,'retired motion identity remains');
+]) assert.ok(component.includes(token), `component missing ${token}`);
 
-for(const token of [
-  "import { BRAND_MOTION_CSS } from './brandMotionV18'",
-  'requestAnimationFrame(step)',
-  'cancelAnimationFrame(frame)',
-  'new ResizeObserver(readBounds)',
-  'node.getBoundingClientRect()',
-  "node.dataset.brandInteraction = 'active'",
-  "node.dataset.brandInteraction = 'settling'",
-  "node.dataset.brandInteraction = 'idle'",
-  'const auraWake = brandMotionPhase(state.wake, 0, 0.42)',
-  'const figureWake = brandMotionPhase(state.wake, 0.12, 0.78)',
-  'const detailWake = brandMotionPhase(state.wake, 0.32, 1)',
-  'maxFrameDeltaSeconds: 0.1',
-  'maxSubstepSeconds: 1 / 60',
-  'while (remaining > 0.000_001)',
-  '--brand-far-scale',
-  '--brand-energy-scale',
-  '--brand-folds-scale-x',
-  '--brand-hood-layers-scale',
-  '--brand-face-scale',
-  '--brand-rim-brightness',
-  '1 - 0.022 * detailWake',
-])assert.ok(motion.includes(token),`motion missing ${token}`);
-for(const token of [
-  'brightness(1.08)',
-  '@media (prefers-reduced-motion:reduce)',
-  'a:focus-visible [data-brand-mark]',
-])assert.ok(motionCss.includes(token),`motion CSS missing ${token}`);
-assert.doesNotMatch(motionCss,/createBrandMotionController|requestAnimationFrame|cancelAnimationFrame|ResizeObserver|Math\.min\(0\.032/,'CSS module must not retain a second spring controller');
-assert.equal((motion.match(/getBoundingClientRect\(\)/g)??[]).length,1,'bounds read site count');
-assert.equal((motion.match(/requestAnimationFrame\(/g)??[]).length,1,'rAF scheduling site count');
-assert.doesNotMatch(motion,/setInterval|setTimeout|while\s*\(true\)/,'timer/idle loop shortcut');
-assert.doesNotMatch(motion,/Math\.min\(0\.032/,'discarded-frame-time clamp returned');
+assert.doesNotMatch(component, /<svg|data-brand-vector|hood-layers|face-depth|epic-folds|drop-shadow|blur\(/i);
+assert.doesNotMatch(component, /opacity:\.(?:1[2-9]|[2-9]\d)|brightness\(1\.[2-9]|saturate\(1\.[2-9]/i, 'component reintroduced excessive glow');
+assert.equal((component.match(/data-brand-raster-layer/g) ?? []).length >= 2, true);
 
-for(const hook of ['atmosphere','energy','figure','cloak','folds','upper-folds','epic-folds','hood','hood-layers','face-void','face-depth','neck-shadow','collar','texture','seams','rim-light'])assert.ok(source.includes(`data-brand-${hook}`),`SVG missing ${hook}`);
-assert.doesNotMatch(source.slice(source.indexOf('<g data-brand-energy='),source.indexOf('<g data-brand-figure=')),/<(?:line|polyline)\b/i);
-for(const token of ['M48 36.5C40.4 35.9','M47.4 7.6C43.9 8.8','M47.5 16.2C44.8 16.8','data-brand-throat=""'])assert.ok(source.includes(token),`visual baseline missing ${token}`);
-assert.ok(mask.includes('fill-rule="evenodd"'));
-for(const token of ['M16 12.2C13.5 12','M15.8 2.6C14.6 2.9','M15.8 5.4C14.9 5.6'])assert.ok(micro.includes(token));
+assert.doesNotMatch(motionCss, /drop-shadow|brightness|saturate|data-brand-vector|data-brand-energy|data-brand-rim-light/i);
+assert.ok(motion.includes('1 + 0.008 * wake'));
+assert.ok(motion.includes('scaled(0.92) * state.x * detail'));
+assert.ok(motion.includes('maxSubstepSeconds: 1 / 60'));
+assert.doesNotMatch(motion, /3\.66|2\.55|0\.022 \* figureWake|--brand-hood|--brand-face|--brand-folds|--brand-rim/i);
 
-assert.equal(evaluation.candidateSource,SOURCE);
-assert.match(evaluation.candidateRevision,/v18\.4 depth-first awakening/i);
-assert.match(evaluation.candidateRevision,/v18\.6 frame-rate-invariant/i);
-assert.match(evaluation.candidateRevision,/obsolete duplicate controller has been removed/i);
-assert.equal(evaluation.reviewerDecision,'not-reference-approved');
-for(const file of [componentFile,motionCssFile,motionFile,sourceFile,standaloneFile,microFile,maskFile])assert.equal(blob(file),evaluation.candidateGitBlobShas[file],`${file}: blob lock`);
-for(const file of ['index.html','public/site.webmanifest','public/browserconfig.xml','public/brand-release.txt'])assert.ok(read(file).includes(VERSION),`${file}: release marker`);
-console.log('brand validation: preserved visual baseline plus one frame-invariant v18.6 controller and a CSS-only layer contract are locked');
+for (const file of ['index.html', 'public/site.webmanifest', 'public/browserconfig.xml', 'public/brand-release.txt']) {
+  assert.ok(read(file).includes(RELEASE), `${file}: release marker missing`);
+}
+assert.doesNotMatch(read('index.html'), /brand-mark-micro\.svg|brand-emblem-mask\.svg|image\/svg\+xml/);
+
+console.log('brand validation: canonical reference raster, restrained hover depth and zero legacy Shredder SVGs are locked');
