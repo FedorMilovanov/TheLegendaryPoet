@@ -18,8 +18,12 @@ const witnessPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_WITNESS_MATRIX_PASS_01_2026-08.md',
 );
+const requestPackPath = join(
+  researchDir,
+  'YESENIN_ARCHIVE_REQUEST_PACK_2026-08.md',
+);
 
-for (const path of [discoveryPath, registryPath, matrixPath, witnessPath]) {
+for (const path of [discoveryPath, registryPath, matrixPath, witnessPath, requestPackPath]) {
   if (!existsSync(path)) throw new Error(`missing December forensic control file: ${path}`);
 }
 
@@ -27,6 +31,7 @@ const discovery = readFileSync(discoveryPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
 const matrix = readFileSync(matrixPath, 'utf8');
 const witnesses = readFileSync(witnessPath, 'utf8');
+const requestPack = readFileSync(requestPackPath, 'utf8');
 
 const queryNumbers = [...discovery.matchAll(/^([1-9]|[1-3][0-9]|40)\.\s+`/gmu)].map(
   (match) => Number(match[1]),
@@ -133,10 +138,42 @@ for (const forbidden of [
   if (forbidden.test(witnesses)) throw new Error(`December witness matrix overstates completion: ${forbidden}`);
 }
 
+for (const required of [
+  'READY-TO-SEND TEMPLATES / NOT SENT / RESPONSES NOT RECEIVED',
+  'ИМЛИ, ф. 32, оп. 2, ед. хр. 37',
+  'roirli.copy@yandex.ru',
+  'info@imli.ru',
+  'https://rusneb.ru/catalog/000199_000009_011625583/',
+  'http://dlib.rsl.ru/rsl01011000000/rsl01011625000/rsl01011625583/rsl01011625583.pdf',
+  'https://rusneb.ru/catalog/000199_000009_007513586/',
+  'https://rusneb.ru/catalog/000199_000009_012474152/',
+  'request_templates_ready: 4',
+  'manual_NEB_RSL_cards_ready: 4',
+  'requests_sent: 0',
+  'responses_received: 0',
+  'files_received: 0',
+  'item_verified_objects: 0',
+  'Drive_batch_created: false',
+  'chapter_15_prose_allowed: false',
+]) {
+  if (!requestPack.includes(required)) throw new Error(`archive request pack lost boundary/route: ${required}`);
+}
+
+for (const forbidden of [
+  /requests_sent:\s*[1-9]/u,
+  /responses_received:\s*[1-9]/u,
+  /files_received:\s*[1-9]/u,
+  /item_verified_objects:\s*[1-9]/u,
+  /Drive_batch_created:\s*true/u,
+  /chapter_15_prose_allowed:\s*true/u,
+]) {
+  if (forbidden.test(requestPack)) throw new Error(`archive request pack overstates progress: ${forbidden}`);
+}
+
 const researchFiles = readdirSync(researchDir);
 const premature = researchFiles.find((name) => /YESENIN_PART_II_DRAFT_CH15/iu.test(name));
 if (premature) throw new Error(`chapter 15 narrative prose appeared before acquisition gates: ${premature}`);
 
 console.log(
-  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 10 partial/pending witness rows, 0 verified binaries and 0 complete witnesses; chapter 15 prose and public route remain blocked.',
+  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 10 partial/pending witness rows, 4 request templates, 4 institutional download cards, 0 sent requests, 0 received/verified files and 0 complete witnesses; chapter 15 prose and public route remain blocked.',
 );
