@@ -149,11 +149,9 @@ export function preloadCurrentRoute() {
   const pathname = initialRoutePathname();
   if (!pathname) return;
   const route = prefetchableRoutes.find((candidate) => matchPath({ path: candidate.pattern, end: true }, pathname));
-  // This function is intentionally invoked from main.tsx only after the full
-  // static module graph has evaluated. Several lazy pages render the shared
-  // Link component, which imports this registry for intent preloading; starting
-  // their dynamic import while this module itself is still evaluating creates
-  // a circular WebKit load that can leave the direct route in Suspense forever.
+  // main.tsx calls this only after the complete static module graph has
+  // evaluated. Lazy pages can therefore import the shared Link component and
+  // return to this registry without forming a WebKit module-initialisation wait.
   if (route) void route.load().catch(() => undefined);
 }
 
