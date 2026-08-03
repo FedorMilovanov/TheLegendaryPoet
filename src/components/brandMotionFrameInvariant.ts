@@ -123,6 +123,7 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
   let motionScale = 1;
   const targets: BrandMotionTargets = { x: 0, y: 0, wake: 0 };
   const state = createBrandMotionState();
+  const atmosphere = node.querySelector<HTMLElement | SVGElement>('[data-brand-atmosphere]');
   let frame = 0;
   let lastTime = 0;
   let active = false;
@@ -155,9 +156,21 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     style.setProperty('--brand-root-y', px(scaled(-0.78) * figureWake));
     style.setProperty('--brand-root-scale', number(1 + 0.022 * figureWake));
 
-    style.setProperty('--brand-far-x', px(scaled(-3.15) * state.x * auraWake));
-    style.setProperty('--brand-far-y', px(scaled(-2 * state.y - 0.5) * auraWake));
-    style.setProperty('--brand-far-scale', number(1 + 0.042 * auraWake));
+    const farX = px(scaled(-3.15) * state.x * auraWake);
+    const farY = px(scaled(-2 * state.y - 0.5) * auraWake);
+    const farScale = number(1 + 0.042 * auraWake);
+    style.setProperty('--brand-far-x', farX);
+    style.setProperty('--brand-far-y', farY);
+    style.setProperty('--brand-far-scale', farScale);
+
+    // The semantic far plane also receives the resolved transform directly.
+    // This keeps the counter-parallax deterministic across SVG groups and HTML
+    // raster layers instead of depending on CSS cascade order.
+    if (atmosphere) {
+      atmosphere.style.transform = atmosphere instanceof SVGElement
+        ? `translate(${farX}, ${farY}) scale(${farScale})`
+        : `translate3d(${farX}, ${farY}, -18px) scale(${farScale})`;
+    }
 
     // The luminous layer deliberately travels slightly farther than the hood
     // and cloth planes. This makes the attached electric rim read as depth,
