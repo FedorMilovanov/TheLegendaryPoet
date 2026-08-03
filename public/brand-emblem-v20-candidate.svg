@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="v2015-title v2015-desc" data-brand-v20-candidate="v20.15-reference-emissive-current" data-brand-reference-decision="not-reference-approved">
 <title id="v2015-title">THE LEGENDARY POET — v20.15 emissive-current master</title>
-<desc id="v2015-desc">Static QA-only master with an almost-black hooded monolith and saturated electric-blue currents that originate on the hood, shoulders and cloak edge instead of forming a detached aura.</desc>
+<desc id="v2015-desc">Static QA-only master with an almost-black hooded monolith and saturated electric-blue currents that originate on the hood, shoulders and cloak edge, then branch outward from those contact points without forming a detached aura.</desc>
 <defs>
   <linearGradient id="c15" x1="27" y1="37" x2="61" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#06121c"/><stop offset=".34" stop-color="#020a10"/><stop offset=".72" stop-color="#000306"/><stop offset="1" stop-color="#000102"/></linearGradient>
   <linearGradient id="h15" x1="43" y1="7" x2="53" y2="39" gradientUnits="userSpaceOnUse"><stop stop-color="#071824"/><stop offset=".42" stop-color="#020b12"/><stop offset=".8" stop-color="#000306"/><stop offset="1" stop-color="#000102"/></linearGradient>
@@ -58,10 +58,10 @@
   </g>
 </g>
 <g data-brand-field-mid="" data-brand-depth="near" transform="translate(10.29 4.76) scale(.79 .95)" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M48 8.1L46.7 8.5L46.1 9.2L45.1 9.6L44.5 10.5L43.8 11.3L43.6 12.4L42.9 13.2L42.8 14.5L42.1 15.3L41.9 16.7L41.3 17.7" stroke="#8ce7ff" stroke-opacity=".82" stroke-width=".36"/>
-  <path d="M48.2 8.1L49.5 8.4L50.1 9.1L51.1 9.5L51.8 10.4L52.5 11.2L52.7 12.3L53.5 13.1L53.6 14.4L54.3 15.2L54.5 16.6L55.2 17.6" stroke="#b8f2ff" stroke-opacity=".84" stroke-width=".35"/>
-  <path d="M38.3 22.5L37.8 24.2L37.3 25.3L37 27L36.2 28L35.7 29.5L34.8 30.5L34 32L32.8 33L31.8 34.4L30.5 35.3L29.3 36.8" stroke="#24bbff" stroke-opacity=".66" stroke-width=".34"/>
-  <path d="M58.2 22.3L58.7 24L59.2 25.1L59.5 26.8L60.3 27.8L60.8 29.3L61.7 30.3L62.5 31.8L63.7 32.8L64.7 34.2L66 35.1L67.2 36.6" stroke="#45c9ff" stroke-opacity=".64" stroke-width=".33"/>
+  <path data-brand-emission-branch="left-glow" d="M40.2 16.8C38.7 15.9 37.3 14.4 36.5 12.8L34.7 12.1L33.8 9.8M35.4 30.5C33.6 29.7 32.2 28.5 31.3 26.9L29.1 26.3L28 23.8L26.2 22.9M28.3 38.1C26.2 37.6 24.5 36.5 23.3 34.9L20.8 35L19.1 32.7L16.8 32.2M20.4 52.9C18.2 52.8 16.4 51.9 15 50.3L12.7 50.9L10.7 48.8L8.6 49.1" stroke="#006eff" stroke-opacity=".14" stroke-width="1.45"/>
+  <path data-brand-emission-branch="right-glow" d="M56.2 18C58 17.2 59.6 15.8 60.5 14.1L62.3 13.5L63.5 10.9M60.9 30.1C62.7 29.3 64.2 28 65.1 26.3L67.6 25.8L68.8 23.1L71 21.9M68.7 38.2C70.8 37.6 72.5 36.3 73.7 34.6L76 34.8L77.7 32.4L80.1 31.5M74.8 48C76.8 47.6 78.5 46.5 79.8 44.8L82 45.1L83.6 42.6L86 41.8M78.7 61C80.5 60.8 82.1 59.8 83.3 58.2L85.5 58.6L87.4 56.3L89.7 56.2" stroke="#007cff" stroke-opacity=".14" stroke-width="1.4"/>
+  <path data-brand-emission-branch="left-core" d="M40.2 16.8C38.7 15.9 37.3 14.4 36.5 12.8L34.7 12.1L33.8 9.8M35.4 30.5C33.6 29.7 32.2 28.5 31.3 26.9L29.1 26.3L28 23.8L26.2 22.9M28.3 38.1C26.2 37.6 24.5 36.5 23.3 34.9L20.8 35L19.1 32.7L16.8 32.2M20.4 52.9C18.2 52.8 16.4 51.9 15 50.3L12.7 50.9L10.7 48.8L8.6 49.1" stroke="#48c8ff" stroke-opacity=".76" stroke-width=".27"/>
+  <path data-brand-emission-branch="right-core" d="M56.2 18C58 17.2 59.6 15.8 60.5 14.1L62.3 13.5L63.5 10.9M60.9 30.1C62.7 29.3 64.2 28 65.1 26.3L67.6 25.8L68.8 23.1L71 21.9M68.7 38.2C70.8 37.6 72.5 36.3 73.7 34.6L76 34.8L77.7 32.4L80.1 31.5M74.8 48C76.8 47.6 78.5 46.5 79.8 44.8L82 45.1L83.6 42.6L86 41.8M78.7 61C80.5 60.8 82.1 59.8 83.3 58.2L85.5 58.6L87.4 56.3L89.7 56.2" stroke="#7dddff" stroke-opacity=".78" stroke-width=".26"/>
 </g>
 <g data-brand-field-front="" data-brand-depth="front" transform="translate(10.29 4.76) scale(.79 .95)" aria-hidden="true" fill="none" stroke-linecap="round">
   <path d="M31.6 38.3C29.5 41 27.7 44.3 26.2 48.2M43.6 47.6C39.2 51.2 35.8 56.3 33 62.5" stroke="#008cff" stroke-opacity=".5" stroke-width=".37"/>
