@@ -47,7 +47,7 @@
   "candidateGitBlobShas": {
     "src/components/BrandMark.tsx": "e2ff0d98a839b0696ef561abfecbd9d8d862427c",
     "src/components/brandMotionV18.ts": "80146d3a18f4a0c0636cfdc6c632fda12493482d",
-    "src/components/brandMotionFrameInvariant.ts": "70e0eac33d4839546f3fff0a15acec0263c150fb",
+    "src/components/brandMotionFrameInvariant.ts": "fa6d572f90a7bd36d03b15a8714d4d5f88e378c0",
     "src/components/brandEmblemV18.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
