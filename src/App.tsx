@@ -44,7 +44,7 @@ const WipeOverlay = ({
   overlayRef,
 }: {
   onComplete: () => void;
-  overlayRef: RefObject<HTMLDivElement>;
+  overlayRef: RefObject<HTMLDivElement | null>;
 }) => (
   <motion.div
     ref={overlayRef}
