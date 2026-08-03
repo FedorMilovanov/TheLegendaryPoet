@@ -2,7 +2,7 @@
   "referenceId": "canonical-hooded-figure-v2-clean-base",
   "reviewedAgainstReferenceSha256": "767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532",
   "candidateSource": "canonical-reference-v2-black-monolith-v17-0",
-  "candidateRevision": "v18.4 depth-first awakening advanced through v18.5 size-normalized exact-idle return to v18.6 frame-rate-invariant bounded-substep integration over the unchanged v17.0 visual baseline: production geometry remains byte-for-byte unchanged; all translation channels scale from the real rendered bounding box around a neutral 64px design size, real wall-clock frame intervals are consumed in stable 60Hz-or-smaller substeps instead of discarded by a 32ms clamp, the obsolete duplicate controller has been removed so brandMotionV18.ts now owns CSS only, and exact reference-ratio evidence still rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
+  "candidateRevision": "v18.4 depth-first awakening advanced through v18.5 size-normalized exact-idle return to v18.6 frame-rate-invariant bounded-substep integration over the unchanged v17.0 visual baseline, with the active spring refined from 136/126 to 128/120 stiffness after exact-head CI exposed a rare over-sharp rendered jump while all strict trajectory, convergence, amplitude, return and refresh-rate contracts remain unchanged: production geometry remains byte-for-byte unchanged; all translation channels scale from the real rendered bounding box around a neutral 64px design size, real wall-clock frame intervals are consumed in stable 60Hz-or-smaller substeps instead of discarded by a 32ms clamp, the obsolete duplicate controller has been removed so brandMotionV18.ts now owns CSS only, and exact reference-ratio evidence still rejects production v17, v19.11 full-size, v19.17 optical and v19.14 micro as reference replacements",
   "status": "reference-reviewed",
   "reviewerDecision": "not-reference-approved",
   "overallScore": 0.63,
@@ -47,7 +47,7 @@
   "candidateGitBlobShas": {
     "src/components/BrandMark.tsx": "e2ff0d98a839b0696ef561abfecbd9d8d862427c",
     "src/components/brandMotionV18.ts": "80146d3a18f4a0c0636cfdc6c632fda12493482d",
-    "src/components/brandMotionFrameInvariant.ts": "b163ede3fbc7896db4042221cfaaf87abb2fc4de",
+    "src/components/brandMotionFrameInvariant.ts": "5cb04d889f598ce6dfc87ffecf1ab966346b597e",
     "src/components/brandEmblemV18.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-emblem.svg": "16241ec20f63b61940f412557826a7aa41b0db8a",
     "public/brand-mark-micro.svg": "8ea1d887d6f2a039bd83f35e59682a06c74ced4e",
