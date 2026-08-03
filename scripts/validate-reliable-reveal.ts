@@ -5,6 +5,7 @@ import path from 'node:path';
 const read = (file: string) => fs.readFileSync(path.resolve(file), 'utf8');
 const reveal = read('src/components/Reveal.tsx');
 const home = read('src/pages/HomePage.tsx');
+const heroWindowCss = read('src/components/home/hero-poet-window.css');
 const safariSpec = read('qa/mobile-webkit-isolated.spec.mjs');
 const helpers = read('qa/mobile-webkit-isolated.helpers.mjs');
 const packageJson = read('package.json');
@@ -49,6 +50,19 @@ assert.match(home, /useReliableInView<HTMLDivElement>\(\{ once: true, threshold:
 assert.match(home, /<Reveal[\s\S]*key=\{stat\.label\}[\s\S]*distance=\{20\}[\s\S]*blur=\{false\}/);
 assert.doesNotMatch(home, /whileInView=/);
 
+const touchFirstViewportPolicy = /@media \(hover: none\) and \(pointer: coarse\), \(max-width: 1024px\) \{[\s\S]*?\.w-full:has\(> \.hero-title-lockup\),[\s\S]*?\[data-hero-poet-window-shell\],[\s\S]*?\.hero-blur-reveal,[\s\S]*?\.hero-blur-reveal-strong \{([\s\S]*?)\n  \}/;
+const touchFirstViewportMatch = heroWindowCss.match(touchFirstViewportPolicy);
+assert.ok(touchFirstViewportMatch, 'touch/compact first viewport must have one shared static readability policy');
+const touchFirstViewportDeclarations = touchFirstViewportMatch[1];
+assert.match(touchFirstViewportDeclarations, /animation: none !important/);
+assert.match(touchFirstViewportDeclarations, /transition: none !important/);
+assert.match(touchFirstViewportDeclarations, /opacity: 1 !important/);
+assert.match(touchFirstViewportDeclarations, /transform: none !important/);
+assert.match(touchFirstViewportDeclarations, /will-change: auto !important/);
+assert.match(heroWindowCss, /@media \(hover: hover\) and \(pointer: fine\)/);
+assert.match(heroWindowCss, /animation-name: hero-premium-reveal-optimized !important/);
+assert.doesNotMatch(touchFirstViewportDeclarations, /display: none|visibility: hidden|pointer-events: none/);
+
 assert.match(safariSpec, /expect\(visual\.effectiveOpacity[\s\S]*toBeGreaterThan\(0\.9\)/);
 assert.match(safariSpec, /expect\(visual\.blurPx[\s\S]*toBeLessThanOrEqual\(0\.05\)/);
 assert.match(helpers, /node\.scrollIntoView\(\{ block: 'center', inline: 'nearest', behavior: 'instant' \}\)/);
@@ -64,4 +78,4 @@ assert.doesNotMatch(helpers, /scrollIntoViewIfNeeded|page\.mouse\.wheel|classLis
 assert.match(packageJson, /"validate:reliable-reveal": "tsx scripts\/validate-reliable-reveal\.ts"/);
 assert.match(packageJson, /validate:brand-v20 && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow/);
 
-console.log('reliable reveal validation: real viewport geometry drives measurable CSS transitions while Safari QA uses native two-phase centering, substantial two-sample visual intersection and unchanged opacity/blur verdicts without forced mutation');
+console.log('reliable reveal validation: below-fold content uses real viewport geometry, while touch/compact first viewport remains readable without depending on delayed animation clocks; desktop fine-pointer choreography and strict Safari opacity/blur verdicts stay intact');
