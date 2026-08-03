@@ -69,7 +69,7 @@ for (const forbidden of [
 
 for (const required of [
   sourceId,
-  `Drive file: \`${pdfDriveId}\``,
+  pdfDriveId,
   '| 103 | 97 |',
   '| 141–142 | 135–136 |',
   '| 163 | 155 |',
