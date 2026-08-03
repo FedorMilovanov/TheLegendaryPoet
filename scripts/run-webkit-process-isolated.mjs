@@ -13,8 +13,8 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
-  { id: 'optical-matrix', file: 'qa/brand-v19-optical.spec.mjs' },
-  { id: 'micro-matrix', file: 'qa/brand-v19-micro.spec.mjs' },
+  { id: 'brand-reference-raster', file: 'qa/brand-emblem.spec.mjs' },
+  { id: 'brand-reference-comparison', file: 'qa/brand-reference-comparison.spec.mjs' },
   ...hoverRoutes.map((route) => ({
     id: `hover-${route}`,
     file: 'qa/hover-stability.spec.mjs',
