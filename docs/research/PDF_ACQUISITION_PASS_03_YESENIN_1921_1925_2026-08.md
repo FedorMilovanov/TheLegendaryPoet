@@ -3,7 +3,7 @@
 **Date:** 2 August 2026  
 **Status:** `40+ DISCOVERY COMPLETE / SHORTLIST DEDUPED / BINARIES PENDING VERIFICATION`  
 **Target Drive area:** `01 — SOURCES — PDF LIBRARY / 01 — BOOKS, EDITIONS & ARTICLES`  
-**Future batch:** `BATCH-0002 — YESENIN 1921–1925` — create only with the first actually verified PDF, not as an empty promise folder.
+**Future batch:** `BATCH-0002 — YESENIN 1921–1925` — create only with the first actually verified and accepted PDF, not as an empty promise folder.
 
 ## 1. What this pass did
 
@@ -30,6 +30,7 @@ Candidates were checked against:
 02 — SECOND EDITORIAL 40
 01 — BOOKS, EDITIONS & ARTICLES / BATCH-0001
 Drive-wide title searches
+ChatGPT Library exact and semantic title/content searches
 known CONTENT_INVENTORY and checksum manifests
 ```
 
@@ -106,10 +107,13 @@ language: English
 repository: Tufts Digital Library / Tisch Library
 item_url: https://dl.tufts.edu/concern/pdfs/h415pp46s
 permanent_url: http://hdl.handle.net/10427/009156
+direct_download_url_identified: https://dl.tufts.edu/downloads/wh247546j?filename=h415pp46s.pdf
 Drive_exact_title_match: none found
 ```
 
 This is currently the strongest new English acquisition candidate. It does not replace letters, passports, press or official route records, but it addresses a period that the existing `My Life` volume does not cover.
+
+The institutional direct-download URL was identified on 3 August 2026. Web fetch timed out on the 384-page file and the container had no external DNS, so no bytes were received. The item remains `BINARY-PENDING`; the existence of a direct URL is not an upload.
 
 ### P03-05 — `Плавильня слов`
 
@@ -183,12 +187,50 @@ Large 1926–1927 collected editions may be useful for text history but do not o
 
 The existing second 40 includes several theology books and broad periodicals. They may belong to other projects or future research, but they must not dilute `BATCH-0002 — YESENIN 1921–1925`.
 
+### Gordon McVay, `Isadora and Esenin` — `HOLD / VERIFIED USER-LIBRARY COPY / COPYRIGHTED`
+
+A copy already existed in the user's ChatGPT Library under the name:
+
+`Isadora_and_Esenin_the_story_of_Isadora_Duncan_and_Sergei_Esenin.pdf`
+
+It was materialized and technically inspected on 3 August 2026:
+
+```yaml
+title: Isadora and Esenin : the story of Isadora Duncan and Sergei Esenin
+author: Gordon McVay
+publication: Macmillan Press / Ardis, 1980
+pages: 424
+file_size_bytes: 265262787
+mime: application/pdf
+pdf_version: 1.3
+encrypted: false
+sha256: 1a3167db1cb9cc2aa1ad64ac59b07bad4d97ebc51c5a142c334f2a74a0dc3238
+first_pages_rendered: true
+copyright_page_inspected: true
+rights_status: All rights reserved; copyright Ardis 1980
+source_provenance: user Library file; original acquisition channel not recorded
+Drive_exact_title_match: not established as an accepted Drive master
+Drive_file_id: null
+Drive_upload_status: false
+```
+
+This is a useful secondary research book and its bibliography points to primary/early sources, but it is **not** the 1929 Irma Duncan/Macdougall volume and must not replace it.
+
+The file is not accepted into `BATCH-0002` yet because:
+
+- it is copyrighted;
+- the original lawful acquisition channel is not recorded in the Library metadata available to this pass;
+- it is a large secondary book rather than the highest-priority primary/early item;
+- the Google Drive connector could not convert the Library file ID, local path or `sandbox:` URI into the required connector file reference.
+
+Safe use while on HOLD: private source comparison and bibliography navigation inside the current research environment. Forbidden use: production redistribution, public download, extracting illustrations as rights-cleared visuals, or reporting it as uploaded to Drive.
+
 ## 5. Binary verification gate
 
 Before any accepted candidate is uploaded:
 
 ```text
-□ bytes downloaded from the recorded institutional item
+□ bytes downloaded from the recorded institutional item or received through a documented lawful user/archive channel
 □ actual MIME = application/pdf
 □ file opens without password/error page
 □ title and publication pages inspected
@@ -198,17 +240,37 @@ Before any accepted candidate is uploaded:
 □ text layer classified TEXT / PARTIAL / SCAN
 □ SHA-256 computed
 □ exact-byte and bibliographic duplicate checks rerun
+□ rights/provenance recorded
 □ canonical filename assigned
-□ manifest row and SHA256SUMS updated
+□ Drive action returns a real file ID/path
+□ manifest row and SHA256SUMS updated with the same bytes
 ```
 
-No empty `BATCH-0002` folder should be created until at least one PDF passes this gate.
+No empty `BATCH-0002` folder should be created until at least one PDF passes this gate and is actually uploaded.
 
-## 6. Current environment limitation
+## 6. Current environment and connector limitations
 
-The institutional catalogue pages and bibliographic records were accessible in this session, but direct PDF endpoints did not materialize into the working filesystem: browser cache/safety redirects and the container's external DNS limitations prevented a trustworthy byte download.
+The institutional catalogue pages and bibliographic records were accessible, but direct PDF endpoints did not materialize into the working filesystem because the container had no external DNS and large web downloads timed out.
 
-Therefore this pass stops honestly at `BINARY-PENDING`. It does not create fake zero-byte files, HTML pages renamed `.pdf`, unchecked Drive uploads or claims that books were acquired.
+A separate connector limitation was reproduced on 3 August 2026:
+
+```text
+Google Drive upload_file rejected:
+- raw Library file ID;
+- structured Library metadata object;
+- local materialized path;
+- sandbox:/ URI.
+
+Error class: UNREGISTERED_FILE_REFERENCE / incompatible file_uri schema.
+```
+
+Therefore no file is reported as uploaded. The pass does not create fake zero-byte files, HTML pages renamed `.pdf`, unchecked Drive uploads or fictional Drive IDs.
+
+When a supported file bridge or browser download becomes available, resume in this order:
+
+1. institutional Tufts PDF bytes for P03-04;
+2. NЭБ public-domain/early-edition files;
+3. only then reconsider the McVay user-library copy under private-research rights and documented owner provenance.
 
 ## 7. Next acquisition order
 
@@ -221,3 +283,15 @@ Therefore this pass stops honestly at `BINARY-PENDING`. It does not create fake 
 7. `От символизма до «Октября»` — larger contextual anthology after exact page mapping.
 
 Only verified accepted binaries enter the future batch; rejections and holds remain documentary rows without binary clutter.
+
+## 8. Current counters
+
+```yaml
+general_discovery_queries: 40+
+accepted_binary_pending_items: 7
+verified_local_binary_candidates: 1
+accepted_Drive_masters_added_in_this_pass: 0
+Drive_file_ids_returned: 0
+empty_batch_folders_created: 0
+fake_or_HTML_as_PDF_files_created: 0
+```
