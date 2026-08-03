@@ -151,10 +151,24 @@
   100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
-/* Touch media features are not reported consistently by every WebKit shell
-   and hybrid laptop. At tablet/mobile layout widths labels must never depend on
-   hover detection, so the content remains visible by geometry as well. */
+/* First-viewport content is a correctness surface on touch and compact
+   layouts, not an animation dependency. Desktop fine-pointer layouts keep the
+   premium entrance choreography; mobile starts from the final readable state.
+   The shell selectors intentionally cover both Framer inline entrance styles
+   and the title keyframes so a delayed WebKit animation clock cannot hide
+   navigation-critical content. */
 @media (hover: none) and (pointer: coarse), (max-width: 1024px) {
+  .w-full:has(> .hero-title-lockup),
+  [data-hero-poet-window-shell],
+  .hero-blur-reveal,
+  .hero-blur-reveal-strong {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
   .hero-poet-window-label {
     opacity: 0.96 !important;
     transform: translateY(0) translateZ(22px) !important;
@@ -180,11 +194,6 @@
     font-size: clamp(8px, 2.25vw, 9px);
     letter-spacing: 0.015em;
   }
-}
-
-@media (max-width: 520px) and (prefers-reduced-motion: no-preference) {
-  .hero-blur-reveal { animation-duration: 0.92s !important; }
-  .hero-blur-reveal-strong { animation-duration: 1.05s !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
