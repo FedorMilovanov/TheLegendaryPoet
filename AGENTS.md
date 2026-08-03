@@ -22,7 +22,18 @@ Before mutation:
 
 A historical report is not proof of current state. A closed PR or deleted branch proves neither the presence nor the absence of code.
 
-## 2. One lane, one branch, one PR
+## 2. Cumulative owner requirements and completion discipline
+
+- The owner's requirements are cumulative across sessions and marathon passes until explicitly superseded or completed with evidence.
+- Do not ask the owner to repeat a requirement that is already present in the active PR, issue, ledger, Drive manifest or controlling documentation.
+- At the start of every continuation, reconcile the current instruction with the PR body, open blockers, pending acquisition rows, review threads and the latest exact-head checks.
+- A plan, discovery list, research ledger or request template is progress, not completion. Continue to the next safe executable step: obtain bytes, verify the object, update metadata, run the applicable gate or close the next unblocked item.
+- If one blocker depends on an archive reply, inaccessible host, missing binary or owner-only action, record the exact dependency and continue every other independent blocker instead of stopping the marathon.
+- Mark work complete only when the relevant Definition of Done is met on the same final state. Never turn `DISCOVERED`, `BINARY-PENDING`, `REQUEST-READY`, `QUEUED`, `IN-PROGRESS` or an old green SHA into `DONE`.
+- Material owner requirements, newly discovered anti-patterns and “how not to do it” rules must be written into the existing controlling document. Do not create a duplicate policy file when the rule already exists; update the canonical file in place.
+- Every continuation should leave an exact handoff: current head, completed evidence, open blockers, next executable actions and unavailable checks.
+
+## 3. One lane, one branch, one PR
 
 - One independently mergeable lane has one owner, one canonical branch and one PR.
 - Do not create a second branch for an already active lane.
@@ -34,7 +45,7 @@ A historical report is not proof of current state. A closed PR or deleted branch
 
 The exact scope of the current editorial lane is in `docs/research/BRANCH_SCOPE.md`.
 
-## 3. Proportionate verification
+## 4. Proportionate verification
 
 Run checks that can fail because of the actual diff:
 
@@ -47,7 +58,7 @@ Run checks that can fail because of the actual diff:
 
 A green check on an earlier head is not evidence for a moved head. A merge does not prove deployment. Production-like output does not prove live bytes.
 
-## 4. Editorial and architectural hard stops
+## 5. Editorial and architectural hard stops
 
 Without a separate owner-approved scope, never:
 
@@ -64,7 +75,7 @@ Without a separate owner-approved scope, never:
 
 `HOLD` is preferable to plausible falsehood. Ten websites repeating one late memoir are not ten independent witnesses.
 
-## 5. Google Drive and PDF acquisition
+## 6. Google Drive and PDF acquisition
 
 The full contract is `docs/SOURCE_ACQUISITION_AND_DRIVE_POLICY.md`.
 
@@ -77,9 +88,11 @@ Minimum rules:
 - record provenance, rights/public-domain status, page count, size, text-layer status and checksum;
 - an open book license does not automatically license every embedded photograph separately;
 - do not create `FINAL`, `LATEST`, `ULTIMATE`, `NEW` or `COPY` duplicates; use one master record and dated immutable snapshots when needed;
-- pirated, rights-unclear, corrupted, low-value or redundant PDFs remain in discovery notes and are not uploaded.
+- pirated, rights-unclear, corrupted, low-value or redundant PDFs remain in discovery notes and are not uploaded;
+- keep the acquisition loop active while research gaps remain: revisit `BINARY-PENDING` and `REQUEST-PENDING` rows, obtain lawful bytes when available, verify them and upload accepted masters with manifest/SHA updates;
+- never report a PDF as uploaded until the Drive action returns a real file reference/ID and the exact accepted bytes are represented in the manifest.
 
-## 6. Definition of done
+## 7. Definition of done
 
 A lane is complete when:
 
@@ -90,7 +103,8 @@ A lane is complete when:
 - temporary tooling is removed;
 - no public date was assigned before readiness;
 - production was not claimed without same-SHA deploy/live evidence;
-- important decisions, anti-patterns and prohibitions were written into durable documentation rather than left only in chat.
+- important decisions, anti-patterns and prohibitions were written into durable documentation rather than left only in chat;
+- every blocker is either closed with evidence or recorded as a precise external dependency while all independent work has been completed.
 
 ---
 
