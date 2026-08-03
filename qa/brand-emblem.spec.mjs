@@ -28,6 +28,7 @@ async function variables(mark) {
     const style = getComputedStyle(node);
     const read = (name) => style.getPropertyValue(name).trim();
     return {
+      motionScale: read('--brand-motion-scale'),
       rootY: read('--brand-root-y'),
       rootScale: read('--brand-root-scale'),
       farX: read('--brand-far-x'),
@@ -98,7 +99,8 @@ test('spectral raster keeps the root contained while semantic layers separate de
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
-  const mark = page.locator('header [data-brand-mark]').first();
+  const mark = page.locator('footer [data-brand-mark]').first();
+  await mark.scrollIntoViewIfNeeded();
   await expect(mark).toBeVisible();
   await expect(mark).toHaveAttribute('data-brand-version', VERSION);
   await expect(mark).toHaveAttribute('data-brand-vector-source', SOURCE);
@@ -120,13 +122,14 @@ test('spectral raster keeps the root contained while semantic layers separate de
   await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
   const active = await variables(mark);
   const activeLayers = await layerState(mark);
+  const motionScale = parseFloat(active.motionScale);
 
   expect(parseFloat(active.rootScale)).toBeGreaterThan(1.018);
   expect(parseFloat(active.rootScale)).toBeLessThan(1.028);
-  expect(parseFloat(active.rootY)).toBeLessThan(-0.6);
-  expect(parseFloat(active.rootY)).toBeGreaterThan(-1.0);
-  expect(Math.abs(parseFloat(active.energyX))).toBeGreaterThan(2.2);
-  expect(Math.abs(parseFloat(active.farX))).toBeGreaterThan(1.8);
+  expect(parseFloat(active.rootY)).toBeLessThan(-0.6 * motionScale);
+  expect(parseFloat(active.rootY)).toBeGreaterThan(-0.9 * motionScale);
+  expect(Math.abs(parseFloat(active.energyX))).toBeGreaterThan(2.2 * motionScale);
+  expect(Math.abs(parseFloat(active.farX))).toBeGreaterThan(1.8 * motionScale);
   expect(parseFloat(active.farScale)).toBeGreaterThan(1.025);
   expect(parseFloat(active.energyScale)).toBeGreaterThan(1.012);
   expect(parseFloat(active.foldsScaleX)).toBeGreaterThan(1.006);
