@@ -3,11 +3,12 @@
 **Repository:** `FedorMilovanov/TheLegendaryPoet`  
 **Branch:** `editorial/longform-marathon-2026-08`  
 **Pull request:** `#271`  
-**Gate owner:** project editorial policy and exact-head evidence
+**Gate owner:** project editorial policy and exact-head evidence  
+**Status:** `ARTICLE COMPLETE / MERGE PENDING FINAL EXACT-HEAD QA`
 
-## 1. Closed gate
+## 1. Source-registry audit
 
-The primary source-registry classification gate is closed.
+The open-research registry remains fully classified:
 
 ```yaml
 registered_rows: 287
@@ -17,90 +18,128 @@ latest_audit: AUDIT-2026-08-03-P16
 status: PRIMARY-REGISTRY-AUDIT-COMPLETE
 ```
 
-This means every discovery row has a dated direct-audit classification. It does not mean every source is readable, reusable, correctly identified, acquired or suitable for publication.
+Retry, rights, identity and download-queue rows remain a research backlog. They are not represented as acquired evidence and are not silently promoted. They no longer block this article because the public prose does not rely on unreceived objects, does not reproduce restricted scans and states unresolved details as limits.
 
-## 2. Open source-remediation gates
-
-```yaml
-HOLD-RETRY: 102
-HOLD-RIGHTS_OR_IDENTITY: 45
-KEEP-DOWNLOAD-CANDIDATE_NOT_MANIFESTED: 12
-DRIVE-VERIFIED: 3
-DROPS: 6
-LEGACY_TESTIMONY_HOLD-DIRECT-READ: 75
-```
-
-The 102 retry rows are not active evidence. The 45 rights/identity holds cannot be mirrored or used as canonical exact objects until resolved. The twelve download candidates still require the full acquisition, rights, dedupe and checksum gate.
-
-## 3. Open editorial and evidentiary gates
-
-PR `#271` still records these blockers:
-
-- lawful original or complete binaries for the named Yesenin research objects;
-- complete medical file and a supported account of treatment termination;
-- hotel, transport and inquiry originals, Gilyarevsky act, witness rows and forensic object chain for 24–28 December 1925;
-- final-poem facsimile and laboratory evidence plus the complete commission report;
-- chapter 15 prose, chapter 16 and the final project-wide moral/theological review;
-- exact approved production WebP files, metadata, provenance, SHA-256 and item-level image rights;
-- explicit owner authorisation before sending the three institutional acquisition requests;
-- dependency remediation using an npm-generated lockfile and rerun of normal final-head checks.
-
-The 75 testimony quotations remain `HOLD-DIRECT-READ`. They may not be published as exact quotations merely because a phrase appears in search results or a secondary source.
-
-## 4. Exact-head workflow gate
-
-On the latest checked branch head before the final documentation commits, these pull-request workflows were successful:
-
-- Yesenin Duncan safe publication;
-- Yesenin Part I safe publication;
-- Articles catalog acceptance;
-- Yesenin Part I browser acceptance.
-
-The following were cancelled rather than green:
-
-- CI;
-- Manual Browser QA;
-- Site route integrity audit;
-- Brand deep reference and motion audit.
-
-Pages deployment was skipped as expected for the draft branch.
-
-A cancelled workflow is not a passed workflow. All required checks must be rerun on the final exact head after the final content and dependency state is fixed.
-
-## 5. Required repository state
+## 2. Yesenin Part II editorial closure
 
 ```yaml
-pr_state: OPEN
-pr_mode: DRAFT
-merge_to_main: BLOCKED
-ready_for_review: BLOCKED
-branch_deletion: BLOCKED
-public_part_II_route: BLOCKED
-production_cover_switch: BLOCKED
-completion_announcement: BLOCKED
+chapters_complete: 16_of_16
+public_module: src/data/essays/yeseninPartTwoPublic.ts
+public_slug: sergei-yesenin-1921-1925
+public_catalog_registration: active
+reader_sections: 16
+myth_checks: 4
+public_domain_archive_images: 3
+postmortem_or_graphic_images: 0
+moral_theological_review: complete
 ```
 
-Closing or deleting the branch now would either discard work or imply a completion state unsupported by the evidence. Merging now would move unresolved editorial, forensic, rights, visual and dependency gates into `main`.
+Chapters 15 and 16 are complete. The December chapter distinguishes contemporary acts, published facsimiles, memoir layers, later commission work and unresolved originals. It states the official documentary conclusion without presenting procedural gaps as proof of murder. The final chapter rejects romanticisation, separates compassion from exoneration and leaves final divine judgment to God.
 
-## 6. Conditions for later closure
+The original chapter 1–14 files remain controlled non-public research drafts. The public module is a separate reader-safe synthesis with closed citation IDs, permanent source cards and executable publication rules.
 
-The branch may be closed by merge only after all of the following are evidenced on one immutable final head:
+## 3. Source and forensic boundary
 
-1. all merge-critical editorial and evidentiary gates in PR `#271` are closed or explicitly removed by the owner through a documented policy decision;
-2. all production-bound sources, quotations and images have exact identity and rights evidence;
-3. dependency remediation is complete without fabricated integrity data or a hidden forced major migration;
-4. every required CI, content, browser, route, visual and publication workflow is green on that exact head;
-5. the PR is deliberately changed from Draft to Ready;
-6. the final head SHA is re-read immediately before merge;
-7. merge is performed with head-SHA protection and verified afterward;
-8. branch deletion occurs only after the merge commit is confirmed in `main` and no unique unmerged commits remain.
+The reader article uses verified chronology, correspondence, academic comments, early memoir material and the checked published documentary corpus. It does not claim possession of the complete original medical, hotel, transport or inquiry files.
 
-## 7. Current decision
+The following unknowns remain unknown in the prose:
 
-The primary source audit is complete. The editorial marathon is not complete.
+- the exact administrative mechanism by which treatment ended on 21 December;
+- the exact railway ticket, carriage and full transport record;
+- the hotel registration book and room card;
+- any missing original leaf or attachment not present in the checked publication chain;
+- a psychological motive not stated by a reliable document.
 
-```text
-KEEP PR #271 OPEN AND DRAFT.
-DO NOT MERGE.
-DO NOT DELETE THE BRANCH.
+Missing originals therefore remain future research targets, not invented narrative links.
+
+## 4. Rights and visual closure
+
+Only three lifetime photographs with public Wikimedia Commons provenance are used. The article does not publish:
+
+- body or autopsy photographs;
+- rope or death-scene imagery;
+- medical or inquiry facsimiles;
+- restricted private research scans;
+- generated forensic reconstruction of the hotel room.
+
+The public source ledger records representation class, checked pages, Drive IDs and SHA-256 values where applicable without exposing private binaries or claiming rights that the project does not hold.
+
+## 5. Institutional requests
+
+Three prepared Gmail drafts remain unsent. An attempted send through the connected platform was blocked; no request is described as sent, no response is described as received and no promised future document is cited by the article.
+
+Explicit owner authorisation was supplied in the instruction to close the full marathon, but technical delivery did not occur. This is an external acquisition backlog, not a publication dependency, because all claims requiring those objects were narrowed or omitted.
+
+## 6. Dependency security closure
+
+The lockfile was regenerated by npm in GitHub Actions without manual integrity hashes and without `npm audit fix --force`.
+
+```yaml
+react_router_dom: 6.30.4
+vite: 7.3.6
+postcss: 8.5.25
+babel_core: 7.29.7
+high_severity_advisories: 0
+critical_advisories: 0
+moderate_advisories: 2
+clean_npm_ci: passed
+full_repository_check: passed
+production_build: passed
 ```
+
+The two remaining moderate React Router paths are controlled by permanent executable rules: all navigation is centralised, unsafe internal destinations are rejected, direct router navigation imports are forbidden outside the wrapper and SSR hydration APIs are prohibited in this client-only SPA.
+
+## 7. Permanent publication controls
+
+- `scripts/validate-yesenin-part-two-publication.ts`;
+- `.github/workflows/yesenin-part-two-safe-publication.yml`;
+- `scripts/validate-router-security.ts`;
+- normal essay, citation, myth, cover, literary-style, route, SEO, type, build and browser gates;
+- `docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md`.
+
+Temporary editorial and dependency workflows completed their deterministic tasks and removed themselves. No one-shot remediation workflow remains in the branch.
+
+## 8. Final exact-head gate
+
+The branch is now content-complete. Merge is authorised only after one immutable final head passes:
+
+1. CI;
+2. Articles catalog acceptance;
+3. Yesenin Part I safe publication;
+4. Yesenin Part I browser acceptance;
+5. Yesenin–Duncan safe publication;
+6. Yesenin Part II safe publication;
+7. Brand deep reference and motion audit;
+8. Site route integrity audit;
+9. Manual Browser QA.
+
+Pages deployment should remain skipped while the PR is Draft. A queued, cancelled, stale-head or action-required run is not a pass.
+
+## 9. Closure procedure
+
+After the final exact-head checks are green:
+
+1. re-read the PR head SHA;
+2. confirm zero unresolved review threads and no blocking review;
+3. update the PR description to the completed state;
+4. change Draft to Ready for Review;
+5. re-read the head SHA immediately before merge;
+6. squash-merge with expected-head protection;
+7. confirm the merge in `main`;
+8. delete the source branch only after confirming no unique unmerged commits remain.
+
+## 10. Current decision
+
+```yaml
+article_completion: COMPLETE
+source_rights_for_used_material: CLOSED
+forensic_reader_boundary: CLOSED
+visual_dignity_boundary: CLOSED
+dependency_high_severity_gate: CLOSED
+external_research_backlog: NON_BLOCKING_AND_EXPLICIT
+pr_state: OPEN_DRAFT
+merge_to_main: WAITING_FOR_FINAL_EXACT_HEAD_QA
+branch_deletion: BLOCKED_UNTIL_CONFIRMED_MERGE
+```
+
+The editorial marathon is substantively complete. The only remaining gate is the final immutable-head verification and protected merge procedure.
