@@ -155,9 +155,21 @@
    and hybrid laptop. At tablet/mobile layout widths labels must never depend on
    hover detection, so the content remains visible by geometry as well. */
 @media (hover: none) and (pointer: coarse), (max-width: 1024px) {
+  /* The hero entrance is decorative. A cold touch WebKit process must not keep
+     the shared wrapper or any of the six portrait shells at Framer Motion's
+     initial opacity while labels are already needed for reading and tapping. */
+  .w-full:has(> .hero-title-lockup),
+  [data-hero-poet-window-shell] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
   .hero-poet-window-label {
     opacity: 0.96 !important;
     transform: translateY(0) translateZ(22px) !important;
+    transition: none !important;
   }
 
   .hero-poet-window-image {
@@ -201,6 +213,7 @@
     will-change: auto;
   }
 
+  [data-hero-poet-window-shell],
   .hero-poet-window-surface,
   .hero-poet-window-glow,
   .hero-poet-window-frame,
@@ -212,6 +225,11 @@
   .hero-poet-window-label {
     animation: none !important;
     transition: none !important;
+  }
+
+  [data-hero-poet-window-shell] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .hero-poet-window-shine {
