@@ -1,0 +1,74 @@
+name: Temporary verified Yesenin source acquisition
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/acquire-yesenin-source-temporary.yml
+
+permissions:
+  contents: read
+
+jobs:
+  acquire-russian-days:
+    if: github.head_ref == 'editorial/longform-marathon-2026-08'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Install PDF verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+
+      - name: Download official Tufts PDF
+        run: |
+          set -euo pipefail
+          mkdir -p acquisition
+          curl \
+            --fail \
+            --location \
+            --retry 6 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 30 \
+            --max-time 1200 \
+            'https://dl.tufts.edu/downloads/wh247546j?filename=h415pp46s.pdf' \
+            --output acquisition/Isadora_Duncan_Russian_Days_1929_Tufts.pdf
+
+      - name: Verify PDF bytes and render first page
+        run: |
+          set -euo pipefail
+          PDF='acquisition/Isadora_Duncan_Russian_Days_1929_Tufts.pdf'
+          test "$(head -c 5 "$PDF")" = '%PDF-'
+          file "$PDF" | tee acquisition/file.txt
+          pdfinfo "$PDF" | tee acquisition/pdfinfo.txt
+          PAGES="$(pdfinfo "$PDF" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
+          test -n "$PAGES"
+          test "$PAGES" -ge 384
+          BYTES="$(stat -c%s "$PDF")"
+          test "$BYTES" -gt 1000000
+          SHA="$(sha256sum "$PDF" | awk '{print $1}')"
+          pdftoppm -f 1 -singlefile -png -r 160 "$PDF" acquisition/first-page
+          test -s acquisition/first-page.png
+          {
+            echo 'source_repository=Tufts Digital Library'
+            echo 'item_url=https://dl.tufts.edu/concern/pdfs/h415pp46s'
+            echo 'permanent_url=http://hdl.handle.net/10427/009156'
+            echo 'download_url=https://dl.tufts.edu/downloads/wh247546j?filename=h415pp46s.pdf'
+            echo 'title=Isadora Duncan’s Russian Days and Her Last Years in France'
+            echo 'authors=Irma Duncan; Allan Ross Macdougall'
+            echo 'publication_year=1929'
+            echo "pdf_pages=$PAGES"
+            echo "file_size_bytes=$BYTES"
+            echo "sha256=$SHA"
+            echo 'first_page_rendered=true'
+            echo 'drive_upload_completed=false'
+          } | tee acquisition/VERIFICATION.txt
+
+      - name: Upload verified acquisition artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-source-russian-days-verified
+          path: acquisition/
+          if-no-files-found: error
+          retention-days: 3
