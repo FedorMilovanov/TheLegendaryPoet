@@ -181,7 +181,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
           ref={imageRef}
           src={imageSrc}
           alt={block.alt}
-          loading="lazy"
+          loading={block.loading ?? 'lazy'}
           decoding="async"
           sizes={sizes}
           data-image-state={imageState}

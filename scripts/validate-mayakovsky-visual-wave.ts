@@ -133,6 +133,10 @@ for (const [slug, expectedFiles] of Object.entries(expectedArticleAssets)) {
     const fileName = image.src.slice(assetPrefix.length);
     const expectedSourceUrl = expectedDocuments.get(fileName);
 
+    if (image.loading !== 'eager') {
+      fail(`${slug}/${fileName}: audited editorial-wave image must use loading=eager`);
+    }
+
     if (expectedSourceUrl) {
       totalDocuments += 1;
       if (image.kind !== 'document') {

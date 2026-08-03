@@ -49,6 +49,7 @@ export function applyMayakovskyPartTwoEditorialWave(blocks: EssayBlock[]): Essay
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/mayakovsky-rosta-workshop-reconstruction.webp',
+          loading: 'eager',
           alt: 'Редакционная реконструкция: Владимир Маяковский работает над агитационным плакатом в мастерской',
           caption: 'Маяковский в мастерской плакатной работы. Редакционная реконструкция по историческим портретным и производственным референсам; не фотография конкретного дня.',
           credit: 'THE LEGENDARY POET · редакционная реконструкция',
@@ -63,6 +64,7 @@ export function applyMayakovskyPartTwoEditorialWave(blocks: EssayBlock[]): Essay
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/mayakovsky-dlya-golosa-1923.webp',
+          loading: 'eager',
           alt: 'Разворот книги Владимира Маяковского «Для голоса» в оформлении Эль Лисицкого, 1923 год',
           caption: 'Владимир Маяковский, «Для голоса». Страницы 2–3 издания с конструктивистским оформлением Эль Лисицкого, 1923.',
           credit: 'Эль Лисицкий · Wikimedia Commons / RISD Museum',
@@ -74,6 +76,7 @@ export function applyMayakovskyPartTwoEditorialWave(blocks: EssayBlock[]): Essay
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/mayakovsky-public-reading-reconstruction.webp',
+          loading: 'eager',
           alt: 'Редакционная реконструкция публичного чтения Владимира Маяковского',
           caption: 'Образ Маяковского-публичного читателя. Редакционная реконструкция по историческим портретным и сценическим референсам; не снимок определённого выступления.',
           credit: 'THE LEGENDARY POET · редакционная реконструкция',
@@ -90,6 +93,7 @@ export function applyMayakovskyPartTwoEditorialWave(blocks: EssayBlock[]): Essay
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/mayakovsky-late-desk-reconstruction.webp',
+          loading: 'eager',
           alt: 'Редакционная реконструкция позднего Владимира Маяковского за рабочим столом у лампы',
           caption: 'Поздний Маяковский за рабочим столом. Редакционная реконструкция по историческим референсам; не фотография конкретной ночи и не психологический диагноз.',
           credit: 'THE LEGENDARY POET · редакционная реконструкция',
@@ -110,6 +114,7 @@ export function applyBrikEditorialWave(blocks: EssayBlock[]): EssayBlock[] {
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/brik-reading-circle-reconstruction.webp',
+          loading: 'eager',
           alt: 'Редакционная реконструкция: Владимир Маяковский читает рукопись Лиле и Осипу Брикам',
           caption: 'Маяковский читает рукопись в кругу Бриков. Редакционная реконструкция по историческим портретным и интерьерным референсам; не фотография конкретного вечера.',
           credit: 'THE LEGENDARY POET · редакционная реконструкция',
@@ -124,6 +129,7 @@ export function applyBrikEditorialWave(blocks: EssayBlock[]): EssayBlock[] {
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/brik-triad-interior-reconstruction.webp',
+          loading: 'eager',
           alt: 'Редакционная реконструкция Владимира Маяковского, Лили и Осипа Бриков в кабинете',
           caption: 'Камерный образ меняющегося союза Маяковского и Бриков. Редакционная реконструкция по историческим референсам; не архивная фотография и не свидетельство конкретной сцены.',
           credit: 'THE LEGENDARY POET · редакционная реконструкция',
@@ -138,6 +144,7 @@ export function applyBrikEditorialWave(blocks: EssayBlock[]): EssayBlock[] {
         {
           type: 'image',
           src: '/images/essays/mayakovsky/editorial-wave/mayakovsky-kruchenykh-stikhi-cover.webp',
+          loading: 'eager',
           alt: 'Обложка книги Алексея Кручёных «Стихи В. Маяковского» с графическим образом поэта',
           caption: 'Алексей Кручёных, «Стихи В. Маяковского». Футуристическая обложка и печатный образ поэта, 1915.',
           credit: 'Алексей Кручёных · Wikimedia Commons',
