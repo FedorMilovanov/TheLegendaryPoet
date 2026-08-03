@@ -28,7 +28,7 @@ const evdokimovDerivedPath = join(
 );
 const letopisSourcePath = join(
   researchDir,
-  'YESENIN_LETOPIS_T3_K2_SOURCE_PASS_01_2026-08.md',
+  'YESENIN_LETOPIS_1921_1925_SOURCE_PASS_01_2026-08.md',
 );
 
 for (const path of [
@@ -236,32 +236,49 @@ for (const forbidden of [
 }
 
 for (const required of [
-  'DRIVE-VERIFIED OCR RESEARCH COPY / ACADEMIC EDITION / PRODUCTION RIGHTS HOLD',
+  '3 DRIVE-VERIFIED OCR RESEARCH COPIES / ACADEMIC EDITIONS / PRODUCTION RIGHTS HOLD',
+  `batch_folder_id: ${batchFolderId}`,
+  `manifest_Drive_file_id: ${manifestDriveId}`,
+  `sha256sums_Drive_file_id: ${sumsDriveId}`,
+  'new_batch_created: false',
+  'duplicate_index_created: false',
+  'empty_folder_created: false',
+  'yes2-letopis-t3-k1-imwerden-ocr',
+  'coverage: 1921 — 10 May 1922',
+  'pdf_pages: 481',
+  'file_size_bytes: 45017280',
+  'eaccd7e92a90087112a4425d6a211257ad3e80e9e47c05ce9943b7f4b1669014',
+  'PDF_Drive_file_id: 13q21pg9dd4EyAIhBVxZXJrxwjYGD0qK-',
   'yes2-letopis-t3-k2-imwerden-ocr',
   'coverage: 10 May 1922 — 2 August 1923',
-  'stored_representation: ImWerden OCR reproduction of the IMLI RAN academic edition',
   'pdf_pages: 580',
   'catalog_description_pages: 568',
   'file_size_bytes: 53450829',
-  'OCR_TEXT_OVER_PAGE_IMAGES',
   '89b33c7a472eab0c234877cd8737a1f2e12eebd142d0552a625eeb28d6ce4187',
+  'PDF_Drive_file_id: 1d_3-aNk4eY5LqLWzU9XUt8J_g6-IynxN',
+  'yes2-letopis-t5-k1-imwerden-ocr',
+  'coverage: January — 23 December 1925',
+  'pdf_pages: 836',
+  'file_size_bytes: 47981380',
+  '1c4a37276fc9e2e8da2a9b19c7b0c8941b6e43a0ec9aec5d42a55589e0145496',
+  'PDF_Drive_file_id: 1d7UCOxmX7SUPJkjclZKvNhJAAGhu1gHs',
+  'OCR_TEXT_OVER_PAGE_IMAGES',
   'first_page_rendered: true',
   'cover_rendered_and_inspected: true',
   'title_page_pdf_page: 5',
-  `batch_folder_id: ${batchFolderId}`,
-  'PDF_Drive_file_id: 1d_3-aNk4eY5LqLWzU9XUt8J_g6-IynxN',
-  `manifest_Drive_file_id: ${manifestDriveId}`,
-  `sha256sums_Drive_file_id: ${sumsDriveId}`,
+  'title_page_rendered_and_inspected: true',
   'Drive_parent_verified: true',
-  'Drive_uploaded: true',
   'manifest_updated_in_place: true',
   'checksum_manifest_updated_in_place: true',
   'canonical_archival_master: false',
   'original_archive_object: false',
   'production_visual_rights_closed: false',
   'production_reuse: HOLD',
-  'acquisition_decision: ACCEPTED_RESEARCH_COPY',
   'public_download: NOT_CREATED',
+  'verified_research_copies: 3',
+  'acquisition_decision: ACCEPTED_RESEARCH_COPIES',
+  'This volume ends on 23 December 1925.',
+  'does not close the medical-file, treatment-end, hotel, transport, inquiry, witness or forensic gates',
 ]) {
   if (!letopisSource.includes(required)) {
     throw new Error(`Letopis source pass lost verified representation/Drive boundary: ${required}`);
@@ -275,6 +292,8 @@ for (const forbidden of [
   /production_visual_rights_closed:\s*true/u,
   /production_reuse:\s*(?:CLEARED|ALLOWED|true)/iu,
   /public_download:\s*(?:CREATED|PUBLISHED|true)/iu,
+  /new_batch_created:\s*true/u,
+  /duplicate_index_created:\s*true/u,
 ]) {
   if (forbidden.test(letopisSource)) {
     throw new Error(`Letopis source pass overstates original/rights/public status: ${forbidden}`);
@@ -282,5 +301,5 @@ for (const forbidden of [
 }
 
 console.log(
-  'Yesenin source acquisitions: 2 Drive-verified research masters/copies plus 2 separately stored Drive-verified derived texts; SHA/pages/Drive IDs pinned, representation, memoir conflicts and original-facsimile/rights HOLDs preserved.',
+  'Yesenin source acquisitions: 4 Drive-verified research masters/copies plus 2 separately stored Drive-verified derived texts; SHA/pages/Drive IDs pinned, representation, memoir conflicts and original-facsimile/rights HOLDs preserved.',
 );
