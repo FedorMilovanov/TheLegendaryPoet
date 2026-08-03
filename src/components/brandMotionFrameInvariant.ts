@@ -159,7 +159,10 @@ export function createBrandMotionController(node: HTMLElement): BrandMotionContr
     style.setProperty('--brand-far-y', px(scaled(-2 * state.y - 0.5) * auraWake));
     style.setProperty('--brand-far-scale', number(1 + 0.042 * auraWake));
 
-    style.setProperty('--brand-energy-x', px(scaled(3.65) * state.x * auraWake));
+    // The luminous layer deliberately travels slightly farther than the hood
+    // and cloth planes. This makes the attached electric rim read as depth,
+    // while remaining inside the root's tightly bounded 2.2% lift.
+    style.setProperty('--brand-energy-x', px(scaled(3.8) * state.x * auraWake));
     style.setProperty('--brand-energy-y', px(scaled(2.35 * state.y - 0.36) * auraWake));
     style.setProperty('--brand-energy-r', degrees(state.x * 0.82 * auraWake));
     style.setProperty('--brand-energy-scale', number(1 + 0.022 * auraWake));
