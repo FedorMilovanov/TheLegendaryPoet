@@ -109,8 +109,8 @@ test.describe('fine-pointer approved RGBA interaction', () => {
     expect(Math.abs(parseFloat(active.auraX))).toBeGreaterThan(0.12);
     expect(Math.abs(parseFloat(active.auraX))).toBeLessThan(0.75);
     expect(Number(active.auraScale)).toBeLessThanOrEqual(1.0031);
-    expect(Number(active.auraOpacity)).toBeGreaterThanOrEqual(0.018);
-    expect(Number(active.auraOpacity)).toBeLessThanOrEqual(0.021);
+    expect(Number(active.auraOpacity)).toBeGreaterThanOrEqual(0.009);
+    expect(Number(active.auraOpacity)).toBeLessThanOrEqual(0.011);
     expect(active.auraTransform).not.toBe(active.baseTransform);
     expect(active.auraFilter).not.toMatch(/drop-shadow|blur\(/i);
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'brand-live-desktop-header-hover.png') });
