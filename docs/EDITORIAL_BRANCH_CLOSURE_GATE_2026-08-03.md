@@ -107,14 +107,18 @@ The two remaining moderate React Router paths are controlled by permanent execut
 
 The final WebKit hardening is implemented in product code rather than hidden in browser tests:
 
-- `useNativeImageState` observes lazy images approaching the viewport, promotes only those images to eager loading and waits for the native decoder;
-- cached and prerendered images remain synchronized through `complete` and `naturalWidth`;
+- `useNativeImageState` keeps direct native `load` and `error` listeners, synchronises cached resources through `complete` and `naturalWidth`, and promotes approaching dormant lazy images through a bounded WebKit path;
+- strict ref narrowing is preserved without non-null assertions or weakened TypeScript settings;
+- essay image blocks have a typed `lazy | eager` loading policy;
+- the seven small, SHA-locked and provenance-controlled Mayakovsky editorial-wave images explicitly use `eager` because their decode is part of the deliberate article reading path;
+- all other essay images retain the default lazy policy;
+- `validate-mayakovsky-visual-wave.ts` fails if the audited eager policy disappears;
 - the homepage title exposes readiness from the supported React `onAnimationEnd` lifecycle;
 - premium QA waits for that event-driven state and checks final opacity instead of guessing the CSS schedule;
-- the permanent brand-browser validator forbids the removed `animationDuration`/`maxTotalMs` timer heuristic;
+- every major mobile Safari contour runs in an independent browser process with no retries;
 - reduced-motion behavior remains an independent mandatory WebKit contour.
 
-The hardening passed the complete repository `check`, TypeScript and production build before it was committed.
+The image-loading contract and runtime hardening passed the complete repository `check`, TypeScript and production build before they were committed.
 
 ## 8. Permanent publication controls
 
@@ -124,10 +128,11 @@ The hardening passed the complete repository `check`, TypeScript and production 
 - `scripts/validate-mayakovsky-visual-wave.ts`;
 - `.github/workflows/mayakovsky-visual-wave-acceptance.yml`;
 - `scripts/validate-brand-browser-workflow.ts`;
+- `scripts/validate-hover-stability.ts`;
 - normal essay, citation, myth, cover, literary-style, route, SEO, type, build and browser gates;
 - `docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md`.
 
-All temporary editorial, dependency, sitemap and WebKit-hardening workflows completed or were superseded and were removed from the branch. Their absence was verified directly before this sealing commit. No one-shot remediation or generation workflow is part of the immutable final QA head.
+All temporary editorial, dependency, sitemap, WebKit-hardening and image-loading workflows completed or were superseded and were removed from the branch. Their absence was verified directly before this sealing commit. No one-shot remediation or generation workflow is part of the immutable final QA head.
 
 ## 9. Final exact-head gate
 
@@ -169,6 +174,7 @@ visual_dignity_boundary: CLOSED
 mayakovsky_visual_provenance: CLOSED
 dependency_high_severity_gate: CLOSED
 webkit_product_hardening: COMPLETE
+typed_image_loading_contract: COMPLETE
 seo_generated_output: MATERIALIZED
 external_research_backlog: NON_BLOCKING_AND_EXPLICIT
 pr_state: OPEN_DRAFT
