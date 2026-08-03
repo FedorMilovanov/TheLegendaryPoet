@@ -35,9 +35,9 @@ export const BRAND_MOTION_TIMESTEP = {
 
 export const BRAND_MOTION_SPRINGS = {
   active: {
-    stiffness: 136,
+    stiffness: 128,
     damping: 18.5,
-    wakeStiffness: 126,
+    wakeStiffness: 120,
     wakeDamping: 15.8,
   },
   returning: {
