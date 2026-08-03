@@ -102,9 +102,9 @@ assert.match(motion, /elapsedSeconds = lastTime \? Math\.max\(0, \(time - lastTi
 assert.match(motion, /snapBrandMotionState\(state, targets\);[\s\S]*write\(\);[\s\S]*lastTime = 0;/);
 assert.match(motion, /motionScale = clamp\(Math\.min\(bounds\.width, bounds\.height\) \/ 64, 0\.65, 1\.6\)/);
 assert.match(motion, /const scaled = \(value: number\) => value \* motionScale/);
-assert.match(motion, /stiffness: 136/);
+assert.match(motion, /stiffness: 128/);
 assert.match(motion, /damping: 18\.5/);
-assert.match(motion, /wakeStiffness: 126/);
+assert.match(motion, /wakeStiffness: 120/);
 assert.match(motion, /wakeDamping: 15\.8/);
 assert.match(motion, /stiffness: 180/);
 assert.match(motion, /wakeStiffness: 220/);
