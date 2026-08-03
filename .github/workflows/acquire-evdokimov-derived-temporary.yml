@@ -1,0 +1,75 @@
+name: Temporary verified Evdokimov derived-text acquisition
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/acquire-evdokimov-derived-temporary.yml
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    if: github.head_ref == 'editorial/longform-marathon-2026-08'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Install PDF tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+
+      - name: Download official Wikisource PDF export
+        run: |
+          set -euo pipefail
+          mkdir -p acquisition
+          curl \
+            --fail \
+            --location \
+            --retry 6 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 30 \
+            --max-time 900 \
+            'https://ws-export.wmcloud.org/?format=pdf&lang=ru&page=%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B9_%D0%90%D0%BB%D0%B5%D0%BA%D1%81%D0%B0%D0%BD%D0%B4%D1%80%D0%BE%D0%B2%D0%B8%D1%87_%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%28%D0%95%D0%B2%D0%B4%D0%BE%D0%BA%D0%B8%D0%BC%D0%BE%D0%B2%29' \
+            --output acquisition/Evdokimov_Sergey_Aleksandrovich_Esenin__Wikisource_DERIVED.pdf
+
+      - name: Verify derived PDF bytes and first page
+        run: |
+          set -euo pipefail
+          PDF='acquisition/Evdokimov_Sergey_Aleksandrovich_Esenin__Wikisource_DERIVED.pdf'
+          test "$(head -c 5 "$PDF")" = '%PDF-'
+          file "$PDF" | tee acquisition/file.txt
+          pdfinfo "$PDF" | tee acquisition/pdfinfo.txt
+          PAGES="$(pdfinfo "$PDF" | awk -F: '/^Pages:/ {gsub(/ /, "", $2); print $2}')"
+          test -n "$PAGES"
+          test "$PAGES" -ge 20
+          BYTES="$(stat -c%s "$PDF")"
+          test "$BYTES" -gt 50000
+          SHA="$(sha256sum "$PDF" | awk '{print $1}')"
+          pdftoppm -f 1 -singlefile -png -r 160 "$PDF" acquisition/first-page
+          test -s acquisition/first-page.png
+          {
+            echo 'source_kind=DERIVED_TEXT_PDF'
+            echo 'source_platform=Russian Wikisource / Wikimedia export service'
+            echo 'source_page=https://ru.wikisource.org/wiki/Сергей_Александрович_Есенин_(Евдокимов)'
+            echo 'text_source_reported_by_wikisource=az.lib.ru'
+            echo 'underlying_work_public_domain=true'
+            echo 'complete_1926_collection=false'
+            echo 'facsimile_of_1926_collection=false'
+            echo 'canonical_archival_master=false'
+            echo "pdf_pages=$PAGES"
+            echo "file_size_bytes=$BYTES"
+            echo "sha256=$SHA"
+            echo 'first_page_rendered=true'
+            echo 'drive_upload_completed=false'
+          } | tee acquisition/VERIFICATION.txt
+
+      - name: Upload verified derived-text artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yesenin-source-evdokimov-wikisource-derived
+          path: acquisition/
+          if-no-files-found: error
+          retention-days: 2
