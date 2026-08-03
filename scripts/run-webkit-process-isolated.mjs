@@ -10,8 +10,30 @@ const common = [
 
 const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];
 
+const mobilePlatformContours = [
+  {
+    id: 'mobile-ratings-community',
+    grep: 'ratings and community input survive touch entry and reload',
+  },
+  {
+    id: 'mobile-music-shell',
+    grep: 'music shell, immersive dialog and mobile dock do not collide',
+  },
+  {
+    id: 'mobile-orientation-navigation',
+    grep: 'portrait, landscape and back navigation stay stable',
+  },
+  {
+    id: 'mobile-engine-identity',
+    grep: 'engine identity is honest for Android Chrome and iPhone Safari',
+  },
+];
+
 const suites = [
-  { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
+  ...mobilePlatformContours.map((contour) => ({
+    ...contour,
+    file: 'qa/mobile-platforms.spec.mjs',
+  })),
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
   { id: 'mayakovsky-visual-wave', file: 'qa/mayakovsky-visual-wave.spec.mjs' },
   { id: 'optical-matrix', file: 'qa/brand-v19-optical.spec.mjs' },
