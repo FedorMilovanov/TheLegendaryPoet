@@ -42,32 +42,28 @@ const sources: Record<Exclude<SpectralBrandVariant, 'auto'>, string> = {
 
 const resolveVariant = (size: SpectralBrandSize, variant: SpectralBrandVariant) => {
   if (variant !== 'auto') return variant;
-  if (size === 'sm') return 'simplified';
+  if (size === 'sm') return 'micro';
   if (size === 'md') return 'simplified';
   return 'primary';
 };
 
-const REFERENCE_RASTER_CSS = `
+const APPROVED_RGBA_CSS = `
 [data-spectral-brand]{isolation:isolate;contain:layout style;touch-action:manipulation}
-[data-spectral-brand] [data-brand-raster-stage]{position:relative;display:block;width:100%;height:100%;overflow:hidden;border-radius:18%;background:#02050b;transform:translate3d(0,var(--brand-root-y,0px),0) scale(var(--brand-root-scale,1));transform-origin:50% 55%;will-change:transform}
-[data-spectral-brand] [data-brand-raster-layer]{position:absolute;inset:0;display:block;pointer-events:none;transform-origin:50% 55%;backface-visibility:hidden;will-change:transform,opacity;transition:opacity 360ms cubic-bezier(.16,1,.3,1),filter 360ms cubic-bezier(.16,1,.3,1)}
+[data-spectral-brand] [data-brand-raster-stage]{position:relative;display:block;width:100%;height:100%;overflow:visible;background:transparent;transform:translate3d(0,var(--brand-root-y,0px),0) scale(var(--brand-root-scale,1));transform-origin:50% 55%;will-change:transform}
+[data-spectral-brand] [data-brand-raster-layer]{position:absolute;inset:0;display:block;pointer-events:none;transform-origin:50% 55%;backface-visibility:hidden;will-change:transform,opacity;transition:opacity 320ms cubic-bezier(.16,1,.3,1)}
 [data-spectral-brand] [data-brand-raster-layer] img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;backface-visibility:hidden}
 [data-spectral-brand] [data-brand-raster-base]{transform:translate3d(var(--brand-figure-x,0px),var(--brand-figure-y,0px),0)}
-[data-spectral-brand] [data-brand-raster-base] img{filter:brightness(.92) saturate(.94) contrast(1.025)}
-[data-spectral-brand] [data-brand-raster-aura]{opacity:.025;mix-blend-mode:screen;clip-path:inset(0 3% 13% 3% round 18%);transform:translate3d(var(--brand-aura-x,0px),var(--brand-aura-y,0px),0) scale(var(--brand-aura-scale,1))}
-[data-spectral-brand] [data-brand-raster-aura] img{filter:brightness(1.025) saturate(1.01) contrast(1.01)}
-[data-spectral-brand][data-brand-compact="true"] [data-brand-raster-aura]{opacity:.012}
+[data-spectral-brand] [data-brand-raster-aura]{opacity:.008;transform:translate3d(var(--brand-aura-x,0px),var(--brand-aura-y,0px),0) scale(var(--brand-aura-scale,1))}
+[data-spectral-brand][data-brand-compact="true"] [data-brand-raster-aura]{opacity:.004}
 @media (hover:hover) and (pointer:fine){
-[data-spectral-brand][data-brand-interaction="active"] [data-brand-raster-base] img{filter:brightness(.94) saturate(.95) contrast(1.028)}
-[data-spectral-brand][data-brand-interaction="active"] [data-brand-raster-aura]{opacity:.055}
-[data-spectral-brand][data-brand-interaction="settling"] [data-brand-raster-aura]{opacity:.038}
-[data-spectral-brand][data-brand-compact="true"][data-brand-interaction="active"] [data-brand-raster-aura]{opacity:.03}
-[data-spectral-brand][data-brand-compact="true"][data-brand-interaction="settling"] [data-brand-raster-aura]{opacity:.02}
+[data-spectral-brand][data-brand-interaction="active"] [data-brand-raster-aura]{opacity:.02}
+[data-spectral-brand][data-brand-interaction="settling"] [data-brand-raster-aura]{opacity:.012}
+[data-spectral-brand][data-brand-compact="true"][data-brand-interaction="active"] [data-brand-raster-aura]{opacity:.01}
+[data-spectral-brand][data-brand-compact="true"][data-brand-interaction="settling"] [data-brand-raster-aura]{opacity:.006}
 }
-a:focus-visible [data-spectral-brand] [data-brand-raster-aura],button:focus-visible [data-spectral-brand] [data-brand-raster-aura]{opacity:.04}
+a:focus-visible [data-spectral-brand] [data-brand-raster-aura],button:focus-visible [data-spectral-brand] [data-brand-raster-aura]{opacity:.012}
 @media (prefers-reduced-motion:reduce){
 [data-spectral-brand] [data-brand-raster-stage],[data-spectral-brand] [data-brand-raster-layer]{transform:none!important;transition:none!important;will-change:auto!important}
-[data-spectral-brand][data-brand-interaction="active"] [data-brand-raster-aura]{opacity:.035}
 }
 `;
 
@@ -138,15 +134,15 @@ export function SpectralBrandMark({
       ref={markRef}
       data-brand-mark
       data-spectral-brand
-      data-brand-release="reference-raster-20260803-1"
-      data-brand-raster-version="canonical-reference-20260803-1"
-      data-brand-renderer="reference-raster-subtle-depth"
-      data-brand-reference-source="canonical-hooded-figure-v2-clean-base"
+      data-brand-release="approved-rgba-20260803-1"
+      data-brand-raster-version="approved-transparent-family-20260803-1"
+      data-brand-renderer="approved-rgba-family-subtle-depth"
+      data-brand-reference-source="generated-transparent-rgba-family"
       data-brand-interaction="idle"
-      data-brand-parallax="subtle-reference-depth-v1"
+      data-brand-parallax="subtle-rgba-depth-v1"
       data-brand-motion-normalization="rendered-box-v1"
       data-brand-motion-timestep="bounded-substeps-v1"
-      data-brand-awakening="reference-subtle-depth-v1"
+      data-brand-awakening="approved-rgba-subtle-depth-v1"
       data-brand-compact={compact ? 'true' : 'false'}
       data-brand-raster-variant={resolvedVariant}
       role="img"
@@ -174,13 +170,13 @@ export function SpectralBrandMark({
         controllerRef.current?.cancel();
       }}
     >
-      <style>{BRAND_MOTION_CSS}{REFERENCE_RASTER_CSS}</style>
+      <style>{BRAND_MOTION_CSS}{APPROVED_RGBA_CSS}</style>
       <span data-brand-raster-stage aria-hidden="true">
         <span data-brand-raster-layer data-brand-raster-base data-brand-figure>
           {layerImage('base')}
         </span>
         <span data-brand-raster-layer data-brand-raster-aura data-brand-aura>
-          {layerImage('aura')}
+          {layerImage('depth')}
         </span>
       </span>
     </span>
