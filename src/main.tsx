@@ -4,6 +4,7 @@ import "./index.css";
 import "./audio-player.css";
 import "./essay-motion.css";
 import "./hover-stability.css";
+import "./overlay-chrome.css";
 import App from "./App";
 import { preloadCurrentRoute } from "./routes/routeModules";
 
