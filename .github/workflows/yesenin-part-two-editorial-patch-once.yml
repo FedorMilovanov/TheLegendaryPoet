@@ -1,0 +1,56 @@
+name: One-shot Yesenin Part II editorial correction
+
+on:
+  push:
+    branches: [editorial/longform-marathon-2026-08]
+    paths:
+      - .github/workflows/yesenin-part-two-editorial-patch-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical branch
+        uses: actions/checkout@v4
+        with:
+          ref: editorial/longform-marathon-2026-08
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Replace the exact short documentary answer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/data/essays/yeseninPartTwoPublic.ts')
+          text = path.read_text(encoding='utf-8')
+          old = "Документирован кавказский маршрут и планы поездки. Надёжного подтверждения физического пребывания Есенина в Иране нет."
+          new = "Академическая хронология подтверждает работу Есенина в Баку и Тифлисе и фиксирует планы поездки дальше, но не содержит надёжного свидетельства о пересечении иранской границы. География цикла — литературная Персия, созданная на Кавказе; она не является документом физического путешествия автора по Ирану."
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one target phrase, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run all content gates
+        run: npm run check:content
+
+      - name: Commit correction and remove one-shot workflow
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/yesenin-part-two-editorial-patch-once.yml
+          git add src/data/essays/yeseninPartTwoPublic.ts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(yesenin): expand Persian journey myth correction'
+          git push origin HEAD:editorial/longform-marathon-2026-08
