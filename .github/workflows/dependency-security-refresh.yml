@@ -18,7 +18,7 @@ concurrency:
 jobs:
   refresh-lock:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 12
     steps:
       - name: Checkout exact branch head
         uses: actions/checkout@v4
@@ -82,21 +82,15 @@ ${rows}
 
 This file records npm advisory output after the reproducible lock refresh. An advisory count is not by itself proof that the deployed BrowserRouter application exposes the affected feature path. Conversely, a green build is not permission to suppress a real advisory. Remaining items require package-by-package reachability and migration review; no major-version force update is applied silently.
 
-## Validation required before closure
+## Validation boundary
 
-- \`npm ci\`;
-- \`npm run check\`;
-- \`npm run build\`;
-- normal PR CI and cross-browser workflows on the subsequent connector-authored final head.
+The one-shot job verifies \`npm ci\`. Full content, type, build, SEO and cross-browser gates must pass again on the subsequent connector-authored final head.
 `;
           fs.writeFileSync('docs/research/DEPENDENCY_SECURITY_REVIEW_2026-08-03.md', markdown);
           NODE
 
-      - name: Validate refreshed dependency graph
-        run: |
-          npm ci
-          npm run check
-          npm run build
+      - name: Verify reproducible install
+        run: npm ci
 
       - name: Commit generated lock, review, and workflow removal
         shell: bash
