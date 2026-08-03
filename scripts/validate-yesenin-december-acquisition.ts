@@ -14,6 +14,10 @@ const sourcePassPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_SOURCE_PASS_IMLI_2003_2026-08.md',
 );
+const memoirPassPath = join(
+  researchDir,
+  'YESENIN_MEMOIR_CORPUS_SOURCE_PASS_1986_USER_UPLOAD_2026-08.md',
+);
 const matrixPath = join(
   researchDir,
   'YESENIN_DECEMBER_1925_DAY_LEVEL_SOURCE_MATRIX_PASS_01_2026-08.md',
@@ -31,6 +35,7 @@ for (const path of [
   discoveryPath,
   registryPath,
   sourcePassPath,
+  memoirPassPath,
   matrixPath,
   witnessPath,
   requestPackPath,
@@ -41,6 +46,7 @@ for (const path of [
 const discovery = readFileSync(discoveryPath, 'utf8');
 const registry = readFileSync(registryPath, 'utf8');
 const sourcePass = readFileSync(sourcePassPath, 'utf8');
+const memoirPass = readFileSync(memoirPassPath, 'utf8');
 const matrix = readFileSync(matrixPath, 'utf8');
 const witnesses = readFileSync(witnessPath, 'utf8');
 const requestPack = readFileSync(requestPackPath, 'utf8');
@@ -135,7 +141,6 @@ for (const forbidden of [
 
 for (const required of [
   'FILE-VERIFIED / PRIVATE RESEARCH ONLY / FACSIMILES VERIFIED / ORIGINALS AND RIGHTS STILL PENDING',
-  'Drive intake id:',
   'UYM-2026-08-03-10',
   'PDF_pages: 416',
   'file_size_bytes: 29439518',
@@ -171,6 +176,33 @@ for (const forbidden of [
 }
 
 for (const required of [
+  '2 SOURCE ARCHIVES VERIFIED / INNER DOCS VERIFIED / PRIVATE RESEARCH ONLY / DERIVED OCR REPRESENTATION',
+  '1f205770874e875737e9b732f6730645c550277082b575ac968401d3144cc896',
+  '08d1ac9432f7bcde99bdd72205b099537c3b63b8714a265a646bc06bd65ba224',
+  '2115ac558e226557cdad0b44e5cc461196a204bf25261bbc00b6015fe85ea778',
+  '42cdf6dcacf25b4383ce307a900a030859b25bb0d47c215acc910d2dc939612e',
+  'first_publication: сборник «Памяти Есенина», Москва, 1926',
+  'edition_basis_here: abridged text of «Право на песнь»',
+  'first_publication: сборник «Воспоминания», 1926',
+  'source_archives_verified: 2',
+  'inner_DOC_SHA_verified: 2',
+  'derivative_PDFs_uploaded: 0',
+  'production_rights_closed: 0',
+  'chapter_15_prose_allowed: false',
+]) {
+  if (!memoirPass.includes(required)) throw new Error(`Yesenin memoir corpus lost version/provenance field: ${required}`);
+}
+
+for (const forbidden of [
+  /derivative_PDFs_uploaded:\s*[1-9]/u,
+  /canonical_library_promotions:\s*[1-9]/u,
+  /production_rights_closed:\s*[1-9]/u,
+  /chapter_15_prose_allowed:\s*true/u,
+]) {
+  if (forbidden.test(memoirPass)) throw new Error(`Yesenin memoir corpus overstates completion: ${forbidden}`);
+}
+
+for (const required of [
   'A memoir is not a hotel register',
   'An evidentiary gap is not positive homicide evidence',
   'no body photograph in the reader article',
@@ -181,16 +213,23 @@ for (const required of [
 
 for (const required of [
   'No row in pass 01 is `COMPLETE`',
-  'written: 28 January 1926 according to academic comments',
-  'later book reduces the reported transfer formula to Тебе',
-  'first_publication: Сергей Александрович Есенин. Воспоминания',
+  'PDF_pages: 383-386',
+  'later book reduces the reported phrase to Тебе',
+  'PDF_page: 382',
+  'first_publication: Воспоминания, 1926',
+  'PDF_pages: 380-381',
   'Красная газета, evening edition, 29 December 1925, no. 314',
-  'A memoir is not a hotel register',
-  'witness_rows_created: 10',
+  'PDF_pages: 378-379',
+  'A memoir and Nazarov protocol are not the hotel register',
+  'PDF_page: 377',
+  'PDF_pages: 393-395',
+  'witness_rows_created: 11',
   'complete_witness_rows: 0',
-  'partial_rows: 3',
+  'protocol_facsimile_mapped_rows: 4',
+  'memoir_version_mapped_rows: 3',
   'presence_reported_rows: 4',
-  'document_witness_pending_rows: 3',
+  'official_document_mapped_rows: 2',
+  'document_witness_pending_rows: 1',
   'composite_everyone_remembered_paragraph_allowed: false',
   'chapter_15_prose_allowed: false',
 ]) {
@@ -242,5 +281,5 @@ const premature = researchFiles.find((name) => /YESENIN_PART_II_DRAFT_CH15/iu.te
 if (premature) throw new Error(`chapter 15 narrative prose appeared before acquisition gates: ${premature}`);
 
 console.log(
-  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 1 verified IMLI source file/facsimile package, 6 advanced objects, 10 partial/pending witness rows and 0 verified originals/complete witnesses; chapter 15 prose and public route remain blocked.',
+  'Yesenin December acquisition: 40 discovery queries, 12 acquisition objects, 1 verified IMLI source file/facsimile package, 2 verified memoir source archives, 6 advanced objects, 11 mapped witness/document rows and 0 verified originals/complete witnesses; chapter 15 prose and public route remain blocked.',
 );
