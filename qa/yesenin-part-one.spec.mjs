@@ -30,13 +30,23 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   expect(response.status()).toBeLessThan(400);
   await scrollWholePage(page);
 
+  const mainContent = page.locator('#main-content');
   await expect(
     page.getByRole('heading', { level: 1, name: 'Сергей Есенин. Часть I: 1895–1921' }),
   ).toBeVisible();
   await expect(page.getByRole('heading', { name: /Константиново: место рождения/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /1921 год: хулиган/i })).toBeVisible();
   await expect(page.getByText(/лазарет № 17 нельзя называть установленным местом формальной службы/i)).toBeVisible();
-  await expect(page.getByText(/видимо, 3 октября 1921 года/i)).toBeVisible();
+
+  const duncanDateParagraph = mainContent.locator('p').filter({
+    hasText: 'Полный комментарий ПСС формулирует дату осторожно',
+  });
+  await expect(duncanDateParagraph).toHaveCount(1);
+  await expect(duncanDateParagraph).toContainText('Есенин и Дункан познакомились');
+  await expect(duncanDateParagraph).toContainText('видимо, 3 октября 1921 года');
+  await expect(duncanDateParagraph).toContainText('предположительность названа прямо');
+  await duncanDateParagraph.scrollIntoViewIfNeeded();
+  await expect(duncanDateParagraph).toBeVisible();
 
   const citationTargets = await page.locator('a[href^="#source-"]').evaluateAll((links) => [
     ...new Set(links.map((link) => link.getAttribute('href')).filter(Boolean)),
