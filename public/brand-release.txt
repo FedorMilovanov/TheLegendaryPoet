@@ -1,2 +1,3 @@
-cloak-20260801-22
-master-sha256=f9e29065cc7191827750d252ecb8b8002385671faed5a4503dd2738065f661b7
+reference-raster-20260803-1
+reference-sha256=767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532
+source=qa/reference/brand-emblem-canonical-reference.webp
