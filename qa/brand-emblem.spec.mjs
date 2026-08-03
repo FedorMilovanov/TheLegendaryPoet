@@ -45,7 +45,7 @@ async function variables(mark) {
 }
 
 async function expectMotionContract(mark) {
-  await expect(mark).toHaveAttribute('data-spectral-brand', '');
+  await expect(mark).toHaveAttribute('data-spectral-brand', 'true');
   await expect(mark).toHaveAttribute('data-brand-renderer', RENDERER);
   await expect(mark).toHaveAttribute('data-brand-raster-version', RASTER_VERSION);
   await expect(mark).toHaveAttribute('data-brand-parallax', PARALLAX);
