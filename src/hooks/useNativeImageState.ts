@@ -16,6 +16,8 @@ const IMAGE_PROXIMITY_POLL_MS = 250;
  * complete before hydration attaches handlers, so each source is synchronized
  * from `complete` and `naturalWidth` after native listeners are installed.
  *
+ * Audited editorial-wave images opt into eager loading at the data layer. This
+ * hook remains the bounded fallback for all other lazy article media.
  * Safari/WebKit can leave a native lazy image dormant when a transformed or
  * revealed ancestor crosses the viewport. IntersectionObserver remains the
  * primary signal, while captured scroll/resize events and a low-frequency
