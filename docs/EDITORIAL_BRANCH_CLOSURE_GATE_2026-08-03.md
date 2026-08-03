@@ -109,19 +109,33 @@ production_build: passed
 
 The two remaining moderate React Router paths are controlled by permanent executable rules: all navigation is centralised, unsafe internal destinations are rejected, direct router navigation imports are forbidden outside the wrapper and SSR hydration APIs are prohibited in this client-only SPA.
 
-## 7. Permanent publication controls
+## 7. Cross-engine runtime closure
+
+The final WebKit hardening is implemented in product code rather than hidden in browser tests:
+
+- `useNativeImageState` observes lazy images approaching the viewport, promotes only those images to eager loading and waits for the native decoder;
+- cached and prerendered images remain synchronized through `complete` and `naturalWidth`;
+- the homepage title exposes readiness from the actual React `onAnimationEnd` lifecycle;
+- premium QA waits for that event-driven state and checks final opacity instead of guessing the CSS schedule;
+- the permanent brand-browser validator forbids the removed `animationDuration`/`maxTotalMs` timer heuristic;
+- reduced-motion behavior remains an independent mandatory WebKit contour.
+
+The hardening passed the complete repository `check`, TypeScript and production build before it was committed. Its temporary workflow removed itself and is absent from this final documentation head.
+
+## 8. Permanent publication controls
 
 - `scripts/validate-yesenin-part-two-publication.ts`;
 - `.github/workflows/yesenin-part-two-safe-publication.yml`;
 - `scripts/validate-router-security.ts`;
 - `scripts/validate-mayakovsky-visual-wave.ts`;
 - `.github/workflows/mayakovsky-visual-wave-acceptance.yml`;
+- `scripts/validate-brand-browser-workflow.ts`;
 - normal essay, citation, myth, cover, literary-style, route, SEO, type, build and browser gates;
 - `docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md`.
 
-Temporary editorial, dependency and sitemap workflows completed their deterministic tasks and removed themselves. No one-shot remediation or generation workflow remains in the branch.
+Temporary editorial, dependency, sitemap and WebKit-hardening workflows completed their deterministic tasks and removed themselves. No one-shot remediation or generation workflow remains in the branch.
 
-## 8. Final exact-head gate
+## 9. Final exact-head gate
 
 The branch is now content-complete. Merge is authorised only after one immutable final head passes:
 
@@ -138,7 +152,7 @@ The branch is now content-complete. Merge is authorised only after one immutable
 
 Pages deployment should remain skipped while the PR is Draft. A queued, cancelled, stale-head or action-required run is not a pass.
 
-## 9. Closure procedure
+## 10. Closure procedure
 
 After the final exact-head checks are green:
 
@@ -151,7 +165,7 @@ After the final exact-head checks are green:
 7. confirm the merge in `main`;
 8. delete the source branch only after confirming no unique unmerged commits remain.
 
-## 10. Current decision
+## 11. Current decision
 
 ```yaml
 article_completion: COMPLETE
@@ -160,6 +174,7 @@ forensic_reader_boundary: CLOSED
 visual_dignity_boundary: CLOSED
 mayakovsky_visual_provenance: CLOSED
 dependency_high_severity_gate: CLOSED
+webkit_product_hardening: COMPLETE
 seo_generated_output: MATERIALIZED
 external_research_backlog: NON_BLOCKING_AND_EXPLICIT
 pr_state: OPEN_DRAFT
