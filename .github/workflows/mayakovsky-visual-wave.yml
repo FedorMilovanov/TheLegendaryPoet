@@ -1,0 +1,39 @@
+name: Mayakovsky visual wave acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'public/images/essays/mayakovsky/editorial-wave/**'
+      - 'src/data/essays/mayakovskyEditorialWave.ts'
+      - 'src/data/essays/index.ts'
+      - 'src/types/essay.ts'
+      - 'scripts/validate-mayakovsky-visual-wave.ts'
+      - '.github/workflows/mayakovsky-visual-wave.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mayakovsky-visual-wave-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact PR head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Validate assets, labels and provenance
+        run: npx tsx scripts/validate-mayakovsky-visual-wave.ts
