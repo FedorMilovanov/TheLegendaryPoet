@@ -1,3 +1,4 @@
-reference-raster-20260803-1
-reference-sha256=767be12318c21aeb2c259a4ab529f04caf9f5db9b131c38223ea85e109ea8532
-source=qa/reference/brand-emblem-canonical-reference.webp
+approved-single-reference-20260804-1
+approved-source=single-user-selected-transparent-reference
+source-sha256=898cf6bd0321f6f48ed12971f49803f7ed6758961f51e06628f0da2ffd50ff17
+roles=single
