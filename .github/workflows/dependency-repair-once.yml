@@ -33,29 +33,18 @@ jobs:
       - name: Install exact current lock
         run: npm ci
 
-      - name: Prove React Router is unused in runtime source
+      - name: Install latest patched compatible Router 6 and Vite 7
         run: |
-          set -euo pipefail
-          if grep -RInE --exclude-dir=node_modules --exclude=package.json --exclude=package-lock.json \
-            "(from|require\()[[:space:]]*['\"]react-router(-dom)?['\"]|['\"]react-router(-dom)?['\"]" \
-            src scripts public index.html vite.config.* 2>/dev/null; then
-            echo 'React Router runtime reference found; dependency removal is not authorized.' >&2
-            exit 1
-          fi
-
-      - name: Remove unused vulnerable package and update Vite
-        run: |
-          npm uninstall react-router-dom
+          npm install --save-exact react-router-dom@6
           npm install --save-dev --save-exact vite@7.3.6
-          npm audit fix
-          npm ls vite
+          npm ls react-router react-router-dom vite
 
       - name: Verify generated lock and zero high-severity advisories
         run: |
           npm ci
           npm audit --audit-level=high
 
-      - name: Run repository checks
+      - name: Run repository checks and production build
         run: |
           npm run check
           npm run build
@@ -70,5 +59,5 @@ jobs:
           git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'chore(deps): remove unused router and update Vite securely'
+          git commit -m 'chore(deps): use audited compatible Router and Vite versions'
           git push origin HEAD:editorial/longform-marathon-2026-08
