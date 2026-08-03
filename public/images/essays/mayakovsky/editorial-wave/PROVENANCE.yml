@@ -1,0 +1,65 @@
+schema_version: 1
+reviewed_at: 2026-08-03
+scope: public/images/essays/mayakovsky/editorial-wave
+policy:
+  reconstruction_label: "Редакционная реконструкция по историческим референсам"
+  reconstruction_boundary: "Не является подлинной фотографией эпохи и не используется как доказательство конкретной сцены, реплики, даты, интерьера или психологического состояния."
+  document_boundary: "Архивный объект публикуется с item-level source URL, автором, датой, правами и SHA-256."
+assets:
+  - path: brik-reading-circle-reconstruction.webp
+    role: essay_inline_reconstruction
+    origin_class: user_supplied_editorial_reconstruction
+    dimensions: 720x405
+    sha256: 67d201a28ec9481a2e675df2c72a25c5acb3751096394614588895ce2b7c158a
+    credit: THE LEGENDARY POET
+    source_use: not_primary_evidence
+  - path: brik-triad-interior-reconstruction.webp
+    role: essay_inline_reconstruction
+    origin_class: user_supplied_editorial_reconstruction
+    dimensions: 720x405
+    sha256: e47e4e916e7d1cdb364079f6abe186d4c683b2a4b7dc3d56439673e1fe9e9177
+    credit: THE LEGENDARY POET
+    source_use: not_primary_evidence
+  - path: mayakovsky-rosta-workshop-reconstruction.webp
+    role: essay_inline_reconstruction
+    origin_class: user_supplied_editorial_reconstruction
+    dimensions: 520x293
+    sha256: cda598891eaf934e76562f205a37bf574e15bda82b8d5b8e38b2b16f9639dbc3
+    credit: THE LEGENDARY POET
+    source_use: not_primary_evidence
+  - path: mayakovsky-public-reading-reconstruction.webp
+    role: essay_inline_reconstruction
+    origin_class: user_supplied_editorial_reconstruction
+    dimensions: 293x520
+    sha256: fc7c1244e65e1d9f57e973fe0fc5df4e2d2f6a7007b334f227ac66e0cc695a7d
+    credit: THE LEGENDARY POET
+    source_use: not_primary_evidence
+  - path: mayakovsky-late-desk-reconstruction.webp
+    role: essay_inline_reconstruction
+    origin_class: user_supplied_editorial_reconstruction
+    dimensions: 520x293
+    sha256: f0f64b7f2b069f46697a36dc90711947d59c78b960448da439e1975fb575e569
+    credit: THE LEGENDARY POET
+    source_use: not_primary_evidence
+  - path: mayakovsky-dlya-golosa-1923.webp
+    role: essay_inline_document
+    origin_class: local_optimized_copy_of_public_domain_archive
+    dimensions: 420x293
+    sha256: d3dd3426b7b930866d7f597f29b0c82f1420d4276ca8d09cbf9f566adc58b1c6
+    source_url: https://commons.wikimedia.org/wiki/File:Dlja_golosa._1923-100.jpg
+    source_creator: El Lissitzky
+    source_date: 1923
+    rights: public_domain
+    drive_file_id: 11VuZIqX58rJlyvUS5E62h52bj2MD47Zi
+    source_use: contextual_documentary_evidence
+  - path: mayakovsky-kruchenykh-stikhi-cover.webp
+    role: essay_inline_document
+    origin_class: local_optimized_copy_of_public_domain_archive
+    dimensions: 220x371
+    sha256: 277941306257879ea4b225dda873128c314f070d09332008f44282ead1659296
+    source_url: https://commons.wikimedia.org/wiki/File:Mayakovsky_books_kruchyonyx_stixi.png
+    source_creator: Alexey Kruchenykh
+    source_date: 1915
+    rights: public_domain
+    drive_file_id: 1Awqv3cftJ8luqsjET0b3P-6YqZXaV1Gx
+    source_use: contextual_documentary_evidence

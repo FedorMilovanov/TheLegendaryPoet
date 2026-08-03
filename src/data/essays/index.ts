@@ -35,6 +35,11 @@ import {
   mayakovskyPartTwoMythRules,
   yeseninPartOneMythRules,
 } from './essayMythChecks';
+import {
+  applyBrikEditorialWave,
+  applyMayakovskyPartTwoEditorialWave,
+  mayakovskyEditorialWaveSources,
+} from './mayakovskyEditorialWave';
 
 function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
@@ -102,23 +107,35 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
   coverKind: 'restoration',
   coverCredit: 'Осип Брик · реставрация проекта',
   coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
-  blocks: placeEssayImages(
-    attachEssayCitations(
-      applyEssayMythChecks(mayakovskyPartTwo.blocks, mayakovskyPartTwoMythRules),
-      mayakovskyPartTwoCitationRules,
+  blocks: applyMayakovskyPartTwoEditorialWave(
+    placeEssayImages(
+      attachEssayCitations(
+        applyEssayMythChecks(mayakovskyPartTwo.blocks, mayakovskyPartTwoMythRules),
+        mayakovskyPartTwoCitationRules,
+      ),
+      mayakovskyPartTwoPlacements,
     ),
-    mayakovskyPartTwoPlacements,
   ),
-  sources: [...mayakovskyLateSources, ...mayakovskyLateSupplementalSources],
+  sources: uniqueSources([
+    ...mayakovskyLateSources,
+    ...mayakovskyLateSupplementalSources,
+    ...mayakovskyEditorialWaveSources,
+  ]),
 };
 
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
-  blocks: placeEssayImages(
-    attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
-    brikEssayPlacements,
+  blocks: applyBrikEditorialWave(
+    placeEssayImages(
+      attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
+      brikEssayPlacements,
+    ),
   ),
-  sources: [...brikDocumentSources, ...brikSupplementalSources],
+  sources: uniqueSources([
+    ...brikDocumentSources,
+    ...brikSupplementalSources,
+    ...mayakovskyEditorialWaveSources,
+  ]),
 };
 
 export const essays: Essay[] = [
