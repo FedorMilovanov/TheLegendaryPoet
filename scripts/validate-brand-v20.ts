@@ -52,13 +52,13 @@ assert.equal(sheet.referenceFile, 'qa/reference/brand-emblem-canonical-reference
 assert.equal(crypto.createHash('sha256').update(fs.readFileSync(sheet.referenceFile)).digest('hex'), sheet.referenceSha256);
 assert.equal(sheet.candidates.length, 2);
 const [fullSheet, microSheet] = sheet.candidates;
-assert.equal(fullSheet.id, 'v20.10-reference-field-envelope');
+assert.equal(fullSheet.id, 'v20.11-reference-volumetric-cowl');
 assert.equal(fullSheet.file, 'public/brand-emblem-v20-candidate.svg');
 assert.deepEqual(fullSheet.designGrid, [96, 96]);
 assert.deepEqual(fullSheet.reviewSizes, [64, 96, 128, 256]);
 assert.equal(fullSheet.compositionEligible, true);
 assert.ok(fullSheet.fieldVisibility, 'visible field contract is missing');
-assert.equal(microSheet.id, 'v20.6-reference-micro-shoulder-anchors');
+assert.equal(microSheet.id, 'v20.7-reference-micro-volumetric-anchors');
 assert.equal(microSheet.file, 'public/brand-emblem-v20-micro-candidate.svg');
 assert.deepEqual(microSheet.designGrid, [32, 32]);
 assert.deepEqual(microSheet.reviewSizes, [16, 20, 24, 32, 48]);
@@ -129,6 +129,7 @@ const historicalLocks: Array<[string, RegExp]> = [
   ['v20.7-reference-draped-monolith', /broad clean shawl/],
   ['v20.8-reference-compressed-cowl', /missing composition contract/],
   ['v20.9-reference-canonical-crop', /field restricted mostly to the hood and upper shoulders/],
+  ['v20.10-reference-field-envelope', /wire-like field topology/],
 ];
 for (const [id, blocker] of historicalLocks) assert.ok(ledger.iterationHistory.some((entry) => entry.full === id && blocker.test(entry.verdict)), `${id}: historical blocker is missing`);
 assert.ok(ledger.iterationHistory.some((entry) => entry.full === fullSheet.id && entry.micro === microSheet.id && /current QA-only/.test(entry.verdict)));
@@ -148,4 +149,4 @@ assert.match(evidenceSpec, /getBoundingClientRect/);
 assert.match(evidenceSpec, /REFERENCE \+ CANDIDATE OVERLAY/);
 assert.match(evidenceSpec, /DARK \/ LIGHT DIAGNOSTICS/);
 
-console.log('brand v20 validation: v20.10 passes internal geometry, canonical square composition and visible field-envelope gates; v20.6 remains an independent optical micro; both are QA-only and not-reference-approved');
+console.log('brand v20 validation: v20.11 preserves internal geometry and canonical square composition while fracturing the visible field and rebuilding cowl/shoulder volume; v20.7 is the independent optical micro; both remain QA-only and not-reference-approved');
