@@ -37,30 +37,34 @@ test('canonical reference and production raster stay together at every optical s
   await page.screenshot({ path: path.join(DIR, 'brand-reference-raster-comparison-matrix.png'), fullPage: true });
 });
 
-test('reference, idle, restrained hover and settled states are shown together', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
-  await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
-  const mark = page.locator('footer [data-brand-mark]').first();
-  await mark.scrollIntoViewIfNeeded();
-  await expect(mark).toHaveAttribute('data-brand-release', RELEASE);
-  await expect(mark).toHaveAttribute('data-brand-renderer', 'reference-raster-subtle-depth');
-  const box = await mark.boundingBox();
-  const clip = markClip(box);
-  const idle = await page.screenshot({ clip });
+test.describe('fine-pointer live comparison', () => {
+  test.skip(({ isMobile }) => Boolean(isMobile), 'touch projects have no mouse-hover state');
 
-  await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
-  await page.waitForTimeout(720);
-  await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
-  const hover = await page.screenshot({ clip });
+  test('reference, idle, faint hover and settled states are shown together', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    expect((await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' }))?.status()).toBeLessThan(400);
+    await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+    const mark = page.locator('footer [data-brand-mark]').first();
+    await mark.scrollIntoViewIfNeeded();
+    await expect(mark).toHaveAttribute('data-brand-release', RELEASE);
+    await expect(mark).toHaveAttribute('data-brand-renderer', 'reference-raster-subtle-depth');
+    const box = await mark.boundingBox();
+    const clip = markClip(box);
+    const idle = await page.screenshot({ clip });
 
-  await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100));
-  await page.waitForTimeout(2200);
-  await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
-  const settled = await page.screenshot({ clip });
+    await page.mouse.move(box.x + box.width * 0.84, box.y + box.height * 0.18);
+    await page.waitForTimeout(720);
+    await expect(mark).toHaveAttribute('data-brand-interaction', 'active');
+    const hover = await page.screenshot({ clip });
 
-  await page.setViewportSize({ width: 1500, height: 760 });
-  await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / RESTRAINED HOVER / SETTLED</h1><div class=sub>The hover is intentionally a small depth cue, not a second glow effect.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${hover.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${settled.toString('base64')}"></div></div></main>`);
-  await decodeAll(page);
-  await page.screenshot({ path: path.join(DIR, 'brand-reference-raster-live-comparison.png'), fullPage: true });
+    await page.mouse.move(Math.max(2, box.x - 100), Math.max(2, box.y - 100));
+    await page.waitForTimeout(2200);
+    await expect(mark).toHaveAttribute('data-brand-interaction', 'idle');
+    const settled = await page.screenshot({ clip });
+
+    await page.setViewportSize({ width: 1500, height: 760 });
+    await page.setContent(`<style>${css}</style><main><h1>REFERENCE / IDLE / FAINT HOVER / SETTLED</h1><div class=sub>The pointer state is limited to a very small depth cue. It does not add blur, bloom or a second electric halo.</div><div class=top><div class=panel><img src="${reference}"></div><div class=panel><img src="data:image/png;base64,${idle.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${hover.toString('base64')}"></div><div class=panel><img src="data:image/png;base64,${settled.toString('base64')}"></div></div></main>`);
+    await decodeAll(page);
+    await page.screenshot({ path: path.join(DIR, 'brand-reference-raster-live-comparison.png'), fullPage: true });
+  });
 });
