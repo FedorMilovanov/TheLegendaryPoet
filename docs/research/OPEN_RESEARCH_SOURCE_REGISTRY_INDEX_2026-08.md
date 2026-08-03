@@ -5,7 +5,8 @@
 **Canonical PR:** `#271`  
 **Current discovery pass:** `OSR-2026-08-03-P07`  
 **Current acquisition pass:** `OSR-2026-08-03-P08`  
-**Current verification pass:** `AUDIT-2026-08-03-P15`  
+**Current verification pass:** `AUDIT-2026-08-03-P16`  
+**Primary registry audit:** `COMPLETE`  
 **Registered discovery rows:** `287`
 
 ## 1. Canonical registry
@@ -39,161 +40,90 @@ Legacy values such as `READ-OK`, `DOWNLOAD-OK`, `LINK-REGISTERED`, `NEW` and pri
 
 ```yaml
 registered_discovery_rows: 287
-direct_audited_rows: 223
-audit_pending_rows: 64
-verified_keep_link: 91
-verified_download_candidates: 10
+direct_audited_rows: 287
+audit_pending_rows: 0
+verified_keep_link: 119
+verified_download_candidates: 12
 drive_verified_binaries: 3
-hold_retry: 85
-hold_rights_or_identity: 29
-drops_total: 5
+hold_retry: 102
+hold_rights_or_identity: 45
+drops_total: 6
 tracked_dashboard_scopes: 66
 latest_source_id: OSR-0287
 ```
 
-The discovery total must never be reported as the verified total.
+All 287 rows now have a dated row-level verdict. This completes primary classification; it does not resolve retry, rights, identity, acquisition, quotation or publication gates.
 
-The 223 directly audited rows comprise:
+## 4. Audit-pass ledger
 
-- 45 world-literature rows `OSR-0242..OSR-0286` from pass 09;
-- 24 Pushkin, Blok and Yesenin academic-corpus rows from pass 10;
-- 22 Mayakovsky, Lermontov, Mandelstam, Khlebnikov, Nekrasov and Tyutchev rows from pass 11;
-- 12 museum, archive, RSL, Presidential Library and thesis rows from pass 12;
-- 14 RSL/NEL and early-edition rows from pass 13;
-- 50 RSL/NEL/RVB/FEB/archive/museum rows from pass 14;
-- 50 rows `OSR-0166..OSR-0215` from pass 15;
-- 3 previously manifested Yesenin binaries;
-- 3 verified duplicate controls.
+| Pass | Directly audited | Main result |
+|---|---:|---|
+| 09 | 45 | World-literature institutional and open-edition rows |
+| 10 | 24 | Pushkin, Blok and Yesenin FEB/RVB corpus rows |
+| 11 | 22 | Mayakovsky, Lermontov, Mandelstam, Khlebnikov, Nekrasov and Tyutchev |
+| 12 | 12 | Museums, archives, RSL, Presidential Library and theses |
+| 13 | 14 | RSL/NEL and early editions |
+| 14 | 50 | First fifty-row marathon |
+| 15 | 50 | Second fifty-row marathon, `OSR-0166..OSR-0215` |
+| 16 | 64 | Every remaining `AUDIT-PENDING` row; primary registry complete |
 
-Every other row remains `UNVERIFIED-DISCOVERY / HOLD / AUDIT-PENDING` until its own dated audit is completed.
+Three manifested Yesenin binaries and three duplicate controls are also part of the 287 audited rows.
 
-## 4. Pass 09 — world literature
-
-```yaml
-rows_audited: 45
-KEEP-LINK: 26
-KEEP-DOWNLOAD-CANDIDATE: 7
-HOLD-RETRY: 8
-HOLD-RIGHTS: 1
-HOLD-IDENTITY: 1
-DROP-BROKEN: 2
-```
-
-Verified candidates: Folger downloadable Shakespeare texts under the recorded noncommercial condition; Goethe's *Faust I* and *Faust II*; Spanish *Don Quijote*; the ten- and twelve-book representations of *Paradise Lost*; and *Paradise Regained*.
-
-`OSR-0251` remains on rights hold. `OSR-0285` remains on identity hold. Exact Gallica URLs `OSR-0282` and `OSR-0286` were dropped after direct 404 results.
-
-## 5. Pass 10 — Pushkin, Blok and Yesenin
+## 5. Pass 16 — primary registry completion
 
 ```yaml
-rows_audited: 24
-KEEP-LINK: 12
-HOLD-RETRY: 12
-```
-
-Retained material includes Pushkin Digital, exact FEB/RVB academic-corpus pages, the RVB Blok portal and volumes 1–3, the FEB description of Yesenin's seven-volume edition and RVB Yesenin volumes 1–2.
-
-Modern electronic-publication or edition rights remain `BLOCKED-REPRODUCTION`. Cache, decoding and fetch failures were not called permanent dead links.
-
-## 6. Pass 11 — Mayakovsky through Tyutchev
-
-```yaml
-rows_audited: 22
-KEEP-LINK: 6
-HOLD-RETRY: 16
-```
-
-Retained rows include the RVB Mayakovsky anthology, RVB Lermontov portal, exact Lermontov volume 1, RVB Mandelstam portal and volume 4, and the RVB Nekrasov portal.
-
-The Lermontov PDF was directly identified, but modern rights on commentary, foreword, layout and cover block mirroring. FEB/Ruthenia/RVB technical failures remain retry holds.
-
-## 7. Pass 12 — museums, archives, RSL and theses
-
-```yaml
-rows_audited: 12
-KEEP-LINK: 8
-KEEP-DOWNLOAD-CANDIDATE: 1
-HOLD-RETRY: 2
-HOLD-RIGHTS: 1
-```
-
-Material corrections and gates:
-
-- Mayakovsky notebook no. 71: Moscow 1930, 38 leaves, museum identifier `РД-222`;
-- `OSR-0047`: corrected to the Mayakovsky section of S. A. Tregub fund 2872, inventory 1;
-- Khlebnikov issue 12: PDF route confirmed but no reusable-file licence;
-- Harvard Weinstein dissertation: verified `CC BY 4.0` download candidate;
-- all 75 legacy testimony quotations remain `HOLD-DIRECT-READ`.
-
-## 8. Pass 13 — RSL/NEL and early editions
-
-```yaml
-rows_audited: 14
-KEEP-LINK: 8
-HOLD-RIGHTS: 5
-HOLD-RETRY: 1
-```
-
-Directly retained RSL links cover Tsvetaeva, Gumilev, Fet and Zabolotsky. Rights holds cover exact Derzhavin, Bryusov, Balmont and Severyanin PDF routes.
-
-Corrections include Bryusov volume 7 dating, the `[19??]` imprint of *Mea*, and the sixth-edition identity of Severyanin's *Громокипящий кубок*.
-
-## 9. Pass 14 — first fifty-row marathon
-
-```yaml
-rows_audited: 50
-KEEP-LINK: 12
+rows_audited: 64
+KEEP-LINK: 28
 KEEP-DOWNLOAD-CANDIDATE: 2
-HOLD-RIGHTS: 17
-HOLD-RETRY: 19
+HOLD-RIGHTS: 4
+HOLD-IDENTITY: 12
+HOLD-RETRY: 17
+DROP-IDENTITY: 1
 new_sources: 0
 binary_uploads: 0
 ```
 
-New verified candidates:
+### New verified candidates
 
-- `OSR-0111` — *Specimens of the Russian Poets*, volume 1;
-- `OSR-0112` — *The Bakchesarian Fountain and Other Poems*.
+- `OSR-0061` — PLOS ONE article *Semantics of European Poetry Is Shaped by Conservative Forces*, `CC-BY`;
+- `OSR-0066` — Colby honors thesis on Akhmatova and Pushkin, research/scholarship download permitted with commercial reproduction and distribution prohibited.
 
-Both are Project Gutenberg United States public-domain representations and still require exact format selection, jurisdiction note, bytes, completeness, dedupe and SHA-256.
+Both remain candidates until actual bytes, MIME, title page, completeness, embedded-material review, deduplication and SHA-256 pass.
 
-Major corrections covered Derzhavin's seven-volume representation, Balmont volume 5, Voloshin fund 102 and title/publication dating, Klyuev edition identities, Gippius publication coverage, Bely and Sologub exact titles, and Maikov/Polonsky extents.
+### Exact identity defects
 
-## 10. Pass 15 — second fifty-row marathon
+Twelve stored NEL identifiers did not match the registered works and remain `HOLD-IDENTITY`: `OSR-0216`, `OSR-0219`, `OSR-0220`, `OSR-0223`, `OSR-0225`, `OSR-0226`, `OSR-0229..OSR-0233`, and `OSR-0237`.
+
+`OSR-0224` is `DROP-IDENTITY`: its exact URL resolves to Golubinsky's *History of the Russian Church*, not Vyazemsky poetry. The row is removed from active maps; no silent replacement was made during the frozen audit.
+
+### Material corrections
+
+- Yesenin Chronicle volume 4: published 2010, coverage 3 August 1923 through 1924, modern rights-controlled edition;
+- Akhmatova museum rare-book fund: approximately 15,000 units;
+- Pasternak family papers at Hoover: 1878–2010;
+- exact RGALI Pasternak row: manuscripts of E. B. and E. V. Pasternak, fund 379, inventory 5, 35 listed units;
+- Bunin twenty-five-volume scholarly edition: plan/prospectus, not a completed available corpus;
+- Koltsov 1901 volume: second edition, XX + 328 + 1 pages plus portrait;
+- Nikitin/Gershenzon 1912: XXIV + X + 448 pages plus nine illustration leaves;
+- Nikitin/Krakov 1914: first edition, XXXVI + 528 + VII pages plus portrait.
+
+## 6. Current retained and blocked queues
 
 ```yaml
-rows_audited: 50
-KEEP-LINK: 19
-HOLD-RIGHTS: 3
-HOLD-IDENTITY: 1
-HOLD-RETRY: 27
-new_sources: 0
-binary_uploads: 0
+KEEP-LINK: 119
+KEEP-DOWNLOAD-CANDIDATE: 12
+DRIVE-VERIFIED: 3
+HOLD-RETRY: 102
+HOLD-RIGHTS_OR_IDENTITY: 45
+DROP: 6
+HOLD-DIRECT-READ_TESTIMONIES: 75
 ```
 
-The pass directly audited `OSR-0166..OSR-0215` covering Nadson, Khodasevich, Parnok, Lokhvitskaya, Cherubina de Gabriak, Brodsky, Tvardovsky, Okudzhava, Lomonosov, Sumarokov, Trediakovsky and Karamzin.
+`HOLD-RETRY` rows are classified failures, not active evidence. `HOLD-RIGHTS` rows may be readable but are not approved for mirroring. `HOLD-IDENTITY` rows may not be cited or acquired until their exact objects are corrected through a governed pass.
 
-Material findings and corrections:
+The 75 legacy testimony quotations remain unpublished as exact quotations until each named book, letter, memoir, article or archival item is directly read.
 
-- Parnok's 1979 Ardis collected poems: 388 pages plus four illustration leaves, modern apparatus, `KEEP-LINK`;
-- Lokhvitskaya Wikisource corpus: mixed witnesses, not one edition;
-- Lokhvitskaya `Version 3`: page labels 1899, but source basis is a 1979 anthology with a 1989 supplement; `HOLD-IDENTITY`;
-- Cherubina de Gabriak Wikisource corpus: mainly a 1989 anthology plus supplements, auxiliary only;
-- three Culture.ru poem pages: exact pages confirmed, no print-edition basis, active-link attribution required;
-- Brodsky URL: museum-foundation navigation, not a direct collection catalogue; site materials are protected;
-- Tvardovsky archive: fund 1816, 1935–1976, two inventories, 702 units; URL path `7615` is not the fund number;
-- exact *Vasilii Terkin* object: chapter XVI `Бой в болоте`, unpublished variant, fund 618, inventory 2, unit 984, 1942–1944;
-- Tvardovsky estate museum: no authentic exhibits; objects are typological and furniture reconstructed;
-- Okudzhava museum: institutional navigation with active-link requirement and item-level media rights;
-- Lomonosov part 2: 1840, `[6] + 356` pages, online reading, no redistribution licence;
-- Sumarokov parent corpus: ten parts, 1781–1782; parts 1 and 3 confirmed complete but remain `HOLD-RIGHTS`;
-- Trediakovsky RVB basis: second edition of *Избранные произведения*, 1963;
-- exact FEB chapter by G. N. Moiseeva and Yu. V. Stennik: 1980, pages 491–522;
-- Karamzin RVB portal: navigation to modern edited electronic publications, not an unrestricted corpus.
-
-Twenty-seven exact URLs returned HTTP 403, cache misses, decoding failures or internal errors. They remain `HOLD-RETRY`, not direct-read sources and not permanent-death findings.
-
-## 11. Controlling verification and rights rules
+## 7. Controlling verification and rights rules
 
 ```text
 page title != edition identity
@@ -206,18 +136,9 @@ public-domain author text != unrestricted scan, apparatus, database or image reu
 HTTP 403, timeout, cache miss or decoding failure != verified content
 ```
 
-Every acquisition candidate still requires:
+Every acquisition candidate requires real bytes, expected MIME, title-page and completeness inspection, page count, size, text-layer classification, exact rights/jurisdiction note, embedded-material review, bounded Drive dedupe, SHA-256 and a real Drive ID.
 
-- real bytes and expected MIME;
-- title-page and completeness inspection;
-- page count and file size;
-- text-layer classification;
-- exact provenance and rights note;
-- bounded Drive dedupe;
-- SHA-256;
-- a real Drive file ID after upload.
-
-## 12. Verified binaries and duplicate controls
+## 8. Verified binaries and duplicate controls
 
 Directly manifested as `DRIVE-VERIFIED`:
 
@@ -225,7 +146,7 @@ Directly manifested as `DRIVE-VERIFIED`:
 - `OSR-0032` — Yesenin chronicle, volume 3, book 2; Drive ID `1d_3-aNk4eY5LqLWzU9XUt8J_g6-IynxN`; SHA-256 `89b33c7a472eab0c234877cd8737a1f2e12eebd142d0552a625eeb28d6ce4187`;
 - `OSR-0287` — Yesenin chronicle, volume 5, book 1; Drive ID `1d7UCOxmX7SUPJkjclZKvNhJAAGhu1gHs`; SHA-256 `1c4a37276fc9e2e8da2a9b19c7b0c8941b6e43a0ec9aec5d42a55589e0145496`.
 
-These are OCR research representations of IMLI academic editions, not original archive masters. Production reuse remains `PRIVATE-RESEARCH-HOLD`.
+Production reuse remains `PRIVATE-RESEARCH-HOLD`.
 
 Verified duplicate controls:
 
@@ -233,7 +154,25 @@ Verified duplicate controls:
 - `OSR-0114` — exact Drive duplicate of Bryusov's *Urbi et Orbi*;
 - `OSR-0124` — exact Drive duplicate of the 1915 Severyanin source in `BATCH-0001`.
 
-## 13. Controlling policy and reports
+## 9. Branch and publication status
+
+The source-registry primary-audit gate is complete. PR `#271` and its branch are not eligible for merge or deletion.
+
+Independent blockers remain:
+
+- 102 retry rows and 45 rights/identity holds;
+- 12 unmanifested download candidates;
+- 75 testimony direct-read holds;
+- incomplete lawful original/full Yesenin binaries and forensic source chains;
+- incomplete medical, hotel, transport, inquiry and final-poem evidence gates;
+- chapters 15 and 16 and final moral/theological review;
+- production visual binaries, provenance, SHA and item-level rights;
+- owner-controlled institution-request drafts;
+- dependency remediation and final exact-head QA.
+
+The compliant state is `PR DRAFT / MERGE BLOCKED / BRANCH DELETE BLOCKED / PUBLIC PART II BLOCKED`.
+
+## 10. Controlling policy and reports
 
 - `docs/SOURCE_ACQUISITION_AND_DRIVE_POLICY.md`;
 - `docs/RESEARCH_SOURCES.md`;
@@ -243,14 +182,8 @@ Verified duplicate controls:
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_12_MUSEUM_ARCHIVE_RSL_THESES_LEGACY_WEAK_SOURCES_2026-08-03.md`;
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_13_RSL_NEL_FIRST_EDITIONS_2026-08-03.md`;
 - `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_14_FIFTY_EXISTING_ROWS_2026-08-03.md`;
-- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_15_FIFTY_EXISTING_ROWS_2026-08-03.md`.
+- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_15_FIFTY_EXISTING_ROWS_2026-08-03.md`;
+- `docs/research/OPEN_RESEARCH_SOURCE_AUDIT_PASS_16_PRIMARY_REGISTRY_COMPLETION_2026-08-03.md`;
+- `docs/EDITORIAL_BRANCH_CLOSURE_GATE_2026-08-03.md`.
 
-Discovery passes 02–07 remain historical discovery evidence. Acquisition pass 08 records verified Yesenin binary acquisition.
-
-## 14. Next direct-audit order
-
-No new-source discovery is authorised while 64 existing rows remain unaudited.
-
-Continue from existing `OSR-0216` through the remaining registered rows, then process retry holds as a separate queue. Exact Culture.ru, Wikisource, weak-mirror and legacy-testimony claims require source-specific authority and identity decisions.
-
-All 75 legacy testimony quotations remain `HOLD-DIRECT-READ` until each named book, letter, memoir, article or archival item is directly read.
+Primary registry classification is complete. Further work must use the classified retry, rights, identity, acquisition, testimony and publication queues rather than reopening discovery silently.
