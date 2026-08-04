@@ -1,0 +1,222 @@
+name: Approved cover release driver
+
+on:
+  push:
+    branches:
+      - release/approved-essay-covers-2026-08-04-final
+    paths:
+      - .github/workflows/approved-cover-release-driver.yml
+
+permissions:
+  actions: read
+  checks: read
+  contents: write
+  pull-requests: write
+  statuses: read
+
+concurrency:
+  group: approved-cover-release-driver
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: FedorMilovanov/TheLegendaryPoet
+      PR_NUMBER: '283'
+      RELEASE_BRANCH: release/approved-essay-covers-2026-08-04-final
+      RELEASE_URL: https://drive.usercontent.google.com/download?id=11s7ddlPaPhdilDtzPUC8r86IyuIl5Was&export=download&confirm=t
+      RELEASE_SHA256: ab591887cf268791d779e1af43f67084c418698e3efdaf5e3bf9dbcaf1dc553a
+    steps:
+      - name: Checkout current release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Establish an immutable twelve-file staging set
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/approved-cover-driver
+          mkdir -p /tmp/approved-cover-driver/staging
+
+          cat > /tmp/approved-cover-driver/EXPECTED_SHA256SUMS <<'SUMS'
+          3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f  public/images/essays/lermontov/lermontov-road-hero.webp
+          d666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146  public/images/essays/yesenin/yesenin-part-1-editorial.webp
+          aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61  public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
+          de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30  public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp
+          f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533  public/images/essays/briks/brik-triangle-hero.webp
+          8350c581deda421dc34f5696cba1f15b9cd3b77f21467503cfd16240547443a0  src/data/essays/index.ts
+          6660b9f10b17c06f4c31aa6c60c0a419dd3d19267e453ac39cc1b6045f286a21  src/data/essays/yeseninPartOnePublic.ts
+          26dccdbb19c0af0e40b854ab1d9e2cadb2e515b15f73d004b1fe9e9114be0729  src/data/essays/brikCaseVisual.ts
+          60d65196795c42ddad2d48c254661b1401b98c7ecc8d127f8e0f7ccafbef1867  scripts/validate-essay-covers.ts
+          a405d2241b83e1a22602cc6cf9935246abe024a51574cc6ca71c0db80e94ddc8  scripts/validate-yesenin-part-one-safe-publication.ts
+          8b8a9651ed00f9116337c903bc1b2e542d11a7c4e1a0b6433fc00ab06c0fa546  public/images/PROVENANCE.yml
+          ab876f732af97f6306ca4f1cb40ba8661533e0fbd65455d87c43877a27c10451  docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+          SUMS
+
+          use_current=true
+          while read -r expected path; do
+            if [[ ! -f "$path" ]] || [[ "$(sha256sum "$path" | awk '{print $1}')" != "$expected" ]]; then
+              use_current=false
+              break
+            fi
+          done < /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+
+          if [[ "$use_current" == true ]]; then
+            while read -r _ path; do
+              install -D -m 0644 "$path" "/tmp/approved-cover-driver/staging/$path"
+            done < /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+          else
+            curl --fail --location --retry 4 --retry-all-errors \
+              --output /tmp/approved-cover-driver/package.tar.gz \
+              "$RELEASE_URL"
+            echo "$RELEASE_SHA256  /tmp/approved-cover-driver/package.tar.gz" \
+              | sha256sum --check --strict
+            gzip -t /tmp/approved-cover-driver/package.tar.gz
+            tar -xzf /tmp/approved-cover-driver/package.tar.gz \
+              -C /tmp/approved-cover-driver/staging
+          fi
+
+          expected_paths="$(awk '{print $2}' /tmp/approved-cover-driver/EXPECTED_SHA256SUMS | sort)"
+          actual_paths="$(cd /tmp/approved-cover-driver/staging && find . -type f -printf '%P\n' | sort)"
+          test "$actual_paths" = "$expected_paths"
+          (cd /tmp/approved-cover-driver/staging && sha256sum --check --strict ../EXPECTED_SHA256SUMS)
+
+      - name: Rebuild release branch as one commit on fresh main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          main_sha="$(git rev-parse origin/main)"
+          git checkout --detach "$main_sha"
+          git clean -ffdqx
+          while read -r _ path; do
+            install -D -m 0644 "/tmp/approved-cover-driver/staging/$path" "$path"
+          done < /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+
+          npm ci
+          npm run check
+          npm run build
+
+          mapfile -t allowed < <(awk '{print $2}' /tmp/approved-cover-driver/EXPECTED_SHA256SUMS | sort)
+          git add -- "${allowed[@]}"
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          test "${#staged[@]}" -eq 12
+          test "$(printf '%s\n' "${staged[@]}")" = "$(printf '%s\n' "${allowed[@]}")"
+          sha256sum --check --strict /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'release(covers): publish five approved essay covers'
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$main_sha"
+          git push --force origin HEAD:"$RELEASE_BRANCH"
+          echo "CLEAN_SHA=$clean_sha" >> "$GITHUB_ENV"
+          echo "MAIN_BEFORE_SHA=$main_sha" >> "$GITHUB_ENV"
+
+      - name: Reopen PR on exact clean head and start normal checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh pr close "$PR_NUMBER" --repo "$REPO" --comment \
+            'Release branch was rebuilt from current main with exactly twelve SHA-pinned files; reopening to run the normal PR verification matrix.' || true
+          sleep 3
+          gh pr reopen "$PR_NUMBER" --repo "$REPO"
+          gh pr ready "$PR_NUMBER" --repo "$REPO" || true
+
+          for attempt in $(seq 1 60); do
+            remote_head="$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq '.head.sha')"
+            run_count="$(gh run list --repo "$REPO" --commit "$CLEAN_SHA" --limit 30 --json databaseId --jq 'length')"
+            if [[ "$remote_head" == "$CLEAN_SHA" && "$run_count" -ge 6 ]]; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Normal verification workflows did not materialize on the clean head.' >&2
+          exit 1
+
+      - name: Wait for a stable all-green verification matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          stable=0
+          previous_total=-1
+          for attempt in $(seq 1 150); do
+            runs="$(gh run list --repo "$REPO" --commit "$CLEAN_SHA" --limit 50 \
+              --json databaseId,name,status,conclusion,event,headSha)"
+            total="$(jq 'length' <<<"$runs")"
+            active="$(jq '[.[] | select(.status != "completed")] | length' <<<"$runs")"
+            bad="$(jq '[.[] | select(.status == "completed" and (.conclusion | IN("success", "skipped", "neutral") | not))] | length' <<<"$runs")"
+
+            if [[ "$bad" -gt 0 ]]; then
+              jq -r '.[] | select(.status == "completed" and (.conclusion | IN("success", "skipped", "neutral") | not)) | "FAILED: \(.name) [\(.conclusion)] id=\(.databaseId)"' <<<"$runs" >&2
+              exit 1
+            fi
+
+            if [[ "$total" -ge 8 && "$active" -eq 0 ]]; then
+              if [[ "$total" -eq "$previous_total" ]]; then
+                stable=$((stable + 1))
+              else
+                stable=1
+              fi
+              if [[ "$stable" -ge 3 ]]; then
+                break
+              fi
+            else
+              stable=0
+            fi
+            previous_total="$total"
+            sleep 20
+          done
+
+          if [[ "$stable" -lt 3 ]]; then
+            echo 'Verification matrix did not reach a stable all-green state.' >&2
+            exit 1
+          fi
+
+          check_runs="$(gh api -H 'Accept: application/vnd.github+json' \
+            "repos/$REPO/commits/$CLEAN_SHA/check-runs?per_page=100")"
+          bad_checks="$(jq '[.check_runs[] | select(.status != "completed" or (.conclusion | IN("success", "skipped", "neutral") | not))] | length' <<<"$check_runs")"
+          test "$bad_checks" -eq 0
+
+      - name: Revalidate exact PR scope and squash-merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_json="$(gh api "repos/$REPO/pulls/$PR_NUMBER")"
+          test "$(jq -r '.head.sha' <<<"$pr_json")" = "$CLEAN_SHA"
+          test "$(jq -r '.base.ref' <<<"$pr_json")" = 'main'
+          test "$(jq -r '.state' <<<"$pr_json")" = 'open'
+
+          mapfile -t actual < <(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files?per_page=100" --jq '.[].filename' | sort)
+          mapfile -t allowed < <(awk '{print $2}' /tmp/approved-cover-driver/EXPECTED_SHA256SUMS | sort)
+          test "${#actual[@]}" -eq 12
+          test "$(printf '%s\n' "${actual[@]}")" = "$(printf '%s\n' "${allowed[@]}")"
+
+          gh pr merge "$PR_NUMBER" --repo "$REPO" --squash --delete-branch \
+            --subject 'release(covers): publish five approved essay covers' \
+            --body 'Publishes the five approved production WebP covers byte-for-byte; updates honest reconstruction metadata, permanent SHA-256 validators, provenance, and the implementation audit. All normal repository and browser verification workflows passed on the exact clean head.'
+
+      - name: Verify merged main and clean auxiliary branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          git checkout --detach origin/main
+          while read -r _ path; do
+            test -f "$path"
+          done < /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+          sha256sum --check --strict /tmp/approved-cover-driver/EXPECTED_SHA256SUMS
+
+          mapfile -t merged < <(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+          mapfile -t allowed < <(awk '{print $2}' /tmp/approved-cover-driver/EXPECTED_SHA256SUMS | sort)
+          test "${#merged[@]}" -eq 12
+          test "$(printf '%s\n' "${merged[@]}")" = "$(printf '%s\n' "${allowed[@]}")"
+
+          gh pr close 282 --repo "$REPO" --comment \
+            'Recovery-only transport is obsolete after the verified production release.' --delete-branch || true
+          git push origin --delete probe-do-not-create || true
+          git push origin --delete recovery/approved-cover-payload-2026-08-04 || true
