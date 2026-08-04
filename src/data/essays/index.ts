@@ -3,6 +3,7 @@ import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
 import { yeseninPartOnePublic } from './yeseninPartOnePublic';
+import { yeseninPartTwoPublic } from './yeseninPartTwoPublic';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -61,8 +62,42 @@ const yeseninWithArchiveLayer: Essay = {
   ]),
 };
 
+const yeseninPartOnePublished: Essay = {
+  ...yeseninPartOnePublic,
+  dateModified: '2026-08-02',
+  readTime: 43,
+};
+
+const yeseninDuncanPublished: Essay = {
+  ...yeseninDuncanFirstMeetingPublished,
+  dateModified: '2026-08-02',
+};
+
+const yeseninPartTwoLedgerUrl =
+  'https://github.com/FedorMilovanov/TheLegendaryPoet/blob/main/docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md';
+
+const yeseninPartTwoOfficialUrls: Record<string, string> = {
+  'yes2-letopis-t3-k1':
+    'https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a/823-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-3',
+  'yes2-letopis-t3-k2':
+    'https://biblio.imli.ru/index.php/ruslit/527-esenin-s-a/824-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-3-kniga-2',
+  'yes2-letopis-t5-k1':
+    'https://biblio.imli.ru/index.php/component/abook/book/826-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-5?Itemid=0&catid=527%3Aesenin-s-a',
+  'yes2-duncan-russian-days-1929-tu':
+    'https://dl.tufts.edu/concern/pdfs/h415pp46s',
+};
+
+yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source) => ({
+  ...source,
+  url:
+    (source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined) ??
+    source.url ??
+    `${yeseninPartTwoLedgerUrl}#${source.id ?? 'source'}`,
+}));
+
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
+  dateModified: '2026-08-02',
   cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
@@ -77,6 +112,7 @@ const mayakovskyPartOneWithLocalCover: Essay = {
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
   ...mayakovskyPartTwo,
+  dateModified: '2026-08-02',
   cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   coverAlt: 'Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года',
@@ -92,6 +128,7 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
 
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
+  dateModified: '2026-08-02',
   blocks: placeEssayImages(
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
@@ -102,8 +139,9 @@ const brikCaseWithSourceLibrary: Essay = {
 export const essays: Essay[] = [
   lermontovRoadWithCover,
   yeseninWithArchiveLayer,
-  yeseninPartOnePublic,
-  yeseninDuncanFirstMeetingPublished,
+  yeseninPartOnePublished,
+  yeseninPartTwoPublic,
+  yeseninDuncanPublished,
   mayakovskyPartOneWithLocalCover,
   mayakovskyPartTwoWithLocalCover,
   brikCaseWithSourceLibrary,

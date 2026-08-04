@@ -1,0 +1,83 @@
+name: Yesenin Part II safe publication
+
+on:
+  pull_request:
+    paths:
+      - 'src/data/essays/yeseninPartTwoPublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'src/types/essay.ts'
+      - 'src/components/essay/blocks.tsx'
+      - 'scripts/validate-yesenin-part-two-publication.ts'
+      - 'scripts/validate-essays.ts'
+      - 'docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md'
+      - 'qa/articles-catalog.spec.mjs'
+      - 'public/sitemap.xml'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-two-safe-publication.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/data/essays/yeseninPartTwoPublic.ts'
+      - 'src/data/essays/index.ts'
+      - 'src/types/essay.ts'
+      - 'src/components/essay/blocks.tsx'
+      - 'scripts/validate-yesenin-part-two-publication.ts'
+      - 'scripts/validate-essays.ts'
+      - 'docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md'
+      - 'qa/articles-catalog.spec.mjs'
+      - 'public/sitemap.xml'
+      - 'package.json'
+      - '.github/workflows/yesenin-part-two-safe-publication.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-build-and-public-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Install exact dependencies
+        run: npm ci --silent
+
+      - name: Validate Part II publication and rights boundary
+        run: npm run validate:yesenin-part-two-publication
+
+      - name: Validate all essays
+        run: npm run validate:essays
+
+      - name: Validate citation topology
+        run: npm run validate:citations
+
+      - name: Validate literary style
+        run: npm run validate:style
+
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: Production build
+        env:
+          VITE_BASE: /
+        run: npm run build
+
+      - name: Regenerate sitemap
+        run: npm run sitemap
+
+      - name: Require public Part II route in sitemap
+        run: grep -F 'https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925' public/sitemap.xml
+
+      - name: Require stable generated output
+        run: git diff --exit-code -- public/sitemap.xml public/prerendered src/generated/brandArtifacts.ts
