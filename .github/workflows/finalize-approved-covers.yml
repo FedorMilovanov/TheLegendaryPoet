@@ -1,4 +1,4 @@
-name: Finalize approved essay covers
+name: Export archived approved-cover payload
 
 on:
   pull_request:
@@ -8,122 +8,47 @@ on:
       - .github/workflows/finalize-approved-covers.yml
 
 permissions:
-  contents: write
+  contents: read
 
-concurrency:
-  group: approved-cover-finalization
-  cancel-in-progress: false
+env:
+  ARCHIVE_TAG: refs/tags/archive/branches/2026-08-04/batch10/agent/lermontov-road-essay
 
 jobs:
-  finalize:
+  export:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     steps:
-      - name: Checkout trigger commit with full history
+      - name: Checkout with tags
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Reconstruct and verify archived release payload
+      - name: Reconstruct archived payload
         shell: bash
         run: |
           set -euo pipefail
-          tag='refs/tags/archive/branches/2026-08-04/batch10/agent/lermontov-road-essay'
-          archive="$RUNNER_TEMP/approved-covers-final.tar.gz"
-          payload="$RUNNER_TEMP/approved-covers-final.tar.gz.b64"
-          git fetch origin main --tags --force
+          git fetch origin --tags --force
+          mkdir -p export
           for part in \
             payload/approved-covers/part00.b64 \
             payload/approved-covers/part01.b64 \
             payload/approved-covers/part02.b64
           do
-            git show "$tag:$part"
-          done | tr -d '\r\n\t ' > "$payload"
-          test "$(wc -c < "$payload")" -eq 697616
-          base64 --decode "$payload" > "$archive"
-          echo '68e5e40021918cf9b3cbaf5ecf643fe40110abd55dd777b46b515868b895bdcd  '"$archive" | sha256sum --check --strict
-          mkdir -p "$RUNNER_TEMP/approved-covers"
-          tar -xzf "$archive" -C "$RUNNER_TEMP/approved-covers"
-          cd "$RUNNER_TEMP/approved-covers"
-          test "$(find . -type f | wc -l)" -eq 10
-          echo '3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f  ./public/images/essays/lermontov/lermontov-road-hero.webp' | sha256sum --check --strict
-          echo 'd666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146  ./public/images/essays/yesenin/yesenin-part-1-editorial.webp' | sha256sum --check --strict
-          echo 'aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61  ./public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp' | sha256sum --check --strict
-          echo 'de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30  ./public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp' | sha256sum --check --strict
-          echo 'f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533  ./public/images/essays/briks/brik-triangle-hero.webp' | sha256sum --check --strict
+            git show "$ARCHIVE_TAG:$part"
+          done | tr -d '\r\n\t ' > export/archived-payload.tar.gz.b64
+          wc -c export/archived-payload.tar.gz.b64
+          base64 --decode export/archived-payload.tar.gz.b64 > export/archived-payload.tar.gz
+          sha256sum export/archived-payload.tar.gz export/archived-payload.tar.gz.b64 > export/SHA256SUMS
+          tar -tzf export/archived-payload.tar.gz > export/CONTENTS.txt
+          cat export/SHA256SUMS
+          cat export/CONTENTS.txt
 
-      - name: Build clean release tree from current main
-        shell: bash
-        run: |
-          set -euo pipefail
-          git checkout -B approved-covers-final origin/main
-          cp -a "$RUNNER_TEMP/approved-covers/." .
-
-      - name: Install exact dependencies
-        run: npm ci --silent
-
-      - name: Validate cover bytes and publication boundaries
-        run: |
-          npm run validate:covers
-          npx tsx scripts/validate-yesenin-part-one-safe-publication.ts
-          npm run validate:yesenin-part-two-publication
-
-      - name: Validate content and types
-        run: |
-          npm run validate:essays
-          npm run validate:citations
-          npm run validate:style
-          npm run typecheck
-
-      - name: Build production output
-        env:
-          VITE_BASE: /
-        run: npm run build
-
-      - name: Enforce exact release scope
-        shell: bash
-        run: |
-          set -euo pipefail
-          expected="$RUNNER_TEMP/expected-files.txt"
-          actual="$RUNNER_TEMP/actual-files.txt"
-          cat > "$expected" <<'EOF'
-          docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
-          public/images/PROVENANCE.yml
-          public/images/essays/briks/brik-triangle-hero.webp
-          public/images/essays/lermontov/lermontov-road-hero.webp
-          public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
-          public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp
-          public/images/essays/yesenin/yesenin-part-1-editorial.webp
-          scripts/validate-essay-covers.ts
-          scripts/validate-yesenin-part-one-safe-publication.ts
-          src/data/essays/index.ts
-          EOF
-          git status --porcelain=v1 --untracked-files=all | sed 's/^...//' | sort > "$actual"
-          diff -u "$expected" "$actual"
-          test ! -e .github/workflows/finalize-approved-covers.yml
-          test ! -e .release
-
-      - name: Publish one clean release commit
-        shell: bash
-        env:
-          TRIGGER_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          git add \
-            docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md \
-            public/images/PROVENANCE.yml \
-            public/images/essays/briks/brik-triangle-hero.webp \
-            public/images/essays/lermontov/lermontov-road-hero.webp \
-            public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp \
-            public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp \
-            public/images/essays/yesenin/yesenin-part-1-editorial.webp \
-            scripts/validate-essay-covers.ts \
-            scripts/validate-yesenin-part-one-safe-publication.ts \
-            src/data/essays/index.ts
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'publish(covers): promote five approved essay heroes'
-          git push \
-            --force-with-lease=refs/heads/release/approved-essay-covers-2026-08-04:"$TRIGGER_SHA" \
-            origin HEAD:refs/heads/release/approved-essay-covers-2026-08-04
+      - name: Upload archived payload
+        uses: actions/upload-artifact@v4
+        with:
+          name: archived-approved-cover-payload
+          path: export/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
