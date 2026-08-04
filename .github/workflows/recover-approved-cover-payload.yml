@@ -13,83 +13,82 @@ permissions:
 jobs:
   recover:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
-      - name: Checkout exact recovery head
+      - name: Checkout all reachable history
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 1
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Export archived chunks and diagnostics
+      - name: Inventory refs and recover exact assets
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p recovery/chunks
-          cp .release/approved-cover-transfer/chunk-* recovery/chunks/
-          sha256sum recovery/chunks/chunk-* > recovery/CHUNK_SHA256SUMS.txt
-          wc -c recovery/chunks/chunk-* > recovery/CHUNK_SIZES.txt
+          git fetch origin main --tags --force
+          mkdir -p recovery/found recovery/main
+          git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/remotes refs/tags \
+            > recovery/REFS.txt
+          git archive --format=tar.gz --output=recovery/main/main-source.tar.gz origin/main
+          git rev-parse origin/main > recovery/main/MAIN_SHA.txt
+
           python3 - <<'PY'
           from pathlib import Path
-          import base64
           import hashlib
           import json
+          import subprocess
 
-          root = Path('recovery/chunks')
-          allowed = set(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\r\n\t ')
-          report = []
-          combined = bytearray()
-          for path in sorted(root.glob('chunk-*')):
-              raw = path.read_bytes()
-              invalid = [{'offset': i, 'byte': b} for i, b in enumerate(raw) if b not in allowed]
-              cleaned = b''.join(raw.split())
-              report.append({
-                  'name': path.name,
-                  'size': len(raw),
-                  'clean_size': len(cleaned),
-                  'sha256': hashlib.sha256(raw).hexdigest(),
-                  'prefix': raw[:32].decode('ascii', 'backslashreplace'),
-                  'suffix': raw[-32:].decode('ascii', 'backslashreplace'),
-                  'invalid': invalid[:50],
-                  'invalid_count': len(invalid),
-              })
-              combined.extend(cleaned)
-
-          Path('recovery/combined.raw.b64').write_bytes(combined)
-          decoded = b''
-          decode_error = None
-          try:
-              decoded = base64.b64decode(combined, validate=True)
-          except Exception as exc:
-              decode_error = repr(exc)
-              try:
-                  decoded = base64.b64decode(combined, validate=False)
-              except Exception as fallback_exc:
-                  decode_error += '; fallback=' + repr(fallback_exc)
-
-          if decoded:
-              Path('recovery/combined.best-effort.tar.gz').write_bytes(decoded)
-          summary = {
-              'chunks': report,
-              'combined_clean_size': len(combined),
-              'combined_mod_4': len(combined) % 4,
-              'decode_error': decode_error,
-              'decoded_size': len(decoded),
-              'decoded_sha256': hashlib.sha256(decoded).hexdigest() if decoded else None,
-              'expected_tar_sha256': '68e5e40021918cf9b3cbaf5ecf643fe40110abd55dd777b46b515868b895bdcd',
+          expected = {
+              '3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f': 'lermontov-road-hero.webp',
+              'd666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146': 'yesenin-part-1-editorial.webp',
+              'aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61': 'mayakovsky-part-1-hero.webp',
+              'de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30': 'mayakovsky-part-2-hero.webp',
+              'f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533': 'brik-triangle-hero.webp',
           }
-          Path('recovery/DIAGNOSTICS.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+          objects = subprocess.check_output(['git', 'rev-list', '--objects', '--all'], text=True, errors='replace')
+          rows = []
+          seen = set()
+          found = []
+          for line in objects.splitlines():
+              parts = line.split(' ', 1)
+              sha = parts[0]
+              path = parts[1] if len(parts) == 2 else ''
+              if not path.lower().endswith('.webp') or sha in seen:
+                  continue
+              seen.add(sha)
+              try:
+                  data = subprocess.check_output(['git', 'cat-file', 'blob', sha])
+              except subprocess.CalledProcessError:
+                  continue
+              digest = hashlib.sha256(data).hexdigest()
+              rows.append({'git_blob': sha, 'bytes': len(data), 'sha256': digest, 'path_hint': path})
+              if digest in expected:
+                  target = Path('recovery/found') / expected[digest]
+                  target.write_bytes(data)
+                  found.append({'name': expected[digest], 'git_blob': sha, 'bytes': len(data), 'sha256': digest, 'path_hint': path})
+          Path('recovery/WEBP_OBJECTS.json').write_text(json.dumps(rows, indent=2), encoding='utf-8')
+          Path('recovery/FOUND_EXPECTED.json').write_text(json.dumps(found, indent=2), encoding='utf-8')
           PY
 
-          if test -s recovery/combined.best-effort.tar.gz; then
-            gzip -t recovery/combined.best-effort.tar.gz > recovery/GZIP_TEST.txt 2>&1 || true
-            tar -tzf recovery/combined.best-effort.tar.gz > recovery/CONTENTS.txt 2> recovery/TAR_ERRORS.txt || true
-          fi
+          : > recovery/PAYLOAD_PATHS.txt
+          : > recovery/HASH_REFERENCES.txt
+          while read -r ref _; do
+            git ls-tree -r --name-only "$ref" 2>/dev/null \
+              | grep -E '(^|/)(payload|approved|cover|release)|part[0-9]+\.b64|\.release/' \
+              | sed "s#^#$ref #" >> recovery/PAYLOAD_PATHS.txt || true
+            git grep -n -I -E '3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f|d666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146|aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61|de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30|f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533' "$ref" -- \
+              >> recovery/HASH_REFERENCES.txt 2>/dev/null || true
+          done < recovery/REFS.txt
+          sort -u recovery/PAYLOAD_PATHS.txt -o recovery/PAYLOAD_PATHS.txt
+          sort -u recovery/HASH_REFERENCES.txt -o recovery/HASH_REFERENCES.txt
+          sha256sum recovery/found/* > recovery/FOUND_SHA256SUMS.txt 2>/dev/null || true
+          wc -c recovery/found/* > recovery/FOUND_SIZES.txt 2>/dev/null || true
 
-      - name: Upload raw recovery evidence
+      - name: Upload repository recovery inventory
         uses: actions/upload-artifact@v4
         with:
-          name: approved-cover-chunk-diagnostics
+          name: approved-cover-repository-inventory
           path: recovery/
           if-no-files-found: error
           retention-days: 1
