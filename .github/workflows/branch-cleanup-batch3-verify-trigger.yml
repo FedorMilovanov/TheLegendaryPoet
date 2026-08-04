@@ -1,0 +1,101 @@
+name: One-shot independent branch cleanup batch 3 verifier
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-batch3-verify-trigger.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Independently verify every planned ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          VERIFY_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          verify_sha = os.environ["VERIFY_SHA"]
+          report_path = "qa/branch-cleanup-batch3-report.json"
+
+          def api(method, path, payload=None, allow_404=False):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(f"https://api.github.com{path}", data=data, method=method)
+              req.add_header("Authorization", f"Bearer {token}")
+              req.add_header("Accept", "application/vnd.github+json")
+              req.add_header("X-GitHub-Api-Version", "2022-11-28")
+              req.add_header("User-Agent", "branch-cleanup-independent-verifier")
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      raw = response.read()
+                      return response.status, json.loads(raw) if raw else None
+              except urllib.error.HTTPError as exc:
+                  if allow_404 and exc.code == 404:
+                      return 404, None
+                  raw = exc.read().decode(errors="replace")
+                  raise RuntimeError(f"{method} {path}: {exc.code} {raw}") from exc
+
+          def enc(v): return urllib.parse.quote(v, safe="")
+          _, rf = api("GET", f"/repos/{repo}/contents/{report_path}?ref=main")
+          report_sha = rf["sha"]
+          report = json.loads(base64.b64decode(rf["content"]).decode())
+          candidates = report.get("candidates", [])
+          if len(candidates) != 95:
+              raise RuntimeError(f"Unexpected candidate count {len(candidates)}")
+
+          absent, remaining, changed = [], [], []
+          for item in candidates:
+              status, ref = api("GET", f"/repos/{repo}/git/ref/heads/{enc(item['branch'])}", allow_404=True)
+              if status == 404:
+                  absent.append(item)
+              elif ref["object"]["sha"] == item["sha"]:
+                  remaining.append(item)
+              else:
+                  changed.append({**item, "currentSha": ref["object"]["sha"]})
+
+          protected = {}
+          for branch in ("main", "work/local-images-playwright-wtoc"):
+              status, ref = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              protected[branch] = {"exists": status != 404, "sha": ref["object"]["sha"] if ref else None}
+
+          _, open_prs = api("GET", f"/repos/{repo}/pulls?state=open&per_page=100")
+          report["independentVerification"] = {
+              "verifyRunSha": verify_sha,
+              "verifiedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+              "plannedCount": len(candidates),
+              "absentConfirmedCount": len(absent),
+              "remainingExactCount": len(remaining),
+              "changedCount": len(changed),
+              "absentConfirmed": absent,
+              "remainingExact": remaining,
+              "changed": changed,
+              "protectedRefs": protected,
+              "openPrCount": len(open_prs),
+          }
+          encoded = base64.b64encode((json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode()).decode()
+          payload = {"message":"ops: independently verify branch cleanup batch 3","content":encoded,"sha":report_sha,"branch":"main"}
+          _, result = api("PUT", f"/repos/{repo}/contents/{report_path}", payload)
+          summary = {
+              "absentConfirmedCount":len(absent), "remainingExactCount":len(remaining),
+              "changedCount":len(changed), "openPrCount":len(open_prs),
+              "main":protected["main"], "canonicalResearch":protected["work/local-images-playwright-wtoc"],
+              "reportCommit":result["commit"]["sha"]
+          }
+          print(json.dumps(summary, ensure_ascii=False, indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+              fh.write("# Independent cleanup verification\n\n")
+              for k,v in summary.items(): fh.write(f"- **{k}**: `{v}`\n")
+          PY
