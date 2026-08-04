@@ -1,5 +1,5 @@
 schema_version: 1
-reviewed_at: 2026-07-30
+reviewed_at: 2026-08-04
 scope: public/images
 policy:
   purpose: >-
@@ -80,21 +80,71 @@ assets:
     review_status: PENDING-GENERATION-RECORD
     source_use: not_primary_evidence
 
-  - path: public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
-    role: essay_hero
-    origin_class: local_artistic_reconstruction
-    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+
+  - path: public/images/essays/lermontov/lermontov-road-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+    master_file_id: file_000000009b60820aa7a0a1abfdd808cd
+    master_name: "Ночной путь в туманных горах.png"
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
+    bytes: 98178
+    sha256: 3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
+    notes: Interpretive scene inspired by the poem; not a photograph of a documented route or event.
+
+  - path: public/images/essays/yesenin/yesenin-part-1-editorial.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+    master_file_id: file_0000000036f0820ab451d9352154f7d8
+    master_name: "Портрет у реки на закате.png"
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
+    bytes: 81494
+    sha256: d666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Approved editorial synthesis of youth, rural roots and entry into literary life.
+
+  - path: public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+    master_file_id: file_00000000ac64820ab3c20ba34abf7d32
+    master_name: "Маяковский в литературном кабаре 1914.png"
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 91; method 6"
+    bytes: 89742
+    sha256: aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Composite public Futurist persona; not an archive photograph of one exact performance.
 
   - path: public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp
-    role: essay_hero
-    origin_class: local_digital_restoration_or_editorial_reconstruction
-    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+    master_file_id: file_00000000c76c81f49d5f28281decdbe9
+    master_name: "Homme en costume, rue brumeuse】【。.png"
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
+    bytes: 130398
+    sha256: de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
-    required_follow_up: retain restoration source/reference record if recovered
+    notes: Layered late-period interpretation; supersedes the former restoration label and archive source claim.
 
+  - path: public/images/essays/briks/brik-triangle-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+    master_file_id: file_0000000060908243b706987c3278ebb5
+    master_name: "image-gen-2(29).png"
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
+    bytes: 111850
+    sha256: f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Unified black-and-white interior composition; archive photographs remain separately credited inside the essay.
   - path: public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
     role: essay_hero
     origin_class: local_cinematic_editorial_reconstruction
@@ -103,12 +153,3 @@ assets:
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
     notes: The audit preserves the approved prompt and states that archival references are not authors of this reconstruction.
-
-  - path: public/images/essays/yesenin/yesenin-part-1-editorial.webp
-    role: essay_hero
-    origin_class: local_cinematic_editorial_reconstruction
-    evidence: docs/ESSAY_COVER_AUDIT_2026-07-26.md
-    sha256: 85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860
-    review_status: VERIFIED-LOCAL-EDITORIAL
-    source_use: not_primary_evidence
-    notes: The audit preserves the approved prompt and production checksum.

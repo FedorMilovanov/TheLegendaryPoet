@@ -82,7 +82,7 @@ for (const required of [
 }
 
 const expectedCover = '/images/essays/yesenin/yesenin-part-1-editorial.webp';
-const expectedCoverSha256 = '85fb6605631d5f0cd54ecd7d03162ba94927ab9af1f675e35dc564efb2ff7860';
+const expectedCoverSha256 = 'd666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146';
 if (article.cover !== expectedCover) throw new Error('unexpected cover file');
 if (article.cardCover !== expectedCover) throw new Error('card cover diverges from the approved cover');
 if (article.coverKind !== 'reconstruction') throw new Error('cover must remain labelled as a reconstruction');

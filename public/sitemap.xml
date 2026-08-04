@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://thelegendarypoet.ru/</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/og-image.jpg</image:loc>
       <image:title>THE LEGENDARY POET</image:title>
@@ -11,15 +11,15 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/ratings</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/articles</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music</loc>
@@ -39,11 +39,11 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/vykhozhu-odin-ya-na-dorogu-lermontov</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
-      <image:loc>https://thelegendarypoet.ru/images/lermontov.jpg</image:loc>
+      <image:loc>https://thelegendarypoet.ru/images/essays/lermontov/lermontov-road-hero.webp</image:loc>
       <image:title>«Выхожу один я на дорогу…»: свобода, покой и живая тишина Лермонтова</image:title>
-      <image:caption>Михаил Юрьевич Лермонтов — портрет русского поэта</image:caption>
+      <image:caption>Михаил Лермонтов на одинокой ночной дороге — редакционная кинематографическая реконструкция образного мира стихотворения</image:caption>
     </image:image>
   </url>
   <url>
@@ -57,11 +57,11 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-part-1-editorial.webp</image:loc>
       <image:title>Сергей Есенин. Часть I: 1895–1921</image:title>
-      <image:caption>Молодой Сергей Есенин у письменного стола — редакционная кинематографическая реконструкция раннего периода</image:caption>
+      <image:caption>Молодой Сергей Есенин среди берёз у воды, на фоне далёкого города — редакционная реконструкция периода 1895–1921 годов</image:caption>
     </image:image>
   </url>
   <url>
@@ -84,29 +84,29 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-1-hero.webp</image:loc>
       <image:title>Маяковский. Часть I: бунтарь, футурист, влюблённый</image:title>
-      <image:caption>Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов</image:caption>
+      <image:caption>Молодой Владимир Маяковский читает стихи со сцены в жёлто-чёрной футуристической кофте — редакционная реконструкция</image:caption>
     </image:image>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-2-hero.webp</image:loc>
       <image:title>Маяковский. Часть II: революция, ЛЕФ и последний кризис</image:title>
-      <image:caption>Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года</image:caption>
+      <image:caption>Зрелый Владимир Маяковский в тёмном костюме на фоне города и конструктивистской графики — редакционная реконструкция позднего периода</image:caption>
     </image:image>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/brik-case</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
-      <image:loc>https://thelegendarypoet.ru/images/essays/briks/brik-archive-hero.webp</image:loc>
+      <image:loc>https://thelegendarypoet.ru/images/essays/briks/brik-triangle-hero.webp</image:loc>
       <image:title>Маяковский и Брики: любовь, союз и зависимость</image:title>
-      <image:caption>Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год</image:caption>
+      <image:caption>Осип Брик, Лиля Брик и Владимир Маяковский в напряжённой интерьерной композиции — редакционная реконструкция</image:caption>
     </image:image>
   </url>
   <url>
@@ -146,7 +146,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/vladimir-mayakovsky</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/mayakovsky.jpg</image:loc>
       <image:title>Владимир Владимирович Маяковский</image:title>
@@ -164,7 +164,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/mikhail-lermontov</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/lermontov.jpg</image:loc>
       <image:title>Михаил Юрьевич Лермонтов</image:title>
@@ -197,7 +197,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc>
-    <lastmod>2026-08-03</lastmod>
+    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/yesenin.jpg</image:loc>
       <image:title>Сергей Александрович Есенин</image:title>
