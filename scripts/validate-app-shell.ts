@@ -130,13 +130,13 @@ expect(
   'release dispatcher must pass the exact brand release id read from the PR head',
 );
 expect(
-  deployDispatchWorkflow.includes('expected_master_sha256: process.env.MASTER_SHA256'),
-  'release dispatcher must pass the exact approved master hash',
+  deployDispatchWorkflow.includes('expected_source_sha256: process.env.SOURCE_SHA256'),
+  'release dispatcher must pass the exact approved single-source hash',
 );
 expect(
   deployWorkflow.includes('EXPECTED_VERSION: ${{ inputs.expected_version }}')
-    && deployWorkflow.includes('EXPECTED_MASTER_SHA256: ${{ inputs.expected_master_sha256 }}'),
-  'deploy workflow must verify the dispatched release metadata against the built artifact',
+    && deployWorkflow.includes('EXPECTED_SOURCE_SHA256: ${{ inputs.expected_source_sha256 }}'),
+  'deploy workflow must verify the dispatched single-source release metadata against the built artifact',
 );
 expect(
   deployDispatchWorkflow.includes("startsWith(github.event.pull_request.head.ref, 'deploy-live-')"),
