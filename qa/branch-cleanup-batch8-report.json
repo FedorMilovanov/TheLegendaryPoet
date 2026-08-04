@@ -1,0 +1,70 @@
+{
+  "repository": "FedorMilovanov/TheLegendaryPoet",
+  "runSha": "01f424c63ce09c659aadbc6def813809cdc234bb",
+  "generatedAt": "2026-08-04T11:15:13.067Z",
+  "results": [
+    {
+      "branch": "__do_not_create__",
+      "sha": "9d2e260be4ad1abff63afbd5878222580140c585",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "agent/home-polish-clean-20260725-r3",
+      "sha": "c5f90764450e690b42e8d949b860609f05961a3c",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "audit/runtime-hygiene-scan-20260727",
+      "sha": "09bdf64a2e12f6f9dbec6622f59e621ac38dc5fe",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "fix/brand-direct-assets-recovery-20260725",
+      "sha": "1ac8bec1573877d8abfd0b5c7a9e9497c92e1558",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "fix/brand-v8-28-postmerge",
+      "sha": "9fd4fde175b984f999bcb8bd89c3845eba6c3d30",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "fix/emblem-v3-main-final",
+      "sha": "93e18d862d71ab3c566177c8d34bef98c2298aa3",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "fix/music-cover-resilience-20260727",
+      "sha": "983c51115a7f7108f2873c6729f56a1a722ff7e0",
+      "container": "main",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "noop-check",
+      "sha": "b114e4b6d979c2f5fc327d74f3b0bcd45139988d",
+      "container": "work/local-images-playwright-wtoc",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "research/yesenin-priority-books-validation-base",
+      "sha": "d312dd9f269955f564cad3e80c3d0d43e4c56b33",
+      "container": "work/local-images-playwright-wtoc",
+      "status": "ALREADY_ABSENT"
+    },
+    {
+      "branch": "work/local-images-playwright-wtoc-backup",
+      "sha": "1533d7c89357a2cfe12f5d27d5336a2f68bae67b",
+      "container": "work/local-images-playwright-wtoc",
+      "status": "ALREADY_ABSENT"
+    }
+  ],
+  "deletedConfirmed": 10,
+  "branchCountAfter": 7,
+  "success": true
+}
