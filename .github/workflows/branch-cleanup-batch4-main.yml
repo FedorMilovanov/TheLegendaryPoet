@@ -1,0 +1,148 @@
+name: One-shot guarded workflow-only never-merge cleanup batch 4
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-batch4-main.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Find explicit never-merge workflow-only PR heads, delete and verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          trigger_sha = os.environ["TRIGGER_SHA"]
+          owner = repo.split("/", 1)[0]
+          report_path = "qa/branch-cleanup-batch4-report.json"
+          allowed_bases = {"main", "work/local-images-playwright-wtoc"}
+          forbidden_exact = {"main", "work/local-images-playwright-wtoc"}
+          forbidden_prefixes = ("backup/", "archive/", "editorial/", "work/", "ops/")
+          markers = (
+              "never merge", "must never be merged", "do not merge", "should not be merged",
+              "not intended to merge", "not intended for merge", "read-only witness",
+              "temporary live witness", "verification branch only"
+          )
+
+          def api(method, path, payload=None, allow_404=False, soft=False):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(f"https://api.github.com{path}", data=data, method=method)
+              req.add_header("Authorization", f"Bearer {token}")
+              req.add_header("Accept", "application/vnd.github+json")
+              req.add_header("X-GitHub-Api-Version", "2022-11-28")
+              req.add_header("User-Agent", "workflow-only-never-merge-cleanup")
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      raw = response.read()
+                      return response.status, json.loads(raw) if raw else None, None
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode(errors="replace")
+                  if allow_404 and exc.code == 404: return 404, None, None
+                  if soft: return exc.code, None, raw
+                  raise RuntimeError(f"{method} {path}: {exc.code} {raw}") from exc
+
+          def enc(v): return urllib.parse.quote(v, safe="")
+          def put_report(report, sha=None):
+              content = base64.b64encode((json.dumps(report, ensure_ascii=False, indent=2)+"\n").encode()).decode()
+              payload = {"message":"ops: record workflow-only cleanup batch 4","content":content,"branch":"main"}
+              if sha: payload["sha"] = sha
+              _, result, _ = api("PUT", f"/repos/{repo}/contents/{report_path}", payload)
+              return result["content"]["sha"], result["commit"]["sha"]
+
+          _, main_ref, _ = api("GET", f"/repos/{repo}/git/ref/heads/main")
+          if main_ref["object"]["sha"] != trigger_sha:
+              raise RuntimeError("main moved before batch 4 preflight")
+          _, open_repo, _ = api("GET", f"/repos/{repo}/pulls?state=open&per_page=100")
+          if open_repo: raise RuntimeError(f"Repository has {len(open_repo)} open PR(s)")
+          _, refs_before, _ = api("GET", f"/repos/{repo}/git/matching-refs/heads/")
+
+          candidates, rejected = [], []
+          for page in range(1, 11):
+              _, prs, _ = api("GET", f"/repos/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=100&page={page}")
+              for pr in prs:
+                  head = pr.get("head") or {}; head_repo = head.get("repo") or {}
+                  branch = head.get("ref"); base = (pr.get("base") or {}).get("ref")
+                  if pr.get("merged_at") or head_repo.get("full_name") != repo or not branch or base not in allowed_bases:
+                      continue
+                  if branch in forbidden_exact or branch.startswith(forbidden_prefixes):
+                      continue
+                  text = ((pr.get("title") or "") + "\n" + (pr.get("body") or "")).lower()
+                  matched = [m for m in markers if m in text]
+                  if not matched: continue
+                  status, ref, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+                  if status == 404: continue
+                  if ref["object"]["sha"] != head.get("sha"):
+                      rejected.append({"branch":branch,"pr":pr["number"],"reason":"sha_changed"}); continue
+                  bstatus, binfo, _ = api("GET", f"/repos/{repo}/branches/{enc(branch)}", allow_404=True)
+                  if bstatus == 404 or binfo.get("protected"):
+                      rejected.append({"branch":branch,"pr":pr["number"],"reason":"absent_or_protected"}); continue
+                  _, files, _ = api("GET", f"/repos/{repo}/pulls/{pr['number']}/files?per_page=100")
+                  if len(files) != 1 or not files[0]["filename"].startswith(".github/workflows/"):
+                      rejected.append({"branch":branch,"pr":pr["number"],"reason":"not_exactly_one_workflow_file","files":[f["filename"] for f in files]}); continue
+                  candidates.append({
+                      "branch":branch,"pr":pr["number"],"base":base,"sha":head["sha"],
+                      "title":pr.get("title", ""),"marker":matched[0],"file":files[0]["filename"]
+                  })
+              if len(prs) < 100: break
+
+          # De-duplicate by branch and enforce a very small safety ceiling.
+          unique = {}
+          for item in candidates: unique[item["branch"]] = item
+          candidates = sorted(unique.values(), key=lambda x:x["branch"])
+          if len(candidates) > 25: raise RuntimeError(f"Candidate count {len(candidates)} exceeds safety ceiling")
+
+          report = {
+              "repository":repo,"generatedAt":dt.datetime.now(dt.timezone.utc).isoformat(),
+              "triggerSha":trigger_sha,"state":"PLANNED",
+              "policy":"Closed unmerged PR; explicit never-merge marker; unchanged head SHA; exactly one .github/workflows file; unprotected; no open PR.",
+              "refCountBefore":len(refs_before),"candidateCount":len(candidates),
+              "candidates":candidates,"rejected":rejected,"deleted":[]
+          }
+          report_sha, plan_commit = put_report(report)
+          report["planCommit"] = plan_commit
+
+          results = []
+          for item in candidates:
+              branch = item["branch"]
+              status, ref, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if status == 404:
+                  results.append({**item,"status":"already_absent_after_plan"}); continue
+              if ref["object"]["sha"] != item["sha"]:
+                  results.append({**item,"status":"skipped_sha_changed_after_plan"}); continue
+              _, open_head, _ = api("GET", f"/repos/{repo}/pulls?state=open&head={enc(owner + ':' + branch)}&per_page=100")
+              if open_head:
+                  results.append({**item,"status":"skipped_open_pr"}); continue
+              dstatus, _, derr = api("DELETE", f"/repos/{repo}/git/refs/heads/{enc(branch)}", soft=True)
+              vstatus, _, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if vstatus == 404:
+                  results.append({**item,"status":"absent_confirmed","deleteHttpStatus":dstatus}); continue
+              results.append({**item,"status":"remaining","deleteHttpStatus":dstatus,"error":derr})
+
+          _, refs_after, _ = api("GET", f"/repos/{repo}/git/matching-refs/heads/")
+          absent_count = sum(1 for r in results if r["status"] in ("absent_confirmed","already_absent_after_plan"))
+          remaining_count = sum(1 for r in results if r["status"] not in ("absent_confirmed","already_absent_after_plan"))
+          report.update({
+              "state":"COMPLETE" if remaining_count == 0 else "COMPLETE_WITH_SKIPS",
+              "completedAt":dt.datetime.now(dt.timezone.utc).isoformat(),
+              "deleted":results,"absentConfirmedCount":absent_count,
+              "remainingCount":remaining_count,"refCountAfter":len(refs_after)
+          })
+          _, final_commit = put_report(report, report_sha)
+          print(json.dumps({"candidateCount":len(candidates),"absentConfirmedCount":absent_count,"remainingCount":remaining_count,"refCountBefore":len(refs_before),"refCountAfter":len(refs_after),"reportCommit":final_commit}, ensure_ascii=False, indent=2))
+          PY
