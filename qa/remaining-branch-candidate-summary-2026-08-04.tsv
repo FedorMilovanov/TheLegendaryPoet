@@ -1,0 +1,99 @@
+CLASS	BRANCH	SHA	PR	BASE	FILES	TITLE
+ADVANCED_SINCE_PR	agent/home-polish-clean-20260725-r2	15b0b3d560d2b07a0708d0727a94f4c475b28629			0	
+ADVANCED_SINCE_PR	agent/lermontov-road-essay	cb8a4ae542f6267574af33deaad6a64a7ec1a380			0	
+ADVANCED_SINCE_PR	research/yesenin-part1-authoring-76	481c28647f0079ecd081ca81cfdefbf7d7e7c552			0	
+CLOSED_EXPLICIT_NEVER_MERGE	diag/webkit-reduced-motion-paint	1996fc196a9ef98b14dc7e48856439f88256c15c	168	main	3	test(home): diagnose reduced-motion WebKit paint
+CLOSED_EXPLICIT_NEVER_MERGE	fix/approved-brand-integrity-complete-20260725	b59d67e46e5a45b64055d4e7b134ce215b29df85	152	main	12	fix(brand): validate approved master and restore complete platform assets
+CLOSED_EXPLICIT_NEVER_MERGE	research/yesenin-benislavskaya-volume-access-evidence-pass25	e21a014e743f9f354daf32760166e63343af5ac3	202	research/yesenin-benislavskaya-inbound-evidence-pass24	6	Validate Benislavskaya source-volume access pass 25
+CLOSED_EXPLICIT_NEVER_MERGE	validation/research-source-gates-20260723	ed496dd3f851cb9cd95f76c958b1642a9c376b2c	44	work/local-images-playwright-wtoc	1	Validate latest research head and article QA
+CLOSED_MENTIONS_SUCCESSOR	docs/imli-40plus-source-integration-2026-07-30	943dab286cf73122976e1212f283888029ae0c68	260	main	2	docs: integrate IMLI PDF archive and rights-aware source workflow
+CLOSED_MENTIONS_SUCCESSOR	feat/home-poet-window-polish-clean-v2	81906b37df7fc0f6ed5c404e3f8e964f7a799572	156	main	5	feat(home): harden premium poet windows and QA
+CLOSED_MENTIONS_SUCCESSOR	feat/seo-production-hardening	18c1026efd87d5f7f3dda81a3bd8646489474614	256	main	25	feat(seo): production discovery, schema, trust and consent hardening
+CLOSED_MENTIONS_SUCCESSOR	fix/home-polish-brand-materializer-clean	17d949e204ec5745464bedc5705d1bb82eee36a9	135	main	34	fix(home): harden premium hero and brand materialization
+CLOSED_MENTIONS_SUCCESSOR	fix/mystical-epic-brand-v7	a580bac1fae448148f3b51cd18a825798622bc06	228	main	12	fix(brand): restore mystical epic depth in hooded emblem
+CLOSED_MENTIONS_SUCCESSOR	fix/mystical-epic-brand-v8	99c7e6c84c825114e42b864b3a18b1b07f762ae0	231	main	12	fix(brand): refine mystical epic emblem with traced v8.4 SVG
+CLOSED_MENTIONS_SUCCESSOR	fix/pages-exact-source-provenance-clean	71d5f01b970bf74846040597b9fba4968c32c03a	161	main	2	fix(deploy): preserve exact source provenance for Pages releases
+CLOSED_MENTIONS_SUCCESSOR	sync/main-poet-windows-into-research	b00383626eb4f1323b55cbe2d191fbffd30dbbb1	130	work/local-images-playwright-wtoc	5	Sync premium poet windows into canonical research
+CLOSED_UNMERGED_REVIEW	agent/custom-domain	5aaa4eec295767f6f1c49edab21ca1f9ac2da235	30	main	10	Prepare thelegendarypoet.ru custom domain
+CLOSED_UNMERGED_REVIEW	agent/deep-home-polish-20260725	56d6a6e536d1f4bd6fbaf663125bd2782593e594	133	main	6	fix(home): deepen premium hero reliability and mobile polish
+CLOSED_UNMERGED_REVIEW	agent/home-polish-reconciled-20260725	3c378f9a29dcc8bd94a2b329b7a075b5b7266db9	169	main	6	fix(home): finish touch labels and QA reconciliation
+CLOSED_UNMERGED_REVIEW	agent/premium-poet-windows	35a7084fa12883d20ce0ddad6b0f9c5638a03b28	119	main	13	feat(home): add premium interactive poet windows
+CLOSED_UNMERGED_REVIEW	archive-collage-real-photos	954959db8d39a60f44d7e767ac0e36893e226c30	32	main	3	Draft: repair provenance for Mayakovsky–Brik archive collage
+CLOSED_UNMERGED_REVIEW	arena/019f6b05-thelegendarypoet	b90dae26ef8e4104b0e633433dd82cd98fe16dd5	29	main	29	Моральный реализм, верификация по первоисточникам и унификация отдела поэтов
+CLOSED_UNMERGED_REVIEW	audit/playwright-total-article-check	e499a78c7730e4e27422626b3789130352a2f770	38	main	32	Audit all article engines and media with Playwright
+CLOSED_UNMERGED_REVIEW	brand-build-diagnostics	69591065066c1a3bf18d8ba7eda5f4829751933f	143	main	1	Capture failing production build output
+CLOSED_UNMERGED_REVIEW	ci/diagnose-main-red	00937c34e24375dc2920de7f5aec903824e58217	254	main	1	chore(ci): diagnose current main failure
+CLOSED_UNMERGED_REVIEW	deploy-live-cloak-v2	ca20c791abc40b8560327f18dba2858ce5daa898	148	main	15	Deploy approved emblem v3 live
+CLOSED_UNMERGED_REVIEW	deploy-live-emblem-v3-20260725	1a074f6fe424d7480108995afb58c6c8fd9a7634	151	main	14	Deploy approved emblem v3 and remove all old fallbacks
+CLOSED_UNMERGED_REVIEW	fix/brand-live-verification-20260725-v2	291bccd63220aee6e835d8109ba84b621bacbfd8	146	main	14	Fix live emblem publication and remove every old fallback
+CLOSED_UNMERGED_REVIEW	fix/brand-ssot-recovery-20260725	8c4317fbe85a5a84d4c6a4e625479c44fcfbd440	140	main	21	fix(brand): recover deterministic SSOT and fail closed
+CLOSED_UNMERGED_REVIEW	fix/deploy-source-sha-contract	15ae76a2b23511e136fd22a472c9569d7487c6c3	166	main	4	fix(deploy): restore exact source SHA contract
+CLOSED_UNMERGED_REVIEW	fix/home-full-labels-hybrid-cursor	c23ef1a83384cdf0a7e419d0a9247170e99e532c	179	main	8	fix(home): preserve full poet names and hybrid pointer behavior
+CLOSED_UNMERGED_REVIEW	fix/mobile-poet-label-wrapping-20260725	a2b19743a48311e7b36d6892db8fa10f38e6a75d	173	main	5	fix(home): show complete poet names on mobile premium cards
+CLOSED_UNMERGED_REVIEW	fix/pages-exact-source-provenance-20260725	0a1f63e732c0669ac3264db0ebc00b13e6b07201	157	main	2	fix(deploy): build trusted Pages releases from exact PR head
+CLOSED_UNMERGED_REVIEW	fix/remove-duplicate-desktop-search-fab	8ea2a796d8197a3fdd6cae50ead577d4ced21018	187	main	4	fix(search): remove duplicate desktop Ctrl K control
+CLOSED_UNMERGED_REVIEW	research/yesenin-pravda-eastview-pass27-runtime-supersession	ae2e21c5978d22101ca56f0a334e84bc1efab8f2	220	work/local-images-playwright-wtoc	6	Supersede East View pass 27 with exact runtime evidence
+CLOSED_UNMERGED_REVIEW	test/webkit-reduced-paint-barrier	a1909b36adfeaf0cd320b470fd49737e4d4b4cee	170	main	1	test(home): wait for WebKit paint before reduced-motion evidence
+CLOSED_UNMERGED_REVIEW	validation/domain-tls-post-cname-20260724	6cb5cef2038932be5d9e7c94d53964e015b1fd95	74	main	1	Validate production TLS after restoring CNAME
+CLOSED_UNMERGED_REVIEW	verify-live-cloak-emblem	d544a2f3095454367290890fa570aed5f38efe17	145	main	2	Verify approved emblem on live domain
+CLOSED_UNMERGED_REVIEW	work/yesenin-visual-series	b40385101ea3049627f7530ddb269597aa96f417	34	main	5	Draft: extract and verify Yesenin biography Part I
+KEEP_CANONICAL_RESEARCH	work/local-images-playwright-wtoc	909df9f73b8d9be6faa58cbee767603954e3fb17	37	main	547	Archived research ledger: Yesenin source upgrades and rights
+KEEP_MAIN	main	9b3d5c9e17270bc36410a20a2df167305cba0e60			0	
+MERGED_EXACT	chore/brand-progress-nonblocking	6e731d026f21a4479a254b9cb4c3dc6ef0392755	251	fix/brand-v9-reference-reset	1	ci(brand): keep WIP emblem checks green with progress status
+MERGED_EXACT	ci/visible-brand-progress	9201319255cabd72b6d1813db6693f3380d31673	253	fix/brand-v9-reference-reset	1	ci(brand): show neutral progress until final approval
+MERGED_EXACT	docs/brand-progress-policy	5840eb7df062d6805643b3a38884fb656d60576a	252	fix/brand-v9-reference-reset	1	docs(brand): define green CI progress policy
+MERGED_EXACT	work/mayakovsky-premium-polish	9a65ecc2a0254fc2fafb4d69efd9d1e01378ea45	35	main	16	Polish Mayakovsky essays with elastic media and verified sources
+MERGED_EXACT	work/mayakovsky-visual-essays	3620e151bfa577b4efbbbcb0af1f261983830708	33	main	22	Add visual Mayakovsky biography series and Brik archive essay
+MERGED_EXACT	work/yesenin-premium-archive	b1afcca7e3595b9a915cd3631f9350ccb61c5578	36	main	5	Add premium Yesenin archive layer to the longread
+NO_PR_HISTORY	__do_not_create__	9d2e260be4ad1abff63afbd5878222580140c585			0	
+NO_PR_HISTORY	agent/home-polish-clean-20260725-r3	c5f90764450e690b42e8d949b860609f05961a3c			0	
+NO_PR_HISTORY	arena/019f6acc-thelegendarypoet	0a85ea232d16d96621538f4a90b2dfb58cc37c61			0	
+NO_PR_HISTORY	audit/runtime-hygiene-scan-20260727	09bdf64a2e12f6f9dbec6622f59e621ac38dc5fe			0	
+NO_PR_HISTORY	fix/approved-brand-home-polish-clean-v2	96c16d11a53bdf6fc978ff56fcd81ac5e1d241b0			0	
+NO_PR_HISTORY	fix/brand-direct-assets-recovery-20260725	1ac8bec1573877d8abfd0b5c7a9e9497c92e1558			0	
+NO_PR_HISTORY	fix/brand-direct-assets-scratch	3993dad54649fdf90c66b3b30a931a5ed95815d9			0	
+NO_PR_HISTORY	fix/brand-live-verification-20260725	84b0ab03fad921b856b57dc711b7c7c3b53dccb7			0	
+NO_PR_HISTORY	fix/brand-v8-26-postmerge	723d0c2430d7f34dbe66e44ae1c70054fca8bc0b			0	
+NO_PR_HISTORY	fix/brand-v8-27-postmerge	3fbfa51b0792aede74379d868cba05be2e8e9f58			0	
+NO_PR_HISTORY	fix/brand-v8-28-postmerge	9fd4fde175b984f999bcb8bd89c3845eba6c3d30			0	
+NO_PR_HISTORY	fix/deep-vector-brandmark-v5	a17aa92c60173ced5373cab8bfd6597be907ad72			0	
+NO_PR_HISTORY	fix/emblem-v3-main-final	93e18d862d71ab3c566177c8d34bef98c2298aa3			0	
+NO_PR_HISTORY	fix/music-cover-resilience-20260727	983c51115a7f7108f2873c6729f56a1a722ff7e0			0	
+NO_PR_HISTORY	fix/mystical-epic-brand-v8-check	189a753ced42af1b376c41a6f19a70d27cab74e2			0	
+NO_PR_HISTORY	fix/mystical-epic-brand-v8-final	189a753ced42af1b376c41a6f19a70d27cab74e2			0	
+NO_PR_HISTORY	noop-check	b114e4b6d979c2f5fc327d74f3b0bcd45139988d			0	
+NO_PR_HISTORY	research/yesenin-mariengof-rsl-route-pass13	23fb34aed69790ade8fa8f77f8b9884fb1171d4f			0	
+NO_PR_HISTORY	research/yesenin-part1-pass6	075c10661fab107283e95798871381833be69048			0	
+NO_PR_HISTORY	research/yesenin-part1-source-sweep-pass6-pr	b3e004b67b0973e6b7b1ca13a4cc37ac0cc82102			0	
+NO_PR_HISTORY	research/yesenin-priority-books-validation-base	d312dd9f269955f564cad3e80c3d0d43e4c56b33			0	
+NO_PR_HISTORY	research/yesenin-real-visual-hash-baseline	fdcab38404da639d1fa0fbd67c2bb48d86f80b32			0	
+NO_PR_HISTORY	work/local-images-playwright-wtoc-backup	1533d7c89357a2cfe12f5d27d5336a2f68bae67b			0	
+OPEN_PR	release/approved-essay-covers-2026-08-04	f7c58e7e40190348048f3fc6a1e0171cf624c019	279	main	2	publish(covers): promote five approved essay heroes
+OPS_TEMP	ops/branch-inventory-remaining-20260804	0ccd54eb444bdd78d07bdb62aa4695ed50061968			0	
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/export-yesenin-part-one-public-candidate	764e1c1ac4b8ed90516460c4cbd688781316e14f	229	work/local-images-playwright-wtoc	2	fix(research): strip internal fields from Part I export
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-benislavskaya-inbound-rgali-discovery-pass24	c12d18d4e7c69e9385aee232dab0086b8a835f84	197	research/yesenin-benislavskaya-provenance-evidence-pass23	2	Discover exact RGALI card for Benislavskaya inbound correspondence
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-benislavskaya-volume-access-pass25	ef4c8ae361491e2ff2b13b788dc12fc40e646985	201	research/yesenin-benislavskaya-inbound-evidence-pass24	3	Discover legal access routes for Benislavskaya inbound letters
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-benislavskaya-volume-access-pass25-canonical	e5b65c93935284da3c9f34c72a9b227f2562d6db	206	work/local-images-playwright-wtoc	6	Record legal access route for Benislavskaya inbound letters
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-duncan-companion-editorial-pass1	d55e975e54dd4473d704d98da6f456b6513aeb11	115	work/local-images-playwright-wtoc	11	Superseded diagnostic: polish Yesenin–Duncan companion article
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-mariengof-editions-pass13	1ff2e8eeeeb0f7b7fa8f3aef70f0d18966aa9dcd	112	work/local-images-playwright-wtoc	5	Acquire exact Mariengof 1927 and 1928 RSL facsimiles
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-materialy-page110-access-discovery-pass27	35acd2d03783f87b59ffc84086e28723a4de78cd	212	research/yesenin-pravda-rsl-access-evidence-pass26-final	2	Discover institutional copy route for Materialy page 110
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-materialy-rsl-fragment-route-discovery	d14805d18a018fc7be387737e215c77d6dafaf46	216	research/yesenin-materialy-page110-access-discovery-pass27	2	Inspect exact RSL order routes for Materialy page 110
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-materialy110-discovery-pass16-diagnostic	6f791c43c73eb6ce81e9366fa825cb1a069f3a17	129	work/local-images-playwright-wtoc	2	Diagnostic: inspect FEB access to Materialy p.110
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-neb-physical-editions-pass8	8b373cf7a009043d1233bc571d74c2bcda33ae0e	100	research/yesenin-real-visual-hash-baseline-clean	3	Superseded diagnostic: NEB physical editions pass 8
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-neb-serial-discovery-pass10	97cbf5cc6bbe075585ffe8e960a47a01d7fef2fe	106	work/local-images-playwright-wtoc	6	Superseded diagnostic: NEB serial issue discovery
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-neb-theatrical-moscow-pass11	ab2bf02facad6fb06c803d41067f29fec8aad418	107	research/yesenin-neb-serial-discovery-pass10	5	Superseded diagnostic: Theatrical Moscow issue acquisition
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-newspaper-discovery-pass14-diagnostic	b3a5b7c0c4418256fba09040644629b78cfcfd63	121	work/local-images-playwright-wtoc	4	Diagnostic: discover exact 1921 newspaper issue cards
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-nypl-api-discovery-pass19	f5f59eef2476c4cc42dcecfc0399a8e41ac7f65b	175	research/yesenin-archive-access-pass18	6	Diagnose four NYPL Duncan program UUIDs before API shutdown
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-part1-citation-topology	c7b3e397cd193a7af95ad8063567c2cc9470b96f	87	work/local-images-playwright-wtoc	6	Build typed citation topology for Yesenin Part I
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-part1-close-topology-gaps	dd5da8d359ac11c57c6ab12bdf2f8381f6b6faa0	89	work/local-images-playwright-wtoc	7	Close Yesenin Part I topology coverage gaps
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-part1-duncan-compaction-diagnostic	fee689058288f94169a6fc17dbd5896b6387ef9a	113	research/yesenin-duncan-companion-split	10	Superseded diagnostic: compact Yesenin Part I Duncan transition
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-part1-literary-theological-pass7-76	4068a05a371181ecfc303c6b8c8ccaf86f146098	97	work/local-images-playwright-wtoc	6	Superseded: Yesenin Part I sections 9–12 editorial pass
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-physical-edition-state-pass9	295cce22afb8752300a93e32765a74e55f6d8fbf	104	research/yesenin-neb-physical-editions-pass8-clean	3	Superseded diagnostic: typed physical edition evidence
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-discovery-pass15-diagnostic	8accf715050e9ab83ae3bb8fbdc7d29bbf78f820	124	work/local-images-playwright-wtoc	2	Diagnostic: locate exact Pravda issue for 9 November 1921
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-eastview-discovery-pass27	1c92bc8dd614c0f35f89356018bf5d7812c1e4f5	211	work/local-images-playwright-wtoc	2	Discover East View metadata for Pravda 9 November 1921
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-eastview-evidence-pass27-final	58462d2f0cb7007897ef299d5ce7bf89a58d59dc	219	work/local-images-playwright-wtoc	6	Resolve exact East View issue metadata for Pravda no. 252
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-eastview-featured-target-discovery	851da0b889c2678ee2f7c723817da877d37fdc12	213	research/yesenin-pravda-eastview-discovery-pass27	2	Inspect exact East View featured issue for Pravda no. 252
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-eastview-literal-pages-discovery	31738f933f18d54989875e3f11b0970cd06a5aa6	214	research/yesenin-pravda-eastview-featured-target-discovery	2	Inspect literal East View pages for Pravda no. 252
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-eastview-runtime-network-discovery	91fafe94a7c013e267ce4c6785c327d4e551a57a	215	research/yesenin-pravda-eastview-literal-pages-discovery	2	Capture East View runtime access state for Pravda no. 252
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-rsl-access-discovery-pass26	29a5dcdee69c376190de41d1a52f724983c50f8b	209	research/yesenin-benislavskaya-volume-access-evidence-pass25-final	2	Discover literal RSL access route for Pravda no. 252
+RESEARCH_DIAGNOSTIC_OR_SUPERSEDED	research/yesenin-pravda-rsl-viewer-discovery-pass26	e61610ca61fde90b382c257cb3a0768a1115584b	208	work/local-images-playwright-wtoc	3	Discover exact RSL viewer route for Pravda 9 November 1921
