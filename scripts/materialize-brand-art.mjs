@@ -43,7 +43,6 @@ function runFfmpeg(args, outputName) {
 
 const png = ['-frames:v', '1', '-c:v', 'png', '-compression_level', '9', '-pred', 'mixed'];
 const emblem = runFfmpeg(['-i', sourcePath, ...png], 'brand-emblem.png');
-runFfmpeg(['-i', emblem, '-frames:v', '1', '-c:v', 'libwebp', '-lossless', '1', '-compression_level', '6', '-pix_fmt', 'yuva420p'], 'brand-emblem-master.webp');
 runFfmpeg(['-i', emblem, '-vf', 'scale=16:16:flags=lanczos', ...png], 'favicon-16.png');
 runFfmpeg(['-i', emblem, '-vf', 'scale=32:32:flags=lanczos', ...png], 'favicon-32.png');
 
@@ -61,7 +60,13 @@ renderPlatformIcon('icon-maskable-512.png', 512, 396);
 renderPlatformIcon('mstile-150x150.png', 150, 128);
 runFfmpeg(['-f', 'lavfi', '-i', 'color=c=0x02050b:s=1200x630:d=1', '-i', emblem, '-filter_complex', '[1:v]scale=500:500:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2', '-frames:v', '1', '-q:v', '3', '-pix_fmt', 'yuvj420p'], 'og-image.jpg');
 
-for (const retired of ['brand-emblem-header.png', 'brand-emblem-primary.png', 'brand-emblem-simplified.png', 'brand-emblem-micro.png']) {
+for (const retired of [
+  'brand-emblem-master.webp',
+  'brand-emblem-header.png',
+  'brand-emblem-primary.png',
+  'brand-emblem-simplified.png',
+  'brand-emblem-micro.png',
+]) {
   const retiredPath = path.join(publicDir, retired);
   if (fs.existsSync(retiredPath)) fs.rmSync(retiredPath);
 }

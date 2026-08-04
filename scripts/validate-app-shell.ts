@@ -131,7 +131,7 @@ expect(
 );
 expect(
   deployDispatchWorkflow.includes('expected_source_sha256: process.env.SOURCE_SHA256'),
-  'release dispatcher must pass the exact approved single-source hash',
+  'release dispatcher must pass the exact approved source hash',
 );
 expect(
   deployWorkflow.includes('EXPECTED_VERSION: ${{ inputs.expected_version }}')

@@ -19,7 +19,7 @@ assert.equal(sourceBytes.subarray(8, 12).toString('ascii'), 'WEBP', 'approved so
 assert.equal(digest(sourceBytes), SOURCE_SHA256, 'approved single source hash changed');
 
 for (const file of [
-  'public/brand-emblem.png', 'public/brand-emblem-master.webp',
+  'public/brand-emblem.png',
   'public/favicon-16.png', 'public/favicon-32.png', 'public/apple-touch-icon.png',
   'public/icon-192.png', 'public/icon-512.png', 'public/icon-maskable-512.png',
   'public/mstile-150x150.png', 'public/og-image.jpg',
@@ -29,6 +29,7 @@ for (const file of [
 }
 
 for (const retired of [
+  'public/brand-emblem-master.webp',
   'public/brand-emblem-header.png', 'public/brand-emblem-primary.png',
   'public/brand-emblem-simplified.png', 'public/brand-emblem-micro.png',
   'qa/reference/brand-emblem-canonical-reference.webp',
@@ -58,6 +59,7 @@ assert.doesNotMatch(materializer, /brand-emblem-canonical-reference|spectral-atl
 assert.ok(materializer.includes(SOURCE_SHA256));
 assert.ok(materializer.includes("Array.from({ length: 25 }"));
 assert.ok(materializer.includes("'brand-emblem.png'"));
+assert.ok(materializer.includes("'brand-emblem-master.webp'"), 'materializer must actively remove the retired WebP runtime asset');
 assert.ok(release.includes(RELEASE));
 assert.ok(release.includes('approved-source=single-user-selected-transparent-reference'));
 assert.ok(release.includes(`source-sha256=${SOURCE_SHA256}`));
