@@ -33,14 +33,14 @@ jobs:
           archive="$RUNNER_TEMP/approved-covers-final.tar.gz"
           payload="$RUNNER_TEMP/approved-covers-final.tar.gz.b64"
           git fetch origin main --tags --force
-          : > "$payload"
           for part in \
             payload/approved-covers/part00.b64 \
             payload/approved-covers/part01.b64 \
             payload/approved-covers/part02.b64
           do
-            git show "$tag:$part" >> "$payload"
-          done
+            git show "$tag:$part"
+          done | tr -d '\r\n\t ' > "$payload"
+          test "$(wc -c < "$payload")" -eq 697616
           base64 --decode "$payload" > "$archive"
           echo '68e5e40021918cf9b3cbaf5ecf643fe40110abd55dd777b46b515868b895bdcd  '"$archive" | sha256sum --check --strict
           mkdir -p "$RUNNER_TEMP/approved-covers"
