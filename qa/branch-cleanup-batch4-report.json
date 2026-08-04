@@ -2,7 +2,7 @@
   "repository": "FedorMilovanov/TheLegendaryPoet",
   "generatedAt": "2026-08-04T10:20:48.923589+00:00",
   "triggerSha": "0948ef977b2c0ce04caad0cf45dd2ffbb4d369ab",
-  "state": "PLANNED",
+  "state": "COMPLETE_WITH_SKIPS",
   "policy": "Closed unmerged PR; explicit never-merge marker; unchanged head SHA; exactly one .github/workflows file; unprotected; no open PR.",
   "refCountBefore": 115,
   "candidateCount": 2,
@@ -208,5 +208,35 @@
       ]
     }
   ],
-  "deleted": []
+  "deleted": [
+    {
+      "branch": "agent/brand-complete-integrity-20260725",
+      "pr": 147,
+      "base": "main",
+      "sha": "a0b4755a2957d32b61e4a16b5850e4a8be0bc475",
+      "title": "diagnostic: complete approved brand asset inventory",
+      "marker": "do not merge",
+      "file": ".github/workflows/_temp-approved-brand-source-export.yml",
+      "status": "remaining",
+      "deleteHttpStatus": 204,
+      "error": null
+    },
+    {
+      "branch": "agent/premium-poet-live-witness",
+      "pr": 126,
+      "base": "main",
+      "sha": "782f602d4ad0f376dee282a79eeb42744f206379",
+      "title": "ci: verify premium poet windows on live Pages",
+      "marker": "must never be merged",
+      "file": ".github/workflows/ci.yml",
+      "status": "remaining",
+      "deleteHttpStatus": 204,
+      "error": null
+    }
+  ],
+  "planCommit": "ad9a2a1f3a3bbc83cfbcc55bed0fc1da17c9077c",
+  "completedAt": "2026-08-04T10:20:52.089470+00:00",
+  "absentConfirmedCount": 0,
+  "remainingCount": 2,
+  "refCountAfter": 113
 }
