@@ -1,9 +1,9 @@
 name: Finalize approved essay covers
 
 on:
-  push:
+  pull_request:
     branches:
-      - release/approved-essay-covers-2026-08-04
+      - main
     paths:
       - .github/workflows/finalize-approved-covers.yml
 
@@ -22,6 +22,7 @@ jobs:
       - name: Checkout trigger commit with full history
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Reconstruct and verify archived release payload
@@ -106,7 +107,7 @@ jobs:
       - name: Publish one clean release commit
         shell: bash
         env:
-          TRIGGER_SHA: ${{ github.sha }}
+          TRIGGER_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           git add \
