@@ -1,0 +1,27 @@
+name: Summarize remaining branch candidates
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/branch-candidate-summary-20260804.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner=context.repo.owner, repo=context.repo.repo;
+            const src=await github.rest.repos.getContent({owner,repo,path:'qa/remaining-branch-candidate-analysis-2026-08-04.json',ref:'main'});
+            const data=JSON.parse(Buffer.from(src.data.content,'base64').toString('utf8'));
+            const rows=[['CLASS','BRANCH','SHA','PR','BASE','FILES','TITLE'].join('\t')];
+            for(const r of [...data.rows].sort((a,b)=>a.class.localeCompare(b.class)||a.branch.localeCompare(b.branch))){
+              rows.push([r.class,r.branch,r.sha,r.exactPr?.number||'',r.exactPr?.base||'',r.fileCount||0,(r.exactPr?.title||'').replace(/[\t\r\n]+/g,' ')].join('\t'));
+            }
+            const path='qa/remaining-branch-candidate-summary-2026-08-04.tsv';
+            let cur;try{cur=await github.rest.repos.getContent({owner,repo,path,ref:'main'});}catch(e){if(e.status!==404)throw e;}
+            await github.rest.repos.createOrUpdateFileContents({owner,repo,path,branch:'main',message:'audit(branches): add compact remaining candidate summary',content:Buffer.from(rows.join('\n')+'\n').toString('base64'),sha:cur?.data?.sha});
