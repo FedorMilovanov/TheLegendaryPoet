@@ -1,0 +1,71 @@
+name: One-shot finish two verified backup archives batch 6
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-batch6-finish.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  finish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify exact tags and remove the two remaining backup branch refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, datetime as dt, json, os, time, urllib.error, urllib.parse, urllib.request
+          repo=os.environ["REPOSITORY"]; token=os.environ["GH_TOKEN"]
+          report_path="qa/branch-cleanup-batch6-backup-archive-report.json"
+          items=[
+            {"branch":"backup/yesenin-feb-acquisition-pre-normalize-20260724","sha":"fbaa00522010f5730d5c3198fc776ebc8ee73ef2","tag":"archive/branches/2026-08-04/backup/yesenin-feb-acquisition-pre-normalize-20260724"},
+            {"branch":"backup/yesenin-pass8-editorial-e5db54f","sha":"e5db54f4fd491086978eecf665a5f4d475fd39c3","tag":"archive/branches/2026-08-04/backup/yesenin-pass8-editorial-e5db54f"},
+          ]
+          def api(method,path,payload=None,allow_404=False):
+            data=None if payload is None else json.dumps(payload).encode()
+            req=urllib.request.Request(f"https://api.github.com{path}",data=data,method=method)
+            req.add_header("Authorization",f"Bearer {token}"); req.add_header("Accept","application/vnd.github+json"); req.add_header("X-GitHub-Api-Version","2022-11-28"); req.add_header("User-Agent","finish-backup-archive")
+            try:
+              with urllib.request.urlopen(req,timeout=45) as r:
+                raw=r.read(); return r.status,json.loads(raw) if raw else None
+            except urllib.error.HTTPError as e:
+              if allow_404 and e.code==404:return 404,None
+              raise RuntimeError(f"{method} {path}: {e.code} {e.read().decode(errors='replace')}")
+          def enc(v):return urllib.parse.quote(v,safe="")
+          _,open_prs=api("GET",f"/repos/{repo}/pulls?state=open&per_page=100")
+          if open_prs:raise RuntimeError("Open PR exists")
+          for item in items:
+            hs,hr=api("GET",f"/repos/{repo}/git/ref/heads/{enc(item['branch'])}",allow_404=True)
+            ts,tr=api("GET",f"/repos/{repo}/git/ref/tags/{enc(item['tag'])}",allow_404=True)
+            if ts==404 or tr["object"]["sha"]!=item["sha"]:raise RuntimeError(f"Archive tag mismatch: {item['tag']}")
+            if hs!=404:
+              if hr["object"]["sha"]!=item["sha"]:raise RuntimeError(f"Branch SHA mismatch: {item['branch']}")
+              api("DELETE",f"/repos/{repo}/git/refs/heads/{enc(item['branch'])}")
+          time.sleep(4)
+          _,heads=api("GET",f"/repos/{repo}/git/matching-refs/heads/")
+          names={x["ref"].removeprefix("refs/heads/") for x in heads}
+          final=[]
+          for item in items:
+            ts,tr=api("GET",f"/repos/{repo}/git/ref/tags/{enc(item['tag'])}",allow_404=True)
+            ok=ts!=404 and tr["object"]["sha"]==item["sha"] and item["branch"] not in names
+            final.append({**item,"tagVerified":ts!=404 and tr["object"]["sha"]==item["sha"],"branchAbsent":item["branch"] not in names,"finalStatus":"ARCHIVED_AND_BRANCH_REMOVED" if ok else "INCOMPLETE"})
+          if not all(x["finalStatus"]=="ARCHIVED_AND_BRANCH_REMOVED" for x in final):raise RuntimeError("Final archive verification failed")
+          _,rf=api("GET",f"/repos/{repo}/contents/{report_path}?ref=main")
+          report=json.loads(base64.b64decode(rf["content"]).decode())
+          by_branch={x["branch"]:x for x in report.get("results",[])}
+          for x in final:by_branch[x["branch"]]=x
+          report.update({"state":"COMPLETE","completedFinalAt":dt.datetime.now(dt.timezone.utc).isoformat(),"results":list(by_branch.values()),"archivedAndRemovedCount":10,"incompleteCount":0,"branchRefCountAfter":len(heads)})
+          content=base64.b64encode((json.dumps(report,ensure_ascii=False,indent=2)+"\n").encode()).decode()
+          api("PUT",f"/repos/{repo}/contents/{report_path}",{"message":"ops: finalize all backup branch archives","content":content,"sha":rf["sha"],"branch":"main"})
+          print(json.dumps({"archivedAndRemovedCount":10,"branchRefCountAfter":len(heads),"final":final},ensure_ascii=False,indent=2))
+          PY
