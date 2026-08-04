@@ -4,12 +4,13 @@ import { insertArchiveImages } from './visualArchive';
 
 export const brikCaseVisual: Essay = {
   ...baseBrikCase,
-  cover: '/images/essays/briks/brik-archive-hero.webp',
-  cardCover: '/images/essays/briks/brik-archive-hero.webp',
-  coverAlt: 'Лиля Брик за столом в квартире в Гендриковом переулке, фотограф Осип Брик, 1929 год',
-  coverKind: 'archive',
-  coverCredit: 'Осип Брик · 1929',
-  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Lilya_Brik_1929.jpg',
+  cover: '/images/essays/briks/brik-triangle-hero.webp',
+  cardCover: '/images/essays/briks/brik-triangle-hero.webp',
+  coverAlt:
+    'Осип Брик, Лиля Брик и Владимир Маяковский в напряжённой интерьерной композиции — редакционная реконструкция',
+  coverKind: 'reconstruction',
+  coverCredit:
+    'THE LEGENDARY POET · редакционная реконструкция на основе портретных референсов трёх участников',
   readTime: 24,
   blocks: insertArchiveImages(baseBrikCase.blocks, {
     'Жуковского, июль 1915-го': [

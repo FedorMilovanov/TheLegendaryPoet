@@ -12,7 +12,7 @@ export const yeseninPartOnePublic: Essay = {
   "readTime": 42,
   "cover": "/images/essays/yesenin/yesenin-part-1-editorial.webp",
   "cardCover": "/images/essays/yesenin/yesenin-part-1-editorial.webp",
-  "coverAlt": "Молодой Сергей Есенин у письменного стола — редакционная кинематографическая реконструкция раннего периода",
+  "coverAlt": "Молодой Сергей Есенин среди берёз у воды, на фоне далёкого города — редакционная реконструкция периода 1895–1921 годов",
   "coverKind": "reconstruction",
   "coverCredit": "THE LEGENDARY POET · редакционная реконструкция на основе предоставленных портретных референсов",
   "accent": "#d7b26d",

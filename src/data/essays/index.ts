@@ -47,9 +47,14 @@ function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
 
 const lermontovRoadWithCover: Essay = {
   ...lermontovRoadEssay,
-  coverKind: 'restoration',
-  coverCredit: 'П. Е. Заболотский · цифровая реставрация проекта',
-  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mikhail_Lermontov_1837.jpg',
+  dateModified: '2026-08-04',
+  cover: '/images/essays/lermontov/lermontov-road-hero.webp',
+  cardCover: '/images/essays/lermontov/lermontov-road-hero.webp',
+  coverAlt:
+    'Михаил Лермонтов на одинокой ночной дороге — редакционная кинематографическая реконструкция образного мира стихотворения',
+  coverKind: 'reconstruction',
+  coverCredit:
+    'THE LEGENDARY POET · редакционная реконструкция на основе портретного референса',
 };
 
 const yeseninWithArchiveLayer: Essay = {
@@ -64,7 +69,7 @@ const yeseninWithArchiveLayer: Essay = {
 
 const yeseninPartOnePublished: Essay = {
   ...yeseninPartOnePublic,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-04',
   readTime: 43,
 };
 
@@ -105,12 +110,14 @@ yeseninPartTwoPublic.blocks = yeseninPartTwoPublic.blocks.map((block) => {
 
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-04',
   cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
-  coverAlt: 'Молодой Владимир Маяковский — художественная реконструкция на основе архивных портретов',
+  coverAlt:
+    'Молодой Владимир Маяковский читает стихи со сцены в жёлто-чёрной футуристической кофте — редакционная реконструкция',
   coverKind: 'reconstruction',
-  coverCredit: 'THE LEGENDARY POET',
+  coverCredit:
+    'THE LEGENDARY POET · редакционная реконструкция на основе архивных портретных референсов',
   blocks: placeEssayImages(
     attachEssayCitations(mayakovskyPartOne.blocks, mayakovskyPartOneCitationRules),
     mayakovskyPartOnePlacements,
@@ -120,13 +127,14 @@ const mayakovskyPartOneWithLocalCover: Essay = {
 
 const mayakovskyPartTwoWithLocalCover: Essay = {
   ...mayakovskyPartTwo,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-04',
   cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
-  coverAlt: 'Поздний Владимир Маяковский — цифровая реставрация архивного портрета 1928 года',
-  coverKind: 'restoration',
-  coverCredit: 'Осип Брик · реставрация проекта',
-  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg',
+  coverAlt:
+    'Зрелый Владимир Маяковский в тёмном костюме на фоне города и конструктивистской графики — редакционная реконструкция позднего периода',
+  coverKind: 'reconstruction',
+  coverCredit:
+    'THE LEGENDARY POET · редакционная реконструкция на основе архивных портретных референсов',
   blocks: placeEssayImages(
     attachEssayCitations(mayakovskyPartTwo.blocks, mayakovskyPartTwoCitationRules),
     mayakovskyPartTwoPlacements,
@@ -136,7 +144,7 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
 
 const brikCaseWithSourceLibrary: Essay = {
   ...brikCaseVisual,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-04',
   blocks: placeEssayImages(
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
