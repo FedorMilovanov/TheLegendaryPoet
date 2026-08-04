@@ -1,0 +1,106 @@
+name: Finalize approved cover release v2
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/finalize-approved-cover-release-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact pull request head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Download and verify approved release package
+        shell: bash
+        env:
+          RELEASE_URL: https://drive.usercontent.google.com/download?id=11s7ddlPaPhdilDtzPUC8r86IyuIl5Was&export=download&confirm=t
+          RELEASE_SHA256: ab591887cf268791d779e1af43f67084c418698e3efdaf5e3bf9dbcaf1dc553a
+        run: |
+          set -euo pipefail
+          mkdir -p .release-v2/staging
+          curl --fail --location --retry 4 --retry-all-errors \
+            --output .release-v2/approved-cover-release-v2.tar.gz \
+            "$RELEASE_URL"
+          echo "$RELEASE_SHA256  .release-v2/approved-cover-release-v2.tar.gz" \
+            | sha256sum --check --strict
+          gzip -t .release-v2/approved-cover-release-v2.tar.gz
+          tar -xzf .release-v2/approved-cover-release-v2.tar.gz \
+            -C .release-v2/staging
+
+          cat > .release-v2/EXPECTED_SHA256SUMS <<'SUMS'
+          3316e08c20179e75899b72da686299e8d5b70ed3b090e295081311c3e338496f  public/images/essays/lermontov/lermontov-road-hero.webp
+          d666bbbf7a76200111b7c60fe06c703a518e1e83dfe0d5997feb1bb572f8a146  public/images/essays/yesenin/yesenin-part-1-editorial.webp
+          aa3f997a812c5130e782830078abbff8cbdd594c1ddcfa29ef0f3dbe36399b61  public/images/essays/mayakovsky/mayakovsky-part-1-hero.webp
+          de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30  public/images/essays/mayakovsky/mayakovsky-part-2-hero.webp
+          f68ee5d38e6aedfff939bfb322a0dbe7df8ed65969d782129484177dde656533  public/images/essays/briks/brik-triangle-hero.webp
+          8350c581deda421dc34f5696cba1f15b9cd3b77f21467503cfd16240547443a0  src/data/essays/index.ts
+          6660b9f10b17c06f4c31aa6c60c0a419dd3d19267e453ac39cc1b6045f286a21  src/data/essays/yeseninPartOnePublic.ts
+          26dccdbb19c0af0e40b854ab1d9e2cadb2e515b15f73d004b1fe9e9114be0729  src/data/essays/brikCaseVisual.ts
+          60d65196795c42ddad2d48c254661b1401b98c7ecc8d127f8e0f7ccafbef1867  scripts/validate-essay-covers.ts
+          a405d2241b83e1a22602cc6cf9935246abe024a51574cc6ca71c0db80e94ddc8  scripts/validate-yesenin-part-one-safe-publication.ts
+          8b8a9651ed00f9116337c903bc1b2e542d11a7c4e1a0b6433fc00ab06c0fa546  public/images/PROVENANCE.yml
+          ab876f732af97f6306ca4f1cb40ba8661533e0fbd65455d87c43877a27c10451  docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
+          SUMS
+
+          expected_paths="$(awk '{print $2}' .release-v2/EXPECTED_SHA256SUMS | sort)"
+          actual_paths="$(cd .release-v2/staging && find . -type f -printf '%P\n' | sort)"
+          test "$actual_paths" = "$expected_paths"
+          (cd .release-v2/staging && sha256sum --check --strict ../EXPECTED_SHA256SUMS)
+
+      - name: Apply production files only
+        shell: bash
+        run: |
+          set -euo pipefail
+          while read -r _ path; do
+            install -D -m 0644 ".release-v2/staging/$path" "$path"
+          done < .release-v2/EXPECTED_SHA256SUMS
+          rm -f .github/workflows/finalize-approved-cover-release-v2.yml
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full validation and production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check
+          npm run build
+
+      - name: Create clean release commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t expected < <(awk '{print $2}' .release-v2/EXPECTED_SHA256SUMS)
+          git add -- "${expected[@]}" .github/workflows/finalize-approved-cover-release-v2.yml
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          mapfile -t allowed < <(printf '%s\n' "${expected[@]}" | sort)
+          test "$(printf '%s\n' "${staged[@]}")" = "$(printf '%s\n' "${allowed[@]}")"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'release(covers): publish five approved essay covers'
+          git push origin "HEAD:${{ github.head_ref }}"
+          mkdir -p .release-v2-result
+          git rev-parse HEAD > .release-v2-result/COMMIT_SHA.txt
+          git rev-parse 'HEAD^{tree}' > .release-v2-result/TREE_SHA.txt
+          git rev-parse HEAD^ > .release-v2-result/PARENT_SHA.txt
+          git diff --name-status HEAD^ HEAD > .release-v2-result/DIFF.txt
+
+      - name: Upload clean commit metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-cover-release-v2-clean-commit
+          path: .release-v2-result/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
