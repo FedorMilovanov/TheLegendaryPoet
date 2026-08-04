@@ -1,0 +1,128 @@
+name: One-shot archive backup branches as tags and remove refs batch 6
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-batch6-archive-backups.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  archive-and-clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Create exact archive tags, verify, delete backup branches, verify again
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, datetime as dt, json, os, time, urllib.error, urllib.parse, urllib.request
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          trigger_sha = os.environ["TRIGGER_SHA"]
+          owner = repo.split("/", 1)[0]
+          report_path = "qa/branch-cleanup-batch6-backup-archive-report.json"
+          tag_prefix = "archive/branches/2026-08-04/backup/"
+
+          def api(method, path, payload=None, allow_404=False, soft=False):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(f"https://api.github.com{path}", data=data, method=method)
+              req.add_header("Authorization", f"Bearer {token}")
+              req.add_header("Accept", "application/vnd.github+json")
+              req.add_header("X-GitHub-Api-Version", "2022-11-28")
+              req.add_header("User-Agent", "backup-branch-archive-cleanup")
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      raw = response.read()
+                      return response.status, json.loads(raw) if raw else None, None
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode(errors="replace")
+                  if allow_404 and exc.code == 404: return 404, None, None
+                  if soft: return exc.code, None, raw
+                  raise RuntimeError(f"{method} {path}: {exc.code} {raw}") from exc
+
+          def enc(v): return urllib.parse.quote(v, safe="")
+          def put_report(report, sha=None):
+              content = base64.b64encode((json.dumps(report, ensure_ascii=False, indent=2)+"\n").encode()).decode()
+              payload = {"message":"ops: record backup branch archive batch 6","content":content,"branch":"main"}
+              if sha: payload["sha"] = sha
+              _, result, _ = api("PUT", f"/repos/{repo}/contents/{report_path}", payload)
+              return result["content"]["sha"], result["commit"]["sha"]
+
+          _, main_ref, _ = api("GET", f"/repos/{repo}/git/ref/heads/main")
+          if main_ref["object"]["sha"] != trigger_sha: raise RuntimeError("main moved before backup archive preflight")
+          _, open_repo, _ = api("GET", f"/repos/{repo}/pulls?state=open&per_page=100")
+          if open_repo: raise RuntimeError(f"Repository has {len(open_repo)} open PR(s)")
+          _, all_heads_before, _ = api("GET", f"/repos/{repo}/git/matching-refs/heads/")
+          _, backup_refs, _ = api("GET", f"/repos/{repo}/git/matching-refs/heads/backup/")
+
+          candidates = []
+          for ref in backup_refs:
+              branch = ref["ref"].removeprefix("refs/heads/")
+              if not branch.startswith("backup/"): continue
+              suffix = branch.removeprefix("backup/")
+              candidates.append({"branch":branch,"sha":ref["object"]["sha"],"tag":tag_prefix+suffix})
+          candidates.sort(key=lambda x:x["branch"])
+          if len(candidates) > 20: raise RuntimeError(f"Backup candidate count {len(candidates)} exceeds ceiling")
+
+          report = {
+              "repository":repo,"generatedAt":dt.datetime.now(dt.timezone.utc).isoformat(),
+              "triggerSha":trigger_sha,"state":"PLANNED",
+              "policy":"Each backup branch is first preserved by an exact lightweight archive tag pointing to the identical commit SHA; tag is verified before branch deletion.",
+              "branchRefCountBefore":len(all_heads_before),"candidateCount":len(candidates),"candidates":candidates
+          }
+          report_sha, plan_commit = put_report(report)
+
+          results = []
+          for item in candidates:
+              branch, sha, tag = item["branch"], item["sha"], item["tag"]
+              hstatus, href, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if hstatus == 404:
+                  results.append({**item,"status":"branch_disappeared_before_archive"}); continue
+              if href["object"]["sha"] != sha:
+                  results.append({**item,"status":"skipped_branch_sha_changed","currentSha":href["object"]["sha"]}); continue
+              _, open_head, _ = api("GET", f"/repos/{repo}/pulls?state=open&head={enc(owner + ':' + branch)}&per_page=100")
+              if open_head:
+                  results.append({**item,"status":"skipped_open_pr"}); continue
+
+              tstatus, tref, _ = api("GET", f"/repos/{repo}/git/ref/tags/{enc(tag)}", allow_404=True)
+              if tstatus == 404:
+                  cstatus, _, cerr = api("POST", f"/repos/{repo}/git/refs", {"ref":"refs/tags/"+tag,"sha":sha}, soft=True)
+                  if cstatus not in (200, 201):
+                      results.append({**item,"status":"skipped_tag_creation_failed","httpStatus":cstatus,"error":cerr}); continue
+              elif tref["object"]["sha"] != sha:
+                  results.append({**item,"status":"skipped_existing_tag_sha_mismatch","existingTagSha":tref["object"]["sha"]}); continue
+
+              verify_tag_status, verify_tag, _ = api("GET", f"/repos/{repo}/git/ref/tags/{enc(tag)}", allow_404=True)
+              if verify_tag_status == 404 or verify_tag["object"]["sha"] != sha:
+                  results.append({**item,"status":"skipped_tag_verification_failed"}); continue
+
+              dstatus, _, derr = api("DELETE", f"/repos/{repo}/git/refs/heads/{enc(branch)}", soft=True)
+              results.append({**item,"status":"delete_requested_after_tag_verified","deleteHttpStatus":dstatus,"deleteError":derr})
+
+          time.sleep(4)
+          _, all_heads_after, _ = api("GET", f"/repos/{repo}/git/matching-refs/heads/")
+          head_names_after = {r["ref"].removeprefix("refs/heads/") for r in all_heads_after}
+          final = []
+          for item in results:
+              branch, sha, tag = item["branch"], item["sha"], item["tag"]
+              tstatus, tref, _ = api("GET", f"/repos/{repo}/git/ref/tags/{enc(tag)}", allow_404=True)
+              tag_ok = tstatus != 404 and tref["object"]["sha"] == sha
+              branch_absent = branch not in head_names_after
+              final.append({**item,"tagVerified":tag_ok,"branchAbsent":branch_absent,"finalStatus":"ARCHIVED_AND_BRANCH_REMOVED" if tag_ok and branch_absent else "INCOMPLETE"})
+
+          complete = [x for x in final if x["finalStatus"] == "ARCHIVED_AND_BRANCH_REMOVED"]
+          incomplete = [x for x in final if x["finalStatus"] != "ARCHIVED_AND_BRANCH_REMOVED"]
+          report.update({"state":"COMPLETE" if not incomplete else "COMPLETE_WITH_SKIPS","planCommit":plan_commit,"completedAt":dt.datetime.now(dt.timezone.utc).isoformat(),"results":final,"archivedAndRemovedCount":len(complete),"incompleteCount":len(incomplete),"branchRefCountAfter":len(all_heads_after)})
+          _, final_commit = put_report(report, report_sha)
+          print(json.dumps({"candidateCount":len(candidates),"archivedAndRemovedCount":len(complete),"incompleteCount":len(incomplete),"branchRefCountBefore":len(all_heads_before),"branchRefCountAfter":len(all_heads_after),"reportCommit":final_commit}, ensure_ascii=False, indent=2))
+          PY
