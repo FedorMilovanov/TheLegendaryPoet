@@ -28,10 +28,21 @@ jobs:
           RELEASE_SHA256: ab591887cf268791d779e1af43f67084c418698e3efdaf5e3bf9dbcaf1dc553a
         run: |
           set -euo pipefail
-          mkdir -p .release-v2/staging
+          mkdir -p .release-v2/staging .release-v2/diagnostics
           curl --fail --location --retry 4 --retry-all-errors \
+            --dump-header .release-v2/diagnostics/HEADERS.txt \
             --output .release-v2/approved-cover-release-v2.tar.gz \
             "$RELEASE_URL"
+          wc -c .release-v2/approved-cover-release-v2.tar.gz \
+            > .release-v2/diagnostics/SIZE.txt
+          sha256sum .release-v2/approved-cover-release-v2.tar.gz \
+            > .release-v2/diagnostics/SHA256.txt
+          file .release-v2/approved-cover-release-v2.tar.gz \
+            > .release-v2/diagnostics/FILE.txt
+          xxd -l 4096 .release-v2/approved-cover-release-v2.tar.gz \
+            > .release-v2/diagnostics/HEAD.hex.txt
+          strings -n 12 .release-v2/approved-cover-release-v2.tar.gz \
+            | head -n 500 > .release-v2/diagnostics/STRINGS.txt || true
           echo "$RELEASE_SHA256  .release-v2/approved-cover-release-v2.tar.gz" \
             | sha256sum --check --strict
           gzip -t .release-v2/approved-cover-release-v2.tar.gz
@@ -57,6 +68,18 @@ jobs:
           actual_paths="$(cd .release-v2/staging && find . -type f -printf '%P\n' | sort)"
           test "$actual_paths" = "$expected_paths"
           (cd .release-v2/staging && sha256sum --check --strict ../EXPECTED_SHA256SUMS)
+
+      - name: Upload raw download diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-cover-release-v2-download-diagnostics
+          path: |
+            .release-v2/diagnostics/
+            .release-v2/approved-cover-release-v2.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
       - name: Apply production files only
         shell: bash
