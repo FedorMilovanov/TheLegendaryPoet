@@ -1,0 +1,53 @@
+name: Recover approved-cover payload
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/recover-approved-cover-payload.yml
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact recovery head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Reassemble and verify archived release
+        shell: bash
+        env:
+          EXPECTED_SHA256: 68e5e40021918cf9b3cbaf5ecf643fe40110abd55dd777b46b515868b895bdcd
+        run: |
+          set -euo pipefail
+          mkdir -p recovery
+          cat .release/approved-cover-transfer/chunk-* \
+            | tr -d '\r\n\t ' \
+            > recovery/approved-cover-release-2026-08-04.tar.gz.b64
+          base64 --decode recovery/approved-cover-release-2026-08-04.tar.gz.b64 \
+            > recovery/approved-cover-release-2026-08-04.tar.gz
+          ACTUAL_SHA256="$(sha256sum recovery/approved-cover-release-2026-08-04.tar.gz | awk '{print $1}')"
+          test "$ACTUAL_SHA256" = "$EXPECTED_SHA256"
+          gzip -t recovery/approved-cover-release-2026-08-04.tar.gz
+          tar -tzf recovery/approved-cover-release-2026-08-04.tar.gz \
+            > recovery/CONTENTS.txt
+          sha256sum recovery/approved-cover-release-2026-08-04.tar.gz \
+            > recovery/SHA256SUMS.txt
+          wc -c recovery/approved-cover-release-2026-08-04.tar.gz \
+            > recovery/SIZES.txt
+
+      - name: Upload verified release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-approved-cover-release
+          path: recovery/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
