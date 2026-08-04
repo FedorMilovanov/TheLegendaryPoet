@@ -1,0 +1,31 @@
+name: Cleanup approved-cover transport branches
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/cleanup-approved-cover-transport.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout cleanup branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Delete temporary branches
+        shell: bash
+        env:
+          CLEANUP_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git push origin --delete release/approved-essay-covers-2026-08-04 || true
+          git push origin --delete "$CLEANUP_BRANCH"
