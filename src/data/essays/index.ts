@@ -95,6 +95,14 @@ yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source)
     `${yeseninPartTwoLedgerUrl}#${source.id ?? 'source'}`,
 }));
 
+yeseninPartTwoPublic.blocks = yeseninPartTwoPublic.blocks.map((block) => {
+  if (block.type !== 'image' || block.credit?.includes('общественное достояние')) return block;
+  return {
+    ...block,
+    credit: `${block.credit ?? 'Wikimedia Commons'} · общественное достояние`,
+  };
+});
+
 const mayakovskyPartOneWithLocalCover: Essay = {
   ...mayakovskyPartOne,
   dateModified: '2026-08-02',
