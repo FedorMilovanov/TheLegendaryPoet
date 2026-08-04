@@ -1,0 +1,430 @@
+{
+  "repository": "FedorMilovanov/TheLegendaryPoet",
+  "runSha": "0a5a323e1e37635bb616d78d83a596769b9162c8",
+  "startedAt": "2026-08-04T10:56:20.010Z",
+  "planned": 46,
+  "results": [
+    {
+      "branch": "chore/brand-progress-nonblocking",
+      "sha": "6e731d026f21a4479a254b9cb4c3dc6ef0392755",
+      "class": "MERGED_EXACT",
+      "pr": 251,
+      "status": "ALREADY_ABSENT_CONFIRMED"
+    },
+    {
+      "branch": "ci/visible-brand-progress",
+      "sha": "9201319255cabd72b6d1813db6693f3380d31673",
+      "class": "MERGED_EXACT",
+      "pr": 253,
+      "status": "DELETED_CONFIRMED"
+    },
+    {
+      "branch": "diag/webkit-reduced-motion-paint",
+      "sha": "1996fc196a9ef98b14dc7e48856439f88256c15c",
+      "class": "CLOSED_EXPLICIT_NEVER_MERGE",
+      "pr": 168,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/diag/webkit-reduced-motion-paint",
+      "tagVerified": true
+    },
+    {
+      "branch": "docs/brand-progress-policy",
+      "sha": "5840eb7df062d6805643b3a38884fb656d60576a",
+      "class": "MERGED_EXACT",
+      "pr": 252,
+      "status": "DELETED_CONFIRMED"
+    },
+    {
+      "branch": "docs/imli-40plus-source-integration-2026-07-30",
+      "sha": "943dab286cf73122976e1212f283888029ae0c68",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 260,
+      "status": "SKIPPED_STILL_EXISTS",
+      "archiveTag": "archive/branches/2026-08-04/batch7/docs/imli-40plus-source-integration-2026-07-30",
+      "tagVerified": true
+    },
+    {
+      "branch": "feat/home-poet-window-polish-clean-v2",
+      "sha": "81906b37df7fc0f6ed5c404e3f8e964f7a799572",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 156,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/feat/home-poet-window-polish-clean-v2",
+      "tagVerified": true
+    },
+    {
+      "branch": "feat/seo-production-hardening",
+      "sha": "18c1026efd87d5f7f3dda81a3bd8646489474614",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 256,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/feat/seo-production-hardening",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "fix/approved-brand-integrity-complete-20260725",
+      "sha": "b59d67e46e5a45b64055d4e7b134ce215b29df85",
+      "class": "CLOSED_EXPLICIT_NEVER_MERGE",
+      "pr": 152,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/fix/approved-brand-integrity-complete-20260725",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "fix/home-polish-brand-materializer-clean",
+      "sha": "17d949e204ec5745464bedc5705d1bb82eee36a9",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 135,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/fix/home-polish-brand-materializer-clean",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "fix/mystical-epic-brand-v7",
+      "sha": "a580bac1fae448148f3b51cd18a825798622bc06",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 228,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/fix/mystical-epic-brand-v7",
+      "tagVerified": true
+    },
+    {
+      "branch": "fix/mystical-epic-brand-v8",
+      "sha": "99c7e6c84c825114e42b864b3a18b1b07f762ae0",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 231,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/fix/mystical-epic-brand-v8",
+      "tagVerified": true
+    },
+    {
+      "branch": "fix/pages-exact-source-provenance-clean",
+      "sha": "71d5f01b970bf74846040597b9fba4968c32c03a",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 161,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/fix/pages-exact-source-provenance-clean",
+      "tagVerified": true
+    },
+    {
+      "branch": "ops/branch-inventory-remaining-20260804",
+      "sha": "0ccd54eb444bdd78d07bdb62aa4695ed50061968",
+      "class": "OPS_TEMP",
+      "pr": null,
+      "status": "DELETED_CONFIRMED"
+    },
+    {
+      "branch": "research/export-yesenin-part-one-public-candidate",
+      "sha": "764e1c1ac4b8ed90516460c4cbd688781316e14f",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 229,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/export-yesenin-part-one-public-candidate",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-benislavskaya-inbound-rgali-discovery-pass24",
+      "sha": "c12d18d4e7c69e9385aee232dab0086b8a835f84",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 197,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-benislavskaya-inbound-rgali-discovery-pass24",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-benislavskaya-volume-access-evidence-pass25",
+      "sha": "e21a014e743f9f354daf32760166e63343af5ac3",
+      "class": "CLOSED_EXPLICIT_NEVER_MERGE",
+      "pr": 202,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-benislavskaya-volume-access-evidence-pass25",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-benislavskaya-volume-access-pass25",
+      "sha": "ef4c8ae361491e2ff2b13b788dc12fc40e646985",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 201,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-benislavskaya-volume-access-pass25",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-benislavskaya-volume-access-pass25-canonical",
+      "sha": "e5b65c93935284da3c9f34c72a9b227f2562d6db",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 206,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-benislavskaya-volume-access-pass25-canonical",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-duncan-companion-editorial-pass1",
+      "sha": "d55e975e54dd4473d704d98da6f456b6513aeb11",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 115,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-duncan-companion-editorial-pass1",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-mariengof-editions-pass13",
+      "sha": "1ff2e8eeeeb0f7b7fa8f3aef70f0d18966aa9dcd",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 112,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-mariengof-editions-pass13",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-materialy-page110-access-discovery-pass27",
+      "sha": "35acd2d03783f87b59ffc84086e28723a4de78cd",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 212,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-materialy-page110-access-discovery-pass27",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-materialy-rsl-fragment-route-discovery",
+      "sha": "d14805d18a018fc7be387737e215c77d6dafaf46",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 216,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-materialy-rsl-fragment-route-discovery",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-materialy110-discovery-pass16-diagnostic",
+      "sha": "6f791c43c73eb6ce81e9366fa825cb1a069f3a17",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 129,
+      "status": "SKIPPED_STILL_EXISTS",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-materialy110-discovery-pass16-diagnostic",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-neb-physical-editions-pass8",
+      "sha": "8b373cf7a009043d1233bc571d74c2bcda33ae0e",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 100,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-neb-physical-editions-pass8",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-neb-serial-discovery-pass10",
+      "sha": "97cbf5cc6bbe075585ffe8e960a47a01d7fef2fe",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 106,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-neb-serial-discovery-pass10",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-neb-theatrical-moscow-pass11",
+      "sha": "ab2bf02facad6fb06c803d41067f29fec8aad418",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 107,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-neb-theatrical-moscow-pass11",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-newspaper-discovery-pass14-diagnostic",
+      "sha": "b3a5b7c0c4418256fba09040644629b78cfcfd63",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 121,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-newspaper-discovery-pass14-diagnostic",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-nypl-api-discovery-pass19",
+      "sha": "f5f59eef2476c4cc42dcecfc0399a8e41ac7f65b",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 175,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-nypl-api-discovery-pass19",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-part1-citation-topology",
+      "sha": "c7b3e397cd193a7af95ad8063567c2cc9470b96f",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 87,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-part1-citation-topology",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-part1-close-topology-gaps",
+      "sha": "dd5da8d359ac11c57c6ab12bdf2f8381f6b6faa0",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 89,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-part1-close-topology-gaps",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-part1-duncan-compaction-diagnostic",
+      "sha": "fee689058288f94169a6fc17dbd5896b6387ef9a",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 113,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-part1-duncan-compaction-diagnostic",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-part1-literary-theological-pass7-76",
+      "sha": "4068a05a371181ecfc303c6b8c8ccaf86f146098",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 97,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-part1-literary-theological-pass7-76",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-physical-edition-state-pass9",
+      "sha": "295cce22afb8752300a93e32765a74e55f6d8fbf",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 104,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-physical-edition-state-pass9",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-pravda-discovery-pass15-diagnostic",
+      "sha": "8accf715050e9ab83ae3bb8fbdc7d29bbf78f820",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 124,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-discovery-pass15-diagnostic",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-pravda-eastview-discovery-pass27",
+      "sha": "1c92bc8dd614c0f35f89356018bf5d7812c1e4f5",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 211,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-eastview-discovery-pass27",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-pravda-eastview-evidence-pass27-final",
+      "sha": "58462d2f0cb7007897ef299d5ce7bf89a58d59dc",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 219,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-eastview-evidence-pass27-final",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-pravda-eastview-featured-target-discovery",
+      "sha": "851da0b889c2678ee2f7c723817da877d37fdc12",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 213,
+      "status": "ERROR",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-eastview-featured-target-discovery",
+      "error": "Not Found",
+      "httpStatus": 404
+    },
+    {
+      "branch": "research/yesenin-pravda-eastview-literal-pages-discovery",
+      "sha": "31738f933f18d54989875e3f11b0970cd06a5aa6",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 214,
+      "status": "SKIPPED_STILL_EXISTS",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-eastview-literal-pages-discovery",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-pravda-eastview-runtime-network-discovery",
+      "sha": "91fafe94a7c013e267ce4c6785c327d4e551a57a",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 215,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-eastview-runtime-network-discovery",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-pravda-rsl-access-discovery-pass26",
+      "sha": "29a5dcdee69c376190de41d1a52f724983c50f8b",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 209,
+      "status": "SKIPPED_STILL_EXISTS",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-rsl-access-discovery-pass26",
+      "tagVerified": true
+    },
+    {
+      "branch": "research/yesenin-pravda-rsl-viewer-discovery-pass26",
+      "sha": "e61610ca61fde90b382c257cb3a0768a1115584b",
+      "class": "RESEARCH_DIAGNOSTIC_OR_SUPERSEDED",
+      "pr": 208,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/research/yesenin-pravda-rsl-viewer-discovery-pass26",
+      "tagVerified": true
+    },
+    {
+      "branch": "sync/main-poet-windows-into-research",
+      "sha": "b00383626eb4f1323b55cbe2d191fbffd30dbbb1",
+      "class": "CLOSED_MENTIONS_SUCCESSOR",
+      "pr": 130,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/sync/main-poet-windows-into-research",
+      "tagVerified": true
+    },
+    {
+      "branch": "validation/research-source-gates-20260723",
+      "sha": "ed496dd3f851cb9cd95f76c958b1642a9c376b2c",
+      "class": "CLOSED_EXPLICIT_NEVER_MERGE",
+      "pr": 44,
+      "status": "DELETED_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch7/validation/research-source-gates-20260723",
+      "tagVerified": true
+    },
+    {
+      "branch": "work/mayakovsky-premium-polish",
+      "sha": "9a65ecc2a0254fc2fafb4d69efd9d1e01378ea45",
+      "class": "MERGED_EXACT",
+      "pr": 35,
+      "status": "DELETED_CONFIRMED"
+    },
+    {
+      "branch": "work/mayakovsky-visual-essays",
+      "sha": "3620e151bfa577b4efbbbcb0af1f261983830708",
+      "class": "MERGED_EXACT",
+      "pr": 33,
+      "status": "DELETED_CONFIRMED"
+    },
+    {
+      "branch": "work/yesenin-premium-archive",
+      "sha": "b1afcca7e3595b9a915cd3631f9350ccb61c5578",
+      "class": "MERGED_EXACT",
+      "pr": 36,
+      "status": "DELETED_CONFIRMED"
+    }
+  ],
+  "completedAt": "2026-08-04T10:57:51.969Z",
+  "deletedConfirmed": 26,
+  "alreadyAbsentConfirmed": 1,
+  "archivedTagsVerified": 24,
+  "skipped": 4,
+  "errors": 15,
+  "branchCountAfter": 67
+}
