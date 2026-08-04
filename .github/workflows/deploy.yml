@@ -44,6 +44,7 @@ jobs:
       verify_brand: ${{ steps.release.outputs.verify_brand }}
       release_version: ${{ steps.release.outputs.release_version }}
       source_sha256: ${{ steps.release.outputs.source_sha256 }}
+      runtime_sha256: ${{ steps.release.outputs.runtime_sha256 }}
       release_sha256: ${{ steps.release.outputs.release_sha256 }}
     steps:
       - name: Validate requested release provenance
@@ -153,7 +154,9 @@ jobs:
           set -euo pipefail
           version=""
           source_sha=""
+          runtime_sha=""
           release_sha=""
+
           if [[ -f dist/brand-release.txt ]]; then
             mapfile -t lines < dist/brand-release.txt
             if [[ "${#lines[@]}" -ne 4 \
@@ -164,8 +167,10 @@ jobs:
               echo "::error::dist/brand-release.txt has an invalid single-source contract"
               exit 1
             fi
+
             version="${lines[0]}"
             source_sha="${lines[2]#source-sha256=}"
+
             if [[ -n "${EXPECTED_VERSION}" && "${version}" != "${EXPECTED_VERSION}" ]]; then
               echo "::error::Release id ${version} does not match dispatched ${EXPECTED_VERSION}"
               exit 1
@@ -174,16 +179,32 @@ jobs:
               echo "::error::Source SHA does not match dispatched release metadata"
               exit 1
             fi
+
+            approved_source_sha="$(
+              cat qa/reference/approved-brand/final-reference.part*.b64 \
+                | tr -d '[:space:]' \
+                | base64 --decode \
+                | sha256sum \
+                | awk '{print $1}'
+            )"
+            if [[ "${approved_source_sha}" != "${source_sha}" ]]; then
+              echo "::error::Approved source fragments do not match brand-release.txt"
+              exit 1
+            fi
+
             grep -Fq "name=\"brand-release\" content=\"${version}\"" dist/index.html
             test -f dist/brand-emblem.png
-            echo "${source_sha}  dist/brand-emblem.png" | sha256sum -c -
             test ! -e dist/brand-emblem-master.webp
             test ! -e dist/brand-emblem.svg
+
+            runtime_sha="$(sha256sum dist/brand-emblem.png | awk '{print $1}')"
             release_sha="$(sha256sum dist/brand-release.txt | awk '{print $1}')"
-            echo "Verified approved single-image contract for ${version}"
+
+            echo "Verified approved source ${source_sha} and built runtime ${runtime_sha} for ${version}"
             echo "verify_brand=true" >> "$GITHUB_OUTPUT"
             echo "release_version=${version}" >> "$GITHUB_OUTPUT"
             echo "source_sha256=${source_sha}" >> "$GITHUB_OUTPUT"
+            echo "runtime_sha256=${runtime_sha}" >> "$GITHUB_OUTPUT"
             echo "release_sha256=${release_sha}" >> "$GITHUB_OUTPUT"
           elif [[ -n "${SOURCE_SHA}" ]]; then
             echo "::error::Exact-head release requests must publish dist/brand-release.txt"
@@ -192,6 +213,7 @@ jobs:
             echo "verify_brand=false" >> "$GITHUB_OUTPUT"
             echo "release_version=" >> "$GITHUB_OUTPUT"
             echo "source_sha256=" >> "$GITHUB_OUTPUT"
+            echo "runtime_sha256=" >> "$GITHUB_OUTPUT"
             echo "release_sha256=" >> "$GITHUB_OUTPUT"
           fi
 
@@ -216,31 +238,35 @@ jobs:
         if: needs.build.outputs.verify_brand == 'true'
         env:
           EXPECTED_VERSION: ${{ needs.build.outputs.release_version }}
-          EXPECTED_SOURCE_SHA256: ${{ needs.build.outputs.source_sha256 }}
+          EXPECTED_RUNTIME_SHA256: ${{ needs.build.outputs.runtime_sha256 }}
           EXPECTED_RELEASE_SHA256: ${{ needs.build.outputs.release_sha256 }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 36); do
             nonce="${GITHUB_RUN_ID}-${attempt}"
+            rm -f /tmp/brand-release.txt /tmp/brand-emblem.png
+
             curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
               "https://thelegendarypoet.ru/brand-release.txt?verify=${nonce}" \
               -o /tmp/brand-release.txt || true
             html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
               "https://thelegendarypoet.ru/?brand_verify=${nonce}" || true)"
+
             if [[ -f /tmp/brand-release.txt ]] \
               && echo "${EXPECTED_RELEASE_SHA256}  /tmp/brand-release.txt" | sha256sum -c - \
               && grep -Fq "name=\"brand-release\" content=\"${EXPECTED_VERSION}\"" <<<"${html}"; then
               curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' \
                 "https://thelegendarypoet.ru/brand-emblem.png?v=${EXPECTED_VERSION}&verify=${nonce}" \
                 -o /tmp/brand-emblem.png
-              echo "${EXPECTED_SOURCE_SHA256}  /tmp/brand-emblem.png" | sha256sum -c -
-              echo "Verified ${EXPECTED_VERSION} on the custom domain"
+              echo "${EXPECTED_RUNTIME_SHA256}  /tmp/brand-emblem.png" | sha256sum -c -
+              echo "Verified ${EXPECTED_VERSION} and its exact built runtime on the custom domain"
               exit 0
             fi
-            rm -f /tmp/brand-release.txt
+
             sleep 10
           done
-          echo "::error::Custom domain did not serve ${EXPECTED_VERSION} with the approved single image within six minutes"
+
+          echo "::error::Custom domain did not serve ${EXPECTED_VERSION} with the exact built runtime within six minutes"
           exit 1
 
   report:
