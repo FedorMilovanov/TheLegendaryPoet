@@ -30,34 +30,18 @@ jobs:
 
           path = Path('scripts/validate-app-shell.ts')
           text = path.read_text(encoding='utf-8')
+          replacements = {
+              "expected_master_sha256: process.env.MASTER_SHA256": "expected_source_sha256: process.env.SOURCE_SHA256",
+              "release dispatcher must pass the exact approved master hash": "release dispatcher must pass the exact approved source hash",
+              "EXPECTED_MASTER_SHA256: ${{ inputs.expected_master_sha256 }}": "EXPECTED_SOURCE_SHA256: ${{ inputs.expected_source_sha256 }}",
+              "deploy workflow must verify the dispatched release metadata against the built artifact": "deploy workflow must verify the dispatched single-source release metadata against the built artifact",
+          }
 
-          old_dispatch = """expect(
-            deployDispatchWorkflow.includes('expected_master_sha256: process.env.MASTER_SHA256'),
-            'release dispatcher must pass the exact approved master hash',
-          );"""
-          new_dispatch = """expect(
-            deployDispatchWorkflow.includes('expected_source_sha256: process.env.SOURCE_SHA256'),
-            'release dispatcher must pass the exact approved source hash',
-          );"""
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'validator fragment not found: {old}')
+              text = text.replace(old, new, 1)
 
-          old_deploy = """expect(
-            deployWorkflow.includes('EXPECTED_VERSION: ${{ inputs.expected_version }}')
-              && deployWorkflow.includes('EXPECTED_MASTER_SHA256: ${{ inputs.expected_master_sha256 }}'),
-            'deploy workflow must verify the dispatched release metadata against the built artifact',
-          );"""
-          new_deploy = """expect(
-            deployWorkflow.includes('EXPECTED_VERSION: ${{ inputs.expected_version }}')
-              && deployWorkflow.includes('EXPECTED_SOURCE_SHA256: ${{ inputs.expected_source_sha256 }}'),
-            'deploy workflow must verify the dispatched single-source release metadata against the built artifact',
-          );"""
-
-          if old_dispatch not in text:
-              raise SystemExit('old dispatcher validator contract not found')
-          if old_deploy not in text:
-              raise SystemExit('old deploy validator contract not found')
-
-          text = text.replace(old_dispatch, new_dispatch, 1)
-          text = text.replace(old_deploy, new_deploy, 1)
           path.write_text(text, encoding='utf-8')
           PY
 
