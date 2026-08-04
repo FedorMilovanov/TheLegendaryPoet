@@ -1,0 +1,61 @@
+{
+  "repository": "FedorMilovanov/TheLegendaryPoet",
+  "generatedAt": "2026-08-04T10:25:40.727309+00:00",
+  "triggerSha": "fc3abdbe42bc812015ddc8370b9cd08b44818a5e",
+  "state": "PLANNED",
+  "policy": "Each backup branch is first preserved by an exact lightweight archive tag pointing to the identical commit SHA; tag is verified before branch deletion.",
+  "branchRefCountBefore": 107,
+  "candidateCount": 10,
+  "candidates": [
+    {
+      "branch": "backup/yesenin-feb-acquisition-pre-normalize-20260724",
+      "sha": "fbaa00522010f5730d5c3198fc776ebc8ee73ef2",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-feb-acquisition-pre-normalize-20260724"
+    },
+    {
+      "branch": "backup/yesenin-mariengof-pass13-125bd9e",
+      "sha": "125bd9e499860c549ef978ac6ee8bdd7fd76feee",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-mariengof-pass13-125bd9e"
+    },
+    {
+      "branch": "backup/yesenin-mcvay-pass5-pre-normalize-20260724",
+      "sha": "52ca1ebd5238a869ceeab2390851dd4919f1b672",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-mcvay-pass5-pre-normalize-20260724"
+    },
+    {
+      "branch": "backup/yesenin-mcvay-pass5-with-topology-20260724",
+      "sha": "6eef78b5eb50ac350c3abdfdfcc4ce044b5805c4",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-mcvay-pass5-with-topology-20260724"
+    },
+    {
+      "branch": "backup/yesenin-neb-serial-dc085e0",
+      "sha": "dc085e0a8e8db0d122523524b27a881706af90fa",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-neb-serial-dc085e0"
+    },
+    {
+      "branch": "backup/yesenin-part1-pass7-pre-normalize-20260724",
+      "sha": "fdca06813faec40fba08017bc11ea35d548c5815",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-part1-pass7-pre-normalize-20260724"
+    },
+    {
+      "branch": "backup/yesenin-part1-pass7-validated-pre-final-normalize-20260724",
+      "sha": "83bd2c3bedf50518ba0b8be218a99677914edbf3",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-part1-pass7-validated-pre-final-normalize-20260724"
+    },
+    {
+      "branch": "backup/yesenin-part1-pre-pr78-sync-20260724",
+      "sha": "93de7a2b8edaf0d292c1ae69c1aba87f193fe11b",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-part1-pre-pr78-sync-20260724"
+    },
+    {
+      "branch": "backup/yesenin-part1-unpublished-pass6-pre-normalize-20260724",
+      "sha": "138a3079a1ca556535c15b9eb32adcb6ad328219",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-part1-unpublished-pass6-pre-normalize-20260724"
+    },
+    {
+      "branch": "backup/yesenin-pass8-editorial-e5db54f",
+      "sha": "e5db54f4fd491086978eecf665a5f4d475fd39c3",
+      "tag": "archive/branches/2026-08-04/backup/yesenin-pass8-editorial-e5db54f"
+    }
+  ]
+}
