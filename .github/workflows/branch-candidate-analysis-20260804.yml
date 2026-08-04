@@ -1,0 +1,55 @@
+name: Analyze remaining branch candidates
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-candidate-analysis-20260804.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner=context.repo.owner, repo=context.repo.repo;
+            const source=await github.rest.repos.getContent({owner,repo,path:'qa/remaining-branch-pr-map-2026-08-04.json',ref:'main'});
+            const report=JSON.parse(Buffer.from(source.data.content,'base64').toString('utf8'));
+            const never=/(never merge|must never be merged|do not merge|not for merge|temporary qa|temporary workflow|read-only post-merge witness)/i;
+            const successor=/(supersed|replacement|replaced by|rebuilt|clean successor|clean branch|final branch|later pr|follow-up pr|closed without merge|already (?:merged|landed|present)|now in main|canonical branch|integrat(?:ed|ion) into)/i;
+            const diagnostic=/(diagnostic|discovery-only|acquisition-only|probe|investigation branch|evidence collection|search script)/i;
+            const rows=[];
+            for (const b of report.branches) {
+              const exact=(b.prs||[]).filter(p=>p.headSha===b.sha);
+              const p=exact[0]||null;
+              let files=[];
+              if (p) files=await github.paginate(github.rest.pulls.listFiles,{owner,repo,pull_number:p.number,per_page:100});
+              const paths=files.map(f=>f.filename);
+              const markerOnly=paths.length>0 && paths.length<=4 && paths.every(x=>x.startsWith('.github/workflows/')||x.startsWith('qa/')||x.startsWith('docs/LIVE')||x.startsWith('docs/DEPLOY')||x.startsWith('docs/QA_'));
+              const body=p?.body||'';
+              let className='NO_EXACT_PR';
+              if (b.branch==='main') className='KEEP_MAIN';
+              else if (b.branch==='work/local-images-playwright-wtoc') className='KEEP_CANONICAL_RESEARCH';
+              else if (b.branch.startsWith('ops/')) className='OPS_TEMP';
+              else if (!p) className=(b.prs||[]).length?'ADVANCED_SINCE_PR':'NO_PR_HISTORY';
+              else if (p.state==='open') className='OPEN_PR';
+              else if (p.mergedAt) className='MERGED_EXACT';
+              else if (markerOnly && never.test(body)) className='CLOSED_NEVER_MERGE_MARKER_ONLY';
+              else if (b.branch.startsWith('research/') && (successor.test(body)||diagnostic.test(body))) className='RESEARCH_DIAGNOSTIC_OR_SUPERSEDED';
+              else if (never.test(body)) className='CLOSED_EXPLICIT_NEVER_MERGE';
+              else if (successor.test(body)) className='CLOSED_MENTIONS_SUCCESSOR';
+              else className='CLOSED_UNMERGED_REVIEW';
+              rows.push({branch:b.branch,sha:b.sha,protected:b.protected,class:className,exactPr:p?{number:p.number,state:p.state,mergedAt:p.mergedAt,base:p.base,title:p.title,draft:p.draft,body:p.body}:null,allPrs:b.prs,files:paths,fileCount:paths.length,markerOnly});
+            }
+            const counts={}; for (const r of rows) counts[r.class]=(counts[r.class]||0)+1;
+            const out={repository:`${owner}/${repo}`,runSha:context.sha,generatedAt:new Date().toISOString(),sourceRunSha:report.runSha,branchCount:rows.length,counts,rows};
+            const path='qa/remaining-branch-candidate-analysis-2026-08-04.json';
+            let current; try{current=await github.rest.repos.getContent({owner,repo,path,ref:'main'});}catch(e){if(e.status!==404)throw e;}
+            await github.rest.repos.createOrUpdateFileContents({owner,repo,path,branch:'main',message:'audit(branches): classify remaining exact refs',content:Buffer.from(JSON.stringify(out,null,2)+'\n').toString('base64'),sha:current?.data?.sha});
+            core.summary.addHeading('Remaining branch classification').addCodeBlock(JSON.stringify(counts,null,2),'json').write();
