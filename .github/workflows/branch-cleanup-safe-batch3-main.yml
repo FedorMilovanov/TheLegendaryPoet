@@ -1,0 +1,181 @@
+name: One-shot guarded merged-head cleanup batch 3
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/branch-cleanup-safe-batch3-main.yml]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  delete-immutable-merged-heads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Preflight all refs, write plan, delete, verify and finalize report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import datetime as dt
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          trigger_sha = os.environ["TRIGGER_SHA"]
+          owner = repo.split("/", 1)[0]
+          report_path = "qa/branch-cleanup-batch3-report.json"
+          allowed_bases = {"main", "work/local-images-playwright-wtoc"}
+          excluded_exact = {"main", "work/local-images-playwright-wtoc"}
+          excluded_prefixes = ("backup/", "archive/", "editorial/", "work/", "ops/")
+
+          def api(method, path, payload=None, allow_404=False):
+              data = None if payload is None else json.dumps(payload).encode("utf-8")
+              req = urllib.request.Request(f"https://api.github.com{path}", data=data, method=method)
+              req.add_header("Authorization", f"Bearer {token}")
+              req.add_header("Accept", "application/vnd.github+json")
+              req.add_header("X-GitHub-Api-Version", "2022-11-28")
+              req.add_header("User-Agent", "guarded-merged-head-cleanup")
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      raw = response.read()
+                      return response.status, json.loads(raw) if raw else None
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode("utf-8", errors="replace")
+                  if allow_404 and exc.code == 404:
+                      return 404, None
+                  raise RuntimeError(f"{method} {path}: {exc.code} {raw}") from exc
+
+          def enc(value):
+              return urllib.parse.quote(value, safe="")
+
+          def put_report(report, sha=None):
+              encoded = base64.b64encode((json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode("utf-8")).decode("ascii")
+              payload = {
+                  "message": "ops: record guarded merged-head cleanup batch 3",
+                  "content": encoded,
+                  "branch": "main",
+              }
+              if sha:
+                  payload["sha"] = sha
+              _, result = api("PUT", f"/repos/{repo}/contents/{report_path}", payload)
+              return result["content"]["sha"], result["commit"]["sha"]
+
+          # Fail closed if another writer advanced main before preflight.
+          _, main_ref = api("GET", f"/repos/{repo}/git/ref/heads/main")
+          if main_ref["object"]["sha"] != trigger_sha:
+              raise RuntimeError(f"main moved before cleanup: {main_ref['object']['sha']} != {trigger_sha}")
+
+          _, open_repo_prs = api("GET", f"/repos/{repo}/pulls?state=open&per_page=100")
+          if open_repo_prs:
+              raise RuntimeError(f"Repository has {len(open_repo_prs)} open PR(s)")
+
+          merged = []
+          for page in range(1, 11):
+              _, prs = api("GET", f"/repos/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=100&page={page}")
+              for pr in prs:
+                  head_repo = (pr.get("head") or {}).get("repo") or {}
+                  branch = (pr.get("head") or {}).get("ref")
+                  if not pr.get("merged_at") or pr.get("base", {}).get("ref") not in allowed_bases:
+                      continue
+                  if head_repo.get("full_name") != repo or not branch:
+                      continue
+                  if branch in excluded_exact or branch.startswith(excluded_prefixes):
+                      continue
+                  merged.append({
+                      "branch": branch,
+                      "pr": pr["number"],
+                      "base": pr["base"]["ref"],
+                      "sha": pr["head"]["sha"],
+                      "mergedAt": pr["merged_at"],
+                      "title": pr.get("title", ""),
+                  })
+              if len(prs) < 100:
+                  break
+
+          by_branch = {}
+          for item in merged:
+              by_branch.setdefault(item["branch"], []).append(item)
+
+          candidates = []
+          skipped = []
+          for branch, pr_items in sorted(by_branch.items()):
+              status, ref = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if status == 404:
+                  skipped.append({"branch": branch, "reason": "already_absent"})
+                  continue
+              current_sha = ref["object"]["sha"]
+              exact = [item for item in pr_items if item["sha"] == current_sha]
+              if not exact:
+                  skipped.append({"branch": branch, "reason": "advanced_or_rewritten", "currentSha": current_sha})
+                  continue
+              item = sorted(exact, key=lambda value: value["pr"], reverse=True)[0]
+              branch_status, branch_info = api("GET", f"/repos/{repo}/branches/{enc(branch)}", allow_404=True)
+              if branch_status == 404:
+                  skipped.append({"branch": branch, "reason": "disappeared_during_preflight"})
+                  continue
+              if branch_info.get("protected"):
+                  skipped.append({"branch": branch, "reason": "protected"})
+                  continue
+              _, open_head = api("GET", f"/repos/{repo}/pulls?state=open&head={enc(owner + ':' + branch)}&per_page=100")
+              if open_head:
+                  skipped.append({"branch": branch, "reason": "open_pr"})
+                  continue
+              candidates.append(item)
+
+          if len(candidates) > 150:
+              raise RuntimeError(f"Candidate count {len(candidates)} exceeds safety ceiling")
+
+          report = {
+              "repository": repo,
+              "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+              "triggerSha": trigger_sha,
+              "policy": "Exact unchanged head of a merged PR whose base is main or work/local-images-playwright-wtoc; no open PR; unprotected ref; archive/backup/editorial/work/ops excluded.",
+              "state": "PLANNED",
+              "candidateCount": len(candidates),
+              "candidates": candidates,
+              "skipped": skipped,
+              "deleted": [],
+          }
+          report_sha, report_commit = put_report(report)
+          report["planCommit"] = report_commit
+
+          deleted = []
+          for item in candidates:
+              branch = item["branch"]
+              status, ref = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if status == 404:
+                  deleted.append({**item, "status": "already_absent_after_plan"})
+                  continue
+              if ref["object"]["sha"] != item["sha"]:
+                  raise RuntimeError(f"SHA changed after plan for {branch}")
+              _, open_head = api("GET", f"/repos/{repo}/pulls?state=open&head={enc(owner + ':' + branch)}&per_page=100")
+              if open_head:
+                  raise RuntimeError(f"Open PR appeared for {branch}")
+              api("DELETE", f"/repos/{repo}/git/refs/heads/{enc(branch)}")
+              verify, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+              if verify != 404:
+                  raise RuntimeError(f"Ref still exists after delete: {branch}")
+              deleted.append({**item, "status": "deleted_confirmed"})
+
+          report["state"] = "COMPLETE"
+          report["completedAt"] = dt.datetime.now(dt.timezone.utc).isoformat()
+          report["deleted"] = deleted
+          report["deletedConfirmedCount"] = sum(1 for item in deleted if item["status"] == "deleted_confirmed")
+          report["alreadyAbsentAfterPlanCount"] = sum(1 for item in deleted if item["status"] != "deleted_confirmed")
+          final_report_sha, final_commit = put_report(report, sha=report_sha)
+          print(json.dumps({"reportCommit": final_commit, "reportBlob": final_report_sha, "deleted": deleted}, ensure_ascii=False, indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+              fh.write(f"# Guarded merged-head cleanup batch 3\n\nDeleted and confirmed: **{report['deletedConfirmedCount']}**\n")
+          PY
