@@ -1,0 +1,71 @@
+name: Guarded final legacy branch cleanup batch 8
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-safe-batch8-main.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner=context.repo.owner,repo=context.repo.repo;
+            const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+            const absent=e=>[404,409,422].includes(e?.status);
+            async function refOrNull(ref){try{return (await github.rest.git.getRef({owner,repo,ref})).data.object.sha;}catch(e){if(absent(e))return null;throw e;}}
+            async function waitRef(ref,sha){for(let i=0;i<12;i++){const s=await refOrNull(ref);if(s===sha)return true;if(s&&s!==sha)throw new Error(`Ref mismatch ${ref}: ${s}`);await sleep(350);}return false;}
+            async function waitAbsent(ref){for(let i=0;i<12;i++){if(!(await refOrNull(ref)))return true;await sleep(350);}return false;}
+            const src=await github.rest.repos.getContent({owner,repo,path:'qa/remaining-branch-graph-audit-2026-08-04.json',ref:'main'});
+            const data=JSON.parse(Buffer.from(src.data.content,'base64').toString('utf8'));
+            const preserve=new Set(['main','work/local-images-playwright-wtoc','release/approved-essay-covers-2026-08-04','deploy-live-cloak-v2','agent/home-polish-clean-20260725-r2','agent/lermontov-road-essay','research/yesenin-part1-authoring-76']);
+            const open=await github.paginate(github.rest.pulls.list,{owner,repo,state:'open',per_page:100});
+            const openHeads=new Set(open.filter(p=>p.head.repo&&p.head.repo.full_name===`${owner}/${repo}`).map(p=>p.head.ref));
+            const targets=data.rows.filter(r=>!preserve.has(r.branch)&&!openHeads.has(r.branch)).map(r=>({...r,mode:(r.containedInMain||r.containedInCanonical)?'DIRECT_CONTAINED':'ARCHIVE'})).sort((a,b)=>a.branch.localeCompare(b.branch));
+            const report={repository:`${owner}/${repo}`,runSha:context.sha,startedAt:new Date().toISOString(),preserve:[...preserve],openHeads:[...openHeads],planned:targets.length,directPlanned:targets.filter(r=>r.mode==='DIRECT_CONTAINED').length,archivePlanned:targets.filter(r=>r.mode==='ARCHIVE').length,results:[]};
+            for(const r of targets){
+              const item={branch:r.branch,sha:r.sha,mode:r.mode,status:'PENDING',archiveTag:null,tagExact:null,branchAbsent:null};report.results.push(item);
+              try{
+                if(openHeads.has(r.branch)){item.status='OPEN_PR_BLOCK';continue;}
+                let bs=await refOrNull(`heads/${r.branch}`);
+                if(bs&&bs!==r.sha){item.status='SHA_CHANGED_BLOCK';item.currentSha=bs;continue;}
+                if(r.mode==='DIRECT_CONTAINED'){
+                  const head=r.containedInMain?'main':'work/local-images-playwright-wtoc';
+                  const cmp=await github.rest.repos.compareCommits({owner,repo,base:r.branch,head});
+                  if(cmp.data.behind_by!==0){item.status='CONTAINMENT_GUARD_BLOCK';continue;}
+                }else{
+                  if(r.exactPr){
+                    const p=await github.rest.pulls.get({owner,repo,pull_number:r.exactPr.number});
+                    if(p.data.state!=='closed'||p.data.merged_at||p.data.head.sha!==r.sha){item.status='PR_GUARD_BLOCK';continue;}
+                  }else if((r.allPrs||[]).length){item.status='PR_HISTORY_GUARD_BLOCK';continue;}
+                  const tag=`archive/branches/2026-08-04/batch8/${r.branch}`;item.archiveTag=tag;
+                  let ts=await refOrNull(`tags/${tag}`);
+                  if(ts&&ts!==r.sha){item.status='TAG_MISMATCH_BLOCK';continue;}
+                  if(!ts){try{await github.rest.git.createRef({owner,repo,ref:`refs/tags/${tag}`,sha:r.sha});}catch(e){if(!absent(e))throw e;}}
+                  item.tagExact=await waitRef(`tags/${tag}`,r.sha);
+                  if(!item.tagExact){item.status='TAG_VERIFY_BLOCK';continue;}
+                }
+                bs=await refOrNull(`heads/${r.branch}`);
+                if(!bs){item.branchAbsent=true;item.status='ABSENT_CONFIRMED';continue;}
+                if(bs!==r.sha){item.status='SHA_CHANGED_BLOCK';item.currentSha=bs;continue;}
+                const bm=await github.rest.repos.getBranch({owner,repo,branch:r.branch});if(bm.data.protected){item.status='PROTECTED_BLOCK';continue;}
+                try{await github.rest.git.deleteRef({owner,repo,ref:`heads/${r.branch}`});}catch(e){if(!absent(e))throw e;}
+                let gone=await waitAbsent(`heads/${r.branch}`);if(!gone){try{await github.rest.git.deleteRef({owner,repo,ref:`heads/${r.branch}`});}catch(e){if(!absent(e))throw e;}gone=await waitAbsent(`heads/${r.branch}`);}
+                item.branchAbsent=gone;item.status=gone?'ABSENT_CONFIRMED':'DELETE_NOT_CONFIRMED';
+              }catch(e){item.status='ERROR';item.error=String(e.message||e);item.httpStatus=e.status||null;}
+            }
+            const remaining=[];const badTags=[];
+            for(const r of targets){const bs=await refOrNull(`heads/${r.branch}`);if(bs)remaining.push({branch:r.branch,currentSha:bs,expectedSha:r.sha});if(r.mode==='ARCHIVE'){const tag=`archive/branches/2026-08-04/batch8/${r.branch}`;const ts=await refOrNull(`tags/${tag}`);if(ts!==r.sha)badTags.push({tag,currentSha:ts,expectedSha:r.sha});}}
+            const branches=await github.paginate(github.rest.repos.listBranches,{owner,repo,per_page:100});
+            report.completedAt=new Date().toISOString();report.remaining=remaining;report.badTags=badTags;report.absentConfirmed=targets.length-remaining.length;report.archiveTagsExact=targets.filter(r=>r.mode==='ARCHIVE').length-badTags.length;report.branchCountAfter=branches.length;report.success=remaining.length===0&&badTags.length===0;
+            const path='qa/branch-cleanup-batch8-report.json';let cur;try{cur=await github.rest.repos.getContent({owner,repo,path,ref:'main'});}catch(e){if(e.status!==404)throw e;}
+            await github.rest.repos.createOrUpdateFileContents({owner,repo,path,branch:'main',message:'ops: record guarded legacy branch cleanup batch 8',content:Buffer.from(JSON.stringify(report,null,2)+'\n').toString('base64'),sha:cur?.data?.sha});
+            core.summary.addHeading('Batch 8 verification').addCodeBlock(JSON.stringify({success:report.success,planned:report.planned,direct:report.directPlanned,archived:report.archivePlanned,absent:report.absentConfirmed,tags:report.archiveTagsExact,remaining:remaining.length,badTags:badTags.length,branchesAfter:report.branchCountAfter},null,2),'json').write();
