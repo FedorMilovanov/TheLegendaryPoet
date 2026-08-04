@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://thelegendarypoet.ru/</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/og-image.jpg</image:loc>
       <image:title>THE LEGENDARY POET</image:title>
@@ -11,15 +11,15 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-03</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/ratings</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-03</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/articles</loc>
-    <lastmod>2026-07-29</lastmod>
+    <lastmod>2026-08-03</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music</loc>
@@ -57,7 +57,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-part-1-editorial.webp</image:loc>
       <image:title>Сергей Есенин. Часть I: 1895–1921</image:title>
@@ -65,8 +65,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925</loc>
+    <lastmod>2026-08-03</lastmod>
+    <image:image>
+      <image:loc>https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin1925.jpg</image:loc>
+      <image:title>Сергей Есенин. Часть II: 1921–1925</image:title>
+      <image:caption>Сергей Есенин — поздний архивный портрет 1925 года</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp</image:loc>
       <image:title>Есенин и Айседора Дункан: что документы говорят о первой встрече</image:title>
@@ -75,7 +84,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-1-hero.webp</image:loc>
       <image:title>Маяковский. Часть I: бунтарь, футурист, влюблённый</image:title>
@@ -84,7 +93,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</loc>
-    <lastmod>2026-07-16</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/mayakovsky/mayakovsky-part-2-hero.webp</image:loc>
       <image:title>Маяковский. Часть II: революция, ЛЕФ и последний кризис</image:title>
@@ -93,7 +102,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/brik-case</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/briks/brik-archive-hero.webp</image:loc>
       <image:title>Маяковский и Брики: любовь, союз и зависимость</image:title>
@@ -137,7 +146,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/vladimir-mayakovsky</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-08-02</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/mayakovsky.jpg</image:loc>
       <image:title>Владимир Владимирович Маяковский</image:title>
@@ -188,7 +197,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc>
-    <lastmod>2026-07-26</lastmod>
+    <lastmod>2026-08-03</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/yesenin.jpg</image:loc>
       <image:title>Сергей Александрович Есенин</image:title>

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { essays } from '../src/data/essays/index';
 import { sectionAnchor } from '../src/components/essay/anchor';
-import type { Essay, EssayBlock, EssaySourceKind } from '../src/types/essay';
+import type { Essay, EssayBlock, EssayMythVerdict, EssaySourceKind } from '../src/types/essay';
 
 const errors: string[] = [];
 const warnings: string[] = [];
@@ -10,6 +10,7 @@ const institutionalSourcePattern = /музей|мемориаль|выставк
 const primarySourceUrlPattern = /feb-web\.ru|rvb\.ru|wikisource\.org/i;
 const scriptureReferencePattern = /\((?:[1-3]\s*)?[А-ЯЁ][А-Яа-яё. ]+\s+\d+:\d+(?:[–-]\d+)?\)/g;
 const allowedSourceKinds = new Set<EssaySourceKind>(['primary', 'archive', 'research', 'context']);
+const allowedMythVerdicts = new Set<EssayMythVerdict>(['false', 'partly-true', 'disputed', 'unproven']);
 
 const sourceMinimums: Record<string, { total: number; primary: number }> = {
   'mayakovsky-before-revolution': { total: 30, primary: 18 },
@@ -101,6 +102,7 @@ function blockText(block: EssayBlock): string {
 function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
   const anchors = new Set<string>();
   let reflectionCount = 0;
+  let mythCount = 0;
   let historicalBodyScriptureReferences = 0;
 
   blocks.forEach((block, index) => {
@@ -157,6 +159,21 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
       error(essay, `poem block ${index + 1} has no lines`);
     }
 
+    if (block.type === 'note' && block.variant === 'myth') {
+      mythCount += 1;
+      if (!block.claim.trim()) error(essay, `myth block ${index + 1} has no claim`);
+      if (!block.text.trim()) error(essay, `myth block ${index + 1} has no documentary answer`);
+      if (!allowedMythVerdicts.has(block.verdict)) {
+        error(essay, `myth block ${index + 1} has an invalid verdict: ${block.verdict}`);
+      }
+      if (!block.sourceIds?.length) {
+        error(essay, `myth block ${index + 1} must cite at least one stable source id`);
+      }
+      if (!block.origin?.trim()) {
+        warning(essay, `myth block ${index + 1} should identify where the formulation circulates`);
+      }
+    }
+
     if (block.type === 'reflection') {
       reflectionCount += 1;
     } else if (block.type === 'paragraph' || block.type === 'note' || block.type === 'poem') {
@@ -167,6 +184,10 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
 
   if (reflectionCount > 1) {
     warning(essay, `has ${reflectionCount} reflection blocks; keep the evangelical conclusion concentrated`);
+  }
+
+  if (mythCount > 4) {
+    warning(essay, `has ${mythCount} myth blocks; the rubric may be overwhelming the narrative`);
   }
 
   if (historicalBodyScriptureReferences > 6) {

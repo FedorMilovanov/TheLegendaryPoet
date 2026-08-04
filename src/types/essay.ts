@@ -9,6 +9,8 @@
 export type EssayImageKind = 'archive' | 'restoration' | 'reconstruction' | 'document';
 export type EssayImageLayout = 'wide' | 'portrait' | 'cinematic';
 export type EssayImagePlacement = 'full' | 'left' | 'right';
+export type EssayImageLoading = 'lazy' | 'eager';
+export type EssayMythVerdict = 'false' | 'partly-true' | 'disputed' | 'unproven';
 
 export interface EssayImageData {
   src: string;
@@ -24,6 +26,12 @@ export interface EssayImageData {
   objectPosition?: string;
   /** Disable pointer tilt for fragile documents or already perspective-heavy art. */
   tilt?: boolean;
+  /**
+   * Loading priority is an editorial decision, not a renderer guess. Keep the
+   * default lazy; use eager only for a small, explicitly audited visual set
+   * whose decode is required for the article's first deliberate reading pass.
+   */
+  loading?: EssayImageLoading;
 }
 
 export interface EssayCitationData {
@@ -46,7 +54,7 @@ export type EssayBlock =
   | { type: 'pullquote'; text: string; cite?: string }
   /** An embedded poem / stanza, rendered in the serif poetry style.
    *  Wrap words in **double asterisks** to render them in glowing gold.
-   *  variant 'blood' tints the stanza red (for Yesenin's last poem, written in blood). */
+   *  variant 'blood' tints the stanza red (for a source-backed material note only). */
   | { type: 'poem'; title?: string; lines: string; year?: string | number; note?: string; variant?: 'default' | 'blood' }
   /** A sourced voice: the poet himself, a friend, another poet, or a historian. */
   | {
@@ -59,7 +67,18 @@ export type EssayBlock =
       kind?: 'self' | 'friend' | 'poet' | 'historian';
     }
   /** An editorial remark from the project (the site's own sober commentary). */
-  | ({ type: 'note'; text: string } & EssayCitationData)
+  | ({ type: 'note'; variant?: 'editorial'; text: string } & EssayCitationData)
+  /** A compact source-backed myth check. The verdict describes the evidence,
+   *  not the emotional appeal or popularity of the claim. */
+  | ({
+      type: 'note';
+      variant: 'myth';
+      claim: string;
+      verdict: EssayMythVerdict;
+      text: string;
+      /** Where the formulation circulates: memoir, school tradition, media, etc. */
+      origin?: string;
+    } & EssayCitationData)
   /** A reverent, candle-lit reflection — the site's careful spiritual/biblical
    *  meditation. Distinct warm-gold styling. Supports **gold** emphasis. */
   | { type: 'reflection'; heading?: string; text: string }

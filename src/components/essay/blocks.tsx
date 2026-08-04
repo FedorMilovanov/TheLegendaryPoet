@@ -181,7 +181,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
           ref={imageRef}
           src={imageSrc}
           alt={block.alt}
-          loading="lazy"
+          loading={block.loading ?? 'lazy'}
           decoding="async"
           sizes={sizes}
           data-image-state={imageState}
@@ -366,7 +366,87 @@ function VoiceBlock({ block }: { block: Block<'voice'> }) {
   );
 }
 
+const mythVerdictConfig = {
+  false: {
+    label: 'Не подтверждается',
+    frame: 'border-rose-400/25 bg-gradient-to-br from-rose-500/[0.07] via-[#0b0809] to-[#050505]',
+    badge: 'border-rose-300/25 bg-rose-400/10 text-rose-200',
+    rule: 'bg-rose-300/70',
+    eyebrow: 'text-rose-200/80',
+  },
+  'partly-true': {
+    label: 'Частично верно',
+    frame: 'border-amber-300/25 bg-gradient-to-br from-amber-400/[0.07] via-[#0c0a06] to-[#050505]',
+    badge: 'border-amber-200/25 bg-amber-300/10 text-amber-100',
+    rule: 'bg-amber-200/70',
+    eyebrow: 'text-amber-100/80',
+  },
+  disputed: {
+    label: 'Спорно',
+    frame: 'border-violet-300/25 bg-gradient-to-br from-violet-400/[0.07] via-[#09080d] to-[#050505]',
+    badge: 'border-violet-200/25 bg-violet-300/10 text-violet-100',
+    rule: 'bg-violet-200/70',
+    eyebrow: 'text-violet-100/80',
+  },
+  unproven: {
+    label: 'Не доказано',
+    frame: 'border-cyan-300/25 bg-gradient-to-br from-cyan-400/[0.065] via-[#061014] to-[#050505]',
+    badge: 'border-cyan-200/25 bg-cyan-300/10 text-cyan-100',
+    rule: 'bg-cyan-200/70',
+    eyebrow: 'text-cyan-100/80',
+  },
+} as const;
+
+function MythNoteBlock({ block, citations }: { block: Extract<Block<'note'>, { variant: 'myth' }>; citations?: ReactNode }) {
+  const cfg = mythVerdictConfig[block.verdict];
+  const paragraphs = splitParagraphs(block.text);
+
+  return (
+    <aside className={`relative my-12 overflow-hidden rounded-[2.25rem] border p-7 md:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.28)] ${cfg.frame}`}>
+      <span className={`absolute bottom-0 left-0 top-0 w-1 ${cfg.rule}`} aria-hidden="true" />
+      <div className="relative z-10">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] ${cfg.eyebrow}`}>
+            <Quote size={14} aria-hidden="true" />
+            Проверка мифа
+          </div>
+          <span className={`inline-flex rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${cfg.badge}`}>
+            {cfg.label}
+          </span>
+        </div>
+
+        <p className="font-serif text-2xl font-semibold leading-snug text-white md:text-3xl text-pretty">
+          «{block.claim}»
+        </p>
+
+        {block.origin ? (
+          <p className="mt-4 text-xs leading-relaxed text-luxury-gray-light/48">
+            <span className="font-bold uppercase tracking-[0.14em] text-luxury-gray-light/60">Откуда формула:</span>{' '}
+            {block.origin}
+          </p>
+        ) : null}
+
+        <div className="mt-7 border-t border-white/10 pt-6">
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
+            Что показывают документы
+          </div>
+          {paragraphs.map((paragraph, index) => (
+            <p key={index} className="mb-4 text-base font-light leading-[1.8] text-luxury-gray-light/88 md:text-lg text-pretty">
+              {withGold(paragraph)}
+              {index === paragraphs.length - 1 ? citations : null}
+            </p>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: ReactNode }) {
+  if (block.variant === 'myth') {
+    return <MythNoteBlock block={block} citations={citations} />;
+  }
+
   return (
     <aside className="my-10 rounded-[2rem] border-l-[6px] border-l-cyan-400/60 bg-[#061018]/60 p-6 md:p-8">
       <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
