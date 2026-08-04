@@ -24,7 +24,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Reconstruct archived payload
+      - name: Export raw archived payload
         shell: bash
         run: |
           set -euo pipefail
@@ -37,14 +37,11 @@ jobs:
           do
             git show "$ARCHIVE_TAG:$part"
           done | tr -d '\r\n\t ' > export/archived-payload.tar.gz.b64
-          wc -c export/archived-payload.tar.gz.b64
-          base64 --decode export/archived-payload.tar.gz.b64 > export/archived-payload.tar.gz
-          sha256sum export/archived-payload.tar.gz export/archived-payload.tar.gz.b64 > export/SHA256SUMS
-          tar -tzf export/archived-payload.tar.gz > export/CONTENTS.txt
-          cat export/SHA256SUMS
-          cat export/CONTENTS.txt
+          base64 --decode export/archived-payload.tar.gz.b64 > export/archived-payload.partial.tar.gz
+          wc -c export/archived-payload.tar.gz.b64 export/archived-payload.partial.tar.gz | tee export/SIZES.txt
+          sha256sum export/archived-payload.tar.gz.b64 export/archived-payload.partial.tar.gz | tee export/SHA256SUMS
 
-      - name: Upload archived payload
+      - name: Upload raw archived payload
         uses: actions/upload-artifact@v4
         with:
           name: archived-approved-cover-payload
