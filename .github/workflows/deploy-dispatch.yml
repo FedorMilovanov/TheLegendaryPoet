@@ -34,17 +34,17 @@ jobs:
             }
             const text = Buffer.from(response.data.content, 'base64').toString('utf8').trimEnd();
             const lines = text.split(/\r?\n/);
-            if (lines.length !== 2 || !/^[a-z0-9][a-z0-9._-]+$/i.test(lines[0])) {
-              core.setFailed('brand-release.txt must contain an exact release id and one master hash line');
-              return;
-            }
-            const match = /^master-sha256=([a-f0-9]{64})$/.exec(lines[1]);
-            if (!match) {
-              core.setFailed('brand-release.txt has an invalid master SHA-256 line');
+            const valid = lines.length === 4
+              && /^[a-z0-9][a-z0-9._-]+$/i.test(lines[0])
+              && /^approved-source=[a-z0-9][a-z0-9._-]+$/i.test(lines[1])
+              && /^source-sha256=[a-f0-9]{64}$/.test(lines[2])
+              && lines[3] === 'roles=single';
+            if (!valid) {
+              core.setFailed('brand-release.txt must contain the approved four-line single-source contract');
               return;
             }
             core.setOutput('version', lines[0]);
-            core.setOutput('master_sha256', match[1]);
+            core.setOutput('source_sha256', lines[2].slice('source-sha256='.length));
 
       - name: Mark exact release request pending
         uses: actions/github-script@v7
@@ -63,7 +63,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          MASTER_SHA256: ${{ steps.release.outputs.master_sha256 }}
+          SOURCE_SHA256: ${{ steps.release.outputs.source_sha256 }}
         with:
           script: |
             const sourceSha = context.payload.pull_request.head.sha;
@@ -77,6 +77,6 @@ jobs:
                 status_sha: sourceSha,
                 pr_number: String(context.payload.pull_request.number),
                 expected_version: process.env.RELEASE_VERSION,
-                expected_master_sha256: process.env.MASTER_SHA256,
+                expected_source_sha256: process.env.SOURCE_SHA256,
               },
             });
