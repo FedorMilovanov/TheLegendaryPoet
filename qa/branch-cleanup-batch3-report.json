@@ -2307,5 +2307,788 @@
     }
   ],
   "skippedAfterResumeCount": 32,
-  "openPrCountAtFinalize": 0
+  "openPrCountAtFinalize": 0,
+  "independentVerification": {
+    "verifyRunSha": "067347c957732b76bc1892bd1f1a89c10f6d7300",
+    "verifiedAt": "2026-08-04T10:15:21.629397+00:00",
+    "plannedCount": 95,
+    "absentConfirmedCount": 95,
+    "remainingExactCount": 0,
+    "changedCount": 0,
+    "absentConfirmed": [
+      {
+        "branch": "agent/audit-hover-architecture",
+        "pr": 236,
+        "base": "main",
+        "sha": "ef375abf49fdfbb92f9bb39f34846d4861e8d612",
+        "mergedAt": "2026-07-27T11:46:43Z",
+        "title": "refactor(ui): harden hover architecture for future cards"
+      },
+      {
+        "branch": "agent/clean-articles-catalog",
+        "pr": 232,
+        "base": "main",
+        "sha": "7d35b359b76c4510d817f3823f4c77f84c93c76e",
+        "mergedAt": "2026-07-26T14:43:15Z",
+        "title": "refactor(articles): unify the public research catalog"
+      },
+      {
+        "branch": "agent/fix-hover-flicker",
+        "pr": 235,
+        "base": "main",
+        "sha": "c1ba957474ecc020966b889189a33470621a05b5",
+        "mergedAt": "2026-07-27T10:34:09Z",
+        "title": "fix(ui): remove cover hover flicker across catalogs"
+      },
+      {
+        "branch": "agent/integrate-unmerged-essays",
+        "pr": 31,
+        "base": "main",
+        "sha": "ab530675ec5929e6c9c7398547462ade64337272",
+        "mergedAt": "2026-07-21T19:59:44Z",
+        "title": "Integrate verified essays, consolidated poet library, CI, and custom domain"
+      },
+      {
+        "branch": "agent/manual-e2e-qa-20260724",
+        "pr": 56,
+        "base": "main",
+        "sha": "149696e7b8f659c40fa6f621733450cdcd7a47d7",
+        "mergedAt": "2026-07-24T00:35:46Z",
+        "title": "Run manual browser QA across core user journeys"
+      },
+      {
+        "branch": "agent/premium-poet-windows-v2",
+        "pr": 123,
+        "base": "main",
+        "sha": "54e2b0aba6f9e8b4098a27a0f7a382ab04e588b6",
+        "mergedAt": "2026-07-25T03:44:43Z",
+        "title": "feat(home): add premium interactive poet windows"
+      },
+      {
+        "branch": "agent/publish-selected-yesenin-covers",
+        "pr": 234,
+        "base": "main",
+        "sha": "35499fef22af82b10dfa4805b3f1816eb2d15f78",
+        "mergedAt": "2026-07-26T22:45:45Z",
+        "title": "assets(essays): publish selected Yesenin covers"
+      },
+      {
+        "branch": "agent/remove-legacy-hover-css",
+        "pr": 237,
+        "base": "main",
+        "sha": "4bb42575beb995fdc3878bf06eb8c3e24b0aa0b7",
+        "mergedAt": "2026-07-27T13:34:32Z",
+        "title": "refactor(ui): unify hover motion and native image lifecycle"
+      },
+      {
+        "branch": "audit/public-image-provenance-ledger-2026-07-30",
+        "pr": 264,
+        "base": "main",
+        "sha": "97308d2417c3bf78558580b8c33668ee40d7342e",
+        "mergedAt": "2026-07-30T13:46:37Z",
+        "title": "audit: add provenance ledger for public editorial images"
+      },
+      {
+        "branch": "brand-deploy-cloak-v2",
+        "pr": 141,
+        "base": "main",
+        "sha": "710782717fc332a3657dbce5fa3d105f70af8cc6",
+        "mergedAt": "2026-07-25T14:40:57Z",
+        "title": "Publish approved cloaked emblem"
+      },
+      {
+        "branch": "chore/brand-reference-lock-v9",
+        "pr": 248,
+        "base": "main",
+        "sha": "c4c40d641d45b319f1e58b1f007a88b28fd460e2",
+        "mergedAt": "2026-07-27T18:28:35Z",
+        "title": "chore(brand): lock SVG marathons to canonical reference"
+      },
+      {
+        "branch": "chore/clean-music-upload",
+        "pr": 40,
+        "base": "main",
+        "sha": "ccba8a8e72d2c28e56d41802e453366d6c08dc82",
+        "mergedAt": "2026-07-23T01:41:53Z",
+        "title": "Clean uploaded music release assets"
+      },
+      {
+        "branch": "chore/place-yesenin-release-assets",
+        "pr": 41,
+        "base": "main",
+        "sha": "2a0b5000dbc62ca3c51a6666d4f35309f91bd78c",
+        "mergedAt": "2026-07-23T11:00:01Z",
+        "title": "Place Yesenin release assets in their final directories"
+      },
+      {
+        "branch": "chore/remove-deprecated-studio-freight-lenis-20260727",
+        "pr": 244,
+        "base": "main",
+        "sha": "10382780561ff04aa26a7986890db572e407c76c",
+        "mergedAt": "2026-07-27T17:02:04Z",
+        "title": "chore(deps): remove deprecated Lenis package alias"
+      },
+      {
+        "branch": "ci/preserve-home-diagnostics-after-failure",
+        "pr": 185,
+        "base": "main",
+        "sha": "c6cb802840a0af5901a3abf757f8c3db4d4217ad",
+        "mergedAt": "2026-07-25T19:41:36Z",
+        "title": "ci: preserve homepage diagnostics after browser failures"
+      },
+      {
+        "branch": "claude/website-audit-html-hzs4bk",
+        "pr": 28,
+        "base": "main",
+        "sha": "202350c5dba79bea94ce234e82d8d7265f47b992",
+        "mergedAt": "2026-07-14T23:52:54Z",
+        "title": "Fix poet hero portrait crop showing only forehead on wide/short viewports"
+      },
+      {
+        "branch": "deploy-live-emblem-v3-final",
+        "pr": 155,
+        "base": "main",
+        "sha": "505202d838155c9326db838c4add0711dbc8183a",
+        "mergedAt": "2026-07-25T16:36:36Z",
+        "title": "Publish approved emblem v3 cleanly"
+      },
+      {
+        "branch": "docs/official-visual-collections-2026-07-30",
+        "pr": 263,
+        "base": "main",
+        "sha": "39af82b8279d0baa0264a29ab2d52b6e1aef43b2",
+        "mergedAt": "2026-07-30T01:07:21Z",
+        "title": "docs: add official visual-collections and portrait-reference policy"
+      },
+      {
+        "branch": "docs/source-library-integration-final-2026-07-30",
+        "pr": 262,
+        "base": "main",
+        "sha": "4ccf57c79c1a7161f103df9639beca9b74fc0d39",
+        "mergedAt": "2026-07-30T00:10:53Z",
+        "title": "docs: integrate final strict 40-PDF source archive"
+      },
+      {
+        "branch": "feat/app-shell-performance-hardening",
+        "pr": 53,
+        "base": "main",
+        "sha": "310684c8efd6ff9e10c7fae9e4d9f6424e986f54",
+        "mergedAt": "2026-07-23T20:36:11Z",
+        "title": "Stabilize navigation shell, lazy routes, and scroll restoration"
+      },
+      {
+        "branch": "feat/community-feedback-hardening",
+        "pr": 51,
+        "base": "main",
+        "sha": "364d2ab6e036b48e82d0e028df60acbd3ff5f8c6",
+        "mergedAt": "2026-07-23T19:52:10Z",
+        "title": "Harden community ratings, comments, and offline sync"
+      },
+      {
+        "branch": "feat/community-ratings-audio",
+        "pr": 39,
+        "base": "main",
+        "sha": "3644044a638306eab11cb23d5e2a7abd6aa7ac6f",
+        "mergedAt": "2026-07-23T11:03:49Z",
+        "title": "Build reader rankings and launch the music archive"
+      },
+      {
+        "branch": "feat/global-audio-experience",
+        "pr": 43,
+        "base": "main",
+        "sha": "46c6e882fa1d312f1fc9d0ec23cfb8652e34633f",
+        "mergedAt": "2026-07-23T11:52:46Z",
+        "title": "Build a persistent global listening experience"
+      },
+      {
+        "branch": "feat/media-overlay-runtime-hardening",
+        "pr": 54,
+        "base": "main",
+        "sha": "bf2be6d6889fef2b02f8a2d76fb556b3221a17ce",
+        "mergedAt": "2026-07-23T21:34:45Z",
+        "title": "Harden overlays, responsive media, and pointer interactions"
+      },
+      {
+        "branch": "feat/music-catalog-scale-hardening",
+        "pr": 47,
+        "base": "main",
+        "sha": "4d879d2aae1e5bb568973d2b99d4730218f6ea57",
+        "mergedAt": "2026-07-23T13:59:02Z",
+        "title": "Scale and harden the music catalog for future releases"
+      },
+      {
+        "branch": "feat/personal-archive-hardening",
+        "pr": 50,
+        "base": "main",
+        "sha": "666bfa696ce86775db966eb1de5fc06e5eea72f1",
+        "mergedAt": "2026-07-23T14:20:14Z",
+        "title": "Harden the personal archive and unify listening history"
+      },
+      {
+        "branch": "feat/premium-audio-player-polish",
+        "pr": 42,
+        "base": "main",
+        "sha": "d8c5b6bd1577872f1621a244724e83ee154a0183",
+        "mergedAt": "2026-07-23T11:19:09Z",
+        "title": "Polish the premium music player and release pages"
+      },
+      {
+        "branch": "feat/seo-production-hardening-v2",
+        "pr": 257,
+        "base": "main",
+        "sha": "fb9d1bd351c1d43157f398f98b6869af53f0eed0",
+        "mergedAt": "2026-07-27T23:18:59Z",
+        "title": "feat(seo): production discovery, schema, trust and consent hardening"
+      },
+      {
+        "branch": "feat/vector-brand-mark-preview",
+        "pr": 207,
+        "base": "main",
+        "sha": "9570ce2e8488e623b2f059a8635c8110c4545f6b",
+        "mergedAt": "2026-07-25T23:59:06Z",
+        "title": "feat(brand): replace raster header mark with layered SVG system"
+      },
+      {
+        "branch": "fix-brand-binary-assets",
+        "pr": 144,
+        "base": "main",
+        "sha": "4e3f9fe27c88648afdf43cc057e23a3e78aa0aab",
+        "mergedAt": "2026-07-25T15:01:23Z",
+        "title": "Fix truncated emblem asset pipeline"
+      },
+      {
+        "branch": "fix/approved-brand-ssot-release-repair",
+        "pr": 164,
+        "base": "main",
+        "sha": "f90f23d0480d6210d56dae5d133c4286aa6576aa",
+        "mergedAt": "2026-07-25T17:36:21Z",
+        "title": "fix(brand): reconcile approved v4 release and harden Pages provenance"
+      },
+      {
+        "branch": "fix/audio-runtime-hardening",
+        "pr": 45,
+        "base": "main",
+        "sha": "4a6cca1327c53fe9713ccf2b497e309f3ba762a8",
+        "mergedAt": "2026-07-23T12:52:02Z",
+        "title": "Harden the global audio runtime and repair integration regressions"
+      },
+      {
+        "branch": "fix/brand-v9-reference-reset",
+        "pr": 250,
+        "base": "main",
+        "sha": "c4ed7c0f3ed0a07220ee473797e1e7dff518c88b",
+        "mergedAt": "2026-07-27T22:14:11Z",
+        "title": "🔵 59% · IN PROGRESS — fix(brand): begin v9 canonical-reference geometry reset"
+      },
+      {
+        "branch": "fix/brandmark-es2020-string-replacement-2026-07-30",
+        "pr": 261,
+        "base": "main",
+        "sha": "88f02a5ccfd55b9bf9f53f27d2ed9acbea86314a",
+        "mergedAt": "2026-07-29T23:51:31Z",
+        "title": "fix: keep BrandMark SVG replacement compatible with current TypeScript lib"
+      },
+      {
+        "branch": "fix/essay-lightbox-overlay-runtime-20260727",
+        "pr": 240,
+        "base": "main",
+        "sha": "5d6614fb9cc263cec852e7c9c6f79bc3881be1c7",
+        "mergedAt": "2026-07-27T15:13:19Z",
+        "title": "fix(scroll): preserve fixed-header anchor geometry without Lenis"
+      },
+      {
+        "branch": "fix/essay-lightbox-shared-overlay-20260727",
+        "pr": 241,
+        "base": "main",
+        "sha": "bbd23824e1275662d48e6dd6931be3280216bb0e",
+        "mergedAt": "2026-07-27T15:46:37Z",
+        "title": "fix(essay): integrate image lightbox with shared overlay runtime"
+      },
+      {
+        "branch": "fix/home-final-reconciliation-20260725",
+        "pr": 181,
+        "base": "main",
+        "sha": "53bd106a4fdb75418cbb378926d72b4dde612bdb",
+        "mergedAt": "2026-07-25T19:23:21Z",
+        "title": "fix(home): complete clean mobile labels and interaction QA"
+      },
+      {
+        "branch": "fix/home-stripe-performance-final",
+        "pr": 162,
+        "base": "main",
+        "sha": "8eb787eceef2403fe9f30a510aa3bc858c40ba1b",
+        "mergedAt": "2026-07-25T17:15:38Z",
+        "title": "fix(home): remove poet stripe and harden pointer performance"
+      },
+      {
+        "branch": "fix/mystical-epic-brand-v8-4-surgical",
+        "pr": 233,
+        "base": "main",
+        "sha": "b28578cb1d7356b6c04dce285730b953ec37e476",
+        "mergedAt": "2026-07-27T12:09:04Z",
+        "title": "fix(brand): merge v8.22 emblem baseline"
+      },
+      {
+        "branch": "fix/pages-vector-release-proof",
+        "pr": 255,
+        "base": "main",
+        "sha": "f1f79dd76b5ec06b70f3fdc799c9d27190d0f607",
+        "mergedAt": "2026-07-27T21:36:56Z",
+        "title": "fix(deploy): verify vector emblem releases by exact hash"
+      },
+      {
+        "branch": "fix/reference-shaped-brand-v5",
+        "pr": 221,
+        "base": "main",
+        "sha": "b4c544e40d465c314c3d36bec6c93d9c0ab0f0f0",
+        "mergedAt": "2026-07-26T01:04:11Z",
+        "title": "fix(brand): redraw emblem to match selected hooded reference"
+      },
+      {
+        "branch": "fix/reference-shaped-brand-v6",
+        "pr": 223,
+        "base": "main",
+        "sha": "43045f0010a73eb6fdb038d94d8862ee3b4cf68c",
+        "mergedAt": "2026-07-26T01:52:24Z",
+        "title": "fix(brand): broaden emblem toward selected hooded reference"
+      },
+      {
+        "branch": "fix/remove-duplicate-desktop-search-fab-final",
+        "pr": 193,
+        "base": "main",
+        "sha": "4355be48b6e5399c0024714604bf5d5a0bed7fa0",
+        "mergedAt": "2026-07-25T23:36:04Z",
+        "title": "fix(search): keep one desktop Ctrl K after shell optimization"
+      },
+      {
+        "branch": "fix/webkit-labels-pages-contract-final",
+        "pr": 176,
+        "base": "main",
+        "sha": "a20471a258926d0ea9aa08535e3e1017fd97254f",
+        "mergedAt": "2026-07-25T18:03:48Z",
+        "title": "fix(home): stabilize WebKit labels and Pages provenance checks"
+      },
+      {
+        "branch": "fix/yesenin-authoring-guard-regressions",
+        "pr": 86,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "be78e24e68eedc18c2e02e3c31b6782659a3a40d",
+        "mergedAt": "2026-07-24T17:32:27Z",
+        "title": "Harden Yesenin Part I authoring guard"
+      },
+      {
+        "branch": "integration/research-main-20260723",
+        "pr": 52,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "4ced7add6f1513c1dd7b574adaa43cebc4217ebe",
+        "mergedAt": "2026-07-23T21:33:21Z",
+        "title": "Integrate verified research with current audio, music and archive runtime"
+      },
+      {
+        "branch": "integration/research-main-qa-20260724",
+        "pr": 65,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "cf8a23f1bf2f818a928e154accba760681625faf",
+        "mergedAt": "2026-07-24T11:27:17Z",
+        "title": "Integrate hardened browser QA into research"
+      },
+      {
+        "branch": "integration/research-mobile-qa-20260724",
+        "pr": 73,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "7febeac29e3e619b230f7ed77487b131650ece81",
+        "mergedAt": "2026-07-24T12:55:49Z",
+        "title": "Integrate final Android and WebKit QA into research"
+      },
+      {
+        "branch": "integration/research-overlay-main-20260724",
+        "pr": 57,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "4f0c89d396f72915ae36fc8a4d806b187d438a37",
+        "mergedAt": "2026-07-23T23:03:25Z",
+        "title": "Integrate overlay, resilient media, and interaction runtime into research"
+      },
+      {
+        "branch": "perf/hall-frame-allocation-20260727",
+        "pr": 247,
+        "base": "main",
+        "sha": "9fde121abdc1e5ea1fd7c71f2294be324909a00f",
+        "mergedAt": "2026-07-27T18:10:13Z",
+        "title": "perf(hall): eliminate frame-loop vector allocations"
+      },
+      {
+        "branch": "perf/static-ambient-backdrop",
+        "pr": 189,
+        "base": "main",
+        "sha": "0237e4b43abdb3bff8ddf52bb29a4813f3b40ca0",
+        "mergedAt": "2026-07-25T20:08:07Z",
+        "title": "perf(shell): replace infinite blurred ambient glows"
+      },
+      {
+        "branch": "publish/yesenin-duncan-safe-companion",
+        "pr": 225,
+        "base": "main",
+        "sha": "95a7cc8fa56947da79308697c70edbb93fafdd84",
+        "mergedAt": "2026-07-26T03:02:47Z",
+        "title": "feat(essays): publish documented Yesenin–Duncan first-meeting investigation"
+      },
+      {
+        "branch": "publish/yesenin-part-one-safe",
+        "pr": 227,
+        "base": "main",
+        "sha": "a8cbea5f7def79d3a463f355bceb16657d1ed1ae",
+        "mergedAt": "2026-07-26T08:41:10Z",
+        "title": "feat(essays): publish Yesenin biography Part I, 1895–1921"
+      },
+      {
+        "branch": "refactor/stable-citation-block-ids-20260724",
+        "pr": 58,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "c5fdea9110fb4ef61ac6817b6d02bf9683ef8bbb",
+        "mergedAt": "2026-07-23T23:21:11Z",
+        "title": "Migrate inline citations to stable essay block IDs"
+      },
+      {
+        "branch": "research/outreach-safe-publication-pass29",
+        "pr": 224,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "0981333bace9e5c46733115116a3e169d3426d3f",
+        "mergedAt": "2026-07-26T03:02:35Z",
+        "title": "research(yesenin): record outreach and audit 60 safe-publication links"
+      },
+      {
+        "branch": "research/provenance-repair-77",
+        "pr": 78,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "67d3e66a34103efe321be81be2b5f5155f1db3b5",
+        "mergedAt": "2026-07-24T14:13:19Z",
+        "title": "Acquire exact Commons originals and repair archive provenance"
+      },
+      {
+        "branch": "research/source-acquisition-49",
+        "pr": 60,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "0d115b9cbfafe478d8ca7bd6d15cf1b5a059a492",
+        "mergedAt": "2026-07-24T12:27:28Z",
+        "title": "Acquire and page-verify issue 49 source scans"
+      },
+      {
+        "branch": "research/yesenin-archive-access-pass18",
+        "pr": 172,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "6c4dc96456236c1a1eaac98a44db72ec688e095c",
+        "mergedAt": "2026-07-25T18:10:12Z",
+        "title": "Record Yesenin archive access and attribution boundaries"
+      },
+      {
+        "branch": "research/yesenin-benislavskaya-volume-access-evidence-pass25-final",
+        "pr": 205,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "3698ef98bb91736219a7ea6b02a861b20bd34031",
+        "mergedAt": "2026-07-25T22:50:01Z",
+        "title": "Record legal access route for Benislavskaya inbound letters"
+      },
+      {
+        "branch": "research/yesenin-c1-request-and-stale-physical-cleanup",
+        "pr": 139,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "c453350d9d0bc6331051fb16c1fbaa76f63919ec",
+        "mergedAt": "2026-07-25T08:22:41Z",
+        "title": "Identify Karokhin and close stale physical-edition requests"
+      },
+      {
+        "branch": "research/yesenin-duncan-companion-editorial-pass1-clean",
+        "pr": 117,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "8c94939b46937782491f39781ef8a832ef076176",
+        "mergedAt": "2026-07-25T02:17:28Z",
+        "title": "Polish the unpublished Yesenin–Duncan companion article"
+      },
+      {
+        "branch": "research/yesenin-duncan-companion-split",
+        "pr": 111,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "b5960a29c2e67f9ffe3a445764226bc4b4c93d97",
+        "mergedAt": "2026-07-25T00:29:58Z",
+        "title": "Split Yesenin Duncan material into a companion investigation"
+      },
+      {
+        "branch": "research/yesenin-duncan-feb-locator-cleanup",
+        "pr": 122,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "2809883b9ec97c69c0ca9b4a0ba32b67959a50c9",
+        "mergedAt": "2026-07-25T03:28:57Z",
+        "title": "Pin official FEB locator for Duncan chronology"
+      },
+      {
+        "branch": "research/yesenin-duncan-mcvay-catalog-locator",
+        "pr": 125,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "04b1f0cbf8980ae2bccbc81db15f4b962e26b718",
+        "mergedAt": "2026-07-25T03:54:45Z",
+        "title": "Attach authoritative McVay catalogue locator"
+      },
+      {
+        "branch": "research/yesenin-mariengof-access-state-pass13-clean",
+        "pr": 116,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "7fe5f96967b7d835bb39a7717d9fb41c21ee76a6",
+        "mergedAt": "2026-07-25T01:44:58Z",
+        "title": "Record bounded Mariengof RSL access state"
+      },
+      {
+        "branch": "research/yesenin-materials-bibliography-pass20",
+        "pr": 184,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "90603ba3f56fbd82381a6d3e6b47c9556fdc81cb",
+        "mergedAt": "2026-07-25T19:54:14Z",
+        "title": "Correct Materials to Biography publication history"
+      },
+      {
+        "branch": "research/yesenin-materialy-page110-access-evidence-pass28",
+        "pr": 218,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "2b8e26b7a36a71e24d29844c01c7e2aff5ac1129",
+        "mergedAt": "2026-07-26T00:23:33Z",
+        "title": "Record live RSL access route for Materialy page 110"
+      },
+      {
+        "branch": "research/yesenin-mcvay-life-request-locator",
+        "pr": 127,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "6eafc01fef2606c7a9440db2c9a6ab85810aa324",
+        "mergedAt": "2026-07-25T06:52:30Z",
+        "title": "Pin exact catalogue identity for McVay biography request"
+      },
+      {
+        "branch": "research/yesenin-neb-physical-editions-pass8-clean",
+        "pr": 103,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "47640d784ec8f66ab9d9109e5f86cb0c29e54408",
+        "mergedAt": "2026-07-24T22:15:28Z",
+        "title": "Add exact NEB physical editions for Yesenin Part I"
+      },
+      {
+        "branch": "research/yesenin-neb-serial-theatre-pass10-11-clean",
+        "pr": 110,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "7e61832e698e6ebed8f75e5532609343f4acf170",
+        "mergedAt": "2026-07-25T00:21:11Z",
+        "title": "Resolve partial Theatrical Moscow witness coverage"
+      },
+      {
+        "branch": "research/yesenin-newspaper-acquisition-pass14-clean",
+        "pr": 128,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "0eb7894be0c09a2305f94ba955a77cb02570e600",
+        "mergedAt": "2026-07-25T07:18:48Z",
+        "title": "Integrate exact 1921 Izvestia issue evidence"
+      },
+      {
+        "branch": "research/yesenin-newspaper-pass14-rebased",
+        "pr": 134,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "1544bc5740d80316433a43a280dfb07cfee5cc81",
+        "mergedAt": "2026-07-25T07:18:47Z",
+        "title": "Rebase exact 1921 Izvestia evidence onto current canonical"
+      },
+      {
+        "branch": "research/yesenin-nypl-evidence-pass19",
+        "pr": 178,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "0bb09d955a29ac51abe0a9dac24c39d721ac3bf4",
+        "mergedAt": "2026-07-25T18:54:20Z",
+        "title": "Record four verified NYPL Duncan program items"
+      },
+      {
+        "branch": "research/yesenin-part-one-export-sanitized-v2",
+        "pr": 230,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "b3ee9250ae1b62389a09c63f7d3d4e3991aba6e6",
+        "mergedAt": "2026-07-26T03:48:34Z",
+        "title": "fix(research): emit production-native Yesenin Part I module"
+      },
+      {
+        "branch": "research/yesenin-part1-76",
+        "pr": 79,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "aa73e94de3bd32ee2d0128ef29e3a2ef36a20fd4",
+        "mergedAt": "2026-07-24T14:47:14Z",
+        "title": "Build verified Yesenin biography Part I on the canonical engine"
+      },
+      {
+        "branch": "research/yesenin-part1-citation-topology-clean",
+        "pr": 88,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "f7571b89357f0bccb7aade97e459adcc9eb89bd2",
+        "mergedAt": "2026-07-24T18:08:25Z",
+        "title": "Build typed citation topology for Yesenin Part I"
+      },
+      {
+        "branch": "research/yesenin-part1-close-topology-gaps-clean",
+        "pr": 90,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "91e68c11cbcf786a65eb012e27f908f0fe532500",
+        "mergedAt": "2026-07-24T18:26:02Z",
+        "title": "Close Yesenin Part I topology coverage gaps"
+      },
+      {
+        "branch": "research/yesenin-part1-duncan-compaction-clean",
+        "pr": 114,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "b602ad1b4b6e24bbc2853de4d1d362f2e1b39759",
+        "mergedAt": "2026-07-25T00:51:20Z",
+        "title": "Compact Yesenin Part I Duncan transition into companion article"
+      },
+      {
+        "branch": "research/yesenin-part1-editorial-pass8-early-76",
+        "pr": 102,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "c9fbbe558838990712395781fa654bdca8f781ef",
+        "mergedAt": "2026-07-24T23:17:39Z",
+        "title": "Complete Yesenin Part I sentence-level editorial pass"
+      },
+      {
+        "branch": "research/yesenin-part1-feb-acquisition-76",
+        "pr": 84,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "8ae8bb54fa14d1876e3f49a07d7b0d3bfb692fe5",
+        "mergedAt": "2026-07-24T16:09:19Z",
+        "title": "Acquire and guard exact FEB witnesses for Yesenin Part I"
+      },
+      {
+        "branch": "research/yesenin-part1-integrate-pass6-unpublished",
+        "pr": 98,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "2e941c50bc204aab119895140bcbe57879d1512e",
+        "mergedAt": "2026-07-24T20:59:30Z",
+        "title": "Integrate Yesenin pass 6 into unpublished typed article"
+      },
+      {
+        "branch": "research/yesenin-part1-page-witnesses-76",
+        "pr": 82,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "bb669e8120c71518a242262b3595a312de169843",
+        "mergedAt": "2026-07-24T15:06:08Z",
+        "title": "Enforce exact page witnesses for Yesenin Part I"
+      },
+      {
+        "branch": "research/yesenin-part1-pass7-rebased-pass6-76",
+        "pr": 101,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "a0ff612df977dd7e2e98235b00024b5a9cfb9b63",
+        "mergedAt": "2026-07-24T21:50:06Z",
+        "title": "Rebase Yesenin pass 7 over pass 6"
+      },
+      {
+        "branch": "research/yesenin-part1-source-sweep-pass6",
+        "pr": 96,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "9a71766589fa558ce3db02b116353c43fcc09e31",
+        "mergedAt": "2026-07-24T20:40:13Z",
+        "title": "Yesenin Part I pass 6: 48 sources, article additions and real-only visuals"
+      },
+      {
+        "branch": "research/yesenin-part1-unpublished-typed-pass6-76",
+        "pr": 95,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "2e1c1a02e9ce00ccaa7cff0964d6619bd685ddeb",
+        "mergedAt": "2026-07-24T20:19:40Z",
+        "title": "Assemble unpublished typed Yesenin Part I and deepen physical-source gate"
+      },
+      {
+        "branch": "research/yesenin-physical-edition-state-pass9-clean",
+        "pr": 105,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "76e182183187bd69e21298e417c62ed1b4b80502",
+        "mergedAt": "2026-07-24T22:44:09Z",
+        "title": "Type acquired Yesenin physical edition evidence"
+      },
+      {
+        "branch": "research/yesenin-physical-witness-effective-state-pass12",
+        "pr": 108,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "48e8d16e11e8b06ede9af6bbfa0cd2447fdcb72c",
+        "mergedAt": "2026-07-24T23:45:24Z",
+        "title": "Resolve effective Yesenin physical witness state"
+      },
+      {
+        "branch": "research/yesenin-pravda-eastview-evidence-pass27",
+        "pr": 217,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "98dfb8852246099653b9659134c490295a05baff",
+        "mergedAt": "2026-07-25T23:46:38Z",
+        "title": "Record exact East View metadata for Pravda no. 252"
+      },
+      {
+        "branch": "research/yesenin-pravda-eastview-pass27-runtime-clean",
+        "pr": 222,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "1f91c5e6a02170eea5f3065f5418eae7322f7b7a",
+        "mergedAt": "2026-07-26T00:45:57Z",
+        "title": "Supersede East View pass 27 with exact page runtime evidence"
+      },
+      {
+        "branch": "research/yesenin-pravda-rsl-access-evidence-pass26-final",
+        "pr": 210,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "d3f6f15734d1bacdcb43294a88d76b1c6bc09fb9",
+        "mergedAt": "2026-07-25T23:14:19Z",
+        "title": "Record authenticated RSL access boundary for Pravda no. 252"
+      },
+      {
+        "branch": "research/yesenin-primary-source-marathon-pass15",
+        "pr": 142,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "843b8f31dda47915f4e554cae0740135fd3cbb3f",
+        "mergedAt": "2026-07-25T15:15:54Z",
+        "title": "Build 48-route Yesenin primary-source and visual marathon pass"
+      },
+      {
+        "branch": "research/yesenin-priority-books-catalog-boundaries",
+        "pr": 137,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "750df19d26e3306a54c8ceeb08a698148ac747b5",
+        "mergedAt": "2026-07-25T07:36:48Z",
+        "title": "Pin exact access boundaries for remaining priority books"
+      },
+      {
+        "branch": "research/yesenin-real-visual-hash-baseline-clean",
+        "pr": 99,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "5cac8168fd23ed9ec65b4125af3c15ed24b49702",
+        "mergedAt": "2026-07-24T21:22:48Z",
+        "title": "Freeze hashes for eight real Yesenin originals"
+      },
+      {
+        "branch": "research/yesenin-secondary-books-access-boundaries",
+        "pr": 138,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "fdb89609ea342d444dd8044bece0975a8b046b34",
+        "mergedAt": "2026-07-25T07:59:59Z",
+        "title": "Bound secondary Yesenin books by exact access state"
+      },
+      {
+        "branch": "sync/main-brand-emblem-into-research",
+        "pr": 120,
+        "base": "work/local-images-playwright-wtoc",
+        "sha": "930c47cd9a04e43b7f12618b1a07145dd5470d5a",
+        "mergedAt": "2026-07-25T03:04:45Z",
+        "title": "Merge final premium emblem into canonical research"
+      }
+    ],
+    "remainingExact": [],
+    "changed": [],
+    "protectedRefs": {
+      "main": {
+        "exists": true,
+        "sha": "067347c957732b76bc1892bd1f1a89c10f6d7300"
+      },
+      "work/local-images-playwright-wtoc": {
+        "exists": true,
+        "sha": "909df9f73b8d9be6faa58cbee767603954e3fb17"
+      }
+    },
+    "openPrCount": 0
+  }
 }
