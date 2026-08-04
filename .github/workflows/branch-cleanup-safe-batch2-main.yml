@@ -1,0 +1,112 @@
+name: One-shot guarded branch cleanup batch 2 main trigger
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/branch-cleanup-safe-batch2-main.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  guarded-cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify immutable PR state and delete exact refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request
+          repo = os.environ["REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          owner = repo.split("/", 1)[0]
+          cleanup_branch = "ops/branch-cleanup-safe-batch2-20260804"
+          candidates = [
+            {"branch":"agent/postmerge-brand-v4-live-witness","pr":171,"sha":"4ece4a5a4486a030151f1ca7bca3bdc9c424e378","policy":"closed_witness"},
+            {"branch":"agent/postmerge-emblem-v3-live-witness","pr":159,"sha":"817b5a174391e2bdbe4425dbac96b8be089542bf","policy":"closed_witness"},
+            {"branch":"fix/brand-v8-23-postmerge","pr":238,"sha":"86d8deb88261c8ffa11bc09a827feb06f081f58b","policy":"merged_head"},
+            {"branch":"fix/brand-v8-25-postmerge","pr":239,"sha":"21915ccf3c6d7ef9b0cfc1ac0847ebac40c7c6b2","policy":"merged_head"},
+            {"branch":"fix/brand-v8-26-main-sync","pr":243,"sha":"7eff784194f3f9b4f49f6ab0d62be284b1393b63","policy":"merged_head"},
+            {"branch":"fix/brand-v8-27-main-sync","pr":246,"sha":"2ac605ef9aac522b6e5c27e3b5559a6479182d40","policy":"merged_head"},
+            {"branch":"txn/brand-v15-layered-depth-20260729","pr":259,"sha":"8a87d20b32af4e56566c155c74f91f3cb8aeb383","policy":"merged_head"},
+          ]
+          forbidden = {"main", "work/local-images-playwright-wtoc", cleanup_branch}
+
+          def api(method, path, allow_404=False):
+            req = urllib.request.Request(f"https://api.github.com{path}", method=method)
+            req.add_header("Authorization", f"Bearer {token}")
+            req.add_header("Accept", "application/vnd.github+json")
+            req.add_header("X-GitHub-Api-Version", "2022-11-28")
+            req.add_header("User-Agent", "guarded-branch-cleanup")
+            try:
+              with urllib.request.urlopen(req, timeout=30) as response:
+                raw = response.read()
+                return response.status, json.loads(raw) if raw else None
+            except urllib.error.HTTPError as exc:
+              raw = exc.read().decode("utf-8", errors="replace")
+              if allow_404 and exc.code == 404:
+                return 404, None
+              raise RuntimeError(f"{method} {path}: {exc.code} {raw}") from exc
+
+          def enc(value):
+            return urllib.parse.quote(value, safe="")
+
+          _, repo_open = api("GET", f"/repos/{repo}/pulls?state=open&per_page=100")
+          if repo_open:
+            raise RuntimeError(f"Repository has {len(repo_open)} open PRs")
+
+          results = []
+          for item in candidates:
+            branch = item["branch"]
+            if branch in forbidden or branch.startswith("backup/"):
+              raise RuntimeError(f"Forbidden allow-list entry: {branch}")
+            status, ref = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+            if status == 404:
+              results.append({"branch":branch,"status":"already_absent"})
+              continue
+            actual = ref["object"]["sha"]
+            if actual != item["sha"]:
+              raise RuntimeError(f"SHA mismatch {branch}: {actual}")
+            _, open_head = api("GET", f"/repos/{repo}/pulls?state=open&head={enc(owner + ':' + branch)}&per_page=100")
+            if open_head:
+              raise RuntimeError(f"Open PR exists for {branch}")
+            _, pr = api("GET", f"/repos/{repo}/pulls/{item['pr']}")
+            if pr["head"]["ref"] != branch or pr["head"]["sha"] != item["sha"] or pr["state"] != "closed":
+              raise RuntimeError(f"PR identity/state mismatch for {branch}")
+            if item["policy"] == "merged_head":
+              if not pr.get("merged_at"):
+                raise RuntimeError(f"PR #{item['pr']} not merged")
+            else:
+              if pr.get("merged_at"):
+                raise RuntimeError(f"Witness PR #{item['pr']} unexpectedly merged")
+              text = (pr.get("title", "") + "\n" + (pr.get("body") or "")).lower()
+              if "witness" not in text or not ("never merge" in text or "must never be merged" in text):
+                raise RuntimeError(f"Witness markers missing in PR #{item['pr']}")
+              _, files = api("GET", f"/repos/{repo}/pulls/{item['pr']}/files?per_page=100")
+              if len(files) != 1 or not files[0]["filename"].startswith(".github/workflows/"):
+                raise RuntimeError(f"Witness PR #{item['pr']} is not workflow-only")
+            api("DELETE", f"/repos/{repo}/git/refs/heads/{enc(branch)}")
+            check, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(branch)}", allow_404=True)
+            if check != 404:
+              raise RuntimeError(f"Deletion verification failed for {branch}")
+            results.append({"branch":branch,"status":"deleted_confirmed","pr":item["pr"]})
+
+          # Remove the unused non-default one-shot branch if it still exists.
+          cleanup_status, _ = api("GET", f"/repos/{repo}/git/ref/heads/{enc(cleanup_branch)}", allow_404=True)
+          if cleanup_status != 404:
+            api("DELETE", f"/repos/{repo}/git/refs/heads/{enc(cleanup_branch)}")
+
+          print(json.dumps(results, ensure_ascii=False, indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+            fh.write("# Guarded cleanup batch 2\n\n")
+            for result in results:
+              fh.write(f"- `{result['branch']}` — **{result['status']}**\n")
+          PY
