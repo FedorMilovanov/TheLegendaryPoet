@@ -22,9 +22,9 @@ const IMAGE_PROXIMITY_POLL_MS = 250;
  * revealed ancestor crosses the viewport. IntersectionObserver remains the
  * primary signal, while captured scroll/resize events and a low-frequency
  * geometry check form a bounded independent path. Once an image approaches the
- * viewport, its still-dormant request is restarted exactly once after switching
- * to eager mode. This preserves lazy loading for distant images and prevents a
- * permanently transparent article frame in WebKit.
+ * viewport, its still-dormant request is promoted and reasserted exactly once
+ * after switching to eager mode. The source remains attached throughout, so no
+ * visible image can transiently become an empty or broken DOM image.
  */
 export function useNativeImageState(src: string) {
   const ref = useRef<HTMLImageElement>(null);
@@ -91,15 +91,15 @@ export function useNativeImageState(src: string) {
 
       promoted = true;
       stopProximityChecks();
-      image.loading = 'eager';
 
-      const requestedSrc = image.getAttribute('src') || src;
+      const requestedSrc = image.currentSrc || image.getAttribute('src') || src;
       restartingRequest = true;
-      image.removeAttribute('src');
+      image.loading = 'eager';
+      image.setAttribute('src', requestedSrc);
 
-      // Reattach on the next frame so WebKit observes an eager image before it
-      // receives the source. The URL is unchanged, so an already-started or
-      // cached resource remains reusable and no alternate asset is introduced.
+      // Reassert the same URL after WebKit has observed eager mode. Keeping the
+      // source attached avoids a one-frame empty image while still prompting a
+      // dormant native lazy request to use the already declared resource.
       restartFrame = window.requestAnimationFrame(() => {
         restartFrame = undefined;
         if (!active) return;
