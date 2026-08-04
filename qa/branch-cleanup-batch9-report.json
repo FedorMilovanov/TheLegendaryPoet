@@ -1,0 +1,43 @@
+{
+  "repository": "FedorMilovanov/TheLegendaryPoet",
+  "runSha": "189d346411be71d192d0c6ff6e9d6a03c8dbdfd5",
+  "startedAt": "2026-08-04T11:19:45.018Z",
+  "planned": 3,
+  "results": [
+    {
+      "branch": "agent/home-polish-clean-20260725-r2",
+      "sha": "15b0b3d560d2b07a0708d0727a94f4c475b28629",
+      "reason": "stale-home-reconciliation",
+      "status": "ABSENT_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch9/agent/home-polish-clean-20260725-r2",
+      "tagExact": true,
+      "branchAbsent": true
+    },
+    {
+      "branch": "deploy-live-cloak-v2",
+      "sha": "ca20c791abc40b8560327f18dba2858ce5daa898",
+      "reason": "superseded-brand-v3",
+      "pr": 148,
+      "status": "ABSENT_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch9/deploy-live-cloak-v2",
+      "tagExact": true,
+      "branchAbsent": true
+    },
+    {
+      "branch": "research/yesenin-part1-authoring-76",
+      "sha": "481c28647f0079ecd081ca81cfdefbf7d7e7c552",
+      "reason": "stale-validator-superseded-by-canonical",
+      "status": "ABSENT_CONFIRMED",
+      "archiveTag": "archive/branches/2026-08-04/batch9/research/yesenin-part1-authoring-76",
+      "tagExact": true,
+      "branchAbsent": true
+    }
+  ],
+  "completedAt": "2026-08-04T11:19:55.134Z",
+  "remaining": [],
+  "badTags": [],
+  "absentConfirmed": 3,
+  "tagsExact": 3,
+  "branchCountAfter": 4,
+  "success": true
+}
