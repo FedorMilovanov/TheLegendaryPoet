@@ -57,6 +57,11 @@ function searchVerificationPlugin(): Plugin {
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [searchVerificationPlugin(), react(), tailwindcss()],
+  // Arena previews are served through a per-session e2b.app host.
+  // Vite otherwise rejects that host before the application can render.
+  server: {
+    allowedHosts: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

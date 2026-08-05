@@ -182,6 +182,28 @@ function assertStableSamples(initial, samples, enforceOpacity) {
   }
 }
 
+test('TiltCard follows live pointer input without a transition backlog', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tilt-card-inner').first();
+  await expect(card).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box.x + box.width * 0.18, box.y + box.height * 0.2);
+  await expect.poll(async () => card.getAttribute('data-tilt-active')).toBe('true');
+
+  const active = await card.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { transform: style.transform, transitionDuration: style.transitionDuration };
+  });
+  expect(active.transform).not.toBe('none');
+  expect(active.transitionDuration).toBe('0s');
+
+  await page.mouse.move(2, 2);
+  await expect.poll(async () => card.getAttribute('data-tilt-active')).toBeNull();
+});
+
 for (const surface of surfaces) {
   test(`${surface.name} interactive artwork uses the universal stable-hover contract`, async ({ page }, testInfo) => {
     const errors = [];

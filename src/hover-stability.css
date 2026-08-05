@@ -16,7 +16,15 @@
   transform-style: preserve-3d;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* The return is eased; live pointer coordinates are written once per RAF. */
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* A CSS transition on every fresh RAF value makes a card visibly trail the
+ * pointer. Disable only that transition during live input; the composited
+ * transform remains the sole animated property. */
+.tilt-card-inner[data-tilt-active='true'] {
+  transition-duration: 0ms;
 }
 
 .tilt-card-content {

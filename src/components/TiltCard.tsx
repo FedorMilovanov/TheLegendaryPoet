@@ -29,6 +29,7 @@ export default function TiltCard({
       settleTimerRef.current = null;
     }
     node.style.willChange = 'transform';
+    node.dataset.tiltActive = 'true';
   }, []);
 
   const reset = useCallback(() => {
@@ -44,9 +45,12 @@ export default function TiltCard({
     node.style.setProperty('--tilt-sheen-x', '50%');
     node.style.setProperty('--tilt-sheen-y', '50%');
     settleTimerRef.current = window.setTimeout(() => {
-      if (ref.current) ref.current.style.willChange = 'auto';
+      if (ref.current) {
+        ref.current.style.willChange = 'auto';
+        delete ref.current.dataset.tiltActive;
+      }
       settleTimerRef.current = null;
-    }, 360);
+    }, 180);
   }, []);
 
   useEffect(() => {
