@@ -35,8 +35,19 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   ).toBeVisible();
   await expect(page.getByRole('heading', { name: /Константиново: место рождения/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /1921 год: хулиган/i })).toBeVisible();
-  await expect(page.getByText(/лазарет № 17 нельзя называть установленным местом формальной службы/i)).toBeVisible();
-  await expect(page.getByText(/видимо, 3 октября 1921 года/i)).toBeVisible();
+
+  // Inline citations now include hidden tooltip text. Match the reader-facing
+  // evidence boundary at paragraph level rather than asking the global text
+  // engine to choose a smallest element across text and tooltip descendants.
+  const articleParagraphs = page.locator('article p');
+  await expect(
+    articleParagraphs.filter({
+      hasText: /лазарет № 17 нельзя называть установленным местом формальной службы/i,
+    }),
+  ).toHaveCount(1);
+  await expect(
+    articleParagraphs.filter({ hasText: /видимо, 3 октября 1921 года/i }),
+  ).toHaveCount(1);
 
   const citationTargets = await page.locator('a[href^="#source-"]').evaluateAll((links) => [
     ...new Set(links.map((link) => link.getAttribute('href')).filter(Boolean)),
