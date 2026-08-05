@@ -18,7 +18,6 @@ import {
 } from './communityRemote';
 import {
   aggregateCommunityRatings,
-  emptyCommunityAggregate,
   mergeTargetComments,
   overlayPendingAggregate,
 } from './communityAggregates';
