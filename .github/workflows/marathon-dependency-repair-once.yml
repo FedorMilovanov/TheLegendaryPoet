@@ -1,0 +1,111 @@
+name: Marathon dependency repair once
+
+on:
+  pull_request:
+    branches:
+      - agent/marathon-audit-integration-20260805
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  repair-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/marathon-audit-integration-20260805
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg imagemagick
+
+      - name: Apply non-major dependency repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROUTER_VERSION="$({ npm view react-router-dom@7 version --json || exit 1; } | node -e '
+            let raw = "";
+            process.stdin.on("data", chunk => raw += chunk);
+            process.stdin.on("end", () => {
+              const value = JSON.parse(raw);
+              const version = Array.isArray(value) ? value.at(-1) : value;
+              if (typeof version !== "string" || !version.startsWith("7.")) process.exit(2);
+              console.log(version);
+            });
+          ')"
+          if [[ "$ROUTER_VERSION" == "7.14.2" ]]; then
+            echo 'Registry did not expose a patched React Router 7 release.' >&2
+            exit 1
+          fi
+          echo "Using react-router-dom $ROUTER_VERSION and Vite 7.3.6"
+          npm install --save-exact "react-router-dom@$ROUTER_VERSION"
+          npm install --save-dev --save-exact vite@7.3.6
+          npm audit fix --package-lock-only
+          npm ci
+
+      - name: Require clean production and full dependency audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm audit --omit=dev
+          npm audit
+
+      - name: Run all repository and production gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run seo:generate
+          npm run check
+          npm run build
+          npm run validate:build-output
+          npm run prerender
+          npm run seo:generate
+          npm run validate:seo-output
+
+      - name: Run Chromium article and hover regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 4173 >/tmp/tlp-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true; cat /tmp/tlp-preview.log' EXIT
+          for attempt in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4173/articles >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/articles >/dev/null
+          QA_BASE_URL=http://127.0.0.1:4173 npx playwright test \
+            qa/hover-stability.spec.mjs \
+            qa/articles-catalog.spec.mjs \
+            --config=playwright.config.mjs \
+            --project=chromium-core \
+            --workers=1
+
+      - name: Commit verified dependency repair and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/marathon-dependency-repair-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No dependency repair changes to commit.'
+            exit 0
+          fi
+          git commit -m 'fix(deps): apply audited non-major security updates'
+          git push origin HEAD:agent/marathon-audit-integration-20260805
