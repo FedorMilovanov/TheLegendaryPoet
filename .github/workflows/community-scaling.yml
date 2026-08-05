@@ -1,0 +1,109 @@
+name: Community scaling contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/App.tsx'
+      - 'src/types/community.ts'
+      - 'src/utils/community*.ts'
+      - 'src/hooks/useCommunityFeedback.ts'
+      - 'src/components/community/**'
+      - 'src/components/poet-detail/PoetCommunitySummary.tsx'
+      - 'src/pages/RatingsPage.tsx'
+      - 'docs/community-schema.sql'
+      - 'scripts/validate-community*.ts'
+      - 'qa/community-request-topology.spec.mjs'
+      - 'playwright.config.mjs'
+      - 'package.json'
+      - '.github/workflows/community-scaling.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/App.tsx'
+      - 'src/types/community.ts'
+      - 'src/utils/community*.ts'
+      - 'src/hooks/useCommunityFeedback.ts'
+      - 'src/components/community/**'
+      - 'src/components/poet-detail/PoetCommunitySummary.tsx'
+      - 'src/pages/RatingsPage.tsx'
+      - 'docs/community-schema.sql'
+      - 'scripts/validate-community*.ts'
+      - 'qa/community-request-topology.spec.mjs'
+      - 'playwright.config.mjs'
+      - 'package.json'
+      - '.github/workflows/community-scaling.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: community-scaling-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  QA_BASE_URL: http://127.0.0.1:4173
+  PLAYWRIGHT_HTML_OPEN: never
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Validate bounded local and target stores
+        run: npm run validate:community-store && npm run validate:community-target-store
+      - name: Validate W3 architecture and request contract
+        run: npm run validate:community-scaling
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: Build production site with mock shared backend
+        env:
+          VITE_BASE: /
+          VITE_SUPABASE_URL: http://127.0.0.1:4173/community-api
+          VITE_SUPABASE_ANON_KEY: topology-test-key
+        run: npm run build
+      - name: Install topology browsers
+        run: npx playwright install --with-deps chromium webkit
+      - name: Start production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > community-preview.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat community-preview.log
+          exit 1
+      - name: Prove community request topology
+        run: >-
+          npx playwright test qa/community-request-topology.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
+          --project=iphone-safari
+          --workers=1
+          --reporter=line
+      - name: Upload exact W3 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: community-scaling-${{ env.TESTED_SHA }}
+          path: |
+            community-preview.log
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 14
