@@ -36,10 +36,10 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   await expect(page.getByRole('heading', { name: /Константиново: место рождения/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /1921 год: хулиган/i })).toBeVisible();
 
-  // Inline citations now include hidden tooltip text. Match the reader-facing
-  // evidence boundary at paragraph level rather than asking the global text
-  // engine to choose a smallest element across text and tooltip descendants.
-  const articleParagraphs = page.locator('article p');
+  // The essay exposes its reader surface through the article accessibility role.
+  // Scope paragraph assertions to that semantic contract so the test remains
+  // correct whether the implementation uses <article> or role="article".
+  const articleParagraphs = page.getByRole('article').locator('p');
   await expect(
     articleParagraphs.filter({
       hasText: /лазарет № 17 нельзя называть установленным местом формальной службы/i,
