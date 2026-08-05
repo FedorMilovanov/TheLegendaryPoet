@@ -16,9 +16,11 @@ on:
       - 'scripts/validate-brand-assets.ts'
       - 'scripts/validate-brand-browser-workflow.ts'
       - 'scripts/validate-brand-motion-frame-invariance.ts'
+      - 'scripts/validate-browser-runtime.ts'
       - 'qa/brand-emblem.spec.mjs'
       - 'qa/brand-reference-comparison.spec.mjs'
       - 'package.json'
+      - 'package-lock.json'
       - 'index.html'
       - 'public/site.webmanifest'
       - 'public/browserconfig.xml'
@@ -59,6 +61,8 @@ jobs:
           sudo apt-get install --yes ffmpeg
       - name: Install project dependencies
         run: npm ci
+      - name: Validate locked browser runtime
+        run: npm run validate:browser-runtime
       - name: Validate approved transparent RGBA surfaces
         run: npm run validate:brand
       - name: Validate hover stability contract
@@ -67,10 +71,8 @@ jobs:
         run: npm run typecheck
       - name: Build exact commit
         run: npm run build
-      - name: Install Chromium QA runtime
-        run: |
-          npm install --no-save @playwright/test@1.55.0
-          npx playwright install --with-deps chromium
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Start exact preview
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/brand-preview.log 2>&1 &

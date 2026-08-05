@@ -39,6 +39,8 @@ jobs:
           cache: npm
       - name: Install project dependencies
         run: npm ci
+      - name: Validate locked browser runtime
+        run: npm run validate:browser-runtime
       - name: Install FFmpeg for deterministic brand assets
         run: |
           sudo apt-get update
@@ -63,10 +65,8 @@ jobs:
             manual-browser-tested-head.txt
           if-no-files-found: error
           retention-days: 7
-      - name: Install isolated Playwright runtime
-        run: |
-          npm install --no-save --no-package-lock @playwright/test@1.54.1
-          npx playwright install --with-deps chromium webkit
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
       - name: Start production preview
         run: |
           npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
@@ -126,6 +126,8 @@ jobs:
           cache: npm
       - name: Install Safari home project dependencies
         run: npm ci
+      - name: Validate locked browser runtime
+        run: npm run validate:browser-runtime
       - name: Install FFmpeg for Safari home deterministic brand assets
         run: |
           sudo apt-get update
@@ -135,10 +137,8 @@ jobs:
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install isolated Safari home Playwright runtime
-        run: |
-          npm install --no-save --no-package-lock @playwright/test@1.54.1
-          npx playwright install --with-deps webkit
+      - name: Install Playwright WebKit
+        run: npx playwright install --with-deps webkit
       - name: Start Safari home production preview
         run: |
           npm run preview -- --host 127.0.0.1 > webkit-home-preview.log 2>&1 &
@@ -176,6 +176,8 @@ jobs:
           cache: npm
       - name: Install premium project dependencies
         run: npm ci
+      - name: Validate locked browser runtime
+        run: npm run validate:browser-runtime
       - name: Install FFmpeg for premium deterministic brand assets
         run: |
           sudo apt-get update
@@ -185,10 +187,8 @@ jobs:
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install isolated premium Playwright runtime
-        run: |
-          npm install --no-save --no-package-lock @playwright/test@1.54.1
-          npx playwright install --with-deps chromium webkit
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
       - name: Start premium production preview
         run: |
           npm run preview -- --host 127.0.0.1 > premium-preview.log 2>&1 &
@@ -229,6 +229,8 @@ jobs:
           cache: npm
       - name: Install critical iPhone project dependencies
         run: npm ci
+      - name: Validate locked browser runtime
+        run: npm run validate:browser-runtime
       - name: Install FFmpeg for critical iPhone deterministic brand assets
         run: |
           sudo apt-get update
@@ -238,10 +240,8 @@ jobs:
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install isolated critical iPhone Playwright runtime
-        run: |
-          npm install --no-save --no-package-lock @playwright/test@1.54.1
-          npx playwright install --with-deps webkit
+      - name: Install Playwright WebKit
+        run: npx playwright install --with-deps webkit
       - name: Start critical iPhone production preview
         run: |
           npm run preview -- --host 127.0.0.1 > premium-iphone-critical-preview.log 2>&1 &
