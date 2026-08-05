@@ -30,7 +30,7 @@ create table if not exists public.tlp_comments (
 alter table public.tlp_comments add column if not exists voter_id uuid;
 alter table public.tlp_comments add column if not exists status text not null default 'published';
 create index if not exists tlp_comments_target_idx
-  on public.tlp_comments(target_type, target_id, status, created_at desc);
+  on public.tlp_comments(target_type, target_id, status, created_at desc, id desc);
 create index if not exists tlp_comments_voter_time_idx
   on public.tlp_comments(voter_id, created_at desc)
   where voter_id is not null;
@@ -180,6 +180,120 @@ begin
 end
 $$;
 
+-- W3 additive read model: aggregate rows contain no voter ids or comment bodies.
+create or replace view public.tlp_community_targets_public
+with (security_barrier = true) as
+with per_rating as (
+  select
+    r.target_type,
+    r.target_id,
+    r.id,
+    r.scores,
+    (
+      select avg(value::numeric)
+      from jsonb_each_text(r.scores)
+      where value ~ '^[1-5](?:\.0+)?$'
+    ) as overall
+  from public.tlp_ratings r
+),
+dimension_values as (
+  select r.target_type, r.target_id, item.key, item.value::numeric as score
+  from public.tlp_ratings r
+  cross join lateral jsonb_each_text(r.scores) item
+  where item.value ~ '^[1-5](?:\.0+)?$'
+),
+dimension_rollup as (
+  select target_type, target_id, jsonb_object_agg(key, average_score) as dimensions
+  from (
+    select target_type, target_id, key, avg(score)::double precision as average_score
+    from dimension_values
+    group by target_type, target_id, key
+  ) values_by_key
+  group by target_type, target_id
+),
+rating_rollup as (
+  select
+    p.target_type,
+    p.target_id,
+    count(*)::integer as rating_count,
+    avg(p.overall)::double precision as overall,
+    coalesce(d.dimensions, '{}'::jsonb) as dimensions,
+    jsonb_build_object(
+      '1', count(*) filter (where round(p.overall) = 1),
+      '2', count(*) filter (where round(p.overall) = 2),
+      '3', count(*) filter (where round(p.overall) = 3),
+      '4', count(*) filter (where round(p.overall) = 4),
+      '5', count(*) filter (where round(p.overall) = 5)
+    ) as distribution,
+    case when count(*) > 1 then stddev_pop(p.overall)::double precision else null end as deviation
+  from per_rating p
+  left join dimension_rollup d using (target_type, target_id)
+  group by p.target_type, p.target_id, d.dimensions
+),
+comment_rollup as (
+  select target_type, target_id, count(*)::integer as comment_count
+  from public.tlp_comments
+  where status = 'published'
+  group by target_type, target_id
+)
+select
+  coalesce(r.target_type, c.target_type) as target_type,
+  coalesce(r.target_id, c.target_id) as target_id,
+  coalesce(r.rating_count, 0)::integer as rating_count,
+  coalesce(c.comment_count, 0)::integer as comment_count,
+  coalesce(r.overall, 0)::double precision as overall,
+  coalesce(r.dimensions, '{}'::jsonb) as dimensions,
+  coalesce(r.distribution, '{"1":0,"2":0,"3":0,"4":0,"5":0}'::jsonb) as distribution,
+  r.deviation
+from rating_rollup r
+full outer join comment_rollup c using (target_type, target_id);
+
+-- Stable keyset pagination. Equal timestamps are ordered by id, so pages cannot
+-- duplicate or skip rows when several comments were created in the same instant.
+create or replace function public.tlp_fetch_comments_page(
+  p_target_type text,
+  p_target_id text,
+  p_before_created_at timestamptz default null,
+  p_before_id text default null,
+  p_limit integer default 11
+) returns table (
+  id text,
+  target_type text,
+  target_id text,
+  author text,
+  text text,
+  kind text,
+  helpful integer,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    c.id,
+    c.target_type,
+    c.target_id,
+    c.author,
+    c.text,
+    c.kind,
+    (c.helpful + count(v.comment_id))::integer as helpful,
+    c.created_at
+  from public.tlp_comments c
+  left join public.tlp_comment_votes v on v.comment_id = c.id
+  where c.status = 'published'
+    and c.target_type = p_target_type
+    and c.target_id = p_target_id
+    and (
+      p_before_created_at is null
+      or (c.created_at, c.id) < (p_before_created_at, coalesce(p_before_id, ''))
+    )
+  group by c.id, c.target_type, c.target_id, c.author, c.text, c.kind, c.helpful, c.created_at
+  order by c.created_at desc, c.id desc
+  limit greatest(1, least(coalesce(p_limit, 11), 51));
+$$;
+
 alter table public.tlp_ratings enable row level security;
 alter table public.tlp_comments enable row level security;
 alter table public.tlp_comment_votes enable row level security;
@@ -188,8 +302,10 @@ revoke all on public.tlp_ratings, public.tlp_comments, public.tlp_comment_votes 
 revoke all on function public.tlp_submit_rating(text, text, text, uuid, jsonb) from public;
 revoke all on function public.tlp_submit_comment(text, text, text, uuid, text, text, text) from public;
 revoke all on function public.tlp_mark_helpful(text, uuid) from public;
+revoke all on function public.tlp_fetch_comments_page(text, text, timestamptz, text, integer) from public;
 
-grant select on public.tlp_ratings_public, public.tlp_comments_public to anon, authenticated;
+grant select on public.tlp_ratings_public, public.tlp_comments_public, public.tlp_community_targets_public to anon, authenticated;
 grant execute on function public.tlp_submit_rating(text, text, text, uuid, jsonb) to anon, authenticated;
 grant execute on function public.tlp_submit_comment(text, text, text, uuid, text, text, text) to anon, authenticated;
 grant execute on function public.tlp_mark_helpful(text, uuid) to anon, authenticated;
+grant execute on function public.tlp_fetch_comments_page(text, text, timestamptz, text, integer) to anon, authenticated;
