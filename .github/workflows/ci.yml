@@ -19,12 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
 
-      - run: npm ci
+      - name: Validate workflow consolidation and performance contract
+        run: npm run validate:workflow-consolidation
       - name: Validate content, stores, and literary style
         run: npm run check:content
       - name: Validate persistent app shell invariants
@@ -85,11 +84,8 @@ jobs:
         run: |
           cp public/sitemap.xml /tmp/sitemap.xml
           cp public/feed.xml /tmp/feed.xml
-      - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
       - name: Validate approved brand assets
         id: brand_validation
         run: |
@@ -124,7 +120,7 @@ jobs:
           path: production-build.log
           if-no-files-found: error
           retention-days: 3
-      - name: Validate route splitting and production asset budgets
+      - name: Validate named route splitting and production asset budgets
         id: build_audit
         run: |
           set +e
@@ -132,14 +128,16 @@ jobs:
           status=$?
           cat build-output-audit.log
           exit $status
-      - name: Upload build audit diagnostics
-        if: ${{ failure() && steps.build_audit.outcome == 'failure' }}
+      - name: Upload exact build budget evidence
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: build-output-audit
-          path: build-output-audit.log
-          if-no-files-found: error
-          retention-days: 3
+          name: build-output-budget-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build-output-audit.log
+            dist/build-budget-report.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Prerender canonical pages
         run: npm run prerender
       - name: Verify discovery output and production SEO contract
