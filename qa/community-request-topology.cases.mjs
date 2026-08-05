@@ -26,15 +26,10 @@ function corsHeaders(extra = {}) {
 
 async function installCommunityBackend(page) {
   await page.addInitScript(() => {
-    Object.defineProperty(globalThis, 'process', {
-      configurable: true,
-      value: {
-        env: {
-          VITE_SUPABASE_URL: 'https://community.test.invalid',
-          VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        },
-      },
-    });
+    globalThis.__TLP_COMMUNITY_TEST_CONFIG__ = {
+      url: 'https://community.test.invalid',
+      key: 'test-anon-key',
+    };
   });
   const reads = [];
   await page.route(`${COMMUNITY_ORIGIN}/**`, async (route) => {
