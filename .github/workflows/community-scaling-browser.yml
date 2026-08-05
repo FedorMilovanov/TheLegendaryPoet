@@ -1,0 +1,84 @@
+name: Community scaling mobile contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: community-scaling-mobile-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  QA_BASE_URL: http://127.0.0.1:4173
+  PLAYWRIGHT_HTML_OPEN: never
+
+jobs:
+  mobile-request-topology:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact W3 mobile tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact W3 mobile checkout identity
+        run: |
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > community-mobile-tested-head.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Validate W3 scaling contracts
+        run: |
+          npm run validate:community-store
+          npm run validate:community-target-store
+          npm run validate:community-scaling
+          npx tsc -b --pretty false
+      - name: Install deterministic build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg imagemagick
+      - name: Build production site
+        env:
+          VITE_BASE: /
+        run: npm run build
+      - name: Install Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+      - name: Start exact production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > community-mobile-preview.log 2>&1 &
+          for attempt in $(seq 1 60); do curl --fail --silent "$QA_BASE_URL/" > /dev/null && exit 0; sleep 1; done
+          cat community-mobile-preview.log
+          exit 1
+      - name: Prove Android and iPhone community request topology
+        run: >-
+          npx playwright test
+          qa/community-request-topology.spec.mjs
+          --config=playwright.config.mjs
+          --project=android-pixel7
+          --project=iphone-safari
+          --workers=1
+          --reporter=line
+      - name: Upload exact mobile W3 evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: community-scaling-mobile-${{ env.TESTED_SHA }}
+          path: |
+            community-mobile-tested-head.txt
+            community-mobile-preview.log
+            playwright-report
+            test-results
+          if-no-files-found: warn
+          retention-days: 14
