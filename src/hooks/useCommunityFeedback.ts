@@ -11,6 +11,7 @@ import {
   getCommunitySyncSnapshot,
   getOwnRating,
   makeFeedbackId,
+  mutateFeedback,
   subscribeCommunitySync,
   trustLabel,
 } from '../utils/communityStore';
@@ -97,6 +98,17 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
   const markHelpful = (commentId: string) => {
     const scope = helpfulScope(commentId);
     if (!canMarkHelpful(scope)) return { ok: false as const, message: 'Вы уже отметили этот комментарий' };
+
+    const interactedComment = comments.find((comment) => comment.id === commentId);
+    if (interactedComment) {
+      mutateFeedback((local) => ({
+        ...local,
+        comments: [
+          ...local.comments.filter((comment) => comment.id !== interactedComment.id),
+          interactedComment,
+        ],
+      }));
+    }
 
     const stored = commitHelpfulFeedback(commentId, scope, getCommunityDeviceId());
     if (!stored) return { ok: false as const, message: 'Не удалось сохранить отметку' };
