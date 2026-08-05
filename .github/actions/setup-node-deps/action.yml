@@ -1,0 +1,38 @@
+name: Setup Node and dependencies
+description: Use the repository Node baseline, npm cache and exact lockfile installation.
+inputs:
+  node-version:
+    description: Node version used when node-version-file is empty.
+    required: false
+    default: '24'
+  node-version-file:
+    description: Optional repository file containing the Node version.
+    required: false
+    default: ''
+  install:
+    description: Whether to install dependencies after Node setup.
+    required: false
+    default: 'true'
+  install-command:
+    description: Exact dependency installation command.
+    required: false
+    default: npm ci
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js from explicit version
+      if: ${{ inputs.node-version-file == '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+    - name: Set up Node.js from repository version file
+      if: ${{ inputs.node-version-file != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: ${{ inputs.node-version-file }}
+        cache: npm
+    - name: Install exact dependencies
+      if: ${{ inputs.install == 'true' }}
+      shell: bash
+      run: ${{ inputs.install-command }}
