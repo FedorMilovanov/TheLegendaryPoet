@@ -29,6 +29,7 @@
     "validate:app-shell": "tsx scripts/validate-app-shell.ts",
     "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts && tsx scripts/validate-hall-audio-runtime.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
+    "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:build-output": "tsx scripts/validate-build-output.ts",
     "validate:seo-output": "node scripts/validate-seo-output.mjs",
     "validate:style": "tsx scripts/validate-literary-style.ts",
@@ -44,7 +45,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run validate:route-audit && npm run typecheck"
+    "check": "npm run brand:materialize && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -63,6 +64,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "22.19.17",
     "@types/react": "19.2.18",
