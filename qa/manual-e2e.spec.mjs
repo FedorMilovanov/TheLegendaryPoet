@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { registerCommunityRequestTopologyTests } from './community-request-topology.cases.mjs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
@@ -330,3 +331,5 @@ test.describe('reduced motion and forced-colors resilience', () => {
     expect(runtime.pageErrors).toEqual([]);
   });
 });
+
+registerCommunityRequestTopologyTests({ test, expect });
