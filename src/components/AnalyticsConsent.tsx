@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Link } from './ui/Link';
 import {
   ANALYTICS_CONSENT_EVENT,

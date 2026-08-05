@@ -1,5 +1,5 @@
 import { Trophy } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { motion } from 'framer-motion';
 import { BookOpen, FileText, Home, Search } from './PremiumIcons';
 import { Link } from './ui/Link';

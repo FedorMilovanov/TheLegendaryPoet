@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';

@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronDown, ListMusic, Search, SlidersHorizontal, UserRound, X } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import type { MusicTrack } from '../../types/poet';
 import {
   filterMusicTracks,

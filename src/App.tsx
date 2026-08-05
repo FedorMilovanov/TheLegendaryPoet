@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { hydrateFromRemote } from './utils/communityStore';
