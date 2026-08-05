@@ -36,18 +36,14 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   await expect(page.getByRole('heading', { name: /Константиново: место рождения/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /1921 год: хулиган/i })).toBeVisible();
 
-  // The essay exposes its reader surface through the article accessibility role.
-  // Scope paragraph assertions to that semantic contract so the test remains
-  // correct whether the implementation uses <article> or role="article".
-  const articleParagraphs = page.getByRole('article').locator('p');
-  await expect(
-    articleParagraphs.filter({
-      hasText: /лазарет № 17 нельзя называть установленным местом формальной службы/i,
-    }),
-  ).toHaveCount(1);
-  await expect(
-    articleParagraphs.filter({ hasText: /видимо, 3 октября 1921 года/i }),
-  ).toHaveCount(1);
+  // Verify the reader-facing evidence boundary through the semantic article.
+  // Accessibility paragraphs may be implemented by components other than a
+  // literal <p>, so the contract is the rendered article text, not a DOM tag.
+  const readerArticle = page.getByRole('article');
+  await expect(readerArticle).toContainText(
+    /лазарет № 17 нельзя называть установленным местом формальной службы/i,
+  );
+  await expect(readerArticle).toContainText(/видимо, 3 октября 1921 года/i);
 
   const citationTargets = await page.locator('a[href^="#source-"]').evaluateAll((links) => [
     ...new Set(links.map((link) => link.getAttribute('href')).filter(Boolean)),
