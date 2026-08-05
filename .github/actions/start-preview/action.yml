@@ -1,0 +1,35 @@
+name: Start exact production preview
+description: Start Vite preview, wait for the configured URL and preserve diagnostics.
+inputs:
+  command:
+    description: Preview command.
+    required: false
+    default: npm run preview -- --host 127.0.0.1
+  url:
+    description: URL that must become ready.
+    required: false
+    default: http://127.0.0.1:4173/
+  log-file:
+    description: File receiving preview output.
+    required: false
+    default: preview.log
+  attempts:
+    description: Maximum one-second readiness attempts.
+    required: false
+    default: '60'
+runs:
+  using: composite
+  steps:
+    - name: Start preview and wait for readiness
+      shell: bash
+      run: |
+        set -euo pipefail
+        ${{ inputs.command }} > "${{ inputs.log-file }}" 2>&1 &
+        for attempt in $(seq 1 "${{ inputs.attempts }}"); do
+          if curl --fail --silent "${{ inputs.url }}" > /dev/null; then
+            exit 0
+          fi
+          sleep 1
+        done
+        cat "${{ inputs.log-file }}"
+        exit 1
