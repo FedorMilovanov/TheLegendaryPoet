@@ -665,7 +665,7 @@ export function commitRatingFeedback(entryValue: RatingEntry, scope: string, vot
   if (!entry || !UUID.test(voterId)) return false;
   const operationId = `rating:${entry.id}`;
   const pending = currentState.outbox.find((item) => item.kind === 'rating' && item.id === operationId);
-  const previousScores = pending ? pending.previousScores : getOwnRating(scope)?.scores;
+  const previousScores = pending?.kind === 'rating' ? pending.previousScores : getOwnRating(scope)?.scores;
   const operation: PendingOperation = {
     id: operationId,
     kind: 'rating',
