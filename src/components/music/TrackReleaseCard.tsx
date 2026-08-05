@@ -96,7 +96,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
       <div className="relative flex min-w-0 flex-col p-5 sm:p-6">
         <div className="pointer-events-none absolute right-[-3rem] top-[-4rem] h-40 w-40 rounded-full blur-3xl" style={{ background: 'color-mix(in srgb, var(--track-secondary) 8%, transparent)' }} />
         <div className="relative mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em]">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.09] px-2.5 py-1" style={{ color: 'var(--track-accent)' }}><Disc3 size={12} /> Релиз {track.releaseYear}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.09] px-2.5 py-1" style={{ color: 'var(--track-accent)' }}><Disc3 size={12} /> Релиз&nbsp;{track.releaseYear}</span>
           <span className="inline-flex items-center gap-1.5 text-white/38"><Clock3 size={12} /> {track.duration}</span>
         </div>
 

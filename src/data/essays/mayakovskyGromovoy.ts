@@ -75,7 +75,7 @@ export const mayakovskyGromovoy: Essay = {
       author: 'Владимир Маяковский',
       role: '«Нате!», 1913',
       source: 'В. Маяковский. Полное собрание сочинений, т. 1; ФЭБ',
-      sourceUrl: 'http://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-056-.htm',
+      sourceUrl: 'https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-056-.htm',
     },
     {
       type: 'section',
@@ -270,7 +270,7 @@ export const mayakovskyGromovoy: Essay = {
     },
     {
       title: 'В. В. Маяковский. Полное собрание сочинений в 13 томах — ФЭБ',
-      url: 'http://feb-web.ru/feb/mayakovsky/default.asp',
+      url: 'https://feb-web.ru/feb/mayakovsky/default.asp',
     },
     {
       title: 'К. Чуковский. Очерк «Маяковский»',

@@ -1,4 +1,4 @@
-import { getAllArticles } from '../../utils/articleLibrary';
+import { getAllEssays } from '../../data/essays';
 import { musicTracks, poets } from '../../data/poets';
 export interface CommandItem { id: string; label: string; description: string; path: string; group: string; }
 const baseItems: CommandItem[] = [
@@ -12,7 +12,15 @@ const baseItems: CommandItem[] = [
 ];
 export function getCommandItems(): CommandItem[] {
   const poetItems = poets.map((poet) => ({ id: `poet-${poet.id}`, label: poet.name, description: poet.fullName, path: `/poets/${poet.id}`, group: 'Поэты' }));
-  const articleItems = getAllArticles().map((article) => ({ id: `article-${article.id}`, label: article.title, description: article.excerpt, path: `/articles/${article.id}`, group: 'Статьи' }));
+  /*
+   * Search offers the published essays at /essays/<slug>.
+   *
+   * It must NOT offer the legacy `Article` records: `/articles/:id` is a
+   * catch-all redirect back to the listing, so every one of those hits was a
+   * dead end — a reader searching "Ахматова" found "Молитва Ахматовой" and
+   * landed on the generic article index.
+   */
+  const essayItems = getAllEssays().map((essay) => ({ id: `essay-${essay.id}`, label: essay.title, description: essay.excerpt, path: `/essays/${essay.slug}`, group: 'Статьи' }));
   const trackItems = musicTracks.map((track) => ({ id: `track-${track.id}`, label: track.title, description: `${track.poet} · ${track.duration}`, path: `/music/${track.id}`, group: 'Музыка' }));
-  return [...baseItems, ...poetItems, ...articleItems, ...trackItems];
+  return [...baseItems, ...poetItems, ...essayItems, ...trackItems];
 }

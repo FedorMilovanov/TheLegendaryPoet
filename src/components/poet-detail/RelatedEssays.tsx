@@ -66,7 +66,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
                   {essay.excerpt}
                 </p>
                 <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/6 pt-4 text-[10px] uppercase tracking-[0.14em] text-luxury-gray-light/40">
-                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {essay.readTime} мин</span>
+                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {essay.readTime}&nbsp;мин</span>
                   <span className="inline-flex items-center gap-1 text-cyan-300/60 transition group-hover:text-cyan-200">
                     Читать <ArrowUpRight size={12} />
                   </span>

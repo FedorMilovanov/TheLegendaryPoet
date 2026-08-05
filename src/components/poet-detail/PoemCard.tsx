@@ -54,7 +54,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
           </h3>
           {poem.year && (
             <span className="gold-border-glow rounded-full border border-luxury-gold/20 bg-luxury-gold/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold-light/80">
-              {poem.year} год
+              {poem.year}&nbsp;год
             </span>
           )}
         </div>

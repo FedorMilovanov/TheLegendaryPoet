@@ -11,7 +11,7 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
-import { withGold, splitParagraphs } from './richText';
+import { withGold, splitParagraphs, withTypography } from './richText';
 import { sectionAnchor } from './anchor';
 import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
@@ -36,9 +36,9 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
   return (
     <div className="my-10 ml-auto max-w-md text-right">
       <Quote size={18} className="ml-auto mb-2 text-luxury-gold/40" aria-hidden="true" />
-      <p className="font-serif text-lg italic leading-relaxed text-luxury-gold/80 text-pretty">{block.text}</p>
+      <p className="font-serif text-lg italic leading-relaxed text-luxury-gold/80 text-pretty">{withTypography(block.text)}</p>
       {block.cite && (
-        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-luxury-gray-light/50">{block.cite}</p>
+        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-luxury-gray-light/50">{withTypography(block.cite)}</p>
       )}
     </div>
   );
@@ -47,7 +47,7 @@ function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
 function LeadBlock({ block, citations }: { block: Block<'lead'>; citations?: ReactNode }) {
   return (
     <p className="essay-lead mb-10 font-serif text-2xl md:text-3xl leading-[1.5] text-white text-pretty">
-      {block.text}{citations}
+      {withTypography(block.text)}{citations}
     </p>
   );
 }
@@ -326,10 +326,10 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
         </figcaption>
       )}
       <div className={`poetry-text whitespace-pre-line text-xl md:text-2xl leading-[1.9] tracking-wide ${v.body}`}>
-        {withGold(block.lines)}
+        {withGold(block.lines, { verse: true })}
       </div>
       {block.note && (
-        <p className={`mt-5 border-t pt-4 text-sm italic ${v.noteRule}`}>{block.note}</p>
+        <p className={`mt-5 border-t pt-4 text-sm italic ${v.noteRule}`}>{withTypography(block.note)}</p>
       )}
     </figure>
   );
@@ -343,7 +343,7 @@ function VoiceBlock({ block }: { block: Block<'voice'> }) {
         <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} aria-hidden="true" />
         {cfg.label}
       </div>
-      <p className="font-serif text-xl md:text-2xl italic leading-relaxed text-white mb-4 text-pretty">«{block.quote}»</p>
+      <p className="font-serif text-xl md:text-2xl italic leading-relaxed text-white mb-4 text-pretty">«{withTypography(block.quote, { verse: true })}»</p>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-white/5 pt-4">
         <div>
           <span className="text-sm font-bold text-white">{block.author}</span>
@@ -453,7 +453,7 @@ function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: Rea
         THE LEGENDARY POET — ремарка
       </div>
       <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
-        {block.text}{citations}
+        {withTypography(block.text)}{citations}
       </p>
     </aside>
   );

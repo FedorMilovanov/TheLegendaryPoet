@@ -1,17 +1,18 @@
 import { Quote, Award } from 'lucide-react';
 import { Testimony } from '../../types/poet';
+import { ruTypography } from '../../utils/typography';
 
 function TestimonyCard({ item }: { item: Testimony }) {
   return (
     <div className="rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-6 md:p-8 hover:border-luxury-gold/25 transition-colors">
       <Quote size={20} className="text-luxury-gold/30 mb-3" />
       <p className="text-lg font-serif italic leading-relaxed text-luxury-gray-light mb-4">
-        «{item.quote}»
+        «{ruTypography(item.quote, { ellipsis: false })}»
       </p>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-luxury-gold/10 pt-4">
         <div>
           <span className="text-sm font-bold text-white">{item.author}</span>
-          <span className="text-xs text-luxury-gray-light/70"> — {item.role}</span>
+          <span className="text-xs text-luxury-gray-light/70"> — {ruTypography(item.role)}</span>
         </div>
         {item.sourceUrl ? (
           <a

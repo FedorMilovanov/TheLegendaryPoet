@@ -78,7 +78,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
               <div className="flex items-center justify-between pt-4 border-t border-cyan-400/10 text-cyan-100/50">
                 <div className="flex items-center gap-1.5 text-xs font-medium">
                   <Calendar size={14} className="text-cyan-400/50" />
-                  <span>{poet.birthYear} — {poet.deathYear || 'н.в.'}</span>
+                  <span>{poet.birthYear}&nbsp;— {poet.deathYear || 'н. в.'}</span>
                 </div>
                 <div className="flex items-center gap-1 text-cyan-400 text-sm font-semibold group-hover:text-cyan-300 transition-colors duration-300">
                   <span>Подробнее</span>
