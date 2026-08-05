@@ -72,7 +72,7 @@ export default defineConfig({
         // Framework code changes rarely, so content deploys should not force
         // visitors to download React or the animation runtime again.
         manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
+          react: ['react', 'react-dom', 'react-router'],
           motion: ['framer-motion'],
         },
       },

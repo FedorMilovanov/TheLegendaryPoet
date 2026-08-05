@@ -198,7 +198,7 @@ export const alexanderPushkin: Poet = {
       kind: 'historian',
       quote: 'Жить в постоянном напряжении страстей было для него не уступкой темпераменту, а сознательной и программной жизненной установкой.',
       source: 'Ю. Лотман, «Александр Сергеевич Пушкин: Биография писателя» (1981)',
-      sourceUrl: 'http://feb-web.ru/feb/pushkin/critics/lot/lot-021-.htm',
+      sourceUrl: 'https://feb-web.ru/feb/pushkin/critics/lot/lot-021-.htm',
     },
     {
       author: 'Валентин Непомнящий',

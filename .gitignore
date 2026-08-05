@@ -6,6 +6,22 @@ dist/
 dist-ssr/
 *.local
 
+# Browser test output
+playwright-report/
+test-results/
+qa-artifacts/
+
+# Generated from the hash-locked brand source by scripts/materialize-brand-art.mjs.
+# They are recreated before dev/build/deploy and must not make a checkout dirty.
+/public/brand-emblem.png
+/public/favicon-16.png
+/public/favicon-32.png
+/public/apple-touch-icon.png
+/public/icon-192.png
+/public/icon-512.png
+/public/icon-maskable-512.png
+/public/mstile-150x150.png
+
 # Logs
 logs/
 *.log

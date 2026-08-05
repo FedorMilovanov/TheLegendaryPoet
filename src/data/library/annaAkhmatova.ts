@@ -191,7 +191,7 @@ X
       kind: 'historian',
       quote: 'Время от её вступления в литературу до наших дней превышает число лет, прошедших от смерти Пушкина до начала русского символизма. Это целая эпоха.',
       source: 'В. Жирмунский, «Творчество Анны Ахматовой» (1973)',
-      sourceUrl: 'http://ahmatova.niv.ru/ahmatova/kritika/zhirmunskij-tvorchestvo-ahmatovoj/pamyat-i-vernost.htm',
+      sourceUrl: 'https://ahmatova.niv.ru/ahmatova/kritika/zhirmunskij-tvorchestvo-ahmatovoj/pamyat-i-vernost.htm',
     },
     {
       author: 'Роман Тименчик',
@@ -199,7 +199,7 @@ X
       kind: 'historian',
       quote: '(пересказ) В «Реквиеме» прослеживается сеть библейских отсылок — вплоть до того, что слово «ужас» в поэме этимологически смыкается с официальным термином государственного «террора».',
       source: 'Р. Тименчик, предисловие к книге «Реквием»',
-      sourceUrl: 'http://ahmatova.niv.ru/ahmatova/kritika/timenchik-predislovie-k-knige-rekviem.htm',
+      sourceUrl: 'https://ahmatova.niv.ru/ahmatova/kritika/timenchik-predislovie-k-knige-rekviem.htm',
     },
   ],
   famousWorks: [

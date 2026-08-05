@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ru">
+  <id>https://thelegendarypoet.ru/</id>
+  <title>THE LEGENDARY POET</title>
+  <subtitle>Новые статьи, биографические исследования и музыкальные публикации проекта.</subtitle>
+  <link href="https://thelegendarypoet.ru/" />
+  <link rel="self" type="application/atom+xml" href="https://thelegendarypoet.ru/feed.xml" />
+  <updated>2026-08-05T00:00:00Z</updated>
+  <author><name>THE LEGENDARY POET</name><uri>https://thelegendarypoet.ru/about</uri></author>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</id>
+    <title>Сергей Есенин. Часть I: 1895–1921</title>
+    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921" />
+    <published>2026-07-26T00:00:00Z</published>
+    <updated>2026-08-05T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Документальная биография Сергея Есенина от Константинова и Спас-Клепиков до Москвы, Блока, Клюева, революционных поэм, имажинизма и рубежа 1921 года.</summary>
+    <category term="Сергей Есенин" />
+    <category term="Биография" />
+    <category term="Серебряный век" />
+    <category term="Часть I" />
+    <category term="Источники" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents</id>
+    <title>Есенин и Айседора Дункан: что документы говорят о первой встрече</title>
+    <link href="https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents" />
+    <published>2026-07-26T00:00:00Z</published>
+    <updated>2026-08-05T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Источниковое расследование о знакомстве Есенина и Дункан — без превращения поздних воспоминаний в стенограмму и вероятной даты в установленный факт.</summary>
+    <category term="Сергей Есенин" />
+    <category term="Айседора Дункан" />
+    <category term="Москва 1921" />
+    <category term="Архив" />
+    <category term="Источники" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/vykhozhu-odin-ya-na-dorogu-lermontov</id>
+    <title>«Выхожу один я на дорогу…»: свобода, покой и живая тишина Лермонтова</title>
+    <link href="https://thelegendarypoet.ru/essays/vykhozhu-odin-ya-na-dorogu-lermontov" />
+    <published>2026-07-29T00:00:00Z</published>
+    <updated>2026-08-04T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">История создания, композиция, пятистопный хорей и смысл строк «Я ищу свободы и покоя»: почему Лермонтов отвергает могильный сон и просит живой тишины.</summary>
+    <category term="Михаил Лермонтов" />
+    <category term="Выхожу один я на дорогу" />
+    <category term="анализ стихотворения" />
+    <category term="свобода и покой" />
+    <category term="пятистопный хорей" />
+    <category term="поздняя лирика Лермонтова" />
+    <category term="русский романс" />
+    <category term="Елизавета Шашина" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/mayakovsky-before-revolution</id>
+    <title>Маяковский. Часть I: бунтарь, футурист, влюблённый</title>
+    <link href="https://thelegendarypoet.ru/essays/mayakovsky-before-revolution" />
+    <published>2026-07-22T00:00:00Z</published>
+    <updated>2026-08-04T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Первая часть документальной биографии Владимира Маяковского: семья, ранние аресты, Бурлюк, футуристическая сцена, религиозный бунт и встреча с Бриками.</summary>
+    <category term="Маяковский" />
+    <category term="Футуризм" />
+    <category term="Серебряный век" />
+    <category term="Биография" />
+    <category term="Часть I" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/mayakovsky-gromovoy</id>
+    <title>Маяковский. Часть II: революция, ЛЕФ и последний кризис</title>
+    <link href="https://thelegendarypoet.ru/essays/mayakovsky-gromovoy" />
+    <published>2026-07-16T00:00:00Z</published>
+    <updated>2026-08-04T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Вторая часть документальной биографии: сознательное служение революции, ЛЕФ, путешествия, поздняя лирика, «Баня», выставка «20 лет работы» и трагический финал.</summary>
+    <category term="Маяковский" />
+    <category term="Футуризм" />
+    <category term="Серебряный век" />
+    <category term="Революция" />
+    <category term="Богоборчество" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/brik-case</id>
+    <title>Маяковский и Брики: любовь, союз и зависимость</title>
+    <link href="https://thelegendarypoet.ru/essays/brik-case" />
+    <published>2026-07-17T00:00:00Z</published>
+    <updated>2026-08-04T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">История Маяковского и Бриков по письмам и документам: творческое сотрудничество, супружеская неверность, эмоциональная зависимость и поздние спорные свидетельства — без мемориального глянца и сенсационной схемы.</summary>
+    <category term="Маяковский" />
+    <category term="Лиля Брик" />
+    <category term="Осип Брик" />
+    <category term="Серебряный век" />
+    <category term="Биография" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925</id>
+    <title>Сергей Есенин. Часть II: 1921–1925</title>
+    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925" />
+    <published>2026-08-03T00:00:00Z</published>
+    <updated>2026-08-03T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Последние четыре года Сергея Есенина: зарубежная поездка, возвращение, «Москва кабацкая», Бениславская, Кавказ, поздняя поэзия и декабрь 1925 года по документам.</summary>
+    <category term="Сергей Есенин" />
+    <category term="Биография" />
+    <category term="1921–1925" />
+    <category term="Источники" />
+    <category term="Часть II" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</id>
+    <title>Я усталым таким ещё не был — Сергей Есенин</title>
+    <link href="https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl" />
+    <published>2026-07-23T00:00:00Z</published>
+    <updated>2026-07-23T00:00:00Z</updated>
+    <author><name>THE LEGENDARY POET</name></author>
+    <summary type="text">Первая официальная музыкальная публикация проекта — тёмная кинематографическая интерпретация исповедальной лирики Сергея Есенина.</summary>
+    <category term="музыка" />
+    <category term="Сергей Есенин" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/music/pushkin-tucha</id>
+    <title>Туча — Александр Пушкин</title>
+    <link href="https://thelegendarypoet.ru/music/pushkin-tucha" />
+    <published>2026-07-23T00:00:00Z</published>
+    <updated>2026-07-23T00:00:00Z</updated>
+    <author><name>THE LEGENDARY POET</name></author>
+    <summary type="text">Грозовая электронно-симфоническая интерпретация пушкинской «Тучи»: от напряжения последней бури к ясному, освобождённому небу.</summary>
+    <category term="музыка" />
+    <category term="Александр Пушкин" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/music/blok-rossiya</id>
+    <title>Россия — Александр Блок</title>
+    <link href="https://thelegendarypoet.ru/music/blok-rossiya" />
+    <published>2026-07-23T00:00:00Z</published>
+    <updated>2026-07-23T00:00:00Z</updated>
+    <author><name>THE LEGENDARY POET</name></author>
+    <summary type="text">Тёмная атмосферная версия блоковской «России», в которой дорожная тоска, бедность и любовь к родине проходят через электронный шум и кинематографический размах.</summary>
+    <category term="музыка" />
+    <category term="Александр Блок" />
+  </entry>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/yesenin-kutezhi</id>
+    <title>Есенин: маска «Москвы кабацкой» и цена саморазрушения</title>
+    <link href="https://thelegendarypoet.ru/essays/yesenin-kutezhi" />
+    <published>2026-07-12T00:00:00Z</published>
+    <updated>2026-07-12T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">История выбранной маски, алкогольной зависимости и позднего саморазоблачения — по стихам, письмам и милицейским документам, без кабацкой романтики и выдуманного покаяния.</summary>
+    <category term="Есенин" />
+    <category term="Москва кабацкая" />
+    <category term="Серебряный век" />
+    <category term="Судьба" />
+    <category term="Нравственный анализ" />
+  </entry>
+</feed>

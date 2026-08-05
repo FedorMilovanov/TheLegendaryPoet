@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';

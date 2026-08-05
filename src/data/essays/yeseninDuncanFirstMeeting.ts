@@ -11,6 +11,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
     'Источниковое расследование о знакомстве Есенина и Дункан — без превращения поздних воспоминаний в стенограмму и вероятной даты в установленный факт.',
   author: 'Редакция THE LEGENDARY POET',
   date: '2026-07-26',
+  dateModified: '2026-08-05',
   readTime: 18,
   cover: '/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp',
   cardCover: '/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp',
@@ -58,11 +59,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       type: 'paragraph',
       text:
         'К моменту знакомства Дункан уже действовала в Москве как самостоятельная международная художница. Её приезд был связан с переговорами о школе, идеей искусства для широкой публики, поиском помещения, набором детей и подготовкой собственной программы. Расхождение между 23 и ранним утром 24 июля важно для точной хронологии маршрута, но не меняет главного: московский проект возник до встречи с Есениным и не был приложением к его биографии.',
-      sourceIds: [
-        'yd1-pss-duncan-chronology',
-        'ye1-nypl-isadora-moscow-reviews',
-        'ye1-nypl-irma-duncan-papers',
-      ],
+      sourceIds: ['yd1-pss-duncan-chronology'],
     },
     {
       type: 'image',
@@ -87,7 +84,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       type: 'note',
       text:
         'Такое начало защищает обоих героев от упрощения. Дункан не появляется в истории как функция судьбы русского поэта, а Есенин не становится единственным объяснением её московских решений. Их встреча была пересечением двух уже сложившихся художественных биографий.',
-      sourceIds: ['ye1-nypl-irma-duncan-collection', 'ye1-ellens-duncan-yesenin'],
+      sourceIds: ['ye1-ellens-duncan-yesenin'],
     },
     {
       type: 'section',
@@ -121,11 +118,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       type: 'paragraph',
       text:
         'Другие линии памяти размещают встречу позднее. Ирма Дункан и Аллан Росс Макдугалл связывали её с началом ноября; свидетельство Шнейдера указывает на осень и подразумевает время до выступления 7 ноября. Эти версии не устанавливают новый точный день. Их значение другое: они показывают, что 3 октября нельзя подавать как единственную бесспорную дату.',
-      sourceIds: [
-        'yd1-mcvay-isadora-yesenin',
-        'ye1-schneider-memoir-commentary',
-        'ye1-nypl-irma-duncan-papers',
-      ],
+      sourceIds: ['yd1-mcvay-isadora-yesenin', 'ye1-schneider-memoir-commentary'],
     },
     {
       type: 'note',
@@ -148,7 +141,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       type: 'paragraph',
       text:
         'Газетное свидетельство не доказывает присутствие Есенина в зале и не устанавливает, познакомился ли он с Дункан до этого вечера или вскоре после него. Хронологическую опору нельзя незаметно превратить в биографическую сцену. Для такого вывода потребовались бы программа с именами, письмо, дневниковая запись или другое конкретное свидетельство.',
-      sourceIds: ['yd1-tm11-ye1-no7', 'ye1-nypl-isadora-programs', 'ye1-nypl-isadora-moscow-reviews'],
+      sourceIds: ['yd1-tm11-ye1-no7'],
     },
     {
       type: 'note',
@@ -216,7 +209,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
     {
       type: 'paragraph',
       text:
-        'Архивные описи NYPL указывают на программы, московские материалы и дневники Ирмы Дункан за 1921 год. Пока конкретные единицы не заказаны и не просмотрены, описи подтверждают существование перспективного корпуса, но не содержание нужной записи. Описание коллекции нельзя цитировать так, будто документ уже прочитан.',
+        'Архивные описания Нью-Йоркской публичной библиотеки (NYPL) указывают на конкретные корпуса: программы и объявления Дункан, материалы московских выступлений и школы на Пречистенке, а также бумаги Ирмы Дункан, где обозначены дневники 1921 года. Это не найденный дневник и не прочитанная программа, а точная карта дальнейшего поиска. Пока конкретные единицы хранения не получены, они могут подтверждать существование коллекции и формулировать архивный запрос, но не служат источником неизвестных реплик, дат или подробностей московской встречи.',
       sourceIds: ['ye1-nypl-isadora-programs', 'ye1-nypl-isadora-moscow-reviews', 'ye1-nypl-irma-duncan-papers'],
     },
     {
@@ -319,7 +312,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       url: 'https://digitalcollections.nypl.org/collections/isadora-duncan-programs-and-announcements',
       kind: 'archive',
       institution: 'New York Public Library, Jerome Robbins Dance Division',
-      note: 'Finding aid и цифровая коллекция; конкретный российский объект не объявляется просмотренным.',
+      note: 'Описание корпуса программ и объявлений: позволяет сформулировать архивный запрос, но не подтверждает содержание непросмотренной программы.',
     },
     {
       id: 'ye1-nypl-isadora-moscow-reviews',
@@ -327,7 +320,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       url: 'https://archives.nypl.org/dan/19659',
       kind: 'archive',
       institution: 'New York Public Library, Jerome Robbins Dance Division',
-      note: 'Описание коллекции подтверждает направление поиска, но не содержание отдельной единицы.',
+      note: 'Описание материалов московских выступлений и школы на Пречистенке: карта дальнейшего поиска, а не источник непрочитанных деталей встречи.',
     },
     {
       id: 'ye1-nypl-irma-duncan-papers',
@@ -335,7 +328,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       url: 'https://archives.nypl.org/dan/19694',
       kind: 'archive',
       institution: 'New York Public Library, Jerome Robbins Dance Division',
-      note: 'Finding aid бумаг Ирмы Дункан; нужная дневниковая единица пока не просмотрена.',
+      note: 'В описании обозначены дневники 1921 года; пока конкретная единица хранения не получена, это ориентир для запроса, не свидетельство содержания дневника.',
     },
     {
       id: 'ye1-nypl-irma-duncan-collection',

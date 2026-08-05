@@ -93,7 +93,7 @@ export default function ArticleRenderer({
   const references = buildSourceReferences(sources);
 
   return (
-    <div className="essay-body flow-root">
+    <div className="essay-body flow-root" lang="ru">
       {normalizedBlocks.map((block, i) => {
         const sectionNumber = block.type === 'section' ? ++sectionCount : undefined;
         const sourceIds = 'sourceIds' in block ? block.sourceIds : undefined;
@@ -108,7 +108,14 @@ export default function ArticleRenderer({
             direction={layout.direction}
             distance={18}
             once
-            className={`${layout.className} will-change-transform`}
+            /*
+             * No permanent `will-change-transform` here. Reveal already sets
+             * will-change while it animates and drops it to `auto` once the
+             * block is revealed; a static class re-pins every block (152 on the
+             * longest essay) as its own composited layer for the whole session,
+             * which starves the compositor that the hover tilt depends on.
+             */
+            className={layout.className}
           >
             <EssayBlockView
               block={block}

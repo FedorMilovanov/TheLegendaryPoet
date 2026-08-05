@@ -49,6 +49,8 @@ for (const [required, label] of [
 const tiltCard = read('src/components/TiltCard.tsx');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-content relative h-full w-full"', 'stable tilt content plane');
 requireText('src/components/TiltCard.tsx', 'onPointerEnter={prepareLayer}', 'pointer-entry compositor warm-up');
+requireText('src/components/TiltCard.tsx', "node.dataset.tiltTracking = 'true';", 'live-pointer transition ownership');
+requireText('src/components/TiltCard.tsx', 'delete node.dataset.tiltTracking;', 'tilt transition cleanup');
 requireText('src/components/TiltCard.tsx', 'className="tilt-card-sheen', 'separate sheen plane');
 if (!tiltCard.includes('<div className="tilt-card-content relative h-full w-full">\n          {children}\n          {sheen && (')) {
   errors.push('src/components/TiltCard.tsx: children and sheen must share the single owned content plane');
@@ -60,6 +62,8 @@ if (stability.includes('.tilt-card-inner > *')) {
 }
 for (const [text, label] of [
   ['.tilt-card-content {', 'stable content plane CSS'],
+  ['.tilt-card-inner[data-tilt-tracking=', 'live-pointer transition override'],
+  ['transition: none;', 'no transition backlog during pointer input'],
   ['backface-visibility: hidden;', 'backface stabilization'],
   ['transform: translate3d(-160%, 0, 0) skewX(-18deg);', 'transform-only luxury sweep'],
   ['transition-property: transform, opacity;', 'explicit sweep transition properties'],
@@ -172,6 +176,9 @@ for (const [text, label] of [
   ['sampledImages.length < MAX_IMAGES_PER_SURFACE', 'bounded multi-image sampling'],
   ["path: '/essays/yesenin-duncan-first-meeting-documents'", 'inline essay artwork route'],
   ["path: '/archive'", 'listening archive route'],
+  ['TiltCard follows live pointer input without a transition backlog', 'live-pointer tilt regression test'],
+  ["card.getAttribute('data-tilt-tracking')", 'tilt active-state assertion'],
+  ["expect(active.transitionDuration).toBe('0s')", 'no-backlog duration assertion'],
 ]) {
   if (!qa.includes(text)) errors.push(`qa/hover-stability.spec.mjs: missing ${label}`);
 }

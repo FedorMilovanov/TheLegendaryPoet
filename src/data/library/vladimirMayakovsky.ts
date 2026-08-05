@@ -158,7 +158,7 @@ export const vladimirMayakovsky: Poet = {
       kind: 'contemporary',
       quote: 'Это было нападение, Володя не просто влюбился в меня, он напал на меня. Два с половиной года не было у меня спокойной минуты — буквально... Меня пугали его напористость, рост, его громада, неуёмная, необузданная страсть.',
       source: 'Л. Брик, «Пристрастные рассказы» (мемуары написаны в эвакуации, 1942, опубл. 2005)',
-      sourceUrl: 'http://mayakovskiy.lit-info.ru/mayakovskiy/vospominaniya/katanyan-sovremennicy/brik-iv.htm',
+      sourceUrl: 'https://mayakovskiy.lit-info.ru/mayakovskiy/vospominaniya/katanyan-sovremennicy/brik-iv.htm',
     },
     {
       author: 'Виктор Шкловский',
@@ -174,7 +174,7 @@ export const vladimirMayakovsky: Poet = {
       kind: 'contemporary',
       quote: 'Утратившие — это наше поколение.',
       source: 'Р. Якобсон, «О поколении, растратившем своих поэтов» (1931) — эссе, написанное сразу после самоубийства Маяковского',
-      sourceUrl: 'http://feb-web.ru/feb/mayakovsky/critics/-mcr0086.html',
+      sourceUrl: 'https://feb-web.ru/feb/mayakovsky/critics/-mcr0086.html',
     },
     {
       author: 'Борис Пастернак',

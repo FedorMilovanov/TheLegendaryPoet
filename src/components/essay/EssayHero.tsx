@@ -90,7 +90,7 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.16em] text-luxury-gray-light/60">
           <span className="inline-flex items-center gap-1.5"><PenLine size={13} className="text-luxury-gold/60" /> {essay.author}</span>
           <span className="inline-flex items-center gap-1.5"><Calendar size={13} className="text-luxury-gold/60" /> {essay.date}</span>
-          <span className="inline-flex items-center gap-1.5"><Clock size={13} className="text-luxury-gold/60" /> {essay.readTime} мин чтения</span>
+          <span className="inline-flex items-center gap-1.5"><Clock size={13} className="text-luxury-gold/60" /> {essay.readTime}&nbsp;мин чтения</span>
         </div>
         {essay.tags.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-2">

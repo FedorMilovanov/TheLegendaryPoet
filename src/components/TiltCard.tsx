@@ -8,46 +8,90 @@ interface TiltCardProps {
   sheen?: boolean;
 }
 
+/**
+ * Pointer-driven tilt with a non-transforming hit surface. The outer wrapper
+ * owns pointer geometry while only the inner visual plane is transformed, so
+ * the card cannot move out from under the cursor and emit a false pointerleave.
+ */
 export default function TiltCard({
   children,
   className = '',
   intensity = 12,
   sheen = true,
 }: TiltCardProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const hitRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
   const settleTimerRef = useRef<number | null>(null);
+  const flattenFrameRef = useRef<number | null>(null);
+  const rectRef = useRef<DOMRect | null>(null);
   const pointerRef = useRef({ x: 0.5, y: 0.5 });
   const enabledRef = useRef(false);
   const visibleRef = useRef(true);
 
-  const prepareLayer = useCallback(() => {
-    const node = ref.current;
-    if (!node || !enabledRef.current || !visibleRef.current) return;
-    if (settleTimerRef.current != null) {
-      window.clearTimeout(settleTimerRef.current);
-      settleTimerRef.current = null;
-    }
-    node.style.willChange = 'transform';
-  }, []);
-
-  const reset = useCallback(() => {
+  const cancelPaint = useCallback(() => {
     if (frameRef.current != null) {
       cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
     }
-    if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
-    const node = ref.current;
+  }, []);
+
+  const cancelSettle = useCallback(() => {
+    if (settleTimerRef.current != null) {
+      window.clearTimeout(settleTimerRef.current);
+      settleTimerRef.current = null;
+    }
+  }, []);
+
+  const prepareLayer = useCallback(() => {
+    const node = visualRef.current;
+    const hit = hitRef.current;
+    if (!node || !hit || !enabledRef.current || !visibleRef.current) return;
+    cancelSettle();
+    rectRef.current ??= hit.getBoundingClientRect();
+    node.style.willChange = 'transform';
+    // Live tracking must not be eased, or every pointermove restarts the
+    // transition and the card visibly trails the cursor.
+    node.dataset.tiltTracking = 'true';
+  }, [cancelSettle]);
+
+  const reset = useCallback(() => {
+    cancelPaint();
+    cancelSettle();
+    rectRef.current = null;
+    pointerRef.current = { x: 0.5, y: 0.5 };
+
+    const node = visualRef.current;
     if (!node) return;
+    // Re-enable easing so the card glides back to rest instead of snapping.
+    delete node.dataset.tiltTracking;
     node.style.setProperty('--tilt-x', '0deg');
     node.style.setProperty('--tilt-y', '0deg');
     node.style.setProperty('--tilt-sheen-x', '50%');
     node.style.setProperty('--tilt-sheen-y', '50%');
     settleTimerRef.current = window.setTimeout(() => {
-      if (ref.current) ref.current.style.willChange = 'auto';
+      if (visualRef.current) visualRef.current.style.willChange = 'auto';
       settleTimerRef.current = null;
     }, 360);
-  }, []);
+  }, [cancelPaint, cancelSettle]);
+
+  /** Flatten before navigation or a lightbox snapshot begins. */
+  const flattenForActivation = useCallback(() => {
+    cancelPaint();
+    cancelSettle();
+    rectRef.current = null;
+    const node = visualRef.current;
+    if (!node) return;
+    delete node.dataset.tiltTracking;
+    node.style.transition = 'none';
+    node.style.setProperty('--tilt-x', '0deg');
+    node.style.setProperty('--tilt-y', '0deg');
+    if (flattenFrameRef.current != null) cancelAnimationFrame(flattenFrameRef.current);
+    flattenFrameRef.current = requestAnimationFrame(() => {
+      node.style.removeProperty('transition');
+      flattenFrameRef.current = null;
+    });
+  }, [cancelPaint, cancelSettle]);
 
   useEffect(() => {
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -70,22 +114,23 @@ export default function TiltCard({
           visibleRef.current = Boolean(entry?.isIntersecting);
           if (!visibleRef.current) reset();
         }, { rootMargin: '120px' });
-    if (ref.current) observer?.observe(ref.current);
+    if (hitRef.current) observer?.observe(hitRef.current);
 
     return () => {
       finePointer.removeEventListener?.('change', updateCapability);
       reducedMotion.removeEventListener?.('change', updateCapability);
       forcedColors.removeEventListener?.('change', updateCapability);
       observer?.disconnect();
-      if (frameRef.current != null) cancelAnimationFrame(frameRef.current);
-      if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
+      cancelPaint();
+      cancelSettle();
+      if (flattenFrameRef.current != null) cancelAnimationFrame(flattenFrameRef.current);
     };
-  }, [reset]);
+  }, [cancelPaint, cancelSettle, reset]);
 
   const paint = () => {
     frameRef.current = null;
-    const node = ref.current;
-    if (!node || !enabledRef.current || !visibleRef.current) return;
+    const node = visualRef.current;
+    if (!node || !enabledRef.current || !visibleRef.current || !node.dataset.tiltTracking) return;
 
     const { x, y } = pointerRef.current;
     const rotateY = (x - 0.5) * intensity;
@@ -98,29 +143,35 @@ export default function TiltCard({
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!ref.current || !enabledRef.current || !visibleRef.current) return;
+    if (!enabledRef.current || !visibleRef.current) return;
     if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
-    const rect = ref.current.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
+    prepareLayer();
+    const hit = hitRef.current;
+    const rect = rectRef.current ?? hit?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+    rectRef.current = rect;
     pointerRef.current = {
       x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
       y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
     };
-    prepareLayer();
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
   return (
-    <div className="tilt-card-wrapper relative h-full w-full">
+    <div
+      ref={hitRef}
+      onPointerEnter={prepareLayer}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={reset}
+      onPointerCancel={reset}
+      onPointerDown={flattenForActivation}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) reset();
+      }}
+      className="tilt-card-wrapper relative h-full w-full"
+    >
       <div
-        ref={ref}
-        onPointerEnter={prepareLayer}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={reset}
-        onPointerCancel={reset}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) reset();
-        }}
+        ref={visualRef}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         <div className="tilt-card-content relative h-full w-full">

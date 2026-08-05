@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Link } from '../components/ui/Link';
 import { ArrowLeft, Search, Sparkles } from '../components/PremiumIcons';
 import { useSeo } from '../hooks/useSeo';

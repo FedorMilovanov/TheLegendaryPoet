@@ -25,7 +25,7 @@ export default function InfoCard({ poet }: InfoCardProps) {
           <div className="w-10 h-10 rounded-full bg-luxury-dark-200 flex items-center justify-center text-luxury-gold border border-luxury-gold/20 group-hover:border-luxury-gold/60 group-hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all">
             <Calendar size={16} />
           </div>
-          <span>{poet.birthYear} — {poet.deathYear || 'н.в.'}</span>
+          <span>{poet.birthYear}&nbsp;— {poet.deathYear || 'н. в.'}</span>
         </div>
         <div className="flex items-center gap-4 group">
           <div className="w-10 h-10 rounded-full bg-luxury-dark-200 flex items-center justify-center text-luxury-gold border border-luxury-gold/20 group-hover:border-luxury-gold/60 group-hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all">

@@ -1,5 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
-import { matchPath, type To } from 'react-router-dom';
+import { matchPath, type To } from 'react-router';
 
 type PageModule = { default: ComponentType };
 type PageImporter = () => Promise<PageModule>;

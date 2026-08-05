@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, LoaderCircle, Maximize2, Pause, Play, RotateCw, X } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { musicTracks } from '../../data/poets';
 import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';

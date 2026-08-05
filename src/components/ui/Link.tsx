@@ -8,14 +8,14 @@ import {
   type NavLinkProps,
   type NavigateOptions,
   type To,
-} from 'react-router-dom';
+} from 'react-router';
 import { scheduleRoutePreload } from '../../routes/routeModules';
 
 /**
  * Site-standard internal navigation.
  *
  * Always import `Link`/`NavLink` from THIS module (never from
- * react-router-dom directly) and navigate imperatively via `useAppNavigate`.
+ * react-router directly) and navigate imperatively via `useAppNavigate`.
  * They enable the View Transitions API on every route change and warm the
  * destination chunk only after deliberate pointer, touch, or keyboard intent.
  */

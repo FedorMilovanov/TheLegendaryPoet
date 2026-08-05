@@ -216,11 +216,24 @@ essays.forEach((e, i) => {
   // Every essay should point to a real poet if poetId is set.
   if (e.poetId && !poetIds.has(e.poetId))
     err(where, `poetId "${e.poetId}" does not match any poet`);
-  // Sources sanity: at least a few, and each is a real link+title.
+  // Sources sanity: a real title, and a real link when a link exists at all.
+  //
+  // A URL is NOT required. Archival case files and print-only scholarly editions
+  // have no public address; demanding one is what previously pushed ten of
+  // Part II's documents to point at this repository's own markdown instead.
+  // Such a source must instead say in prose where it can be consulted.
   (e.sources || []).forEach((s, k) => {
     const sw = `${where}.sources[${k}]`;
     if (!isNonEmptyString(s.title)) err(sw, 'source missing title');
-    if (!isNonEmptyString(s.url) || !/^https?:\/\//.test(s.url)) err(sw, `source url invalid: "${s.url}"`);
+    if (s.url === undefined) {
+      if (!isNonEmptyString(s.note) && !isNonEmptyString(s.institution)) {
+        err(sw, 'source without a URL must name where the document can be consulted');
+      }
+      return;
+    }
+    if (!isNonEmptyString(s.url) || !/^https:\/\//.test(s.url)) {
+      err(sw, `source url must be a public https:// address: "${s.url}"`);
+    }
   });
   if (!e.sources || e.sources.length < 5)
     warn(where, `essay has only ${e.sources?.length || 0} sources — deep essays should cite primary sources`);

@@ -18,6 +18,8 @@ const allowedLatinWords = new Set([
   'Exegi',
   'Silentium',
   'monumentum',
+  // Institutional abbreviations are acceptable after their Russian expansion.
+  'NYPL',
 ]);
 
 const requiredPoetMarkers: Record<string, string[]> = {

@@ -1,4 +1,5 @@
 import type { Essay, EssaySource } from '../../types/essay';
+import { estimateReadTime } from '../../utils/readTime';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
@@ -69,13 +70,13 @@ const yeseninWithArchiveLayer: Essay = {
 
 const yeseninPartOnePublished: Essay = {
   ...yeseninPartOnePublic,
-  dateModified: '2026-08-04',
+  dateModified: '2026-08-05',
   readTime: 43,
 };
 
 const yeseninDuncanPublished: Essay = {
   ...yeseninDuncanFirstMeetingPublished,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-05',
 };
 
 const yeseninPartTwoLedgerUrl =
@@ -92,13 +93,36 @@ const yeseninPartTwoOfficialUrls: Record<string, string> = {
     'https://dl.tufts.edu/concern/pdfs/h415pp46s',
 };
 
-yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source) => ({
-  ...source,
-  url:
-    (source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined) ??
-    source.url ??
-    `${yeseninPartTwoLedgerUrl}#${source.id ?? 'source'}`,
-}));
+/*
+ * Attach the real public URL where one exists — and nothing where one does not.
+ *
+ * This previously fell back to `<our own GitHub ledger>#<source-id>` for every
+ * source without a link. The effect was that 10 of Part II's 17 sources — the
+ * forensic report, the interrogation protocols, the power of attorney, the 1992
+ * laboratory letter — pointed at this repository's markdown instead of at the
+ * document, so a reader clicking "external link" on a medical examiner's act
+ * landed in the website's source code. An archival case file has no public URL
+ * and must simply render without one; `SourceLibrary` already renders an
+ * unlinked entry correctly. The ledger is still offered, once, as its own
+ * clearly-labelled entry below.
+ */
+yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source) => {
+  const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
+  const url = officialUrl ?? source.url;
+  return url ? { ...source, url } : { ...source, url: undefined };
+});
+
+yeseninPartTwoPublic.sources = [
+  ...yeseninPartTwoPublic.sources,
+  {
+    id: 'yes2-publication-ledger',
+    title: 'Как проверялись источники этой части: публичный реестр публикации',
+    url: yeseninPartTwoLedgerUrl,
+    kind: 'context',
+    institution: 'THE LEGENDARY POET',
+    note: 'Редакционный реестр: какое печатное издание и какая страница стоят за каждым документом, включая архивные дела без публичного адреса.',
+  },
+];
 
 yeseninPartTwoPublic.blocks = yeseninPartTwoPublic.blocks.map((block) => {
   if (block.type !== 'image' || block.credit?.includes('общественное достояние')) return block;
@@ -162,6 +186,20 @@ export const essays: Essay[] = [
   mayakovskyPartTwoWithLocalCover,
   brikCaseWithSourceLibrary,
 ];
+
+/*
+ * Reading time is derived from the body, never trusted from the data file.
+ *
+ * Hand-typed values had drifted badly (Part II promised 55 minutes for a
+ * ~13-minute text), and a stale number is a promise the page cannot keep.
+ *
+ * Assigned in place rather than via `.map()`: several validators assert object
+ * identity between a named essay export and its entry in this catalog, and
+ * spreading into a copy would silently break that contract.
+ */
+for (const essay of essays) {
+  essay.readTime = estimateReadTime(essay.blocks);
+}
 
 export function getAllEssays(): Essay[] {
   return essays;

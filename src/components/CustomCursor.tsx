@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 const INTERACTIVE_SELECTOR = 'a, button, input, textarea, select, summary, [role="button"], [role="link"], [data-cursor-interactive]';
 

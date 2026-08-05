@@ -175,7 +175,7 @@ export const yeseninKutezhi: Essay = {
       author: 'Сергей Есенин',
       role: 'из письма А. Мариенгофу, Нью-Йорк, ноябрь 1922',
       source: 'С. Есенин, Полн. собр. соч., т. 6 (Письма), ИМЛИ РАН, 1999',
-      sourceUrl: 'http://feb-web.ru/feb/esenin/texts/es6/',
+      sourceUrl: 'https://feb-web.ru/feb/esenin/texts/es6/',
     },
     {
       type: 'paragraph',
@@ -192,7 +192,7 @@ export const yeseninKutezhi: Essay = {
       author: 'Владислав Ходасевич',
       role: 'поэт и критик, современник',
       source: 'В. Ходасевич, очерк «Есенин»',
-      sourceUrl: 'http://dugward.ru/library/esenin/hodasevich_esenin.html',
+      sourceUrl: 'https://dugward.ru/library/esenin/hodasevich_esenin.html',
     },
     {
       type: 'paragraph',
@@ -527,7 +527,7 @@ export const yeseninKutezhi: Essay = {
       author: 'Сергей Есенин',
       role: 'в передаче А. Блока, дневниковая запись 4 января 1918',
       source: 'Дневник А. Блока, запись 4 января 1918 (Летопись жизни и творчества Есенина, ФЭБ)',
-      sourceUrl: 'http://feb-web.ru/feb/esenin/el-abc/el2/el2-081-.htm',
+      sourceUrl: 'https://feb-web.ru/feb/esenin/el-abc/el2/el2-081-.htm',
     },
     {
       type: 'paragraph',
@@ -591,7 +591,7 @@ export const yeseninKutezhi: Essay = {
       author: 'Сергей Есенин',
       role: 'автопризнание, запись 1921 г.',
       source: 'С. Есенин, автобиографическая запись; публ. в воспоминаниях и исследованиях',
-      sourceUrl: 'http://feb-web.ru/feb/esenin/texts/e77/e77-018-.htm',
+      sourceUrl: 'https://feb-web.ru/feb/esenin/texts/e77/e77-018-.htm',
     },
     {
       type: 'paragraph',
@@ -638,7 +638,13 @@ export const yeseninKutezhi: Essay = {
       url: 'https://www.persee.fr/doc/slave_0080-2557_1995_num_67_1_6248',
     },
     {
-      title: 'Research / Серия «Сердце»: антропология сердца, привычка, ложное утешение и ответственность',
+      // Our own theological working note, not an external witness. Named as
+      // such so it can never be mistaken for an independent source.
+      title:
+        'Редакционный реестр THE LEGENDARY POET: богословская рабочая записка о сердце, привычке и ответственности',
+      kind: 'context',
+      institution: 'THE LEGENDARY POET',
+      note: 'Собственная аналитическая записка проекта, а не внешнее свидетельство: объясняет нравственную рамку разбора, но ничего не доказывает о биографии.',
       url: 'https://github.com/FedorMilovanov/Research/blob/main/%D0%A1%D0%95%D0%A0%D0%98%D0%AF%20%D0%A1%D0%95%D0%A0%D0%94%D0%A6%D0%95/04_THEOLOGICAL_ANTHROPOLOGY_HEART_WILL_NATURE.md',
     },
     {
@@ -663,7 +669,7 @@ export const yeseninKutezhi: Essay = {
     },
     {
       title: 'В. Ходасевич. Очерк «Есенин»',
-      url: 'http://dugward.ru/library/esenin/hodasevich_esenin.html',
+      url: 'https://dugward.ru/library/esenin/hodasevich_esenin.html',
     },
     {
       title: 'В. Эрлих. «Право на песнь» (1930) — о последних днях поэта',
@@ -695,7 +701,7 @@ export const yeseninKutezhi: Essay = {
     },
     {
       title: 'С. Есенин. «О себе» — академический текст, ФЭБ',
-      url: 'http://feb-web.ru/feb/esenin/texts/e77/e77-018-.htm',
+      url: 'https://feb-web.ru/feb/esenin/texts/e77/e77-018-.htm',
     },
     {
       title: 'А. Блок. Дневник, запись 4 января 1918 (о словах Есенина об «Инонии»)',

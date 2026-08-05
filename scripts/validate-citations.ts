@@ -52,6 +52,37 @@ for (const essay of essays) {
   }
 }
 
+/*
+ * Site-wide link integrity for every bibliography.
+ *
+ * Two rules, both learned from real regressions:
+ *  - no source may link to our own repository in place of the document it
+ *    claims to be (a reader clicking a forensic act must not land in our
+ *    markdown); the one allowed exception is an entry that openly presents
+ *    itself as the editorial ledger;
+ *  - no source may use plain http:// — five poet testimonies and two essay
+ *    sources did, including feb-web.ru, which serves https everywhere else.
+ */
+const SELF_REFERENCE = /github\.com\/FedorMilovanov/i;
+
+for (const essay of essays) {
+  for (const source of essay.sources ?? []) {
+    if (!source.url) continue;
+
+    if (source.url.startsWith('http://')) {
+      errors.push(`${essay.slug}: source ${source.id ?? source.title} uses insecure http://`);
+    }
+    if (
+      SELF_REFERENCE.test(source.url) &&
+      !/ledger|реестр|редакционн/i.test(source.title)
+    ) {
+      errors.push(
+        `${essay.slug}: source ${source.id ?? source.title} links to our own repository instead of the document`,
+      );
+    }
+  }
+}
+
 for (const warning of warnings) console.warn(`WARN  ${warning}`);
 for (const error of errors) console.error(`ERROR ${error}`);
 console.log(

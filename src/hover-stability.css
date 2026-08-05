@@ -16,12 +16,29 @@
   transform-style: preserve-3d;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /*
+   * Settle-only easing. While the pointer is tracking, the transform must follow
+   * the cursor on the very same frame: a transition here restarts on every
+   * pointermove, so the card permanently chases the pointer and reads as lag.
+   * The easing is only wanted for the return-to-rest after pointerleave.
+   */
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.tilt-card-inner[data-tilt-tracking="true"] {
+  transition: none;
+}
+
+/*
+ * Flat, not preserve-3d. The card body below is a `.luxury-card` with
+ * `backdrop-filter`, which forces its own stacking context and flattens any 3D
+ * context it sits in. Nesting a second preserve-3d plane around it makes the
+ * compositor re-promote and re-rasterize the blur on every tilt frame, which is
+ * what shows up as flicker on hover. One 3D plane (`.tilt-card-inner`) is enough.
+ */
 .tilt-card-content {
   transform: translateZ(0);
-  transform-style: preserve-3d;
+  transform-style: flat;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type Lenis from 'lenis';
-import { useLocation, useNavigationType } from 'react-router-dom';
+import { useLocation, useNavigationType } from 'react-router';
 import { setActiveLenis } from '../utils/smoothScroll';
 
 const HASH_RETRY_LIMIT = 20;
