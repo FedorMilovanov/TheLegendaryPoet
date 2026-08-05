@@ -51,11 +51,29 @@ jobs:
             '
           }
 
+          REACT_VERSION="$(latest_major 'react' 19)"
+          REACT_DOM_VERSION="$(npm view "react-dom@${REACT_VERSION}" version)"
+          TYPES_REACT_VERSION="$(latest_major '@types/react' 19)"
+          TYPES_REACT_DOM_VERSION="$(latest_major '@types/react-dom' 19)"
           PLUGIN_REACT_VERSION="$(latest_major '@vitejs/plugin-react' 5)"
           TAILWIND_VITE_VERSION="$(latest_major '@tailwindcss/vite' 4)"
           TAILWIND_VERSION="$(latest_major 'tailwindcss' 4)"
           BABEL_VERSION="$(latest_major '@babel/core' 7)"
           POSTCSS_VERSION="$(latest_major 'postcss' 8)"
+
+          node - "$REACT_VERSION" "$REACT_DOM_VERSION" <<'NODE'
+          const [react, reactDom] = process.argv.slice(2);
+          const parts = react.split('.').map(Number);
+          const compatible = parts[0] > 19 || (parts[0] === 19 && (parts[1] > 2 || (parts[1] === 2 && parts[2] >= 7)));
+          if (!compatible) {
+            console.error(`React ${react} does not satisfy react-router 8.3.0 peer >=19.2.7`);
+            process.exit(1);
+          }
+          if (reactDom !== react) {
+            console.error(`React/ReactDOM versions differ: ${react} vs ${reactDom}`);
+            process.exit(1);
+          }
+          NODE
 
           python3 <<'PY'
           from pathlib import Path
@@ -79,12 +97,15 @@ jobs:
               link.write_text(source, encoding='utf-8')
           PY
 
+          echo "Migrating to React ${REACT_VERSION}, React Router 8.3.0 and Vite 7.3.6"
           npm uninstall react-router-dom
           npm install --save-exact \
-            react@19.2.6 \
-            react-dom@19.2.6 \
+            "react@${REACT_VERSION}" \
+            "react-dom@${REACT_VERSION}" \
             react-router@8.3.0
           npm install --save-dev --save-exact \
+            "@types/react@${TYPES_REACT_VERSION}" \
+            "@types/react-dom@${TYPES_REACT_DOM_VERSION}" \
             vite@7.3.6 \
             "@vitejs/plugin-react@${PLUGIN_REACT_VERSION}" \
             "@tailwindcss/vite@${TAILWIND_VITE_VERSION}" \
