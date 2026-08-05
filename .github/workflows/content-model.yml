@@ -5,27 +5,61 @@ on:
     branches: [main]
     paths:
       - 'package.json'
+      - 'package-lock.json'
       - 'src/types/poet.ts'
+      - 'src/types/essay.ts'
       - 'src/data/poets.ts'
       - 'src/data/library/**'
+      - 'src/data/essays/**'
       - 'src/utils/dailyContent.ts'
+      - 'src/utils/readTime.ts'
       - 'src/App.tsx'
+      - 'src/pages/ArticlesPage.tsx'
+      - 'src/pages/EssayPage.tsx'
       - 'scripts/new-poet.ts'
+      - 'scripts/gen-essay-search-index.ts'
+      - 'scripts/gen-sitemap.mjs'
+      - 'scripts/gen-feed.mjs'
+      - 'scripts/prerender-og.mjs'
       - 'scripts/validate-library.ts'
+      - 'scripts/validate-essays.ts'
+      - 'scripts/validate-essay-search-index.ts'
+      - 'scripts/validate-essay-covers.ts'
+      - 'scripts/validate-citations.ts'
+      - 'scripts/validate-literary-style.ts'
+      - 'scripts/validate-yesenin-part-two-publication.ts'
       - 'scripts/validate-content-model.mjs'
+      - 'scripts/validate-essay-publication.ts'
       - 'docs/legacy-content/**'
       - '.github/workflows/content-model.yml'
   pull_request:
     paths:
       - 'package.json'
+      - 'package-lock.json'
       - 'src/types/poet.ts'
+      - 'src/types/essay.ts'
       - 'src/data/poets.ts'
       - 'src/data/library/**'
+      - 'src/data/essays/**'
       - 'src/utils/dailyContent.ts'
+      - 'src/utils/readTime.ts'
       - 'src/App.tsx'
+      - 'src/pages/ArticlesPage.tsx'
+      - 'src/pages/EssayPage.tsx'
       - 'scripts/new-poet.ts'
+      - 'scripts/gen-essay-search-index.ts'
+      - 'scripts/gen-sitemap.mjs'
+      - 'scripts/gen-feed.mjs'
+      - 'scripts/prerender-og.mjs'
       - 'scripts/validate-library.ts'
+      - 'scripts/validate-essays.ts'
+      - 'scripts/validate-essay-search-index.ts'
+      - 'scripts/validate-essay-covers.ts'
+      - 'scripts/validate-citations.ts'
+      - 'scripts/validate-literary-style.ts'
+      - 'scripts/validate-yesenin-part-two-publication.ts'
       - 'scripts/validate-content-model.mjs'
+      - 'scripts/validate-essay-publication.ts'
       - 'docs/legacy-content/**'
       - '.github/workflows/content-model.yml'
   workflow_dispatch:
@@ -33,15 +67,28 @@ on:
 permissions:
   contents: read
 
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Checkout exact head
+      - name: Checkout exact tested head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci --silent
       - name: Validate one live longform model
         run: npm run validate:content-model
+      - name: Validate immutable essay publication
+        run: npm run validate:essay-publication
