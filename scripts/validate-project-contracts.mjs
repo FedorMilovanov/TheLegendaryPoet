@@ -17,6 +17,48 @@ const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
 assert(contract.schemaVersion === 1, 'project contract schemaVersion must be 1');
 assert(read('.nvmrc').trim() === String(contract.runtime.recommendedNodeMajor), '.nvmrc must match the recommended Node major');
 
+const governance = contract.governance ?? {};
+const packageManifest = JSON.parse(read('package.json'));
+const packageLock = JSON.parse(read('package-lock.json'));
+const lockRoot = packageLock.packages?.[''] ?? {};
+
+assert(typeof governance.packageName === 'string' && governance.packageName.length > 0, 'governance.packageName must be registered');
+assert(typeof governance.packageVersion === 'string' && governance.packageVersion.length > 0, 'governance.packageVersion must be registered');
+assert(governance.private === true, 'governance.private must remain true');
+assert(governance.license === 'UNLICENSED', 'governance.license must remain UNLICENSED unless an owner-approved licence change updates the contract');
+assert(typeof governance.nodeEngine === 'string' && governance.nodeEngine.length > 0, 'governance.nodeEngine must be registered');
+assert(typeof governance.releasePolicy === 'string' && governance.releasePolicy.length > 0, 'governance.releasePolicy must be registered');
+assert(governance.productionAuthority === 'exact verified source main SHA', 'production authority must remain the exact verified source main SHA');
+
+assert(packageManifest.name === governance.packageName, 'package.json name must match governance.packageName');
+assert(packageManifest.version === governance.packageVersion, 'package.json version must match governance.packageVersion');
+assert(packageManifest.private === governance.private, 'package.json private flag must match governance.private');
+assert(packageManifest.license === governance.license, 'package.json license must match governance.license');
+assert(packageManifest.engines?.node === governance.nodeEngine, 'package.json Node engine must match governance.nodeEngine');
+assert(packageManifest.homepage === contract.canonicalUrl, 'package.json homepage must match the canonical URL');
+assert(packageManifest.repository?.url === 'git+https://github.com/FedorMilovanov/TheLegendaryPoet.git', 'package.json repository must identify the governed source repository');
+assert(packageLock.name === governance.packageName, 'package-lock.json top-level name must match governance.packageName');
+assert(packageLock.version === governance.packageVersion, 'package-lock.json top-level version must match governance.packageVersion');
+assert(lockRoot.name === governance.packageName, 'package-lock root name must match governance.packageName');
+assert(lockRoot.version === governance.packageVersion, 'package-lock root version must match governance.packageVersion');
+assert(lockRoot.license === governance.license, 'package-lock root license must match governance.license');
+assert(lockRoot.engines?.node === governance.nodeEngine, 'package-lock root Node engine must match governance.nodeEngine');
+assert(exists(governance.releasePolicy), `release policy does not exist: ${governance.releasePolicy}`);
+
+if (exists(governance.releasePolicy)) {
+  const releasePolicy = read(governance.releasePolicy);
+  for (const requiredText of [
+    '`the-legendary-poet`',
+    '`0.0.0-private`',
+    '`UNLICENSED`',
+    'exact commit SHA on source `main`',
+    'expected-head-protected squash merge',
+    'must not be published to npm',
+  ]) {
+    assert(releasePolicy.includes(requiredText), `${governance.releasePolicy} is missing required governance text: ${requiredText}`);
+  }
+}
+
 const runtimePaths = Object.entries(contract.runtime)
   .filter(([, value]) => typeof value === 'string' && value.includes('/'));
 for (const [key, relativePath] of runtimePaths) {
@@ -36,6 +78,7 @@ for (const entry of supersededTechnical) {
   assert(exists(entry), `superseded technical document does not exist: ${entry}`);
 }
 assert(authoritative.includes(contract.documentation.currentState), 'currentState must be authoritative');
+assert(authoritative.includes(governance.releasePolicy), 'releasePolicy must be authoritative');
 
 const architecture = contract.architecture ?? {};
 const auditAuthority = architecture.auditAuthority;

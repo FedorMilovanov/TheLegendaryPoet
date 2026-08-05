@@ -6,7 +6,9 @@ This file is the source-repository entry point for the **current architecture**.
 
 - Canonical site: `https://thelegendarypoet.ru`.
 - Deployment base: `/` on the custom domain.
-- Runtime: React 19, direct `react-router`, Vite 7. Node 24 is the CI and `.nvmrc` baseline; React Router 8 requires Node 22.22.0 or newer.
+- Runtime: React 19, direct `react-router`, Vite 7. Node 24 is the CI and `.nvmrc` baseline; the supported package engine range is Node `>=22.22.0 <25`.
+- Private package identity: `the-legendary-poet@0.0.0-private`, `private: true`, `UNLICENSED`.
+- Release and licensing authority: `docs/RELEASE_POLICY.md`. Production identity is the exact verified source `main` SHA, not the private package version.
 - Live lazy route registry: `src/routes/routeModules.ts`.
 - Public longform model: `Essay`, catalogued by `src/data/essays/index.ts` and rendered at `/essays/:slug`.
 - Poet catalog: `src/data/library/index.ts`.
@@ -14,18 +16,19 @@ This file is the source-repository entry point for the **current architecture**.
 - Fonts are self-hosted WOFF2 assets under `src/assets/fonts/`.
 - Community reads are target-scoped and aggregate-backed; generic application startup does not hydrate a public ratings/comments corpus.
 
-The machine-readable counterpart is `docs/project-contract.json`; `node scripts/validate-project-contracts.mjs` blocks drift between documentation, workflows, live paths and the registered open architecture lanes.
+The machine-readable counterpart is `docs/project-contract.json`; `node scripts/validate-project-contracts.mjs` blocks drift between documentation, package/lock identity, workflows, live paths and registered open architecture lanes.
 
 ## Verified architecture now in production
 
 The exact evidence remains in AuditRepo, but the current source tree enforces these boundaries:
 
 1. **One public longform model.** The live runtime publishes `Essay` objects only. The retired `Article` model and unpublished drafts were removed from the runtime with bounded archival preservation and compatibility redirects.
-2. **Immutable essay publication.** Canonical essays are cloned, enriched, validated and deep-frozen at one publication boundary; authoring imports are not mutated in place.
+2. **Immutable essay publication.** Canonical essays are cloned, enriched, validated and deep-frozen at one publication boundary; authoring imports are not mutated in place. Accepted verified-media decisions are applied by a central registry, while unresolved media remain blocked.
 3. **Target-scoped community data.** Detail surfaces use aggregate summaries and bounded comment pages. Leaderboards use aggregate rows, local persistence is bounded to device-owned state/outbox work, and poisoned persisted operations cannot block valid delivery.
 4. **Workflow and performance contracts.** Shared repository actions own dependency, build-tool, browser and preview setup. The production build must retain one entry, fourteen distinct lazy route chunks and explicit entry, route, JavaScript and CSS budgets.
 5. **Reader-facing integrity.** Source links, citation identifiers, literary-language checks, route recovery, blocked-storage handling and compositor-safe tilt behavior are permanent validated contours rather than page-specific patches.
 6. **Premium reader certification.** Desktop Chromium, Android Chrome, desktop WebKit and fresh-process iPhone Safari certify longform navigation, archive round-trips, honest blocked-storage behavior, route focus ownership, reduced motion, forced colors and queued failed community writes without adding a duplicate workflow.
+7. **Explicit private governance.** Package and lockfile identity, supported Node range, private/non-publishable status, `UNLICENSED` disposition and SHA-based release promotion are machine-checked. No public-source licence is inferred from repository visibility or third-party asset metadata.
 
 ## Current quality gates
 
@@ -36,8 +39,7 @@ The dependency-free `Project contracts` workflow runs project-contract, reader-c
 Every current open lane must have a canonical `TLP-*` ID in this section and in `docs/project-contract.json`. Prose-only or anonymous debt entries are forbidden. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
-1. `TLP-CLEAN-001` — **Branch and artifact retirement (W6).** Classify every remaining remote branch and unique path as extracted, archived with a durable pointer, or rejected as stale before deletion; never merge old Arena, trigger or deeply diverged work branches wholesale.
-2. `TLP-GOV-001` — **Owner governance decision.** Resolve package identity, engine/release policy and public-source licensing explicitly. Agents must not invent a license or semantic release version inside an unrelated repair lane.
+1. `TLP-CLEAN-001` — **Branch and artifact retirement (W6).** Classify every remaining remote branch and unique path as extracted, archived with a durable pointer, intentionally retained, or rejected as stale before deletion; never merge old Arena, trigger or deeply diverged work branches wholesale.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material
@@ -49,5 +51,6 @@ Every current open lane must have a canonical `TLP-*` ID in this section and in 
 - Prefer root-cause repair lanes over page-specific patches.
 - Do not merge old Arena/trigger branches wholesale; extract only current-head-verified unique value.
 - Do not add an open architecture item without a canonical ID registered in `docs/project-contract.json`.
-- Update `docs/project-contract.json` whenever an authoritative runtime path or open-lane set changes.
+- Update `docs/project-contract.json` whenever an authoritative runtime path, governance contract or open-lane set changes.
 - Update AuditRepo only after a repair wave is merged and verified on the resulting production head.
+- A licence, public package release or redistribution grant requires explicit owner approval and a dedicated governance change.
