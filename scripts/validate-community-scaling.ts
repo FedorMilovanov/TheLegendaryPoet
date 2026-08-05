@@ -14,6 +14,10 @@ const mini = read('src/components/community/FeedbackMiniSummary.tsx');
 const schema = read('docs/community-schema.sql');
 const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string, string> };
 const manualQa = read('qa/manual-e2e.spec.mjs');
+const topologyCases = read('qa/community-request-topology.cases.mjs');
+const mobileTopology = read('qa/community-request-topology.spec.mjs');
+const playwright = read('playwright.config.mjs');
+const mobileWorkflow = read('.github/workflows/community-scaling-browser.yml');
 
 expect(!/hydrateFromRemote|fetchAllRemote/.test(app), 'App must not start global community hydration');
 expect(!/fetchAllRemote|MAX_REMOTE_ROWS|20_?000/.test(remote), 'remote client must not retain a global 20k corpus reader');
@@ -56,9 +60,15 @@ expect(scripts['validate:community-store']?.includes('validate-community-store.t
 expect(scripts['validate:community-target-store']?.includes('validate-community-target-store.ts'), 'package must expose the target/cursor validator');
 expect(scripts['validate:community-scaling']?.includes('validate-community-scaling.ts'), 'package must expose the static scaling contract');
 expect(scripts['check:content']?.includes('validate:community-scaling'), 'repository-wide content checks must include community scaling');
-expect(manualQa.includes('registerCommunityRequestTopologyTests'), 'mandatory manual browser QA must register the request-topology contour');
-expect(read('qa/community-request-topology.cases.mjs').includes('__TLP_COMMUNITY_TEST_CONFIG__'), 'request-topology contour must activate the loopback-only remote backend before bundle evaluation');
+expect(manualQa.includes('registerCommunityRequestTopologyTests'), 'mandatory desktop browser QA must register the request-topology contour');
+expect(topologyCases.includes('__TLP_COMMUNITY_TEST_CONFIG__'), 'request topology must activate the loopback-only backend before bundle evaluation');
+expect(topologyCases.includes("localStorage.getItem('tlp-community-feedback:v3')"), 'request topology must inspect the bounded v3 persistence envelope');
+expect(topologyCases.includes("operation.kind === 'helpful'") && topologyCases.includes('localSnapshot?.comments'), 'request topology must prove remote helpful outbox semantics without persisting public comments');
+expect(mobileTopology.includes("projects: ['android-pixel7', 'iphone-safari']"), 'mobile topology entrypoint must cover Android Chrome and iPhone Safari');
+expect(playwright.includes('community-request-topology'), 'Playwright mobile projects must admit the mobile topology entrypoint');
+expect(mobileWorkflow.includes('qa/community-request-topology.spec.mjs') && mobileWorkflow.includes('--project=android-pixel7') && mobileWorkflow.includes('--project=iphone-safari'), 'exact-head mobile workflow must run topology on both mobile engines');
+expect(mobileWorkflow.includes('TESTED_SHA') && mobileWorkflow.includes('git rev-parse HEAD'), 'mobile workflow must pin and verify the exact tested head');
 
 for (const failure of failures) console.error(`ERROR community-scaling: ${failure}`);
-console.log(`Community scaling contract: ${failures.length} error(s); startup, target, cursor, aggregate, persistence and schema boundaries checked.`);
+console.log(`Community scaling contract: ${failures.length} error(s); startup, target, cursor, aggregate, persistence, mobile topology and schema boundaries checked.`);
 if (failures.length) process.exit(1);
