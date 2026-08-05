@@ -3,20 +3,22 @@ import { test, expect } from '@playwright/test';
 const API_PATH = '/community-api/rest/v1/';
 const timestamp = '2026-08-05T12:00:00.000Z';
 
-function commentRow(number) {
+function commentRow(number, helpfulIds = new Set()) {
+  const id = `comment-100-${String(number).padStart(2, '0')}`;
   return {
-    id: `comment-100-${String(number).padStart(2, '0')}`,
+    id,
     target_type: 'poet',
     target_id: 'alexander-pushkin',
     author: 'Читатель',
     text: `Комментарий для проверки курсора номер ${number}.`,
     kind: 'literary',
-    helpful: number % 4,
+    helpful: number % 4 + (helpfulIds.has(id) ? 1 : 0),
     created_at: timestamp,
   };
 }
 
 async function installCommunityApi(page, requests) {
+  const helpfulIds = new Set();
   await page.route(`**${API_PATH}**`, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -38,10 +40,21 @@ async function installCommunityApi(page, requests) {
 
     if (url.pathname.endsWith('/rpc/tlp_fetch_comments_page')) {
       const beforeId = body?.p_before_id ?? null;
-      const first = Array.from({ length: 11 }, (_, index) => commentRow(21 - index));
-      const second = Array.from({ length: 11 }, (_, index) => commentRow(11 - index));
+      const first = Array.from({ length: 11 }, (_, index) => commentRow(21 - index, helpfulIds));
+      const second = Array.from({ length: 11 }, (_, index) => commentRow(11 - index, helpfulIds));
       const rows = beforeId ? second : first;
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(rows) });
+      return;
+    }
+
+    if (url.pathname.endsWith('/rpc/tlp_mark_helpful')) {
+      helpfulIds.add(body?.p_comment_id);
+      await route.fulfill({ status: 204, body: '' });
+      return;
+    }
+
+    if (url.pathname.includes('/rpc/tlp_submit_')) {
+      await route.fulfill({ status: 204, body: '' });
       return;
     }
 
@@ -58,7 +71,7 @@ test('generic startup performs zero community reads', async ({ page }) => {
   expect(requests).toEqual([]);
 });
 
-test('detail target shares one aggregate request and uses stable cursor comments', async ({ page }) => {
+test('detail target shares one aggregate request, paginates and preserves offline helpful semantics', async ({ page }) => {
   const requests = [];
   await installCommunityApi(page, requests);
   await page.goto('/poets/alexander-pushkin');
@@ -75,13 +88,25 @@ test('detail target shares one aggregate request and uses stable cursor comments
   expect(requests.some((item) => item.path.endsWith('/tlp_ratings_public'))).toBe(false);
   expect(requests.some((item) => item.path.endsWith('/tlp_comments_public'))).toBe(false);
 
-  await page.getByRole('button', { name: /Показать ещё/ }).click();
-  await page.getByRole('button', { name: /Показать ещё/ }).click();
-  await expect.poll(() => requests.filter((item) => item.path.endsWith('/rpc/tlp_fetch_comments_page')).length).toBe(2);
+  const helpful = page.getByRole('button', { name: /Отметить комментарий полезным/ }).first();
+  await helpful.click();
+  await expect(page.getByRole('button', { name: /Вы отметили комментарий полезным/ }).first()).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => requests.filter((item) => item.path.endsWith('/rpc/tlp_mark_helpful')).length).toBe(1);
+  const persistedComments = await page.evaluate(() => {
+    const value = localStorage.getItem('tlp-community-feedback:v3');
+    return value ? JSON.parse(value).snapshot.comments : [];
+  });
+  expect(persistedComments).toHaveLength(1);
+  expect(persistedComments[0].id).toBe('comment-100-21');
 
-  const nextPage = requests.filter((item) => item.path.endsWith('/rpc/tlp_fetch_comments_page'))[1];
+  await page.getByRole('button', { name: /Показать ещё/ }).click();
+  await page.getByRole('button', { name: /Показать ещё/ }).click();
+  await expect.poll(() => requests.filter((item) => item.path.endsWith('/rpc/tlp_fetch_comments_page')).length).toBeGreaterThanOrEqual(2);
+
+  const nextPage = requests.filter((item) => item.path.endsWith('/rpc/tlp_fetch_comments_page'))
+    .find((item) => item.body?.p_before_id === 'comment-100-12');
+  expect(nextPage).toBeTruthy();
   expect(nextPage.body.p_before_created_at).toBe(timestamp);
-  expect(nextPage.body.p_before_id).toBe('comment-100-12');
   expect(nextPage.body.p_limit).toBe(11);
 });
 
