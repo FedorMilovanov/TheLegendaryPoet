@@ -47,6 +47,7 @@ const iso = (offsetMs: number) => new Date(now + offsetMs).toISOString();
 const ownRatingId = 'rating-11111111-1111-4111-8111-111111111111';
 const pendingRatingId = 'rating-22222222-2222-4222-8222-222222222222';
 const pendingCommentId = 'comment-33333333-3333-4333-8333-333333333333';
+const voterId = '11111111-1111-4111-8111-111111111111';
 
 const remoteRatings = Array.from({ length: 120 }, (_, index) => ({
   id: `rating-remote-${String(index).padStart(8, '0')}`,
@@ -79,8 +80,8 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
     ],
   },
   outbox: [
-    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId: 'device-a', entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
-    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId: 'device-a', entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
+    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId: voterId, entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
+    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId: voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
   ],
   cooldowns: { 'rating:poet:alexander-pushkin': now + 5000 },
   helpfulVotes: {},
@@ -149,11 +150,11 @@ expect(store.commitRatingFeedback({
   targetId: 'anna-akhmatova',
   scores: { language: 5, depth: 4 },
   createdAt: iso(100),
-}, 'rating:poet:anna-akhmatova', 'device-a'), 'UUID-based rating ids must be accepted by the client store');
+}, 'rating:poet:anna-akhmatova', voterId), 'UUID-based rating ids must be accepted by the client store');
 expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'new remote-enabled writes must enter the outbox');
 
 const remoteHelpfulId = 'comment-55555555-5555-4555-8555-555555555555';
-expect(store.commitHelpfulFeedback(remoteHelpfulId, `helpful:article:sergei-yesenin-1921-1925:${remoteHelpfulId}`, 'device-a'), 'helpful vote for a non-persisted remote comment must queue');
+expect(store.commitHelpfulFeedback(remoteHelpfulId, `helpful:article:sergei-yesenin-1921-1925:${remoteHelpfulId}`, voterId), 'helpful vote for a non-persisted remote comment must queue');
 expect(store.getPendingTargetOverlay('article', 'sergei-yesenin-1921-1925').helpfulCommentIds.includes(remoteHelpfulId), 'remote helpful overlay must remain target-scoped');
 
 const countBeforeFailure = store.getFeedbackSnapshot().comments.length;
@@ -167,7 +168,7 @@ const blocked = store.commitCommentFeedback({
   kind: 'literary',
   helpful: 0,
   createdAt: iso(200),
-}, 'comment:article:sergei-yesenin-1921-1925', 'device-a');
+}, 'comment:article:sergei-yesenin-1921-1925', voterId);
 storage.failWrites = false;
 expect(!blocked, 'quota failures must be reported');
 expect(store.getFeedbackSnapshot().comments.length === countBeforeFailure, 'failed persistence must not create dishonest in-memory state');

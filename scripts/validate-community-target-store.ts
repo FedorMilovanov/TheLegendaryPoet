@@ -37,6 +37,7 @@ Object.defineProperty(globalThis, 'window', { configurable: true, value: testWin
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } });
 
 const targetId = 'sergei-yesenin-1921-1925';
+const voterId = '11111111-1111-4111-8111-111111111111';
 const equalTimestamp = '2026-08-05T10:00:00.000Z';
 const commentRows = Array.from({ length: 12 }, (_, index) => ({
   id: `comment-${String(99 - index).padStart(8, '0')}`,
@@ -144,7 +145,7 @@ expect(store.commitRatingFeedback({
   targetId,
   scores: { language: 5, depth: 5 },
   createdAt: new Date().toISOString(),
-}, `rating:article:${targetId}`, 'device-a'), 'target optimistic rating must persist');
+}, `rating:article:${targetId}`, voterId), 'target optimistic rating must persist');
 await settle();
 expect(targets.getFeedbackTargetSnapshot('poet', 'anna-akhmatova') === unrelatedBefore, 'unrelated target snapshot identity must remain stable');
 expect(unrelatedNotifications === 0, 'unrelated target subscribers must not rerender');

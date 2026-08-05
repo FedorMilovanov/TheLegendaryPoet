@@ -22,7 +22,9 @@ const COOLDOWN_MS = 30 * 1000;
 const MAX_OUTBOX_ITEMS = 500;
 const MAX_LOCAL_ENTRIES = 500;
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/i;
-const FEEDBACK_ID = /^[a-z0-9][a-z0-9-]{1,199}$/i;
+const RATING_ID = /^rating-[a-z0-9][a-z0-9-]{7,199}$/i;
+const COMMENT_ID = /^comment-[a-z0-9][a-z0-9-]{7,199}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SCORE_KEY = /^[a-z0-9][a-z0-9-]{0,79}$/i;
 const TARGET_TYPES = new Set<FeedbackTargetType>(['poet', 'poem', 'track', 'article']);
 const COMMENT_KINDS = new Set(['literary', 'history', 'moral', 'performance']);
@@ -141,7 +143,7 @@ function sanitizeRating(value: unknown): RatingEntry | null {
   const createdAt = validIsoDate(candidate.createdAt);
   if (
     typeof candidate.id !== 'string'
-    || !FEEDBACK_ID.test(candidate.id)
+    || !RATING_ID.test(candidate.id)
     || !TARGET_TYPES.has(candidate.targetType as FeedbackTargetType)
     || typeof candidate.targetId !== 'string'
     || !TARGET_ID.test(candidate.targetId)
@@ -166,7 +168,7 @@ function sanitizeComment(value: unknown): CommentEntry | null {
   const helpful = Math.max(0, Math.min(1_000_000, Math.floor(Number(candidate.helpful) || 0)));
   if (
     typeof candidate.id !== 'string'
-    || !FEEDBACK_ID.test(candidate.id)
+    || !COMMENT_ID.test(candidate.id)
     || !TARGET_TYPES.has(candidate.targetType as FeedbackTargetType)
     || typeof candidate.targetId !== 'string'
     || !TARGET_ID.test(candidate.targetId)
@@ -235,7 +237,7 @@ function sanitizeOwnRating(value: unknown): OwnRatingRecord | true | null {
   const candidate = value as Partial<OwnRatingRecord>;
   const scores = sanitizeScores(candidate.scores);
   const updatedAt = validIsoDate(candidate.updatedAt);
-  if (typeof candidate.id !== 'string' || !FEEDBACK_ID.test(candidate.id) || !scores || !updatedAt) return null;
+  if (typeof candidate.id !== 'string' || !RATING_ID.test(candidate.id) || !scores || !updatedAt) return null;
   return { id: candidate.id, scores, updatedAt };
 }
 
@@ -257,23 +259,44 @@ function sanitizeRecord(value: unknown, mode: 'cooldowns' | 'helpful' | 'ratings
   return result;
 }
 
+function parseHelpfulScope(scope: string, commentId: string) {
+  const match = /^helpful:(poet|poem|track|article):([a-z0-9][a-z0-9-]{1,159}):(comment-[a-z0-9][a-z0-9-]{7,199})$/i.exec(scope);
+  return Boolean(match && match[3] === commentId);
+}
+
 function sanitizeOperation(value: unknown): PendingOperation | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<PendingOperation> & { entry?: unknown; previousScores?: unknown };
   const createdAt = validIsoDate(candidate.createdAt) ?? new Date().toISOString();
   const attempts = Math.max(0, Math.min(1000, Math.floor(Number(candidate.attempts) || 0)));
-  if (typeof candidate.id !== 'string' || !candidate.id || candidate.id.length > 260 || typeof candidate.voterId !== 'string' || !candidate.voterId) return null;
+  if (
+    typeof candidate.id !== 'string'
+    || candidate.id.length > 420
+    || typeof candidate.voterId !== 'string'
+    || !UUID.test(candidate.voterId)
+  ) return null;
 
   if (candidate.kind === 'rating') {
     const entry = sanitizeRating(candidate.entry);
     const previousScores = sanitizeScores(candidate.previousScores) ?? undefined;
-    return entry ? { id: candidate.id, kind: 'rating', voterId: candidate.voterId, entry, previousScores, createdAt, attempts } : null;
+    return entry && candidate.id === `rating:${entry.id}`
+      ? { id: candidate.id, kind: 'rating', voterId: candidate.voterId, entry, previousScores, createdAt, attempts }
+      : null;
   }
   if (candidate.kind === 'comment') {
     const entry = sanitizeComment(candidate.entry);
-    return entry ? { id: candidate.id, kind: 'comment', voterId: candidate.voterId, entry, createdAt, attempts } : null;
+    return entry && candidate.id === `comment:${entry.id}`
+      ? { id: candidate.id, kind: 'comment', voterId: candidate.voterId, entry, createdAt, attempts }
+      : null;
   }
-  if (candidate.kind === 'helpful' && typeof candidate.commentId === 'string' && FEEDBACK_ID.test(candidate.commentId) && typeof candidate.scope === 'string') {
+  if (
+    candidate.kind === 'helpful'
+    && typeof candidate.commentId === 'string'
+    && COMMENT_ID.test(candidate.commentId)
+    && typeof candidate.scope === 'string'
+    && parseHelpfulScope(candidate.scope, candidate.commentId)
+    && candidate.id === `helpful:${candidate.scope}`
+  ) {
     return { id: candidate.id, kind: 'helpful', voterId: candidate.voterId, commentId: candidate.commentId, scope: candidate.scope, createdAt, attempts };
   }
   return null;
@@ -639,14 +662,16 @@ function enqueueOperation(outbox: PendingOperation[], operation: PendingOperatio
 
 export function commitRatingFeedback(entryValue: RatingEntry, scope: string, voterId: string) {
   const entry = sanitizeRating(entryValue);
-  if (!entry || !voterId) return false;
-  const previous = getOwnRating(scope);
+  if (!entry || !UUID.test(voterId)) return false;
+  const operationId = `rating:${entry.id}`;
+  const pending = currentState.outbox.find((item) => item.kind === 'rating' && item.id === operationId);
+  const previousScores = pending ? pending.previousScores : getOwnRating(scope)?.scores;
   const operation: PendingOperation = {
-    id: `rating:${entry.id}`,
+    id: operationId,
     kind: 'rating',
     voterId,
     entry,
-    previousScores: previous?.scores,
+    previousScores,
     createdAt: new Date().toISOString(),
     attempts: 0,
   };
@@ -667,7 +692,7 @@ export function commitRatingFeedback(entryValue: RatingEntry, scope: string, vot
 
 export function commitCommentFeedback(entryValue: CommentEntry, scope: string, voterId: string) {
   const entry = sanitizeComment(entryValue);
-  if (!entry || !voterId) return false;
+  if (!entry || !UUID.test(voterId)) return false;
   const operation: PendingOperation = {
     id: `comment:${entry.id}`,
     kind: 'comment',
@@ -685,7 +710,7 @@ export function commitCommentFeedback(entryValue: CommentEntry, scope: string, v
 }
 
 export function commitHelpfulFeedback(commentId: string, scope: string, voterId: string) {
-  if (!FEEDBACK_ID.test(commentId) || !voterId || currentState.helpfulVotes[scope]) return false;
+  if (!COMMENT_ID.test(commentId) || !UUID.test(voterId) || !parseHelpfulScope(scope, commentId) || currentState.helpfulVotes[scope]) return false;
   const operation: PendingOperation = {
     id: `helpful:${scope}`,
     kind: 'helpful',
