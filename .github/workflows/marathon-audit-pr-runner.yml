@@ -38,15 +38,27 @@ jobs:
             if not collecting and line == '        run: |':
               collecting = True
               continue
-            if collecting and line.startswith('          '):
+            if not collecting:
+              continue
+            if line == '':
+              block.append('')
+              continue
+            if line.startswith('          '):
               block.append(line[10:])
               continue
-            if collecting:
-              break
+            break
 
-          if not block or "SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'" not in '\n'.join(block):
-            raise SystemExit('The reviewed integration block could not be extracted safely')
-          Path('/tmp/marathon-integrate.sh').write_text('#!/usr/bin/env bash\nset -euo pipefail\n' + '\n'.join(block) + '\n', encoding='utf-8')
+          joined = '\n'.join(block)
+          required = [
+            "SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'",
+            'copy_from_source()',
+            "inline.write_text",
+            "routeModules.tsx",
+          ]
+          missing = [marker for marker in required if marker not in joined]
+          if missing:
+            raise SystemExit(f'The reviewed integration block is incomplete: {missing}')
+          Path('/tmp/marathon-integrate.sh').write_text('#!/usr/bin/env bash\nset -euo pipefail\n' + joined + '\n', encoding='utf-8')
           PY
           chmod +x /tmp/marathon-integrate.sh
           /tmp/marathon-integrate.sh
@@ -67,6 +79,8 @@ jobs:
           npm run check
           npm run build
           npm run validate:build-output
+          npm run prerender
+          npm run seo:generate
           npm run validate:seo-output
 
       - name: Run Chromium article and hover regressions
