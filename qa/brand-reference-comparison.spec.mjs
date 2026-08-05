@@ -64,7 +64,15 @@ test.describe('one approved source live-site review', () => {
 test('runtime resolves every placement to one file', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-  const sources = await page.locator('[data-brand-mark] [data-brand-raster-base] img').evaluateAll((nodes) => nodes.map((node) => new URL(node.src).pathname));
+
+  const loadingShell = page.getByRole('status', { name: 'Загрузка страницы' });
+  await expect(loadingShell).toBeHidden({ timeout: 15_000 });
+
+  const brandImages = page.locator('[data-brand-mark] [data-brand-raster-base] img');
+  await expect(brandImages.first()).toHaveAttribute('src', /brand-emblem\.png/);
+  expect(await brandImages.count()).toBeGreaterThanOrEqual(2);
+
+  const sources = await brandImages.evaluateAll((nodes) => nodes.map((node) => new URL(node.src).pathname));
   expect(new Set(sources)).toEqual(new Set(['/brand-emblem.png']));
   expect(await page.locator('[data-brand-mark] svg').count()).toBe(0);
 });
