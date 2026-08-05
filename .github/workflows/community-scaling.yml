@@ -70,6 +70,8 @@ jobs:
         run: npm run validate:community-scaling
       - name: TypeScript typecheck
         run: npm run typecheck
+      - name: Install deterministic brand build tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg imagemagick
       - name: Build production site with mock shared backend
         env:
           VITE_BASE: /
