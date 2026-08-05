@@ -12,14 +12,19 @@ permissions:
 jobs:
   run-one-shot-integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/marathon-audit-integration-20260805
           fetch-depth: 0
 
-      - name: Execute the reviewed one-shot workflow body
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Integrate the reviewed Arena files and conflict resolutions
         shell: bash
         run: |
           set -euo pipefail
@@ -27,29 +32,75 @@ jobs:
           from pathlib import Path
 
           source = Path('.github/workflows/marathon-audit-integration-once.yml').read_text(encoding='utf-8').splitlines()
-          blocks = []
-          current = None
+          block = []
+          collecting = False
           for line in source:
-            if line == '        run: |':
-              current = []
-              blocks.append(current)
+            if not collecting and line == '        run: |':
+              collecting = True
               continue
-            if current is None:
+            if collecting and line.startswith('          '):
+              block.append(line[10:])
               continue
-            if line.startswith('          '):
-              current.append(line[10:])
-              continue
-            current = None
+            if collecting:
+              break
 
-          if len(blocks) != 5:
-            raise SystemExit(f'Expected exactly five reviewed run blocks, found {len(blocks)}')
-
-          script = ['#!/usr/bin/env bash', 'set -euo pipefail']
-          for index, block in enumerate(blocks, start=1):
-            script.append(f"echo '::group::Marathon block {index}'")
-            script.extend(block)
-            script.append("echo '::endgroup::'")
-          Path('/tmp/marathon-integration.sh').write_text('\n'.join(script) + '\n', encoding='utf-8')
+          if not block or "SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'" not in '\n'.join(block):
+            raise SystemExit('The reviewed integration block could not be extracted safely')
+          Path('/tmp/marathon-integrate.sh').write_text('#!/usr/bin/env bash\nset -euo pipefail\n' + '\n'.join(block) + '\n', encoding='utf-8')
           PY
-          chmod +x /tmp/marathon-integration.sh
-          /tmp/marathon-integration.sh
+          chmod +x /tmp/marathon-integrate.sh
+          /tmp/marathon-integrate.sh
+
+      - name: Install deterministic build and browser dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg imagemagick
+          npm ci
+
+      - name: Generate derived indexes and run repository gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run seo:generate
+          npm run check
+          npm run build
+          npm run validate:build-output
+          npm run validate:seo-output
+
+      - name: Run Chromium article and hover regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+          npm run preview -- --host 127.0.0.1 --port 4173 >/tmp/tlp-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true; cat /tmp/tlp-preview.log' EXIT
+          for attempt in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4173/articles >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/articles >/dev/null
+          QA_BASE_URL=http://127.0.0.1:4173 npx playwright test \
+            qa/hover-stability.spec.mjs \
+            qa/articles-catalog.spec.mjs \
+            --config=playwright.config.mjs \
+            --project=chromium-core \
+            --workers=1
+
+      - name: Commit the verified integration and remove temporary machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/marathon-audit-integration-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No integration changes to commit.'
+            exit 0
+          fi
+          git commit -m 'fix(site): integrate verified marathon audit repairs'
+          git push origin HEAD:agent/marathon-audit-integration-20260805
