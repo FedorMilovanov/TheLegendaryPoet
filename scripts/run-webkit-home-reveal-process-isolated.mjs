@@ -5,7 +5,6 @@ import path from 'node:path';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const common = [
   '--config=playwright.config.mjs',
-  '--project=iphone-safari',
   '--workers=1',
   '--reporter=line',
 ];
@@ -54,6 +53,11 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
   })),
+  {
+    id: 'desktop-reader-certification',
+    file: 'qa/premium-reader-certification.spec.mjs',
+    project: 'webkit-reader-desktop',
+  },
 ];
 
 const record = (line) => {
@@ -63,7 +67,14 @@ const record = (line) => {
 };
 
 for (const [index, suite] of suites.entries()) {
-  const args = ['playwright', 'test', suite.file, ...common, '--grep', suite.grep];
+  const args = [
+    'playwright',
+    'test',
+    suite.file,
+    ...common,
+    `--project=${suite.project ?? 'iphone-safari'}`,
+  ];
+  if (suite.grep) args.push('--grep', suite.grep);
   const label = `${index + 1}/${suites.length} ${suite.id}`;
 
   record(`[webkit-home-process START] ${label}`);
