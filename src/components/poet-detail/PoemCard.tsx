@@ -21,14 +21,20 @@ export default function PoemCard({ poem }: PoemCardProps) {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
   }, []);
 
-  const toggleFavorite = () => {
-    const next = toggleFavoritePoem(poem.id);
-    setToast(next ? 'Добавлено в архив' : 'Удалено из архива');
+  const showToast = (message: string) => {
+    setToast(message);
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => {
       setToast(null);
       toastTimerRef.current = null;
-    }, 2000);
+    }, 2600);
+  };
+
+  const toggleFavorite = () => {
+    const result = toggleFavoritePoem(poem.id);
+    if (result.status === 'added') showToast('Добавлено в архив');
+    else if (result.status === 'removed') showToast('Удалено из архива');
+    else showToast('Не удалось изменить архив. Проверьте доступ к хранилищу браузера.');
   };
 
   return (

@@ -21,6 +21,10 @@ expect(!exists('.github/workflows/community-scaling-browser.yml'), 'standalone c
 
 const manual = read('.github/workflows/manual-browser-qa.yml');
 const webkitRunner = read('scripts/run-webkit-process-isolated.mjs');
+const playwrightConfig = read('playwright.config.mjs');
+const archiveStore = read('src/utils/myArchiveStore.ts');
+const poemCard = read('src/components/poet-detail/PoemCard.tsx');
+const readerJourneys = read('qa/reader-journeys.spec.mjs');
 const ci = read('.github/workflows/ci.yml');
 const buildValidator = read('scripts/validate-build-output.ts');
 
@@ -55,6 +59,7 @@ const preservedSuites = [
   'qa/floating-chrome.spec.mjs',
   'qa/mobile-platforms.spec.mjs',
   'qa/community-request-topology.spec.mjs',
+  'qa/reader-journeys.spec.mjs',
   'qa/yesenin-part-one.spec.mjs',
   'qa/brand-emblem.spec.mjs',
   'qa/brand-reference-comparison.spec.mjs',
@@ -68,6 +73,25 @@ const preservedSuites = [
 for (const suite of preservedSuites) expect(manual.includes(suite), `Manual Browser QA lost acceptance contour: ${suite}`);
 expect(webkitRunner.includes("id: 'community-request-topology'"), 'base iPhone Safari suite must retain community request topology');
 expect(webkitRunner.includes("file: 'qa/community-request-topology.spec.mjs'"), 'base iPhone Safari suite must execute the shared community topology file');
+expect(webkitRunner.includes("id: 'reader-journeys'"), 'base iPhone Safari suite must retain reader outcome journeys');
+expect(webkitRunner.includes("file: 'qa/reader-journeys.spec.mjs'"), 'base iPhone Safari suite must execute the shared reader journey file');
+expect(playwrightConfig.includes('reader-journeys'), 'Android and iPhone project matching must include reader journeys');
+
+for (const token of [
+  "FavoriteToggleStatus = 'added' | 'removed' | 'failed' | 'invalid'",
+  "status: 'failed'",
+  'favorite: existing',
+]) {
+  expect(archiveStore.includes(token), `archive mutation contract is missing: ${token}`);
+}
+expect(poemCard.includes('Не удалось изменить архив'), 'poem favorite UI must report blocked archive storage honestly');
+for (const outcome of [
+  'saved poem travels through archive search and returns to the exact poem',
+  'blocked archive storage reports failure without dishonest success state',
+  'citation focus reveals its source and keeps the longform readable',
+]) {
+  expect(readerJourneys.includes(outcome), `reader outcome suite is missing: ${outcome}`);
+}
 
 expect(ci.includes('./.github/actions/setup-node-deps'), 'CI must use the shared Node dependency setup');
 expect(ci.includes('./.github/actions/install-build-tools'), 'CI must use the shared deterministic build tools setup');
