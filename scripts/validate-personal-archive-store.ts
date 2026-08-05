@@ -80,14 +80,14 @@ expect(!isFavoritePoem('bad id'), 'invalid ids must never be treated as favorite
 let notifications = 0;
 const unsubscribe = subscribeFavoritePoems(() => { notifications += 1; });
 const added = toggleFavoritePoem('blok-1');
-expect(added && isFavoritePoem('blok-1'), 'toggle must add a valid missing favorite');
+expect(added.status === 'added' && added.favorite && isFavoritePoem('blok-1'), 'toggle must report and persist an added favorite');
 expect(notifications === 1, 'same-tab writes must notify archive subscribers once');
 testWindow.dispatchEvent({ type: 'storage', key: FAVORITES_STORAGE_KEY } as unknown as StorageEvent);
 expect(notifications === 2, 'matching storage events must notify cross-tab subscribers');
 testWindow.dispatchEvent({ type: 'storage', key: 'unrelated-key' } as unknown as StorageEvent);
 expect(notifications === 2, 'unrelated storage events must be ignored');
 const removedByToggle = toggleFavoritePoem('blok-1');
-expect(!removedByToggle && !isFavoritePoem('blok-1'), 'toggle must remove an existing favorite');
+expect(removedByToggle.status === 'removed' && !removedByToggle.favorite && !isFavoritePoem('blok-1'), 'toggle must report and persist removal of an existing favorite');
 expect(notifications === 3, 'same-tab removals must notify archive subscribers once');
 unsubscribe();
 toggleFavoritePoem('blok-2');
@@ -95,16 +95,19 @@ expect(notifications === 3, 'unsubscribed listeners must not receive later write
 expect((listeners.get(FAVORITES_CHANGE_EVENT)?.size ?? 0) === 0, 'unsubscribe must release the custom-event listener');
 expect((listeners.get('storage')?.size ?? 0) === 0, 'unsubscribe must release the storage-event listener');
 
-expect(!toggleFavoritePoem('invalid favorite id'), 'invalid ids must be rejected without changing the archive');
+const invalid = toggleFavoritePoem('invalid favorite id');
+expect(invalid.status === 'invalid' && !invalid.favorite, 'invalid ids must be explicitly rejected without changing the archive');
 expect(!removeFavoritePoem('not-present'), 'removing an unknown favorite must report no change');
 expect(removeFavoritePoem('blok-2'), 'explicit removal must persist an existing favorite');
 expect(!isFavoritePoem('blok-2'), 'explicit removal must update subsequent reads');
 
 toggleFavoritePoem('kept-on-write-failure');
 storage.failWrites = true;
-expect(!toggleFavoritePoem('new-on-write-failure'), 'a failed add must return the actual unchanged false state');
+const failedAdd = toggleFavoritePoem('new-on-write-failure');
+expect(failedAdd.status === 'failed' && !failedAdd.favorite, 'a failed add must be distinguishable from a successful removal and report the unchanged false state');
 expect(!isFavoritePoem('new-on-write-failure'), 'a failed add must not appear in subsequent reads');
-expect(toggleFavoritePoem('kept-on-write-failure'), 'a failed removal must return the actual unchanged true state');
+const failedRemoval = toggleFavoritePoem('kept-on-write-failure');
+expect(failedRemoval.status === 'failed' && failedRemoval.favorite, 'a failed removal must be distinguishable from a successful add and report the unchanged true state');
 expect(isFavoritePoem('kept-on-write-failure'), 'a failed removal must leave the stored favorite intact');
 expect(!removeFavoritePoem('kept-on-write-failure'), 'explicit removal must report failure when storage rejects the write');
 storage.failWrites = false;

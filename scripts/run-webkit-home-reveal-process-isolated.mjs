@@ -5,7 +5,6 @@ import path from 'node:path';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const common = [
   '--config=playwright.config.mjs',
-  '--project=iphone-safari',
   '--workers=1',
   '--reporter=line',
 ];
@@ -18,12 +17,6 @@ fs.writeFileSync(
 );
 
 const suites = [
-  // Run the interaction-heavy dock/search contour in the first completely
-  // fresh WebKit process. The assertion remains strict and fail-on-flaky;
-  // only the execution order changes so repeated route process teardown
-  // cannot influence the most input-sensitive contour. Use the historical
-  // mobile-home-webkit entrypoint because the Safari project's testMatch is
-  // intentionally scoped to that stable filename; it imports the isolated spec.
   {
     id: 'home-dock-search',
     file: 'qa/mobile-home-webkit.spec.mjs',
@@ -54,6 +47,11 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
   })),
+  {
+    id: 'desktop-reader-certification',
+    file: 'qa/premium-reader-certification.spec.mjs',
+    project: 'webkit-reader-desktop',
+  },
 ];
 
 const record = (line) => {
@@ -63,7 +61,14 @@ const record = (line) => {
 };
 
 for (const [index, suite] of suites.entries()) {
-  const args = ['playwright', 'test', suite.file, ...common, '--grep', suite.grep];
+  const args = [
+    'playwright',
+    'test',
+    suite.file,
+    ...common,
+    `--project=${suite.project ?? 'iphone-safari'}`,
+  ];
+  if (suite.grep) args.push('--grep', suite.grep);
   const label = `${index + 1}/${suites.length} ${suite.id}`;
 
   record(`[webkit-home-process START] ${label}`);

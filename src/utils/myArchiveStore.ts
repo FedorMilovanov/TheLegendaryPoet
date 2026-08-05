@@ -9,6 +9,13 @@ export interface FavoritePoem {
   addedAt: number;
 }
 
+export type FavoriteToggleStatus = 'added' | 'removed' | 'failed' | 'invalid';
+
+export interface FavoriteToggleResult {
+  status: FavoriteToggleStatus;
+  favorite: boolean;
+}
+
 interface FavoriteArchiveSnapshot {
   version: 3;
   items: FavoritePoem[];
@@ -125,15 +132,18 @@ export function removeFavoritePoem(poemId: string): boolean {
   return writeSnapshot({ ...snapshot, items });
 }
 
-export function toggleFavoritePoem(poemId: string): boolean {
-  if (!POEM_ID.test(poemId)) return false;
+export function toggleFavoritePoem(poemId: string): FavoriteToggleResult {
+  if (!POEM_ID.test(poemId)) return { status: 'invalid', favorite: false };
   const snapshot = readSnapshot();
   const existing = snapshot.items.some((favorite) => favorite.id === poemId);
   const items = existing
     ? snapshot.items.filter((favorite) => favorite.id !== poemId)
     : [...snapshot.items, { id: poemId, addedAt: Date.now() }];
   const persisted = writeSnapshot({ ...snapshot, items });
-  return persisted ? !existing : existing;
+  if (!persisted) return { status: 'failed', favorite: existing };
+  return existing
+    ? { status: 'removed', favorite: false }
+    : { status: 'added', favorite: true };
 }
 
 export function reconcileFavoritePoems(validPoemIds: Iterable<string>) {
