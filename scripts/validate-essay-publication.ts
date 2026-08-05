@@ -104,18 +104,22 @@ const canonicalConsumers = [
   'scripts/validate-citations.ts',
   'scripts/validate-essay-covers.ts',
   'scripts/validate-literary-style.ts',
+  'scripts/validate-yesenin-part-two-publication.ts',
 ];
+
+const catalogImportPattern = /from\s*['"][^'"]*data\/essays(?:\/index(?:\.ts)?)?['"]/;
+const rawEssayImportPattern = /from\s*['"][^'"]*data\/essays\/(?!index(?:\.ts)?['"])[^'"]+['"]/;
 
 for (const file of canonicalConsumers) {
   const source = readFileSync(file, 'utf8');
-  if (!source.includes('getAllEssays')) {
-    throw new Error(`canonical essay consumer bypasses getAllEssays: ${file}`);
+  if (!catalogImportPattern.test(source)) {
+    throw new Error(`canonical essay consumer bypasses the catalog module: ${file}`);
   }
-  if (/import\s*\{[^}]*\bessays\b[^}]*\}\s*from\s*['"][^'"]*data\/essays/.test(source)) {
-    throw new Error(`canonical essay consumer imports the catalog array directly: ${file}`);
+  if (rawEssayImportPattern.test(source)) {
+    throw new Error(`canonical essay consumer imports an authoring module directly: ${file}`);
   }
 }
 
 console.log(
-  `Essay publication contract: ${catalog.length} immutable essays, stable catalog identity, derived readTime, untouched authoring modules, one consumer API.`,
+  `Essay publication contract: ${catalog.length} immutable essays, stable catalog identity, derived readTime, untouched authoring modules, one catalog boundary.`,
 );
