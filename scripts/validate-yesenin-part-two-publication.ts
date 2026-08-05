@@ -1,50 +1,50 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { yeseninPartTwoPublic } from '../src/data/essays/yeseninPartTwoPublic';
-import { essays } from '../src/data/essays/index';
+import { yeseninPartTwoPublic as authoringEssay } from '../src/data/essays/yeseninPartTwoPublic';
+import { essays, getEssayBySlug } from '../src/data/essays/index';
 
-const essay = yeseninPartTwoPublic;
+const slug = 'sergei-yesenin-1921-1925';
+const essay = getEssayBySlug(slug);
 const ledgerPath = 'docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md';
+
+if (!essay) throw new Error(`Part II is not registered in the canonical essay catalog: ${slug}`);
+if (essays.filter((item) => item.slug === slug).length !== 1) {
+  throw new Error('Part II is not registered exactly once in the canonical essay catalog');
+}
+if (essay === authoringEssay) {
+  throw new Error('Part II publication aliases its mutable authoring input');
+}
+if (essay.id !== authoringEssay.id || essay.slug !== authoringEssay.slug) {
+  throw new Error('Part II stable authoring identity diverged during publication');
+}
 
 if (!existsSync(ledgerPath)) throw new Error(`missing public source ledger: ${ledgerPath}`);
 const ledger = readFileSync(ledgerPath, 'utf8');
 
 if (essay.id !== 'essay-yesenin-biography-part-two') throw new Error('unexpected Part II essay id');
-if (essay.slug !== 'sergei-yesenin-1921-1925') throw new Error('unexpected Part II slug');
 if (essay.series?.part !== 2 || essay.series.total !== 2) {
   throw new Error('Yesenin biography series metadata is not 2 of 2');
 }
-/*
- * Guard the actual longform scope, not the advertised label.
- *
- * This used to assert `readTime >= 45`, which only proved that a number in a
- * data file was large: the body is ~2 400 words (~13 min), so CI was actively
- * requiring the site to overstate the reading time by roughly 4x. Reading time
- * is now derived from the text, so the meaningful invariant is the amount of
- * text itself.
- */
-const partTwoWords = essay.blocks
-  .flatMap((block) => {
-    const value = block as Record<string, unknown>;
-    return ['text', 'heading', 'caption', 'note', 'quote', 'lines']
-      .flatMap((key) => (Array.isArray(value[key]) ? (value[key] as unknown[]) : [value[key]]))
-      .filter((item): item is string => typeof item === 'string');
-  })
-  .reduce((total, text) => total + (text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0), 0);
 
+const readerStrings = essay.blocks.flatMap((block) => {
+  const value = block as Record<string, unknown>;
+  return ['text', 'heading', 'caption', 'note', 'quote', 'lines']
+    .flatMap((key) => (Array.isArray(value[key]) ? (value[key] as unknown[]) : [value[key]]))
+    .filter((item): item is string => typeof item === 'string');
+});
+const partTwoWords = readerStrings.reduce(
+  (total, text) => total + (text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0),
+  0,
+);
 if (partTwoWords < 2000) {
   throw new Error(`Part II body was compressed below longform scope: ${partTwoWords} words`);
 }
+
 if (essay.coverKind !== 'archive') throw new Error('Part II cover must remain an archive image');
 if (!essay.coverSourceUrl?.includes('commons.wikimedia.org/wiki/File:Esenin1925.jpg')) {
   throw new Error('Part II cover lost its public-domain provenance URL');
 }
 if (!essay.coverCredit?.includes('общественное достояние')) {
   throw new Error('Part II cover lost its public-domain credit');
-}
-
-const registered = essays.filter((item) => item.slug === essay.slug);
-if (registered.length !== 1 || registered[0] !== essay) {
-  throw new Error('Part II is not registered exactly once in the canonical essay catalog');
 }
 
 const expectedHeadings = [
@@ -65,7 +65,6 @@ const expectedHeadings = [
   'Декабрь 1925 года: что устанавливают документы',
   'После легенды: дар и ответственность',
 ] as const;
-
 const headings = essay.blocks
   .filter((block) => block.type === 'section')
   .map((block) => block.heading);
@@ -83,19 +82,7 @@ if (proseBlocks.length < 45) {
   throw new Error(`Part II is too compressed: ${proseBlocks.length} prose blocks`);
 }
 
-const articleText = [essay.title, essay.subtitle ?? '', essay.excerpt]
-  .concat(
-    essay.blocks.map((block) => {
-      if ('text' in block) return block.text;
-      if (block.type === 'section') return block.heading;
-      if (block.type === 'image') return `${block.alt} ${block.caption} ${block.credit ?? ''}`;
-      if (block.type === 'poem') return `${block.title ?? ''} ${block.lines} ${block.note ?? ''}`;
-      if (block.type === 'voice') return `${block.quote} ${block.author} ${block.source}`;
-      return '';
-    }),
-  )
-  .join('\n');
-
+const articleText = [essay.title, essay.subtitle ?? '', essay.excerpt, ...readerStrings].join('\n');
 if (articleText.length < 18_000) {
   throw new Error(`Part II reader text is below the longform floor: ${articleText.length} characters`);
 }
@@ -150,38 +137,18 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-letopis-t5-k1': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
 };
-/*
- * A source must be honest, not merely linked.
- *
- * Requiring every source to carry an HTTPS URL is what produced the regression
- * this validator was meant to prevent: archival case files and print-only
- * scholarly editions have no public address, so the catalog silently pointed
- * them at this repository's own markdown ledger. A reader then clicked through
- * from the forensic act to our source code.
- *
- * The real invariants: a URL, when present, must be public HTTPS and must never
- * be a self-reference standing in for a document; a source without a URL must
- * instead say in prose where the document can be found.
- */
-const SELF_REFERENCE = /github\.com\/FedorMilovanov/i;
-
+const selfReference = /github\.com\/FedorMilovanov/i;
 for (const source of sources) {
   if (!source.id) throw new Error(`source without stable id: ${source.title}`);
-
   if (source.url) {
     if (!source.url.startsWith('https://')) {
       throw new Error(`source ${source.id} must use a public HTTPS URL`);
     }
-    // The publication ledger itself is allowed to link to the repository.
-    if (SELF_REFERENCE.test(source.url) && source.id !== 'yes2-publication-ledger') {
-      throw new Error(
-        `source ${source.id} points at our own repository instead of the document`,
-      );
+    if (selfReference.test(source.url) && source.id !== 'yes2-publication-ledger') {
+      throw new Error(`source ${source.id} points at our own repository instead of the document`);
     }
   } else if (!source.note && !source.institution) {
-    throw new Error(
-      `source ${source.id} has no URL and no note saying where the document can be consulted`,
-    );
+    throw new Error(`source ${source.id} has no URL and no consultation note`);
   }
 
   const officialPattern = requiredOfficialUrls[source.id];
@@ -215,5 +182,5 @@ for (const marker of [
 }
 
 console.log(
-  `Yesenin Part II publication: 16 sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} public source links, ${images.length} public-domain images; documentary, visual and rights boundaries passed.`,
+  `Yesenin Part II publication: ${headings.length} sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} sources, ${images.length} public-domain images; immutable catalog and documentary boundaries passed.`,
 );
