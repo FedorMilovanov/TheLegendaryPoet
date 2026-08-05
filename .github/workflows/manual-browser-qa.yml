@@ -78,6 +78,7 @@ jobs:
           qa/mobile-platforms.spec.mjs
           qa/community-request-topology.spec.mjs
           qa/reader-journeys.spec.mjs
+          qa/premium-reader-certification.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
