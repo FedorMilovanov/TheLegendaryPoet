@@ -24,44 +24,42 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Integrate the reviewed Arena files and conflict resolutions
+      - name: Integrate reviewed unique files from Arena 019fcf76
         shell: bash
         run: |
           set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
+          SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'
+          git fetch origin 'refs/heads/arena/019fcf76-thelegendarypoet:refs/remotes/origin/arena/019fcf76-thelegendarypoet'
 
-          source = Path('.github/workflows/marathon-audit-integration-once.yml').read_text(encoding='utf-8').splitlines()
-          block = []
-          collecting = False
-          for line in source:
-            if not collecting and line == '        run: |':
-              collecting = True
-              continue
-            if not collecting:
-              continue
-            if line == '':
-              block.append('')
-              continue
-            if line.startswith('          '):
-              block.append(line[10:])
-              continue
-            break
+          copy_from_source() {
+            local path="$1"
+            mkdir -p "$(dirname "$path")"
+            git show "$SOURCE_REF:$path" > "$path"
+          }
 
-          joined = '\n'.join(block)
-          required = [
-            "SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'",
-            'copy_from_source()',
-            "inline.write_text",
-            "routeModules.tsx",
-          ]
-          missing = [marker for marker in required if marker not in joined]
-          if missing:
-            raise SystemExit(f'The reviewed integration block is incomplete: {missing}')
-          Path('/tmp/marathon-integrate.sh').write_text('#!/usr/bin/env bash\nset -euo pipefail\n' + joined + '\n', encoding='utf-8')
-          PY
-          chmod +x /tmp/marathon-integrate.sh
-          /tmp/marathon-integrate.sh
+          for path in \
+            .gitignore \
+            docs/APP_SHELL_RUNTIME.md \
+            qa/hover-stability.spec.mjs \
+            scripts/materialize-brand-art.mjs \
+            scripts/validate-app-shell.ts \
+            scripts/validate-build-output.ts \
+            scripts/validate-hover-stability.ts \
+            scripts/validate-literary-style.ts \
+            src/components/ThemeToggle.tsx \
+            src/components/music/AudioPlayerProvider.tsx \
+            src/data/essays/yeseninDuncanFirstMeeting.ts \
+            src/data/essays/yeseninPartOnePublic.ts \
+            src/utils/analytics.ts \
+            src/utils/browserStorage.ts \
+            src/utils/communityIdentity.ts
+          do
+            copy_from_source "$path"
+          done
+
+          rm -f src/routes/routeModules.tsx
+          rm -f src/components/hall/PoetDetailHeroTransition.tsx
+          python3 scripts/integrate-marathon-audit.py
 
       - name: Install deterministic build and browser dependencies
         shell: bash
@@ -104,11 +102,14 @@ jobs:
             --project=chromium-core \
             --workers=1
 
-      - name: Commit the verified integration and remove temporary machinery
+      - name: Commit verified integration and remove temporary machinery
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/marathon-audit-integration-once.yml
+          rm -f \
+            .github/workflows/marathon-audit-integration-once.yml \
+            .github/workflows/marathon-audit-pr-runner.yml \
+            scripts/integrate-marathon-audit.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
