@@ -25,14 +25,10 @@ import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { asset } from '../utils/asset';
 import {
-  averageScores,
-  filterComments,
-  filterRatings,
   getCommunitySyncSnapshot,
-  getFeedbackSnapshot,
   subscribeCommunitySync,
-  subscribeFeedback,
 } from '../utils/communityStore';
+import { useCommunityLeaderboard } from '../hooks/useCommunityLeaderboard';
 
 const PRIOR_WEIGHT = 5;
 type SortKey = 'reader' | 'votes' | 'discussion' | 'editorial' | 'consensus';
@@ -57,17 +53,6 @@ type RankedPoet = {
   dimensionIndexes: Record<string, number>;
 };
 
-function ratingAverage(scores: Record<string, number>) {
-  const values = Object.values(scores).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-}
-
-function standardDeviation(values: number[]) {
-  if (values.length < 2) return null;
-  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
-}
-
 function fmt(value: number | null, digits = 2) {
   return value === null ? '—' : value.toFixed(digits);
 }
@@ -89,7 +74,8 @@ export default function RatingsPage() {
     path: '/ratings',
   });
 
-  const snapshot = useSyncExternalStore(subscribeFeedback, getFeedbackSnapshot, getFeedbackSnapshot);
+  const poetIds = useMemo(() => poets.map((poet) => poet.id), []);
+  const leaderboard = useCommunityLeaderboard(poetIds);
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSort = searchParams.get('sort') as SortKey | null;
@@ -107,53 +93,55 @@ export default function RatingsPage() {
     setSearchParams(next, { replace: true });
   }, [query, ratedOnly, setSearchParams, sortBy, tag]);
 
-  const allPoetRatings = useMemo(
-    () => snapshot.ratings.filter((item) => item.targetType === 'poet'),
-    [snapshot],
+  const aggregateById = useMemo(
+    () => new Map(leaderboard.aggregates.map((aggregate) => [aggregate.targetId, aggregate])),
+    [leaderboard.aggregates],
   );
-
-  const globalMean = useMemo(() => {
-    const values = allPoetRatings.map((rating) => ratingAverage(rating.scores)).filter((value) => value > 0);
-    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 4.0;
-  }, [allPoetRatings]);
-
+  const totalVotes = leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.ratingCount, 0);
+  const globalMean = totalVotes
+    ? leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.overall * aggregate.ratingCount, 0) / totalVotes
+    : 4.0;
   const globalDimensionMeans = useMemo(() => Object.fromEntries(
     poetRatingDimensions.map((dimension) => {
-      const values = allPoetRatings
-        .map((rating) => rating.scores[dimension.key])
-        .filter((value): value is number => typeof value === 'number' && value >= 1 && value <= 5);
-      return [dimension.key, values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : globalMean];
+      const weighted = leaderboard.aggregates.reduce((sum, aggregate) => {
+        const value = aggregate.dimensions[dimension.key];
+        return sum + (typeof value === 'number' ? value * aggregate.ratingCount : 0);
+      }, 0);
+      const count = leaderboard.aggregates.reduce((sum, aggregate) => (
+        typeof aggregate.dimensions[dimension.key] === 'number' ? sum + aggregate.ratingCount : sum
+      ), 0);
+      return [dimension.key, count ? weighted / count : globalMean];
     }),
-  ), [allPoetRatings, globalMean]);
+  ), [globalMean, leaderboard.aggregates]);
 
   const rows = useMemo<RankedPoet[]>(() => poets.map((poet) => {
-    const ratings = filterRatings(snapshot, 'poet', poet.id);
-    const comments = filterComments(snapshot, 'poet', poet.id);
-    const summary = averageScores(ratings);
-    const averages = ratings.map((rating) => ratingAverage(rating.scores)).filter((value) => value > 0);
-    const rawScore = ratings.length ? summary.overall : null;
-    const readerScore = ratings.length
-      ? (ratings.length * summary.overall + PRIOR_WEIGHT * globalMean) / (ratings.length + PRIOR_WEIGHT)
+    const aggregate = aggregateById.get(poet.id);
+    const votes = aggregate?.ratingCount ?? 0;
+    const comments = aggregate?.commentCount ?? 0;
+    const rawScore = votes ? aggregate?.overall ?? null : null;
+    const readerScore = votes && rawScore !== null
+      ? (votes * rawScore + PRIOR_WEIGHT * globalMean) / (votes + PRIOR_WEIGHT)
       : null;
+    const dimensions = aggregate?.dimensions ?? {};
     const dimensionIndexes = Object.fromEntries(poetRatingDimensions.map((dimension) => {
-      const raw = summary.dimensions[dimension.key];
-      const adjusted = ratings.length && raw
-        ? (ratings.length * raw + PRIOR_WEIGHT * globalDimensionMeans[dimension.key]) / (ratings.length + PRIOR_WEIGHT)
+      const raw = dimensions[dimension.key];
+      const adjusted = votes && raw
+        ? (votes * raw + PRIOR_WEIGHT * globalDimensionMeans[dimension.key]) / (votes + PRIOR_WEIGHT)
         : 0;
       return [dimension.key, adjusted];
     }));
 
     return {
       poet,
-      votes: ratings.length,
-      comments: comments.length,
+      votes,
+      comments,
       rawScore,
       readerScore,
-      deviation: standardDeviation(averages),
-      dimensions: summary.dimensions,
+      deviation: aggregate?.deviation ?? null,
+      dimensions,
       dimensionIndexes,
     };
-  }), [snapshot, globalMean, globalDimensionMeans]);
+  }), [aggregateById, globalMean, globalDimensionMeans]);
 
   const tags = useMemo(
     () => Array.from(new Set(poets.flatMap((poet) => poet.tags))).sort((left, right) => left.localeCompare(right, 'ru')),
@@ -186,7 +174,7 @@ export default function RatingsPage() {
   const mostDiscussed = rows.slice().sort((left, right) => right.comments - left.comments || right.votes - left.votes)[0];
   const consensus = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (left.deviation ?? 9) - (right.deviation ?? 9) || right.votes - left.votes)[0];
   const controversial = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (right.deviation ?? 0) - (left.deviation ?? 0) || right.votes - left.votes)[0];
-  const totalComments = snapshot.comments.filter((item) => item.targetType === 'poet').length;
+  const totalComments = leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.commentCount, 0);
 
   const dimensionLeaders = poetRatingDimensions.map((dimension) => {
     const leader = ratedRows
@@ -199,7 +187,7 @@ export default function RatingsPage() {
   const syncBadge = (() => {
     if (sync.phase === 'local') return { Icon: ShieldCheck, spin: false, className: 'border-amber-400/20 bg-amber-400/8 text-amber-100/70', text: 'Сейчас показаны данные этого браузера; общий backend не подключён' };
     if (sync.phase === 'syncing' || sync.phase === 'idle') return { Icon: LoaderCircle, spin: true, className: 'border-cyan-400/20 bg-cyan-400/8 text-cyan-100/70', text: sync.message ?? 'Обновляем общую базу читательских оценок…' };
-    if (sync.phase === 'offline') return { Icon: CloudOff, spin: false, className: 'border-amber-400/20 bg-amber-400/8 text-amber-100/70', text: sync.pendingCount > 0 ? `Связь временно недоступна; в очереди ${sync.pendingCount} изменений` : 'Общая база временно недоступна; показан локальный кэш' };
+    if (sync.phase === 'offline') return { Icon: CloudOff, spin: false, className: 'border-amber-400/20 bg-amber-400/8 text-amber-100/70', text: sync.pendingCount > 0 ? `Связь временно недоступна; в очереди ${sync.pendingCount} изменений` : 'Сводный рейтинг временно недоступен; локальные изменения сохранены' };
     return { Icon: Cloud, spin: false, className: sync.pendingCount > 0 ? 'border-amber-400/20 bg-amber-400/8 text-amber-100/70' : 'border-emerald-400/20 bg-emerald-400/8 text-emerald-200', text: sync.pendingCount > 0 ? `Общая база подключена; в очереди ${sync.pendingCount} изменений` : 'Общая база синхронизирована для всех посетителей' };
   })();
 
@@ -218,7 +206,7 @@ export default function RatingsPage() {
         <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Users, label: 'Поэтов в таблице', value: poets.length },
-            { icon: Star, label: 'Голосов читателей', value: allPoetRatings.length },
+            { icon: Star, label: 'Голосов читателей', value: totalVotes },
             { icon: MessageSquare, label: 'Комментариев', value: totalComments },
             { icon: BarChart3, label: 'Поэтов с оценкой', value: ratedRows.length },
           ].map(({ icon: Icon, label, value }) => <div key={label} className="rounded-3xl border border-cyan-400/10 bg-[#07111a]/70 p-5"><Icon size={18} className="mb-5 text-cyan-300" /><div className="text-3xl font-bold">{value}</div><div className="mt-1 text-xs uppercase tracking-[0.16em] text-cyan-100/40">{label}</div></div>)}
