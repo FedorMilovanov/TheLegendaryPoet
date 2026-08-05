@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { safeRead, safeWrite } from '../utils/browserStorage';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -14,12 +15,7 @@ export default function ThemeToggle() {
   const [mode, setMode] = useState<ThemeMode>('dark');
 
   useEffect(() => {
-    let stored: ThemeMode | null = null;
-    try {
-      stored = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-    } catch {
-      stored = null;
-    }
+    const stored = safeRead(STORAGE_KEY) as ThemeMode | null;
     const next = stored === 'light' ? 'light' : 'dark';
     setMode(next);
     applyTheme(next);
@@ -29,11 +25,8 @@ export default function ThemeToggle() {
     const next = mode === 'dark' ? 'light' : 'dark';
     setMode(next);
     applyTheme(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // Theme still changes for current session.
-    }
+    // Theme still changes for the current session if browser storage is blocked.
+    safeWrite(STORAGE_KEY, next);
   };
 
   const isLight = mode === 'light';
