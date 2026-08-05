@@ -1,13 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import type { CommentEntry, CommentKind, FeedbackTargetType, RatingEntry } from '../types/community';
 import {
-  averageScores,
   canMarkHelpful,
   checkCooldown,
   commitCommentFeedback,
   commitHelpfulFeedback,
   commitRatingFeedback,
-  distributionFromRatings,
+  compactCommunityLocalCache,
   flushCommunityOutbox,
   getCommunitySyncSnapshot,
   getOwnRating,
@@ -15,7 +14,12 @@ import {
   subscribeCommunitySync,
   trustLabel,
 } from '../utils/communityStore';
-import { getFeedbackTargetSnapshot, subscribeFeedbackTarget } from '../utils/communityTargetStore';
+import {
+  getFeedbackTargetSnapshot,
+  loadMoreFeedbackComments,
+  refreshFeedbackTarget,
+  subscribeFeedbackTarget,
+} from '../utils/communityTargetStore';
 import { getCommunityDeviceId } from '../utils/communityIdentity';
 
 export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: string) {
@@ -27,15 +31,18 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
   const ratingScope = `rating:${targetType}:${targetId}`;
 
-  const ratings = snapshot.ratings;
+  const summary = snapshot.aggregate;
   const comments = snapshot.comments;
-  const summary = useMemo(() => averageScores(ratings), [ratings]);
-  const distribution = useMemo(() => distributionFromRatings(ratings), [ratings]);
   const topComment = useMemo(() => comments
     .slice()
     .sort((left, right) => right.helpful - left.helpful || Date.parse(right.createdAt) - Date.parse(left.createdAt))[0], [comments]);
-  const trust = useMemo(() => trustLabel(ratings.length), [ratings.length]);
+  const trust = useMemo(() => trustLabel(snapshot.aggregate.ratingCount), [snapshot.aggregate.ratingCount]);
   const ownRating = useMemo(() => getOwnRating(ratingScope), [ratingScope, snapshot]);
+
+  const revalidateAfterWrite = () => {
+    compactCommunityLocalCache();
+    void flushCommunityOutbox().then(() => refreshFeedbackTarget(targetType, targetId));
+  };
 
   const addRating = (scores: Record<string, number>) => {
     const cooldown = checkCooldown(ratingScope);
@@ -55,7 +62,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     const stored = commitRatingFeedback(entry, ratingScope, getCommunityDeviceId());
     if (!stored) return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
 
-    void flushCommunityOutbox();
+    revalidateAfterWrite();
     return { ok: true as const, message: previous ? 'Оценка обновлена' : 'Оценка сохранена' };
   };
 
@@ -66,7 +73,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
 
     const normalizedText = text.replace(/\r\n?/g, '\n').trim();
     if (normalizedText.length < 8) return { ok: false as const, message: 'Комментарий слишком короткий' };
-    if (normalizedText.length > 2000) return { ok: false as const, message: 'Комментарий превышает 2000 символов' };
+    if (normalizedText.length > 1200) return { ok: false as const, message: 'Комментарий превышает 1200 символов' };
 
     const entry: CommentEntry = {
       id: makeFeedbackId('comment'),
@@ -81,7 +88,7 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     const stored = commitCommentFeedback(entry, scope, getCommunityDeviceId());
     if (!stored) return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
 
-    void flushCommunityOutbox();
+    revalidateAfterWrite();
     return { ok: true as const, message: 'Комментарий добавлен' };
   };
 
@@ -95,19 +102,29 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
     const stored = commitHelpfulFeedback(commentId, scope, getCommunityDeviceId());
     if (!stored) return { ok: false as const, message: 'Не удалось сохранить отметку' };
 
-    void flushCommunityOutbox();
+    revalidateAfterWrite();
     return { ok: true as const, message: 'Спасибо, мнение учтено' };
   };
 
   return {
-    ratings,
+    ratings: [] as RatingEntry[],
+    ratingCount: snapshot.aggregate.ratingCount,
+    commentCount: snapshot.aggregate.commentCount,
     comments,
-    summary,
-    distribution,
+    summary: {
+      overall: snapshot.aggregate.overall,
+      dimensions: snapshot.aggregate.dimensions,
+    },
+    distribution: snapshot.aggregate.distribution,
     topComment,
     trust,
     ownRating,
     sync,
+    targetPhase: snapshot.phase,
+    targetMessage: snapshot.message,
+    hasMoreComments: snapshot.hasMoreComments,
+    loadingMoreComments: snapshot.loadingMore,
+    loadMoreComments: () => loadMoreFeedbackComments(targetType, targetId),
     addRating,
     addComment,
     markHelpful,
