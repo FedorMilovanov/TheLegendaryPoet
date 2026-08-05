@@ -14,11 +14,19 @@
     "brandApprovedSourceDirectory": "qa/reference/approved-brand",
     "communitySchema": "docs/community-schema.sql"
   },
+  "governance": {
+    "packageName": "the-legendary-poet",
+    "packageVersion": "0.0.0-private",
+    "private": true,
+    "license": "UNLICENSED",
+    "nodeEngine": ">=22.22.0 <25",
+    "releasePolicy": "docs/RELEASE_POLICY.md",
+    "productionAuthority": "exact verified source main SHA"
+  },
   "architecture": {
     "auditAuthority": "FedorMilovanov/AuditRepo/projects/the-legendary-poet/",
     "openLaneIds": [
-      "TLP-CLEAN-001",
-      "TLP-GOV-001"
+      "TLP-CLEAN-001"
     ],
     "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
     "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
@@ -27,7 +35,8 @@
       "The old `Article`/`Poet.articles` data model remains",
       "`src/data/essays/index.ts` mutates imported essay objects",
       "The app currently hydrates the complete public ratings/comments corpus globally",
-      "Fourteen workflows repeat dependency/browser setup"
+      "Fourteen workflows repeat dependency/browser setup",
+      "Generic package identity, engine/license/release policy unresolved"
     ]
   },
   "documentation": {
@@ -36,6 +45,7 @@
       "README.md",
       "AGENTS.md",
       "docs/CURRENT_STATE.md",
+      "docs/RELEASE_POLICY.md",
       "docs/APP_SHELL_RUNTIME.md",
       "docs/BRAND_EMBLEM.md",
       "docs/COMMENTS_SETUP.md",
