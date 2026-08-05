@@ -1,0 +1,25 @@
+name: Project contracts
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Validate repository contracts
+        run: node scripts/validate-project-contracts.mjs
+      - name: Validate UTC daily rotation
+        run: node scripts/validate-daily-content.mjs

@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - qa/brand-reference-evaluation.json
-      - src/components/BrandMark.tsx
-      - public/brand-emblem.svg
-      - public/brand-mark-micro.svg
-      - public/brand-emblem-mask.svg
+      - qa/reference/approved-brand/**
+      - src/components/SpectralBrandMark.tsx
+      - src/components/brandMotionFrameInvariant.ts
+      - scripts/materialize-brand-art.mjs
+      - scripts/validate-brand-assets.ts
+      - public/brand-release.txt
       - .github/workflows/brand-progress.yml
   workflow_dispatch:
 

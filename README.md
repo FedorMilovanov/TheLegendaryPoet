@@ -1,89 +1,52 @@
 # THE LEGENDARY POET
 
-Тёмный люксовый редакторский сайт о великих русских поэтах: биографии, тексты,
-глубокий литературный и — там, где это оправдано — христианский разбор.
-React 19 + TypeScript + Vite + Tailwind v4 + Framer Motion.
+Тёмный редакторский сайт о русской поэзии: профили поэтов, стихотворения, большие документированные эссе, музыка и читательские функции.
 
-## Разработка
+**Production:** `https://thelegendarypoet.ru`  
+**Stack:** React 19 · TypeScript · direct React Router · Vite 7 · Tailwind CSS 4 · Framer Motion
+
+## Быстрый старт
+
+Используйте Node 24 из `.nvmrc`, совпадающий с CI. React Router 8 требует Node не ниже 22.22.0; Node 24 является единым рекомендуемым baseline проекта.
 
 ```bash
-npm install
-npm run dev        # локальный сервер разработки
-npm run build      # production-сборка в dist/ (multi-file, хешированные ассеты)
-npm run preview    # предпросмотр собранной версии
-node scripts/gen-sitemap.mjs   # пересобрать public/sitemap.xml из данных
+nvm use
+npm ci
+npm run dev
+npm run check
+npm run build
+npm run preview
 ```
 
-## Структура
+Workflow `Project contracts` без установки зависимостей проверяет машинный контракт проекта и UTC-ротацию. `npm run check` продолжает проверять контент, бренд, маршруты, взаимодействия и TypeScript; финальные production/prerender/browser-гейты запускаются отдельными workflow GitHub Actions.
 
-- `src/pages/*` — маршруты: `/`, `/poets`, `/poets/:id`, `/articles`, `/articles/:id`, `/music`, `/about`, 404.
-- `src/data/library/*` — данные: по одному модулю на поэта + `articles.ts`, `musicTracks.ts`.
-- `src/config/site.ts` — **единый источник** ссылок на каналы и контактов (менять здесь).
-- `src/components/community/*`, `src/utils/communityStore.ts` — локальный прототип оценок/комментариев (localStorage, реактивный общий стор).
-- `src/hooks/useSeo.ts` — пер-страничные title/description/OG/canonical.
-- `src/docs/THEOLOGICAL_GUIDELINES.md` — обязательные редакционные правила для богословских разборов.
-- `docs/IMAGE_PROMPTS.md` — промты и инструкция по подстановке аутентичных изображений.
-- `docs/BRAND_EMBLEM.md` — каноническая эмблема, карта всех иконок и обязательные бренд-проверки.
+## Каноническая архитектура
 
-## Публикация на GitHub Pages
+- `docs/CURRENT_STATE.md` — текущая архитектурная правда и открытые системные долги.
+- `docs/project-contract.json` — машинно-проверяемые пути и роли.
+- `src/routes/routeModules.ts` — единственный lazy route registry.
+- `src/data/essays/index.ts` — публичный каталог больших эссе (`/essays/:slug`).
+- `src/data/library/index.ts` — библиотека поэтов.
+- `src/config/site.ts` — домен, каналы и контакты.
+- `src/components/SpectralBrandMark.tsx` + `scripts/materialize-brand-art.mjs` — production-бренд.
+- `src/assets/fonts/` — локальные WOFF2; внешние Google Fonts не используются.
+- `docs/community-schema.sql` — серверный контракт общей системы оценок и комментариев.
 
-Всё настроено под project‑страницу `https://<owner>.github.io/TheLegendaryPoet/`:
+## Публикация
 
-1. В настройках репозитория: **Settings → Pages → Source: GitHub Actions** (включить один раз).
-2. Пуш в `main` (или ветку деплоя) запускает `.github/workflows/deploy.yml` — сборка и публикация.
-3. `vite.config.ts` `base` = `/TheLegendaryPoet/`; deep‑ссылки работают через `404.html`‑фолбэк.
-4. **Кастомный домен:** задайте `VITE_BASE=/` (в workflow), обновите `siteConfig.url` (`src/config/site.ts`)
-   и OG‑URL в `index.html`, добавьте `public/CNAME`.
+Production обслуживается с корня кастомного домена (`VITE_BASE=/`). `.github/workflows/deploy.yml` собирает multi-file Vite build, проверяет точный SHA и публикует GitHub Pages. Deep links защищены статическим fallback и prerender/SEO-гейтами.
 
-Готово к публикации и на Netlify/Vercel (`_redirects`, `vercel.json`).
+## Контент и доказательность
 
-## Что ещё можно улучшить (по желанию)
+Новые биографические и богословские утверждения проходят правила из:
 
-- **Изображения статей** — сейчас у карточек иконка книги (осознанно); можно вернуть поле `image` и промты в `docs/IMAGE_PROMPTS.md`.
-- **Музыка** — треки ведут на каналы; для реального плеера положите `.mp3` в `public/audio/` и укажите `audioUrl`.
-- **Контент** — новые стихи только из сверенных источников (Викитека/РВБ/ФЭБ), см. `docs/RESEARCH_SOURCES.md`.
-- **Шрифты** — сейчас Google Fonts; для офлайна/приватности можно самостоятельно разместить woff2.
-- **Оценки/комментарии** — по умолчанию локально (localStorage, на устройстве). Чтобы
-  сделать их общими для всех — бесплатный Supabase за 5 минут, инструкция в
-  [`docs/COMMENTS_SETUP.md`](docs/COMMENTS_SETUP.md) (код уже готов, включается двумя переменными).
+- `PROJECT_CHARTER.md`;
+- `docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md`;
+- `docs/HISTORICAL_NARRATIVE_STANDARD.md`;
+- `src/docs/THEOLOGICAL_GUIDELINES.md`.
 
-## Аудит
+Точные verified SHA, закрытые repair-волны и evidence-пакеты хранятся в `FedorMilovanov/AuditRepo/projects/the-legendary-poet/`, а не дублируются в нескольких документах этого репозитория.
 
-Полный отчёт о готовности к публикации и статус исправлений — в `audit/index.html`
-(самодостаточная страница, открывается в браузере).
+## Исторические материалы
 
-## Редакционные стандарты — ОБЯЗАТЕЛЬНО для контрибьюторов и ИИ-агентов
-
-Это то, к чему стремится проект. Полные правила — в
-[`src/docs/THEOLOGICAL_GUIDELINES.md`](src/docs/THEOLOGICAL_GUIDELINES.md). Кратко:
-
-1. **Никаких библейских разборов «ради разбора».** Комментируем веру/Писание только
-   там, где текст или биография реально дают основание.
-2. **Не делаем поэтов верующими христианами и «библейскими писателями».** Талант,
-   красивые образы и тоска по свету — не доказательство личной веры.
-3. **Подлинный библейский образ объясняем как ИСТОЧНИК, а не как веру автора.**
-   Пример: у Пушкина «Пророк» — это сюжет призвания Исаии (Ис. 6:1–8); мы детально и
-   точно объясняем, что сказано в этом месте Писания и как поэт его преломил, — но
-   не объявляем самого Пушкина пророком или верующим.
-4. **Нравственная оценка — честная и библейская.** Жизнь многих поэтов была тяжёлой,
-   греховной, полной депрессии; «творческие души» ломались — в первую очередь потому,
-   что не знали Бога. Говорим об этом прямо, но с уважением к таланту, без злорадства
-   и сентиментальности.
-5. **Только выверенные канонические тексты стихов** (сверка по 2+ источникам), опора на
-   **первоисточники**, а не на пересказы. Список исследовательских ссылок —
-   [`docs/RESEARCH_SOURCES.md`](docs/RESEARCH_SOURCES.md) (цель — 30+).
-
-**Бренд:** эмблема — выбранная владельцем проекта безликая фигура в глубоком капюшоне
-и тяжёлом чёрно‑синем плаще с холодным туманным свечением. Нижний край плавно
-растворяется в дымке. В эмблеме нет книги, крыльев, нимба, лица и монограммы `LP`.
-Канонический SVG — `public/brand-emblem.svg`, мастер для интерфейса —
-`public/brand-emblem-master.webp`, интерактивный компонент —
-`src/components/BrandMark.tsx`. Платформенные растровые варианты воспроизводятся
-командой `npm run brand:materialize`. Полные правила:
-[`docs/BRAND_EMBLEM.md`](docs/BRAND_EMBLEM.md).
-
-## Лицензия
-
-Тексты стихотворений — общественное достояние (авторы умерли более 70 лет назад).
-Лицензию на код и оригинальные редакционные материалы выберите на своё усмотрение
-(например, MIT для кода) до публичного релиза.
+`audit/index.html`, `COMPONENT_BLUEPRINTS.md`, `TRANSFER.md` и `docs/INTEGRATION_STATUS.md` сохраняются только как история прежних этапов. Они не являются инструкцией для текущего кода.

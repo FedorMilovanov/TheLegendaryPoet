@@ -3,12 +3,12 @@ name: Articles catalog acceptance
 on:
   push:
     branches:
-      - agent/clean-articles-catalog
+      - main
     paths:
       - 'src/pages/ArticlesPage.tsx'
       - 'src/pages/HomePage.tsx'
       - 'src/App.tsx'
-      - 'src/routes/routeModules.tsx'
+      - 'src/routes/routeModules.ts'
       - 'src/data/essays/index.ts'
       - 'qa/articles-catalog.spec.mjs'
       - 'playwright.config.mjs'
@@ -21,7 +21,7 @@ on:
       - 'src/pages/ArticlesPage.tsx'
       - 'src/pages/HomePage.tsx'
       - 'src/App.tsx'
-      - 'src/routes/routeModules.tsx'
+      - 'src/routes/routeModules.ts'
       - 'src/data/essays/index.ts'
       - 'qa/articles-catalog.spec.mjs'
       - 'playwright.config.mjs'

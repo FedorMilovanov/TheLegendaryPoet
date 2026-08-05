@@ -2,10 +2,11 @@ import { poets } from '../data/poets';
 import { Poet, Poem } from '../types/poet';
 
 const DAY_MS = 86_400_000;
+const EPOCH_DAY = Math.floor(Date.UTC(2024, 0, 1) / DAY_MS);
 
-// Стабильный индекс дня, не зависящий от часового пояса
-function getDayIndex() {
-  return Math.floor((Date.now() - new Date(2024, 0, 1).getTime()) / DAY_MS);
+// UTC-day contract: every visitor sees the same item until the next UTC midnight.
+export function getDayIndex(timestamp = Date.now()) {
+  return Math.floor(timestamp / DAY_MS) - EPOCH_DAY;
 }
 
 export function getPoemOfDay(): { poem: Poem; poet: Poet } {

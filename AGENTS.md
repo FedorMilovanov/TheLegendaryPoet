@@ -2,62 +2,65 @@
 
 These rules apply to every human, coding agent and autonomous marathon working in this repository.
 
-## Canonical emblem reference: absolute authority
+## Read current truth first
 
-The only visual authority for the THE LEGENDARY POET emblem is:
+Before changing code, read:
 
-`qa/reference/brand-emblem-canonical-reference.webp`
+1. `docs/CURRENT_STATE.md`;
+2. `docs/project-contract.json`;
+3. `PROJECT_CHARTER.md`;
+4. the current The Legendary Poet project entry in AuditRepo.
 
-Reference id: `canonical-hooded-figure-v2-clean-base`.
+Run `node scripts/validate-project-contracts.mjs` before and after architectural changes. A path, branch or document from an old audit is not current truth merely because it still exists.
 
-The approved reference has a high layered hood, a broad black face cavern, heavy gathered cloth, a wide cloak, cold upper/side electrical energy and a clean lower edge with no required smoke beneath the cloak. Older SVGs are implementation history only, never artistic references.
+## Branch and concurrency discipline
 
-## Direct-main workflow
+- Do not work directly in another agent's branch.
+- Start from current `main` and use one clearly named repair lane per root cause.
+- Never merge Arena, trigger or deeply diverged work branches wholesale. Extract only unique value that is independently reverified on current HEAD.
+- Before opening or merging a PR, re-check open PRs and the source `main` SHA.
+- Temporary workflows, markers, QA output and transport code must not survive in production.
+- Exact SHA evidence and closure belong in AuditRepo after the source repair is merged.
 
-All emblem marathon work is committed directly to `main`. Do not create temporary brand branches or draft PRs that can be abandoned.
+## Systemic repair rule
 
-Every emblem pass must be one atomic Git tree based on the latest `main` and must update together:
+Prefer one shared contract, renderer, registry, store or validator over repeated page-specific patches. A repair proposal must state:
 
-- `src/components/BrandMark.tsx`;
-- `public/brand-emblem.svg`;
-- `public/brand-mark-micro.svg`;
-- `public/brand-emblem-mask.svg`;
-- `qa/brand-reference-evaluation.json` with exact Git blob locks;
-- affected validators, Browser QA and cache/version markers.
+- root cause;
+- all affected routes/data surfaces;
+- the single owning layer;
+- migration and rollback boundaries;
+- source/build/browser evidence required for closure.
 
-Before moving `main`, confirm that its head has not advanced. Never force-push and never overwrite unrelated work. If `main` advances, rebuild the atomic tree on the new head.
+## Brand authority
 
-## Mandatory visual loop
+The production brand is the owner-approved single transparent reference reconstructed from:
 
-1. Open the canonical reference before editing.
-2. Keep it visible beside the candidate throughout the pass.
-3. Judge macro geometry before detail: hood/body ratio, face width, shoulder spread, cowl construction, three large fold families and the smoke-free lower edge.
-4. Never iterate from the preceding SVG alone.
-5. Run strict static validation and exact-main Browser QA.
-6. Inspect `REFERENCE / CURRENT CANDIDATE` at 192, 96, 56, 32 and 16 px.
-7. Inspect `REFERENCE / CURRENT SVG / EXACT-MAIN LIVE SITE` and the actual homepage header/footer.
-8. Record all remaining deviations honestly and keep `not-reference-approved` until the user accepts the exact-main visuals.
+`qa/reference/approved-brand/final-reference.part*.b64`
+
+Its integrity is pinned in `scripts/materialize-brand-art.mjs`. Production outputs are generated, not hand-edited:
+
+- runtime component: `src/components/SpectralBrandMark.tsx`;
+- motion controller: `src/components/brandMotionFrameInvariant.ts`;
+- materializer: `scripts/materialize-brand-art.mjs`;
+- generated main asset: `public/brand-emblem.png`;
+- release marker: `public/brand-release.txt`.
+
+Retired SVG-era files such as `BrandMark.tsx`, `brand-emblem.svg`, micro/mask SVGs and v17/v18 artistic candidates are not production authority. Never recreate them to satisfy stale documentation.
+
+Brand changes require source-integrity validation, materialization, static brand gates and exact-head Browser QA. Green CI proves technical integrity, not visual approval.
+
+## Editorial and source discipline
+
+Never strengthen a historical, moral or theological claim beyond its evidence. Preserve source hierarchy, uncertainty and conflicts of interest. Follow the charter and editorial standards referenced by `README.md`.
 
 ## Hard stops
 
-Reset the base geometry instead of micro-polishing when:
+Stop and re-scope instead of pushing when:
 
-- the face becomes a narrow oval, droplet or tidy mask;
-- the hood/body ratio drifts from the reference;
-- the cloak becomes a compact bust, dome or poncho;
-- the cowl becomes a clean X, bow, moustache or necktie;
-- folds become identical radial wedges;
-- glow hides weak cloth construction;
-- smoke, mist or a bright pool appears under the cloak;
-- tests freeze old coordinates that conflict with the reference;
-- green CI is presented as proof of visual fidelity.
-
-## Evidence required after every main commit
-
-- `qa-artifacts/brand-reference-comparison-matrix.png`;
-- `qa-artifacts/brand-reference-live-site-comparison.png`;
-- `qa-artifacts/brand-live-site-home-first-viewport.png`;
-- the exact `main` SHA and workflow artifact digest;
-- an explicit visual decision and remaining deviations.
-
-Green CI proves technical integrity only. Change the candidate, never weaken the reference, evidence or score.
+- the source branch advanced and the patch was not rebased/reverified;
+- a change duplicates an existing live engine or registry;
+- an old document contradicts `docs/project-contract.json`;
+- a test is weakened merely to make CI green;
+- a page-specific patch leaves the same root cause active elsewhere;
+- a proposed license, rights claim or production credential lacks explicit owner authority.
