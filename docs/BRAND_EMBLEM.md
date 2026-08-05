@@ -1,116 +1,44 @@
 # Эмблема THE LEGENDARY POET
 
-## Главный канонический референс
+## Production authority
 
-Единственный художественный эталон производственной эмблемы:
+Текущая production-эмблема основана на одном выбранном владельцем прозрачном референсе. Его байты хранятся частями в:
 
-`qa/reference/brand-emblem-canonical-reference.webp`
+`qa/reference/approved-brand/final-reference.part*.b64`
 
-Reference id: `canonical-hooded-figure-v2-clean-base`.
+`scripts/materialize-brand-art.mjs` собирает WebP, проверяет SHA-256 `898cf6bd0321f6f48ed12971f49803f7ed6758961f51e06628f0da2ffd50ff17` и детерминированно создаёт production-ассеты. Текущий release id: `approved-single-reference-20260804-1`.
 
-Это **квадратный крупный погрудный образ**, а не длинная фигура в полный рост. Канон фиксирует:
+## Живая архитектура
 
-- монументальный высокий многослойный капюшон;
-- огромную абсолютно чёрную пустоту лица;
-- широкие тяжёлые плечи;
-- собранный смятый клобук без банта, X или галстука;
-- три главные семьи складок: левая диагональная, правая диагональная и центральная вертикальная;
-- холодный ледяной контур по капюшону и верхним бокам;
-- электрическую синюю ауру за головой и верхней частью фигуры;
-- чистый тёмный низ без обязательного дыма или светящейся подушки.
+- `src/components/SpectralBrandMark.tsx` — единственный production React-компонент;
+- `src/components/brandMotionFrameInvariant.ts` — ограниченная по времени pointer-физика;
+- `scripts/materialize-brand-art.mjs` — источник всех растровых производных;
+- `public/brand-emblem.png` — основной сгенерированный runtime-ассет;
+- `public/favicon-16.png`, `public/favicon-32.png`, platform icons и `public/og-image.jpg` — производные;
+- `public/brand-release.txt` — release/source marker.
 
-Исходный пользовательский файл указан в `qa/reference/brand-reference-manifest.json` как `Figure mystérieuse dans une lueur bleue.png` и закреплён SHA-256.
+Компонент использует базовый RGBA-слой и очень слабый depth/aura дубль. Touch-параллакс отключён; `prefers-reduced-motion` убирает геометрическое движение.
 
-`Siluette dans la brume sombre.png` — только дополнительный mood reference. Он не может влиять на геометрию, оптические пропорции или решение о принятии эмблемы.
+## Запрещённые откаты
 
-## Проверка идентичности референса
+Следующие поверхности относятся к прежней SVG-архитектуре и не должны восстанавливаться по старым документам:
 
-Словесное описание всегда проверяется по неизменяемому WebP и его SHA-256. Посторонний полнофигурный файл из рабочего каталога не является каноном и не может переопределять `qa/reference/brand-emblem-canonical-reference.webp`.
+- `src/components/BrandMark.tsx`;
+- `public/brand-emblem.svg`;
+- `public/brand-mark-micro.svg`;
+- `public/brand-emblem-mask.svg`;
+- ручное редактирование сгенерированных PNG/иконок;
+- параллельные header/primary/simplified/micro источники.
 
-## Текущий безопасный этап марафона
+Файлы `brandEmblemV17.svg`, `brandMotionV17.ts` и `brandMotionV18.ts`, пока они остаются в дереве, являются только кандидатами на отдельный retirement review, а не production authority.
 
-Production-геометрия `v17.0` пока сохранена без художественной подмены: ранние reset-кандидаты не доказали визуальное превосходство и не должны ухудшать живой сайт.
+## Обязательная проверка
 
-Текущая ревизия:
+1. `npm run brand:materialize`;
+2. `npm run validate:brand`;
+3. `node scripts/validate-project-contracts.mjs`;
+4. production build;
+5. exact-head Browser QA на реальных header/footer/intro поверхностях;
+6. визуальное решение владельца для художественной замены.
 
-- visual source id: `canonical-reference-v2-black-monolith-v17-0`;
-- interaction architecture: `spring-awakening-v4`;
-- awakening sequence: `aura-depth-cloth-v2`;
-- release marker: `cloak-20260801-22`;
-- решение: **NOT REFERENCE APPROVED**.
-
-Оценка геометрии не повышена из-за улучшения анимации. Оставшиеся визуальные расхождения закреплены в `qa/brand-reference-evaluation.json`.
-
-## Производственные поверхности
-
-Синхронно обновляются и блокируются Git blob SHA:
-
-- `src/components/brandEmblemV18.svg` — сохранённая production-геометрия;
-- `src/components/BrandMark.tsx` — React-обёртка, pointer ownership и доступное описание;
-- `src/components/brandMotionV18.ts` — фазовый контроллер интерактивного пробуждения;
-- `public/brand-emblem.svg` — автономный SVG, байт-в-байт равный авторскому источнику;
-- `public/brand-mark-micro.svg` — отдельная оптическая геометрия для 16–32 px;
-- `public/brand-emblem-mask.svg` — Safari mask с настоящим вырезом лица.
-
-Runtime SVG не содержит `<image>`, base64, `<rect>`, canvas или растровой подложки.
-
-## Архитектура «оживания» v18.4
-
-`brandMotionV18.ts` реализует:
-
-- чтение bounds при входе и изменении размера, а не на каждом pointer frame;
-- один `requestAnimationFrame`-цикл только во время взаимодействия и возврата;
-- затухающую пружинную физику по X, Y и интенсивности пробуждения;
-- последовательность «аура → внутренняя глубина → ткань и контур»;
-- уменьшенный общий подъём и масштаб всей эмблемы, чтобы знак не наезжал на название в шапке;
-- усиленный counter-parallax между дальней аурой и ближней энергией;
-- независимый масштаб и сдвиг складок, внешнего капюшона и внутренних слоёв;
-- обратный параллакс и небольшое сжатие чёрной пустоты лица для ощущения глубины;
-- отдельную реакцию клобука, текстуры и ледяного контура;
-- состояние `active → settling → idle` без остаточных смещений;
-- временный `will-change` только во время активности и возврата;
-- исключение touch-параллакса;
-- keyboard focus-visible усиление света;
-- reduced-motion режим без геометрического движения;
-- отсутствие React state updates внутри pointer hot loop.
-
-Цель эффекта — ощущение, что фигура собирает силу и раскрывает внутреннюю пространственную структуру, а не просто увеличивается или дёргается вслед за курсором.
-
-## 24-проходный марафон
-
-Исследовательский и инженерный контракт находится в:
-
-`docs/research/BRAND_EMBLEM_SVG_MOTION_MARATHON_2026.md`
-
-Там зафиксированы 69 официальных и первичных ссылок и 24 самостоятельных художественно-технических прохода. Завершены безопасные фундаментальные этапы идентичности, pointer physics, layer-depth response, cloth awakening, aura/rim phasing и reduced-motion ownership. Геометрические проходы капюшона, пустоты лица, клобука, складок, контура и ауры остаются активными.
-
-## Обязательная проверка каждого глубокого прохода
-
-Browser QA создаёт:
-
-- `brand-reference-comparison-matrix.png` — основной референс и production/candidate на 256/192/128/96/64/56/44/32/24/16 px;
-- `brand-reference-live-site-comparison.png` — референс, idle, entry и depth-first awakening;
-- `brand-interaction-state-matrix.png` — idle, фазы, четыре направления counter-parallax и settled return;
-- `brand-live-site-home-first-viewport.png` — фактический первый экран production-сборки;
-- `brand-emblem-optical-size-matrix.png` — production и micro SVG;
-- `brand-emblem-reduced-motion.png` — отдельное reduced-motion доказательство.
-
-Проверки обязательны минимум в Chromium и WebKit. Зелёный CI доказывает только техническую целостность. Кандидат остаётся `not-reference-approved`, пока владелец не примет exact-head визуальные артефакты.
-
-CI допускает один повтор упавшего теста в новом worker/browser для отделения редкого падения процесса WebKit от воспроизводимой ошибки. Пороги и утверждения не ослабляются: настоящий дефект остаётся красным после повторного запуска.
-
-## Запрещено
-
-- работать от предыдущего SVG без открытого квадратного референса;
-- использовать длинный силуэт как источник пропорций;
-- заменять production-геометрию кандидатом, который визуально хуже текущего baseline;
-- повышать score без новой сравнительной матрицы;
-- скрывать слабую геометрию свечением;
-- превращать пустоту лица в узкую каплю или аккуратную маску;
-- превращать клобук в X, бант, усы или галстук;
-- заменять тяжёлую ткань одинаковыми радиальными клиньями;
-- добавлять дым или яркую подушку под нижний край;
-- встраивать растровое изображение в runtime-эмблему;
-- запускать вечный idle-loop;
-- выполнять layout read/write на каждом pointer event;
-- ослаблять тесты ради принятия художественно слабого кандидата.
+Нельзя менять SHA, источник или визуальный baseline ради зелёного теста. Нельзя вручную исправлять производные файлы вместо materializer.
