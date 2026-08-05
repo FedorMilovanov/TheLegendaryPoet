@@ -39,16 +39,29 @@ jobs:
           latest_major() {
             local package="$1"
             local major="$2"
-            npm view "${package}@${major}" version --json | node -e '
-              let raw = "";
-              process.stdin.on("data", chunk => raw += chunk);
-              process.stdin.on("end", () => {
-                const value = JSON.parse(raw);
-                const version = Array.isArray(value) ? value.at(-1) : value;
-                if (typeof version !== "string") process.exit(2);
-                console.log(version);
+            npm view "${package}@${major}" version --json | node - "$major" <<'NODE'
+          const major = Number(process.argv[2]);
+          let raw = '';
+          process.stdin.on('data', chunk => raw += chunk);
+          process.stdin.on('end', () => {
+            const value = JSON.parse(raw);
+            const values = Array.isArray(value) ? value : [value];
+            const versions = values
+              .filter((version) => typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version))
+              .filter((version) => Number(version.split('.')[0]) === major)
+              .sort((left, right) => {
+                const a = left.split('.').map(Number);
+                const b = right.split('.').map(Number);
+                for (let index = 0; index < 3; index += 1) {
+                  if (a[index] !== b[index]) return a[index] - b[index];
+                }
+                return 0;
               });
-            '
+            const version = versions.at(-1);
+            if (!version) process.exit(2);
+            console.log(version);
+          });
+          NODE
           }
 
           REACT_VERSION="$(latest_major 'react' 19)"
