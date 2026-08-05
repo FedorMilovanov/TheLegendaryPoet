@@ -1,5 +1,4 @@
-import type { Essay, EssaySource } from '../../types/essay';
-import { estimateReadTime } from '../../utils/readTime';
+import type { EssaySource } from '../../types/essay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
@@ -30,24 +29,13 @@ import {
   mayakovskyPartTwoPlacements,
   placeEssayImages,
 } from './essayVisualLayout';
+import {
+  publishEssay,
+  uniqueEssaySources,
+  type PublishedEssay,
+} from './publishEssay';
 
-function uniqueSources(sources: EssaySource[] = []): EssaySource[] {
-  const seen = new Set<string>();
-  return sources.filter((source) => {
-    const secureUrl = source.url?.startsWith('http:')
-      ? `https:${source.url.slice(5)}`
-      : source.url;
-    const key = secureUrl?.endsWith('/')
-      ? secureUrl.slice(0, -1)
-      : secureUrl ?? `${source.id ?? ''}:${source.title}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-const lermontovRoadWithCover: Essay = {
-  ...lermontovRoadEssay,
+const lermontovRoadPublished = publishEssay(lermontovRoadEssay, {
   dateModified: '2026-08-04',
   cover: '/images/essays/lermontov/lermontov-road-hero.webp',
   cardCover: '/images/essays/lermontov/lermontov-road-hero.webp',
@@ -56,28 +44,24 @@ const lermontovRoadWithCover: Essay = {
   coverKind: 'reconstruction',
   coverCredit:
     'THE LEGENDARY POET · редакционная реконструкция на основе портретного референса',
-};
+});
 
-const yeseninWithArchiveLayer: Essay = {
-  ...yeseninKutezhiVisual,
+const yeseninArchivePublished = publishEssay(yeseninKutezhiVisual, {
   coverKind: 'reconstruction',
   coverCredit: 'THE LEGENDARY POET · редакционная реконструкция',
-  sources: uniqueSources([
+  sources: uniqueEssaySources([
     ...(yeseninKutezhiVisual.sources ?? []),
     ...yeseninArchiveSources,
   ]),
-};
+});
 
-const yeseninPartOnePublished: Essay = {
-  ...yeseninPartOnePublic,
+const yeseninPartOnePublished = publishEssay(yeseninPartOnePublic, {
   dateModified: '2026-08-05',
-  readTime: 43,
-};
+});
 
-const yeseninDuncanPublished: Essay = {
-  ...yeseninDuncanFirstMeetingPublished,
+const yeseninDuncanPublished = publishEssay(yeseninDuncanFirstMeetingPublished, {
   dateModified: '2026-08-05',
-};
+});
 
 const yeseninPartTwoLedgerUrl =
   'https://github.com/FedorMilovanov/TheLegendaryPoet/blob/main/docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md';
@@ -93,27 +77,12 @@ const yeseninPartTwoOfficialUrls: Record<string, string> = {
     'https://dl.tufts.edu/concern/pdfs/h415pp46s',
 };
 
-/*
- * Attach the real public URL where one exists — and nothing where one does not.
- *
- * This previously fell back to `<our own GitHub ledger>#<source-id>` for every
- * source without a link. The effect was that 10 of Part II's 17 sources — the
- * forensic report, the interrogation protocols, the power of attorney, the 1992
- * laboratory letter — pointed at this repository's markdown instead of at the
- * document, so a reader clicking "external link" on a medical examiner's act
- * landed in the website's source code. An archival case file has no public URL
- * and must simply render without one; `SourceLibrary` already renders an
- * unlinked entry correctly. The ledger is still offered, once, as its own
- * clearly-labelled entry below.
- */
-yeseninPartTwoPublic.sources = (yeseninPartTwoPublic.sources ?? []).map((source) => {
-  const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
-  const url = officialUrl ?? source.url;
-  return url ? { ...source, url } : { ...source, url: undefined };
-});
-
-yeseninPartTwoPublic.sources = [
-  ...yeseninPartTwoPublic.sources,
+const yeseninPartTwoSources: EssaySource[] = [
+  ...(yeseninPartTwoPublic.sources ?? []).map((source) => {
+    const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
+    const url = officialUrl ?? source.url;
+    return url ? { ...source, url } : { ...source, url: undefined };
+  }),
   {
     id: 'yes2-publication-ledger',
     title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -124,16 +93,18 @@ yeseninPartTwoPublic.sources = [
   },
 ];
 
-yeseninPartTwoPublic.blocks = yeseninPartTwoPublic.blocks.map((block) => {
-  if (block.type !== 'image' || block.credit?.includes('общественное достояние')) return block;
-  return {
-    ...block,
-    credit: `${block.credit ?? 'Wikimedia Commons'} · общественное достояние`,
-  };
+const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
+  sources: yeseninPartTwoSources,
+  blocks: yeseninPartTwoPublic.blocks.map((block) => {
+    if (block.type !== 'image' || block.credit?.includes('общественное достояние')) return block;
+    return {
+      ...block,
+      credit: `${block.credit ?? 'Wikimedia Commons'} · общественное достояние`,
+    };
+  }),
 });
 
-const mayakovskyPartOneWithLocalCover: Essay = {
-  ...mayakovskyPartOne,
+const mayakovskyPartOnePublished = publishEssay(mayakovskyPartOne, {
   dateModified: '2026-08-04',
   cover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-1-hero.webp',
@@ -147,10 +118,9 @@ const mayakovskyPartOneWithLocalCover: Essay = {
     mayakovskyPartOnePlacements,
   ),
   sources: [...mayakovskyEarlySources, ...mayakovskyEarlySupplementalSources],
-};
+});
 
-const mayakovskyPartTwoWithLocalCover: Essay = {
-  ...mayakovskyPartTwo,
+const mayakovskyPartTwoPublished = publishEssay(mayakovskyPartTwo, {
   dateModified: '2026-08-04',
   cover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
   cardCover: '/images/essays/mayakovsky/mayakovsky-part-2-hero.webp',
@@ -164,47 +134,32 @@ const mayakovskyPartTwoWithLocalCover: Essay = {
     mayakovskyPartTwoPlacements,
   ),
   sources: mayakovskyLateSources,
-};
+});
 
-const brikCaseWithSourceLibrary: Essay = {
-  ...brikCaseVisual,
+const brikCasePublished = publishEssay(brikCaseVisual, {
   dateModified: '2026-08-04',
   blocks: placeEssayImages(
     attachEssayCitations(brikCaseVisual.blocks, brikCitationRules),
     brikEssayPlacements,
   ),
   sources: [...brikDocumentSources, ...brikSupplementalSources],
-};
+});
 
-export const essays: Essay[] = [
-  lermontovRoadWithCover,
-  yeseninWithArchiveLayer,
+export const essays: readonly PublishedEssay[] = Object.freeze([
+  lermontovRoadPublished,
+  yeseninArchivePublished,
   yeseninPartOnePublished,
-  yeseninPartTwoPublic,
+  yeseninPartTwoPublished,
   yeseninDuncanPublished,
-  mayakovskyPartOneWithLocalCover,
-  mayakovskyPartTwoWithLocalCover,
-  brikCaseWithSourceLibrary,
-];
+  mayakovskyPartOnePublished,
+  mayakovskyPartTwoPublished,
+  brikCasePublished,
+]);
 
-/*
- * Reading time is derived from the body, never trusted from the data file.
- *
- * Hand-typed values had drifted badly (Part II promised 55 minutes for a
- * ~13-minute text), and a stale number is a promise the page cannot keep.
- *
- * Assigned in place rather than via `.map()`: several validators assert object
- * identity between a named essay export and its entry in this catalog, and
- * spreading into a copy would silently break that contract.
- */
-for (const essay of essays) {
-  essay.readTime = estimateReadTime(essay.blocks);
-}
-
-export function getAllEssays(): Essay[] {
+export function getAllEssays(): readonly PublishedEssay[] {
   return essays;
 }
 
-export function getEssayBySlug(slug: string): Essay | undefined {
+export function getEssayBySlug(slug: string): PublishedEssay | undefined {
   return essays.find((essay) => essay.slug === slug);
 }
