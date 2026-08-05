@@ -38,16 +38,19 @@ test.describe('reader outcome journeys', () => {
 
     const addButton = page.getByRole('button', { name: /^Добавить «.+» в архив$/ }).first();
     await addButton.scrollIntoViewIfNeeded();
-    const poemCard = addButton.locator('xpath=ancestor::*[starts-with(@id,"poem-")][1]');
-    const poemCardId = await poemCard.getAttribute('id');
-    const title = (await poemCard.locator('h3').first().innerText()).replace(/[«»]/g, '').trim();
+    const discoveredPoemCard = addButton.locator('xpath=ancestor::*[starts-with(@id,"poem-")][1]');
+    const poemCardId = await discoveredPoemCard.getAttribute('id');
+    const title = (await discoveredPoemCard.locator('h3').first().innerText()).replace(/[«»]/g, '').trim();
     expect(poemCardId).toMatch(/^poem-/);
     expect(title.length).toBeGreaterThan(1);
 
+    // Freeze the card identity before clicking. A locator chained from the
+    // “Добавить” button becomes empty as soon as the accessible name changes
+    // to “Убрать”, even though the same card remains mounted and updates
+    // correctly. The stable id proves the exact reader outcome instead.
+    const poemCard = page.locator(`#${poemCardId}`);
+    await expect(poemCard).toBeVisible();
     await addButton.click();
-    // The accessible name changes from “Добавить” to “Убрать” after success.
-    // Keep the assertion anchored to the exact poem card instead of allowing
-    // the original role/name locator to re-resolve to the next unsaved poem.
     const savedButton = poemCard.getByRole('button', { name: /^Убрать «.+» из архива$/ });
     await expect(savedButton).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('status').filter({ hasText: 'Добавлено в архив' })).toBeVisible();
