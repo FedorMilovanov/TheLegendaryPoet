@@ -18,7 +18,6 @@
     "currentState": "docs/CURRENT_STATE.md",
     "authoritative": [
       "README.md",
-      "PROJECT_CHARTER.md",
       "AGENTS.md",
       "docs/CURRENT_STATE.md",
       "docs/APP_SHELL_RUNTIME.md",
@@ -29,6 +28,19 @@
       "src/docs/THEOLOGICAL_GUIDELINES.md"
     ],
     "historical": [
+      "audit/index.html",
+      "COMPONENT_BLUEPRINTS.md",
+      "TRANSFER.md",
+      "docs/INTEGRATION_STATUS.md"
+    ],
+    "editorialAuthority": [
+      "PROJECT_CHARTER.md",
+      "docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md",
+      "docs/HISTORICAL_NARRATIVE_STANDARD.md",
+      "src/docs/THEOLOGICAL_GUIDELINES.md"
+    ],
+    "supersededTechnicalDocuments": [
+      "PROJECT_CHARTER.md",
       "audit/index.html",
       "COMPONENT_BLUEPRINTS.md",
       "TRANSFER.md",

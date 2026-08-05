@@ -24,12 +24,17 @@ for (const [key, relativePath] of runtimePaths) {
 }
 
 const authoritative = contract.documentation.authoritative ?? [];
+const editorialAuthority = contract.documentation.editorialAuthority ?? [];
 const historical = contract.documentation.historical ?? [];
-for (const relativePath of [...authoritative, ...historical]) {
+const supersededTechnical = contract.documentation.supersededTechnicalDocuments ?? [];
+for (const relativePath of [...authoritative, ...editorialAuthority, ...historical, ...supersededTechnical]) {
   assert(exists(relativePath), `document registry path does not exist: ${relativePath}`);
 }
 const overlap = authoritative.filter((entry) => historical.includes(entry));
-assert(overlap.length === 0, `documents cannot be both authoritative and historical: ${overlap.join(', ')}`);
+assert(overlap.length === 0, `documents cannot be both runtime-authoritative and historical: ${overlap.join(', ')}`);
+for (const entry of supersededTechnical) {
+  assert(exists(entry), `superseded technical document does not exist: ${entry}`);
+}
 assert(authoritative.includes(contract.documentation.currentState), 'currentState must be authoritative');
 
 function literalWorkflowPaths(workflowText) {
@@ -93,11 +98,6 @@ const forbiddenByFile = {
     'base` = `/TheLegendaryPoet/',
     'src/routes/routeModules.tsx',
   ],
-  'PROJECT_CHARTER.md': [
-    'PR №31 остаётся черновым',
-    'Интеграционный PR:',
-    '/articles/:id` — старые статьи',
-  ],
   'docs/CURRENT_STATE.md': ['src/routes/routeModules.tsx'],
 };
 for (const [relativePath, tokens] of Object.entries(forbiddenByFile)) {
@@ -113,4 +113,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`project contracts: OK (${authoritative.length} authoritative docs, ${historical.length} historical docs)`);
+console.log(`project contracts: OK (${authoritative.length} runtime docs, ${editorialAuthority.length} editorial docs, ${historical.length} historical docs)`);

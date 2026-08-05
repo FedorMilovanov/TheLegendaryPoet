@@ -1,6 +1,6 @@
 # Current project state
 
-This file is the source-repository entry point for the **current architecture**. Exact verified production SHAs and closed repair evidence are owned by `FedorMilovanov/AuditRepo/projects/the-legendary-poet/`; they are intentionally not duplicated here.
+This file is the source-repository entry point for the **current architecture**. Technical route, branch, brand and deployment statements in `PROJECT_CHARTER.md` are historical where they conflict with this file; its editorial mission remains authoritative. Exact verified production SHAs and closed repair evidence are owned by `FedorMilovanov/AuditRepo/projects/the-legendary-poet/`; they are intentionally not duplicated here.
 
 ## Production contract
 
