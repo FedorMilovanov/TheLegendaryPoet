@@ -1,0 +1,54 @@
+name: Essay publication contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'src/types/essay.ts'
+      - 'src/data/essays/**'
+      - 'src/utils/readTime.ts'
+      - 'scripts/validate-essay-publication.ts'
+      - '.github/workflows/essay-publication.yml'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'src/types/essay.ts'
+      - 'src/data/essays/**'
+      - 'src/utils/readTime.ts'
+      - 'scripts/validate-essay-publication.ts'
+      - '.github/workflows/essay-publication.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact tested head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install project dependencies
+        run: npm ci
+      - name: Validate immutable essay publication
+        run: npm run validate:essay-publication
+      - name: Typecheck published essay consumers
+        run: npm run typecheck
+      - name: Generate discovery artifacts and build
+        env:
+          VITE_BASE: /
+        run: npm run sitemap && npm run feed && npm run build
