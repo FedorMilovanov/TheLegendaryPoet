@@ -24,6 +24,7 @@
     "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
     "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
     "forbiddenCurrentStateClaims": [
+      "## Known systemic debt after the verified marathon repair",
       "The old `Article`/`Poet.articles` data model remains",
       "`src/data/essays/index.ts` mutates imported essay objects",
       "The app currently hydrates the complete public ratings/comments corpus globally",
