@@ -23,7 +23,7 @@ interface CommunityPanelProps {
 
 export default function CommunityPanel({ targetType, targetId, title, dimensions, compact = false }: CommunityPanelProps) {
   const feedback = useCommunityFeedback(targetType, targetId);
-  const hasRatings = feedback.ratings.length > 0;
+  const hasRatings = feedback.ratingCount > 0;
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
@@ -45,24 +45,24 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
       text: 'Локальный режим: ответы сохраняются только в этом браузере.',
       spin: false,
     };
-    if (feedback.sync.phase === 'syncing') return {
+    if (feedback.targetPhase === 'loading' || feedback.sync.phase === 'syncing') return {
       Icon: LoaderCircle,
       className: 'text-cyan-100/58',
-      text: feedback.sync.message ?? 'Синхронизируем общую базу…',
+      text: feedback.targetMessage ?? feedback.sync.message ?? 'Загружаем данные этого произведения…',
       spin: true,
     };
-    if (feedback.sync.phase === 'offline') return {
+    if (feedback.targetPhase === 'offline' || feedback.sync.phase === 'offline') return {
       Icon: CloudOff,
       className: 'text-amber-100/58',
       text: feedback.sync.pendingCount > 0
         ? `Сервер недоступен. В очереди: ${feedback.sync.pendingCount}; ничего не потеряно.`
-        : (feedback.sync.message ?? 'Сервер временно недоступен; показан локальный кэш.'),
+        : (feedback.targetMessage ?? feedback.sync.message ?? 'Сервер временно недоступен; показан локальный кэш.'),
       spin: false,
     };
     if (feedback.sync.phase === 'idle') return {
       Icon: Clock3,
       className: 'text-cyan-100/48',
-      text: 'Общая база подключена; ожидаем первую синхронизацию.',
+      text: feedback.targetMessage ?? 'Общая база подключена; загружаем данные этой страницы.',
       spin: false,
     };
     return {
@@ -70,7 +70,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
       className: feedback.sync.pendingCount > 0 ? 'text-amber-100/58' : 'text-emerald-200/58',
       text: feedback.sync.pendingCount > 0
         ? `Общая база подключена. В очереди на отправку: ${feedback.sync.pendingCount}.`
-        : 'Общая база синхронизирована: оценки и комментарии видны всем посетителям.',
+        : (feedback.targetMessage ?? 'Общая база синхронизирована для этого произведения.'),
       spin: false,
     };
   })();
@@ -92,7 +92,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
         <div className="text-left md:text-right">
           <div className={`mb-1 font-bold text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>{hasRatings ? feedback.summary.overall.toFixed(1) : '—'}</div>
           <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
-          <div className="mt-1 text-xs text-cyan-100/40">{feedback.ratings.length} оценок · {feedback.trust}</div>
+          <div className="mt-1 text-xs text-cyan-100/40">{feedback.ratingCount} оценок · {feedback.trust}</div>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
         <div className="space-y-5">
           <CommunityInsights dimensions={dimensions} values={feedback.summary.dimensions} />
           <RatingBars dimensions={dimensions} values={feedback.summary.dimensions} />
-          {!compact && <RatingDistribution distribution={feedback.distribution} total={feedback.ratings.length} />}
+          {!compact && <RatingDistribution distribution={feedback.distribution} total={feedback.ratingCount} />}
         </div>
         {!compact && <FeedbackPair positive={positiveComment} critical={criticalComment} />}
       </div>
@@ -115,10 +115,14 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
           />
         </div>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} className="text-cyan-300" /> Комментарии</div>
+          <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} className="text-cyan-300" /> Комментарии · {feedback.commentCount}</div>
           <CommentComposer onSubmit={feedback.addComment} onStatus={(message, tone) => setToast({ message, tone })} />
           <CommentList
             comments={feedback.comments}
+            total={feedback.commentCount}
+            hasMore={feedback.hasMoreComments}
+            loadingMore={feedback.loadingMoreComments}
+            onLoadMore={feedback.loadMoreComments}
             onHelpful={feedback.markHelpful}
             isHelpfulMarked={feedback.hasMarkedHelpful}
             onStatus={(message, tone) => setToast({ message, tone })}
