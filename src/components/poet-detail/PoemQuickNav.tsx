@@ -4,7 +4,7 @@ import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 import { scrollToId } from '../../utils/smoothScroll';
 
 function PoemQuickRow({ poem }: { poem: Poem }) {
-  const feedback = useCommunityFeedback('poem', poem.id);
+  const feedback = useCommunityFeedback('poem', poem.id, { mode: 'summary' });
 
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -16,14 +16,14 @@ function PoemQuickRow({ poem }: { poem: Poem }) {
       <div className="mb-1 text-sm font-semibold text-white">{poem.title}</div>
       <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em] text-cyan-100/40">
         <span>{poem.year || 'год не указан'}</span>
-        {feedback.ratings.length > 0 && (
+        {feedback.ratingCount > 0 && (
           <span className="inline-flex items-center gap-1 text-cyan-300">
             <Star size={11} className="fill-cyan-300" /> {feedback.summary.overall.toFixed(1)}
           </span>
         )}
-        {feedback.comments.length > 0 && (
+        {feedback.commentCount > 0 && (
           <span className="inline-flex items-center gap-1">
-            <MessageSquare size={11} className="text-cyan-300" /> {feedback.comments.length}
+            <MessageSquare size={11} className="text-cyan-300" /> {feedback.commentCount}
           </span>
         )}
       </div>
