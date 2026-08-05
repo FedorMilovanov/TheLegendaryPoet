@@ -6,20 +6,22 @@ import type {
   RatingEntry,
 } from '../types/community';
 import {
-  fetchAllRemote,
   markHelpfulRemote,
   remoteEnabled,
   submitCommentRemote,
   submitRatingRemote,
 } from './communityRemote';
 
-const STORE_KEY = 'tlp-community-feedback:v2';
+const STORE_KEY = 'tlp-community-feedback:v3';
+const V2_STORE_KEY = 'tlp-community-feedback:v2';
 const LEGACY_STORE_KEY = 'tlp-community-feedback-v1';
 const LEGACY_COOLDOWN_KEY = 'tlp-community-cooldowns-v1';
 const LEGACY_HELPFUL_KEY = 'tlp-community-helpful-v1';
 const LEGACY_RATED_KEY = 'tlp-community-rated-v1';
 const COOLDOWN_MS = 30 * 1000;
 const MAX_OUTBOX_ITEMS = 500;
+const MAX_LOCAL_RATINGS = 100;
+const MAX_LOCAL_COMMENTS = 100;
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/i;
 const FEEDBACK_ID = /^[a-z0-9][a-z0-9-]{1,199}$/i;
 const SCORE_KEY = /^[a-z0-9][a-z0-9-]{0,79}$/i;
@@ -40,6 +42,7 @@ type PendingOperation =
       kind: 'rating';
       voterId: string;
       entry: RatingEntry;
+      previousScores?: Record<string, number>;
       createdAt: string;
       attempts: number;
     }
@@ -62,7 +65,7 @@ type PendingOperation =
     };
 
 interface PersistedCommunityState {
-  version: 2;
+  version: 3;
   snapshot: FeedbackSnapshot;
   outbox: PendingOperation[];
   cooldowns: Record<string, number>;
@@ -72,11 +75,18 @@ interface PersistedCommunityState {
   lastSyncedAt: string | null;
 }
 
+export interface PendingTargetFeedback {
+  ratings: Array<{ entry: RatingEntry; previousScores?: Record<string, number> }>;
+  comments: CommentEntry[];
+  helpfulCommentIds: Set<string>;
+  localComments: CommentEntry[];
+}
+
 const emptySnapshot: FeedbackSnapshot = { ratings: [], comments: [] };
 
 function defaultState(): PersistedCommunityState {
   return {
-    version: 2,
+    version: 3,
     snapshot: emptySnapshot,
     outbox: [],
     cooldowns: {},
@@ -172,7 +182,12 @@ function sanitizeComment(value: unknown): CommentEntry | null {
   };
 }
 
-function dedupeRatings(values: unknown) {
+function sortNewest<T extends { createdAt: string; id: string }>(values: T[]) {
+  return values.sort((left, right) =>
+    Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.id.localeCompare(left.id));
+}
+
+function dedupeRatings(values: unknown, limit = MAX_LOCAL_RATINGS) {
   const byId = new Map<string, RatingEntry>();
   if (Array.isArray(values)) {
     for (const value of values) {
@@ -182,10 +197,10 @@ function dedupeRatings(values: unknown) {
       if (!existing || Date.parse(rating.createdAt) >= Date.parse(existing.createdAt)) byId.set(rating.id, rating);
     }
   }
-  return [...byId.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+  return sortNewest([...byId.values()]).slice(0, limit);
 }
 
-function dedupeComments(values: unknown) {
+function dedupeComments(values: unknown, limit = MAX_LOCAL_COMMENTS) {
   const byId = new Map<string, CommentEntry>();
   if (Array.isArray(values)) {
     for (const value of values) {
@@ -199,7 +214,7 @@ function dedupeComments(values: unknown) {
       });
     }
   }
-  return [...byId.values()].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+  return sortNewest([...byId.values()]).slice(0, limit);
 }
 
 function sanitizeSnapshot(value: unknown): FeedbackSnapshot {
@@ -241,14 +256,15 @@ function sanitizeRecord(value: unknown, mode: 'cooldowns' | 'helpful' | 'ratings
 
 function sanitizeOperation(value: unknown): PendingOperation | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const candidate = value as Partial<PendingOperation> & { entry?: unknown };
+  const candidate = value as Partial<PendingOperation> & { entry?: unknown; previousScores?: unknown };
   const createdAt = validIsoDate(candidate.createdAt) ?? new Date().toISOString();
   const attempts = Math.max(0, Math.min(1000, Math.floor(Number(candidate.attempts) || 0)));
   if (typeof candidate.id !== 'string' || !candidate.id || candidate.id.length > 260 || typeof candidate.voterId !== 'string' || !candidate.voterId) return null;
 
   if (candidate.kind === 'rating') {
     const entry = sanitizeRating(candidate.entry);
-    return entry ? { id: candidate.id, kind: 'rating', voterId: candidate.voterId, entry, createdAt, attempts } : null;
+    const previousScores = sanitizeScores(candidate.previousScores) ?? undefined;
+    return entry ? { id: candidate.id, kind: 'rating', voterId: candidate.voterId, entry, previousScores, createdAt, attempts } : null;
   }
   if (candidate.kind === 'comment') {
     const entry = sanitizeComment(candidate.entry);
@@ -267,7 +283,7 @@ function sanitizeState(value: unknown): PersistedCommunityState {
     ? candidate.outbox.map(sanitizeOperation).filter((operation): operation is PendingOperation => Boolean(operation)).slice(-MAX_OUTBOX_ITEMS)
     : [];
   return {
-    version: 2,
+    version: 3,
     snapshot: sanitizeSnapshot(candidate.snapshot),
     outbox,
     cooldowns: sanitizeRecord(candidate.cooldowns, 'cooldowns') as Record<string, number>,
@@ -287,34 +303,30 @@ function persistState(storage: Storage, state: PersistedCommunityState) {
   }
 }
 
-function readLegacyObject(storage: Storage, key: string) {
+function readJson(storage: Storage, key: string) {
   try {
     const raw = storage.getItem(key);
-    return raw ? JSON.parse(raw) : {};
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return {};
+    return null;
   }
 }
 
-function migrateLegacy(storage: Storage) {
-  let snapshot: FeedbackSnapshot = emptySnapshot;
-  try {
-    const raw = storage.getItem(LEGACY_STORE_KEY);
-    snapshot = raw ? sanitizeSnapshot(JSON.parse(raw)) : emptySnapshot;
-  } catch {
-    snapshot = emptySnapshot;
-  }
-
-  const state = sanitizeState({
-    ...defaultState(),
-    snapshot,
-    cooldowns: readLegacyObject(storage, LEGACY_COOLDOWN_KEY),
-    helpfulVotes: readLegacyObject(storage, LEGACY_HELPFUL_KEY),
-    ownRatings: readLegacyObject(storage, LEGACY_RATED_KEY),
-  });
+function migrateState(storage: Storage) {
+  const v2 = readJson(storage, V2_STORE_KEY);
+  const legacySnapshot = readJson(storage, LEGACY_STORE_KEY);
+  const state = sanitizeState(v2 && typeof v2 === 'object'
+    ? v2
+    : {
+        ...defaultState(),
+        snapshot: legacySnapshot ?? emptySnapshot,
+        cooldowns: readJson(storage, LEGACY_COOLDOWN_KEY) ?? {},
+        helpfulVotes: readJson(storage, LEGACY_HELPFUL_KEY) ?? {},
+        ownRatings: readJson(storage, LEGACY_RATED_KEY) ?? {},
+      });
 
   if (persistState(storage, state)) {
-    for (const key of [LEGACY_STORE_KEY, LEGACY_COOLDOWN_KEY, LEGACY_HELPFUL_KEY, LEGACY_RATED_KEY]) {
+    for (const key of [V2_STORE_KEY, LEGACY_STORE_KEY, LEGACY_COOLDOWN_KEY, LEGACY_HELPFUL_KEY, LEGACY_RATED_KEY]) {
       try { storage.removeItem(key); } catch { /* storage became unavailable */ }
     }
   }
@@ -324,16 +336,11 @@ function migrateLegacy(storage: Storage) {
 function readState(): PersistedCommunityState {
   const storage = getStorage();
   if (!storage) return defaultState();
-  try {
-    const raw = storage.getItem(STORE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === 'object' && (parsed as { version?: number }).version === 2) return sanitizeState(parsed);
-    }
-  } catch {
-    // Corrupt v2 state falls through to the validated legacy/default migration.
+  const current = readJson(storage, STORE_KEY);
+  if (current && typeof current === 'object' && (current as { version?: number }).version === 3) {
+    return sanitizeState(current);
   }
-  return migrateLegacy(storage);
+  return migrateState(storage);
 }
 
 let currentState = readState();
@@ -345,10 +352,10 @@ let syncState: CommunitySyncState = {
 };
 const listeners = new Set<() => void>();
 const syncListeners = new Set<() => void>();
+const remoteRefreshListeners = new Set<() => void>();
 let storageBound = false;
 let networkBound = false;
 let flushPromise: Promise<void> | null = null;
-let hydratePromise: Promise<void> | null = null;
 
 function emit() {
   for (const listener of listeners) listener();
@@ -356,6 +363,10 @@ function emit() {
 
 function emitSync() {
   for (const listener of syncListeners) listener();
+}
+
+function emitRemoteRefresh() {
+  for (const listener of remoteRefreshListeners) listener();
 }
 
 function setSyncState(patch: Partial<CommunitySyncState>) {
@@ -371,7 +382,7 @@ function setSyncState(patch: Partial<CommunitySyncState>) {
 }
 
 function applyState(nextValue: PersistedCommunityState, allowMemoryFallback = false) {
-  const next = sanitizeState({ ...nextValue, version: 2, updatedAt: new Date().toISOString() });
+  const next = sanitizeState({ ...nextValue, version: 3, updatedAt: new Date().toISOString() });
   const storage = getStorage();
   const persisted = storage ? persistState(storage, next) : false;
   if (!persisted && !allowMemoryFallback) return false;
@@ -385,10 +396,11 @@ function bindStorageListener() {
   if (storageBound || typeof window === 'undefined') return;
   storageBound = true;
   window.addEventListener('storage', (event) => {
-    if (event.key !== STORE_KEY && ![LEGACY_STORE_KEY, LEGACY_COOLDOWN_KEY, LEGACY_HELPFUL_KEY, LEGACY_RATED_KEY].includes(event.key ?? '')) return;
+    if (![STORE_KEY, V2_STORE_KEY, LEGACY_STORE_KEY, LEGACY_COOLDOWN_KEY, LEGACY_HELPFUL_KEY, LEGACY_RATED_KEY].includes(event.key ?? '')) return;
     currentState = readState();
     emit();
     setSyncState({ pendingCount: currentState.outbox.length, lastSyncedAt: currentState.lastSyncedAt });
+    emitRemoteRefresh();
   });
 }
 
@@ -396,7 +408,9 @@ function bindNetworkListeners() {
   if (networkBound || typeof window === 'undefined' || !remoteEnabled) return;
   networkBound = true;
   window.addEventListener('offline', () => setSyncState({ phase: 'offline', message: 'Нет соединения; изменения останутся в очереди.' }));
-  window.addEventListener('online', () => { void hydrateFromRemote(); });
+  window.addEventListener('online', () => {
+    void flushCommunityOutbox().then(emitRemoteRefresh);
+  });
 }
 
 export function subscribeFeedback(listener: () => void) {
@@ -410,6 +424,11 @@ export function subscribeCommunitySync(listener: () => void) {
   bindNetworkListeners();
   syncListeners.add(listener);
   return () => syncListeners.delete(listener);
+}
+
+export function subscribeCommunityRemoteRefresh(listener: () => void) {
+  remoteRefreshListeners.add(listener);
+  return () => remoteRefreshListeners.delete(listener);
 }
 
 export function getFeedbackSnapshot() {
@@ -430,24 +449,8 @@ export function mutateFeedback(update: (snapshot: FeedbackSnapshot) => FeedbackS
   return applyState({ ...currentState, snapshot: sanitizeSnapshot(update(currentState.snapshot)) });
 }
 
-function mergeRemoteWithPending(remote: FeedbackSnapshot, local: FeedbackSnapshot, outbox: PendingOperation[]) {
-  const pendingRatingIds = new Set(outbox.filter((operation) => operation.kind === 'rating').map((operation) => operation.entry.id));
-  const pendingCommentIds = new Set(outbox.filter((operation) => operation.kind === 'comment').map((operation) => operation.entry.id));
-  const pendingHelpfulIds = new Set(outbox.filter((operation) => operation.kind === 'helpful').map((operation) => operation.commentId));
-
-  const ratings = new Map(remote.ratings.map((rating) => [rating.id, rating]));
-  for (const rating of local.ratings) if (pendingRatingIds.has(rating.id)) ratings.set(rating.id, rating);
-
-  const comments = new Map(remote.comments.map((comment) => [comment.id, comment]));
-  for (const comment of local.comments) {
-    if (pendingCommentIds.has(comment.id)) comments.set(comment.id, comment);
-    else if (pendingHelpfulIds.has(comment.id)) {
-      const remoteComment = comments.get(comment.id);
-      if (remoteComment) comments.set(comment.id, { ...remoteComment, helpful: Math.max(remoteComment.helpful, comment.helpful) });
-    }
-  }
-
-  return sanitizeSnapshot({ ratings: [...ratings.values()], comments: [...comments.values()] });
+export function compactCommunityLocalCache() {
+  return applyState({ ...currentState, snapshot: sanitizeSnapshot(currentState.snapshot) }, true);
 }
 
 async function sendOperation(operation: PendingOperation) {
@@ -482,52 +485,21 @@ export function flushCommunityOutbox() {
     if (failed) {
       setSyncState({ phase: 'offline', message: 'Сервер недоступен; изменения безопасно сохранены и будут повторены.' });
     } else {
-      setSyncState({ phase: 'online', message: null, pendingCount: 0 });
+      const now = new Date().toISOString();
+      applyState({ ...currentState, lastSyncedAt: now }, true);
+      setSyncState({ phase: 'online', message: null, pendingCount: 0, lastSyncedAt: now });
+      emitRemoteRefresh();
     }
   })().finally(() => { flushPromise = null; });
 
   return flushPromise;
 }
 
-export function hydrateFromRemote() {
-  if (!remoteEnabled) {
-    setSyncState({ phase: 'local', message: null, pendingCount: 0 });
-    return Promise.resolve();
-  }
-  if (hydratePromise) return hydratePromise;
-
-  bindNetworkListeners();
-  hydratePromise = (async () => {
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      setSyncState({ phase: 'offline', message: 'Нет соединения; показан локальный кэш.' });
-      return;
-    }
-
-    setSyncState({ phase: 'syncing', message: 'Обновляем общую базу…' });
-    const remote = await fetchAllRemote();
-    if (!remote) {
-      setSyncState({ phase: 'offline', message: 'Общая база временно недоступна; показан локальный кэш.' });
-      return;
-    }
-
-    const now = new Date().toISOString();
-    applyState({
-      ...currentState,
-      snapshot: mergeRemoteWithPending(sanitizeSnapshot(remote), currentState.snapshot, currentState.outbox),
-      lastSyncedAt: now,
-    }, true);
-    setSyncState({ phase: 'online', message: null, lastSyncedAt: now });
-    await flushCommunityOutbox();
-  })().finally(() => { hydratePromise = null; });
-
-  return hydratePromise;
-}
-
 export function makeFeedbackId(prefix: string) {
-  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  return `${prefix}-${suffix}`;
+  const random = typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function'
+    ? Array.from(crypto.getRandomValues(new Uint8Array(6)), (value) => value.toString(36)).join('').slice(0, 12)
+    : Math.random().toString(36).slice(2, 14);
+  return `${prefix}-${Date.now()}-${random}`;
 }
 
 export function filterRatings(snapshot: FeedbackSnapshot, targetType: FeedbackTargetType, targetId: string) {
@@ -616,14 +588,43 @@ function enqueueOperation(outbox: PendingOperation[], operation: PendingOperatio
   return [...withoutDuplicate, operation].slice(-MAX_OUTBOX_ITEMS);
 }
 
+export function getPendingTargetFeedback(targetType: FeedbackTargetType, targetId: string): PendingTargetFeedback {
+  const ratings = currentState.outbox
+    .filter((operation): operation is Extract<PendingOperation, { kind: 'rating' }> => operation.kind === 'rating')
+    .filter((operation) => operation.entry.targetType === targetType && operation.entry.targetId === targetId)
+    .map((operation) => ({ entry: operation.entry, previousScores: operation.previousScores }));
+  const comments = currentState.outbox
+    .filter((operation): operation is Extract<PendingOperation, { kind: 'comment' }> => operation.kind === 'comment')
+    .filter((operation) => operation.entry.targetType === targetType && operation.entry.targetId === targetId)
+    .map((operation) => operation.entry);
+  const helpfulCommentIds = new Set(
+    currentState.outbox
+      .filter((operation): operation is Extract<PendingOperation, { kind: 'helpful' }> => operation.kind === 'helpful')
+      .filter((operation) => operation.scope.startsWith(`helpful:${targetType}:${targetId}:`))
+      .map((operation) => operation.commentId),
+  );
+  return {
+    ratings,
+    comments,
+    helpfulCommentIds,
+    localComments: filterComments(currentState.snapshot, targetType, targetId),
+  };
+}
+
 export function commitRatingFeedback(entryValue: RatingEntry, scope: string, voterId: string) {
   const entry = sanitizeRating(entryValue);
   if (!entry || !voterId) return false;
+  const existingPending = currentState.outbox.find(
+    (operation): operation is Extract<PendingOperation, { kind: 'rating' }> =>
+      operation.kind === 'rating' && operation.entry.id === entry.id,
+  );
+  const existingOwn = getOwnRating(scope);
   const operation: PendingOperation = {
     id: `rating:${entry.id}`,
     kind: 'rating',
     voterId,
     entry,
+    previousScores: existingPending?.previousScores ?? existingOwn?.scores,
     createdAt: new Date().toISOString(),
     attempts: 0,
   };
