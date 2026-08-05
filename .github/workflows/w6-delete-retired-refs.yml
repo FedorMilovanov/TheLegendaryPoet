@@ -143,7 +143,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Delete the temporary workflow source branch
+      - name: Ensure the temporary workflow source branch is absent
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -165,11 +165,18 @@ jobs:
           }
           get_url = f'https://api.github.com/repos/{repository}/git/ref/{encoded}'
           delete_url = f'https://api.github.com/repos/{repository}/git/refs/{encoded}'
+
           try:
               with urllib.request.urlopen(urllib.request.Request(get_url, headers=headers)) as response:
-                  current = response.status
-              if current != 200:
-                  raise SystemExit(f'temporary branch lookup returned {current}')
+                  if response.status != 200:
+                      raise SystemExit(f'temporary branch lookup returned {response.status}')
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  print(f'temporary branch already absent: {branch}')
+                  raise SystemExit(0)
+              raise SystemExit(f'temporary branch lookup failed: HTTP {error.code} {error.read().decode()}')
+
+          try:
               with urllib.request.urlopen(urllib.request.Request(delete_url, method='DELETE', headers=headers)) as response:
                   if response.status != 204:
                       raise SystemExit(f'temporary branch deletion returned {response.status}')
