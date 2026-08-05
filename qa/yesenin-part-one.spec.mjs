@@ -6,6 +6,15 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+function normalizeReaderText(value) {
+  return value
+    .normalize('NFC')
+    .replace(/[\u00A0\u2007\u202F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('ru-RU');
+}
+
 async function scrollWholePage(page) {
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
   await page.evaluate(async () => {
@@ -36,14 +45,14 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   await expect(page.getByRole('heading', { name: /Константиново: место рождения/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /1921 год: хулиган/i })).toBeVisible();
 
-  // Verify the reader-facing evidence boundary through the semantic article.
-  // Accessibility paragraphs may be implemented by components other than a
-  // literal <p>, so the contract is the rendered article text, not a DOM tag.
+  // Typography intentionally inserts non-breaking spaces. Normalize only
+  // Unicode whitespace, then require the complete reader-facing statements.
   const readerArticle = page.getByRole('article');
-  await expect(readerArticle).toContainText(
-    /лазарет № 17 нельзя называть установленным местом формальной службы/i,
+  const readerText = normalizeReaderText(await readerArticle.innerText());
+  expect(readerText).toContain(
+    'лазарет № 17 нельзя называть установленным местом формальной службы',
   );
-  await expect(readerArticle).toContainText(/видимо, 3 октября 1921 года/i);
+  expect(readerText).toContain('видимо, 3 октября 1921 года');
 
   const citationTargets = await page.locator('a[href^="#source-"]').evaluateAll((links) => [
     ...new Set(links.map((link) => link.getAttribute('href')).filter(Boolean)),
