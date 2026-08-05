@@ -18,6 +18,7 @@ const manualQa = read('qa/manual-e2e.spec.mjs');
 expect(!/hydrateFromRemote|fetchAllRemote/.test(app), 'App must not start global community hydration');
 expect(!/fetchAllRemote|MAX_REMOTE_ROWS|20_?000/.test(remote), 'remote client must not retain a global 20k corpus reader');
 expect(remote.includes("const SUMMARY_VIEW = 'tlp_feedback_summary_public'"), 'remote client must use the aggregate summary view');
+expect(remote.includes('__TLP_COMMUNITY_TEST_CONFIG__') && remote.includes('LOOPBACK_HOSTS'), 'browser topology may inject remote config only on loopback hosts');
 expect(remote.includes('fetchTargetAggregate') && remote.includes('fetchTargetCommentsPage') && remote.includes('fetchPoetAggregates'), 'remote client must expose target aggregate, cursor comments and aggregate leaderboard readers');
 expect(/target_type:\s*`eq\.\$\{targetType\}`/.test(remote) && /target_id:\s*`eq\.\$\{targetId\}`/.test(remote), 'detail requests must bind both target type and target id');
 expect(remote.includes("order: 'created_at.desc,id.desc'"), 'comments must use stable newest/id ordering');
@@ -56,6 +57,7 @@ expect(scripts['validate:community-target-store']?.includes('validate-community-
 expect(scripts['validate:community-scaling']?.includes('validate-community-scaling.ts'), 'package must expose the static scaling contract');
 expect(scripts['check:content']?.includes('validate:community-scaling'), 'repository-wide content checks must include community scaling');
 expect(manualQa.includes('registerCommunityRequestTopologyTests'), 'mandatory manual browser QA must register the request-topology contour');
+expect(read('qa/community-request-topology.cases.mjs').includes('__TLP_COMMUNITY_TEST_CONFIG__'), 'request-topology contour must activate the loopback-only remote backend before bundle evaluation');
 
 for (const failure of failures) console.error(`ERROR community-scaling: ${failure}`);
 console.log(`Community scaling contract: ${failures.length} error(s); startup, target, cursor, aggregate, persistence and schema boundaries checked.`);
