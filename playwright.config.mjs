@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology)\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology|premium-reader-certification)\.spec\.mjs/;
 const finePointerOnly = /(?:TiltCard follows live pointer input without a transition backlog|article title remains painted throughout live 3D pointer tracking)/;
 
 export default defineConfig({
@@ -48,6 +48,17 @@ export default defineConfig({
       use: {
         ...devices['iPhone 15 Pro'],
         browserName: 'webkit',
+        locale: 'ru-RU',
+        timezoneId: 'Europe/Paris',
+        colorScheme: 'dark',
+      },
+    },
+    {
+      name: 'webkit-reader-desktop',
+      testMatch: /premium-reader-certification\.spec\.mjs/,
+      use: {
+        browserName: 'webkit',
+        viewport: { width: 1440, height: 1000 },
         locale: 'ru-RU',
         timezoneId: 'Europe/Paris',
         colorScheme: 'dark',
