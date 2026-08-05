@@ -37,6 +37,69 @@ for (const entry of supersededTechnical) {
 }
 assert(authoritative.includes(contract.documentation.currentState), 'currentState must be authoritative');
 
+const architecture = contract.architecture ?? {};
+const auditAuthority = architecture.auditAuthority;
+const openLaneIds = architecture.openLaneIds ?? [];
+const openLaneStart = architecture.currentStateOpenLaneStart;
+const openLaneEnd = architecture.currentStateOpenLaneEnd;
+const forbiddenCurrentStateClaims = architecture.forbiddenCurrentStateClaims ?? [];
+
+assert(
+  typeof auditAuthority === 'string' && auditAuthority.startsWith('FedorMilovanov/AuditRepo/'),
+  'architecture.auditAuthority must point to the governed AuditRepo project path',
+);
+assert(Array.isArray(openLaneIds) && openLaneIds.length > 0, 'architecture.openLaneIds must be a non-empty array');
+assert(
+  openLaneIds.every((id) => typeof id === 'string' && /^TLP-[A-Z]+-\d{3}$/.test(id)),
+  'architecture.openLaneIds must contain canonical TLP IDs',
+);
+assert(new Set(openLaneIds).size === openLaneIds.length, 'architecture.openLaneIds must not contain duplicates');
+assert(
+  typeof openLaneStart === 'string' && typeof openLaneEnd === 'string' && openLaneStart !== openLaneEnd,
+  'architecture must define distinct current-state open-lane markers',
+);
+assert(Array.isArray(forbiddenCurrentStateClaims), 'architecture.forbiddenCurrentStateClaims must be an array');
+
+const currentStatePath = contract.documentation.currentState;
+const currentStateText = read(currentStatePath);
+assert(currentStateText.includes(auditAuthority), `${currentStatePath} must name the AuditRepo authority path`);
+
+const openLaneStartIndex = typeof openLaneStart === 'string' ? currentStateText.indexOf(openLaneStart) : -1;
+const openLaneEndIndex = typeof openLaneEnd === 'string' ? currentStateText.indexOf(openLaneEnd) : -1;
+assert(openLaneStartIndex >= 0, `${currentStatePath} is missing the open-lane start marker`);
+assert(openLaneEndIndex > openLaneStartIndex, `${currentStatePath} is missing or misorders the open-lane end marker`);
+
+if (openLaneStartIndex >= 0 && openLaneEndIndex > openLaneStartIndex) {
+  const openLaneSection = currentStateText.slice(openLaneStartIndex + openLaneStart.length, openLaneEndIndex);
+  const laneLines = openLaneSection
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^(?:\d+\.|[-*])\s+/.test(line));
+  const backtickedLaneIds = [...openLaneSection.matchAll(/`(TLP-[A-Z]+-\d{3})`/g)].map((match) => match[1]);
+  const everyLaneMention = [...openLaneSection.matchAll(/TLP-[A-Z]+-\d{3}/g)].map((match) => match[0]);
+
+  assert(laneLines.length === openLaneIds.length, `open-lane section must contain exactly ${openLaneIds.length} registered entries`);
+  for (const line of laneLines) {
+    const ids = [...line.matchAll(/`(TLP-[A-Z]+-\d{3})`/g)].map((match) => match[1]);
+    assert(ids.length === 1, `every open-lane entry must contain exactly one backticked canonical ID: ${line}`);
+  }
+  assert(
+    JSON.stringify(backtickedLaneIds) === JSON.stringify(openLaneIds),
+    `current-state open lanes must exactly match project-contract order: expected ${openLaneIds.join(', ')}, found ${backtickedLaneIds.join(', ')}`,
+  );
+  assert(
+    everyLaneMention.length === backtickedLaneIds.length,
+    'every TLP ID in the open-lane section must be represented as the canonical backticked entry ID',
+  );
+}
+
+for (const claim of forbiddenCurrentStateClaims) {
+  assert(typeof claim === 'string' && claim.length > 0, 'forbidden current-state claims must be non-empty strings');
+  if (typeof claim === 'string' && claim.length > 0) {
+    assert(!currentStateText.includes(claim), `${currentStatePath} reintroduced a closed architecture claim: ${claim}`);
+  }
+}
+
 function literalWorkflowPaths(workflowText) {
   const values = [];
   const lines = workflowText.split(/\r?\n/);
@@ -113,4 +176,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`project contracts: OK (${authoritative.length} runtime docs, ${editorialAuthority.length} editorial docs, ${historical.length} historical docs)`);
+console.log(`project contracts: OK (${authoritative.length} runtime docs, ${editorialAuthority.length} editorial docs, ${historical.length} historical docs, ${openLaneIds.length} open architecture lanes)`);
