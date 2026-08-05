@@ -30,25 +30,50 @@ const sourcePath = path.join(publicDir, '.brand-emblem-approved-source.webp');
 fs.writeFileSync(sourcePath, sourceBytes);
 const written = [];
 
-function runFfmpeg(args, outputName) {
-  const outputPath = path.join(publicDir, outputName);
-  const result = spawnSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', ...args, outputPath], { encoding: 'utf8' });
-  if (result.error?.code === 'ENOENT') throw new Error('brand materialize: FFmpeg was not found');
-  if (result.status !== 0) throw new Error(`brand materialize: FFmpeg failed for ${outputName}: ${result.stderr || result.error || 'unknown error'}`);
+function recordOutput(outputPath, outputName) {
   const size = fs.statSync(outputPath).size;
   if (size < 180) throw new Error(`brand materialize: generated asset is unexpectedly small ${outputName}`);
   written.push(`${outputName} (${size} B)`);
   return outputPath;
 }
 
+function runFfmpeg(args, outputName) {
+  const outputPath = path.join(publicDir, outputName);
+  const result = spawnSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', ...args, outputPath], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`brand materialize: FFmpeg failed for ${outputName}: ${result.stderr || result.error || 'unknown error'}`);
+  return recordOutput(outputPath, outputName);
+}
+
+function runConvert(args, outputName) {
+  const outputPath = path.join(publicDir, outputName);
+  const result = spawnSync('convert', [...args, outputPath], { encoding: 'utf8' });
+  if (result.status !== 0) throw new Error(`brand materialize: ImageMagick failed for ${outputName}: ${result.stderr || result.error || 'unknown error'}`);
+  return recordOutput(outputPath, outputName);
+}
+
+const ffmpegAvailable = spawnSync(ffmpeg, ['-version'], { encoding: 'utf8' }).status === 0;
 const png = ['-frames:v', '1', '-c:v', 'png', '-compression_level', '9', '-pred', 'mixed'];
-const emblem = runFfmpeg(['-i', sourcePath, ...png], 'brand-emblem.png');
-runFfmpeg(['-i', emblem, '-vf', 'scale=16:16:flags=lanczos', ...png], 'favicon-16.png');
-runFfmpeg(['-i', emblem, '-vf', 'scale=32:32:flags=lanczos', ...png], 'favicon-32.png');
+const emblem = ffmpegAvailable
+  ? runFfmpeg(['-i', sourcePath, ...png], 'brand-emblem.png')
+  : runConvert([sourcePath, '-strip'], 'brand-emblem.png');
+
+if (ffmpegAvailable) {
+  runFfmpeg(['-i', emblem, '-vf', 'scale=16:16:flags=lanczos', ...png], 'favicon-16.png');
+  runFfmpeg(['-i', emblem, '-vf', 'scale=32:32:flags=lanczos', ...png], 'favicon-32.png');
+} else {
+  runConvert([emblem, '-resize', '16x16', '-strip'], 'favicon-16.png');
+  runConvert([emblem, '-resize', '32x32', '-strip'], 'favicon-32.png');
+}
 
 function renderPlatformIcon(outputName, canvas, mark) {
-  return runFfmpeg(
-    ['-f', 'lavfi', '-i', `color=c=0x02050b:s=${canvas}x${canvas}:d=1`, '-i', emblem, '-filter_complex', `[1:v]scale=${mark}:${mark}:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2`, ...png],
+  if (ffmpegAvailable) {
+    return runFfmpeg(
+      ['-f', 'lavfi', '-i', `color=c=0x02050b:s=${canvas}x${canvas}:d=1`, '-i', emblem, '-filter_complex', `[1:v]scale=${mark}:${mark}:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2`, ...png],
+      outputName,
+    );
+  }
+  return runConvert(
+    ['-size', `${canvas}x${canvas}`, 'xc:#02050b', '(', emblem, '-resize', `${mark}x${mark}`, ')', '-gravity', 'center', '-composite', '-strip'],
     outputName,
   );
 }
@@ -58,7 +83,13 @@ renderPlatformIcon('icon-192.png', 192, 168);
 renderPlatformIcon('icon-512.png', 512, 448);
 renderPlatformIcon('icon-maskable-512.png', 512, 396);
 renderPlatformIcon('mstile-150x150.png', 150, 128);
-runFfmpeg(['-f', 'lavfi', '-i', 'color=c=0x02050b:s=1200x630:d=1', '-i', emblem, '-filter_complex', '[1:v]scale=500:500:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2', '-frames:v', '1', '-q:v', '3', '-pix_fmt', 'yuvj420p'], 'og-image.jpg');
+if (ffmpegAvailable) {
+  runFfmpeg(['-f', 'lavfi', '-i', 'color=c=0x02050b:s=1200x630:d=1', '-i', emblem, '-filter_complex', '[1:v]scale=500:500:force_original_aspect_ratio=decrease:flags=lanczos[mark];[0:v][mark]overlay=(W-w)/2:(H-h)/2', '-frames:v', '1', '-q:v', '3', '-pix_fmt', 'yuvj420p'], 'og-image.jpg');
+} else if (!fs.existsSync(path.join(publicDir, 'og-image.jpg'))) {
+  // A checked-in OG fallback is already valid. Avoid a platform-specific byte
+  // change in a local no-FFmpeg checkout; deploys still use the FFmpeg recipe.
+  runConvert(['-size', '1200x630', 'xc:#02050b', '(', emblem, '-resize', '500x500', ')', '-gravity', 'center', '-composite', '-quality', '92'], 'og-image.jpg');
+}
 
 for (const retired of [
   'brand-emblem-master.webp',
