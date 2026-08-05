@@ -1,0 +1,55 @@
+name: Marathon audit PR runner
+
+on:
+  pull_request:
+    branches:
+      - agent/marathon-audit-integration-20260805
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  run-one-shot-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/marathon-audit-integration-20260805
+          fetch-depth: 0
+
+      - name: Execute the reviewed one-shot workflow body
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          source = Path('.github/workflows/marathon-audit-integration-once.yml').read_text(encoding='utf-8').splitlines()
+          blocks = []
+          current = None
+          for line in source:
+            if line == '        run: |':
+              current = []
+              blocks.append(current)
+              continue
+            if current is None:
+              continue
+            if line.startswith('          '):
+              current.append(line[10:])
+              continue
+            current = None
+
+          if len(blocks) < 7:
+            raise SystemExit(f'Expected at least seven reviewed run blocks, found {len(blocks)}')
+
+          script = ['#!/usr/bin/env bash', 'set -euo pipefail']
+          for index, block in enumerate(blocks, start=1):
+            script.append(f"echo '::group::Marathon block {index}'")
+            script.extend(block)
+            script.append("echo '::endgroup::'")
+          Path('/tmp/marathon-integration.sh').write_text('\n'.join(script) + '\n', encoding='utf-8')
+          PY
+          chmod +x /tmp/marathon-integration.sh
+          /tmp/marathon-integration.sh
