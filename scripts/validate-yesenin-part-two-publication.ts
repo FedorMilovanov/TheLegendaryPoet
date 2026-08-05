@@ -1,8 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { yeseninPartTwoPublic } from '../src/data/essays/yeseninPartTwoPublic';
-import { essays } from '../src/data/essays/index';
+import { getAllEssays, getEssayBySlug } from '../src/data/essays/index';
 
-const essay = yeseninPartTwoPublic;
+const slug = 'sergei-yesenin-1921-1925';
+const essays = getAllEssays();
+const essay = getEssayBySlug(slug);
+if (!essay) throw new Error(`Part II is not registered: ${slug}`);
 const ledgerPath = 'docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md';
 
 if (!existsSync(ledgerPath)) throw new Error(`missing public source ledger: ${ledgerPath}`);
