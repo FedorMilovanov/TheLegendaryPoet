@@ -9,9 +9,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 env:
-  TEMPORARY_BRANCH: maintenance/w6-delete-retired-refs-20260805
+  TEMPORARY_BRANCH: maintenance/w6-delete-retired-refs-v2-20260805
+  RETAINED_ARCHIVE_BRANCH: archive/deep-research-local-images-20260724
 
 jobs:
   delete-retired-refs:
@@ -31,105 +33,151 @@ jobs:
           from pathlib import Path
 
           repository = os.environ['GITHUB_REPOSITORY']
+          owner = repository.split('/', 1)[0]
           token = os.environ['GH_TOKEN']
-          actual_branch = os.environ['GITHUB_REF_NAME']
-          if actual_branch != 'main':
-              raise SystemExit(f'wrong execution branch: {actual_branch}')
+          temporary_branch = os.environ['TEMPORARY_BRANCH']
+          archive_branch = os.environ['RETAINED_ARCHIVE_BRANCH']
+
+          if os.environ['GITHUB_REF_NAME'] != 'main':
+              raise SystemExit(f'wrong execution branch: {os.environ["GITHUB_REF_NAME"]}')
 
           targets = [
-              ('agent/marathon-audit-trigger-20260805', '76b8ccd23a33bf5741719c6aa9e90a91940a59a7'),
-              ('agent/marathon-audit-trigger2-20260805', '06545dda727503c1ce4a71bb93b51777f739f959'),
-              ('agent/marathon-audit-trigger3-20260805', '5f93f24f76714896e29eaa08efa84cf402e4db7e'),
-              ('agent/marathon-audit-trigger4-20260805', 'c6b970902664b72f5473d7596b17983177574f06'),
-              ('agent/marathon-audit-trigger5-20260805', 'f4a0a718a82926a40256ae5ab02c61b672da4a4c'),
-              ('agent/marathon-audit-trigger6-20260805', '6be2422c40eadec003ac6e761c78efc637e61d2c'),
-              ('agent/marathon-audit-trigger7-20260805', 'f449c6e72f3865c1aa8a851f5991a049d72ca994'),
-              ('agent/marathon-audit-trigger8-20260805', '705c91da514e7e34dbfa935c29f4d1c1e57a3664'),
-              ('agent/marathon-clean-security-trigger-20260805', '9da460da562d8b296d15b7875f738fbc3ce47dda'),
-              ('agent/marathon-dependency-trigger-20260805', 'eefba29f2cc63819f18e45c54ffb16d5b2280115'),
-              ('agent/marathon-dependency-trigger2-20260805', '7b01bdc799b9c099b78fda220b3f2036681de7aa'),
-              ('agent/marathon-router8-trigger-20260805', '00f1805a3cb4f2d82e095c90b9e8bf5753e3335d'),
-              ('agent/marathon-router8-direct-trigger-20260805', '97497b04840916786db216b912d5bcdfff1b8ce4'),
-              ('agent/marathon-router8-react-compatible-trigger-20260805', '13f67afb159b6d40c637b76fc3cab1010463d4cf'),
-              ('agent/marathon-router8-semver-trigger-20260805', 'f962fcd01baa76683ea958b5f898db175b7d7490'),
-              ('audit/discovery-artifact-contract-20260805', '27e006a8f30f3d9e4298d42341f233db27b5ef66'),
-              ('audit/content-model-unification-wave2-20260805', '53e7168aaf5b6c6351a7e45658666f1de52f3ec9'),
-              ('audit/immutable-essay-publication-w2-20260805', '2d11c8e6075c6463bf27bd0de8df73b493b17341'),
-              ('audit/immutable-essay-publication-20260805', 'd076373e8adfd3f5730d5ccb01ece87d5959f375'),
-              ('audit/community-scaling-w3-20260805', '76ea1768278571497459ced5b97f0ef2bb5c7052'),
-              ('audit/community-target-scaling-w3-20260805', 'f85aba5803ecc5643b39a5ee4081da86e0174997'),
-              ('integration/community-target-scaling-w3-final-20260805', None),
-              ('integration/community-w3-hardening-production-20260805', '253376bd8107471e1641027d892ac5207c18f73a'),
-              ('audit/premium-browser-certification-w5-20260805', 'e3991b71eb2c7b5056961b2b458ac9feed00058f'),
-              ('audit/premium-reader-journeys-w5-20260805', '2dbb10b20b4b0f3abe963e59109133d60aa3bb98'),
-              ('agent/current-state-truth-contract-20260805', '6c9cf17871bcaec3aeb9718a3c573d215be65552'),
-              ('arena/019fcf76-thelegendarypoet', None),
-              ('arena/019fcf77-thelegendarypoet', None),
-              ('work/local-images-playwright-wtoc', '909df9f73b8d9be6faa58cbee767603954e3fb17'),
+              'agent/marathon-audit-trigger-20260805',
+              'agent/marathon-audit-trigger2-20260805',
+              'agent/marathon-audit-trigger3-20260805',
+              'agent/marathon-audit-trigger4-20260805',
+              'agent/marathon-audit-trigger5-20260805',
+              'agent/marathon-audit-trigger6-20260805',
+              'agent/marathon-audit-trigger7-20260805',
+              'agent/marathon-audit-trigger8-20260805',
+              'agent/marathon-clean-security-trigger-20260805',
+              'agent/marathon-dependency-trigger-20260805',
+              'agent/marathon-dependency-trigger2-20260805',
+              'agent/marathon-router8-trigger-20260805',
+              'agent/marathon-router8-direct-trigger-20260805',
+              'agent/marathon-router8-react-compatible-trigger-20260805',
+              'agent/marathon-router8-semver-trigger-20260805',
+              'audit/discovery-artifact-contract-20260805',
+              'audit/content-model-unification-wave2-20260805',
+              'audit/immutable-essay-publication-w2-20260805',
+              'audit/immutable-essay-publication-20260805',
+              'audit/community-scaling-w3-20260805',
+              'audit/community-target-scaling-w3-20260805',
+              'integration/community-target-scaling-w3-final-20260805',
+              'integration/community-w3-hardening-production-20260805',
+              'audit/premium-browser-certification-w5-20260805',
+              'audit/premium-reader-journeys-w5-20260805',
+              'agent/current-state-truth-contract-20260805',
+              'arena/019fcf76-thelegendarypoet',
+              'arena/019fcf77-thelegendarypoet',
+              'work/local-images-playwright-wtoc',
           ]
 
-          forbidden = {'main', 'archive/deep-research-local-images-20260724', os.environ['TEMPORARY_BRANCH']}
-          names = [name for name, _ in targets]
-          if len(names) != 29 or len(set(names)) != 29:
+          protected = {'main', archive_branch, temporary_branch}
+          if len(targets) != 29 or len(set(targets)) != 29:
               raise SystemExit('source deletion allowlist must contain exactly 29 unique refs')
-          if forbidden.intersection(names):
+          if protected.intersection(targets):
               raise SystemExit('deletion allowlist contains a protected ref')
 
           headers = {
               'Accept': 'application/vnd.github+json',
               'Authorization': f'Bearer {token}',
               'X-GitHub-Api-Version': '2022-11-28',
-              'User-Agent': 'tlp-w6-retirement',
+              'User-Agent': 'tlp-w6-retirement-v2',
           }
 
-          def api(method, ref):
-              encoded = urllib.parse.quote(f'heads/{ref}', safe='')
-              singular = 'ref' if method == 'GET' else 'refs'
-              url = f'https://api.github.com/repos/{repository}/git/{singular}/{encoded}'
-              request = urllib.request.Request(url, method=method, headers=headers)
+          def request(method, url):
+              call = urllib.request.Request(url, method=method, headers=headers)
               try:
-                  with urllib.request.urlopen(request) as response:
+                  with urllib.request.urlopen(call) as response:
                       body = response.read()
                       return response.status, json.loads(body) if body else None
               except urllib.error.HTTPError as error:
                   return error.code, error.read().decode('utf-8', errors='replace')
 
+          def ref_url(branch, plural=False):
+              encoded = urllib.parse.quote(f'heads/{branch}', safe='')
+              noun = 'refs' if plural else 'ref'
+              return f'https://api.github.com/repos/{repository}/git/{noun}/{encoded}'
+
+          def open_prs_url(branch):
+              query = urllib.parse.urlencode({
+                  'state': 'open',
+                  'head': f'{owner}:{branch}',
+                  'per_page': '2',
+              })
+              return f'https://api.github.com/repos/{repository}/pulls?{query}'
+
+          archive_status, archive_payload = request('GET', ref_url(archive_branch))
+          if archive_status != 200:
+              raise SystemExit(f'retained archive ref missing: HTTP {archive_status} {archive_payload}')
+          archive_head = archive_payload['object']['sha']
+
           preflight = []
-          for name, expected in targets:
-              status, payload = api('GET', name)
+          for branch in targets:
+              status, payload = request('GET', ref_url(branch))
               if status != 200:
-                  raise SystemExit(f'preflight failed for {name}: HTTP {status} {payload}')
-              actual = payload['object']['sha']
-              if expected is not None and actual != expected:
-                  raise SystemExit(f'head mismatch for {name}: expected {expected}, found {actual}')
-              preflight.append({'branch': name, 'head': actual, 'expectedHead': expected})
+                  raise SystemExit(f'preflight ref lookup failed for {branch}: HTTP {status} {payload}')
+              head = payload['object']['sha']
+
+              pr_status, pr_payload = request('GET', open_prs_url(branch))
+              if pr_status != 200:
+                  raise SystemExit(f'open-PR lookup failed for {branch}: HTTP {pr_status} {pr_payload}')
+              if pr_payload:
+                  numbers = [item.get('number') for item in pr_payload]
+                  raise SystemExit(f'open PR still owns {branch}: {numbers}')
+
+              if branch == 'work/local-images-playwright-wtoc' and head != archive_head:
+                  raise SystemExit(f'deep work/archive mismatch: work={head}, archive={archive_head}')
+
+              preflight.append({
+                  'branch': branch,
+                  'headAtDeletion': head,
+                  'openPullRequests': 0,
+              })
+
+          if len(preflight) != 29:
+              raise SystemExit(f'preflight count mismatch: {len(preflight)}')
 
           deleted = []
           for item in preflight:
-              status, payload = api('DELETE', item['branch'])
+              status, payload = request('DELETE', ref_url(item['branch'], plural=True))
               if status != 204:
                   raise SystemExit(f'delete failed for {item["branch"]}: HTTP {status} {payload}')
               deleted.append(item)
 
           absent = []
           for item in deleted:
-              status, payload = api('GET', item['branch'])
+              status, payload = request('GET', ref_url(item['branch']))
               if status != 404:
                   raise SystemExit(f'absence verification failed for {item["branch"]}: HTTP {status} {payload}')
               absent.append(item['branch'])
 
+          retained_checks = {}
+          for branch in ['main', archive_branch]:
+              status, payload = request('GET', ref_url(branch))
+              if status != 200:
+                  raise SystemExit(f'retained ref missing after deletion: {branch}: HTTP {status} {payload}')
+              retained_checks[branch] = payload['object']['sha']
+
           evidence = {
+              'schemaVersion': 2,
               'repository': repository,
               'runId': os.environ['GITHUB_RUN_ID'],
               'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'mainCommitThatTriggeredDeletion': os.environ['GITHUB_SHA'],
               'preflight': preflight,
+              'deepWorkArchiveIdentity': {
+                  'workBranch': 'work/local-images-playwright-wtoc',
+                  'archiveBranch': archive_branch,
+                  'sharedHead': archive_head,
+              },
               'deletedCount': len(deleted),
               'absentCount': len(absent),
               'absentBranches': absent,
-              'retainedBranches': ['main', 'archive/deep-research-local-images-20260724'],
+              'retainedRefs': retained_checks,
           }
-          Path('w6-source-ref-deletion-evidence.json').write_text(
+          Path('w6-source-ref-deletion-evidence-v2.json').write_text(
               json.dumps(evidence, indent=2) + '\n', encoding='utf-8'
           )
           print(json.dumps(evidence, indent=2))
@@ -138,8 +186,8 @@ jobs:
       - name: Upload source deletion evidence
         uses: actions/upload-artifact@v4
         with:
-          name: w6-source-ref-deletion-evidence
-          path: w6-source-ref-deletion-evidence.json
+          name: w6-source-ref-deletion-evidence-v2
+          path: w6-source-ref-deletion-evidence-v2.json
           if-no-files-found: error
           retention-days: 90
 
@@ -161,7 +209,7 @@ jobs:
               'Accept': 'application/vnd.github+json',
               'Authorization': f'Bearer {os.environ["GH_TOKEN"]}',
               'X-GitHub-Api-Version': '2022-11-28',
-              'User-Agent': 'tlp-w6-retirement',
+              'User-Agent': 'tlp-w6-retirement-v2',
           }
           get_url = f'https://api.github.com/repos/{repository}/git/ref/{encoded}'
           delete_url = f'https://api.github.com/repos/{repository}/git/refs/{encoded}'
