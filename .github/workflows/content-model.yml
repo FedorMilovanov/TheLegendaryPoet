@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'package.json'
       - 'src/types/poet.ts'
       - 'src/data/poets.ts'
       - 'src/data/library/**'
@@ -16,6 +17,7 @@ on:
       - '.github/workflows/content-model.yml'
   pull_request:
     paths:
+      - 'package.json'
       - 'src/types/poet.ts'
       - 'src/data/poets.ts'
       - 'src/data/library/**'
@@ -35,6 +37,11 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - name: Validate one live longform model
-        run: node scripts/validate-content-model.mjs
+        run: npm run validate:content-model
