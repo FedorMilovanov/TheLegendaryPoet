@@ -20,7 +20,13 @@ function attachDiagnostics(page) {
   page.on('requestfailed', (request) => {
     if (!request.url().startsWith(BASE_URL)) return;
     const failure = request.failure()?.errorText || 'unknown';
-    if (!/ERR_ABORTED/i.test(failure)) result.localFailures.push(`${request.method()} ${request.url()}: ${failure}`);
+    if (/ERR_ABORTED/i.test(failure)) return;
+    // WebKit can cancel an in-flight font fetch when the test immediately
+    // navigates to the next certified route. This is a harmless document-lifetime
+    // cancellation, not a missing asset or application/network failure. Keep
+    // scripts, stylesheets, documents and API requests strict.
+    if (request.resourceType() === 'font' && /Load request cancelled/i.test(failure)) return;
+    result.localFailures.push(`${request.method()} ${request.url()}: ${failure}`);
   });
   return result;
 }
