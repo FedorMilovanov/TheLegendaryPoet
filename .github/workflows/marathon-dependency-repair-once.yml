@@ -31,7 +31,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg imagemagick
 
-      - name: Apply audited dependency repairs
+      - name: Migrate to audited React Router 8 package
         shell: bash
         run: |
           set -euo pipefail
@@ -57,11 +57,33 @@ jobs:
           BABEL_VERSION="$(latest_major '@babel/core' 7)"
           POSTCSS_VERSION="$(latest_major 'postcss' 8)"
 
-          echo "Testing React Router 8.3.0, React 19.2.6 and Vite 7.3.6"
+          python3 <<'PY'
+          from pathlib import Path
+
+          for path in Path('src').rglob('*'):
+              if path.suffix not in {'.ts', '.tsx'}:
+                  continue
+              source = path.read_text(encoding='utf-8')
+              updated = source.replace("from 'react-router-dom'", "from 'react-router'")
+              updated = updated.replace('from "react-router-dom"', 'from "react-router"')
+              if updated != source:
+                  path.write_text(updated, encoding='utf-8')
+
+          vite = Path('vite.config.ts')
+          source = vite.read_text(encoding='utf-8').replace("'react-router-dom'", "'react-router'")
+          vite.write_text(source, encoding='utf-8')
+
+          link = Path('src/components/ui/Link.tsx')
+          if link.exists():
+              source = link.read_text(encoding='utf-8').replace('react-router-dom directly', 'react-router directly')
+              link.write_text(source, encoding='utf-8')
+          PY
+
+          npm uninstall react-router-dom
           npm install --save-exact \
             react@19.2.6 \
             react-dom@19.2.6 \
-            react-router-dom@8.3.0
+            react-router@8.3.0
           npm install --save-dev --save-exact \
             vite@7.3.6 \
             "@vitejs/plugin-react@${PLUGIN_REACT_VERSION}" \
@@ -84,6 +106,11 @@ jobs:
           npm install --package-lock-only
           npm audit fix --package-lock-only
           npm ci
+
+          if grep -RIn --include='*.ts' --include='*.tsx' "from ['\"]react-router-dom['\"]" src; then
+            echo 'Legacy react-router-dom imports remain.' >&2
+            exit 1
+          fi
 
       - name: Require clean production and full dependency audits
         shell: bash
@@ -141,5 +168,5 @@ jobs:
             echo 'No dependency repair changes to commit.'
             exit 0
           fi
-          git commit -m 'fix(deps): upgrade audited router and build dependencies'
+          git commit -m 'fix(deps): migrate to audited React Router 8 package'
           git push origin HEAD:agent/marathon-audit-integration-20260805
