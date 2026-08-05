@@ -39,16 +39,18 @@ assert(authoritative.includes(contract.documentation.currentState), 'currentStat
 
 const architecture = contract.architecture ?? {};
 const auditAuthority = architecture.auditAuthority;
-const openLaneIds = architecture.openLaneIds ?? [];
+const openLaneIdsConfigured = Array.isArray(architecture.openLaneIds);
+const openLaneIds = openLaneIdsConfigured ? architecture.openLaneIds : [];
 const openLaneStart = architecture.currentStateOpenLaneStart;
 const openLaneEnd = architecture.currentStateOpenLaneEnd;
-const forbiddenCurrentStateClaims = architecture.forbiddenCurrentStateClaims ?? [];
+const forbiddenClaimsConfigured = Array.isArray(architecture.forbiddenCurrentStateClaims);
+const forbiddenCurrentStateClaims = forbiddenClaimsConfigured ? architecture.forbiddenCurrentStateClaims : [];
 
 assert(
   typeof auditAuthority === 'string' && auditAuthority.startsWith('FedorMilovanov/AuditRepo/'),
   'architecture.auditAuthority must point to the governed AuditRepo project path',
 );
-assert(Array.isArray(openLaneIds) && openLaneIds.length > 0, 'architecture.openLaneIds must be a non-empty array');
+assert(openLaneIdsConfigured, 'architecture.openLaneIds must be an array');
 assert(
   openLaneIds.every((id) => typeof id === 'string' && /^TLP-[A-Z]+-\d{3}$/.test(id)),
   'architecture.openLaneIds must contain canonical TLP IDs',
@@ -58,7 +60,7 @@ assert(
   typeof openLaneStart === 'string' && typeof openLaneEnd === 'string' && openLaneStart !== openLaneEnd,
   'architecture must define distinct current-state open-lane markers',
 );
-assert(Array.isArray(forbiddenCurrentStateClaims), 'architecture.forbiddenCurrentStateClaims must be an array');
+assert(forbiddenClaimsConfigured, 'architecture.forbiddenCurrentStateClaims must be an array');
 
 const currentStatePath = contract.documentation.currentState;
 const currentStateText = read(currentStatePath);
