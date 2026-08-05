@@ -9,7 +9,8 @@ const expect = (condition: unknown, message: string) => {
 };
 
 const app = read('src/App.tsx');
-const routes = read('src/routes/routeModules.tsx');
+const routes = read('src/routes/routeModules.ts');
+expect(!fs.existsSync(path.join(root, 'src/routes/routeModules.tsx')), 'routeModules.tsx must not shadow the live route registry');
 const link = read('src/components/ui/Link.tsx');
 const smooth = read('src/components/SmoothScroll.tsx');
 const boundary = read('src/components/ErrorBoundary.tsx');
@@ -31,6 +32,8 @@ const expectedPages = [
   'MusicPage',
   'TrackDetailPage',
   'AboutPage',
+  'EditorialPolicyPage',
+  'PrivacyPage',
   'MyArchivePage',
   'NotFoundPage',
 ];

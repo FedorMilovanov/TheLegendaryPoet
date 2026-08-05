@@ -69,13 +69,13 @@ const yeseninWithArchiveLayer: Essay = {
 
 const yeseninPartOnePublished: Essay = {
   ...yeseninPartOnePublic,
-  dateModified: '2026-08-04',
+  dateModified: '2026-08-05',
   readTime: 43,
 };
 
 const yeseninDuncanPublished: Essay = {
   ...yeseninDuncanFirstMeetingPublished,
-  dateModified: '2026-08-02',
+  dateModified: '2026-08-05',
 };
 
 const yeseninPartTwoLedgerUrl =

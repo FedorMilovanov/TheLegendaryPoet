@@ -29,6 +29,8 @@ const routeSources = [
   'src/pages/MusicPage.tsx',
   'src/pages/TrackDetailPage.tsx',
   'src/pages/AboutPage.tsx',
+  'src/pages/EditorialPolicyPage.tsx',
+  'src/pages/PrivacyPage.tsx',
   'src/pages/MyArchivePage.tsx',
   'src/pages/NotFoundPage.tsx',
 ];
