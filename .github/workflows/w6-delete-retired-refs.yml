@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 env:
   TEMPORARY_BRANCH: maintenance/w6-delete-retired-refs-v2-20260805
@@ -112,8 +113,6 @@ jobs:
               raise SystemExit(f'retained archive ref missing: HTTP {archive_status} {archive_payload}')
           archive_head = archive_payload['object']['sha']
 
-          # Complete two-phase preflight: every target must exist, have no open PR,
-          # and the deep work ref must be byte/history-identical to the retained archive.
           preflight = []
           for branch in targets:
               status, payload = request('GET', ref_url(branch))
@@ -129,9 +128,7 @@ jobs:
                   raise SystemExit(f'open PR still owns {branch}: {numbers}')
 
               if branch == 'work/local-images-playwright-wtoc' and head != archive_head:
-                  raise SystemExit(
-                      f'deep work/archive mismatch: work={head}, archive={archive_head}'
-                  )
+                  raise SystemExit(f'deep work/archive mismatch: work={head}, archive={archive_head}')
 
               preflight.append({
                   'branch': branch,
@@ -153,9 +150,7 @@ jobs:
           for item in deleted:
               status, payload = request('GET', ref_url(item['branch']))
               if status != 404:
-                  raise SystemExit(
-                      f'absence verification failed for {item["branch"]}: HTTP {status} {payload}'
-                  )
+                  raise SystemExit(f'absence verification failed for {item["branch"]}: HTTP {status} {payload}')
               absent.append(item['branch'])
 
           retained_checks = {}
@@ -230,9 +225,7 @@ jobs:
               raise SystemExit(f'temporary branch lookup failed: HTTP {error.code} {error.read().decode()}')
 
           try:
-              with urllib.request.urlopen(
-                  urllib.request.Request(delete_url, method='DELETE', headers=headers)
-              ) as response:
+              with urllib.request.urlopen(urllib.request.Request(delete_url, method='DELETE', headers=headers)) as response:
                   if response.status != 204:
                       raise SystemExit(f'temporary branch deletion returned {response.status}')
           except urllib.error.HTTPError as error:
