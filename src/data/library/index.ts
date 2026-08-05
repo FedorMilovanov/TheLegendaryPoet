@@ -23,5 +23,4 @@ export const poets: Poet[] = [
   alexanderBlok,
 ];
 
-export { articles } from './articles';
 export { allMusicTracks, musicTracks } from './musicTracks';

@@ -1,0 +1,40 @@
+name: Content model contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/types/poet.ts'
+      - 'src/data/poets.ts'
+      - 'src/data/library/**'
+      - 'src/utils/dailyContent.ts'
+      - 'src/App.tsx'
+      - 'scripts/new-poet.ts'
+      - 'scripts/validate-library.ts'
+      - 'scripts/validate-content-model.mjs'
+      - 'docs/legacy-content/**'
+      - '.github/workflows/content-model.yml'
+  pull_request:
+    paths:
+      - 'src/types/poet.ts'
+      - 'src/data/poets.ts'
+      - 'src/data/library/**'
+      - 'src/utils/dailyContent.ts'
+      - 'src/App.tsx'
+      - 'scripts/new-poet.ts'
+      - 'scripts/validate-library.ts'
+      - 'scripts/validate-content-model.mjs'
+      - 'docs/legacy-content/**'
+      - '.github/workflows/content-model.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate one live longform model
+        run: node scripts/validate-content-model.mjs
