@@ -29,6 +29,9 @@ export default function TiltCard({
       settleTimerRef.current = null;
     }
     node.style.willChange = 'transform';
+    // Live tracking must not be eased, or every pointermove restarts the
+    // transition and the card visibly trails the cursor.
+    node.dataset.tiltTracking = 'true';
   }, []);
 
   const reset = useCallback(() => {
@@ -39,6 +42,8 @@ export default function TiltCard({
     if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
     const node = ref.current;
     if (!node) return;
+    // Re-enable easing so the card glides back to rest instead of snapping.
+    delete node.dataset.tiltTracking;
     node.style.setProperty('--tilt-x', '0deg');
     node.style.setProperty('--tilt-y', '0deg');
     node.style.setProperty('--tilt-sheen-x', '50%');
