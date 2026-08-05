@@ -24,7 +24,6 @@ export function getPoemOfDay(): { poem: Poem; poet: Poet } {
       rating: 10,
       tags: [],
       poems: [],
-      articles: [],
       famousWorks: [],
     };
     const fallbackPoem: Poem = {
