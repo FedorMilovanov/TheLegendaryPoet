@@ -24,5 +24,7 @@ jobs:
         run: node scripts/validate-project-contracts.mjs
       - name: Validate workflow consolidation and performance contract
         run: node scripts/validate-workflow-consolidation.mjs
+      - name: Validate premium reader certification wiring
+        run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
         run: node scripts/validate-daily-content.mjs
