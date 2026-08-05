@@ -6,6 +6,11 @@ dist/
 dist-ssr/
 *.local
 
+# Browser test output
+playwright-report/
+test-results/
+qa-artifacts/
+
 # Generated from the hash-locked brand source by scripts/materialize-brand-art.mjs.
 # They are recreated before dev/build/deploy and must not make a checkout dirty.
 /public/brand-emblem.png
