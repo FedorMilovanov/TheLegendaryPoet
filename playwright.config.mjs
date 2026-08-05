@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology)\.spec\.mjs/;
 const finePointerOnly = /(?:TiltCard follows live pointer input without a transition backlog|article title remains painted throughout live 3D pointer tracking)/;
+const baseURL = process.env.QA_BASE_URL ?? 'http://127.0.0.1:4173';
 
 export default defineConfig({
   testDir: './qa',
@@ -17,6 +18,9 @@ export default defineConfig({
   reporter: process.env.CI
     ? [['line'], ['html', { open: 'never' }]]
     : [['line']],
+  use: {
+    baseURL,
+  },
   projects: [
     {
       name: 'chromium-core',
