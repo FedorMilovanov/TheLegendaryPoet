@@ -132,11 +132,18 @@ export function mergeTargetComments(
 ) {
   const byId = new Map(remote.map((comment) => [comment.id, comment]));
   for (const comment of pending.comments) byId.set(comment.id, comment);
-  for (const local of pending.localComments) {
-    if (!pending.helpfulCommentIds.has(local.id)) continue;
-    const current = byId.get(local.id);
-    if (current) byId.set(local.id, { ...current, helpful: Math.max(current.helpful, local.helpful) });
+
+  const localById = new Map(pending.localComments.map((comment) => [comment.id, comment]));
+  for (const commentId of pending.helpfulCommentIds) {
+    const current = byId.get(commentId);
+    if (!current) continue;
+    const local = localById.get(commentId);
+    byId.set(commentId, {
+      ...current,
+      helpful: Math.max(current.helpful + 1, local?.helpful ?? 0),
+    });
   }
+
   return [...byId.values()].sort((left, right) =>
     Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.id.localeCompare(left.id));
 }
