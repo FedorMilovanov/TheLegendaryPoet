@@ -8,8 +8,12 @@ function fail(message: string) {
   errors.push(message);
 }
 
+function read(relativePath: string) {
+  return fs.readFileSync(path.join(root, relativePath), 'utf8');
+}
+
 function readJson(relativePath: string) {
-  return JSON.parse(fs.readFileSync(path.join(root, relativePath), 'utf8')) as Record<string, any>;
+  return JSON.parse(read(relativePath)) as Record<string, any>;
 }
 
 const manifest = readJson('package.json');
@@ -40,6 +44,29 @@ for (const packagePath of [
   }
 }
 
+const setupActionPath = '.github/actions/setup-node-deps/action.yml';
+const playwrightActionPath = '.github/actions/install-playwright/action.yml';
+const setupAction = fs.existsSync(path.join(root, setupActionPath)) ? read(setupActionPath) : '';
+const playwrightAction = fs.existsSync(path.join(root, playwrightActionPath)) ? read(playwrightActionPath) : '';
+
+if (setupAction) {
+  if (!setupAction.includes('actions/setup-node@v4')) fail(`${setupActionPath}: must use actions/setup-node@v4`);
+  if (!setupAction.includes('npm ci')) fail(`${setupActionPath}: default dependency installation must be npm ci`);
+  if (!setupAction.includes('cache: npm')) fail(`${setupActionPath}: npm cache must remain enabled`);
+}
+
+if (playwrightAction) {
+  if (!playwrightAction.includes(`!== '${playwrightVersion}'`)) {
+    fail(`${playwrightActionPath}: must assert the manifest Playwright version ${playwrightVersion}`);
+  }
+  if (!playwrightAction.includes('npx playwright install --with-deps')) {
+    fail(`${playwrightActionPath}: must install browser binaries through the locked Playwright CLI`);
+  }
+  if (!playwrightAction.includes('npx playwright --version')) {
+    fail(`${playwrightActionPath}: must print the resolved Playwright version`);
+  }
+}
+
 const expectedBrowserWorkflows = [
   'articles-catalog.yml',
   'brand-deep-audit.yml',
@@ -58,10 +85,24 @@ for (const fileName of expectedBrowserWorkflows) {
   }
 
   const source = fs.readFileSync(workflowPath, 'utf8');
-  if (!source.includes('npm ci')) fail(`${fileName}: dependencies must come from package-lock via npm ci`);
-  if (!source.includes('npx playwright install --with-deps')) {
-    fail(`${fileName}: browser binaries must be installed from the locked Playwright CLI`);
+  const usesSharedDependencies = source.includes('uses: ./.github/actions/setup-node-deps');
+  const usesDirectDependencies = /\bnpm ci(?:\s|$)/m.test(source);
+  if (!usesDirectDependencies && !usesSharedDependencies) {
+    fail(`${fileName}: dependencies must come from package-lock via npm ci or the shared exact-dependency action`);
   }
+  if (usesSharedDependencies && !setupAction) {
+    fail(`${fileName}: references the missing shared exact-dependency action`);
+  }
+
+  const usesSharedBrowsers = source.includes('uses: ./.github/actions/install-playwright');
+  const usesDirectBrowsers = source.includes('npx playwright install --with-deps');
+  if (!usesDirectBrowsers && !usesSharedBrowsers) {
+    fail(`${fileName}: browser binaries must be installed from the locked Playwright CLI or its shared action`);
+  }
+  if (usesSharedBrowsers && !playwrightAction) {
+    fail(`${fileName}: references the missing shared Playwright action`);
+  }
+
   if (/npm\s+(?:install|i)\b[^\n]*@playwright\/test/i.test(source)) {
     fail(`${fileName}: must not install @playwright/test outside package-lock`);
   }
@@ -78,6 +119,12 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   if (/npm\s+(?:install|i)\b[^\n]*@playwright\/test/i.test(source)) {
     fail(`${fileName}: hidden Playwright installation bypasses the committed lockfile`);
   }
+  if (/@playwright\/test@\d/i.test(source)) {
+    fail(`${fileName}: hidden embedded Playwright version bypasses the committed lockfile`);
+  }
+  if (/--no-save|--no-package-lock/.test(source)) {
+    fail(`${fileName}: hidden ephemeral dependency flags are forbidden`);
+  }
 }
 
 if (errors.length > 0) {
@@ -86,5 +133,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}, ${expectedBrowserWorkflows.length} workflows use the committed lockfile.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives.`,
 );
