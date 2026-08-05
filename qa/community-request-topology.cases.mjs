@@ -24,6 +24,16 @@ function corsHeaders(extra = {}) {
   };
 }
 
+function parseBody(request) {
+  const raw = request.postData();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
+
 async function installCommunityBackend(page) {
   await page.addInitScript(() => {
     globalThis.__TLP_COMMUNITY_TEST_CONFIG__ = {
@@ -31,7 +41,9 @@ async function installCommunityBackend(page) {
       key: 'test-anon-key',
     };
   });
+
   const reads = [];
+  const writes = [];
   await page.route(`${COMMUNITY_ORIGIN}/**`, async (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') {
@@ -41,6 +53,7 @@ async function installCommunityBackend(page) {
 
     const url = new URL(request.url());
     if (request.method() === 'GET') reads.push(url);
+    else writes.push({ url, method: request.method(), body: parseBody(request) });
 
     if (url.pathname.endsWith('/tlp_feedback_summary_public')) {
       if (url.searchParams.get('target_type') === 'eq.poet') {
@@ -90,85 +103,148 @@ async function installCommunityBackend(page) {
       return;
     }
 
+    if (url.pathname.endsWith('/rpc/tlp_mark_helpful')) {
+      await route.fulfill({
+        status: 503,
+        headers: corsHeaders(),
+        body: JSON.stringify({ message: 'offline write contract' }),
+      });
+      return;
+    }
+
     await route.fulfill({ status: 404, headers: corsHeaders(), body: '[]' });
   });
-  return reads;
+  return { reads, writes };
 }
 
 function readUrls(reads) {
   return reads.map((url) => decodeURIComponent(url.toString()));
 }
 
-export function registerCommunityRequestTopologyTests({ test, expect }) {
+function useAllowedProject(test, testInfo, projects) {
+  test.skip(!projects.includes(testInfo.project.name), `request topology is assigned to ${projects.join(', ')}`);
+}
+
+async function visibleCommunityPanel(page, expect) {
+  await expect(page.getByText('9 оценок', { exact: false }).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+  const panel = page
+    .getByText('Комментарии', { exact: true })
+    .filter({ visible: true })
+    .first()
+    .locator('xpath=ancestor::section[1]');
+  await expect(panel.getByText('Показано 5 из 12', { exact: false })).toBeVisible();
+  return panel;
+}
+
+export function registerCommunityRequestTopologyTests({
+  test,
+  expect,
+  projects = ['chromium-core'],
+}) {
   test.describe('community request topology', () => {
-  test('generic startup performs zero community reads', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-core', 'request topology runs once on Chromium core');
-    const reads = await installCommunityBackend(page);
-    const response = await page.goto(BASE_URL, { waitUntil: 'networkidle' });
-    expect(response?.status()).toBeLessThan(400);
-    await page.waitForTimeout(500);
-    expect(reads).toHaveLength(0);
-  });
+    test('generic startup performs zero community reads', async ({ page }, testInfo) => {
+      useAllowedProject(test, testInfo, projects);
+      const { reads } = await installCommunityBackend(page);
+      const response = await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+      expect(response?.status()).toBeLessThan(400);
+      await page.waitForTimeout(500);
+      expect(reads).toHaveLength(0);
+    });
 
-  test('article loads one target summary and cursor-paginated comments only', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-core', 'request topology runs once on Chromium core');
-    const reads = await installCommunityBackend(page);
-    const response = await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
-    expect(response?.status()).toBeLessThan(400);
+    test('article loads one target summary and cursor-paginated comments only', async ({ page }, testInfo) => {
+      useAllowedProject(test, testInfo, projects);
+      const { reads } = await installCommunityBackend(page);
+      const response = await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
+      expect(response?.status()).toBeLessThan(400);
+      const communityPanel = await visibleCommunityPanel(page, expect);
 
-    await expect(page.getByText('9 оценок', { exact: false }).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
-    const communityPanel = page
-      .getByText('Комментарии', { exact: true })
-      .filter({ visible: true })
-      .first()
-      .locator('xpath=ancestor::section[1]');
-    await expect(communityPanel.getByText('Показано 5 из 12', { exact: false })).toBeVisible();
+      let urls = readUrls(reads);
+      const summary = urls.filter((url) => url.includes('/tlp_feedback_summary_public'));
+      const commentReads = urls.filter((url) => url.includes('/tlp_comments_public'));
+      expect(summary).toHaveLength(1);
+      expect(commentReads).toHaveLength(1);
+      expect(summary[0]).toContain('target_type=eq.article');
+      expect(summary[0]).toContain(`target_id=eq.${ARTICLE_ID}`);
+      expect(commentReads[0]).toContain('target_type=eq.article');
+      expect(commentReads[0]).toContain(`target_id=eq.${ARTICLE_ID}`);
+      expect(commentReads[0]).toContain('order=created_at.desc,id.desc');
+      expect(commentReads[0]).toContain('limit=11');
+      expect(urls.some((url) => url.includes('/tlp_ratings_public'))).toBe(false);
 
-    let urls = readUrls(reads);
-    const summary = urls.filter((url) => url.includes('/tlp_feedback_summary_public'));
-    const commentReads = urls.filter((url) => url.includes('/tlp_comments_public'));
-    expect(summary).toHaveLength(1);
-    expect(commentReads).toHaveLength(1);
-    expect(summary[0]).toContain('target_type=eq.article');
-    expect(summary[0]).toContain(`target_id=eq.${ARTICLE_ID}`);
-    expect(commentReads[0]).toContain('target_type=eq.article');
-    expect(commentReads[0]).toContain(`target_id=eq.${ARTICLE_ID}`);
-    expect(commentReads[0]).toContain('order=created_at.desc,id.desc');
-    expect(commentReads[0]).toContain('limit=11');
-    expect(urls.some((url) => url.includes('/tlp_ratings_public'))).toBe(false);
+      await communityPanel.getByRole('button', { name: /Показать ещё/ }).click();
+      const loadMoreComments = communityPanel.getByRole('button', { name: 'Загрузить ещё комментарии' });
+      await expect(loadMoreComments).toBeVisible();
+      await loadMoreComments.click();
+      await expect(communityPanel.getByText('Показано 10 из 12', { exact: false })).toBeVisible({ timeout: 10_000 });
 
-    await communityPanel.getByRole('button', { name: /Показать ещё/ }).click();
-    const loadMoreComments = communityPanel.getByRole('button', { name: 'Загрузить ещё комментарии' });
-    await expect(loadMoreComments).toBeVisible();
-    await loadMoreComments.click();
-    await expect(communityPanel.getByText('Показано 10 из 12', { exact: false })).toBeVisible({ timeout: 10_000 });
+      urls = readUrls(reads);
+      const paged = urls.filter((url) => url.includes('/tlp_comments_public'));
+      expect(paged).toHaveLength(2);
+      expect(paged[1]).toContain('or=(created_at.lt.');
+      expect(paged[1]).toContain('created_at.eq.');
+      expect(paged[1]).toContain('id.lt.');
+      await communityPanel.getByRole('button', { name: /Показать ещё 2/ }).click();
+      await expect(communityPanel.getByText('Показано 12 из 12', { exact: false })).toBeVisible();
+      expect(new Set(await communityPanel.locator('[data-community-comment-id]:visible').evaluateAll(
+        (nodes) => nodes.map((node) => node.getAttribute('data-community-comment-id')),
+      )).size).toBe(12);
+    });
 
-    urls = readUrls(reads);
-    const paged = urls.filter((url) => url.includes('/tlp_comments_public'));
-    expect(paged).toHaveLength(2);
-    expect(paged[1]).toContain('or=(created_at.lt.');
-    expect(paged[1]).toContain('created_at.eq.');
-    expect(paged[1]).toContain('id.lt.');
-    await communityPanel.getByRole('button', { name: /Показать ещё 2/ }).click();
-    await expect(communityPanel.getByText('Показано 12 из 12', { exact: false })).toBeVisible();
-    expect(new Set(await communityPanel.locator('[data-community-comment-id]:visible').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-community-comment-id')))).size).toBe(12);
-  });
+    test('remote helpful remains optimistic and queued without persisting the public comment corpus', async ({ page }, testInfo) => {
+      useAllowedProject(test, testInfo, projects);
+      const { writes } = await installCommunityBackend(page);
+      const response = await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
+      expect(response?.status()).toBeLessThan(400);
+      const communityPanel = await visibleCommunityPanel(page, expect);
 
-  test('ratings hub reads aggregate poet rows and never comment bodies', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-core', 'request topology runs once on Chromium core');
-    const reads = await installCommunityBackend(page);
-    const response = await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'networkidle' });
-    expect(response?.status()).toBeLessThan(400);
-    await expect(page.getByText('Поэты в оценке читателей')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Общая база синхронизирована для всех посетителей')).toBeVisible({ timeout: 15_000 });
+      const firstVisibleCard = communityPanel.locator('[data-community-comment-id]:visible').first();
+      const commentId = await firstVisibleCard.getAttribute('data-community-comment-id');
+      expect(commentId).toMatch(/^comment-/);
+      const commentCard = communityPanel.locator(`[data-community-comment-id="${commentId}"]`);
+      await commentCard.getByRole('button', { name: /Отметить комментарий полезным/ }).click();
+      await expect(commentCard.getByRole('button', { name: /Вы отметили комментарий полезным/ }))
+        .toHaveAttribute('aria-pressed', 'true');
 
-    const urls = readUrls(reads);
-    expect(urls).toHaveLength(1);
-    expect(urls[0]).toContain('/tlp_feedback_summary_public');
-    expect(urls[0]).toContain('target_type=eq.poet');
-    expect(urls[0]).toContain('target_id=in.(');
-    expect(urls[0]).not.toContain('/tlp_comments_public');
-    expect(urls[0]).not.toContain('/tlp_ratings_public');
-  });
+      await expect.poll(() => writes.filter((entry) => entry.url.pathname.endsWith('/rpc/tlp_mark_helpful')).length)
+        .toBe(1);
+      const persisted = await page.evaluate(() => {
+        const raw = localStorage.getItem('tlp-community-feedback:v3');
+        return raw ? JSON.parse(raw) : null;
+      });
+      expect(persisted).not.toBeNull();
+      expect(persisted.localSnapshot?.comments ?? []).toHaveLength(0);
+      expect(persisted.outbox?.some((operation) => operation.kind === 'helpful' && operation.commentId === commentId)).toBe(true);
+      expect(Object.values(persisted.helpfulVotes ?? {})).toContain(true);
+
+      await page.reload({ waitUntil: 'networkidle' });
+      const reloadedPanel = await visibleCommunityPanel(page, expect);
+      const reloadedCard = reloadedPanel.locator(`[data-community-comment-id="${commentId}"]`);
+      await expect(reloadedCard.getByRole('button', { name: /Вы отметили комментарий полезным/ }))
+        .toHaveAttribute('aria-pressed', 'true');
+      const persistedAfterReload = await page.evaluate(() => JSON.parse(
+        localStorage.getItem('tlp-community-feedback:v3') ?? '{}',
+      ));
+      expect(persistedAfterReload.localSnapshot?.comments ?? []).toHaveLength(0);
+      expect(persistedAfterReload.outbox?.some(
+        (operation) => operation.kind === 'helpful' && operation.commentId === commentId,
+      )).toBe(true);
+    });
+
+    test('ratings hub reads aggregate poet rows and never comment bodies', async ({ page }, testInfo) => {
+      useAllowedProject(test, testInfo, projects);
+      const { reads } = await installCommunityBackend(page);
+      const response = await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'networkidle' });
+      expect(response?.status()).toBeLessThan(400);
+      await expect(page.getByText('Поэты в оценке читателей')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText('Общая база синхронизирована для всех посетителей')).toBeVisible({ timeout: 15_000 });
+
+      const urls = readUrls(reads);
+      expect(urls).toHaveLength(1);
+      expect(urls[0]).toContain('/tlp_feedback_summary_public');
+      expect(urls[0]).toContain('target_type=eq.poet');
+      expect(urls[0]).toContain('target_id=in.(');
+      expect(urls[0]).not.toContain('/tlp_comments_public');
+      expect(urls[0]).not.toContain('/tlp_ratings_public');
+    });
   });
 }
