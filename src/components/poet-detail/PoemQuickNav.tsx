@@ -4,7 +4,7 @@ import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 import { scrollToId } from '../../utils/smoothScroll';
 
 function PoemQuickRow({ poem }: { poem: Poem }) {
-  const feedback = useCommunityFeedback('poem', poem.id, { mode: 'summary' });
+  const feedback = useCommunityFeedback('poem', poem.id, { mode: 'passive' });
 
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();

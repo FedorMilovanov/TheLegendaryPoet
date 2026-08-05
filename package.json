@@ -29,7 +29,7 @@
     "validate:archive-store": "tsx scripts/validate-personal-archive-store.ts",
     "validate:community-store": "tsx scripts/validate-community-store.ts",
     "validate:community-target-store": "tsx scripts/validate-community-target-store.ts",
-    "validate:community-scaling": "tsx scripts/validate-community-scaling.ts",
+    "validate:community-scaling": "tsx scripts/validate-community-scaling.ts && tsx scripts/validate-community-hardening.ts",
     "validate:app-shell": "tsx scripts/validate-app-shell.ts",
     "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts && tsx scripts/validate-hall-audio-runtime.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",

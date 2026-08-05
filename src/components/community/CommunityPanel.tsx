@@ -19,10 +19,19 @@ interface CommunityPanelProps {
   title: string;
   dimensions: RatingDimension[];
   compact?: boolean;
+  deferRemote?: boolean;
 }
 
-export default function CommunityPanel({ targetType, targetId, title, dimensions, compact = false }: CommunityPanelProps) {
-  const feedback = useCommunityFeedback(targetType, targetId);
+export default function CommunityPanel({
+  targetType,
+  targetId,
+  title,
+  dimensions,
+  compact = false,
+  deferRemote = false,
+}: CommunityPanelProps) {
+  const [remoteActivated, setRemoteActivated] = useState(!deferRemote);
+  const feedback = useCommunityFeedback(targetType, targetId, { mode: remoteActivated ? 'full' : 'passive' });
   const hasRatings = feedback.ratingCount > 0;
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
@@ -74,6 +83,32 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
       spin: false,
     };
   })();
+
+  if (deferRemote && !remoteActivated) {
+    return (
+      <section className={`luxury-card relative border border-cyan-400/15 bg-[#061018]/70 ${shell}`}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
+              <ShieldCheck size={13} /> Оценка сообщества
+            </div>
+            <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/45">
+              Оценки и комментарии загружаются только после открытия этого блока.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-community-activate-target={`${targetType}:${targetId}`}
+            onClick={() => setRemoteActivated(true)}
+            className="min-h-11 shrink-0 rounded-full border border-cyan-300/25 bg-cyan-400/[0.06] px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-cyan-100 transition hover:border-cyan-200/45 hover:bg-cyan-400/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+          >
+            Открыть оценки и комментарии
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={`luxury-card relative border border-cyan-400/15 bg-[#061018]/70 ${shell}`}>

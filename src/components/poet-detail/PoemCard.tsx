@@ -104,6 +104,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       <div className="mt-8">
         <CommunityPanel
           compact
+          deferRemote
           targetType="poem"
           targetId={poem.id}
           title={`Оценка стихотворения: ${poem.title}`}
