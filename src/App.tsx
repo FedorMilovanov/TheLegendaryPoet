@@ -72,15 +72,19 @@ function RouteSettled({ pathname, onSettled, children }: { pathname: string; onS
 function RouteContent() {
   const location = useLocation();
   const outlet = useOutlet();
-  const firstRouteRef = useRef(true);
+  const initialPathRef = useRef(location.pathname);
   const [announcement, setAnnouncement] = useState('');
 
   const handleSettled = useCallback(() => {
-    const firstRoute = firstRouteRef.current;
-    firstRouteRef.current = false;
     setAnnouncement(document.title || 'Страница открыта');
-    if (!firstRoute) document.getElementById('main-content')?.focus({ preventScroll: true });
-  }, []);
+    // Key focus transfer to route identity, not to whether the initial passive
+    // effect happened to run first. A very fast keyboard command can navigate
+    // before that first timeout fires; the destination is still a real route
+    // change and must receive focus.
+    if (location.pathname !== initialPathRef.current) {
+      document.getElementById('main-content')?.focus({ preventScroll: true });
+    }
+  }, [location.pathname]);
 
   const page = (
     <ErrorBoundary resetKey={location.pathname} variant="page">
