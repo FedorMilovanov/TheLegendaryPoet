@@ -59,6 +59,7 @@ jobs:
 
           rm -f src/routes/routeModules.tsx
           rm -f src/components/hall/PoetDetailHeroTransition.tsx
+          sed -i 's/if "data-tilt-tracking" not in tilt:/if "tiltTracking" not in tilt:/' scripts/integrate-marathon-audit.py
           python3 scripts/integrate-marathon-audit.py
 
       - name: Install deterministic build and browser dependencies
