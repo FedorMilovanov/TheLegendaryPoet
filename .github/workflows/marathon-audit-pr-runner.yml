@@ -59,6 +59,18 @@ jobs:
 
           rm -f src/routes/routeModules.tsx
           rm -f src/components/hall/PoetDetailHeroTransition.tsx
+
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('scripts/validate-hover-stability.ts')
+          source = path.read_text(encoding='utf-8')
+          source = source.replace("node.dataset.tiltActive = 'true';", "node.dataset.tiltTracking = 'true';")
+          source = source.replace('delete ref.current.dataset.tiltActive;', 'delete node.dataset.tiltTracking;')
+          source = source.replace(".tilt-card-inner[data-tilt-active='true']", '.tilt-card-inner[data-tilt-tracking="true"]')
+          source = source.replace('transition-duration: 0ms;', 'transition: none;')
+          path.write_text(source, encoding='utf-8')
+          PY
+
           sed -i 's/if "data-tilt-tracking" not in tilt:/if "tiltTracking" not in tilt:/' scripts/integrate-marathon-audit.py
           python3 scripts/integrate-marathon-audit.py
 
