@@ -31,27 +31,54 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ffmpeg imagemagick
 
-      - name: Apply non-major dependency repairs
+      - name: Apply audited same-major dependency repairs
         shell: bash
         run: |
           set -euo pipefail
-          ROUTER_VERSION="$({ npm view react-router-dom@7 version --json || exit 1; } | node -e '
-            let raw = "";
-            process.stdin.on("data", chunk => raw += chunk);
-            process.stdin.on("end", () => {
-              const value = JSON.parse(raw);
-              const version = Array.isArray(value) ? value.at(-1) : value;
-              if (typeof version !== "string" || !version.startsWith("7.")) process.exit(2);
-              console.log(version);
-            });
-          ')"
-          if [[ "$ROUTER_VERSION" == "7.14.2" ]]; then
-            echo 'Registry did not expose a patched React Router 7 release.' >&2
-            exit 1
-          fi
-          echo "Using react-router-dom $ROUTER_VERSION and Vite 7.3.6"
-          npm install --save-exact "react-router-dom@$ROUTER_VERSION"
-          npm install --save-dev --save-exact vite@7.3.6
+
+          latest_major() {
+            local package="$1"
+            local major="$2"
+            npm view "${package}@${major}" version --json | node -e '
+              let raw = "";
+              process.stdin.on("data", chunk => raw += chunk);
+              process.stdin.on("end", () => {
+                const value = JSON.parse(raw);
+                const version = Array.isArray(value) ? value.at(-1) : value;
+                if (typeof version !== "string") process.exit(2);
+                console.log(version);
+              });
+            '
+          }
+
+          PLUGIN_REACT_VERSION="$(latest_major '@vitejs/plugin-react' 5)"
+          TAILWIND_VITE_VERSION="$(latest_major '@tailwindcss/vite' 4)"
+          TAILWIND_VERSION="$(latest_major 'tailwindcss' 4)"
+          BABEL_VERSION="$(latest_major '@babel/core' 7)"
+          POSTCSS_VERSION="$(latest_major 'postcss' 8)"
+
+          echo "Using react-router-dom 7.11.0, Vite 7.3.6, plugin-react ${PLUGIN_REACT_VERSION}, Tailwind ${TAILWIND_VERSION}"
+          npm install --save-exact react-router-dom@7.11.0
+          npm install --save-dev --save-exact \
+            vite@7.3.6 \
+            "@vitejs/plugin-react@${PLUGIN_REACT_VERSION}" \
+            "@tailwindcss/vite@${TAILWIND_VITE_VERSION}" \
+            "tailwindcss@${TAILWIND_VERSION}"
+
+          node - "$BABEL_VERSION" "$POSTCSS_VERSION" <<'NODE'
+          const fs = require('fs');
+          const [babelVersion, postcssVersion] = process.argv.slice(2);
+          const path = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+          pkg.overrides = {
+            ...(pkg.overrides ?? {}),
+            '@babel/core': babelVersion,
+            postcss: postcssVersion,
+          };
+          fs.writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`);
+          NODE
+
+          npm install --package-lock-only
           npm audit fix --package-lock-only
           npm ci
 
@@ -107,5 +134,5 @@ jobs:
             echo 'No dependency repair changes to commit.'
             exit 0
           fi
-          git commit -m 'fix(deps): apply audited non-major security updates'
+          git commit -m 'fix(deps): apply audited same-major security updates'
           git push origin HEAD:agent/marathon-audit-integration-20260805
