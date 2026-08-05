@@ -41,8 +41,8 @@ jobs:
               continue
             current = None
 
-          if len(blocks) < 7:
-            raise SystemExit(f'Expected at least seven reviewed run blocks, found {len(blocks)}')
+          if len(blocks) != 5:
+            raise SystemExit(f'Expected exactly five reviewed run blocks, found {len(blocks)}')
 
           script = ['#!/usr/bin/env bash', 'set -euo pipefail']
           for index, block in enumerate(blocks, start=1):
