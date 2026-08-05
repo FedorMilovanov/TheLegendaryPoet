@@ -57,16 +57,6 @@ function searchVerificationPlugin(): Plugin {
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [searchVerificationPlugin(), react(), tailwindcss()],
-  // Dev/preview only: sandboxed review environments serve the dev server behind a
-  // generated hostname. Production builds are static files and ignore this block.
-  server: {
-    host: true,
-    allowedHosts: ['.e2b.app', 'localhost', '127.0.0.1'],
-  },
-  preview: {
-    host: true,
-    allowedHosts: ['.e2b.app', 'localhost', '127.0.0.1'],
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
