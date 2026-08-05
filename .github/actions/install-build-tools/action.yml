@@ -1,0 +1,20 @@
+name: Install deterministic build tools
+description: Install the exact system packages required by deterministic asset materialization.
+inputs:
+  packages:
+    description: Space-separated apt packages.
+    required: false
+    default: ffmpeg
+runs:
+  using: composite
+  steps:
+    - name: Install system build tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update -qq
+        read -r -a packages <<< "${{ inputs.packages }}"
+        sudo apt-get install -y -qq --no-install-recommends "${packages[@]}"
+        for package in "${packages[@]}"; do
+          dpkg-query -W -f='${Package}=${Version}\n' "$package"
+        done

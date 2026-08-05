@@ -33,18 +33,12 @@ jobs:
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$TESTED_SHA"
           printf 'tested_commit=%s\n' "$actual" > manual-browser-tested-head.txt
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install project dependencies
-        run: npm ci
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
       - name: Validate locked browser runtime
         run: npm run validate:browser-runtime
-      - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
       - name: Build production site
         id: production_build
         env:
@@ -63,16 +57,17 @@ jobs:
           path: |
             production-build.log
             manual-browser-tested-head.txt
+            dist/build-budget-report.json
           if-no-files-found: error
           retention-days: 7
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium webkit
+      - name: Install locked Playwright browsers
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium webkit
       - name: Start production preview
-        run: |
-          npm run preview -- --host 127.0.0.1 > preview.log 2>&1 &
-          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
-          cat preview.log
-          exit 1
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: preview.log
       - name: Run Chromium and Android Chrome QA
         run: >-
           npx playwright test
@@ -81,6 +76,7 @@ jobs:
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs
+          qa/community-request-topology.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
@@ -107,6 +103,7 @@ jobs:
             preview.log
             production-build.log
             manual-browser-tested-head.txt
+            dist/build-budget-report.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -120,30 +117,25 @@ jobs:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact Safari home checkout identity
         run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install Safari home project dependencies
-        run: npm ci
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
       - name: Validate locked browser runtime
         run: npm run validate:browser-runtime
-      - name: Install FFmpeg for Safari home deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
       - name: Build Safari home production site
         id: webkit_home_build
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install Playwright WebKit
-        run: npx playwright install --with-deps webkit
+      - name: Install locked Playwright WebKit
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: webkit
       - name: Start Safari home production preview
-        run: |
-          npm run preview -- --host 127.0.0.1 > webkit-home-preview.log 2>&1 &
-          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
-          exit 1
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: webkit-home-preview.log
       - name: Run Safari home reveal and route QA on a fresh runner
         if: ${{ always() && steps.webkit_home_build.outcome == 'success' }}
         run: node scripts/run-webkit-home-reveal-process-isolated.mjs
@@ -157,6 +149,7 @@ jobs:
             playwright-report
             test-results
             webkit-home-preview.log
+            dist/build-budget-report.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -170,30 +163,25 @@ jobs:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact premium checkout identity
         run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install premium project dependencies
-        run: npm ci
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
       - name: Validate locked browser runtime
         run: npm run validate:browser-runtime
-      - name: Install FFmpeg for premium deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
       - name: Build premium production site
         id: premium_build
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium webkit
+      - name: Install locked Playwright browsers
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium webkit
       - name: Start premium production preview
-        run: |
-          npm run preview -- --host 127.0.0.1 > premium-preview.log 2>&1 &
-          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
-          exit 1
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: premium-preview.log
       - name: Run standard premium homepage and pointer-performance matrix on a fresh runner
         if: ${{ always() && steps.premium_build.outcome == 'success' }}
         run: |
@@ -210,6 +198,7 @@ jobs:
             test-results
             premium-preview.log
             home-polish.log
+            dist/build-budget-report.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -223,30 +212,25 @@ jobs:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact critical iPhone checkout identity
         run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install critical iPhone project dependencies
-        run: npm ci
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
       - name: Validate locked browser runtime
         run: npm run validate:browser-runtime
-      - name: Install FFmpeg for critical iPhone deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
       - name: Build critical iPhone production site
         id: premium_iphone_critical_build
         env:
           VITE_BASE: /
         run: npm run build
-      - name: Install Playwright WebKit
-        run: npx playwright install --with-deps webkit
+      - name: Install locked Playwright WebKit
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: webkit
       - name: Start critical iPhone production preview
-        run: |
-          npm run preview -- --host 127.0.0.1 > premium-iphone-critical-preview.log 2>&1 &
-          for attempt in $(seq 1 60); do curl --fail --silent http://127.0.0.1:4173/ > /dev/null && exit 0; sleep 1; done
-          exit 1
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: premium-iphone-critical-preview.log
       - name: Run critical iPhone first-viewport and reduced-motion contours on a fresh runner
         if: ${{ always() && steps.premium_iphone_critical_build.outcome == 'success' }}
         run: |
@@ -263,5 +247,6 @@ jobs:
             test-results
             premium-iphone-critical-preview.log
             home-iphone-critical.log
+            dist/build-budget-report.json
           if-no-files-found: warn
           retention-days: 7
