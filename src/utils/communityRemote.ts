@@ -13,7 +13,7 @@ const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
 type CommunityTestConfig = { url: string; key: string };
 
 function readLoopbackTestConfig(): CommunityTestConfig | undefined {
-  if (typeof window === 'undefined' || !LOOPBACK_HOSTS.has(window.location.hostname)) return undefined;
+  if (typeof window === 'undefined' || !LOOPBACK_HOSTS.has(window.location?.hostname ?? '')) return undefined;
   const candidate = (globalThis as typeof globalThis & {
     __TLP_COMMUNITY_TEST_CONFIG__?: Partial<CommunityTestConfig>;
   }).__TLP_COMMUNITY_TEST_CONFIG__;
