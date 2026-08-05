@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "project": "THE LEGENDARY POET",
+  "canonicalUrl": "https://thelegendarypoet.ru",
+  "deploymentBase": "/",
+  "runtime": {
+    "minimumNode": "22.22.0",
+    "recommendedNodeMajor": 24,
+    "routeRegistry": "src/routes/routeModules.ts",
+    "essayCatalog": "src/data/essays/index.ts",
+    "poetCatalog": "src/data/library/index.ts",
+    "brandComponent": "src/components/SpectralBrandMark.tsx",
+    "brandMaterializer": "scripts/materialize-brand-art.mjs",
+    "brandApprovedSourceDirectory": "qa/reference/approved-brand",
+    "communitySchema": "docs/community-schema.sql"
+  },
+  "documentation": {
+    "currentState": "docs/CURRENT_STATE.md",
+    "authoritative": [
+      "README.md",
+      "PROJECT_CHARTER.md",
+      "AGENTS.md",
+      "docs/CURRENT_STATE.md",
+      "docs/APP_SHELL_RUNTIME.md",
+      "docs/BRAND_EMBLEM.md",
+      "docs/COMMENTS_SETUP.md",
+      "docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md",
+      "docs/HISTORICAL_NARRATIVE_STANDARD.md",
+      "src/docs/THEOLOGICAL_GUIDELINES.md"
+    ],
+    "historical": [
+      "audit/index.html",
+      "COMPONENT_BLUEPRINTS.md",
+      "TRANSFER.md",
+      "docs/INTEGRATION_STATUS.md"
+    ]
+  },
+  "workflowPathExceptions": []
+}
