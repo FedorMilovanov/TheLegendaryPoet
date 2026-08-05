@@ -15,11 +15,14 @@ jobs:
     steps:
       - name: Checkout exact head
         uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up repository Node baseline
+        uses: ./.github/actions/setup-node-deps
         with:
           node-version-file: .nvmrc
+          install: 'false'
       - name: Validate repository contracts
         run: node scripts/validate-project-contracts.mjs
+      - name: Validate workflow consolidation and performance contract
+        run: node scripts/validate-workflow-consolidation.mjs
       - name: Validate UTC daily rotation
         run: node scripts/validate-daily-content.mjs
