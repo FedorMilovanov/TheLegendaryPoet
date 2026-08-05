@@ -1,13 +1,11 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import type { CommentEntry, CommentKind, FeedbackTargetType, RatingEntry } from '../types/community';
 import {
-  averageScores,
   canMarkHelpful,
   checkCooldown,
   commitCommentFeedback,
   commitHelpfulFeedback,
   commitRatingFeedback,
-  distributionFromRatings,
   flushCommunityOutbox,
   getCommunitySyncSnapshot,
   getOwnRating,
@@ -15,26 +13,43 @@ import {
   subscribeCommunitySync,
   trustLabel,
 } from '../utils/communityStore';
-import { getFeedbackTargetSnapshot, subscribeFeedbackTarget } from '../utils/communityTargetStore';
+import {
+  getFeedbackTargetSnapshot,
+  loadMoreFeedbackTargetComments,
+  retryFeedbackTarget,
+  subscribeFeedbackTarget,
+  type CommunityTargetLoadMode,
+} from '../utils/communityTargetStore';
 import { getCommunityDeviceId } from '../utils/communityIdentity';
 
-export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: string) {
+interface CommunityFeedbackOptions {
+  mode?: CommunityTargetLoadMode;
+}
+
+export function useCommunityFeedback(
+  targetType: FeedbackTargetType,
+  targetId: string,
+  options: CommunityFeedbackOptions = {},
+) {
+  const mode = options.mode ?? 'full';
   const targetStore = useMemo(() => ({
-    subscribe: (listener: () => void) => subscribeFeedbackTarget(targetType, targetId, listener),
+    subscribe: (listener: () => void) => subscribeFeedbackTarget(targetType, targetId, listener, mode),
     getSnapshot: () => getFeedbackTargetSnapshot(targetType, targetId),
-  }), [targetId, targetType]);
+  }), [mode, targetId, targetType]);
   const snapshot = useSyncExternalStore(targetStore.subscribe, targetStore.getSnapshot, targetStore.getSnapshot);
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
   const ratingScope = `rating:${targetType}:${targetId}`;
 
-  const ratings = snapshot.ratings;
   const comments = snapshot.comments;
-  const summary = useMemo(() => averageScores(ratings), [ratings]);
-  const distribution = useMemo(() => distributionFromRatings(ratings), [ratings]);
+  const summary = useMemo(() => ({
+    overall: snapshot.aggregate.overall,
+    dimensions: snapshot.aggregate.dimensions,
+  }), [snapshot.aggregate.dimensions, snapshot.aggregate.overall]);
+  const distribution = snapshot.aggregate.distribution;
   const topComment = useMemo(() => comments
     .slice()
     .sort((left, right) => right.helpful - left.helpful || Date.parse(right.createdAt) - Date.parse(left.createdAt))[0], [comments]);
-  const trust = useMemo(() => trustLabel(ratings.length), [ratings.length]);
+  const trust = trustLabel(snapshot.aggregate.ratingCount);
   const ownRating = useMemo(() => getOwnRating(ratingScope), [ratingScope, snapshot]);
 
   const addRating = (scores: Record<string, number>) => {
@@ -100,17 +115,24 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
   };
 
   return {
-    ratings,
     comments,
+    ratingCount: snapshot.aggregate.ratingCount,
+    commentCount: snapshot.aggregate.commentCount,
     summary,
     distribution,
     topComment,
     trust,
     ownRating,
     sync,
+    summaryPhase: snapshot.summaryPhase,
+    commentsPhase: snapshot.commentsPhase,
+    hasMoreComments: snapshot.hasMoreComments,
+    error: snapshot.error,
     addRating,
     addComment,
     markHelpful,
     hasMarkedHelpful,
+    loadMoreComments: () => loadMoreFeedbackTargetComments(targetType, targetId),
+    retry: () => retryFeedbackTarget(targetType, targetId, mode),
   };
 }
