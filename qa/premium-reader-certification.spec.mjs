@@ -230,7 +230,9 @@ test.describe('W5 premium reader certification', () => {
     await panel.getByPlaceholder('Ваше имя или псевдоним — необязательно').fill('Reader QA');
     await panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?').fill(commentText);
     await panel.getByRole('button', { name: 'Добавить комментарий' }).click();
-    await expect(panel.getByText(commentText)).toBeVisible();
+    const optimisticCommentSurfaces = panel.getByText(commentText);
+    expect(await optimisticCommentSurfaces.count()).toBeGreaterThanOrEqual(1);
+    await expect(optimisticCommentSurfaces.first()).toBeVisible();
     await expect.poll(() => writes.filter((entry) => entry.pathname.includes('/rpc/')).length).toBeGreaterThan(0);
     await expect(panel.locator('p[aria-live="polite"]')).toContainText(/Сервер недоступен|В очереди|ничего не потеряно/i, { timeout: 15_000 });
 
