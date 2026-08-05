@@ -16,6 +16,8 @@ create unique index if not exists tlp_ratings_one_vote_per_browser
   where voter_id is not null;
 create index if not exists tlp_ratings_target_idx
   on public.tlp_ratings(target_type, target_id, created_at desc);
+create index if not exists tlp_ratings_target_cursor_idx
+  on public.tlp_ratings(target_type, target_id, created_at desc, id desc);
 
 create table if not exists public.tlp_comments (
   id text primary key,
@@ -31,6 +33,8 @@ alter table public.tlp_comments add column if not exists voter_id uuid;
 alter table public.tlp_comments add column if not exists status text not null default 'published';
 create index if not exists tlp_comments_target_idx
   on public.tlp_comments(target_type, target_id, status, created_at desc);
+create index if not exists tlp_comments_target_cursor_idx
+  on public.tlp_comments(target_type, target_id, status, created_at desc, id desc);
 create index if not exists tlp_comments_voter_time_idx
   on public.tlp_comments(voter_id, created_at desc)
   where voter_id is not null;
@@ -63,6 +67,82 @@ left join public.tlp_comment_votes v on v.comment_id = c.id
 where c.status = 'published'
 group by c.id, c.target_type, c.target_id, c.author, c.text, c.kind, c.helpful, c.created_at;
 
+create or replace view public.tlp_feedback_summary_public
+with (security_barrier = true) as
+with rating_values as (
+  select
+    r.target_type,
+    r.target_id,
+    r.id,
+    item.key as dimension,
+    (item.value::text)::numeric as score
+  from public.tlp_ratings r
+  cross join lateral jsonb_each(r.scores) item
+  where jsonb_typeof(item.value) = 'number'
+),
+rating_per_vote as (
+  select target_type, target_id, id, avg(score) as overall
+  from rating_values
+  group by target_type, target_id, id
+),
+rating_summary as (
+  select
+    target_type,
+    target_id,
+    count(*)::integer as rating_count,
+    avg(overall)::double precision as overall,
+    stddev_pop(overall)::double precision as deviation
+  from rating_per_vote
+  group by target_type, target_id
+),
+dimension_summary as (
+  select target_type, target_id, jsonb_object_agg(dimension, average_score order by dimension) as dimensions
+  from (
+    select target_type, target_id, dimension, avg(score)::double precision as average_score
+    from rating_values
+    group by target_type, target_id, dimension
+  ) values_by_dimension
+  group by target_type, target_id
+),
+distribution_summary as (
+  select target_type, target_id, jsonb_object_agg(bucket::text, bucket_count order by bucket) as distribution
+  from (
+    select
+      target_type,
+      target_id,
+      greatest(1, least(5, round(overall)::integer)) as bucket,
+      count(*)::integer as bucket_count
+    from rating_per_vote
+    group by target_type, target_id, greatest(1, least(5, round(overall)::integer))
+  ) values_by_bucket
+  group by target_type, target_id
+),
+comment_summary as (
+  select target_type, target_id, count(*)::integer as comment_count
+  from public.tlp_comments
+  where status = 'published'
+  group by target_type, target_id
+),
+targets as (
+  select target_type, target_id from rating_summary
+  union
+  select target_type, target_id from comment_summary
+)
+select
+  targets.target_type,
+  targets.target_id,
+  coalesce(rating_summary.rating_count, 0)::integer as rating_count,
+  coalesce(comment_summary.comment_count, 0)::integer as comment_count,
+  coalesce(rating_summary.overall, 0)::double precision as overall,
+  rating_summary.deviation,
+  coalesce(dimension_summary.dimensions, '{}'::jsonb) as dimensions,
+  coalesce(distribution_summary.distribution, '{}'::jsonb) as distribution
+from targets
+left join rating_summary using (target_type, target_id)
+left join dimension_summary using (target_type, target_id)
+left join distribution_summary using (target_type, target_id)
+left join comment_summary using (target_type, target_id);
+
 create or replace function public.tlp_submit_rating(
   p_id text,
   p_target_type text,
@@ -80,7 +160,7 @@ declare
   expected_keys text[];
 begin
   if p_voter_id is null then raise exception 'voter id is required'; end if;
-  if p_id is null or p_id !~ '^rating-[0-9]+-[a-z0-9]{1,16}$' then raise exception 'invalid rating id'; end if;
+  if p_id is null or p_id !~ '^rating-[a-z0-9][a-z0-9-]{7,199}$' then raise exception 'invalid rating id'; end if;
   if p_target_type not in ('poet', 'poem', 'track', 'article') then raise exception 'invalid target type'; end if;
   if p_target_id is null or p_target_id !~ '^[a-z0-9][a-z0-9-]{0,159}$' then raise exception 'invalid target id'; end if;
   if jsonb_typeof(p_scores) <> 'object' or p_scores = '{}'::jsonb then raise exception 'scores must be an object'; end if;
@@ -127,7 +207,7 @@ declare
   clean_text text;
 begin
   if p_voter_id is null then raise exception 'voter id is required'; end if;
-  if p_id is null or p_id !~ '^comment-[0-9]+-[a-z0-9]{1,16}$' then raise exception 'invalid comment id'; end if;
+  if p_id is null or p_id !~ '^comment-[a-z0-9][a-z0-9-]{7,199}$' then raise exception 'invalid comment id'; end if;
   if p_target_type not in ('poet', 'poem', 'track', 'article') then raise exception 'invalid target type'; end if;
   if p_target_id is null or p_target_id !~ '^[a-z0-9][a-z0-9-]{0,159}$' then raise exception 'invalid target id'; end if;
   if p_kind not in ('literary', 'history', 'moral', 'performance') then raise exception 'invalid comment kind'; end if;
@@ -135,7 +215,7 @@ begin
   clean_author := regexp_replace(coalesce(trim(p_author), ''), '[[:cntrl:]]', '', 'g');
   clean_text := trim(coalesce(p_text, ''));
   if char_length(clean_author) > 60 then raise exception 'author too long'; end if;
-  if char_length(clean_text) < 8 or char_length(clean_text) > 1200 then raise exception 'invalid comment length'; end if;
+  if char_length(clean_text) < 8 or char_length(clean_text) > 2000 then raise exception 'invalid comment length'; end if;
 
   if exists (
     select 1 from public.tlp_comments
@@ -168,7 +248,7 @@ set search_path = public
 as $$
 begin
   if p_voter_id is null then raise exception 'voter id is required'; end if;
-  if p_comment_id is null or p_comment_id !~ '^comment-[0-9]+-[a-z0-9]{1,16}$' then raise exception 'invalid comment id'; end if;
+  if p_comment_id is null or p_comment_id !~ '^comment-[a-z0-9][a-z0-9-]{7,199}$' then raise exception 'invalid comment id'; end if;
 
   insert into public.tlp_comment_votes(comment_id, voter_id)
   select p_comment_id, p_voter_id
@@ -189,7 +269,7 @@ revoke all on function public.tlp_submit_rating(text, text, text, uuid, jsonb) f
 revoke all on function public.tlp_submit_comment(text, text, text, uuid, text, text, text) from public;
 revoke all on function public.tlp_mark_helpful(text, uuid) from public;
 
-grant select on public.tlp_ratings_public, public.tlp_comments_public to anon, authenticated;
+grant select on public.tlp_ratings_public, public.tlp_comments_public, public.tlp_feedback_summary_public to anon, authenticated;
 grant execute on function public.tlp_submit_rating(text, text, text, uuid, jsonb) to anon, authenticated;
 grant execute on function public.tlp_submit_comment(text, text, text, uuid, text, text, text) to anon, authenticated;
 grant execute on function public.tlp_mark_helpful(text, uuid) to anon, authenticated;

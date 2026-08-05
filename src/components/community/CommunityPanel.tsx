@@ -23,7 +23,7 @@ interface CommunityPanelProps {
 
 export default function CommunityPanel({ targetType, targetId, title, dimensions, compact = false }: CommunityPanelProps) {
   const feedback = useCommunityFeedback(targetType, targetId);
-  const hasRatings = feedback.ratings.length > 0;
+  const hasRatings = feedback.ratingCount > 0;
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
@@ -56,7 +56,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
       className: 'text-amber-100/58',
       text: feedback.sync.pendingCount > 0
         ? `Сервер недоступен. В очереди: ${feedback.sync.pendingCount}; ничего не потеряно.`
-        : (feedback.sync.message ?? 'Сервер временно недоступен; показан локальный кэш.'),
+        : (feedback.sync.message ?? 'Сервер временно недоступен; локальные изменения сохранены.'),
       spin: false,
     };
     if (feedback.sync.phase === 'idle') return {
@@ -92,7 +92,7 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
         <div className="text-left md:text-right">
           <div className={`mb-1 font-bold text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>{hasRatings ? feedback.summary.overall.toFixed(1) : '—'}</div>
           <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
-          <div className="mt-1 text-xs text-cyan-100/40">{feedback.ratings.length} оценок · {feedback.trust}</div>
+          <div className="mt-1 text-xs text-cyan-100/40">{feedback.ratingCount} оценок · {feedback.trust}</div>
         </div>
       </div>
 
@@ -100,10 +100,17 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
         <div className="space-y-5">
           <CommunityInsights dimensions={dimensions} values={feedback.summary.dimensions} />
           <RatingBars dimensions={dimensions} values={feedback.summary.dimensions} />
-          {!compact && <RatingDistribution distribution={feedback.distribution} total={feedback.ratings.length} />}
+          {!compact && <RatingDistribution distribution={feedback.distribution} total={feedback.ratingCount} />}
         </div>
         {!compact && <FeedbackPair positive={positiveComment} critical={criticalComment} />}
       </div>
+
+      {feedback.error && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-xs text-amber-100/65" role="status">
+          <span>{feedback.error}</span>
+          <button type="button" onClick={() => { void feedback.retry(); }} className="min-h-9 rounded-full border border-amber-300/20 px-3 font-bold text-amber-100 transition hover:border-amber-200/40">Повторить</button>
+        </div>
+      )}
 
       <div className={actionGrid}>
         <div className="space-y-5">
@@ -119,6 +126,10 @@ export default function CommunityPanel({ targetType, targetId, title, dimensions
           <CommentComposer onSubmit={feedback.addComment} onStatus={(message, tone) => setToast({ message, tone })} />
           <CommentList
             comments={feedback.comments}
+            total={feedback.commentCount}
+            hasMore={feedback.hasMoreComments}
+            loading={feedback.commentsPhase === 'loading'}
+            onLoadMore={feedback.loadMoreComments}
             onHelpful={feedback.markHelpful}
             isHelpfulMarked={feedback.hasMarkedHelpful}
             onStatus={(message, tone) => setToast({ message, tone })}

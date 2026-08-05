@@ -17,7 +17,7 @@ const dateFormatter = new Intl.DateTimeFormat('ru-RU', {
 
 export default function CommentCard({ comment, helpfulMarked = false, onHelpful }: CommentCardProps) {
   return (
-    <article className="rounded-2xl border border-cyan-400/10 bg-black/25 p-4 transition hover:border-cyan-400/18">
+    <article data-community-comment-id={comment.id} className="rounded-2xl border border-cyan-400/10 bg-black/25 p-4 transition hover:border-cyan-400/18">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-bold text-white" title={comment.author}>{comment.author}</div>

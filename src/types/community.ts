@@ -26,6 +26,7 @@ export interface CommentEntry {
   createdAt: string;
 }
 
+/** Device-owned optimistic data only. Remote public corpora never enter this envelope. */
 export interface FeedbackSnapshot {
   ratings: RatingEntry[];
   comments: CommentEntry[];
@@ -38,4 +39,25 @@ export interface CommunitySyncState {
   pendingCount: number;
   lastSyncedAt: string | null;
   message: string | null;
+}
+
+export interface CommunityAggregate {
+  targetType: FeedbackTargetType;
+  targetId: string;
+  ratingCount: number;
+  commentCount: number;
+  overall: number;
+  dimensions: Record<string, number>;
+  distribution: Record<number, number>;
+  deviation: number | null;
+}
+
+export interface CommentCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface CommunityCommentPage {
+  comments: CommentEntry[];
+  nextCursor: CommentCursor | null;
 }

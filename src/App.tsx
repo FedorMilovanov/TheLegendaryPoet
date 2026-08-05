@@ -2,7 +2,6 @@ import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } fr
 import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
-import { hydrateFromRemote } from './utils/communityStore';
 import { musicTracks } from './data/poets';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -197,7 +196,6 @@ function RoutedApp() {
 
 function App() {
   const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
-  useEffect(() => { void hydrateFromRemote(); }, []);
   return (
     <AudioPlayerProvider tracks={musicTracks}>
       <Router basename={basename}>
