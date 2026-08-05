@@ -1,0 +1,61 @@
+name: W3 Hardening Type Narrowing
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: w3-hardening-type-narrowing-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact hardening branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/community-w3-production-hardening-20260805
+          fetch-depth: 0
+
+      - name: Apply type-only narrowing repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 'cce03f4be081a08b6f0705377dcbbd87ea37aeb0'
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/utils/communityStore.ts')
+          source = path.read_text(encoding='utf-8')
+          old = "const previousScores = pending ? pending.previousScores : getOwnRating(scope)?.scores;"
+          new = "const previousScores = pending?.kind === 'rating' ? pending.previousScores : getOwnRating(scope)?.scores;"
+          assert source.count(old) == 1, 'pending rating narrowing anchor drifted'
+          source = source.replace(old, new, 1)
+          path.write_text(source, encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Verify community contracts and TypeScript
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Run focused hardening barrier
+        run: |
+          npm run validate:community-store
+          npm run validate:community-target-store
+          npm run validate:community-scaling
+          npm run typecheck -- --pretty false
+
+      - name: Publish verified narrowing repair
+        shell: bash
+        run: |
+          git config user.name 'W3 Hardening Type Guard'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/utils/communityStore.ts
+          git diff --cached --check
+          git commit -m 'fix(community): narrow pending rating operations'
+          git push origin HEAD:fix/community-w3-production-hardening-20260805
