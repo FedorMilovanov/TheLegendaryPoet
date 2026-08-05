@@ -1,3 +1,5 @@
+import { safeRead, safeWrite } from './browserStorage';
+
 const DEVICE_KEY = 'tlp-community-device-v1';
 
 function fallbackUuid() {
@@ -12,13 +14,9 @@ function fallbackUuid() {
  */
 export function getCommunityDeviceId(): string {
   if (typeof window === 'undefined') return '00000000-0000-4000-8000-000000000000';
-  try {
-    const existing = window.localStorage.getItem(DEVICE_KEY);
-    if (existing) return existing;
-    const next = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : fallbackUuid();
-    window.localStorage.setItem(DEVICE_KEY, next);
-    return next;
-  } catch {
-    return fallbackUuid();
-  }
+  const existing = safeRead(DEVICE_KEY);
+  if (existing) return existing;
+  const next = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : fallbackUuid();
+  safeWrite(DEVICE_KEY, next);
+  return next;
 }
