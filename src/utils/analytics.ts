@@ -9,6 +9,8 @@
  * consent interface remains hidden.
  */
 
+import { safeRead, safeWrite } from './browserStorage';
+
 export type AnalyticsConsent = 'granted' | 'denied';
 
 const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
@@ -29,22 +31,14 @@ export function hasConfiguredAnalytics() {
 }
 
 export function getAnalyticsConsent(): AnalyticsConsent | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const value = window.localStorage.getItem(CONSENT_STORAGE_KEY);
-    return value === 'granted' || value === 'denied' ? value : null;
-  } catch {
-    return null;
-  }
+  const value = safeRead(CONSENT_STORAGE_KEY);
+  return value === 'granted' || value === 'denied' ? value : null;
 }
 
 export function setAnalyticsConsent(value: AnalyticsConsent) {
   if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(CONSENT_STORAGE_KEY, value);
-  } catch {
-    // Consent still applies to the current page even when storage is blocked.
-  }
+  // Consent still applies to the current page even when storage is blocked.
+  safeWrite(CONSENT_STORAGE_KEY, value);
   window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
 }
 
