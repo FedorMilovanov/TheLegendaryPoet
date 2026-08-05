@@ -45,7 +45,11 @@ test.describe('reader outcome journeys', () => {
     expect(title.length).toBeGreaterThan(1);
 
     await addButton.click();
-    await expect(addButton).toHaveAttribute('aria-pressed', 'true');
+    // The accessible name changes from “Добавить” to “Убрать” after success.
+    // Keep the assertion anchored to the exact poem card instead of allowing
+    // the original role/name locator to re-resolve to the next unsaved poem.
+    const savedButton = poemCard.getByRole('button', { name: /^Убрать «.+» из архива$/ });
+    await expect(savedButton).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('status').filter({ hasText: 'Добавлено в архив' })).toBeVisible();
 
     await page.goto(`${BASE_URL}/archive`, { waitUntil: 'domcontentloaded' });
