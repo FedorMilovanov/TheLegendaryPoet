@@ -9,11 +9,17 @@ const expect = (condition: unknown, message: string) => {
 };
 
 const app = read('src/App.tsx');
-const routes = read('src/routes/routeModules.tsx');
+const routes = read('src/routes/routeModules.ts');
+expect(!fs.existsSync(path.join(root, 'src/routes/routeModules.tsx')), 'routeModules.tsx must not shadow the live route registry');
 const link = read('src/components/ui/Link.tsx');
 const smooth = read('src/components/SmoothScroll.tsx');
 const boundary = read('src/components/ErrorBoundary.tsx');
 const cursor = read('src/components/CustomCursor.tsx');
+const browserStorage = read('src/utils/browserStorage.ts');
+const communityIdentity = read('src/utils/communityIdentity.ts');
+const analytics = read('src/utils/analytics.ts');
+const themeToggle = read('src/components/ThemeToggle.tsx');
+const audioProvider = read('src/components/music/AudioPlayerProvider.tsx');
 const commandPalette = read('src/components/command/CommandPalette.tsx');
 const header = read('src/components/Header.tsx');
 const mobileDock = read('src/components/MobileDock.tsx');
@@ -31,6 +37,8 @@ const expectedPages = [
   'MusicPage',
   'TrackDetailPage',
   'AboutPage',
+  'EditorialPolicyPage',
+  'PrivacyPage',
   'MyArchivePage',
   'NotFoundPage',
 ];
@@ -97,6 +105,18 @@ expect(cursor.includes('forced-colors: active'), 'the custom cursor must preserv
 expect(cursor.includes('visibilitychange'), 'the cursor must hide when the document is backgrounded');
 expect(cursor.includes('INTERACTIVE_SELECTOR'), 'cursor emphasis must cover controls beyond links and buttons');
 expect(cursor.includes('activatedRef.current'), 'the native cursor must remain visible until a real pointer position exists');
+
+for (const [source, label] of [
+  [communityIdentity, 'community identity'],
+  [analytics, 'analytics consent'],
+  [themeToggle, 'theme preference'],
+  [audioProvider, 'audio coordination'],
+] as const) {
+  expect(source.includes('safeWrite('), `${label} must use safeWrite for browser persistence`);
+  expect(!source.includes('window.localStorage.setItem('), `${label} must not write localStorage directly`);
+}
+expect(browserStorage.includes('export function safeWrite'), 'shared safeWrite helper must remain available');
+expect(browserStorage.includes("typeof window === 'undefined'"), 'browser storage helper must remain SSR-safe');
 
 expect(commandPalette.includes('if (!open) return null;'), 'closed search must not render a duplicate fixed desktop trigger');
 expect(!commandPalette.includes('palette-fab'), 'the retired floating Ctrl K pill must stay out of the command palette DOM');

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
+import { safeWrite } from '../../utils/browserStorage';
 import {
   AUDIO_COORDINATION_CHANNEL,
   AUDIO_COORDINATION_STORAGE_KEY,
@@ -502,7 +503,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         timestamp: Date.now(),
       };
       try { coordinationChannelRef.current?.postMessage(message); } catch { /* restricted browsing context */ }
-      try { window.localStorage.setItem(AUDIO_COORDINATION_STORAGE_KEY, JSON.stringify(message)); } catch { /* storage unavailable */ }
+      safeWrite(AUDIO_COORDINATION_STORAGE_KEY, JSON.stringify(message));
     };
 
     const updateBuffered = () => {

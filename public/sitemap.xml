@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://thelegendarypoet.ru/</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/og-image.jpg</image:loc>
       <image:title>THE LEGENDARY POET</image:title>
@@ -11,15 +11,15 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/ratings</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/articles</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music</loc>
@@ -57,7 +57,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-part-1-editorial.webp</image:loc>
       <image:title>Сергей Есенин. Часть I: 1895–1921</image:title>
@@ -75,7 +75,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-05</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp</image:loc>
       <image:title>Есенин и Айседора Дункан: что документы говорят о первой встрече</image:title>
@@ -197,7 +197,7 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc>
-    <lastmod>2026-08-04</lastmod>
+    <lastmod>2026-08-05</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/yesenin.jpg</image:loc>
       <image:title>Сергей Александрович Есенин</image:title>

@@ -182,6 +182,66 @@ function assertStableSamples(initial, samples, enforceOpacity) {
   }
 }
 
+test('TiltCard follows live pointer input without a transition backlog', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tilt-card-inner').first();
+  await expect(card).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  await page.mouse.move(box.x + box.width * 0.18, box.y + box.height * 0.2);
+  await expect.poll(async () => card.getAttribute('data-tilt-tracking')).toBe('true');
+
+  const active = await card.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { transform: style.transform, transitionDuration: style.transitionDuration };
+  });
+  expect(active.transform).not.toBe('none');
+  expect(active.transitionDuration).toBe('0s');
+
+  await page.mouse.move(2, 2);
+  await expect.poll(async () => card.getAttribute('data-tilt-tracking')).toBeNull();
+});
+
+
+test('article title remains painted throughout live 3D pointer tracking', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tilt-card-inner').first();
+  const title = card.locator('h3').first();
+  await expect(card).toBeVisible();
+  await expect(title).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  const expectedText = await title.textContent();
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+
+  for (const [x, y] of [[0.16, 0.2], [0.5, 0.5], [0.84, 0.78]]) {
+    await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 6 });
+    await expect(card).toHaveAttribute('data-tilt-tracking', 'true');
+    await expect(title).toHaveText(expectedText ?? '');
+    const state = await title.evaluate((node) => {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return {
+        connected: node.isConnected,
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+        display: style.display,
+        width: rect.width,
+        height: rect.height,
+      };
+    });
+    expect(state.connected).toBe(true);
+    expect(state.opacity).toBeGreaterThan(0.95);
+    expect(state.visibility).not.toBe('hidden');
+    expect(state.display).not.toBe('none');
+    expect(state.width).toBeGreaterThan(1);
+    expect(state.height).toBeGreaterThan(1);
+  }
+});
+
 for (const surface of surfaces) {
   test(`${surface.name} interactive artwork uses the universal stable-hover contract`, async ({ page }, testInfo) => {
     const errors = [];

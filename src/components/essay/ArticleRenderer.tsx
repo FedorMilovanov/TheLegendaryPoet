@@ -93,7 +93,7 @@ export default function ArticleRenderer({
   const references = buildSourceReferences(sources);
 
   return (
-    <div className="essay-body flow-root">
+    <div className="essay-body flow-root" lang="ru">
       {normalizedBlocks.map((block, i) => {
         const sectionNumber = block.type === 'section' ? ++sectionCount : undefined;
         const sourceIds = 'sourceIds' in block ? block.sourceIds : undefined;

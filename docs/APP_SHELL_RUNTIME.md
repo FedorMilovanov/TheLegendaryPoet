@@ -20,7 +20,7 @@ The audio provider remains above the router and the audio chrome remains outside
 
 ## Lazy route registry
 
-All page modules are declared in `src/routes/routeModules.tsx`.
+All page modules are declared in `src/routes/routeModules.ts`.
 
 Each page has:
 
