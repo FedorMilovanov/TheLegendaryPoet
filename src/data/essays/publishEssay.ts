@@ -1,5 +1,6 @@
 import type { Essay, EssayBlock, EssaySource } from '../../types/essay';
 import { estimateReadTime } from '../../utils/readTime';
+import { applyVerifiedEssayMedia, assertVerifiedEssayMediaCoverage } from './verifiedEssayMedia';
 
 export type EssayPublicationOverrides = Partial<Omit<Essay, 'id' | 'slug' | 'blocks' | 'sources' | 'readTime'>> & {
   blocks?: readonly EssayBlock[];
@@ -40,6 +41,7 @@ export function publishEssay(base: Essay, overrides: EssayPublicationOverrides =
     sources: overrides.sources ?? base.sources,
   }) as Essay;
 
+  draft.blocks = applyVerifiedEssayMedia(draft.blocks);
   draft.readTime = estimateReadTime(draft.blocks);
   return deepFreeze(draft);
 }
@@ -55,5 +57,6 @@ export function publishEssayCatalog(items: readonly Essay[]): readonly Essay[] {
     slugs.add(essay.slug);
   }
 
+  assertVerifiedEssayMediaCoverage(items);
   return deepFreeze([...items]);
 }
