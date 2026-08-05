@@ -18,7 +18,6 @@ export interface Poet {
   epochLabel?: string;
   tags: string[];
   poems: Poem[];
-  articles: Article[];
   /** Poet-specific music, when available. */
   music?: MusicTrack[];
   historicalNote?: string;
@@ -57,17 +56,6 @@ export interface Poem {
   rating: number;
 }
 
-export interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  date: string;
-  category: 'analysis' | 'history' | 'moral' | 'biblical' | 'biography';
-  readTime: number;
-  image?: string;
-}
 
 export interface MusicTrackTheme {
   /** Primary interactive colour. Use an accessible six-digit hex value. */
