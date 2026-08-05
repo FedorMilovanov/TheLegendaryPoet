@@ -12,6 +12,7 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
+  { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
   { id: 'brand-reference-raster', file: 'qa/brand-emblem.spec.mjs' },
   { id: 'brand-reference-comparison', file: 'qa/brand-reference-comparison.spec.mjs' },
