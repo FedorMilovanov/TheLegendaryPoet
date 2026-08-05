@@ -78,7 +78,6 @@ export const ${camel}: Poet = {
     },
     // минимум 2–4 стихотворения
   ],
-  articles: [],
   historicalNote: 'TODO: 2–4 предложения об эпохе',
   spiritualSearch: 'TODO: духовный путь и мировоззрение — аналитически, без баптизирования',
   moralPortrait: ` + '`TODO (опционально): честная моральная оценка грехов; цензура POET_AUTHORING_GUIDE §6. Можно опустить.`' + `,

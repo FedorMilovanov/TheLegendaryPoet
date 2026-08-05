@@ -16,7 +16,7 @@
  * not fail the build. Keep this list honest: every rule maps to a real bug we
  * have seen or could realistically introduce.
  */
-import { poets, articles, musicTracks } from '../src/data/poets';
+import { poets, musicTracks } from '../src/data/poets';
 import { essays } from '../src/data/essays/index';
 import { poetConnections } from '../src/data/poetConnections';
 import type { Poet } from '../src/types/poet';
@@ -173,23 +173,6 @@ poets.forEach((poet: Poet, i) => {
     warn(where, `only ${(poet.testimonies || []).length} testimony — POET_AUTHORING_GUIDE targets 5–9`);
 });
 
-/* ---- Articles ---------------------------------------------------------- */
-
-const articleIds = new Set<string>();
-articles.forEach((a, i) => {
-  const where = `articles[${i}] (${a.id || '?'})`;
-  if (!isNonEmptyString(a.id)) err(where, 'missing id');
-  if (articleIds.has(a.id)) err(where, `duplicate article id "${a.id}"`);
-  if (a.id) articleIds.add(a.id);
-  if (!isNonEmptyString(a.title)) err(where, 'missing title');
-  if (!isNonEmptyString(a.excerpt)) err(where, 'missing excerpt');
-  if (!isNonEmptyString(a.content)) err(where, 'missing content');
-  if (a.content && a.content.trim().length < 400) warn(where, 'article content is short');
-  const cats = ['analysis', 'history', 'moral', 'biblical', 'biography'];
-  if (!cats.includes(a.category)) err(where, `invalid category "${a.category}"`);
-  if (PLACEHOLDER.test(a.content || '')) err(where, 'placeholder text in content');
-});
-
 /* ---- Music ------------------------------------------------------------- */
 
 const trackIds = new Set<string>();
@@ -259,7 +242,7 @@ const tag = (l: Level) => (l === 'ERROR' ? '\x1b[31m✗ ERROR\x1b[0m' : '\x1b[33
 problems.forEach((p) => console.log(`${tag(p.level)}  ${p.where}\n        ${p.msg}`));
 
 console.log(
-  `\n${poets.length} poets · ${poemIds.size} poems · ${articles.length} articles · ${essays.length} essays · ${musicTracks.length} tracks`,
+  `\n${poets.length} poets · ${poemIds.size} poems · ${essays.length} essays · ${musicTracks.length} tracks`,
 );
 console.log(`${errors.length} error(s), ${warns.length} warning(s)`);
 
