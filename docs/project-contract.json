@@ -25,9 +25,7 @@
   },
   "architecture": {
     "auditAuthority": "FedorMilovanov/AuditRepo/projects/the-legendary-poet/",
-    "openLaneIds": [
-      "TLP-CLEAN-001"
-    ],
+    "openLaneIds": [],
     "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
     "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
     "forbiddenCurrentStateClaims": [
@@ -36,7 +34,8 @@
       "`src/data/essays/index.ts` mutates imported essay objects",
       "The app currently hydrates the complete public ratings/comments corpus globally",
       "Fourteen workflows repeat dependency/browser setup",
-      "Generic package identity, engine/license/release policy unresolved"
+      "Generic package identity, engine/license/release policy unresolved",
+      "Classify every remaining remote branch and unique path as extracted"
     ]
   },
   "documentation": {
