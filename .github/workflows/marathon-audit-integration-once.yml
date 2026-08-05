@@ -1,0 +1,279 @@
+name: Marathon audit integration once
+
+on:
+  push:
+    branches:
+      - agent/marathon-audit-integration-20260805
+
+permissions:
+  contents: write
+
+concurrency:
+  group: marathon-audit-integration-20260805
+  cancel-in-progress: false
+
+jobs:
+  integrate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/marathon-audit-integration-20260805
+          fetch-depth: 0
+
+      - name: Integrate verified Arena work
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_REF='refs/remotes/origin/arena/019fcf76-thelegendarypoet'
+          git fetch origin 'refs/heads/arena/019fcf76-thelegendarypoet:refs/remotes/origin/arena/019fcf76-thelegendarypoet'
+
+          copy_from_source() {
+            local path="$1"
+            mkdir -p "$(dirname "$path")"
+            git show "$SOURCE_REF:$path" > "$path"
+          }
+
+          for path in \
+            .gitignore \
+            docs/APP_SHELL_RUNTIME.md \
+            qa/hover-stability.spec.mjs \
+            scripts/materialize-brand-art.mjs \
+            scripts/validate-app-shell.ts \
+            scripts/validate-build-output.ts \
+            scripts/validate-hover-stability.ts \
+            scripts/validate-literary-style.ts \
+            src/components/ThemeToggle.tsx \
+            src/components/music/AudioPlayerProvider.tsx \
+            src/data/essays/yeseninDuncanFirstMeeting.ts \
+            src/data/essays/yeseninPartOnePublic.ts \
+            src/utils/analytics.ts \
+            src/utils/browserStorage.ts \
+            src/utils/communityIdentity.ts
+          do
+            copy_from_source "$path"
+          done
+
+          rm -f src/routes/routeModules.tsx
+          rm -f src/components/hall/PoetDetailHeroTransition.tsx
+
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+
+          # Compact, ordered, non-breaking citation cluster with an immediate visual tooltip.
+          inline = root / 'src/components/essay/InlineCitations.tsx'
+          inline.write_text("""import type { EssaySource } from '../../types/essay';
+
+export interface EssaySourceReference {
+  number: number;
+  source: EssaySource;
+}
+
+export type EssaySourceReferenceMap = Record<string, EssaySourceReference>;
+
+export default function InlineCitations({
+  sourceIds,
+  references,
+}: {
+  sourceIds?: string[];
+  references?: EssaySourceReferenceMap;
+}) {
+  if (!sourceIds?.length || !references) return null;
+
+  const resolved = sourceIds
+    .map((id) => ({ id, reference: references[id] }))
+    .filter((item): item is { id: string; reference: EssaySourceReference } => Boolean(item.reference))
+    .sort((a, b) => a.reference.number - b.reference.number);
+
+  if (resolved.length === 0) return null;
+
+  return (
+    <sup className=\"ml-1 inline-flex whitespace-nowrap translate-y-[-0.12em] items-center gap-1 align-baseline not-italic\">
+      {resolved.map(({ id, reference }) => (
+        <a
+          key={id}
+          href={`#source-${id}`}
+          title={reference.source.title}
+          aria-label={`Источник ${reference.number}: ${reference.source.title}`}
+          className=\"group/citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums text-luxury-gold/70 transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65\"
+        >
+          {reference.number}
+          <span
+            role=\"tooltip\"
+            className=\"pointer-events-none absolute bottom-[calc(100%+0.45rem)] left-1/2 z-30 w-max max-w-64 -translate-x-1/2 whitespace-normal rounded-lg border border-luxury-gold/20 bg-[#12100c] px-2.5 py-1.5 text-left text-[10px] font-normal leading-snug normal-case tracking-normal text-luxury-gray-light/85 opacity-0 shadow-xl transition-opacity duration-150 group-hover/citation:opacity-100 group-focus-visible/citation:opacity-100\"
+          >
+            {reference.source.title}
+          </span>
+        </a>
+      ))}
+    </sup>
+  );
+}
+""", encoding='utf-8')
+
+          renderer = root / 'src/components/essay/ArticleRenderer.tsx'
+          text = renderer.read_text(encoding='utf-8')
+          text = text.replace('<div className="essay-body flow-root">', '<div className="essay-body flow-root" lang="ru">')
+          renderer.write_text(text, encoding='utf-8')
+
+          tilt = root / 'src/components/TiltCard.tsx'
+          text = tilt.read_text(encoding='utf-8')
+          if "data-tilt-tracking" not in text:
+            raise SystemExit('TiltCard lost the live tracking contract from Arena branch 77')
+          tilt.write_text(text, encoding='utf-8')
+
+          hover = root / 'src/hover-stability.css'
+          text = hover.read_text(encoding='utf-8')
+          text = text.replace('transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);', 'transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);')
+          if 'transform-style: flat;' not in text:
+            raise SystemExit('hover stability lost the flat content-plane fix')
+          hover.write_text(text, encoding='utf-8')
+
+          for path in ['qa/hover-stability.spec.mjs', 'scripts/validate-hover-stability.ts']:
+            file = root / path
+            text = file.read_text(encoding='utf-8').replace('data-tilt-active', 'data-tilt-tracking')
+            file.write_text(text, encoding='utf-8')
+
+          qa = root / 'qa/hover-stability.spec.mjs'
+          text = qa.read_text(encoding='utf-8')
+          marker = 'for (const surface of surfaces) {'
+          title_test = r'''
+test('article title remains painted throughout live 3D pointer tracking', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tilt-card-inner').first();
+  const title = card.locator('h3').first();
+  await expect(card).toBeVisible();
+  await expect(title).toBeVisible();
+  await card.scrollIntoViewIfNeeded();
+  const expectedText = await title.textContent();
+  const box = await card.boundingBox();
+  expect(box).not.toBeNull();
+
+  for (const [x, y] of [[0.16, 0.2], [0.5, 0.5], [0.84, 0.78]]) {
+    await page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 6 });
+    await expect(card).toHaveAttribute('data-tilt-tracking', 'true');
+    await expect(title).toHaveText(expectedText ?? '');
+    const state = await title.evaluate((node) => {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return {
+        connected: node.isConnected,
+        opacity: Number(style.opacity),
+        visibility: style.visibility,
+        display: style.display,
+        width: rect.width,
+        height: rect.height,
+      };
+    });
+    expect(state.connected).toBe(true);
+    expect(state.opacity).toBeGreaterThan(0.95);
+    expect(state.visibility).not.toBe('hidden');
+    expect(state.display).not.toBe('none');
+    expect(state.width).toBeGreaterThan(1);
+    expect(state.height).toBeGreaterThan(1);
+  }
+});
+
+'''
+          if 'article title remains painted throughout live 3D pointer tracking' not in text:
+            if marker not in text:
+              raise SystemExit('QA insertion marker not found')
+            text = text.replace(marker, title_test + marker, 1)
+          qa.write_text(text, encoding='utf-8')
+
+          index = root / 'src/data/essays/index.ts'
+          text = index.read_text(encoding='utf-8')
+          text = re.sub(r"(const yeseninPartOnePublished: Essay = \{.*?dateModified: )'[^']+'", r"\1'2026-08-05'", text, count=1, flags=re.S)
+          text = re.sub(r"(const yeseninDuncanPublished: Essay = \{.*?dateModified: )'[^']+'", r"\1'2026-08-05'", text, count=1, flags=re.S)
+          index.write_text(text, encoding='utf-8')
+
+          part_one = root / 'src/data/essays/yeseninPartOnePublic.ts'
+          text = part_one.read_text(encoding='utf-8')
+          replacements = {
+            'Основной титул виден на третьем PDF-кадре; весь объект упакован в 35 кадров, включая предтитул, титул, оба раздела, оглавление и издательскую рекламу.':
+              'Титульный лист и состав экземпляра просмотрены постранично: предтитул, титул, оба раздела, оглавление и издательская реклама.',
+            'Для файлов зафиксированы точные URL, размеры и SHA-256. Их предел столь же важен, как содержание: осмотрены цифровые страницы ФЭБ, но не каждый контролирующий лист полного дела РГИА.':
+              'Опубликованные страницы позволяют сверить документы с редакционной транскрипцией. При этом осмотрены цифровые страницы ФЭБ, но не каждый контролирующий лист полного дела РГИА.',
+            'Цифровой экземпляр НЭБ теперь получен и просмотрен покадрово: 16 PDF-кадров показывают печатную обложку, внутренний титул, «Хулигана», «Сорокоуст» с посвящением А. Мариенгофу и датой «Август 1920», затем «Исповедь хулигана» с датой «Ноябрь 1920». SHA-256 исходного PDF зафиксирован. Это закрывает прежний вопрос о составе книги, но не превращает открытый библиотечный скан в автоматически разрешённое для публикации изображение.':
+              'Цифровой экземпляр НЭБ просмотрен постранично: печатная обложка, внутренний титул, «Хулиган», «Сорокоуст» с посвящением А. Мариенгофу и датой «Август 1920», затем «Исповедь хулигана» с датой «Ноябрь 1920». Это уточняет состав книги и порядок вошедших в неё текстов.'
+          }
+          for old, new in replacements.items():
+            if old not in text:
+              raise SystemExit(f'Expected reader-facing technical paragraph not found: {old[:70]}')
+            text = text.replace(old, new)
+          part_one.write_text(text, encoding='utf-8')
+
+          app_validator = root / 'scripts/validate-app-shell.ts'
+          if app_validator.exists():
+            text = app_validator.read_text(encoding='utf-8')
+            if "src/routes/routeModules.ts'" not in text or 'routeModules.tsx must not shadow' not in text:
+              raise SystemExit('app-shell validator is not checking the live route registry')
+
+          # The one-shot workflow must not remain in the production tree.
+          (root / '.github/workflows/marathon-audit-integration-once.yml').unlink()
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate canonical SEO files
+        run: npm run seo:generate
+
+      - name: Run repository validation suite
+        run: npm run check
+
+      - name: Build and validate production output
+        run: |
+          npm run build
+          npm run validate:build-output
+          npm run validate:seo-output
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --package-lock=false @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run browser regression suite for articles and hover
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run preview -- --host 127.0.0.1 --port 4173 >/tmp/tlp-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true; cat /tmp/tlp-preview.log' EXIT
+          for attempt in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:4173/articles >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/articles >/dev/null
+          QA_BASE_URL=http://127.0.0.1:4173 npx playwright test \
+            qa/hover-stability.spec.mjs \
+            qa/articles-catalog.spec.mjs \
+            --config=playwright.config.mjs \
+            --project=chromium-core \
+            --workers=1
+
+      - name: Commit verified integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A \
+            .github/workflows/marathon-audit-integration-once.yml \
+            .gitignore \
+            docs/APP_SHELL_RUNTIME.md \
+            qa \
+            scripts \
+            src \
+            public/sitemap.xml \
+            public/feed.xml
+          if git diff --cached --quiet; then
+            echo 'No integration changes to commit.'
+            exit 0
+          fi
+          git commit -m 'fix(site): integrate verified marathon audit repairs'
+          git push origin HEAD:agent/marathon-audit-integration-20260805
