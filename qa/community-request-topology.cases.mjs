@@ -117,7 +117,12 @@ export function registerCommunityRequestTopologyTests({ test, expect }) {
     expect(response?.status()).toBeLessThan(400);
 
     await expect(page.getByText('9 оценок', { exact: false }).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Показано 5 из 12', { exact: false }).filter({ visible: true }).first()).toBeVisible();
+    const communityPanel = page
+      .getByText('Комментарии', { exact: true })
+      .filter({ visible: true })
+      .first()
+      .locator('xpath=ancestor::section[1]');
+    await expect(communityPanel.getByText('Показано 5 из 12', { exact: false })).toBeVisible();
 
     let urls = readUrls(reads);
     const summary = urls.filter((url) => url.includes('/tlp_feedback_summary_public'));
@@ -132,9 +137,11 @@ export function registerCommunityRequestTopologyTests({ test, expect }) {
     expect(commentReads[0]).toContain('limit=11');
     expect(urls.some((url) => url.includes('/tlp_ratings_public'))).toBe(false);
 
-    await page.getByRole('button', { name: /Показать ещё/ }).filter({ visible: true }).first().click();
-    await page.getByRole('button', { name: 'Загрузить ещё комментарии' }).filter({ visible: true }).first().click();
-    await expect(page.getByText('Показано 10 из 12', { exact: false }).filter({ visible: true }).first()).toBeVisible({ timeout: 10_000 });
+    await communityPanel.getByRole('button', { name: /Показать ещё/ }).click();
+    const loadMoreComments = communityPanel.getByRole('button', { name: 'Загрузить ещё комментарии' });
+    await expect(loadMoreComments).toBeVisible();
+    await loadMoreComments.click();
+    await expect(communityPanel.getByText('Показано 10 из 12', { exact: false })).toBeVisible({ timeout: 10_000 });
 
     urls = readUrls(reads);
     const paged = urls.filter((url) => url.includes('/tlp_comments_public'));
@@ -142,9 +149,9 @@ export function registerCommunityRequestTopologyTests({ test, expect }) {
     expect(paged[1]).toContain('or=(created_at.lt.');
     expect(paged[1]).toContain('created_at.eq.');
     expect(paged[1]).toContain('id.lt.');
-    await page.getByRole('button', { name: /Показать ещё 2/ }).filter({ visible: true }).first().click();
-    await expect(page.getByText('Показано 12 из 12', { exact: false }).filter({ visible: true }).first()).toBeVisible();
-    expect(new Set(await page.locator('[data-community-comment-id]:visible').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-community-comment-id')))).size).toBe(12);
+    await communityPanel.getByRole('button', { name: /Показать ещё 2/ }).click();
+    await expect(communityPanel.getByText('Показано 12 из 12', { exact: false })).toBeVisible();
+    expect(new Set(await communityPanel.locator('[data-community-comment-id]:visible').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-community-comment-id')))).size).toBe(12);
   });
 
   test('ratings hub reads aggregate poet rows and never comment bodies', async ({ page }, testInfo) => {
