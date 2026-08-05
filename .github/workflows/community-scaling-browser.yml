@@ -44,7 +44,7 @@ jobs:
           npm run validate:community-store
           npm run validate:community-target-store
           npm run validate:community-scaling
-          npx tsc -b --pretty false
+          npm run typecheck -- --pretty false
       - name: Install deterministic build tools
         run: |
           sudo apt-get update
