@@ -31,7 +31,6 @@ export function useCommunityFeedback(targetType: FeedbackTargetType, targetId: s
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
   const ratingScope = `rating:${targetType}:${targetId}`;
 
-  const summary = snapshot.aggregate;
   const comments = snapshot.comments;
   const topComment = useMemo(() => comments
     .slice()
