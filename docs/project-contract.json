@@ -14,6 +14,22 @@
     "brandApprovedSourceDirectory": "qa/reference/approved-brand",
     "communitySchema": "docs/community-schema.sql"
   },
+  "architecture": {
+    "auditAuthority": "FedorMilovanov/AuditRepo/projects/the-legendary-poet/",
+    "openLaneIds": [
+      "TLP-QA-001",
+      "TLP-CLEAN-001",
+      "TLP-GOV-001"
+    ],
+    "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
+    "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
+    "forbiddenCurrentStateClaims": [
+      "The old `Article`/`Poet.articles` data model remains",
+      "`src/data/essays/index.ts` mutates imported essay objects",
+      "The app currently hydrates the complete public ratings/comments corpus globally",
+      "Fourteen workflows repeat dependency/browser setup"
+    ]
+  },
   "documentation": {
     "currentState": "docs/CURRENT_STATE.md",
     "authoritative": [
