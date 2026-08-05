@@ -49,20 +49,6 @@ function searchVerificationPlugin(): Plugin {
   };
 }
 
-const isCoreCommunityTopologyQa =
-  process.env.GITHUB_ACTIONS === 'true'
-  && process.env.GITHUB_JOB === 'browser-qa'
-  && process.env.QA_BASE_URL === 'http://127.0.0.1:4173'
-  && !process.env.VITE_SUPABASE_URL
-  && !process.env.VITE_SUPABASE_ANON_KEY;
-
-const communityTopologyDefinitions = isCoreCommunityTopologyQa
-  ? {
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('https://community.test.invalid'),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify('test-anon-key'),
-    }
-  : {};
-
 // https://vite.dev/config/
 // The production site is served from the root of the custom domain.
 // VITE_BASE remains overridable for previews on another path.
@@ -70,7 +56,6 @@ const communityTopologyDefinitions = isCoreCommunityTopologyQa
 // route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
-  define: communityTopologyDefinitions,
   plugins: [searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: {
