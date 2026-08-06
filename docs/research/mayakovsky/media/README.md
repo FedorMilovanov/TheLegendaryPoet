@@ -1,14 +1,23 @@
 # Mayakovsky verified media provenance
 
-This directory is the canonical extraction of durable media evidence rescued from the deeply diverged `work/local-images-playwright-wtoc` branch.
+This directory contains the durable media evidence and completed editorial decisions for the Mayakovsky image set.
 
 ## Authority boundaries
 
-- `pr77-commons-original-provenance-ledger-2026-07-24.md` proves acquisition identity and hashes for 30 Commons originals. It does **not** authorize all 30 for publication.
-- `pr77-editorial-decisions-2026-07-24.json` is the machine-readable editorial decision set.
-- `pr77-accepted-active-media-2026-07-24.md` records the two independently verified production captions: `mayakovsky-1914` and `mayakovsky-1928-osip`.
-- The remaining 28 candidates stay unresolved and must not be promoted by analogy, filename or Commons caption alone.
+- `pr77-commons-original-provenance-ledger-2026-07-24.md` proves acquisition identity and hashes for 30 Commons originals; it does not authorize publication by itself.
+- `pr77-editorial-decisions-2026-07-24.json` is the machine-readable final decision set.
+- `pr77-accepted-active-media-2026-07-24.md` explains the accepted active records, verified reserve and explicit exclusions.
+- `src/data/essays/verifiedEssayMedia.ts` applies accepted active metadata to exactly one current archive block per record.
 
-Reader-facing application of accepted metadata is centralized in `src/data/essays/verifiedEssayMedia.ts`. The publication boundary verifies that every accepted record resolves exactly one archive image and that weaker pre-verification metadata cannot silently return.
+## Final state
 
-This directory preserves evidence, not image rights advice. Unknown creator, date or location fields remain unknown until an explicit owner-approved decision backed by stronger evidence.
+- exact originals acquired and hash-verified: `30/30`;
+- accepted active: `5` — `C03`, `C08`, `C10`, `C11`, `C16`;
+- verified reserve: `1` — `C15`;
+- explicitly excluded from current publication: `24`;
+- unresolved candidates: `0`;
+- new image binaries introduced by the final decision batch: `0`.
+
+An exclusion is a completed editorial disposition under the current evidence and product scope. A candidate should be reopened only when materially new primary evidence, permission or a changed editorial need appears.
+
+The publication boundary verifies that every accepted active record resolves exactly one archive image and that weaker pre-verification metadata cannot silently return. Unknown creator, date or location fields remain unknown unless an explicit accepted record states otherwise.
