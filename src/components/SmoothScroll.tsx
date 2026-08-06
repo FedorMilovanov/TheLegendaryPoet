@@ -1,15 +1,8 @@
 import { useEffect, useRef } from 'react';
-import type Lenis from 'lenis';
 import { useLocation, useNavigationType } from 'react-router';
-import { setActiveLenis } from '../utils/smoothScroll';
 
 const HASH_RETRY_LIMIT = 20;
 const FIXED_HEADER_OFFSET = 96;
-
-type IdleCapableWindow = Window & typeof globalThis & {
-  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-  cancelIdleCallback?: (handle: number) => void;
-};
 
 function decodeHash(hash: string) {
   const raw = hash.replace(/^#/, '');
@@ -17,10 +10,19 @@ function decodeHash(hash: string) {
   try { return decodeURIComponent(raw); } catch { return raw; }
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
+
+/**
+ * Owns route restoration and anchor geometry while leaving ordinary wheel,
+ * trackpad and touch scrolling entirely to the browser. Native scrolling keeps
+ * moving even when React or image decoding briefly occupies the main thread;
+ * a global JavaScript interpolation loop cannot provide that guarantee.
+ */
 const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigationType = useNavigationType();
-  const lenisRef = useRef<Lenis | null>(null);
   const positionsRef = useRef(new Map<string, number>());
   const previousRouteRef = useRef(`${location.pathname}${location.hash}`);
   const firstRouteRef = useRef(true);
@@ -28,71 +30,18 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = 'manual';
-    const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
-    const idleWindow = window as IdleCapableWindow;
-    let cancelled = false;
-    let animationFrameId = 0;
-    let idleCallbackId = 0;
-    let fallbackTimeoutId = 0;
-    let instance: Lenis | null = null;
 
     const scrollTop = () => {
-      if (lenisRef.current) lenisRef.current.scrollTo(0, { duration: prefersReduced ? 0 : 0.72 });
-      else window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
-    };
-
-    window.addEventListener('tlp-scroll-top', scrollTop);
-
-    const startLenis = () => {
-      if (cancelled) return;
-      void import('lenis').then(({ default: LenisConstructor }) => {
-        if (cancelled) return;
-        instance = new LenisConstructor({
-          // Responsive rather than syrupy: the old 1.08s interpolation made the
-          // entire interface feel delayed even when rendering was healthy.
-          duration: 0.82,
-          easing: (time) => Math.min(1, 1.001 - Math.pow(2, -10 * time)),
-          orientation: 'vertical',
-          gestureOrientation: 'vertical',
-          smoothWheel: true,
-          wheelMultiplier: 1,
-          touchMultiplier: 1,
-        });
-        lenisRef.current = instance;
-        setActiveLenis(instance);
-
-        const raf = (time: number) => {
-          if (document.visibilityState === 'visible') instance?.raf(time);
-          animationFrameId = requestAnimationFrame(raf);
-        };
-        animationFrameId = requestAnimationFrame(raf);
-      }).catch(() => {
-        // Native scrolling remains fully functional when the enhancement chunk fails.
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
       });
     };
 
-    // Native touch scrolling is more reliable and less power-hungry on phones.
-    // On desktop, defer Lenis until the first viewport has painted and decoded;
-    // it no longer competes with the intro, hero title and six eager portraits.
-    if (!prefersReduced && !coarsePointer) {
-      if (idleWindow.requestIdleCallback) {
-        idleCallbackId = idleWindow.requestIdleCallback(startLenis, { timeout: 1_400 });
-      } else {
-        fallbackTimeoutId = window.setTimeout(startLenis, 650);
-      }
-    }
-
+    window.addEventListener('tlp-scroll-top', scrollTop);
     return () => {
-      cancelled = true;
       window.removeEventListener('tlp-scroll-top', scrollTop);
       window.history.scrollRestoration = previousRestoration;
-      if (idleCallbackId) idleWindow.cancelIdleCallback?.(idleCallbackId);
-      if (fallbackTimeoutId) window.clearTimeout(fallbackTimeoutId);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (instance) instance.destroy();
-      lenisRef.current = null;
-      setActiveLenis(null);
     };
   }, []);
 
@@ -120,15 +69,10 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
-      if (lenisRef.current) lenisRef.current.scrollTo(safeTop, { immediate: true });
-      else window.scrollTo(0, safeTop);
+      window.scrollTo({ top: safeTop, behavior: 'auto' });
     };
 
     const scrollToHashTarget = (target: HTMLElement) => {
-      if (lenisRef.current) {
-        lenisRef.current.scrollTo(target, { offset: -FIXED_HEADER_OFFSET, duration: 0.72 });
-        return;
-      }
       const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
     };
