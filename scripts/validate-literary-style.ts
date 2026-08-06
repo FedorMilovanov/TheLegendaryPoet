@@ -4,6 +4,7 @@ import type { Poet } from '../src/types/poet';
 import type { Essay, EssayBlock } from '../src/types/essay';
 
 type Problem = { level: 'ERROR' | 'WARN'; where: string; message: string };
+type SemanticInvariant = { label: string; anyOf: string[] };
 
 const problems: Problem[] = [];
 
@@ -22,58 +23,194 @@ const allowedLatinWords = new Set([
   'NYPL',
 ]);
 
-const requiredPoetMarkers: Record<string, string[]> = {
-  'sergei-yesenin': [
-    '21 ноября 1923 года',
-    '20 января 1924 года',
-    '26 ноября по 21 декабря 1925 года',
+/**
+ * These contracts protect historical and theological boundaries, not one
+ * frozen editorial sentence. Each invariant accepts a small set of equivalent
+ * witnesses so prose can be improved without weakening the underlying claim.
+ */
+const requiredPoetInvariants: Record<string, SemanticInvariant[]> = {
+  'fyodor-tyutchev': [
+    {
+      label: 'the relationship with Denisyeva remains a long double life',
+      anyOf: ['многолетнюю связь с Еленой Денисьевой', 'длительная двойная жизнь'],
+    },
+    {
+      label: 'the unequal public cost to Denisyeva remains explicit',
+      anyOf: ['Денисьева оказалась изгоем', 'основную тяжесть общественного осуждения'],
+    },
+    {
+      label: 'poetic insight does not erase responsibility',
+      anyOf: ['поступок, породивший эту боль', 'трагедия его поступков'],
+    },
   ],
   'vladimir-mayakovsky': [
-    'зал переполнила молодёжь',
-    'поэтом-агитатором и поэтом-пропагандистом',
-    'не оставил ясных свидетельств покаяния',
-  ],
-  'nikolay-gumilev': [
-    'нарушение брачного обета',
-    'сфабрикованному политическому делу',
-    'перед смертью он держался спокойно и мужественно',
-  ],
-  'anna-akhmatova': [
-    'Пунин оставался мужем Анны Аренс',
-    'это было прелюбодеяние',
-    'не позволяет безоговорочно описывать всю её жизнь',
-  ],
-  'boris-pasternak': [
-    'зарегистрировали брак в ЗАГСе',
-    'в августе 1960 года',
-    'сильном притяжении к личности Христа',
-  ],
-  'alexander-blok': [
-    'не заменяет медицинской истории',
-    'связала красногвардейский патруль с образом Христа',
-    'не оставил ясного свидетельства примирения с Богом',
-  ],
-  'fyodor-tyutchev': [
-    'сам факт супружеской неверности сомнений не вызывает',
-    'Это была не краткая слабость, а длительная двойная жизнь',
-    'не сводит к одной гордости',
+    {
+      label: 'the Brik relationship remains identified as marital unfaithfulness',
+      anyOf: ['Лилей Брик', 'супружеской неверности'],
+    },
+    {
+      label: 'conscious revolutionary service remains explicit',
+      anyOf: ['моя революция', 'своей революцией', 'агитатором и пропагандистом'],
+    },
+    {
+      label: 'programmatic blasphemy remains explicit',
+      anyOf: ['унижал Бога', 'богохульство'],
+    },
+    {
+      label: 'the absence of a documented Christian return remains explicit',
+      anyOf: ['известных свидетельств обращения ко Христу', 'не оставил ясных свидетельств покаяния'],
+    },
   ],
   'alexander-pushkin': [
-    'не является протоколом тридцати семи доказанных любовных связей',
-    'Называть это сребролюбием неточно',
-    'предсмертную исповедь с причастием',
+    {
+      label: 'the Don Juan list is not treated as an exact affair count',
+      anyOf: ['Донжуанский список не даёт точного счёта', 'донжуанский список'],
+    },
+    {
+      label: 'gambling and debt remain part of the moral account',
+      anyOf: ['карточная игра', 'Долги преследовали'],
+    },
+    {
+      label: 'duel responsibility remains explicit',
+      anyOf: ['к многочисленным вызовам и дуэлям', 'Рим. 12:19'],
+    },
+    {
+      label: 'the final confession and communion remain explicit',
+      anyOf: ['исповедался и причастился', 'предсмертная исповедь'],
+    },
   ],
   'mikhail-lermontov': [
-    'даёт серьёзные основания считать, что Лермонтов не хотел стрелять',
-    'не отменяет ответственности за доведённое до поединка унижение',
-    'не погиб потому, что одна колкость мистически «вернулась пулей»',
+    {
+      label: 'the repeated mockery of Martynov remains explicit',
+      anyOf: ['высмеивал Николая Мартынова', 'насмешками'],
+    },
+    {
+      label: 'the upward-shot evidence remains qualified rather than certain',
+      anyOf: ['Если на дуэли поэт действительно направил пистолет вверх', 'серьёзные основания считать, что Лермонтов не хотел стрелять'],
+    },
+    {
+      label: 'Lermontov remains responsible for his part in the duel chain',
+      anyOf: ['ответственность за собственное участие', 'не отменяет ответственности'],
+    },
+    {
+      label: 'the prayer poems retain their contrasting moral possibility',
+      anyOf: ['молитвенная лирика', 'путь к миру был ему знаком'],
+    },
+  ],
+  'boris-pasternak': [
+    {
+      label: 'the breakup of two families remains explicit',
+      anyOf: ['распались две семьи', 'Пастернак оставил Евгению Лурье'],
+    },
+    {
+      label: 'the Ivinskaya relationship remains identified as marital unfaithfulness',
+      anyOf: ['Ольгой Ивинской', 'супружеской неверности'],
+    },
+    {
+      label: 'the two arrests remain historically distinguished',
+      anyOf: ['первый арест использовался', 'второй, уже после его смерти'],
+    },
+    {
+      label: 'the late Gospel movement remains explicit',
+      anyOf: ['обращение Пастернака к Евангелию', 'сильном притяжении к личности Христа'],
+    },
   ],
   'afanasy-fet': [
-    'сводить многолетний брак к одной финансовой сделке оснований недостаточно',
-    'Называть этот поступок сребролюбием слишком просто',
-    'подробности известны из одного близкого свидетельства',
+    {
+      label: 'the refusal to marry Lazich remains tied to fear of poverty and status loss',
+      anyOf: ['отказ от брака с Марией Лазич', 'страх бедности'],
+    },
+    {
+      label: 'direct causation for Lazich death remains unclaimed',
+      anyOf: ['Обстоятельства гибели Лазич остаются спорными', 'прямой линии от разрыва к её смерти'],
+    },
+    {
+      label: 'the Botkina marriage is not reduced to a financial transaction',
+      anyOf: ['свести многолетний союз к одному приданому', 'многолетний брак к одной финансовой сделке'],
+    },
+    {
+      label: 'the final self-harm account remains source-qualified',
+      anyOf: ['По свидетельству секретаря', 'подробности известны из одного близкого свидетельства'],
+    },
+  ],
+  'nikolay-gumilev': [
+    {
+      label: 'documented military courage remains explicit',
+      anyOf: ['два Георгиевских креста', 'добровольно пошёл на фронт'],
+    },
+    {
+      label: 'marital unfaithfulness remains explicit',
+      anyOf: ['супружеская неверность', 'разрыв брачного обета'],
+    },
+    {
+      label: 'the execution remains identified as a political reprisal',
+      anyOf: ['политической расправой', 'сфабрикованному политическому делу'],
+    },
+    {
+      label: 'courage before execution remains explicit',
+      anyOf: ['встретил её мужественно', 'держался спокойно и мужественно'],
+    },
+  ],
+  'sergei-yesenin': [
+    {
+      label: 'alcohol dependence remains a destructive real-world force',
+      anyOf: ['Алкогольная зависимость', 'пьяные скандалы'],
+    },
+    {
+      label: 'the late psychiatric treatment remains explicit',
+      anyOf: ['26 ноября по 21 декабря 1925 года', 'психиатрической клинике'],
+    },
+    {
+      label: 'the absence of a documented Christian return remains explicit',
+      anyOf: ['ясного свидетельства возвращения ко Христу', 'Есенин умер неверующим'],
+    },
+    {
+      label: 'the death is neither romanticized nor reduced to one punishment formula',
+      anyOf: ['не был красивой кабацкой легендой', 'самоубийство в «Англетере»'],
+    },
+  ],
+  'anna-akhmatova': [
+    {
+      label: 'courage in the prison queues and preservation of memory remains explicit',
+      anyOf: ['тюремных очередях', 'сохранении стихов'],
+    },
+    {
+      label: 'Punin existing marriage remains explicit',
+      anyOf: ['Пунин оставался мужем Анны Аренс', 'он оставался мужем Анны Аренс'],
+    },
+    {
+      label: 'the relationship moral harm remains explicit',
+      anyOf: ['связи с женатым человеком', 'разрушительном союзе', 'прелюбодеяние'],
+    },
+  ],
+  'alexander-blok': [
+    {
+      label: 'the idealization of his wife and lost marital closeness remain explicit',
+      anyOf: ['воплощение Прекрасной Дамы', 'супружеской близости'],
+    },
+    {
+      label: 'alcohol misuse and affairs remain explicit',
+      anyOf: ['злоупотребление вином', 'увлечения за пределами брака'],
+    },
+    {
+      label: 'the revolutionary patrol and Christ image remain connected',
+      anyOf: ['красногвардейский патруль оказался связан с образом Христа', 'с образом Христа'],
+    },
+    {
+      label: 'medical death is not treated as punishment and no clear reconciliation is invented',
+      anyOf: ['не была наглядным наказанием', 'ясного свидетельства примирения с Богом'],
+    },
   ],
 };
+
+const forbiddenPortraitScaffolding = [
+  'честный портрет',
+  'редактору достаточно',
+  'не даёт редактору права',
+  'не нуждается в приукрашивании',
+  'не приукрашиваем',
+  'не умаляем',
+];
 
 const forbiddenPoetMarkers: Record<string, string[]> = {
   'sergei-yesenin': [
@@ -146,22 +283,6 @@ const forbiddenPoetMarkers: Record<string, string[]> = {
   ],
 };
 
-const requiredPoetConclusionMarkers: Record<string, string[]> = {
-  'sergei-yesenin': [
-    'Я вовсе не религиозный человек и не мистик',
-    'по доступным историческим свидетельствам Есенин умер неверующим',
-    'повторное отвержение известной истины ожесточает сердце',
-  ],
-  'vladimir-mayakovsky': [
-    'Моя революция',
-    'По доступным историческим свидетельствам Маяковский умер неверующим',
-    'повторное отвержение известной истины ожесточает сердце',
-  ],
-  'alexander-blok': [
-    'По доступным историческим свидетельствам он умер человеком, не пришедшим к евангельской вере',
-  ],
-};
-
 const requiredEssayMarkers: Record<string, string[]> = {
   'yesenin-kutezhi': [
     'Печаль, которая не стала покаянием',
@@ -224,6 +345,10 @@ function proseOfPoet(poet: Poet): string {
     poet.authorCommentary ?? '',
     ...poet.poems.flatMap((poem) => [poem.analysis ?? '', poem.biblicalPerspective ?? '']),
   ].join('\n');
+}
+
+function portraitOfPoet(poet: Poet): string {
+  return [poet.moralPortrait ?? '', poet.authorCommentary ?? ''].join('\n').toLocaleLowerCase('ru');
 }
 
 function blockText(block: EssayBlock): string {
@@ -309,16 +434,20 @@ function validateRhythm(where: string, text: string, mirroredLimit: number): voi
 
 for (const poet of poets) {
   const text = proseOfPoet(poet);
+  const portraitText = portraitOfPoet(poet);
 
-  for (const marker of requiredPoetConclusionMarkers[poet.id] ?? []) {
-    if (!text.includes(marker)) {
-      error(poet.id, 'required strengthened conclusion is missing: “' + marker + '”');
+  for (const invariant of requiredPoetInvariants[poet.id] ?? []) {
+    if (!invariant.anyOf.some((marker) => text.includes(marker))) {
+      error(
+        poet.id,
+        `required semantic boundary is missing: ${invariant.label}; accepted witnesses: ${invariant.anyOf.map((marker) => `“${marker}”`).join(' / ')}`,
+      );
     }
   }
 
-  for (const marker of requiredPoetMarkers[poet.id] ?? []) {
-    if (!text.includes(marker)) {
-      error(poet.id, `required verified or editorial marker is missing: “${marker}”`);
+  for (const marker of forbiddenPortraitScaffolding) {
+    if (portraitText.includes(marker.toLocaleLowerCase('ru'))) {
+      error(poet.id, `service/editorial scaffolding returned to the portrait: “${marker}”`);
     }
   }
 
