@@ -1,20 +1,22 @@
 {
-  "schemaVersion": 1,
-  "updatedAt": "2026-07-24",
+  "schemaVersion": 2,
+  "updatedAt": "2026-08-06",
   "policy": {
-    "defaultStatus": "unresolved",
+    "defaultStatus": "excluded-unless-explicitly-accepted",
     "acceptedRequires": [
       "exact Commons original identity and hashes",
-      "independent institutional or photo-chronicle caption evidence",
+      "independent institutional, object-card, photo-chronicle or primary-publication caption evidence",
       "visual match between the independent witness and the acquired original",
-      "creator/date uncertainty preserved without inference",
-      "public-domain or licence rationale recorded separately from caption verification"
-    ]
+      "creator, date and location uncertainty preserved without inference",
+      "public-domain or licence rationale recorded separately from caption verification",
+      "active acceptance must resolve exactly one current archive block"
+    ],
+    "finalStatuses": ["accepted-active", "verified-reserve", "excluded-rights", "excluded-provenance", "excluded-scope"]
   },
   "decisions": {
     "Vladimir Mayakovsky 1914.jpg": {
       "candidateId": "C03",
-      "status": "accepted",
+      "status": "accepted-active",
       "publicationScope": "identity, depicted person, Kazan location, 1914 date and unknown photographer",
       "caption": "Футурист Владимир Маяковский. Казань, 1914.",
       "creator": "Unknown author",
@@ -23,91 +25,114 @@
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vladimir_Mayakovsky_1914.jpg",
       "independentEvidenceUrl": "https://russiainphoto.ru/photos/248776/",
       "independentEvidenceInstitution": "ГБУК г. Москвы «Государственный музей В. В. Маяковского»",
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "The museum/photo-chronicle witness and C03 show the same studio negative: identical pose, top hat, cigarette and holder, cane, glove, clothing, background and handwritten inscription. C03 is a reduced high-contrast reproduction of that witness."
-      },
+      "visualMatch": "confirmed: same studio negative, pose, clothing, props, background and inscription",
       "originalSha256": "b6250970d408b602b96b0cf35fc1ee8b50eff88d64caebd6e53a6018dd7a974d",
-      "originalBytes": 28750,
-      "originalDimensions": {
-        "width": 400,
-        "height": 564
-      },
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-RusEmpire",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-RusEmpire",
-        "note": "This records the Commons source page's public-domain rationale; it is separate from the museum-based caption verification."
-      },
-      "productionMediaKey": "mayakovsky-1914",
-      "editorialNotes": "Do not name a photographer. Prefer the museum-backed Kazan/1914 caption over the weaker source link currently stored on the Commons file page."
+      "publicDomainRationale": "Template:PD-RusEmpire",
+      "productionMediaKey": "mayakovsky-1914"
     },
     "Mayakovsky 1928 by Osip Brik.jpg": {
       "candidateId": "C08",
-      "status": "accepted",
+      "status": "accepted-active",
       "publicationScope": "identity, depicted person, 1928 date and Osip Brik photographer attribution",
       "caption": "Владимир Маяковский. Фотография Осипа Брика, 1928.",
       "creator": "Осип Максимович Брик",
       "date": "1928",
       "location": "unresolved",
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg",
+      "independentEvidenceUrl": "https://dlib.rsl.ru/viewer/01005408111#?page=5",
       "independentEvidenceInstitution": "Российская государственная библиотека",
-      "independentEvidence": {
-        "indexViewerUrl": "https://dlib.rsl.ru/viewer/01005408088#?page=377",
-        "indexPageApiUrl": "https://viewer.rsl.ru/api/v1/document/rsl01005408088/page/377",
-        "indexWitness": "The official ten-volume index states under portraits: portrait 2 is a 1928 photograph by O. M. Brik in volume seven.",
-        "reproductionViewerUrl": "https://dlib.rsl.ru/viewer/01005408111#?page=5",
-        "reproductionPageApiUrl": "https://viewer.rsl.ru/api/v1/document/rsl01005408111/page/5",
-        "reproductionWitness": "The official scan of volume seven, viewer page 5, contains the exact portrait reproduced by C08.",
-        "workflowRun": "30097285671",
-        "artifactDigest": "sha256:c1397cfa078f80319515cab9aeba8674c459c1ca037f30c271dab69eb56f9067"
-      },
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "C08 is a close crop of the RSL volume-seven reproduction: identical face, raised left hand, striped shirt and tie, jacket pattern, lighting and framing."
-      },
+      "visualMatch": "confirmed by exact volume-seven reproduction and official portrait index",
       "originalSha256": "0e004e5ae2ce5d2c152e4dd603dff619ae35b219de431e84df065b7d12f18f0f",
-      "originalBytes": 100934,
-      "originalDimensions": {
-        "width": 514,
-        "height": 724
-      },
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-Russia",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-Russia",
-        "note": "This records the Commons source page's public-domain rationale and is separate from the RSL author/date verification."
-      },
-      "productionMediaKey": "mayakovsky-1928-osip",
-      "editorialNotes": "The RSL witnesses establish photographer and date but not the shooting location. Do not add a location without a separate object card or contemporary record."
+      "publicDomainRationale": "Template:PD-Russia",
+      "productionMediaKey": "mayakovsky-1928-osip"
+    },
+    "Mayakovsky and Futurists.jpg": {
+      "candidateId": "C10",
+      "status": "accepted-active",
+      "publicationScope": "group identity, Moscow, 1912, unknown photographer and documented 1913 leaflet publication",
+      "caption": "Маяковский и футуристы. Москва, 1912.",
+      "creator": "Unknown author",
+      "date": "1912",
+      "location": "Москва",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Futurists.jpg",
+      "independentEvidenceUrl": "https://muzeimayakovskogo.ru/exhibitions/virtualnye/mayakovskiy-voskhozhdenie/chetyre-krika-doloy-/listovka-poshchechina-obshchestvennomu-vkusu/",
+      "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
+      "visualMatch": "confirmed: same six-person group photograph and sitters",
+      "originalSha256": "3ae1f3638b36ac5acb4e3289bacb119b355c5e3d8a55bc177880bceca8925999",
+      "publicDomainRationale": "Template:PD-RusEmpire; exact photograph documented on the February 1913 leaflet",
+      "productionMediaKey": "mayakovsky-futurists-1912"
+    },
+    "Mayakovsky and Moreno by Modotti 1925.jpg": {
+      "candidateId": "C11",
+      "status": "accepted-active",
+      "publicationScope": "Vladimir Mayakovsky and Francisco Moreno, Mexico City, 1925, photographed by Tina Modotti",
+      "caption": "Владимир Маяковский и Франсиско Морено. Мехико, 1925.",
+      "creator": "Тина Модотти",
+      "date": "1925",
+      "location": "Мехико, Мексика",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Moreno_by_Modotti_1925.jpg",
+      "independentEvidenceUrl": "https://goskatalog.ru/portal/#/collections?id=11208336",
+      "independentEvidenceInstitution": "Государственный музей В. В. Маяковского / Государственный каталог Музейного фонда РФ",
+      "visualMatch": "confirmed at the exact State Catalogue source record",
+      "originalSha256": "b7c4befe6d4043a3e7e3d936731b17a895deba77ec51b26360c4b333abcd47c8",
+      "publicDomainRationale": "Templates:PD-old-70-expired and PD-old-X-expired; Tina Modotti died in 1942",
+      "productionMediaKey": "mayakovsky-moreno-modotti-1925"
+    },
+    "1927. Владимир Маяковский бреется.jpg": {
+      "candidateId": "C16",
+      "status": "accepted-active",
+      "publicationScope": "Vladimir Mayakovsky shaving, Moscow, 1927, photographed by Osip Brik",
+      "caption": "Владимир Маяковский бреется. Москва, 1927.",
+      "creator": "Осип Максимович Брик",
+      "date": "1927",
+      "location": "Москва",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:1927._Владимир_Маяковский_бреется.jpg",
+      "independentEvidenceUrl": "https://arzamas.academy/mag/1168-mayak",
+      "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
+      "visualMatch": "confirmed against the exact museum-credit reproduction",
+      "originalSha256": "7bea5222bbb5621b11efa66e6ac081948a27719c4e0efb14f051d828cde60008",
+      "publicDomainRationale": "Template:PD-Russia; known creator Osip Brik died in 1945",
+      "productionMediaKey": "mayakovsky-shaving-osip-1927"
+    },
+    "1926. Владимир Маяковский с Булькой.jpg": {
+      "candidateId": "C15",
+      "status": "verified-reserve",
+      "publicationScope": "Vladimir Mayakovsky with Bulka, Moscow, 1926, photographed by Osip Brik",
+      "creator": "Осип Максимович Брик",
+      "date": "1926",
+      "location": "Москва",
+      "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:1926._Владимир_Маяковский_с_Булькой.jpg",
+      "independentEvidenceUrl": "https://arzamas.academy/mag/1168-mayak",
+      "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
+      "originalSha256": "92cd221171cd249708a74ebaf28340931702a01577da5f2c1166f441553f0c77",
+      "publicDomainRationale": "Template:PD-Russia; no active key because no current essay block uses the exact source"
     }
   },
-  "unresolvedByDefault": [
-    "C01",
-    "C02",
-    "C04",
-    "C05",
-    "C06",
-    "C07",
-    "C09",
-    "C10",
-    "C11",
-    "C12",
-    "C13",
-    "C14",
-    "C15",
-    "C16",
-    "C17",
-    "C18",
-    "C19",
-    "C20",
-    "C21",
-    "C22",
-    "C23",
-    "C24",
-    "C25",
-    "C26",
-    "C27",
-    "C28",
-    "C29",
-    "C30"
-  ]
+  "excludedCandidates": {
+    "C01": {"status":"excluded-rights","reason":"Caption/object verified; original publication and complete publication authority remain unproved."},
+    "C02": {"status":"excluded-provenance","reason":"Primary exact-object museum record and publication history remain unavailable."},
+    "C04": {"status":"excluded-rights","reason":"1940 publication is cited but the exact source page and editorial rights predicate were not preserved."},
+    "C05": {"status":"excluded-provenance","reason":"Original FPLIB source is unavailable and no independent exact-object record was found."},
+    "C06": {"status":"excluded-rights","reason":"Museum caption is verified, but the pre-1931 publication predicate remains unproved."},
+    "C07": {"status":"excluded-rights","reason":"The 1928 volume is verified, but decisive RSL reproduction and index pages remain unavailable."},
+    "C09": {"status":"excluded-provenance","reason":"Dead FPLIB source, generic caption repetition and missing United States rationale."},
+    "C12": {"status":"excluded-provenance","reason":"1962 Polish-book scan does not establish original object, photographer or exact first publication."},
+    "C13": {"status":"excluded-rights","reason":"MFA Houston verifies the exact object and Anatoly Cemenka, but creator-term/publication authority remains unresolved."},
+    "C14": {"status":"excluded-provenance","reason":"1962 Polish-book scan and PD-Poland template do not establish exact object provenance or first publication."},
+    "C17": {"status":"excluded-provenance","reason":"Dead secondary source, unknown photographer and generic PD-old without a United States tag."},
+    "C18": {"status":"excluded-rights","reason":"Family-album provenance does not establish pre-1917 publication required by PD-RusEmpire."},
+    "C19": {"status":"excluded-provenance","reason":"Unspecified book source; exact object, photographer and publication lineage are absent."},
+    "C20": {"status":"excluded-provenance","reason":"Unspecified book source; exact object, photographer and publication lineage are absent."},
+    "C21": {"status":"excluded-provenance","reason":"Unspecified book source and malformed date metadata do not support exact dating or publication authority."},
+    "C22": {"status":"excluded-provenance","reason":"Unspecified book source does not identify the friends, exact object or publication event."},
+    "C23": {"status":"excluded-provenance","reason":"Unspecified book source does not provide an object card, photographer or first-publication record."},
+    "C24": {"status":"excluded-rights","reason":"Osip Brik attribution is secondary; exact day and United States publication rationale are unsupported."},
+    "C25": {"status":"excluded-scope","reason":"Secondary attribution and incomplete rights; the nude portrait is outside current editorial scope."},
+    "C26": {"status":"excluded-provenance","reason":"Dead secondary source, unknown photographer and no independently demonstrated pre-1917 publication."},
+    "C27": {"status":"excluded-provenance","reason":"No source, creator or verified creation date."},
+    "C28": {"status":"excluded-rights","reason":"Secondary source and anonymous-EU template provide no United States rationale or primary object record."},
+    "C29": {"status":"excluded-provenance","reason":"Secondary genealogy source, tiny reproduction, unknown photographer and missing United States tag."},
+    "C30": {"status":"excluded-rights","reason":"Strong 1925 caption and 1939 lineage, but PD-anon-70-EU does not establish broader publication authority."}
+  },
+  "unresolvedByDefault": []
 }
