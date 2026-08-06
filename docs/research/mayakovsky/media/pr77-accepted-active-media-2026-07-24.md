@@ -52,7 +52,7 @@ Runtime authority:
 ### C10 — Mayakovsky and the Futurists, 1912
 
 - media key: `mayakovsky-futurists-1912`;
-- exact SHA-256: `3ae1f3638b36ac5ab4e3289bacb119b355c5e3d8a55bc177880bceca8925999`;
+- exact SHA-256: `3ae1f3638b36ac5acb4e3289bacb119b355c5e3d8a55bc177880bceca8925999`;
 - accepted caption: `Маяковский и футуристы. Москва, 1912.`;
 - creator: unknown;
 - witness: State Mayakovsky Museum virtual exhibition and the exact `Пощечина общественному вкусу` leaflet history;
@@ -105,8 +105,8 @@ The exact reason for every candidate is stored in the machine-readable decision 
 
 ## Final publication status
 
-- exact original acquisition: `30/30 complete`;
-- accepted active: `5/30`;
+- original acquisition: `30/30 complete`;
+- independent historical acceptance: `5/30 active`;
 - verified reserve: `1/30`;
 - explicitly excluded: `24/30`;
 - unresolved: `0/30`;
