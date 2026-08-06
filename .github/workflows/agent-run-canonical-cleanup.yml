@@ -79,8 +79,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm -f \
+          git rm -f --ignore-unmatch \
             .github/workflows/agent-canonical-editorial-cleanup.yml \
+            .github/workflows/agent-run-canonical-cleanup.yml \
             .github/NOOP \
             .github/README \
             .github/.keep2 \
