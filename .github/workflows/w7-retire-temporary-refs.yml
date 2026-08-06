@@ -1,0 +1,67 @@
+name: W7 retire temporary refs
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+    paths:
+      - .github/workflows/w7-retire-temporary-refs.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  retire:
+    if: github.head_ref == 'maintenance/w7-retire-temporary-refs-20260806'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN: 5cc5ba89ab95d50eb2c31adcade0dd96e13b40d8
+      EXPECTED_STALE_HEAD: aa2e37573453480531825c8962c372596513f9f2
+      SELF_REF: maintenance/w7-retire-temporary-refs-20260806
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Exact allowlist preflight and physical deletion
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_HEAD_REF" = "$SELF_REF"
+
+          remote_head() {
+            git ls-remote --heads origin "refs/heads/$1" | awk '{print $1}'
+          }
+
+          main_head="$(remote_head main)"
+          test "$main_head" = "$EXPECTED_MAIN"
+
+          stale_refs=(
+            fix/w7-runtime-truth-20260806
+            agent/w7-route-runtime-truth-20260806
+          )
+
+          for ref in "${stale_refs[@]}"; do
+            head="$(remote_head "$ref")"
+            test "$head" = "$EXPECTED_STALE_HEAD"
+            open_count="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --head "$ref" --json number --jq 'length')"
+            test "$open_count" = "0"
+          done
+
+          archive_head="$(remote_head archive/deep-research-local-images-20260724)"
+          test "$archive_head" = "909df9f73b8d9be6faa58cbee767603954e3fb17"
+
+          for ref in "${stale_refs[@]}"; do
+            git push origin --delete "$ref"
+          done
+
+          for ref in "${stale_refs[@]}"; do
+            test -z "$(remote_head "$ref")"
+          done
+          test "$(remote_head main)" = "$EXPECTED_MAIN"
+          test "$(remote_head archive/deep-research-local-images-20260724)" = "$archive_head"
+
+          git push origin --delete "$SELF_REF"
