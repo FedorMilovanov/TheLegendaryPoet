@@ -6,7 +6,8 @@
   "runtime": {
     "minimumNode": "22.22.0",
     "recommendedNodeMajor": 24,
-    "routeRegistry": "src/routes/routeModules.ts",
+    "routeRegistry": "src/routes/route-contract.json",
+    "routeRuntime": "src/routes/routeModules.ts",
     "essayCatalog": "src/data/essays/index.ts",
     "poetCatalog": "src/data/library/index.ts",
     "brandComponent": "src/components/SpectralBrandMark.tsx",

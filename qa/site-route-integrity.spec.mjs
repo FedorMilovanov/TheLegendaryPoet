@@ -5,6 +5,7 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const BASE_ORIGIN = new URL(BASE_URL).origin;
 const SITEMAP_PATH = path.resolve('public/sitemap.xml');
+const ROUTE_CONTRACT_PATH = path.resolve('src/routes/route-contract.json');
 const ARTIFACT_DIR = path.resolve('qa-artifacts/site-route-integrity');
 const MIN_CANONICAL_ROUTES = 28;
 const MIN_AUDITED_ROUTES = 35;
@@ -36,22 +37,18 @@ function readCanonicalRoutes() {
 }
 
 const canonicalRoutes = readCanonicalRoutes();
-const utilityRoutes = ['/hall', '/archive'];
-const redirects = [
-  ['/articles/article-1', '/poets/alexander-pushkin'],
-  ['/articles/article-2', '/essays/yesenin-kutezhi'],
-  ['/articles/article-3', '/poets/anna-akhmatova'],
-  ['/articles/article-main-1', '/articles'],
-  ['/articles/article-main-2', '/music'],
-  ['/articles/route-audit-legacy', '/articles'],
-];
-const notFoundRoute = '/route-audit-page-that-must-not-exist';
+const routeContract = JSON.parse(fs.readFileSync(ROUTE_CONTRACT_PATH, 'utf8'));
+const utilityRoutes = routeContract.routes
+  .filter((route) => route.audit === 'utility')
+  .map((route) => route.path);
+const redirects = routeContract.redirects.map(({ from, to }) => [from, to]);
+const notFoundRoutes = routeContract.notFoundProbes;
 const renderedRoutes = [...new Set([...canonicalRoutes, ...utilityRoutes])];
 const knownInternalPaths = new Set([
   ...renderedRoutes,
   ...redirects.flatMap(([source, target]) => [source, target]),
 ]);
-const auditedRouteCount = renderedRoutes.length + redirects.length + 1;
+const auditedRouteCount = renderedRoutes.length + redirects.length + notFoundRoutes.length;
 
 if (auditedRouteCount < MIN_AUDITED_ROUTES) {
   throw new Error(`route audit expected at least ${MIN_AUDITED_ROUTES} URLs, received ${auditedRouteCount}`);
@@ -77,9 +74,10 @@ function attachRuntimeDiagnostics(page) {
 }
 
 async function settleRoute(page) {
-  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
-  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined);
-  await page.waitForTimeout(220);
+  const main = page.locator('#main-content');
+  await main.waitFor({ state: 'visible', timeout: 20_000 });
+  await expect(main.locator('[aria-busy="true"]:visible')).toHaveCount(0);
+  await expect(main.locator('h1, [role="heading"][aria-level="1"]').first()).toBeVisible();
   await page.evaluate(async () => {
     if (document.fonts?.ready) await document.fonts.ready;
   });
@@ -203,7 +201,8 @@ for (const [source, target] of redirects) {
   });
 }
 
-test(`not-found route remains a healthy app shell: ${notFoundRoute}`, async ({ page }) => {
+for (const notFoundRoute of notFoundRoutes) {
+  test(`not-found route remains a healthy app shell: ${notFoundRoute}`, async ({ page }) => {
   const runtime = attachRuntimeDiagnostics(page);
   const response = await page.goto(`${BASE_URL}${notFoundRoute}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   expect(response?.status() ?? 0).toBeLessThan(400);
@@ -226,3 +225,4 @@ test(`not-found route remains a healthy app shell: ${notFoundRoute}`, async ({ p
   expect(runtime.pageErrors).toEqual([]);
   expect(runtime.failedResponses).toEqual([]);
 });
+}

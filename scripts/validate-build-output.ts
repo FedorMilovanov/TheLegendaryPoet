@@ -33,22 +33,12 @@ const SINGLE_JS_BUDGET_BYTES = 665_000;
 const TOTAL_JS_BUDGET_BYTES = 1_800_000;
 const TOTAL_CSS_BUDGET_BYTES = 300_000;
 
-const routeBudgets = new Map<string, number>([
-  ['src/pages/HomePage.tsx', 32_000],
-  ['src/pages/HallPage.tsx', 8_000],
-  ['src/pages/PoetsPage.tsx', 12_000],
-  ['src/pages/PoetDetailPage.tsx', 52_000],
-  ['src/pages/RatingsPage.tsx', 34_000],
-  ['src/pages/ArticlesPage.tsx', 12_000],
-  ['src/pages/EssayPage.tsx', 58_000],
-  ['src/pages/MusicPage.tsx', 32_000],
-  ['src/pages/TrackDetailPage.tsx', 23_000],
-  ['src/pages/AboutPage.tsx', 15_000],
-  ['src/pages/EditorialPolicyPage.tsx', 12_000],
-  ['src/pages/PrivacyPage.tsx', 12_000],
-  ['src/pages/MyArchivePage.tsx', 23_000],
-  ['src/pages/NotFoundPage.tsx', 6_000],
-]);
+const routeContract = JSON.parse(fs.readFileSync(path.join(root, 'src/routes/route-contract.json'), 'utf8')) as {
+  routes: Array<{ module: string; budgetBytes: number }>;
+};
+const routeBudgets = new Map<string, number>(
+  routeContract.routes.map((route) => [route.module, route.budgetBytes]),
+);
 
 function expect(condition: unknown, message: string) {
   if (!condition) failures.push(message);

@@ -65,6 +65,37 @@ for (const [key, relativePath] of runtimePaths) {
   assert(exists(relativePath), `runtime contract path ${key} does not exist: ${relativePath}`);
 }
 
+
+const routeContractPath = contract.runtime.routeRegistry;
+const routeRuntimePath = contract.runtime.routeRuntime;
+assert(routeContractPath === 'src/routes/route-contract.json', 'runtime.routeRegistry must identify the machine route contract');
+assert(routeRuntimePath === 'src/routes/routeModules.ts', 'runtime.routeRuntime must identify the lazy route runtime');
+if (exists(routeContractPath) && exists(routeRuntimePath)) {
+  const routeContract = JSON.parse(read(routeContractPath));
+  const routeRuntime = read(routeRuntimePath);
+  const routes = Array.isArray(routeContract.routes) ? routeContract.routes : [];
+  const redirects = Array.isArray(routeContract.redirects) ? routeContract.redirects : [];
+  const notFoundProbes = Array.isArray(routeContract.notFoundProbes) ? routeContract.notFoundProbes : [];
+  assert(routeContract.schemaVersion === 1, 'route contract schemaVersion must be 1');
+  assert(routes.length === 14, `route contract must register 14 lazy pages, found ${routes.length}`);
+  assert(new Set(routes.map((route) => route.id)).size === routes.length, 'route contract ids must be unique');
+  assert(new Set(routes.map((route) => route.path)).size === routes.length, 'route contract paths must be unique');
+  assert(routes.filter((route) => route.path === '*' && route.audit === 'not-found').length === 1, 'route contract must define one wildcard NotFound route');
+  for (const route of routes) {
+    assert(typeof route.id === 'string' && /^[a-z0-9-]+$/.test(route.id), `invalid route id: ${route.id}`);
+    assert(typeof route.path === 'string' && (route.path === '*' || route.path.startsWith('/')), `invalid route path: ${route.path}`);
+    assert(typeof route.module === 'string' && exists(route.module), `route module does not exist: ${route.module}`);
+    assert(Number.isInteger(route.budgetBytes) && route.budgetBytes > 0, `route budget must be a positive integer: ${route.id}`);
+  }
+  assert(new Set(redirects.map((redirect) => redirect.from)).size === redirects.length, 'redirect sources must be unique');
+  assert(!redirects.some((redirect) => redirect.from === '/articles/:id'), 'broad unknown-article redirects are forbidden');
+  assert(notFoundProbes.includes('/articles/route-audit-legacy'), 'route contract must preserve an unknown article NotFound probe');
+  assert(routeRuntime.includes("import routeContractData from './route-contract.json'"), 'route runtime must import the machine route contract');
+  assert(read('scripts/gen-sitemap.mjs').includes('src/routes/route-contract.json'), 'sitemap generator must consume the route contract');
+  assert(read('scripts/validate-build-output.ts').includes('src/routes/route-contract.json'), 'build budgets must consume the route contract');
+  assert(read('qa/site-route-integrity.spec.mjs').includes('src/routes/route-contract.json'), 'route QA must consume the route contract');
+}
+
 const authoritative = contract.documentation.authoritative ?? [];
 const editorialAuthority = contract.documentation.editorialAuthority ?? [];
 const historical = contract.documentation.historical ?? [];
@@ -205,6 +236,7 @@ const forbiddenByFile = {
     'сейчас Google Fonts',
     'base` = `/TheLegendaryPoet/',
     'src/routes/routeModules.tsx',
+    '`src/routes/routeModules.ts` — единственный lazy route registry.',
   ],
   'docs/CURRENT_STATE.md': ['src/routes/routeModules.tsx'],
 };

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "routes": [
+    {
+      "id": "home",
+      "path": "/",
+      "page": "HomePage",
+      "module": "src/pages/HomePage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "site",
+      "sitemapImage": "site",
+      "audit": "canonical",
+      "budgetBytes": 32000
+    },
+    {
+      "id": "hall",
+      "path": "/hall",
+      "page": "HallPage",
+      "module": "src/pages/HallPage.tsx",
+      "prefetch": true,
+      "sitemap": false,
+      "audit": "utility",
+      "budgetBytes": 8000
+    },
+    {
+      "id": "poets",
+      "path": "/poets",
+      "page": "PoetsPage",
+      "module": "src/pages/PoetsPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "site",
+      "audit": "canonical",
+      "budgetBytes": 12000
+    },
+    {
+      "id": "poet-detail",
+      "path": "/poets/:id",
+      "page": "PoetDetailPage",
+      "module": "src/pages/PoetDetailPage.tsx",
+      "prefetch": true,
+      "sitemap": false,
+      "audit": "dynamic",
+      "budgetBytes": 52000
+    },
+    {
+      "id": "ratings",
+      "path": "/ratings",
+      "page": "RatingsPage",
+      "module": "src/pages/RatingsPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "site",
+      "audit": "canonical",
+      "budgetBytes": 34000
+    },
+    {
+      "id": "articles",
+      "path": "/articles",
+      "page": "ArticlesPage",
+      "module": "src/pages/ArticlesPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "essays",
+      "audit": "canonical",
+      "budgetBytes": 12000
+    },
+    {
+      "id": "essay",
+      "path": "/essays/:slug",
+      "page": "EssayPage",
+      "module": "src/pages/EssayPage.tsx",
+      "prefetch": true,
+      "sitemap": false,
+      "audit": "dynamic",
+      "budgetBytes": 58000
+    },
+    {
+      "id": "music",
+      "path": "/music",
+      "page": "MusicPage",
+      "module": "src/pages/MusicPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "music",
+      "audit": "canonical",
+      "budgetBytes": 32000
+    },
+    {
+      "id": "track-detail",
+      "path": "/music/:id",
+      "page": "TrackDetailPage",
+      "module": "src/pages/TrackDetailPage.tsx",
+      "prefetch": true,
+      "sitemap": false,
+      "audit": "dynamic",
+      "budgetBytes": 23000
+    },
+    {
+      "id": "about",
+      "path": "/about",
+      "page": "AboutPage",
+      "module": "src/pages/AboutPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "policy",
+      "audit": "canonical",
+      "budgetBytes": 15000
+    },
+    {
+      "id": "editorial-policy",
+      "path": "/editorial-policy",
+      "page": "EditorialPolicyPage",
+      "module": "src/pages/EditorialPolicyPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "policy",
+      "audit": "canonical",
+      "budgetBytes": 12000
+    },
+    {
+      "id": "privacy",
+      "path": "/privacy",
+      "page": "PrivacyPage",
+      "module": "src/pages/PrivacyPage.tsx",
+      "prefetch": true,
+      "sitemap": true,
+      "sitemapLastmod": "policy",
+      "audit": "canonical",
+      "budgetBytes": 12000
+    },
+    {
+      "id": "archive",
+      "path": "/archive",
+      "page": "MyArchivePage",
+      "module": "src/pages/MyArchivePage.tsx",
+      "prefetch": true,
+      "sitemap": false,
+      "audit": "utility",
+      "budgetBytes": 23000
+    },
+    {
+      "id": "not-found",
+      "path": "*",
+      "page": "NotFoundPage",
+      "module": "src/pages/NotFoundPage.tsx",
+      "prefetch": false,
+      "sitemap": false,
+      "audit": "not-found",
+      "budgetBytes": 6000
+    }
+  ],
+  "redirects": [
+    { "from": "/articles/article-1", "to": "/poets/alexander-pushkin" },
+    { "from": "/articles/article-2", "to": "/essays/yesenin-kutezhi" },
+    { "from": "/articles/article-3", "to": "/poets/anna-akhmatova" },
+    { "from": "/articles/article-main-1", "to": "/articles" },
+    { "from": "/articles/article-main-2", "to": "/music" }
+  ],
+  "notFoundProbes": [
+    "/route-audit-page-that-must-not-exist",
+    "/articles/route-audit-legacy"
+  ]
+}

@@ -24,7 +24,7 @@ Workflow `Project contracts` без установки зависимостей 
 
 - `docs/CURRENT_STATE.md` — текущая архитектурная правда и открытые системные долги.
 - `docs/project-contract.json` — машинно-проверяемые пути и роли.
-- `src/routes/routeModules.ts` — единственный lazy route registry.
+- `src/routes/route-contract.json` — единый машинный манифест маршрутов, redirects, sitemap, QA и бюджетов; `src/routes/routeModules.ts` — его lazy runtime.
 - `src/data/essays/index.ts` — публичный каталог больших эссе (`/essays/:slug`).
 - `src/data/library/index.ts` — библиотека поэтов.
 - `src/config/site.ts` — домен, каналы и контакты.

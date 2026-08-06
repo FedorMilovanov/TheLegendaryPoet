@@ -97,8 +97,12 @@ expect((listeners.get('storage')?.size ?? 0) === 0, 'unsubscribe must release th
 
 const invalid = toggleFavoritePoem('invalid favorite id');
 expect(invalid.status === 'invalid' && !invalid.favorite, 'invalid ids must be explicitly rejected without changing the archive');
-expect(!removeFavoritePoem('not-present'), 'removing an unknown favorite must report no change');
-expect(removeFavoritePoem('blok-2'), 'explicit removal must persist an existing favorite');
+const invalidRemoval = removeFavoritePoem('invalid favorite id');
+expect(invalidRemoval.status === 'invalid' && !invalidRemoval.favorite, 'invalid explicit removals must be rejected without changing the archive');
+const unknownRemoval = removeFavoritePoem('not-present');
+expect(unknownRemoval.status === 'unchanged' && !unknownRemoval.favorite, 'removing an unknown favorite must report the unchanged false state');
+const explicitRemoval = removeFavoritePoem('blok-2');
+expect(explicitRemoval.status === 'removed' && !explicitRemoval.favorite, 'explicit removal must report and persist removal of an existing favorite');
 expect(!isFavoritePoem('blok-2'), 'explicit removal must update subsequent reads');
 
 toggleFavoritePoem('kept-on-write-failure');
@@ -109,9 +113,11 @@ expect(!isFavoritePoem('new-on-write-failure'), 'a failed add must not appear in
 const failedRemoval = toggleFavoritePoem('kept-on-write-failure');
 expect(failedRemoval.status === 'failed' && failedRemoval.favorite, 'a failed removal must be distinguishable from a successful add and report the unchanged true state');
 expect(isFavoritePoem('kept-on-write-failure'), 'a failed removal must leave the stored favorite intact');
-expect(!removeFavoritePoem('kept-on-write-failure'), 'explicit removal must report failure when storage rejects the write');
+const failedExplicitRemoval = removeFavoritePoem('kept-on-write-failure');
+expect(failedExplicitRemoval.status === 'failed' && failedExplicitRemoval.favorite, 'explicit removal must report failed and preserve the true state when storage rejects the write');
 storage.failWrites = false;
-expect(removeFavoritePoem('kept-on-write-failure'), 'the same removal must succeed after storage recovers');
+const recoveredExplicitRemoval = removeFavoritePoem('kept-on-write-failure');
+expect(recoveredExplicitRemoval.status === 'removed' && !recoveredExplicitRemoval.favorite, 'the same explicit removal must report success after storage recovers');
 
 for (const id of ['yesenin-2', 'pushkin-2', 'removed-poem']) toggleFavoritePoem(id);
 const reconciled = reconcileFavoritePoems(['yesenin-1', 'yesenin-2', 'pushkin-2']);

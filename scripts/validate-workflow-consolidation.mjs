@@ -27,6 +27,7 @@ const poemCard = read('src/components/poet-detail/PoemCard.tsx');
 const readerJourneys = read('qa/reader-journeys.spec.mjs');
 const ci = read('.github/workflows/ci.yml');
 const buildValidator = read('scripts/validate-build-output.ts');
+const routeContract = JSON.parse(read('src/routes/route-contract.json'));
 
 for (const primitive of [
   './.github/actions/setup-node-deps',
@@ -78,7 +79,7 @@ expect(webkitRunner.includes("file: 'qa/reader-journeys.spec.mjs'"), 'base iPhon
 expect(playwrightConfig.includes('reader-journeys'), 'Android and iPhone project matching must include reader journeys');
 
 for (const token of [
-  "FavoriteToggleStatus = 'added' | 'removed' | 'failed' | 'invalid'",
+  "ArchiveMutationStatus = 'added' | 'removed' | 'unchanged' | 'failed' | 'invalid'",
   "status: 'failed'",
   'favorite: existing',
 ]) {
@@ -102,13 +103,22 @@ for (const token of [
   'SINGLE_JS_BUDGET_BYTES = 665_000',
   'TOTAL_JS_BUDGET_BYTES = 1_800_000',
   'TOTAL_CSS_BUDGET_BYTES = 300_000',
-  "['src/pages/HomePage.tsx', 32_000]",
-  "['src/pages/EssayPage.tsx', 58_000]",
-  "['src/pages/PoetDetailPage.tsx', 52_000]",
-  "['src/pages/RatingsPage.tsx', 34_000]",
+  'src/routes/route-contract.json',
   'build-budget-report.json',
 ]) {
   expect(buildValidator.includes(token), `build budget contract is missing: ${token}`);
+}
+
+const expectedRouteBudgets = new Map([
+  ['src/pages/HomePage.tsx', 32_000],
+  ['src/pages/EssayPage.tsx', 58_000],
+  ['src/pages/PoetDetailPage.tsx', 52_000],
+  ['src/pages/RatingsPage.tsx', 34_000],
+]);
+for (const [modulePath, budgetBytes] of expectedRouteBudgets) {
+  const route = routeContract.routes?.find((candidate) => candidate.module === modulePath);
+  expect(Boolean(route), `route contract is missing budget owner: ${modulePath}`);
+  expect(route?.budgetBytes === budgetBytes, `route contract budget drifted for ${modulePath}: expected ${budgetBytes}, found ${route?.budgetBytes}`);
 }
 
 const workflowDir = path.join(root, '.github', 'workflows');

@@ -23,10 +23,14 @@ const desktopWebkit = read('scripts/run-webkit-home-reveal-process-isolated.mjs'
 for (const token of [
   'saved poem travels through archive search and returns to the exact poem',
   'blocked archive storage reports failure without dishonest success state',
+  'blocked archive removal keeps the poem visible and explains the unchanged state',
   'citation focus reveals its source and keeps the longform readable',
 ]) {
   expect(archiveJourneys.includes(token), `archive/longform reader suite is missing: ${token}`);
 }
+expect(!archiveJourneys.includes('waitForTimeout('), 'archive/longform reader suite must wait on observable readiness instead of fixed sleeps');
+expect(archiveJourneys.includes('[aria-busy="true"]:visible'), 'archive/longform reader suite must wait for visible busy regions to settle');
+expect(archiveJourneys.includes('document.fonts?.ready'), 'archive/longform reader suite must wait for production fonts before asserting layout');
 
 for (const token of [
   'longform reader journey remains readable and returns through real navigation',
@@ -75,4 +79,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('premium reader certification contract: OK (archive honesty, longform sources, Chromium desktop, Android, desktop WebKit, iPhone, reduced motion, blocked storage, failed writes and forced colors)');
+console.log('premium reader certification contract: OK (archive add/remove honesty, observable route readiness, longform sources, Chromium desktop, Android, desktop WebKit, iPhone, reduced motion, blocked storage, failed writes and forced colors)');
