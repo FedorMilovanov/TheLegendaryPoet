@@ -57,23 +57,33 @@ for (const [name, expected] of Object.entries(archived)) {
 }
 
 const app = read('src/App.tsx');
-const redirects = [
-  ['article-1', '/poets/alexander-pushkin'],
-  ['article-2', '/essays/yesenin-kutezhi'],
-  ['article-3', '/poets/anna-akhmatova'],
-  ['article-main-1', '/articles'],
-  ['article-main-2', '/music'],
+const routeContract = JSON.parse(read('src/routes/route-contract.json'));
+const expectedRedirects = [
+  ['/articles/article-1', '/poets/alexander-pushkin'],
+  ['/articles/article-2', '/essays/yesenin-kutezhi'],
+  ['/articles/article-3', '/poets/anna-akhmatova'],
+  ['/articles/article-main-1', '/articles'],
+  ['/articles/article-main-2', '/music'],
 ];
-for (const [legacyId, target] of redirects) {
-  if (!app.includes(`path="/articles/${legacyId}"`) || !app.includes(`to="${target}"`)) {
-    fail(`missing compatibility redirect for ${legacyId} -> ${target}`);
-  }
+for (const [from, to] of expectedRedirects) {
+  const matches = routeContract.redirects?.filter((redirect) => redirect.from === from && redirect.to === to) ?? [];
+  if (matches.length !== 1) fail(`expected one compatibility redirect for ${from} -> ${to}, found ${matches.length}`);
 }
-if (!app.includes('path="/articles/:id"')) fail('missing fallback redirect for unknown legacy article ids');
+
+const unknownArticleProbe = '/articles/route-audit-legacy';
+if (routeContract.redirects?.some((redirect) => redirect.from === unknownArticleProbe)) {
+  fail(`unknown legacy article probe must not be redirected: ${unknownArticleProbe}`);
+}
+if (!routeContract.notFoundProbes?.includes(unknownArticleProbe)) {
+  fail(`unknown legacy article probe must be registered as NotFound evidence: ${unknownArticleProbe}`);
+}
+if (!app.includes('legacyRedirects.map')) fail('App.tsx must render explicit compatibility redirects from the route contract');
+if (app.includes('path="/articles/:id"')) fail('App.tsx must not restore the broad unknown-article soft-404 redirect');
+if (!app.includes('<Route path="*" element={<NotFoundPage />}')) fail('App.tsx must retain the normal NotFound boundary');
 
 if (failures.length) {
   console.error('content model contract: FAILED');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log('content model contract: one live Essay engine; five exact legacy drafts archived; redirects retained');
+console.log('content model contract: one live Essay engine; five exact legacy drafts archived; explicit redirects retained; unknown legacy ids reach NotFound');
