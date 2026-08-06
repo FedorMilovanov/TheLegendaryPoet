@@ -11,13 +11,7 @@
       "public-domain or licence rationale recorded separately from caption verification",
       "active acceptance must resolve exactly one current archive block"
     ],
-    "finalStatuses": [
-      "accepted-active",
-      "verified-reserve",
-      "excluded-rights",
-      "excluded-provenance",
-      "excluded-scope"
-    ]
+    "finalStatuses": ["accepted-active", "verified-reserve", "excluded-rights", "excluded-provenance", "excluded-scope"]
   },
   "decisions": {
     "Vladimir Mayakovsky 1914.jpg": {
@@ -31,17 +25,9 @@
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Vladimir_Mayakovsky_1914.jpg",
       "independentEvidenceUrl": "https://russiainphoto.ru/photos/248776/",
       "independentEvidenceInstitution": "ГБУК г. Москвы «Государственный музей В. В. Маяковского»",
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "Same studio negative: identical pose, top hat, cigarette and holder, cane, glove, clothing, background and inscription."
-      },
+      "visualMatch": "confirmed: same studio negative, pose, clothing, props, background and inscription",
       "originalSha256": "b6250970d408b602b96b0cf35fc1ee8b50eff88d64caebd6e53a6018dd7a974d",
-      "originalBytes": 28750,
-      "originalDimensions": { "width": 400, "height": 564 },
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-RusEmpire",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-RusEmpire"
-      },
+      "publicDomainRationale": "Template:PD-RusEmpire",
       "productionMediaKey": "mayakovsky-1914"
     },
     "Mayakovsky 1928 by Osip Brik.jpg": {
@@ -53,19 +39,11 @@
       "date": "1928",
       "location": "unresolved",
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_1928_by_Osip_Brik.jpg",
-      "independentEvidenceInstitution": "Российская государственная библиотека",
       "independentEvidenceUrl": "https://dlib.rsl.ru/viewer/01005408111#?page=5",
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "Exact volume-seven reproduction and official index identify the same portrait, date and photographer."
-      },
+      "independentEvidenceInstitution": "Российская государственная библиотека",
+      "visualMatch": "confirmed by exact volume-seven reproduction and official portrait index",
       "originalSha256": "0e004e5ae2ce5d2c152e4dd603dff619ae35b219de431e84df065b7d12f18f0f",
-      "originalBytes": 100934,
-      "originalDimensions": { "width": 514, "height": 724 },
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-Russia",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-Russia"
-      },
+      "publicDomainRationale": "Template:PD-Russia",
       "productionMediaKey": "mayakovsky-1928-osip"
     },
     "Mayakovsky and Futurists.jpg": {
@@ -79,17 +57,9 @@
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Futurists.jpg",
       "independentEvidenceUrl": "https://muzeimayakovskogo.ru/exhibitions/virtualnye/mayakovskiy-voskhozhdenie/chetyre-krika-doloy-/listovka-poshchechina-obshchestvennomu-vkusu/",
       "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "The museum leaflet witness contains the same six-person group photograph and identifies all sitters."
-      },
-      "originalSha256": "3ae1f3638b36ac5ab4e3289bacb119b355c5e3d8a55bc177880bceca8925999",
-      "originalBytes": 971574,
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-RusEmpire",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-RusEmpire",
-        "note": "The museum documents use of the group photograph on the February 1913 leaflet, independently establishing pre-1931 publication."
-      },
+      "visualMatch": "confirmed: same six-person group photograph and sitters",
+      "originalSha256": "3ae1f3638b36ac5acb4e3289bacb119b355c5e3d8a55bc177880bceca8925999",
+      "publicDomainRationale": "Template:PD-RusEmpire; exact photograph documented on the February 1913 leaflet",
       "productionMediaKey": "mayakovsky-futurists-1912"
     },
     "Mayakovsky and Moreno by Modotti 1925.jpg": {
@@ -103,16 +73,9 @@
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Moreno_by_Modotti_1925.jpg",
       "independentEvidenceUrl": "https://goskatalog.ru/portal/#/collections?id=11208336",
       "independentEvidenceInstitution": "Государственный музей В. В. Маяковского / Государственный каталог Музейного фонда РФ",
-      "visualMatch": {
-        "status": "confirmed-at-source",
-        "notes": "The acquired Commons original is explicitly sourced to the exact State Catalogue museum record."
-      },
+      "visualMatch": "confirmed at the exact State Catalogue source record",
       "originalSha256": "b7c4befe6d4043a3e7e3d936731b17a895deba77ec51b26360c4b333abcd47c8",
-      "originalBytes": 76586,
-      "publicDomainRationale": {
-        "commonsTemplates": ["Template:PD-old-70-expired", "Template:PD-old-X-expired"],
-        "note": "Tina Modotti died in 1942; creator and date are explicit and the recorded term-based rationale is separate from museum caption verification."
-      },
+      "publicDomainRationale": "Templates:PD-old-70-expired and PD-old-X-expired; Tina Modotti died in 1942",
       "productionMediaKey": "mayakovsky-moreno-modotti-1925"
     },
     "1927. Владимир Маяковский бреется.jpg": {
@@ -126,17 +89,9 @@
       "commonsPageUrl": "https://commons.wikimedia.org/wiki/File:1927._Владимир_Маяковский_бреется.jpg",
       "independentEvidenceUrl": "https://arzamas.academy/mag/1168-mayak",
       "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
-      "visualMatch": {
-        "status": "confirmed",
-        "notes": "The Arzamas museum-credit reproduction is the same shaving composition as the acquired original."
-      },
+      "visualMatch": "confirmed against the exact museum-credit reproduction",
       "originalSha256": "7bea5222bbb5621b11efa66e6ac081948a27719c4e0efb14f051d828cde60008",
-      "originalBytes": 96372,
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-Russia",
-        "templateUrl": "https://commons.wikimedia.org/wiki/Template:PD-Russia",
-        "note": "Known creator Osip Brik died in 1945; the term-based rationale is recorded separately from the museum caption witness."
-      },
+      "publicDomainRationale": "Template:PD-Russia; known creator Osip Brik died in 1945",
       "productionMediaKey": "mayakovsky-shaving-osip-1927"
     },
     "1926. Владимир Маяковский с Булькой.jpg": {
@@ -150,37 +105,34 @@
       "independentEvidenceUrl": "https://arzamas.academy/mag/1168-mayak",
       "independentEvidenceInstitution": "Государственный музей В. В. Маяковского",
       "originalSha256": "92cd221171cd249708a74ebaf28340931702a01577da5f2c1166f441553f0c77",
-      "publicDomainRationale": {
-        "commonsTemplate": "Template:PD-Russia",
-        "note": "Evidence is sufficient for a future bounded use, but no current essay archive block uses this exact source, so no active media key is created."
-      }
+      "publicDomainRationale": "Template:PD-Russia; no active key because no current essay block uses the exact source"
     }
   },
   "excludedCandidates": {
-    "C01": { "status": "excluded-rights", "reason": "Caption/object verified; original publication and complete publication authority remain unproved." },
-    "C02": { "status": "excluded-provenance", "reason": "Primary exact-object museum record and publication history remain unavailable." },
-    "C04": { "status": "excluded-rights", "reason": "1940 publication is cited but the exact source page and editorial rights predicate were not directly preserved." },
-    "C05": { "status": "excluded-provenance", "reason": "Original FPLIB source is unavailable and no independent exact-object record was found." },
-    "C06": { "status": "excluded-rights", "reason": "Museum caption is verified, but the pre-1931 publication predicate behind PD-Russia-expired is unproved." },
-    "C07": { "status": "excluded-rights", "reason": "The 1928 volume is verified, but decisive RSL reproduction and index pages remain unavailable." },
-    "C09": { "status": "excluded-provenance", "reason": "Dead FPLIB source, generic caption repetition and missing United States rationale." },
-    "C12": { "status": "excluded-provenance", "reason": "1962 Polish-book scan does not establish the original object, photographer or exact first-publication predicate." },
-    "C13": { "status": "excluded-rights", "reason": "MFA Houston verifies the exact 1924 object and identifies Anatoly Cemenka, but creator-term/publication authority for this reproduction is not sufficiently resolved." },
-    "C14": { "status": "excluded-provenance", "reason": "1962 Polish-book scan and PD-Poland template do not independently establish exact object provenance or first publication." },
-    "C17": { "status": "excluded-provenance", "reason": "Dead secondary source, unknown photographer and generic PD-old without a United States tag." },
-    "C18": { "status": "excluded-rights", "reason": "Family-album provenance supports the subjects but does not establish pre-1917 publication required by PD-RusEmpire." },
-    "C19": { "status": "excluded-provenance", "reason": "Source is only an unspecified book; exact object, photographer and publication lineage are absent." },
-    "C20": { "status": "excluded-provenance", "reason": "Source is only an unspecified book; exact object, photographer and publication lineage are absent." },
-    "C21": { "status": "excluded-provenance", "reason": "Unspecified book source and malformed date metadata do not support exact dating or publication authority." },
-    "C22": { "status": "excluded-provenance", "reason": "Unspecified book source does not identify the friends, exact object or publication event." },
-    "C23": { "status": "excluded-provenance", "reason": "Unspecified book source does not provide an object card, photographer or first-publication record." },
-    "C24": { "status": "excluded-rights", "reason": "Osip Brik attribution is secondary; the exact day and United States publication rationale are unsupported." },
-    "C25": { "status": "excluded-scope", "reason": "Secondary attribution and rights remain incomplete; the nude portrait is not required by the current editorial scope." },
-    "C26": { "status": "excluded-provenance", "reason": "Dead secondary image source and unknown photographer; pre-1917 publication is not independently demonstrated." },
-    "C27": { "status": "excluded-provenance", "reason": "No source, creator or verified creation date; the 1928 wording is not enough to establish the object or publication predicate." },
-    "C28": { "status": "excluded-rights", "reason": "Secondary source and anonymous-EU template provide no United States public-domain rationale or primary object record." },
-    "C29": { "status": "excluded-provenance", "reason": "Secondary genealogy source, tiny reproduction, unknown photographer and missing United States tag." },
-    "C30": { "status": "excluded-rights", "reason": "The 1925 group caption and 1939 reproduction lineage are strong, but PD-anon-70-EU does not establish the required global publication authority." }
+    "C01": {"status":"excluded-rights","reason":"Caption/object verified; original publication and complete publication authority remain unproved."},
+    "C02": {"status":"excluded-provenance","reason":"Primary exact-object museum record and publication history remain unavailable."},
+    "C04": {"status":"excluded-rights","reason":"1940 publication is cited but the exact source page and editorial rights predicate were not preserved."},
+    "C05": {"status":"excluded-provenance","reason":"Original FPLIB source is unavailable and no independent exact-object record was found."},
+    "C06": {"status":"excluded-rights","reason":"Museum caption is verified, but the pre-1931 publication predicate remains unproved."},
+    "C07": {"status":"excluded-rights","reason":"The 1928 volume is verified, but decisive RSL reproduction and index pages remain unavailable."},
+    "C09": {"status":"excluded-provenance","reason":"Dead FPLIB source, generic caption repetition and missing United States rationale."},
+    "C12": {"status":"excluded-provenance","reason":"1962 Polish-book scan does not establish original object, photographer or exact first publication."},
+    "C13": {"status":"excluded-rights","reason":"MFA Houston verifies the exact object and Anatoly Cemenka, but creator-term/publication authority remains unresolved."},
+    "C14": {"status":"excluded-provenance","reason":"1962 Polish-book scan and PD-Poland template do not establish exact object provenance or first publication."},
+    "C17": {"status":"excluded-provenance","reason":"Dead secondary source, unknown photographer and generic PD-old without a United States tag."},
+    "C18": {"status":"excluded-rights","reason":"Family-album provenance does not establish pre-1917 publication required by PD-RusEmpire."},
+    "C19": {"status":"excluded-provenance","reason":"Unspecified book source; exact object, photographer and publication lineage are absent."},
+    "C20": {"status":"excluded-provenance","reason":"Unspecified book source; exact object, photographer and publication lineage are absent."},
+    "C21": {"status":"excluded-provenance","reason":"Unspecified book source and malformed date metadata do not support exact dating or publication authority."},
+    "C22": {"status":"excluded-provenance","reason":"Unspecified book source does not identify the friends, exact object or publication event."},
+    "C23": {"status":"excluded-provenance","reason":"Unspecified book source does not provide an object card, photographer or first-publication record."},
+    "C24": {"status":"excluded-rights","reason":"Osip Brik attribution is secondary; exact day and United States publication rationale are unsupported."},
+    "C25": {"status":"excluded-scope","reason":"Secondary attribution and incomplete rights; the nude portrait is outside current editorial scope."},
+    "C26": {"status":"excluded-provenance","reason":"Dead secondary source, unknown photographer and no independently demonstrated pre-1917 publication."},
+    "C27": {"status":"excluded-provenance","reason":"No source, creator or verified creation date."},
+    "C28": {"status":"excluded-rights","reason":"Secondary source and anonymous-EU template provide no United States rationale or primary object record."},
+    "C29": {"status":"excluded-provenance","reason":"Secondary genealogy source, tiny reproduction, unknown photographer and missing United States tag."},
+    "C30": {"status":"excluded-rights","reason":"Strong 1925 caption and 1939 lineage, but PD-anon-70-EU does not establish broader publication authority."}
   },
   "unresolvedByDefault": []
 }
