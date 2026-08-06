@@ -28,6 +28,72 @@ async function readOverlayDebug(page) {
   return page.evaluate(() => window.__TLP_OVERLAY_DEBUG ?? null);
 }
 
+test.describe('native scroll continuity', () => {
+  test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
+
+  test('real wheel impulses remain progressive and uncancelled on a long poet page', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-core', 'Desktop wheel input is certified in the Chromium core profile.');
+
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+    await page.goto(`${BASE_URL}/poets/sergei-yesenin`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+
+    const geometry = await page.evaluate(() => ({
+      scrollHeight: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+      viewportHeight: window.innerHeight,
+    }));
+    expect(geometry.scrollHeight - geometry.viewportHeight).toBeGreaterThan(3_000);
+
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+      window.__TLP_WHEEL_EVENTS = [];
+      window.addEventListener('wheel', (event) => {
+        window.__TLP_WHEEL_EVENTS.push({
+          deltaY: event.deltaY,
+          defaultPrevented: event.defaultPrevented,
+          observedAt: performance.now(),
+        });
+      }, { passive: true });
+    });
+    await page.mouse.move(720, 500);
+    await page.waitForTimeout(150);
+
+    const positions = [];
+    let previousPosition = await page.evaluate(() => window.scrollY);
+    for (let index = 0; index < 6; index += 1) {
+      await page.mouse.wheel(0, 620);
+      await expect.poll(
+        () => page.evaluate(() => window.scrollY),
+        { timeout: 1_200, intervals: [50, 100, 150] },
+      ).toBeGreaterThan(previousPosition + 50);
+      const position = await page.evaluate(() => window.scrollY);
+      positions.push(position);
+      previousPosition = position;
+    }
+
+    const diagnostics = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      wheelEvents: window.__TLP_WHEEL_EVENTS ?? [],
+      htmlOverflowY: getComputedStyle(document.documentElement).overflowY,
+      bodyOverflowY: getComputedStyle(document.body).overflowY,
+    }));
+    fs.writeFileSync(
+      path.join(ARTIFACT_DIR, 'desktop-native-wheel-continuity.json'),
+      JSON.stringify({ geometry, positions, ...diagnostics }, null, 2),
+    );
+
+    expect(diagnostics.wheelEvents.length).toBeGreaterThanOrEqual(6);
+    expect(diagnostics.wheelEvents.every((event) => event.deltaY > 0 && event.defaultPrevented === false)).toBe(true);
+    expect(positions[0]).toBeGreaterThan(100);
+    for (let index = 1; index < positions.length; index += 1) {
+      expect(positions[index]).toBeGreaterThan(positions[index - 1] + 50);
+    }
+    expect(positions.at(-1)).toBeGreaterThan(2_000);
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe('focused community interactions', () => {
   test.use({ viewport: { width: 1440, height: 1000 }, locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark' });
 

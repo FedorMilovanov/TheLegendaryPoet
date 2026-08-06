@@ -9,8 +9,9 @@ import { nikolayGumilev } from './nikolayGumilev';
 import { sergeiYesenin } from './sergeiYesenin';
 import { annaAkhmatova } from './annaAkhmatova';
 import { alexanderBlok } from './alexanderBlok';
+import { editorialPortraitOverrides } from './editorialPortraitOverrides';
 
-export const poets: Poet[] = [
+const sourcePoets: Poet[] = [
   fyodorTyutchev,
   vladimirMayakovsky,
   alexanderPushkin,
@@ -22,5 +23,10 @@ export const poets: Poet[] = [
   annaAkhmatova,
   alexanderBlok,
 ];
+
+export const poets: Poet[] = sourcePoets.map((poet) => {
+  const editorialOverride = editorialPortraitOverrides[poet.id];
+  return editorialOverride ? { ...poet, ...editorialOverride } : poet;
+});
 
 export { allMusicTracks, musicTracks } from './musicTracks';

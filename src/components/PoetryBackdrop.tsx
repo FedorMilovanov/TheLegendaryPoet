@@ -1,5 +1,3 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-
 const fragments = [
   { text: 'Духовной жаждою томим', top: '14%', left: '4%', rotate: -8, size: 'text-5xl', opacity: 0.035 },
   { text: 'Мысль изреченная есть ложь', top: '30%', left: '68%', rotate: 7, size: 'text-4xl', opacity: 0.03 },
@@ -10,15 +8,16 @@ const fragments = [
   { text: 'Перед этим горем гнутся горы', top: '88%', left: '18%', rotate: 2, size: 'text-3xl', opacity: 0.024 },
 ];
 
+/**
+ * Fixed atmospheric typography. It deliberately has no scroll subscription:
+ * the fragments are already extremely faint, while recalculating their parent
+ * opacity on every wheel frame adds work to the most latency-sensitive path.
+ */
 export default function PoetryBackdrop() {
-  const { scrollY } = useScroll();
-  const scrollOpacity = useTransform(scrollY, [0, 800], [1, 0.2]);
-
   return (
-    <motion.div
+    <div
       className="pointer-events-none fixed inset-0 z-[1] overflow-hidden select-none"
       aria-hidden="true"
-      style={{ opacity: scrollOpacity }}
     >
       <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,black_0%,black_48%,transparent_80%)]" />
       {fragments.map((fragment) => (
@@ -40,6 +39,6 @@ export default function PoetryBackdrop() {
         <path d="M80 210 C260 140, 390 260, 560 180 S900 70, 1120 220" fill="none" stroke="#d4af37" strokeWidth="1.2" />
         <path d="M120 620 C310 520, 520 690, 740 560 S980 430, 1140 590" fill="none" stroke="#2ed8ff" strokeWidth="1" />
       </svg>
-    </motion.div>
+    </div>
   );
 }

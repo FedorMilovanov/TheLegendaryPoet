@@ -1,17 +1,30 @@
-import { useState } from 'react';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from './PremiumIcons';
 
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
-  const { scrollY } = useScroll();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const shouldShow = latest > 400;
-    if (shouldShow !== isVisible) {
-      setIsVisible(shouldShow);
-    }
-  });
+  useEffect(() => {
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const shouldShow = window.scrollY > 400;
+      setIsVisible((current) => current === shouldShow ? current : shouldShow);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const scrollToTop = () => {
     window.dispatchEvent(new Event('tlp-scroll-top'));
