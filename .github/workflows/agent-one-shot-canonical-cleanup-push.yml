@@ -3,6 +3,8 @@ name: One-shot canonical editorial cleanup push
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -10,7 +12,9 @@ permissions:
 
 jobs:
   canonicalize:
-    if: github.event.head_commit.message == 'chore(agent): trigger canonical cleanup run'
+    if: >-
+      github.event_name == 'schedule'
+      || github.event.head_commit.message == 'chore(agent): trigger canonical cleanup run'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:
@@ -70,8 +74,8 @@ jobs:
 
       - name: Report success
         if: success()
-        run: gh pr comment 336 --body "Push-orchestrated cleanup succeeded: npm ci, complete npm run check and production build passed before the product commit was pushed."
+        run: gh pr comment 336 --body "Scheduled cleanup succeeded: npm ci, complete npm run check and production build passed before the product commit was pushed."
 
       - name: Report failure
         if: failure()
-        run: gh pr comment 336 --body "Push-orchestrated cleanup failed before committing product changes. The product branch was not advanced by this run."
+        run: gh pr comment 336 --body "Scheduled cleanup failed before committing product changes. The product branch was not advanced by this run."
