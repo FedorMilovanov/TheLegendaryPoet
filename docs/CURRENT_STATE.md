@@ -39,9 +39,10 @@ The dependency-free `Project contracts` workflow runs project-contract, reader-c
 
 ## Open architecture lanes
 
-There are currently no registered open architecture lanes. Any future lane must receive a canonical `TLP-*` ID in this section and in `docs/project-contract.json`; prose-only or anonymous debt entries are forbidden. AuditRepo remains the authority for exact status transitions and production evidence.
+One bounded repair lane is registered while PR #336 replaces the hidden post-#334 editorial override with canonical poet-file ownership. It remains open until all ten source files publish directly, raw-source guards pass, the dependency/lock boundary is internally consistent, and exact-head source/build/browser evidence is recorded. AuditRepo remains the authority for the final status transition after merge.
 
 <!-- project-contract:open-lanes:start -->
+- `TLP-POET-001` — restore one-file authority for all ten poet records, reject hidden editorial rewriting and service voice in canonical source, and retain native-scroll ownership while closing its bounded cleanup tails.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material

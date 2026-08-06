@@ -2,15 +2,6 @@ const FIXED_HEADER_OFFSET = 96;
 const pauseTokens = new Set<symbol>();
 
 /**
- * Compatibility hook retained for older callers and contract tests. Ordinary
- * page scrolling is native now, so there is no global enhancement instance to
- * register, stop or restart.
- */
-export function setActiveLenis(_unused: unknown) {
-  // Intentionally empty: native browser scrolling is the production path.
-}
-
-/**
  * Records nested overlay ownership. The overlay itself remains responsible for
  * its body lock; native document scrolling has no animation target that needs
  * to be paused or synchronised when the lock is released.
