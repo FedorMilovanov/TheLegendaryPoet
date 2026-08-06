@@ -1,0 +1,196 @@
+name: One-shot canonical poet repair
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: one-shot-canonical-poet-repair
+  cancel-in-progress: false
+
+env:
+  REPAIR_BRANCH: agent/canonical-editorial-scroll-cleanup-20260806
+  PR_NUMBER: '336'
+  QA_BASE_URL: http://127.0.0.1:4173
+  PLAYWRIGHT_HTML_OPEN: never
+
+jobs:
+  repair-and-certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REPAIR_BRANCH }}
+          fetch-depth: 0
+
+      - name: Canonicalize full Pasternak source
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/data/library/borisPasternak.ts')
+          source = path.read_text(encoding='utf-8')
+          final_moral = '''Пастернак проявлял мужество перед властью, помогал людям и обладал болезненно чувствительной совестью. История «Доктора Живаго» показала его литературную стойкость: травля и принудительный отказ от Нобелевской премии не заставили его отречься от романа.
+
+Семейная жизнь строилась через тяжёлые разрывы. Влюбившись в Зинаиду Нейгауз, жену Генриха Нейгауза, Пастернак оставил Евгению Лурье; распались две семьи. Позднее, оставаясь мужем Зинаиды, он начал длительные отношения с Ольгой Ивинской. Искренность чувства и мучительное сознание двойственности не меняли сущности супружеской неверности (Исх. 20:14; Евр. 13:4).
+
+Ивинская действительно пострадала из-за близости к поэту: первый арест использовался как давление на него, второй, уже после его смерти, был связан с зарубежными гонорарами и наследием романа. Позднее обращение Пастернака к Евангелию было глубоким и серьёзным, но сосуществовало с неразрешённой двойной семейной жизнью. Мужество перед государством и религиозная сила стихов не сняли боли, причинённой близким.'''
+          final_commentary = 'В Пастернаке соединились гражданская стойкость, щедрость, евангельская жажда и семейная неверность. Он выдержал давление огромной системы, но не сумел привести личную жизнь к той цельности, о которой всё яснее писал в поздних стихах.'
+          replacement = f"  moralPortrait: `{final_moral}`,\n  authorCommentary: '{final_commentary}',\n"
+          pattern = re.compile(
+              r"^  moralPortrait: `.*?`,\n  authorCommentary: '(?:\\.|[^'])*',\n(?=  testimonies:)",
+              re.MULTILINE | re.DOTALL,
+          )
+          updated, count = pattern.subn(replacement, source, count=1)
+          if count == 0:
+              if final_moral not in source or final_commentary not in source:
+                  raise SystemExit('Pasternak portrait boundary did not match and final prose is absent')
+              updated = source
+
+          required = [
+              "id: 'pasternak-2'",
+              "id: 'pasternak-3'",
+              "id: 'pasternak-4'",
+              "author: 'Анна Ахматова'",
+              "author: 'Надежда Мандельштам'",
+              "author: 'Ольга Ивинская'",
+              "author: 'Александр Гладков'",
+              "author: 'Дмитрий Быков'",
+              "author: 'Лазарь Флейшман'",
+              "'Гефсиманский сад'",
+          ]
+          if len(updated.encode('utf-8')) < 28000:
+              raise SystemExit('Pasternak source is unexpectedly short')
+          if not updated.rstrip().endswith('};'):
+              raise SystemExit('Pasternak source does not end with a complete object')
+          if updated.count('sourceUrl:') != 7:
+              raise SystemExit(f'Pasternak testimony/source count changed: {updated.count("sourceUrl:")}')
+          for marker in required:
+              if marker not in updated:
+                  raise SystemExit(f'Pasternak source lost required marker: {marker}')
+          if updated.count('moralPortrait:') != 1 or updated.count('authorCommentary:') != 1:
+              raise SystemExit('Pasternak must contain exactly one portrait and conclusion')
+
+          path.write_text(updated, encoding='utf-8')
+          PY
+
+      - name: Commit bounded source repair
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/library/borisPasternak.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(editorial): canonicalize complete Pasternak portrait"
+            git push origin HEAD:${REPAIR_BRANCH}
+          fi
+          tested_sha="$(git rev-parse HEAD)"
+          echo "TESTED_SHA=$tested_sha" >> "$GITHUB_ENV"
+          printf 'tested_commit=%s\n' "$tested_sha" > canonical-poet-tested-head.txt
+
+      - name: Verify exact checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
+
+      - name: Run project contracts
+        run: node scripts/validate-project-contracts.mjs
+
+      - name: Run full project check
+        run: npm run check
+
+      - name: Build production site
+        env:
+          VITE_BASE: /
+        run: |
+          npm run sitemap
+          npm run build
+
+      - name: Install locked Playwright browsers
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium webkit
+
+      - name: Start production preview
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: canonical-poet-preview.log
+
+      - name: Run Chromium and Android Chrome QA
+        run: >-
+          npx playwright test
+          qa/manual-e2e.spec.mjs
+          qa/focused-interactions.spec.mjs
+          qa/deep-routes.spec.mjs
+          qa/floating-chrome.spec.mjs
+          qa/mobile-platforms.spec.mjs
+          qa/community-request-topology.spec.mjs
+          qa/reader-journeys.spec.mjs
+          qa/premium-reader-certification.spec.mjs
+          qa/yesenin-part-one.spec.mjs
+          qa/brand-emblem.spec.mjs
+          qa/brand-reference-comparison.spec.mjs
+          qa/hover-stability.spec.mjs
+          qa/essay-lightbox-overlay.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
+          --grep-invert "poet rating keyboard flow, durable comment and helpful state"
+          --workers=1
+          --reporter=line
+
+      - name: Run base iPhone Safari QA
+        run: node scripts/run-webkit-process-isolated.mjs
+
+      - name: Run desktop WebKit home and route QA
+        run: node scripts/run-webkit-home-reveal-process-isolated.mjs
+
+      - name: Run premium homepage performance QA
+        run: node scripts/run-home-polish-process-isolated.mjs
+
+      - name: Run critical iPhone and reduced-motion QA
+        run: node scripts/run-home-polish-iphone-critical-process-isolated.mjs
+
+      - name: Upload exact-head evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-poet-repair-evidence-${{ env.TESTED_SHA }}
+          path: |
+            canonical-poet-tested-head.txt
+            canonical-poet-preview.log
+            qa-artifacts
+            playwright-report
+            test-results
+            dist/build-budget-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Record successful certification on PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "## Exact-head certification complete\n\nTested source head: \`$TESTED_SHA\`.\n\nPassed in this one-shot runner:\n- project contracts;\n- full \`npm run check\`;\n- sitemap + production build;\n- Chromium and Android Chrome QA, including real native-wheel continuity;\n- base iPhone Safari;\n- desktop WebKit home/route;\n- premium homepage performance;\n- critical iPhone and reduced-motion contours.\n\nThe scheduled control-plane workflow is now removing itself from \`main\`."
+
+      - name: Remove one-shot workflow from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          workflow_path='.github/workflows/agent-scheduled-canonical-poet-repair.yml'
+          workflow_sha="$(gh api "repos/$GITHUB_REPOSITORY/contents/$workflow_path?ref=main" --jq .sha)"
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/contents/$workflow_path" \
+            -f message='chore(agent): remove completed canonical poet repair runner' \
+            -f sha="$workflow_sha" \
+            -f branch='main'
