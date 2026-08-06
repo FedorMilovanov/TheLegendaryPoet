@@ -118,8 +118,6 @@ export default function PoetDetailPage() {
             />
 
             {poet.spiritualSearch && <SpiritualPath content={poet.spiritualSearch} />}
-            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
-            {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
             {poet.historicalNote && (
               <div className="luxury-card rounded-[2.5rem] border border-luxury-gold/10 bg-[#0a0a0a]/50 p-8 md:p-10">
@@ -132,7 +130,9 @@ export default function PoetDetailPage() {
               </div>
             )}
 
+            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
+            {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
             <div className="pt-16">
               <h2 className="editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none text-white sm:mb-12 sm:text-5xl">
