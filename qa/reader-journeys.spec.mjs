@@ -170,13 +170,21 @@ test.describe('reduced-motion longform reader journey', () => {
     await expect(page.locator('.reading-progress')).toBeVisible();
     expect(await page.locator('.essay-body p').count()).toBeGreaterThan(8);
 
-    const citation = page.getByRole('link', { name: /^Источник \d+:/ }).first();
+    const citationCandidates = page.locator('#main-content a[href^="#source-"]');
+    await expect(citationCandidates.first()).toBeVisible();
+    const href = await citationCandidates.first().getAttribute('href');
+    expect(href).toMatch(/^#source-/);
+
+    // Reveal can replace the first inline citation while scrolling on a slower
+    // mobile compositor. Reacquire the exact href after scroll instead of
+    // focusing the role locator that discovered the previous DOM node.
+    const citation = page.locator(`#main-content a[href="${href}"]`).first();
     await citation.scrollIntoViewIfNeeded();
+    await expect(citation).toBeAttached();
+    await expect(citation).toBeVisible();
     await citation.focus();
     await expect(citation).toBeFocused();
     await expect(citation.getByRole('tooltip')).toBeVisible();
-    const href = await citation.getAttribute('href');
-    expect(href).toMatch(/^#source-/);
 
     await citation.press('Enter');
     await expect(page).toHaveURL(new RegExp(`${escapeRegExp(href)}$`));
