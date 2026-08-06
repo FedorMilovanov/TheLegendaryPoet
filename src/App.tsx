@@ -21,22 +21,7 @@ import GlobalMiniPlayer from './components/music/GlobalMiniPlayer';
 import ImmersivePlayer from './components/music/ImmersivePlayer';
 import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
-import {
-  AboutPage,
-  ArticlesPage,
-  EditorialPolicyPage,
-  EssayPage,
-  HallPage,
-  HomePage,
-  MusicPage,
-  MyArchivePage,
-  NotFoundPage,
-  PoetDetailPage,
-  PoetsPage,
-  PrivacyPage,
-  RatingsPage,
-  TrackDetailPage,
-} from './routes/routeModules';
+import { applicationRoutes, legacyRedirects, NotFoundPage } from './routes/routeModules';
 
 const WipeOverlay = () => (
   <motion.div
@@ -72,16 +57,23 @@ function RouteSettled({ pathname, onSettled, children }: { pathname: string; onS
 function RouteContent() {
   const location = useLocation();
   const outlet = useOutlet();
-  const initialPathRef = useRef(location.pathname);
+  const renderedPathRef = useRef(location.pathname);
+  const shouldFocusOnSettleRef = useRef(false);
   const [announcement, setAnnouncement] = useState('');
+
+  if (renderedPathRef.current !== location.pathname) {
+    renderedPathRef.current = location.pathname;
+    shouldFocusOnSettleRef.current = true;
+  }
 
   const handleSettled = useCallback(() => {
     setAnnouncement(document.title || 'Страница открыта');
-    // Key focus transfer to route identity, not to whether the initial passive
-    // effect happened to run first. A very fast keyboard command can navigate
-    // before that first timeout fires; the destination is still a real route
-    // change and must receive focus.
-    if (location.pathname !== initialPathRef.current) {
+    // The render boundary records every pathname transition, including a
+    // return to the URL that opened the session. The first document render is
+    // passive, while every real SPA transition owns focus after lazy content
+    // has settled.
+    if (shouldFocusOnSettleRef.current) {
+      shouldFocusOnSettleRef.current = false;
       document.getElementById('main-content')?.focus({ preventScroll: true });
     }
   }, [location.pathname]);
@@ -149,25 +141,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<SiteLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/hall" element={<HallPage />} />
-        <Route path="/poets" element={<PoetsPage />} />
-        <Route path="/poets/:id" element={<PoetDetailPage />} />
-        <Route path="/ratings" element={<RatingsPage />} />
-        <Route path="/articles" element={<ArticlesPage />} />
-        <Route path="/essays/:slug" element={<EssayPage />} />
-        <Route path="/articles/article-1" element={<Navigate to="/poets/alexander-pushkin" replace />} />
-        <Route path="/articles/article-2" element={<Navigate to="/essays/yesenin-kutezhi" replace />} />
-        <Route path="/articles/article-3" element={<Navigate to="/poets/anna-akhmatova" replace />} />
-        <Route path="/articles/article-main-1" element={<Navigate to="/articles" replace />} />
-        <Route path="/articles/article-main-2" element={<Navigate to="/music" replace />} />
-        <Route path="/articles/:id" element={<Navigate to="/articles" replace />} />
-        <Route path="/music" element={<MusicPage />} />
-        <Route path="/music/:id" element={<TrackDetailPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/editorial-policy" element={<EditorialPolicyPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/archive" element={<MyArchivePage />} />
+        {applicationRoutes.map(({ id, path, Component }) => (
+          <Route key={id} path={path} element={<Component />} />
+        ))}
+        {legacyRedirects.map(({ from, to }) => (
+          <Route key={from} path={from} element={<Navigate to={to} replace />} />
+        ))}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

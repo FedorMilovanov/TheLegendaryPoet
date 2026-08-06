@@ -51,15 +51,25 @@ const latestEssayDate = latestDate(essays.map((essay) => essay.dateModified || e
 const latestMusicDate = latestDate(publishedTracks.map((track) => track.publishedAt));
 const latestSiteDate = latestDate([latestEssayDate, latestMusicDate, POLICY_DATE]);
 
+const routeContract = JSON.parse(fs.readFileSync(path.resolve('src/routes/route-contract.json'), 'utf8'));
+const lastmodBySource = {
+  site: latestSiteDate,
+  essays: latestEssayDate,
+  music: latestMusicDate,
+  policy: POLICY_DATE,
+};
+const staticRoutes = routeContract.routes
+  .filter((route) => route.sitemap)
+  .map((route) => ({
+    loc: route.path,
+    lastmod: lastmodBySource[route.sitemapLastmod],
+    image: route.sitemapImage === 'site'
+      ? { loc: '/og-image.jpg', title: 'THE LEGENDARY POET', caption: 'Поэзия, анализ и история русской литературы' }
+      : undefined,
+  }));
+
 const urls = [
-  { loc: '/', lastmod: latestSiteDate, image: { loc: '/og-image.jpg', title: 'THE LEGENDARY POET', caption: 'Поэзия, анализ и история русской литературы' } },
-  { loc: '/poets', lastmod: latestSiteDate },
-  { loc: '/ratings', lastmod: latestSiteDate },
-  { loc: '/articles', lastmod: latestEssayDate },
-  { loc: '/music', lastmod: latestMusicDate },
-  { loc: '/about', lastmod: POLICY_DATE },
-  { loc: '/editorial-policy', lastmod: POLICY_DATE },
-  { loc: '/privacy', lastmod: POLICY_DATE },
+  ...staticRoutes,
   ...essays.map((essay) => ({
     loc: `/essays/${essay.slug}`,
     lastmod: validDate(essay.dateModified || essay.date),

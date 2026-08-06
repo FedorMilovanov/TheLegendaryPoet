@@ -9,7 +9,7 @@ This file is the source-repository entry point for the **current architecture**.
 - Runtime: React 19, direct `react-router`, Vite 7. Node 24 is the CI and `.nvmrc` baseline; the supported package engine range is Node `>=22.22.0 <25`.
 - Private package identity: `the-legendary-poet@0.0.0-private`, `private: true`, `UNLICENSED`.
 - Release and licensing authority: `docs/RELEASE_POLICY.md`. Production identity is the exact verified source `main` SHA, not the private package version.
-- Live lazy route registry: `src/routes/routeModules.ts`.
+- Machine route authority: `src/routes/route-contract.json`; lazy import and chunk-recovery runtime: `src/routes/routeModules.ts`.
 - Public longform model: `Essay`, catalogued by `src/data/essays/index.ts` and rendered at `/essays/:slug`.
 - Poet catalog: `src/data/library/index.ts`.
 - Brand runtime: `src/components/SpectralBrandMark.tsx`; approved source parts live in `qa/reference/approved-brand/` and are materialized by `scripts/materialize-brand-art.mjs`.
@@ -31,6 +31,7 @@ The exact evidence remains in AuditRepo, but the current source tree enforces th
 6. **Premium reader certification.** Desktop Chromium, Android Chrome, desktop WebKit and fresh-process iPhone Safari certify longform navigation, archive round-trips, honest blocked-storage behavior, route focus ownership, reduced motion, forced colors and queued failed community writes without adding a duplicate workflow.
 7. **Explicit private governance.** Package and lockfile identity, supported Node range, private/non-publishable status, `UNLICENSED` disposition and SHA-based release promotion are machine-checked. No public-source licence is inferred from repository visibility or third-party asset metadata.
 8. **Forensic branch retirement.** Temporary transport refs, superseded implementation refs, old Arena refs and the deeply diverged work ref were retired only after exact successor mapping, byte-identical evidence archival, selective current-head extraction, rights-safe path classification and direct post-deletion branch inventory. The intentional archive ref preserves the old research history without restoring obsolete runtime or executable workflows.
+9. **Single route/runtime truth.** Router elements, lazy page ownership, explicit redirects, sitemap membership, route QA inventory and per-route budgets derive from one machine contract. Unknown article ids reach NotFound, every SPA pathname transition owns focus after settlement, invalid essay structure fails validation instead of being repaired by the renderer, and archive removals expose honest mutation outcomes.
 
 ## Current quality gates
 

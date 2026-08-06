@@ -18,9 +18,9 @@ Page modules render through the nested route outlet. Adding a page must not dupl
 
 The audio provider remains above the router and the audio chrome remains outside page-level error boundaries. A broken article or route chunk must not stop an active MP3 or remove its controls.
 
-## Lazy route registry
+## Route contract and lazy runtime
 
-All page modules are declared in `src/routes/routeModules.ts`.
+`src/routes/route-contract.json` is the single machine-readable owner of route ids, paths, page modules, explicit legacy redirects, sitemap participation, route-audit role, prefetch eligibility, and per-route build budgets. `src/routes/routeModules.ts` binds that contract to cached dynamic importers and `React.lazy`. `App.tsx`, sitemap generation, route QA, and build-budget validation consume the same contract instead of maintaining parallel path lists.
 
 Each page has:
 
@@ -29,7 +29,7 @@ Each page has:
 - one route pattern used for intent prefetch;
 - one stable recovery ID.
 
-Do not add eager page imports to `App.tsx`. New pages must be registered in the route module registry and in `scripts/validate-app-shell.ts`. The production manifest audit will fail when a registered page stops being a dynamic entry.
+Do not add eager page imports or manual route paths to `App.tsx`. New pages and redirects must be registered in `route-contract.json`; the runtime and validators must fail when its importer, module, sitemap, QA, or budget ownership drifts. Unknown `/articles/:id` URLs reach the normal NotFound boundary; only named historical URLs may redirect.
 
 ## Intent prefetch
 
@@ -110,11 +110,11 @@ Vite emits `dist/.vite/manifest.json`. `validate:build-output` requires:
 - all registered pages as dynamic entries;
 - at least ten distinct route chunks;
 - no route chunk in the eager entry dependency graph;
-- a raw entry budget of 700 KB;
-- a raw per-route budget of 1.3 MB;
-- a raw per-JavaScript-file budget of 1.9 MB;
-- total raw JavaScript below 9 MB;
-- total raw CSS below 2 MB.
+- a raw entry budget of 665,000 bytes;
+- route-specific raw budgets declared in `route-contract.json`;
+- a raw per-JavaScript-file budget of 665,000 bytes;
+- total raw JavaScript below 1,800,000 bytes;
+- total raw CSS below 300,000 bytes.
 
 Budgets are intentionally conservative ceilings, not performance targets. When a route approaches a ceiling, split the heavy feature inside that route instead of raising the limit without investigation.
 

@@ -43,6 +43,7 @@ export default function MyArchivePage() {
   const [sortBy, setSortBy] = useState<ArchiveSort>('date');
   const [query, setQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
+  const [archiveMessage, setArchiveMessage] = useState('');
   const deferredQuery = useDeferredValue(query);
   const searchPending = deferredQuery !== query;
 
@@ -109,6 +110,19 @@ export default function MyArchivePage() {
 
   const hasAnyArchive = archivedPoems.length > 0 || listeningEntries.length > 0;
   const authorCount = new Set(archivedPoems.map((entry) => entry.poetId)).size;
+
+  const handleRemoveFavorite = (poemId: string) => {
+    const result = removeFavoritePoem(poemId);
+    if (result.status === 'failed') {
+      setArchiveMessage('Не удалось удалить стихотворение: архив браузера недоступен, список не изменён.');
+      return;
+    }
+    if (result.status === 'removed') {
+      setArchiveMessage('Стихотворение удалено из архива.');
+      return;
+    }
+    setArchiveMessage('Архив уже не содержит это стихотворение.');
+  };
 
   if (!hasAnyArchive) {
     return (
@@ -212,6 +226,7 @@ export default function MyArchivePage() {
             </div>
 
             <div className="mb-4 text-xs text-cyan-100/32" aria-live="polite">{searchPending ? 'Обновляем результаты…' : <>Найдено: <strong className="text-white/60">{filteredPoems.length}</strong>{filteredPoems.length !== archivedPoems.length && ` из ${archivedPoems.length}`}</>}</div>
+            {archiveMessage && <p className="mb-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-3 text-sm text-cyan-100/72" role="status" aria-live="polite" aria-atomic="true">{archiveMessage}</p>}
 
             {filteredPoems.length > 0 ? (
               <>
@@ -228,7 +243,7 @@ export default function MyArchivePage() {
                       </div>
                       <div className="flex flex-shrink-0 items-center gap-3">
                         <div className="flex items-center gap-1 text-luxury-gold"><Star size={14} className="fill-luxury-gold" /><span className="text-sm font-bold">{poem.rating}</span></div>
-                        <button type="button" onClick={() => removeFavoritePoem(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
+                        <button type="button" onClick={() => handleRemoveFavorite(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
                       </div>
                     </article>
                   ))}

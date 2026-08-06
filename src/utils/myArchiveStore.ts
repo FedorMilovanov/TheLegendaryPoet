@@ -9,10 +9,10 @@ export interface FavoritePoem {
   addedAt: number;
 }
 
-export type FavoriteToggleStatus = 'added' | 'removed' | 'failed' | 'invalid';
+export type ArchiveMutationStatus = 'added' | 'removed' | 'unchanged' | 'failed' | 'invalid';
 
-export interface FavoriteToggleResult {
-  status: FavoriteToggleStatus;
+export interface ArchiveMutationResult {
+  status: ArchiveMutationStatus;
   favorite: boolean;
 }
 
@@ -124,15 +124,16 @@ export function isFavoritePoem(poemId: string): boolean {
   return POEM_ID.test(poemId) && readSnapshot().items.some((favorite) => favorite.id === poemId);
 }
 
-export function removeFavoritePoem(poemId: string): boolean {
-  if (!POEM_ID.test(poemId)) return false;
+export function removeFavoritePoem(poemId: string): ArchiveMutationResult {
+  if (!POEM_ID.test(poemId)) return { status: 'invalid', favorite: false };
   const snapshot = readSnapshot();
   const items = snapshot.items.filter((favorite) => favorite.id !== poemId);
-  if (items.length === snapshot.items.length) return false;
-  return writeSnapshot({ ...snapshot, items });
+  if (items.length === snapshot.items.length) return { status: 'unchanged', favorite: false };
+  if (!writeSnapshot({ ...snapshot, items })) return { status: 'failed', favorite: true };
+  return { status: 'removed', favorite: false };
 }
 
-export function toggleFavoritePoem(poemId: string): FavoriteToggleResult {
+export function toggleFavoritePoem(poemId: string): ArchiveMutationResult {
   if (!POEM_ID.test(poemId)) return { status: 'invalid', favorite: false };
   const snapshot = readSnapshot();
   const existing = snapshot.items.some((favorite) => favorite.id === poemId);
