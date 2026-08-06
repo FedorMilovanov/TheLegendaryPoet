@@ -36,6 +36,33 @@ export const verifiedEssayMediaRecords: readonly VerifiedMediaRecord[] = [
     credit: 'Осип Брик · Российская государственная библиотека',
     sourceUrl: 'https://dlib.rsl.ru/viewer/01005408111#?page=5',
   },
+  {
+    id: 'mayakovsky-futurists-1912',
+    matchSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Futurists.jpg',
+    matchKind: 'archive',
+    alt: 'Владимир Маяковский с русскими футуристами в Москве, 1912 год',
+    caption: 'Маяковский и футуристы. Москва, 1912.',
+    credit: 'Неизвестный фотограф · Государственный музей В. В. Маяковского',
+    sourceUrl: 'https://muzeimayakovskogo.ru/exhibitions/virtualnye/mayakovskiy-voskhozhdenie/chetyre-krika-doloy-/listovka-poshchechina-obshchestvennomu-vkusu/',
+  },
+  {
+    id: 'mayakovsky-moreno-modotti-1925',
+    matchSourceUrl: 'https://commons.wikimedia.org/wiki/File:Mayakovsky_and_Moreno_by_Modotti_1925.jpg',
+    matchKind: 'archive',
+    alt: 'Владимир Маяковский и Франсиско Морено в Мехико, фотограф Тина Модотти, 1925 год',
+    caption: 'Владимир Маяковский и Франсиско Морено. Мехико, 1925.',
+    credit: 'Тина Модотти · Государственный музей В. В. Маяковского',
+    sourceUrl: 'https://goskatalog.ru/portal/#/collections?id=11208336',
+  },
+  {
+    id: 'mayakovsky-shaving-osip-1927',
+    matchSourceUrl: 'https://commons.wikimedia.org/wiki/File:1927._Владимир_Маяковский_бреется.jpg',
+    matchKind: 'archive',
+    alt: 'Владимир Маяковский бреется, фотограф Осип Брик, Москва, 1927 год',
+    caption: 'Владимир Маяковский бреется. Москва, 1927.',
+    credit: 'Осип Брик · Государственный музей В. В. Маяковского',
+    sourceUrl: 'https://arzamas.academy/mag/1168-mayak',
+  },
 ] as const;
 
 function matchesOriginal(block: Extract<EssayBlock, { type: 'image' }>, record: VerifiedMediaRecord) {
