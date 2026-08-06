@@ -10,18 +10,40 @@ async function essayLinks(page) {
   return page.locator('a[href^="/essays/"]');
 }
 
+async function waitForSettledRoute(page) {
+  const main = page.locator('#main-content');
+  await main.waitFor({ state: 'visible', timeout: 20_000 });
+  await expect(main.locator('[aria-busy="true"]:visible')).toHaveCount(0);
+  await expect(main.locator('h1, [role="heading"][aria-level="1"]').first()).toBeVisible();
+}
+
 async function expectLegacyRedirect(context, sourcePath, destination) {
   // Each legacy route gets a fresh page in the same project context. WebKit can
-  // keep a client-side replace navigation alive briefly after toHaveURL passes;
-  // reusing that page lets the previous redirect interrupt the next page.goto.
+  // keep a client-side replace navigation alive while another route opens;
+  // isolation prevents the previous redirect from interrupting the next goto.
   const probe = await context.newPage();
   try {
     const response = await probe.goto(`${BASE_URL}${sourcePath}`, { waitUntil: 'domcontentloaded' });
     expect(response).not.toBeNull();
     expect(response.status()).toBeLessThan(400);
     await expect(probe).toHaveURL(destination, { timeout: 12_000 });
-    await probe.waitForTimeout(120);
+    await waitForSettledRoute(probe);
     await expect(probe).toHaveURL(destination);
+  } finally {
+    await probe.close();
+  }
+}
+
+async function expectUnknownLegacyNotFound(context, sourcePath) {
+  const probe = await context.newPage();
+  try {
+    const response = await probe.goto(`${BASE_URL}${sourcePath}`, { waitUntil: 'domcontentloaded' });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBeLessThan(400);
+    await waitForSettledRoute(probe);
+    await expect(probe).toHaveURL(new RegExp(`${sourcePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+    await expect(probe.getByRole('heading', { level: 1, name: /Страница Не Найдена/i })).toBeVisible();
+    await expect(probe.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
   } finally {
     await probe.close();
   }
@@ -75,8 +97,8 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   });
 });
 
-test('legacy mini-article URLs redirect to canonical destinations', async ({ context }) => {
+test('known legacy article URLs redirect while unknown ids remain real NotFound routes', async ({ context }) => {
   await expectLegacyRedirect(context, '/articles/article-2', /\/essays\/yesenin-kutezhi$/);
   await expectLegacyRedirect(context, '/articles/article-main-2', /\/music$/);
-  await expectLegacyRedirect(context, '/articles/unknown-old-id', /\/articles$/);
+  await expectUnknownLegacyNotFound(context, '/articles/unknown-old-id');
 });
