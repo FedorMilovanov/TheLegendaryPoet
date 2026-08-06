@@ -1,0 +1,83 @@
+name: One-shot canonical editorial cleanup PR target
+
+on:
+  pull_request_target:
+    types: [synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  canonicalize:
+    if: >-
+      github.event.pull_request.number == 336
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.head.ref == 'agent/canonical-editorial-scroll-cleanup-20260806'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      TARGET_BRANCH: agent/canonical-editorial-scroll-cleanup-20260806
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ env.EXPECTED_HEAD }}
+          fetch-depth: 0
+
+      - name: Verify trusted exact head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$TARGET_BRANCH" = "${{ github.event.pull_request.head.ref }}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Prepare canonical source repair
+        run: python3 scripts/agent_canonical_editorial_cleanup.py
+
+      - name: Regenerate deterministic lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run complete project contract suite
+        run: npm run check
+
+      - name: Build production output
+        run: npm run build
+
+      - name: Commit verified product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/agent-canonical-editorial-cleanup.yml
+          git rm .github/workflows/agent-canonical-editorial-cleanup-pr.yml
+          git rm scripts/agent_canonical_editorial_cleanup.py
+          git rm .agent-ref-trigger
+          printf 'remove this marker in the next exact-head synchronization commit\n' > .agent-ci-trigger
+          git add -A -- package.json package-lock.json src scripts qa .github/workflows/agent-canonical-editorial-cleanup.yml .github/workflows/agent-canonical-editorial-cleanup-pr.yml scripts/agent_canonical_editorial_cleanup.py .agent-ref-trigger .agent-ci-trigger
+          git diff --cached --name-status
+          git diff --cached --quiet && { echo "No product changes produced"; exit 1; }
+          git commit -m "fix(editorial): restore canonical poet ownership and finish scroll cleanup"
+          git push origin HEAD:"$TARGET_BRANCH"
+
+      - name: Report success
+        if: success()
+        run: gh pr comment 336 --body "One-shot cleanup succeeded: npm ci, complete npm run check and production build passed before the verified product commit was pushed."
+
+      - name: Report failure
+        if: failure()
+        run: gh pr comment 336 --body "One-shot cleanup failed before committing product changes. The PR branch was not advanced by this workflow; inspect the failed run before retrying."
