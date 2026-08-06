@@ -56,12 +56,20 @@ test.describe('native scroll continuity', () => {
         });
       }, { passive: true });
     });
+    await page.mouse.move(720, 500);
+    await page.waitForTimeout(150);
 
     const positions = [];
+    let previousPosition = await page.evaluate(() => window.scrollY);
     for (let index = 0; index < 6; index += 1) {
       await page.mouse.wheel(0, 620);
-      await page.waitForTimeout(90);
-      positions.push(await page.evaluate(() => window.scrollY));
+      await expect.poll(
+        () => page.evaluate(() => window.scrollY),
+        { timeout: 1_200, intervals: [50, 100, 150] },
+      ).toBeGreaterThan(previousPosition + 50);
+      const position = await page.evaluate(() => window.scrollY);
+      positions.push(position);
+      previousPosition = position;
     }
 
     const diagnostics = await page.evaluate(() => ({
