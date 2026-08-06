@@ -7,8 +7,13 @@ const ARTIFACT_DIR = path.resolve('qa-artifacts', 'reader-journeys');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 async function waitForRoute(page) {
-  await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
-  await page.waitForTimeout(500);
+  const main = page.locator('#main-content');
+  await main.waitFor({ state: 'visible', timeout: 20_000 });
+  await expect(main.locator('[aria-busy="true"]:visible')).toHaveCount(0);
+  await expect(main.locator('h1, [role="heading"][aria-level="1"]').first()).toBeVisible();
+  await page.evaluate(async () => {
+    if (document.fonts?.ready) await document.fonts.ready;
+  });
 }
 
 function attachRuntimeDiagnostics(page) {
@@ -109,6 +114,45 @@ test.describe('reader outcome journeys', () => {
     expect(persisted).toBeNull();
 
     await page.screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-blocked-storage-honesty.png`), fullPage: false });
+    expect(runtime.pageErrors).toEqual([]);
+    expect(runtime.consoleErrors).toEqual([]);
+  });
+
+  test('blocked archive removal keeps the poem visible and explains the unchanged state', async ({ page }, testInfo) => {
+    const runtime = attachRuntimeDiagnostics(page);
+    await page.goto(`${BASE_URL}/poets/sergei-yesenin`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+
+    const addButton = page.getByRole('button', { name: /^Добавить «.+» в архив$/ }).first();
+    await addButton.scrollIntoViewIfNeeded();
+    const poemCard = addButton.locator('xpath=ancestor::*[starts-with(@id,"poem-")][1]');
+    const title = (await poemCard.locator('h3').first().innerText()).replace(/[«»]/g, '').trim();
+    await addButton.click();
+    await expect(page.getByRole('status').filter({ hasText: 'Добавлено в архив' })).toBeVisible();
+
+    await page.goto(`${BASE_URL}/archive`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const removeButton = page.getByRole('button', { name: new RegExp(`^Удалить «${escapeRegExp(title)}» из архива$`) });
+    await expect(removeButton).toBeVisible();
+
+    await page.evaluate((storageKey) => {
+      const original = Storage.prototype.setItem;
+      Object.defineProperty(Storage.prototype, 'setItem', {
+        configurable: true,
+        value(key, value) {
+          if (key === storageKey) throw new DOMException('Archive storage blocked', 'QuotaExceededError');
+          return original.call(this, key, value);
+        },
+      });
+    }, 'tlp-my-archive:v3');
+
+    await removeButton.click();
+    await expect(removeButton).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: /Не удалось удалить стихотворение.+список не изменён/ })).toBeVisible();
+    const persisted = await page.evaluate(() => window.localStorage.getItem('tlp-my-archive:v3'));
+    expect(JSON.parse(persisted || '{}').items?.length).toBeGreaterThan(0);
+
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-blocked-removal-honesty.png`), fullPage: false });
     expect(runtime.pageErrors).toEqual([]);
     expect(runtime.consoleErrors).toEqual([]);
   });
