@@ -199,20 +199,32 @@ for (const source of sources) {
   }
 }
 
-const pre1925CompanionSources = new Set([
+const explicitPre1925Sources = new Set([
+  'yes2-letopis-t3-k2',
   'yes2-pss-chronology',
   'yes2-pss-letters-vol6',
   'yes2-pss-business-documents',
   'yes2-pss-declarations-vol7k1',
 ]);
 
+const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> = {
+  'Возвращение: Москва после Запада': new Set([
+    'yes2-letopis-t3-k2',
+    'yes2-pss-chronology',
+  ]),
+  '«Москва кабацкая»: роль, рынок и реальная зависимость': new Set([
+    'yes2-pss-chronology',
+  ]),
+  'Имажинизм после единства': new Set([
+    'yes2-pss-declarations-vol7k1',
+  ]),
+  'Галина Бениславская: рукописи и издательские дела': new Set([
+    'yes2-pss-letters-vol6',
+    'yes2-pss-business-documents',
+  ]),
+};
+
 let activeSection = '';
-const inheritedPre1925Sections = new Set([
-  'Возвращение: Москва после Запада',
-  '«Москва кабацкая»: роль, рынок и реальная зависимость',
-  'Имажинизм после единства',
-  'Галина Бениславская: рукописи и издательские дела',
-]);
 for (const [index, block] of essay.blocks.entries()) {
   if (block.type === 'section') {
     activeSection = block.heading;
@@ -224,13 +236,53 @@ for (const [index, block] of essay.blocks.entries()) {
     : 'text' in block && typeof block.text === 'string'
       ? block.text
       : '';
-  const needsPre1925Coverage = /\b1924(?:–1925)?\b/u.test(searchable) || inheritedPre1925Sections.has(activeSection);
-  if (needsPre1925Coverage && block.sourceIds.includes('yes2-letopis-t5-k1') && !block.sourceIds.some((id) => pre1925CompanionSources.has(id))) {
-    throw new Error(`block ${index + 1} uses the 1925-only Letopis without a pre-1925 companion in section: ${activeSection}`);
+
+  const explicitPre1925Claim = /\b(?:1923|1924)(?:–1925)?\b/u.test(searchable);
+  if (
+    explicitPre1925Claim
+    && block.sourceIds.includes('yes2-letopis-t5-k1')
+    && !block.sourceIds.some((id) => explicitPre1925Sources.has(id))
+  ) {
+    throw new Error(
+      `block ${index + 1} uses the 1925-only Letopis for an explicit pre-1925 claim without a period-capable source`,
+    );
   }
+
+  const requiredSectionAuthorities = requiredPre1925AuthoritiesBySection[activeSection];
+  if (
+    requiredSectionAuthorities
+    && !block.sourceIds.some((id) => requiredSectionAuthorities.has(id))
+  ) {
+    throw new Error(
+      `block ${index + 1} in section ${activeSection} lacks its section-specific pre-1925 authority`,
+    );
+  }
+
   if (searchable.includes('Корпус переписки') && !block.sourceIds.includes('yes2-pss-letters-vol6')) {
     throw new Error(`block ${index + 1} discusses the correspondence corpus without item-level PSS vol.6`);
   }
+}
+
+const benislavskayaLegalBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Галина Бениславская была не только героиней несчастной любви.'),
+);
+if (
+  !benislavskayaLegalBlock
+  || !('sourceIds' in benislavskayaLegalBlock)
+  || !benislavskayaLegalBlock.sourceIds?.includes('yes2-pss-business-documents')
+) {
+  throw new Error('Benislavskaya legal-role paragraph lost item-level business-document authority');
+}
+
+const benislavskayaLetterBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('29 октября 1924 года из Тифлиса'),
+);
+if (
+  !benislavskayaLetterBlock
+  || !('sourceIds' in benislavskayaLetterBlock)
+  || !benislavskayaLetterBlock.sourceIds?.includes('yes2-pss-letters-vol6')
+) {
+  throw new Error('Benislavskaya 29 October correspondence paragraph lost item-level PSS vol.6 authority');
 }
 
 const postReturnMoscowBlock = essay.blocks.find(
