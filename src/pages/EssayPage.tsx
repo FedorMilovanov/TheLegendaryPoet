@@ -1,10 +1,10 @@
-import { useRef } from 'react';
+import { use, useRef } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
-import { getAllEssays, getEssayBySlug } from '../data/essays';
+import { getBrowserEssayBySlug, getBrowserEssayCatalog } from '../data/essays/browserEssayData';
 import { poets } from '../data/poets';
 import ReadingProgress from '../components/articles/ReadingProgress';
 import EssayHero from '../components/essay/EssayHero';
@@ -17,9 +17,12 @@ import { useSeo } from '../hooks/useSeo';
 import { buildArticlePageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { titleCase } from '../utils/titleCase';
 
+const missingEssayPromise = Promise.resolve(undefined);
+
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
-  const essay = slug ? getEssayBySlug(slug) : undefined;
+  const essay = use(slug ? getBrowserEssayBySlug(slug) : missingEssayPromise);
+  const essayCatalog = use(getBrowserEssayCatalog());
   const poet = essay?.poetId ? poets.find((candidate) => candidate.id === essay.poetId) : undefined;
   const articleRef = useRef<HTMLElement>(null);
   const routePath = `/essays/${slug ?? ''}`;
@@ -78,7 +81,7 @@ export default function EssayPage() {
 
   const toc = getEssayToc(essay.blocks);
   const seriesEntries = essay.series
-    ? getAllEssays()
+    ? essayCatalog
         .filter((entry) => entry.series?.id === essay.series?.id)
         .sort((a, b) => (a.series?.part ?? 0) - (b.series?.part ?? 0))
     : [];
