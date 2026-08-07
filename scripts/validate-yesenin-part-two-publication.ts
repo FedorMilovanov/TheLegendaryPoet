@@ -241,6 +241,7 @@ const explicitPre1925Sources = new Set([
   'yes2-ballada-26-commentary',
   'yes2-baku-no215-commentary',
   'yes2-pss-declarations-vol7k1',
+  'yes2-black-man-commentary',
 ]);
 
 const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> = {
@@ -321,7 +322,7 @@ if (
 }
 
 const benislavskayaLetterBlock = essay.blocks.find(
-  (block) => block.type === 'paragraph' && block.text.startsWith('29 октября 1924 года из Тифлиса'),
+  (block) => block.type === 'paragraph' && block.text.includes('29 октября 1924 года из Тифлиса'),
 );
 if (
   !benislavskayaLetterBlock
@@ -339,7 +340,7 @@ if (!postReturnMoscowBlock || !('sourceIds' in postReturnMoscowBlock) || !postRe
 }
 
 const imagismBlock = essay.blocks.find(
-  (block) => block.type === 'paragraph' && block.text.startsWith('Имажинизм дал Есенину издательскую сеть'),
+  (block) => block.type === 'paragraph' && block.text.startsWith('К августу 1924 года спор'),
 );
 if (!imagismBlock || !('sourceIds' in imagismBlock) || !imagismBlock.sourceIds?.includes('yes2-pss-declarations-vol7k1')) {
   throw new Error('Imagism public-break paragraph lost item-level declarations evidence');
@@ -387,7 +388,7 @@ if (
 }
 
 const blackManBlock = essay.blocks.find(
-  (block) => block.type === 'paragraph' && block.text.startsWith('Сохранившаяся редакция «Чёрного человека»'),
+  (block) => block.type === 'paragraph' && block.text.startsWith('«Чёрный человек» тоже сопротивляется'),
 );
 if (!blackManBlock || !('sourceIds' in blackManBlock) || !blackManBlock.sourceIds?.includes('yes2-black-man-commentary')) {
   throw new Error('Black Man paragraph lost item-level creative-history authority');
