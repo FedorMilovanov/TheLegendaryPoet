@@ -322,7 +322,7 @@ if (
 }
 
 const benislavskayaLetterBlock = essay.blocks.find(
-  (block) => block.type === 'paragraph' && block.text.startsWith('29 октября 1924 года из Тифлиса'),
+  (block) => block.type === 'paragraph' && block.text.includes('29 октября 1924 года из Тифлиса'),
 );
 if (
   !benislavskayaLetterBlock
