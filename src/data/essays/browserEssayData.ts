@@ -9,6 +9,11 @@ const validSlugPattern = /^[a-z0-9-]+$/;
 let catalogPromise: Promise<readonly EssaySummary[]> | undefined;
 const essayPromises = new Map<string, Promise<Essay | undefined>>();
 
+function summaryOf(essay: Essay): EssaySummary {
+  const { blocks: _blocks, sources: _sources, ...summary } = essay;
+  return summary;
+}
+
 function assertSummary(value: unknown, label: string): EssaySummary {
   if (!value || typeof value !== 'object') throw new Error(`${label} is not an object`);
   const summary = value as Partial<EssaySummary>;
@@ -36,20 +41,32 @@ async function fetchJson(url: string): Promise<unknown> {
   return response.json();
 }
 
+async function getDevCatalog(): Promise<readonly EssaySummary[]> {
+  const { getAllEssays } = await import('./index');
+  return getAllEssays().map(summaryOf);
+}
+
+async function getDevEssayBySlug(slug: string): Promise<Essay | undefined> {
+  const { getEssayBySlug } = await import('./index');
+  return getEssayBySlug(slug);
+}
+
 export function getBrowserEssayCatalog(): Promise<readonly EssaySummary[]> {
-  catalogPromise ??= fetchJson(`${payloadRoot}catalog.json`).then((value) => {
-    if (!Array.isArray(value)) throw new Error('Essay catalog payload is not an array');
-    const summaries = value.map((entry, index) => assertSummary(entry, `Essay catalog entry ${index + 1}`));
-    const ids = new Set<string>();
-    const slugs = new Set<string>();
-    for (const summary of summaries) {
-      if (ids.has(summary.id)) throw new Error(`Duplicate browser essay id: ${summary.id}`);
-      if (slugs.has(summary.slug)) throw new Error(`Duplicate browser essay slug: ${summary.slug}`);
-      ids.add(summary.id);
-      slugs.add(summary.slug);
-    }
-    return summaries;
-  });
+  catalogPromise ??= import.meta.env.DEV
+    ? getDevCatalog()
+    : fetchJson(`${payloadRoot}catalog.json`).then((value) => {
+        if (!Array.isArray(value)) throw new Error('Essay catalog payload is not an array');
+        const summaries = value.map((entry, index) => assertSummary(entry, `Essay catalog entry ${index + 1}`));
+        const ids = new Set<string>();
+        const slugs = new Set<string>();
+        for (const summary of summaries) {
+          if (ids.has(summary.id)) throw new Error(`Duplicate browser essay id: ${summary.id}`);
+          if (slugs.has(summary.slug)) throw new Error(`Duplicate browser essay slug: ${summary.slug}`);
+          ids.add(summary.id);
+          slugs.add(summary.slug);
+        }
+        return summaries;
+      });
   return catalogPromise;
 }
 
@@ -59,22 +76,24 @@ export function getBrowserEssayBySlug(slug: string): Promise<Essay | undefined> 
   const cached = essayPromises.get(slug);
   if (cached) return cached;
 
-  const request = fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, { credentials: 'same-origin' })
-    .then(async (response) => {
-      if (response.status === 404) return undefined;
-      if (!response.ok) {
-        throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
-      }
-      const value = await response.json() as unknown;
-      const summary = assertSummary(value, `Essay payload ${slug}`);
-      const essay = value as Partial<Essay>;
-      if (summary.slug !== slug) throw new Error(`Essay payload slug mismatch: requested ${slug}, received ${summary.slug}`);
-      if (!Array.isArray(essay.blocks)) throw new Error(`Essay payload ${slug} has no block array`);
-      if (essay.sources !== undefined && !Array.isArray(essay.sources)) {
-        throw new Error(`Essay payload ${slug} has an invalid source list`);
-      }
-      return value as Essay;
-    });
+  const request = import.meta.env.DEV
+    ? getDevEssayBySlug(slug)
+    : fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, { credentials: 'same-origin' })
+        .then(async (response) => {
+          if (response.status === 404) return undefined;
+          if (!response.ok) {
+            throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
+          }
+          const value = await response.json() as unknown;
+          const summary = assertSummary(value, `Essay payload ${slug}`);
+          const essay = value as Partial<Essay>;
+          if (summary.slug !== slug) throw new Error(`Essay payload slug mismatch: requested ${slug}, received ${summary.slug}`);
+          if (!Array.isArray(essay.blocks)) throw new Error(`Essay payload ${slug} has no block array`);
+          if (essay.sources !== undefined && !Array.isArray(essay.sources)) {
+            throw new Error(`Essay payload ${slug} has an invalid source list`);
+          }
+          return value as Essay;
+        });
 
   essayPromises.set(slug, request);
   return request;
