@@ -59,16 +59,21 @@ function getStorage() {
   }
 }
 
-function sanitizeAddedAt(value: unknown) {
+function sanitizeLegacyAddedAt(value: unknown) {
   const addedAt = Number(value);
   return Number.isFinite(addedAt) && addedAt > 0 ? Math.min(addedAt, Date.now()) : 0;
+}
+
+function sanitizeOperationAddedAt(value: unknown) {
+  const addedAt = Number(value);
+  return Number.isSafeInteger(addedAt) && addedAt > 0 ? addedAt : 0;
 }
 
 function sanitizeFavorite(value: unknown): FavoritePoem | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<FavoritePoem>;
   if (typeof candidate.id !== 'string' || !POEM_ID.test(candidate.id)) return null;
-  return { id: candidate.id, addedAt: sanitizeAddedAt(candidate.addedAt) };
+  return { id: candidate.id, addedAt: sanitizeLegacyAddedAt(candidate.addedAt) };
 }
 
 function sanitizeItems(value: unknown) {
@@ -123,7 +128,7 @@ function sanitizeOperation(value: unknown): FavoriteArchiveOperation | null {
   return {
     id: candidate.id,
     favorite: candidate.favorite,
-    addedAt: candidate.favorite ? sanitizeAddedAt(candidate.addedAt) : 0,
+    addedAt: candidate.favorite ? sanitizeOperationAddedAt(candidate.addedAt) : 0,
     generation,
     writerId: candidate.writerId,
   };
@@ -171,7 +176,7 @@ export function createFavoriteArchiveOperation(
   return {
     id: poemId,
     favorite,
-    addedAt: favorite ? sanitizeAddedAt(now) : 0,
+    addedAt: favorite ? sanitizeOperationAddedAt(now) : 0,
     generation,
     writerId,
   };
@@ -248,7 +253,7 @@ function readPreviousSnapshot(storage: Storage): PreviousFavoriteArchiveSnapshot
     return {
       version: 3,
       items: sanitizeItems(value.items),
-      updatedAt: sanitizeAddedAt(value.updatedAt) || Date.now(),
+      updatedAt: sanitizeLegacyAddedAt(value.updatedAt) || Date.now(),
     };
   } catch {
     return null;
@@ -284,9 +289,10 @@ function readSnapshot(): FavoriteArchiveSnapshot {
 }
 
 function activeFavorites(snapshot: FavoriteArchiveSnapshot) {
+  const now = Date.now();
   return snapshot.operations
     .filter((operation) => operation.favorite)
-    .map((operation) => ({ id: operation.id, addedAt: operation.addedAt }))
+    .map((operation) => ({ id: operation.id, addedAt: Math.min(operation.addedAt, now) }))
     .sort((left, right) => left.addedAt - right.addedAt || left.id.localeCompare(right.id));
 }
 
