@@ -117,6 +117,22 @@ assertContract(
   'semantic listener inspection must honor a later explicit passive true override',
 );
 
+const lexicalScopeFixture = inspectSource(`
+  function attachObserver() {
+    const passive = true;
+    const listenerOptions = { passive };
+    window.addEventListener('scroll', onScroll, listenerOptions);
+  }
+  function unrelatedScope() {
+    const passive = false;
+    void passive;
+  }
+`);
+assertContract(
+  lexicalScopeFixture.hasEventListener('scroll', { options: { passive: true } }),
+  'semantic listener inspection must resolve shorthand options from the nearest lexical scope',
+);
+
 const wheelFixture = inspectSource(`
   const EVENT = 'wheel';
   window.addEventListener(EVENT, onWheel);
