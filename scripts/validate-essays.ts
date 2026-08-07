@@ -235,7 +235,7 @@ function validateSources(essay: Essay) {
   }
 
   const sourceIds = new Set<string>();
-  const sourceUrls = new Set<string>();
+  const sourceRecords = new Set<string>();
 
   for (const [index, source] of sources.entries()) {
     const label = `source ${index + 1}`;
@@ -255,8 +255,12 @@ function validateSources(essay: Essay) {
     }
     if (source.url) {
       const normalizedUrl = source.url.replace(/^http:/, 'https:').replace(/\/$/, '');
-      if (sourceUrls.has(normalizedUrl)) error(essay, `duplicate source URL: ${source.url}`);
-      sourceUrls.add(normalizedUrl);
+      const normalizedTitle = source.title.trim().toLocaleLowerCase('ru-RU').replace(/\s+/g, ' ');
+      const sourceRecord = `${normalizedUrl}\n${normalizedTitle}`;
+      if (sourceRecords.has(sourceRecord)) {
+        error(essay, `duplicate source record: ${source.title} — ${source.url}`);
+      }
+      sourceRecords.add(sourceRecord);
     }
     if ((source.kind === 'primary' || source.kind === 'archive') && !source.institution) {
       warning(essay, `${label} should name its institution or collection`);

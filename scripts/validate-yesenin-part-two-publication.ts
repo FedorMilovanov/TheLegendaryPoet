@@ -58,7 +58,7 @@ const expectedHeadings = [
   'Америка: гастрольная машина и отчуждение',
   'Что действительно было написано за границей',
   'Возвращение: Москва после Запада',
-  '«Москва кабацкая»: роль, рынок и реальная зависимость',
+  '«Москва кабацкая»: роль, рынок и документированные эпизоды',
   'Имажинизм после единства',
   'Галина Бениславская: рукописи и издательские дела',
   'Кавказ и воображаемая Персия',
@@ -120,8 +120,10 @@ for (const unsafe of [
   /удостоверение\s*№\s*1037/iu,
   /Ганнушкин[^.]{0,100}(?:поставил диагноз|диагностировал|лечил Есенина|лечащий врач Есенина)/iu,
   /вне всяких сомнений[^.]{0,100}предсмертн/iu,
+  /Эта часть биографии не пытается/iu,
+  /evidence class/iu,
 ]) {
-  if (unsafe.test(articleText)) throw new Error(`Part II contains an unsupported claim: ${unsafe}`);
+  if (unsafe.test(articleText)) throw new Error(`Part II contains an unsupported or service-style claim: ${unsafe}`);
 }
 
 const myths = essay.blocks.filter((block) => block.type === 'note' && block.variant === 'myth');
@@ -154,9 +156,20 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-letopis-t5-k1': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-pss-chronology': /^https:\/\/www\.museum-esenin\.ru\//,
   'yes2-pss-letters-vol6': /^https:\/\/feb-web\.ru\//,
+  'yes2-pugachev-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-berlin-autobiography-1922': /^https:\/\/vtoraya-literatura\.com\//,
+  'yes2-berlin-collected-1922': /^https:\/\/search\.rsl\.ru\//,
+  'yes2-strana-negodyaev-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-us-admission-1922': /^https:\/\/oregonnews\.uoregon\.edu\//,
+  'yes2-zhelezny-mirgorod-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-moscow-kabatskaya-1924': /^https:\/\/rusneb\.ru\//,
+  'yes2-pss-cafe-accounts': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-legal-1923': /^https:\/\/feb-web\.ru\//,
   'yes2-pss-business-documents': /^https:\/\/feb-web\.ru\//,
   'yes2-pss-manuscript-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-persian-motifs-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-pss-declarations-vol7k1': /^https:\/\/feb-web\.ru\//,
+  'yes2-black-man-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
 };
 /*
@@ -203,6 +216,15 @@ const explicitPre1925Sources = new Set([
   'yes2-letopis-t3-k2',
   'yes2-pss-chronology',
   'yes2-pss-letters-vol6',
+  'yes2-pugachev-commentary',
+  'yes2-berlin-autobiography-1922',
+  'yes2-berlin-collected-1922',
+  'yes2-strana-negodyaev-commentary',
+  'yes2-us-admission-1922',
+  'yes2-zhelezny-mirgorod-commentary',
+  'yes2-moscow-kabatskaya-1924',
+  'yes2-pss-cafe-accounts',
+  'yes2-pss-legal-1923',
   'yes2-pss-business-documents',
   'yes2-pss-declarations-vol7k1',
 ]);
@@ -212,8 +234,10 @@ const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> =
     'yes2-letopis-t3-k2',
     'yes2-pss-chronology',
   ]),
-  '«Москва кабацкая»: роль, рынок и реальная зависимость': new Set([
-    'yes2-pss-chronology',
+  '«Москва кабацкая»: роль, рынок и документированные эпизоды': new Set([
+    'yes2-moscow-kabatskaya-1924',
+    'yes2-pss-cafe-accounts',
+    'yes2-pss-legal-1923',
   ]),
   'Имажинизм после единства': new Set([
     'yes2-pss-declarations-vol7k1',
@@ -297,6 +321,32 @@ const imagismBlock = essay.blocks.find(
 );
 if (!imagismBlock || !('sourceIds' in imagismBlock) || !imagismBlock.sourceIds?.includes('yes2-pss-declarations-vol7k1')) {
   throw new Error('Imagism public-break paragraph lost item-level declarations evidence');
+}
+
+const admissionBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Американский этап начался 1 октября 1922 года'),
+);
+if (!admissionBlock || !('sourceIds' in admissionBlock) || !admissionBlock.sourceIds?.includes('yes2-us-admission-1922')) {
+  throw new Error('U.S. admission paragraph lost contemporaneous item-level press evidence');
+}
+
+const cafeBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('«Москва кабацкая» была книгой'),
+);
+if (
+  !cafeBlock
+  || !('sourceIds' in cafeBlock)
+  || !cafeBlock.sourceIds?.includes('yes2-pss-cafe-accounts')
+  || !cafeBlock.sourceIds?.includes('yes2-pss-legal-1923')
+) {
+  throw new Error('Moscow Kabatskaya paragraph lost cafe-account/legal-process source separation');
+}
+
+const blackManBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Сохранившаяся редакция «Чёрного человека»'),
+);
+if (!blackManBlock || !('sourceIds' in blackManBlock) || !blackManBlock.sourceIds?.includes('yes2-black-man-commentary')) {
+  throw new Error('Black Man paragraph lost item-level creative-history authority');
 }
 
 let citationCount = 0;
