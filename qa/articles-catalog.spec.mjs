@@ -28,6 +28,12 @@ function collectEssayPayloadRequests(page) {
   return requests;
 }
 
+async function expectNoAutomaticRetry(readAttempts) {
+  const attempts = readAttempts();
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  expect(readAttempts()).toBe(attempts);
+}
+
 async function expectLegacyRedirect(context, sourcePath, destination) {
   // Each legacy route gets a fresh page in the same project context. WebKit can
   // keep a client-side replace navigation alive while another route opens;
@@ -150,6 +156,145 @@ test('browser essay payloads remain target-scoped and unknown slugs stay honest'
   } finally {
     await missing.close();
   }
+});
+
+test('homepage remains available when the essay catalog fails and retries after a new SPA visit', async ({ page }) => {
+  let catalogAttempts = 0;
+  let documentRequests = 0;
+
+  page.on('request', (request) => {
+    if (request.resourceType() === 'document') documentRequests += 1;
+  });
+  await page.route('**/data/essays/catalog.json', async (route) => {
+    catalogAttempts += 1;
+    if (catalogAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'temporary catalog failure' }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  const response = await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+  expect(response).not.toBeNull();
+  expect(response.status()).toBeLessThan(400);
+  await expect(page.getByRole('heading', { level: 1, name: /THE LEGENDARY POET/i })).toBeVisible();
+  await expect.poll(() => catalogAttempts).toBe(1);
+  await expect(page.getByLabel('Количество исследований пока недоступно')).toHaveCount(1);
+  await expect(page.getByRole('heading', { level: 1, name: /Попробуем восстановить страницу/i })).toHaveCount(0);
+  await expectNoAutomaticRetry(() => catalogAttempts);
+
+  await page.locator('a[href="/poets"]:visible').first().click();
+  await expect(page).toHaveURL(/\/poets$/);
+  await waitForSettledRoute(page);
+  await page.locator('a[href="/"]:visible').first().click();
+  await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?$`));
+  await expect(page.getByRole('heading', { level: 1, name: /THE LEGENDARY POET/i })).toBeVisible();
+  await expect.poll(() => catalogAttempts).toBe(2);
+  await expect(page.getByLabel('Количество исследований пока недоступно')).toHaveCount(0);
+  expect(documentRequests).toBe(1);
+});
+
+test('failed catalog Suspense visit stays stable until a later SPA visit retries it', async ({ page }) => {
+  let catalogAttempts = 0;
+  let documentRequests = 0;
+
+  page.on('request', (request) => {
+    if (request.resourceType() === 'document') documentRequests += 1;
+  });
+  await page.route('**/data/essays/catalog.json', async (route) => {
+    catalogAttempts += 1;
+    if (catalogAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'temporary catalog failure' }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  const response = await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  expect(response).not.toBeNull();
+  expect(response.status()).toBeLessThan(400);
+  await expect(page.getByRole('heading', { level: 1, name: /Попробуем восстановить страницу/i })).toBeVisible();
+  await expect.poll(() => catalogAttempts).toBe(1);
+  await expectNoAutomaticRetry(() => catalogAttempts);
+
+  await page.getByRole('link', { name: /На главную/i }).click();
+  await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?$`));
+  await expect(page.getByRole('heading', { level: 1, name: /THE LEGENDARY POET/i })).toBeVisible();
+  await expect.poll(() => catalogAttempts).toBe(2);
+
+  await page.getByRole('link', { name: /Изучить статьи/i }).click();
+  await expect(page).toHaveURL(/\/articles$/);
+  await waitForSettledRoute(page);
+  await expect(await essayLinks(page)).toHaveCount(8);
+  expect(catalogAttempts).toBe(2);
+  expect(documentRequests).toBe(1);
+});
+
+test('failed essay body stays stable until revisit, then success remains cached', async ({ page }) => {
+  const slug = 'sergei-yesenin-1921-1925';
+  let catalogAttempts = 0;
+  let bodyAttempts = 0;
+  let documentRequests = 0;
+
+  page.on('request', (request) => {
+    if (request.resourceType() === 'document') documentRequests += 1;
+  });
+  await page.route('**/data/essays/catalog.json', async (route) => {
+    catalogAttempts += 1;
+    await route.continue();
+  });
+  await page.route(`**/data/essays/${slug}.json`, async (route) => {
+    bodyAttempts += 1;
+    if (bodyAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'temporary essay failure' }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  const response = await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  expect(response).not.toBeNull();
+  expect(response.status()).toBeLessThan(400);
+  await waitForSettledRoute(page);
+  await expect(page.locator(`a[href="/essays/${slug}"]`)).toHaveCount(1);
+  await expect.poll(() => catalogAttempts).toBe(1);
+
+  await page.locator(`a[href="/essays/${slug}"]`).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Попробуем восстановить страницу/i })).toBeVisible();
+  await expect.poll(() => bodyAttempts).toBe(1);
+  await expectNoAutomaticRetry(() => bodyAttempts);
+
+  await page.getByRole('link', { name: /На главную/i }).click();
+  await expect(page).toHaveURL(new RegExp(`${BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?$`));
+  await expect(page.getByRole('heading', { level: 1, name: /THE LEGENDARY POET/i })).toBeVisible();
+  await page.getByRole('link', { name: /Изучить статьи/i }).click();
+  await expect(page).toHaveURL(/\/articles$/);
+  await waitForSettledRoute(page);
+
+  await page.locator(`a[href="/essays/${slug}"]`).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Сергей Есенин.*1921–1925/i })).toBeVisible();
+  await expect.poll(() => bodyAttempts).toBe(2);
+
+  await page.getByRole('link', { name: /Все статьи/i }).click();
+  await expect(page).toHaveURL(/\/articles$/);
+  await waitForSettledRoute(page);
+  await page.locator(`a[href="/essays/${slug}"]`).click();
+  await expect(page.getByRole('heading', { level: 1, name: /Сергей Есенин.*1921–1925/i })).toBeVisible();
+  expect(bodyAttempts).toBe(2);
+  expect(catalogAttempts).toBe(1);
+  expect(documentRequests).toBe(1);
 });
 
 test('known legacy article URLs redirect while unknown ids remain real NotFound routes', async ({ context }) => {

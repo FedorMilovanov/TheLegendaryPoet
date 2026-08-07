@@ -1,4 +1,5 @@
 import { use, useState } from 'react';
+import { useLocation } from 'react-router';
 import { motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
 import { getBrowserEssayCatalog } from '../data/essays/browserEssayData';
@@ -38,7 +39,8 @@ function matchesCategory(essay: EssaySummary, category: string) {
 
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
-  const essays = use(getBrowserEssayCatalog());
+  const location = useLocation();
+  const essays = use(getBrowserEssayCatalog(location.key));
 
   useSeo({
     title: 'Исследования и большие статьи — THE LEGENDARY POET',
