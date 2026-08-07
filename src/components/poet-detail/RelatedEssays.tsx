@@ -1,12 +1,13 @@
+import { use } from 'react';
 import { ArrowUpRight, Clock, Layers3 } from 'lucide-react';
 import { Link } from '../ui/Link';
 import TiltCard from '../TiltCard';
 import EssayCover from '../essay/EssayCover';
-import { getAllEssays } from '../../data/essays';
+import { getBrowserEssayCatalog } from '../../data/essays/browserEssayData';
 import { titleCase } from '../../utils/titleCase';
 
 export default function RelatedEssays({ poetId }: { poetId: string }) {
-  const related = getAllEssays()
+  const related = use(getBrowserEssayCatalog())
     .filter((essay) => essay.poetId === poetId)
     .sort((a, b) => {
       if (a.series?.id && a.series.id === b.series?.id) {

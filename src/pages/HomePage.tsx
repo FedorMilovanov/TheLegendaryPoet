@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { Link } from '../components/ui/Link';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { poets, musicTracks } from '../data/poets';
-import { getAllEssays } from '../data/essays';
+import { getBrowserEssayCatalog } from '../data/essays/browserEssayData';
 import PoetCard from '../components/PoetCard';
 import MagneticButton from '../components/MagneticButton';
 import { BookMonogramIcon, RutubeIcon, YouTubeIcon, VKIcon } from '../components/ChannelIcons';
@@ -172,14 +172,18 @@ function AnimatedCounter({ value }: { value: number }) {
   return <div ref={ref} className="inline"><motion.span>{displayValue}</motion.span></div>;
 }
 
-const stats = [
+const staticStats = [
   { icon: BookOpen, label: 'Поэтов в базе', getValue: () => poets.length },
   { icon: FileText, label: 'Текстов стихов', getValue: () => poets.reduce((acc, p) => acc + p.poems.length, 0) },
   { icon: AudioWaveform, label: 'Аудио-треков', getValue: () => musicTracks.length },
-  { icon: Star, label: 'Больших исследований', getValue: () => getAllEssays().length },
 ];
 
-function StatsSection() {
+function StatsSection({ essayCount }: { essayCount: number }) {
+  const stats = [
+    ...staticStats,
+    { icon: Star, label: 'Больших исследований', getValue: () => essayCount },
+  ];
+
   return (
     <section className="py-16 relative z-10 -mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -207,6 +211,8 @@ function StatsSection() {
 }
 
 export default function HomePage() {
+  const essayCatalog = use(getBrowserEssayCatalog());
+
   useSeo({
     title: 'THE LEGENDARY POET | Поэзия, анализ, история',
     description: 'Великие русские поэты: биографии, тексты стихов, глубокий литературный и — где это оправдано — христианский разбор. Пушкин, Лермонтов, Ахматова, Есенин, Блок и другие.',
@@ -216,7 +222,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
       <HeroSection />
-      <StatsSection />
+      <StatsSection essayCount={essayCatalog.length} />
       <PoemOfDay />
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -91,9 +91,9 @@ for (const forbidden of [
   }
 }
 
-const canonicalConsumers = [
-  'src/pages/ArticlesPage.tsx',
-  'src/pages/EssayPage.tsx',
+const buildTimeCanonicalConsumers = [
+  'scripts/gen-essay-browser-data.ts',
+  'scripts/validate-essay-browser-data.ts',
   'scripts/gen-essay-search-index.ts',
   'scripts/validate-essay-search-index.ts',
   'scripts/gen-sitemap.mjs',
@@ -106,20 +106,47 @@ const canonicalConsumers = [
   'scripts/validate-literary-style.ts',
   'scripts/validate-yesenin-part-two-publication.ts',
 ];
+const browserPublishedConsumers = [
+  'src/pages/HomePage.tsx',
+  'src/pages/ArticlesPage.tsx',
+  'src/pages/EssayPage.tsx',
+  'src/components/poet-detail/RelatedEssays.tsx',
+];
 
 const catalogImportPattern = /from\s*['"][^'"]*data\/essays(?:\/index(?:\.ts)?)?['"]/;
-const rawEssayImportPattern = /from\s*['"][^'"]*data\/essays\/(?!index(?:\.ts)?['"])[^'"]+['"]/;
+const rawEssayImportPattern = /from\s*['"][^'"]*data\/essays\/(?!index(?:\.ts)?['"]|browserEssayData(?:\.ts)?['"])[^'"]+['"]/;
+const browserAdapterImportPattern = /from\s*['"][^'"]*data\/essays\/browserEssayData(?:\.ts)?['"]/;
 
-for (const file of canonicalConsumers) {
+for (const file of buildTimeCanonicalConsumers) {
   const source = readFileSync(file, 'utf8');
   if (!catalogImportPattern.test(source)) {
-    throw new Error(`canonical essay consumer bypasses the catalog module: ${file}`);
+    throw new Error(`build-time essay consumer bypasses the canonical catalog module: ${file}`);
   }
   if (rawEssayImportPattern.test(source)) {
-    throw new Error(`canonical essay consumer imports an authoring module directly: ${file}`);
+    throw new Error(`build-time essay consumer imports an authoring module directly: ${file}`);
   }
 }
 
+for (const file of browserPublishedConsumers) {
+  const source = readFileSync(file, 'utf8');
+  if (!browserAdapterImportPattern.test(source)) {
+    throw new Error(`browser essay consumer bypasses the generated publication adapter: ${file}`);
+  }
+  if (catalogImportPattern.test(source) || rawEssayImportPattern.test(source)) {
+    throw new Error(`browser essay consumer reintroduces an eager canonical/authoring import: ${file}`);
+  }
+}
+
+const browserAdapterSource = readFileSync('src/data/essays/browserEssayData.ts', 'utf8');
+if (catalogImportPattern.test(browserAdapterSource) || rawEssayImportPattern.test(browserAdapterSource)) {
+  throw new Error('browser essay adapter must remain payload-only and must not import the full corpus');
+}
+
+const generatorSource = readFileSync('scripts/gen-essay-browser-data.ts', 'utf8');
+if (!catalogImportPattern.test(generatorSource)) {
+  throw new Error('browser payload generator lost the canonical published catalog as its source');
+}
+
 console.log(
-  `Essay publication contract: ${catalog.length} immutable essays, stable catalog identity, derived readTime, untouched authoring modules, one catalog boundary.`,
+  `Essay publication contract: ${catalog.length} immutable essays, stable canonical catalog identity, derived readTime, untouched authoring modules, one canonical build-time boundary plus one generated browser publication adapter across ${browserPublishedConsumers.length} browser consumers.`,
 );

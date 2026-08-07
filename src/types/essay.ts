@@ -141,3 +141,11 @@ export interface Essay {
   blocks: EssayBlock[];
   sources?: EssaySource[];
 }
+
+/**
+ * Browser/listing metadata derived from a published Essay. It deliberately omits
+ * the large block/source payload while preserving every identity, card, SEO and
+ * series field. Build-time generation produces these summaries from the
+ * canonical published catalog; authors never maintain a second metadata copy.
+ */
+export type EssaySummary = Omit<Essay, 'blocks' | 'sources'>;

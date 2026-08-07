@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { use, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
-import { getAllEssays } from '../data/essays';
-import type { Essay } from '../types/essay';
+import { getBrowserEssayCatalog } from '../data/essays/browserEssayData';
+import type { EssaySummary } from '../types/essay';
 import EssayCard from '../components/essay/EssayCard';
 import ResilientImage from '../components/media/ResilientImage';
 import Reveal from '../components/Reveal';
@@ -25,7 +25,7 @@ const categories = [
   { value: 'mikhail-lermontov', label: 'Михаил Лермонтов' },
 ];
 
-function matchesCategory(essay: Essay, category: string) {
+function matchesCategory(essay: EssaySummary, category: string) {
   if (!category) return true;
   if (poetCategoryIds.has(category)) return essay.poetId === category;
 
@@ -38,13 +38,14 @@ function matchesCategory(essay: Essay, category: string) {
 
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
+  const essays = use(getBrowserEssayCatalog());
+
   useSeo({
     title: 'Исследования и большие статьи — THE LEGENDARY POET',
     description: 'Документальные биографии и большие исследования русской поэзии с открытой библиографией, проверенными формулировками и редакционными иллюстрациями.',
     path: '/articles',
   });
 
-  const essays = useMemo(() => getAllEssays(), []);
   const filteredEssays = essays.filter((essay) => matchesCategory(essay, selectedCategory));
 
   return (
