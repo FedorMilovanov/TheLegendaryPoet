@@ -25,6 +25,15 @@ function summaryOf(essay: Essay): EssaySummary {
   return summary;
 }
 
+function sourceFilesUnder(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) return sourceFilesUnder(absolute);
+    if (!entry.isFile() || !/\.(?:ts|tsx)$/.test(entry.name)) return [];
+    return [absolute.split(path.sep).join('/')];
+  });
+}
+
 const essays = [...getAllEssays()];
 const expectedCatalog = essays.map((essay) => jsonValue(summaryOf(essay)));
 const actualCatalog = JSON.parse(readFileSync(path.join(outputDir, 'catalog.json'), 'utf8')) as unknown;
@@ -48,8 +57,13 @@ for (const relativePath of browserPublishedConsumers) {
   if (!browserAdapterImportPattern.test(source)) {
     throw new Error(`${relativePath} does not consume the generated browser essay adapter`);
   }
+}
+
+for (const relativePath of sourceFilesUnder('src')) {
+  if (relativePath.startsWith('src/data/essays/')) continue;
+  const source = readFileSync(relativePath, 'utf8');
   if (eagerCatalogImportPattern.test(source) || rawEssayImportPattern.test(source)) {
-    throw new Error(`${relativePath} still imports the eager full essay corpus`);
+    throw new Error(`${relativePath} imports the eager full essay corpus into browser source`);
   }
 }
 
@@ -59,5 +73,5 @@ if (eagerCatalogImportPattern.test(browserAdapterSource) || rawEssayImportPatter
 }
 
 console.log(
-  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; ${browserPublishedConsumers.length} browser consumers are isolated from the eager full corpus.`,
+  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser src scan found no eager full-corpus consumer, and ${browserPublishedConsumers.length} expected consumers use the generated adapter.`,
 );
