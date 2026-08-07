@@ -107,8 +107,10 @@ const buildTimeCanonicalConsumers = [
   'scripts/validate-yesenin-part-two-publication.ts',
 ];
 const browserPublishedConsumers = [
+  'src/pages/HomePage.tsx',
   'src/pages/ArticlesPage.tsx',
   'src/pages/EssayPage.tsx',
+  'src/components/poet-detail/RelatedEssays.tsx',
 ];
 
 const catalogImportPattern = /from\s*['"][^'"]*data\/essays(?:\/index(?:\.ts)?)?['"]/;
@@ -146,5 +148,5 @@ if (!catalogImportPattern.test(generatorSource)) {
 }
 
 console.log(
-  `Essay publication contract: ${catalog.length} immutable essays, stable canonical catalog identity, derived readTime, untouched authoring modules, one canonical build-time boundary plus one generated browser publication adapter.`,
+  `Essay publication contract: ${catalog.length} immutable essays, stable canonical catalog identity, derived readTime, untouched authoring modules, one canonical build-time boundary plus one generated browser publication adapter across ${browserPublishedConsumers.length} browser consumers.`,
 );
