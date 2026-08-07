@@ -382,6 +382,62 @@ function count(text: string, pattern: RegExp): number {
   return text.match(pattern)?.length ?? 0;
 }
 
+function normalizeSemanticText(text: string): string {
+  return text.toLocaleLowerCase('ru').replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
+}
+
+const semanticStopWords = new Set([
+  'а',
+  'без',
+  'бы',
+  'в',
+  'во',
+  'для',
+  'до',
+  'его',
+  'ее',
+  'её',
+  'и',
+  'из',
+  'к',
+  'как',
+  'ко',
+  'на',
+  'не',
+  'но',
+  'о',
+  'об',
+  'от',
+  'по',
+  'с',
+  'со',
+  'что',
+  'это',
+]);
+
+function semanticStem(token: string): string {
+  const normalized = token.replace(/[^a-zа-я0-9]/gi, '');
+  if (normalized.length <= 5) return normalized;
+  return normalized.slice(0, Math.max(5, normalized.length - 3));
+}
+
+function semanticWitnessMatches(text: string, witness: string): boolean {
+  const normalizedText = normalizeSemanticText(text);
+  const normalizedWitness = normalizeSemanticText(witness);
+  if (normalizedText.includes(normalizedWitness)) return true;
+
+  const textTokens = normalizedText.match(/[a-zа-я0-9]+/gi) ?? [];
+  const witnessTokens = (normalizedWitness.match(/[a-zа-я0-9]+/gi) ?? []).filter(
+    (token) => token.length >= 4 && !semanticStopWords.has(token),
+  );
+  if (witnessTokens.length < 2) return false;
+
+  return witnessTokens.every((token) => {
+    const stem = semanticStem(token);
+    return textTokens.some((candidate) => candidate.startsWith(stem));
+  });
+}
+
 function validateRhythm(where: string, text: string, mirroredLimit: number): void {
   const latinWords = [
     ...new Set(
@@ -437,7 +493,7 @@ for (const poet of poets) {
   const portraitText = portraitOfPoet(poet);
 
   for (const invariant of requiredPoetInvariants[poet.id] ?? []) {
-    if (!invariant.anyOf.some((marker) => text.includes(marker))) {
+    if (!invariant.anyOf.some((marker) => semanticWitnessMatches(text, marker))) {
       error(
         poet.id,
         `required semantic boundary is missing: ${invariant.label}; accepted witnesses: ${invariant.anyOf.map((marker) => `“${marker}”`).join(' / ')}`,
