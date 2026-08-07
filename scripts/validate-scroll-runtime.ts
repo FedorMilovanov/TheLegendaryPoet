@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { inspectSource } from './lib/source-contract-ast';
 
 const failures: string[] = [];
 const assertContract = (condition: unknown, message: string) => {
@@ -55,24 +56,63 @@ const poetryBackdropSource = readFileSync(new URL('../src/components/PoetryBackd
 const scrollTopSource = readFileSync(new URL('../src/components/ScrollToTop.tsx', import.meta.url), 'utf8');
 const readingProgressSource = readFileSync(new URL('../src/components/articles/ReadingProgress.tsx', import.meta.url), 'utf8');
 
-assertContract(!coordinatorSource.includes("import('lenis')"), 'the document scroll coordinator must not load a global JavaScript scroller');
+const coordinatorAst = inspectSource(coordinatorSource, 'SmoothScroll.tsx');
+const scrollTopAst = inspectSource(scrollTopSource, 'ScrollToTop.tsx');
+const readingProgressAst = inspectSource(readingProgressSource, 'ReadingProgress.tsx');
+
+assertContract(!coordinatorAst.hasModuleImport('lenis'), 'the document scroll coordinator must not load a global JavaScript scroller');
 assertContract(!coordinatorSource.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native');
-assertContract(!coordinatorSource.includes('.raf('), 'document scrolling must not depend on a perpetual JavaScript animation loop');
-assertContract(!coordinatorSource.includes("addEventListener('wheel'"), 'the app shell must not intercept wheel input');
-assertContract(!coordinatorSource.includes('preventDefault()'), 'the app shell must not cancel native document scrolling');
-assertContract(coordinatorSource.includes("window.addEventListener('tlp-scroll-top'"), 'the native scroll coordinator must retain the scroll-to-top command');
+assertContract(!coordinatorAst.hasMethodCall('raf'), 'document scrolling must not depend on a perpetual JavaScript animation loop');
+assertContract(!coordinatorAst.hasEventListener('wheel'), 'the app shell must not intercept wheel input');
+assertContract(!coordinatorAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document scrolling');
+assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native scroll coordinator must retain the scroll-to-top command');
 assertContract(!smoothScrollSource.includes('setActiveLenis'), 'the native scroll utility must not retain a legacy Lenis registration API');
 assertContract(!poetryBackdropSource.includes('useScroll'), 'decorative poetry must not subscribe to scroll frames');
 assertContract(!poetryBackdropSource.includes('useTransform'), 'decorative poetry must not derive motion values from document scrolling');
 assertContract(!scrollTopSource.includes('useMotionValueEvent'), 'scroll-top visibility must not create a Framer document-scroll subscription');
-assertContract(scrollTopSource.includes("addEventListener('scroll', onScroll, { passive: true })"), 'scroll-top visibility must use one passive native listener');
-assertContract(readingProgressSource.includes("addEventListener('scroll', onScroll, { passive: true })"), 'reading progress fallback must use one passive native listener');
-assertContract(readingProgressSource.includes('window.requestAnimationFrame(update)'), 'reading progress fallback must coalesce React updates through requestAnimationFrame');
-assertContract(readingProgressSource.includes('window.cancelAnimationFrame(frame)'), 'reading progress fallback must cancel its pending frame when unmounted');
-assertContract(!readingProgressSource.includes("addEventListener('scroll', update"), 'reading progress fallback must not set React state directly on every scroll event');
+assertContract(scrollTopAst.hasEventListener('scroll', { options: { passive: true } }), 'scroll-top visibility must use a passive native listener');
+assertContract(readingProgressAst.hasEventListener('scroll', { options: { passive: true } }), 'reading progress fallback must use a passive native listener');
+assertContract(readingProgressAst.hasMethodCall('requestAnimationFrame'), 'reading progress fallback must coalesce React updates through requestAnimationFrame');
+assertContract(readingProgressAst.hasMethodCall('cancelAnimationFrame'), 'reading progress fallback must cancel its pending frame when unmounted');
+assertContract(!readingProgressAst.hasEventListener('scroll', { handlerName: 'update' }), 'reading progress fallback must not set React state directly on every scroll event');
+
+// Mutation-style harness checks: equivalent syntax must pass, forbidden behavior must not.
+const passiveFixture = inspectSource(`
+  const EVENT = 'scroll';
+  const passive = true;
+  const listenerOptions = { passive };
+  window['addEventListener'](EVENT, onScroll, listenerOptions);
+`);
+assertContract(
+  passiveFixture.hasEventListener('scroll', { options: { passive: true } }),
+  'semantic listener inspection must accept equivalent passive-option syntax',
+);
+
+const nonPassiveFixture = inspectSource(`
+  const listenerOptions = { passive: false };
+  window.addEventListener('scroll', onScroll, listenerOptions);
+`);
+assertContract(
+  !nonPassiveFixture.hasEventListener('scroll', { options: { passive: true } }),
+  'semantic listener inspection must reject a non-passive scroll observer',
+);
+
+const wheelFixture = inspectSource(`
+  const EVENT = 'wheel';
+  window.addEventListener(EVENT, onWheel);
+  function onWheel(event: WheelEvent) { event['preventDefault'](); }
+`);
+assertContract(wheelFixture.hasEventListener('wheel'), 'semantic listener inspection must detect wheel interception through an event-name binding');
+assertContract(wheelFixture.hasMethodCall('preventDefault'), 'semantic call inspection must detect alternate preventDefault syntax');
+
+const scrollerFixture = inspectSource(`
+  const SCROLLER_MODULE = 'lenis';
+  async function boot() { await import(SCROLLER_MODULE); }
+`);
+assertContract(scrollerFixture.hasModuleImport('lenis'), 'semantic import inspection must detect a global scroller loaded through a const module binding');
 
 if (failures.length > 0) {
   throw new Error(`Scroll runtime validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
 }
 
-console.log('Scroll runtime validation passed: native wheel continuity, anchor geometry, reduced motion, nested overlays and RAF-coalesced chrome observers are enforced.');
+console.log('Scroll runtime validation passed: native wheel continuity, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
