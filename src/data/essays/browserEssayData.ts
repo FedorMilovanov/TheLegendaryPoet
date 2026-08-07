@@ -5,6 +5,7 @@ const baseUrl = import.meta.env.BASE_URL.endsWith('/')
   : `${import.meta.env.BASE_URL}/`;
 const payloadRoot = `${baseUrl}data/essays/`;
 const validSlugPattern = /^[a-z0-9-]+$/;
+const requestOptions: RequestInit = { credentials: 'same-origin', cache: 'no-store' };
 
 let catalogPromise: Promise<readonly EssaySummary[]> | undefined;
 const essayPromises = new Map<string, Promise<Essay | undefined>>();
@@ -34,7 +35,7 @@ function assertSummary(value: unknown, label: string): EssaySummary {
 }
 
 async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url, { credentials: 'same-origin' });
+  const response = await fetch(url, requestOptions);
   if (!response.ok) {
     throw new Error(`Essay payload request failed (${response.status}) for ${url}`);
   }
@@ -80,7 +81,7 @@ export function getBrowserEssayBySlug(slug: string): Promise<Essay | undefined> 
     ? getDevEssayBySlug(slug)
     : Promise.all([
         getBrowserEssayCatalog(),
-        fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, { credentials: 'same-origin' }),
+        fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, requestOptions),
       ]).then(async ([catalog, response]) => {
         const catalogEntry = catalog.find((entry) => entry.slug === slug);
         if (!catalogEntry) return undefined;
