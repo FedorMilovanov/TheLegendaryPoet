@@ -21,6 +21,12 @@ import {
   setStoredTrackPosition,
   setStoredVolume,
 } from './audioSessionStore';
+import {
+  isPlaybackCoordinationClaim,
+  nextPlaybackClaimTimestamp,
+  shouldYieldToRemotePlayback,
+  type PlaybackCoordinationClaim,
+} from './audioCoordination';
 
 export type AudioStatus = 'idle' | 'loading' | 'ready' | 'buffering' | 'error';
 export type AudioFailureReason = 'network' | 'decode' | 'source' | 'blocked' | 'aborted' | 'unknown';
@@ -65,13 +71,6 @@ interface AudioPlayerContextValue {
   openImmersive: (track?: MusicTrack) => void;
   closeImmersive: () => void;
   getSavedPosition: (trackId: string) => number;
-}
-
-interface CoordinationMessage {
-  type: 'playing';
-  instanceId: string;
-  trackId: string;
-  timestamp: number;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
@@ -129,15 +128,6 @@ function failureFromPlayError(error: unknown): AudioFailure | null {
   return { reason: 'unknown', message: 'Воспроизведение не запустилось. Попробуйте ещё раз.' };
 }
 
-function isCoordinationMessage(value: unknown): value is CoordinationMessage {
-  if (!value || typeof value !== 'object') return false;
-  const message = value as Partial<CoordinationMessage>;
-  return message.type === 'playing'
-    && typeof message.instanceId === 'string'
-    && typeof message.trackId === 'string'
-    && Number.isFinite(message.timestamp);
-}
-
 export function AudioPlayerProvider({ tracks, children }: { tracks: readonly MusicTrack[]; children: ReactNode }) {
   const initialSessionRef = useRef(readAudioSession());
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -151,6 +141,8 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const lastSavedRef = useRef(0);
   const restoredRef = useRef(false);
   const instanceIdRef = useRef(createInstanceId());
+  const coordinationClockRef = useRef(0);
+  const activePlaybackClaimRef = useRef<PlaybackCoordinationClaim | null>(null);
   const coordinationChannelRef = useRef<BroadcastChannel | null>(null);
   const adjacentPlaybackRef = useRef<(direction: -1 | 1) => Promise<void>>(async () => undefined);
   const completedRef = useRef<Set<string>>(new Set(initialSessionRef.current.completedTrackIds));
@@ -187,7 +179,6 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const total = Number.isFinite(audio.duration) && audio.duration > 0
       ? audio.duration
       : track.durationSeconds ?? 0;
-
     if (audio.ended || (total > 0 && position >= total - 2)) {
       setStoredTrackPosition(track.id, null);
       lastSavedRef.current = 0;
@@ -278,6 +269,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     sourceTransitionRef.current = true;
     suppressPausePersistenceRef.current = !audio.paused || playAttemptVersionRef.current !== null;
     playAttemptVersionRef.current = null;
+    activePlaybackClaimRef.current = null;
     audio.pause();
     clearMediaSession();
 
@@ -413,6 +405,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     sourceTransitionRef.current = true;
     suppressPausePersistenceRef.current = Boolean(audio && (!audio.paused || playAttemptVersionRef.current !== null));
     playAttemptVersionRef.current = null;
+    activePlaybackClaimRef.current = null;
     if (audio) {
       audio.pause();
       audio.removeAttribute('src');
@@ -456,8 +449,10 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleRemotePlayback = (message: CoordinationMessage) => {
-      if (message.instanceId === instanceIdRef.current || audio.paused) return;
+    const handleRemotePlayback = (message: PlaybackCoordinationClaim) => {
+      coordinationClockRef.current = Math.max(coordinationClockRef.current, message.timestamp);
+      if (audio.paused) return;
+      if (!shouldYieldToRemotePlayback(activePlaybackClaimRef.current, message, instanceIdRef.current)) return;
       audio.pause();
     };
 
@@ -466,7 +461,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
         const channel = new BroadcastChannel(AUDIO_COORDINATION_CHANNEL);
         coordinationChannelRef.current = channel;
         channel.addEventListener('message', (event: MessageEvent<unknown>) => {
-          if (isCoordinationMessage(event.data)) handleRemotePlayback(event.data);
+          if (isPlaybackCoordinationClaim(event.data)) handleRemotePlayback(event.data);
         });
       } catch {
         coordinationChannelRef.current = null;
@@ -477,7 +472,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       if (event.key !== AUDIO_COORDINATION_STORAGE_KEY || !event.newValue) return;
       try {
         const message: unknown = JSON.parse(event.newValue);
-        if (isCoordinationMessage(message)) handleRemotePlayback(message);
+        if (isPlaybackCoordinationClaim(message)) handleRemotePlayback(message);
       } catch {
         // Ignore malformed cross-tab messages.
       }
@@ -496,12 +491,15 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     if (!audio) return;
 
     const announcePlayback = (trackId: string) => {
-      const message: CoordinationMessage = {
+      const timestamp = nextPlaybackClaimTimestamp(coordinationClockRef.current, Date.now());
+      coordinationClockRef.current = timestamp;
+      const message: PlaybackCoordinationClaim = {
         type: 'playing',
         instanceId: instanceIdRef.current,
         trackId,
-        timestamp: Date.now(),
+        timestamp,
       };
+      activePlaybackClaimRef.current = message;
       try { coordinationChannelRef.current?.postMessage(message); } catch { /* restricted browsing context */ }
       safeWrite(AUDIO_COORDINATION_STORAGE_KEY, JSON.stringify(message));
     };
@@ -598,6 +596,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       if (sourceTransitionRef.current || !currentTrackRef.current) return;
       pendingAutoplayRef.current = false;
       playAttemptVersionRef.current = null;
+      activePlaybackClaimRef.current = null;
       setFailure(failureFromMediaError(audio.error));
       setStatus('error');
       setPlaying(false);
@@ -619,6 +618,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       const suppressPersistence = suppressPausePersistenceRef.current;
       suppressPausePersistenceRef.current = false;
       playAttemptVersionRef.current = null;
+      activePlaybackClaimRef.current = null;
       setPlaying(false);
       if (suppressPersistence || sourceTransitionRef.current || !currentTrackRef.current || audio.ended) return;
       persistCurrentPosition(true);
@@ -628,6 +628,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     const onEnd = () => {
       const track = currentTrackRef.current;
       playAttemptVersionRef.current = null;
+      activePlaybackClaimRef.current = null;
       setPlaying(false);
       setEnded(true);
       setCurrentTime(audio.duration || 0);
