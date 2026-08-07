@@ -5,11 +5,16 @@ import { getAllEssays } from '../src/data/essays/index';
 import type { Essay, EssaySummary } from '../src/types/essay';
 
 const outputDir = path.resolve('public/data/essays');
-const browserSourceFiles = [
+const browserPublishedConsumers = [
+  'src/pages/HomePage.tsx',
   'src/pages/ArticlesPage.tsx',
   'src/pages/EssayPage.tsx',
-  'src/data/essays/browserEssayData.ts',
+  'src/components/poet-detail/RelatedEssays.tsx',
 ] as const;
+const browserAdapterPath = 'src/data/essays/browserEssayData.ts';
+const eagerCatalogImportPattern = /from\s+['"][^'"]*data\/essays(?:\/index(?:\.ts)?)?['"]/;
+const rawEssayImportPattern = /from\s+['"][^'"]*data\/essays\/(?!index(?:\.ts)?['"]|browserEssayData(?:\.ts)?['"])[^'"]+['"]/;
+const browserAdapterImportPattern = /from\s+['"][^'"]*data\/essays\/browserEssayData(?:\.ts)?['"]/;
 
 function jsonValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -38,16 +43,21 @@ for (const essay of essays) {
   );
 }
 
-for (const relativePath of browserSourceFiles) {
+for (const relativePath of browserPublishedConsumers) {
   const source = readFileSync(relativePath, 'utf8');
-  if (/from\s+['"]\.\.\/data\/essays(?:\/index)?['"]/.test(source)) {
-    throw new Error(`${relativePath} still imports the eager full essay catalog`);
+  if (!browserAdapterImportPattern.test(source)) {
+    throw new Error(`${relativePath} does not consume the generated browser essay adapter`);
   }
-  if (/from\s+['"]\.\/index['"]/.test(source) && relativePath.endsWith('browserEssayData.ts')) {
-    throw new Error('browserEssayData.ts must not import the canonical full-corpus index at runtime');
+  if (eagerCatalogImportPattern.test(source) || rawEssayImportPattern.test(source)) {
+    throw new Error(`${relativePath} still imports the eager full essay corpus`);
   }
 }
 
+const browserAdapterSource = readFileSync(browserAdapterPath, 'utf8');
+if (eagerCatalogImportPattern.test(browserAdapterSource) || rawEssayImportPattern.test(browserAdapterSource)) {
+  throw new Error('browserEssayData.ts must remain payload-only and must not import the canonical full corpus');
+}
+
 console.log(
-  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser pages do not import the eager full corpus.`,
+  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; ${browserPublishedConsumers.length} browser consumers are isolated from the eager full corpus.`,
 );
