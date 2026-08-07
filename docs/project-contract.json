@@ -26,9 +26,7 @@
   },
   "architecture": {
     "auditAuthority": "FedorMilovanov/AuditRepo/projects/the-legendary-poet/",
-    "openLaneIds": [
-      "TLP-POET-001"
-    ],
+    "openLaneIds": [],
     "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
     "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
     "forbiddenCurrentStateClaims": [
