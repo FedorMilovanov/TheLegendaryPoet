@@ -60,7 +60,7 @@ const expectedHeadings = [
   'Возвращение: Москва после Запада',
   '«Москва кабацкая»: роль, рынок и реальная зависимость',
   'Имажинизм после единства',
-  'Галина Бениславская: невидимая редакция',
+  'Галина Бениславская: рукописи и издательские дела',
   'Кавказ и воображаемая Персия',
   'Поздняя поэзия: ясность без посмертного диагноза',
   'Софья Толстая и клиника: попытка порядка',
@@ -104,7 +104,7 @@ if (articleText.length < 18_000) {
 for (const marker of [
   'юридической депортации',
   'не доказывают физического присутствия автора в Иране',
-  'механизм окончания лечения 21 декабря',
+  'не объясняют административный или медицинский механизм окончания лечения',
   'Вопрос не равен доказательству',
   'официальная версия не имела документов» неверно',
   'совершенный суд над сердцем принадлежит Богу',
@@ -117,6 +117,8 @@ for (const unsafe of [
   /Дункан (?:погубила|уничтожила) Есенина/iu,
   /Есенин (?:побывал|жил) в (?:Персии|Иране)/iu,
   /клиника[^.]{0,100}точный диагноз/iu,
+  /удостоверение\s*№\s*1037/iu,
+  /Ганнушкин[^.]{0,100}(?:поставил диагноз|диагностировал|лечил Есенина|лечащий врач Есенина)/iu,
   /вне всяких сомнений[^.]{0,100}предсмертн/iu,
 ]) {
   if (unsafe.test(articleText)) throw new Error(`Part II contains an unsupported claim: ${unsafe}`);
@@ -150,6 +152,11 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-letopis-t3-k1': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-letopis-t3-k2': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-letopis-t5-k1': /^https:\/\/biblio\.imli\.ru\//,
+  'yes2-pss-chronology': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-pss-letters-vol6': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-business-documents': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-manuscript-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-declarations-vol7k1': /^https:\/\/feb-web\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
 };
 /*
@@ -192,6 +199,106 @@ for (const source of sources) {
   }
 }
 
+const explicitPre1925Sources = new Set([
+  'yes2-letopis-t3-k2',
+  'yes2-pss-chronology',
+  'yes2-pss-letters-vol6',
+  'yes2-pss-business-documents',
+  'yes2-pss-declarations-vol7k1',
+]);
+
+const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> = {
+  'Возвращение: Москва после Запада': new Set([
+    'yes2-letopis-t3-k2',
+    'yes2-pss-chronology',
+  ]),
+  '«Москва кабацкая»: роль, рынок и реальная зависимость': new Set([
+    'yes2-pss-chronology',
+  ]),
+  'Имажинизм после единства': new Set([
+    'yes2-pss-declarations-vol7k1',
+  ]),
+  'Галина Бениславская: рукописи и издательские дела': new Set([
+    'yes2-pss-letters-vol6',
+    'yes2-pss-business-documents',
+  ]),
+};
+
+let activeSection = '';
+for (const [index, block] of essay.blocks.entries()) {
+  if (block.type === 'section') {
+    activeSection = block.heading;
+    continue;
+  }
+  if (!('sourceIds' in block) || !block.sourceIds?.length) continue;
+  const searchable = block.type === 'note'
+    ? `${block.claim} ${block.text}`
+    : 'text' in block && typeof block.text === 'string'
+      ? block.text
+      : '';
+
+  const explicitPre1925Claim = /\b(?:1923|1924)(?:–1925)?\b/u.test(searchable);
+  if (
+    explicitPre1925Claim
+    && block.sourceIds.includes('yes2-letopis-t5-k1')
+    && !block.sourceIds.some((id) => explicitPre1925Sources.has(id))
+  ) {
+    throw new Error(
+      `block ${index + 1} uses the 1925-only Letopis for an explicit pre-1925 claim without a period-capable source`,
+    );
+  }
+
+  const requiredSectionAuthorities = requiredPre1925AuthoritiesBySection[activeSection];
+  if (
+    requiredSectionAuthorities
+    && !block.sourceIds.some((id) => requiredSectionAuthorities.has(id))
+  ) {
+    throw new Error(
+      `block ${index + 1} in section ${activeSection} lacks its section-specific pre-1925 authority`,
+    );
+  }
+
+  if (searchable.includes('Корпус переписки') && !block.sourceIds.includes('yes2-pss-letters-vol6')) {
+    throw new Error(`block ${index + 1} discusses the correspondence corpus without item-level PSS vol.6`);
+  }
+}
+
+const benislavskayaLegalBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Галина Бениславская была не только героиней несчастной любви.'),
+);
+if (
+  !benislavskayaLegalBlock
+  || !('sourceIds' in benislavskayaLegalBlock)
+  || !benislavskayaLegalBlock.sourceIds?.includes('yes2-pss-business-documents')
+) {
+  throw new Error('Benislavskaya legal-role paragraph lost item-level business-document authority');
+}
+
+const benislavskayaLetterBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('29 октября 1924 года из Тифлиса'),
+);
+if (
+  !benislavskayaLetterBlock
+  || !('sourceIds' in benislavskayaLetterBlock)
+  || !benislavskayaLetterBlock.sourceIds?.includes('yes2-pss-letters-vol6')
+) {
+  throw new Error('Benislavskaya 29 October correspondence paragraph lost item-level PSS vol.6 authority');
+}
+
+const postReturnMoscowBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Московская литературная среда тоже изменилась.'),
+);
+if (!postReturnMoscowBlock || !('sourceIds' in postReturnMoscowBlock) || !postReturnMoscowBlock.sourceIds?.includes('yes2-pss-chronology')) {
+  throw new Error('post-return Moscow context lost its 1923–1924-capable chronology source');
+}
+
+const imagismBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Имажинизм дал Есенину издательскую сеть'),
+);
+if (!imagismBlock || !('sourceIds' in imagismBlock) || !imagismBlock.sourceIds?.includes('yes2-pss-declarations-vol7k1')) {
+  throw new Error('Imagism public-break paragraph lost item-level declarations evidence');
+}
+
 let citationCount = 0;
 for (const [index, block] of essay.blocks.entries()) {
   if (!('sourceIds' in block) || !block.sourceIds?.length) continue;
@@ -209,6 +316,12 @@ for (const marker of [
   '## yes2-letopis-t3-k1',
   '## yes2-letopis-t3-k2',
   '## yes2-letopis-t5-k1',
+  '## yes2-pss-chronology',
+  '## yes2-pss-letters-vol6',
+  '## yes2-pss-business-documents',
+  '## yes2-pss-manuscript-commentary',
+  '## yes2-pss-declarations-vol7k1',
+  '## yes2-aronson-receipt-1925-12-16',
   '## yes2-duncan-russian-days-1929-tu',
   'Запросы на дополнительные цифровые копии и разрешения отправлены 4 августа 2026 года',
   'Локальные зеркала полных PDF не публикуются до письменного разрешения',
