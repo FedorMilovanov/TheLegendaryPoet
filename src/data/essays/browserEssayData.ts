@@ -78,22 +78,29 @@ export function getBrowserEssayBySlug(slug: string): Promise<Essay | undefined> 
 
   const request = import.meta.env.DEV
     ? getDevEssayBySlug(slug)
-    : fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, { credentials: 'same-origin' })
-        .then(async (response) => {
-          if (response.status === 404) return undefined;
-          if (!response.ok) {
-            throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
-          }
-          const value = await response.json() as unknown;
-          const summary = assertSummary(value, `Essay payload ${slug}`);
-          const essay = value as Partial<Essay>;
-          if (summary.slug !== slug) throw new Error(`Essay payload slug mismatch: requested ${slug}, received ${summary.slug}`);
-          if (!Array.isArray(essay.blocks)) throw new Error(`Essay payload ${slug} has no block array`);
-          if (essay.sources !== undefined && !Array.isArray(essay.sources)) {
-            throw new Error(`Essay payload ${slug} has an invalid source list`);
-          }
-          return value as Essay;
-        });
+    : Promise.all([
+        getBrowserEssayCatalog(),
+        fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, { credentials: 'same-origin' }),
+      ]).then(async ([catalog, response]) => {
+        const catalogEntry = catalog.find((entry) => entry.slug === slug);
+        if (!catalogEntry) return undefined;
+        if (!response.ok) {
+          throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
+        }
+
+        const value = await response.json() as unknown;
+        const summary = assertSummary(value, `Essay payload ${slug}`);
+        const essay = value as Partial<Essay>;
+        if (summary.slug !== slug) throw new Error(`Essay payload slug mismatch: requested ${slug}, received ${summary.slug}`);
+        if (summary.id !== catalogEntry.id || summary.title !== catalogEntry.title || summary.series?.id !== catalogEntry.series?.id) {
+          throw new Error(`Essay payload identity diverged from browser catalog for ${slug}`);
+        }
+        if (!Array.isArray(essay.blocks)) throw new Error(`Essay payload ${slug} has no block array`);
+        if (essay.sources !== undefined && !Array.isArray(essay.sources)) {
+          throw new Error(`Essay payload ${slug} has an invalid source list`);
+        }
+        return value as Essay;
+      });
 
   essayPromises.set(slug, request);
   return request;
