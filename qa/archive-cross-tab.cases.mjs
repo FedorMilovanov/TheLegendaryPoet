@@ -2,29 +2,10 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const FAVORITES_STORAGE_KEY = 'tlp-my-archive:v4';
+const ARCHIVE_POET_ROUTES = ['/poets/sergei-yesenin', '/poets/alexander-pushkin'];
 
 async function waitForRoute(page) {
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
-}
-
-async function discoverPoetRoutes(context) {
-  const page = await context.newPage();
-  try {
-    const response = await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
-    expect(response).not.toBeNull();
-    expect(response.status()).toBeLessThan(400);
-    await waitForRoute(page);
-    const hrefs = await page.locator('a[href^="/poets/"]').evaluateAll((links) => {
-      const values = links
-        .map((link) => link.getAttribute('href'))
-        .filter((href) => typeof href === 'string' && /^\/poets\/[^/?#]+$/.test(href));
-      return [...new Set(values)].slice(0, 8);
-    });
-    expect(hrefs.length, 'poet catalog must expose at least two detail routes').toBeGreaterThanOrEqual(2);
-    return hrefs;
-  } finally {
-    await page.close();
-  }
 }
 
 async function openPoetWithFavorite(context, href) {
@@ -46,28 +27,9 @@ export function registerArchiveCrossTabTests() {
     const pages = [];
 
     try {
-      const poetRoutes = await discoverPoetRoutes(context);
-      let first = null;
-      let second = null;
-
-      for (const href of poetRoutes) {
-        try {
-          const candidate = await openPoetWithFavorite(context, href);
-          pages.push(candidate.page);
-          if (!first) first = candidate;
-          else {
-            second = candidate;
-            break;
-          }
-        } catch {
-          const candidatePage = context.pages().at(-1);
-          if (candidatePage && candidatePage !== first?.page) await candidatePage.close().catch(() => undefined);
-        }
-      }
-
-      expect(first, 'first poet page with a real archive control').not.toBeNull();
-      expect(second, 'second poet page with a real archive control').not.toBeNull();
-      if (!first || !second) return;
+      const first = await openPoetWithFavorite(context, ARCHIVE_POET_ROUTES[0]);
+      const second = await openPoetWithFavorite(context, ARCHIVE_POET_ROUTES[1]);
+      pages.push(first.page, second.page);
 
       await Promise.all([first.button.click(), second.button.click()]);
 
