@@ -1,6 +1,6 @@
 import { Link } from '../ui/Link';
 import { ArrowRight, Clock } from 'lucide-react';
-import type { Essay } from '../../types/essay';
+import type { EssaySummary } from '../../types/essay';
 import { DEFAULT_ACCENT } from './theme';
 import TiltCard from '../TiltCard';
 import EssayCover from './EssayCover';
@@ -10,8 +10,11 @@ import { titleCase } from '../../utils/titleCase';
  * Featured essay link card with a 3D-tilt cover, for the Articles listing.
  * `variant="feature"` renders a large hero card; default is a compact card.
  * Cover art (with graceful fallback) comes from the shared EssayCover.
+ *
+ * The card consumes only published summary metadata so the articles listing
+ * never needs to import or download every longform body and bibliography.
  */
-export default function EssayCard({ essay, variant = 'default' }: { essay: Essay; variant?: 'default' | 'feature' }) {
+export default function EssayCard({ essay, variant = 'default' }: { essay: EssaySummary; variant?: 'default' | 'feature' }) {
   const accent = essay.accent || DEFAULT_ACCENT;
   const feature = variant === 'feature';
 
