@@ -97,6 +97,26 @@ assertContract(
   'semantic listener inspection must reject a non-passive scroll observer',
 );
 
+const unsafeSpreadFixture = inspectSource(`
+  const unsafeOptions = { passive: false };
+  const listenerOptions = { passive: true, ...unsafeOptions };
+  window.addEventListener('scroll', onScroll, listenerOptions);
+`);
+assertContract(
+  !unsafeSpreadFixture.hasEventListener('scroll', { options: { passive: true } }),
+  'semantic listener inspection must honor a later spread that overrides passive to false',
+);
+
+const safeSpreadFixture = inspectSource(`
+  const unsafeOptions = { passive: false };
+  const listenerOptions = { ...unsafeOptions, passive: true };
+  window.addEventListener('scroll', onScroll, listenerOptions);
+`);
+assertContract(
+  safeSpreadFixture.hasEventListener('scroll', { options: { passive: true } }),
+  'semantic listener inspection must honor a later explicit passive true override',
+);
+
 const wheelFixture = inspectSource(`
   const EVENT = 'wheel';
   window.addEventListener(EVENT, onWheel);
