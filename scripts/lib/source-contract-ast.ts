@@ -86,25 +86,29 @@ function objectBooleanOption(
   const object = resolveObjectLiteral(expression, bindings, depth);
   if (!object) return undefined;
 
-  let inherited: boolean | undefined;
+  // Object properties and spreads use JavaScript's left-to-right, last-write-wins semantics.
+  let resolvedValue: boolean | undefined;
   for (const property of object.properties) {
     if (ts.isSpreadAssignment(property)) {
       const spreadValue = objectBooleanOption(property.expression, key, bindings, depth + 1);
-      if (spreadValue !== undefined) inherited = spreadValue;
+      if (spreadValue !== undefined) resolvedValue = spreadValue;
       continue;
     }
 
     if (ts.isPropertyAssignment(property) && propertyNameText(property.name) === key) {
-      return resolveBooleanLiteral(property.initializer, bindings, depth + 1);
+      const propertyValue = resolveBooleanLiteral(property.initializer, bindings, depth + 1);
+      if (propertyValue !== undefined) resolvedValue = propertyValue;
+      continue;
     }
 
     if (ts.isShorthandPropertyAssignment(property) && property.name.text === key) {
       const bound = bindings.get(property.name.text);
-      return bound ? resolveBooleanLiteral(bound, bindings, depth + 1) : undefined;
+      const shorthandValue = bound ? resolveBooleanLiteral(bound, bindings, depth + 1) : undefined;
+      if (shorthandValue !== undefined) resolvedValue = shorthandValue;
     }
   }
 
-  return inherited;
+  return resolvedValue;
 }
 
 function identifierName(expression: ts.Expression, bindings: BindingMap, depth = 0): string | undefined {
