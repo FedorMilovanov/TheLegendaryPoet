@@ -1,0 +1,72 @@
+name: One-shot Yesenin evidence durable commit
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  commit:
+    if: github.head_ref == 'fix/yesenin-part-two-document-evidence-20260807' || github.ref_name == 'fix/yesenin-part-two-document-evidence-20260807'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/yesenin-part-two-document-evidence-20260807
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Reuse the verified evidence patch
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          workflow = Path('.github/workflows/one-shot-yesenin-document-evidence-pr.yml').read_text(encoding='utf-8').splitlines()
+          start = next(i for i, line in enumerate(workflow) if line.strip() == '- name: Apply evidence patch')
+          run_line = next(i for i in range(start + 1, len(workflow)) if workflow[i].strip() == 'run: |')
+          body = []
+          for line in workflow[run_line + 1:]:
+              if line.startswith('      - name:'):
+                  break
+              if line.startswith('          '):
+                  body.append(line[10:])
+              elif not line.strip():
+                  body.append('')
+              else:
+                  raise SystemExit(f'unexpected indentation while extracting Apply step: {line!r}')
+          script = '\n'.join(body) + '\n'
+          subprocess.run(['bash', '-e', '-o', 'pipefail', '-c', script], check=True)
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Targeted publication contract
+        run: npm run validate:yesenin-part-two-publication
+
+      - name: Essay contract
+        run: npm run validate:essays
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Commit durable result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/essays/yeseninPartTwoPublic.ts scripts/validate-yesenin-part-two-publication.ts docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md
+          git diff --cached --check -- src/data/essays/yeseninPartTwoPublic.ts scripts/validate-yesenin-part-two-publication.ts
+          git commit -m "fix(yesenin): align Part II with verified document evidence"
+          git push origin HEAD:fix/yesenin-part-two-document-evidence-20260807
