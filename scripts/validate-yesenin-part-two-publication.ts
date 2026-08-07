@@ -173,6 +173,8 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-pss-business-documents': /^https:\/\/feb-web\.ru\//,
   'yes2-pss-manuscript-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-persian-motifs-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-ballada-26-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-baku-no215-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-pss-declarations-vol7k1': /^https:\/\/feb-web\.ru\//,
   'yes2-black-man-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
@@ -236,6 +238,8 @@ const explicitPre1925Sources = new Set([
   'yes2-pss-cafe-accounts',
   'yes2-pss-legal-1923',
   'yes2-pss-business-documents',
+  'yes2-ballada-26-commentary',
+  'yes2-baku-no215-commentary',
   'yes2-pss-declarations-vol7k1',
 ]);
 
@@ -256,6 +260,13 @@ const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> =
   'Галина Бениславская: рукописи и издательские дела': new Set([
     'yes2-pss-letters-vol6',
     'yes2-pss-business-documents',
+  ]),
+  'Кавказ и воображаемая Персия': new Set([
+    'yes2-pss-chronology',
+    'yes2-pss-letters-vol6',
+    'yes2-persian-motifs-commentary',
+    'yes2-ballada-26-commentary',
+    'yes2-baku-no215-commentary',
   ]),
 };
 
@@ -353,6 +364,28 @@ if (
   throw new Error('Moscow Kabatskaya paragraph lost cafe-account/legal-process source separation');
 }
 
+const bakuBalladBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('22 сентября «Бакинский рабочий» № 214'),
+);
+if (
+  !bakuBalladBlock
+  || !('sourceIds' in bakuBalladBlock)
+  || !bakuBalladBlock.sourceIds?.includes('yes2-ballada-26-commentary')
+) {
+  throw new Error('Baku Ballad paragraph lost item-level PSS reconstruction authority');
+}
+
+const bakuNo215Block = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('На следующий день, 23 сентября, № 215'),
+);
+if (
+  !bakuNo215Block
+  || !('sourceIds' in bakuNo215Block)
+  || !bakuNo215Block.sourceIds?.includes('yes2-baku-no215-commentary')
+) {
+  throw new Error('Baku No. 215 paragraph lost publication-versus-composition authority');
+}
+
 const blackManBlock = essay.blocks.find(
   (block) => block.type === 'paragraph' && block.text.startsWith('Сохранившаяся редакция «Чёрного человека»'),
 );
@@ -386,6 +419,8 @@ for (const marker of [
   '## yes2-us-reception-2023',
   '## yes2-pss-business-documents',
   '## yes2-pss-manuscript-commentary',
+  '## yes2-ballada-26-commentary',
+  '## yes2-baku-no215-commentary',
   '## yes2-pss-declarations-vol7k1',
   '## yes2-aronson-receipt-1925-12-16',
   '## yes2-duncan-russian-days-1929-tu',
