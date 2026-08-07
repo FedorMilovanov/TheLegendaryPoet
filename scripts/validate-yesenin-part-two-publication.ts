@@ -200,14 +200,10 @@ for (const source of sources) {
 }
 
 const pre1925CompanionSources = new Set([
-  'yes2-letopis-t3-k2',
   'yes2-pss-chronology',
   'yes2-pss-letters-vol6',
   'yes2-pss-business-documents',
   'yes2-pss-declarations-vol7k1',
-  'yes2-pss-poetry-comments',
-  'yes2-pss-letters-comments',
-  'yes2-contemporary-memoirs-1986',
 ]);
 
 let activeSection = '';
