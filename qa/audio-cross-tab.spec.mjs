@@ -85,6 +85,10 @@ test('unsafe finite storage claims are delivered but cannot pause or poison a he
     await first.play.click();
     await expectPlaying(first.page, true);
 
+    // Arm an independent observer after normal startup traffic. The assertion
+    // below waits until the same storage event that reaches the application has
+    // completed dispatch, preventing a false green that checks playback before
+    // the malformed claim is actually delivered.
     await first.page.evaluate((key) => {
       window.__tlpAudioPrecisionStorageSeen = false;
       const onStorage = (event) => {
@@ -110,6 +114,7 @@ test('unsafe finite storage claims are delivered but cannot pause or poison a he
     ).toBe(true);
     await expectPlaying(first.page, true);
 
+    // The ignored malformed write must not poison later legitimate arbitration.
     await second.play.click();
     await expectPlaying(second.page, true);
     await expectPlaying(first.page, false);
