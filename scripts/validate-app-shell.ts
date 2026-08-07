@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { inspectSource } from './lib/source-contract-ast';
 
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -35,6 +36,9 @@ const essayValidator = read('scripts/validate-essays.ts');
 const archivePage = read('src/pages/MyArchivePage.tsx');
 const archiveStore = read('src/utils/myArchiveStore.ts');
 
+const appAst = inspectSource(app, 'App.tsx');
+const smoothAst = inspectSource(smooth, 'SmoothScroll.tsx');
+
 const expectedPages = routeContract.routes.map((route) => route.page);
 const routeIds = routeContract.routes.map((route) => route.id);
 const routePaths = routeContract.routes.map((route) => route.path);
@@ -53,7 +57,10 @@ expect(app.includes('useOutlet()'), 'the persistent shell must render route cont
 expect(app.includes('<Suspense fallback={<RouteLoadingShell />}'), 'lazy routes need a stable loading presentation');
 expect(app.includes('<RouteSettled pathname={location.pathname}'), 'focus and announcements must wait for lazy route content to settle');
 expect(app.includes('document.title ||'), 'settled routes must announce their final document title');
-expect(app.includes("focus({ preventScroll: true })"), 'SPA focus management must not disturb the restored scroll position');
+expect(
+  appAst.hasMethodCallWithBooleanOptions('focus', { preventScroll: true }),
+  'SPA focus management must focus without disturbing the restored scroll position',
+);
 expect(app.includes('renderedPathRef.current !== location.pathname'), 'focus ownership must detect every real pathname transition');
 expect(!app.includes('initialPathRef'), 'focus ownership must not suppress a return to the initial session URL');
 expect(app.includes('variant="page"'), 'route failures must be isolated inside the persistent shell');
@@ -97,11 +104,10 @@ for (const event of ['onFocus', 'onPointerEnter', 'onTouchStart']) {
 expect(link.includes('scheduleRoutePreload'), 'site links must use the shared route prefetch scheduler');
 expect(link.includes('viewTransition'), 'site links must preserve View Transitions');
 
-expect(!smooth.includes("import('lenis')"), 'the persistent shell must not load a global JavaScript document scroller');
-expect(!/^import Lenis from 'lenis';/m.test(smooth), 'SmoothScroll must not eagerly import Lenis at runtime');
+expect(!smoothAst.hasModuleImport('lenis'), 'the persistent shell must not load a global JavaScript document scroller');
 expect(!smooth.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native on every pointer class');
-expect(!smooth.includes("addEventListener('wheel'"), 'the app shell must not intercept ordinary wheel input');
-expect(!smooth.includes('preventDefault()'), 'the app shell must not cancel native document movement');
+expect(!smoothAst.hasEventListener('wheel'), 'the app shell must not intercept ordinary wheel input');
+expect(!smoothAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document movement');
 expect(smooth.includes("scrollRestoration = 'manual'"), 'SPA navigation must own scroll restoration');
 expect(smooth.includes("navigationType === 'POP'"), 'back/forward navigation must restore a saved position');
 expect(smooth.includes('prefers-reduced-motion: reduce'), 'programmatic scroll commands must respect reduced motion');
@@ -109,7 +115,23 @@ expect(smooth.includes('positionsRef.current.size > 80'), 'scroll history must r
 expect(smooth.includes('function decodeHash'), 'malformed percent-encoded hashes must not crash navigation');
 expect(smooth.includes('FIXED_HEADER_OFFSET'), 'hash navigation must compensate for the fixed header');
 expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native hash scrolling must apply the fixed-header offset');
-expect(smooth.includes("window.addEventListener('tlp-scroll-top'"), 'the persistent shell must retain the explicit scroll-to-top command');
+expect(smoothAst.hasEventListener('tlp-scroll-top'), 'the persistent shell must retain the explicit scroll-to-top command');
+
+// Mutation-style proof that equivalent focus-option spelling is accepted semantically.
+const focusOptionsFixture = inspectSource(`
+  const preventScroll = true;
+  const focusOptions = { preventScroll };
+  main.focus(focusOptions);
+`);
+expect(
+  focusOptionsFixture.hasMethodCallWithBooleanOptions('focus', { preventScroll: true }),
+  'focus contract inspection must accept an extracted preventScroll options object',
+);
+const unsafeFocusFixture = inspectSource(`main.focus({ preventScroll: false });`);
+expect(
+  !unsafeFocusFixture.hasMethodCallWithBooleanOptions('focus', { preventScroll: true }),
+  'focus contract inspection must reject focus that is allowed to move scroll',
+);
 
 expect(cursor.includes('useMotionValue'), 'the persistent custom cursor must not rerender React on every pointer movement');
 expect(!cursor.includes('setMousePosition'), 'pointer coordinates must remain outside React state');
