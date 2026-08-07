@@ -129,14 +129,6 @@ function sanitizeOperation(value: unknown): FavoriteArchiveOperation | null {
   };
 }
 
-/**
- * Per-poem causal ordering.
- *
- * A higher generation means the writer observed a later operation for the same
- * poem. Equal generations are concurrent; removal wins that conflict so a
- * stale peer cannot resurrect an observed removal. Writer id only provides a
- * stable total order when both concurrent operations have the same intent.
- */
 export function compareFavoriteArchiveOperations(
   left: FavoriteArchiveOperation,
   right: FavoriteArchiveOperation,
@@ -276,7 +268,7 @@ function migrateLegacy(storage: Storage) {
   const items = previous?.items ?? readLegacyItems(storage);
   const writerId = previous ? 'migration-v3' : 'migration-v2';
   const snapshot = snapshotFromItems(items, writerId);
-  if (writeSnapshot(snapshot)) {
+  if (writeSnapshot(snapshot, false)) {
     try { storage.removeItem(FAVORITES_V3_STORAGE_KEY); } catch { /* storage became unavailable */ }
     try { storage.removeItem(LEGACY_FAVORITES_STORAGE_KEY); } catch { /* storage became unavailable */ }
   }
@@ -302,12 +294,6 @@ function currentOperation(snapshot: FavoriteArchiveSnapshot, poemId: string) {
   return snapshot.operations.find((operation) => operation.id === poemId) ?? null;
 }
 
-/**
- * Repair the physical last-writer-wins localStorage race with a logical merge.
- * StorageEvent.oldValue is important: it preserves the snapshot that a stale
- * peer physically overwrote, so the union can recover distinct poem operations
- * and the per-poem comparator can restore a newer removal.
- */
 function repairStorageEvent(event: StorageEvent) {
   if (event.key !== FAVORITES_STORAGE_KEY) return false;
   const storage = getStorage();
