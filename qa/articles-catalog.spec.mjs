@@ -17,6 +17,17 @@ async function waitForSettledRoute(page) {
   await expect(main.locator('h1, [role="heading"][aria-level="1"]').first()).toBeVisible();
 }
 
+function collectEssayPayloadRequests(page) {
+  const requests = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.includes('/data/essays/') && url.pathname.endsWith('.json')) {
+      requests.push(url.pathname);
+    }
+  });
+  return requests;
+}
+
 async function expectLegacyRedirect(context, sourcePath, destination) {
   // Each legacy route gets a fresh page in the same project context. WebKit can
   // keep a client-side replace navigation alive while another route opens;
@@ -95,6 +106,50 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   await page.screenshot({
     path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-articles-catalog-top.png`),
   });
+});
+
+test('browser essay payloads remain target-scoped and unknown slugs stay honest', async ({ context }) => {
+  const listing = await context.newPage();
+  const listingRequests = collectEssayPayloadRequests(listing);
+  try {
+    const response = await listing.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBeLessThan(400);
+    await waitForSettledRoute(listing);
+    await expect(await essayLinks(listing)).toHaveCount(8);
+    expect([...new Set(listingRequests)]).toEqual(['/data/essays/catalog.json']);
+  } finally {
+    await listing.close();
+  }
+
+  const detail = await context.newPage();
+  const detailRequests = collectEssayPayloadRequests(detail);
+  try {
+    const response = await detail.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'domcontentloaded' });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBeLessThan(400);
+    await waitForSettledRoute(detail);
+    await expect(detail.getByRole('heading', { level: 1, name: /Сергей Есенин.*1921–1925/i })).toBeVisible();
+    expect([...new Set(detailRequests)].sort()).toEqual([
+      '/data/essays/catalog.json',
+      '/data/essays/sergei-yesenin-1921-1925.json',
+    ]);
+  } finally {
+    await detail.close();
+  }
+
+  const missing = await context.newPage();
+  try {
+    const response = await missing.goto(`${BASE_URL}/essays/not-a-real-essay`, { waitUntil: 'domcontentloaded' });
+    expect(response).not.toBeNull();
+    expect(response.status()).toBeLessThan(400);
+    await waitForSettledRoute(missing);
+    await expect(missing.getByRole('heading', { level: 1, name: /Статья не найдена/i })).toBeVisible();
+    await expect(missing.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
+    await expect(missing).toHaveURL(/\/essays\/not-a-real-essay$/);
+  } finally {
+    await missing.close();
+  }
 });
 
 test('known legacy article URLs redirect while unknown ids remain real NotFound routes', async ({ context }) => {
