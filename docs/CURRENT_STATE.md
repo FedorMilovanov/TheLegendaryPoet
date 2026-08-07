@@ -32,6 +32,7 @@ The exact evidence remains in AuditRepo, but the current source tree enforces th
 7. **Explicit private governance.** Package and lockfile identity, supported Node range, private/non-publishable status, `UNLICENSED` disposition and SHA-based release promotion are machine-checked. No public-source licence is inferred from repository visibility or third-party asset metadata.
 8. **Forensic branch retirement.** Temporary transport refs, superseded implementation refs, old Arena refs and the deeply diverged work ref were retired only after exact successor mapping, byte-identical evidence archival, selective current-head extraction, rights-safe path classification and direct post-deletion branch inventory. The intentional archive ref preserves the old research history without restoring obsolete runtime or executable workflows.
 9. **Single route/runtime truth.** Router elements, lazy page ownership, explicit redirects, sitemap membership, route QA inventory and per-route budgets derive from one machine contract. Unknown article ids reach NotFound, every SPA pathname transition owns focus after settlement, invalid essay structure fails validation instead of being repaired by the renderer, and archive removals expose honest mutation outcomes.
+10. **Canonical poet source authority.** All ten published poet records own their portrait and conclusion prose directly in their canonical source modules. The catalog preserves direct object identity, and permanent validation rejects hidden publication-time editorial rewriting or duplicate ownership of those fields.
 
 ## Current quality gates
 
@@ -39,10 +40,9 @@ The dependency-free `Project contracts` workflow runs project-contract, reader-c
 
 ## Open architecture lanes
 
-One bounded repair lane is registered while PR #336 replaces the hidden post-#334 editorial override with canonical poet-file ownership. It remains open until all ten source files publish directly, raw-source guards pass, the dependency/lock boundary is internally consistent, and exact-head source/build/browser evidence is recorded. AuditRepo remains the authority for the final status transition after merge.
+There are currently no registered open architecture lanes. Any future lane must receive a canonical `TLP-*` ID in this section and in `docs/project-contract.json`; prose-only or anonymous debt entries are forbidden. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
-- `TLP-POET-001` — restore one-file authority for all ten poet records, reject hidden editorial rewriting and service voice in canonical source, and retain native-scroll ownership while closing its bounded cleanup tails.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material
