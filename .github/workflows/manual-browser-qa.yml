@@ -72,6 +72,7 @@ jobs:
         run: >-
           npx playwright test
           qa/manual-e2e.spec.mjs
+          qa/audio-cross-tab.spec.mjs
           qa/focused-interactions.spec.mjs
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
