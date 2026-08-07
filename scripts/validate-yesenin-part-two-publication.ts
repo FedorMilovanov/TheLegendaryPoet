@@ -60,7 +60,7 @@ const expectedHeadings = [
   'Возвращение: Москва после Запада',
   '«Москва кабацкая»: роль, рынок и реальная зависимость',
   'Имажинизм после единства',
-  'Галина Бениславская: невидимая редакция',
+  'Галина Бениславская: рукописи и издательские дела',
   'Кавказ и воображаемая Персия',
   'Поздняя поэзия: ясность без посмертного диагноза',
   'Софья Толстая и клиника: попытка порядка',
@@ -104,7 +104,7 @@ if (articleText.length < 18_000) {
 for (const marker of [
   'юридической депортации',
   'не доказывают физического присутствия автора в Иране',
-  'механизм окончания лечения 21 декабря',
+  'не объясняют административный или медицинский механизм окончания лечения',
   'Вопрос не равен доказательству',
   'официальная версия не имела документов» неверно',
   'совершенный суд над сердцем принадлежит Богу',
@@ -117,6 +117,8 @@ for (const unsafe of [
   /Дункан (?:погубила|уничтожила) Есенина/iu,
   /Есенин (?:побывал|жил) в (?:Персии|Иране)/iu,
   /клиника[^.]{0,100}точный диагноз/iu,
+  /удостоверение\s*№\s*1037/iu,
+  /Ганнушкин[^.]{0,100}(?:поставил диагноз|диагностировал|лечил Есенина|лечащий врач Есенина)/iu,
   /вне всяких сомнений[^.]{0,100}предсмертн/iu,
 ]) {
   if (unsafe.test(articleText)) throw new Error(`Part II contains an unsupported claim: ${unsafe}`);
@@ -150,6 +152,11 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-letopis-t3-k1': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-letopis-t3-k2': /^https:\/\/biblio\.imli\.ru\//,
   'yes2-letopis-t5-k1': /^https:\/\/biblio\.imli\.ru\//,
+  'yes2-pss-chronology': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-pss-letters-vol6': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-business-documents': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-manuscript-commentary': /^https:\/\/feb-web\.ru\//,
+  'yes2-pss-declarations-vol7k1': /^https:\/\/feb-web\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
 };
 /*
@@ -192,6 +199,58 @@ for (const source of sources) {
   }
 }
 
+const pre1925CompanionSources = new Set([
+  'yes2-letopis-t3-k2',
+  'yes2-pss-chronology',
+  'yes2-pss-letters-vol6',
+  'yes2-pss-business-documents',
+  'yes2-pss-declarations-vol7k1',
+  'yes2-pss-poetry-comments',
+  'yes2-pss-letters-comments',
+  'yes2-contemporary-memoirs-1986',
+]);
+
+let activeSection = '';
+const inheritedPre1925Sections = new Set([
+  'Возвращение: Москва после Запада',
+  '«Москва кабацкая»: роль, рынок и реальная зависимость',
+  'Имажинизм после единства',
+  'Галина Бениславская: рукописи и издательские дела',
+]);
+for (const [index, block] of essay.blocks.entries()) {
+  if (block.type === 'section') {
+    activeSection = block.heading;
+    continue;
+  }
+  if (!('sourceIds' in block) || !block.sourceIds?.length) continue;
+  const searchable = block.type === 'note'
+    ? `${block.claim} ${block.text}`
+    : 'text' in block && typeof block.text === 'string'
+      ? block.text
+      : '';
+  const needsPre1925Coverage = /\b1924(?:–1925)?\b/u.test(searchable) || inheritedPre1925Sections.has(activeSection);
+  if (needsPre1925Coverage && block.sourceIds.includes('yes2-letopis-t5-k1') && !block.sourceIds.some((id) => pre1925CompanionSources.has(id))) {
+    throw new Error(`block ${index + 1} uses the 1925-only Letopis without a pre-1925 companion in section: ${activeSection}`);
+  }
+  if (searchable.includes('Корпус переписки') && !block.sourceIds.includes('yes2-pss-letters-vol6')) {
+    throw new Error(`block ${index + 1} discusses the correspondence corpus without item-level PSS vol.6`);
+  }
+}
+
+const postReturnMoscowBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Московская литературная среда тоже изменилась.'),
+);
+if (!postReturnMoscowBlock || !('sourceIds' in postReturnMoscowBlock) || !postReturnMoscowBlock.sourceIds?.includes('yes2-pss-chronology')) {
+  throw new Error('post-return Moscow context lost its 1923–1924-capable chronology source');
+}
+
+const imagismBlock = essay.blocks.find(
+  (block) => block.type === 'paragraph' && block.text.startsWith('Имажинизм дал Есенину издательскую сеть'),
+);
+if (!imagismBlock || !('sourceIds' in imagismBlock) || !imagismBlock.sourceIds?.includes('yes2-pss-declarations-vol7k1')) {
+  throw new Error('Imagism public-break paragraph lost item-level declarations evidence');
+}
+
 let citationCount = 0;
 for (const [index, block] of essay.blocks.entries()) {
   if (!('sourceIds' in block) || !block.sourceIds?.length) continue;
@@ -209,6 +268,12 @@ for (const marker of [
   '## yes2-letopis-t3-k1',
   '## yes2-letopis-t3-k2',
   '## yes2-letopis-t5-k1',
+  '## yes2-pss-chronology',
+  '## yes2-pss-letters-vol6',
+  '## yes2-pss-business-documents',
+  '## yes2-pss-manuscript-commentary',
+  '## yes2-pss-declarations-vol7k1',
+  '## yes2-aronson-receipt-1925-12-16',
   '## yes2-duncan-russian-days-1929-tu',
   'Запросы на дополнительные цифровые копии и разрешения отправлены 4 августа 2026 года',
   'Локальные зеркала полных PDF не публикуются до письменного разрешения',
