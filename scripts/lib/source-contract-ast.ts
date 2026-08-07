@@ -7,7 +7,12 @@ type EventListenerExpectation = {
   handlerName?: string;
 };
 
-type BindingMap = Map<string, ts.Expression>;
+type BindingEntry = {
+  initializer: ts.Expression;
+  scope: ts.Node;
+};
+
+type BindingMap = Map<string, BindingEntry[]>;
 
 const MAX_RESOLVE_DEPTH = 12;
 
@@ -17,13 +22,15 @@ function propertyNameText(name: ts.PropertyName): string | undefined {
   return undefined;
 }
 
-function memberName(expression: ts.Expression): string | undefined {
-  if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
-  if (ts.isElementAccessExpression(expression) && expression.argumentExpression) {
-    return resolveStringLiteral(expression.argumentExpression, new Map());
+function bindingScope(node: ts.Node): ts.Node {
+  let current: ts.Node | undefined = node.parent;
+  while (current) {
+    if (ts.isSourceFile(current) || ts.isBlock(current) || ts.isModuleBlock(current) || ts.isCaseBlock(current)) {
+      return current;
+    }
+    current = current.parent;
   }
-  if (ts.isIdentifier(expression)) return expression.text;
-  return undefined;
+  return node.getSourceFile();
 }
 
 function collectConstBindings(sourceFile: ts.SourceFile): BindingMap {
@@ -33,7 +40,9 @@ function collectConstBindings(sourceFile: ts.SourceFile): BindingMap {
     if (ts.isVariableStatement(node) && (node.declarationList.flags & ts.NodeFlags.Const) !== 0) {
       for (const declaration of node.declarationList.declarations) {
         if (ts.isIdentifier(declaration.name) && declaration.initializer) {
-          bindings.set(declaration.name.text, declaration.initializer);
+          const entries = bindings.get(declaration.name.text) ?? [];
+          entries.push({ initializer: declaration.initializer, scope: bindingScope(declaration) });
+          bindings.set(declaration.name.text, entries);
         }
       }
     }
@@ -44,9 +53,23 @@ function collectConstBindings(sourceFile: ts.SourceFile): BindingMap {
   return bindings;
 }
 
+function resolveBinding(identifier: ts.Identifier, bindings: BindingMap): ts.Expression | undefined {
+  const entries = bindings.get(identifier.text);
+  if (!entries) return undefined;
+
+  let current: ts.Node | undefined = identifier;
+  while (current) {
+    const entry = entries.find((candidate) => candidate.scope === current);
+    if (entry) return entry.initializer;
+    current = current.parent;
+  }
+
+  return undefined;
+}
+
 function resolveExpression(expression: ts.Expression, bindings: BindingMap, depth = 0): ts.Expression {
   if (depth >= MAX_RESOLVE_DEPTH || !ts.isIdentifier(expression)) return expression;
-  const bound = bindings.get(expression.text);
+  const bound = resolveBinding(expression, bindings);
   if (!bound || bound === expression) return expression;
   return resolveExpression(bound, bindings, depth + 1);
 }
@@ -102,7 +125,7 @@ function objectBooleanOption(
     }
 
     if (ts.isShorthandPropertyAssignment(property) && property.name.text === key) {
-      const bound = bindings.get(property.name.text);
+      const bound = resolveBinding(property.name, bindings);
       const shorthandValue = bound ? resolveBooleanLiteral(bound, bindings, depth + 1) : undefined;
       if (shorthandValue !== undefined) resolvedValue = shorthandValue;
     }
@@ -114,10 +137,19 @@ function objectBooleanOption(
 function identifierName(expression: ts.Expression, bindings: BindingMap, depth = 0): string | undefined {
   if (depth >= MAX_RESOLVE_DEPTH) return undefined;
   if (ts.isIdentifier(expression)) {
-    const bound = bindings.get(expression.text);
+    const bound = resolveBinding(expression, bindings);
     if (bound && ts.isIdentifier(bound)) return identifierName(bound, bindings, depth + 1);
     return expression.text;
   }
+  return undefined;
+}
+
+function memberName(expression: ts.Expression, bindings: BindingMap): string | undefined {
+  if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
+  if (ts.isElementAccessExpression(expression) && expression.argumentExpression) {
+    return resolveStringLiteral(expression.argumentExpression, bindings);
+  }
+  if (ts.isIdentifier(expression)) return expression.text;
   return undefined;
 }
 
@@ -149,7 +181,7 @@ export function inspectSource(source: string, fileName = 'contract.tsx') {
   });
 
   const hasMethodCall = (method: string): boolean => walk(sourceFile, (node) =>
-    ts.isCallExpression(node) && memberName(node.expression) === method,
+    ts.isCallExpression(node) && memberName(node.expression, bindings) === method,
   );
 
   const hasMethodCallWithBooleanOptions = (
@@ -157,7 +189,7 @@ export function inspectSource(source: string, fileName = 'contract.tsx') {
     options: BooleanOptionExpectation,
     optionsArgumentIndex = 0,
   ): boolean => walk(sourceFile, (node) => {
-    if (!ts.isCallExpression(node) || memberName(node.expression) !== method) return false;
+    if (!ts.isCallExpression(node) || memberName(node.expression, bindings) !== method) return false;
     const argument = node.arguments[optionsArgumentIndex];
     return Object.entries(options).every(([key, expected]) => objectBooleanOption(argument, key, bindings) === expected);
   });
@@ -165,7 +197,7 @@ export function inspectSource(source: string, fileName = 'contract.tsx') {
   const hasEventListener = (eventName: string, expectation: EventListenerExpectation = {}): boolean => walk(
     sourceFile,
     (node) => {
-      if (!ts.isCallExpression(node) || memberName(node.expression) !== 'addEventListener') return false;
+      if (!ts.isCallExpression(node) || memberName(node.expression, bindings) !== 'addEventListener') return false;
       if (resolveStringLiteral(node.arguments[0], bindings) !== eventName) return false;
 
       if (expectation.handlerName) {
