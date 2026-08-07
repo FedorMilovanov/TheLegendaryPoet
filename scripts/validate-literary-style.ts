@@ -388,7 +388,6 @@ function normalizeSemanticText(text: string): string {
 
 const semanticStopWords = new Set([
   'а',
-  'без',
   'бы',
   'в',
   'во',
@@ -403,7 +402,6 @@ const semanticStopWords = new Set([
   'как',
   'ко',
   'на',
-  'не',
   'но',
   'о',
   'об',
@@ -414,6 +412,7 @@ const semanticStopWords = new Set([
   'что',
   'это',
 ]);
+const semanticCriticalShortTokens = new Set(['не', 'без']);
 
 function semanticStem(token: string): string {
   const normalized = token.replace(/[^a-zа-я0-9]/gi, '');
@@ -426,15 +425,19 @@ function semanticWitnessMatches(text: string, witness: string): boolean {
   const normalizedWitness = normalizeSemanticText(witness);
   if (normalizedText.includes(normalizedWitness)) return true;
 
-  const textTokens = normalizedText.match(/[a-zа-я0-9]+/gi) ?? [];
   const witnessTokens = (normalizedWitness.match(/[a-zа-я0-9]+/gi) ?? []).filter(
-    (token) => token.length >= 4 && !semanticStopWords.has(token),
+    (token) =>
+      (token.length >= 4 || semanticCriticalShortTokens.has(token)) &&
+      !semanticStopWords.has(token),
   );
   if (witnessTokens.length < 2) return false;
 
-  return witnessTokens.every((token) => {
-    const stem = semanticStem(token);
-    return textTokens.some((candidate) => candidate.startsWith(stem));
+  return normalizedText.split(/[.!?;:]+/).some((clause) => {
+    const clauseTokens = clause.match(/[a-zа-я0-9]+/gi) ?? [];
+    return witnessTokens.every((token) => {
+      const stem = semanticStem(token);
+      return clauseTokens.some((candidate) => candidate.startsWith(stem));
+    });
   });
 }
 
