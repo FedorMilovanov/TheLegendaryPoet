@@ -15,7 +15,7 @@ This file is the source-repository entry point for the **current architecture**.
 - Brand runtime: `src/components/SpectralBrandMark.tsx`; approved source parts live in `qa/reference/approved-brand/` and are materialized by `scripts/materialize-brand-art.mjs`.
 - Fonts are self-hosted WOFF2 assets under `src/assets/fonts/`.
 - Community reads are target-scoped and aggregate-backed; generic application startup does not hydrate a public ratings/comments corpus.
-- Remote source branches are intentionally limited to `main` plus `archive/deep-research-local-images-20260724`, the exact preserved head of the retired deep research branch. The archive ref is evidence-only and is never a production merge candidate.
+- Steady-state remote source refs are intentionally limited to `main` plus `archive/deep-research-local-images-20260724`, the exact preserved head of the retired deep research branch. Temporary one-owner issue/repair branches may exist while their bounded lane is active; they are not durable source authority and must be removed after closure. The archive ref is evidence-only and is never a production merge candidate.
 
 The machine-readable counterpart is `docs/project-contract.json`; `node scripts/validate-project-contracts.mjs` blocks drift between documentation, package/lock identity, workflows, live paths and registered open architecture lanes.
 
