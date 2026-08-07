@@ -7,8 +7,16 @@ const payloadRoot = `${baseUrl}data/essays/`;
 const validSlugPattern = /^[a-z0-9-]+$/;
 const requestOptions: RequestInit = { credentials: 'same-origin', cache: 'no-store' };
 
-let catalogPromise: Promise<readonly EssaySummary[]> | undefined;
-const essayPromises = new Map<string, Promise<Essay | undefined>>();
+type RequestStatus = 'pending' | 'fulfilled' | 'rejected';
+
+interface VisitScopedRequest<T> {
+  promise: Promise<T>;
+  visitKeys: Set<string>;
+  status: RequestStatus;
+}
+
+let catalogRequest: VisitScopedRequest<readonly EssaySummary[]> | undefined;
+const essayRequests = new Map<string, VisitScopedRequest<Essay | undefined>>();
 
 function summaryOf(essay: Essay): EssaySummary {
   const { blocks: _blocks, sources: _sources, ...summary } = essay;
@@ -52,8 +60,22 @@ async function getDevEssayBySlug(slug: string): Promise<Essay | undefined> {
   return getEssayBySlug(slug);
 }
 
-export function getBrowserEssayCatalog(): Promise<readonly EssaySummary[]> {
-  catalogPromise ??= import.meta.env.DEV
+function reusableForVisit<T>(entry: VisitScopedRequest<T> | undefined, visitKey: string): entry is VisitScopedRequest<T> {
+  if (!entry) return false;
+  if (entry.status === 'pending') {
+    // Concurrent consumers share one in-flight request. If it later rejects,
+    // every visit that already waited on it keeps that same stable failure;
+    // only a genuinely later visit may start a fresh attempt.
+    entry.visitKeys.add(visitKey);
+    return true;
+  }
+  return entry.status === 'fulfilled' || entry.visitKeys.has(visitKey);
+}
+
+export function getBrowserEssayCatalog(visitKey: string): Promise<readonly EssaySummary[]> {
+  if (reusableForVisit(catalogRequest, visitKey)) return catalogRequest.promise;
+
+  const request = import.meta.env.DEV
     ? getDevCatalog()
     : fetchJson(`${payloadRoot}catalog.json`).then((value) => {
         if (!Array.isArray(value)) throw new Error('Essay catalog payload is not an array');
@@ -68,19 +90,36 @@ export function getBrowserEssayCatalog(): Promise<readonly EssaySummary[]> {
         }
         return summaries;
       });
-  return catalogPromise;
+
+  const entry: VisitScopedRequest<readonly EssaySummary[]> = {
+    promise: request,
+    visitKeys: new Set([visitKey]),
+    status: 'pending',
+  };
+  entry.promise = request.then(
+    (value) => {
+      if (catalogRequest === entry) entry.status = 'fulfilled';
+      return value;
+    },
+    (error: unknown) => {
+      if (catalogRequest === entry) entry.status = 'rejected';
+      throw error;
+    },
+  );
+  catalogRequest = entry;
+  return entry.promise;
 }
 
-export function getBrowserEssayBySlug(slug: string): Promise<Essay | undefined> {
+export function getBrowserEssayBySlug(slug: string, visitKey: string): Promise<Essay | undefined> {
   if (!validSlugPattern.test(slug)) return Promise.resolve(undefined);
 
-  const cached = essayPromises.get(slug);
-  if (cached) return cached;
+  const cached = essayRequests.get(slug);
+  if (reusableForVisit(cached, visitKey)) return cached.promise;
 
   const request = import.meta.env.DEV
     ? getDevEssayBySlug(slug)
     : Promise.all([
-        getBrowserEssayCatalog(),
+        getBrowserEssayCatalog(visitKey),
         fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, requestOptions),
       ]).then(async ([catalog, response]) => {
         const catalogEntry = catalog.find((entry) => entry.slug === slug);
@@ -103,6 +142,21 @@ export function getBrowserEssayBySlug(slug: string): Promise<Essay | undefined> 
         return value as Essay;
       });
 
-  essayPromises.set(slug, request);
-  return request;
+  const entry: VisitScopedRequest<Essay | undefined> = {
+    promise: request,
+    visitKeys: new Set([visitKey]),
+    status: 'pending',
+  };
+  entry.promise = request.then(
+    (value) => {
+      if (essayRequests.get(slug) === entry) entry.status = 'fulfilled';
+      return value;
+    },
+    (error: unknown) => {
+      if (essayRequests.get(slug) === entry) entry.status = 'rejected';
+      throw error;
+    },
+  );
+  essayRequests.set(slug, entry);
+  return entry.promise;
 }

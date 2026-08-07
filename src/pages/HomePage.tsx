@@ -1,4 +1,5 @@
-import { use, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Link } from '../components/ui/Link';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { poets, musicTracks } from '../data/poets';
@@ -178,7 +179,23 @@ const staticStats = [
   { icon: AudioWaveform, label: 'Аудио-треков', getValue: () => musicTracks.length },
 ];
 
-function StatsSection({ essayCount }: { essayCount: number }) {
+function StatsSection({ visitKey }: { visitKey: string }) {
+  const [essayCount, setEssayCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void getBrowserEssayCatalog(visitKey)
+      .then((catalog) => {
+        if (active) setEssayCount(catalog.length);
+      })
+      .catch(() => {
+        if (active) setEssayCount(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [visitKey]);
+
   const stats = [
     ...staticStats,
     { icon: Star, label: 'Больших исследований', getValue: () => essayCount },
@@ -188,22 +205,31 @@ function StatsSection({ essayCount }: { essayCount: number }) {
     <section className="py-16 relative z-10 -mt-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat, idx) => (
-            <Reveal
-              key={stat.label}
-              direction="up"
-              delay={idx * 0.1}
-              duration={0.5}
-              distance={20}
-              blur={false}
-              className="luxury-card group rounded-2xl border border-cyan-400/10 bg-[#061018]/60 p-8 text-center backdrop-blur-lg glow-hover"
-            >
-              <motion.div whileHover={{ scale: 1.18, rotate: -4 }} transition={{ type: 'spring', stiffness: 440, damping: 16 }} className="mx-auto mb-4 flex h-14 w-14 items-center justify-center text-cyan-300 drop-shadow-[0_0_18px_rgba(0,212,255,0.38)]"><stat.icon size={38} /></motion.div>
-              <div className="mx-auto mb-4 h-px w-14 bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
-              <div className="mb-2 font-serif text-4xl font-bold tracking-tight text-white"><AnimatedCounter value={stat.getValue()} /></div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-100/45">{stat.label}</div>
-            </Reveal>
-          ))}
+          {stats.map((stat, idx) => {
+            const value = stat.getValue();
+            return (
+              <Reveal
+                key={stat.label}
+                direction="up"
+                delay={idx * 0.1}
+                duration={0.5}
+                distance={20}
+                blur={false}
+                className="luxury-card group rounded-2xl border border-cyan-400/10 bg-[#061018]/60 p-8 text-center backdrop-blur-lg glow-hover"
+              >
+                <motion.div whileHover={{ scale: 1.18, rotate: -4 }} transition={{ type: 'spring', stiffness: 440, damping: 16 }} className="mx-auto mb-4 flex h-14 w-14 items-center justify-center text-cyan-300 drop-shadow-[0_0_18px_rgba(0,212,255,0.38)]"><stat.icon size={38} /></motion.div>
+                <div className="mx-auto mb-4 h-px w-14 bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
+                <div className="mb-2 font-serif text-4xl font-bold tracking-tight text-white">
+                  {value === null ? (
+                    <span aria-label="Количество исследований пока недоступно">—</span>
+                  ) : (
+                    <AnimatedCounter value={value} />
+                  )}
+                </div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-100/45">{stat.label}</div>
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -211,8 +237,7 @@ function StatsSection({ essayCount }: { essayCount: number }) {
 }
 
 export default function HomePage() {
-  const essayCatalog = use(getBrowserEssayCatalog());
-
+  const location = useLocation();
   useSeo({
     title: 'THE LEGENDARY POET | Поэзия, анализ, история',
     description: 'Великие русские поэты: биографии, тексты стихов, глубокий литературный и — где это оправдано — христианский разбор. Пушкин, Лермонтов, Ахматова, Есенин, Блок и другие.',
@@ -222,7 +247,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
       <HeroSection />
-      <StatsSection essayCount={essayCatalog.length} />
+      <StatsSection visitKey={location.key} />
       <PoemOfDay />
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

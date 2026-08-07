@@ -1,5 +1,5 @@
 import { use, useRef } from 'react';
-import { useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
@@ -21,8 +21,9 @@ const missingEssayPromise = Promise.resolve(undefined);
 
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
-  const essay = use(slug ? getBrowserEssayBySlug(slug) : missingEssayPromise);
-  const essayCatalog = use(getBrowserEssayCatalog());
+  const location = useLocation();
+  const essay = use(slug ? getBrowserEssayBySlug(slug, location.key) : missingEssayPromise);
+  const essayCatalog = use(getBrowserEssayCatalog(location.key));
   const poet = essay?.poetId ? poets.find((candidate) => candidate.id === essay.poetId) : undefined;
   const articleRef = useRef<HTMLElement>(null);
   const routePath = `/essays/${slug ?? ''}`;
