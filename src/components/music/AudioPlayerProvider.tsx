@@ -23,9 +23,11 @@ import {
 } from './audioSessionStore';
 import {
   isPlaybackCoordinationClaim,
-  nextPlaybackClaimTimestamp,
+  nextPlaybackCoordinationClock,
+  observePlaybackCoordinationClaim,
   shouldYieldToRemotePlayback,
   type PlaybackCoordinationClaim,
+  type PlaybackCoordinationClock,
 } from './audioCoordination';
 
 export type AudioStatus = 'idle' | 'loading' | 'ready' | 'buffering' | 'error';
@@ -141,7 +143,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const lastSavedRef = useRef(0);
   const restoredRef = useRef(false);
   const instanceIdRef = useRef(createInstanceId());
-  const coordinationClockRef = useRef(0);
+  const coordinationClockRef = useRef<PlaybackCoordinationClock>({ timestamp: 0, sequence: 0n });
   const activePlaybackClaimRef = useRef<PlaybackCoordinationClaim | null>(null);
   const coordinationChannelRef = useRef<BroadcastChannel | null>(null);
   const adjacentPlaybackRef = useRef<(direction: -1 | 1) => Promise<void>>(async () => undefined);
@@ -450,7 +452,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     if (!audio) return;
 
     const handleRemotePlayback = (message: PlaybackCoordinationClaim) => {
-      coordinationClockRef.current = Math.max(coordinationClockRef.current, message.timestamp);
+      coordinationClockRef.current = observePlaybackCoordinationClaim(coordinationClockRef.current, message);
       if (audio.paused) return;
       if (!shouldYieldToRemotePlayback(activePlaybackClaimRef.current, message, instanceIdRef.current)) return;
       audio.pause();
@@ -491,13 +493,14 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     if (!audio) return;
 
     const announcePlayback = (trackId: string) => {
-      const timestamp = nextPlaybackClaimTimestamp(coordinationClockRef.current, Date.now());
-      coordinationClockRef.current = timestamp;
+      const clock = nextPlaybackCoordinationClock(coordinationClockRef.current, Date.now());
+      coordinationClockRef.current = clock;
       const message: PlaybackCoordinationClaim = {
         type: 'playing',
         instanceId: instanceIdRef.current,
         trackId,
-        timestamp,
+        timestamp: clock.timestamp,
+        sequence: clock.sequence.toString(),
       };
       activePlaybackClaimRef.current = message;
       try { coordinationChannelRef.current?.postMessage(message); } catch { /* restricted browsing context */ }
