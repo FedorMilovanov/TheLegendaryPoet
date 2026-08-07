@@ -1,0 +1,231 @@
+name: One-shot Yesenin evidence integration
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'fix/yesenin-part-two-document-evidence-20260807' || github.ref_name == 'fix/yesenin-part-two-document-evidence-20260807'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/yesenin-part-two-document-evidence-20260807
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Apply evidence patch
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one match, found {count}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          essay = 'src/data/essays/yeseninPartTwoPublic.ts'
+          validator = 'scripts/validate-yesenin-part-two-publication.ts'
+          ledger = 'docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md'
+
+          replace_once(essay, "  dateModified: '2026-08-03',", "  dateModified: '2026-08-07',")
+
+          # Temporal/source topology after the 1923 return and through 1924.
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],\n    },\n\n    { type: 'section', heading: '«Москва кабацкая»: роль, рынок и реальная зависимость' },",
+              "      sourceIds: ['yes2-pss-chronology', 'yes2-contemporary-memoirs-1986'],\n    },\n\n    { type: 'section', heading: '«Москва кабацкая»: роль, рынок и реальная зависимость' },"
+          )
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Документы не дают простого калькулятора, который по числу подписанных счетов устанавливает состояние человека в каждый вечер. Они показывают другое: повседневная система вокруг поэта была дорогой и неустойчивой, а Галина Бениславская и другие близкие постоянно участвовали в расчётах, рукописях, договорах и урегулировании последствий. Публичный успех всё меньше означал личное управление жизнью.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],",
+              "      sourceIds: ['yes2-pss-chronology', 'yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Документы не дают простого калькулятора, который по числу подписанных счетов устанавливает состояние человека в каждый вечер. Они показывают другое: повседневная система вокруг поэта была дорогой и неустойчивой, а Галина Бениславская и другие близкие постоянно участвовали в расчётах, рукописях, договорах и урегулировании последствий. Публичный успех всё меньше означал личное управление жизнью.',\n      sourceIds: ['yes2-pss-chronology', 'yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],"
+          )
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-letters-comments'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Разрыв с группой не был мгновенным освобождением от её инфраструктуры. Личные, финансовые и издательские связи сохранялись; бывшие союзники продолжали участвовать в публикации и посмертной памяти. Имажинизм объясняет часть литературного поведения Есенина, но не всю его поэзию и не происхождение каждого разрушительного решения.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],",
+              "      sourceIds: ['yes2-pss-chronology', 'yes2-pss-letters-comments'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Разрыв с группой не был мгновенным освобождением от её инфраструктуры. Личные, финансовые и издательские связи сохранялись; бывшие союзники продолжали участвовать в публикации и посмертной памяти. Имажинизм объясняет часть литературного поведения Есенина, но не всю его поэзию и не происхождение каждого разрушительного решения.',\n      sourceIds: ['yes2-pss-chronology', 'yes2-contemporary-memoirs-1986'],"
+          )
+
+          # Benislavskaya: replace role-label overclaim and upgrade to primary legal/letter evidence.
+          replace_once(
+              essay,
+              "    { type: 'section', heading: 'Галина Бениславская: невидимая редакция' },",
+              "    { type: 'section', heading: 'Галина Бениславская: рукописи и издательские дела' },"
+          )
+          replace_once(
+              essay,
+              "      text:\n        'Галина Бениславская была не только героиней несчастной любви. Она получала и отправляла рукописи, связывалась с редакциями, следила за деньгами и изданиями, помогала семье, устраивала быт и принимала на себя часть кризисов. Её труд делал возможным то, что в библиографии выглядит как самостоятельное движение автора от книги к книге.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],",
+              "      text:\n        'Галина Бениславская была не только героиней несчастной любви. 12 июня 1924 года Есенин выдал ей формальную доверенность на договор с Госиздатом по «Березовому ситцу»; 1 июля договор № 4581 был заключён по этой доверенности. ПСС печатает доверенность по автографу, а договор — по архивному подлиннику. Это доказывает конкретную юридическую роль Бениславской в издательской работе, но не превращает её в управляющую всеми делами Есенина.',\n      sourceIds: ['yes2-pss-business-documents', 'yes2-pss-chronology'],"
+          )
+          replace_once(
+              essay,
+              "      text:\n        'Корпус переписки дошёл неравномерно: автографы, фотокопии, копии и поздние публикации нельзя цитировать как один источник. Часть входящих писем известна неполно, а дневниковая запись имеет собственную историю представления. Поэтому биография не восстанавливает за Бениславскую неизвестные слова и не превращает её помощь в согласие со всем, что происходило.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-contemporary-memoirs-1986'],",
+              "      text:\n        '29 октября 1924 года из Тифлиса Есенин прямо писал Бениславской, что будет присылать ей всё написанное, отправлял два текста из «Персидских мотивов» и давал конкретные указания по «Рябиновому костру», исправлению «Руси советской» и возможному собранию. Корпус переписки дошёл неравномерно, поэтому автографы, копии и поздние публикации не сливаются в один evidence class; но рабочая передача рукописей и издательских поручений здесь установлена первичным письмом.',\n      sourceIds: ['yes2-pss-letters-vol6', 'yes2-pss-business-documents'],"
+          )
+
+          # Caucasus 1924–1925 must carry a 1924-capable source.
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        '«Персидские мотивы» не доказывают физического присутствия автора в Иране. Планы поездки, литературная география и культурные источники создали поэтическую Персию, но подтверждённый маршрут проходит по Кавказу. Эта граница не уменьшает цикл; напротив, позволяет увидеть работу воображения, не превращая её в туристическую справку.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],",
+              "      sourceIds: ['yes2-pss-chronology', 'yes2-pss-letters-vol6', 'yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        '«Персидские мотивы» не доказывают физического присутствия автора в Иране. Планы поездки, литературная география и культурные источники создали поэтическую Персию, но подтверждённый маршрут проходит по Кавказу. Эта граница не уменьшает цикл; напротив, позволяет увидеть работу воображения, не превращая её в туристическую справку.',\n      sourceIds: ['yes2-pss-chronology', 'yes2-pss-letters-vol6', 'yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],"
+          )
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],\n    },\n    {\n      type: 'image',\n      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chagin%20and%20Esenin%201924.jpg',",
+              "      sourceIds: ['yes2-pss-chronology', 'yes2-pss-letters-vol6', 'yes2-letopis-t5-k1', 'yes2-pss-poetry-comments'],\n    },\n    {\n      type: 'image',\n      src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chagin%20and%20Esenin%201924.jpg',"
+          )
+
+          # Sofya Tolstaya and clinic: manuscript provenance + bounded medical records + Aronson.
+          replace_once(
+              essay,
+              "      text:\n        'Брак с Софьей Толстой и подготовка собрания сочинений были попыткой построить другой бытовой и издательский порядок. Не следует изображать этот союз ни гарантированным спасением, ни одной формальностью. Письма показывают практическую связь, напряжение и продолжение дел; они не дают одной формулы для всех чувств и решений пары.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-letters-comments'],",
+              "      text:\n        'Брак с Софьей Толстой и подготовка собрания сочинений были попыткой построить другой бытовой и издательский порядок. В наборном экземпляре сохранились списки её рукой; собственная помета Толстой сообщает, что она переписывала стихи во время подготовки Есениным полного собрания для Госиздата, а исправления на листах сделаны его рукой. ПСС также фиксирует тексты, записанные ею под диктовку. Это документирует практическую помощь, но не делает Толстую редактором или соавтором композиции трёхтомника.',\n      sourceIds: ['yes2-pss-manuscript-commentary', 'yes2-letopis-t5-k1'],"
+          )
+          replace_once(
+              essay,
+              "      text:\n        'С 26 ноября Есенин находился на лечении. Удостоверение № 1037 подтверждало пребывание в клинике и невозможность участвовать в судебном опросе, но не являлось полной историей болезни. Опубликованное научное издание воспроизводит листы идентифицированной медицинской единицы; отдельного полученного документа, объясняющего механизм окончания лечения 21 декабря, нет. Поэтому статья не утверждает ни формальную выписку, ни побег, ни решение семьи.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-medical-facsimile-1925'],",
+              "      text:\n        '26 ноября Есенин был помещён в клинику 1-го МГУ — эту дату Летопись устанавливает по календарной записи Софьи Толстой. 5 декабря заведена «История болезни» Поликлиники 1-го МГУ, сохранившаяся в ИМЛИ (ф. 32, оп. 2, ед. хр. 37) и опубликованная с факсимиле. 21 декабря календарь Толстой фиксирует сам выход из клиники. Эти источники устанавливают пребывание и факт выхода, но не объясняют административный или медицинский механизм окончания лечения; поэтому статья не называет событие ни формальной выпиской, ни побегом, ни решением семьи и не превращает один общеклинический лист в полную психиатрическую историю.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-medical-facsimile-1925', 'yes2-imli-death-documents-2003'],"
+          )
+          replace_once(
+              essay,
+              "      text:\n        'Во время лечения продолжались письма, работа над стихами, финансовые и издательские поручения. Практическая деятельность не доказывает выздоровления; тяжесть кризиса не стирает практическую деятельность. Это важная граница для последнего месяца: планы и риск могут существовать одновременно.',\n      sourceIds: ['yes2-letopis-t5-k1', 'yes2-pss-letters-comments'],",
+              "      text:\n        '16 декабря ординатор А. Я. Аронсон, которого Летопись называет лечащим врачом Есенина, расписался в получении ста рублей поэта на личные расходы. Это документирует конкретный врачебный контакт; поздние пересказы разговоров не дают права автоматически приписывать Аронсону или П. Б. Ганнушкину конкретный диагноз, прогноз или схему лечения. Одновременно продолжались письма, работа над стихами и издательские поручения: практическая деятельность не доказывает выздоровления, а тяжесть кризиса не стирает практическую деятельность.',\n      sourceIds: ['yes2-aronson-receipt-1925-12-16', 'yes2-letopis-t5-k1'],"
+          )
+
+          # Four-year synthesis must bridge 1924 explicitly.
+          replace_once(
+              essay,
+              "      sourceIds: ['yes2-letopis-t3-k1', 'yes2-letopis-t3-k2', 'yes2-letopis-t5-k1'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Разрушение не является доказательством избранности, а талант не отменяет вреда, нанесённого другим.",
+              "      sourceIds: ['yes2-letopis-t3-k1', 'yes2-letopis-t3-k2', 'yes2-pss-chronology', 'yes2-letopis-t5-k1'],\n    },\n    {\n      type: 'paragraph',\n      text:\n        'Разрушение не является доказательством избранности, а талант не отменяет вреда, нанесённого другим."
+          )
+
+          # Add item-level sources.
+          p = Path(essay)
+          text = p.read_text(encoding='utf-8')
+          anchor = "    {\n      id: 'yes2-letopis-t5-k1',"
+          insert = "    {\n      id: 'yes2-pss-chronology',\n      title: 'Хронологическая канва жизни и творчества Сергея Александровича Есенина (1895–1925)',\n      url: 'https://www.museum-esenin.ru/esenin/biografiya',\n      kind: 'research',\n      institution: 'Государственный музей-заповедник С. А. Есенина / академическое ПСС ИМЛИ РАН',\n      note: 'Институциональное воспроизведение академической хронологической канвы; 1924-capable cross-check, не замена page-level Летописи.',\n    },\n"
+          if text.count(anchor) != 1: raise SystemExit('chronology source anchor mismatch')
+          p.write_text(text.replace(anchor, insert + anchor, 1), encoding='utf-8')
+
+          text = p.read_text(encoding='utf-8')
+          anchor = "    {\n      id: 'yes2-pss-poetry-comments',"
+          insert = "    {\n      id: 'yes2-pss-letters-vol6',\n      title: 'С. А. Есенин. ПСС, т. 6: Письма',\n      url: 'https://feb-web.ru/feb/esenin/texts/es6/es6-233-.htm?cmd=p',\n      kind: 'primary',\n      institution: 'ФЭБ / ИМЛИ РАН',\n      year: 1999,\n      note: 'Item-level корпус писем, записок и телеграмм; планы поездок не повышаются до совершённого маршрута без внешней хронологии.',\n    },\n    {\n      id: 'yes2-pss-business-documents',\n      title: 'С. А. Есенин. ПСС, т. 7, кн. 2: деловые бумаги и издательские документы',\n      url: 'https://feb-web.ru/feb/esenin/texts/e72/e72-266-.htm?cmd=p',\n      kind: 'primary',\n      institution: 'ФЭБ / ИМЛИ РАН',\n      year: 2000,\n      note: 'Доверенности и договоры с разделением архивных оригиналов и текстов, известных только по первой публикации.',\n    },\n    {\n      id: 'yes2-pss-manuscript-commentary',\n      title: 'С. А. Есенин. ПСС, т. 1: комментарии к наборному экземпляру «Собрания стихотворений»',\n      url: 'https://feb-web.ru/feb/esenin/texts/es1/es1-385-.htm?cmd=p',\n      kind: 'primary',\n      institution: 'ФЭБ / ИМЛИ РАН',\n      year: 1995,\n      note: 'Рукописная provenance роли Софьи Толстой-Есениной; авторская правка и композиция остаются за Есениным.',\n    },\n"
+          if text.count(anchor) != 1: raise SystemExit('PSS item source anchor mismatch')
+          p.write_text(text.replace(anchor, insert + anchor, 1), encoding='utf-8')
+
+          text = p.read_text(encoding='utf-8')
+          anchor = "    {\n      id: 'yes2-power-attorney-1925-12-27',"
+          insert = "    {\n      id: 'yes2-aronson-receipt-1925-12-16',\n      title: 'Расписка ординатора А. Я. Аронсона от 16 декабря 1925 года',\n      url: 'https://biblio.imli.ru/index.php/component/abook/book/826-letopis-zhizni-i-tvorchestva-s-a-esenina-tom-5?Itemid=0&catid=527%3Aesenin-s-a',\n      kind: 'primary',\n      institution: 'ГЛМ, ф. 4, оп. 1, ед. хр. 339 / публикация ИМЛИ РАН',\n      year: 1925,\n      note: 'Подписанная расписка документирует контакт с лечащим ординатором; не устанавливает диагноз или схему лечения.',\n    },\n"
+          if text.count(anchor) != 1: raise SystemExit('Aronson source anchor mismatch')
+          p.write_text(text.replace(anchor, insert + anchor, 1), encoding='utf-8')
+
+          replace_once(
+              essay,
+              "      title: 'Медицинская единица клинического периода Есенина, ноябрь–декабрь 1925 года',\n      kind: 'archive',\n      institution: 'ИМЛИ РАН, опубликованное факсимиле идентифицированной единицы хранения',\n      year: 1925,\n      note: 'Подтверждает медицинский документальный слой, но не устанавливает отдельным листом механизм окончания лечения 21 декабря.',",
+              "      title: '«История болезни» Поликлиники 1-го МГУ от 5 декабря 1925 года',\n      kind: 'archive',\n      institution: 'ИМЛИ РАН, ф. 32, оп. 2, ед. хр. 37 · опубликованное факсимиле',\n      year: 1925,\n      note: 'Сохранившийся общеклинический документ; не объявляется полной психиатрической стационарной картой и не доказывает сам по себе механизм выхода 21 декабря.',"
+          )
+
+          # Validator: heading, reader guards, official URLs, context-aware coverage.
+          replace_once(
+              validator,
+              "  'Галина Бениславская: невидимая редакция',",
+              "  'Галина Бениславская: рукописи и издательские дела',"
+          )
+          replace_once(
+              validator,
+              "  'механизм окончания лечения 21 декабря',",
+              "  'не объясняют административный или медицинский механизм окончания лечения',"
+          )
+          replace_once(
+              validator,
+              "  /клиника[^.]{0,100}точный диагноз/iu,\n  /вне всяких сомнений[^.]{0,100}предсмертн/iu,",
+              "  /клиника[^.]{0,100}точный диагноз/iu,\n  /удостоверение\\s*№\\s*1037/iu,\n  /Ганнушкин[^.]{0,100}(?:поставил диагноз|диагностировал|лечил Есенина|лечащий врач Есенина)/iu,\n  /вне всяких сомнений[^.]{0,100}предсмертн/iu,"
+          )
+          replace_once(
+              validator,
+              "  'yes2-letopis-t5-k1': /^https:\\/\\/biblio\\.imli\\.ru\\//,\n  'yes2-duncan-russian-days-1929-tu': /^https:\\/\\/dl\\.tufts\\.edu\\//,",
+              "  'yes2-letopis-t5-k1': /^https:\\/\\/biblio\\.imli\\.ru\\//,\n  'yes2-pss-chronology': /^https:\\/\\/www\\.museum-esenin\\.ru\\//,\n  'yes2-pss-letters-vol6': /^https:\\/\\/feb-web\\.ru\\//,\n  'yes2-pss-business-documents': /^https:\\/\\/feb-web\\.ru\\//,\n  'yes2-pss-manuscript-commentary': /^https:\\/\\/feb-web\\.ru\\//,\n  'yes2-aronson-receipt-1925-12-16': /^https:\\/\\/biblio\\.imli\\.ru\\//,\n  'yes2-duncan-russian-days-1929-tu': /^https:\\/\\/dl\\.tufts\\.edu\\//,"
+          )
+
+          temporal_guard = """const pre1925CompanionSources = new Set([\n  'yes2-letopis-t3-k2',\n  'yes2-pss-chronology',\n  'yes2-pss-letters-vol6',\n  'yes2-pss-business-documents',\n  'yes2-pss-poetry-comments',\n  'yes2-pss-letters-comments',\n  'yes2-contemporary-memoirs-1986',\n]);\n\nlet activeSection = '';\nconst inheritedPre1925Sections = new Set([\n  'Возвращение: Москва после Запада',\n  '«Москва кабацкая»: роль, рынок и реальная зависимость',\n  'Имажинизм после единства',\n  'Галина Бениславская: рукописи и издательские дела',\n]);\nfor (const [index, block] of essay.blocks.entries()) {\n  if (block.type === 'section') {\n    activeSection = block.heading;\n    continue;\n  }\n  if (!('sourceIds' in block) || !block.sourceIds?.length) continue;\n  const searchable = block.type === 'note'\n    ? `${block.claim} ${block.text}`\n    : 'text' in block && typeof block.text === 'string'\n      ? block.text\n      : '';\n  const needsPre1925Coverage = /\\b1924(?:–1925)?\\b/u.test(searchable) || inheritedPre1925Sections.has(activeSection);\n  if (needsPre1925Coverage && block.sourceIds.includes('yes2-letopis-t5-k1') && !block.sourceIds.some((id) => pre1925CompanionSources.has(id))) {\n    throw new Error(`block ${index + 1} uses the 1925-only Letopis without a pre-1925 companion in section: ${activeSection}`);\n  }\n  if (searchable.includes('Корпус переписки') && !block.sourceIds.includes('yes2-pss-letters-vol6')) {\n    throw new Error(`block ${index + 1} discusses the correspondence corpus without item-level PSS vol.6`);\n  }\n}\n\nconst postReturnMoscowBlock = essay.blocks.find(\n  (block) => block.type === 'paragraph' && block.text.startsWith('Московская литературная среда тоже изменилась.'),\n);\nif (!postReturnMoscowBlock || !('sourceIds' in postReturnMoscowBlock) || !postReturnMoscowBlock.sourceIds?.includes('yes2-pss-chronology')) {\n  throw new Error('post-return Moscow context lost its 1923–1924-capable chronology source');\n}\n\n"""
+          p = Path(validator)
+          text = p.read_text(encoding='utf-8')
+          anchor = 'let citationCount = 0;\n'
+          if text.count(anchor) != 1: raise SystemExit('temporal validator anchor mismatch')
+          p.write_text(text.replace(anchor, temporal_guard + anchor, 1), encoding='utf-8')
+
+          replace_once(
+              validator,
+              "  '## yes2-letopis-t5-k1',\n  '## yes2-duncan-russian-days-1929-tu',",
+              "  '## yes2-letopis-t5-k1',\n  '## yes2-pss-chronology',\n  '## yes2-pss-letters-vol6',\n  '## yes2-pss-business-documents',\n  '## yes2-pss-manuscript-commentary',\n  '## yes2-aronson-receipt-1925-12-16',\n  '## yes2-duncan-russian-days-1929-tu',"
+          )
+
+          # Public ledger mirrors the reader source topology.
+          replace_once(ledger, '**Обновлено:** 4 августа 2026 года', '**Обновлено:** 7 августа 2026 года')
+          replace_once(
+              ledger,
+              '## yes2-letopis-t5-k1\n',
+              "## yes2-pss-chronology\n\n**Источник:** академическая «Хронологическая канва жизни и творчества Сергея Александровича Есенина (1895–1925)».  \n**Карточка:** https://www.museum-esenin.ru/esenin/biografiya  \n**Использование:** 1924-capable cross-check; не заменяет page-level полного тома 4 «Летописи».\n\n## yes2-letopis-t5-k1\n"
+          )
+          replace_once(
+              ledger,
+              '## yes2-pss-poetry-comments\n',
+              "## yes2-pss-letters-vol6\n\n**Источник:** С. А. Есенин. ПСС, т. 6: «Письма».  \n**ФЭБ:** https://feb-web.ru/feb/esenin/texts/es6/es6-233-.htm?cmd=p  \n**Использование:** датированные письма, записки и телеграммы; особенно Кавказ 1924–1925, Бениславская и Чагин.  \n**Граница:** заявленный в письме план поездки не считается выполненным маршрутом без внешней хронологии.\n\n## yes2-pss-business-documents\n\n**Источник:** ПСС, т. 7, кн. 2 — деловые бумаги и издательские документы.  \n**ФЭБ:** https://feb-web.ru/feb/esenin/texts/e72/e72-266-.htm?cmd=p  \n**Проверено:** доверенность Бениславской от 12 июня 1924 — автограф РГАЛИ, ф. 190, оп. 1, ед. хр. 11, л. 3; договор № 4581 от 1 июля — подлинник, л. 2; договор № 7604 от 30 июня 1925 — подлинник, л. 9.  \n**Граница:** заявление 17 июня 1925 известно по первой публикации, автограф не выявлен.\n\n## yes2-pss-manuscript-commentary\n\n**Источник:** ПСС, т. 1 — комментарии к наборному экземпляру «Собрания стихотворений».  \n**ФЭБ:** https://feb-web.ru/feb/esenin/texts/es1/es1-385-.htm?cmd=p  \n**Использование:** списки Софьи Толстой-Есениной, диктовка и авторская правка Есенина.  \n**Граница:** техническая помощь не превращается в композиционное соавторство.\n\n## yes2-pss-poetry-comments\n"
+          )
+          replace_once(
+              ledger,
+              "**Объект:** опубликованные листы медицинской единицы клинического периода.  \n**Устанавливает:** наличие медицинского документального слоя.  \n**Не устанавливает:** отдельным полученным листом механизм окончания лечения 21 декабря 1925 года.  \n**Публикация:** текстовое описание без изображения документа.",
+              "**Объект:** «История болезни» Поликлиники 1-го МГУ от 5 декабря 1925 года — ИМЛИ, ф. 32, оп. 2, ед. хр. 37; в научном издании воспроизведена факсимильно.  \n**Устанавливает:** существование конкретного общеклинического документа.  \n**Не устанавливает:** что этот лист исчерпывает психиатрическую документацию, окончательный диагноз, полную схему лечения или административный механизм выхода 21 декабря.  \n**Публикация:** текстовое описание без изображения документа."
+          )
+          replace_once(
+              ledger,
+              '## yes2-power-attorney-1925-12-27\n',
+              "## yes2-aronson-receipt-1925-12-16\n\n**Объект:** расписка ординатора А. Я. Аронсона от 16 декабря 1925 года о получении 100 рублей Есенина на личные расходы.  \n**Архивная ссылка:** ГЛМ, ф. 4, оп. 1, ед. хр. 339; опубликовано в академической Летописи.  \n**Использование:** прямой документальный врачебный контакт.  \n**Не устанавливает:** диагноз, прогноз или схему лечения; Ганнушкину не приписывается конкретный диагноз без отдельного первичного документа.\n\n## yes2-power-attorney-1925-12-27\n"
+          )
+          replace_once(
+              ledger,
+              '- «Плавильня слов», «Русь советская», «Памяти Есенина», сборник воспоминаний под редакцией И. В. Евдокимова и книга И. В. Грузинова запрошены у РГБ, РНБ и Мурманской библиотеки. До получения файлов и условий воспроизведения публикуются библиографические ссылки, но не неавторизованные зеркала.',
+              '- «Памяти Есенина» и сборник воспоминаний под редакцией И. В. Евдокимова институционально идентифицированы в НЭБ/РГБ и используются только с page/version guards; открытое чтение не считается лицензией на зеркалирование. Остальные acquisition gaps сохраняют собственные статусы.'
+          )
+
+          print('Evidence patch applied.')
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Targeted publication contract
+        run: npm run validate:yesenin-part-two-publication
+
+      - name: Essay contract
+        run: npm run validate:essays
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Commit durable result and remove transport
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/one-shot-yesenin-document-evidence-pr.yml
+          git add src/data/essays/yeseninPartTwoPublic.ts scripts/validate-yesenin-part-two-publication.ts docs/research/YESENIN_PART_II_PUBLICATION_SOURCE_LEDGER_2026-08.md
+          git diff --cached --check
+          git commit -m "fix(yesenin): align Part II with verified document evidence"
+          git push origin HEAD:fix/yesenin-part-two-document-evidence-20260807
