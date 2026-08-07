@@ -5,8 +5,22 @@
   <subtitle>Новые статьи, биографические исследования и музыкальные публикации проекта.</subtitle>
   <link href="https://thelegendarypoet.ru/" />
   <link rel="self" type="application/atom+xml" href="https://thelegendarypoet.ru/feed.xml" />
-  <updated>2026-08-05T00:00:00Z</updated>
+  <updated>2026-08-07T00:00:00Z</updated>
   <author><name>THE LEGENDARY POET</name><uri>https://thelegendarypoet.ru/about</uri></author>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925</id>
+    <title>Сергей Есенин. Часть II: 1921–1925</title>
+    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925" />
+    <published>2026-08-03T00:00:00Z</published>
+    <updated>2026-08-07T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Последние четыре года Сергея Есенина: зарубежная поездка, возвращение, «Москва кабацкая», Бениславская, Кавказ, поздняя поэзия и декабрь 1925 года по документам.</summary>
+    <category term="Сергей Есенин" />
+    <category term="Биография" />
+    <category term="1921–1925" />
+    <category term="Источники" />
+    <category term="Часть II" />
+  </entry>
   <entry>
     <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921</id>
     <title>Сергей Есенин. Часть I: 1895–1921</title>
@@ -93,20 +107,6 @@
     <category term="Осип Брик" />
     <category term="Серебряный век" />
     <category term="Биография" />
-  </entry>
-  <entry>
-    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925</id>
-    <title>Сергей Есенин. Часть II: 1921–1925</title>
-    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925" />
-    <published>2026-08-03T00:00:00Z</published>
-    <updated>2026-08-03T00:00:00Z</updated>
-    <author><name>Редакция THE LEGENDARY POET</name></author>
-    <summary type="text">Последние четыре года Сергея Есенина: зарубежная поездка, возвращение, «Москва кабацкая», Бениславская, Кавказ, поздняя поэзия и декабрь 1925 года по документам.</summary>
-    <category term="Сергей Есенин" />
-    <category term="Биография" />
-    <category term="1921–1925" />
-    <category term="Источники" />
-    <category term="Часть II" />
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</id>
