@@ -40,9 +40,10 @@ The dependency-free `Project contracts` workflow runs project-contract, reader-c
 
 ## Open architecture lanes
 
-There are currently no registered open architecture lanes. Any future lane must receive a canonical `TLP-*` ID in this section and in `docs/project-contract.json`; prose-only or anonymous debt entries are forbidden. AuditRepo remains the authority for exact status transitions and production evidence.
+One owner-selected architecture lane is open. It is independent of the current personal-archive repair and must not absorb unrelated runtime/content work. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
+- `TLP-HALL-001` — Product #369 owns Hall v3 foundation and staged rebuild. Production `/hall` remains a lightweight DOM shell; `src/components/hall/*` is legacy implementation evidence rather than visual/runtime authority. `docs/hall-v3/README.md` owns the gate sequence. No new 3D runtime is allowed to bypass reference/greybox/material-lighting/export/vertical-slice approval.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material
