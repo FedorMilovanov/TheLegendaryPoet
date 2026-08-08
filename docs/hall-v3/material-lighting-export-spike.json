@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "materialLightingExportSpike",
+  "status": "candidate-authoring",
+  "selectedStrategy": null,
+  "frozenAuthority": {
+    "topology": "H3",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "greyboxLayoutsBlob": "b3def316d855a6539ffd280217ed63e22c6855d9",
+    "cameraDecisionBlob": "fedf0c0d269822655a9db15b95914222c815769f",
+    "cameraRig": "R1",
+    "camera": {
+      "variableWitness": "pushkinViewing",
+      "position": [
+        8.0,
+        2.5,
+        1.6
+      ],
+      "target": [
+        11.15,
+        5.45,
+        1.95
+      ],
+      "nextDestination": [
+        11.15,
+        5.45,
+        1.95
+      ],
+      "lensMm": 28
+    }
+  },
+  "representativeBay": {
+    "source": "docs/hall-v3/greybox-layouts.json#H3",
+    "ceilingZone": {
+      "center": [
+        10.0,
+        5.2
+      ],
+      "size": [
+        5.5,
+        5.2
+      ],
+      "height": 4.3
+    },
+    "wallSegments": [
+      [
+        10,
+        3.6,
+        12.2,
+        4.2
+      ],
+      [
+        12.2,
+        4.2,
+        11.5,
+        8.0
+      ]
+    ],
+    "pushkinAnchor": {
+      "center": [
+        11.15,
+        5.45,
+        2.0
+      ],
+      "size": [
+        2.4,
+        0.18,
+        3.2
+      ],
+      "rotationZ": -1.3
+    },
+    "documentCases": [
+      {
+        "name": "EXHIBIT_DOC_CASE_01",
+        "center": [
+          9.7,
+          6.4,
+          0.55
+        ],
+        "size": [
+          1.0,
+          0.65,
+          1.1
+        ],
+        "rotationZ": -0.45
+      },
+      {
+        "name": "EXHIBIT_DOC_CASE_02",
+        "center": [
+          10.7,
+          3.7,
+          0.55
+        ],
+        "size": [
+          1.0,
+          0.65,
+          1.1
+        ],
+        "rotationZ": -0.45
+      }
+    ],
+    "documentaryAssets": "neutral-proxies-only",
+    "rightsClearedMediaRequired": false
+  },
+  "materialContract": {
+    "surfaceMaterial": "MAT_H3_SPIKE_STONE",
+    "emissiveCalibrationMaterial": "MAT_H3_SPIKE_EMISSIVE_CALIBRATION",
+    "baseColor": {
+      "role": "color",
+      "sourceColorSpace": "sRGB",
+      "threeColorSpace": "SRGBColorSpace"
+    },
+    "emissive": {
+      "role": "color",
+      "sourceColorSpace": "sRGB",
+      "threeColorSpace": "SRGBColorSpace"
+    },
+    "normal": {
+      "role": "data",
+      "sourceColorSpace": "Non-Color",
+      "threeColorSpace": "NoColorSpace"
+    },
+    "roughness": {
+      "role": "data",
+      "sourceColorSpace": "Non-Color",
+      "threeColorSpace": "NoColorSpace"
+    },
+    "metalness": {
+      "role": "data",
+      "sourceColorSpace": "Non-Color",
+      "threeColorSpace": "NoColorSpace",
+      "maximumValue": 0.0
+    },
+    "ao": {
+      "role": "data",
+      "sourceColorSpace": "Non-Color",
+      "threeColorSpace": "NoColorSpace"
+    },
+    "postProcessingRequired": false
+  },
+  "uvContract": {
+    "uv0": {
+      "semantic": "surface-materials",
+      "gltfAttribute": "TEXCOORD_0",
+      "required": true
+    },
+    "uv1": {
+      "semantic": "external-static-lightmap-candidate-only",
+      "gltfAttribute": "TEXCOORD_1",
+      "required": true
+    },
+    "lightMapThreeChannel": 1,
+    "lightMapThreeColorSpace": "LinearSRGBColorSpace"
+  },
+  "lightingCandidates": [
+    {
+      "id": "L0_MINIMAL_REALTIME",
+      "delivery": "pbr-plus-minimal-runtime-lighting",
+      "geometrySource": "same-bay",
+      "camera": "R1",
+      "shadowCastingLights": 0,
+      "externalLightMap": false
+    },
+    {
+      "id": "L1_EXTERNAL_LIGHTMAP_UV1",
+      "delivery": "external-baked-lightmap-plus-minimal-fill",
+      "geometrySource": "same-bay",
+      "camera": "R1",
+      "shadowCastingLights": 0,
+      "externalLightMap": true,
+      "lightMapUvChannel": 1
+    }
+  ],
+  "toolchain": {
+    "blender": {
+      "version": "4.5.12 LTS",
+      "source": "existing pinned Hall workflow"
+    },
+    "gltfValidator": {
+      "package": "gltf-validator",
+      "version": "2.0.0-dev.3.10"
+    },
+    "optimizer": {
+      "tool": "gltfpack",
+      "package": "gltfpack",
+      "version": "1.2.0",
+      "arguments": [
+        "-kn",
+        "-km",
+        "-ke",
+        "-kv",
+        "-vpf",
+        "-vtf",
+        "-cc"
+      ],
+      "preservationIntent": [
+        "named-nodes",
+        "named-materials",
+        "extras",
+        "unused-uv1",
+        "texture-coordinate-fidelity",
+        "no-dequantization-helper-transform"
+      ]
+    }
+  },
+  "evidenceContract": {
+    "generatedRoot": "qa-artifacts/hall-material-spike",
+    "commitGeneratedArtifacts": false,
+    "required": [
+      "source-blend",
+      "raw-glb",
+      "optimized-glb",
+      "raw-khronos-validation",
+      "optimized-khronos-validation",
+      "asset-contract-comparison",
+      "uv1-lightmap",
+      "desktop-browser-capture-both-candidates",
+      "mobile-browser-capture-both-candidates",
+      "browser-renderer-metrics-both-candidates",
+      "sha256-manifest"
+    ]
+  },
+  "productionBoundary": {
+    "hallRouteRemainsPlaceholder": true,
+    "threeRuntimeMayActivate": false,
+    "spikeAssetsMayEnterPublic": false,
+    "finalPushkinMediaMayEnterSpike": false,
+    "h3TopologyMayChange": false,
+    "r1CameraMayChange": false,
+    "fullHallLookdevMayStart": false,
+    "laterGateMayAdvanceInThisWave": false
+  }
+}
