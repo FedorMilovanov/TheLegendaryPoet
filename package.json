@@ -47,7 +47,7 @@
     "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts",
     "validate:hall-foundation": "tsx scripts/validate-hall-foundation.ts && node scripts/validate-hall-public-promises.mjs",
     "validate:hall-reference-bible": "tsx scripts/validate-hall-reference-bible.ts",
-    "validate:hall-topology-selection": "tsx scripts/validate-hall-topology-selection.ts",
+    "validate:hall-topology-selection": "tsx scripts/validate-hall-topology-selection.ts && tsx scripts/validate-hall-topology-selection-provenance.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
