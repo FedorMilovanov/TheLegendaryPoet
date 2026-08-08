@@ -93,9 +93,10 @@ for (const retiredPromise of [
 ]) {
   expect(!hallPage.includes(retiredPromise), `public Hall placeholder must not promise unapproved architecture: ${retiredPromise}`);
 }
+expect(!hallPage.includes('hall-preview.webp'), 'dormant Hall route must not load stale concept artwork');
 expect(
-  hallPage.includes('не обещание финальной архитектуры'),
-  'Hall placeholder must state that the concept backdrop is not the final architecture',
+  hallPage.includes('без выдачи ранних концептов за финальную архитектуру'),
+  'Hall placeholder must state that early concepts are not the final architecture',
 );
 
 const requiredHallDocs = [
