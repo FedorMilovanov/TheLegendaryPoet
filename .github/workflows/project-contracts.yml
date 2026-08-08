@@ -19,11 +19,13 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           node-version-file: .nvmrc
-          install: 'false'
+          install: 'true'
       - name: Validate repository contracts
         run: node scripts/validate-project-contracts.mjs
       - name: Validate workflow consolidation and performance contract
         run: node scripts/validate-workflow-consolidation.mjs
+      - name: Validate Hall v3 foundation contract
+        run: npm run validate:hall-foundation
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
