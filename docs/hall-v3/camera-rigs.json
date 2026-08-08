@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "cameraApproval",
+  "status": "candidate-authoring",
+  "selectedTopology": "H3",
+  "approvedRig": null,
+  "frozenTopologyAuthority": {
+    "decisionRecord": "docs/hall-v3/greybox-decision.json",
+    "layoutSource": "docs/hall-v3/greybox-layouts.json",
+    "layoutBlob": "b3def316d855a6539ffd280217ed63e22c6855d9",
+    "generator": "scripts/hall-greybox/generate-candidates.py",
+    "generatorBlob": "7f5dbe64d61880031819a5d4e855e5c6b7285ef3",
+    "selectedLayoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65"
+  },
+  "sourceBlend": "qa-artifacts/hall-greybox-candidates/H3/H3.blend",
+  "cameraGenerator": "scripts/hall-camera/generate-camera-candidates.py",
+  "render": {
+    "engine": "BLENDER_WORKBENCH",
+    "desktopResolution": [960, 540],
+    "mobileResolution": [540, 960],
+    "desktopWitnesses": [
+      "entryReveal",
+      "orientation",
+      "firstTransition",
+      "pushkinApproach",
+      "pushkinViewing",
+      "reverseExit"
+    ],
+    "mobileWitnesses": [
+      "entryReveal",
+      "pushkinApproach",
+      "pushkinViewing"
+    ]
+  },
+  "comparisonRules": {
+    "geometryMayChange": false,
+    "materialsMayChange": false,
+    "lightsMayChange": false,
+    "exhibitProxyMayChange": false,
+    "baselineFiveWitnessesFrozen": true,
+    "variableWitnesses": ["pushkinViewing"],
+    "freeLookAllowed": false,
+    "fpsRequired": false,
+    "reducedMotionRequiresDirectDestinations": true,
+    "humanApprovalRequired": true
+  },
+  "knownBaselineFailure": {
+    "rigId": "R0",
+    "witness": "pushkinViewing",
+    "finding": "portrait-mobile render is dominated by the Pushkin proxy plane and loses room/exhibit context; desktop is also excessively flat/close",
+    "disposition": "benchmark-only-not-approvable-without-new-evidence"
+  },
+  "rigs": [
+    {
+      "id": "R0",
+      "name": "frozen 35 mm benchmark",
+      "status": "benchmark",
+      "description": "Exact H3 shootout camera set retained only as the visual baseline.",
+      "cameras": {
+        "entryReveal": {"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"lensMm":35,"note":"asymmetric orientation field"},
+        "orientation": {"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"lensMm":35,"note":"diagonal main trajectory"},
+        "firstTransition": {"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"lensMm":35,"note":"diagonal transition"},
+        "pushkinApproach": {"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"lensMm":35,"note":"Pushkin side focus room"},
+        "pushkinViewing": {"position":[8.4,3.3,1.65],"target":[11.15,5.45,2.0],"nextDestination":[11.15,5.45,2.0],"lensMm":35,"note":"frozen Pushkin portrait proxy benchmark"},
+        "reverseExit": {"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"lensMm":35,"note":"return to diagonal trajectory"}
+      }
+    },
+    {
+      "id": "R1",
+      "name": "wide contextual viewing",
+      "status": "candidate",
+      "description": "Preserve the proven H3 journey and widen only the Pushkin viewing composition: 28 mm from a moderately more distant point.",
+      "cameras": {
+        "entryReveal": {"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"lensMm":35,"note":"frozen entry reveal"},
+        "orientation": {"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"lensMm":35,"note":"frozen orientation"},
+        "firstTransition": {"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"lensMm":35,"note":"frozen first transition"},
+        "pushkinApproach": {"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"lensMm":35,"note":"frozen Pushkin approach"},
+        "pushkinViewing": {"position":[8.0,2.5,1.60],"target":[11.15,5.45,1.95],"nextDestination":[11.15,5.45,1.95],"lensMm":28,"note":"wider contextual Pushkin viewing test"},
+        "reverseExit": {"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"lensMm":35,"note":"frozen reverse exit"}
+      }
+    },
+    {
+      "id": "R2",
+      "name": "balanced contextual viewing",
+      "status": "candidate",
+      "description": "32 mm Pushkin view from a farther point to restore exhibit/room hierarchy without making the room read ultra-wide.",
+      "cameras": {
+        "entryReveal": {"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"lensMm":35,"note":"frozen entry reveal"},
+        "orientation": {"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"lensMm":35,"note":"frozen orientation"},
+        "firstTransition": {"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"lensMm":35,"note":"frozen first transition"},
+        "pushkinApproach": {"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"lensMm":35,"note":"frozen Pushkin approach"},
+        "pushkinViewing": {"position":[7.5,2.5,1.60],"target":[11.15,5.45,1.95],"nextDestination":[11.15,5.45,1.95],"lensMm":32,"note":"balanced contextual Pushkin viewing test"},
+        "reverseExit": {"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"lensMm":35,"note":"frozen reverse exit"}
+      }
+    },
+    {
+      "id": "R3",
+      "name": "distant 35 mm viewing",
+      "status": "candidate",
+      "description": "Keep 35 mm but move the Pushkin view substantially back to test whether distance alone restores spatial context.",
+      "cameras": {
+        "entryReveal": {"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"lensMm":35,"note":"frozen entry reveal"},
+        "orientation": {"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"lensMm":35,"note":"frozen orientation"},
+        "firstTransition": {"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"lensMm":35,"note":"frozen first transition"},
+        "pushkinApproach": {"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"lensMm":35,"note":"frozen Pushkin approach"},
+        "pushkinViewing": {"position":[7.0,2.0,1.60],"target":[11.15,5.45,1.95],"nextDestination":[11.15,5.45,1.95],"lensMm":35,"note":"distant 35 mm Pushkin viewing test"},
+        "reverseExit": {"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"lensMm":35,"note":"frozen reverse exit"}
+      }
+    }
+  ]
+}
