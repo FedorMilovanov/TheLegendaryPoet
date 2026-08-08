@@ -38,6 +38,9 @@ const EXPECTED_LAYOUT = '5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49e
 const EXPECTED_SOURCE_GEOMETRY = 'b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777';
 const EXPECTED_LAYOUTS_BLOB = 'b3def316d855a6539ffd280217ed63e22c6855d9';
 const EXPECTED_CAMERA_DECISION_BLOB = 'fedf0c0d269822655a9db15b95914222c815769f';
+const EXPECTED_MESHOPT_COMMIT = '9d9890c73011d75920af614485296d1e03e95448';
+const EXPECTED_VALIDATOR_COMMIT = 'bcd52cc4ba5f333b2999a58f67cc05ddf28b4fb1';
+const EXPECTED_VALIDATOR_RELEASE = 'gltf_validator-2.0.0-dev.3.10-linux64.tar.xz';
 const APPROVED_R1 = {
   variableWitness: 'pushkinViewing',
   position: [8.0, 2.5, 1.60],
@@ -49,7 +52,9 @@ const CANDIDATES = ['L0_MINIMAL_REALTIME','L1_EXTERNAL_LIGHTMAP_UV1'];
 
 expect(contract.phase === 'materialLightingExportSpike', 'Hall phase must remain materialLightingExportSpike during candidate authoring');
 expect(contract.gates?.materialLightingExportSpike === 'active', 'materialLightingExportSpike must remain active');
-for (const gate of ['pushkinVerticalSlice','offlineVisualApproval','webVerticalSlice','fullMuseumScaleOut']) expect(contract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked: ${gate}`);
+for (const gate of ['pushkinVerticalSlice','offlineVisualApproval','webVerticalSlice','fullMuseumScaleOut']) {
+  expect(contract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked: ${gate}`);
+}
 expect(contract.productionRoute?.mode === 'placeholder', '/hall must remain placeholder during the spike');
 expect(contract.productionRoute?.allowThreeRuntimeImports === false, 'production /hall must not activate Three/R3F during the spike');
 expect(contract.sourceAuthority?.materialLightingExportSpike === configPath, 'Hall contract must register material spike source authority');
@@ -71,7 +76,9 @@ const h3 = (layouts.candidates ?? []).find((item:any)=>item.id === 'H3');
 expect(Boolean(h3), 'frozen H3 layout must exist');
 if (h3) {
   expect(h3.ceilingZones.some((zone:any)=>same(zone, config.representativeBay?.ceilingZone)), 'representative ceiling zone must be literal H3 source');
-  for (const segment of config.representativeBay?.wallSegments ?? []) expect(h3.walls.some((wall:any)=>same(wall,segment)), `representative wall must be literal H3 source: ${JSON.stringify(segment)}`);
+  for (const segment of config.representativeBay?.wallSegments ?? []) {
+    expect(h3.walls.some((wall:any)=>same(wall,segment)), `representative wall must be literal H3 source: ${JSON.stringify(segment)}`);
+  }
   expect(same(h3.pushkin?.anchor, config.representativeBay?.pushkinAnchor), 'Pushkin proxy anchor must remain literal H3 source');
   expect(same(h3.pushkin?.documentCases, config.representativeBay?.documentCases), 'document proxy geometry must remain literal H3 source');
 }
@@ -100,41 +107,77 @@ expect(config.lightingCandidates?.[0]?.externalLightMap === false, 'L0 must be t
 expect(config.lightingCandidates?.[1]?.externalLightMap === true && config.lightingCandidates?.[1]?.lightMapUvChannel === 1, 'L1 must explicitly bind the external lightmap to UV1');
 
 const optimizerArgs = config.toolchain?.optimizer?.arguments ?? [];
-for (const flag of ['-kn','-km','-ke','-kv','-vpf','-vtf','-cc']) expect(optimizerArgs.includes(flag), `controlled gltfpack path must retain ${flag}`);
-expect(config.toolchain?.optimizer?.version === '1.2.0', 'gltfpack must stay pinned for reproducibility');
-expect(config.toolchain?.gltfValidator?.version === '2.0.0-dev.3.10', 'Khronos validator npm version must stay pinned for reproducibility');
+for (const flag of ['-kn','-km','-ke','-kv','-vpf','-vtf','-cc']) {
+  expect(optimizerArgs.includes(flag), `controlled gltfpack path must retain ${flag}`);
+}
+expect(config.toolchain?.optimizer?.tool === 'gltfpack' && config.toolchain?.optimizer?.version === '1.2', 'gltfpack version must remain pinned to v1.2');
+expect(config.toolchain?.optimizer?.sourceRepo === 'zeux/meshoptimizer', 'gltfpack must come from the upstream meshoptimizer repository');
+expect(config.toolchain?.optimizer?.sourceCommit === EXPECTED_MESHOPT_COMMIT, 'gltfpack must be built from the exact upstream v1.2 commit');
+expect(config.toolchain?.optimizer?.build === 'make -j2 config=release gltfpack', 'gltfpack native build contract drifted');
+expect(config.toolchain?.gltfValidator?.tool === 'gltf_validator' && config.toolchain?.gltfValidator?.version === '2.0.0-dev.3.10', 'Khronos validator version must remain pinned');
+expect(config.toolchain?.gltfValidator?.sourceRepo === 'KhronosGroup/glTF-Validator', 'validator must come from KhronosGroup/glTF-Validator');
+expect(config.toolchain?.gltfValidator?.sourceCommit === EXPECTED_VALIDATOR_COMMIT, 'validator release must bind the exact upstream version commit');
+expect(config.toolchain?.gltfValidator?.releaseAsset === EXPECTED_VALIDATOR_RELEASE, 'validator Linux release asset must remain exact');
 
 expect(config.productionBoundary?.hallRouteRemainsPlaceholder === true, 'production Hall placeholder boundary must remain true');
-for (const key of ['threeRuntimeMayActivate','spikeAssetsMayEnterPublic','finalPushkinMediaMayEnterSpike','h3TopologyMayChange','r1CameraMayChange','fullHallLookdevMayStart','laterGateMayAdvanceInThisWave']) expect(config.productionBoundary?.[key] === false, `production boundary must keep ${key}=false`);
+for (const key of ['threeRuntimeMayActivate','spikeAssetsMayEnterPublic','finalPushkinMediaMayEnterSpike','h3TopologyMayChange','r1CameraMayChange','fullHallLookdevMayStart','laterGateMayAdvanceInThisWave']) {
+  expect(config.productionBoundary?.[key] === false, `production boundary must keep ${key}=false`);
+}
 expect(config.evidenceContract?.generatedRoot === 'qa-artifacts/hall-material-spike', 'spike evidence must stay in QA artifacts');
 expect(config.evidenceContract?.commitGeneratedArtifacts === false, 'generated spike artifacts must not be committed as runtime assets');
+for (const requiredEvidence of ['gltfpack-source-head','gltf-validator-release-sha256']) {
+  expect(config.evidenceContract?.required?.includes(requiredEvidence), `evidence contract must retain ${requiredEvidence}`);
+}
 
-for (const relative of [generatorPath,gltfValidatorPath,inspectorPath,finalizerPath,viewerPath,browserWitnessPath]) expect(exists(relative), `material spike source missing: ${relative}`);
+for (const relative of [generatorPath,gltfValidatorPath,inspectorPath,finalizerPath,viewerPath,browserWitnessPath]) {
+  expect(exists(relative), `material spike source missing: ${relative}`);
+}
 const scripts = packageJson.scripts ?? {};
 expect(scripts['validate:hall-material-spike'] === `tsx ${validatorPath}`, 'package must expose current material spike validator');
 expect((scripts.check ?? '').includes('validate:hall-material-spike'), 'normal check must run material spike source validator');
 expect(ci.includes('npm run validate:hall-material-spike'), 'primary CI must enforce material spike source contract');
 expect(projectContracts.includes('npm run validate:hall-material-spike'), 'Project contracts must enforce material spike source contract');
 expect(hallWorkflow.includes('npm run validate:hall-material-spike'), 'Hall workflow must enforce material spike validator');
-for (const trigger of [configPath, 'scripts/hall-material-spike/**', 'qa/hall-material-spike/**', validatorPath]) expect(hallWorkflow.includes(`'${trigger}'`), `Hall workflow must trigger on ${trigger}`);
-expect(hallWorkflow.includes('gltfpack@1.2.0') && hallWorkflow.includes('gltf-validator@2.0.0-dev.3.10'), 'Hall workflow must install the pinned temporary glTF toolchain');
+for (const trigger of [configPath, 'scripts/hall-material-spike/**', 'qa/hall-material-spike/**', validatorPath]) {
+  expect(hallWorkflow.includes(`'${trigger}'`), `Hall workflow must trigger on ${trigger}`);
+}
+expect(hallWorkflow.includes(EXPECTED_MESHOPT_COMMIT), 'Hall workflow must checkout the exact meshoptimizer v1.2 source commit');
+expect(hallWorkflow.includes('make -C .tools/meshoptimizer -j2 config=release gltfpack'), 'Hall workflow must build native gltfpack from pinned source');
+expect(hallWorkflow.includes(EXPECTED_VALIDATOR_RELEASE), 'Hall workflow must download the exact Khronos validator release asset');
+expect(hallWorkflow.includes('gltf-validator-release.sha256'), 'Hall workflow must record the Khronos release archive SHA-256');
+expect(hallWorkflow.includes('"$GLTFPACK_BIN"') && hallWorkflow.includes('"$GLTF_VALIDATOR_BIN"'), 'Hall workflow must execute the pinned native binaries');
 expect(hallWorkflow.includes('-kn -km -ke -kv -vpf -vtf -cc'), 'Hall workflow optimizer invocation must preserve identity/extras/UV1');
 expect(hallWorkflow.includes('npx playwright install --with-deps chromium'), 'Hall workflow must install a real Chromium witness');
+expect(!/npm\s+(?:install|i)\b/.test(hallWorkflow), 'Hall workflow must not mutate Node dependencies or hide ephemeral tooling');
+expect(!hallWorkflow.includes('--no-save') && !hallWorkflow.includes('--package-lock=false') && !hallWorkflow.includes('--no-package-lock'), 'Hall workflow must not contain forbidden ephemeral dependency flags');
 expect(currentState.includes('materialLightingExportSpike') && currentState.includes('H3') && currentState.includes('R1'), 'CURRENT_STATE must describe active H3/R1 material spike');
 expect(hallReadme.includes('material / lighting / export spike') && hallReadme.includes('candidate'), 'Hall README must document the candidate-authoring spike');
 
 const evidenceRoot = process.env.HALL_MATERIAL_SPIKE_EVIDENCE;
 if (evidenceRoot) {
-  const relative = (name:string) => path.join(evidenceRoot,name);
+  const evidencePath = (name:string) => path.join(evidenceRoot,name);
   for (const required of [
     'source-manifest.json','h3-material-spike.blend','h3-bay.raw.glb','h3-bay.optimized.glb','h3-bay-lightmap-uv1.png',
     'raw-validator.json','optimized-validator.json','asset-contract.json','sha256-manifest.json',
+    'gltfpack-source-head.txt','gltf-validator-release.sha256','gltf-validator-version.txt',
     'L0_MINIMAL_REALTIME/browser-witness.json','L0_MINIMAL_REALTIME/desktop.png','L0_MINIMAL_REALTIME/mobile.png',
     'L1_EXTERNAL_LIGHTMAP_UV1/browser-witness.json','L1_EXTERNAL_LIGHTMAP_UV1/desktop.png','L1_EXTERNAL_LIGHTMAP_UV1/mobile.png',
-  ]) expect(exists(relative(required)), `generated material spike evidence missing: ${required}`);
+  ]) {
+    expect(exists(evidencePath(required)), `generated material spike evidence missing: ${required}`);
+  }
 
-  if (exists(relative('source-manifest.json'))) {
-    const manifest = readJson(relative('source-manifest.json'));
+  if (exists(evidencePath('gltfpack-source-head.txt'))) {
+    expect(read(evidencePath('gltfpack-source-head.txt')).trim() === EXPECTED_MESHOPT_COMMIT, 'generated evidence must prove exact meshoptimizer/gltfpack source commit');
+  }
+  if (exists(evidencePath('gltf-validator-version.txt'))) {
+    expect(read(evidencePath('gltf-validator-version.txt')).includes('2.0.0-dev.3.10'), 'generated evidence must prove exact Khronos validator version');
+  }
+  if (exists(evidencePath('gltf-validator-release.sha256'))) {
+    expect(/^[a-f0-9]{64}\s+/.test(read(evidencePath('gltf-validator-release.sha256')).trim()), 'generated evidence must record a valid SHA-256 for the Khronos validator release archive');
+  }
+
+  if (exists(evidencePath('source-manifest.json'))) {
+    const manifest = readJson(evidencePath('source-manifest.json'));
     expect(same(manifest.runtime?.versionTuple,[4,5,12]) && manifest.runtime?.background === true, 'spike evidence must come from Blender 4.5.12 headless');
     expect(manifest.runtime?.unitSystem === 'METRIC' && manifest.runtime?.scaleLength === 1, 'spike evidence must remain metre-scale');
     expect(manifest.sourceAuthority?.topology === 'H3' && manifest.sourceAuthority?.layoutFingerprint === EXPECTED_LAYOUT, 'generated bay must retain H3 authority');
@@ -150,10 +193,16 @@ if (evidenceRoot) {
     expect(manifest.textureSemantics?.lightMap?.sourceColorSpace === 'Non-Color' && manifest.textureSemantics?.lightMap?.uvChannel === 1, 'generated lightmap must be linear source data bound to UV1');
   }
 
-  for (const name of ['raw-validator.json','optimized-validator.json']) if (exists(relative(name))) expect(readJson(relative(name)).issues?.numErrors === 0, `${name} must have zero Khronos validation errors`);
+  for (const name of ['raw-validator.json','optimized-validator.json']) {
+    if (exists(evidencePath(name))) {
+      const report = readJson(evidencePath(name));
+      expect(report.issues?.numErrors === 0, `${name} must have zero Khronos validation errors`);
+      expect(report._hallWitness?.validatorBinary === 'gltf_validator' && report._hallWitness?.exitStatus === 0, `${name} must be produced by the pinned Khronos native binary`);
+    }
+  }
 
-  if (exists(relative('asset-contract.json'))) {
-    const report = readJson(relative('asset-contract.json'));
+  if (exists(evidencePath('asset-contract.json'))) {
+    const report = readJson(evidencePath('asset-contract.json'));
     expect(report.status === 'passed', 'raw→optimized asset preservation contract must pass');
     expect(report.preservation?.nodeNamesAndExtras === true, 'optimizer must preserve required node names/extras');
     expect(report.preservation?.uv0AndUv1 === true, 'optimizer must preserve UV0 and UV1');
@@ -163,7 +212,7 @@ if (evidenceRoot) {
   }
 
   for (const candidate of CANDIDATES) {
-    const reportPath = relative(`${candidate}/browser-witness.json`);
+    const reportPath = evidencePath(`${candidate}/browser-witness.json`);
     if (!exists(reportPath)) continue;
     const report = readJson(reportPath);
     expect(report.strategy === candidate, `browser witness strategy mismatch for ${candidate}`);
@@ -178,9 +227,11 @@ if (evidenceRoot) {
     }
   }
 
-  if (exists(relative('sha256-manifest.json'))) {
-    const hashes = readJson(relative('sha256-manifest.json'));
-    for (const required of ['h3-material-spike.blend','h3-bay.raw.glb','h3-bay.optimized.glb','h3-bay-lightmap-uv1.png','asset-contract.json']) expect(typeof hashes.files?.[required] === 'string' && hashes.files[required].length === 64, `final SHA-256 manifest must bind ${required}`);
+  if (exists(evidencePath('sha256-manifest.json'))) {
+    const hashes = readJson(evidencePath('sha256-manifest.json'));
+    for (const required of ['h3-material-spike.blend','h3-bay.raw.glb','h3-bay.optimized.glb','h3-bay-lightmap-uv1.png','asset-contract.json','gltfpack-source-head.txt','gltf-validator-release.sha256']) {
+      expect(typeof hashes.files?.[required] === 'string' && hashes.files[required].length === 64, `final SHA-256 manifest must bind ${required}`);
+    }
   }
 }
 
@@ -189,4 +240,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Hall material/light/export spike source contract passed${evidenceRoot ? ' with generated evidence' : ''}: frozen H3/R1, bounded L0/L1 candidates, no production activation.`);
+console.log(`Hall material/light/export spike source contract passed${evidenceRoot ? ' with generated evidence' : ''}: frozen H3/R1, bounded L0/L1 candidates, native pinned glTF toolchain, no production activation.`);
