@@ -39,7 +39,7 @@
     "stoneMaterial": "MAT_STONE_PROOF",
     "stoneMetallicFactor": 0.0,
     "baseColor": {"file": "stone-basecolor.png", "colorSpace": "sRGB", "uvChannel": 0},
-    "normal": {"file": "stone-normal.png", "colorSpace": "Non-Color", "uvChannel": 0},
+    "normal": {"file": "stone-normal.png", "colorSpace": "Non-Color", "uvChannel": 0, "requiresTangentAttribute": true},
     "roughness": {"file": "stone-roughness.png", "colorSpace": "Non-Color", "uvChannel": 0},
     "lightmaps": {
       "filePattern": "lightmap-<node>.exr",
@@ -51,6 +51,7 @@
     "forbidden": [
       "stone-metallic-cheat",
       "blanket-srgb-data-textures",
+      "generated-tangent-space-warning",
       "lightmap-as-no-colorspace-data",
       "bloom-dependent-look",
       "fog-dependent-look",
@@ -87,6 +88,7 @@
       "node-extras",
       "TEXCOORD_0",
       "TEXCOORD_1",
+      "TANGENT",
       "camera-node",
       "poetId-extra",
       "metric-scale"
@@ -96,8 +98,16 @@
     "surface": "qa-only-vite-viewer",
     "productionRouteTouched": false,
     "modes": ["L0-minimal-runtime", "L1-external-lightmap"],
-    "requiredMetrics": ["load-complete", "draw-calls", "triangles", "textures", "programs", "raw-bytes", "optimized-bytes"],
-    "screenshots": ["L0-minimal-runtime.png", "L1-external-lightmap.png"]
+    "rawControl": {"asset": "raw", "mode": "L0-minimal-runtime"},
+    "optimizedControl": {"asset": "optimized", "mode": "L0-minimal-runtime"},
+    "optimizationVisualEquivalence": {
+      "sampleGrid": [64, 36],
+      "maximumMeanAbsoluteChannelDifference": 0.75,
+      "maximumChannelDifference": 8,
+      "maximumChangedSampleRatioAbove2": 0.05
+    },
+    "requiredMetrics": ["load-complete", "draw-calls", "triangles", "textures", "programs", "raw-bytes", "optimized-bytes", "pixel-sample"],
+    "screenshots": ["raw-L0-minimal-runtime.png", "optimized-L0-minimal-runtime.png", "optimized-L1-external-lightmap.png"]
   },
   "decision": {
     "approvedLightingStrategy": null,
