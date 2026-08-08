@@ -12,6 +12,7 @@ on:
       - 'docs/hall-v3/greybox-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/validate-hall-topology-selection.ts'
+      - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -24,6 +25,7 @@ on:
       - 'docs/hall-v3/greybox-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/validate-hall-topology-selection.ts'
+      - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'package.json'
   workflow_dispatch:
 
