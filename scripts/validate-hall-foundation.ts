@@ -43,17 +43,27 @@ const legacyHallDir = hallContract.legacy?.sourceDirectory ?? 'src/components/ha
 const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
 const MAX_RESOLVE_DEPTH = 12;
 
-type BindingEntry = { initializer: ts.Expression; scope: ts.Node };
+type BindingEntry = {
+  initializer: ts.Expression;
+  scope: ts.Node;
+};
 type BindingMap = Map<string, BindingEntry[]>;
-type ModuleReference = { specifier: string | null; kind: 'static' | 'dynamic' | 'require' };
+
+type ModuleReference = {
+  specifier: string | null;
+  kind: 'static' | 'dynamic' | 'require';
+};
 
 function sourceFiles(relativeDir: string): string[] {
   const absoluteDir = path.join(root, relativeDir);
   const files: string[] = [];
   for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
     const relativePath = path.posix.join(relativeDir, entry.name);
-    if (entry.isDirectory()) files.push(...sourceFiles(relativePath));
-    else if (/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) files.push(relativePath);
+    if (entry.isDirectory()) {
+      files.push(...sourceFiles(relativePath));
+      continue;
+    }
+    if (/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) files.push(relativePath);
   }
   return files;
 }
@@ -171,6 +181,7 @@ function validateDormantRouteDependencyGraph(entry: string) {
     for (const reference of moduleReferences(read(current), current)) {
       expect(reference.specifier !== null, `dormant Hall dependency graph must not contain unresolved ${reference.kind} imports: ${current}`);
       if (!reference.specifier) continue;
+
       expect(!isForbiddenThreeRuntime(reference.specifier), `dormant Hall dependency graph must not reach 3D runtime: ${current} -> ${reference.specifier}`);
       const resolved = resolveLocalSource(current, reference.specifier);
       if (!resolved) continue;
@@ -208,7 +219,7 @@ const packageManifest = JSON.parse(read('package.json')) as { scripts?: Record<s
 expect(hallContract.schemaVersion === 1, 'Hall v3 machine contract schemaVersion must remain 1');
 expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by TLP-HALL-001');
 expect(hallContract.productIssue === 369, 'Hall v3 machine contract must point to Product #369');
-expect(['foundation', 'referenceBible'].includes(hallContract.phase ?? ''), `Hall foundation invariant validator does not recognize phase: ${hallContract.phase ?? '<missing>'}`);
+expect(['foundation', 'referenceBible', 'metricGreybox'].includes(hallContract.phase ?? ''), `Hall foundation invariant validator does not recognize phase: ${hallContract.phase ?? '<missing>'}`);
 
 if (hallContract.phase === 'foundation') {
   expect(hallContract.gates?.foundation === 'active', 'foundation phase must keep foundation gate active');
@@ -221,6 +232,14 @@ if (hallContract.phase === 'referenceBible') {
   expect(hallContract.gates?.referenceBible === 'active', 'Reference Bible phase must mark referenceBible active');
   for (const gate of ['metricGreybox', 'cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
     expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while Reference Bible is active: ${gate}`);
+  }
+}
+if (hallContract.phase === 'metricGreybox') {
+  expect(hallContract.gates?.foundation === 'completed', 'metricGreybox phase must preserve completed foundation status');
+  expect(hallContract.gates?.referenceBible === 'completed', 'metricGreybox phase must preserve completed Reference Bible status');
+  expect(hallContract.gates?.metricGreybox === 'active', 'metricGreybox phase must mark metricGreybox active');
+  for (const gate of ['cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
+    expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while metricGreybox is active: ${gate}`);
   }
 }
 

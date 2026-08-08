@@ -1,6 +1,6 @@
 # Hall v3 — Reference Bible
 
-Status: **Gate 1 / active** under `TLP-HALL-001`.
+Status: **Gate 1 / completed** under `TLP-HALL-001`. The current Hall phase is metric greybox; this document remains the completed evidence layer that every candidate must inherit.
 
 This document converts museum research into design evidence. It is not a mood board and it does not approve a building form. The machine-readable counterpart is [`reference-bible.json`](reference-bible.json); if prose and machine state disagree, the gate fails rather than silently choosing one.
 
@@ -269,4 +269,4 @@ The presence of a file under `src` is not evidence that Hall v3 should inherit i
 
 ## Reference Bible exit condition
 
-This gate can complete only when the companion [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md) and machine data define a fair neutral comparison between multiple spatial hypotheses. Completion still does not approve geometry; it only authorizes the next transaction to activate `metricGreybox`.
+Gate 1 is completed. Its evidence remains binding during metric greybox; completion authorizes candidate modelling but does **not** approve any geometry, topology, camera rig, material system or web runtime.

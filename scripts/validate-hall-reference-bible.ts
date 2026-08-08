@@ -82,24 +82,29 @@ const ci = read('.github/workflows/ci.yml');
 const projectContracts = read('.github/workflows/project-contracts.yml');
 
 expect(contract.laneId === 'TLP-HALL-001', 'Hall contract must remain owned by TLP-HALL-001');
-expect(contract.phase === 'referenceBible', 'Hall machine phase must be referenceBible in this wave');
-expect(contract.gates?.foundation === 'completed', 'foundation gate must be completed before Reference Bible is active');
-expect(contract.gates?.referenceBible === 'active', 'referenceBible gate must be active');
-for (const gate of [
-  'metricGreybox',
-  'cameraApproval',
-  'materialLightingExportSpike',
-  'pushkinVerticalSlice',
-  'offlineVisualApproval',
-  'webVerticalSlice',
-  'fullMuseumScaleOut',
-]) {
-  expect(contract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked during Reference Bible: ${gate}`);
+expect(['referenceBible', 'metricGreybox'].includes(contract.phase ?? ''), 'Reference Bible invariants currently support referenceBible or metricGreybox phase');
+expect(contract.gates?.foundation === 'completed', 'foundation gate must remain completed once Reference Bible exists');
+if (contract.phase === 'referenceBible') {
+  expect(contract.gates?.referenceBible === 'active', 'referenceBible gate must be active while Reference Bible is current phase');
+  expect(contract.gates?.metricGreybox === 'blocked', 'metricGreybox must remain blocked while Reference Bible is current phase');
+} else if (contract.phase === 'metricGreybox') {
+  expect(contract.gates?.referenceBible === 'completed', 'Reference Bible must be completed before metricGreybox is active');
+  expect(contract.gates?.metricGreybox === 'active', 'metricGreybox gate must be active in metricGreybox phase');
+  for (const gate of [
+    'cameraApproval',
+    'materialLightingExportSpike',
+    'pushkinVerticalSlice',
+    'offlineVisualApproval',
+    'webVerticalSlice',
+    'fullMuseumScaleOut',
+  ]) {
+    expect(contract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked during metric greybox: ${gate}`);
+  }
 }
-expect(contract.productionRoute?.mode === 'placeholder', '/hall must remain a placeholder during Reference Bible');
-expect(contract.productionRoute?.allowLegacyHallImports === false, 'Reference Bible must not reactivate legacy Hall imports');
-expect(contract.productionRoute?.allowThreeRuntimeImports === false, 'Reference Bible must not activate Three/R3F runtime');
-expect(contract.productionRoute?.allowUnapprovedConceptArt === false, 'Reference Bible must not publish unapproved concept art');
+expect(contract.productionRoute?.mode === 'placeholder', '/hall must remain a placeholder while Reference Bible evidence is pre-runtime authority');
+expect(contract.productionRoute?.allowLegacyHallImports === false, 'Reference Bible invariants must not reactivate legacy Hall imports');
+expect(contract.productionRoute?.allowThreeRuntimeImports === false, 'Reference Bible invariants must not activate Three/R3F runtime');
+expect(contract.productionRoute?.allowUnapprovedConceptArt === false, 'Reference Bible invariants must not publish unapproved concept art');
 
 const requiredAuthorities = {
   referenceBible: 'docs/hall-v3/REFERENCE_BIBLE.md',
@@ -113,8 +118,11 @@ for (const [key, expectedPath] of Object.entries(requiredAuthorities)) {
 
 expect(bible.schemaVersion === 1, 'Reference Bible schemaVersion must be 1');
 expect(bible.laneId === contract.laneId, 'Reference Bible lane must match Hall contract');
-expect(bible.phase === 'referenceBible', 'Reference Bible data phase must be referenceBible');
-expect(bible.status === 'active', 'Reference Bible data status must be active');
+expect(bible.phase === 'referenceBible', 'Reference Bible data must retain referenceBible provenance');
+expect(
+  bible.status === (contract.phase === 'referenceBible' ? 'active' : 'completed'),
+  `Reference Bible status must match current Hall phase: ${contract.phase}`,
+);
 
 const allowedTags = new Set(bible.allowedProblemTags ?? []);
 const requiredProblems = bible.requiredPrimaryProblems ?? [];
@@ -166,7 +174,7 @@ expect(metrics.sensitivePaperGuidance?.hardProductionSetpoint === false, '50 lux
 
 const hypotheses = bible.spatialHypotheses ?? [];
 const hypothesisIds = hypotheses.map((hypothesis) => hypothesis.id);
-expect(hypotheses.length === 3, 'Reference Bible must compare exactly three initial hypotheses before greybox');
+expect(hypotheses.length === 3, 'Reference Bible must retain exactly three initial hypotheses for greybox comparison');
 expect(JSON.stringify(hypothesisIds) === JSON.stringify(['H1', 'H2', 'H3']), 'initial spatial hypotheses must remain H1, H2, H3 in comparison order');
 for (const hypothesis of hypotheses) {
   expect((hypothesis.name?.length ?? 0) >= 10, `${hypothesis.id ?? 'hypothesis'} must have a descriptive name`);
@@ -187,8 +195,9 @@ expect(bible.dataAuthority?.legacyVisualConceptNotAuthority?.includes('src/data/
 expect(bible.dataAuthority?.uiOnlyUnlessApproved?.includes('src/data/epochColors.ts') === true, 'epochColors must remain UI-only unless explicitly approved');
 
 expect(bible.toolingCandidate?.name === 'Blender', 'Reference Bible tooling candidate must remain Blender');
+expect(bible.toolingCandidate?.version === '4.5 LTS', 'Reference Bible must retain the originally evaluated Blender LTS series rather than becoming the exact runtime pin');
 expect(bible.toolingCandidate?.headlessPythonCandidate === true, 'Blender tooling candidate must retain headless Python capability');
-expect(bible.toolingCandidate?.permanentAuthority === false, 'Reference Bible must not prematurely make a Blender version permanent authority');
+expect(bible.toolingCandidate?.permanentAuthority === false, 'Reference Bible must not become permanent tooling authority');
 
 for (const [decision, value] of Object.entries(bible.decisions ?? {})) {
   expect(value === null, `Reference Bible must not pre-approve ${decision}`);
@@ -203,7 +212,7 @@ for (const requiredText of ['H1', 'H2', 'H3', '0.915 m', '1.525 m', '0.76 × 1.2
 
 for (const forbiddenExtension of ['.blend', '.glb', '.gltf']) {
   const hallFiles = fs.readdirSync(path.join(root, 'docs/hall-v3'));
-  expect(!hallFiles.some((name) => name.toLowerCase().endsWith(forbiddenExtension)), `Reference Bible phase must not smuggle geometry/runtime assets into docs/hall-v3: ${forbiddenExtension}`);
+  expect(!hallFiles.some((name) => name.toLowerCase().endsWith(forbiddenExtension)), `Hall contract documents must not contain generated geometry/runtime assets: ${forbiddenExtension}`);
 }
 
 const scripts = packageManifest.scripts ?? {};
@@ -218,4 +227,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Hall v3 Reference Bible validation passed: ${sources.length} annotated sources, H1/H2/H3 neutral comparison, metric accessibility witnesses, camera/mobile evidence, legacy-data boundaries and blocked downstream gates are enforced.`);
+console.log(`Hall v3 Reference Bible validation passed as ${bible.status}: ${sources.length} annotated sources, H1/H2/H3 neutral comparison, metric accessibility witnesses, camera/mobile evidence and legacy-data boundaries remain enforced.`);

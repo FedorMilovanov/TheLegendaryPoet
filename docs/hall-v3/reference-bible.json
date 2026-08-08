@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "phase": "referenceBible",
-  "status": "active",
+  "status": "completed",
   "allowedProblemTags": [
     "circulation",
     "sightline",

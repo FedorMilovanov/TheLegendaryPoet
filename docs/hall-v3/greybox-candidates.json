@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "phase": "metricGreybox",
+  "status": "active",
+  "approvedCandidate": null,
+  "cameraSet": {
+    "status": "common-set-required-not-yet-approved",
+    "lensCandidatesMm": [],
+    "approvedRig": null
+  },
+  "equalComparison": {
+    "unit": "metres",
+    "neutralMaterialOnly": true,
+    "ornamentAllowed": false,
+    "bloomAllowed": false,
+    "fogAllowed": false,
+    "particlesAllowed": false,
+    "goldGlowAllowed": false,
+    "fpsRequired": false,
+    "commonHumanProxyHeightMetres": 1.75,
+    "minimumClearances": {
+      "routeOneWay": 0.915,
+      "routeTwoWayRecommended": 1.525,
+      "viewingWidth": 0.76,
+      "viewingDepth": 1.22,
+      "headroom": 2.03
+    },
+    "requiredCameraWitnesses": [
+      "entryReveal",
+      "orientation",
+      "firstTransition",
+      "pushkinApproach",
+      "pushkinViewing",
+      "reverseExit"
+    ],
+    "mobileCropMinimum": 3,
+    "requiredOutputs": [
+      "dimensionedPlan",
+      "twoSectionsMinimum",
+      "entryRevealCamera",
+      "orientationCamera",
+      "firstTransitionCamera",
+      "pushkinApproachCamera",
+      "pushkinViewingCamera",
+      "reverseExitCamera",
+      "threePortraitMobileCropsMinimum",
+      "topDownSightlineOcclusionDiagram",
+      "baselineRouteLengthAndForcedTurnCount",
+      "visibleNextDestinationNotes"
+    ]
+  },
+  "automaticRejectionRules": [
+    "strongest-view-needs-decoration-or-effects",
+    "route-exposes-unfinished-backs-or-sides",
+    "pushkin-reads-like-card-on-wall",
+    "equivalent-bays-repeat-without-hierarchy",
+    "route-needs-fps-or-free-look",
+    "wayfinding-needs-large-hud-labels",
+    "mobile-framing-requires-geometry-rebuild",
+    "central-or-transition-space-is-spectacle-only",
+    "candidate-survives-by-sunk-cost"
+  ],
+  "candidates": [
+    {
+      "id": "H1",
+      "name": "orientation court plus chronological branches",
+      "status": "unbuilt",
+      "sourceBlend": null,
+      "evidenceManifest": null,
+      "routeLengthMetres": null,
+      "forcedTurnCount": null,
+      "rejected": false,
+      "rejectionReasons": []
+    },
+    {
+      "id": "H2",
+      "name": "directed chronological promenade plus focus bays",
+      "status": "unbuilt",
+      "sourceBlend": null,
+      "evidenceManifest": null,
+      "routeLengthMetres": null,
+      "forcedTurnCount": null,
+      "rejected": false,
+      "rejectionReasons": []
+    },
+    {
+      "id": "H3",
+      "name": "asymmetric orientation plus diagonal or curved trajectory and side focus rooms",
+      "status": "unbuilt",
+      "sourceBlend": null,
+      "evidenceManifest": null,
+      "routeLengthMetres": null,
+      "forcedTurnCount": null,
+      "rejected": false,
+      "rejectionReasons": []
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # Hall v3 — Spatial Brief for the Metric Greybox Shootout
 
-Status: **Reference Bible / active**. This brief defines what a later neutral Blender greybox must prove. It does not activate `metricGreybox` and it does not approve a building form.
+Status: **Reference Bible / completed; Metric Greybox / active**. This brief defines what the neutral Blender greyboxes must prove. It does not approve a building form or camera winner.
 
 ## Design question
 
 Find a spatial system that can carry literary chronology, a strong first reveal, clear onward orientation, intimate object-led poet encounters and mobile/accessible viewing **without** depending on free-look navigation, giant HUD labels, ornament or post-processing.
 
-The three starting hypotheses below must be compared at the same neutral quality. A better fourth option is allowed if it is evaluated against the same evidence package.
+The three starting hypotheses below must be compared at the same neutral quality. A better fourth option is allowed only if it is evaluated against the same evidence package in a later explicit contract update; the current machine candidate set remains H1/H2/H3.
 
 ## Hard evidence dimensions
 
@@ -113,9 +113,9 @@ Each candidate must eventually produce:
 11. approximate baseline route length and forced-turn count;
 12. visible-next-destination note at every certified camera.
 
-## Camera contract for the next phase
+## Camera contract for the current greybox phase
 
-The Reference Bible does not approve a camera rig. It only fixes the witness positions that every candidate must support:
+Metric greybox still does not approve a camera rig. It fixes the witness positions that every candidate must support:
 
 - `entryReveal`
 - `orientation`
@@ -124,7 +124,7 @@ The Reference Bible does not approve a camera rig. It only fixes the witness pos
 - `pushkinViewing`
 - `reverseExit`
 
-Before Camera Approval, each candidate uses the same small lens/FOV set. Do not tune a unique flattering lens for one topology.
+Before Camera Approval, each candidate uses the same small lens/FOV set once that candidate set is explicitly selected. Do not tune a unique flattering lens for one topology.
 
 ## Automatic rejection before materials
 
@@ -158,8 +158,8 @@ This brief does not approve:
 
 ## Tooling boundary
 
-Official Blender 4.5 LTS headless/Python support is a **candidate** reproducible production environment for the later greybox tooling spike. The project does not yet make Blender 4.5 LTS permanent authority, and absence of Blender in an assistant container is never permission to author architecture in JSX.
+The active tooling/preflight transaction pins Blender 4.5.12 from the official 4.5 LTS release archive and proves it headlessly in CI with the vendor checksum and a metre-scale save/reopen smoke scene. That exact pin is current greybox tooling authority, not permanent project doctrine; a later material/export gate may re-evaluate it explicitly. Absence of Blender in an assistant container is never permission to author architecture in JSX.
 
 ## Gate exit
 
-Reference Bible may be marked complete after this brief, the annotated reference set and the machine contract are exact-head validated and merged. The **next separate transaction** may then activate `metricGreybox`. No geometry is authorized by this document alone.
+Reference Bible is completed and metric greybox is active. Gate 2 completes only after comparable H1/H2/H3 neutral evidence exists and one candidate is selected or all are rejected with recorded reasons. The current tooling/preflight transaction alone does not complete Gate 2.
