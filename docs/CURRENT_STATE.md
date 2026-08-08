@@ -15,6 +15,7 @@ This file is the source-repository entry point for the **current architecture**.
 - Brand runtime: `src/components/SpectralBrandMark.tsx`; approved source parts live in `qa/reference/approved-brand/` and are materialized by `scripts/materialize-brand-art.mjs`.
 - Fonts are self-hosted WOFF2 assets under `src/assets/fonts/`.
 - Community reads are target-scoped and aggregate-backed; generic application startup does not hydrate a public ratings/comments corpus.
+- Hall v3 foundation authority: `docs/HALL_V3_FOUNDATION.md`. While `TLP-HALL-001` is open, `/hall` remains a lightweight placeholder and `src/components/hall/*` is legacy/non-authoritative evidence that production routes must not import.
 - Steady-state remote source refs are intentionally limited to `main` plus `archive/deep-research-local-images-20260724`, the exact preserved head of the retired deep research branch. Temporary one-owner issue/repair branches may exist while their bounded lane is active; they are not durable source authority and must be removed after closure. The archive ref is evidence-only and is never a production merge candidate.
 
 The machine-readable counterpart is `docs/project-contract.json`; `node scripts/validate-project-contracts.mjs` blocks drift between documentation, package/lock identity, workflows, live paths and registered open architecture lanes.
@@ -33,16 +34,20 @@ The exact evidence remains in AuditRepo, but the current source tree enforces th
 8. **Forensic branch retirement.** Temporary transport refs, superseded implementation refs, old Arena refs and the deeply diverged work ref were retired only after exact successor mapping, byte-identical evidence archival, selective current-head extraction, rights-safe path classification and direct post-deletion branch inventory. The intentional archive ref preserves the old research history without restoring obsolete runtime or executable workflows.
 9. **Single route/runtime truth.** Router elements, lazy page ownership, explicit redirects, sitemap membership, route QA inventory and per-route budgets derive from one machine contract. Unknown article ids reach NotFound, every SPA pathname transition owns focus after settlement, invalid essay structure fails validation instead of being repaired by the renderer, and archive removals expose honest mutation outcomes.
 10. **Canonical poet source authority.** All ten published poet records own their portrait and conclusion prose directly in their canonical source modules. The catalog preserves direct object identity, and permanent validation rejects hidden publication-time editorial rewriting or duplicate ownership of those fields.
+11. **Hall v3 starts outside the old runtime.** The current Hall lane treats the retired R3F prototype as evidence only. Architecture authority begins with annotated references and a metric DCC greybox; camera, materials, lighting, rights, optimization and a Pushkin vertical slice must be approved before a new immersive runtime can become production authority.
 
 ## Current quality gates
 
 The dependency-free `Project contracts` workflow runs project-contract, reader-certification and UTC-day validators on every PR and `main` push. `npm run check` continues to validate content, brand, app shell, interaction runtime, routes, archive behavior and TypeScript; production build, prerender and browser workflows remain separate final gates.
 
+While `TLP-HALL-001` is open, the interaction-runtime chain includes a Hall foundation validator that protects the lightweight `/hall` boundary and blocks accidental imports from the retired scene rather than preserving Hall-v2 FPS/audio/dust behavior as architecture truth.
+
 ## Open architecture lanes
 
-There are currently no registered open architecture lanes. Any future lane must receive a canonical `TLP-*` ID in this section and in `docs/project-contract.json`; prose-only or anonymous debt entries are forbidden. AuditRepo remains the authority for exact status transitions and production evidence.
+There is currently one registered open architecture lane. Registration means the question is active and governed; it does not claim the final architecture or implementation is approved. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
+- `TLP-HALL-001` — Hall v3 foundation: keep `/hall` lightweight, retire Hall-v2 runtime authority, and require annotated references → metric greybox → camera/material/lighting/export gates → Pushkin vertical slice before any new immersive runtime.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material
