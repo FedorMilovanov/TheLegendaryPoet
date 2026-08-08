@@ -33,6 +33,34 @@ const ids = ['H1', 'H2', 'H3'];
 const cameras = ['entryReveal', 'orientation', 'firstTransition', 'pushkinApproach', 'pushkinViewing', 'reverseExit'];
 const mobile = ['entryReveal', 'pushkinApproach', 'pushkinViewing'];
 
+type Point2 = [number, number];
+const EPSILON = 1e-9;
+const point2 = (value: number[]): Point2 => [Number(value[0]), Number(value[1])];
+const orient = (a: Point2, b: Point2, c: Point2) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+const within = (value: number, a: number, b: number) => value >= Math.min(a, b) - EPSILON && value <= Math.max(a, b) + EPSILON;
+const onSegment = (a: Point2, b: Point2, p: Point2) => Math.abs(orient(a, b, p)) <= EPSILON && within(p[0], a[0], b[0]) && within(p[1], a[1], b[1]);
+function segmentsIntersect(a: Point2, b: Point2, c: Point2, d: Point2) {
+  const o1 = orient(a, b, c);
+  const o2 = orient(a, b, d);
+  const o3 = orient(c, d, a);
+  const o4 = orient(c, d, b);
+  if (((o1 > EPSILON && o2 < -EPSILON) || (o1 < -EPSILON && o2 > EPSILON))
+      && ((o3 > EPSILON && o4 < -EPSILON) || (o3 < -EPSILON && o4 > EPSILON))) return true;
+  return (Math.abs(o1) <= EPSILON && onSegment(a, b, c))
+    || (Math.abs(o2) <= EPSILON && onSegment(a, b, d))
+    || (Math.abs(o3) <= EPSILON && onSegment(c, d, a))
+    || (Math.abs(o4) <= EPSILON && onSegment(c, d, b));
+}
+function crossingWalls(from: number[], to: number[], walls: number[][]) {
+  const a = point2(from);
+  const b = point2(to);
+  const hits: number[] = [];
+  walls.forEach((wall, index) => {
+    if (segmentsIntersect(a, b, [Number(wall[0]), Number(wall[1])], [Number(wall[2]), Number(wall[3])])) hits.push(index + 1);
+  });
+  return hits;
+}
+
 expect(contract.laneId === 'TLP-HALL-001', 'candidate evidence must remain owned by TLP-HALL-001');
 expect(contract.phase === 'metricGreybox', 'candidate authoring must remain inside metricGreybox phase');
 expect(contract.gates?.foundation === 'completed', 'foundation must remain completed');
@@ -89,12 +117,20 @@ for (const candidate of layoutCandidates) {
   expect(candidate.viewingClearance?.size?.[0] >= 0.76 && candidate.viewingClearance?.size?.[1] >= 1.22, `${candidate.id}: Pushkin viewing clearance source must meet inherited minimum dimensions`);
   expect(candidate.pushkin?.anchor && (candidate.pushkin?.documentCases?.length ?? 0) === 2, `${candidate.id}: must use the same Pushkin anchor + two document-case proxy grammar`);
   expect(JSON.stringify(Object.keys(candidate.cameras ?? {})) === JSON.stringify(cameras), `${candidate.id}: must define the exact six common camera witnesses in order`);
+  for (let index = 0; index < (candidate.route?.length ?? 0) - 1; index += 1) {
+    const hits = crossingWalls(candidate.route[index], candidate.route[index + 1], candidate.walls ?? []);
+    expect(hits.length === 0, `${candidate.id}: baseline route segment ${index + 1} crosses wall segments ${hits.join(',')}`);
+  }
   for (const cameraId of cameras) {
     const camera = candidate.cameras?.[cameraId];
     expect(Array.isArray(camera?.position) && camera.position.length === 3, `${candidate.id}/${cameraId}: camera position must be 3D`);
     expect(Array.isArray(camera?.target) && camera.target.length === 3, `${candidate.id}/${cameraId}: camera target must be 3D`);
     expect(Array.isArray(camera?.nextDestination) && camera.nextDestination.length === 3, `${candidate.id}/${cameraId}: next-destination witness must be 3D`);
     expect((camera?.note?.length ?? 0) >= 5, `${candidate.id}/${cameraId}: camera witness must explain visible destination`);
+    if (Array.isArray(camera?.position) && Array.isArray(camera?.nextDestination)) {
+      const hits = crossingWalls(camera.position, camera.nextDestination, candidate.walls ?? []);
+      expect(hits.length === 0, `${candidate.id}/${cameraId}: certified sightline crosses wall segments ${hits.join(',')}`);
+    }
   }
   const fingerprint = sha256(JSON.stringify({floorPolygon:candidate.floorPolygon,walls:candidate.walls,route:candidate.route,ceilingZones:candidate.ceilingZones}));
   fingerprints.add(fingerprint);
