@@ -27,12 +27,13 @@ const packageManifest = JSON.parse(read('package.json')) as {
 };
 
 const hallRoute = routeContract.routes?.find((route) => route.id === 'hall');
+const hallBudgetBytes = hallRoute?.budgetBytes;
 expect(Boolean(hallRoute), 'route contract must retain one hall route');
 expect(hallRoute?.path === '/hall', 'hall route path must remain /hall');
 expect(hallRoute?.page === 'HallPage', 'hall route must remain owned by HallPage');
 expect(hallRoute?.module === hallPagePath, 'hall route module must remain the lightweight HallPage shell');
 expect(
-  Number.isInteger(hallRoute?.budgetBytes) && Number(hallRoute?.budgetBytes) <= 8_000,
+  typeof hallBudgetBytes === 'number' && Number.isInteger(hallBudgetBytes) && hallBudgetBytes <= 8_000,
   'dormant Hall shell must retain the <= 8000-byte route budget',
 );
 
