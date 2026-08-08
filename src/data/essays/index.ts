@@ -98,6 +98,36 @@ const yeseninPartTwoGrzhebinCoverSource: EssaySource = {
   note: 'Точный музейный экземпляр. Публичная delivery-копия Wikimedia Commons загружена непосредственно из этой карточки ГИМ и помечена Public Domain / free of known restrictions.',
 };
 
+const yeseninPartTwoP75Sources: EssaySource[] = [
+  {
+    id: 'yes2-pss-do-svidanya-commentary',
+    title: 'ПСС, т. 4: комментарий к «До свиданья, друг мой, до свиданья…»',
+    url: 'https://feb-web.ru/feb/esenin/texts/e74/e74-323-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    year: 1996,
+    note: 'Item-level академический комментарий к последнему стихотворению: первые публикации, автограф, экспертизы и границы гипотез об адресате. Не превращает стихотворение в юридически доказанную предсмертную записку.',
+  },
+  {
+    id: 'yes2-nasedkin-posledniy-god',
+    title: 'В. Ф. Наседкин. «Последний год Есенина»',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-303-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / «С. А. Есенин в воспоминаниях современников», т. 2',
+    year: 1986,
+    note: 'Item-level мемуарное свидетельство о посещении Есенина в клинике 20 декабря 1925 года. Используется для самого визита и содержания воспоминания; не заменяет Летопись как хронологическую authority и не является медицинским диагнозом.',
+  },
+  {
+    id: 'yes2-ivnev-o-sergee-esenine',
+    title: 'Рюрик Ивнев. «О Сергее Есенине»',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev1/ev1-324-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / «С. А. Есенин в воспоминаниях современников», т. 1',
+    year: 1986,
+    note: 'Item-level мемуар Рюрика Ивнева, участника имажинистского круга. Используется для последующей жизни литературной среды после публичного разрыва; датированные заявления о роспуске группы остаются за документами ПСС.',
+  },
+];
+
 const yeseninPartTwoChaginCommonsUrl =
   'https://commons.wikimedia.org/wiki/File:Chagin_and_Esenin_1924.jpg';
 const yeseninPartTwoGrzhebinCommonsUrl =
@@ -116,6 +146,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
         return url ? { ...source, url } : { ...source, url: undefined };
       }),
     yeseninPartTwoGrzhebinCoverSource,
+    ...yeseninPartTwoP75Sources,
     {
       id: 'yes2-publication-ledger',
       title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -126,6 +157,37 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     },
   ],
   blocks: yeseninPartTwoPublic.blocks.map((block) => {
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Эта короткая газетная дуэль хорошо показывает')
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-pss-declarations-vol7k1',
+          'yes2-byt-i-iskusstvo-1921',
+          'yes2-ivnev-o-sergee-esenine',
+        ],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('20 декабря Василий Наседкин и Екатерина Есенина посетили поэта')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-letopis-t5-k1', 'yes2-nasedkin-posledniy-god'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Последнее стихотворение остаётся стихотворением')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-lab-letter-1992', 'yes2-pss-do-svidanya-commentary'],
+      };
+    }
     if (block.type === 'image' && block.sourceUrl === yeseninPartTwoChaginCommonsUrl) {
       return {
         ...block,
