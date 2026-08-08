@@ -52,7 +52,7 @@
     "validate:hall-camera-approval": "tsx scripts/validate-hall-camera-approval.ts",
     "validate:hall-camera-decision": "tsx scripts/validate-hall-camera-decision.ts",
     "validate:hall-post-camera-authority": "tsx scripts/validate-hall-post-camera-authority.ts",
-    "validate:hall-material-spike": "tsx scripts/validate-hall-material-spike.ts",
+    "validate:hall-material-spike": "tsx scripts/validate-hall-material-spike.ts && tsx scripts/validate-hall-material-transport.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
