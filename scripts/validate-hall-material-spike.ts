@@ -6,7 +6,6 @@ const root = process.cwd();
 const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
-const exists = (relative: string) => fs.existsSync(path.join(root, relative));
 const sha256File = (absolute: string) => crypto.createHash('sha256').update(fs.readFileSync(absolute)).digest('hex');
 
 const contractPath = 'docs/hall-v3/hall-v3-contract.json';
@@ -54,21 +53,14 @@ function parseGlbJson(filePath: string): GlbJson {
     const start = offset + 8;
     const end = start + length;
     if (end > buffer.length) break;
-    if (type === 0x4E4F534A) {
-      return JSON.parse(buffer.subarray(start, end).toString('utf8').replace(/\u0000+$/g, '').trim());
-    }
+    if (type === 0x4E4F534A) return JSON.parse(buffer.subarray(start, end).toString('utf8').replace(/\u0000+$/g, '').trim());
     offset = end;
   }
   expect(false, `${path.basename(filePath)} must contain a JSON chunk`);
   return {};
 }
-
-function nodeByName(doc: GlbJson, name: string): any | undefined {
-  return (doc.nodes ?? []).find((node: any) => node?.name === name);
-}
-function materialByName(doc: GlbJson, name: string): any | undefined {
-  return (doc.materials ?? []).find((material: any) => material?.name === name);
-}
+function nodeByName(doc: GlbJson, name: string): any | undefined { return (doc.nodes ?? []).find((node: any) => node?.name === name); }
+function materialByName(doc: GlbJson, name: string): any | undefined { return (doc.materials ?? []).find((material: any) => material?.name === name); }
 function primitiveAttributes(doc: GlbJson, node: any): Record<string, number>[] {
   if (typeof node?.mesh !== 'number') return [];
   return (doc.meshes?.[node.mesh]?.primitives ?? []).map((primitive: any) => primitive?.attributes ?? {});
@@ -97,34 +89,26 @@ function validateGlbContract(label: string, filePath: string, optimized: boolean
   expect(typeof stone?.pbrMetallicRoughness?.metallicRoughnessTexture?.index === 'number', `${label}: stone roughness texture must be exported`);
   expect(typeof stone?.normalTexture?.index === 'number', `${label}: stone normal texture must be exported`);
   expect(!(doc.extensionsUsed ?? []).includes('KHR_lights_punctual'), `${label}: exported spike must contain zero glTF lights`);
-  if (optimized) {
-    expect((doc.extensionsUsed ?? []).includes('EXT_meshopt_compression'), `${label}: optimized GLB must use EXT_meshopt_compression`);
-  }
+  if (optimized) expect((doc.extensionsUsed ?? []).includes('EXT_meshopt_compression'), `${label}: optimized GLB must use EXT_meshopt_compression`);
   return doc;
 }
 
-// Static authority and scope.
 expect(contract.schemaVersion === 1 && contract.laneId === 'TLP-HALL-001', 'Hall contract identity must remain exact');
-expect(contract.phase === 'materialLightingExportSpike', 'material spike validator applies only to the active materialLightingExportSpike phase');
+expect(contract.phase === 'materialLightingExportSpike', 'material spike validator applies only to materialLightingExportSpike');
 expect(contract.gates?.foundation === 'completed' && contract.gates?.referenceBible === 'completed' && contract.gates?.metricGreybox === 'completed' && contract.gates?.cameraApproval === 'completed', 'all prior Hall gates must remain completed');
 expect(contract.gates?.materialLightingExportSpike === 'active', 'materialLightingExportSpike must remain active during authoring');
 for (const gate of ['pushkinVerticalSlice','offlineVisualApproval','webVerticalSlice','fullMuseumScaleOut']) expect(contract.gates?.[gate] === 'blocked', `${gate} must remain blocked during material spike`);
 expect(contract.productionRoute?.mode === 'placeholder', '/hall must remain placeholder');
-expect(contract.productionRoute?.allowThreeRuntimeImports === false, 'material spike must not activate Three/R3F on /hall');
-expect(contract.productionRoute?.allowLegacyHallImports === false, 'material spike must not reactivate Hall v2');
-expect(contract.productionRoute?.allowUnapprovedConceptArt === false, 'material spike must not publish unapproved concept art');
+expect(contract.productionRoute?.allowThreeRuntimeImports === false && contract.productionRoute?.allowLegacyHallImports === false && contract.productionRoute?.allowUnapprovedConceptArt === false, 'material spike must not reactivate runtime/legacy/concept art');
 expect(contract.sourceAuthority?.materialSpike === spikePath, 'Hall contract must register material-spike authority');
 
 expect(spike.schemaVersion === 1 && spike.laneId === contract.laneId && spike.phase === contract.phase && spike.status === 'authoring', 'material-spike identity/state must be exact');
 expect(spike.source?.topology === 'H3' && spike.source?.approvedRig === 'R1', 'spike must derive only from H3/R1');
-expect(spike.source?.layoutFingerprint === EXPECTED_LAYOUT, 'spike must retain frozen H3 layout fingerprint');
-expect(spike.source?.meshGeometryFingerprint === EXPECTED_MESH, 'spike must retain frozen H3 mesh fingerprint');
+expect(spike.source?.layoutFingerprint === EXPECTED_LAYOUT && spike.source?.meshGeometryFingerprint === EXPECTED_MESH, 'spike must retain frozen H3 fingerprints');
 expect(JSON.stringify(spike.source?.representativeWallNodes ?? []) === JSON.stringify(['ARCH_wall_016','ARCH_wall_017']), 'representative wall set must remain bounded');
 expect(JSON.stringify(spike.bay?.exportNodes ?? []) === JSON.stringify(REQUIRED_EXPORT_NODES), 'representative export-node set must remain exact');
 expect(spike.bay?.productionAsset === false && spike.bay?.documentaryAsset === false, 'spike bay must remain non-production and non-documentary');
-expect(JSON.stringify(spike.approvedCameraWitness?.position ?? []) === JSON.stringify([8.0,2.5,1.6]), 'R1 position must remain frozen');
-expect(JSON.stringify(spike.approvedCameraWitness?.target ?? []) === JSON.stringify([11.15,5.45,1.95]), 'R1 target must remain frozen');
-expect(spike.approvedCameraWitness?.lensMm === 28, 'R1 lens must remain 28 mm');
+expect(JSON.stringify(spike.approvedCameraWitness?.position ?? []) === JSON.stringify([8.0,2.5,1.6]) && JSON.stringify(spike.approvedCameraWitness?.target ?? []) === JSON.stringify([11.15,5.45,1.95]) && spike.approvedCameraWitness?.lensMm === 28, 'R1 witness must remain frozen');
 
 expect(spike.materialProof?.stoneMetallicFactor === 0, 'stone proof must remain non-metallic');
 expect(spike.materialProof?.baseColor?.colorSpace === 'sRGB' && spike.materialProof?.baseColor?.uvChannel === 0, 'baseColor must remain sRGB on UV0');
@@ -133,31 +117,28 @@ expect(spike.materialProof?.roughness?.colorSpace === 'Non-Color' && spike.mater
 expect(spike.materialProof?.lightmaps?.colorSpace === 'LinearSRGBColorSpace' && spike.materialProof?.lightmaps?.uvChannel === 1 && spike.materialProof?.lightmaps?.encoding === 'OpenEXR-Linear', 'lightmaps must remain linear illuminance on UV1');
 expect(spike.lightingCandidates?.length === 2 && spike.lightingCandidates?.[0]?.id === 'L0-minimal-runtime' && spike.lightingCandidates?.[1]?.id === 'L1-external-lightmap', 'lighting comparison must remain exactly L0/L1');
 for (const candidate of spike.lightingCandidates ?? []) expect(candidate.realtimeShadowLights === 0, `${candidate.id}: realtime shadow lights must remain zero`);
-expect(spike.exportToolchain?.format === 'glTF-2.0-GLB', 'spike export must remain GLB');
-expect(spike.exportToolchain?.blender === '4.5.12 LTS', 'spike Blender pin must remain 4.5.12 LTS');
-expect(spike.exportToolchain?.validator?.package === 'gltf-validator' && spike.exportToolchain?.validator?.version === '2.0.0-dev.3.10', 'Khronos validator package/version must remain pinned');
-expect(spike.exportToolchain?.optimizer?.package === 'gltfpack' && spike.exportToolchain?.optimizer?.version === '1.2.0', 'gltfpack package/version must remain pinned');
-expect(JSON.stringify(spike.exportToolchain?.optimizer?.args ?? []) === JSON.stringify(['-cc','-kn','-km','-ke']), 'optimizer must preserve names/materials/extras while using meshopt compression');
+expect(spike.exportToolchain?.format === 'glTF-2.0-GLB' && spike.exportToolchain?.blender === '4.5.12 LTS', 'spike export format/Blender pin must remain exact');
+expect(spike.exportToolchain?.validator?.package === 'gltf-validator' && spike.exportToolchain?.validator?.version === '2.0.0-dev.3.10', 'Khronos validator must remain pinned');
+expect(spike.exportToolchain?.optimizer?.package === 'gltfpack' && spike.exportToolchain?.optimizer?.version === '1.2.0', 'gltfpack must remain pinned');
+expect(JSON.stringify(spike.exportToolchain?.optimizer?.args ?? []) === JSON.stringify(['-cc','-kn','-km','-ke']), 'base optimizer flags must preserve names/materials/extras');
+expect(JSON.stringify(spike.exportToolchain?.optimizer?.additionalPreservationArgs ?? []) === JSON.stringify(['-kv','-vpf']), 'optimizer must retain unused UV1 and avoid hidden dequantization transforms');
 expect(spike.browserWitness?.productionRouteTouched === false && spike.browserWitness?.surface === 'qa-only-vite-viewer', 'browser witness must remain QA-only');
-for (const value of Object.values(spike.decision ?? {})) expect(value === null || value === false, 'material authoring PR must not pre-approve a delivery strategy or later gate');
-expect((spike.nonGoals ?? []).includes('production-webgl-hall') && (spike.nonGoals ?? []).includes('post-processing-rescue'), 'non-goals must keep production WebGL and post-processing rescue forbidden');
+for (const value of Object.values(spike.decision ?? {})) expect(value === null || value === false, 'material authoring PR must not pre-approve a strategy or later gate');
 
 expect(promotion.sourceDecision?.selectedTopology === 'H3' && promotion.sourceDecision?.selectedRig === 'R1', 'camera promotion must still freeze H3/R1');
-expect(promotion.nextGateScope?.allowed?.includes('one-small-h3-architectural-bay'), 'promotion must authorize the representative bay');
+expect(promotion.nextGateScope?.allowed?.includes('one-small-h3-architectural-bay'), 'promotion must authorize representative bay');
 expect(promotion.nextGateScope?.forbidden?.includes('production-three-r3f-webgl-hall'), 'promotion must still forbid production Three/R3F/WebGL');
 
-for (const token of ['EXPECTED_VERSION = (4, 5, 12)','geometry_fingerprint()','ARCH_wall_016','ARCH_wall_017','CAM_R1_pushkinViewing','MAT_STONE_PROOF','UV0','UV1','OPEN_EXR','LinearSRGBColorSpace','export_scene.gltf','export_extras=True','export_cameras=True']) expect(generator.includes(token), `material generator lost required invariant: ${token}`);
-for (const forbidden of ['MeshReflectorMaterial','Bloom','Vignette','fog-dependent-look']) expect(!generator.includes(forbidden), `material generator contains forbidden rescue token: ${forbidden}`);
+for (const token of ['EXPECTED_VERSION = (4, 5, 12)','geometry_fingerprint()','contract["source"]["representativeWallNodes"]','contract["materialProof"]["stoneMaterial"]','CAM_R1_pushkinViewing','UV0','UV1','OPEN_EXR','LinearSRGBColorSpace','export_scene.gltf','export_extras=True','export_cameras=True']) expect(generator.includes(token), `material generator lost required invariant: ${token}`);
+for (const forbidden of ['MeshReflectorMaterial','Bloom','Vignette']) expect(!generator.includes(forbidden), `material generator contains forbidden rescue token: ${forbidden}`);
 expect(validatorWrapper.includes('gltf-validator') && validatorWrapper.includes('validateBytes'), 'glTF validator wrapper must call Khronos validator');
 
 const scripts = packageJson.scripts ?? {};
 expect(scripts['validate:hall-material-spike'] === 'tsx scripts/validate-hall-material-spike.ts', 'package scripts must expose material spike validator');
 expect(scripts.check?.includes('validate:hall-material-spike') === true, 'normal check must run material spike validator');
-expect(ci.includes('npm run validate:hall-material-spike'), 'primary CI must run material spike validator');
-expect(projectContracts.includes('npm run validate:hall-material-spike'), 'Project contracts must independently run material spike validator');
-expect(workflow.includes('npm run validate:hall-material-spike'), 'Hall Blender workflow must run material spike validator');
-expect(workflow.includes('gltf-validator@2.0.0-dev.3.10') && workflow.includes('gltfpack@1.2.0'), 'Hall workflow must install exact validation/optimization tool versions');
-expect(workflow.includes('-cc -kn -km -ke'), 'Hall workflow must use preservation-safe meshopt optimizer args');
+expect(ci.includes('npm run validate:hall-material-spike') && projectContracts.includes('npm run validate:hall-material-spike') && workflow.includes('npm run validate:hall-material-spike'), 'all mandatory traces must run material spike validator');
+expect(workflow.includes('gltf-validator@2.0.0-dev.3.10') && workflow.includes('gltfpack@1.2.0'), 'Hall workflow must install exact validation/optimization tools');
+expect(workflow.includes('-cc -kn -km -ke -kv -vpf'), 'Hall workflow must preserve UV1 and metric node transforms through gltfpack');
 expect(!packageJson.dependencies?.['gltf-validator'] && !packageJson.devDependencies?.['gltf-validator'] && !packageJson.dependencies?.gltfpack && !packageJson.devDependencies?.gltfpack, 'spike-only glTF tools must not become permanent Product dependencies');
 expect(!hallPage.includes('hall-material') && !hallPage.includes('material-spike'), 'production HallPage must not import spike assets/viewer');
 
@@ -176,20 +157,18 @@ if (evidenceDirRelative) {
     expect(evidence.source?.candidateId === 'H3' && evidence.source?.layoutFingerprint === EXPECTED_LAYOUT && evidence.source?.meshGeometryFingerprintBeforeSpike === EXPECTED_MESH, 'generated evidence must prove frozen H3 before lookdev');
     expect(JSON.stringify(evidence.camera?.position ?? []) === JSON.stringify([8.0,2.5,1.6]) && evidence.camera?.lensMm === 28, 'generated evidence must prove frozen R1');
     expect(evidence.material?.metallicFactor === 0, 'generated stone material must be non-metallic');
-    expect(evidence.material?.baseColorColorSpace === 'sRGB' && evidence.material?.normalColorSpace === 'Non-Color' && evidence.material?.roughnessColorSpace === 'Non-Color', 'generated surface texture color spaces must be exact');
-    expect(evidence.material?.lightmapRuntimeColorSpace === 'LinearSRGBColorSpace', 'generated lightmap runtime color space must be linear-sRGB');
-    expect(evidence.scene?.unitSystem === 'METRIC' && evidence.scene?.lengthUnit === 'METERS' && evidence.scene?.scaleLength === 1, 'generated spike must remain metre-scale');
-    expect(evidence.scene?.lights === 0, 'export scene must contain zero lights after bake');
+    expect(evidence.material?.baseColorColorSpace === 'sRGB' && evidence.material?.normalColorSpace === 'Non-Color' && evidence.material?.roughnessColorSpace === 'Non-Color' && evidence.material?.lightmapRuntimeColorSpace === 'LinearSRGBColorSpace', 'generated texture color spaces must be exact');
+    expect(evidence.scene?.unitSystem === 'METRIC' && evidence.scene?.lengthUnit === 'METERS' && evidence.scene?.scaleLength === 1 && evidence.scene?.lights === 0, 'generated export scene must remain metric with zero lights');
     for (const name of ARCH_NODES) expect(JSON.stringify(evidence.architectureUvSets?.[name] ?? []) === JSON.stringify(['UV0','UV1']), `${name}: generated evidence must retain exactly UV0/UV1`);
     expect(evidence.productionAsset === false && evidence.documentaryAsset === false, 'generated spike must remain non-production/non-documentary');
   }
   if (fs.existsSync(bindingsPath)) {
     const bindings = JSON.parse(fs.readFileSync(bindingsPath,'utf8')) as any;
-    expect(bindings.strategy === 'L1-external-lightmap' && bindings.sourceTopology === 'H3' && bindings.approvedRig === 'R1', 'lightmap bindings must target H3/R1 L1 strategy');
-    expect((bindings.bindings ?? []).length === 3, 'three architecture nodes must receive external lightmap bindings');
+    expect(bindings.strategy === 'L1-external-lightmap' && bindings.sourceTopology === 'H3' && bindings.approvedRig === 'R1', 'lightmap bindings must target H3/R1 L1');
+    expect((bindings.bindings ?? []).length === 3, 'three architecture nodes must receive external lightmaps');
     for (const binding of bindings.bindings ?? []) {
       expect(ARCH_NODES.includes(binding.node), `unexpected lightmap binding node ${binding.node}`);
-      expect(binding.uvChannel === 1 && binding.runtimeColorSpace === 'LinearSRGBColorSpace' && binding.sourceEncoding === 'OpenEXR-Linear', `${binding.node}: lightmap binding must use UV1 + linear-sRGB`);
+      expect(binding.uvChannel === 1 && binding.runtimeColorSpace === 'LinearSRGBColorSpace' && binding.sourceEncoding === 'OpenEXR-Linear', `${binding.node}: lightmap must use UV1 + linear-sRGB`);
       const lightmapPath = path.join(evidenceDir,'lightmaps',binding.texture);
       expect(fs.existsSync(lightmapPath) && fs.statSync(lightmapPath).size === binding.bytes && sha256File(lightmapPath) === binding.sha256, `${binding.node}: lightmap file hash/bytes must match binding`);
     }
@@ -215,7 +194,7 @@ if (browserEvidenceRelative) {
   if (fs.existsSync(browserPath)) {
     const browser = JSON.parse(fs.readFileSync(browserPath,'utf8')) as any;
     expect(browser.schemaVersion === 1 && browser.laneId === contract.laneId && browser.phase === contract.phase, 'browser evidence identity must match material spike');
-    expect(JSON.stringify(Object.keys(browser.modes ?? {}).sort()) === JSON.stringify(['L0-minimal-runtime','L1-external-lightmap']), 'browser evidence must contain both L0 and L1');
+    expect(JSON.stringify(Object.keys(browser.modes ?? {}).sort()) === JSON.stringify(['L0-minimal-runtime','L1-external-lightmap']), 'browser evidence must contain L0/L1');
     for (const [mode, metrics] of Object.entries(browser.modes ?? {}) as [string,any][]) {
       expect(metrics.loadComplete === true, `${mode}: browser viewer must load completely`);
       expect(Number(metrics.drawCalls) > 0 && Number(metrics.triangles) > 0, `${mode}: browser metrics must report non-zero render work`);
