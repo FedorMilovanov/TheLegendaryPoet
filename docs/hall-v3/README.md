@@ -4,6 +4,8 @@
 
 This directory is the technical/art-production authority for Hall v3 while the lane is open. It does **not** make the current Hall v2 prototype production authority, and it does not authorize a new WebGL scene before the visual gates below are passed.
 
+The current machine phase and gate state live in [`hall-v3-contract.json`](hall-v3-contract.json). Agents must update that contract explicitly when advancing a gate; prose alone cannot silently advance Hall production state.
+
 ## Current production boundary
 
 - `/hall` remains a lightweight DOM placeholder.
@@ -86,6 +88,7 @@ FPS/free-walk, poet-connection mode, timeline animation and ambient audio are la
 
 ## Documents
 
+- [`hall-v3-contract.json`](hall-v3-contract.json)
 - [`ART_DIRECTION.md`](ART_DIRECTION.md)
 - [`SCENE_CONTRACT.md`](SCENE_CONTRACT.md)
 - [`ASSET_PIPELINE.md`](ASSET_PIPELINE.md)
