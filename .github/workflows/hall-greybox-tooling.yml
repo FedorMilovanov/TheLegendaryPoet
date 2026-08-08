@@ -9,9 +9,9 @@ on:
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
       - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
       - 'scripts/hall-greybox/**'
-      - 'scripts/validate-hall-greybox-tooling.ts'
-      - 'scripts/validate-hall-greybox-candidates.ts'
+      - 'scripts/validate-hall-topology-selection.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -21,9 +21,9 @@ on:
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
       - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
       - 'scripts/hall-greybox/**'
-      - 'scripts/validate-hall-greybox-tooling.ts'
-      - 'scripts/validate-hall-greybox-candidates.ts'
+      - 'scripts/validate-hall-topology-selection.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -47,12 +47,12 @@ jobs:
       BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
 
     steps:
-      - name: Checkout exact greybox tooling head
+      - name: Checkout exact Hall selection head
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
 
-      - name: Verify exact greybox checkout identity
+      - name: Verify exact Hall checkout identity
         run: |
           actual="$(git rev-parse HEAD)"
           test "$actual" = "$TESTED_SHA"
@@ -61,11 +61,8 @@ jobs:
       - name: Set up repository Node baseline
         uses: ./.github/actions/setup-node-deps
 
-      - name: Validate metric-greybox tooling source contract
-        run: npm run validate:hall-greybox-tooling
-
-      - name: Validate neutral candidate source contract
-        run: npm run validate:hall-greybox-candidates
+      - name: Validate persistent Hall topology selection source contract
+        run: npm run validate:hall-topology-selection
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -102,10 +99,10 @@ jobs:
             -- \
             --output-dir qa-artifacts/hall-greybox-tooling
 
-      - name: Validate generated Blender tooling evidence
+      - name: Validate generated Blender tooling evidence against selected topology authority
         env:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
-        run: npm run validate:hall-greybox-tooling
+        run: npm run validate:hall-topology-selection
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -113,7 +110,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libegl1
 
-      - name: Generate H1 H2 H3 neutral metric candidates
+      - name: Regenerate H1 H2 H3 neutral metric evidence
         run: |
           set -euo pipefail
           mkdir -p qa-artifacts/hall-greybox-candidates
@@ -126,10 +123,10 @@ jobs:
             --layouts docs/hall-v3/greybox-layouts.json \
             --output-dir qa-artifacts/hall-greybox-candidates
 
-      - name: Validate generated candidate evidence
+      - name: Validate regenerated evidence against frozen shootout decision
         env:
           HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
-        run: npm run validate:hall-greybox-candidates
+        run: npm run validate:hall-topology-selection
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
@@ -144,7 +141,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload neutral H1 H2 H3 comparison evidence
+      - name: Upload frozen H1 H2 H3 comparison evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
