@@ -30,6 +30,8 @@ jobs:
         run: npm run validate:hall-reference-bible
       - name: Validate Hall v3 topology selection and camera boundary
         run: npm run validate:hall-topology-selection
+      - name: Validate Hall v3 frozen shootout provenance
+        run: npm run validate:hall-topology-provenance
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
