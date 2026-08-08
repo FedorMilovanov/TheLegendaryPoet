@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import validator from 'gltf-validator';
+import { createRequire } from 'node:module';
 
 const args = process.argv.slice(2);
 const value = (name) => {
@@ -11,6 +11,9 @@ const value = (name) => {
 
 const input = path.resolve(value('--input'));
 const output = path.resolve(value('--output'));
+const toolRoot = path.resolve(value('--tool-root'));
+const requireFromTools = createRequire(path.join(toolRoot, 'resolver.cjs'));
+const validator = requireFromTools('gltf-validator');
 const bytes = new Uint8Array(fs.readFileSync(input));
 const report = await validator.validateBytes(bytes, {
   uri: path.basename(input),
