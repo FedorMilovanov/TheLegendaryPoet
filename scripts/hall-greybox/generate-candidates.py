@@ -515,10 +515,10 @@ def generate_candidate(candidate: dict[str, Any], common: dict[str, Any], output
     mobile_dir.mkdir(parents=True, exist_ok=True)
 
     camera_objects = build_candidate(candidate, common)
-    scene = bpy.context.scene
     blend_path = candidate_dir / f"{candidate_id}.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
     bpy.ops.wm.open_mainfile(filepath=str(blend_path), load_ui=False)
+    scene = bpy.context.scene
 
     if scene.unit_settings.system != "METRIC" or scene.unit_settings.length_unit != "METERS" or abs(scene.unit_settings.scale_length - 1.0) > 1e-9:
         fail(f"{candidate_id}: metric unit contract failed after save/reopen")
