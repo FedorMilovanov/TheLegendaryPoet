@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
-  "phase": "referenceBible",
+  "phase": "metricGreybox",
   "productionRoute": {
     "path": "/hall",
     "mode": "placeholder",
@@ -29,12 +29,14 @@
     "legacyRetirement": "docs/hall-v3/LEGACY_RETIREMENT.md",
     "referenceBible": "docs/hall-v3/REFERENCE_BIBLE.md",
     "spatialBrief": "docs/hall-v3/SPATIAL_BRIEF.md",
-    "referenceBibleData": "docs/hall-v3/reference-bible.json"
+    "referenceBibleData": "docs/hall-v3/reference-bible.json",
+    "greyboxTooling": "docs/hall-v3/greybox-tooling.json",
+    "greyboxCandidates": "docs/hall-v3/greybox-candidates.json"
   },
   "gates": {
     "foundation": "completed",
-    "referenceBible": "active",
-    "metricGreybox": "blocked",
+    "referenceBible": "completed",
+    "metricGreybox": "active",
     "cameraApproval": "blocked",
     "materialLightingExportSpike": "blocked",
     "pushkinVerticalSlice": "blocked",
