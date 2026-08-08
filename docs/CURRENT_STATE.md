@@ -14,8 +14,8 @@ This file is the source-repository entry point for the **current architecture**.
 - Poet catalog: `src/data/library/index.ts`.
 - Brand runtime: `src/components/SpectralBrandMark.tsx`; approved source parts live in `qa/reference/approved-brand/` and are materialized by `scripts/materialize-brand-art.mjs`.
 - Fonts are self-hosted WOFF2 assets under `src/assets/fonts/`.
-- Community reads are target-scoped and aggregate-backed; generic application startup does not hydrate a public ratings/comments corpus.
-- Steady-state remote source refs are intentionally limited to `main` plus `archive/deep-research-local-images-20260724`, the exact preserved head of the retired deep research branch. Temporary one-owner issue/repair branches may exist while their bounded lane is active; they are not durable source authority and must be removed after closure. The archive ref is evidence-only and is never a production merge candidate.
+- Community reads are target-scoped and aggregate-backed; generic application startup does not hydrate a public ratings/comments corpus globally.
+- Steady-state remote source refs are intentionally limited to `main` plus `archive/deep-research-local-images-20260724`, the exact preserved head of the retired deep research branch. Temporary bounded owner branches are not durable source authority.
 
 The machine-readable counterpart is `docs/project-contract.json`; `node scripts/validate-project-contracts.mjs` blocks drift between documentation, package/lock identity, workflows, live paths and registered open architecture lanes.
 
@@ -23,35 +23,35 @@ The machine-readable counterpart is `docs/project-contract.json`; `node scripts/
 
 The exact evidence remains in AuditRepo, but the current source tree enforces these boundaries:
 
-1. **One public longform model.** The live runtime publishes `Essay` objects only. The retired `Article` model and unpublished drafts were removed from the runtime with bounded archival preservation and compatibility redirects.
-2. **Immutable essay publication.** Canonical essays are cloned, enriched, validated and deep-frozen at one publication boundary; authoring imports are not mutated in place. Accepted verified-media decisions are applied by a central registry, while unresolved media remain blocked.
-3. **Target-scoped community data.** Detail surfaces use aggregate summaries and bounded comment pages. Leaderboards use aggregate rows, local persistence is bounded to device-owned state/outbox work, and poisoned persisted operations cannot block valid delivery.
-4. **Workflow and performance contracts.** Shared repository actions own dependency, build-tool, browser and preview setup. The production build must retain one entry, fourteen distinct lazy route chunks and explicit entry, route, JavaScript and CSS budgets.
-5. **Reader-facing integrity.** Source links, citation identifiers, literary-language checks, route recovery, blocked-storage handling and compositor-safe tilt behavior are permanent validated contours rather than page-specific patches.
-6. **Premium reader certification.** Desktop Chromium, Android Chrome, desktop WebKit and fresh-process iPhone Safari certify longform navigation, archive round-trips, honest blocked-storage behavior, route focus ownership, reduced motion, forced colors and queued failed community writes without adding a duplicate workflow.
-7. **Explicit private governance.** Package and lockfile identity, supported Node range, private/non-publishable status, `UNLICENSED` disposition and SHA-based release promotion are machine-checked. No public-source licence is inferred from repository visibility or third-party asset metadata.
-8. **Forensic branch retirement.** Temporary transport refs, superseded implementation refs, old Arena refs and the deeply diverged work ref were retired only after exact successor mapping, byte-identical evidence archival, selective current-head extraction, rights-safe path classification and direct post-deletion branch inventory. The intentional archive ref preserves the old research history without restoring obsolete runtime or executable workflows.
-9. **Single route/runtime truth.** Router elements, lazy page ownership, explicit redirects, sitemap membership, route QA inventory and per-route budgets derive from one machine contract. Unknown article ids reach NotFound, every SPA pathname transition owns focus after settlement, invalid essay structure fails validation instead of being repaired by the renderer, and archive removals expose honest mutation outcomes.
-10. **Canonical poet source authority.** All ten published poet records own their portrait and conclusion prose directly in their canonical source modules. The catalog preserves direct object identity, and permanent validation rejects hidden publication-time editorial rewriting or duplicate ownership of those fields.
-11. **Hall v3 staged boundary.** Production `/hall` remains a lightweight DOM placeholder; retained Hall-v2 source is forensic/non-authoritative and excluded from current TypeScript/runtime ownership. Foundation, Reference Bible and metric greybox are completed. H3 is the frozen topology authority. Exact-head Camera Approval evidence compared R0/R1/R2/R3 without changing H3 geometry or the other five journey witnesses; `camera-decision.json` selects R1, retains R3 as reserve, and rejects R0/R2. The camera gate remains the current phase until a separate promotion transaction; material/light/export, Pushkin slice and all web-runtime gates remain blocked.
+1. **One public longform model.** The live runtime publishes `Essay` objects only. Retired article/runtime drafts are not a second live model.
+2. **Immutable essay publication.** Canonical essays are cloned, enriched, validated and deep-frozen at one publication boundary; unresolved media remain blocked rather than silently repaired.
+3. **Target-scoped community data.** Detail surfaces use aggregate summaries and bounded comment pages; local persistence is bounded to device-owned state/outbox work.
+4. **Workflow and performance contracts.** Shared repository actions own dependency, browser and preview setup. Production route/entry/JS/CSS budgets remain explicit.
+5. **Reader-facing integrity.** Source links, citations, route recovery, blocked-storage handling and compositor-safe behavior are permanent validated contours.
+6. **Premium reader certification.** Desktop Chromium, Android Chrome, desktop WebKit and fresh-process iPhone Safari certify longform and shell behavior.
+7. **Explicit private governance.** Package/lock identity, supported Node range, `UNLICENSED` disposition and SHA-based release promotion are machine-checked.
+8. **Forensic branch retirement.** Historical refs remain evidence only; they do not restore obsolete runtime/workflows.
+9. **Single route/runtime truth.** Router elements, redirects, sitemap membership, route QA and route budgets derive from one machine contract.
+10. **Canonical poet source authority.** All ten published poet records own their portrait/conclusion prose directly in canonical source modules.
+11. **Hall v3 staged boundary.** Production `/hall` remains a lightweight DOM placeholder and Hall v2 remains forensic/non-authoritative. Foundation, Reference Bible, metric greybox and Camera Approval are completed. H3 is the frozen topology authority; H1 remains topology reserve and H2 is rejected. R1 is the approved guided camera, R3 remains camera reserve and R0/R2 are rejected. `camera-gate-promotion.json` activates only the bounded material/lighting/export spike; Pushkin slice, offline visual approval, production WebGL runtime and scale-out remain blocked.
 
 ## Current quality gates
 
-The `Project contracts` workflow runs project-contract, workflow-consolidation, Hall phase contracts, reader-certification and UTC-day validators on every PR and `main` push. `npm run check` validates content, brand, app shell, interaction runtime, Hall foundation invariants, completed Reference Bible evidence, frozen topology provenance, immutable Camera Approval candidate evidence and the separate R1 camera decision, routes, archive behavior and TypeScript. The path-scoped Hall greybox workflow reuses one pinned Blender download to prove tooling, regenerate the frozen H1/H2/H3 evidence and regenerate the H3 camera candidate package against immutable topology. Normal production build, prerender and browser workflows remain separate final gates.
+`Project contracts` runs project/workflow contracts, permanent Hall boundaries, reader certification and UTC-day validation on every PR and `main` push. `npm run check` keeps Hall foundation and Reference Bible guards, frozen topology provenance and the persistent post-camera H3/R1 authority. The path-scoped Hall Blender workflow still regenerates frozen H1/H2/H3 and R0/R1/R2/R3 evidence from exact source and checks H3/R1 fingerprints under the promoted gate. Earlier phase-specific Hall validators remain available for forensic reproduction but are not the current mandatory authority after their gates are completed.
 
 ## Open architecture lanes
 
 One owner-selected architecture lane is open. It must not absorb unrelated runtime/content work. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
-- `TLP-HALL-001` — Product #369 owns the staged Hall v3 rebuild. Foundation, Reference Bible and metric greybox are completed. H3 is the selected topology; H1 is the retained topology reserve; H2 is rejected. The current phase remains **cameraApproval** while the selected-camera decision is recorded separately from gate promotion. Exact PR #382 produced and verified the immutable R0/R1/R2/R3 camera evidence package; `camera-decision.json` selects `R1` (28 mm contextual Pushkin view), retains `R3` as camera reserve and rejects `R0`/`R2`. Candidate source remains immutable with `approvedRig=null`, while `camera-decision.json` owns the human selection. A separate bounded promotion transaction may complete Camera Approval and open only `materialLightingExportSpike`. Pushkin slice, offline visual approval, web runtime and scale-out remain blocked.
+- `TLP-HALL-001` — Product #369 owns the staged Hall v3 rebuild. The current phase is **materialLightingExportSpike**. H3 topology and R1 camera are frozen. The active bounded task is one representative H3 architectural bay proving material color-space ownership, UV/static-light delivery strategy, raw→optimized glTF validation and browser viability. This phase may not redesign H3/R1, texture/light the full Hall, add final Pushkin documentary assets or activate Three/R3F/WebGL on production `/hall`. `pushkinVerticalSlice`, `offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` remain blocked.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material
 
-`audit/index.html`, `COMPONENT_BLUEPRINTS.md`, `TRANSFER.md`, `docs/INTEGRATION_STATUS.md` and `docs/HALL_RESEARCH.md` remain historical snapshots only. They are not current implementation instructions and must not be used to reopen already closed architecture work or override the Hall-v3 authority.
+`audit/index.html`, `COMPONENT_BLUEPRINTS.md`, `TRANSFER.md`, `docs/INTEGRATION_STATUS.md` and `docs/HALL_RESEARCH.md` remain historical snapshots only. They are not current implementation instructions and must not override Hall-v3 authority.
 
-The branch `archive/deep-research-local-images-20260724` is a deliberate forensic/research retention ref. Its presence does not make its old runtime, workflows, media or claims current, publication-safe or mergeable.
+The branch `archive/deep-research-local-images-20260724` is deliberate forensic/research retention. Its presence does not make its old runtime, workflows, media or claims current, publication-safe or mergeable.
 
 ## Change discipline
 
@@ -61,4 +61,4 @@ The branch `archive/deep-research-local-images-20260724` is a deliberate forensi
 - Update `docs/project-contract.json` whenever an authoritative runtime path, governance contract or open-lane set changes.
 - Update AuditRepo only after a repair wave is merged and verified on the resulting production head.
 - A licence, public package release or redistribution grant requires explicit owner approval and a dedicated governance change.
-- Unresolved research, attribution and media-rights work remains editorial backlog; architecture closure must never be used to invent evidence or publication permission.
+- Unresolved research, attribution and media-rights work remains editorial backlog; architecture closure must never invent evidence or publication permission.
