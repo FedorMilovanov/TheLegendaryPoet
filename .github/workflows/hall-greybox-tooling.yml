@@ -191,17 +191,26 @@ jobs:
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-material-spike
 
-      - name: Install exact spike-only glTF validation and optimizer tools
-        run: npm install --no-save --package-lock=false gltf-validator@2.0.0-dev.3.10 gltfpack@1.2.0
+      - name: Install exact spike-only glTF tools in isolated prefix
+        run: |
+          set -euo pipefail
+          rm -rf .tools/hall-gltf
+          mkdir -p .tools/hall-gltf
+          printf '%s\n' '{"name":"hall-gltf-spike-tools","version":"0.0.0","private":true}' > .tools/hall-gltf/package.json
+          npm install --prefix .tools/hall-gltf --save-exact --ignore-scripts --omit=dev --no-audit --no-fund gltf-validator@2.0.0-dev.3.10 gltfpack@1.2.0
+          test "$(node -p "require('./.tools/hall-gltf/node_modules/gltf-validator/package.json').version")" = "2.0.0-dev.3.10"
+          test "$(node -p "require('./.tools/hall-gltf/node_modules/gltfpack/package.json').version")" = "1.2.0"
+          test -x .tools/hall-gltf/node_modules/.bin/gltfpack
+          test -f .tools/hall-gltf/package-lock.json
 
       - name: Validate raw Blender GLB with Khronos validator
-        run: node scripts/hall-material/validate-gltf.mjs --input qa-artifacts/hall-material-spike/material-spike-raw.glb --output qa-artifacts/hall-material-spike/gltf-raw-report.json
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-gltf --input qa-artifacts/hall-material-spike/material-spike-raw.glb --output qa-artifacts/hall-material-spike/gltf-raw-report.json
 
       - name: Optimize representative GLB with preservation-safe Meshopt path
-        run: ./node_modules/.bin/gltfpack -i qa-artifacts/hall-material-spike/material-spike-raw.glb -o qa-artifacts/hall-material-spike/material-spike-optimized.glb -cc -kn -km -ke -kv -vpf
+        run: .tools/hall-gltf/node_modules/.bin/gltfpack -i qa-artifacts/hall-material-spike/material-spike-raw.glb -o qa-artifacts/hall-material-spike/material-spike-optimized.glb -cc -kn -km -ke -kv -vpf
 
       - name: Validate optimized GLB with Khronos validator
-        run: node scripts/hall-material/validate-gltf.mjs --input qa-artifacts/hall-material-spike/material-spike-optimized.glb --output qa-artifacts/hall-material-spike/gltf-optimized-report.json
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-gltf --input qa-artifacts/hall-material-spike/material-spike-optimized.glb --output qa-artifacts/hall-material-spike/gltf-optimized-report.json
 
       - name: Validate generated raw optimized preservation contract
         env:
