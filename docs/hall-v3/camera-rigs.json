@@ -84,14 +84,21 @@
     {
       "id": "R2",
       "name": "balanced contextual viewing",
-      "status": "candidate",
-      "description": "32 mm Pushkin view from a farther point to restore exhibit/room hierarchy without making the room read ultra-wide.",
+      "status": "rejected",
+      "description": "32 mm Pushkin view from a farther point; generated evidence is retained as a rejected camera candidate.",
+      "rejectionReasons": [
+        "pushkinViewing ray is occluded by HUMAN_PROXY before reaching EXHIBIT_alexander-pushkin"
+      ],
+      "expectedFailure": {
+        "witness": "pushkinViewing",
+        "hitObject": "HUMAN_PROXY"
+      },
       "cameras": {
         "entryReveal": {"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"lensMm":35,"note":"asymmetric orientation field"},
         "orientation": {"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"lensMm":35,"note":"diagonal main trajectory"},
         "firstTransition": {"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"lensMm":35,"note":"diagonal transition"},
         "pushkinApproach": {"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"lensMm":35,"note":"Pushkin side focus room"},
-        "pushkinViewing": {"position":[7.5,2.5,1.60],"target":[11.15,5.45,1.95],"nextDestination":[11.15,5.45,1.95],"lensMm":32,"note":"balanced contextual Pushkin viewing test"},
+        "pushkinViewing": {"position":[7.5,2.5,1.60],"target":[11.15,5.45,1.95],"nextDestination":[11.15,5.45,1.95],"lensMm":32,"note":"rejected occluded Pushkin viewing test"},
         "reverseExit": {"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"lensMm":35,"note":"return to diagonal trajectory"}
       }
     },
