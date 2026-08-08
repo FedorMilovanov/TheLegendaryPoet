@@ -13,6 +13,7 @@ const retiredTokens = [
   'купольный пантеон',
   'иммерсивный пантеон',
   'залы разных эпох',
+  'Зал 3D',
   'hall-preview.webp',
   'hall_target_v3_temple.webp',
 ];
