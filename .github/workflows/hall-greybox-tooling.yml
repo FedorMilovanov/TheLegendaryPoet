@@ -1,0 +1,102 @@
+name: Hall greybox tooling
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-greybox-tooling.yml'
+      - 'docs/hall-v3/**'
+      - 'scripts/hall-greybox/**'
+      - 'scripts/validate-hall-greybox-tooling.ts'
+      - 'scripts/validate-hall-reference-bible.ts'
+      - 'scripts/validate-hall-foundation.ts'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-greybox-tooling.yml'
+      - 'docs/hall-v3/**'
+      - 'scripts/hall-greybox/**'
+      - 'scripts/validate-hall-greybox-tooling.ts'
+      - 'scripts/validate-hall-reference-bible.ts'
+      - 'scripts/validate-hall-foundation.ts'
+      - 'package.json'
+  workflow_dispatch:
+
+concurrency:
+  group: hall-greybox-tooling-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  blender-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
+      BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
+      BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
+
+    steps:
+      - name: Checkout exact greybox tooling head
+        uses: actions/checkout@v4
+
+      - name: Set up repository Node baseline
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Validate metric-greybox tooling source contract
+        run: npm run validate:hall-greybox-tooling
+
+      - name: Download pinned Blender 4.5.12 LTS and vendor checksum
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/download .tools/blender
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_ARCHIVE_URL" --output ".tools/download/$BLENDER_ARCHIVE"
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_CHECKSUM_URL" --output .tools/download/blender-4.5.12.sha256
+          grep "${BLENDER_ARCHIVE}$" .tools/download/blender-4.5.12.sha256 > .tools/download/blender-linux.sha256
+          test -s .tools/download/blender-linux.sha256
+          (
+            cd .tools/download
+            sha256sum -c blender-linux.sha256
+          )
+
+      - name: Extract exact Blender runtime
+        run: |
+          set -euo pipefail
+          tar -xJf ".tools/download/$BLENDER_ARCHIVE" -C .tools/blender --strip-components=1
+          test -x .tools/blender/blender
+          printf 'BLENDER_BIN=%s/.tools/blender/blender\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+
+      - name: Record Blender runtime identity
+        run: "$BLENDER_BIN --version | tee blender-version.txt"
+
+      - name: Run headless metre-scale save-reopen smoke scene
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-greybox-tooling
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-greybox/blender-tooling-preflight.py \
+            -- \
+            --output-dir qa-artifacts/hall-greybox-tooling
+
+      - name: Validate generated Blender evidence
+        env:
+          HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
+        run: npm run validate:hall-greybox-tooling
+
+      - name: Upload reproducible tooling witness
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-greybox-tooling-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            blender-version.txt
+            qa-artifacts/hall-greybox-tooling/preflight.json
+            qa-artifacts/hall-greybox-tooling/tooling-smoke.blend
+          if-no-files-found: warn
+          retention-days: 14
