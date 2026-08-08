@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { registerArchiveCrossTabTests } from './archive-cross-tab.cases.mjs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const COORDINATION_STORAGE_KEY = 'tlp-audio-coordination:v1';
@@ -123,3 +124,5 @@ test('unsafe finite storage claims are delivered but cannot pause or poison a he
     await context.close();
   }
 });
+
+registerArchiveCrossTabTests();
