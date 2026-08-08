@@ -51,7 +51,7 @@ for (const profile of [
       const response = await page.goto(`${BASE_URL}/hall`, { waitUntil: 'domcontentloaded' });
       expect(response.status()).toBeLessThan(400);
       await settle(page);
-      await expect(page.getByRole('heading', { name: /Храм русской поэзии/i })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Зал Поэтов/i })).toBeVisible();
       await expect(page.getByRole('link', { name: /Перейти к поэтам/i })).toBeVisible();
       const state = await diagnostics(page);
       fs.writeFileSync(path.join(ARTIFACT_DIR, `${profile.name}-hall.json`), JSON.stringify(state, null, 2));

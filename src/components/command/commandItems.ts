@@ -13,7 +13,7 @@ const baseItems: CommandItem[] = [
   { id: 'home', label: 'Главная', description: 'Обложка проекта', path: '/', group: 'Разделы' },
   { id: 'poets', label: 'Поэты', description: 'Каталог поэтов', path: '/poets', group: 'Разделы' },
   { id: 'ratings', label: 'Рейтинг поэтов', description: 'Сводная таблица оценок и комментариев читателей', path: '/ratings', group: 'Разделы' },
-  { id: 'hall', label: 'Зал поэтов', description: 'Будущий иммерсивный пантеон', path: '/hall', group: 'Разделы' },
+  { id: 'hall', label: 'Зал поэтов', description: 'Иммерсивный музейный раздел в разработке', path: '/hall', group: 'Разделы' },
   { id: 'articles', label: 'Статьи', description: 'Материалы и анализы', path: '/articles', group: 'Разделы' },
   { id: 'music', label: 'Музыка', description: 'Официальные музыкальные публикации', path: '/music', group: 'Разделы' },
   { id: 'about', label: 'О проекте', description: 'Миссия и контакты', path: '/about', group: 'Разделы' },
