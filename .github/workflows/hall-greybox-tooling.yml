@@ -13,10 +13,14 @@ on:
       - 'docs/hall-v3/camera-rigs.json'
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/camera-gate-promotion.json'
+      - 'docs/hall-v3/material-lighting-export-spike.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
+      - 'scripts/hall-material-spike/**'
+      - 'qa/hall-material-spike/**'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-post-camera-authority.ts'
+      - 'scripts/validate-hall-material-spike.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -30,10 +34,14 @@ on:
       - 'docs/hall-v3/camera-rigs.json'
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/camera-gate-promotion.json'
+      - 'docs/hall-v3/material-lighting-export-spike.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
+      - 'scripts/hall-material-spike/**'
+      - 'qa/hall-material-spike/**'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-post-camera-authority.ts'
+      - 'scripts/validate-hall-material-spike.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -50,7 +58,7 @@ env:
 jobs:
   blender-preflight:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 50
     env:
       BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
       BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
@@ -76,6 +84,9 @@ jobs:
 
       - name: Validate frozen H3 R1 post-camera authority
         run: npm run validate:hall-post-camera-authority
+
+      - name: Validate bounded material spike source contract
+        run: npm run validate:hall-material-spike
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -118,6 +129,7 @@ jobs:
         run: |
           npm run validate:hall-topology-provenance
           npm run validate:hall-post-camera-authority
+          npm run validate:hall-material-spike
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -144,6 +156,7 @@ jobs:
         run: |
           npm run validate:hall-topology-provenance
           npm run validate:hall-post-camera-authority
+          npm run validate:hall-material-spike
 
       - name: Regenerate frozen H3 camera candidate evidence
         run: |
@@ -163,7 +176,84 @@ jobs:
       - name: Validate regenerated R1 approval evidence under promoted gate
         env:
           HALL_CAMERA_APPROVAL_EVIDENCE: qa-artifacts/hall-camera-candidates/index.json
-        run: npm run validate:hall-post-camera-authority
+        run: |
+          npm run validate:hall-post-camera-authority
+          npm run validate:hall-material-spike
+
+      - name: Install pinned temporary glTF spike toolchain
+        run: npm install --no-save --package-lock=false gltfpack@1.2.0 gltf-validator@2.0.0-dev.3.10
+
+      - name: Generate representative H3 material and lightmap evidence
+        run: |
+          set -euo pipefail
+          rm -rf qa-artifacts/hall-material-spike
+          mkdir -p qa-artifacts/hall-material-spike
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material-spike/generate-bay.py \
+            -- \
+            --config docs/hall-v3/material-lighting-export-spike.json \
+            --layouts docs/hall-v3/greybox-layouts.json \
+            --output-dir qa-artifacts/hall-material-spike
+
+      - name: Khronos-validate raw representative GLB
+        run: node scripts/hall-material-spike/validate-gltf.mjs qa-artifacts/hall-material-spike/h3-bay.raw.glb qa-artifacts/hall-material-spike/raw-validator.json
+
+      - name: Optimize representative GLB with preservation flags
+        run: |
+          set -euo pipefail
+          npx --no-install gltfpack \
+            -i qa-artifacts/hall-material-spike/h3-bay.raw.glb \
+            -o qa-artifacts/hall-material-spike/h3-bay.optimized.glb \
+            -kn -km -ke -kv -vpf -vtf -cc
+
+      - name: Khronos-validate optimized representative GLB
+        run: node scripts/hall-material-spike/validate-gltf.mjs qa-artifacts/hall-material-spike/h3-bay.optimized.glb qa-artifacts/hall-material-spike/optimized-validator.json
+
+      - name: Compare raw and optimized application contracts
+        run: |
+          node scripts/hall-material-spike/inspect-glb.mjs \
+            --raw qa-artifacts/hall-material-spike/h3-bay.raw.glb \
+            --optimized qa-artifacts/hall-material-spike/h3-bay.optimized.glb \
+            --out qa-artifacts/hall-material-spike/asset-contract.json
+
+      - name: Install real Chromium for isolated browser witness
+        run: npx playwright install --with-deps chromium
+
+      - name: Capture equal R1 browser witnesses for both lighting candidates
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4174 --bind 127.0.0.1 >/tmp/hall-material-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4174/qa/hall-material-spike/viewer.html >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:4174/qa/hall-material-spike/viewer.html >/dev/null
+          node qa/hall-material-spike/browser-witness.mjs \
+            --strategy L0_MINIMAL_REALTIME \
+            --asset qa-artifacts/hall-material-spike/h3-bay.optimized.glb \
+            --out qa-artifacts/hall-material-spike/L0_MINIMAL_REALTIME
+          node qa/hall-material-spike/browser-witness.mjs \
+            --strategy L1_EXTERNAL_LIGHTMAP_UV1 \
+            --asset qa-artifacts/hall-material-spike/h3-bay.optimized.glb \
+            --lightmap qa-artifacts/hall-material-spike/h3-bay-lightmap-uv1.png \
+            --out qa-artifacts/hall-material-spike/L1_EXTERNAL_LIGHTMAP_UV1
+
+      - name: Finalize material spike artifact hashes
+        run: node scripts/hall-material-spike/finalize-evidence.mjs qa-artifacts/hall-material-spike
+
+      - name: Validate generated material light export evidence
+        env:
+          HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
+        run: |
+          npm run validate:hall-post-camera-authority
+          npm run validate:hall-material-spike
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
@@ -197,5 +287,17 @@ jobs:
           path: |
             hall-greybox-tested-head.txt
             qa-artifacts/hall-camera-candidates
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload bounded H3 material lighting export evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-material-spike-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            hall-greybox-tested-head.txt
+            blender-version.txt
+            qa-artifacts/hall-material-spike
           if-no-files-found: warn
           retention-days: 14
