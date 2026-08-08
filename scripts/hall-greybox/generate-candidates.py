@@ -533,10 +533,16 @@ def generate_candidate(candidate: dict[str, Any], common: dict[str, Any], output
     visibility: dict[str, Any] = {}
     for camera_id in REQUIRED_CAMERA_IDS:
         spec = candidate["cameras"][camera_id]
-        visible, occluder, distance = ray_is_clear(spec["position"], spec["nextDestination"])
+        expected_visible_object = candidate["viewingClearance"]["servedObject"] if camera_id == "pushkinViewing" else None
+        witness_target = candidate["pushkin"]["anchor"]["center"] if expected_visible_object else spec["nextDestination"]
+        clear, hit_object, distance = ray_is_clear(spec["position"], witness_target)
+        reached_expected_object = expected_visible_object is not None and hit_object == expected_visible_object
+        visible = reached_expected_object if expected_visible_object is not None else clear
         visibility[camera_id] = {
             "visible": visible,
-            "occluder": occluder,
+            "occluder": None if visible else hit_object,
+            "hitObject": hit_object,
+            "expectedVisibleObject": expected_visible_object,
             "distanceMetres": round(distance, 4),
             "note": spec["note"],
         }
