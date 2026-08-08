@@ -434,6 +434,8 @@ def main() -> None:
     scene.unit_settings.length_unit = "METERS"
     scene.unit_settings.scale_length = 1.0
     scene.render.image_settings.file_format = "PNG"
+    if scene.world is None:
+        scene.world = bpy.data.worlds.new("HALL_H3_MATERIAL_EXPORT_SPIKE_WORLD")
     scene.world.color = (0.018, 0.022, 0.03)
 
     export_collection = collection(EXPORT_COLLECTION)
