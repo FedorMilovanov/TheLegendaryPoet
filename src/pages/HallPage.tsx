@@ -1,36 +1,27 @@
 import { Link } from '../components/ui/Link';
 import { motion } from 'framer-motion';
 import { useSeo } from '../hooks/useSeo';
-import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 /**
- * Hall of Poets — placeholder while the immersive version is rebuilt.
+ * Hall of Poets — lightweight public placeholder.
  *
- * The route stays reachable (nav link / homepage CTA), but instead of loading
- * the heavy R3F scene it shows a blurred glimpse of the target "Храм Русской
- * Поэзии" reference with an explicit "в разработке" message. The 3D hall
- * components remain in the repo (src/components/hall/*) for the future rebuild;
- * they are simply not imported here, so none of three.js ships in this route.
+ * The retired R3F prototype under src/components/hall/ is intentionally not
+ * imported here. Hall v3 architecture, assets, camera and materials must pass
+ * their own foundation/greybox gates before a new immersive runtime exists.
  */
 export default function HallPage() {
   useSeo({
     title: 'Зал Поэтов — в разработке — THE LEGENDARY POET',
-    description: 'Иммерсивный «Храм Русской Поэзии» сейчас в разработке. Скоро здесь можно будет пройтись по залам поэтов разных эпох.',
+    description: 'Иммерсивный Зал Поэтов пересобирается с нуля. Пока финальная архитектура не объявлена; доступны библиотека поэтов, статьи и музыка.',
     path: '/hall',
   });
 
   return (
     <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#050505]">
-      {/* Blurred reference backdrop — a glimpse of where the hall is heading */}
-      <div className="absolute inset-0">
-        <img
-          src={asset('/images/hall-preview.webp')}
-          alt="Приблизительный референс будущего зала — купольный храм русской поэзии"
-          className="h-full w-full scale-110 object-cover opacity-60 blur-xl"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/55 to-[#050505]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.55)_100%)]" />
+      <div aria-hidden="true" className="absolute inset-0">
+        <div className="absolute left-1/2 top-[42%] h-[44rem] w-[44rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-luxury-gold/[0.055] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(212,175,55,0.075),transparent_34%),linear-gradient(to_bottom,rgba(5,5,5,0.15),#050505_82%)]" />
       </div>
 
       <motion.div
@@ -45,16 +36,16 @@ export default function HallPage() {
         </span>
 
         <h1 className="editorial-title mb-6 font-serif text-5xl font-bold leading-[0.95] text-white md:text-7xl">
-          <span className="gold-gradient gold-glow-text">{titleCase('Храм русской поэзии')}</span>
+          <span className="gold-gradient gold-glow-text">{titleCase('Зал поэтов')}</span>
         </h1>
 
         <p className="mx-auto mb-4 max-w-xl font-serif text-xl italic leading-relaxed text-luxury-gray-light md:text-2xl">
-          Иммерсивный зал поэтов сейчас перестраивается.
+          Иммерсивная версия пересобирается с нуля.
         </p>
         <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-luxury-gray-light/70">
-          Мы делаем его заново — как купольный пантеон с залами разных эпох:
-          Золотой век, Серебряный век, советская и современная поэзия. На фоне —
-          приблизительный референс того, к чему идём. Пока это только эскиз.
+          Сначала проходят проверку архитектура, исторические источники, права,
+          материалы, свет и камера. Пока эти этапы не утверждены, страница не
+          обещает финальную форму будущего пространства.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
