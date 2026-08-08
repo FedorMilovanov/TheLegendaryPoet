@@ -33,7 +33,8 @@
     "greyboxTooling": "docs/hall-v3/greybox-tooling.json",
     "greyboxCandidates": "docs/hall-v3/greybox-candidates.json",
     "greyboxLayouts": "docs/hall-v3/greybox-layouts.json",
-    "greyboxDecision": "docs/hall-v3/greybox-decision.json"
+    "greyboxDecision": "docs/hall-v3/greybox-decision.json",
+    "cameraRigs": "docs/hall-v3/camera-rigs.json"
   },
   "gates": {
     "foundation": "completed",
