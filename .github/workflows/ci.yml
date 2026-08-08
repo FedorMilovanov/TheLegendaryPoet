@@ -36,6 +36,8 @@ jobs:
         run: npm run validate:hall-topology-provenance
       - name: Validate Hall v3 post-camera spatial authority
         run: npm run validate:hall-post-camera-authority
+      - name: Validate Hall v3 material spike source contract
+        run: npm run validate:hall-material-spike
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |
