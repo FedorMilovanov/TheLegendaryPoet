@@ -6,18 +6,21 @@ This directory is the technical/art-production authority for Hall v3 while the l
 
 The current machine phase and gate state live in [`hall-v3-contract.json`](hall-v3-contract.json). Agents must update that contract explicitly when advancing a gate; prose alone cannot silently advance Hall production state.
 
-## Current phase — camera approval
+## Current phase — camera approval decision recorded
 
-Gate 0 / foundation and Gate 1 / Reference Bible are completed. Gate 2 / metric greybox is completed by a separate explicit topology decision. Gate 3 / camera approval is now active.
+Gate 0 / foundation, Gate 1 / Reference Bible and Gate 2 / metric greybox are completed. Gate 3 / camera approval remains the current machine phase, but the camera decision itself is now recorded separately from gate promotion.
 
-The neutral H1/H2/H3 shootout remains immutable evidence. It was regenerated on exact PR head `70aeb9c1aca4414d9cade3cb9cdcfb887b7ea806` in Blender 4.5.12 LTS and merged through PR #376 to Product `main@66dabcdcff5fa0fc8ad8fde44544432e4a144e4d`.
+The immutable topology and Camera Approval evidence say:
 
-The topology decision is:
+- **H3 — selected topology**;
+- **H1 — topology reserve benchmark**;
+- **H2 — topology reject**;
+- **R1 — selected guided camera rig**;
+- **R3 — camera reserve**;
+- **R0 — rejected close/flat benchmark**;
+- **R2 — rejected because `pushkinViewing` hits `HUMAN_PROXY` before the Pushkin proxy**.
 
-- **H3 — advance**: selected single topology authority for camera evaluation;
-- **H1 — reserve**: retained as route/orientation benchmark only;
-- **H2 — reject**: parked because the neutral evidence does not justify its 53.8854 m baseline route and 8 forced turns;
-- **camera rig — not approved**: the common 35 mm shootout lens remains benchmark instrumentation only.
+The camera candidate evidence was rendered on exact PR #382 head `7637010ef69248fe05ea37c1a1cf9ee8d2a38193` in Blender 4.5.12 LTS. `camera-decision.json` owns the human select/reject decision; `camera-rigs.json` deliberately remains immutable candidate evidence with `approvedRig=null` rather than being rewritten after inspection.
 
 Current source authority:
 
@@ -26,11 +29,15 @@ Current source authority:
 - [`reference-bible.json`](reference-bible.json) — completed evidence and explicit non-decisions;
 - [`greybox-tooling.json`](greybox-tooling.json) — completed reproducible Blender 4.5.12 runtime/smoke evidence contract;
 - [`greybox-layouts.json`](greybox-layouts.json) — frozen H1/H2/H3 metre-scale shootout source;
-- [`greybox-candidates.json`](greybox-candidates.json) — retained candidate dispositions with H3 selected and `approvedRig=null`;
-- [`greybox-decision.json`](greybox-decision.json) — exact artifact-backed select/reject authority and phase transition;
-- `scripts/hall-greybox/generate-candidates.py` — deterministic generator retained for reproducibility;
-- `scripts/validate-hall-topology-selection.ts` — persistent source + generated-evidence guard;
-- `.github/workflows/hall-greybox-tooling.yml` — exact-head Blender reproduction barrier for the frozen shootout.
+- [`greybox-candidates.json`](greybox-candidates.json) — frozen topology candidate evidence;
+- [`greybox-decision.json`](greybox-decision.json) — artifact-backed H3/H1/H2 topology select/reject authority;
+- [`camera-rigs.json`](camera-rigs.json) — immutable R0/R1/R2/R3 camera candidate source;
+- [`camera-decision.json`](camera-decision.json) — selected R1 / reserve R3 / rejected R0,R2 authority;
+- `scripts/hall-greybox/generate-candidates.py` — deterministic topology-evidence generator retained for reproducibility;
+- `scripts/hall-camera/generate-camera-candidates.py` — deterministic camera-evidence generator that may not mutate H3 geometry;
+- `scripts/validate-hall-topology-selection.ts` and `scripts/validate-hall-topology-selection-provenance.ts` — persistent frozen-topology guards;
+- `scripts/validate-hall-camera-approval.ts` plus `scripts/validate-hall-camera-decision.ts` — immutable camera evidence + decision guards;
+- `.github/workflows/hall-greybox-tooling.yml` — exact-head Blender reproduction barrier.
 
 ## Current production boundary
 
@@ -38,7 +45,7 @@ Current source authority:
 - `src/components/hall/*` is legacy implementation evidence only.
 - Three.js/R3F remains out of the dormant `/hall` dependency graph.
 - No generated `.blend`, PNG/SVG comparison evidence or runtime GLB is committed as production web authority.
-- H3 selection authorizes **camera evaluation only**; it does not authorize geometry redesign, materials, lights, textures, export or WebGL.
+- H3 topology and R1 camera selection do **not** authorize geometry redesign, materials, lights, textures, export or WebGL.
 - Candidate scenes contain proxy geometry only; no rights-uncleared documentary image becomes a source asset.
 - No Hall v2 FPS, hover-whisper, dust, mirror-floor or post-processing behavior is a required Hall v3 feature.
 
@@ -46,19 +53,21 @@ Current source authority:
 
 1. **Reference/evidence bible** — visual language, exclusions, spatial brief and acceptance criteria.
 2. **Frozen metric shootout source** — H1/H2/H3 layout data and deterministic Blender generator.
-3. **Generated Blender evidence** — exact-head Actions artifacts proving routes, clearances, sightlines and comparison metrics.
-4. **Topology decision** — H3 advance / H1 reserve / H2 reject; no camera approval implied.
-5. **Camera approval evidence** — next active layer; must prove guided desktop/mobile/reduced-motion framing on selected H3.
-6. **Later approved Blender scene** — only after camera approval and later lookdev/export gates.
-7. **Asset/runtime manifest** — later GLB/KTX2 files, hashes, exhibit bindings and budgets.
-8. **Canonical poet library + rights register** — content/provenance remain outside Blender.
-9. **Web runtime** — later loading, approved camera, accessible DOM, quality tiers, reduced motion and fallback.
+3. **Generated topology evidence** — exact-head Actions artifacts proving routes, clearances, sightlines and comparison metrics.
+4. **Topology decision** — H3 selected, H1 reserve, H2 rejected.
+5. **Immutable camera candidate evidence** — R0/R1/R2/R3 generated on frozen H3.
+6. **Camera decision** — R1 selected, R3 reserve, R0/R2 rejected; camera candidate source remains unmodified evidence.
+7. **Later material/lighting/export spike** — may start only after a separate machine gate-promotion transaction.
+8. **Later approved Blender scene** — only after lookdev/export and Pushkin vertical-slice gates.
+9. **Asset/runtime manifest** — later GLB/KTX2 files, hashes, exhibit bindings and budgets.
+10. **Canonical poet library + rights register** — content/provenance remain outside Blender.
+11. **Web runtime** — later loading, approved camera, accessible DOM, quality tiers, reduced motion and fallback.
 
 A lower layer must not silently repair a higher-layer defect. React does not fix architecture. Post-processing does not fix materials. AI does not approve its own output.
 
 ## Mandatory production order
 
-`reference bible → metric greybox → candidate decision → camera approval → material/lighting/export spike → Pushkin vertical slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
+`reference bible → metric greybox → candidate decision → camera approval → gate promotion → material/lighting/export spike → Pushkin vertical slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
 
 Skipping a gate is a blocker, not an acceleration.
 
@@ -80,35 +89,26 @@ Frozen comparison metrics:
 - H2 — 53.8854 m / 8 forced turns;
 - H3 — 37.8327 m / 4 forced turns.
 
-All 18 certified sightline witnesses passed. All three Pushkin viewing pockets passed the inherited accessibility witness. Materials = 0, lights = 0. The topology-selection validator also pins the exact layout fingerprints from that evidence so this decision cannot be retroactively justified after a hidden layout change.
+All 18 certified topology sightline witnesses passed. H3 advances because it has the strongest spatial identity, changing diagonal sightlines and side-focus hierarchy at a moderate route cost. H1 remains the orientation/route-simplicity reserve benchmark. H2 is rejected for the current production path.
 
-### Topology decision — completed
+## Gate 3 — camera approval — decision recorded, promotion pending
 
-H3 advances because it has the strongest spatial identity, changing diagonal sightlines and side-focus hierarchy at a moderate route cost. H1 remains the orientation/route-simplicity reserve benchmark. H2 is rejected for the current production path because its longest route/highest turn count is not compensated by stronger neutral spatial evidence.
+Camera candidate authoring kept H3 geometry, materials/lights and the five non-problem journey witnesses frozen. Only `pushkinViewing` varied.
 
-This is a topology decision only. It does not approve the common 35 mm camera set.
+Exact-head candidate findings:
 
-## Gate 3 — camera approval — active
+- R0 / 35 mm / 3.5082 m — rejected close/flat benchmark;
+- R1 / 28 mm / 4.3342 m — **selected**; unobstructed, stronger room/document context, portrait-mobile Pushkin proxy fully inside frame;
+- R2 / 32 mm / 4.7101 m — rejected by generated ray evidence because `HUMAN_PROXY` blocks the Pushkin target;
+- R3 / 35 mm / 5.4116 m — valid reserve; unobstructed but compositionally weaker than R1 in current neutral evidence.
 
-Camera Approval must operate on the selected H3 topology without redesigning that topology to rescue a weak shot.
+The selected R1 `pushkinViewing` camera is exactly the candidate evidence position `[8.0, 2.5, 1.60]`, target/destination `[11.15, 5.45, 1.95]`, lens `28 mm`. The other five guided H3 witness cameras remain the frozen baseline values.
 
-Known shootout-camera problem: `pushkinViewing` is too close/flat in portrait framing. The next bounded camera wave must compare a small common set of guided rigs/lenses and prove:
-
-- entry reveal;
-- orientation;
-- first transition;
-- Pushkin approach;
-- Pushkin viewing;
-- reverse/exit;
-- equivalent portrait-mobile crops;
-- direct reduced-motion cut destinations;
-- wayfinding that does not depend on FPS/free-look.
-
-`approvedRig` remains `null` until that evidence is inspected and explicitly approved.
+`camera-decision.json` does **not** itself complete the machine gate. A separate bounded promotion transaction must verify the merged decision evidence, then set `cameraApproval=completed` and activate only `materialLightingExportSpike`. Any later camera change requires reopening Camera Approval with new evidence.
 
 ## Gate 4 — material / lighting / export spike — blocked
 
-Only after Camera Approval may one small H3 architectural bay test PBR colour spaces, UV strategy, navigation-safe lighting, static-light delivery, raw→optimized asset validation and browser viability. Do not texture or bake the full museum first.
+Only after explicit gate promotion may one small H3 architectural bay test PBR colour spaces, UV strategy, navigation-safe lighting, static-light delivery, raw→optimized asset validation and browser viability. Do not texture or bake the full museum first.
 
 ## Gate 5 — Pushkin vertical slice — blocked
 
@@ -130,6 +130,8 @@ FPS/free-walk, poet-connection mode, timeline animation and ambient audio remain
 - [`greybox-candidates.json`](greybox-candidates.json)
 - [`greybox-layouts.json`](greybox-layouts.json)
 - [`greybox-decision.json`](greybox-decision.json)
+- [`camera-rigs.json`](camera-rigs.json)
+- [`camera-decision.json`](camera-decision.json)
 - [`ART_DIRECTION.md`](ART_DIRECTION.md)
 - [`SCENE_CONTRACT.md`](SCENE_CONTRACT.md)
 - [`ASSET_PIPELINE.md`](ASSET_PIPELINE.md)
@@ -141,4 +143,4 @@ FPS/free-walk, poet-connection mode, timeline animation and ambient audio remain
 
 ## Closure
 
-Topology selection does not close `TLP-HALL-001`. The lane closes only after camera, lookdev/export, Pushkin slice, offline/web delivery and fallback contracts are certified, production `/hall` safely replaces the placeholder and resulting exact-head evidence is recorded in AuditRepo.
+Camera selection does not close `TLP-HALL-001`. The lane closes only after gate promotion, lookdev/export, Pushkin slice, offline/web delivery and fallback contracts are certified, production `/hall` safely replaces the placeholder and resulting exact-head evidence is recorded in AuditRepo.
