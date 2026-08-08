@@ -34,6 +34,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   blender-preflight:
     runs-on: ubuntu-latest
@@ -46,6 +49,14 @@ jobs:
     steps:
       - name: Checkout exact greybox tooling head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact greybox checkout identity
+        run: |
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > hall-greybox-tested-head.txt
 
       - name: Set up repository Node baseline
         uses: ./.github/actions/setup-node-deps
@@ -124,8 +135,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: hall-greybox-tooling-${{ github.event.pull_request.head.sha || github.sha }}
+          name: hall-greybox-tooling-${{ env.TESTED_SHA }}
           path: |
+            hall-greybox-tested-head.txt
             blender-version.txt
             qa-artifacts/hall-greybox-tooling/preflight.json
             qa-artifacts/hall-greybox-tooling/tooling-smoke.blend
@@ -136,7 +148,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: hall-greybox-candidates-${{ github.event.pull_request.head.sha || github.sha }}
-          path: qa-artifacts/hall-greybox-candidates
+          name: hall-greybox-candidates-${{ env.TESTED_SHA }}
+          path: |
+            hall-greybox-tested-head.txt
+            qa-artifacts/hall-greybox-candidates
           if-no-files-found: warn
           retention-days: 14
