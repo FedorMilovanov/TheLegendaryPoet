@@ -10,7 +10,7 @@ This directory is the technical/art-production authority for Hall v3 while the l
 - `src/components/hall/*` is legacy implementation evidence only.
 - No Hall v2 FPS, hover-whisper, dust, mirror-floor or post-processing behavior is a required Hall v3 feature.
 - Three.js/R3F must remain out of the `/hall` route chunk until the user explicitly enters an approved v3 experience.
-- The background concept image on the placeholder is not an architectural promise.
+- Early architectural concept art stays off the production `/hall` route until it has passed the reference/greybox/visual gates; dormant-route presentation must not masquerade as the approved Hall.
 
 ## Authority layers
 
