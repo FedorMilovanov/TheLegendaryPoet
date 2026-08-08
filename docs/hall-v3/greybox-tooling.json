@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "phase": "metricGreybox",
+  "status": "active",
+  "blender": {
+    "releaseSeries": "4.5 LTS",
+    "version": "4.5.12",
+    "platform": "linux-x64",
+    "archiveFilename": "blender-4.5.12-linux-x64.tar.xz",
+    "archiveUrl": "https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz",
+    "checksumIndexUrl": "https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256",
+    "officialBuildIndex": "https://builder.blender.org/download/daily/",
+    "officialManual": "https://docs.blender.org/manual/en/4.5/advanced/command_line/arguments.html",
+    "requiredCli": [
+      "--background",
+      "--disable-autoexec",
+      "--python-exit-code",
+      "--python"
+    ],
+    "autoUpdate": false
+  },
+  "smokeScene": {
+    "unitSystem": "METRIC",
+    "lengthUnit": "METERS",
+    "scaleLength": 1,
+    "humanProxyHeightMetres": 1.75,
+    "requiredCollections": [
+      "COLL_CORE",
+      "COLL_CAMERAS",
+      "COLL_EXPORT_HELPERS"
+    ],
+    "requiredObjects": [
+      "TOOLING_FLOOR",
+      "HUMAN_PROXY",
+      "CAM_TOOLING_PREFLIGHT"
+    ],
+    "roundTripSaveReopen": true,
+    "renderRequired": false,
+    "materialsRequired": false,
+    "lightsRequired": false
+  },
+  "evidence": {
+    "directory": "qa-artifacts/hall-greybox-tooling",
+    "json": "qa-artifacts/hall-greybox-tooling/preflight.json",
+    "blend": "qa-artifacts/hall-greybox-tooling/tooling-smoke.blend",
+    "retainInGit": false
+  },
+  "candidateManifest": "docs/hall-v3/greybox-candidates.json",
+  "nonGoals": [
+    "production-geometry",
+    "topology-winner",
+    "camera-approval",
+    "material-lookdev",
+    "lighting-lookdev",
+    "gltf-export",
+    "webgl-runtime",
+    "production-hall-route-change"
+  ]
+}
