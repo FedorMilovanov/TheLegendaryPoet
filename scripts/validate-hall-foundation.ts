@@ -37,24 +37,26 @@ expect(
   'dormant Hall shell must retain the <= 8000-byte route budget',
 );
 
-for (const forbiddenImport of [
-  "components/hall",
-  "@react-three/fiber",
-  "@react-three/drei",
-  "@react-three/postprocessing",
-  "from 'three'",
-  'from "three"',
-  'HallOfPoets',
-]) {
-  expect(!hallPage.includes(forbiddenImport), `HallPage must not import dormant 3D runtime: ${forbiddenImport}`);
+const importSpecifiers = [...hallPage.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)]
+  .map((match) => match[1]);
+for (const specifier of importSpecifiers) {
+  expect(
+    !specifier.includes('/components/hall') && !specifier.includes('components/hall/'),
+    `HallPage must not import the dormant Hall v2 runtime: ${specifier}`,
+  );
+  expect(
+    !['three', '@react-three/fiber', '@react-three/drei', '@react-three/postprocessing'].includes(specifier),
+    `HallPage must not import a 3D runtime dependency while dormant: ${specifier}`,
+  );
 }
+expect(!importSpecifiers.some((specifier) => /HallOfPoets/i.test(specifier)), 'HallPage must not import HallOfPoets');
 
 expect(
   routeRuntime.includes("HallPage: () => import('../pages/HallPage')"),
   'route runtime must lazy-load the HallPage shell through the canonical route registry',
 );
 expect(
-  !routeRuntime.includes("components/hall/HallOfPoets"),
+  !/(?:from\s+|import\s*\(\s*)['"][^'"]*components\/hall\/HallOfPoets/.test(routeRuntime),
   'route runtime must not import the legacy Hall v2 scene',
 );
 
