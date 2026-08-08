@@ -13,6 +13,8 @@
     "resultingMain": "66dabcdcff5fa0fc8ad8fde44544432e4a144e4d",
     "artifactId": 9021765090,
     "artifactDigest": "sha256:598b2a60df72d9457e9b7620b5b7ea94fb59af8e0db60e11d334fbaaa94e8318",
+    "layoutsGitBlobSha": "b3def316d855a6539ffd280217ed63e22c6855d9",
+    "generatorGitBlobSha": "7f5dbe64d61880031819a5d4e855e5c6b7285ef3",
     "testedHeadWitness": "tested_commit=70aeb9c1aca4414d9cade3cb9cdcfb887b7ea806",
     "blenderVersion": "4.5.12 LTS",
     "blenderBuildHash": "84afd5f785f7",
