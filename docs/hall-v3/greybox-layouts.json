@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "phase": "metricGreybox",
+  "status": "authoring",
+  "common": {
+    "unit": "metres",
+    "wallThickness": 0.25,
+    "defaultWallHeight": 4.5,
+    "humanProxyHeightMetres": 1.75,
+    "cameraEyeHeightMetres": 1.65,
+    "comparisonLensMm": 35,
+    "desktopResolution": [960, 540],
+    "mobileResolution": [540, 960],
+    "neutralRenderEngine": "BLENDER_WORKBENCH",
+    "minimumClearances": {
+      "routeOneWay": 0.915,
+      "routeTwoWayRecommended": 1.525,
+      "viewingWidth": 0.76,
+      "viewingDepth": 1.22,
+      "headroom": 2.03
+    },
+    "mobileWitnesses": ["entryReveal", "pushkinApproach", "pushkinViewing"]
+  },
+  "candidates": [
+    {
+      "id": "H1",
+      "name": "orientation court plus chronological branches",
+      "floorPolygon": [[-18,-16],[18,-16],[18,16],[-18,16]],
+      "walls": [
+        [-18,-16,-2.5,-16], [2.5,-16,18,-16], [-18,-16,-18,16], [18,-16,18,16], [-18,16,18,16],
+        [-2.5,-16,-2.5,-7], [2.5,-16,2.5,-7],
+        [-18,-2.25,-8.5,-2.25], [-18,2.25,-8.5,2.25],
+        [8.5,-2.25,18,-2.25], [8.5,2.25,18,2.25],
+        [-2.25,7,-2.25,16], [2.25,7,2.25,16],
+        [-15.5,2.25,-15.5,9], [-9.5,2.25,-9.5,9], [-15.5,9,-9.5,9],
+        [-15.5,2.25,-13.45,2.25], [-11.55,2.25,-9.5,2.25]
+      ],
+      "ceilingZones": [
+        {"center":[0,-11.5],"size":[5,9],"height":4.2},
+        {"center":[0,0],"size":[17,14],"height":6.2},
+        {"center":[-13.25,0],"size":[9.5,4.5],"height":4.3},
+        {"center":[13.25,0],"size":[9.5,4.5],"height":4.3},
+        {"center":[0,11.5],"size":[4.5,9],"height":4.3},
+        {"center":[-12.5,5.6],"size":[6,6.7],"height":4.5}
+      ],
+      "route": [[0,-15],[0,-8],[0,-2],[-8,0],[-12.5,0],[-12.5,4.2],[-12.5,6.4]],
+      "clearanceProbes": [
+        {"id":"entry","a":[-2,-10,1.2],"b":[2,-10,1.2]},
+        {"id":"west-branch","a":[-10,-2,1.2],"b":[-10,2,1.2]},
+        {"id":"pushkin-door","a":[-13.4,2.4,1.2],"b":[-11.6,2.4,1.2]}
+      ],
+      "viewingClearance": {"center":[-12.5,6.05],"size":[1.4,1.6],"servedObject":"EXHIBIT_alexander-pushkin"},
+      "pushkin": {
+        "anchor":{"center":[-12.5,8.82,2.0],"size":[2.4,0.18,3.2],"rotationZ":0.0},
+        "documentCases":[
+          {"name":"EXHIBIT_DOC_CASE_01","center":[-10.8,6.2,0.55],"size":[1.0,0.65,1.1],"rotationZ":0.0},
+          {"name":"EXHIBIT_DOC_CASE_02","center":[-14.2,6.2,0.55],"size":[1.0,0.65,1.1],"rotationZ":0.0}
+        ]
+      },
+      "humanProxyPosition":[-11.2,5.0],
+      "cameras": {
+        "entryReveal":{"position":[0,-14.2,1.65],"target":[0,-1.0,1.6],"nextDestination":[0,-1.0,1.6],"note":"orientation court"},
+        "orientation":{"position":[0,-2.0,1.65],"target":[-8.0,0.0,1.6],"nextDestination":[-8.0,0.0,1.6],"note":"west chronological branch"},
+        "firstTransition":{"position":[-6.3,0.0,1.65],"target":[-12.3,0.0,1.6],"nextDestination":[-12.3,0.0,1.6],"note":"Pushkin branch threshold"},
+        "pushkinApproach":{"position":[-12.5,0.5,1.65],"target":[-12.5,7.4,1.75],"nextDestination":[-12.5,7.4,1.75],"note":"Pushkin anchor"},
+        "pushkinViewing":{"position":[-12.5,5.0,1.65],"target":[-12.5,8.8,1.95],"nextDestination":[-12.5,8.8,1.95],"note":"Pushkin portrait proxy"},
+        "reverseExit":{"position":[-12.5,6.2,1.65],"target":[-12.5,2.6,1.5],"nextDestination":[-12.5,2.6,1.5],"note":"return to west branch"}
+      }
+    },
+    {
+      "id": "H2",
+      "name": "directed chronological promenade plus focus bays",
+      "floorPolygon": [[-10,-22],[10,-22],[10,22],[-10,22]],
+      "walls": [
+        [-10,-22,-2.5,-22], [2.5,-22,10,-22], [-10,-22,-10,22], [10,-22,10,22], [-10,22,10,22],
+        [-10,-11,2,-11], [5,-11,7,-11], [8.5,-11,10,-11],
+        [-10,-1,-5,-1], [-2,-1,7,-1], [8.5,-1,10,-1],
+        [-10,9,1,9], [4,9,7,9], [8.5,9,10,9],
+        [7,-10,7,-2.4], [4.6,-9.5,7,-9.5], [4.6,-2.5,7,-2.5]
+      ],
+      "ceilingZones": [
+        {"center":[0,-16.5],"size":[20,11],"height":3.7},
+        {"center":[0,-6],"size":[20,10],"height":5.0},
+        {"center":[0,4],"size":[20,10],"height":3.9},
+        {"center":[0,15.5],"size":[20,13],"height":5.2}
+      ],
+      "route": [[0,-21],[0,-14],[3.5,-11],[3.5,-7],[5.1,-5.0],[3.5,-2.0],[-3.5,-1],[-3.5,4],[2.5,9],[2.5,14],[0,21]],
+      "clearanceProbes": [
+        {"id":"entry","a":[-2,-16,1.2],"b":[2,-16,1.2]},
+        {"id":"first-transition","a":[2.2,-10.8,1.2],"b":[4.8,-10.8,1.2]},
+        {"id":"east-direct-cut","a":[7.05,4,1.2],"b":[8.45,4,1.2]},
+        {"id":"later-prom-aisle","a":[-5,4,1.2],"b":[-2,4,1.2]}
+      ],
+      "viewingClearance": {"center":[5.25,-5.0],"size":[1.3,1.6],"servedObject":"EXHIBIT_alexander-pushkin"},
+      "pushkin": {
+        "anchor":{"center":[6.88,-5.0,2.0],"size":[0.18,2.4,3.2],"rotationZ":0.0},
+        "documentCases":[
+          {"name":"EXHIBIT_DOC_CASE_01","center":[5.6,-7.2,0.55],"size":[0.65,1.0,1.1],"rotationZ":0.0},
+          {"name":"EXHIBIT_DOC_CASE_02","center":[5.6,-3.0,0.55],"size":[0.65,1.0,1.1],"rotationZ":0.0}
+        ]
+      },
+      "humanProxyPosition":[4.2,-5.8],
+      "cameras": {
+        "entryReveal":{"position":[0,-20.4,1.65],"target":[0,-13.0,1.6],"nextDestination":[0,-13.0,1.6],"note":"first promenade chamber"},
+        "orientation":{"position":[0,-14.0,1.65],"target":[3.5,-11.0,1.6],"nextDestination":[3.5,-11.0,1.6],"note":"offset first transition"},
+        "firstTransition":{"position":[2.0,-12.4,1.65],"target":[3.5,-8.0,1.6],"nextDestination":[3.5,-8.0,1.6],"note":"first focus chamber"},
+        "pushkinApproach":{"position":[3.6,-8.4,1.65],"target":[6.7,-5.0,1.85],"nextDestination":[6.7,-5.0,1.85],"note":"Pushkin focus bay"},
+        "pushkinViewing":{"position":[5.0,-5.0,1.65],"target":[6.88,-5.0,2.0],"nextDestination":[6.88,-5.0,2.0],"note":"Pushkin portrait proxy"},
+        "reverseExit":{"position":[5.3,-5.0,1.65],"target":[3.6,-8.2,1.5],"nextDestination":[3.6,-8.2,1.5],"note":"return to promenade"}
+      }
+    },
+    {
+      "id": "H3",
+      "name": "asymmetric orientation plus diagonal or curved trajectory and side focus rooms",
+      "floorPolygon": [[-10,-17],[10,-17],[15,-7],[13,8],[4,18],[-10,14],[-15,2],[-14,-8]],
+      "walls": [
+        [-10,-17,-2.5,-17], [2.5,-17,10,-17], [10,-17,15,-7], [15,-7,13,8], [13,8,4,18], [4,18,-10,14], [-10,14,-15,2], [-15,2,-14,-8], [-14,-8,-10,-17],
+        [-6,-13,1,-6], [6,-12,10,-7], [1,-6,-1,3], [10,-7,8,3], [-1,3,-5,10], [8,3,4,11],
+        [8.1,3.1,12.2,4.2], [12.2,4.2,11.5,8.0]
+      ],
+      "ceilingZones": [
+        {"center":[0,-11.5],"size":[18,11],"height":5.4},
+        {"center":[4,-2],"size":[17,12],"height":4.6},
+        {"center":[2,9],"size":[18,12],"height":5.1},
+        {"center":[10.0,5.2],"size":[5.5,5.2],"height":4.3}
+      ],
+      "route": [[0,-16],[0,-12],[3,-8],[6,-5],[6,0],[9,3],[7,7],[3,12],[1,16]],
+      "clearanceProbes": [
+        {"id":"entry","a":[-2,-14.5,1.2],"b":[2,-14.5,1.2]},
+        {"id":"diagonal-1","a":[1.8,-8.8,1.2],"b":[4.2,-7.0,1.2]},
+        {"id":"diagonal-2","a":[5.0,-1.0,1.2],"b":[7.4,-0.4,1.2]},
+        {"id":"focus-return","a":[7.4,5.4,1.2],"b":[9.3,6.0,1.2]}
+      ],
+      "viewingClearance": {"center":[9.25,4.3],"size":[1.4,1.6],"servedObject":"EXHIBIT_alexander-pushkin"},
+      "pushkin": {
+        "anchor":{"center":[11.15,5.45,2.0],"size":[2.4,0.18,3.2],"rotationZ":-1.30},
+        "documentCases":[
+          {"name":"EXHIBIT_DOC_CASE_01","center":[9.7,6.4,0.55],"size":[1.0,0.65,1.1],"rotationZ":-0.45},
+          {"name":"EXHIBIT_DOC_CASE_02","center":[10.7,3.7,0.55],"size":[1.0,0.65,1.1],"rotationZ":-0.45}
+        ]
+      },
+      "humanProxyPosition":[8.0,3.2],
+      "cameras": {
+        "entryReveal":{"position":[0,-15.5,1.65],"target":[3.0,-9.0,1.6],"nextDestination":[3.0,-9.0,1.6],"note":"asymmetric orientation field"},
+        "orientation":{"position":[2.0,-10.0,1.65],"target":[6.0,-5.0,1.6],"nextDestination":[6.0,-5.0,1.6],"note":"diagonal main trajectory"},
+        "firstTransition":{"position":[4.0,-7.0,1.65],"target":[6.0,-2.0,1.6],"nextDestination":[6.0,-2.0,1.6],"note":"diagonal transition"},
+        "pushkinApproach":{"position":[6.0,-1.0,1.65],"target":[9.5,3.8,1.8],"nextDestination":[9.5,3.8,1.8],"note":"Pushkin side focus room"},
+        "pushkinViewing":{"position":[8.4,3.3,1.65],"target":[11.15,5.45,2.0],"nextDestination":[11.15,5.45,2.0],"note":"Pushkin portrait proxy"},
+        "reverseExit":{"position":[9.1,4.2,1.65],"target":[6.2,0.2,1.5],"nextDestination":[6.2,0.2,1.5],"note":"return to diagonal trajectory"}
+      }
+    }
+  ]
+}
