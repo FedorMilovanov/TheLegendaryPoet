@@ -38,9 +38,20 @@ function accessorCount(json, accessorIndex) {
   return json.accessors?.[accessorIndex]?.count ?? 0;
 }
 
+function meshTriangleCount(mesh) {
+  if (!mesh) return 0;
+  return mesh.primitives.reduce((sum, primitive) => sum + primitive.triangles, 0);
+}
+
 function snapshot(filePath) {
   const { json, bytes } = readGlbJson(filePath);
-  const nodes = (json.nodes ?? []).map((node, index) => ({ index, name: node.name ?? null, mesh: node.mesh ?? null, camera: node.camera ?? null, extras: node.extras ?? null }));
+  const nodes = (json.nodes ?? []).map((node, index) => ({
+    index,
+    name: node.name ?? null,
+    mesh: node.mesh ?? null,
+    camera: node.camera ?? null,
+    extras: node.extras ?? null,
+  }));
   const meshes = (json.meshes ?? []).map((mesh, meshIndex) => ({
     index: meshIndex,
     name: mesh.name ?? null,
@@ -65,6 +76,11 @@ function snapshot(filePath) {
     metallicFactor: material.pbrMetallicRoughness?.metallicFactor ?? 1,
     roughnessFactor: material.pbrMetallicRoughness?.roughnessFactor ?? 1,
   }));
+  const uniqueMeshTriangles = meshes.reduce((sum, mesh) => sum + meshTriangleCount(mesh), 0);
+  const renderedInstanceTriangles = nodes.reduce((sum, node) => {
+    if (!Number.isInteger(node.mesh)) return sum;
+    return sum + meshTriangleCount(meshes[node.mesh]);
+  }, 0);
   return {
     file: filePath,
     bytes,
@@ -76,7 +92,8 @@ function snapshot(filePath) {
     cameras: (json.cameras ?? []).map((camera, index) => ({ index, name: camera.name ?? null, type: camera.type })),
     textureCount: (json.textures ?? []).length,
     imageCount: (json.images ?? []).length,
-    totalTriangles: meshes.reduce((sum, mesh) => sum + mesh.primitives.reduce((inner, primitive) => inner + primitive.triangles, 0), 0),
+    uniqueMeshTriangles,
+    renderedInstanceTriangles,
   };
 }
 
@@ -137,10 +154,12 @@ for (const [label, value] of [['raw', raw], ['optimized', optimized]]) {
   if (!emissive?.hasEmissiveTexture) failures.push(`${label} GLB missing emissive calibration texture`);
 }
 
-if (raw.totalTriangles !== optimized.totalTriangles) failures.push(`triangle count changed without a simplification contract: ${raw.totalTriangles} -> ${optimized.totalTriangles}`);
+if (raw.renderedInstanceTriangles !== optimized.renderedInstanceTriangles) {
+  failures.push(`rendered scene triangle count changed without a simplification contract: ${raw.renderedInstanceTriangles} -> ${optimized.renderedInstanceTriangles}`);
+}
 
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   status: failures.length ? 'failed' : 'passed',
   requiredNames,
   raw,
@@ -149,7 +168,12 @@ const report = {
     nodeNamesAndExtras: failures.every((item) => !item.includes('required node') && !item.includes('extras drifted')),
     uv0AndUv1: failures.every((item) => !item.includes('TEXCOORD_')),
     pbrBindings: failures.every((item) => !item.includes('surface material') && !item.includes('AO/occlusion') && !item.includes('emissive')),
-    trianglesUnchanged: raw.totalTriangles === optimized.totalTriangles,
+    trianglesUnchanged: raw.renderedInstanceTriangles === optimized.renderedInstanceTriangles,
+    meshDeduplicationOnly: optimized.uniqueMeshTriangles <= raw.uniqueMeshTriangles && optimized.renderedInstanceTriangles === raw.renderedInstanceTriangles,
+  },
+  optimization: {
+    uniqueMeshTriangleDelta: optimized.uniqueMeshTriangles - raw.uniqueMeshTriangles,
+    renderedInstanceTriangleDelta: optimized.renderedInstanceTriangles - raw.renderedInstanceTriangles,
   },
   sizeReductionBytes: raw.bytes - optimized.bytes,
   sizeReductionRatio: raw.bytes > 0 ? (raw.bytes - optimized.bytes) / raw.bytes : 0,
@@ -163,4 +187,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Hall material spike GLB preservation passed: ${raw.bytes} -> ${optimized.bytes} bytes`);
+console.log(`Hall material spike GLB preservation passed: ${raw.bytes} -> ${optimized.bytes} bytes; rendered triangles ${raw.renderedInstanceTriangles} -> ${optimized.renderedInstanceTriangles}; unique-mesh triangles ${raw.uniqueMeshTriangles} -> ${optimized.uniqueMeshTriangles}`);
