@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "foundation",
+  "productionRoute": {
+    "path": "/hall",
+    "mode": "placeholder",
+    "module": "src/pages/HallPage.tsx",
+    "maxRouteBytes": 8000,
+    "allowLegacyHallImports": false,
+    "allowThreeRuntimeImports": false,
+    "allowUnapprovedConceptArt": false
+  },
+  "legacy": {
+    "sourceDirectory": "src/components/hall",
+    "currentAuthority": false,
+    "historicalValidator": "scripts/validate-hall-audio-runtime.ts",
+    "historicalValidatorMandatory": false
+  },
+  "sourceAuthority": {
+    "artDirection": "docs/hall-v3/ART_DIRECTION.md",
+    "scene": "docs/hall-v3/SCENE_CONTRACT.md",
+    "assetPipeline": "docs/hall-v3/ASSET_PIPELINE.md",
+    "visualAcceptance": "docs/hall-v3/VISUAL_ACCEPTANCE.md",
+    "aiPolicy": "docs/hall-v3/AI_USAGE_POLICY.md",
+    "performance": "docs/hall-v3/PERFORMANCE_BUDGET.md",
+    "rights": "docs/hall-v3/RIGHTS_REGISTER.md",
+    "legacyRetirement": "docs/hall-v3/LEGACY_RETIREMENT.md"
+  },
+  "gates": {
+    "foundation": "active",
+    "referenceBible": "blocked",
+    "metricGreybox": "blocked",
+    "cameraApproval": "blocked",
+    "materialLightingExportSpike": "blocked",
+    "pushkinVerticalSlice": "blocked",
+    "offlineVisualApproval": "blocked",
+    "webVerticalSlice": "blocked",
+    "fullMuseumScaleOut": "blocked"
+  },
+  "baselineNonGoals": [
+    "fps-free-walk",
+    "hover-whispers",
+    "fake-autographs",
+    "jsx-authored-architecture",
+    "full-museum-preload",
+    "effect-driven-visual-rescue"
+  ]
+}

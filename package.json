@@ -44,7 +44,8 @@
     "validate:community-target-store": "tsx scripts/validate-community-target-store.ts",
     "validate:community-scaling": "tsx scripts/validate-community-scaling.ts && tsx scripts/validate-community-hardening.ts",
     "validate:app-shell": "tsx scripts/validate-app-shell.ts",
-    "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts && tsx scripts/validate-hall-audio-runtime.ts",
+    "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts",
+    "validate:hall-foundation": "tsx scripts/validate-hall-foundation.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
@@ -65,7 +66,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
+    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
