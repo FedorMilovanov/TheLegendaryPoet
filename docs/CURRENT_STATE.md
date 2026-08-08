@@ -33,17 +33,18 @@ The exact evidence remains in AuditRepo, but the current source tree enforces th
 8. **Forensic branch retirement.** Temporary transport refs, superseded implementation refs, old Arena refs and the deeply diverged work ref were retired only after exact successor mapping, byte-identical evidence archival, selective current-head extraction, rights-safe path classification and direct post-deletion branch inventory. The intentional archive ref preserves the old research history without restoring obsolete runtime or executable workflows.
 9. **Single route/runtime truth.** Router elements, lazy page ownership, explicit redirects, sitemap membership, route QA inventory and per-route budgets derive from one machine contract. Unknown article ids reach NotFound, every SPA pathname transition owns focus after settlement, invalid essay structure fails validation instead of being repaired by the renderer, and archive removals expose honest mutation outcomes.
 10. **Canonical poet source authority.** All ten published poet records own their portrait and conclusion prose directly in their canonical source modules. The catalog preserves direct object identity, and permanent validation rejects hidden publication-time editorial rewriting or duplicate ownership of those fields.
+11. **Hall v3 foundation boundary.** Production `/hall` is a lightweight DOM placeholder; retained Hall-v2 source is forensic/non-authoritative and excluded from current TypeScript/runtime ownership. Legacy imports, dormant Three/R3F runtime and unapproved Hall concept art remain machine-blocked while staged Hall gates advance.
 
 ## Current quality gates
 
-The dependency-free `Project contracts` workflow runs project-contract, reader-certification and UTC-day validators on every PR and `main` push. `npm run check` continues to validate content, brand, app shell, interaction runtime, routes, archive behavior and TypeScript; production build, prerender and browser workflows remain separate final gates.
+The `Project contracts` workflow runs project-contract, workflow-consolidation, Hall phase contracts, reader-certification and UTC-day validators on every PR and `main` push. `npm run check` continues to validate content, brand, app shell, interaction runtime, Hall foundation invariants, the active Hall Reference Bible, routes, archive behavior and TypeScript; production build, prerender and browser workflows remain separate final gates.
 
 ## Open architecture lanes
 
 One owner-selected architecture lane is open. It must not absorb unrelated runtime/content work. AuditRepo remains the authority for exact status transitions and production evidence.
 
 <!-- project-contract:open-lanes:start -->
-- `TLP-HALL-001` — Product #369 owns Hall v3 foundation and staged rebuild. Production `/hall` remains a lightweight DOM shell; `src/components/hall/*` is legacy implementation evidence rather than visual/runtime authority. `docs/hall-v3/README.md` owns the gate sequence. No new 3D runtime is allowed to bypass reference/greybox/material-lighting/export/vertical-slice approval.
+- `TLP-HALL-001` — Product #369 owns the staged Hall v3 rebuild. Foundation is merged and remains permanently guarded; the current source phase is **Reference Bible**, with `docs/hall-v3/REFERENCE_BIBLE.md`, `SPATIAL_BRIEF.md` and `reference-bible.json` owning evidence/comparison criteria. Production `/hall` remains a lightweight DOM shell; `metricGreybox` and all later 3D/runtime gates are still blocked.
 <!-- project-contract:open-lanes:end -->
 
 ## Retained historical material

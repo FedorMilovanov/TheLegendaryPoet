@@ -24,8 +24,10 @@ jobs:
         run: node scripts/validate-project-contracts.mjs
       - name: Validate workflow consolidation and performance contract
         run: node scripts/validate-workflow-consolidation.mjs
-      - name: Validate Hall v3 foundation contract
+      - name: Validate Hall v3 foundation invariants
         run: npm run validate:hall-foundation
+      - name: Validate Hall v3 Reference Bible contract
+        run: npm run validate:hall-reference-bible
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation

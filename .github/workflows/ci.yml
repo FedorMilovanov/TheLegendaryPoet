@@ -28,8 +28,10 @@ jobs:
         run: npm run check:content
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
-      - name: Validate Hall v3 foundation contract
+      - name: Validate Hall v3 foundation invariants
         run: npm run validate:hall-foundation
+      - name: Validate Hall v3 Reference Bible contract
+        run: npm run validate:hall-reference-bible
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |

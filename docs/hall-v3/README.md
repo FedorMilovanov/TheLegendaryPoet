@@ -1,10 +1,22 @@
-# Hall v3 — production foundation
+# Hall v3 — staged production authority
 
 `TLP-HALL-001` owns the rebuild of `/hall`.
 
-This directory is the technical/art-production authority for Hall v3 while the lane is open. It does **not** make the current Hall v2 prototype production authority, and it does not authorize a new WebGL scene before the visual gates below are passed.
+This directory is the technical/art-production authority for Hall v3 while the lane is open. It does **not** make the Hall v2 prototype production authority, and it does not authorize a new WebGL scene before the visual gates below are passed.
 
 The current machine phase and gate state live in [`hall-v3-contract.json`](hall-v3-contract.json). Agents must update that contract explicitly when advancing a gate; prose alone cannot silently advance Hall production state.
+
+## Current phase — Reference Bible
+
+Gate 0 / foundation is completed. Gate 1 / Reference Bible is active.
+
+Current source authority for this phase:
+
+- [`REFERENCE_BIBLE.md`](REFERENCE_BIBLE.md) — annotated institutional/conservation references with `TAKE / AVOID / WHY / SOURCE`;
+- [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md) — common metric/camera/evidence criteria for the later H1/H2/H3 greybox shootout;
+- [`reference-bible.json`](reference-bible.json) — machine-readable sources, metrics, hypotheses, rejection rules, data boundaries and explicit non-decisions.
+
+`metricGreybox` and every later gate remain blocked. This phase does not authorize Blender geometry, GLB production assets, a WebGL runtime or a chosen museum topology.
 
 ## Current production boundary
 
@@ -16,9 +28,9 @@ The current machine phase and gate state live in [`hall-v3-contract.json`](hall-
 
 ## Authority layers
 
-1. **Art/reference bible** — visual language, references, exclusions and approved shots.
-2. **Blender source scene** — metric architecture, geometry, UVs, cameras, light/bake source and node naming.
-3. **Asset manifest** — runtime files, hashes, node IDs, exhibit bindings, optional lightmap bindings and budgets.
+1. **Art/reference bible** — visual language, evidence, exclusions, metric spatial brief and approved comparison criteria.
+2. **Blender source scene** — later metric architecture, geometry, UVs, cameras, light/bake source and node naming.
+3. **Asset manifest** — later runtime files, hashes, node IDs, exhibit bindings, optional lightmap bindings and budgets.
 4. **Canonical poet library** — poet identity/content; Blender must not become a second CMS.
 5. **Rights register** — provenance and publication permission for every documentary exhibit asset.
 6. **Web runtime** — loading, camera direction, DOM overlays, quality tiers, reduced-motion behavior and fallback.
@@ -31,35 +43,54 @@ A lower layer must not silently repair a higher-layer defect. React does not fix
 
 Skipping a gate is a blocker, not an acceleration.
 
-## Gate 0 — foundation
+## Gate 0 — foundation — completed
 
-Before new 3D code:
+Foundation proved and permanently guards:
 
-- this documentation set exists and is registered;
-- Hall v2 is explicitly legacy;
-- the route cannot accidentally import Hall v2;
-- project checks no longer make obsolete Hall-v2 interaction behavior current architecture authority;
-- `TLP-HALL-001` is registered in `docs/project-contract.json` and `docs/CURRENT_STATE.md`.
+- Hall-v3 authority is registered;
+- Hall v2 is explicitly legacy/non-authoritative;
+- production `/hall` cannot accidentally import Hall v2 or Three/R3F while dormant;
+- obsolete Hall-v2 interaction behavior no longer defines current architecture;
+- stale public concept art and temple/pantheon promises are blocked by validation;
+- the route remains within its lightweight shell budget.
 
-## Gate 1 — references and spatial brief
+These invariants continue to run while later phases advance.
 
-Produce a large annotated real-world reference set grouped by architecture, museum display, materials, lighting, signage, camera composition and mobile framing. Each useful reference records `TAKE / AVOID / WHY`; AI concept art may support ideation but cannot be the only spatial reference.
+## Gate 1 — references and spatial brief — active
 
-No final number of wings, dome form or exhibit layout is promised before this gate and the greybox gate are approved.
+The current wave converts research into an annotated real-world evidence set grouped by design problem. Each useful reference records `TAKE / AVOID / WHY / SOURCE`; a machine contract rejects unannotated source drift and premature topology decisions.
 
-## Gate 2 — Blender greybox
+The companion spatial brief defines:
+
+- H1/H2/H3 as **comparison hypotheses, not approvals**;
+- real-metre accessibility/viewing witnesses;
+- identical camera/mobile/evidence outputs for every later greybox candidate;
+- automatic rejection rules before materials;
+- object-first Pushkin exhibit grammar plus authoritative accessible DOM context;
+- a boundary between canonical poet data and legacy visual-concept metadata.
+
+No final number of wings, dome form, exhibit topology or camera rig is promised in this phase.
+
+### Gate 1 exit
+
+Gate 1 may be marked completed only in a separate exact-head transaction after this evidence/brief package is merged and recorded. That next transaction may activate `metricGreybox`; the present wave must leave it blocked.
+
+## Gate 2 — Blender greybox — blocked
+
+When explicitly activated later:
 
 - real-world scale;
 - plan, section and elevations;
-- fixed approved camera candidates;
+- fixed common camera candidates;
 - neutral materials only;
-- no bloom, fog, particles, gold glow or decorative rescue.
+- no bloom, fog, particles, gold glow or decorative rescue;
+- at least three materially different spatial hypotheses compared under the same evidence package.
 
 If the entrance, reveal, circulation and one exhibit approach are weak in grey, geometry returns to work.
 
-## Gate 3 — material / lighting / export spike
+## Gate 3 — material / lighting / export spike — blocked
 
-One small architectural bay proves:
+One small architectural bay must later prove:
 
 - PBR color-space rules;
 - UV0/UV1 strategy;
@@ -70,16 +101,16 @@ One small architectural bay proves:
 
 Do not bake the full museum before this decision.
 
-## Gate 4 — Pushkin vertical slice
+## Gate 4 — Pushkin vertical slice — blocked
 
-One finished slice contains part of the central space, one transition/portal and one complete Pushkin exhibit with rights-cleared documentary material. It must pass `VISUAL_ACCEPTANCE.md` before scale-out.
+One finished slice eventually contains part of the approved spatial system, one transition and one complete Pushkin exhibit with rights-cleared documentary material. It must pass `VISUAL_ACCEPTANCE.md` before scale-out.
 
-## Gate 5 — web vertical slice
+## Gate 5 — web vertical slice — blocked
 
-Only after Gate 4:
+Only after offline visual approval:
 
 - load approved optimized assets;
-- use a guided camera path first;
+- use an approved guided camera path first;
 - keep text/navigation in accessible DOM;
 - support reduced motion and a non-WebGL/weak-device fallback;
 - prove chunked loading and resource cleanup.
@@ -89,6 +120,9 @@ FPS/free-walk, poet-connection mode, timeline animation and ambient audio are la
 ## Documents
 
 - [`hall-v3-contract.json`](hall-v3-contract.json)
+- [`REFERENCE_BIBLE.md`](REFERENCE_BIBLE.md)
+- [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md)
+- [`reference-bible.json`](reference-bible.json)
 - [`ART_DIRECTION.md`](ART_DIRECTION.md)
 - [`SCENE_CONTRACT.md`](SCENE_CONTRACT.md)
 - [`ASSET_PIPELINE.md`](ASSET_PIPELINE.md)
@@ -100,4 +134,4 @@ FPS/free-walk, poet-connection mode, timeline animation and ambient audio are la
 
 ## Closure
 
-The foundation wave does not close `TLP-HALL-001`. The lane closes only after the owner-approved Hall architecture is implemented, delivery/fallback contracts are certified, production `/hall` has replaced the placeholder safely and resulting exact-head evidence is recorded in AuditRepo.
+The Reference Bible wave does not close `TLP-HALL-001`. The lane closes only after the owner-approved Hall architecture is implemented, delivery/fallback contracts are certified, production `/hall` has replaced the placeholder safely and resulting exact-head evidence is recorded in AuditRepo.
