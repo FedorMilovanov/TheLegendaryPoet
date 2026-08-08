@@ -198,7 +198,7 @@ jobs:
         run: node scripts/hall-material/validate-gltf.mjs --input qa-artifacts/hall-material-spike/material-spike-raw.glb --output qa-artifacts/hall-material-spike/gltf-raw-report.json
 
       - name: Optimize representative GLB with preservation-safe Meshopt path
-        run: ./node_modules/.bin/gltfpack -i qa-artifacts/hall-material-spike/material-spike-raw.glb -o qa-artifacts/hall-material-spike/material-spike-optimized.glb -cc -kn -km -ke
+        run: ./node_modules/.bin/gltfpack -i qa-artifacts/hall-material-spike/material-spike-raw.glb -o qa-artifacts/hall-material-spike/material-spike-optimized.glb -cc -kn -km -ke -kv -vpf
 
       - name: Validate optimized GLB with Khronos validator
         run: node scripts/hall-material/validate-gltf.mjs --input qa-artifacts/hall-material-spike/material-spike-optimized.glb --output qa-artifacts/hall-material-spike/gltf-optimized-report.json
