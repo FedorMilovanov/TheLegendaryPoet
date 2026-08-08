@@ -78,7 +78,8 @@
     "optimizer": {
       "package": "gltfpack",
       "version": "1.2.0",
-      "args": ["-cc", "-kn", "-km", "-ke", "-kv", "-vpf"]
+      "args": ["-cc", "-kn", "-km", "-ke"],
+      "additionalPreservationArgs": ["-kv", "-vpf"]
     },
     "requiredPreservation": [
       "named-nodes",
