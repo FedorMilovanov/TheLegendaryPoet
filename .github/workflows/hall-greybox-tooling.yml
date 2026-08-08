@@ -135,7 +135,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: hall-greybox-tooling-${{ env.TESTED_SHA }}
+          name: hall-greybox-tooling-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             hall-greybox-tested-head.txt
             blender-version.txt
@@ -148,7 +148,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: hall-greybox-candidates-${{ env.TESTED_SHA }}
+          name: hall-greybox-candidates-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             hall-greybox-tested-head.txt
             qa-artifacts/hall-greybox-candidates
