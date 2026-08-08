@@ -36,7 +36,8 @@
     "greyboxDecision": "docs/hall-v3/greybox-decision.json",
     "cameraRigs": "docs/hall-v3/camera-rigs.json",
     "cameraDecision": "docs/hall-v3/camera-decision.json",
-    "cameraGatePromotion": "docs/hall-v3/camera-gate-promotion.json"
+    "cameraGatePromotion": "docs/hall-v3/camera-gate-promotion.json",
+    "materialLightingExportSpike": "docs/hall-v3/material-lighting-export-spike.json"
   },
   "gates": {
     "foundation": "completed",
