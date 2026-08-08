@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
+const ARCHIVE_STORAGE_KEY = 'tlp-my-archive:v4';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'reader-journeys');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -99,7 +100,7 @@ test.describe('reader outcome journeys', () => {
           return original.call(this, key, value);
         },
       });
-    }, 'tlp-my-archive:v3');
+    }, ARCHIVE_STORAGE_KEY);
 
     await page.goto(`${BASE_URL}/poets/sergei-yesenin`, { waitUntil: 'domcontentloaded' });
     await waitForRoute(page);
@@ -110,7 +111,7 @@ test.describe('reader outcome journeys', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Не удалось изменить архив' })).toBeVisible();
     await expect(addButton).toHaveAttribute('aria-pressed', 'false');
     await expect(addButton).toHaveAccessibleName(/^Добавить «.+» в архив$/);
-    const persisted = await page.evaluate(() => window.localStorage.getItem('tlp-my-archive:v3'));
+    const persisted = await page.evaluate((storageKey) => window.localStorage.getItem(storageKey), ARCHIVE_STORAGE_KEY);
     expect(persisted).toBeNull();
 
     await page.screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-blocked-storage-honesty.png`), fullPage: false });
@@ -144,13 +145,14 @@ test.describe('reader outcome journeys', () => {
           return original.call(this, key, value);
         },
       });
-    }, 'tlp-my-archive:v3');
+    }, ARCHIVE_STORAGE_KEY);
 
     await removeButton.click();
     await expect(removeButton).toBeVisible();
     await expect(page.getByRole('status').filter({ hasText: /Не удалось удалить стихотворение.+список не изменён/ })).toBeVisible();
-    const persisted = await page.evaluate(() => window.localStorage.getItem('tlp-my-archive:v3'));
-    expect(JSON.parse(persisted || '{}').items?.length).toBeGreaterThan(0);
+    const persisted = await page.evaluate((storageKey) => window.localStorage.getItem(storageKey), ARCHIVE_STORAGE_KEY);
+    const snapshot = JSON.parse(persisted || '{}');
+    expect(snapshot.operations?.some((operation) => operation?.favorite === true)).toBe(true);
 
     await page.screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-blocked-removal-honesty.png`), fullPage: false });
     expect(runtime.pageErrors).toEqual([]);
