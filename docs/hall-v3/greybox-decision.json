@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "decision": "topology-select-reject",
+  "status": "approved-for-camera-evaluation",
+  "phaseTransition": {
+    "from": "metricGreybox",
+    "to": "cameraApproval"
+  },
+  "candidateEvidence": {
+    "productPr": 376,
+    "testedHead": "70aeb9c1aca4414d9cade3cb9cdcfb887b7ea806",
+    "resultingMain": "66dabcdcff5fa0fc8ad8fde44544432e4a144e4d",
+    "artifactId": 9021765090,
+    "artifactDigest": "sha256:598b2a60df72d9457e9b7620b5b7ea94fb59af8e0db60e11d334fbaaa94e8318",
+    "testedHeadWitness": "tested_commit=70aeb9c1aca4414d9cade3cb9cdcfb887b7ea806",
+    "blenderVersion": "4.5.12 LTS",
+    "blenderBuildHash": "84afd5f785f7",
+    "comparisonLensMm": 35,
+    "humanProxyHeightMetres": 1.75,
+    "certifiedCameraWitnessCount": 18,
+    "portraitMobileWitnessCount": 9,
+    "pixelStableWitnessCount": 27,
+    "materials": 0,
+    "lights": 0
+  },
+  "candidates": {
+    "H1": {
+      "disposition": "reserve",
+      "routeLengthMetres": 32.1462,
+      "forcedTurnCount": 2,
+      "layoutFingerprint": "4c2b886b0c6640edd87ecb457e96e6326adca3896f9eb865e81fcb9285206d6c",
+      "strengths": [
+        "shortest-baseline-route",
+        "lowest-forced-turn-count",
+        "clearest-orientation-benchmark"
+      ],
+      "risks": [
+        "generic-ceremonial-centre",
+        "central-space-may-overweight-monumentality"
+      ],
+      "reason": "Retain as the orientation and route-simplicity benchmark, but do not carry two production topologies forward. Neutral evidence gives H3 stronger spatial identity without H2's circulation cost."
+    },
+    "H2": {
+      "disposition": "reject",
+      "routeLengthMetres": 53.8854,
+      "forcedTurnCount": 8,
+      "layoutFingerprint": "69ee2718c35f7b7d10ac408a321b5f2b59bb730fb9e8458d757baad4499cc4b7",
+      "strengths": [
+        "strongest-literal-chronological-promenade"
+      ],
+      "risks": [
+        "longest-baseline-route",
+        "highest-forced-turn-count",
+        "most-corridor-like",
+        "insufficient-neutral-spatial-compensation"
+      ],
+      "reason": "Reject for current production because the neutral evidence does not justify 53.8854 m and eight forced turns compared with the other candidates; carrying it forward would spend material/camera effort on the weakest circulation tradeoff."
+    },
+    "H3": {
+      "disposition": "advance",
+      "routeLengthMetres": 37.8327,
+      "forcedTurnCount": 4,
+      "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+      "strengths": [
+        "strongest-spatial-identity",
+        "changing-diagonal-sightlines",
+        "side-focus-room-hierarchy",
+        "moderate-route-cost"
+      ],
+      "risks": [
+        "wayfinding-needs-camera-proof",
+        "portrait-mobile-framing-needs-camera-revision"
+      ],
+      "reason": "Advance as the single topology authority for Camera Approval. It preserves materially stronger spatial hierarchy and changing sightlines while remaining far below H2's route/turn cost."
+    }
+  },
+  "selectedCandidate": "H3",
+  "reserveCandidate": "H1",
+  "rejectedCandidates": ["H2"],
+  "cameraBoundary": {
+    "approvedRig": null,
+    "comparisonLensMm": 35,
+    "comparisonLensStatus": "benchmark-only-not-approved",
+    "knownIssues": [
+      "pushkin-viewing-portrait-too-close-flat",
+      "mobile-composition-needs-selected-topology-camera-proof",
+      "wayfinding-must-not-depend-on-free-look"
+    ],
+    "nextRequiredWitnesses": [
+      "entry-reveal-rig-comparison",
+      "orientation-rig-comparison",
+      "first-transition-rig-comparison",
+      "pushkin-approach-rig-comparison",
+      "pushkin-viewing-rig-comparison",
+      "reverse-exit-rig-comparison",
+      "portrait-mobile-crops",
+      "reduced-motion-cut-destinations"
+    ]
+  },
+  "nonDecisions": {
+    "approvedCameraRig": null,
+    "materialSystem": null,
+    "lightingSystem": null,
+    "exportStrategy": null,
+    "pushkinFinalExhibit": null,
+    "webRuntime": null,
+    "freeWalkMode": null
+  },
+  "selectionRules": [
+    "neutral-evidence-only",
+    "no-geometry-edits-inside-selection-transaction",
+    "losing-candidate-evidence-retained",
+    "topology-selection-does-not-approve-camera",
+    "topology-selection-does-not-open-lookdev",
+    "production-hall-route-remains-placeholder"
+  ]
+}
