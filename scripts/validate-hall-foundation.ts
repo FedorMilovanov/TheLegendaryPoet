@@ -333,8 +333,8 @@ for (const legacyDoc of supersededHallDocs) {
 
 const scripts = packageManifest.scripts ?? {};
 expect(
-  scripts['validate:hall-foundation'] === 'tsx scripts/validate-hall-foundation.ts',
-  'package scripts must expose the Hall foundation validator',
+  scripts['validate:hall-foundation'] === 'tsx scripts/validate-hall-foundation.ts && node scripts/validate-hall-public-promises.mjs',
+  'package scripts must expose the Hall foundation and public-promise validators as one mandatory contract',
 );
 expect(
   scripts['validate:interaction-runtime']?.includes('validate-hall-audio-runtime') === false,
