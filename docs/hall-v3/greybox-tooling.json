@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "phase": "metricGreybox",
-  "status": "active",
+  "status": "completed",
   "blender": {
     "releaseSeries": "4.5 LTS",
     "version": "4.5.12",
@@ -49,8 +49,8 @@
   "candidateManifest": "docs/hall-v3/greybox-candidates.json",
   "nonGoals": [
     "production-geometry",
-    "topology-winner",
-    "camera-approval",
+    "topology-winner-inside-tooling",
+    "camera-approval-inside-greybox",
     "material-lookdev",
     "lighting-lookdev",
     "gltf-export",

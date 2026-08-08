@@ -219,27 +219,46 @@ const packageManifest = JSON.parse(read('package.json')) as { scripts?: Record<s
 expect(hallContract.schemaVersion === 1, 'Hall v3 machine contract schemaVersion must remain 1');
 expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by TLP-HALL-001');
 expect(hallContract.productIssue === 369, 'Hall v3 machine contract must point to Product #369');
-expect(['foundation', 'referenceBible', 'metricGreybox'].includes(hallContract.phase ?? ''), `Hall foundation invariant validator does not recognize phase: ${hallContract.phase ?? '<missing>'}`);
+const knownPhases = [
+  'foundation',
+  'referenceBible',
+  'metricGreybox',
+  'cameraApproval',
+  'materialLightingExportSpike',
+  'pushkinVerticalSlice',
+  'offlineVisualApproval',
+  'webVerticalSlice',
+  'fullMuseumScaleOut',
+];
+expect(knownPhases.includes(hallContract.phase ?? ''), `Hall foundation invariant validator does not recognize phase: ${hallContract.phase ?? '<missing>'}`);
 
 if (hallContract.phase === 'foundation') {
   expect(hallContract.gates?.foundation === 'active', 'foundation phase must keep foundation gate active');
   for (const [gate, status] of Object.entries(hallContract.gates ?? {})) {
     if (gate !== 'foundation') expect(status === 'blocked', `later Hall gate must remain blocked during foundation: ${gate}`);
   }
+} else {
+  expect(hallContract.gates?.foundation === 'completed', `${hallContract.phase} phase must preserve completed foundation status`);
 }
 if (hallContract.phase === 'referenceBible') {
-  expect(hallContract.gates?.foundation === 'completed', 'Reference Bible phase must preserve completed foundation status');
   expect(hallContract.gates?.referenceBible === 'active', 'Reference Bible phase must mark referenceBible active');
   for (const gate of ['metricGreybox', 'cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
     expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while Reference Bible is active: ${gate}`);
   }
 }
 if (hallContract.phase === 'metricGreybox') {
-  expect(hallContract.gates?.foundation === 'completed', 'metricGreybox phase must preserve completed foundation status');
   expect(hallContract.gates?.referenceBible === 'completed', 'metricGreybox phase must preserve completed Reference Bible status');
   expect(hallContract.gates?.metricGreybox === 'active', 'metricGreybox phase must mark metricGreybox active');
   for (const gate of ['cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
     expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while metricGreybox is active: ${gate}`);
+  }
+}
+if (hallContract.phase === 'cameraApproval') {
+  expect(hallContract.gates?.referenceBible === 'completed', 'cameraApproval phase must preserve completed Reference Bible status');
+  expect(hallContract.gates?.metricGreybox === 'completed', 'cameraApproval phase must preserve completed metricGreybox status');
+  expect(hallContract.gates?.cameraApproval === 'active', 'cameraApproval phase must mark cameraApproval active');
+  for (const gate of ['materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
+    expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while cameraApproval is active: ${gate}`);
   }
 }
 

@@ -82,13 +82,25 @@ const ci = read('.github/workflows/ci.yml');
 const projectContracts = read('.github/workflows/project-contracts.yml');
 
 expect(contract.laneId === 'TLP-HALL-001', 'Hall contract must remain owned by TLP-HALL-001');
-expect(['referenceBible', 'metricGreybox'].includes(contract.phase ?? ''), 'Reference Bible invariants currently support referenceBible or metricGreybox phase');
+const supportedPhases = [
+  'referenceBible',
+  'metricGreybox',
+  'cameraApproval',
+  'materialLightingExportSpike',
+  'pushkinVerticalSlice',
+  'offlineVisualApproval',
+  'webVerticalSlice',
+  'fullMuseumScaleOut',
+];
+expect(supportedPhases.includes(contract.phase ?? ''), `Reference Bible invariant validator does not recognize Hall phase: ${contract.phase ?? '<missing>'}`);
 expect(contract.gates?.foundation === 'completed', 'foundation gate must remain completed once Reference Bible exists');
 if (contract.phase === 'referenceBible') {
   expect(contract.gates?.referenceBible === 'active', 'referenceBible gate must be active while Reference Bible is current phase');
   expect(contract.gates?.metricGreybox === 'blocked', 'metricGreybox must remain blocked while Reference Bible is current phase');
-} else if (contract.phase === 'metricGreybox') {
-  expect(contract.gates?.referenceBible === 'completed', 'Reference Bible must be completed before metricGreybox is active');
+} else {
+  expect(contract.gates?.referenceBible === 'completed', `${contract.phase} phase must preserve completed Reference Bible status`);
+}
+if (contract.phase === 'metricGreybox') {
   expect(contract.gates?.metricGreybox === 'active', 'metricGreybox gate must be active in metricGreybox phase');
   for (const gate of [
     'cameraApproval',
@@ -100,6 +112,8 @@ if (contract.phase === 'referenceBible') {
   ]) {
     expect(contract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked during metric greybox: ${gate}`);
   }
+} else if (contract.phase !== 'referenceBible') {
+  expect(contract.gates?.metricGreybox === 'completed', `${contract.phase} phase must preserve completed metricGreybox status`);
 }
 expect(contract.productionRoute?.mode === 'placeholder', '/hall must remain a placeholder while Reference Bible evidence is pre-runtime authority');
 expect(contract.productionRoute?.allowLegacyHallImports === false, 'Reference Bible invariants must not reactivate legacy Hall imports');

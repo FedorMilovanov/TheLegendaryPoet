@@ -47,8 +47,8 @@
     "validate:interaction-runtime": "tsx scripts/validate-interaction-runtime.ts && tsx scripts/validate-scroll-runtime.ts && tsx scripts/validate-essay-lightbox-runtime.ts",
     "validate:hall-foundation": "tsx scripts/validate-hall-foundation.ts && node scripts/validate-hall-public-promises.mjs",
     "validate:hall-reference-bible": "tsx scripts/validate-hall-reference-bible.ts",
-    "validate:hall-greybox-tooling": "tsx scripts/validate-hall-greybox-tooling.ts",
-    "validate:hall-greybox-candidates": "tsx scripts/validate-hall-greybox-candidates.ts",
+    "validate:hall-topology-selection": "tsx scripts/validate-hall-topology-selection.ts",
+    "validate:hall-topology-provenance": "tsx scripts/validate-hall-topology-selection-provenance.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
@@ -69,7 +69,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-greybox-tooling && npm run validate:hall-greybox-candidates && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
+    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-topology-selection && npm run validate:hall-topology-provenance && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

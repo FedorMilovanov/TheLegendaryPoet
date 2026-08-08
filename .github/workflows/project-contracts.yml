@@ -28,10 +28,10 @@ jobs:
         run: npm run validate:hall-foundation
       - name: Validate Hall v3 Reference Bible invariants
         run: npm run validate:hall-reference-bible
-      - name: Validate Hall v3 metric greybox tooling contract
-        run: npm run validate:hall-greybox-tooling
-      - name: Validate Hall v3 neutral greybox candidate source
-        run: npm run validate:hall-greybox-candidates
+      - name: Validate Hall v3 topology selection and camera boundary
+        run: npm run validate:hall-topology-selection
+      - name: Validate Hall v3 frozen shootout provenance
+        run: npm run validate:hall-topology-provenance
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
