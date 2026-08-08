@@ -83,7 +83,13 @@ const h3 = (frozenLayouts.candidates ?? []).find((candidate:any)=>candidate.id =
 expect(Boolean(h3), 'frozen layout source must retain H3');
 const r0 = rigs.rigs?.[0];
 for (const rig of rigs.rigs ?? []) {
-  expect(['benchmark','candidate'].includes(rig.status), `${rig.id}: invalid camera rig status`);
+  expect(['benchmark','candidate','rejected'].includes(rig.status), `${rig.id}: invalid camera rig status`);
+  if (rig.status === 'rejected') {
+    expect((rig.rejectionReasons?.length ?? 0) >= 1, `${rig.id}: rejected rig must retain an explicit rejection reason`);
+    expect(rig.expectedFailure?.witness === 'pushkinViewing' && rig.expectedFailure?.hitObject === 'HUMAN_PROXY', `${rig.id}: rejected rig must retain the reproduced HUMAN_PROXY occlusion witness`);
+  } else {
+    expect(rig.rejectionReasons === undefined && rig.expectedFailure === undefined, `${rig.id}: non-rejected rig must not carry rejection metadata`);
+  }
   expect(same(Object.keys(rig.cameras ?? {}),witnesses), `${rig.id}: must define six witnesses in canonical order`);
   for (const witness of witnesses) {
     const camera = rig.cameras?.[witness];
@@ -106,7 +112,7 @@ for (const rig of rigs.rigs ?? []) {
   }
 }
 const viewingFingerprints = new Set((rigs.rigs ?? []).map((rig:any)=>JSON.stringify(cameraCore(rig.cameras?.pushkinViewing))));
-expect(viewingFingerprints.size === 4, 'R0/R1/R2/R3 must test four materially distinct Pushkin viewing cameras');
+expect(viewingFingerprints.size === 4, 'R0/R1/R2/R3 must retain four materially distinct Pushkin viewing cameras');
 
 for (const token of ['EXPECTED_VERSION = (4, 5, 12)','bpy.ops.wm.open_mainfile','geometry_fingerprint()','camera candidate generation mutated frozen H3 geometry','scene.render.engine != "BLENDER_WORKBENCH"','len(bpy.data.materials) != 0','len(bpy.data.lights) != 0','world_to_camera_view','pushkinViewingFraming','CAMERA_COLLECTION = "COLL_CAMERA_APPROVAL"']) expect(generator.includes(token), `camera generator lost required invariant: ${token}`);
 for (const forbidden of ['bpy.ops.mesh.','bpy.data.meshes.new','bpy.data.materials.new','bpy.data.lights.new','save_as_mainfile','BLENDER_EEVEE','CYCLES']) expect(!generator.includes(forbidden), `camera generator must not mutate geometry/lookdev or save a new scene: ${forbidden}`);
@@ -133,18 +139,29 @@ if (evidenceRelative) {
     const geometryFingerprints = new Set<string>();
     const viewingSummaries = new Set<string>();
     for (const rigId of rigIds) {
+      const sourceRig = (rigs.rigs ?? []).find((rig:any)=>rig.id === rigId);
       const manifestPath = path.join(evidenceRoot,rigId,'manifest.json');
       expect(fs.existsSync(manifestPath), `${rigId}: camera manifest missing`);
       if (!fs.existsSync(manifestPath)) continue;
       const manifest = JSON.parse(fs.readFileSync(manifestPath,'utf8')) as any;
       expect(manifest.rigId === rigId && manifest.selectedTopology === 'H3' && manifest.approvedRig === null, `${rigId}: generated identity mismatch`);
+      expect(manifest.rigStatus === sourceRig?.status, `${rigId}: generated disposition must match camera source`);
       expect(manifest.source?.layoutFingerprint === expectedH3Fingerprint, `${rigId}: source topology fingerprint drifted`);
       expect(manifest.source?.geometryFingerprintBefore === manifest.source?.geometryFingerprintAfter, `${rigId}: frozen geometry changed during camera evidence`);
       geometryFingerprints.add(manifest.source?.geometryFingerprintBefore);
       expect(manifest.source?.materials === 0 && manifest.source?.lights === 0, `${rigId}: camera evidence introduced materials/lights`);
       expect(same(manifest.render?.desktopWitnesses,witnesses) && same(manifest.render?.mobileWitnesses,mobileWitnesses), `${rigId}: render witness set drifted`);
       expect(same(manifest.render?.desktopResolution,[960,540]) && same(manifest.render?.mobileResolution,[540,960]), `${rigId}: render resolution drifted`);
-      for (const witness of witnesses) expect(manifest.cameraWitnesses?.[witness]?.visible === true, `${rigId}/${witness}: generated camera witness is occluded`);
+      for (const witness of witnesses) {
+        const generatedWitness = manifest.cameraWitnesses?.[witness];
+        const expectedFailure = sourceRig?.status === 'rejected' && witness === sourceRig?.expectedFailure?.witness;
+        if (expectedFailure) {
+          expect(generatedWitness?.visible === false, `${rigId}/${witness}: rejected witness unexpectedly became visible`);
+          expect(generatedWitness?.hitObject === sourceRig?.expectedFailure?.hitObject, `${rigId}/${witness}: rejected witness must reproduce ${sourceRig?.expectedFailure?.hitObject}`);
+        } else {
+          expect(generatedWitness?.visible === true, `${rigId}/${witness}: generated camera witness is occluded`);
+        }
+      }
       for (const mode of ['desktop','mobile']) {
         const framing = manifest.pushkinViewingFraming?.[mode];
         expect(typeof framing?.anchor?.visibleAreaFraction === 'number' && typeof framing?.anchor?.fullyInsideFrame === 'boolean', `${rigId}/${mode}: anchor framing metrics missing`);
@@ -156,7 +173,7 @@ if (evidenceRelative) {
       viewingSummaries.add(JSON.stringify({lens:manifest.cameraWitnesses?.pushkinViewing?.lensMm,distance:manifest.cameraWitnesses?.pushkinViewing?.distanceMetres,desktop:manifest.pushkinViewingFraming?.desktop?.anchor,mobile:manifest.pushkinViewingFraming?.mobile?.anchor}));
     }
     expect(geometryFingerprints.size === 1, 'all camera rigs must use one identical frozen H3 geometry fingerprint');
-    expect(viewingSummaries.size === 4, 'generated R0/R1/R2/R3 viewing evidence must be materially distinct');
+    expect(viewingSummaries.size === 4, 'generated R0/R1/R2/R3 viewing evidence must remain materially distinct');
   }
 }
 
@@ -165,4 +182,4 @@ if (failures.length) {
   failures.forEach((failure)=>console.error(`- ${failure}`));
   process.exit(1);
 }
-console.log(`Hall v3 Camera Approval invariants passed: frozen H3 topology, camera-only R0/R1/R2/R3 comparison, approvedRig=null${evidenceRelative ? ', generated Blender evidence verified' : ''}.`);
+console.log(`Hall v3 Camera Approval invariants passed: frozen H3 topology, camera-only R0/R1/R2/R3 comparison with explicit R2 rejection, approvedRig=null${evidenceRelative ? ', generated Blender evidence verified' : ''}.`);
