@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hall v3 material spike witness</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #07090d; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #status { position: fixed; left: 10px; bottom: 10px; z-index: 2; padding: 6px 8px; font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; color: #d9e6f2; background: rgba(3, 5, 8, .72); border: 1px solid rgba(160, 190, 220, .24); }
+  </style>
+  <script type="importmap">
+    { "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <div id="status">loading</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+    const params = new URLSearchParams(location.search);
+    const strategy = params.get('strategy') || 'L0_MINIMAL_REALTIME';
+    const asset = params.get('asset');
+    const lightmap = params.get('lightmap');
+    const status = document.querySelector('#status');
+    if (!asset) throw new Error('asset query parameter is required');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.shadowMap.enabled = false;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080b10);
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+
+    function materialSnapshot(material) {
+      return {
+        name: material.name,
+        map: material.map ? material.map.colorSpace : null,
+        normalMap: material.normalMap ? material.normalMap.colorSpace : null,
+        roughnessMap: material.roughnessMap ? material.roughnessMap.colorSpace : null,
+        metalnessMap: material.metalnessMap ? material.metalnessMap.colorSpace : null,
+        aoMap: material.aoMap ? material.aoMap.colorSpace : null,
+        emissiveMap: material.emissiveMap ? material.emissiveMap.colorSpace : null,
+        lightMap: material.lightMap ? material.lightMap.colorSpace : null,
+        lightMapChannel: material.lightMap ? material.lightMap.channel : null,
+      };
+    }
+
+    async function loadTexture(url) {
+      return await new Promise((resolve, reject) => new THREE.TextureLoader().load(url, resolve, undefined, reject));
+    }
+
+    try {
+      const gltf = await loader.loadAsync(asset);
+      scene.add(gltf.scene);
+      const requiredNames = ['ARCH_H3_SPIKE_BAY','EXHIBIT_alexander-pushkin','EXHIBIT_DOC_CASE_01','EXHIBIT_DOC_CASE_02','ARCH_H3_SPIKE_EMISSIVE_MARKER','CAM_H3_R1_pushkinViewing'];
+      const missing = requiredNames.filter((name) => !gltf.scene.getObjectByName(name));
+      if (missing.length) throw new Error(`missing required GLB nodes: ${missing.join(', ')}`);
+
+      const cameraSource = gltf.scene.getObjectByName('CAM_H3_R1_pushkinViewing');
+      if (!(cameraSource instanceof THREE.PerspectiveCamera)) throw new Error('R1 camera did not load as PerspectiveCamera');
+      const camera = cameraSource.clone();
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+
+      let shadowCastingLights = 0;
+      if (strategy === 'L0_MINIMAL_REALTIME') {
+        const hemi = new THREE.HemisphereLight(0xe4ecf8, 0x171a21, 1.15);
+        const key = new THREE.DirectionalLight(0xfff2df, 2.15);
+        key.position.set(8.4, 2.6, 4.0);
+        key.castShadow = false;
+        scene.add(hemi, key);
+      } else if (strategy === 'L1_EXTERNAL_LIGHTMAP_UV1') {
+        if (!lightmap) throw new Error('lightmap query parameter is required for L1');
+        const map = await loadTexture(lightmap);
+        map.flipY = false;
+        map.colorSpace = THREE.LinearSRGBColorSpace;
+        map.channel = 1;
+        map.needsUpdate = true;
+        const architecture = gltf.scene.getObjectByName('ARCH_H3_SPIKE_BAY');
+        if (!architecture?.isMesh) throw new Error('architecture lightmap target is not a mesh');
+        architecture.material.lightMap = map;
+        architecture.material.lightMapIntensity = 1.0;
+        architecture.material.needsUpdate = true;
+        scene.add(new THREE.HemisphereLight(0xd5e4f5, 0x111319, 0.28));
+      } else {
+        throw new Error(`unknown strategy ${strategy}`);
+      }
+
+      scene.traverse((object) => { if (object.isLight && object.castShadow) shadowCastingLights += 1; });
+      function resizeAndRender() {
+        renderer.setSize(innerWidth, innerHeight, false);
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
+      }
+      addEventListener('resize', resizeAndRender);
+      resizeAndRender();
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      renderer.render(scene, camera);
+
+      const materials = {};
+      gltf.scene.traverse((object) => {
+        if (!object.isMesh) return;
+        const list = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of list) materials[material.name] = materialSnapshot(material);
+      });
+      const surface = materials.MAT_H3_SPIKE_STONE;
+      const emissive = materials.MAT_H3_SPIKE_EMISSIVE_CALIBRATION;
+      const assertions = {
+        baseColorIsSrgb: surface?.map === THREE.SRGBColorSpace,
+        normalIsData: surface?.normalMap === THREE.NoColorSpace,
+        roughnessIsData: surface?.roughnessMap === THREE.NoColorSpace,
+        metalnessIsData: surface?.metalnessMap === THREE.NoColorSpace,
+        aoIsData: surface?.aoMap === THREE.NoColorSpace,
+        emissiveIsSrgb: emissive?.emissiveMap === THREE.SRGBColorSpace,
+        lightMapContract: strategy !== 'L1_EXTERNAL_LIGHTMAP_UV1' || (surface?.lightMap === THREE.LinearSRGBColorSpace && surface?.lightMapChannel === 1),
+        noRealtimeShadowCastingLights: shadowCastingLights === 0,
+      };
+      const failedAssertions = Object.entries(assertions).filter(([, passed]) => !passed).map(([name]) => name);
+      if (failedAssertions.length) throw new Error(`browser material contract failed: ${failedAssertions.join(', ')}`);
+
+      window.__HALL_SPIKE_READY__ = {
+        ok: true, strategy, assertions,
+        renderer: { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? null, shadowCastingLights, outputColorSpace: renderer.outputColorSpace, toneMapping: renderer.toneMapping, postProcessingPasses: 0 },
+        materials,
+        camera: { name: cameraSource.name, position: cameraSource.position.toArray(), fov: cameraSource.fov, near: cameraSource.near, far: cameraSource.far },
+        viewport: { width: innerWidth, height: innerHeight, devicePixelRatio },
+      };
+      status.textContent = `${strategy} · ready`;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      window.__HALL_SPIKE_READY__ = { ok: false, strategy, error: message };
+      status.textContent = `error · ${message}`;
+      console.error(error);
+    }
+  </script>
+</body>
+</html>
