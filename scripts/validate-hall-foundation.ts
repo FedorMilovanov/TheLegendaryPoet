@@ -8,9 +8,34 @@ const expect = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
 
-const hallPagePath = 'src/pages/HallPage.tsx';
-const legacyHallDir = 'src/components/hall';
 const hallDocsPath = 'docs/hall-v3/README.md';
+const hallContractPath = 'docs/hall-v3/hall-v3-contract.json';
+const hallContract = JSON.parse(read(hallContractPath)) as {
+  schemaVersion?: number;
+  laneId?: string;
+  productIssue?: number;
+  phase?: string;
+  productionRoute?: {
+    path?: string;
+    mode?: string;
+    module?: string;
+    maxRouteBytes?: number;
+    allowLegacyHallImports?: boolean;
+    allowThreeRuntimeImports?: boolean;
+    allowUnapprovedConceptArt?: boolean;
+  };
+  legacy?: {
+    sourceDirectory?: string;
+    currentAuthority?: boolean;
+    historicalValidator?: string;
+    historicalValidatorMandatory?: boolean;
+  };
+  sourceAuthority?: Record<string, string>;
+  gates?: Record<string, string>;
+};
+
+const hallPagePath = hallContract.productionRoute?.module ?? 'src/pages/HallPage.tsx';
+const legacyHallDir = hallContract.legacy?.sourceDirectory ?? 'src/components/hall';
 
 function sourceFiles(relativeDir: string): string[] {
   const absoluteDir = path.join(root, relativeDir);
@@ -44,15 +69,35 @@ const packageManifest = JSON.parse(read('package.json')) as {
   scripts?: Record<string, string>;
 };
 
+expect(hallContract.schemaVersion === 1, 'Hall v3 machine contract schemaVersion must remain 1 during foundation');
+expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by TLP-HALL-001');
+expect(hallContract.productIssue === 369, 'Hall v3 machine contract must point to Product #369');
+expect(hallContract.phase === 'foundation', 'Hall v3 must not advance beyond foundation without an explicit contract change');
+expect(hallContract.productionRoute?.mode === 'placeholder', 'production /hall must remain a placeholder during foundation');
+expect(hallContract.productionRoute?.allowLegacyHallImports === false, 'foundation contract must forbid legacy Hall imports');
+expect(hallContract.productionRoute?.allowThreeRuntimeImports === false, 'foundation contract must forbid Three/R3F runtime imports');
+expect(hallContract.productionRoute?.allowUnapprovedConceptArt === false, 'foundation contract must keep unapproved concept art off /hall');
+expect(hallContract.legacy?.currentAuthority === false, 'Hall v2 must remain non-authoritative');
+expect(hallContract.legacy?.historicalValidatorMandatory === false, 'Hall v2 validator must remain non-mandatory');
+
+for (const [gate, status] of Object.entries(hallContract.gates ?? {})) {
+  if (gate === 'foundation') expect(status === 'active', 'foundation gate must remain active until this wave is closed');
+  else expect(status === 'blocked', `later Hall gate must remain blocked during foundation: ${gate}`);
+}
+
 const hallRoute = routeContract.routes?.find((route) => route.id === 'hall');
 const hallBudgetBytes = hallRoute?.budgetBytes;
+const maxRouteBytes = hallContract.productionRoute?.maxRouteBytes;
 expect(Boolean(hallRoute), 'route contract must retain one hall route');
-expect(hallRoute?.path === '/hall', 'hall route path must remain /hall');
+expect(hallRoute?.path === hallContract.productionRoute?.path, 'Hall route path must match the Hall v3 machine contract');
 expect(hallRoute?.page === 'HallPage', 'hall route must remain owned by HallPage');
-expect(hallRoute?.module === hallPagePath, 'hall route module must remain the lightweight HallPage shell');
+expect(hallRoute?.module === hallPagePath, 'Hall route module must match the Hall v3 machine contract');
 expect(
-  typeof hallBudgetBytes === 'number' && Number.isInteger(hallBudgetBytes) && hallBudgetBytes <= 8_000,
-  'dormant Hall shell must retain the <= 8000-byte route budget',
+  typeof hallBudgetBytes === 'number'
+    && typeof maxRouteBytes === 'number'
+    && Number.isInteger(hallBudgetBytes)
+    && hallBudgetBytes <= maxRouteBytes,
+  'dormant Hall shell must remain within the machine-contract route budget',
 );
 
 for (const specifier of importSpecifiers(hallPage)) {
@@ -99,26 +144,16 @@ expect(
   'Hall placeholder must state that early concepts are not the final architecture',
 );
 
-const requiredHallDocs = [
-  hallDocsPath,
-  'docs/hall-v3/ART_DIRECTION.md',
-  'docs/hall-v3/SCENE_CONTRACT.md',
-  'docs/hall-v3/ASSET_PIPELINE.md',
-  'docs/hall-v3/VISUAL_ACCEPTANCE.md',
-  'docs/hall-v3/AI_USAGE_POLICY.md',
-  'docs/hall-v3/PERFORMANCE_BUDGET.md',
-  'docs/hall-v3/RIGHTS_REGISTER.md',
-  'docs/hall-v3/LEGACY_RETIREMENT.md',
-];
-for (const relativePath of requiredHallDocs) {
+const requiredHallDocs = [hallDocsPath, hallContractPath, ...Object.values(hallContract.sourceAuthority ?? {})];
+for (const relativePath of new Set(requiredHallDocs)) {
   expect(fs.existsSync(path.join(root, relativePath)), `Hall v3 contract document must exist: ${relativePath}`);
 }
 expect(fs.existsSync(path.join(root, legacyHallDir, 'README.md')), 'legacy Hall directory must declare its non-authoritative status');
 expect(
-  projectContract.architecture?.openLaneIds?.includes('TLP-HALL-001') === true,
-  'project contract must register TLP-HALL-001 while the Hall architecture lane is open',
+  projectContract.architecture?.openLaneIds?.includes(hallContract.laneId ?? '') === true,
+  'project contract must register the Hall machine-contract lane while it is open',
 );
-expect(currentState.includes('`TLP-HALL-001`'), 'CURRENT_STATE must register the TLP-HALL-001 lane');
+expect(currentState.includes(`\`${hallContract.laneId}\``), 'CURRENT_STATE must register the Hall machine-contract lane');
 expect(
   projectContract.documentation?.authoritative?.includes(hallDocsPath) === true,
   'project contract must register the Hall v3 README as an authoritative architecture entrypoint',
@@ -144,4 +179,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall v3 foundation validation passed: lightweight route, full legacy isolation and architecture-lane ownership are enforced.');
+console.log('Hall v3 foundation validation passed: machine phase, lightweight route, full legacy isolation and architecture ownership are enforced.');
