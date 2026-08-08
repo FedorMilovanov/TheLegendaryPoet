@@ -227,7 +227,13 @@ const projectContract = JSON.parse(read('docs/project-contract.json')) as {
     supersededTechnicalDocuments?: string[];
   };
 };
-const tsConfig = JSON.parse(read('tsconfig.json')) as { exclude?: string[] };
+const parsedTsConfig = ts.parseConfigFileTextToJson('tsconfig.json', read('tsconfig.json'));
+if (parsedTsConfig.error) {
+  failures.push(
+    `tsconfig.json: TypeScript config parser failed: ${ts.flattenDiagnosticMessageText(parsedTsConfig.error.messageText, '\n')}`,
+  );
+}
+const tsConfig = (parsedTsConfig.config ?? {}) as { exclude?: string[] };
 const currentState = read('docs/CURRENT_STATE.md');
 const packageManifest = JSON.parse(read('package.json')) as {
   scripts?: Record<string, string>;
