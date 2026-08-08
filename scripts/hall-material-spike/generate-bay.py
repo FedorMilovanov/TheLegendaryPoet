@@ -572,6 +572,7 @@ def main() -> None:
         export_cameras=True,
         export_lights=False,
         export_extras=True,
+        export_tangents=True,
         export_yup=True,
         export_apply=False,
     )
@@ -605,6 +606,7 @@ def main() -> None:
             "rightsClearedMediaUsed": False,
             "documentaryMediaUsed": False,
             "metallicTextureMaximum": 0.0,
+            "tangentSpaceExported": True,
         },
         "textureSemantics": {
             "baseColor": {"image": base.name, "sourceColorSpace": base.colorspace_settings.name, "role": "color"},
