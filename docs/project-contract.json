@@ -26,7 +26,9 @@
   },
   "architecture": {
     "auditAuthority": "FedorMilovanov/AuditRepo/projects/the-legendary-poet/",
-    "openLaneIds": [],
+    "openLaneIds": [
+      "TLP-HALL-001"
+    ],
     "currentStateOpenLaneStart": "<!-- project-contract:open-lanes:start -->",
     "currentStateOpenLaneEnd": "<!-- project-contract:open-lanes:end -->",
     "forbiddenCurrentStateClaims": [
@@ -51,6 +53,7 @@
       "docs/COMMENTS_SETUP.md",
       "docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md",
       "docs/HISTORICAL_NARRATIVE_STANDARD.md",
+      "docs/hall-v3/README.md",
       "src/docs/THEOLOGICAL_GUIDELINES.md"
     ],
     "historical": [
