@@ -14,10 +14,17 @@ async function openPoetWithFavorite(context, href) {
   expect(response).not.toBeNull();
   expect(response.status()).toBeLessThan(400);
   await waitForRoute(page);
-  const button = page.getByRole('button', { name: /Добавить «.+» в архив/i }).first();
-  await expect(button).toBeVisible({ timeout: 15_000 });
-  await expect(button).toHaveAttribute('aria-pressed', 'false');
-  return { page, button };
+
+  const addButton = page.getByRole('button', { name: /Добавить «.+» в архив/i }).first();
+  await expect(addButton).toBeVisible({ timeout: 15_000 });
+  await expect(addButton).toHaveAttribute('aria-pressed', 'false');
+
+  const poemCard = addButton.locator('xpath=ancestor::*[starts-with(@id,"poem-")][1]');
+  const poemCardId = await poemCard.getAttribute('id');
+  expect(poemCardId).toMatch(/^poem-/);
+  const archiveButton = page.locator(`#${poemCardId} button[aria-pressed]`).first();
+  await expect(archiveButton).toHaveAttribute('aria-pressed', 'false');
+  return { page, archiveButton, poemCardId };
 }
 
 export function registerArchiveCrossTabTests() {
@@ -30,11 +37,11 @@ export function registerArchiveCrossTabTests() {
       const first = await openPoetWithFavorite(context, ARCHIVE_POET_ROUTES[0]);
       const second = await openPoetWithFavorite(context, ARCHIVE_POET_ROUTES[1]);
       pages.push(first.page, second.page);
+      expect(first.poemCardId).not.toBe(second.poemCardId);
 
-      await Promise.all([first.button.click(), second.button.click()]);
-
-      await expect(first.button).toHaveAttribute('aria-pressed', 'true');
-      await expect(second.button).toHaveAttribute('aria-pressed', 'true');
+      await Promise.all([first.archiveButton.click(), second.archiveButton.click()]);
+      await expect(first.archiveButton).toHaveAttribute('aria-pressed', 'true');
+      await expect(second.archiveButton).toHaveAttribute('aria-pressed', 'true');
 
       await expect.poll(
         () => first.page.evaluate((key) => {
