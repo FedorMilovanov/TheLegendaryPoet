@@ -30,6 +30,8 @@ jobs:
         run: npm run validate:hall-reference-bible
       - name: Validate Hall v3 metric greybox tooling contract
         run: npm run validate:hall-greybox-tooling
+      - name: Validate Hall v3 neutral greybox candidate source
+        run: npm run validate:hall-greybox-candidates
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
