@@ -11,11 +11,13 @@ on:
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
+      - 'docs/hall-v3/camera-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-camera-approval.ts'
+      - 'scripts/validate-hall-camera-decision.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -27,11 +29,13 @@ on:
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
+      - 'docs/hall-v3/camera-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-camera-approval.ts'
+      - 'scripts/validate-hall-camera-decision.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -78,6 +82,9 @@ jobs:
       - name: Validate H3 Camera Approval candidate source
         run: npm run validate:hall-camera-approval
 
+      - name: Validate selected H3 camera decision authority
+        run: npm run validate:hall-camera-decision
+
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
           set -euo pipefail
@@ -120,6 +127,7 @@ jobs:
           npm run validate:hall-topology-selection
           npm run validate:hall-topology-provenance
           npm run validate:hall-camera-approval
+          npm run validate:hall-camera-decision
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -147,6 +155,7 @@ jobs:
           npm run validate:hall-topology-selection
           npm run validate:hall-topology-provenance
           npm run validate:hall-camera-approval
+          npm run validate:hall-camera-decision
 
       - name: Generate H3 Camera Approval candidate evidence
         run: |
@@ -163,10 +172,12 @@ jobs:
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-camera-candidates
 
-      - name: Validate generated H3 Camera Approval evidence
+      - name: Validate generated H3 Camera Approval evidence and selected decision
         env:
           HALL_CAMERA_APPROVAL_EVIDENCE: qa-artifacts/hall-camera-candidates/index.json
-        run: npm run validate:hall-camera-approval
+        run: |
+          npm run validate:hall-camera-approval
+          npm run validate:hall-camera-decision
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}

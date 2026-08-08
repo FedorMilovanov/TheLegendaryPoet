@@ -34,6 +34,8 @@ jobs:
         run: npm run validate:hall-topology-provenance
       - name: Validate Hall v3 Camera Approval candidate source
         run: npm run validate:hall-camera-approval
+      - name: Validate Hall v3 camera decision authority
+        run: npm run validate:hall-camera-decision
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation

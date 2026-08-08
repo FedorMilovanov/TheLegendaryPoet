@@ -38,6 +38,8 @@ jobs:
         run: npm run validate:hall-topology-provenance
       - name: Validate Hall v3 Camera Approval candidate source
         run: npm run validate:hall-camera-approval
+      - name: Validate Hall v3 camera decision authority
+        run: npm run validate:hall-camera-decision
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |
