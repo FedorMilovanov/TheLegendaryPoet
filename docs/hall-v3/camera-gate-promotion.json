@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "promotion": "cameraApproval-to-materialLightingExportSpike",
+  "status": "active-next-gate",
+  "sourceDecision": {
+    "productPr": 383,
+    "exactTestedHead": "8682789cf78e4e717eba5181246700da09de5c11",
+    "resultingMain": "07e23ea3feb79fea9d42f29b192e4e3f046713cc",
+    "cameraDecision": "docs/hall-v3/camera-decision.json",
+    "cameraDecisionBlob": "fedf0c0d269822655a9db15b95914222c815769f",
+    "selectedTopology": "H3",
+    "selectedRig": "R1",
+    "reserveRig": "R3",
+    "rejectedRigs": ["R0", "R2"],
+    "selectedLayoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777"
+  },
+  "phaseTransition": {
+    "from": "cameraApproval",
+    "to": "materialLightingExportSpike"
+  },
+  "gatesAfterPromotion": {
+    "foundation": "completed",
+    "referenceBible": "completed",
+    "metricGreybox": "completed",
+    "cameraApproval": "completed",
+    "materialLightingExportSpike": "active",
+    "pushkinVerticalSlice": "blocked",
+    "offlineVisualApproval": "blocked",
+    "webVerticalSlice": "blocked",
+    "fullMuseumScaleOut": "blocked"
+  },
+  "frozenAuthorities": {
+    "greyboxLayoutsBlob": "b3def316d855a6539ffd280217ed63e22c6855d9",
+    "greyboxGeneratorBlob": "7f5dbe64d61880031819a5d4e855e5c6b7285ef3",
+    "cameraRigsBlob": "8c65312a53dbd41c7ec5f0a6128610e3f5428205",
+    "cameraGeneratorBlob": "79f8b396b2fe0ca5fe695b49a70eb013f9c9418f",
+    "cameraDecisionBlob": "fedf0c0d269822655a9db15b95914222c815769f"
+  },
+  "approvedGuidedCamera": {
+    "rigId": "R1",
+    "variableWitness": "pushkinViewing",
+    "position": [8.0, 2.5, 1.60],
+    "target": [11.15, 5.45, 1.95],
+    "nextDestination": [11.15, 5.45, 1.95],
+    "lensMm": 28
+  },
+  "nextGateScope": {
+    "allowed": [
+      "one-small-h3-architectural-bay",
+      "pbr-color-space-proof",
+      "uv-and-optional-lightmap-delivery-proof",
+      "static-lighting-strategy-comparison",
+      "raw-to-optimized-gltf-validation",
+      "browser-viability-measurement"
+    ],
+    "forbidden": [
+      "full-hall-lookdev",
+      "h3-topology-redesign",
+      "r1-camera-redesign-without-reopening-cameraApproval",
+      "rights-uncleared-documentary-media",
+      "production-three-r3f-webgl-hall",
+      "pushkin-final-exhibit",
+      "full-museum-scale-out"
+    ]
+  },
+  "productionBoundary": {
+    "hallRouteRemainsPlaceholder": true,
+    "legacyHallMayReactivate": false,
+    "threeRuntimeMayActivate": false,
+    "thisPromotionAddsMaterials": false,
+    "thisPromotionAddsLights": false,
+    "thisPromotionAddsExportAssets": false
+  }
+}
