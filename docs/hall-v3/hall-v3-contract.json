@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
-  "phase": "metricGreybox",
+  "phase": "cameraApproval",
   "productionRoute": {
     "path": "/hall",
     "mode": "placeholder",
@@ -32,13 +32,14 @@
     "referenceBibleData": "docs/hall-v3/reference-bible.json",
     "greyboxTooling": "docs/hall-v3/greybox-tooling.json",
     "greyboxCandidates": "docs/hall-v3/greybox-candidates.json",
-    "greyboxLayouts": "docs/hall-v3/greybox-layouts.json"
+    "greyboxLayouts": "docs/hall-v3/greybox-layouts.json",
+    "greyboxDecision": "docs/hall-v3/greybox-decision.json"
   },
   "gates": {
     "foundation": "completed",
     "referenceBible": "completed",
-    "metricGreybox": "active",
-    "cameraApproval": "blocked",
+    "metricGreybox": "completed",
+    "cameraApproval": "active",
     "materialLightingExportSpike": "blocked",
     "pushkinVerticalSlice": "blocked",
     "offlineVisualApproval": "blocked",
