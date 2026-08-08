@@ -49,7 +49,7 @@
     "validate:hall-reference-bible": "tsx scripts/validate-hall-reference-bible.ts",
     "validate:hall-topology-selection": "tsx scripts/validate-hall-topology-selection.ts",
     "validate:hall-topology-provenance": "tsx scripts/validate-hall-topology-selection-provenance.ts",
-    "validate:hall-camera-approval": "tsx scripts/validate-hall-camera-approval.ts",
+    "validate:hall-camera-approval": "tsx scripts/validate-hall-camera-approval.ts && tsx scripts/validate-hall-camera-decision.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
