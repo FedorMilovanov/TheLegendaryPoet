@@ -11,7 +11,6 @@ const expect = (condition: unknown, message: string) => {
 const hallPagePath = 'src/pages/HallPage.tsx';
 const legacyHallDir = 'src/components/hall';
 const hallDocsPath = 'docs/hall-v3/README.md';
-const importPattern = /(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g;
 
 function sourceFiles(relativeDir: string): string[] {
   const absoluteDir = path.join(root, relativeDir);
@@ -28,7 +27,7 @@ function sourceFiles(relativeDir: string): string[] {
 }
 
 function importSpecifiers(source: string) {
-  return [...source.matchAll(importPattern)].map((match) => match[1]);
+  return [...source.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].map((match) => match[1]);
 }
 
 const hallPage = read(hallPagePath);
@@ -69,10 +68,14 @@ for (const specifier of importSpecifiers(hallPage)) {
 
 for (const relativePath of sourceFiles('src')) {
   if (relativePath === legacyHallDir || relativePath.startsWith(`${legacyHallDir}/`)) continue;
-  const specifiers = importSpecifiers(read(relativePath));
-  for (const specifier of specifiers) {
-    const importsLegacyHall = /(?:^|\/)components\/hall(?:\/|$)/.test(specifier)
-      || (specifier.startsWith('.') && /(?:^|\/)hall(?:\/|$)/.test(path.posix.normalize(path.posix.join(path.posix.dirname(relativePath), specifier))));
+  for (const specifier of importSpecifiers(read(relativePath))) {
+    const resolvedRelativeImport = specifier.startsWith('.')
+      ? path.posix.normalize(path.posix.join(path.posix.dirname(relativePath), specifier))
+      : null;
+    const importsLegacyHall = specifier.includes('/components/hall')
+      || specifier.startsWith('components/hall/')
+      || resolvedRelativeImport === legacyHallDir
+      || resolvedRelativeImport?.startsWith(`${legacyHallDir}/`) === true;
     expect(!importsLegacyHall, `production source must not import legacy Hall v2: ${relativePath} -> ${specifier}`);
   }
 }
