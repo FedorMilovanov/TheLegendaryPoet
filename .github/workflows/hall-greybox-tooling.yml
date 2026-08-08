@@ -8,8 +8,10 @@ on:
       - 'docs/hall-v3/hall-v3-contract.json'
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
+      - 'docs/hall-v3/greybox-layouts.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/validate-hall-greybox-tooling.ts'
+      - 'scripts/validate-hall-greybox-candidates.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -18,8 +20,10 @@ on:
       - 'docs/hall-v3/hall-v3-contract.json'
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
+      - 'docs/hall-v3/greybox-layouts.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/validate-hall-greybox-tooling.ts'
+      - 'scripts/validate-hall-greybox-candidates.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -33,7 +37,7 @@ permissions:
 jobs:
   blender-preflight:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     env:
       BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
       BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
@@ -48,6 +52,9 @@ jobs:
 
       - name: Validate metric-greybox tooling source contract
         run: npm run validate:hall-greybox-tooling
+
+      - name: Validate neutral candidate source contract
+        run: npm run validate:hall-greybox-candidates
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -84,10 +91,28 @@ jobs:
             -- \
             --output-dir qa-artifacts/hall-greybox-tooling
 
-      - name: Validate generated Blender evidence
+      - name: Validate generated Blender tooling evidence
         env:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
         run: npm run validate:hall-greybox-tooling
+
+      - name: Generate H1 H2 H3 neutral metric candidates
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-greybox-candidates
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-greybox/generate-candidates.py \
+            -- \
+            --layouts docs/hall-v3/greybox-layouts.json \
+            --output-dir qa-artifacts/hall-greybox-candidates
+
+      - name: Validate generated candidate evidence
+        env:
+          HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
+        run: npm run validate:hall-greybox-candidates
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
@@ -98,5 +123,14 @@ jobs:
             blender-version.txt
             qa-artifacts/hall-greybox-tooling/preflight.json
             qa-artifacts/hall-greybox-tooling/tooling-smoke.blend
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload neutral H1 H2 H3 comparison evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-greybox-candidates-${{ github.event.pull_request.head.sha || github.sha }}
+          path: qa-artifacts/hall-greybox-candidates
           if-no-files-found: warn
           retention-days: 14
