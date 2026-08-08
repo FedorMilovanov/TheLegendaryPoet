@@ -66,6 +66,9 @@ jobs:
       - name: Validate persistent Hall topology selection source contract
         run: npm run validate:hall-topology-selection
 
+      - name: Validate frozen Hall shootout provenance
+        run: npm run validate:hall-topology-provenance
+
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
           set -euo pipefail
@@ -104,7 +107,9 @@ jobs:
       - name: Validate generated Blender tooling evidence against selected topology authority
         env:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
-        run: npm run validate:hall-topology-selection
+        run: |
+          npm run validate:hall-topology-selection
+          npm run validate:hall-topology-provenance
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -128,7 +133,9 @@ jobs:
       - name: Validate regenerated evidence against frozen shootout decision
         env:
           HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
-        run: npm run validate:hall-topology-selection
+        run: |
+          npm run validate:hall-topology-selection
+          npm run validate:hall-topology-provenance
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
