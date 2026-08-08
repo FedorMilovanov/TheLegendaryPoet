@@ -5,28 +5,26 @@ import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 /**
- * Hall of Poets — placeholder while the immersive version is rebuilt.
+ * Hall of Poets — lightweight production shell while Hall v3 is designed and
+ * certified outside the runtime.
  *
- * The route stays reachable (nav link / homepage CTA), but instead of loading
- * the heavy R3F scene it shows a blurred glimpse of the target "Храм Русской
- * Поэзии" reference with an explicit "в разработке" message. The 3D hall
- * components remain in the repo (src/components/hall/*) for the future rebuild;
- * they are simply not imported here, so none of three.js ships in this route.
+ * The old R3F prototype under src/components/hall/* is legacy evidence only and
+ * is deliberately not imported here. The backdrop is an early concept image,
+ * not a promise of the final architecture.
  */
 export default function HallPage() {
   useSeo({
     title: 'Зал Поэтов — в разработке — THE LEGENDARY POET',
-    description: 'Иммерсивный «Храм Русской Поэзии» сейчас в разработке. Скоро здесь можно будет пройтись по залам поэтов разных эпох.',
+    description: 'Иммерсивный музей русской поэзии проектируется заново: сначала архитектура, материалы, свет и исторические экспонаты, затем — браузерная 3D-версия.',
     path: '/hall',
   });
 
   return (
     <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#050505]">
-      {/* Blurred reference backdrop — a glimpse of where the hall is heading */}
       <div className="absolute inset-0">
         <img
           src={asset('/images/hall-preview.webp')}
-          alt="Приблизительный референс будущего зала — купольный храм русской поэзии"
+          alt="Ранний концептуальный эскиз будущего Зала Поэтов"
           className="h-full w-full scale-110 object-cover opacity-60 blur-xl"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/55 to-[#050505]" />
@@ -45,16 +43,16 @@ export default function HallPage() {
         </span>
 
         <h1 className="editorial-title mb-6 font-serif text-5xl font-bold leading-[0.95] text-white md:text-7xl">
-          <span className="gold-gradient gold-glow-text">{titleCase('Храм русской поэзии')}</span>
+          <span className="gold-gradient gold-glow-text">{titleCase('Зал Поэтов')}</span>
         </h1>
 
         <p className="mx-auto mb-4 max-w-xl font-serif text-xl italic leading-relaxed text-luxury-gray-light md:text-2xl">
-          Иммерсивный зал поэтов сейчас перестраивается.
+          Иммерсивный музей проектируется заново.
         </p>
         <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-luxury-gray-light/70">
-          Мы делаем его заново — как купольный пантеон с залами разных эпох:
-          Золотой век, Серебряный век, советская и современная поэзия. На фоне —
-          приблизительный референс того, к чему идём. Пока это только эскиз.
+          Сначала мы отдельно утверждаем пространство, камеры, реальные материалы, свет и
+          исторические экспонаты — и только после этого возвращаем 3D в браузер. Фоновое
+          изображение здесь — ранний концепт, не обещание финальной архитектуры.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
