@@ -11,6 +11,25 @@ const expect = (condition: unknown, message: string) => {
 const hallPagePath = 'src/pages/HallPage.tsx';
 const legacyHallDir = 'src/components/hall';
 const hallDocsPath = 'docs/hall-v3/README.md';
+const importPattern = /(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g;
+
+function sourceFiles(relativeDir: string): string[] {
+  const absoluteDir = path.join(root, relativeDir);
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
+    const relativePath = path.posix.join(relativeDir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...sourceFiles(relativePath));
+      continue;
+    }
+    if (/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) files.push(relativePath);
+  }
+  return files;
+}
+
+function importSpecifiers(source: string) {
+  return [...source.matchAll(importPattern)].map((match) => match[1]);
+}
 
 const hallPage = read(hallPagePath);
 const routeRuntime = read('src/routes/routeModules.ts');
@@ -37,9 +56,7 @@ expect(
   'dormant Hall shell must retain the <= 8000-byte route budget',
 );
 
-const importSpecifiers = [...hallPage.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)]
-  .map((match) => match[1]);
-for (const specifier of importSpecifiers) {
+for (const specifier of importSpecifiers(hallPage)) {
   expect(
     !specifier.includes('/components/hall') && !specifier.includes('components/hall/'),
     `HallPage must not import the dormant Hall v2 runtime: ${specifier}`,
@@ -49,15 +66,20 @@ for (const specifier of importSpecifiers) {
     `HallPage must not import a 3D runtime dependency while dormant: ${specifier}`,
   );
 }
-expect(!importSpecifiers.some((specifier) => /HallOfPoets/i.test(specifier)), 'HallPage must not import HallOfPoets');
+
+for (const relativePath of sourceFiles('src')) {
+  if (relativePath === legacyHallDir || relativePath.startsWith(`${legacyHallDir}/`)) continue;
+  const specifiers = importSpecifiers(read(relativePath));
+  for (const specifier of specifiers) {
+    const importsLegacyHall = /(?:^|\/)components\/hall(?:\/|$)/.test(specifier)
+      || (specifier.startsWith('.') && /(?:^|\/)hall(?:\/|$)/.test(path.posix.normalize(path.posix.join(path.posix.dirname(relativePath), specifier))));
+    expect(!importsLegacyHall, `production source must not import legacy Hall v2: ${relativePath} -> ${specifier}`);
+  }
+}
 
 expect(
   routeRuntime.includes("HallPage: () => import('../pages/HallPage')"),
   'route runtime must lazy-load the HallPage shell through the canonical route registry',
-);
-expect(
-  !/(?:from\s+|import\s*\(\s*)['"][^'"]*components\/hall\/HallOfPoets/.test(routeRuntime),
-  'route runtime must not import the legacy Hall v2 scene',
 );
 
 for (const retiredPromise of [
@@ -73,7 +95,20 @@ expect(
   'Hall placeholder must state that the concept backdrop is not the final architecture',
 );
 
-expect(fs.existsSync(path.join(root, hallDocsPath)), 'Hall v3 authority README must exist');
+const requiredHallDocs = [
+  hallDocsPath,
+  'docs/hall-v3/ART_DIRECTION.md',
+  'docs/hall-v3/SCENE_CONTRACT.md',
+  'docs/hall-v3/ASSET_PIPELINE.md',
+  'docs/hall-v3/VISUAL_ACCEPTANCE.md',
+  'docs/hall-v3/AI_USAGE_POLICY.md',
+  'docs/hall-v3/PERFORMANCE_BUDGET.md',
+  'docs/hall-v3/RIGHTS_REGISTER.md',
+  'docs/hall-v3/LEGACY_RETIREMENT.md',
+];
+for (const relativePath of requiredHallDocs) {
+  expect(fs.existsSync(path.join(root, relativePath)), `Hall v3 contract document must exist: ${relativePath}`);
+}
 expect(fs.existsSync(path.join(root, legacyHallDir, 'README.md')), 'legacy Hall directory must declare its non-authoritative status');
 expect(
   projectContract.architecture?.openLaneIds?.includes('TLP-HALL-001') === true,
@@ -105,4 +140,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('Hall v3 foundation validation passed: lightweight route, legacy isolation and architecture-lane ownership are enforced.');
+console.log('Hall v3 foundation validation passed: lightweight route, full legacy isolation and architecture-lane ownership are enforced.');
