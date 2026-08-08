@@ -16,6 +16,8 @@ const contract = JSON.parse(read(contractPath)) as any;
 const rigs = JSON.parse(read(rigsPath)) as any;
 const decision = JSON.parse(read(decisionPath)) as any;
 const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string,string> };
+const projectContracts = read('.github/workflows/project-contracts.yml');
+const hallWorkflow = read('.github/workflows/hall-greybox-tooling.yml');
 
 function gitBlobSha(relative: string) {
   const bytes = fs.readFileSync(path.join(root, relative));
@@ -43,7 +45,7 @@ expect(rigs.approvedRig === null, 'candidate source must not be rewritten to mas
 expect(gitBlobSha(rigsPath) === decision.evidence?.candidateSourceBlob, 'camera decision must freeze the exact merged camera-rigs Git blob');
 expect(gitBlobSha(generatorPath) === decision.evidence?.cameraGeneratorBlob, 'camera decision must freeze the exact merged camera generator Git blob');
 
-const byId = new Map((rigs.rigs ?? []).map((rig: any) => [rig.id, rig]));
+const byId = new Map<string, any>((rigs.rigs ?? []).map((rig: any) => [String(rig.id), rig]));
 expect(JSON.stringify([...byId.keys()]) === JSON.stringify(['R0','R1','R2','R3']), 'camera source must retain R0/R1/R2/R3');
 expect(byId.get('R2')?.status === 'rejected', 'R2 must remain the evidence-level rejected rig');
 expect(byId.get('R2')?.expectedFailure?.hitObject === 'HUMAN_PROXY', 'R2 must preserve HUMAN_PROXY rejection evidence');
@@ -85,8 +87,12 @@ const forbiddenOpened = ['materials','lighting','textures','final Pushkin portra
 for (const item of forbiddenOpened) expect((decision.nonDecisions ?? []).includes(item), `decision must preserve non-decision: ${item}`);
 
 const scripts = packageJson.scripts ?? {};
-expect((scripts['validate:hall-camera-approval'] ?? '').includes('validate-hall-camera-decision.ts'), 'camera decision validator must be chained into validate:hall-camera-approval');
-expect((scripts.check ?? '').includes('validate:hall-camera-approval'), 'normal check must retain the camera approval chain');
+expect(scripts['validate:hall-camera-approval'] === 'tsx scripts/validate-hall-camera-approval.ts', 'camera candidate validator command must remain unchanged');
+expect(scripts['validate:hall-camera-decision'] === 'tsx scripts/validate-hall-camera-decision.ts', 'package scripts must expose the separate camera decision validator');
+expect((scripts.check ?? '').includes('validate:hall-camera-approval'), 'normal check must retain the camera candidate validator');
+expect((scripts.check ?? '').includes('validate:hall-camera-decision'), 'normal check must run the camera decision validator separately');
+expect(projectContracts.includes('npm run validate:hall-camera-decision'), 'Project contracts must run the separate camera decision validator');
+expect(hallWorkflow.includes('npm run validate:hall-camera-decision'), 'Hall Blender workflow must enforce the camera decision source authority');
 
 if (failures.length) {
   console.error('Hall camera decision validation failed:');
