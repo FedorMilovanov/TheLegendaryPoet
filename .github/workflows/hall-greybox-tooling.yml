@@ -11,11 +11,13 @@ on:
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
+      - 'docs/hall-v3/camera-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-camera-approval.ts'
+      - 'scripts/validate-hall-camera-decision.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -27,11 +29,13 @@ on:
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
+      - 'docs/hall-v3/camera-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-camera-approval.ts'
+      - 'scripts/validate-hall-camera-decision.ts'
       - 'package.json'
   workflow_dispatch:
 
