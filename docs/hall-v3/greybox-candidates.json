@@ -4,9 +4,11 @@
   "phase": "metricGreybox",
   "status": "active",
   "approvedCandidate": null,
+  "layoutSource": "docs/hall-v3/greybox-layouts.json",
+  "generator": "scripts/hall-greybox/generate-candidates.py",
   "cameraSet": {
-    "status": "common-set-required-not-yet-approved",
-    "lensCandidatesMm": [],
+    "status": "common-test-set-selected-not-approved",
+    "lensCandidatesMm": [35],
     "approvedRig": null
   },
   "equalComparison": {
@@ -65,7 +67,8 @@
     {
       "id": "H1",
       "name": "orientation court plus chronological branches",
-      "status": "unbuilt",
+      "status": "source-defined",
+      "sourceLayoutId": "H1",
       "sourceBlend": null,
       "evidenceManifest": null,
       "routeLengthMetres": null,
@@ -76,7 +79,8 @@
     {
       "id": "H2",
       "name": "directed chronological promenade plus focus bays",
-      "status": "unbuilt",
+      "status": "source-defined",
+      "sourceLayoutId": "H2",
       "sourceBlend": null,
       "evidenceManifest": null,
       "routeLengthMetres": null,
@@ -87,7 +91,8 @@
     {
       "id": "H3",
       "name": "asymmetric orientation plus diagonal or curved trajectory and side focus rooms",
-      "status": "unbuilt",
+      "status": "source-defined",
+      "sourceLayoutId": "H3",
       "sourceBlend": null,
       "evidenceManifest": null,
       "routeLengthMetres": null,
