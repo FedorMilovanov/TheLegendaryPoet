@@ -34,6 +34,8 @@ jobs:
         run: npm run validate:hall-reference-bible
       - name: Validate Hall v3 topology selection and camera boundary
         run: npm run validate:hall-topology-selection
+      - name: Validate Hall v3 frozen shootout provenance
+        run: npm run validate:hall-topology-provenance
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |
