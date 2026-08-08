@@ -96,6 +96,12 @@ jobs:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
         run: npm run validate:hall-greybox-tooling
 
+      - name: Install minimal EGL runtime for headless Workbench evidence
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libegl1
+
       - name: Generate H1 H2 H3 neutral metric candidates
         run: |
           set -euo pipefail
