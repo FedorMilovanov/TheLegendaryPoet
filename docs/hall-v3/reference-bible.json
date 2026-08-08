@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "phase": "referenceBible",
+  "status": "active",
+  "allowedProblemTags": [
+    "circulation",
+    "sightline",
+    "scale",
+    "portrait-display",
+    "document-display",
+    "material",
+    "daylight",
+    "artificial-light",
+    "signage",
+    "camera",
+    "mobile",
+    "accessibility"
+  ],
+  "requiredPrimaryProblems": [
+    "circulation",
+    "sightline",
+    "portrait-display",
+    "document-display",
+    "daylight",
+    "accessibility"
+  ],
+  "sources": [
+    {
+      "id": "british-museum-great-court",
+      "institution": "British Museum",
+      "title": "Great Court architecture",
+      "url": "https://www.britishmuseum.org/about-us/british-museum-story/architecture/great-court",
+      "primaryProblem": "circulation",
+      "secondaryProblems": ["sightline", "scale", "camera"],
+      "take": [
+        "Use a central space only when it distributes visitors and reveals multiple onward destinations.",
+        "Let vistas change as the visitor moves instead of presenting one static symmetrical postcard."
+      ],
+      "avoid": [
+        "Do not copy the glass-roof aesthetic or circular Reading Room literally.",
+        "Do not spend area on an empty monumental lobby with no circulation job."
+      ],
+      "why": "A central reveal is valuable only when it improves orientation, route choice and spatial depth."
+    },
+    {
+      "id": "louvre-cour-marly",
+      "institution": "Musee du Louvre",
+      "title": "Shining new light on sculpture — Cour Marly and Cour Puget",
+      "url": "https://www.louvre.fr/en/explore/the-palace/shining-new-light-on-sculpture",
+      "primaryProblem": "daylight",
+      "secondaryProblems": ["sightline", "scale", "artificial-light"],
+      "take": [
+        "Use level changes and controlled overhead light to create hierarchy and varied vistas.",
+        "Treat daylight as something to regulate rather than as a permanent theatrical beam."
+      ],
+      "avoid": [
+        "Do not use monumental sculpture as filler for literary space.",
+        "Do not equate a glass roof with museum quality."
+      ],
+      "why": "Large-scale museum drama can coexist with controlled light and clear hierarchy without dictating Hall form."
+    },
+    {
+      "id": "met-rockefeller-wing-2025",
+      "institution": "The Metropolitan Museum of Art",
+      "title": "Michael C. Rockefeller Wing reopening",
+      "url": "https://www.metmuseum.org/de/press-releases/mcrw-opening-english-2025",
+      "primaryProblem": "sightline",
+      "secondaryProblems": ["circulation", "scale", "portrait-display", "camera"],
+      "take": [
+        "Combine a strong trajectory and long anchor sightlines with smaller focus galleries for close looking.",
+        "Let collection needs shape display zones without turning them into themed scenery."
+      ],
+      "avoid": [
+        "Do not repeat equal bays with equal visual weight.",
+        "Do not copy regional motifs unrelated to Russian literary material."
+      ],
+      "why": "Hall needs an establishing route and intimate poet-scale moments rather than one uniform corridor."
+    },
+    {
+      "id": "npg-floor-plans",
+      "institution": "National Portrait Gallery, London",
+      "title": "Floor plans",
+      "url": "https://www.npg.org.uk/visit/floor-plans/",
+      "primaryProblem": "circulation",
+      "secondaryProblems": ["signage", "accessibility"],
+      "take": [
+        "Use chronology as a possible navigation simplifier without fixing a wing count in advance.",
+        "Make it possible to focus on one historical period without traversing the whole collection."
+      ],
+      "avoid": [
+        "Do not turn chronological grouping into four preordained wings.",
+        "Do not require a complete linear traversal to reach a later period."
+      ],
+      "why": "Chronology is useful when it lowers navigation cost, not when it becomes architectural dogma."
+    },
+    {
+      "id": "npg-wall-design",
+      "institution": "National Portrait Gallery, London",
+      "title": "Walls of the new National Portrait Gallery",
+      "url": "https://www.npg.org.uk/blog/walls-of-new-npg",
+      "primaryProblem": "portrait-display",
+      "secondaryProblems": ["material", "artificial-light"],
+      "take": [
+        "Choose wall material, reflectance and colour to improve how the actual portrait reads under controlled light.",
+        "Test portrait, background surface and lighting together instead of treating the wall as decoration."
+      ],
+      "avoid": [
+        "Do not assign a loud unique colour world or material archetype to every poet.",
+        "Do not default to black metallic walls and glowing gold frames."
+      ],
+      "why": "The portrait is the optical anchor; the background should support it rather than advertise a theme."
+    },
+    {
+      "id": "getty-museum-lighting",
+      "institution": "Getty Conservation Institute",
+      "title": "Museum Lighting Research",
+      "url": "https://www.getty.edu/projects/museum-lighting-research/",
+      "primaryProblem": "document-display",
+      "secondaryProblems": ["daylight", "artificial-light"],
+      "take": [
+        "Treat lighting for paper and documentary objects as a conservation constraint as well as visual design.",
+        "Separate circulation lighting decisions from fragile-object display lighting."
+      ],
+      "avoid": [
+        "Do not use one dramatic lighting recipe for portraits, photographs, paper and architecture.",
+        "Do not rescue weak display composition with brighter spotlights."
+      ],
+      "why": "Light-sensitive documents need a different exposure strategy from the readable circulation environment."
+    },
+    {
+      "id": "smithsonian-accessible-exhibition-design",
+      "institution": "Smithsonian Institution",
+      "title": "Smithsonian Guidelines for Accessible Exhibition Design",
+      "url": "https://www.sifacilities.si.edu/sites/default/files/Files/Accessibility/accessible-exhibition-design1.pdf",
+      "primaryProblem": "accessibility",
+      "secondaryProblems": ["circulation", "signage", "sightline"],
+      "take": [
+        "Design a clearly legible circulation route with adequate clear widths, viewing clearances and headroom.",
+        "Avoid glare, abrupt light transitions and obstacles that make the route hard to read."
+      ],
+      "avoid": [
+        "Do not treat accessibility as a post-build UI overlay.",
+        "Do not rely on narrow one-person routes where visitors must stop to view exhibits."
+      ],
+      "why": "Accessible dimensions and visual legibility are geometry inputs for the greybox, not late compliance patches."
+    },
+    {
+      "id": "british-museum-accessibility",
+      "institution": "British Museum",
+      "title": "Accessibility at the museum",
+      "url": "https://www.britishmuseum.org/visit/accessibility-museum",
+      "primaryProblem": "accessibility",
+      "secondaryProblems": ["circulation", "signage"],
+      "take": [
+        "Provide direct accessible routes, rest opportunities and multiple information modalities.",
+        "Preserve equivalent content outside any future 3D interaction."
+      ],
+      "avoid": [
+        "Do not make free locomotion a prerequisite for reaching content.",
+        "Do not make Canvas the sole owner of navigation or interpretation."
+      ],
+      "why": "The spatial experience can be optional; the content and route logic must remain accessible independently."
+    },
+    {
+      "id": "cci-paper-objects",
+      "institution": "Canadian Conservation Institute",
+      "title": "Caring for paper objects",
+      "url": "https://www.canada.ca/en/conservation-institute/services/preventive-conservation/guidelines-collections/paper-objects.html",
+      "primaryProblem": "document-display",
+      "secondaryProblems": ["artificial-light", "daylight"],
+      "take": [
+        "Treat light exposure to sensitive paper as cumulative and keep display illumination low and controlled.",
+        "Use rotation, exposure limits or facsimile strategies when appropriate."
+      ],
+      "avoid": [
+        "Do not expose manuscripts to the same bright route lighting as architecture.",
+        "Do not infer reproduction rights from conservation guidance."
+      ],
+      "why": "A credible literary museum needs controlled document pockets and rights/provenance decisions separate from visual mood."
+    },
+    {
+      "id": "pushkin-museum-life-work",
+      "institution": "All-Russian Museum of A. S. Pushkin",
+      "title": "Pushkin. Life and Work",
+      "url": "https://www.museumpushkin.ru/vserossijskij_muzej_a._s._pushkina/muzej_pushkin._zhizn_i_tvorchestvo.html",
+      "primaryProblem": "portrait-display",
+      "secondaryProblems": ["document-display", "sightline", "signage"],
+      "take": [
+        "Use one strong portrait as a visual anchor and let smaller documentary material form the surrounding evidence field.",
+        "Keep the first Pushkin slice object-led rather than filling it with equivalent decorative niches."
+      ],
+      "avoid": [
+        "Do not assume the museum webpage grants image reproduction rights.",
+        "Do not copy the physical room literally without a Hall-specific spatial test."
+      ],
+      "why": "Pushkin provides a concrete exhibit hierarchy to test while object-level image rights remain a separate gate."
+    }
+  ],
+  "metricConstraints": {
+    "unit": "metres",
+    "routeOneWayMinimum": 0.915,
+    "routeTwoWayRecommendedMinimum": 1.525,
+    "accessibleViewingClearance": {
+      "width": 0.76,
+      "depth": 1.22
+    },
+    "clearHeadroomMinimum": 2.03,
+    "sensitivePaperGuidance": {
+      "nominalLux": 50,
+      "hardProductionSetpoint": false,
+      "note": "Use roughly 50 lux or as low as practical as an evidence guide; final exposure strategy is object-specific and remains a conservation/rights decision."
+    }
+  },
+  "spatialHypotheses": [
+    {
+      "id": "H1",
+      "name": "orientation court plus chronological branches",
+      "question": "Can a central orientation/reveal space distribute visitors into chronological groups without becoming an empty monumental lobby?",
+      "mustTest": [
+        "At least one onward destination is visibly legible from orientation.",
+        "Branch identity works without giant floating labels.",
+        "Return path avoids long dead travel.",
+        "Central space has a visual and circulation reason to exist with UI hidden."
+      ],
+      "primaryFailureMode": "Impressive centre followed by repetitive peripheral corridors."
+    },
+    {
+      "id": "H2",
+      "name": "directed chronological promenade plus focus bays",
+      "question": "Can a primarily linear route communicate literary chronology without recreating Hall v2's uniform nave?",
+      "mustTest": [
+        "Compression, release and sightline vary deliberately along the route.",
+        "Poet focus bays do not block the main trajectory.",
+        "A visitor can jump to a later period without traversing every prior poet.",
+        "No sequence of equivalent wall niches defines the experience."
+      ],
+      "primaryFailureMode": "Hall v2 with better modelling."
+    },
+    {
+      "id": "H3",
+      "name": "asymmetric orientation plus diagonal or curved trajectory and side focus rooms",
+      "question": "Can a less symmetrical museum create stronger cinematic sightlines and anchor works while retaining clear wayfinding?",
+      "mustTest": [
+        "Entry has one clear establishing direction.",
+        "The long view terminates on a meaningful exhibit or architectural anchor.",
+        "Side rooms support close reading and a clear return to orientation.",
+        "Portrait-mobile framing remains viable without geometry crossing the screen."
+      ],
+      "primaryFailureMode": "Visually exciting but confusing spatial graph."
+    }
+  ],
+  "greyboxEvidencePackage": {
+    "certifiedCameraWitnesses": [
+      "entryReveal",
+      "orientation",
+      "firstTransition",
+      "pushkinApproach",
+      "pushkinViewing",
+      "reverseExit"
+    ],
+    "mobileCropMinimum": 3,
+    "requiredOutputs": [
+      "dimensionedPlan",
+      "twoSectionsMinimum",
+      "entryRevealCamera",
+      "orientationCamera",
+      "firstTransitionCamera",
+      "pushkinApproachCamera",
+      "pushkinViewingCamera",
+      "reverseExitCamera",
+      "threePortraitMobileCropsMinimum",
+      "topDownSightlineOcclusionDiagram",
+      "baselineRouteLengthAndForcedTurnCount",
+      "visibleNextDestinationNotes"
+    ]
+  },
+  "automaticRejectionRules": [
+    "Strongest view depends on ornament, dome, bloom, fog, particles or lighting effects absent in neutral grey.",
+    "Intended route exposes unfinished backs or sides of architecture.",
+    "First poet reads like a card attached to a wall instead of an exhibit composition.",
+    "Equivalent bays repeat without spatial hierarchy.",
+    "Route requires FPS or free-look to become understandable.",
+    "Large HUD labels are required for basic wayfinding.",
+    "Portrait-mobile crop has no viable framing without rebuilding geometry.",
+    "Central or transition space exists only for spectacle.",
+    "Candidate survives only because more time has already been spent on it."
+  ],
+  "dataAuthority": {
+    "canonical": ["src/data/library/* canonical poet ids, names, dates, portraits and published content"],
+    "reverifyBeforeUse": ["src/data/poetConnections.ts for optional later semantic/navigation modes"],
+    "legacyVisualConceptNotAuthority": ["src/data/poetMuseumMeta.ts"],
+    "uiOnlyUnlessApproved": ["src/data/epochColors.ts"]
+  },
+  "toolingCandidate": {
+    "name": "Blender",
+    "version": "4.5 LTS",
+    "headlessPythonCandidate": true,
+    "permanentAuthority": false
+  },
+  "decisions": {
+    "approvedHypothesis": null,
+    "approvedTopology": null,
+    "approvedWingCount": null,
+    "approvedDome": null,
+    "approvedCameraRig": null
+  }
+}
