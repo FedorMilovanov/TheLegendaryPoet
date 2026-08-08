@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "cameraApproval",
+  "status": "selected",
+  "selectedTopology": "H3",
+  "selectedRig": "R1",
+  "reserveRig": "R3",
+  "rejectedRigs": ["R0", "R2"],
+  "selectionBasis": "exact-head Blender camera evidence plus manual desktop/mobile comparison",
+  "evidence": {
+    "candidateSource": "docs/hall-v3/camera-rigs.json",
+    "candidateSourceBlob": "8c65312a53dbd41c7ec5f0a6128610e3f5428205",
+    "cameraGenerator": "scripts/hall-camera/generate-camera-candidates.py",
+    "cameraGeneratorBlob": "79f8b396b2fe0ca5fe695b49a70eb013f9c9418f",
+    "testedHead": "7637010ef69248fe05ea37c1a1cf9ee8d2a38193",
+    "artifactId": 9027136608,
+    "artifactDigest": "sha256:17af431ffb72bd40b5febd8fa9927699f8c792ecdeea795d3b913b9cd6941c04",
+    "blenderVersion": "4.5.12 LTS",
+    "selectedLayoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "manifestHashAudit": "36/36 PNG outputs matched recorded SHA-256 and byte length",
+    "reproducibility": "R0/R1/R2/R3 pushkinViewing decoded pixels reproduced between the diagnostic 12e5798c artifact and exact-head 7637010e artifact"
+  },
+  "decision": {
+    "R0": {
+      "disposition": "rejected",
+      "reason": "Known frozen benchmark failure: Pushkin portrait proxy dominates the view, mobile framing is clipped and documentary context is effectively lost.",
+      "lensMm": 35,
+      "distanceMetres": 3.5082,
+      "mobileAnchorFullyInsideFrame": false
+    },
+    "R1": {
+      "disposition": "selected",
+      "reason": "Best focus-zone transition among unobstructed candidates: restores room/document context, removes more dominant vertical architectural occlusion than R3, keeps the Pushkin anchor fully inside mobile framing and preserves the five already-certified H3 journey cameras unchanged.",
+      "lensMm": 28,
+      "distanceMetres": 4.3342,
+      "desktopAnchorScreenCoverage": 0.41413,
+      "mobileAnchorScreenCoverage": 0.49311,
+      "mobileAnchorFullyInsideFrame": true,
+      "desktopDocumentCaseScreenCoverage": [0.05750, 0.06434]
+    },
+    "R2": {
+      "disposition": "rejected",
+      "reason": "Automatic ray-occlusion failure: pushkinViewing hits HUMAN_PROXY before EXHIBIT_alexander-pushkin.",
+      "lensMm": 32,
+      "distanceMetres": 4.7101,
+      "expectedFailure": {
+        "visible": false,
+        "hitObject": "HUMAN_PROXY"
+      }
+    },
+    "R3": {
+      "disposition": "reserve",
+      "reason": "Valid unobstructed fallback with restrained 35 mm perspective and slightly better document-case centering, but manual comparison shows stronger vertical architectural occlusion and a weaker transition from pushkinApproach into the focus zone than R1.",
+      "lensMm": 35,
+      "distanceMetres": 5.4116,
+      "desktopAnchorScreenCoverage": 0.41691,
+      "mobileAnchorScreenCoverage": 0.47527,
+      "mobileAnchorFullyInsideFrame": true,
+      "desktopDocumentCaseScreenCoverage": [0.05238, 0.06007]
+    }
+  },
+  "approvedCamera": {
+    "rigId": "R1",
+    "variableWitness": "pushkinViewing",
+    "position": [8.0, 2.5, 1.60],
+    "target": [11.15, 5.45, 1.95],
+    "nextDestination": [11.15, 5.45, 1.95],
+    "lensMm": 28
+  },
+  "frozenAfterDecision": {
+    "topology": "H3",
+    "fiveBaselineJourneyWitnesses": true,
+    "pushkinViewingRig": "R1",
+    "geometryMayChange": false,
+    "cameraMayChangeWithoutNewCameraApproval": false
+  },
+  "nonDecisions": [
+    "materials",
+    "lighting",
+    "textures",
+    "final Pushkin portrait/document assets",
+    "GLB export settings",
+    "web runtime",
+    "performance budgets",
+    "full museum scale-out"
+  ],
+  "nextGate": "materialLightingExportSpike"
+}
