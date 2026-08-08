@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "phase": "metricGreybox",
-  "status": "active",
-  "approvedCandidate": null,
+  "status": "selected",
+  "approvedCandidate": "H3",
+  "decisionRecord": "docs/hall-v3/greybox-decision.json",
   "layoutSource": "docs/hall-v3/greybox-layouts.json",
   "generator": "scripts/hall-greybox/generate-candidates.py",
   "cameraSet": {
-    "status": "common-test-set-selected-not-approved",
+    "status": "topology-selected-camera-rig-unapproved",
     "lensCandidatesMm": [35],
     "approvedRig": null
   },
@@ -67,7 +68,8 @@
     {
       "id": "H1",
       "name": "orientation court plus chronological branches",
-      "status": "source-defined",
+      "status": "reserve",
+      "disposition": "reserve",
       "sourceLayoutId": "H1",
       "sourceBlend": null,
       "evidenceManifest": null,
@@ -79,19 +81,26 @@
     {
       "id": "H2",
       "name": "directed chronological promenade plus focus bays",
-      "status": "source-defined",
+      "status": "rejected",
+      "disposition": "reject",
       "sourceLayoutId": "H2",
       "sourceBlend": null,
       "evidenceManifest": null,
       "routeLengthMetres": null,
       "forcedTurnCount": null,
-      "rejected": false,
-      "rejectionReasons": []
+      "rejected": true,
+      "rejectionReasons": [
+        "longest-baseline-route",
+        "highest-forced-turn-count",
+        "most-corridor-like",
+        "insufficient-neutral-spatial-compensation"
+      ]
     },
     {
       "id": "H3",
       "name": "asymmetric orientation plus diagonal or curved trajectory and side focus rooms",
-      "status": "source-defined",
+      "status": "selected",
+      "disposition": "advance",
       "sourceLayoutId": "H3",
       "sourceBlend": null,
       "evidenceManifest": null,
