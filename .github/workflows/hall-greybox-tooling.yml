@@ -63,6 +63,9 @@ jobs:
       BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
       BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
       BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
+      MESHOPT_REPO: https://github.com/zeux/meshoptimizer.git
+      MESHOPT_COMMIT: 9d9890c73011d75920af614485296d1e03e95448
+      GLTF_VALIDATOR_URL: https://github.com/KhronosGroup/glTF-Validator/releases/download/2.0.0-dev.3.10/gltf_validator-2.0.0-dev.3.10-linux64.tar.xz
 
     steps:
       - name: Checkout exact Hall post-camera head
@@ -180,8 +183,29 @@ jobs:
           npm run validate:hall-post-camera-authority
           npm run validate:hall-material-spike
 
-      - name: Install pinned temporary glTF spike toolchain
-        run: npm install --no-save --package-lock=false gltfpack@1.2.0 gltf-validator@2.0.0-dev.3.10
+      - name: Build pinned native gltfpack v1.2 from exact upstream commit
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout "$MESHOPT_REPO" .tools/meshoptimizer
+          git -C .tools/meshoptimizer checkout --detach "$MESHOPT_COMMIT"
+          actual="$(git -C .tools/meshoptimizer rev-parse HEAD)"
+          test "$actual" = "$MESHOPT_COMMIT"
+          printf '%s\n' "$actual" > gltfpack-source-head.txt
+          make -C .tools/meshoptimizer -j2 config=release gltfpack
+          test -x .tools/meshoptimizer/gltfpack
+          printf 'GLTFPACK_BIN=%s/.tools/meshoptimizer/gltfpack\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+
+      - name: Download pinned Khronos glTF Validator release
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/gltf-validator .tools/download
+          curl --fail --location --retry 3 --retry-delay 2 "$GLTF_VALIDATOR_URL" --output .tools/download/gltf-validator.tar.xz
+          sha256sum .tools/download/gltf-validator.tar.xz | tee gltf-validator-release.sha256
+          tar -xJf .tools/download/gltf-validator.tar.xz -C .tools/gltf-validator
+          test -x .tools/gltf-validator/gltf_validator
+          printf 'GLTF_VALIDATOR_BIN=%s/.tools/gltf-validator/gltf_validator\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+          .tools/gltf-validator/gltf_validator 2>&1 | tee gltf-validator-version.txt || true
+          grep -F '2.0.0-dev.3.10' gltf-validator-version.txt
 
       - name: Generate representative H3 material and lightmap evidence
         run: |
@@ -197,20 +221,23 @@ jobs:
             --config docs/hall-v3/material-lighting-export-spike.json \
             --layouts docs/hall-v3/greybox-layouts.json \
             --output-dir qa-artifacts/hall-material-spike
+          cp gltfpack-source-head.txt qa-artifacts/hall-material-spike/gltfpack-source-head.txt
+          cp gltf-validator-release.sha256 qa-artifacts/hall-material-spike/gltf-validator-release.sha256
+          cp gltf-validator-version.txt qa-artifacts/hall-material-spike/gltf-validator-version.txt
 
       - name: Khronos-validate raw representative GLB
-        run: node scripts/hall-material-spike/validate-gltf.mjs qa-artifacts/hall-material-spike/h3-bay.raw.glb qa-artifacts/hall-material-spike/raw-validator.json
+        run: node scripts/hall-material-spike/validate-gltf.mjs "$GLTF_VALIDATOR_BIN" qa-artifacts/hall-material-spike/h3-bay.raw.glb qa-artifacts/hall-material-spike/raw-validator.json
 
       - name: Optimize representative GLB with preservation flags
         run: |
           set -euo pipefail
-          npx --no-install gltfpack \
+          "$GLTFPACK_BIN" \
             -i qa-artifacts/hall-material-spike/h3-bay.raw.glb \
             -o qa-artifacts/hall-material-spike/h3-bay.optimized.glb \
             -kn -km -ke -kv -vpf -vtf -cc
 
       - name: Khronos-validate optimized representative GLB
-        run: node scripts/hall-material-spike/validate-gltf.mjs qa-artifacts/hall-material-spike/h3-bay.optimized.glb qa-artifacts/hall-material-spike/optimized-validator.json
+        run: node scripts/hall-material-spike/validate-gltf.mjs "$GLTF_VALIDATOR_BIN" qa-artifacts/hall-material-spike/h3-bay.optimized.glb qa-artifacts/hall-material-spike/optimized-validator.json
 
       - name: Compare raw and optimized application contracts
         run: |
@@ -298,6 +325,9 @@ jobs:
           path: |
             hall-greybox-tested-head.txt
             blender-version.txt
+            gltfpack-source-head.txt
+            gltf-validator-release.sha256
+            gltf-validator-version.txt
             qa-artifacts/hall-material-spike
           if-no-files-found: warn
           retention-days: 14
