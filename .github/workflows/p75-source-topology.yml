@@ -98,7 +98,7 @@ jobs:
           git diff --check
           test "$(git diff --name-only | wc -l)" -eq 1
           test "$(git diff --name-only)" = "src/data/essays/yeseninPartTwoPublic.ts"
-          test "$(git diff --numstat src/data/essays/yeseninPartTwoPublic.ts | awk '{print $1}')" -eq 30
+          test "$(git diff --numstat src/data/essays/yeseninPartTwoPublic.ts | awk '{print $1}')" -eq 33
           test "$(git diff --numstat src/data/essays/yeseninPartTwoPublic.ts | awk '{print $2}')" -eq 3
           git diff -- src/data/essays/yeseninPartTwoPublic.ts
 
