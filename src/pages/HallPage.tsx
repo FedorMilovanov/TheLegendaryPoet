@@ -1,7 +1,6 @@
 import { Link } from '../components/ui/Link';
 import { motion } from 'framer-motion';
 import { useSeo } from '../hooks/useSeo';
-import { asset } from '../utils/asset';
 import { titleCase } from '../utils/titleCase';
 
 /**
@@ -9,8 +8,8 @@ import { titleCase } from '../utils/titleCase';
  * certified outside the runtime.
  *
  * The old R3F prototype under src/components/hall/* is legacy evidence only and
- * is deliberately not imported here. The backdrop is an early concept image,
- * not a promise of the final architecture.
+ * is deliberately not imported here. Early architectural concepts are also kept
+ * out of the production route so they cannot masquerade as the approved Hall.
  */
 export default function HallPage() {
   useSeo({
@@ -21,24 +20,21 @@ export default function HallPage() {
 
   return (
     <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#050505]">
-      <div className="absolute inset-0">
-        <img
-          src={asset('/images/hall-preview.webp')}
-          alt="Ранний концептуальный эскиз будущего Зала Поэтов"
-          className="h-full w-full scale-110 object-cover opacity-60 blur-xl"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/70 via-[#050505]/55 to-[#050505]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.55)_100%)]" />
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(212,175,55,0.10),transparent_28%,rgba(5,5,5,0)_56%)]" />
+        <div className="absolute inset-x-[12%] top-[18%] h-px bg-gradient-to-r from-transparent via-luxury-gold/20 to-transparent" />
+        <div className="absolute inset-x-[22%] bottom-[20%] h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.66)_76%)]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto max-w-2xl px-6 text-center"
       >
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-luxury-gold/30 bg-luxury-gold/5 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-luxury-gold">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-luxury-gold" />
+          <span className="h-1.5 w-1.5 rounded-full bg-luxury-gold" />
           В разработке
         </span>
 
@@ -51,8 +47,8 @@ export default function HallPage() {
         </p>
         <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-luxury-gray-light/70">
           Сначала мы отдельно утверждаем пространство, камеры, реальные материалы, свет и
-          исторические экспонаты — и только после этого возвращаем 3D в браузер. Фоновое
-          изображение здесь — ранний концепт, не обещание финальной архитектуры.
+          исторические экспонаты. Только после визуальной и технической проверки новая 3D-версия
+          вернётся в браузер — без выдачи ранних концептов за финальную архитектуру.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
