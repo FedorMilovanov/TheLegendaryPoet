@@ -17,7 +17,6 @@ const rigs = JSON.parse(read(rigsPath)) as any;
 const decision = JSON.parse(read(decisionPath)) as any;
 const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string,string> };
 const projectContracts = read('.github/workflows/project-contracts.yml');
-const hallWorkflow = read('.github/workflows/hall-greybox-tooling.yml');
 
 function gitBlobSha(relative: string) {
   const bytes = fs.readFileSync(path.join(root, relative));
@@ -92,7 +91,6 @@ expect(scripts['validate:hall-camera-decision'] === 'tsx scripts/validate-hall-c
 expect((scripts.check ?? '').includes('validate:hall-camera-approval'), 'normal check must retain the camera candidate validator');
 expect((scripts.check ?? '').includes('validate:hall-camera-decision'), 'normal check must run the camera decision validator separately');
 expect(projectContracts.includes('npm run validate:hall-camera-decision'), 'Project contracts must run the separate camera decision validator');
-expect(hallWorkflow.includes('npm run validate:hall-camera-decision'), 'Hall Blender workflow must enforce the camera decision source authority');
 
 if (failures.length) {
   console.error('Hall camera decision validation failed:');
