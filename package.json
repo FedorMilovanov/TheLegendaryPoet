@@ -51,6 +51,7 @@
     "validate:hall-topology-provenance": "tsx scripts/validate-hall-topology-selection-provenance.ts",
     "validate:hall-camera-approval": "tsx scripts/validate-hall-camera-approval.ts",
     "validate:hall-camera-decision": "tsx scripts/validate-hall-camera-decision.ts",
+    "validate:hall-post-camera-authority": "tsx scripts/validate-hall-post-camera-authority.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
@@ -71,7 +72,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-topology-selection && npm run validate:hall-topology-provenance && npm run validate:hall-camera-approval && npm run validate:hall-camera-decision && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
+    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-topology-provenance && npm run validate:hall-post-camera-authority && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

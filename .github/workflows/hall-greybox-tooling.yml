@@ -12,12 +12,11 @@ on:
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
       - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/camera-gate-promotion.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
-      - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
-      - 'scripts/validate-hall-camera-approval.ts'
-      - 'scripts/validate-hall-camera-decision.ts'
+      - 'scripts/validate-hall-post-camera-authority.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -30,12 +29,11 @@ on:
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-rigs.json'
       - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/camera-gate-promotion.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
-      - 'scripts/validate-hall-topology-selection.ts'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
-      - 'scripts/validate-hall-camera-approval.ts'
-      - 'scripts/validate-hall-camera-decision.ts'
+      - 'scripts/validate-hall-post-camera-authority.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -59,7 +57,7 @@ jobs:
       BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
 
     steps:
-      - name: Checkout exact Hall camera head
+      - name: Checkout exact Hall post-camera head
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
@@ -73,17 +71,11 @@ jobs:
       - name: Set up repository Node baseline
         uses: ./.github/actions/setup-node-deps
 
-      - name: Validate persistent Hall topology selection source contract
-        run: npm run validate:hall-topology-selection
-
       - name: Validate frozen Hall shootout provenance
         run: npm run validate:hall-topology-provenance
 
-      - name: Validate H3 Camera Approval candidate source
-        run: npm run validate:hall-camera-approval
-
-      - name: Validate selected H3 camera decision authority
-        run: npm run validate:hall-camera-decision
+      - name: Validate frozen H3 R1 post-camera authority
+        run: npm run validate:hall-post-camera-authority
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -120,14 +112,12 @@ jobs:
             -- \
             --output-dir qa-artifacts/hall-greybox-tooling
 
-      - name: Validate generated Blender tooling evidence against selected topology authority
+      - name: Validate tooling evidence against post-camera authority
         env:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
         run: |
-          npm run validate:hall-topology-selection
           npm run validate:hall-topology-provenance
-          npm run validate:hall-camera-approval
-          npm run validate:hall-camera-decision
+          npm run validate:hall-post-camera-authority
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -148,16 +138,14 @@ jobs:
             --layouts docs/hall-v3/greybox-layouts.json \
             --output-dir qa-artifacts/hall-greybox-candidates
 
-      - name: Validate regenerated evidence against frozen shootout decision
+      - name: Validate regenerated frozen H3 evidence
         env:
           HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
         run: |
-          npm run validate:hall-topology-selection
           npm run validate:hall-topology-provenance
-          npm run validate:hall-camera-approval
-          npm run validate:hall-camera-decision
+          npm run validate:hall-post-camera-authority
 
-      - name: Generate H3 Camera Approval candidate evidence
+      - name: Regenerate frozen H3 camera candidate evidence
         run: |
           set -euo pipefail
           mkdir -p qa-artifacts/hall-camera-candidates
@@ -172,12 +160,10 @@ jobs:
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-camera-candidates
 
-      - name: Validate generated H3 Camera Approval evidence and selected decision
+      - name: Validate regenerated R1 approval evidence under promoted gate
         env:
           HALL_CAMERA_APPROVAL_EVIDENCE: qa-artifacts/hall-camera-candidates/index.json
-        run: |
-          npm run validate:hall-camera-approval
-          npm run validate:hall-camera-decision
+        run: npm run validate:hall-post-camera-authority
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
@@ -203,7 +189,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload H3 Camera Approval comparison evidence
+      - name: Upload frozen H3 camera comparison evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
