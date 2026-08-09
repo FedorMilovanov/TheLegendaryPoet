@@ -141,6 +141,9 @@ expect(byteEvidenceWorkflow.includes('\n  pull_request:\n') && byteEvidenceWorkf
 for (const triggerInput of SOURCE_BYTE_TRIGGER_INPUTS) {
   expect(countOccurrences(byteEvidenceWorkflow, `'${triggerInput}'`) >= 2, `source-byte evidence workflow must cover ${triggerInput} in both pull_request and main push paths`);
 }
+expect(byteEvidenceWorkflow.includes('uses: actions/setup-node@v4') && byteEvidenceWorkflow.includes("node-version: '24'"), 'source-byte workflow must use an explicit isolated Node 24 runtime');
+expect(!byteEvidenceWorkflow.includes('./.github/actions/setup-node-deps'), 'source-byte workflow must not depend on the repository npm-installing setup action');
+expect(!byteEvidenceWorkflow.includes('npm ci') && !byteEvidenceWorkflow.includes('npm install') && !byteEvidenceWorkflow.includes('pnpm ') && !byteEvidenceWorkflow.includes('yarn '), 'source-byte workflow must not install application package dependencies');
 expect(byteEvidenceWorkflow.includes('Upload source-byte identity evidence only'), 'source-byte workflow must upload evidence rather than source media');
 expect(byteEvidenceScript.includes("hostname !== 'upload.wikimedia.org'") && byteEvidenceScript.includes('recorded sourceFileHash does not match freshly acquired bytes'), 'source-byte probe must pin host and revalidate recorded hashes');
 expect(!hallPage.includes('@react-three/') && !hallPage.includes("from 'three'") && !hallPage.includes('from "three"'), 'production Hall page must remain free of Three/R3F imports');
