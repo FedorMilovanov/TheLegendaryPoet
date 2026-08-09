@@ -46,13 +46,14 @@
       "sourceDate": "1827",
       "sourceAccessedAt": "2026-08-09",
       "rightsStatus": "rights-pending",
-      "rightsBasis": "Object identity is source-verified. Wikimedia Commons declares the selected Google Art Project reproduction PD-Art/Public Domain Mark, but intended-use/jurisdiction review and exact file acquisition remain unresolved.",
+      "rightsBasis": "Object identity is source-verified. Wikimedia Commons declares the selected Google Art Project reproduction PD-Art/Public Domain Mark, but intended-use/jurisdiction review and exact file-byte acquisition remain unresolved.",
       "creditLine": null,
       "sourceFileHash": null,
       "runtimeAssetPath": null,
       "verificationStatus": "rights-pending",
       "notes": [
         "Institutional collection identity is separate from rights in any particular digital reproduction.",
+        "The Commons description exposes the original-file route and reports a 3455 x 4000 JPEG, but this registry does not treat remote metadata as acquired bytes or as a source-file hash.",
         "EU/Germany public-domain reproduction rules are supportive but do not by themselves resolve every intended-use jurisdiction.",
         "Russian Museum Fund commercial-reproduction rules require explicit owner/legal disposition before global/commercial approval is asserted."
       ],
@@ -66,6 +67,8 @@
       "reproduction": {
         "status": "rights-pending",
         "sourcePage": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "acquisitionStatus": "remote-original-identified-bytes-not-acquired",
         "declaredBasis": "Wikimedia Commons Public Domain Mark / PD-Art declaration for a faithful reproduction of a public-domain two-dimensional artwork",
         "creditLineCandidate": "Orest Kiprensky, Portrait of A.S. Pushkin, 1827; State Tretyakov Gallery; digital reproduction via Google Arts & Culture / Wikimedia Commons",
         "sourceFileHash": null,
@@ -90,13 +93,14 @@
       "sourceDate": "1833",
       "sourceAccessedAt": "2026-08-09",
       "rightsStatus": "rights-pending",
-      "rightsBasis": "RSL object identity is source-verified. Wikimedia Commons declares the 1833 work/reproduction public domain and cites the IRLI RAN electronic library as scan source, but exact file acquisition, final credit and intended-use approval remain unresolved.",
+      "rightsBasis": "RSL object identity is source-verified. Wikimedia Commons declares the 1833 work/reproduction public domain and cites the IRLI RAN electronic library as scan source, but exact file-byte acquisition, final credit and intended-use approval remain unresolved.",
       "creditLine": null,
       "sourceFileHash": null,
       "runtimeAssetPath": null,
       "verificationStatus": "rights-pending",
       "notes": [
         "RSL identifies the 1833 St Petersburg Smirdin edition and marks the digitized document as available in full.",
+        "The Commons original-file route resolves to a 324-page PDF and cites the IRLI RAN electronic library as source, but this registry does not treat a remote PDF response or file-page metadata as an acquired local byte identity.",
         "Object identity and reproduction/public-domain declaration are recorded separately.",
         "A specific page/crop intended for publication still requires file-level acquisition, hashing, credit review and final intended-use approval."
       ],
@@ -109,6 +113,8 @@
       "reproduction": {
         "status": "rights-pending",
         "sourcePage": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
+        "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
+        "acquisitionStatus": "remote-original-identified-bytes-not-acquired",
         "declaredBasis": "Wikimedia Commons Public Domain Mark declaration for the 1833 work; Commons metadata cites the IRLI RAN / Pushkin House electronic library as scan source",
         "creditLineCandidate": "A. S. Pushkin, Eugene Onegin, St Petersburg: A. Smirdin, 1833; object identity verified against Russian State Library record 01003570012",
         "sourceFileHash": null,
@@ -119,6 +125,58 @@
         ]
       },
       "intendedUse": "offline-source-evidence-only-until-approved",
+      "productionManifestEligible": false
+    },
+    {
+      "assetId": "pushkin-house-onegin-self-portrait-1824",
+      "poetId": "alexander-pushkin",
+      "kind": "manuscript-drawing",
+      "sourceTitle": "Рисунок: автопортрет с Онегиным на набережной Невы",
+      "creator": "Alexander Pushkin",
+      "sourceInstitution": "Institute of Russian Literature (Pushkin House), Russian Academy of Sciences — Manuscript Department",
+      "sourceUrlOrArchiveAddress": "https://ro.pushkinskijdom.ru/inventories/3576886",
+      "objectIdOrCallNumber": "Ф. 244, оп. 12, ед. хр. 6",
+      "sourceDate": "1–10 November 1824",
+      "sourceAccessedAt": "2026-08-09",
+      "rightsStatus": "rights-pending",
+      "rightsBasis": "The official Pushkin House inventory source-verifies the archival object and exact cipher. The institution separately requires a copy request naming researcher, topic, intended use and archive cipher for publication/illustration/exhibition purposes; no digital reproduction or reuse approval is inferred here.",
+      "creditLine": null,
+      "sourceFileHash": null,
+      "runtimeAssetPath": null,
+      "verificationStatus": "source-verified",
+      "notes": [
+        "Official inventory identifies Ф. 244, оп. 12, ед. хр. 6 as Pushkin's self-portrait with Onegin on the Neva, an auto-illustration to chapter 1 of Eugene Onegin at the letter to L. S. Pushkin dated 1–10 November 1824.",
+        "This record replaces the weak mirror as the preferred documentary object-provenance candidate, but it does not authorize a specific digital copy.",
+        "The Manuscript Department copy-request process is an explicit institutional/human dependency and must remain unresolved until a real request/disposition exists."
+      ],
+      "objectProvenance": {
+        "status": "source-verified",
+        "objectUrl": "https://ro.pushkinskijdom.ru/inventories/3576886",
+        "objectIdOrCallNumber": "Ф. 244, оп. 12, ед. хр. 6",
+        "notes": "Official Pushkin House inventory record for the Pushkin fund and exact archival unit."
+      },
+      "reproduction": {
+        "status": "rights-pending",
+        "sourcePage": "https://ro.pushkinskijdom.ru/contacts",
+        "originalFileUrl": null,
+        "acquisitionStatus": "institutional-copy-request-required",
+        "declaredBasis": "No reusable digital reproduction is approved. Pushkin House states that copy requests identify researcher, research topic, intended use (including publication, illustration or exhibition), and exact archive cipher.",
+        "creditLineCandidate": "A. S. Pushkin, self-portrait with Onegin on the Neva, 1824; IRLI RAN (Pushkin House), Manuscript Department, Ф. 244, оп. 12, ед. хр. 6",
+        "sourceFileHash": null,
+        "runtimeAssetPath": null,
+        "institutionalRequest": {
+          "required": true,
+          "status": "not-submitted",
+          "requestUrl": "https://ro.pushkinskijdom.ru/contacts",
+          "requiredInformation": ["researcher identity", "research topic", "intended use", "archive cipher and unit title"],
+          "publishedFulfilmentWindow": "up to 1 month"
+        },
+        "jurisdictionNotes": [
+          "Object provenance and copy/reproduction permission are separate evidence layers.",
+          "An agent may record the institutional request requirement but may not fabricate submission, permission or approval."
+        ]
+      },
+      "intendedUse": "offline-source-evidence-only-until-copy-and-rights-approved",
       "productionManifestEligible": false
     },
     {
@@ -140,7 +198,7 @@
       "verificationStatus": "blocked",
       "notes": [
         "Current Commons metadata points to a non-institutional mirror and supplies no exact archive object/call number.",
-        "That is insufficient for a documentary Hall facsimile and must be replaced by primary institutional provenance."
+        "That is insufficient for a documentary Hall facsimile. The official Pushkin House archival candidate is now the preferred provenance path; this record remains as a fail-closed negative control."
       ],
       "objectProvenance": {
         "status": "blocked",
@@ -151,13 +209,15 @@
       "reproduction": {
         "status": "blocked",
         "sourcePage": "https://commons.wikimedia.org/wiki/File:Onegin_autograph.jpg",
+        "originalFileUrl": null,
+        "acquisitionStatus": "do-not-acquire-current-weak-source",
         "declaredBasis": "Commons page declares public-domain status, but rights status does not repair weak object provenance.",
         "creditLineCandidate": null,
         "sourceFileHash": null,
         "runtimeAssetPath": null,
         "jurisdictionNotes": []
       },
-      "intendedUse": "forbidden-until-primary-provenance-replacement",
+      "intendedUse": "forbidden-current-source-negative-control",
       "productionManifestEligible": false
     }
   ]
