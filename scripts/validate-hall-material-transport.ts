@@ -12,6 +12,8 @@ const viewer = read('qa/hall-material-viewer/main.ts');
 const browserWitness = read('scripts/hall-material/browser-witness.mjs');
 
 const ARCH_NODES = ['ARCH_spike_floor','ARCH_wall_016','ARCH_wall_017'];
+const EXPECTED_LIGHTMAP_RESIDENT_BYTES = 128 * 128 * 4 * 2;
+const EXPECTED_TOTAL_LIGHTMAP_RESIDENT_BYTES = EXPECTED_LIGHTMAP_RESIDENT_BYTES * ARCH_NODES.length;
 
 type GlbJson = Record<string, any>;
 function parseGlbJson(filePath: string): GlbJson {
@@ -58,7 +60,9 @@ expect(reexport.includes('contract["bay"]["exportNodes"]'), 'transport re-export
 expect(workflow.includes('scripts/hall-material/reexport-with-tangents.py'), 'Hall workflow must run tangent re-export before Khronos validation');
 expect(viewer.includes("antialias: false") && viewer.includes('preserveDrawingBuffer: true'), 'pixel comparison viewer must disable antialias and preserve the drawing buffer');
 expect(viewer.includes("requestedAsset === 'raw'") && viewer.includes('gl.readPixels') && viewer.includes("crypto.subtle.digest('SHA-256'"), 'viewer must support raw/optimized deterministic pixel witnesses');
+expect(viewer.includes('gpuTextureResidentBytes') && viewer.includes('estimatedResidentBytes') && viewer.includes('generateMipmaps'), 'viewer must measure decoded GPU texture residency and mip policy');
 expect(browserWitness.includes("key: 'rawL0'") && browserWitness.includes("key: 'optimizedL0'") && browserWitness.includes('compareSamples'), 'browser witness must compare raw L0 against optimized L0');
+expect(browserWitness.includes('gpuMemoryComparison') && browserWitness.includes('lightmapEstimatedResidentBytes'), 'browser witness must persist L0/L1 GPU-memory comparison');
 const visual = spike.browserWitness?.optimizationVisualEquivalence ?? {};
 expect(JSON.stringify(visual.sampleGrid ?? []) === JSON.stringify([64,36]), 'visual equivalence sample grid must remain 64x36');
 expect(visual.maximumMeanAbsoluteChannelDifference === 0.75, 'visual equivalence mean-difference threshold must remain explicit');
@@ -116,6 +120,26 @@ if (browserEvidenceRelative) {
     expect(Number(comparison.meanAbsoluteChannelDifference) <= visual.maximumMeanAbsoluteChannelDifference, `optimizer visual mean difference too high: ${comparison.meanAbsoluteChannelDifference}`);
     expect(Number(comparison.maximumChannelDifference) <= visual.maximumChannelDifference, `optimizer visual max-channel difference too high: ${comparison.maximumChannelDifference}`);
     expect(Number(comparison.changedSampleRatioAbove2) <= visual.maximumChangedSampleRatioAbove2, `optimizer changed too many sampled channels: ${comparison.changedSampleRatioAbove2}`);
+
+    for (const witness of [raw, optimized, lit]) {
+      expect(Number(witness?.gpuTextureResidentBytes) > 0, `${witness?.asset}/${witness?.mode}: decoded GPU texture residency must be measured`);
+      expect(Array.isArray(witness?.gpuTextures) && witness.gpuTextures.length > 0, `${witness?.asset}/${witness?.mode}: decoded GPU texture inventory must be present`);
+    }
+    const gpu = evidence.gpuMemoryComparison ?? {};
+    expect(Number(gpu.l0EstimatedResidentBytes) === Number(optimized?.gpuTextureResidentBytes), 'GPU comparison L0 total must match optimized L0 witness');
+    expect(Number(gpu.l1EstimatedResidentBytes) === Number(lit?.gpuTextureResidentBytes), 'GPU comparison L1 total must match optimized L1 witness');
+    expect(Number(gpu.incrementalEstimatedResidentBytes) > 0, 'L1 must report its incremental decoded GPU texture cost');
+    expect(Number(gpu.lightmapTextureCount) === ARCH_NODES.length, 'L1 must load exactly one external lightmap per representative architecture node');
+    expect(Number(gpu.lightmapEstimatedResidentBytes) === EXPECTED_TOTAL_LIGHTMAP_RESIDENT_BYTES, `three 128x128 RGBA HalfFloat lightmaps must occupy ${EXPECTED_TOTAL_LIGHTMAP_RESIDENT_BYTES} decoded bytes`);
+    expect(Number(gpu.incrementalEstimatedResidentBytes) >= EXPECTED_TOTAL_LIGHTMAP_RESIDENT_BYTES, 'L1 incremental GPU texture cost must include all decoded lightmaps');
+    for (const texture of gpu.lightmaps ?? []) {
+      expect(Number(texture.width) === 128 && Number(texture.height) === 128, 'L1 lightmap witness must retain 128x128 bake resolution');
+      expect(texture.type === 'HalfFloatType', 'Three r184 EXR lightmap must decode as HalfFloatType');
+      expect(texture.format === 'RGBAFormat', 'Three r184 EXR lightmap must decode as RGBAFormat');
+      expect(texture.generateMipmaps === false, 'EXR DataTexture lightmap must not silently allocate mipmaps');
+      expect(Number(texture.channel) === 1, 'external lightmap must bind UV1/channel 1');
+      expect(Number(texture.estimatedResidentBytes) === EXPECTED_LIGHTMAP_RESIDENT_BYTES, `each decoded lightmap must report ${EXPECTED_LIGHTMAP_RESIDENT_BYTES} resident bytes`);
+    }
   }
 }
 
@@ -124,4 +148,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Hall material transport contract passed${evidenceDirRelative ? ' with GLB evidence' : ''}${browserEvidenceRelative ? ' and raw/optimized browser equivalence' : ''}.`);
+console.log(`Hall material transport contract passed${evidenceDirRelative ? ' with GLB evidence' : ''}${browserEvidenceRelative ? ' and raw/optimized browser equivalence plus GPU residency' : ''}.`);
