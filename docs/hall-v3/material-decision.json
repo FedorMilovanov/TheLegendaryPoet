@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "materialLightingExportSpike",
+  "status": "selected",
+  "selectionBasis": "accepted exact-head Blender/export/browser evidence plus manual material visual acceptance; two earlier machine-green visual artifacts were explicitly rejected",
+  "evidence": {
+    "materialSpike": "docs/hall-v3/material-spike.json",
+    "materialSpikeBlob": "21d12804cd4c593a8c26a9074cc96d24506217ee",
+    "visualPreparer": "scripts/hall-material/prepare-material-visual-evidence.py",
+    "visualPreparerBlob": "501a34531b6e41fcfcf495b39d25ebedd9c41f55",
+    "browserWitness": "scripts/hall-material/browser-witness.mjs",
+    "browserWitnessBlob": "2485fea08e565645952f78a9acb6469ad6b256a2",
+    "visualEvidenceValidator": "scripts/hall-material/validate-visual-evidence.mjs",
+    "visualEvidenceValidatorBlob": "34321eef5a1d3a2beb20a5e54c0fd361711f0608",
+    "testedHead": "600f28efd2aa59b6d31086b64aeb42da7b03a48e",
+    "resultingMain": "0ce2e17f6eaa8b1af9c87257b20c9967616b8e4b",
+    "hallRunId": 31307136214,
+    "artifactId": 9036351234,
+    "artifactDigest": "sha256:dc33af96ba747175794f9f31775c534c224a35645d9943302424459e0bf8cc95",
+    "blenderVersion": "4.5.12 LTS",
+    "selectedLayoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "rawGlb": {
+      "bytes": 200672,
+      "sha256": "10da27398d69397b77298e549af0b399eb2edf53ba430bfbb81a7937082fca7e"
+    },
+    "optimizedGlb": {
+      "bytes": 141896,
+      "sha256": "810865870e5c240af681eab5aa8765a2fc6de44c69c823c8971a097a973ce089"
+    },
+    "khronos": {
+      "rawErrors": 0,
+      "rawWarnings": 0,
+      "optimizedErrors": 0,
+      "optimizedWarnings": 0,
+      "sourceEvidenceIdentityMatched": true
+    },
+    "rawOptimizedVisualEquivalence": {
+      "meanAbsoluteChannelDifference": 0.0047743,
+      "maximumChannelDifference": 2,
+      "changedSampleRatioAbove2": 0.0
+    },
+    "rejectedFalseGreenArtifacts": [
+      {
+        "artifactId": 9036028517,
+        "digest": "sha256:94cee8891d6f4f5df607828dbe934c099fac19662271a09a8264cc663a4bb054",
+        "reason": "inspection camera framed the wrong local wall axis, so material response occupied only a narrow strip"
+      },
+      {
+        "artifactId": 9036170327,
+        "digest": "sha256:cae659f4dbf8b7fe46ec49bdba5314c281ecbfc17ed8ee65af96a01d4112bcb5",
+        "reason": "wall-face framing was fixed but a hard horizontal repeated-texture seam remained visible"
+      }
+    ]
+  },
+  "lightingDecision": {
+    "selected": "L0-minimal-runtime",
+    "scope": "Pushkin vertical-slice baseline",
+    "externalLightmapRequired": false,
+    "realtimeShadowLights": 0,
+    "selectedEvidence": {
+      "meanDisplayLuma": 0.18037,
+      "darkSampleRatioBelow0_08": 0.39366,
+      "gpuTextureResidentBytes": 1398096,
+      "disposition": "eligible-for-human-review"
+    },
+    "rejected": [
+      {
+        "id": "L1-external-lightmap",
+        "disposition": "reject-current-bake",
+        "reason": "current accepted exact-head bake buries architectural/exhibit hierarchy below the explicit readability threshold",
+        "meanDisplayLuma": 0.06554,
+        "darkSampleRatioBelow0_08": 0.96832,
+        "gpuTextureResidentBytes": 1791312,
+        "incrementalLightmapBytes": 393216
+      }
+    ]
+  },
+  "uvDecision": {
+    "surfaceMaterialUv": "UV0",
+    "surfaceUvChannel": 0,
+    "surfaceScaleModel": "metre-scaled-box-projection",
+    "surfaceUvCubeSizeMeters": 1.5,
+    "staticBakeUv": "UV1",
+    "staticBakeUvChannel": 1,
+    "staticBakeDisposition": "reserved-not-required",
+    "mandatoryLightmap": false
+  },
+  "optimizerDecision": {
+    "selected": "gltfpack-preservation-safe",
+    "package": "gltfpack",
+    "version": "1.2.0",
+    "args": ["-cc", "-kn", "-km", "-ke", "-kv", "-vpf"],
+    "khronosBeforeOptimization": true,
+    "khronosAfterOptimization": true,
+    "requiredPreservation": [
+      "named-nodes",
+      "named-materials",
+      "node-extras",
+      "TEXCOORD_0",
+      "TEXCOORD_1",
+      "TANGENT",
+      "camera-node",
+      "poetId-extra",
+      "metric-scale"
+    ]
+  },
+  "texturePolicyDecision": {
+    "baseColor": {"semantic": "color", "colorSpace": "sRGB", "uv": "UV0"},
+    "normal": {"semantic": "data", "colorSpace": "Non-Color", "uv": "UV0", "requiresTangents": true},
+    "roughness": {"semantic": "data", "colorSpace": "Non-Color", "uv": "UV0"},
+    "stoneMetallicFactor": 0.0,
+    "lightmapIfReintroduced": {"semantic": "linear-illuminance", "colorSpace": "LinearSRGBColorSpace", "uv": "UV1"},
+    "qaProofMaps": {
+      "encoding": "PNG-8bit",
+      "resolution": 256,
+      "productionAssets": false
+    },
+    "productionTextureEncoding": "deferred-to-pushkin-vertical-slice",
+    "ktx2": "deferred-not-default"
+  },
+  "materialResponseEvidence": {
+    "normalClose": {
+      "meanAbsoluteChannelDifference": 1.453125,
+      "maximumChannelDifference": 14,
+      "changedSampleRatioAbove2": 0.2503
+    },
+    "roughnessMedium": {
+      "meanAbsoluteChannelDifference": 0.538194,
+      "maximumChannelDifference": 14,
+      "changedSampleRatioAbove2": 0.0684
+    },
+    "lookdevBevelMeters": 0.015,
+    "lookdevBevelSegments": 3,
+    "repeatTexturePeriodicityTolerance": 1e-9
+  },
+  "frozenAfterDecision": {
+    "topology": "H3",
+    "approvedRig": "R1",
+    "geometryMayChange": false,
+    "cameraMayChangeWithoutNewCameraApproval": false,
+    "productionHallMayActivate": false,
+    "fullHallLookdevMayStart": false,
+    "currentL1BakeMayBeReusedAsApproved": false
+  },
+  "gateBoundary": {
+    "materialContractSelected": true,
+    "pushkinVerticalSliceActive": false,
+    "gatePromotionMayProceed": true,
+    "decisionTransactionMayPromoteGate": false,
+    "nextTransaction": "materialLightingExportSpike-to-pushkinVerticalSlice-gate-promotion"
+  },
+  "nonDecisions": [
+    "final-production-texture-encoding",
+    "final-pushkin-portrait-and-document-assets",
+    "full-hall-lookdev",
+    "full-hall-static-lighting",
+    "production-webgl-runtime",
+    "offline-visual-approval",
+    "web-vertical-slice-approval",
+    "full-museum-scale-out"
+  ]
+}
