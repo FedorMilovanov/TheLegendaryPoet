@@ -14,6 +14,7 @@ on:
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/camera-gate-promotion.json'
       - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -22,6 +23,7 @@ on:
       - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
       - 'scripts/validate-hall-material-transport.ts'
+      - 'scripts/validate-hall-material-decision.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -36,6 +38,7 @@ on:
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/camera-gate-promotion.json'
       - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -44,6 +47,7 @@ on:
       - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
       - 'scripts/validate-hall-material-transport.ts'
+      - 'scripts/validate-hall-material-decision.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -95,6 +99,9 @@ jobs:
 
       - name: Validate material visual evidence source contract
         run: npm run validate:hall-material-visual-evidence
+
+      - name: Validate material decision source authority
+        run: npm run validate:hall-material-decision
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -251,6 +258,7 @@ jobs:
           npm run validate:hall-material-spike
           npm run validate:hall-material-transport
           npm run validate:hall-material-visual-evidence
+          npm run validate:hall-material-decision
 
       - name: Prepare isolated QA viewer assets
         run: |
@@ -290,6 +298,7 @@ jobs:
           npm run validate:hall-material-spike
           npm run validate:hall-material-transport
           npm run validate:hall-material-visual-evidence
+          npm run validate:hall-material-decision
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}

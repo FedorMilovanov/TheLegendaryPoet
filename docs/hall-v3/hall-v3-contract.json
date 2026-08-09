@@ -37,7 +37,8 @@
     "cameraRigs": "docs/hall-v3/camera-rigs.json",
     "cameraDecision": "docs/hall-v3/camera-decision.json",
     "cameraGatePromotion": "docs/hall-v3/camera-gate-promotion.json",
-    "materialSpike": "docs/hall-v3/material-spike.json"
+    "materialSpike": "docs/hall-v3/material-spike.json",
+    "materialDecision": "docs/hall-v3/material-decision.json"
   },
   "gates": {
     "foundation": "completed",
