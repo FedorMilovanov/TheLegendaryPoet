@@ -100,8 +100,9 @@
     "productionTextureEncodingDecision": null
   },
   "nextAllowedWork": [
-    "acquire-exact-source-files-and-hashes",
-    "resolve-rights-basis-and-credit",
+    "owner-intended-use-and-final-credit-disposition",
+    "qualified-legal-or-institutional-disposition-where-required",
+    "human-pushkin-house-copy-request-or-owner-decision-to-proceed-without-it",
     "promote-only-independently-approved-rights-records",
     "author-one-source-offline-pushkin-exhibit-in-blender",
     "measure-first-slice-delivery-and-performance",
