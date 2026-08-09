@@ -9,8 +9,13 @@ const hasOwn = (value: unknown, key: string) => Boolean(value && typeof value ==
 
 const rightsPath = 'docs/hall-v3/pushkin-rights.json';
 const policyPath = 'docs/hall-v3/RIGHTS_REGISTER.md';
+const validatorPath = 'scripts/validate-hall-pushkin-rights-policy-schema.ts';
 const rights = JSON.parse(read(rightsPath)) as any;
 const policy = read(policyPath);
+const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string,string> };
+const ci = read('.github/workflows/ci.yml');
+const projectContracts = read('.github/workflows/project-contracts.yml');
+const hallWorkflow = read('.github/workflows/hall-greybox-tooling.yml');
 
 const REQUIRED_RECORD_FIELDS = [
   'assetId',
@@ -37,6 +42,13 @@ for (const field of REQUIRED_RECORD_FIELDS) {
   expect(policy.includes(`\n${field}\n`) || policy.includes(`\n${field}\r\n`), `RIGHTS_REGISTER required field missing from policy text: ${field}`);
 }
 expect(policy.includes('Only `approved` documentary assets may enter the production Hall manifest.'), 'RIGHTS_REGISTER must retain approved-only production manifest rule');
+
+expect(packageJson.scripts?.['validate:hall-pushkin-rights-policy-schema'] === 'tsx scripts/validate-hall-pushkin-rights-policy-schema.ts', 'package script validate:hall-pushkin-rights-policy-schema must be registered exactly');
+expect((packageJson.scripts?.check ?? '').includes('validate:hall-pushkin-rights-policy-schema'), 'npm check must run canonical Pushkin rights-record schema validator');
+for (const [name, workflow] of [['CI',ci],['Project Contracts',projectContracts],['Hall tooling',hallWorkflow]] as const) {
+  expect(workflow.includes('validate:hall-pushkin-rights-policy-schema'), `${name} workflow must run canonical Pushkin rights-record schema validator`);
+}
+expect(hallWorkflow.includes(`'${validatorPath}'`), 'Hall workflow paths must trigger on canonical Pushkin rights-record schema validator changes');
 
 const assets = Array.isArray(rights.assets) ? rights.assets : [];
 expect(assets.length > 0, 'Pushkin rights registry must contain documentary records');
@@ -113,4 +125,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall Pushkin canonical rights-record schema passed: repository policy fields are explicit, evidence mirrors are consistent, and zero current records are production-approved.');
+console.log('Hall Pushkin canonical rights-record schema passed: repository policy fields and validator wiring are explicit, evidence mirrors are consistent, and zero current records are production-approved.');
