@@ -72,6 +72,12 @@ expect(viewer.includes('gpuTextureResidentBytes') && viewer.includes('estimatedR
 expect(browserWitness.includes("key: 'rawL0'") && browserWitness.includes("key: 'optimizedL0'") && browserWitness.includes('compareSamples'), 'browser witness must compare raw L0 against optimized L0');
 expect(browserWitness.includes('gpuMemoryComparison') && browserWitness.includes('lightmapEstimatedResidentBytes'), 'browser witness must persist L0/L1 GPU-memory comparison');
 expect(gltfValidationScript.includes('_hallToolchain') && gltfValidationScript.includes('packageLockSha256') && gltfValidationScript.includes('integrity'), 'Khronos reports must bind validation to the isolated npm lock and package integrity');
+const requiredMetrics = spike.browserWitness?.requiredMetrics ?? [];
+expect(requiredMetrics.includes('gpu-texture-resident-bytes') && requiredMetrics.includes('gpu-texture-inventory'), 'material-spike contract must explicitly require GPU texture residency and inventory');
+const isolatedInstallEvidence = spike.exportToolchain?.isolatedInstallEvidence ?? [];
+for (const required of ['package-lock-sha256','resolved-source','npm-integrity']) {
+  expect(isolatedInstallEvidence.includes(required), `material-spike contract must retain isolated tool evidence: ${required}`);
+}
 const visual = spike.browserWitness?.optimizationVisualEquivalence ?? {};
 expect(JSON.stringify(visual.sampleGrid ?? []) === JSON.stringify([64,36]), 'visual equivalence sample grid must remain 64x36');
 expect(visual.maximumMeanAbsoluteChannelDifference === 0.75, 'visual equivalence mean-difference threshold must remain explicit');
