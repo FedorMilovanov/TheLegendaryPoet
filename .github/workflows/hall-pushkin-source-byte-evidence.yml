@@ -1,0 +1,54 @@
+name: Pushkin source-byte evidence
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-source-byte-evidence.yml'
+      - 'scripts/hall-pushkin/acquire-source-byte-evidence.mjs'
+      - 'docs/hall-v3/pushkin-acquisition.json'
+      - 'docs/hall-v3/pushkin-rights.json'
+  workflow_dispatch:
+
+concurrency:
+  group: hall-pushkin-source-byte-evidence-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  acquire-source-byte-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact acquisition head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+
+      - name: Set up repository Node baseline
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Install PDF identity tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
+
+      - name: Acquire registered source bytes and write hash evidence
+        run: node scripts/hall-pushkin/acquire-source-byte-evidence.mjs
+
+      - name: Upload source-byte identity evidence only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pushkin-source-byte-evidence-${{ env.TESTED_SHA }}
+          path: qa-artifacts/pushkin-source-byte-evidence/source-byte-evidence.json
+          if-no-files-found: warn
+          retention-days: 14
