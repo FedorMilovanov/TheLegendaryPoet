@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "promotion": "materialLightingExportSpike-to-pushkinVerticalSlice",
+  "status": "active-next-gate",
+  "sourceDecision": {
+    "productPr": 389,
+    "exactTestedHead": "6a843479987b1022da562f342bbe9e61ff1214fc",
+    "resultingMain": "022c25b84aa3e4228fff3fbff6f4cef11e2d36c7",
+    "materialDecision": "docs/hall-v3/material-decision.json",
+    "materialDecisionBlob": "9282a3b75694c7e0198f95a148c5d0bbb52f0b28",
+    "materialSpike": "docs/hall-v3/material-spike.json",
+    "materialSpikeBlob": "21d12804cd4c593a8c26a9074cc96d24506217ee",
+    "selectedTopology": "H3",
+    "selectedRig": "R1",
+    "selectedLighting": "L0-minimal-runtime",
+    "rejectedCurrentBake": "L1-external-lightmap",
+    "surfaceUv": "UV0",
+    "reservedStaticBakeUv": "UV1",
+    "productionTextureEncoding": "deferred-to-pushkin-vertical-slice",
+    "selectedLayoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777"
+  },
+  "phaseTransition": {
+    "from": "materialLightingExportSpike",
+    "to": "pushkinVerticalSlice"
+  },
+  "gatesAfterPromotion": {
+    "foundation": "completed",
+    "referenceBible": "completed",
+    "metricGreybox": "completed",
+    "cameraApproval": "completed",
+    "materialLightingExportSpike": "completed",
+    "pushkinVerticalSlice": "active",
+    "offlineVisualApproval": "blocked",
+    "webVerticalSlice": "blocked",
+    "fullMuseumScaleOut": "blocked"
+  },
+  "frozenAuthorities": {
+    "materialSpikeBlob": "21d12804cd4c593a8c26a9074cc96d24506217ee",
+    "materialDecisionBlob": "9282a3b75694c7e0198f95a148c5d0bbb52f0b28",
+    "visualPreparerBlob": "501a34531b6e41fcfcf495b39d25ebedd9c41f55",
+    "browserWitnessBlob": "2485fea08e565645952f78a9acb6469ad6b256a2",
+    "visualEvidenceValidatorBlob": "34321eef5a1d3a2beb20a5e54c0fd361711f0608",
+    "materialDecisionValidatorBlob": "7ef66459c2bc1a7cf59375d6b32791e83de96861"
+  },
+  "selectedDelivery": {
+    "lighting": {
+      "id": "L0-minimal-runtime",
+      "externalLightmapRequired": false,
+      "realtimeShadowLights": 0
+    },
+    "currentL1": {
+      "id": "L1-external-lightmap",
+      "disposition": "reject-current-bake",
+      "incrementalLightmapResidentBytes": 393216,
+      "mayShip": false
+    },
+    "uv": {
+      "surfaceMaterial": "UV0",
+      "surfaceScaleMetersPerUvUnit": 1.5,
+      "staticBakeReserve": "UV1",
+      "staticBakeMandatory": false
+    },
+    "optimizer": {
+      "package": "gltfpack",
+      "version": "1.2.0",
+      "args": ["-cc", "-kn", "-km", "-ke", "-kv", "-vpf"],
+      "khronosBeforeAndAfter": true
+    },
+    "texturePolicy": {
+      "qaProofMapsAreProductionAssets": false,
+      "productionTextureEncoding": "deferred-to-pushkin-vertical-slice",
+      "ktx2": "deferred-not-default"
+    }
+  },
+  "nextGateScope": {
+    "allowed": [
+      "pushkin-rights-and-provenance-register",
+      "one-complete-pushkin-exhibit-offline",
+      "h3-r1-l0-authority",
+      "rights-cleared-portrait-and-documentary-media",
+      "near-final-material-authoring-on-uv0",
+      "production-texture-encoding-comparison",
+      "fixed-still-and-offline-camera-evidence",
+      "raw-to-optimized-pushkin-asset-validation",
+      "first-slice-performance-budget-calibration"
+    ],
+    "forbidden": [
+      "full-hall-lookdev",
+      "h3-topology-redesign",
+      "r1-camera-redesign-without-reopening-cameraApproval",
+      "current-l1-bake-as-approved",
+      "rights-uncleared-documentary-media",
+      "ai-generated-historical-facsimile-or-signature",
+      "production-three-r3f-webgl-hall",
+      "offlineVisualApproval-promotion",
+      "webVerticalSlice-promotion",
+      "fullMuseumScaleOut-promotion"
+    ]
+  },
+  "productionBoundary": {
+    "hallRouteRemainsPlaceholder": true,
+    "legacyHallMayReactivate": false,
+    "threeRuntimeMayActivate": false,
+    "thisPromotionAddsPushkinAssets": false,
+    "thisPromotionAddsProductionTextures": false,
+    "thisPromotionAddsRuntimeAssets": false,
+    "thisPromotionChangesGeometry": false,
+    "thisPromotionChangesCamera": false
+  },
+  "rightsBoundary": {
+    "documentaryHeroAssetsRequireApprovedRightsRecord": true,
+    "pendingRightsMayEnterProductionManifest": false,
+    "aiMaySubstituteForMissingDocumentaryRights": false
+  }
+}
