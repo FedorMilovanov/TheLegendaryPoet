@@ -91,7 +91,7 @@ expect(Boolean(rejectedL1), 'current L1 bake must be explicitly rejected');
 expect(rejectedL1?.disposition === 'reject-current-bake', 'current L1 bake disposition must remain reject-current-bake');
 expect(l1?.externalLightmap === true, 'rejected L1 evidence candidate must remain the external-lightmap candidate');
 expect(Number(rejectedL1?.meanDisplayLuma) < Number(spike.visualEvidence?.readabilityReject?.lumaThreshold), 'rejected L1 mean luma must remain below the darkness threshold');
-expect(rejectedL1?.incrementalLightmapBytes === 393216, 'rejected L1 must preserve measured incremental lightmap residency');
+expect(rejectedL1?.incrementalLightmapResidentBytes === 393216, 'rejected L1 must preserve measured incremental GPU lightmap residency');
 
 expect(decision.uvDecision?.surfaceMaterialUv === 'UV0' && decision.uvDecision?.surfaceUvChannel === 0, 'surface material strategy must select UV0');
 expect(decision.uvDecision?.surfaceScaleModel === 'metre-scaled-box-projection', 'surface UV scale model must remain explicit');
