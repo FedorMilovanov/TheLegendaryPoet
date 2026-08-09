@@ -6,9 +6,9 @@ This directory is the technical/art-production authority for Hall v3 while the l
 
 The current machine phase and gate state live in [`hall-v3-contract.json`](hall-v3-contract.json). Prose cannot silently advance a Hall gate.
 
-## Current phase — material / lighting / export spike
+## Current phase — material / lighting / export decision selected; promotion pending
 
-Foundation, Reference Bible, metric greybox and Camera Approval are completed. A separate gate-promotion record now activates **`materialLightingExportSpike`** and nothing later.
+Foundation, Reference Bible, metric greybox and Camera Approval are completed. Gate 4 **`materialLightingExportSpike`** remains machine-active until a separate promotion transaction, but its measured delivery contract is selected in [`material-decision.json`](material-decision.json).
 
 Frozen spatial authority:
 
@@ -21,28 +21,34 @@ Frozen spatial authority:
 
 The selected R1 variable witness is `pushkinViewing`: position `[8.0, 2.5, 1.60]`, target/destination `[11.15, 5.45, 1.95]`, lens `28 mm`. The other five guided H3 witnesses remain frozen.
 
-`camera-rigs.json` stays immutable candidate evidence with `approvedRig=null`; `camera-decision.json` owns the human selection. [`camera-gate-promotion.json`](camera-gate-promotion.json) owns the machine transition from Camera Approval to the material/light/export spike.
+`camera-rigs.json` stays immutable candidate evidence with `approvedRig=null`; `camera-decision.json` owns the human camera selection. [`camera-gate-promotion.json`](camera-gate-promotion.json) owns the machine transition from Camera Approval to Gate 4. `material-spike.json` remains immutable authoring/evidence authority with null decision fields; [`material-decision.json`](material-decision.json) separately owns the selected Gate-4 delivery contract. A later promotion record, not the decision record, must advance `pushkinVerticalSlice`.
 
 ## Current source authority
 
 - [`REFERENCE_BIBLE.md`](REFERENCE_BIBLE.md), [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md), [`reference-bible.json`](reference-bible.json) — completed reference/metric evidence;
 - [`greybox-tooling.json`](greybox-tooling.json), [`greybox-layouts.json`](greybox-layouts.json), [`greybox-candidates.json`](greybox-candidates.json), [`greybox-decision.json`](greybox-decision.json) — frozen topology evidence and decision;
 - [`camera-rigs.json`](camera-rigs.json), [`camera-decision.json`](camera-decision.json), [`camera-gate-promotion.json`](camera-gate-promotion.json) — immutable camera evidence, R1 decision and gate promotion;
+- [`material-spike.json`](material-spike.json) — merged material/light/export candidate and visual-evidence contract;
+- [`material-decision.json`](material-decision.json) — selected Gate-4 delivery semantics, accepted evidence identity, current L1 rejection and separate-promotion boundary;
 - `scripts/hall-greybox/generate-candidates.py` and `scripts/hall-camera/generate-camera-candidates.py` — reproducibility generators only;
 - `scripts/validate-hall-topology-selection-provenance.ts` — frozen shootout provenance;
-- `scripts/validate-hall-post-camera-authority.ts` — current persistent H3/R1 spatial authority;
-- `.github/workflows/hall-greybox-tooling.yml` — exact-head Blender regeneration barrier.
+- `scripts/validate-hall-post-camera-authority.ts` — persistent H3/R1 spatial authority;
+- `scripts/validate-hall-material-spike.ts`, `scripts/validate-hall-material-transport.ts`, `scripts/hall-material/validate-visual-evidence.mjs` — Gate-4 candidate/transport/visual evidence guards;
+- `scripts/validate-hall-material-decision.ts` — selected material-delivery decision authority;
+- `.github/workflows/hall-greybox-tooling.yml` — exact-head Blender/export/browser regeneration barrier.
 
-Earlier phase-specific validators remain in the repository for forensic reproduction of their original gates, but they are no longer the current mandatory authority after Camera Approval completion.
+Earlier phase-specific validators remain in the repository for forensic reproduction of their original gates. Current persistent authority must retain H3/R1 plus the accepted material evidence and selected decision until a later gate explicitly supersedes them.
 
 ## Production boundary
 
 - `/hall` remains a lightweight DOM placeholder.
 - `src/components/hall/*` remains legacy evidence only.
 - Three.js/R3F remains out of the dormant `/hall` dependency graph.
-- H3 topology and R1 camera are frozen; the current spike may not redesign them.
-- No generated `.blend`, PNG/SVG evidence or GLB becomes production web authority merely by existing in Actions.
-- No rights-uncleared documentary media is allowed into the spike.
+- H3 topology and R1 camera are frozen; Gate-4 selection may not redesign them.
+- No generated `.blend`, QA PNG/SVG evidence or GLB becomes production web authority merely by existing in Actions.
+- The accepted 256px PNG proof maps are evidence only, not production texture assets or encoding authority.
+- The current L1 external-lightmap bake is rejected and may not be silently reused as approved.
+- No rights-uncleared documentary media is allowed into the lane.
 - FPS/free-walk, hover whispers, dust, mirror floor and effect-driven rescue remain non-goals.
 
 ## Gate 0 — foundation — completed
@@ -71,42 +77,49 @@ Camera Decision PR #383 exact head `8682789cf78e4e717eba5181246700da09de5c11` re
 
 Any later change to H3 or R1 requires reopening the relevant earlier gate with new evidence. Lookdev is not allowed to move walls or cameras to rescue a material/light problem.
 
-## Gate 4 — material / lighting / export spike — active
+## Gate 4 — material / lighting / export spike — active, decision selected
 
-The active task is deliberately small: **one representative H3 architectural bay**, not the whole museum.
+The bounded representative H3 bay has now produced accepted DCC/export/browser evidence and a separate material-delivery decision. Gate 4 remains machine-active only because the repository requires a distinct promotion transaction before `pushkinVerticalSlice` becomes active.
 
-This gate may prove:
+Selected baseline for the first Pushkin vertical slice:
 
-- correct PBR color-space ownership (`baseColor/emissive` color data vs normal/roughness/metalness/AO non-color data);
-- a bounded UV strategy and, if useful, a separately evidenced secondary UV/lightmap delivery contract;
-- a static-lighting strategy comparison without changing H3/R1;
-- raw → optimized glTF/GLB validation;
-- preservation of required node names/extras through optimization;
-- browser viability and measurable asset/render budgets for the bay.
+- **L0 minimal runtime lighting** — selected, no external lightmap required and zero realtime shadow lights in the proved baseline;
+- **UV0** — surface material mapping with the accepted metre-scaled `1.5 m / UV unit` model;
+- **UV1** — preserved as a reserved/optional static-bake channel, not mandatory;
+- **current L1 external-lightmap bake** — rejected because the accepted exact-head evidence is too dark; the technical UV1/lightmap transport remains available for a future bounded repeat-spike if a real need appears;
+- **glTF transport** — Blender 4.5.12 LTS → Khronos validation → preservation-safe `gltfpack@1.2.0` (`-cc -kn -km -ke -kv -vpf`) → Khronos revalidation, with names/materials/extras/UV0/UV1/tangents/camera/poetId/metric scale preserved;
+- **material semantics** — baseColor is sRGB color, normal/roughness are Non-Color data, explicit tangents are required, stone metallic factor remains `0`, and any future external lightmap remains linear data on UV1;
+- **production texture encoding** — deliberately deferred to the Pushkin vertical slice. QA PNG proof maps do not authorize a production PNG/KTX2 choice.
 
-This gate must **not**:
+Two earlier machine-green material artifacts were manually rejected before the accepted visual evidence because one used invalid wall-face framing and the next exposed a hard repeat seam. Machine green is therefore not treated as visual acceptance by itself.
 
+This decision still must **not**:
+
+- activate `pushkinVerticalSlice` inside the decision transaction;
 - texture/light the full Hall;
 - add final Pushkin portrait/manuscript assets;
 - introduce production Three/R3F/WebGL;
 - redesign topology or camera;
+- reuse the rejected current L1 bake as approved;
 - use bloom/fog/particles as a substitute for material/light quality.
 
-The spike is not complete until a concrete delivery contract is chosen from measured evidence rather than assumed from Blender screenshots.
+The only next Gate-4 transaction is the separate `materialLightingExportSpike → pushkinVerticalSlice` promotion record.
 
 ## Later gates — blocked
 
-`pushkinVerticalSlice`, `offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` remain blocked. A complete Pushkin exhibit still requires rights-cleared documentary assets and separate visual approval before browser integration.
+`pushkinVerticalSlice`, `offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` remain blocked until the machine contract is separately promoted. A complete Pushkin exhibit still requires rights-cleared documentary assets and separate visual approval before browser integration.
 
 ## Production order
 
-`reference bible → metric greybox → topology decision → camera evidence → camera decision → gate promotion → material/lighting/export spike → Pushkin vertical slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
+`reference bible → metric greybox → topology decision → camera evidence → camera decision → camera gate promotion → material/light/export evidence → material delivery decision → material gate promotion → Pushkin vertical slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
 
 Skipping a gate is a blocker, not an acceleration.
 
 ## Documents
 
 - [`hall-v3-contract.json`](hall-v3-contract.json)
+- [`material-decision.json`](material-decision.json)
+- [`material-spike.json`](material-spike.json)
 - [`camera-gate-promotion.json`](camera-gate-promotion.json)
 - [`camera-decision.json`](camera-decision.json)
 - [`camera-rigs.json`](camera-rigs.json)
@@ -123,4 +136,4 @@ Skipping a gate is a blocker, not an acceleration.
 
 ## Closure
 
-`TLP-HALL-001` remains open. The lane closes only after the material/export decision, finished Pushkin slice, offline visual approval, runtime/fallback certification and safe replacement of the production `/hall` placeholder are all separately verified and recorded in AuditRepo.
+`TLP-HALL-001` remains open. The lane closes only after the selected material contract is promoted into the Pushkin-slice gate, the Pushkin slice is finished, offline visual approval passes, runtime/fallback certification passes and the production `/hall` placeholder is safely replaced with the separately approved Hall experience.
