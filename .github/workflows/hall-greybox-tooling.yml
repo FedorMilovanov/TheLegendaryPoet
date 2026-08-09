@@ -28,6 +28,7 @@ on:
       - 'scripts/validate-hall-material-decision.ts'
       - 'scripts/validate-hall-post-material-authority.ts'
       - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -56,6 +57,7 @@ on:
       - 'scripts/validate-hall-material-decision.ts'
       - 'scripts/validate-hall-post-material-authority.ts'
       - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -101,6 +103,9 @@ jobs:
 
       - name: Validate Pushkin rights and source-slice authority
         run: npm run validate:hall-pushkin-rights
+
+      - name: Validate canonical Pushkin rights record schema
+        run: npm run validate:hall-pushkin-rights-policy-schema
 
       - name: Validate phase-independent material transport source contract
         run: npm run validate:hall-material-transport
