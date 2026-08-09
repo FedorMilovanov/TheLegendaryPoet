@@ -82,6 +82,15 @@ def main() -> None:
             fail(f"missing export node: {name}")
         obj.select_set(True)
 
+    visual = contract.get("visualEvidence")
+    export_apply = isinstance(visual, dict) and visual.get("status") == "repeat-spike-authoring"
+    if export_apply:
+        for name in ("ARCH_spike_floor", "ARCH_wall_016", "ARCH_wall_017"):
+            obj = bpy.data.objects.get(name)
+            modifier = obj.modifiers.get("SPIKE_VISUAL_BEVEL") if obj is not None else None
+            if modifier is None or modifier.type != "BEVEL":
+                fail(f"visual evidence export requires bounded bevel modifier on {name}")
+
     bpy.ops.export_scene.gltf(
         filepath=str(output_path),
         export_format="GLB",
@@ -90,6 +99,7 @@ def main() -> None:
         export_cameras=True,
         export_materials="EXPORT",
         export_tangents=True,
+        export_apply=export_apply,
         export_yup=True,
     )
     if not output_path.exists() or output_path.stat().st_size == 0:

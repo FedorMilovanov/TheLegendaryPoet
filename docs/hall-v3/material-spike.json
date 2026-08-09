@@ -58,6 +58,51 @@
       "mirror-floor-rescue"
     ]
   },
+  "visualEvidence": {
+    "status": "repeat-spike-authoring",
+    "inspectionTarget": "ARCH_wall_016",
+    "surfaceUvProjection": "cube",
+    "surfaceUvCubeSizeMeters": 1.5,
+    "proofTextureResolution": 256,
+    "lookdevBevelMeters": 0.015,
+    "lookdevBevelSegments": 3,
+    "lookdevBevelLimit": "ANGLE",
+    "views": {
+      "materialMedium": {
+        "id": "material-medium",
+        "distanceMeters": 2.2,
+        "lensMm": 45,
+        "edgeBias": 0.72
+      },
+      "materialClose": {
+        "id": "material-close",
+        "distanceMeters": 0.85,
+        "lensMm": 55,
+        "edgeBias": 0.82
+      }
+    },
+    "variants": ["full", "normal-off", "roughness-flat"],
+    "normalResponse": {
+      "view": "material-close",
+      "baselineVariant": "full",
+      "comparisonVariant": "normal-off",
+      "minimumMeanAbsoluteChannelDifference": 0.1,
+      "minimumChangedSampleRatioAbove2": 0.002
+    },
+    "roughnessResponse": {
+      "view": "material-medium",
+      "baselineVariant": "full",
+      "comparisonVariant": "roughness-flat",
+      "minimumMeanAbsoluteChannelDifference": 0.05,
+      "minimumChangedSampleRatioAbove2": 0.001
+    },
+    "readabilityReject": {
+      "lumaThreshold": 0.08,
+      "maximumDarkSampleRatio": 0.98
+    },
+    "requiresHumanArtDirection": true,
+    "decisionMayAdvance": false
+  },
   "lightingCandidates": [
     {
       "id": "L0-minimal-runtime",
@@ -122,9 +167,19 @@
       "optimized-bytes",
       "gpu-texture-resident-bytes",
       "gpu-texture-inventory",
-      "pixel-sample"
+      "pixel-sample",
+      "display-luma",
+      "dark-sample-ratio"
     ],
-    "screenshots": ["raw-L0-minimal-runtime.png", "optimized-L0-minimal-runtime.png", "optimized-L1-external-lightmap.png"]
+    "screenshots": [
+      "raw-L0-minimal-runtime.png",
+      "optimized-L0-minimal-runtime.png",
+      "optimized-L1-external-lightmap.png",
+      "optimized-L0-material-medium-full.png",
+      "optimized-L0-material-close-full.png",
+      "optimized-L0-material-close-normal-off.png",
+      "optimized-L0-material-medium-roughness-flat.png"
+    ]
   },
   "decision": {
     "approvedLightingStrategy": null,
