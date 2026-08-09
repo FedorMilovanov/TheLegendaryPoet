@@ -40,8 +40,10 @@ jobs:
       - name: Verify exact checkout identity
         run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
 
-      - name: Set up repository Node baseline
-        uses: ./.github/actions/setup-node-deps
+      - name: Set up isolated Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Install PDF identity tool
         run: |
