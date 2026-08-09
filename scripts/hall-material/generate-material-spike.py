@@ -425,7 +425,10 @@ def main() -> None:
         path = lightmap_dir / f"lightmap-{obj.name}.exr"
         lightmap_bindings.append(bake_lightmap(obj, stone, path, resolution))
 
+    bake_light_data = bake_light.data
     bpy.data.objects.remove(bake_light, do_unlink=True)
+    if bake_light_data is not None:
+        bpy.data.lights.remove(bake_light_data, do_unlink=True)
     if len(bpy.data.lights) != 0:
         fail("bake lights must not survive into exported material-spike scene")
 
