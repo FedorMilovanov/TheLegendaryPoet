@@ -42,7 +42,7 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: 'WebKit home principal section faith-culture reveals in a fresh context',
   },
-  ...['poets', 'ratings', 'articles', 'music', 'archive', 'about', 'not-found'].map((route) => ({
+  ...['poets', 'ratings', 'articles', 'music', 'archive', 'about', 'hall', 'not-found'].map((route) => ({
     id: `route-${route}`,
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
