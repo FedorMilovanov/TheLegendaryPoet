@@ -18,6 +18,7 @@ const visualViewer = read('qa/hall-material-viewer/visual.ts');
 const hallPage = read('src/pages/HallPage.tsx');
 const visual = spike.visualEvidence ?? {};
 const ARCH_NODES = ['ARCH_spike_floor', 'ARCH_wall_016', 'ARCH_wall_017'];
+const MATERIAL_ROLES = ['baseColor', 'normal', 'roughness'];
 
 expect(contract.phase === 'materialLightingExportSpike', 'visual evidence applies only while materialLightingExportSpike is current');
 expect(contract.gates?.materialLightingExportSpike === 'active', 'materialLightingExportSpike must remain active during visual repeat-spike');
@@ -44,7 +45,7 @@ expect(closeEnough(visual.readabilityReject?.lumaThreshold, 0.08) && closeEnough
 expect(Number(visual.normalResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.normalResponse?.minimumChangedSampleRatioAbove2) > 0, 'normal response must have non-zero machine thresholds');
 expect(Number(visual.roughnessResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.roughnessResponse?.minimumChangedSampleRatioAbove2) > 0, 'roughness response must have non-zero machine thresholds');
 
-for (const token of ['dominant_axis_box_project_uv0', 'evaluated_get', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance']) {
+for (const token of ['dominant_axis_box_project_uv0', 'evaluated_get', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance', 'assert_tileable_edges', 'proofTextureTileability']) {
   expect(preparer.includes(token), `visual DCC preparer lost required invariant: ${token}`);
 }
 for (const forbidden of ['bpy.ops.uv.cube_project', 'bpy.ops.object.modifier_apply', 'image.reload()']) {
@@ -109,6 +110,12 @@ if (evidenceRelative) {
     expect(closeEnough(dcc.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), 'DCC visual evidence UV scale must match contract');
     expect(closeEnough(dcc.lookdevBevelMeters, visual.lookdevBevelMeters) && dcc.lookdevBevelSegments === visual.lookdevBevelSegments, 'DCC visual evidence bevel must match contract');
     expect(dcc.bevelExportMode === 'gltf-export-apply-modifiers', 'DCC visual evidence must keep bevel non-destructive until glTF export');
+    for (const role of MATERIAL_ROLES) {
+      const tile = dcc.proofTextureTileability?.[role];
+      expect(tile?.leftRightMatches === true && tile?.topBottomMatches === true, `${role}: proof texture must be periodic on both axes before repeat`);
+      expect(Number(tile?.edgeSamplePairs) === visual.proofTextureResolution * 2, `${role}: proof texture tileability must cover every opposite-edge sample`);
+      expect(tile?.quantization === 'rounded-8bit-rgb', `${role}: tileability proof must match exported 8-bit RGB quantization`);
+    }
     for (const name of ARCH_NODES) {
       const item = dcc.objects?.[name];
       expect(Boolean(item), `DCC visual evidence missing ${name}`);
@@ -126,6 +133,7 @@ if (evidenceRelative) {
     expect(source.source?.candidateId === 'H3', 'source visual evidence must still derive from H3');
     expect(source.camera?.name === 'CAM_R1_pushkinViewing' && source.camera?.lensMm === 28, 'source visual evidence must preserve frozen R1 authority');
     expect(source.material?.proofTextureResolution === visual.proofTextureResolution, 'source evidence must record proof texture resolution');
+    expect(source.material?.proofTextureTileable === true, 'source evidence must record periodic proof-texture delivery');
     expect(source.material?.surfaceUvProjection === visual.surfaceUvProjection && closeEnough(source.material?.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), 'source evidence must record metre-scaled UV0 contract');
     expect(closeEnough(source.material?.lookdevBevelMeters, visual.lookdevBevelMeters) && source.material?.lookdevBevelSegments === visual.lookdevBevelSegments, 'source evidence must record bounded lookdev bevel');
     expect(source.material?.bevelExportMode === 'gltf-export-apply-modifiers', 'source evidence must record evaluated glTF bevel export mode');
