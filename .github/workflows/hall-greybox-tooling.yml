@@ -38,6 +38,9 @@ on:
       - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'package.json'
+      - 'package-lock.json'
+      - '.github/actions/setup-node-deps/**'
+      - '.github/actions/install-playwright/**'
   push:
     branches: [main]
     paths:
@@ -75,6 +78,9 @@ on:
       - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'package.json'
+      - 'package-lock.json'
+      - '.github/actions/setup-node-deps/**'
+      - '.github/actions/install-playwright/**'
   workflow_dispatch:
 
 concurrency:
