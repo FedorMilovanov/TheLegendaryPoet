@@ -25,6 +25,7 @@ const evidence = {
   modes: {},
   rawControl: null,
   optimizationVisualEquivalence: null,
+  gpuMemoryComparison: null,
 };
 
 function compareSamples(rawBase64, optimizedBase64) {
@@ -51,6 +52,18 @@ function compareSamples(rawBase64, optimizedBase64) {
   };
 }
 
+function compareGpuMemory(l0, l1) {
+  const lightmaps = (l1.gpuTextures ?? []).filter((texture) => texture.roles?.includes('lightMap'));
+  return {
+    l0EstimatedResidentBytes: Number(l0.gpuTextureResidentBytes ?? 0),
+    l1EstimatedResidentBytes: Number(l1.gpuTextureResidentBytes ?? 0),
+    incrementalEstimatedResidentBytes: Number(l1.gpuTextureResidentBytes ?? 0) - Number(l0.gpuTextureResidentBytes ?? 0),
+    lightmapTextureCount: lightmaps.length,
+    lightmapEstimatedResidentBytes: lightmaps.reduce((sum, texture) => sum + Number(texture.estimatedResidentBytes ?? 0), 0),
+    lightmaps,
+  };
+}
+
 const browser = await chromium.launch({ headless: true });
 try {
   for (const item of cases) {
@@ -73,23 +86,31 @@ try {
   await browser.close();
 }
 
-if (!evidence.rawControl || !evidence.modes['L0-minimal-runtime']) throw new Error('missing raw/optimized L0 comparison witnesses');
+if (!evidence.rawControl || !evidence.modes['L0-minimal-runtime'] || !evidence.modes['L1-external-lightmap']) {
+  throw new Error('missing raw/optimized L0/L1 comparison witnesses');
+}
 evidence.optimizationVisualEquivalence = compareSamples(
   evidence.rawControl.pixelSampleBase64,
   evidence.modes['L0-minimal-runtime'].pixelSampleBase64,
+);
+evidence.gpuMemoryComparison = compareGpuMemory(
+  evidence.modes['L0-minimal-runtime'],
+  evidence.modes['L1-external-lightmap'],
 );
 
 fs.writeFileSync(path.join(outputDir, 'browser-evidence.json'), `${JSON.stringify(evidence, null, 2)}\n`, 'utf8');
 let failed = false;
 const allMetrics = [evidence.rawControl, ...Object.values(evidence.modes)];
 for (const metrics of allMetrics) {
-  if (!metrics.loadComplete || metrics.drawCalls <= 0 || metrics.triangles <= 0 || metrics.errors.length > 0 || !metrics.pixelHash || !metrics.pixelSampleBase64) {
+  if (!metrics.loadComplete || metrics.drawCalls <= 0 || metrics.triangles <= 0 || metrics.errors.length > 0 || !metrics.pixelHash || !metrics.pixelSampleBase64 || metrics.gpuTextureResidentBytes <= 0 || !Array.isArray(metrics.gpuTextures) || metrics.gpuTextures.length <= 0) {
     console.error(`${metrics.asset}/${metrics.mode} failed browser witness`, metrics);
     failed = true;
   } else {
-    console.log(`${metrics.asset}/${metrics.mode}: calls=${metrics.drawCalls} triangles=${metrics.triangles} textures=${metrics.textures} programs=${metrics.programs} raw=${metrics.rawBytes} optimized=${metrics.optimizedBytes} pixel=${metrics.pixelHash.slice(0, 12)}`);
+    console.log(`${metrics.asset}/${metrics.mode}: calls=${metrics.drawCalls} triangles=${metrics.triangles} textures=${metrics.textures} programs=${metrics.programs} raw=${metrics.rawBytes} optimized=${metrics.optimizedBytes} gpu=${metrics.gpuTextureResidentBytes} pixel=${metrics.pixelHash.slice(0, 12)}`);
   }
 }
 const comparison = evidence.optimizationVisualEquivalence;
 console.log(`raw/optimized L0: meanAbs=${comparison.meanAbsoluteChannelDifference.toFixed(4)} max=${comparison.maximumChannelDifference} changed>2=${comparison.changedSampleRatioAbove2.toFixed(6)} exactHash=${comparison.exactPixelHashMatch}`);
+const gpu = evidence.gpuMemoryComparison;
+console.log(`L0/L1 GPU texture residency: L0=${gpu.l0EstimatedResidentBytes} L1=${gpu.l1EstimatedResidentBytes} delta=${gpu.incrementalEstimatedResidentBytes} lightmaps=${gpu.lightmapEstimatedResidentBytes}`);
 if (failed) process.exit(1);
