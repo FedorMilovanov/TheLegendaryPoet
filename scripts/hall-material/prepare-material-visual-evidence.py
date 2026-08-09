@@ -18,6 +18,10 @@ EXPECTED_VERSION = (4, 5, 12)
 ARCH_NODES = ("ARCH_spike_floor", "ARCH_wall_016", "ARCH_wall_017")
 
 
+def log(message: str) -> None:
+    print(f"[hall-material-visual] {message}", flush=True)
+
+
 def fail(message: str) -> None:
     raise RuntimeError(message)
 
@@ -63,12 +67,21 @@ def stable_matrix(obj: bpy.types.Object) -> list[float]:
     return [stable_float(value) for row in obj.matrix_world for value in row]
 
 
-def world_bounds(obj: bpy.types.Object) -> dict[str, list[float]]:
-    points = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+def bounds_from_corners(obj: bpy.types.Object, corners: Any) -> dict[str, list[float]]:
+    points = [obj.matrix_world @ Vector(corner) for corner in corners]
     return {
         "min": [stable_float(min(point[index] for point in points)) for index in range(3)],
         "max": [stable_float(max(point[index] for point in points)) for index in range(3)],
     }
+
+
+def world_bounds(obj: bpy.types.Object) -> dict[str, list[float]]:
+    return bounds_from_corners(obj, obj.bound_box)
+
+
+def evaluated_world_bounds(obj: bpy.types.Object, depsgraph: bpy.types.Depsgraph) -> dict[str, list[float]]:
+    evaluated = obj.evaluated_get(depsgraph)
+    return bounds_from_corners(evaluated, evaluated.bound_box)
 
 
 def maximum_bounds_delta(left: dict[str, list[float]], right: dict[str, list[float]]) -> float:
@@ -103,7 +116,6 @@ def rewrite_proof_textures(texture_dir: Path, contract: dict[str, Any], resoluti
         "normal": texture_dir / contract["materialProof"]["normal"]["file"],
         "roughness": texture_dir / contract["materialProof"]["roughness"]["file"],
     }
-
     tau = math.tau
 
     def base_pixel(x: int, y: int, width: int, height: int):
@@ -133,29 +145,38 @@ def rewrite_proof_textures(texture_dir: Path, contract: dict[str, Any], resoluti
     return paths
 
 
-def reload_blender_images(texture_paths: dict[str, Path]) -> None:
-    by_name = {path.name: path for path in texture_paths.values()}
-    seen: set[str] = set()
-    for image in bpy.data.images:
-        candidate = by_name.get(Path(bpy.path.abspath(image.filepath)).name)
-        if candidate is None:
+def set_image_colorspace(image: bpy.types.Image, preferred: list[str]) -> str:
+    for candidate in preferred:
+        try:
+            image.colorspace_settings.name = candidate
+            return candidate
+        except Exception:
             continue
-        image.filepath = str(candidate)
-        image.filepath_raw = str(candidate)
-        image.reload()
-        seen.add(candidate.name)
-    missing = sorted(set(by_name) - seen)
-    if missing:
-        fail(f"material proof images were not loaded in Blender scene: {missing}")
+    return str(image.colorspace_settings.name)
 
 
-def activate_mesh(obj: bpy.types.Object) -> None:
-    bpy.ops.object.select_all(action="DESELECT")
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
+def replace_material_images(texture_paths: dict[str, Path], material_name: str) -> dict[str, str]:
+    material = bpy.data.materials.get(material_name)
+    if material is None or not material.use_nodes or material.node_tree is None:
+        fail(f"missing node material {material_name}")
+    mapping = {
+        "baseColor": ("TEX_BASECOLOR", ["sRGB"]),
+        "normal": ("TEX_NORMAL", ["Non-Color"]),
+        "roughness": ("TEX_ROUGHNESS", ["Non-Color"]),
+    }
+    colorspaces: dict[str, str] = {}
+    for role, (node_name, preferred) in mapping.items():
+        node = material.node_tree.nodes.get(node_name)
+        if node is None or node.bl_idname != "ShaderNodeTexImage":
+            fail(f"missing material image node {node_name}")
+        image = bpy.data.images.load(str(texture_paths[role]), check_existing=False)
+        image.name = f"VISUAL_{role}_{texture_paths[role].stem}"
+        colorspaces[role] = set_image_colorspace(image, preferred)
+        node.image = image
+    return colorspaces
 
 
-def project_uv0_in_meters(obj: bpy.types.Object, cube_size: float) -> dict[str, Any]:
+def dominant_axis_box_project_uv0(obj: bpy.types.Object, cube_size: float) -> dict[str, Any]:
     if obj.type != "MESH":
         fail(f"{obj.name}: UV projection requires mesh")
     mesh = obj.data
@@ -164,27 +185,32 @@ def project_uv0_in_meters(obj: bpy.types.Object, cube_size: float) -> dict[str, 
     if uv0 is None or uv1 is None:
         fail(f"{obj.name}: expected existing UV0/UV1 before visual evidence")
 
-    uv0_index = next((index for index, layer in enumerate(mesh.uv_layers) if layer.name == "UV0"), -1)
-    if uv0_index < 0:
-        fail(f"{obj.name}: could not resolve UV0 index")
-    mesh.uv_layers.active_index = uv0_index
-    uv0.active_render = True
-
-    activate_mesh(obj)
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.cube_project(cube_size=cube_size, correct_aspect=True, clip_to_bounds=False, scale_to_bounds=False)
-    bpy.ops.object.mode_set(mode="OBJECT")
-    obj.select_set(False)
+    for polygon in mesh.polygons:
+        normal = polygon.normal
+        axis = max(range(3), key=lambda index: abs(normal[index]))
+        for loop_index in polygon.loop_indices:
+            coordinate = mesh.vertices[mesh.loops[loop_index].vertex_index].co
+            if axis == 0:
+                u = (-coordinate.y if normal.x >= 0 else coordinate.y) / cube_size
+                v = coordinate.z / cube_size
+            elif axis == 1:
+                u = (coordinate.x if normal.y >= 0 else -coordinate.x) / cube_size
+                v = coordinate.z / cube_size
+            else:
+                u = (coordinate.x if normal.z >= 0 else -coordinate.x) / cube_size
+                v = coordinate.y / cube_size
+            uv0.data[loop_index].uv = (u, v)
+    mesh.update()
 
     ratios: list[float] = []
+    transform = obj.matrix_world.to_3x3()
     for polygon in mesh.polygons:
         loops = list(polygon.loop_indices)
         for index, loop_index in enumerate(loops):
             next_loop_index = loops[(index + 1) % len(loops)]
             a_vertex = mesh.vertices[mesh.loops[loop_index].vertex_index].co
             b_vertex = mesh.vertices[mesh.loops[next_loop_index].vertex_index].co
-            world_length = (b_vertex - a_vertex).length
+            world_length = (transform @ (b_vertex - a_vertex)).length
             uv_length = (uv0.data[next_loop_index].uv - uv0.data[loop_index].uv).length
             if world_length > 1e-6 and uv_length > 1e-6:
                 ratios.append(float(world_length / uv_length))
@@ -196,6 +222,7 @@ def project_uv0_in_meters(obj: bpy.types.Object, cube_size: float) -> dict[str, 
         fail(f"{obj.name}: UV0 metre scale drift {median:.6f} vs {cube_size:.6f}")
     return {
         "projection": "cube",
+        "implementation": "dominant-axis-loop-data",
         "cubeSizeMeters": cube_size,
         "sampleCount": len(ratios),
         "medianMetersPerUvUnit": stable_float(median),
@@ -204,10 +231,18 @@ def project_uv0_in_meters(obj: bpy.types.Object, cube_size: float) -> dict[str, 
     }
 
 
-def apply_bounded_bevel(obj: bpy.types.Object, width: float, segments: int, limit_method: str) -> dict[str, Any]:
+def add_bounded_bevel_modifier(
+    obj: bpy.types.Object,
+    depsgraph: bpy.types.Depsgraph,
+    width: float,
+    segments: int,
+    limit_method: str,
+) -> dict[str, Any]:
     before_matrix = stable_matrix(obj)
     before_bounds = world_bounds(obj)
-    activate_mesh(obj)
+    modifier = obj.modifiers.get("SPIKE_VISUAL_BEVEL")
+    if modifier is not None:
+        obj.modifiers.remove(modifier)
     modifier = obj.modifiers.new(name="SPIKE_VISUAL_BEVEL", type="BEVEL")
     modifier.width = width
     modifier.segments = segments
@@ -215,11 +250,11 @@ def apply_bounded_bevel(obj: bpy.types.Object, width: float, segments: int, limi
     modifier.angle_limit = math.radians(30.0)
     modifier.profile = 0.5
     modifier.use_clamp_overlap = True
-    bpy.ops.object.modifier_apply(modifier=modifier.name)
-    obj.select_set(False)
+    bpy.context.view_layer.update()
 
     after_matrix = stable_matrix(obj)
-    after_bounds = world_bounds(obj)
+    evaluated = obj.evaluated_get(depsgraph)
+    after_bounds = evaluated_world_bounds(obj, depsgraph)
     bounds_delta = maximum_bounds_delta(before_bounds, after_bounds)
     if before_matrix != after_matrix:
         fail(f"{obj.name}: visual bevel changed H3 object transform")
@@ -233,12 +268,15 @@ def apply_bounded_bevel(obj: bpy.types.Object, width: float, segments: int, limi
         "widthMeters": width,
         "segments": segments,
         "limitMethod": limit_method,
+        "implementation": "non-destructive-modifier-export-apply",
         "matrixWorldUnchanged": True,
         "boundsBefore": before_bounds,
         "boundsAfter": after_bounds,
         "maximumBoundsDeltaMeters": stable_float(bounds_delta),
-        "verticesAfter": len(obj.data.vertices),
-        "polygonsAfter": len(obj.data.polygons),
+        "verticesBefore": len(obj.data.vertices),
+        "polygonsBefore": len(obj.data.polygons),
+        "verticesEvaluated": len(evaluated.data.vertices),
+        "polygonsEvaluated": len(evaluated.data.polygons),
     }
 
 
@@ -263,6 +301,7 @@ def main() -> None:
     if source_evidence.get("source", {}).get("meshGeometryFingerprintBeforeSpike") != contract["source"]["meshGeometryFingerprint"]:
         fail("visual evidence must start from the frozen H3 source fingerprint")
 
+    log(f"open representative blend {blend_path.name}")
     bpy.ops.wm.open_mainfile(filepath=str(blend_path), load_ui=False)
     scene = bpy.context.scene
     if scene.unit_settings.system != "METRIC" or scene.unit_settings.length_unit != "METERS" or abs(scene.unit_settings.scale_length - 1.0) > 1e-9:
@@ -285,18 +324,24 @@ def main() -> None:
     if texture_resolution not in (128, 256, 512):
         fail("visual proof texture resolution must remain a bounded power-of-two lab size")
 
+    log("write and bind deterministic proof textures")
     texture_paths = rewrite_proof_textures(output_dir / "textures", contract, texture_resolution)
-    reload_blender_images(texture_paths)
+    colorspaces = replace_material_images(texture_paths, contract["materialProof"]["stoneMaterial"])
+    if colorspaces.get("baseColor") != "sRGB" or colorspaces.get("normal") != "Non-Color" or colorspaces.get("roughness") != "Non-Color":
+        fail(f"visual proof texture color-space assignment drifted: {colorspaces}")
 
+    depsgraph = bpy.context.evaluated_depsgraph_get()
     object_evidence: dict[str, Any] = {}
     for name in ARCH_NODES:
+        log(f"prepare {name}: direct UV0 projection")
         obj = bpy.data.objects.get(name)
         if obj is None or obj.type != "MESH":
             fail(f"missing representative architecture node {name}")
-        uv_evidence = project_uv0_in_meters(obj, cube_size)
+        uv_evidence = dominant_axis_box_project_uv0(obj, cube_size)
         obj["surfaceUvProjection"] = "cube"
         obj["surfaceUvCubeSizeMeters"] = cube_size
-        bevel_evidence = apply_bounded_bevel(obj, bevel_width, bevel_segments, bevel_limit)
+        log(f"prepare {name}: bounded non-destructive bevel")
+        bevel_evidence = add_bounded_bevel_modifier(obj, depsgraph, bevel_width, bevel_segments, bevel_limit)
         if [layer.name for layer in obj.data.uv_layers] != ["UV0", "UV1"]:
             fail(f"{name}: visual lookdev must preserve exactly UV0/UV1")
         object_evidence[name] = {
@@ -308,6 +353,7 @@ def main() -> None:
     if stable_matrix(r1) != r1_matrix_before:
         fail("visual evidence modified the frozen R1 camera")
 
+    log("save and reopen visual-evidence blend")
     bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
     bpy.ops.wm.open_mainfile(filepath=str(blend_path), load_ui=False)
     if len(bpy.data.lights) != 0:
@@ -319,6 +365,9 @@ def main() -> None:
         obj = bpy.data.objects.get(name)
         if obj is None or [layer.name for layer in obj.data.uv_layers] != ["UV0", "UV1"]:
             fail(f"{name}: visual-evidence save/reopen lost UV0/UV1")
+        modifier = obj.modifiers.get("SPIKE_VISUAL_BEVEL")
+        if modifier is None or modifier.type != "BEVEL":
+            fail(f"{name}: visual-evidence save/reopen lost bounded bevel modifier")
 
     visual_evidence = {
         "schemaVersion": 1,
@@ -334,6 +383,7 @@ def main() -> None:
         "lookdevBevelMeters": bevel_width,
         "lookdevBevelSegments": bevel_segments,
         "lookdevBevelLimit": bevel_limit,
+        "bevelExportMode": "gltf-export-apply-modifiers",
         "r1MatrixUnchanged": True,
         "objects": object_evidence,
         "productionAsset": False,
@@ -348,6 +398,7 @@ def main() -> None:
         "surfaceUvCubeSizeMeters": cube_size,
         "lookdevBevelMeters": bevel_width,
         "lookdevBevelSegments": bevel_segments,
+        "bevelExportMode": "gltf-export-apply-modifiers",
     })
     source_evidence["visualLookdev"] = visual_evidence
     files = source_evidence.setdefault("files", {})
@@ -355,8 +406,7 @@ def main() -> None:
     files["textures"] = {key: file_identity(path, output_dir) for key, path in texture_paths.items()}
     files["visualLookdev"] = file_identity(visual_evidence_path, output_dir)
     write_json(source_evidence_path, source_evidence)
-
-    print(f"Hall material visual evidence prepared: {visual_evidence_path}")
+    log(f"prepared visual evidence {visual_evidence_path.name}")
 
 
 if __name__ == "__main__":
