@@ -3,7 +3,7 @@
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
   "phase": "pushkinVerticalSlice",
-  "status": "acquisition-in-progress",
+  "status": "external-authority-required",
   "policyAuthority": "docs/hall-v3/RIGHTS_REGISTER.md",
   "aiPolicyAuthority": "docs/hall-v3/AI_USAGE_POLICY.md",
   "publicationRule": {
