@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "status": "source-contract-ready-rights-blocked",
+  "source": {
+    "topology": "H3",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "approvedRig": "R1",
+    "pushkinViewing": {
+      "position": [8.0, 2.5, 1.6],
+      "target": [11.15, 5.45, 1.95],
+      "lensMm": 28
+    },
+    "lighting": "L0-minimal-runtime",
+    "surfaceUv": "UV0",
+    "surfaceScaleMetersPerUvUnit": 1.5,
+    "staticBakeReserve": "UV1",
+    "currentL1Disposition": "reject-current-bake"
+  },
+  "exhibit": {
+    "poetId": "alexander-pushkin",
+    "nodeName": "EXHIBIT_alexander-pushkin",
+    "anchorName": "ANCHOR_alexander-pushkin",
+    "sourceAuthority": "Blender",
+    "reactThreeMayModelCanonicalGeometry": false,
+    "oneCompleteExhibitRequired": true,
+    "requiredAssetRoles": [
+      {
+        "role": "heroPortrait",
+        "preferredAssetId": "pushkin-kiprensky-1827-portrait",
+        "minimumVerificationStatus": "approved",
+        "currentStatus": "rights-pending"
+      },
+      {
+        "role": "documentaryPublication",
+        "preferredAssetId": "pushkin-onegin-1833-edition",
+        "minimumVerificationStatus": "approved",
+        "currentStatus": "rights-pending"
+      }
+    ]
+  },
+  "productionBoundary": {
+    "productionManifestAllowed": false,
+    "productionHallRouteMayChange": false,
+    "productionThreeRuntimeMayActivate": false,
+    "fullHallLookdevAllowed": false,
+    "laterGatePromotionAllowed": false,
+    "rightsPendingMediaMayShip": false,
+    "blockedAssetIds": ["pushkin-onegin-autograph-weak-mirror"]
+  },
+  "materialBoundary": {
+    "productionTextureEncoding": "deferred-until-measured-first-slice",
+    "qaProofPngsAreProductionAssets": false,
+    "ktx2": "candidate-not-default",
+    "photographicAndDocumentDeliveryMustBeEvaluatedSeparately": true,
+    "noEffectsBaselineRequired": true
+  },
+  "requiredOfflineEvidence": {
+    "fixedStillCount": {"min": 8, "max": 12},
+    "closeMaterialCrops": true,
+    "desktopFraming": true,
+    "mobileFraming": true,
+    "offlineCameraSequenceSeconds": {"min": 20, "max": 30},
+    "noEffectsBaseline": true,
+    "rawVsOptimizedComparison": true,
+    "humanOwnerVisualApprovalRequired": true,
+    "webglMayBeginBeforeCompellingOfflineSequence": false
+  },
+  "deliveryPreflight": {
+    "rawGlbRequired": true,
+    "khronosBeforeOptimization": true,
+    "optimizer": {"package": "gltfpack", "version": "1.2.0", "args": ["-cc", "-kn", "-km", "-ke", "-kv", "-vpf"]},
+    "khronosAfterOptimization": true,
+    "preserve": ["named-nodes", "named-materials", "node-extras", "UV0", "UV1", "tangents", "camera", "poetId", "metric-scale"],
+    "visualComparisonRequired": true,
+    "budgetReportRequired": true,
+    "runtimeManifestRequiresApprovedRights": true
+  },
+  "firstSliceBudgets": {
+    "status": "must-be-measured-on-source-offline-slice",
+    "transferBytes": null,
+    "gpuTextureResidentBytes": null,
+    "triangleCount": null,
+    "drawMaterialCount": null,
+    "frameTimeTargets": null,
+    "productionTextureEncodingDecision": null
+  },
+  "nextAllowedWork": [
+    "acquire-exact-source-files-and-hashes",
+    "resolve-rights-basis-and-credit",
+    "promote-only-independently-approved-rights-records",
+    "author-one-source-offline-pushkin-exhibit-in-blender",
+    "measure-first-slice-delivery-and-performance",
+    "produce-required-offline-visual-evidence"
+  ],
+  "forbiddenWork": [
+    "production-three-r3f-webgl-hall",
+    "jsx-authored-canonical-architecture",
+    "full-hall-lookdev",
+    "h3-topology-redesign",
+    "r1-camera-redesign-without-reopening-cameraApproval",
+    "current-l1-bake-as-approved",
+    "rights-pending-production-media",
+    "ai-generated-historical-facsimile",
+    "offlineVisualApproval-promotion",
+    "webVerticalSlice-promotion",
+    "fullMuseumScaleOut-promotion"
+  ]
+}
