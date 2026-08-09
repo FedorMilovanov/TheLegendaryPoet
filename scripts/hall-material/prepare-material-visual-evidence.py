@@ -92,13 +92,16 @@ def png_chunk(kind: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
 
 
+def quantize_rgb(pixel: tuple[float, float, float]) -> tuple[int, int, int]:
+    return tuple(max(0, min(255, int(round(float(value))))) for value in pixel)
+
+
 def write_rgb_png(path: Path, width: int, height: int, pixel_fn) -> None:
     rows: list[bytes] = []
     for y in range(height):
         row = bytearray([0])
         for x in range(width):
-            r, g, b = pixel_fn(x, y, width, height)
-            row.extend((max(0, min(255, int(r))), max(0, min(255, int(g))), max(0, min(255, int(b)))))
+            row.extend(quantize_rgb(pixel_fn(x, y, width, height)))
         rows.append(bytes(row))
     header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
     path.write_bytes(
@@ -109,7 +112,32 @@ def write_rgb_png(path: Path, width: int, height: int, pixel_fn) -> None:
     )
 
 
-def rewrite_proof_textures(texture_dir: Path, contract: dict[str, Any], resolution: int) -> dict[str, Path]:
+def assert_tileable_edges(pixel_fn, width: int, height: int, label: str) -> dict[str, Any]:
+    left_right = [
+        quantize_rgb(pixel_fn(0, y, width, height)) == quantize_rgb(pixel_fn(width - 1, y, width, height))
+        for y in range(height)
+    ]
+    top_bottom = [
+        quantize_rgb(pixel_fn(x, 0, width, height)) == quantize_rgb(pixel_fn(x, height - 1, width, height))
+        for x in range(width)
+    ]
+    if not all(left_right):
+        fail(f"{label}: proof texture is not periodic across left/right edges")
+    if not all(top_bottom):
+        fail(f"{label}: proof texture is not periodic across top/bottom edges")
+    return {
+        "leftRightMatches": True,
+        "topBottomMatches": True,
+        "edgeSamplePairs": width + height,
+        "quantization": "rounded-8bit-rgb",
+    }
+
+
+def rewrite_proof_textures(
+    texture_dir: Path,
+    contract: dict[str, Any],
+    resolution: int,
+) -> tuple[dict[str, Path], dict[str, dict[str, Any]]]:
     texture_dir.mkdir(parents=True, exist_ok=True)
     paths = {
         "baseColor": texture_dir / contract["materialProof"]["baseColor"]["file"],
@@ -121,28 +149,34 @@ def rewrite_proof_textures(texture_dir: Path, contract: dict[str, Any], resoluti
     def base_pixel(x: int, y: int, width: int, height: int):
         u = x / max(1, width - 1)
         v = y / max(1, height - 1)
-        coarse = math.sin(tau * (u * 2.25 + v * 0.35)) * 8.0 + math.cos(tau * (v * 1.7 - u * 0.2)) * 6.0
-        grain = math.sin(tau * (u * 9.0 + v * 4.0)) * 2.8 + math.cos(tau * (u * 3.0 - v * 11.0)) * 2.2
+        coarse = math.sin(tau * (2.0 * u + v)) * 8.0 + math.cos(tau * (v - u)) * 6.0
+        grain = math.sin(tau * (9.0 * u + 4.0 * v)) * 2.8 + math.cos(tau * (3.0 * u - 11.0 * v)) * 2.2
         value = 146.0 + coarse + grain
         return value + 4.0, value, value - 7.0
 
     def normal_pixel(x: int, y: int, width: int, height: int):
         u = x / max(1, width - 1)
         v = y / max(1, height - 1)
-        nx = 128.0 + 15.0 * math.sin(tau * (u * 5.0 + v * 1.7)) + 4.0 * math.sin(tau * v * 13.0)
-        ny = 128.0 + 13.0 * math.cos(tau * (v * 4.0 - u * 1.2)) + 4.0 * math.cos(tau * u * 12.0)
+        nx = 128.0 + 15.0 * math.sin(tau * (5.0 * u + 2.0 * v)) + 4.0 * math.sin(tau * 13.0 * v)
+        ny = 128.0 + 13.0 * math.cos(tau * (4.0 * v - u)) + 4.0 * math.cos(tau * 12.0 * u)
         return nx, ny, 253.0
 
     def rough_pixel(x: int, y: int, width: int, height: int):
         u = x / max(1, width - 1)
         v = y / max(1, height - 1)
-        value = 171.0 + 24.0 * math.sin(tau * (u * 2.8 + v * 1.3)) + 11.0 * math.cos(tau * (u * 7.0 - v * 3.0))
+        value = 171.0 + 24.0 * math.sin(tau * (3.0 * u + v)) + 11.0 * math.cos(tau * (7.0 * u - 3.0 * v))
         return value, value, value
 
-    write_rgb_png(paths["baseColor"], resolution, resolution, base_pixel)
-    write_rgb_png(paths["normal"], resolution, resolution, normal_pixel)
-    write_rgb_png(paths["roughness"], resolution, resolution, rough_pixel)
-    return paths
+    functions = {
+        "baseColor": base_pixel,
+        "normal": normal_pixel,
+        "roughness": rough_pixel,
+    }
+    tileability: dict[str, dict[str, Any]] = {}
+    for role, pixel_fn in functions.items():
+        tileability[role] = assert_tileable_edges(pixel_fn, resolution, resolution, role)
+        write_rgb_png(paths[role], resolution, resolution, pixel_fn)
+    return paths, tileability
 
 
 def set_image_colorspace(image: bpy.types.Image, preferred: list[str]) -> str:
@@ -324,8 +358,8 @@ def main() -> None:
     if texture_resolution not in (128, 256, 512):
         fail("visual proof texture resolution must remain a bounded power-of-two lab size")
 
-    log("write and bind deterministic proof textures")
-    texture_paths = rewrite_proof_textures(output_dir / "textures", contract, texture_resolution)
+    log("write and bind deterministic periodic proof textures")
+    texture_paths, tileability = rewrite_proof_textures(output_dir / "textures", contract, texture_resolution)
     colorspaces = replace_material_images(texture_paths, contract["materialProof"]["stoneMaterial"])
     if colorspaces.get("baseColor") != "sRGB" or colorspaces.get("normal") != "Non-Color" or colorspaces.get("roughness") != "Non-Color":
         fail(f"visual proof texture color-space assignment drifted: {colorspaces}")
@@ -378,6 +412,7 @@ def main() -> None:
         "approvedRig": "R1",
         "inspectionTarget": visual["inspectionTarget"],
         "proofTextureResolution": texture_resolution,
+        "proofTextureTileability": tileability,
         "surfaceUvProjection": visual["surfaceUvProjection"],
         "surfaceUvCubeSizeMeters": cube_size,
         "lookdevBevelMeters": bevel_width,
@@ -394,6 +429,7 @@ def main() -> None:
 
     source_evidence.setdefault("material", {}).update({
         "proofTextureResolution": texture_resolution,
+        "proofTextureTileable": True,
         "surfaceUvProjection": visual["surfaceUvProjection"],
         "surfaceUvCubeSizeMeters": cube_size,
         "lookdevBevelMeters": bevel_width,
