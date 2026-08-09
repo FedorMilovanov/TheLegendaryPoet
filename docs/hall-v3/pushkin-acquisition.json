@@ -3,20 +3,23 @@
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
   "phase": "pushkinVerticalSlice",
-  "status": "source-bytes-verified-rights-pending",
+  "status": "source-bytes-verified-offline-authoring-authorized-production-rights-pending",
   "rightsAuthority": "docs/hall-v3/pushkin-rights.json",
+  "ownerDispositionAuthority": "docs/hall-v3/pushkin-owner-disposition.json",
   "rules": {
     "metadataChecksumMayStandInForAcquiredBytesHash": false,
     "remoteFilePageMayStandInForAcquiredBytes": false,
     "sourceFileHashRequiresActualByteAcquisition": true,
     "institutionalRequestMayBeAutoApprovedByAgent": false,
     "approvedRightsRequiredBeforeProductionManifest": true,
-    "runtimeAssetPathMayPrecedeApproval": false
+    "runtimeAssetPathMayPrecedeApproval": false,
+    "offlineAuthoringMayUseOwnerAuthorizedExactVerifiedSources": true,
+    "offlineAuthoringIsProductionPermission": false
   },
   "assets": [
     {
       "assetId": "pushkin-kiprensky-1827-portrait",
-      "acquisitionState": "source-bytes-verified-rights-pending",
+      "acquisitionState": "source-bytes-verified-offline-authoring-authorized-production-rights-pending",
       "descriptionPage": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
       "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
       "reportedRemoteMetadata": {
@@ -30,18 +33,19 @@
         "evidenceWorkflow": "Pushkin source-byte evidence",
         "evidenceRunId": 31325179600,
         "evidenceHead": "be1d38a80d26a5ad0116ad1d1ec43540b803d795",
-        "requestedUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
-        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "requestedUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
         "detectedType": "image/jpeg",
         "byteCount": 10862180,
         "dimensions": [3455, 4000],
         "sha256": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b"
       },
-      "nextRequiredAction": "resolve final credit and intended-use/reproduction-rights disposition independently; byte identity alone does not authorize production"
+      "offlineAuthoringAuthorized": true,
+      "nextRequiredAction": "author exact-source offline exhibit evidence; final production derivative, credit and publication status remain separate"
     },
     {
       "assetId": "pushkin-onegin-1833-edition",
-      "acquisitionState": "source-bytes-verified-rights-pending",
+      "acquisitionState": "source-bytes-verified-offline-authoring-authorized-production-rights-pending",
       "descriptionPage": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
       "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
       "reportedRemoteMetadata": {
@@ -64,11 +68,13 @@
         "pages": 324,
         "sha256": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5"
       },
-      "nextRequiredAction": "resolve final credit and intended-use/reproduction-rights disposition independently; byte identity alone does not authorize production"
+      "offlineAuthoringAuthorized": true,
+      "selectedOfflineSourcePdfPageIndex": 0,
+      "nextRequiredAction": "author title-page derivative inside exact-source offline exhibit evidence; final production derivative, credit and publication status remain separate"
     },
     {
       "assetId": "pushkin-house-onegin-self-portrait-1824",
-      "acquisitionState": "institutional-copy-request-required",
+      "acquisitionState": "institutional-copy-request-required-optional-for-v1",
       "descriptionPage": "https://ro.pushkinskijdom.ru/inventories/3576886",
       "originalFileUrl": null,
       "reportedRemoteMetadata": {
@@ -76,16 +82,25 @@
         "objectDescription": "Рисунок: автопортрет с Онегиным на набережной Невы. Автоиллюстрация к гл. 1 романа «Евгений Онегин», при письме Л. С. Пушкину от 1–10 нояб. 1824 г."
       },
       "institutionalRequest": {
-        "required": true,
+        "requiredForExactArchiveCopy": true,
         "status": "not-submitted",
         "requestUrl": "https://ro.pushkinskijdom.ru/contacts",
         "requestEmail": "roirli.copy@yandex.ru",
         "requiredInformation": ["researcher identity", "research topic", "intended use", "archive cipher and unit title"],
         "publishedFulfilmentWindow": "up to 1 month"
       },
+      "gratisGuidanceInquiry": {
+        "status": "sent",
+        "sentAt": "2026-08-10",
+        "purpose": "ask whether an already-open facsimile may be reused gratis and request attribution/open-source guidance",
+        "isFormalPaidCopyOrder": false,
+        "replyRequiredBeforeV1OfflineAuthoring": false
+      },
       "bytesAcquired": false,
       "sourceFileHash": null,
-      "nextRequiredAction": "human/owner decides intended use and submits the institutional copy request; after an actual supplied copy is received, hash those exact bytes and separately record reuse/credit disposition"
+      "offlineAuthoringAuthorized": false,
+      "v1Requirement": "optional-deferred-not-blocking",
+      "nextRequiredAction": "none for v1; if a reusable copy is later supplied or identified, hash exact bytes and separately record reuse/credit disposition"
     },
     {
       "assetId": "pushkin-onegin-autograph-weak-mirror",
@@ -95,12 +110,15 @@
       "reportedRemoteMetadata": null,
       "bytesAcquired": false,
       "sourceFileHash": null,
+      "offlineAuthoringAuthorized": false,
       "nextRequiredAction": "none; retain only as negative-control evidence that a public mirror cannot substitute for exact institutional object provenance"
     }
   ],
   "currentOutcome": {
     "approvedDocumentaryAssets": 0,
     "exactSourceByteHashes": 2,
+    "offlineBlenderSourceEvidenceAllowed": true,
+    "offlineAuthorizedAssetIds": ["pushkin-kiprensky-1827-portrait", "pushkin-onegin-1833-edition"],
     "productionManifestAllowed": false,
     "blenderExhibitMayConsumeDocumentaryMedia": false,
     "productionWebglMayBegin": false
@@ -108,10 +126,12 @@
   "nextBoundary": {
     "allowed": [
       "independent-byte-revalidation-against-recorded-sha256",
+      "author-owner-authorized-exact-source-offline-pushkin-exhibit",
+      "derive-and-hash-offline-display-assets",
+      "measure-first-slice-delivery-and-performance",
+      "produce-required-offline-visual-evidence",
       "final-credit-disposition",
-      "intended-use-rights-disposition",
-      "institutional-copy-request-by-human-owner",
-      "promote-only-fully-approved-records"
+      "promote-only-fully-approved-production-records"
     ],
     "forbidden": [
       "metadata-hash-as-source-file-hash",
