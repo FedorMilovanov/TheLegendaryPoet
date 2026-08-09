@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "decidedAt": "2026-08-10",
+  "status": "owner-offline-authoring-authorized",
+  "decisionOrigin": "explicit-project-owner-instruction",
+  "projectUse": {
+    "surface": "public-cultural-web-project-and-public-project-channels",
+    "licensingBudget": "none",
+    "paidLicenceOrPaidDigitalCopyAllowed": false,
+    "preferHighestQualityGratisPublicDomainOrOpenSource": true,
+    "preserveAttributionAndSourceChain": true,
+    "replaceSourceRatherThanPayWhenGratisUseIsUnavailable": true
+  },
+  "offlineAuthoring": {
+    "authorized": true,
+    "scope": "source-offline-pushkin-exhibit-evidence-only",
+    "productionShippingAuthorizedByThisDecision": false,
+    "assets": [
+      {
+        "assetId": "pushkin-kiprensky-1827-portrait",
+        "sourceFileHash": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b",
+        "allowedOfflineOperations": ["display", "crop", "resize", "color-management", "non-destructive-technical-cleanup"],
+        "sourceTreatment": "retain-exact-source-and-record-every-derived-byte-identity"
+      },
+      {
+        "assetId": "pushkin-onegin-1833-edition",
+        "sourceFileHash": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5",
+        "selectedOfflinePresentation": {
+          "sourcePdfPageIndex": 0,
+          "humanPageNumber": 1,
+          "role": "documentary-publication-title-page"
+        },
+        "allowedOfflineOperations": ["display", "crop", "resize", "color-management", "non-destructive-technical-cleanup"],
+        "sourceTreatment": "retain-exact-source-and-record-every-derived-byte-identity"
+      }
+    ]
+  },
+  "documentaryAuthenticity": {
+    "aiGeneratedHistoricalFacsimileAllowed": false,
+    "aiRestorationMayReplaceSourceAuthority": false,
+    "technicalOrAiEnhancedDerivativeMustRemainLabelledAsDerivative": true,
+    "exactHistoricalSourceMustRemainPreserved": true
+  },
+  "pushkinHouse": {
+    "assetId": "pushkin-house-onegin-self-portrait-1824",
+    "v1Requirement": "optional-deferred-not-blocking",
+    "waitForInstitutionBeforeOfflineAuthoring": false,
+    "gratisInquirySent": true,
+    "inquiryDate": "2026-08-10",
+    "paidCopyAllowed": false,
+    "mayBeAddedLaterOnlyFromActuallySuppliedOrOtherwiseReusableSource": true
+  },
+  "gratisInstitutionalInquiries": {
+    "status": "sent-non-blocking",
+    "institutions": ["State Tretyakov Gallery", "Russian State Library", "IRLI RAN / Pushkin House"],
+    "purpose": "seek written gratis-use guidance, better open high-resolution sources, attribution guidance, or optional expert/information support",
+    "hallMayContinueBeforeReplies": true,
+    "replyMayStrengthenOrRestrictLaterProductionDisposition": true
+  },
+  "productionBoundary": {
+    "canonicalApprovedStatusStillRequiredForProductionManifest": true,
+    "runtimeAssetPathMayBeAssignedByThisDecision": false,
+    "productionWebglMayBeginByThisDecision": false,
+    "offlineVisualApprovalMayBePromotedByThisDecision": false
+  }
+}
