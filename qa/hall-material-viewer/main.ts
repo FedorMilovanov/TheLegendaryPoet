@@ -5,6 +5,20 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 
 type Mode = 'L0-minimal-runtime' | 'L1-external-lightmap';
 type Asset = 'raw' | 'optimized';
+type GpuTextureWitness = {
+  uuid: string;
+  roles: string[];
+  width: number;
+  height: number;
+  format: string;
+  type: string;
+  colorSpace: string;
+  channel: number;
+  generateMipmaps: boolean;
+  minFilter: string;
+  baseLevelBytes: number;
+  estimatedResidentBytes: number;
+};
 type SpikeMetrics = {
   mode: Mode;
   asset: Asset;
@@ -15,6 +29,8 @@ type SpikeMetrics = {
   programs: number;
   rawBytes: number;
   optimizedBytes: number;
+  gpuTextureResidentBytes: number;
+  gpuTextures: GpuTextureWitness[];
   errors: string[];
   lightmapBindings: number;
   pixelHash: string;
@@ -45,6 +61,8 @@ window.__HALL_SPIKE__ = {
   programs: 0,
   rawBytes: 0,
   optimizedBytes: 0,
+  gpuTextureResidentBytes: 0,
+  gpuTextures: [],
   errors,
   lightmapBindings: 0,
   pixelHash: '',
@@ -170,6 +188,120 @@ async function pixelWitness(): Promise<{ hash: string; sample: string }> {
   return { hash, sample: bytesToBase64(samplePixels(pixels, width, height)) };
 }
 
+function enumName(value: number): string {
+  const known: Array<[number, string]> = [
+    [THREE.RedFormat, 'RedFormat'],
+    [THREE.RGFormat, 'RGFormat'],
+    [THREE.RGBAFormat, 'RGBAFormat'],
+    [THREE.UnsignedByteType, 'UnsignedByteType'],
+    [THREE.ByteType, 'ByteType'],
+    [THREE.UnsignedShortType, 'UnsignedShortType'],
+    [THREE.ShortType, 'ShortType'],
+    [THREE.UnsignedIntType, 'UnsignedIntType'],
+    [THREE.IntType, 'IntType'],
+    [THREE.FloatType, 'FloatType'],
+    [THREE.HalfFloatType, 'HalfFloatType'],
+    [THREE.NearestFilter, 'NearestFilter'],
+    [THREE.LinearFilter, 'LinearFilter'],
+    [THREE.NearestMipmapNearestFilter, 'NearestMipmapNearestFilter'],
+    [THREE.NearestMipmapLinearFilter, 'NearestMipmapLinearFilter'],
+    [THREE.LinearMipmapNearestFilter, 'LinearMipmapNearestFilter'],
+    [THREE.LinearMipmapLinearFilter, 'LinearMipmapLinearFilter'],
+  ];
+  return known.find(([candidate]) => candidate === value)?.[1] ?? String(value);
+}
+
+function componentCount(format: number): number {
+  if (format === THREE.RedFormat) return 1;
+  if (format === THREE.RGFormat) return 2;
+  return 4;
+}
+
+function componentBytes(type: number): number {
+  if (type === THREE.ByteType || type === THREE.UnsignedByteType) return 1;
+  if (type === THREE.ShortType || type === THREE.UnsignedShortType || type === THREE.HalfFloatType) return 2;
+  if (type === THREE.IntType || type === THREE.UnsignedIntType || type === THREE.FloatType) return 4;
+  throw new Error(`Unsupported texture type for resident-memory witness: ${enumName(type)}`);
+}
+
+function usesMipmaps(texture: THREE.Texture): boolean {
+  if (!texture.generateMipmaps) return false;
+  return texture.minFilter === THREE.NearestMipmapNearestFilter
+    || texture.minFilter === THREE.NearestMipmapLinearFilter
+    || texture.minFilter === THREE.LinearMipmapNearestFilter
+    || texture.minFilter === THREE.LinearMipmapLinearFilter;
+}
+
+function estimateResidentBytes(texture: THREE.Texture): { width: number; height: number; baseLevelBytes: number; estimatedResidentBytes: number } {
+  const image = texture.image as { width?: number; height?: number; data?: ArrayBufferView } | undefined;
+  const width = Number(image?.width ?? 0);
+  const height = Number(image?.height ?? 0);
+  if (!Number.isInteger(width) || width <= 0 || !Number.isInteger(height) || height <= 0) {
+    throw new Error(`Texture ${texture.uuid} has no inspectable 2D dimensions`);
+  }
+  const typedBytes = image?.data && ArrayBuffer.isView(image.data) ? image.data.byteLength : 0;
+  const baseLevelBytes = typedBytes > 0
+    ? typedBytes
+    : width * height * componentCount(texture.format) * componentBytes(texture.type);
+  if (!usesMipmaps(texture)) return { width, height, baseLevelBytes, estimatedResidentBytes: baseLevelBytes };
+
+  const bytesPerPixel = baseLevelBytes / (width * height);
+  let mipWidth = width;
+  let mipHeight = height;
+  let estimatedResidentBytes = 0;
+  while (true) {
+    estimatedResidentBytes += Math.ceil(mipWidth * mipHeight * bytesPerPixel);
+    if (mipWidth === 1 && mipHeight === 1) break;
+    mipWidth = Math.max(1, Math.floor(mipWidth / 2));
+    mipHeight = Math.max(1, Math.floor(mipHeight / 2));
+  }
+  return { width, height, baseLevelBytes, estimatedResidentBytes };
+}
+
+function gpuTextureWitness(root: THREE.Object3D): { textures: GpuTextureWitness[]; total: number } {
+  const roles = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'lightMap'] as const;
+  const found = new Map<string, { texture: THREE.Texture; roles: Set<string> }>();
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const material of materials) {
+      if (!material) continue;
+      const candidate = material as THREE.MeshStandardMaterial;
+      for (const role of roles) {
+        const texture = candidate[role] as THREE.Texture | null | undefined;
+        if (!texture?.isTexture) continue;
+        const entry = found.get(texture.uuid) ?? { texture, roles: new Set<string>() };
+        entry.roles.add(role);
+        found.set(texture.uuid, entry);
+      }
+    }
+  });
+
+  const textures = [...found.values()].map(({ texture, roles: textureRoles }) => {
+    const estimate = estimateResidentBytes(texture);
+    return {
+      uuid: texture.uuid,
+      roles: [...textureRoles].sort(),
+      width: estimate.width,
+      height: estimate.height,
+      format: enumName(texture.format),
+      type: enumName(texture.type),
+      colorSpace: texture.colorSpace,
+      channel: texture.channel,
+      generateMipmaps: texture.generateMipmaps,
+      minFilter: enumName(texture.minFilter),
+      baseLevelBytes: estimate.baseLevelBytes,
+      estimatedResidentBytes: estimate.estimatedResidentBytes,
+    };
+  }).sort((a, b) => a.uuid.localeCompare(b.uuid));
+
+  return {
+    textures,
+    total: textures.reduce((sum, texture) => sum + texture.estimatedResidentBytes, 0),
+  };
+}
+
 async function boot(): Promise<void> {
   const assetUrl = asset === 'raw' ? '/generated/material-spike-raw.glb' : '/generated/material-spike-optimized.glb';
   const gltf = await loader.loadAsync(assetUrl);
@@ -186,6 +318,7 @@ async function boot(): Promise<void> {
   }));
 
   const witness = await pixelWitness();
+  const gpu = gpuTextureWitness(gltf.scene);
   const [rawBytes, optimizedBytes] = await Promise.all([rawBytesPromise, optimizedBytesPromise]);
   const info = renderer.info;
   window.__HALL_SPIKE__ = {
@@ -198,6 +331,8 @@ async function boot(): Promise<void> {
     programs: info.programs?.length ?? 0,
     rawBytes,
     optimizedBytes,
+    gpuTextureResidentBytes: gpu.total,
+    gpuTextures: gpu.textures,
     errors,
     lightmapBindings: applied,
     pixelHash: witness.hash,
