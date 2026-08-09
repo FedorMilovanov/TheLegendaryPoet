@@ -7,6 +7,7 @@ const expect = (condition: unknown, message: string) => { if (!condition) failur
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
 const exists = (relative: string) => fs.existsSync(path.join(root, relative));
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+const countOccurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
 
 const contractPath = 'docs/hall-v3/hall-v3-contract.json';
 const rightsPath = 'docs/hall-v3/pushkin-rights.json';
@@ -15,6 +16,7 @@ const acquisitionPath = 'docs/hall-v3/pushkin-acquisition.json';
 const validatorPath = 'scripts/validate-hall-pushkin-acquisition.ts';
 const byteEvidenceScriptPath = 'scripts/hall-pushkin/acquire-source-byte-evidence.mjs';
 const byteEvidenceWorkflowPath = '.github/workflows/hall-pushkin-source-byte-evidence.yml';
+const SOURCE_BYTE_TRIGGER_INPUTS = [byteEvidenceWorkflowPath, byteEvidenceScriptPath, acquisitionPath, rightsPath];
 
 for (const required of [contractPath, rightsPath, slicePath, acquisitionPath, validatorPath, byteEvidenceScriptPath, byteEvidenceWorkflowPath]) {
   expect(exists(required), `required acquisition authority file missing: ${required}`);
@@ -135,7 +137,10 @@ expect((packageJson.scripts?.check ?? '').includes('validate:hall-pushkin-acquis
 for (const [name, workflow] of [['CI',ci],['Project Contracts',projectContracts],['Hall tooling',hallWorkflow]] as const) expect(workflow.includes('validate:hall-pushkin-acquisition'), `${name} must run Pushkin acquisition validator`);
 expect(hallWorkflow.includes("'docs/hall-v3/pushkin-acquisition.json'") && hallWorkflow.includes(`'${validatorPath}'`), 'Hall workflow must trigger on acquisition authority/validator changes');
 expect(byteEvidenceWorkflow.includes(byteEvidenceScriptPath), 'source-byte evidence workflow must run the exact acquisition probe');
-expect(byteEvidenceWorkflow.includes("'docs/hall-v3/pushkin-acquisition.json'") && byteEvidenceWorkflow.includes("'docs/hall-v3/pushkin-rights.json'"), 'source-byte evidence workflow must rerun when canonical byte identities change');
+expect(byteEvidenceWorkflow.includes('\n  pull_request:\n') && byteEvidenceWorkflow.includes('\n  push:\n'), 'source-byte evidence workflow must revalidate exact bytes on both pull requests and main pushes');
+for (const triggerInput of SOURCE_BYTE_TRIGGER_INPUTS) {
+  expect(countOccurrences(byteEvidenceWorkflow, `'${triggerInput}'`) >= 2, `source-byte evidence workflow must cover ${triggerInput} in both pull_request and main push paths`);
+}
 expect(byteEvidenceWorkflow.includes('Upload source-byte identity evidence only'), 'source-byte workflow must upload evidence rather than source media');
 expect(byteEvidenceScript.includes("hostname !== 'upload.wikimedia.org'") && byteEvidenceScript.includes('recorded sourceFileHash does not match freshly acquired bytes'), 'source-byte probe must pin host and revalidate recorded hashes');
 expect(!hallPage.includes('@react-three/') && !hallPage.includes("from 'three'") && !hallPage.includes('from "three"'), 'production Hall page must remain free of Three/R3F imports');
