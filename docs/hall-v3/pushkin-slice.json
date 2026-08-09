@@ -40,6 +40,17 @@
         "minimumVerificationStatus": "approved",
         "currentStatus": "rights-pending"
       }
+    ],
+    "provenanceCandidates": [
+      {
+        "role": "documentaryDrawing",
+        "preferredAssetId": "pushkin-house-onegin-self-portrait-1824",
+        "objectVerificationStatus": "source-verified",
+        "reproductionRightsStatus": "rights-pending",
+        "acquisitionStatus": "institutional-copy-request-required",
+        "shippingRequirement": "approved",
+        "negativeControlAssetId": "pushkin-onegin-autograph-weak-mirror"
+      }
     ]
   },
   "productionBoundary": {
