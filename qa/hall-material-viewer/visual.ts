@@ -4,6 +4,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 
 type ViewId = 'material-medium' | 'material-close';
 type Variant = 'full' | 'normal-off' | 'roughness-flat';
+type AxisIndex = 0 | 1 | 2;
 type VisualMetrics = {
   view: ViewId;
   variant: Variant;
@@ -17,8 +18,13 @@ type VisualMetrics = {
     distanceMeters: number;
     lensMm: number;
     edgeBias: number;
+    edgeRevealDegrees: number;
+    faceNormalAxis: AxisIndex;
+    verticalAxis: AxisIndex;
+    tangentAxis: AxisIndex;
     position: [number, number, number];
     target: [number, number, number];
+    surfaceNormal: [number, number, number];
   };
   material: {
     name: string;
@@ -59,6 +65,7 @@ const targetName = params.get('target') || 'ARCH_wall_016';
 const distanceMeters = Number(params.get('distance') || (view === 'material-close' ? '0.85' : '2.2'));
 const lensMm = Number(params.get('lens') || (view === 'material-close' ? '55' : '45'));
 const edgeBias = Number(params.get('edgeBias') || (view === 'material-close' ? '0.82' : '0.72'));
+const edgeRevealDegrees = view === 'material-close' ? 18 : 14;
 const lumaThreshold = Number(params.get('lumaThreshold') || '0.08');
 const sampleGrid: [number, number] = [64, 36];
 const errors: string[] = [];
@@ -117,7 +124,28 @@ function cloneTargetMaterial(target: THREE.Mesh): THREE.MeshStandardMaterial {
   return clone;
 }
 
-function configureInspectionCamera(root: THREE.Object3D, target: THREE.Mesh): { camera: THREE.PerspectiveCamera; targetPoint: THREE.Vector3 } {
+function axisComponent(vector: THREE.Vector3, axis: AxisIndex): number {
+  return axis === 0 ? vector.x : axis === 1 ? vector.y : vector.z;
+}
+
+function setAxisComponent(vector: THREE.Vector3, axis: AxisIndex, value: number): void {
+  if (axis === 0) vector.x = value;
+  else if (axis === 1) vector.y = value;
+  else vector.z = value;
+}
+
+function localAxis(axis: AxisIndex): THREE.Vector3 {
+  return axis === 0 ? new THREE.Vector3(1, 0, 0) : axis === 1 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
+}
+
+function configureInspectionCamera(root: THREE.Object3D, target: THREE.Mesh): {
+  camera: THREE.PerspectiveCamera;
+  targetPoint: THREE.Vector3;
+  surfaceNormal: THREE.Vector3;
+  faceNormalAxis: AxisIndex;
+  verticalAxis: AxisIndex;
+  tangentAxis: AxisIndex;
+} {
   const r1 = root.getObjectByName('CAM_R1_pushkinViewing');
   if (!r1 || !(r1 as THREE.Camera).isCamera) throw new Error('Missing frozen R1 camera for inspection reference');
   root.updateMatrixWorld(true);
@@ -127,20 +155,43 @@ function configureInspectionCamera(root: THREE.Object3D, target: THREE.Mesh): { 
   const box = geometry.boundingBox;
   if (!box) throw new Error(`${target.name} has no geometry bounding box`);
 
+  const size = box.getSize(new THREE.Vector3());
+  const dimensions = [size.x, size.y, size.z];
+  if (dimensions.some((dimension) => !Number.isFinite(dimension) || dimension <= 0)) throw new Error(`${target.name} has invalid local bounds`);
+  const faceNormalAxis = dimensions.indexOf(Math.min(...dimensions)) as AxisIndex;
+
+  const worldQuaternion = target.getWorldQuaternion(new THREE.Quaternion());
+  const axisWorld = ([0, 1, 2] as AxisIndex[]).map((axis) => localAxis(axis).applyQuaternion(worldQuaternion).normalize());
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  const remainingAxes = ([0, 1, 2] as AxisIndex[]).filter((axis) => axis !== faceNormalAxis);
+  const verticalAxis = remainingAxes.reduce((best, axis) => Math.abs(axisWorld[axis].dot(worldUp)) > Math.abs(axisWorld[best].dot(worldUp)) ? axis : best);
+  const tangentAxis = remainingAxes.find((axis) => axis !== verticalAxis);
+  if (tangentAxis === undefined) throw new Error(`${target.name} cannot resolve surface tangent axis`);
+
+  const center = box.getCenter(new THREE.Vector3());
   const r1Local = target.worldToLocal(r1World.clone());
-  const frontZ = r1Local.z >= 0 ? box.max.z : box.min.z;
-  const edgeX = r1Local.x >= 0 ? box.max.x * edgeBias : box.min.x * edgeBias;
-  const localTarget = new THREE.Vector3(edgeX, 0, frontZ);
+  const normalSign = axisComponent(r1Local, faceNormalAxis) >= axisComponent(center, faceNormalAxis) ? 1 : -1;
+  const tangentSign = axisComponent(r1Local, tangentAxis) >= axisComponent(center, tangentAxis) ? 1 : -1;
+  const localTarget = center.clone();
+  setAxisComponent(localTarget, faceNormalAxis, normalSign > 0 ? axisComponent(box.max, faceNormalAxis) : axisComponent(box.min, faceNormalAxis));
+  const tangentCenter = axisComponent(center, tangentAxis);
+  const tangentHalfExtent = axisComponent(size, tangentAxis) * 0.5;
+  setAxisComponent(localTarget, tangentAxis, tangentCenter + tangentSign * tangentHalfExtent * edgeBias);
+
   const targetPoint = target.localToWorld(localTarget.clone());
-  const towardR1 = r1World.clone().sub(targetPoint).normalize();
+  const surfaceNormal = axisWorld[faceNormalAxis].clone().multiplyScalar(normalSign).normalize();
+  const surfaceTangent = axisWorld[tangentAxis].clone().multiplyScalar(tangentSign).normalize();
+  const revealRadians = THREE.MathUtils.degToRad(edgeRevealDegrees);
+  const cameraOffset = surfaceNormal.clone().multiplyScalar(Math.cos(revealRadians) * distanceMeters)
+    .add(surfaceTangent.multiplyScalar(Math.sin(revealRadians) * distanceMeters));
 
   const camera = new THREE.PerspectiveCamera(lensMm, renderWidth / renderHeight, 0.03, 20);
-  camera.position.copy(targetPoint).addScaledVector(towardR1, distanceMeters);
-  camera.up.set(0, 1, 0);
+  camera.position.copy(targetPoint).add(cameraOffset);
+  camera.up.copy(worldUp);
   camera.lookAt(targetPoint);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld(true);
-  return { camera, targetPoint };
+  return { camera, targetPoint, surfaceNormal, faceNormalAxis, verticalAxis, tangentAxis };
 }
 
 function samplePixels(pixels: Uint8Array, width: number, height: number): Uint8Array {
@@ -221,6 +272,7 @@ async function boot(): Promise<void> {
   const info = renderer.info;
   const position = configured.camera.position;
   const targetPoint = configured.targetPoint;
+  const surfaceNormal = configured.surfaceNormal;
   window.__HALL_VISUAL__ = {
     view,
     variant,
@@ -234,8 +286,13 @@ async function boot(): Promise<void> {
       distanceMeters,
       lensMm,
       edgeBias,
+      edgeRevealDegrees,
+      faceNormalAxis: configured.faceNormalAxis,
+      verticalAxis: configured.verticalAxis,
+      tangentAxis: configured.tangentAxis,
       position: [position.x, position.y, position.z],
       target: [targetPoint.x, targetPoint.y, targetPoint.z],
+      surfaceNormal: [surfaceNormal.x, surfaceNormal.y, surfaceNormal.z],
     },
     material: {
       name: material.name,
