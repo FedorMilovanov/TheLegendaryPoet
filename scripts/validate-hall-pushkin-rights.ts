@@ -7,6 +7,7 @@ const expect = (condition: unknown, message: string) => { if (!condition) failur
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
 const exists = (relative: string) => fs.existsSync(path.join(root, relative));
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+const countOccurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
 
 const contractPath = 'docs/hall-v3/hall-v3-contract.json';
 const rightsPath = 'docs/hall-v3/pushkin-rights.json';
@@ -19,6 +20,19 @@ const scenePath = 'docs/hall-v3/SCENE_CONTRACT.md';
 const visualAcceptancePath = 'docs/hall-v3/VISUAL_ACCEPTANCE.md';
 const assetPipelinePath = 'docs/hall-v3/ASSET_PIPELINE.md';
 const validatorPath = 'scripts/validate-hall-pushkin-rights.ts';
+const HALL_DCC_TRIGGER_AUTHORITIES = [
+  contractPath,
+  rightsPolicyPath,
+  aiPolicyPath,
+  scenePath,
+  visualAcceptancePath,
+  assetPipelinePath,
+  rightsPath,
+  slicePath,
+  acquisitionPath,
+  rightsReviewPath,
+  validatorPath,
+];
 
 for (const required of [contractPath, rightsPath, slicePath, acquisitionPath, rightsReviewPath, rightsPolicyPath, aiPolicyPath, scenePath, visualAcceptancePath, assetPipelinePath, validatorPath]) {
   expect(exists(required), `required Pushkin authority file missing: ${required}`);
@@ -221,7 +235,9 @@ expect((packageJson.scripts?.check ?? '').includes('validate:hall-pushkin-rights
 for (const [name, workflow] of [['CI',ci],['Project Contracts',projectContracts],['Hall tooling',hallWorkflow]] as const) {
   expect(workflow.includes('validate:hall-pushkin-rights'), `${name} must run Pushkin rights validator`);
 }
-expect(hallWorkflow.includes(`'${validatorPath}'`) && hallWorkflow.includes("'docs/hall-v3/pushkin-rights.json'"), 'Hall workflow must trigger on rights authority changes');
+for (const authorityPath of HALL_DCC_TRIGGER_AUTHORITIES) {
+  expect(countOccurrences(hallWorkflow, `'${authorityPath}'`) >= 2, `Hall workflow must trigger on ${authorityPath} for both pull_request and main push`);
+}
 expect(!hallPage.includes('@react-three/') && !hallPage.includes("from 'three'") && !hallPage.includes('from "three"'), 'production Hall page must remain free of Three/R3F imports');
 
 if (failures.length) {
