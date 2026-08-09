@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "reviewedAt": "2026-08-09",
+  "status": "autonomous-review-complete-human-boundary",
+  "scope": "exact-hash-anchored-reproduction-rights-and-credit-review",
+  "canonicalRightsAuthority": "docs/hall-v3/pushkin-rights.json",
+  "canonicalAcquisitionAuthority": "docs/hall-v3/pushkin-acquisition.json",
+  "rules": {
+    "reviewIsLegalAdvice": false,
+    "agentMayConvertEvidenceToApproval": false,
+    "publicDomainAgeAloneIsApproval": false,
+    "commonsAvailabilityAloneIsApproval": false,
+    "successfulByteAcquisitionIsApproval": false,
+    "productionManifestStillRequiresCanonicalApprovedStatus": true
+  },
+  "assets": [
+    {
+      "assetId": "pushkin-kiprensky-1827-portrait",
+      "sourceFileHash": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b",
+      "currentCanonicalStatus": "rights-pending",
+      "reviewDisposition": "human-legal-owner-decision-required",
+      "copyrightEvidence": {
+        "strength": "strong-public-domain-evidence-for-faithful-reproduction-in-us-eu-contexts",
+        "sources": [
+          {
+            "id": "commons-exact-file",
+            "url": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+            "finding": "Exact 3455x4000 Google Art Project JPEG is marked Public Domain / PD-Art; Commons states the faithful reproduction is considered public domain in the United States and warns reuse may be restricted in other jurisdictions."
+          },
+          {
+            "id": "eu-dsm-2019-790-art14",
+            "url": "https://eur-lex.europa.eu/eli/dir/2019/790/oj",
+            "finding": "Article 14 provides that non-original reproductions of visual artworks whose protection term has expired are not subject to copyright or related rights in EU Member States."
+          },
+          {
+            "id": "de-urhg-68",
+            "url": "https://www.gesetze-im-internet.de/urhg/__68.html",
+            "finding": "German section 68 states that reproductions of public-domain visual works are not protected by related rights under the specified parts of the Act."
+          }
+        ]
+      },
+      "museumAndCommercialUseEvidence": {
+        "status": "separate-russian-museum-use-boundary-unresolved",
+        "sources": [
+          {
+            "id": "tretyakov-site-materials",
+            "url": "https://www.tretyakovgallery.ru/about/copirith/",
+            "finding": "Tretyakov Gallery states non-commercial conditions for images from its collection, requires written permission for commercial use of its site materials, and offers digital museum-object images and usage rights by written paid agreement after a positive decision."
+          },
+          {
+            "id": "tretyakov-digital-copy",
+            "url": "https://www.tretyakovgallery.ru/about/how-to-buy-image/",
+            "finding": "Tretyakov Gallery states that digital images of collection objects and rights to use them may be provided to legal entities and individuals under a paid written contract after a positive decision."
+          },
+          {
+            "id": "ru-museum-fund-art36",
+            "url": "https://www.consultant.ru/document/cons_doc_LAW_10496/18bda5f8624e149693f3546fdf94dcf70f7c9bda/",
+            "finding": "Article 36 assigns museums the transfer of rights for commercial use of reproductions of museum objects in the Museum Fund and requires museum-management permission for specified reproduced/printed goods using museum-object images."
+          }
+        ]
+      },
+      "creditLineCandidate": "Orest Kiprensky, Portrait of A.S. Pushkin, 1827; State Tretyakov Gallery; source reproduction via Google Arts & Culture / Wikimedia Commons",
+      "finalCreditResolved": false,
+      "ownerDecisionsRequired": [
+        "confirm intended Hall use and whether it is commercial/non-commercial for the relevant distribution contexts",
+        "decide whether Russia-facing use requires Tretyakov permission/contract under the museum-use regime",
+        "accept or revise the final credit line for the exact hashed reproduction"
+      ],
+      "productionEligible": false,
+      "agentMayApprove": false
+    },
+    {
+      "assetId": "pushkin-onegin-1833-edition",
+      "sourceFileHash": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5",
+      "currentCanonicalStatus": "rights-pending",
+      "reviewDisposition": "copyright-evidence-strong-owner-production-disposition-required",
+      "copyrightEvidence": {
+        "strength": "strong-public-domain-evidence-for-exact-pdf",
+        "sources": [
+          {
+            "id": "commons-exact-file",
+            "url": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
+            "finding": "Exact 324-page PDF is identified as the 1833 edition, sourced to the IRLI RAN electronic library, marked public domain, and identified by Commons as free of known copyright and related-right restrictions."
+          },
+          {
+            "id": "rsl-object-record",
+            "url": "https://search.rsl.ru/ru/record/01003570012",
+            "finding": "Russian State Library identifies the 1833 St Petersburg Smirdin edition and states the document is available in full open access."
+          },
+          {
+            "id": "rsl-open-library-policy",
+            "url": "https://www.rsl.ru/events/chitayte-onlayn-v-elektronnoy-biblioteke-rgb",
+            "finding": "Russian State Library states that open-access editions whose copyright term has expired may be downloaded."
+          }
+        ]
+      },
+      "creditLineCandidate": "A. S. Pushkin, Eugene Onegin, St Petersburg: A. Smirdin, 1833; exact PDF source via IRLI RAN electronic library / Wikimedia Commons; object identity verified against Russian State Library record 01003570012",
+      "finalCreditResolved": false,
+      "productionDerivativeResolved": false,
+      "ownerDecisionsRequired": [
+        "confirm intended Hall documentary use for the exact PDF",
+        "select the exact production page/crop or decide to use the full PDF only as source evidence",
+        "accept or revise the final credit line for the selected production derivative/source chain"
+      ],
+      "productionEligible": false,
+      "agentMayApprove": false
+    }
+  ],
+  "externalDependencies": [
+    {
+      "assetId": "pushkin-house-onegin-self-portrait-1824",
+      "dependency": "institutional-copy-request",
+      "status": "not-submitted",
+      "archiveCipher": "Ф. 244, оп. 12, ед. хр. 6",
+      "agentMaySubmitOrFabricateApproval": false
+    }
+  ],
+  "currentOutcome": {
+    "autonomousByteAcquisitionComplete": true,
+    "autonomousRightsResearchComplete": true,
+    "approvedDocumentaryAssets": 0,
+    "exactSourceByteHashes": 2,
+    "canonicalRightsStatusesChanged": false,
+    "productionManifestAllowed": false,
+    "documentaryBlenderMediaConsumptionAllowed": false,
+    "productionWebglAllowed": false,
+    "nextRequiredAuthority": "owner-legal-institutional-disposition-or-materially-new-evidence"
+  }
+}
