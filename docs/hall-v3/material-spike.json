@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "phase": "materialLightingExportSpike",
+  "status": "authoring",
+  "source": {
+    "topology": "H3",
+    "approvedRig": "R1",
+    "sourceBlend": "qa-artifacts/hall-greybox-candidates/H3/H3.blend",
+    "sourceManifest": "qa-artifacts/hall-greybox-candidates/H3/manifest.json",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "representativeWallNodes": ["ARCH_wall_016", "ARCH_wall_017"],
+    "servedExhibit": "EXHIBIT_alexander-pushkin"
+  },
+  "approvedCameraWitness": {
+    "id": "R1-pushkinViewing",
+    "position": [8.0, 2.5, 1.6],
+    "target": [11.15, 5.45, 1.95],
+    "lensMm": 28
+  },
+  "bay": {
+    "derivedFloorNode": "ARCH_spike_floor",
+    "derivedFloorCenter": [9.7, 5.25, -0.06],
+    "derivedFloorSize": [7.0, 7.5, 0.12],
+    "exportNodes": [
+      "ARCH_spike_floor",
+      "ARCH_wall_016",
+      "ARCH_wall_017",
+      "EXHIBIT_alexander-pushkin",
+      "EXHIBIT_DOC_CASE_01",
+      "EXHIBIT_DOC_CASE_02",
+      "CAM_R1_pushkinViewing"
+    ],
+    "productionAsset": false,
+    "documentaryAsset": false
+  },
+  "materialProof": {
+    "stoneMaterial": "MAT_STONE_PROOF",
+    "stoneMetallicFactor": 0.0,
+    "baseColor": {"file": "stone-basecolor.png", "colorSpace": "sRGB", "uvChannel": 0},
+    "normal": {"file": "stone-normal.png", "colorSpace": "Non-Color", "uvChannel": 0, "requiresTangentAttribute": true},
+    "roughness": {"file": "stone-roughness.png", "colorSpace": "Non-Color", "uvChannel": 0},
+    "lightmaps": {
+      "filePattern": "lightmap-<node>.exr",
+      "colorSpace": "LinearSRGBColorSpace",
+      "uvChannel": 1,
+      "resolution": 128,
+      "encoding": "OpenEXR-Linear"
+    },
+    "forbidden": [
+      "stone-metallic-cheat",
+      "blanket-srgb-data-textures",
+      "generated-tangent-space-warning",
+      "lightmap-as-no-colorspace-data",
+      "bloom-dependent-look",
+      "fog-dependent-look",
+      "mirror-floor-rescue"
+    ]
+  },
+  "lightingCandidates": [
+    {
+      "id": "L0-minimal-runtime",
+      "description": "PBR material plus low-cost browser ambient/directional lighting; no realtime shadows in spike viewer",
+      "externalLightmap": false,
+      "realtimeShadowLights": 0
+    },
+    {
+      "id": "L1-external-lightmap",
+      "description": "Same PBR material plus Blender-baked diffuse direct+indirect linear EXR lightmaps bound externally on UV1",
+      "externalLightmap": true,
+      "realtimeShadowLights": 0
+    }
+  ],
+  "exportToolchain": {
+    "format": "glTF-2.0-GLB",
+    "blender": "4.5.12 LTS",
+    "validator": {"package": "gltf-validator", "version": "2.0.0-dev.3.10"},
+    "optimizer": {
+      "package": "gltfpack",
+      "version": "1.2.0",
+      "args": ["-cc", "-kn", "-km", "-ke"],
+      "additionalPreservationArgs": ["-kv", "-vpf"]
+    },
+    "positionBoundsToleranceMeters": 0.00005,
+    "requiredPreservation": [
+      "named-nodes",
+      "named-materials",
+      "node-extras",
+      "TEXCOORD_0",
+      "TEXCOORD_1",
+      "TANGENT",
+      "camera-node",
+      "poetId-extra",
+      "metric-scale"
+    ],
+    "isolatedInstallEvidence": [
+      "package-lock-sha256",
+      "resolved-source",
+      "npm-integrity"
+    ]
+  },
+  "browserWitness": {
+    "surface": "qa-only-vite-viewer",
+    "productionRouteTouched": false,
+    "modes": ["L0-minimal-runtime", "L1-external-lightmap"],
+    "rawControl": {"asset": "raw", "mode": "L0-minimal-runtime"},
+    "optimizedControl": {"asset": "optimized", "mode": "L0-minimal-runtime"},
+    "optimizationVisualEquivalence": {
+      "sampleGrid": [64, 36],
+      "maximumMeanAbsoluteChannelDifference": 0.75,
+      "maximumChannelDifference": 8,
+      "maximumChangedSampleRatioAbove2": 0.05
+    },
+    "requiredMetrics": [
+      "load-complete",
+      "draw-calls",
+      "triangles",
+      "textures",
+      "programs",
+      "raw-bytes",
+      "optimized-bytes",
+      "gpu-texture-resident-bytes",
+      "gpu-texture-inventory",
+      "pixel-sample"
+    ],
+    "screenshots": ["raw-L0-minimal-runtime.png", "optimized-L0-minimal-runtime.png", "optimized-L1-external-lightmap.png"]
+  },
+  "decision": {
+    "approvedLightingStrategy": null,
+    "approvedUvStrategy": null,
+    "approvedOptimizer": null,
+    "approvedTextureDelivery": null,
+    "pushkinVerticalSliceMayActivate": false
+  },
+  "nonGoals": [
+    "full-hall-lookdev",
+    "h3-topology-edit",
+    "r1-camera-edit",
+    "final-pushkin-portrait",
+    "rights-uncleared-documentary-media",
+    "production-webgl-hall",
+    "full-hall-texturing",
+    "post-processing-rescue",
+    "ktx2-by-default"
+  ]
+}
