@@ -156,7 +156,7 @@ jobs:
 
       - name: Validate regenerated frozen H3 evidence
         env:
-          HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/H3/manifest.json
+          HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
         run: |
           npm run validate:hall-topology-provenance
           npm run validate:hall-post-camera-authority
