@@ -21,6 +21,7 @@ on:
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
+      - 'scripts/validate-hall-material-transport.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -42,6 +43,7 @@ on:
       - 'scripts/validate-hall-topology-selection-provenance.ts'
       - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
+      - 'scripts/validate-hall-material-transport.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -87,6 +89,9 @@ jobs:
 
       - name: Validate material light export spike source contract
         run: npm run validate:hall-material-spike
+
+      - name: Validate material transport source contract
+        run: npm run validate:hall-material-transport
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -191,6 +196,18 @@ jobs:
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-material-spike
 
+      - name: Re-export identical bay with explicit normal-map tangents
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/reexport-with-tangents.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --blend qa-artifacts/hall-material-spike/material-spike.blend \
+            --output qa-artifacts/hall-material-spike/material-spike-raw.glb
+
       - name: Install exact spike-only glTF tools in isolated prefix
         run: |
           set -euo pipefail
@@ -215,7 +232,9 @@ jobs:
       - name: Validate generated raw optimized preservation contract
         env:
           HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
-        run: npm run validate:hall-material-spike
+        run: |
+          npm run validate:hall-material-spike
+          npm run validate:hall-material-transport
 
       - name: Prepare isolated QA viewer assets
         run: |
@@ -244,14 +263,16 @@ jobs:
           cat qa-artifacts/hall-material-spike/viewer.log
           exit 1
 
-      - name: Capture L0 L1 browser material evidence
+      - name: Capture raw L0 optimized L0 and optimized L1 browser evidence
         run: node scripts/hall-material/browser-witness.mjs --base-url http://127.0.0.1:4175 --output-dir qa-artifacts/hall-material-browser
 
       - name: Validate final DCC export and browser material evidence
         env:
           HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
           HALL_MATERIAL_BROWSER_EVIDENCE: qa-artifacts/hall-material-browser/browser-evidence.json
-        run: npm run validate:hall-material-spike
+        run: |
+          npm run validate:hall-material-spike
+          npm run validate:hall-material-transport
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
