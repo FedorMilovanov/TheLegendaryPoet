@@ -28,6 +28,7 @@ const ROUTES = [
   ['music', '/music'],
   ['archive', '/archive'],
   ['about', '/about'],
+  ['hall', '/hall'],
   ['not-found', '/mobile-platform-route-that-does-not-exist'],
 ];
 
