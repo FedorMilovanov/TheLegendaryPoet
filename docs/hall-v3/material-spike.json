@@ -92,6 +92,11 @@
       "camera-node",
       "poetId-extra",
       "metric-scale"
+    ],
+    "isolatedInstallEvidence": [
+      "package-lock-sha256",
+      "resolved-source",
+      "npm-integrity"
     ]
   },
   "browserWitness": {
@@ -106,7 +111,18 @@
       "maximumChannelDifference": 8,
       "maximumChangedSampleRatioAbove2": 0.05
     },
-    "requiredMetrics": ["load-complete", "draw-calls", "triangles", "textures", "programs", "raw-bytes", "optimized-bytes", "pixel-sample"],
+    "requiredMetrics": [
+      "load-complete",
+      "draw-calls",
+      "triangles",
+      "textures",
+      "programs",
+      "raw-bytes",
+      "optimized-bytes",
+      "gpu-texture-resident-bytes",
+      "gpu-texture-inventory",
+      "pixel-sample"
+    ],
     "screenshots": ["raw-L0-minimal-runtime.png", "optimized-L0-minimal-runtime.png", "optimized-L1-external-lightmap.png"]
   },
   "decision": {
