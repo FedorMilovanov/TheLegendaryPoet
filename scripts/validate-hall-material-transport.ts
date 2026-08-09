@@ -10,6 +10,7 @@ const reexport = read('scripts/hall-material/reexport-with-tangents.py');
 const workflow = read('.github/workflows/hall-greybox-tooling.yml');
 const viewer = read('qa/hall-material-viewer/main.ts');
 const browserWitness = read('scripts/hall-material/browser-witness.mjs');
+const gltfValidationScript = read('scripts/hall-material/validate-gltf.mjs');
 
 const ARCH_NODES = ['ARCH_spike_floor','ARCH_wall_016','ARCH_wall_017'];
 const EXPECTED_LIGHTMAP_RESIDENT_BYTES = 128 * 128 * 4 * 2;
@@ -51,6 +52,13 @@ function warningCodes(reportPath: string): string[] {
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as any;
   return (report?.issues?.messages ?? []).filter((message: any) => Number(message?.severity) === 1).map((message: any) => String(message?.code ?? ''));
 }
+function validationReport(reportPath: string): any | null {
+  if (!fs.existsSync(reportPath)) return null;
+  return JSON.parse(fs.readFileSync(reportPath, 'utf8')) as any;
+}
+function validIntegrity(value: unknown): boolean {
+  return typeof value === 'string' && /^sha(256|384|512)-[A-Za-z0-9+/=]+$/.test(value);
+}
 
 // Static transport contract.
 expect(spike.materialProof?.normal?.requiresTangentAttribute === true, 'normal-mapped stone must require explicit tangent transport');
@@ -63,6 +71,7 @@ expect(viewer.includes("requestedAsset === 'raw'") && viewer.includes('gl.readPi
 expect(viewer.includes('gpuTextureResidentBytes') && viewer.includes('estimatedResidentBytes') && viewer.includes('generateMipmaps'), 'viewer must measure decoded GPU texture residency and mip policy');
 expect(browserWitness.includes("key: 'rawL0'") && browserWitness.includes("key: 'optimizedL0'") && browserWitness.includes('compareSamples'), 'browser witness must compare raw L0 against optimized L0');
 expect(browserWitness.includes('gpuMemoryComparison') && browserWitness.includes('lightmapEstimatedResidentBytes'), 'browser witness must persist L0/L1 GPU-memory comparison');
+expect(gltfValidationScript.includes('_hallToolchain') && gltfValidationScript.includes('packageLockSha256') && gltfValidationScript.includes('integrity'), 'Khronos reports must bind validation to the isolated npm lock and package integrity');
 const visual = spike.browserWitness?.optimizationVisualEquivalence ?? {};
 expect(JSON.stringify(visual.sampleGrid ?? []) === JSON.stringify([64,36]), 'visual equivalence sample grid must remain 64x36');
 expect(visual.maximumMeanAbsoluteChannelDifference === 0.75, 'visual equivalence mean-difference threshold must remain explicit');
@@ -96,10 +105,26 @@ if (evidenceDirRelative) {
       }
     }
   }
+  const rawReport = validationReport(path.join(evidenceDir, 'gltf-raw-report.json'));
+  const optimizedReport = validationReport(path.join(evidenceDir, 'gltf-optimized-report.json'));
   const rawWarnings = warningCodes(path.join(evidenceDir, 'gltf-raw-report.json'));
   const optimizedWarnings = warningCodes(path.join(evidenceDir, 'gltf-optimized-report.json'));
   expect(!rawWarnings.includes('MESH_PRIMITIVE_GENERATED_TANGENT_SPACE'), 'raw GLB must not rely on generated tangent space');
   expect(!optimizedWarnings.includes('MESH_PRIMITIVE_GENERATED_TANGENT_SPACE'), 'optimized GLB must not rely on generated tangent space');
+  for (const [label, report] of [['raw', rawReport], ['optimized', optimizedReport]] as const) {
+    const toolchain = report?._hallToolchain;
+    expect(toolchain?.schemaVersion === 1, `${label} Khronos report must include Hall toolchain schema`);
+    expect(typeof toolchain?.packageLockSha256 === 'string' && /^[a-f0-9]{64}$/.test(toolchain.packageLockSha256), `${label} Khronos report must bind the isolated package-lock SHA-256`);
+    expect(toolchain?.gltfValidator?.version === '2.0.0-dev.3.10', `${label} Khronos report must prove gltf-validator@2.0.0-dev.3.10`);
+    expect(toolchain?.gltfpack?.version === '1.2.0', `${label} Khronos report must prove gltfpack@1.2.0`);
+    expect(validIntegrity(toolchain?.gltfValidator?.integrity), `${label} Khronos report must preserve gltf-validator package integrity`);
+    expect(validIntegrity(toolchain?.gltfpack?.integrity), `${label} Khronos report must preserve gltfpack package integrity`);
+    expect(typeof toolchain?.gltfValidator?.resolved === 'string' && toolchain.gltfValidator.resolved.length > 0, `${label} Khronos report must record gltf-validator resolved source`);
+    expect(typeof toolchain?.gltfpack?.resolved === 'string' && toolchain.gltfpack.resolved.length > 0, `${label} Khronos report must record gltfpack resolved source`);
+  }
+  if (rawReport?._hallToolchain?.packageLockSha256 && optimizedReport?._hallToolchain?.packageLockSha256) {
+    expect(rawReport._hallToolchain.packageLockSha256 === optimizedReport._hallToolchain.packageLockSha256, 'raw and optimized validation must use one identical isolated tool lock');
+  }
 }
 
 const browserEvidenceRelative = process.env.HALL_MATERIAL_BROWSER_EVIDENCE;
@@ -148,4 +173,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Hall material transport contract passed${evidenceDirRelative ? ' with GLB evidence' : ''}${browserEvidenceRelative ? ' and raw/optimized browser equivalence plus GPU residency' : ''}.`);
+console.log(`Hall material transport contract passed${evidenceDirRelative ? ' with GLB evidence and isolated tool integrity' : ''}${browserEvidenceRelative ? ' and raw/optimized browser equivalence plus GPU residency' : ''}.`);
