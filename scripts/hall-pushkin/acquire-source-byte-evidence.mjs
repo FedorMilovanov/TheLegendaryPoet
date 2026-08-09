@@ -90,8 +90,9 @@ try {
     const filePath = path.join(tempDir, `${entry.assetId}${extension}`);
     const { bytes, contentType, finalUrl } = await fetchBytes(entry.originalFileUrl, filePath);
     const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
-    if (entry.sourceFileHash != null && entry.sourceFileHash !== sha256) {
-      fail(`${entry.assetId} recorded sourceFileHash does not match freshly acquired bytes`);
+    if (entry.sourceFileHash != null) {
+      if (!/^sha256:[a-f0-9]{64}$/.test(entry.sourceFileHash)) fail(`${entry.assetId} recorded sourceFileHash format is invalid`);
+      if (entry.sourceFileHash.slice('sha256:'.length) !== sha256) fail(`${entry.assetId} recorded sourceFileHash does not match freshly acquired bytes`);
     }
 
     const observed = {
@@ -100,7 +101,7 @@ try {
       finalUrl,
       responseContentType: contentType || null,
       byteCount: bytes.length,
-      sha256,
+      sha256: `sha256:${sha256}`,
       recordedSourceFileHash: entry.sourceFileHash ?? null,
     };
 
