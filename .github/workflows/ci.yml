@@ -40,6 +40,8 @@ jobs:
         run: npm run validate:hall-material-spike
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
+      - name: Validate Hall v3 material visual evidence invariants
+        run: npm run validate:hall-material-visual-evidence
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |
