@@ -8,6 +8,7 @@ const expect = (condition: unknown, message: string) => { if (!condition) failur
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
 const exists = (relative: string) => fs.existsSync(path.join(root, relative));
 const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+const countOccurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
 const close = (left: unknown, right: unknown, tolerance: number) => Math.abs(Number(left) - Number(right)) <= tolerance;
 const sha256Bytes = (bytes: Buffer) => crypto.createHash('sha256').update(bytes).digest('hex');
 const sha256File = (absolute: string) => sha256Bytes(fs.readFileSync(absolute));
@@ -26,6 +27,12 @@ const browserWitnessPath = 'scripts/hall-material/browser-witness.mjs';
 const visualValidatorPath = 'scripts/hall-material/validate-visual-evidence.mjs';
 const decisionValidatorPath = 'scripts/validate-hall-material-decision.ts';
 const validatorPath = 'scripts/validate-hall-post-material-authority.ts';
+const HALL_DCC_TOOLCHAIN_TRIGGER_INPUTS = [
+  'package.json',
+  'package-lock.json',
+  '.github/actions/setup-node-deps/**',
+  '.github/actions/install-playwright/**',
+];
 
 const contract = JSON.parse(read(contractPath)) as any;
 const promotion = JSON.parse(read(promotionPath)) as any;
@@ -188,6 +195,10 @@ expect(projectContracts.includes('npm run validate:hall-post-material-authority'
 expect(hallWorkflow.includes('npm run validate:hall-post-material-authority') && hallWorkflow.includes('npm run validate:hall-material-transport') && hallWorkflow.includes('npm run validate:hall-topology-provenance'), 'Hall DCC workflow must retain topology + post-material + transport');
 for (const retiredRun of ['npm run validate:hall-post-camera-authority','npm run validate:hall-material-spike','npm run validate:hall-material-visual-evidence','npm run validate:hall-material-decision']) expect(!hallWorkflow.includes(retiredRun), `Hall current-phase workflow must retire old mandatory run: ${retiredRun}`);
 expect(hallWorkflow.includes("'docs/hall-v3/material-gate-promotion.json'") && hallWorkflow.includes(`'${validatorPath}'`), 'Hall workflow must trigger on material promotion authority changes');
+expect(hallWorkflow.includes('uses: ./.github/actions/setup-node-deps') && hallWorkflow.includes('uses: ./.github/actions/install-playwright'), 'Hall DCC workflow must retain the local locked Node/browser setup actions it executes');
+for (const triggerInput of HALL_DCC_TOOLCHAIN_TRIGGER_INPUTS) {
+  expect(countOccurrences(hallWorkflow, `'${triggerInput}'`) >= 2, `Hall DCC workflow must trigger on ${triggerInput} changes for both pull_request and main push`);
+}
 expect(!hallPage.includes('material-gate-promotion') && !hallPage.includes('material-decision') && !hallPage.includes('material-spike'), 'production HallPage must not load Hall governance/evidence authority');
 
 // Optional exact-head generated evidence layers.
