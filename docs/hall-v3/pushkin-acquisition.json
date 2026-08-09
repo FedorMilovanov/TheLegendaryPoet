@@ -3,7 +3,7 @@
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
   "phase": "pushkinVerticalSlice",
-  "status": "routes-identified-bytes-pending",
+  "status": "source-bytes-verified-rights-pending",
   "rightsAuthority": "docs/hall-v3/pushkin-rights.json",
   "rules": {
     "metadataChecksumMayStandInForAcquiredBytesHash": false,
@@ -16,7 +16,7 @@
   "assets": [
     {
       "assetId": "pushkin-kiprensky-1827-portrait",
-      "acquisitionState": "remote-original-identified-bytes-not-acquired",
+      "acquisitionState": "source-bytes-verified-rights-pending",
       "descriptionPage": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
       "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
       "reportedRemoteMetadata": {
@@ -24,13 +24,24 @@
         "dimensions": [3455, 4000],
         "fileSizeLabel": "10.36 MB"
       },
-      "bytesAcquired": false,
-      "sourceFileHash": null,
-      "nextRequiredAction": "materialize exact original JPEG bytes through a working source-byte channel, verify MIME/dimensions, compute SHA-256 locally, then keep rights disposition separate"
+      "bytesAcquired": true,
+      "sourceFileHash": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b",
+      "verifiedByteIdentity": {
+        "evidenceWorkflow": "Pushkin source-byte evidence",
+        "evidenceRunId": 31325179600,
+        "evidenceHead": "be1d38a80d26a5ad0116ad1d1ec43540b803d795",
+        "requestedUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "detectedType": "image/jpeg",
+        "byteCount": 10862180,
+        "dimensions": [3455, 4000],
+        "sha256": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b"
+      },
+      "nextRequiredAction": "resolve final credit and intended-use/reproduction-rights disposition independently; byte identity alone does not authorize production"
     },
     {
       "assetId": "pushkin-onegin-1833-edition",
-      "acquisitionState": "remote-original-identified-bytes-not-acquired",
+      "acquisitionState": "source-bytes-verified-rights-pending",
       "descriptionPage": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
       "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
       "reportedRemoteMetadata": {
@@ -40,9 +51,20 @@
         "fileSizeLabel": "5.18 MB",
         "declaredScanSource": "Electronic library of IRLI RAN / Pushkin House"
       },
-      "bytesAcquired": false,
-      "sourceFileHash": null,
-      "nextRequiredAction": "materialize exact 324-page PDF bytes through a working source-byte channel, verify PDF identity/page count, compute SHA-256 locally, then select/crop only after rights and credit review"
+      "bytesAcquired": true,
+      "sourceFileHash": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5",
+      "verifiedByteIdentity": {
+        "evidenceWorkflow": "Pushkin source-byte evidence",
+        "evidenceRunId": 31325179600,
+        "evidenceHead": "be1d38a80d26a5ad0116ad1d1ec43540b803d795",
+        "requestedUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
+        "finalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
+        "detectedType": "application/pdf",
+        "byteCount": 5433794,
+        "pages": 324,
+        "sha256": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5"
+      },
+      "nextRequiredAction": "resolve final credit and intended-use/reproduction-rights disposition independently; byte identity alone does not authorize production"
     },
     {
       "assetId": "pushkin-house-onegin-self-portrait-1824",
@@ -78,15 +100,14 @@
   ],
   "currentOutcome": {
     "approvedDocumentaryAssets": 0,
-    "exactSourceByteHashes": 0,
+    "exactSourceByteHashes": 2,
     "productionManifestAllowed": false,
     "blenderExhibitMayConsumeDocumentaryMedia": false,
     "productionWebglMayBegin": false
   },
   "nextBoundary": {
     "allowed": [
-      "actual-byte-materialization-and-sha256",
-      "mime-dimension-page-count-verification",
+      "independent-byte-revalidation-against-recorded-sha256",
       "final-credit-disposition",
       "intended-use-rights-disposition",
       "institutional-copy-request-by-human-owner",
@@ -94,6 +115,7 @@
     ],
     "forbidden": [
       "metadata-hash-as-source-file-hash",
+      "hash-without-actual-byte-evidence",
       "agent-fabricated-institutional-request",
       "agent-fabricated-permission",
       "rights-pending-production-manifest",
