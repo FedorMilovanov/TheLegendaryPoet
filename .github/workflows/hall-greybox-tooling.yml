@@ -93,6 +93,9 @@ jobs:
       - name: Validate material transport source contract
         run: npm run validate:hall-material-transport
 
+      - name: Validate material visual evidence source contract
+        run: npm run validate:hall-material-visual-evidence
+
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
           set -euo pipefail
@@ -247,6 +250,7 @@ jobs:
         run: |
           npm run validate:hall-material-spike
           npm run validate:hall-material-transport
+          npm run validate:hall-material-visual-evidence
 
       - name: Prepare isolated QA viewer assets
         run: |
@@ -285,6 +289,7 @@ jobs:
         run: |
           npm run validate:hall-material-spike
           npm run validate:hall-material-transport
+          npm run validate:hall-material-visual-evidence
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
