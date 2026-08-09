@@ -82,6 +82,7 @@
       "args": ["-cc", "-kn", "-km", "-ke"],
       "additionalPreservationArgs": ["-kv", "-vpf"]
     },
+    "positionBoundsToleranceMeters": 0.00005,
     "requiredPreservation": [
       "named-nodes",
       "named-materials",
