@@ -8,6 +8,13 @@ on:
       - 'scripts/hall-pushkin/acquire-source-byte-evidence.mjs'
       - 'docs/hall-v3/pushkin-acquisition.json'
       - 'docs/hall-v3/pushkin-rights.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-source-byte-evidence.yml'
+      - 'scripts/hall-pushkin/acquire-source-byte-evidence.mjs'
+      - 'docs/hall-v3/pushkin-acquisition.json'
+      - 'docs/hall-v3/pushkin-rights.json'
   workflow_dispatch:
 
 concurrency:
