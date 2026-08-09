@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "status": "routes-identified-bytes-pending",
+  "rightsAuthority": "docs/hall-v3/pushkin-rights.json",
+  "rules": {
+    "metadataChecksumMayStandInForAcquiredBytesHash": false,
+    "remoteFilePageMayStandInForAcquiredBytes": false,
+    "sourceFileHashRequiresActualByteAcquisition": true,
+    "institutionalRequestMayBeAutoApprovedByAgent": false,
+    "approvedRightsRequiredBeforeProductionManifest": true,
+    "runtimeAssetPathMayPrecedeApproval": false
+  },
+  "assets": [
+    {
+      "assetId": "pushkin-kiprensky-1827-portrait",
+      "acquisitionState": "remote-original-identified-bytes-not-acquired",
+      "descriptionPage": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+      "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+      "reportedRemoteMetadata": {
+        "mimeType": "image/jpeg",
+        "dimensions": [3455, 4000],
+        "fileSizeLabel": "10.36 MB"
+      },
+      "bytesAcquired": false,
+      "sourceFileHash": null,
+      "nextRequiredAction": "materialize exact original JPEG bytes through a working source-byte channel, verify MIME/dimensions, compute SHA-256 locally, then keep rights disposition separate"
+    },
+    {
+      "assetId": "pushkin-onegin-1833-edition",
+      "acquisitionState": "remote-original-identified-bytes-not-acquired",
+      "descriptionPage": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
+      "originalFileUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_%281833%29.pdf",
+      "reportedRemoteMetadata": {
+        "mimeType": "application/pdf",
+        "pages": 324,
+        "pagePixels": [662, 1097],
+        "fileSizeLabel": "5.18 MB",
+        "declaredScanSource": "Electronic library of IRLI RAN / Pushkin House"
+      },
+      "bytesAcquired": false,
+      "sourceFileHash": null,
+      "nextRequiredAction": "materialize exact 324-page PDF bytes through a working source-byte channel, verify PDF identity/page count, compute SHA-256 locally, then select/crop only after rights and credit review"
+    },
+    {
+      "assetId": "pushkin-house-onegin-self-portrait-1824",
+      "acquisitionState": "institutional-copy-request-required",
+      "descriptionPage": "https://ro.pushkinskijdom.ru/inventories/3576886",
+      "originalFileUrl": null,
+      "reportedRemoteMetadata": {
+        "archiveCipher": "Ф. 244, оп. 12, ед. хр. 6",
+        "objectDescription": "Рисунок: автопортрет с Онегиным на набережной Невы. Автоиллюстрация к гл. 1 романа «Евгений Онегин», при письме Л. С. Пушкину от 1–10 нояб. 1824 г."
+      },
+      "institutionalRequest": {
+        "required": true,
+        "status": "not-submitted",
+        "requestUrl": "https://ro.pushkinskijdom.ru/contacts",
+        "requestEmail": "roirli.copy@yandex.ru",
+        "requiredInformation": ["researcher identity", "research topic", "intended use", "archive cipher and unit title"],
+        "publishedFulfilmentWindow": "up to 1 month"
+      },
+      "bytesAcquired": false,
+      "sourceFileHash": null,
+      "nextRequiredAction": "human/owner decides intended use and submits the institutional copy request; after an actual supplied copy is received, hash those exact bytes and separately record reuse/credit disposition"
+    },
+    {
+      "assetId": "pushkin-onegin-autograph-weak-mirror",
+      "acquisitionState": "do-not-acquire-current-weak-source",
+      "descriptionPage": "https://commons.wikimedia.org/wiki/File:Onegin_autograph.jpg",
+      "originalFileUrl": null,
+      "reportedRemoteMetadata": null,
+      "bytesAcquired": false,
+      "sourceFileHash": null,
+      "nextRequiredAction": "none; retain only as negative-control evidence that a public mirror cannot substitute for exact institutional object provenance"
+    }
+  ],
+  "currentOutcome": {
+    "approvedDocumentaryAssets": 0,
+    "exactSourceByteHashes": 0,
+    "productionManifestAllowed": false,
+    "blenderExhibitMayConsumeDocumentaryMedia": false,
+    "productionWebglMayBegin": false
+  },
+  "nextBoundary": {
+    "allowed": [
+      "actual-byte-materialization-and-sha256",
+      "mime-dimension-page-count-verification",
+      "final-credit-disposition",
+      "intended-use-rights-disposition",
+      "institutional-copy-request-by-human-owner",
+      "promote-only-fully-approved-records"
+    ],
+    "forbidden": [
+      "metadata-hash-as-source-file-hash",
+      "agent-fabricated-institutional-request",
+      "agent-fabricated-permission",
+      "rights-pending-production-manifest",
+      "weak-mirror-documentary-use",
+      "production-three-r3f-webgl-hall",
+      "offlineVisualApproval-promotion",
+      "webVerticalSlice-promotion",
+      "fullMuseumScaleOut-promotion"
+    ]
+  }
+}

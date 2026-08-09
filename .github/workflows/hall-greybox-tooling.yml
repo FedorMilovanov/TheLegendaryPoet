@@ -18,6 +18,7 @@ on:
       - 'docs/hall-v3/material-gate-promotion.json'
       - 'docs/hall-v3/pushkin-rights.json'
       - 'docs/hall-v3/pushkin-slice.json'
+      - 'docs/hall-v3/pushkin-acquisition.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -29,6 +30,7 @@ on:
       - 'scripts/validate-hall-post-material-authority.ts'
       - 'scripts/validate-hall-pushkin-rights.ts'
       - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
+      - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -47,6 +49,7 @@ on:
       - 'docs/hall-v3/material-gate-promotion.json'
       - 'docs/hall-v3/pushkin-rights.json'
       - 'docs/hall-v3/pushkin-slice.json'
+      - 'docs/hall-v3/pushkin-acquisition.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -58,6 +61,7 @@ on:
       - 'scripts/validate-hall-post-material-authority.ts'
       - 'scripts/validate-hall-pushkin-rights.ts'
       - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
+      - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -106,6 +110,9 @@ jobs:
 
       - name: Validate canonical Pushkin rights record schema
         run: npm run validate:hall-pushkin-rights-policy-schema
+
+      - name: Validate Pushkin acquisition authority
+        run: npm run validate:hall-pushkin-acquisition
 
       - name: Validate phase-independent material transport source contract
         run: npm run validate:hall-material-transport
