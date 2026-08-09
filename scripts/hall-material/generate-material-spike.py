@@ -437,11 +437,15 @@ def main() -> None:
     if bake_node is not None:
         stone.node_tree.nodes.remove(bake_node)
 
+    stone_name = stone.name
     scene.render.engine = "BLENDER_WORKBENCH"
     raw_blend = output_dir / "material-spike.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(raw_blend))
     bpy.ops.wm.open_mainfile(filepath=str(raw_blend), load_ui=False)
     scene = bpy.context.scene
+    stone = bpy.data.materials.get(stone_name)
+    if stone is None:
+        fail(f"save/reopen material spike lost material {stone_name}")
 
     if len(bpy.data.lights) != 0:
         fail("save/reopen material spike contains unexpected lights")
