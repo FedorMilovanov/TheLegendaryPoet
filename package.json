@@ -56,6 +56,7 @@
     "validate:hall-material-transport": "tsx scripts/validate-hall-material-transport.ts",
     "validate:hall-material-visual-evidence": "node scripts/hall-material/validate-visual-evidence.mjs",
     "validate:hall-material-decision": "tsx scripts/validate-hall-material-decision.ts",
+    "validate:hall-post-material-authority": "tsx scripts/validate-hall-post-material-authority.ts",
     "validate:hover-stability": "tsx scripts/validate-hover-stability.ts",
     "validate:browser-runtime": "tsx scripts/validate-browser-runtime.ts",
     "validate:workflow-consolidation": "node scripts/validate-workflow-consolidation.mjs",
@@ -76,7 +77,7 @@
     "validate:brand-browser-workflow": "tsx scripts/validate-brand-browser-workflow.ts",
     "validate:brand-motion-timestep": "tsx scripts/validate-brand-motion-frame-invariance.ts",
     "validate:brand": "npm run brand:materialize && npm run validate:reliable-reveal && npm run validate:brand-browser-workflow && npm run validate:brand-motion-timestep && tsx scripts/validate-brand-assets.ts",
-    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-topology-provenance && npm run validate:hall-post-camera-authority && npm run validate:hall-material-spike && npm run validate:hall-material-transport && npm run validate:hall-material-visual-evidence && npm run validate:hall-material-decision && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
+    "check": "npm run brand:materialize && npm run validate:workflow-consolidation && npm run validate:reader-certification && npm run check:content && npm run validate:brand && npm run validate:app-shell && npm run validate:interaction-runtime && npm run validate:hall-foundation && npm run validate:hall-reference-bible && npm run validate:hall-topology-provenance && npm run validate:hall-post-material-authority && npm run validate:hall-material-transport && npm run validate:hover-stability && npm run validate:browser-runtime && npm run validate:route-audit && npm run typecheck"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

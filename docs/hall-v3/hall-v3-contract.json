@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
-  "phase": "materialLightingExportSpike",
+  "phase": "pushkinVerticalSlice",
   "productionRoute": {
     "path": "/hall",
     "mode": "placeholder",
@@ -38,15 +38,16 @@
     "cameraDecision": "docs/hall-v3/camera-decision.json",
     "cameraGatePromotion": "docs/hall-v3/camera-gate-promotion.json",
     "materialSpike": "docs/hall-v3/material-spike.json",
-    "materialDecision": "docs/hall-v3/material-decision.json"
+    "materialDecision": "docs/hall-v3/material-decision.json",
+    "materialGatePromotion": "docs/hall-v3/material-gate-promotion.json"
   },
   "gates": {
     "foundation": "completed",
     "referenceBible": "completed",
     "metricGreybox": "completed",
     "cameraApproval": "completed",
-    "materialLightingExportSpike": "active",
-    "pushkinVerticalSlice": "blocked",
+    "materialLightingExportSpike": "completed",
+    "pushkinVerticalSlice": "active",
     "offlineVisualApproval": "blocked",
     "webVerticalSlice": "blocked",
     "fullMuseumScaleOut": "blocked"

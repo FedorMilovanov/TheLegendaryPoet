@@ -15,15 +15,16 @@ on:
       - 'docs/hall-v3/camera-gate-promotion.json'
       - 'docs/hall-v3/material-spike.json'
       - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/material-gate-promotion.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
       - 'qa/hall-material-viewer/**'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
-      - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
       - 'scripts/validate-hall-material-transport.ts'
       - 'scripts/validate-hall-material-decision.ts'
+      - 'scripts/validate-hall-post-material-authority.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -39,15 +40,16 @@ on:
       - 'docs/hall-v3/camera-gate-promotion.json'
       - 'docs/hall-v3/material-spike.json'
       - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/material-gate-promotion.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
       - 'qa/hall-material-viewer/**'
       - 'scripts/validate-hall-topology-selection-provenance.ts'
-      - 'scripts/validate-hall-post-camera-authority.ts'
       - 'scripts/validate-hall-material-spike.ts'
       - 'scripts/validate-hall-material-transport.ts'
       - 'scripts/validate-hall-material-decision.ts'
+      - 'scripts/validate-hall-post-material-authority.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -71,7 +73,7 @@ jobs:
       BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
 
     steps:
-      - name: Checkout exact Hall material spike head
+      - name: Checkout exact Hall post-material head
         uses: actions/checkout@v4
         with:
           ref: ${{ env.TESTED_SHA }}
@@ -88,20 +90,11 @@ jobs:
       - name: Validate frozen Hall shootout provenance
         run: npm run validate:hall-topology-provenance
 
-      - name: Validate frozen H3 R1 post-camera authority
-        run: npm run validate:hall-post-camera-authority
+      - name: Validate frozen H3 R1 selected material authority
+        run: npm run validate:hall-post-material-authority
 
-      - name: Validate material light export spike source contract
-        run: npm run validate:hall-material-spike
-
-      - name: Validate material transport source contract
+      - name: Validate phase-independent material transport source contract
         run: npm run validate:hall-material-transport
-
-      - name: Validate material visual evidence source contract
-        run: npm run validate:hall-material-visual-evidence
-
-      - name: Validate material decision source authority
-        run: npm run validate:hall-material-decision
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
@@ -138,12 +131,12 @@ jobs:
             -- \
             --output-dir qa-artifacts/hall-greybox-tooling
 
-      - name: Validate tooling evidence against post-camera authority
+      - name: Validate tooling evidence against post-material authority
         env:
           HALL_GREYBOX_TOOLING_EVIDENCE: qa-artifacts/hall-greybox-tooling/preflight.json
         run: |
           npm run validate:hall-topology-provenance
-          npm run validate:hall-post-camera-authority
+          npm run validate:hall-post-material-authority
 
       - name: Install minimal EGL runtime for headless Workbench evidence
         run: |
@@ -169,7 +162,7 @@ jobs:
           HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
         run: |
           npm run validate:hall-topology-provenance
-          npm run validate:hall-post-camera-authority
+          npm run validate:hall-post-material-authority
 
       - name: Regenerate frozen H3 camera candidate evidence
         run: |
@@ -186,10 +179,10 @@ jobs:
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-camera-candidates
 
-      - name: Validate regenerated R1 approval evidence under promoted gate
+      - name: Validate regenerated R1 evidence under post-material authority
         env:
           HALL_CAMERA_APPROVAL_EVIDENCE: qa-artifacts/hall-camera-candidates/index.json
-        run: npm run validate:hall-post-camera-authority
+        run: npm run validate:hall-post-material-authority
 
       - name: Generate representative H3 material and lightmap bay
         run: |
@@ -251,14 +244,12 @@ jobs:
       - name: Validate optimized GLB with Khronos validator
         run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-gltf --input qa-artifacts/hall-material-spike/material-spike-optimized.glb --output qa-artifacts/hall-material-spike/gltf-optimized-report.json
 
-      - name: Validate generated raw optimized preservation contract
+      - name: Validate regenerated material transport and selected authority
         env:
           HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
         run: |
-          npm run validate:hall-material-spike
           npm run validate:hall-material-transport
-          npm run validate:hall-material-visual-evidence
-          npm run validate:hall-material-decision
+          npm run validate:hall-post-material-authority
 
       - name: Prepare isolated QA viewer assets
         run: |
@@ -287,18 +278,16 @@ jobs:
           cat qa-artifacts/hall-material-spike/viewer.log
           exit 1
 
-      - name: Capture transport plus bounded close and medium material browser evidence
+      - name: Capture selected and rejected material browser evidence
         run: node scripts/hall-material/browser-witness.mjs --contract docs/hall-v3/material-spike.json --base-url http://127.0.0.1:4175 --output-dir qa-artifacts/hall-material-browser
 
-      - name: Validate final DCC export and browser material evidence
+      - name: Validate final DCC export browser evidence under selected material authority
         env:
           HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
           HALL_MATERIAL_BROWSER_EVIDENCE: qa-artifacts/hall-material-browser/browser-evidence.json
         run: |
-          npm run validate:hall-material-spike
           npm run validate:hall-material-transport
-          npm run validate:hall-material-visual-evidence
-          npm run validate:hall-material-decision
+          npm run validate:hall-post-material-authority
 
       - name: Upload reproducible tooling witness
         if: ${{ always() }}
@@ -335,7 +324,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload representative material light export spike evidence
+      - name: Upload representative material evidence under Pushkin gate
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
