@@ -12,6 +12,7 @@ const contractPath = 'docs/hall-v3/hall-v3-contract.json';
 const rightsPath = 'docs/hall-v3/pushkin-rights.json';
 const slicePath = 'docs/hall-v3/pushkin-slice.json';
 const acquisitionPath = 'docs/hall-v3/pushkin-acquisition.json';
+const rightsReviewPath = 'docs/hall-v3/pushkin-rights-review.json';
 const rightsPolicyPath = 'docs/hall-v3/RIGHTS_REGISTER.md';
 const aiPolicyPath = 'docs/hall-v3/AI_USAGE_POLICY.md';
 const scenePath = 'docs/hall-v3/SCENE_CONTRACT.md';
@@ -19,7 +20,7 @@ const visualAcceptancePath = 'docs/hall-v3/VISUAL_ACCEPTANCE.md';
 const assetPipelinePath = 'docs/hall-v3/ASSET_PIPELINE.md';
 const validatorPath = 'scripts/validate-hall-pushkin-rights.ts';
 
-for (const required of [contractPath, rightsPath, slicePath, acquisitionPath, rightsPolicyPath, aiPolicyPath, scenePath, visualAcceptancePath, assetPipelinePath, validatorPath]) {
+for (const required of [contractPath, rightsPath, slicePath, acquisitionPath, rightsReviewPath, rightsPolicyPath, aiPolicyPath, scenePath, visualAcceptancePath, assetPipelinePath, validatorPath]) {
   expect(exists(required), `required Pushkin authority file missing: ${required}`);
 }
 
@@ -27,6 +28,7 @@ const contract = JSON.parse(read(contractPath)) as any;
 const rights = JSON.parse(read(rightsPath)) as any;
 const slice = JSON.parse(read(slicePath)) as any;
 const acquisition = JSON.parse(read(acquisitionPath)) as any;
+const rightsReview = JSON.parse(read(rightsReviewPath)) as any;
 const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string,string> };
 const rightsPolicy = read(rightsPolicyPath);
 const aiPolicy = read(aiPolicyPath);
@@ -56,6 +58,15 @@ const EXPECTED_GATES = {
 const EXPECTED_R1 = { position: [8.0, 2.5, 1.6], target: [11.15, 5.45, 1.95], lensMm: 28 };
 const VALID_STATUSES = new Set(['candidate','source-verified','rights-pending','approved','blocked','retired']);
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
+const EXPECTED_NEXT_ALLOWED_WORK = [
+  'owner-intended-use-and-final-credit-disposition',
+  'qualified-legal-or-institutional-disposition-where-required',
+  'human-pushkin-house-copy-request-or-owner-decision-to-proceed-without-it',
+  'promote-only-independently-approved-rights-records',
+  'author-one-source-offline-pushkin-exhibit-in-blender',
+  'measure-first-slice-delivery-and-performance',
+  'produce-required-offline-visual-evidence',
+];
 
 expect(contract.schemaVersion === 1 && contract.laneId === 'TLP-HALL-001' && contract.productIssue === 369, 'Hall contract identity must remain exact');
 expect(contract.phase === 'pushkinVerticalSlice' && same(contract.gates, EXPECTED_GATES), 'Pushkin source work may not advance or reopen Hall gates');
@@ -64,9 +75,10 @@ expect(contract.productionRoute?.allowThreeRuntimeImports === false && contract.
 expect(contract.sourceAuthority?.pushkinRights === rightsPath, 'Hall sourceAuthority must register pushkin-rights.json');
 expect(contract.sourceAuthority?.pushkinSlice === slicePath, 'Hall sourceAuthority must register pushkin-slice.json');
 expect(contract.sourceAuthority?.pushkinAcquisition === acquisitionPath, 'Hall sourceAuthority must register pushkin-acquisition.json');
+expect(contract.sourceAuthority?.pushkinRightsReview === rightsReviewPath, 'Hall sourceAuthority must register the final Pushkin rights-review handoff');
 
 expect(rights.schemaVersion === 1 && rights.laneId === 'TLP-HALL-001' && rights.productIssue === 369, 'Pushkin rights registry identity must remain exact');
-expect(rights.phase === 'pushkinVerticalSlice' && rights.status === 'acquisition-in-progress', 'Pushkin rights registry must remain acquisition-in-progress');
+expect(rights.phase === 'pushkinVerticalSlice' && rights.status === 'external-authority-required', 'Pushkin rights registry must reflect the completed autonomous review and external-authority boundary');
 expect(rights.policyAuthority === rightsPolicyPath && rights.aiPolicyAuthority === aiPolicyPath, 'rights registry must cite repository rights/AI policies');
 expect(rights.publicationRule?.productionManifestRequiresApproved === true, 'production Hall manifest must require approved records');
 expect(rights.publicationRule?.fileAvailabilityIsPermission === false, 'file availability may not be treated as permission');
@@ -144,6 +156,24 @@ expect(weak?.verificationStatus === 'blocked' && weak?.rightsStatus === 'blocked
 expect(weak?.reproduction?.acquisitionStatus === 'do-not-acquire-current-weak-source', 'weak autograph mirror must remain do-not-acquire');
 expect(weak?.sourceFileHash == null && weak?.runtimeAssetPath == null && weak?.productionManifestEligible === false, 'weak autograph mirror may not acquire/ship');
 
+expect(rightsReview.schemaVersion === 1 && rightsReview.laneId === 'TLP-HALL-001' && rightsReview.productIssue === 369, 'Pushkin rights-review identity must remain exact');
+expect(rightsReview.phase === 'pushkinVerticalSlice' && rightsReview.status === 'autonomous-review-complete-human-boundary', 'Pushkin rights-review must retain completed autonomous handoff status');
+expect(rightsReview.canonicalRightsAuthority === rightsPath && rightsReview.canonicalAcquisitionAuthority === acquisitionPath, 'rights-review must bind to canonical rights/acquisition authorities');
+expect(rightsReview.rules?.agentMayConvertEvidenceToApproval === false && rightsReview.rules?.productionManifestStillRequiresCanonicalApprovedStatus === true, 'rights-review must remain additive evidence, never approval authority');
+expect(rightsReview.currentOutcome?.autonomousByteAcquisitionComplete === true && rightsReview.currentOutcome?.autonomousRightsResearchComplete === true, 'rights-review must prove autonomous byte acquisition/research are complete');
+expect(rightsReview.currentOutcome?.approvedDocumentaryAssets === 0 && rightsReview.currentOutcome?.exactSourceByteHashes === 2, 'rights-review outcome must retain zero approvals and two exact hashes');
+expect(rightsReview.currentOutcome?.productionManifestAllowed === false && rightsReview.currentOutcome?.documentaryBlenderMediaConsumptionAllowed === false && rightsReview.currentOutcome?.productionWebglAllowed === false, 'rights-review may not unlock documentary consumption or production runtime');
+expect(rightsReview.currentOutcome?.nextRequiredAuthority === 'owner-legal-institutional-disposition-or-materially-new-evidence', 'rights-review must point to a genuinely external next authority');
+const reviewedPortrait = (rightsReview.assets ?? []).find((asset: any) => asset.assetId === 'pushkin-kiprensky-1827-portrait');
+expect(reviewedPortrait?.sourceFileHash === PORTRAIT_HASH && reviewedPortrait?.currentCanonicalStatus === 'rights-pending', 'Kiprensky rights-review must stay bound to canonical pending exact-hash evidence');
+expect(reviewedPortrait?.reviewDisposition === 'human-legal-owner-decision-required' && reviewedPortrait?.productionEligible === false && reviewedPortrait?.agentMayApprove === false, 'Kiprensky review must retain human/legal owner boundary');
+const reviewedOnegin = (rightsReview.assets ?? []).find((asset: any) => asset.assetId === 'pushkin-onegin-1833-edition');
+expect(reviewedOnegin?.sourceFileHash === ONEGIN_HASH && reviewedOnegin?.currentCanonicalStatus === 'rights-pending', 'Onegin rights-review must stay bound to canonical pending exact-hash evidence');
+expect(reviewedOnegin?.reviewDisposition === 'copyright-evidence-strong-owner-production-disposition-required' && reviewedOnegin?.productionEligible === false && reviewedOnegin?.agentMayApprove === false, 'Onegin review must retain owner production/credit boundary');
+const reviewedPushkinHouse = (rightsReview.externalDependencies ?? []).find((entry: any) => entry.assetId === 'pushkin-house-onegin-self-portrait-1824');
+expect(reviewedPushkinHouse?.dependency === 'institutional-copy-request' && reviewedPushkinHouse?.status === 'not-submitted' && reviewedPushkinHouse?.archiveCipher === 'Ф. 244, оп. 12, ед. хр. 6', 'rights-review must retain the real Pushkin House institutional dependency');
+expect(reviewedPushkinHouse?.agentMaySubmitOrFabricateApproval === false, 'rights-review must forbid fabricated Pushkin House submission/approval');
+
 expect(slice.schemaVersion === 1 && slice.laneId === 'TLP-HALL-001' && slice.productIssue === 369, 'Pushkin slice identity must remain exact');
 expect(slice.phase === 'pushkinVerticalSlice' && slice.status === 'source-contract-ready-rights-blocked', 'Pushkin slice must remain rights-blocked');
 expect(slice.source?.topology === 'H3' && slice.source?.layoutFingerprint === EXPECTED_H3_LAYOUT && slice.source?.meshGeometryFingerprint === EXPECTED_H3_GEOMETRY, 'Pushkin slice must retain frozen H3 authority');
@@ -174,6 +204,8 @@ expect(slice.requiredOfflineEvidence?.humanOwnerVisualApprovalRequired === true 
 expect(slice.deliveryPreflight?.rawGlbRequired === true && slice.deliveryPreflight?.khronosBeforeOptimization === true && slice.deliveryPreflight?.khronosAfterOptimization === true, 'Pushkin delivery preflight must preserve raw/Khronos barriers');
 expect(slice.deliveryPreflight?.optimizer?.package === 'gltfpack' && slice.deliveryPreflight?.optimizer?.version === '1.2.0', 'Pushkin optimizer authority drifted');
 expect(slice.deliveryPreflight?.runtimeManifestRequiresApprovedRights === true, 'runtime manifest must require approved rights');
+expect(same(slice.nextAllowedWork, EXPECTED_NEXT_ALLOWED_WORK), 'Pushkin nextAllowedWork must begin at external authority, not repeat completed acquisition/research');
+expect(!(slice.nextAllowedWork ?? []).includes('acquire-exact-source-files-and-hashes'), 'completed source-byte acquisition must not remain advertised as next work');
 
 expect(acquisition.currentOutcome?.approvedDocumentaryAssets === 0 && acquisition.currentOutcome?.exactSourceByteHashes === 2, 'acquisition outcome must show two verified byte hashes and zero approvals');
 expect(acquisition.currentOutcome?.productionManifestAllowed === false && acquisition.currentOutcome?.blenderExhibitMayConsumeDocumentaryMedia === false && acquisition.currentOutcome?.productionWebglMayBegin === false, 'verified bytes may not unlock production/documentary consumption');
@@ -198,4 +230,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall Pushkin rights authority passed: two exact source-byte identities are verified, all documentary rights remain fail-closed, and production/runtime gates remain blocked.');
+console.log('Hall Pushkin rights authority passed: autonomous acquisition/review are complete, the external owner/legal/institutional handoff is explicit, all documentary rights remain fail-closed, and production/runtime gates remain blocked.');
