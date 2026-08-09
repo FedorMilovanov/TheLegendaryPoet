@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "status": "acquisition-in-progress",
+  "policyAuthority": "docs/hall-v3/RIGHTS_REGISTER.md",
+  "aiPolicyAuthority": "docs/hall-v3/AI_USAGE_POLICY.md",
+  "publicationRule": {
+    "productionManifestRequiresApproved": true,
+    "fileAvailabilityIsPermission": false,
+    "catalogueRecordEqualsReusableImageLicence": false,
+    "aiReconstructionMayBeDocumentaryFacsimile": false,
+    "rightsDecisionMayBeInferredByAgent": false
+  },
+  "jurisdictionResearch": {
+    "status": "informational-not-final-legal-approval",
+    "references": [
+      {
+        "id": "eu-dsm-2019-790-art14",
+        "url": "https://eur-lex.europa.eu/eli/dir/2019/790/oj",
+        "note": "Article 14 addresses reproductions of public-domain visual artworks in EU copyright law."
+      },
+      {
+        "id": "de-urhg-68",
+        "url": "https://www.gesetze-im-internet.de/urhg/__68.html",
+        "note": "German section 68 addresses reproductions of public-domain visual works."
+      },
+      {
+        "id": "ru-museum-fund-art36",
+        "url": "https://www.consultant.ru/document/cons_doc_LAW_10496/18bda5f8624e149693f3546fdf94dcf70f7c9bda/",
+        "note": "Russian Museum Fund Article 36 is a separate commercial-use consideration for reproductions of museum objects; owner/legal review is required before treating it as resolved for intended publication."
+      }
+    ]
+  },
+  "assets": [
+    {
+      "assetId": "pushkin-kiprensky-1827-portrait",
+      "poetId": "alexander-pushkin",
+      "kind": "portrait",
+      "sourceTitle": "Portrait of A.S. Pushkin",
+      "creator": "Orest Kiprensky",
+      "sourceDate": "1827",
+      "sourceInstitution": "The State Tretyakov Gallery",
+      "objectProvenance": {
+        "status": "source-verified",
+        "objectUrl": "https://artsandculture.google.com/asset/portrait-of-a-s-pushkin/GwHXH-oqLPXL8g",
+        "objectIdOrCallNumber": "State Catalogue of the Museum Fund of Russia artwork ID 4574813; Tretyakov accession 168",
+        "dimensions": "54 x 63 cm",
+        "notes": "Institutional collection identity is separate from rights in any particular digital reproduction."
+      },
+      "reproduction": {
+        "status": "rights-pending",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Orest_Kiprensky_-_%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%90.%D0%A1.%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_-_Google_Art_Project.jpg",
+        "declaredBasis": "Wikimedia Commons Public Domain Mark / PD-Art declaration for a faithful reproduction of a public-domain two-dimensional artwork",
+        "creditLineCandidate": "Orest Kiprensky, Portrait of A.S. Pushkin, 1827; State Tretyakov Gallery; digital reproduction via Google Arts & Culture / Wikimedia Commons",
+        "sourceFileHash": null,
+        "runtimeAssetPath": null,
+        "jurisdictionNotes": [
+          "EU/Germany public-domain reproduction rules are supportive but do not by themselves resolve every intended-use jurisdiction.",
+          "Russian Museum Fund commercial-reproduction rules require explicit owner/legal disposition before global/commercial approval is asserted."
+        ]
+      },
+      "intendedUse": "offline-source-evidence-only-until-approved",
+      "verificationStatus": "rights-pending",
+      "productionManifestEligible": false
+    },
+    {
+      "assetId": "pushkin-onegin-1833-edition",
+      "poetId": "alexander-pushkin",
+      "kind": "archival-book",
+      "sourceTitle": "Евгений Онегин: роман в стихах",
+      "creator": "Alexander Pushkin",
+      "sourceDate": "1833",
+      "sourceInstitution": "Russian State Library",
+      "objectProvenance": {
+        "status": "source-verified",
+        "objectUrl": "https://search.rsl.ru/ru/record/01003570012",
+        "objectIdOrCallNumber": "RSL record 01003570012; holdings include MK XIIА7 / 8°, FB U 466/170, OMF2 1-52/587, OMF2 810-84/409-x",
+        "notes": "RSL identifies the 1833 St Petersburg Smirdin edition and marks the digitized document as available in full."
+      },
+      "reproduction": {
+        "status": "rights-pending",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD._%D0%95%D0%B2%D0%B3%D0%B5%D0%BD%D0%B8%D0%B9_%D0%9E%D0%BD%D0%B5%D0%B3%D0%B8%D0%BD_(1833).pdf",
+        "declaredBasis": "Wikimedia Commons Public Domain Mark declaration for the 1833 work; Commons metadata cites the IRLI RAN / Pushkin House electronic library as scan source",
+        "creditLineCandidate": "A. S. Pushkin, Eugene Onegin, St Petersburg: A. Smirdin, 1833; object identity verified against Russian State Library record 01003570012",
+        "sourceFileHash": null,
+        "runtimeAssetPath": null,
+        "jurisdictionNotes": [
+          "Object identity and reproduction/public-domain declaration are recorded separately.",
+          "A specific page/crop intended for publication still requires file-level acquisition, hashing, credit review and final intended-use approval."
+        ]
+      },
+      "intendedUse": "offline-source-evidence-only-until-approved",
+      "verificationStatus": "rights-pending",
+      "productionManifestEligible": false
+    },
+    {
+      "assetId": "pushkin-onegin-autograph-weak-mirror",
+      "poetId": "alexander-pushkin",
+      "kind": "manuscript",
+      "sourceTitle": "Autograph of Eugene Onegin, second canto",
+      "creator": "Alexander Pushkin",
+      "sourceDate": "1820s",
+      "sourceInstitution": null,
+      "objectProvenance": {
+        "status": "blocked",
+        "objectUrl": null,
+        "objectIdOrCallNumber": null,
+        "notes": "Current Commons metadata points to a non-institutional mirror and supplies no exact archive object/call number. That is insufficient for a documentary Hall facsimile."
+      },
+      "reproduction": {
+        "status": "blocked",
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Onegin_autograph.jpg",
+        "declaredBasis": "Commons page declares public-domain status, but rights status does not repair weak object provenance.",
+        "creditLineCandidate": null,
+        "sourceFileHash": null,
+        "runtimeAssetPath": null,
+        "jurisdictionNotes": []
+      },
+      "intendedUse": "forbidden-until-primary-provenance-replacement",
+      "verificationStatus": "blocked",
+      "productionManifestEligible": false
+    }
+  ]
+}
