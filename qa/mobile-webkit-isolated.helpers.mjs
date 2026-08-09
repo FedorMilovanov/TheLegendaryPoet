@@ -48,7 +48,13 @@ export async function gotoRoute(page, route) {
   const dock = page.locator('.mobile-dock');
   await dock.waitFor({ state: 'visible', timeout: 20_000 });
   await expect(dock.locator('a, button')).toHaveCount(5, { timeout: 20_000 });
-  await page.waitForTimeout(420);
+
+  // #main-content and the persistent dock exist before lazy route content has
+  // settled. Wait on the actual visual/loading boundaries so evidence cannot
+  // be captured under the first-document wipe or Suspense route skeleton.
+  await expect(page.locator('.page-wipe')).toBeHidden({ timeout: 20_000 });
+  await expect(page.getByRole('status', { name: 'Загрузка страницы' })).toBeHidden({ timeout: 20_000 });
+  await page.waitForTimeout(120);
 }
 
 async function centerLocatorNatively(target) {
@@ -161,6 +167,14 @@ export async function collectDiagnostics(page) {
       const style = getComputedStyle(image);
       return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 2 && rect.height > 2;
     });
+    const isVisiblyRendered = (element) => {
+      if (!(element instanceof HTMLElement)) return false;
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return rect.width > 1 && rect.height > 1 && style.display !== 'none' && style.visibility !== 'hidden' && Number.parseFloat(style.opacity || '1') > 0.01;
+    };
+    const routeLoadingShell = document.querySelector('[role="status"][aria-label="Загрузка страницы"]');
+    const pageWipe = document.querySelector('.page-wipe');
     return {
       pathname: location.pathname,
       maxTouchPoints: navigator.maxTouchPoints,
@@ -177,6 +191,8 @@ export async function collectDiagnostics(page) {
         const rect = element.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       }).length,
+      routeLoadingVisible: isVisiblyRendered(routeLoadingShell),
+      pageWipeVisible: isVisiblyRendered(pageWipe),
       chromeHidden: root.classList.contains('chrome-hidden'),
       dock: dockRect && dockRect.width > 0 ? {
         left: dockRect.left,
@@ -193,6 +209,8 @@ export function expectDiagnostics(diagnostics, { requireTopChrome = false } = {}
   expect(diagnostics.brokenImages).toEqual([]);
   expect(diagnostics.failedResilientImages).toBe(0);
   expect(diagnostics.visibleBusyRegions).toBe(0);
+  expect(diagnostics.routeLoadingVisible).toBe(false);
+  expect(diagnostics.pageWipeVisible).toBe(false);
   expect(diagnostics.visualViewport).not.toBeNull();
   expect(diagnostics.coarsePointer).toBe(true);
   expect(diagnostics.maxTouchPoints > 0 || diagnostics.touchEventSurface).toBe(true);
