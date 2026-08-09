@@ -74,7 +74,7 @@
         "meanDisplayLuma": 0.06554,
         "darkSampleRatioBelow0_08": 0.96832,
         "gpuTextureResidentBytes": 1791312,
-        "incrementalLightmapBytes": 393216
+        "incrementalLightmapResidentBytes": 393216
       }
     ]
   },
