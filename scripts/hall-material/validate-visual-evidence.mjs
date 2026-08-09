@@ -12,6 +12,7 @@ const contract = readJson('docs/hall-v3/hall-v3-contract.json');
 const spike = readJson('docs/hall-v3/material-spike.json');
 const workflow = read('.github/workflows/hall-greybox-tooling.yml');
 const preparer = read('scripts/hall-material/prepare-material-visual-evidence.py');
+const reexport = read('scripts/hall-material/reexport-with-tangents.py');
 const browserWitness = read('scripts/hall-material/browser-witness.mjs');
 const visualViewer = read('qa/hall-material-viewer/visual.ts');
 const hallPage = read('src/pages/HallPage.tsx');
@@ -30,7 +31,7 @@ for (const value of Object.values(spike.decision ?? {})) expect(value === null |
 
 expect(visual.status === 'repeat-spike-authoring', 'visual evidence status must remain repeat-spike-authoring');
 expect(visual.inspectionTarget === 'ARCH_wall_016', 'visual evidence inspection target must remain the bounded representative wall');
-expect(visual.surfaceUvProjection === 'cube', 'visual evidence must use explicit cube UV0 projection');
+expect(visual.surfaceUvProjection === 'cube', 'visual evidence must use explicit box-style UV0 projection');
 expect(closeEnough(visual.surfaceUvCubeSizeMeters, 1.5), 'visual UV0 cube scale must remain 1.5 metres');
 expect(visual.proofTextureResolution === 256, 'visual proof textures must remain bounded at 256px');
 expect(closeEnough(visual.lookdevBevelMeters, 0.015), 'visual lookdev bevel must remain 15 mm');
@@ -43,9 +44,14 @@ expect(closeEnough(visual.readabilityReject?.lumaThreshold, 0.08) && closeEnough
 expect(Number(visual.normalResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.normalResponse?.minimumChangedSampleRatioAbove2) > 0, 'normal response must have non-zero machine thresholds');
 expect(Number(visual.roughnessResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.roughnessResponse?.minimumChangedSampleRatioAbove2) > 0, 'roughness response must have non-zero machine thresholds');
 
-for (const token of ['bpy.ops.uv.cube_project', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance']) {
+for (const token of ['dominant_axis_box_project_uv0', 'evaluated_get', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance']) {
   expect(preparer.includes(token), `visual DCC preparer lost required invariant: ${token}`);
 }
+for (const forbidden of ['bpy.ops.uv.cube_project', 'bpy.ops.object.modifier_apply', 'image.reload()']) {
+  expect(!preparer.includes(forbidden), `headless visual DCC preparer must not use context-sensitive mutation: ${forbidden}`);
+}
+expect(reexport.includes('export_apply=export_apply'), 'tangent re-export must explicitly apply the bounded visual modifier only during visual authoring');
+expect(reexport.includes('visual evidence export requires bounded bevel modifier'), 'tangent re-export must fail if the bounded visual bevel is missing');
 for (const forbidden of ['Bloom', 'Vignette', 'MeshReflectorMaterial', 'FogExp2', 'GodRays']) {
   expect(!preparer.includes(forbidden) && !visualViewer.includes(forbidden), `visual evidence contains forbidden rescue token: ${forbidden}`);
 }
@@ -99,12 +105,15 @@ if (evidenceRelative) {
     expect(dcc.proofTextureResolution === visual.proofTextureResolution, 'DCC visual evidence texture resolution must match contract');
     expect(closeEnough(dcc.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), 'DCC visual evidence UV scale must match contract');
     expect(closeEnough(dcc.lookdevBevelMeters, visual.lookdevBevelMeters) && dcc.lookdevBevelSegments === visual.lookdevBevelSegments, 'DCC visual evidence bevel must match contract');
+    expect(dcc.bevelExportMode === 'gltf-export-apply-modifiers', 'DCC visual evidence must keep bevel non-destructive until glTF export');
     for (const name of ARCH_NODES) {
       const item = dcc.objects?.[name];
       expect(Boolean(item), `DCC visual evidence missing ${name}`);
       expect(item?.bevel?.matrixWorldUnchanged === true, `${name}: lookdev bevel must not change object transform`);
+      expect(item?.bevel?.implementation === 'non-destructive-modifier-export-apply', `${name}: bevel must remain non-destructive before export`);
       expect(Number(item?.bevel?.maximumBoundsDeltaMeters ?? 1) <= 0.00005, `${name}: lookdev bevel may not expand frozen H3 bounds`);
       expect(JSON.stringify(item?.uvSetsAfter ?? []) === JSON.stringify(['UV0', 'UV1']), `${name}: lookdev must preserve exactly UV0/UV1`);
+      expect(item?.uv0?.implementation === 'dominant-axis-loop-data', `${name}: UV0 must use direct headless loop-data projection`);
       expect(closeEnough(item?.uv0?.medianMetersPerUvUnit, visual.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters * 0.04), `${name}: UV0 median metre scale must match contract`);
     }
   }
@@ -116,6 +125,7 @@ if (evidenceRelative) {
     expect(source.material?.proofTextureResolution === visual.proofTextureResolution, 'source evidence must record proof texture resolution');
     expect(source.material?.surfaceUvProjection === visual.surfaceUvProjection && closeEnough(source.material?.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), 'source evidence must record metre-scaled UV0 contract');
     expect(closeEnough(source.material?.lookdevBevelMeters, visual.lookdevBevelMeters) && source.material?.lookdevBevelSegments === visual.lookdevBevelSegments, 'source evidence must record bounded lookdev bevel');
+    expect(source.material?.bevelExportMode === 'gltf-export-apply-modifiers', 'source evidence must record evaluated glTF bevel export mode');
     expect(source.visualLookdev?.decisionMayAdvance === false, 'source evidence may not claim Gate 4 decision advancement');
   }
 
