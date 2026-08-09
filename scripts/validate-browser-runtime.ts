@@ -127,11 +127,39 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   }
 }
 
+const webkitRouteSuitePath = 'qa/mobile-webkit-isolated.spec.mjs';
+const webkitRouteHelperPath = 'qa/mobile-webkit-isolated.helpers.mjs';
+const webkitRouteRunnerPath = 'scripts/run-webkit-home-reveal-process-isolated.mjs';
+for (const requiredPath of [webkitRouteSuitePath, webkitRouteHelperPath, webkitRouteRunnerPath]) {
+  if (!fs.existsSync(path.join(root, requiredPath))) fail(`missing Safari route certification source: ${requiredPath}`);
+}
+if (fs.existsSync(path.join(root, webkitRouteSuitePath))) {
+  const source = read(webkitRouteSuitePath);
+  if (!/\['hall',\s*'\/hall'\]/.test(source)) {
+    fail(`${webkitRouteSuitePath}: iPhone Safari route matrix must include the current /hall production shell`);
+  }
+}
+if (fs.existsSync(path.join(root, webkitRouteRunnerPath))) {
+  const source = read(webkitRouteRunnerPath);
+  if (!/\.\.\.\[[^\]]*['"]hall['"][^\]]*\]\.map\(\(route\)/s.test(source)) {
+    fail(`${webkitRouteRunnerPath}: fresh-process Safari runner must execute the Hall route contour`);
+  }
+}
+if (fs.existsSync(path.join(root, webkitRouteHelperPath))) {
+  const source = read(webkitRouteHelperPath);
+  if (!source.includes("page.locator('.page-wipe')") || !source.includes("getByRole('status', { name: 'Загрузка страницы' })")) {
+    fail(`${webkitRouteHelperPath}: Safari route readiness must wait for both first-document wipe and Suspense loading shell to clear`);
+  }
+  if (!source.includes('routeLoadingVisible') || !source.includes('pageWipeVisible')) {
+    fail(`${webkitRouteHelperPath}: Safari route diagnostics must fail closed when loading/wipe surfaces remain visible`);
+  }
+}
+
 if (errors.length > 0) {
   for (const error of errors) console.error(`ERROR ${error}`);
   process.exit(1);
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
