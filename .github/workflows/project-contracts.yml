@@ -30,16 +30,10 @@ jobs:
         run: npm run validate:hall-reference-bible
       - name: Validate Hall v3 frozen shootout provenance
         run: npm run validate:hall-topology-provenance
-      - name: Validate Hall v3 post-camera spatial authority
-        run: npm run validate:hall-post-camera-authority
-      - name: Validate Hall v3 material light export spike contract
-        run: npm run validate:hall-material-spike
+      - name: Validate Hall v3 post-material authority
+        run: npm run validate:hall-post-material-authority
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
-      - name: Validate Hall v3 material visual evidence invariants
-        run: npm run validate:hall-material-visual-evidence
-      - name: Validate Hall v3 material decision authority
-        run: npm run validate:hall-material-decision
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
