@@ -49,7 +49,7 @@ const evidence = {
   },
 };
 
-function compareSampleBuffers(leftBase64, rightBase64) {
+function compareSamples(leftBase64, rightBase64) {
   const left = Buffer.from(leftBase64, 'base64');
   const right = Buffer.from(rightBase64, 'base64');
   if (left.length !== right.length || left.length === 0) throw new Error(`pixel sample length mismatch ${left.length} != ${right.length}`);
@@ -72,7 +72,7 @@ function compareSampleBuffers(leftBase64, rightBase64) {
 
 function compareOptimization(rawMetrics, optimizedMetrics) {
   return {
-    ...compareSampleBuffers(rawMetrics.pixelSampleBase64, optimizedMetrics.pixelSampleBase64),
+    ...compareSamples(rawMetrics.pixelSampleBase64, optimizedMetrics.pixelSampleBase64),
     rawPixelHash: rawMetrics.pixelHash,
     optimizedPixelHash: optimizedMetrics.pixelHash,
     exactPixelHashMatch: rawMetrics.pixelHash === optimizedMetrics.pixelHash,
@@ -189,13 +189,13 @@ if (!witnesses.materialCloseFull || !witnesses.materialCloseNormalOff || !witnes
 }
 evidence.visualEvidence.materialResponses.normal = {
   view: visual.normalResponse.view,
-  ...compareSampleBuffers(witnesses.materialCloseFull.pixelSampleBase64, witnesses.materialCloseNormalOff.pixelSampleBase64),
+  ...compareSamples(witnesses.materialCloseFull.pixelSampleBase64, witnesses.materialCloseNormalOff.pixelSampleBase64),
   baselinePixelHash: witnesses.materialCloseFull.pixelHash,
   comparisonPixelHash: witnesses.materialCloseNormalOff.pixelHash,
 };
 evidence.visualEvidence.materialResponses.roughness = {
   view: visual.roughnessResponse.view,
-  ...compareSampleBuffers(witnesses.materialMediumFull.pixelSampleBase64, witnesses.materialMediumRoughnessFlat.pixelSampleBase64),
+  ...compareSamples(witnesses.materialMediumFull.pixelSampleBase64, witnesses.materialMediumRoughnessFlat.pixelSampleBase64),
   baselinePixelHash: witnesses.materialMediumFull.pixelHash,
   comparisonPixelHash: witnesses.materialMediumRoughnessFlat.pixelHash,
 };
