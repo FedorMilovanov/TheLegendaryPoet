@@ -45,11 +45,11 @@ expect(closeEnough(visual.readabilityReject?.lumaThreshold, 0.08) && closeEnough
 expect(Number(visual.normalResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.normalResponse?.minimumChangedSampleRatioAbove2) > 0, 'normal response must have non-zero machine thresholds');
 expect(Number(visual.roughnessResponse?.minimumMeanAbsoluteChannelDifference) > 0 && Number(visual.roughnessResponse?.minimumChangedSampleRatioAbove2) > 0, 'roughness response must have non-zero machine thresholds');
 
-for (const token of ['dominant_axis_box_project_uv0', 'evaluated_get', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance', 'assert_tileable_edges', 'proofTextureTileability']) {
+for (const token of ['dominant_axis_box_project_uv0', 'evaluated_get', 'SPIKE_VISUAL_BEVEL', 'matrixWorldUnchanged', 'maximumBoundsDeltaMeters', 'visualEvidenceOnly', 'decisionMayAdvance', 'assert_periodic_function', 'proofTexturePeriodicity', 'texel-centers-periodic']) {
   expect(preparer.includes(token), `visual DCC preparer lost required invariant: ${token}`);
 }
-for (const forbidden of ['bpy.ops.uv.cube_project', 'bpy.ops.object.modifier_apply', 'image.reload()']) {
-  expect(!preparer.includes(forbidden), `headless visual DCC preparer must not use context-sensitive mutation: ${forbidden}`);
+for (const forbidden of ['bpy.ops.uv.cube_project', 'bpy.ops.object.modifier_apply', 'image.reload()', 'assert_tileable_edges']) {
+  expect(!preparer.includes(forbidden), `headless visual DCC preparer must not use invalid/context-sensitive mutation or texel-edge proof: ${forbidden}`);
 }
 expect(reexport.includes('export_apply=export_apply'), 'tangent re-export must explicitly apply the bounded visual modifier only during visual authoring');
 expect(reexport.includes('visual evidence export requires bounded bevel modifier'), 'tangent re-export must fail if the bounded visual bevel is missing');
@@ -111,10 +111,13 @@ if (evidenceRelative) {
     expect(closeEnough(dcc.lookdevBevelMeters, visual.lookdevBevelMeters) && dcc.lookdevBevelSegments === visual.lookdevBevelSegments, 'DCC visual evidence bevel must match contract');
     expect(dcc.bevelExportMode === 'gltf-export-apply-modifiers', 'DCC visual evidence must keep bevel non-destructive until glTF export');
     for (const role of MATERIAL_ROLES) {
-      const tile = dcc.proofTextureTileability?.[role];
-      expect(tile?.leftRightMatches === true && tile?.topBottomMatches === true, `${role}: proof texture must be periodic on both axes before repeat`);
-      expect(Number(tile?.edgeSamplePairs) === visual.proofTextureResolution * 2, `${role}: proof texture tileability must cover every opposite-edge sample`);
-      expect(tile?.quantization === 'rounded-8bit-rgb', `${role}: tileability proof must match exported 8-bit RGB quantization`);
+      const periodic = dcc.proofTexturePeriodicity?.[role];
+      expect(periodic?.periodic === true, `${role}: proof texture continuous material function must be periodic`);
+      expect(Number(periodic?.boundarySamplePairs) === visual.proofTextureResolution * 2, `${role}: periodicity proof must sample both continuous boundaries densely`);
+      expect(Number(periodic?.leftRightMaxAbsDifference ?? Infinity) <= Number(periodic?.tolerance ?? 0), `${role}: u=0/1 periodicity delta must stay within recorded tolerance`);
+      expect(Number(periodic?.topBottomMaxAbsDifference ?? Infinity) <= Number(periodic?.tolerance ?? 0), `${role}: v=0/1 periodicity delta must stay within recorded tolerance`);
+      expect(Number(periodic?.tolerance) > 0 && Number(periodic?.tolerance) <= 1e-9, `${role}: periodicity tolerance must remain strict`);
+      expect(periodic?.rasterSampling === 'texel-centers-periodic' && periodic?.wrapContract === 'repeat', `${role}: raster must sample periodic function at texel centers for repeat wrapping`);
     }
     for (const name of ARCH_NODES) {
       const item = dcc.objects?.[name];
@@ -133,7 +136,8 @@ if (evidenceRelative) {
     expect(source.source?.candidateId === 'H3', 'source visual evidence must still derive from H3');
     expect(source.camera?.name === 'CAM_R1_pushkinViewing' && source.camera?.lensMm === 28, 'source visual evidence must preserve frozen R1 authority');
     expect(source.material?.proofTextureResolution === visual.proofTextureResolution, 'source evidence must record proof texture resolution');
-    expect(source.material?.proofTextureTileable === true, 'source evidence must record periodic proof-texture delivery');
+    expect(source.material?.proofTexturePeriodic === true, 'source evidence must record continuous periodic proof-texture delivery');
+    expect(source.material?.proofTextureRasterSampling === 'texel-centers-periodic', 'source evidence must record texel-center periodic raster sampling');
     expect(source.material?.surfaceUvProjection === visual.surfaceUvProjection && closeEnough(source.material?.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), 'source evidence must record metre-scaled UV0 contract');
     expect(closeEnough(source.material?.lookdevBevelMeters, visual.lookdevBevelMeters) && source.material?.lookdevBevelSegments === visual.lookdevBevelSegments, 'source evidence must record bounded lookdev bevel');
     expect(source.material?.bevelExportMode === 'gltf-export-apply-modifiers', 'source evidence must record evaluated glTF bevel export mode');
