@@ -40,8 +40,22 @@
       "kind": "portrait",
       "sourceTitle": "Portrait of A.S. Pushkin",
       "creator": "Orest Kiprensky",
-      "sourceDate": "1827",
       "sourceInstitution": "The State Tretyakov Gallery",
+      "sourceUrlOrArchiveAddress": "https://artsandculture.google.com/asset/portrait-of-a-s-pushkin/GwHXH-oqLPXL8g",
+      "objectIdOrCallNumber": "State Catalogue of the Museum Fund of Russia artwork ID 4574813; Tretyakov accession 168",
+      "sourceDate": "1827",
+      "sourceAccessedAt": "2026-08-09",
+      "rightsStatus": "rights-pending",
+      "rightsBasis": "Object identity is source-verified. Wikimedia Commons declares the selected Google Art Project reproduction PD-Art/Public Domain Mark, but intended-use/jurisdiction review and exact file acquisition remain unresolved.",
+      "creditLine": null,
+      "sourceFileHash": null,
+      "runtimeAssetPath": null,
+      "verificationStatus": "rights-pending",
+      "notes": [
+        "Institutional collection identity is separate from rights in any particular digital reproduction.",
+        "EU/Germany public-domain reproduction rules are supportive but do not by themselves resolve every intended-use jurisdiction.",
+        "Russian Museum Fund commercial-reproduction rules require explicit owner/legal disposition before global/commercial approval is asserted."
+      ],
       "objectProvenance": {
         "status": "source-verified",
         "objectUrl": "https://artsandculture.google.com/asset/portrait-of-a-s-pushkin/GwHXH-oqLPXL8g",
@@ -62,7 +76,6 @@
         ]
       },
       "intendedUse": "offline-source-evidence-only-until-approved",
-      "verificationStatus": "rights-pending",
       "productionManifestEligible": false
     },
     {
@@ -71,8 +84,22 @@
       "kind": "archival-book",
       "sourceTitle": "Евгений Онегин: роман в стихах",
       "creator": "Alexander Pushkin",
-      "sourceDate": "1833",
       "sourceInstitution": "Russian State Library",
+      "sourceUrlOrArchiveAddress": "https://search.rsl.ru/ru/record/01003570012",
+      "objectIdOrCallNumber": "RSL record 01003570012; holdings include MK XIIА7 / 8°, FB U 466/170, OMF2 1-52/587, OMF2 810-84/409-x",
+      "sourceDate": "1833",
+      "sourceAccessedAt": "2026-08-09",
+      "rightsStatus": "rights-pending",
+      "rightsBasis": "RSL object identity is source-verified. Wikimedia Commons declares the 1833 work/reproduction public domain and cites the IRLI RAN electronic library as scan source, but exact file acquisition, final credit and intended-use approval remain unresolved.",
+      "creditLine": null,
+      "sourceFileHash": null,
+      "runtimeAssetPath": null,
+      "verificationStatus": "rights-pending",
+      "notes": [
+        "RSL identifies the 1833 St Petersburg Smirdin edition and marks the digitized document as available in full.",
+        "Object identity and reproduction/public-domain declaration are recorded separately.",
+        "A specific page/crop intended for publication still requires file-level acquisition, hashing, credit review and final intended-use approval."
+      ],
       "objectProvenance": {
         "status": "source-verified",
         "objectUrl": "https://search.rsl.ru/ru/record/01003570012",
@@ -92,7 +119,6 @@
         ]
       },
       "intendedUse": "offline-source-evidence-only-until-approved",
-      "verificationStatus": "rights-pending",
       "productionManifestEligible": false
     },
     {
@@ -101,8 +127,21 @@
       "kind": "manuscript",
       "sourceTitle": "Autograph of Eugene Onegin, second canto",
       "creator": "Alexander Pushkin",
-      "sourceDate": "1820s",
       "sourceInstitution": null,
+      "sourceUrlOrArchiveAddress": "https://commons.wikimedia.org/wiki/File:Onegin_autograph.jpg",
+      "objectIdOrCallNumber": null,
+      "sourceDate": "1820s",
+      "sourceAccessedAt": "2026-08-09",
+      "rightsStatus": "blocked",
+      "rightsBasis": "Commons declares public-domain status, but the available metadata points to a non-institutional mirror and does not establish the exact archive object/call number. Rights status cannot repair weak documentary provenance.",
+      "creditLine": null,
+      "sourceFileHash": null,
+      "runtimeAssetPath": null,
+      "verificationStatus": "blocked",
+      "notes": [
+        "Current Commons metadata points to a non-institutional mirror and supplies no exact archive object/call number.",
+        "That is insufficient for a documentary Hall facsimile and must be replaced by primary institutional provenance."
+      ],
       "objectProvenance": {
         "status": "blocked",
         "objectUrl": null,
@@ -119,7 +158,6 @@
         "jurisdictionNotes": []
       },
       "intendedUse": "forbidden-until-primary-provenance-replacement",
-      "verificationStatus": "blocked",
       "productionManifestEligible": false
     }
   ]
