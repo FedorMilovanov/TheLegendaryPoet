@@ -55,8 +55,11 @@ expect(reexport.includes('visual evidence export requires bounded bevel modifier
 for (const forbidden of ['Bloom', 'Vignette', 'MeshReflectorMaterial', 'FogExp2', 'GodRays']) {
   expect(!preparer.includes(forbidden) && !visualViewer.includes(forbidden), `visual evidence contains forbidden rescue token: ${forbidden}`);
 }
-for (const token of ['normal-off', 'roughness-flat', 'meanDisplayLuma', 'darkSampleRatio', 'materialResponses', 'automaticDisposition']) {
+for (const token of ['normal-off', 'roughness-flat', 'meanDisplayLuma', 'darkSampleRatio', 'materialResponses', 'automaticDisposition', 'minimumMeanDisplayLuma', 'rejectionReasons']) {
   expect(browserWitness.includes(token), `browser visual witness lost required invariant: ${token}`);
+}
+for (const token of ['faceNormalAxis', 'verticalAxis', 'tangentAxis', 'edgeRevealDegrees', 'dimensions.indexOf(Math.min(...dimensions))', 'surfaceNormal']) {
+  expect(visualViewer.includes(token), `material inspection viewer lost wall-face framing invariant: ${token}`);
 }
 expect(visualViewer.includes('AmbientLight') && visualViewer.includes('DirectionalLight') && visualViewer.includes('shadowMap.enabled = false'), 'visual viewer must use bounded no-shadow neutral L0 lighting');
 expect(visualViewer.includes("loadAsync('/generated/material-spike-optimized.glb')"), 'visual viewer must inspect the optimized delivery candidate');
@@ -161,6 +164,13 @@ if (browserRelative) {
       expect(witness.transport?.uv0 === true && witness.transport?.uv1 === true && witness.transport?.visualEvidenceOnly === true, `${key}: visual witness must preserve UV0/UV1 and QA-only extra`);
       expect(closeEnough(witness.transport?.lookdevBevelMeters, visual.lookdevBevelMeters) && witness.transport?.lookdevBevelSegments === visual.lookdevBevelSegments, `${key}: visual witness bevel transport must match contract`);
       expect(closeEnough(witness.transport?.surfaceUvCubeSizeMeters, visual.surfaceUvCubeSizeMeters), `${key}: visual witness metre UV scale must match contract`);
+      const camera = witness.camera ?? {};
+      const axes = [camera.faceNormalAxis, camera.verticalAxis, camera.tangentAxis];
+      const normal = camera.surfaceNormal ?? [];
+      const normalLength = normal.length === 3 ? Math.hypot(...normal.map(Number)) : 0;
+      expect(new Set(axes).size === 3 && axes.every((axis) => [0, 1, 2].includes(axis)), `${key}: inspection camera must resolve three distinct local wall axes`);
+      expect(Number(camera.edgeRevealDegrees) > 0 && Number(camera.edgeRevealDegrees) < 30, `${key}: inspection camera must use a bounded edge-reveal angle`);
+      expect(Math.abs(normalLength - 1) <= 1e-5, `${key}: inspection camera surface normal must be unit length`);
     }
     const normal = visualEvidence.materialResponses?.normal;
     const roughness = visualEvidence.materialResponses?.roughness;
@@ -172,10 +182,18 @@ if (browserRelative) {
     const l0 = browser.candidateReadability?.['L0-minimal-runtime'];
     const l1 = browser.candidateReadability?.['L1-external-lightmap'];
     for (const [mode, result] of [['L0-minimal-runtime', l0], ['L1-external-lightmap', l1]]) {
-      const expectedDisposition = Number(result?.darkSampleRatio ?? 1) > Number(visual.readabilityReject.maximumDarkSampleRatio)
-        ? 'reject-current-bake'
-        : 'eligible-for-human-review';
-      expect(result?.automaticDisposition === expectedDisposition, `${mode}: readability disposition must derive from explicit threshold`);
+      const threshold = Number(visual.readabilityReject.lumaThreshold);
+      const maximumDark = Number(visual.readabilityReject.maximumDarkSampleRatio);
+      const darkRatioReject = Number(result?.darkSampleRatio ?? 1) > maximumDark;
+      const meanLumaReject = Number(result?.meanDisplayLuma ?? 0) < threshold;
+      const expectedDisposition = darkRatioReject || meanLumaReject ? 'reject-current-bake' : 'eligible-for-human-review';
+      const expectedReasons = [
+        ...(darkRatioReject ? ['dark-sample-ratio'] : []),
+        ...(meanLumaReject ? ['mean-display-luma'] : []),
+      ];
+      expect(result?.automaticDisposition === expectedDisposition, `${mode}: readability disposition must derive from explicit darkness checks`);
+      expect(closeEnough(result?.minimumMeanDisplayLuma, threshold), `${mode}: readability evidence must record the minimum mean display luma`);
+      expect(JSON.stringify(result?.rejectionReasons ?? []) === JSON.stringify(expectedReasons), `${mode}: readability rejection reasons must match measured evidence`);
     }
     expect(l0?.automaticDisposition !== 'reject-current-bake', 'L0 neutral baseline must remain visually reviewable');
 
