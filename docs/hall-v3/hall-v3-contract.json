@@ -42,7 +42,8 @@
     "materialGatePromotion": "docs/hall-v3/material-gate-promotion.json",
     "pushkinRights": "docs/hall-v3/pushkin-rights.json",
     "pushkinSlice": "docs/hall-v3/pushkin-slice.json",
-    "pushkinAcquisition": "docs/hall-v3/pushkin-acquisition.json"
+    "pushkinAcquisition": "docs/hall-v3/pushkin-acquisition.json",
+    "pushkinRightsReview": "docs/hall-v3/pushkin-rights-review.json"
   },
   "gates": {
     "foundation": "completed",
