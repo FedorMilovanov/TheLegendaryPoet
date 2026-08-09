@@ -15,6 +15,7 @@ const gltfValidationScript = read('scripts/hall-material/validate-gltf.mjs');
 const ARCH_NODES = ['ARCH_spike_floor','ARCH_wall_016','ARCH_wall_017'];
 const EXPECTED_LIGHTMAP_RESIDENT_BYTES = 128 * 128 * 4 * 2;
 const EXPECTED_TOTAL_LIGHTMAP_RESIDENT_BYTES = EXPECTED_LIGHTMAP_RESIDENT_BYTES * ARCH_NODES.length;
+const POSITION_BOUNDS_TOLERANCE_METERS = Number(spike.exportToolchain?.positionBoundsToleranceMeters);
 
 type GlbJson = Record<string, any>;
 function parseGlbJson(filePath: string): GlbJson {
@@ -44,8 +45,12 @@ function positionBounds(doc: GlbJson, node: any): { min: number[]; max: number[]
   if (!Array.isArray(accessor?.min) || !Array.isArray(accessor?.max)) return null;
   return { min: accessor.min.map(Number), max: accessor.max.map(Number) };
 }
-function closeArray(a: number[] | undefined, b: number[] | undefined, epsilon = 1e-5): boolean {
+function closeArray(a: number[] | undefined, b: number[] | undefined, epsilon: number): boolean {
   return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((value, index) => Math.abs(value - b[index]) <= epsilon);
+}
+function maxArrayDelta(a: number[] | undefined, b: number[] | undefined): number {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return Number.POSITIVE_INFINITY;
+  return a.reduce((maximum, value, index) => Math.max(maximum, Math.abs(value - b[index])), 0);
 }
 function warningCodes(reportPath: string): string[] {
   if (!fs.existsSync(reportPath)) return [];
@@ -63,6 +68,7 @@ function validIntegrity(value: unknown): boolean {
 // Static transport contract.
 expect(spike.materialProof?.normal?.requiresTangentAttribute === true, 'normal-mapped stone must require explicit tangent transport');
 expect((spike.exportToolchain?.requiredPreservation ?? []).includes('TANGENT'), 'export preservation contract must include TANGENT');
+expect(POSITION_BOUNDS_TOLERANCE_METERS === 0.00005, 'optimizer POSITION bounds tolerance must remain explicitly capped at 50 micrometres');
 expect(reexport.includes('export_tangents=True'), 'transport re-export must request Blender tangents');
 expect(reexport.includes('contract["bay"]["exportNodes"]'), 'transport re-export must select nodes from machine contract');
 expect(workflow.includes('scripts/hall-material/reexport-with-tangents.py'), 'Hall workflow must run tangent re-export before Khronos validation');
@@ -107,7 +113,14 @@ if (evidenceDirRelative) {
       const optimizedBounds = positionBounds(optimized, optimizedNode);
       expect(Boolean(rawBounds) && Boolean(optimizedBounds), `${name}: raw/optimized position bounds must be inspectable`);
       if (rawBounds && optimizedBounds) {
-        expect(closeArray(rawBounds.min, optimizedBounds.min) && closeArray(rawBounds.max, optimizedBounds.max), `${name}: optimizer changed local position bounds`);
+        const minDelta = maxArrayDelta(rawBounds.min, optimizedBounds.min);
+        const maxDelta = maxArrayDelta(rawBounds.max, optimizedBounds.max);
+        const measuredDelta = Math.max(minDelta, maxDelta);
+        expect(
+          closeArray(rawBounds.min, optimizedBounds.min, POSITION_BOUNDS_TOLERANCE_METERS)
+            && closeArray(rawBounds.max, optimizedBounds.max, POSITION_BOUNDS_TOLERANCE_METERS),
+          `${name}: optimizer changed local position bounds by ${measuredDelta}m, exceeding ${POSITION_BOUNDS_TOLERANCE_METERS}m contract`,
+        );
       }
     }
   }
