@@ -156,7 +156,7 @@ jobs:
 
       - name: Validate regenerated frozen H3 evidence
         env:
-          HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/index.json
+          HALL_GREYBOX_CANDIDATE_EVIDENCE: qa-artifacts/hall-greybox-candidates/H3/manifest.json
         run: |
           npm run validate:hall-topology-provenance
           npm run validate:hall-post-camera-authority
@@ -195,6 +195,18 @@ jobs:
             --source-blend qa-artifacts/hall-greybox-candidates/H3/H3.blend \
             --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
             --output-dir qa-artifacts/hall-material-spike
+
+      - name: Prepare bounded close and medium material visual evidence
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/prepare-material-visual-evidence.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --blend qa-artifacts/hall-material-spike/material-spike.blend \
+            --source-evidence qa-artifacts/hall-material-spike/source-evidence.json
 
       - name: Re-export identical bay with explicit normal-map tangents
         run: |
@@ -263,8 +275,8 @@ jobs:
           cat qa-artifacts/hall-material-spike/viewer.log
           exit 1
 
-      - name: Capture raw L0 optimized L0 and optimized L1 browser evidence
-        run: node scripts/hall-material/browser-witness.mjs --base-url http://127.0.0.1:4175 --output-dir qa-artifacts/hall-material-browser
+      - name: Capture transport plus bounded close and medium material browser evidence
+        run: node scripts/hall-material/browser-witness.mjs --contract docs/hall-v3/material-spike.json --base-url http://127.0.0.1:4175 --output-dir qa-artifacts/hall-material-browser
 
       - name: Validate final DCC export and browser material evidence
         env:
