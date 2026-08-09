@@ -3,7 +3,7 @@
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
   "phase": "pushkinVerticalSlice",
-  "status": "source-contract-ready-rights-blocked",
+  "status": "offline-authoring-authorized-production-rights-pending",
   "source": {
     "topology": "H3",
     "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
@@ -27,18 +27,22 @@
     "sourceAuthority": "Blender",
     "reactThreeMayModelCanonicalGeometry": false,
     "oneCompleteExhibitRequired": true,
+    "offlineAuthoringAuthority": "docs/hall-v3/pushkin-owner-disposition.json",
     "requiredAssetRoles": [
       {
         "role": "heroPortrait",
         "preferredAssetId": "pushkin-kiprensky-1827-portrait",
-        "minimumVerificationStatus": "approved",
-        "currentStatus": "rights-pending"
+        "minimumVerificationStatusForProduction": "approved",
+        "currentStatus": "rights-pending",
+        "offlineSourceEvidenceAuthorized": true
       },
       {
         "role": "documentaryPublication",
         "preferredAssetId": "pushkin-onegin-1833-edition",
-        "minimumVerificationStatus": "approved",
-        "currentStatus": "rights-pending"
+        "minimumVerificationStatusForProduction": "approved",
+        "currentStatus": "rights-pending",
+        "offlineSourceEvidenceAuthorized": true,
+        "selectedOfflineSourcePdfPageIndex": 0
       }
     ],
     "provenanceCandidates": [
@@ -48,12 +52,14 @@
         "objectVerificationStatus": "source-verified",
         "reproductionRightsStatus": "rights-pending",
         "acquisitionStatus": "institutional-copy-request-required",
+        "v1Requirement": "optional-deferred-not-blocking",
         "shippingRequirement": "approved",
         "negativeControlAssetId": "pushkin-onegin-autograph-weak-mirror"
       }
     ]
   },
   "productionBoundary": {
+    "offlineSourceEvidenceMediaAllowed": true,
     "productionManifestAllowed": false,
     "productionHallRouteMayChange": false,
     "productionThreeRuntimeMayActivate": false,
@@ -100,13 +106,11 @@
     "productionTextureEncodingDecision": null
   },
   "nextAllowedWork": [
-    "owner-intended-use-and-final-credit-disposition",
-    "qualified-legal-or-institutional-disposition-where-required",
-    "human-pushkin-house-copy-request-or-owner-decision-to-proceed-without-it",
-    "promote-only-independently-approved-rights-records",
     "author-one-source-offline-pushkin-exhibit-in-blender",
     "measure-first-slice-delivery-and-performance",
-    "produce-required-offline-visual-evidence"
+    "produce-required-offline-visual-evidence",
+    "finalize-selected-production-derivatives-and-credits",
+    "promote-only-independently-approved-rights-records"
   ],
   "forbiddenWork": [
     "production-three-r3f-webgl-hall",
