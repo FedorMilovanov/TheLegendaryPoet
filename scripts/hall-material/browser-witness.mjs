@@ -114,10 +114,17 @@ function lumaStats(base64, threshold) {
 
 function readability(metrics) {
   const stats = lumaStats(metrics.pixelSampleBase64, Number(visual.readabilityReject.lumaThreshold));
-  const rejected = stats.darkSampleRatio > Number(visual.readabilityReject.maximumDarkSampleRatio);
+  const maximumDarkSampleRatio = Number(visual.readabilityReject.maximumDarkSampleRatio);
+  const averageBelowDarkThreshold = stats.meanDisplayLuma < stats.lumaThreshold;
+  const rejected = stats.darkSampleRatio > maximumDarkSampleRatio || averageBelowDarkThreshold;
   return {
     ...stats,
-    maximumDarkSampleRatio: Number(visual.readabilityReject.maximumDarkSampleRatio),
+    maximumDarkSampleRatio,
+    minimumMeanDisplayLuma: stats.lumaThreshold,
+    rejectionReasons: [
+      ...(stats.darkSampleRatio > maximumDarkSampleRatio ? ['dark-sample-ratio'] : []),
+      ...(averageBelowDarkThreshold ? ['mean-display-luma'] : []),
+    ],
     automaticDisposition: rejected ? 'reject-current-bake' : 'eligible-for-human-review',
   };
 }
@@ -214,8 +221,15 @@ for (const metrics of allMetrics) {
 
 for (const [key, metrics] of Object.entries(witnesses)) {
   const transport = metrics.transport ?? {};
+  const camera = metrics.camera ?? {};
+  const axes = [camera.faceNormalAxis, camera.verticalAxis, camera.tangentAxis];
+  const normalLength = Math.hypot(...(camera.surfaceNormal ?? [0, 0, 0]));
   if (!metrics.loadComplete || metrics.drawCalls <= 0 || metrics.triangles <= 0 || metrics.errors.length > 0 || !metrics.pixelHash || !metrics.pixelSampleBase64 || !transport.uv0 || !transport.uv1 || !transport.visualEvidenceOnly) {
     console.error(`${key} failed visual material witness`, metrics);
+    failed = true;
+  }
+  if (new Set(axes).size !== 3 || axes.some((axis) => ![0, 1, 2].includes(axis)) || Math.abs(normalLength - 1) > 1e-5 || !Number.isFinite(camera.edgeRevealDegrees) || camera.edgeRevealDegrees <= 0 || camera.edgeRevealDegrees >= 30) {
+    console.error(`${key} failed wall-face inspection camera basis`, camera);
     failed = true;
   }
   if (Math.abs(Number(transport.lookdevBevelMeters) - Number(visual.lookdevBevelMeters)) > 1e-9 || Number(transport.lookdevBevelSegments) !== Number(visual.lookdevBevelSegments) || Math.abs(Number(transport.surfaceUvCubeSizeMeters) - Number(visual.surfaceUvCubeSizeMeters)) > 1e-9) {
@@ -229,7 +243,7 @@ console.log(`raw/optimized L0: meanAbs=${comparison.meanAbsoluteChannelDifferenc
 const gpu = evidence.gpuMemoryComparison;
 console.log(`L0/L1 GPU texture residency: L0=${gpu.l0EstimatedResidentBytes} L1=${gpu.l1EstimatedResidentBytes} delta=${gpu.incrementalEstimatedResidentBytes} lightmaps=${gpu.lightmapEstimatedResidentBytes}`);
 for (const [mode, result] of Object.entries(evidence.candidateReadability)) {
-  console.log(`${mode} readability: meanLuma=${result.meanDisplayLuma.toFixed(4)} dark<${result.lumaThreshold}=${result.darkSampleRatio.toFixed(4)} disposition=${result.automaticDisposition}`);
+  console.log(`${mode} readability: meanLuma=${result.meanDisplayLuma.toFixed(4)} dark<${result.lumaThreshold}=${result.darkSampleRatio.toFixed(4)} disposition=${result.automaticDisposition} reasons=${result.rejectionReasons.join(',') || 'none'}`);
 }
 
 const normal = evidence.visualEvidence.materialResponses.normal;
