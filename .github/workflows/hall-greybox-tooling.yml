@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/hall-greybox-tooling.yml'
       - 'docs/hall-v3/hall-v3-contract.json'
+      - 'docs/hall-v3/RIGHTS_REGISTER.md'
+      - 'docs/hall-v3/AI_USAGE_POLICY.md'
+      - 'docs/hall-v3/SCENE_CONTRACT.md'
+      - 'docs/hall-v3/VISUAL_ACCEPTANCE.md'
+      - 'docs/hall-v3/ASSET_PIPELINE.md'
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
       - 'docs/hall-v3/greybox-layouts.json'
@@ -38,6 +43,11 @@ on:
     paths:
       - '.github/workflows/hall-greybox-tooling.yml'
       - 'docs/hall-v3/hall-v3-contract.json'
+      - 'docs/hall-v3/RIGHTS_REGISTER.md'
+      - 'docs/hall-v3/AI_USAGE_POLICY.md'
+      - 'docs/hall-v3/SCENE_CONTRACT.md'
+      - 'docs/hall-v3/VISUAL_ACCEPTANCE.md'
+      - 'docs/hall-v3/ASSET_PIPELINE.md'
       - 'docs/hall-v3/greybox-tooling.json'
       - 'docs/hall-v3/greybox-candidates.json'
       - 'docs/hall-v3/greybox-layouts.json'
