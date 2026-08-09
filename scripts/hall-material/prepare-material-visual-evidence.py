@@ -9,13 +9,14 @@ import struct
 import sys
 import zlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import bpy
 from mathutils import Vector
 
 EXPECTED_VERSION = (4, 5, 12)
 ARCH_NODES = ("ARCH_spike_floor", "ARCH_wall_016", "ARCH_wall_017")
+PERIODICITY_TOLERANCE = 1e-9
 
 
 def log(message: str) -> None:
@@ -96,12 +97,19 @@ def quantize_rgb(pixel: tuple[float, float, float]) -> tuple[int, int, int]:
     return tuple(max(0, min(255, int(round(float(value))))) for value in pixel)
 
 
-def write_rgb_png(path: Path, width: int, height: int, pixel_fn) -> None:
+def write_rgb_png(
+    path: Path,
+    width: int,
+    height: int,
+    sample_fn: Callable[[float, float], tuple[float, float, float]],
+) -> None:
     rows: list[bytes] = []
     for y in range(height):
         row = bytearray([0])
+        v = (y + 0.5) / height
         for x in range(width):
-            row.extend(quantize_rgb(pixel_fn(x, y, width, height)))
+            u = (x + 0.5) / width
+            row.extend(quantize_rgb(sample_fn(u, v)))
         rows.append(bytes(row))
     header = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
     path.write_bytes(
@@ -112,24 +120,39 @@ def write_rgb_png(path: Path, width: int, height: int, pixel_fn) -> None:
     )
 
 
-def assert_tileable_edges(pixel_fn, width: int, height: int, label: str) -> dict[str, Any]:
-    left_right = [
-        quantize_rgb(pixel_fn(0, y, width, height)) == quantize_rgb(pixel_fn(width - 1, y, width, height))
-        for y in range(height)
-    ]
-    top_bottom = [
-        quantize_rgb(pixel_fn(x, 0, width, height)) == quantize_rgb(pixel_fn(x, height - 1, width, height))
-        for x in range(width)
-    ]
-    if not all(left_right):
-        fail(f"{label}: proof texture is not periodic across left/right edges")
-    if not all(top_bottom):
-        fail(f"{label}: proof texture is not periodic across top/bottom edges")
+def maximum_channel_delta(left: tuple[float, float, float], right: tuple[float, float, float]) -> float:
+    return max(abs(float(a) - float(b)) for a, b in zip(left, right))
+
+
+def assert_periodic_function(
+    sample_fn: Callable[[float, float], tuple[float, float, float]],
+    sample_count: int,
+    label: str,
+) -> dict[str, Any]:
+    left_right_max = 0.0
+    top_bottom_max = 0.0
+    for index in range(sample_count):
+        coordinate = (index + 0.5) / sample_count
+        left_right_max = max(
+            left_right_max,
+            maximum_channel_delta(sample_fn(0.0, coordinate), sample_fn(1.0, coordinate)),
+        )
+        top_bottom_max = max(
+            top_bottom_max,
+            maximum_channel_delta(sample_fn(coordinate, 0.0), sample_fn(coordinate, 1.0)),
+        )
+    if left_right_max > PERIODICITY_TOLERANCE:
+        fail(f"{label}: continuous material function is not periodic across u=0/1 ({left_right_max:.12g})")
+    if top_bottom_max > PERIODICITY_TOLERANCE:
+        fail(f"{label}: continuous material function is not periodic across v=0/1 ({top_bottom_max:.12g})")
     return {
-        "leftRightMatches": True,
-        "topBottomMatches": True,
-        "edgeSamplePairs": width + height,
-        "quantization": "rounded-8bit-rgb",
+        "periodic": True,
+        "leftRightMaxAbsDifference": left_right_max,
+        "topBottomMaxAbsDifference": top_bottom_max,
+        "boundarySamplePairs": sample_count * 2,
+        "tolerance": PERIODICITY_TOLERANCE,
+        "rasterSampling": "texel-centers-periodic",
+        "wrapContract": "repeat",
     }
 
 
@@ -146,37 +169,31 @@ def rewrite_proof_textures(
     }
     tau = math.tau
 
-    def base_pixel(x: int, y: int, width: int, height: int):
-        u = x / max(1, width - 1)
-        v = y / max(1, height - 1)
+    def base_sample(u: float, v: float) -> tuple[float, float, float]:
         coarse = math.sin(tau * (2.0 * u + v)) * 8.0 + math.cos(tau * (v - u)) * 6.0
         grain = math.sin(tau * (9.0 * u + 4.0 * v)) * 2.8 + math.cos(tau * (3.0 * u - 11.0 * v)) * 2.2
         value = 146.0 + coarse + grain
         return value + 4.0, value, value - 7.0
 
-    def normal_pixel(x: int, y: int, width: int, height: int):
-        u = x / max(1, width - 1)
-        v = y / max(1, height - 1)
+    def normal_sample(u: float, v: float) -> tuple[float, float, float]:
         nx = 128.0 + 15.0 * math.sin(tau * (5.0 * u + 2.0 * v)) + 4.0 * math.sin(tau * 13.0 * v)
         ny = 128.0 + 13.0 * math.cos(tau * (4.0 * v - u)) + 4.0 * math.cos(tau * 12.0 * u)
         return nx, ny, 253.0
 
-    def rough_pixel(x: int, y: int, width: int, height: int):
-        u = x / max(1, width - 1)
-        v = y / max(1, height - 1)
+    def rough_sample(u: float, v: float) -> tuple[float, float, float]:
         value = 171.0 + 24.0 * math.sin(tau * (3.0 * u + v)) + 11.0 * math.cos(tau * (7.0 * u - 3.0 * v))
         return value, value, value
 
     functions = {
-        "baseColor": base_pixel,
-        "normal": normal_pixel,
-        "roughness": rough_pixel,
+        "baseColor": base_sample,
+        "normal": normal_sample,
+        "roughness": rough_sample,
     }
-    tileability: dict[str, dict[str, Any]] = {}
-    for role, pixel_fn in functions.items():
-        tileability[role] = assert_tileable_edges(pixel_fn, resolution, resolution, role)
-        write_rgb_png(paths[role], resolution, resolution, pixel_fn)
-    return paths, tileability
+    periodicity: dict[str, dict[str, Any]] = {}
+    for role, sample_fn in functions.items():
+        periodicity[role] = assert_periodic_function(sample_fn, resolution, role)
+        write_rgb_png(paths[role], resolution, resolution, sample_fn)
+    return paths, periodicity
 
 
 def set_image_colorspace(image: bpy.types.Image, preferred: list[str]) -> str:
@@ -358,8 +375,8 @@ def main() -> None:
     if texture_resolution not in (128, 256, 512):
         fail("visual proof texture resolution must remain a bounded power-of-two lab size")
 
-    log("write and bind deterministic periodic proof textures")
-    texture_paths, tileability = rewrite_proof_textures(output_dir / "textures", contract, texture_resolution)
+    log("prove continuous periodicity, then rasterize proof textures at texel centers")
+    texture_paths, periodicity = rewrite_proof_textures(output_dir / "textures", contract, texture_resolution)
     colorspaces = replace_material_images(texture_paths, contract["materialProof"]["stoneMaterial"])
     if colorspaces.get("baseColor") != "sRGB" or colorspaces.get("normal") != "Non-Color" or colorspaces.get("roughness") != "Non-Color":
         fail(f"visual proof texture color-space assignment drifted: {colorspaces}")
@@ -412,7 +429,7 @@ def main() -> None:
         "approvedRig": "R1",
         "inspectionTarget": visual["inspectionTarget"],
         "proofTextureResolution": texture_resolution,
-        "proofTextureTileability": tileability,
+        "proofTexturePeriodicity": periodicity,
         "surfaceUvProjection": visual["surfaceUvProjection"],
         "surfaceUvCubeSizeMeters": cube_size,
         "lookdevBevelMeters": bevel_width,
@@ -429,7 +446,8 @@ def main() -> None:
 
     source_evidence.setdefault("material", {}).update({
         "proofTextureResolution": texture_resolution,
-        "proofTextureTileable": True,
+        "proofTexturePeriodic": True,
+        "proofTextureRasterSampling": "texel-centers-periodic",
         "surfaceUvProjection": visual["surfaceUvProjection"],
         "surfaceUvCubeSizeMeters": cube_size,
         "lookdevBevelMeters": bevel_width,
