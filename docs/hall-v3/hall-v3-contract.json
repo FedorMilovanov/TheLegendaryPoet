@@ -39,7 +39,9 @@
     "cameraGatePromotion": "docs/hall-v3/camera-gate-promotion.json",
     "materialSpike": "docs/hall-v3/material-spike.json",
     "materialDecision": "docs/hall-v3/material-decision.json",
-    "materialGatePromotion": "docs/hall-v3/material-gate-promotion.json"
+    "materialGatePromotion": "docs/hall-v3/material-gate-promotion.json",
+    "pushkinRights": "docs/hall-v3/pushkin-rights.json",
+    "pushkinSlice": "docs/hall-v3/pushkin-slice.json"
   },
   "gates": {
     "foundation": "completed",

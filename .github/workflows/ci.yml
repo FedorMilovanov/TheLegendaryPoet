@@ -36,6 +36,10 @@ jobs:
         run: npm run validate:hall-topology-provenance
       - name: Validate Hall v3 post-material authority
         run: npm run validate:hall-post-material-authority
+      - name: Validate Hall v3 Pushkin rights and source-slice authority
+        run: npm run validate:hall-pushkin-rights
+      - name: Validate Hall v3 canonical Pushkin rights record schema
+        run: npm run validate:hall-pushkin-rights-policy-schema
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
       - name: Validate overlays, images, and pointer interactions

@@ -16,6 +16,8 @@ on:
       - 'docs/hall-v3/material-spike.json'
       - 'docs/hall-v3/material-decision.json'
       - 'docs/hall-v3/material-gate-promotion.json'
+      - 'docs/hall-v3/pushkin-rights.json'
+      - 'docs/hall-v3/pushkin-slice.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -25,6 +27,8 @@ on:
       - 'scripts/validate-hall-material-transport.ts'
       - 'scripts/validate-hall-material-decision.ts'
       - 'scripts/validate-hall-post-material-authority.ts'
+      - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'package.json'
   push:
     branches: [main]
@@ -41,6 +45,8 @@ on:
       - 'docs/hall-v3/material-spike.json'
       - 'docs/hall-v3/material-decision.json'
       - 'docs/hall-v3/material-gate-promotion.json'
+      - 'docs/hall-v3/pushkin-rights.json'
+      - 'docs/hall-v3/pushkin-slice.json'
       - 'scripts/hall-greybox/**'
       - 'scripts/hall-camera/**'
       - 'scripts/hall-material/**'
@@ -50,6 +56,8 @@ on:
       - 'scripts/validate-hall-material-transport.ts'
       - 'scripts/validate-hall-material-decision.ts'
       - 'scripts/validate-hall-post-material-authority.ts'
+      - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-rights-policy-schema.ts'
       - 'package.json'
   workflow_dispatch:
 
@@ -92,6 +100,12 @@ jobs:
 
       - name: Validate frozen H3 R1 selected material authority
         run: npm run validate:hall-post-material-authority
+
+      - name: Validate Pushkin rights and source-slice authority
+        run: npm run validate:hall-pushkin-rights
+
+      - name: Validate canonical Pushkin rights record schema
+        run: npm run validate:hall-pushkin-rights-policy-schema
 
       - name: Validate phase-independent material transport source contract
         run: npm run validate:hall-material-transport

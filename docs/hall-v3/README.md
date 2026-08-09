@@ -6,9 +6,9 @@ This directory is the technical/art-production authority for Hall v3 while the l
 
 The current machine phase and gate state live in [`hall-v3-contract.json`](hall-v3-contract.json). Prose cannot silently advance a Hall gate.
 
-## Current phase — Pushkin vertical slice active
+## Current phase — Pushkin vertical slice active, documentary rights still blocked
 
-Foundation, Reference Bible, metric greybox, Camera Approval and the material / lighting / export gate are completed. The machine contract now activates **`pushkinVerticalSlice`** and keeps every later Hall gate blocked.
+Foundation, Reference Bible, metric greybox, Camera Approval and the material / lighting / export gate are completed. The machine contract activates **`pushkinVerticalSlice`** and keeps every later Hall gate blocked.
 
 Frozen authority entering the slice:
 
@@ -28,6 +28,8 @@ The selected R1 variable witness is `pushkinViewing`: position `[8.0, 2.5, 1.60]
 
 `camera-rigs.json` remains immutable camera candidate evidence. `camera-decision.json` owns R1 selection and `camera-gate-promotion.json` owns the Camera Approval → Gate 4 transition. `material-spike.json` remains immutable candidate/evidence authority with null decision fields; `material-decision.json` owns the selected delivery semantics; [`material-gate-promotion.json`](material-gate-promotion.json) owns the separate Gate 4 → Pushkin transition.
 
+The first Pushkin transaction now adds **authority only**, not approved media. [`pushkin-rights.json`](pushkin-rights.json) separates historical object provenance from rights in a specific digital reproduction and keeps publication fail-closed. [`pushkin-slice.json`](pushkin-slice.json) defines the one-exhibit source/offline evidence contract on H3/R1/L0. The Kiprensky 1827 portrait and the 1833 `Eugene Onegin` edition are registered as `rights-pending`; the weak Onegin autograph mirror without primary institutional object identity is `blocked`. No documentary source file hash or Hall runtime media path is authorized yet.
+
 ## Current source authority
 
 - [`REFERENCE_BIBLE.md`](REFERENCE_BIBLE.md), [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md), [`reference-bible.json`](reference-bible.json) — completed reference/metric evidence;
@@ -36,11 +38,14 @@ The selected R1 variable witness is `pushkinViewing`: position `[8.0, 2.5, 1.60]
 - [`material-spike.json`](material-spike.json) — accepted material/light/export candidate and visual-evidence contract;
 - [`material-decision.json`](material-decision.json) — selected L0/UV0/export/material semantics and rejected current L1 bake;
 - [`material-gate-promotion.json`](material-gate-promotion.json) — machine transition into `pushkinVerticalSlice` plus the bounded next-gate scope;
+- [`pushkin-rights.json`](pushkin-rights.json) — fail-closed documentary object/reproduction/jurisdiction/use registry; non-`approved` records cannot ship;
+- [`pushkin-slice.json`](pushkin-slice.json) — H3/R1/L0 one-exhibit source/offline contract, required evidence, delivery preflight and unset first-slice budgets;
 - `scripts/hall-greybox/generate-candidates.py`, `scripts/hall-camera/generate-camera-candidates.py`, `scripts/hall-material/*` — frozen reproducibility/evidence generators;
 - `scripts/validate-hall-topology-selection-provenance.ts` — frozen shootout provenance;
 - `scripts/validate-hall-material-transport.ts` — phase-independent raw/optimized/semantic/GPU transport guard;
 - `scripts/validate-hall-post-material-authority.ts` — persistent current authority after Gate-4 promotion;
-- `.github/workflows/hall-greybox-tooling.yml` — exact-head Blender/export/browser regeneration barrier.
+- `scripts/validate-hall-pushkin-rights.ts` — Pushkin rights/source fail-closed authority; any future `approved` record requires verified object identity, approved reproduction-rights disposition, final credit, exact source-file hash and Hall runtime path;
+- `.github/workflows/hall-greybox-tooling.yml` — exact-head source-rights plus Blender/export/browser regeneration barrier.
 
 Earlier camera/material phase-specific validators remain in the repository for forensic reproduction of their original gates. They are not current-phase authority after material promotion.
 
@@ -53,7 +58,8 @@ Earlier camera/material phase-specific validators remain in the repository for f
 - No generated `.blend`, QA PNG/SVG evidence or GLB becomes production web authority merely by existing in Actions.
 - Accepted 256px PNG proof maps remain evidence only, not production texture assets or encoding authority.
 - The current L1 external-lightmap bake remains rejected and may not be silently reused as approved.
-- No rights-uncleared documentary media is allowed into a production Hall manifest.
+- No `candidate`, `source-verified`, `rights-pending` or `blocked` documentary record is eligible for a production Hall manifest; only independently `approved` records may enter it.
+- Museum/catalogue object identity and rights in a particular digital reproduction remain separate evidence questions.
 - AI may not impersonate a historical facsimile, signature, manuscript or museum object, and may not substitute for missing documentary rights.
 - FPS/free-walk, hover whispers, dust, mirror floor and effect-driven rescue remain non-goals.
 
@@ -93,19 +99,30 @@ Two machine-green visual artifacts were manually rejected before the accepted Ga
 
 This gate is deliberately **offline/source-first**. It does not authorize production WebGL integration by itself.
 
+### Current rights/source state
+
+The registry currently proves two useful object identities but **zero approved documentary runtime assets**:
+
+- `pushkin-kiprensky-1827-portrait` — object provenance `source-verified`, reproduction/use disposition `rights-pending`, no source-file hash/runtime path;
+- `pushkin-onegin-1833-edition` — object provenance `source-verified`, reproduction/use disposition `rights-pending`, no source-file hash/runtime path;
+- `pushkin-onegin-autograph-weak-mirror` — `blocked` because a public mirror/Commons declaration does not repair missing primary institutional object provenance.
+
+`pushkin-slice.json` therefore keeps `productionManifestAllowed=false`. The next mutation is exact file acquisition/hash + independent rights/credit disposition. It is **not** a WebGL implementation transaction.
+
 ### First bounded ordering
 
-1. **Rights/provenance record first for documentary hero assets.** [`RIGHTS_REGISTER.md`](RIGHTS_REGISTER.md) requires source identity, rights basis, credit, source URL/access date and verification. Only `approved` documentary records may enter a production Hall manifest.
-2. Acquire/verify one bounded Pushkin portrait/document set. Pending or ambiguous rights block that asset; AI is not a substitute for missing rights.
+1. Acquire exact reproduction files only for the registered strong candidates; record SHA-256 and final source/credit chain.
+2. Resolve intended-use/reproduction rights independently from object identity. Only records that satisfy the complete approval contract may move to `approved`.
 3. Assemble one complete Pushkin exhibit using Blender/source authority on frozen H3/R1/L0. React/Three is not the modeller.
 4. Author near-final materials on selected UV0 and compare final production texture encoding using measured slice evidence rather than assuming PNG/KTX2.
-5. Produce fixed stills, close material crops, desktop/mobile framing and a 20–30 s offline camera sequence, including no-effects baseline and raw-vs-optimized comparison.
+5. Produce 8–12 fixed stills, close material crops, desktop/mobile framing and a 20–30 s offline camera sequence, including no-effects baseline and raw-vs-optimized comparison.
 6. Calibrate first-slice transfer, decode, GPU-memory and frame-time budgets from the representative slice.
-7. If the offline sequence is not compelling or hero provenance is unresolved, the slice does **not** advance to WebGL integration.
+7. If the offline sequence is not compelling or hero provenance/rights remain unresolved, the slice does **not** advance to WebGL integration.
 
 ### Allowed in this gate
 
-- explicit Pushkin rights/provenance registration;
+- explicit Pushkin rights/provenance registration and exact source-file acquisition/hash;
+- promotion of only independently approved documentary records;
 - one complete offline Pushkin exhibit;
 - rights-cleared portrait/documentary media;
 - near-final material authoring on UV0;
@@ -116,6 +133,7 @@ This gate is deliberately **offline/source-first**. It does not authorize produc
 
 ### Forbidden in this gate
 
+- inferring digital-reproduction rights from object age, public visibility or catalogue presence;
 - full-Hall lookdev;
 - H3 topology redesign;
 - R1 redesign without reopening Camera Approval;
@@ -131,13 +149,15 @@ This gate is deliberately **offline/source-first**. It does not authorize produc
 
 ## Production order
 
-`reference bible → metric greybox → topology decision → camera evidence → camera decision → camera gate promotion → material/light/export evidence → material delivery decision → material gate promotion → Pushkin vertical slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
+`reference bible → metric greybox → topology decision → camera evidence → camera decision → camera gate promotion → material/light/export evidence → material delivery decision → material gate promotion → Pushkin rights/source acquisition → Pushkin offline slice → offline visual approval → optimized runtime asset → web vertical slice → remaining exhibits → advanced modes`
 
 Skipping a gate is a blocker, not an acceleration.
 
 ## Documents
 
 - [`hall-v3-contract.json`](hall-v3-contract.json)
+- [`pushkin-rights.json`](pushkin-rights.json)
+- [`pushkin-slice.json`](pushkin-slice.json)
 - [`material-gate-promotion.json`](material-gate-promotion.json)
 - [`material-decision.json`](material-decision.json)
 - [`material-spike.json`](material-spike.json)
