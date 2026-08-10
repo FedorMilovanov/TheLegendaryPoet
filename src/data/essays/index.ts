@@ -4,6 +4,14 @@ import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
 import { yeseninPartOnePublic } from './yeseninPartOnePublic';
 import { yeseninPartTwoPublic } from './yeseninPartTwoPublic';
+import {
+  expandYeseninPartTwoBlocks,
+  yeseninPartTwoExpansionSources,
+} from './yeseninPartTwoExpansion';
+import {
+  supplementYeseninPartTwoBlocks,
+  yeseninPartTwoSupplementSources,
+} from './yeseninPartTwoSupplement';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -280,6 +288,12 @@ const yeseninPartTwoGrzhebinImageUrl =
 
 const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
   dateModified: '2026-08-10',
+  cover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей_Есенин_в_1923_году.jpg',
+  cardCover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей_Есенин_в_1923_году.jpg',
+  coverAlt: 'Сергей Есенин, 1923 год — архивный портрет для второй части документальной биографии',
+  coverKind: 'archive',
+  coverCredit: 'Неизвестный фотограф · Wikimedia Commons · общественное достояние',
+  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Сергей_Есенин_в_1923_году.jpg',
   sources: [
     ...(yeseninPartTwoPublic.sources ?? [])
       .filter(
@@ -301,6 +315,8 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     ...yeseninPartTwoMemoirSources,
     ...yeseninPartTwoDecemberInquirySources,
     ...yeseninPartTwoDeathObjectSources,
+    ...yeseninPartTwoExpansionSources,
+    ...yeseninPartTwoSupplementSources,
     {
       id: 'yes2-publication-ledger',
       title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -310,7 +326,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       note: 'Редакционный реестр: какое печатное издание и какая страница стоят за каждым документом, включая архивные дела без публичного адреса.',
     },
   ],
-  blocks: yeseninPartTwoPublic.blocks.map((block) => {
+  blocks: supplementYeseninPartTwoBlocks(expandYeseninPartTwoBlocks(yeseninPartTwoPublic.blocks.map((block) => {
     if (
       block.type === 'paragraph' &&
       block.text.startsWith('В эти годы рядом существовали вещи')
@@ -493,7 +509,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       ...block,
       credit: `${block.credit ?? 'Wikimedia Commons'} · общественное достояние`,
     };
-  }),
+  }))),
 });
 
 const mayakovskyPartOnePublished = publishEssay(mayakovskyPartOne, {
