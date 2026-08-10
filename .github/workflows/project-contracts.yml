@@ -40,6 +40,8 @@ jobs:
         run: npm run validate:hall-pushkin-acquisition
       - name: Validate Hall v3 Pushkin offline exhibit source contract
         run: npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+      - name: Validate Hall v3 Pushkin first-slice budget authority
+        run: node scripts/validate-hall-pushkin-offline-budget.mjs
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
       - name: Validate premium reader certification wiring
