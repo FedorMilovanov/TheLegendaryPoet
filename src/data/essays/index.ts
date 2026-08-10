@@ -115,6 +115,12 @@ const yeseninPartTwoSourceOverrides: Record<string, Partial<EssaySource>> = {
     year: 1999,
     note: 'Публичный том ПСС содержит письма и академические комментарии, включая письмо № 106 А. М. Сахарову (апрель 1921 года) и разбор издательского замысла «Ржаных коней». В раннем абзаце 1921 года источник используется для документированной издательской части; хронологический каркас остаётся за Летописью.',
   },
+  'yes2-gilyarevsky-act-1925-12-29': {
+    title: 'Акт вскрытия трупа С. Есенина',
+    url: 'https://or.imli.ru/akt-vskrytiya-trupa-s-esenina',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 47',
+    note: 'Публичная архивная карточка ИМЛИ идентифицирует точный объект акта вскрытия. Она используется как object-level provenance и не объявляет первоначальную процедуру безупречной; права на воспроизведение изображения документа отдельно не предоставляются.',
+  },
 };
 
 const yeseninPartTwoGrzhebinCoverSource: EssaySource = {
@@ -157,6 +163,36 @@ const yeseninPartTwoP75Sources: EssaySource[] = [
   },
 ];
 
+const yeseninPartTwoDecemberInquirySources: EssaySource[] = [
+  {
+    id: 'yes2-inquiry-nazaryev-1925-12-28',
+    title: 'Протокол опроса В. М. Назарьева',
+    url: 'https://or.imli.ru/protokol-oprosa-v-m-nazareva',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 40',
+    year: 1925,
+    note: 'Exact object page протокола управляющего гостиницей. Используется для следственного свидетельства о гостиничном слое; не заменяет отсутствующую гостиничную книгу или карточку номера и не даёт разрешения на републикацию архивного изображения.',
+  },
+  {
+    id: 'yes2-inquiry-ea-ustinova-1925-12-28',
+    title: 'Протокол опроса Е. А. Устиновой',
+    url: 'https://or.imli.ru/protokol-oprosa-e-a-ustinovoj',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 42',
+    year: 1925,
+    note: 'Exact object page современного событию протокола Е. А. Устиновой. Протокол отделяется от позднейших мемуарных редакций; архивная карточка не является лицензией на воспроизведение листа.',
+  },
+  {
+    id: 'yes2-inquiry-ehrlich-1925-12-28',
+    title: 'Протокол опроса В. И. Эрлиха',
+    url: 'https://or.imli.ru/protokol-oprosa-v-i-erlikha',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 43',
+    year: 1925,
+    note: 'Exact object page современного событию протокола В. И. Эрлиха. Используется для свидетельства о передаче последнего стихотворения; не сливается с поздней переработкой воспоминаний и не устанавливает юридический статус текста.',
+  },
+];
+
 const yeseninPartTwoChaginCommonsUrl =
   'https://commons.wikimedia.org/wiki/File:Chagin_and_Esenin_1924.jpg';
 const yeseninPartTwoGrzhebinCommonsUrl =
@@ -168,7 +204,11 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
   dateModified: '2026-08-10',
   sources: [
     ...(yeseninPartTwoPublic.sources ?? [])
-      .filter((source) => source.id !== 'yesenin-chagin-1924')
+      .filter(
+        (source) =>
+          source.id !== 'yesenin-chagin-1924' &&
+          source.id !== 'yes2-inquiry-protocols-1925-12-28',
+      )
       .map((source) => {
         const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
         const sourceOverride = source.id ? yeseninPartTwoSourceOverrides[source.id] : undefined;
@@ -177,6 +217,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       }),
     yeseninPartTwoGrzhebinCoverSource,
     ...yeseninPartTwoP75Sources,
+    ...yeseninPartTwoDecemberInquirySources,
     {
       id: 'yes2-publication-ledger',
       title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -207,6 +248,42 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       return {
         ...block,
         sourceIds: ['yes2-letopis-t5-k1', 'yes2-nasedkin-posledniy-god'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Пребывание в «Англетере»')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-imli-death-documents-2003', 'yes2-inquiry-nazaryev-1925-12-28'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Тем же утром Есенин передал Эрлиху')
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-lab-letter-1992',
+          'yes2-inquiry-ehrlich-1925-12-28',
+          'yes2-inquiry-ea-ustinova-1925-12-28',
+        ],
+      };
+    }
+    if (
+      block.type === 'note' &&
+      block.variant === 'myth' &&
+      block.claim === 'Последнее стихотворение — юридически доказанная предсмертная записка Эрлиху.'
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-lab-letter-1992',
+          'yes2-inquiry-ehrlich-1925-12-28',
+          'yes2-inquiry-ea-ustinova-1925-12-28',
+        ],
       };
     }
     if (
