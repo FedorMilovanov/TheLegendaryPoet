@@ -18,7 +18,7 @@ npm run build
 npm run preview
 ```
 
-Workflow `Project contracts` без установки зависимостей проверяет машинный контракт проекта и UTC-ротацию. `npm run check` продолжает проверять контент, бренд, маршруты, взаимодействия и TypeScript; финальные production/prerender/browser-гейты запускаются отдельными workflow GitHub Actions.
+Workflow `Project contracts` использует общий Node/dependency setup с точной установкой из lockfile (`npm ci`), после чего проверяет машинный контракт проекта, Hall-контракты и UTC-ротацию. `npm run check` продолжает проверять контент, бренд, маршруты, взаимодействия и TypeScript; финальные production/prerender/browser-гейты запускаются отдельными workflow GitHub Actions.
 
 ## Каноническая архитектура
 
