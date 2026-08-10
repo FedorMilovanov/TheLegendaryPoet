@@ -88,6 +88,22 @@ const yeseninPartTwoOfficialUrls: Record<string, string> = {
     'https://dl.tufts.edu/concern/pdfs/h415pp46s',
 };
 
+const yeseninPartTwoSourceOverrides: Record<string, Partial<EssaySource>> = {
+  'yes2-lab-letter-1992': {
+    title: 'ПСС, т. 4: опубликованный академический witness заключения № 2028 от 15 июня 1992 года',
+    url: 'https://feb-web.ru/feb/esenin/texts/e74/e74-323-.htm?cmd=p',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    note: 'Публичный академический комментарий передаёт вывод лабораторного заключения № 2028 о крови как пишущем веществе. Эта ссылка не выдаётся за оригинальный лабораторный документ и не устанавливает адресата, мотив или юридическую функцию стихотворения.',
+  },
+  'yes2-commission-1991-1993': {
+    title: 'Ю. Л. Прокушев. «Прозрения гения»: публичный академический witness итогов комиссии 1991–1993 годов',
+    url: 'https://feb-web.ru/feb/esenin/chronics/el1/el1-005-.htm?cmd=p',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    year: 2003,
+    note: 'Публичная академическая публикация цитирует и описывает выводы комиссии и проведённых экспертиз. Это не ссылка на полный архив комиссии и не утверждение, что первоначальная процедура была безупречной.',
+  },
+};
+
 const yeseninPartTwoGrzhebinCoverSource: EssaySource = {
   id: 'yesenin-grzhebin-1922-cover',
   title: 'С. А. Есенин. «Собрание стихов и поэм», т. I. Берлин, 1922 — обложка',
@@ -133,17 +149,18 @@ const yeseninPartTwoChaginCommonsUrl =
 const yeseninPartTwoGrzhebinCommonsUrl =
   'https://commons.wikimedia.org/wiki/File:Есенин_С.А._Собрание_стихов_и_поэм._Т._I._1922г_(обложка_изд._Гржебина_З.)_ГИМ.jpg';
 const yeseninPartTwoGrzhebinImageUrl =
-  'https://upload.wikimedia.org/wikipedia/commons/9/92/%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D0%A1.%D0%90._%D0%A1%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D0%B5_%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2_%D0%B8_%D0%BF%D0%BE%D1%8D%D0%BC._%D0%A2._I._1922%D0%B3_%28%D0%BE%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7%D0%B4._%D0%93%D1%80%D0%B6%D0%B5%D0%B1%D0%B8%D0%BD%D0%B0_%D0%97.%29_%D0%93%D0%98%D0%9C.jpg';
+  'https://upload.wikimedia.org/wikipedia/commons/9/92/%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D0%A1.%D0%90._%D0%A1%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D0%B5_%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2_%D0%B8_%D0%BF%D0%BE%D1%8D%D0%BC._%D0%A2._I._1922%D0%B3_%28%D0%BE%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B4._%D0%93%D1%80%D0%B6%D0%B5%D0%B1%D0%B8%D0%BD%D0%B0_%D0%97.%29_%D0%93%D0%98%D0%9C.jpg';
 
 const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
-  dateModified: '2026-08-08',
+  dateModified: '2026-08-10',
   sources: [
     ...(yeseninPartTwoPublic.sources ?? [])
       .filter((source) => source.id !== 'yesenin-chagin-1924')
       .map((source) => {
         const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
-        const url = officialUrl ?? source.url;
-        return url ? { ...source, url } : { ...source, url: undefined };
+        const sourceOverride = source.id ? yeseninPartTwoSourceOverrides[source.id] : undefined;
+        const url = sourceOverride?.url ?? officialUrl ?? source.url;
+        return { ...source, ...sourceOverride, url };
       }),
     yeseninPartTwoGrzhebinCoverSource,
     ...yeseninPartTwoP75Sources,
