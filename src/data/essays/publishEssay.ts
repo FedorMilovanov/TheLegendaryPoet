@@ -41,6 +41,18 @@ export function publishEssay(base: Essay, overrides: EssayPublicationOverrides =
     sources: overrides.sources ?? base.sources,
   }) as Essay;
 
+  // A newly supplied editorial reconstruction is a different media object from an
+  // inherited archive cover. Unless the caller explicitly supplies new provenance,
+  // do not let the old archive URL survive the cover replacement.
+  if (
+    overrides.coverKind === 'reconstruction'
+    && overrides.cover
+    && overrides.cover !== base.cover
+    && !Object.prototype.hasOwnProperty.call(overrides, 'coverSourceUrl')
+  ) {
+    delete draft.coverSourceUrl;
+  }
+
   draft.blocks = applyVerifiedEssayMedia(draft.blocks);
   draft.readTime = estimateReadTime(draft.blocks);
   return deepFreeze(draft);
