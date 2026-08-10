@@ -277,6 +277,15 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     }
     if (
       block.type === 'paragraph' &&
+      block.text.startsWith('26 ноября Есенин был помещён в клинику 1-го МГУ')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-letopis-t5-k1', 'yes2-medical-facsimile-1925'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
       block.text.startsWith('20 декабря Василий Наседкин и Екатерина Есенина посетили поэта')
     ) {
       return {
@@ -290,7 +299,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     ) {
       return {
         ...block,
-        sourceIds: ['yes2-imli-death-documents-2003', 'yes2-inquiry-nazaryev-1925-12-28'],
+        sourceIds: ['yes2-letopis-t5-k1', 'yes2-inquiry-nazaryev-1925-12-28'],
       };
     }
     if (
@@ -318,6 +327,15 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
           'yes2-inquiry-ehrlich-1925-12-28',
           'yes2-inquiry-ea-ustinova-1925-12-28',
         ],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Процедура оставляет вопросы о полноте осмотра')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-commission-1991-1993', 'yes2-gilyarevsky-act-1925-12-29'],
       };
     }
     if (
