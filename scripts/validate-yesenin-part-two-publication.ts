@@ -15,15 +15,7 @@ if (essay.slug !== 'sergei-yesenin-1921-1925') throw new Error('unexpected Part 
 if (essay.series?.part !== 2 || essay.series.total !== 2) {
   throw new Error('Yesenin biography series metadata is not 2 of 2');
 }
-/*
- * Guard the actual longform scope, not the advertised label.
- *
- * This used to assert `readTime >= 45`, which only proved that a number in a
- * data file was large: the body is ~2 400 words (~13 min), so CI was actively
- * requiring the site to overstate the reading time by roughly 4x. Reading time
- * is now derived from the text, so the meaningful invariant is the amount of
- * text itself.
- */
+
 const partTwoWords = essay.blocks
   .flatMap((block) => {
     const value = block as Record<string, unknown>;
@@ -33,12 +25,13 @@ const partTwoWords = essay.blocks
   })
   .reduce((total, text) => total + (text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0), 0);
 
-if (partTwoWords < 2000) {
-  throw new Error(`Part II body was compressed below longform scope: ${partTwoWords} words`);
+if (partTwoWords < 8500 || partTwoWords > 11500) {
+  throw new Error(`Part II body must stay inside the final 8,500–11,500-word longform scope: ${partTwoWords} words`);
 }
 if (essay.coverKind !== 'archive') throw new Error('Part II cover must remain an archive image');
-if (!essay.coverSourceUrl?.includes('commons.wikimedia.org/wiki/File:Esenin1925.jpg')) {
-  throw new Error('Part II cover lost its public-domain provenance URL');
+const expectedCoverSource = 'https://commons.wikimedia.org/wiki/File:Сергей_Есенин_в_1923_году.jpg';
+if (essay.coverSourceUrl !== expectedCoverSource) {
+  throw new Error(`Part II cover lost its distinct public-domain provenance URL: ${essay.coverSourceUrl ?? '<none>'}`);
 }
 if (!essay.coverCredit?.includes('общественное достояние')) {
   throw new Error('Part II cover lost its public-domain credit');
@@ -132,11 +125,25 @@ const reflections = essay.blocks.filter((block) => block.type === 'reflection');
 if (reflections.length !== 1) throw new Error(`expected one concentrated reflection, found ${reflections.length}`);
 
 const images = essay.blocks.filter((block) => block.type === 'image');
-if (images.length < 3) throw new Error(`expected at least 3 rights-cleared archive images, found ${images.length}`);
+if (images.length < 16 || images.length > 24) {
+  throw new Error(`Part II must publish 16–24 rights-cleared documentary visuals; found ${images.length}`);
+}
+const documentaryImages = images.filter((image) => image.kind === 'archive' || image.kind === 'document');
+if (documentaryImages.length < 10) {
+  throw new Error(`Part II must retain at least 10 documentary visuals; found ${documentaryImages.length}`);
+}
+const imageSourceUrls = new Set<string>();
 for (const [index, image] of images.entries()) {
   if (image.kind !== 'archive') throw new Error(`image ${index + 1} is not classified as archive`);
   if (!image.sourceUrl?.startsWith('https://commons.wikimedia.org/wiki/File:')) {
     throw new Error(`image ${index + 1} lacks Wikimedia Commons provenance`);
+  }
+  if (imageSourceUrls.has(image.sourceUrl)) {
+    throw new Error(`image ${index + 1} duplicates a documentary provenance URL: ${image.sourceUrl}`);
+  }
+  imageSourceUrls.add(image.sourceUrl);
+  if (image.sourceUrl === essay.coverSourceUrl) {
+    throw new Error(`image ${index + 1} reuses the dedicated Part II cover inside the body`);
   }
   if (!image.credit?.includes('общественное достояние')) {
     throw new Error(`image ${index + 1} lacks a public-domain credit`);
@@ -148,7 +155,9 @@ for (const [index, image] of images.entries()) {
 
 const sources = essay.sources ?? [];
 const sourceIds = new Set(sources.map((source) => source.id).filter((id): id is string => Boolean(id)));
-if (sourceIds.size < 14) throw new Error(`Part II bibliography is too small: ${sourceIds.size} stable ids`);
+if (sourceIds.size < 75 || sourceIds.size > 110) {
+  throw new Error(`Part II bibliography must stay inside the final 75–110 source-unit scope: ${sourceIds.size}`);
+}
 
 const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-letopis-t3-k1': /^https:\/\/biblio\.imli\.ru\//,
@@ -178,20 +187,20 @@ const requiredOfficialUrls: Record<string, RegExp> = {
   'yes2-pss-declarations-vol7k1': /^https:\/\/feb-web\.ru\//,
   'yes2-black-man-commentary': /^https:\/\/feb-web\.ru\//,
   'yes2-duncan-russian-days-1929-tu': /^https:\/\/dl\.tufts\.edu\//,
+  'yes2-letter-klyuev-1922-05-05': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-schneider-1922-06-21': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-mariengof-1922-07-09': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-schneider-1922-07-13': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-benislavskaya-1924-10-29': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-benislavskaya-1924-after-11-02': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-benislavskaya-1925-01-20': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-chagin-1925-03': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-yesenina-1925-06-16': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-evdokimov-1925-12-06': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-ehrlich-1925-12-07': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-yesenina-1925-12-07-13': /^https:\/\/www\.museum-esenin\.ru\//,
+  'yes2-letter-zeitlin-1925-12-13': /^https:\/\/www\.museum-esenin\.ru\//,
 };
-/*
- * A source must be honest, not merely linked.
- *
- * Requiring every source to carry an HTTPS URL is what produced the regression
- * this validator was meant to prevent: archival case files and print-only
- * scholarly editions have no public address, so the catalog silently pointed
- * them at this repository's own markdown ledger. A reader then clicked through
- * from the forensic act to our source code.
- *
- * The real invariants: a URL, when present, must be public HTTPS and must never
- * be a self-reference standing in for a document; a source without a URL must
- * instead say in prose where the document can be found.
- */
 const SELF_REFERENCE = /github\.com\/FedorMilovanov/i;
 
 for (const source of sources) {
@@ -201,7 +210,6 @@ for (const source of sources) {
     if (!source.url.startsWith('https://')) {
       throw new Error(`source ${source.id} must use a public HTTPS URL`);
     }
-    // The publication ledger itself is allowed to link to the repository.
     if (SELF_REFERENCE.test(source.url) && source.id !== 'yes2-publication-ledger') {
       throw new Error(
         `source ${source.id} points at our own repository instead of the document`,
@@ -242,6 +250,12 @@ const explicitPre1925Sources = new Set([
   'yes2-baku-no215-commentary',
   'yes2-pss-declarations-vol7k1',
   'yes2-black-man-commentary',
+  'yes2-letter-klyuev-1922-05-05',
+  'yes2-letter-schneider-1922-06-21',
+  'yes2-letter-mariengof-1922-07-09',
+  'yes2-letter-schneider-1922-07-13',
+  'yes2-letter-benislavskaya-1924-10-29',
+  'yes2-letter-benislavskaya-1924-after-11-02',
 ]);
 
 const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> = {
@@ -249,6 +263,7 @@ const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> =
     'yes2-letopis-t3-k2',
     'yes2-pss-chronology',
     'yes2-zhelezny-mirgorod-commentary',
+    'yes2-letter-mariengof-1922-07-09',
   ]),
   '«Москва кабацкая»: роль, рынок и документированные эпизоды': new Set([
     'yes2-moscow-kabatskaya-1924',
@@ -261,6 +276,8 @@ const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> =
   'Галина Бениславская: рукописи и издательские дела': new Set([
     'yes2-pss-letters-vol6',
     'yes2-pss-business-documents',
+    'yes2-letter-benislavskaya-1924-10-29',
+    'yes2-letter-benislavskaya-1924-after-11-02',
   ]),
   'Кавказ и воображаемая Персия': new Set([
     'yes2-pss-chronology',
@@ -268,6 +285,8 @@ const requiredPre1925AuthoritiesBySection: Record<string, ReadonlySet<string>> =
     'yes2-persian-motifs-commentary',
     'yes2-ballada-26-commentary',
     'yes2-baku-no215-commentary',
+    'yes2-letter-benislavskaya-1925-01-20',
+    'yes2-letter-chagin-1925-03',
   ]),
 };
 
@@ -432,5 +451,5 @@ for (const marker of [
 }
 
 console.log(
-  `Yesenin Part II publication: 16 sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} public source links, ${images.length} public-domain images; documentary, visual and rights boundaries passed.`,
+  `Yesenin Part II publication: ${partTwoWords} words, 16 sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} source units, ${images.length} public-domain images; final documentary, visual and rights boundaries passed.`,
 );
