@@ -181,6 +181,27 @@ const yeseninPartTwoP75Sources: EssaySource[] = [
   },
 ];
 
+const yeseninPartTwoMemoirSources: EssaySource[] = [
+  {
+    id: 'yes2-benislavskaya-memoir',
+    title: 'Г. А. Бениславская. «Воспоминания о Есенине»',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-049-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / «С. А. Есенин в воспоминаниях современников», т. 2',
+    year: 1986,
+    note: 'Item-level мемуар близкого человека. Используется для документирования личной цены поздней неустроенности; субъективность мемуара не скрывается и проверяется по редакционному комментарию и датированным документам.',
+  },
+  {
+    id: 'yes2-memoirs-editorial-comments-vol2',
+    title: 'А. А. Козловский. Комментарии к т. 2 «С. А. Есенин в воспоминаниях современников»',
+    url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-361-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / Художественная литература',
+    year: 1986,
+    note: 'Редакционно-текстологический контроль мемуарного корпуса: происхождение рукописей, незавершённость, субъективность и расхождения с хронологией не сглаживаются.',
+  },
+];
+
 const yeseninPartTwoDecemberInquirySources: EssaySource[] = [
   {
     id: 'yes2-inquiry-nazaryev-1925-12-28',
@@ -211,6 +232,45 @@ const yeseninPartTwoDecemberInquirySources: EssaySource[] = [
   },
 ];
 
+const yeseninPartTwoDeathObjectSources: EssaySource[] = [
+  {
+    id: 'yes2-death-discovery-act-1925-12-28',
+    title: 'Акт об обнаружении тела С. Есенина',
+    url: 'https://or.imli.ru/akt-ob-obnaruzhenii-tela-s-esenina',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 39',
+    year: 1925,
+    note: 'Exact object page акта обнаружения. Подтверждает существование и архивный шифр документа; карточка каталога не выдаётся за просмотр всего оригинального дела и не даёт право на републикацию изображения.',
+  },
+  {
+    id: 'yes2-inquiry-gf-ustinov-1925-12-28',
+    title: 'Протокол опроса Г. Ф. Устинова',
+    url: 'https://or.imli.ru/protokol-oprosa-g-f-ustinova',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 41',
+    year: 1925,
+    note: 'Exact object page современного событию протокола Г. Ф. Устинова. Используется как отдельная архивная единица, а не как замена позднейшим мемуарам.',
+  },
+  {
+    id: 'yes2-death-inventory-1925-12-28',
+    title: 'Протокол описи вещей в номере Есенина',
+    url: 'https://or.imli.ru/protokol-opisi-veshchej-v-nomere-esenina',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 44',
+    year: 1925,
+    note: 'Exact object page описи имущества в гостиничном номере. Карточка подтверждает объект и шифр; содержание не расширяется деталями, не прочитанными в публичном представлении.',
+  },
+  {
+    id: 'yes2-death-phoneogram-1925-12-28',
+    title: 'Телефонограмма о доставке тела С. Есенина в Обуховскую больницу',
+    url: 'https://or.imli.ru/telefonogramma-o-dostavke-trupa-s-esenina-v-obukhovskuyu-bolnitsu',
+    kind: 'primary',
+    institution: 'Отдел рукописей ИМЛИ РАН · ф. 32, оп. 2, ед. 45',
+    year: 1925,
+    note: 'Exact object page телефонограммы. Используется только как provenance конкретного документа и звена официального документооборота после обнаружения тела.',
+  },
+];
+
 const yeseninPartTwoChaginCommonsUrl =
   'https://commons.wikimedia.org/wiki/File:Chagin_and_Esenin_1924.jpg';
 const yeseninPartTwoGrzhebinCommonsUrl =
@@ -226,7 +286,9 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
         (source) =>
           source.id !== 'yesenin-chagin-1924' &&
           source.id !== 'yes2-inquiry-protocols-1925-12-28' &&
-          source.id !== 'yes2-pss-poetry-comments',
+          source.id !== 'yes2-pss-poetry-comments' &&
+          source.id !== 'yes2-contemporary-memoirs-1986' &&
+          source.id !== 'yes2-imli-death-documents-2003',
       )
       .map((source) => {
         const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
@@ -236,7 +298,9 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       }),
     yeseninPartTwoGrzhebinCoverSource,
     ...yeseninPartTwoP75Sources,
+    ...yeseninPartTwoMemoirSources,
     ...yeseninPartTwoDecemberInquirySources,
+    ...yeseninPartTwoDeathObjectSources,
     {
       id: 'yes2-publication-ledger',
       title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -247,6 +311,30 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     },
   ],
   blocks: yeseninPartTwoPublic.blocks.map((block) => {
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('В эти годы рядом существовали вещи')
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-memoirs-editorial-comments-vol2',
+          'yes2-pss-business-documents',
+          'yes2-pss-legal-1923',
+          'yes2-death-discovery-act-1925-12-28',
+          'yes2-publication-ledger',
+        ],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Разница языков осложняла общение')
+    ) {
+      return {
+        ...block,
+        sourceIds: ['yes2-duncan-russian-days-1929-tu'],
+      };
+    }
     if (
       block.type === 'paragraph' &&
       block.text.startsWith('Эта короткая газетная дуэль хорошо показывает')
@@ -304,6 +392,16 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     }
     if (
       block.type === 'paragraph' &&
+      block.text.startsWith('27 декабря была оформлена доверенность Вольфу Эрлиху')
+    ) {
+      return {
+        ...block,
+        text: '27 декабря была оформлена доверенность Вольфу Эрлиху. Академическая публикация ПСС печатает документ по подлиннику ИМЛИ, ф. 32, оп. 2, ед. хр. 38, и отдельно указывает распределение почерков: текст написал Эрлих, подпись и дату поставил Есенин, удостоверительную запись сделал М. А. Фроман. Это конкретное практическое поручение. Оно не опровергает кризис, но не позволяет описывать последний день как время, из которого полностью исчезло будущее.',
+        sourceIds: ['yes2-power-attorney-1925-12-27'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
       block.text.startsWith('Тем же утром Есенин передал Эрлиху')
     ) {
       return {
@@ -331,11 +429,43 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     }
     if (
       block.type === 'paragraph' &&
+      block.text.startsWith('В ночь с 27 на 28 декабря Есенин умер')
+    ) {
+      return {
+        ...block,
+        text: 'В ночь с 27 на 28 декабря Есенин умер. Современное событию расследование и судебно-медицинский акт Александра Гиляревского квалифицировали смерть как самоубийство через повешение. В открытом каталоге Отдела рукописей ИМЛИ независимо проверяются точные архивные единицы: акт обнаружения тела, протоколы управляющего и свидетелей, опись вещей в номере, телефонограмма о доставке тела в Обуховскую больницу и акт вскрытия. Эти карточки подтверждают существование и архивные шифры документов, но не дают права считать просмотренной каждую страницу оригинального дела и не превращают каталог в полную реконструкцию порядка листов. Поэтому утверждение «официальная версия не имела документов» неверно.',
+        sourceIds: [
+          'yes2-death-discovery-act-1925-12-28',
+          'yes2-inquiry-nazaryev-1925-12-28',
+          'yes2-inquiry-gf-ustinov-1925-12-28',
+          'yes2-inquiry-ea-ustinova-1925-12-28',
+          'yes2-inquiry-ehrlich-1925-12-28',
+          'yes2-death-inventory-1925-12-28',
+          'yes2-death-phoneogram-1925-12-28',
+          'yes2-gilyarevsky-act-1925-12-29',
+        ],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
       block.text.startsWith('Процедура оставляет вопросы о полноте осмотра')
     ) {
       return {
         ...block,
         sourceIds: ['yes2-commission-1991-1993', 'yes2-gilyarevsky-act-1925-12-29'],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Разрушение не является доказательством избранности')
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-benislavskaya-memoir',
+          'yes2-memoirs-editorial-comments-vol2',
+          'yes2-letopis-t5-k1',
+        ],
       };
     }
     if (
