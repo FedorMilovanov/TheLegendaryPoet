@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "status": "offline-exhibit-authoring",
+  "source": {
+    "topology": "H3",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "approvedRig": "R1",
+    "lightingBaseline": "L0-minimal-runtime",
+    "surfaceUv": "UV0",
+    "sourceBlend": "qa-artifacts/hall-material-spike/material-spike.blend",
+    "sourceEvidence": "qa-artifacts/hall-material-spike/source-evidence.json",
+    "sourceAssetsEvidence": "qa-artifacts/hall-pushkin-offline/sources/source-assets-evidence.json",
+    "ownerAuthority": "docs/hall-v3/pushkin-owner-disposition.json",
+    "sliceAuthority": "docs/hall-v3/pushkin-slice.json"
+  },
+  "approvedCameraWitness": {
+    "id": "R1-pushkinViewing",
+    "position": [8.0, 2.5, 1.6],
+    "target": [11.15, 5.45, 1.95],
+    "lensMm": 28
+  },
+  "exhibit": {
+    "nodeName": "EXHIBIT_alexander-pushkin",
+    "anchor": {
+      "center": [11.15, 5.45, 2.0],
+      "size": [2.4, 0.18, 3.2],
+      "rotationZ": -1.30
+    },
+    "documentCases": [
+      {"name": "EXHIBIT_DOC_CASE_01", "center": [9.7, 6.4, 0.55], "size": [1.0, 0.65, 1.1], "rotationZ": -0.45},
+      {"name": "EXHIBIT_DOC_CASE_02", "center": [10.7, 3.7, 0.55], "size": [1.0, 0.65, 1.1], "rotationZ": -0.45}
+    ],
+    "heroPortrait": {
+      "assetId": "pushkin-kiprensky-1827-portrait",
+      "sourceFile": "kiprensky-1827-source.jpg",
+      "sourceHash": "sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b",
+      "visibleImageSizeMetres": [1.52, 1.92],
+      "matSizeMetres": [1.74, 2.16],
+      "frameOuterSizeMetres": [1.94, 2.36],
+      "frameDepthMetres": 0.075,
+      "shadowGapMetres": 0.025
+    },
+    "oneginTitlePage": {
+      "assetId": "pushkin-onegin-1833-edition",
+      "sourceDerivativeFile": "onegin-1833-title-page.png",
+      "sourceHash": "sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5",
+      "sourcePdfPageIndex": 0,
+      "caseName": "EXHIBIT_DOC_CASE_01",
+      "displayPageSizeMetres": [0.52, 0.82],
+      "deckTiltDegrees": 18,
+      "glassClearanceMetres": 0.055
+    },
+    "contextCase": {
+      "caseName": "EXHIBIT_DOC_CASE_02",
+      "mode": "editorial-context-only-no-facsimile",
+      "labels": ["АЛЕКСАНДР ПУШКИН", "1799 — 1837", "ПОРТРЕТ — 1827", "ЕВГЕНИЙ ОНЕГИН — 1833"]
+    }
+  },
+  "artDirection": {
+    "intent": "restrained-premium-museum-not-stage-set",
+    "palette": {
+      "charcoal": [0.035, 0.041, 0.052, 1.0],
+      "warmStone": [0.245, 0.232, 0.210, 1.0],
+      "linen": [0.68, 0.63, 0.53, 1.0],
+      "paper": [0.78, 0.73, 0.63, 1.0],
+      "brass": [0.42, 0.25, 0.08, 1.0],
+      "glassTint": [0.82, 0.90, 0.92, 1.0]
+    },
+    "materials": {
+      "frameBrass": {"metallic": 0.82, "roughness": 0.30},
+      "linenMat": {"metallic": 0.0, "roughness": 0.86},
+      "charcoalPlinth": {"metallic": 0.0, "roughness": 0.68},
+      "paperBacking": {"metallic": 0.0, "roughness": 0.92},
+      "glass": {"metallic": 0.0, "roughness": 0.10, "transmission": 0.92, "alpha": 0.28}
+    },
+    "forbidden": [
+      "fog",
+      "bloom",
+      "mirror-floor",
+      "fake-autograph",
+      "generated-historical-facsimile",
+      "ornamental-overload",
+      "readable-modern-prop",
+      "effect-driven-visual-rescue"
+    ]
+  },
+  "offlineLighting": {
+    "evidenceOnly": true,
+    "productionLightingAuthorityUnchanged": "L0-minimal-runtime",
+    "worldStrength": 0.10,
+    "exposureStops": -0.35,
+    "lights": [
+      {"id": "hero-key", "type": "AREA", "location": [9.1, 3.8, 3.4], "target": [11.15, 5.45, 2.0], "energy": 460, "size": 2.2, "temperatureIntent": "warm-neutral"},
+      {"id": "hero-fill", "type": "AREA", "location": [8.9, 5.25, 2.75], "target": [11.0, 5.4, 1.95], "energy": 160, "size": 1.8, "temperatureIntent": "soft-neutral"},
+      {"id": "onegin-key", "type": "AREA", "location": [8.65, 5.45, 2.35], "target": [9.69, 6.38, 1.19], "energy": 280, "size": 1.0, "temperatureIntent": "warm-document"}
+    ]
+  },
+  "evidence": {
+    "renderEngine": "BLENDER_EEVEE_NEXT",
+    "desktopResolution": [1280, 720],
+    "mobileResolution": [720, 1280],
+    "stillCount": 10,
+    "stills": [
+      {"id": "01-r1-hero", "class": "desktop", "position": [8.0, 2.5, 1.6], "target": [11.15, 5.45, 1.95], "lensMm": 28},
+      {"id": "02-approach", "class": "desktop", "position": [7.6, 4.8, 1.7], "target": [10.7, 5.35, 1.75], "lensMm": 32},
+      {"id": "03-portrait-close", "class": "desktop", "position": [9.15, 4.2, 2.08], "target": [11.15, 5.45, 2.05], "lensMm": 58},
+      {"id": "04-frame-material", "class": "desktop", "position": [9.85, 3.95, 2.9], "target": [11.22, 4.64, 2.95], "lensMm": 72},
+      {"id": "05-onegin-medium", "class": "desktop", "position": [8.2, 5.05, 1.72], "target": [9.69, 6.38, 1.19], "lensMm": 42},
+      {"id": "06-onegin-close", "class": "desktop", "position": [8.95, 5.72, 1.55], "target": [9.69, 6.38, 1.20], "lensMm": 58},
+      {"id": "07-room-context", "class": "desktop", "position": [7.35, 3.65, 1.82], "target": [10.35, 5.35, 1.60], "lensMm": 30},
+      {"id": "08-side-light", "class": "desktop", "position": [8.75, 3.75, 2.48], "target": [11.18, 5.10, 2.55], "lensMm": 54},
+      {"id": "09-mobile-portrait", "class": "mobile", "position": [8.25, 3.15, 1.78], "target": [11.15, 5.45, 2.12], "lensMm": 38},
+      {"id": "10-mobile-onegin", "class": "mobile", "position": [8.55, 5.02, 1.72], "target": [9.69, 6.38, 1.18], "lensMm": 46}
+    ],
+    "cameraSequence": {
+      "durationSeconds": 24,
+      "fps": 24,
+      "resolution": [960, 540],
+      "keyframes": [
+        {"second": 0, "position": [7.35, 2.20, 1.64], "target": [10.45, 4.80, 1.72]},
+        {"second": 6, "position": [8.0, 2.5, 1.6], "target": [11.15, 5.45, 1.95]},
+        {"second": 12, "position": [8.18, 5.02, 1.68], "target": [9.69, 6.38, 1.19]},
+        {"second": 18, "position": [8.85, 3.95, 1.98], "target": [11.15, 5.45, 2.05]},
+        {"second": 24, "position": [8.25, 3.18, 1.72], "target": [11.15, 5.45, 2.02]}
+      ]
+    },
+    "rawGlbRequired": true,
+    "optimizedGlbRequired": true,
+    "khronosBeforeAndAfter": true,
+    "visualInspectionRequired": true,
+    "humanOwnerApprovalRequired": true
+  },
+  "productionBoundary": {
+    "productionAsset": false,
+    "documentaryProductionShippingAllowed": false,
+    "productionHallRouteMayChange": false,
+    "productionWebglMayBegin": false,
+    "offlineVisualApprovalMayPromoteFromGenerator": false
+  }
+}

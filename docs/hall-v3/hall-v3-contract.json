@@ -44,7 +44,8 @@
     "pushkinSlice": "docs/hall-v3/pushkin-slice.json",
     "pushkinAcquisition": "docs/hall-v3/pushkin-acquisition.json",
     "pushkinRightsReview": "docs/hall-v3/pushkin-rights-review.json",
-    "pushkinOwnerDisposition": "docs/hall-v3/pushkin-owner-disposition.json"
+    "pushkinOwnerDisposition": "docs/hall-v3/pushkin-owner-disposition.json",
+    "pushkinOfflineExhibit": "docs/hall-v3/pushkin-offline-exhibit.json"
   },
   "gates": {
     "foundation": "completed",

@@ -1,0 +1,304 @@
+name: Hall Pushkin offline exhibit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-offline-exhibit.yml'
+      - 'docs/hall-v3/hall-v3-contract.json'
+      - 'docs/hall-v3/RIGHTS_REGISTER.md'
+      - 'docs/hall-v3/AI_USAGE_POLICY.md'
+      - 'docs/hall-v3/SCENE_CONTRACT.md'
+      - 'docs/hall-v3/VISUAL_ACCEPTANCE.md'
+      - 'docs/hall-v3/ASSET_PIPELINE.md'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
+      - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/camera-gate-promotion.json'
+      - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/material-gate-promotion.json'
+      - 'docs/hall-v3/pushkin-rights.json'
+      - 'docs/hall-v3/pushkin-acquisition.json'
+      - 'docs/hall-v3/pushkin-rights-review.json'
+      - 'docs/hall-v3/pushkin-slice.json'
+      - 'docs/hall-v3/pushkin-owner-disposition.json'
+      - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'scripts/hall-greybox/generate-candidates.py'
+      - 'scripts/hall-material/generate-material-spike.py'
+      - 'scripts/hall-material/prepare-material-visual-evidence.py'
+      - 'scripts/hall-pushkin/**'
+      - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-acquisition.ts'
+      - 'scripts/validate-hall-pushkin-offline-exhibit.ts'
+      - 'scripts/hall-material/validate-gltf.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/actions/setup-node-deps/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-offline-exhibit.yml'
+      - 'docs/hall-v3/hall-v3-contract.json'
+      - 'docs/hall-v3/RIGHTS_REGISTER.md'
+      - 'docs/hall-v3/AI_USAGE_POLICY.md'
+      - 'docs/hall-v3/SCENE_CONTRACT.md'
+      - 'docs/hall-v3/VISUAL_ACCEPTANCE.md'
+      - 'docs/hall-v3/ASSET_PIPELINE.md'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
+      - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/camera-gate-promotion.json'
+      - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/material-gate-promotion.json'
+      - 'docs/hall-v3/pushkin-rights.json'
+      - 'docs/hall-v3/pushkin-acquisition.json'
+      - 'docs/hall-v3/pushkin-rights-review.json'
+      - 'docs/hall-v3/pushkin-slice.json'
+      - 'docs/hall-v3/pushkin-owner-disposition.json'
+      - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'scripts/hall-greybox/generate-candidates.py'
+      - 'scripts/hall-material/generate-material-spike.py'
+      - 'scripts/hall-material/prepare-material-visual-evidence.py'
+      - 'scripts/hall-pushkin/**'
+      - 'scripts/validate-hall-pushkin-rights.ts'
+      - 'scripts/validate-hall-pushkin-acquisition.ts'
+      - 'scripts/validate-hall-pushkin-offline-exhibit.ts'
+      - 'scripts/hall-material/validate-gltf.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/actions/setup-node-deps/**'
+  workflow_dispatch:
+
+concurrency:
+  group: hall-pushkin-offline-exhibit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
+  BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
+  BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
+  EXHIBIT_DIR: qa-artifacts/hall-pushkin-offline/exhibit
+  SOURCE_DIR: qa-artifacts/hall-pushkin-offline/sources
+
+jobs:
+  offline-exhibit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout exact Pushkin offline exhibit head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact checkout identity
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > hall-pushkin-offline-tested-head.txt
+
+      - name: Set up exact repository Node dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Validate owner, rights and acquisition boundaries
+        run: |
+          npm run validate:hall-pushkin-rights
+          npm run validate:hall-pushkin-acquisition
+          npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+
+      - name: Install exact-source and headless render system tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils libegl1 ffmpeg
+          pdfinfo -v 2>&1 | head -1
+          pdftoppm -v 2>&1 | head -1
+          ffmpeg -version | head -1
+
+      - name: Prepare and hash exact offline source assets
+        run: node scripts/hall-pushkin/prepare-offline-source-assets.mjs "$SOURCE_DIR"
+
+      - name: Download pinned Blender 4.5.12 LTS and vendor checksum
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/download .tools/blender
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_ARCHIVE_URL" --output ".tools/download/$BLENDER_ARCHIVE"
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_CHECKSUM_URL" --output .tools/download/blender-4.5.12.sha256
+          grep "${BLENDER_ARCHIVE}$" .tools/download/blender-4.5.12.sha256 > .tools/download/blender-linux.sha256
+          test -s .tools/download/blender-linux.sha256
+          (
+            cd .tools/download
+            sha256sum -c blender-linux.sha256
+          )
+          tar -xJf ".tools/download/$BLENDER_ARCHIVE" -C .tools/blender --strip-components=1
+          test -x .tools/blender/blender
+          printf 'BLENDER_BIN=%s/.tools/blender/blender\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+
+      - name: Record Blender runtime identity
+        run: "$BLENDER_BIN --version | tee hall-pushkin-offline-blender-version.txt"
+
+      - name: Regenerate frozen H1 H2 H3 source authority
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-greybox-candidates
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-greybox/generate-candidates.py \
+            -- \
+            --layouts docs/hall-v3/greybox-layouts.json \
+            --output-dir qa-artifacts/hall-greybox-candidates
+          HALL_GREYBOX_CANDIDATE_EVIDENCE=qa-artifacts/hall-greybox-candidates/index.json npm run validate:hall-topology-provenance
+
+      - name: Rebuild frozen H3 material bay as exhibit source
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-material-spike
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/generate-material-spike.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --source-blend qa-artifacts/hall-greybox-candidates/H3/H3.blend \
+            --source-manifest qa-artifacts/hall-greybox-candidates/H3/manifest.json \
+            --output-dir qa-artifacts/hall-material-spike
+
+      - name: Apply bounded certified H3 material lookdev
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/prepare-material-visual-evidence.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --blend qa-artifacts/hall-material-spike/material-spike.blend \
+            --source-evidence qa-artifacts/hall-material-spike/source-evidence.json
+
+      - name: Generate packed Pushkin scene and fixed still evidence
+        run: |
+          set -euo pipefail
+          mkdir -p "$EXHIBIT_DIR"
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-pushkin/run-offline-exhibit.py \
+            -- \
+            --contract docs/hall-v3/pushkin-offline-exhibit.json \
+            --source-blend qa-artifacts/hall-material-spike/material-spike.blend \
+            --source-evidence qa-artifacts/hall-material-spike/source-evidence.json \
+            --source-assets-evidence "$SOURCE_DIR/source-assets-evidence.json" \
+            --portrait "$SOURCE_DIR/kiprensky-1827-source.jpg" \
+            --onegin-page "$SOURCE_DIR/onegin-1833-title-page.png" \
+            --output-dir "$EXHIBIT_DIR"
+
+      - name: Install exact isolated glTF validation and optimization tools
+        run: |
+          set -euo pipefail
+          rm -rf .tools/hall-pushkin-gltf
+          mkdir -p .tools/hall-pushkin-gltf
+          printf '%s\n' '{"name":"hall-pushkin-gltf-tools","version":"0.0.0","private":true}' > .tools/hall-pushkin-gltf/package.json
+          npm install --prefix .tools/hall-pushkin-gltf --save-exact --ignore-scripts --omit=dev --no-audit --no-fund gltf-validator@2.0.0-dev.3.10 gltfpack@1.2.0
+          test "$(node -p "require('./.tools/hall-pushkin-gltf/node_modules/gltf-validator/package.json').version")" = "2.0.0-dev.3.10"
+          test "$(node -p "require('./.tools/hall-pushkin-gltf/node_modules/gltfpack/package.json').version")" = "1.2.0"
+          test -x .tools/hall-pushkin-gltf/node_modules/.bin/gltfpack
+
+      - name: Validate raw Pushkin GLB with Khronos validator
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-pushkin-gltf --input "$EXHIBIT_DIR/pushkin-offline-raw.glb" --output "$EXHIBIT_DIR/gltf-raw-report.json"
+
+      - name: Optimize Pushkin GLB through preservation-safe Meshopt path
+        run: .tools/hall-pushkin-gltf/node_modules/.bin/gltfpack -i "$EXHIBIT_DIR/pushkin-offline-raw.glb" -o "$EXHIBIT_DIR/pushkin-offline-optimized.glb" -cc -kn -km -ke -kv -vpf
+
+      - name: Validate optimized Pushkin GLB with Khronos validator
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-pushkin-gltf --input "$EXHIBIT_DIR/pushkin-offline-optimized.glb" --output "$EXHIBIT_DIR/gltf-optimized-report.json"
+
+      - name: Build audit-complete 5x2 still contact sheet before walkthrough
+        run: |
+          set -euo pipefail
+          rm -rf "$EXHIBIT_DIR/contact-tiles"
+          mkdir -p "$EXHIBIT_DIR/contact-tiles"
+          mapfile -t stills < <(find "$EXHIBIT_DIR" -maxdepth 1 -type f \( -name '0[1-9]-*.png' -o -name '10-*.png' \) | sort)
+          test "${#stills[@]}" -eq 10
+          index=0
+          for still in "${stills[@]}"; do
+            tile="$EXHIBIT_DIR/contact-tiles/$(printf '%02d' "$index").png"
+            ffmpeg -loglevel error -y -i "$still" \
+              -vf "scale=480:270:force_original_aspect_ratio=decrease,pad=480:270:(ow-iw)/2:(oh-ih)/2:color=black" \
+              -frames:v 1 "$tile"
+            test -s "$tile"
+            index=$((index + 1))
+          done
+          ffmpeg -loglevel error -y -framerate 1 -start_number 0 -i "$EXHIBIT_DIR/contact-tiles/%02d.png" \
+            -vf "tile=5x2:padding=8:margin=8" -frames:v 1 "$EXHIBIT_DIR/contact-sheet.png"
+          test -s "$EXHIBIT_DIR/contact-sheet.png"
+          dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$EXHIBIT_DIR/contact-sheet.png")"
+          test "$dimensions" = "2448x564"
+          rm -rf "$EXHIBIT_DIR/contact-tiles"
+
+      - name: Upload Pushkin still-review evidence before walkthrough
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-pushkin-offline-stills-${{ env.TESTED_SHA }}
+          path: |
+            hall-pushkin-offline-tested-head.txt
+            hall-pushkin-offline-blender-version.txt
+            qa-artifacts/hall-pushkin-offline/sources/source-assets-evidence.json
+            qa-artifacts/hall-pushkin-offline/exhibit/offline-exhibit-evidence.json
+            qa-artifacts/hall-pushkin-offline/exhibit/pushkin-offline-exhibit.blend
+            qa-artifacts/hall-pushkin-offline/exhibit/pushkin-offline-raw.glb
+            qa-artifacts/hall-pushkin-offline/exhibit/pushkin-offline-optimized.glb
+            qa-artifacts/hall-pushkin-offline/exhibit/gltf-raw-report.json
+            qa-artifacts/hall-pushkin-offline/exhibit/gltf-optimized-report.json
+            qa-artifacts/hall-pushkin-offline/exhibit/*.png
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Render authored 24-second Pushkin walkthrough separately
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-pushkin/render-offline-sequence.py \
+            -- \
+            --contract docs/hall-v3/pushkin-offline-exhibit.json \
+            --blend "$EXHIBIT_DIR/pushkin-offline-exhibit.blend" \
+            --evidence "$EXHIBIT_DIR/offline-exhibit-evidence.json" \
+            --output-dir "$EXHIBIT_DIR"
+
+      - name: Verify rendered camera sequence with ffprobe
+        run: |
+          set -euo pipefail
+          video="$(find "$EXHIBIT_DIR" -maxdepth 1 -name 'pushkin-sequence*.mp4' -type f | head -1)"
+          test -n "$video"
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate,nb_frames -of json "$video" > "$EXHIBIT_DIR/ffprobe-sequence.json"
+          cat "$EXHIBIT_DIR/ffprobe-sequence.json"
+
+      - name: Validate final Pushkin offline exhibit evidence
+        env:
+          HALL_PUSHKIN_OFFLINE_EVIDENCE_DIR: qa-artifacts/hall-pushkin-offline/exhibit
+        run: npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+
+      - name: Upload Pushkin offline exhibit evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-pushkin-offline-exhibit-${{ env.TESTED_SHA }}
+          path: |
+            hall-pushkin-offline-tested-head.txt
+            hall-pushkin-offline-blender-version.txt
+            qa-artifacts/hall-pushkin-offline/sources/source-assets-evidence.json
+            qa-artifacts/hall-pushkin-offline/exhibit
+          if-no-files-found: warn
+          retention-days: 14
