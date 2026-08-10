@@ -102,6 +102,12 @@ const yeseninPartTwoSourceOverrides: Record<string, Partial<EssaySource>> = {
     year: 2003,
     note: 'Публичная академическая публикация цитирует и описывает выводы комиссии и проведённых экспертиз. Это не ссылка на полный архив комиссии и не утверждение, что первоначальная процедура была безупречной.',
   },
+  'yes2-power-attorney-1925-12-27': {
+    title: 'ПСС, т. 7, кн. 2: доверенность В. И. Эрлиху от 27 декабря 1925 года',
+    url: 'https://feb-web.ru/feb/esenin/texts/e72/e72-266-.htm?cmd=p',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    note: 'ПСС печатает документ № 53 по подлиннику ИМЛИ, ф. 32, оп. 2, ед. хр. 38: текст написан В. И. Эрлихом, подпись и дата — рукой Есенина, заверение — М. А. Фромана. Публичная FEB-страница является академической публикацией документа, а не разрешением воспроизводить архивное факсимиле.',
+  },
 };
 
 const yeseninPartTwoGrzhebinCoverSource: EssaySource = {
@@ -149,7 +155,7 @@ const yeseninPartTwoChaginCommonsUrl =
 const yeseninPartTwoGrzhebinCommonsUrl =
   'https://commons.wikimedia.org/wiki/File:Есенин_С.А._Собрание_стихов_и_поэм._Т._I._1922г_(обложка_изд._Гржебина_З.)_ГИМ.jpg';
 const yeseninPartTwoGrzhebinImageUrl =
-  'https://upload.wikimedia.org/wikipedia/commons/9/92/%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D0%A1.%D0%90._%D0%A1%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D0%B5_%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2_%D0%B8_%D0%BF%D0%BE%D1%8D%D0%BC._%D0%A2._I._1922%D0%B3_%28%D0%BE%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7%D0%B4._%D0%93%D1%80%D0%B6%D0%B5%D0%B1%D0%B8%D0%BD%D0%B0_%D0%97.%29_%D0%93%D0%98%D0%9C.jpg';
+  'https://upload.wikimedia.org/wikipedia/commons/9/92/%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D0%A1%D0%90._%D0%A1%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D0%B5_%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2_%D0%B8_%D0%BF%D0%BE%D1%8D%D0%BC._%D0%A2._I._1922%D0%B3_%28%D0%BE%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7%D0%B4._%D0%93%D1%80%D0%B6%D0%B5%D0%B1%D0%B8%D0%BD%D0%B0_%D0%97.%29_%D0%93%D0%98%D0%9C.jpg';
 
 const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
   dateModified: '2026-08-10',
