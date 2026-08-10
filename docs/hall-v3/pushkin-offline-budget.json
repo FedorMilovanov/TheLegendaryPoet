@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-001",
+  "productIssue": 369,
+  "phase": "pushkinVerticalSlice",
+  "status": "offline-first-slice-budget-evidence-required",
+  "report": {
+    "fileName": "first-slice-budget-report.json",
+    "schemaVersion": 1,
+    "purpose": "first-slice-budget-evidence-not-approved-production-limit",
+    "requiredMeasurements": [
+      "raw-and-optimized-glb-transfer-bytes",
+      "embedded-documentary-compressed-bytes",
+      "embedded-documentary-dimensions",
+      "conservative-rgba8-decoded-texture-residency-estimate",
+      "exhibit-triangle-count",
+      "draw-material-count"
+    ]
+  },
+  "measurementSemantics": {
+    "offlineGlbTransferBytesAreProductionBudget": false,
+    "conservativeRgba8DecodedTextureResidentBytesAreMeasuredGpuResidency": false,
+    "meshoptSavingsMayBeReported": true,
+    "documentaryAndNonDocumentaryTransferMustBeSeparated": true,
+    "productionTextureEncodingDecisionMayBeInferredOffline": false
+  },
+  "runtimeMeasurementsDeferredToWebVerticalSlice": [
+    "production-gpu-texture-residency",
+    "renderer-info-draw-calls-geometries-textures",
+    "desktop-frame-time",
+    "mobile-frame-time",
+    "asset-decode-load-time",
+    "production-texture-encoding-decision"
+  ],
+  "productionBoundary": {
+    "reportIsProductionAsset": false,
+    "reportApprovesBudgetLimit": false,
+    "reportAllowsProductionManifest": false,
+    "reportAllowsDocumentaryShipping": false,
+    "reportAllowsProductionWebgl": false,
+    "reportPromotesOfflineVisualApproval": false
+  }
+}
