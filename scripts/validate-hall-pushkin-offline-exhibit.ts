@@ -65,7 +65,7 @@ expect(contract.evidence?.renderEngine === 'BLENDER_EEVEE_NEXT', 'offline exhibi
 expect(contract.evidence?.stillCount === 10 && (contract.evidence?.stills ?? []).length === 10, 'offline exhibit must require exactly ten fixed evidence stills');
 expect(same((contract.evidence?.stills ?? []).map((entry: any) => entry.id), EXPECTED_STILL_IDS), 'offline exhibit still evidence IDs drifted');
 expect(same(contract.evidence?.desktopResolution, [1280,720]) && same(contract.evidence?.mobileResolution, [720,1280]), 'offline exhibit still resolutions drifted');
-expect(contract.evidence?.cameraSequence?.durationSeconds === 24 && contract.evidence?.cameraSequence?.fps === 24 && same(contract.evidence?.cameraSequence?.resolution, [960,540]), 'offline exhibit camera sequence must remain 24s/24fps/960x540');
+expect(contract.evidence?.cameraSequence?.durationSeconds === 24 && contract.evidence?.cameraSequence?.fps === 24 && same(contract.evidence?.cameraSequence?.resolution, [960,540]) && contract.evidence?.cameraSequence?.renderSamples === 8, 'offline exhibit camera sequence must remain 24s/24fps/960x540 with the bounded 8-sample motion-evidence budget');
 expect((contract.evidence?.cameraSequence?.keyframes ?? []).length === 5, 'offline exhibit camera sequence must retain five authored waypoints');
 expect(contract.evidence?.rawGlbRequired === true && contract.evidence?.optimizedGlbRequired === true && contract.evidence?.khronosBeforeAndAfter === true, 'offline exhibit delivery proof must require raw+optimized Khronos validation');
 expect(contract.evidence?.visualInspectionRequired === true && contract.evidence?.humanOwnerApprovalRequired === true, 'offline exhibit cannot self-promote visual approval');
@@ -80,6 +80,7 @@ expect(prep.includes("hostname !== 'upload.wikimedia.org'") && prep.includes('so
 expect(prep.includes("pdftoppm") && prep.includes("'-f', '1'") && prep.includes("'-r', '240'"), 'Onegin offline title page must be deterministic page-1 240 DPI derivative');
 expect(runner.includes('bpy.ops.file.pack_all()') && runner.includes('productionManifestAllowed') && runner.includes('humanOwnerVisualApprovalRequired'), 'offline exhibit runner must pack source textures and retain fail-closed production boundary');
 expect(sequenceRunner.includes('packed blend hash does not match still evidence') && sequenceRunner.includes('offline-exhibit-generated-awaiting-human-visual-approval'), 'separate sequence runner must bind the packed still scene before final evidence');
+expect(sequenceRunner.includes('taa_render_samples') && sequenceRunner.includes('renderSamples') && sequenceRunner.includes('render_samples != 8'), 'separate sequence runner must fail closed on the exact bounded 8-sample Eevee motion-evidence budget');
 expect(library.includes('PUSHKIN_HERO_PORTRAIT') && library.includes('PUSHKIN_ONEGIN_PAGE') && library.includes('editorial-context'), 'offline exhibit library must author real portrait/publication/context geometry');
 expect(!library.includes('fake-autograph') && !library.includes('AI-generated historical'), 'offline exhibit generator must not author fake documentary material');
 
@@ -132,6 +133,7 @@ if (evidenceDirValue) {
       expect(Number(evidence.cameraSequence?.bytes) === actualVideoBytes && actualVideoBytes > 100_000, 'offline camera sequence must be a non-trivial MP4');
       expect(evidence.cameraSequence?.sha256 === sha256File(videoPath), 'offline camera sequence hash drifted');
       expect(Number(evidence.cameraSequence?.durationSeconds) === 24 && Number(evidence.cameraSequence?.fps) === 24, 'offline camera sequence semantic duration/fps drifted');
+      expect(Number(evidence.cameraSequence?.renderSamples) === 8, 'offline camera sequence evidence must prove the exact bounded 8-sample Eevee render budget');
       expect(Number(evidence.cameraSequence?.frameCount) >= 576 && Number(evidence.cameraSequence?.frameCount) <= 577, 'offline camera sequence frame count drifted beyond authored 24s boundary');
       if (fs.existsSync(ffprobePath)) {
         const probe = JSON.parse(fs.readFileSync(ffprobePath, 'utf8')) as any;
@@ -181,4 +183,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Hall Pushkin offline exhibit authority passed${evidenceDirValue ? ': exact H3/R1 source scene, ten stills, ffprobe-verified 24s sequence, packed blend and raw/optimized Khronos evidence remain bounded before human visual approval' : ': source/owner/art-direction/evidence contract is internally consistent and production remains blocked'}.`);
+console.log(`Hall Pushkin offline exhibit authority passed${evidenceDirValue ? ': exact H3/R1 source scene, ten stills, ffprobe-verified 24s/8-sample sequence, packed blend and raw/optimized Khronos evidence remain bounded before human visual approval' : ': source/owner/art-direction/evidence contract is internally consistent and production remains blocked'}.`);

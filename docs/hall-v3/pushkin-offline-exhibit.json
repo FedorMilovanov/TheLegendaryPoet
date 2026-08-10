@@ -120,6 +120,7 @@
       "durationSeconds": 24,
       "fps": 24,
       "resolution": [960, 540],
+      "renderSamples": 8,
       "keyframes": [
         {"second": 0, "position": [7.35, 2.20, 1.64], "target": [10.45, 4.80, 1.72]},
         {"second": 6, "position": [8.0, 2.5, 1.6], "target": [11.15, 5.45, 1.95]},

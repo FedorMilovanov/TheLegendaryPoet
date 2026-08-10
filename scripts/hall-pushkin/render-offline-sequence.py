@@ -60,16 +60,27 @@ def main() -> None:
         fail("packed exhibit is missing authored sequence camera/target")
 
     sequence = contract["evidence"]["cameraSequence"]
+    render_samples = int(sequence.get("renderSamples", 0))
+    if render_samples != 8:
+        fail(f"walkthrough evidence render must use exactly 8 samples, got {render_samples}")
+    scene = bpy.context.scene
+    if not hasattr(scene, "eevee") or not hasattr(scene.eevee, "taa_render_samples"):
+        fail("Blender 4.5.12 runtime does not expose Eevee taa_render_samples")
+    scene.eevee.taa_render_samples = render_samples
+    if int(scene.eevee.taa_render_samples) != render_samples:
+        fail("failed to bind exact walkthrough Eevee render sample count")
+
     final_frame = int(sequence["durationSeconds"] * sequence["fps"])
     rendered = lib.render_sequence(contract, camera, final_frame, output_dir)
     rendered["status"] = "rendered"
+    rendered["renderSamples"] = render_samples
 
     evidence["status"] = "offline-exhibit-generated-awaiting-human-visual-approval"
     evidence["cameraSequence"] = rendered
     evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"Pushkin walkthrough rendered separately: {rendered['durationSeconds']}s, "
-        f"{rendered['frameCount']} frames, {rendered['bytes']} bytes."
+        f"{rendered['frameCount']} frames, {render_samples} samples, {rendered['bytes']} bytes."
     )
 
 
