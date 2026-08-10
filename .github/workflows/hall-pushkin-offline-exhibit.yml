@@ -24,6 +24,7 @@ on:
       - 'docs/hall-v3/pushkin-slice.json'
       - 'docs/hall-v3/pushkin-owner-disposition.json'
       - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'docs/hall-v3/pushkin-offline-budget.json'
       - 'scripts/hall-greybox/generate-candidates.py'
       - 'scripts/hall-material/generate-material-spike.py'
       - 'scripts/hall-material/prepare-material-visual-evidence.py'
@@ -31,6 +32,7 @@ on:
       - 'scripts/validate-hall-pushkin-rights.ts'
       - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'scripts/validate-hall-pushkin-offline-exhibit.ts'
+      - 'scripts/validate-hall-pushkin-offline-budget.mjs'
       - 'scripts/hall-material/validate-gltf.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -58,6 +60,7 @@ on:
       - 'docs/hall-v3/pushkin-slice.json'
       - 'docs/hall-v3/pushkin-owner-disposition.json'
       - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'docs/hall-v3/pushkin-offline-budget.json'
       - 'scripts/hall-greybox/generate-candidates.py'
       - 'scripts/hall-material/generate-material-spike.py'
       - 'scripts/hall-material/prepare-material-visual-evidence.py'
@@ -65,6 +68,7 @@ on:
       - 'scripts/validate-hall-pushkin-rights.ts'
       - 'scripts/validate-hall-pushkin-acquisition.ts'
       - 'scripts/validate-hall-pushkin-offline-exhibit.ts'
+      - 'scripts/validate-hall-pushkin-offline-budget.mjs'
       - 'scripts/hall-material/validate-gltf.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -107,11 +111,12 @@ jobs:
       - name: Set up exact repository Node dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Validate owner, rights and acquisition boundaries
+      - name: Validate owner, rights, acquisition and budget boundaries
         run: |
           npm run validate:hall-pushkin-rights
           npm run validate:hall-pushkin-acquisition
           npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+          node scripts/validate-hall-pushkin-offline-budget.mjs
 
       - name: Install exact-source and headless render system tools
         run: |
@@ -223,6 +228,21 @@ jobs:
       - name: Validate optimized Pushkin GLB with Khronos validator
         run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-pushkin-gltf --input "$EXHIBIT_DIR/pushkin-offline-optimized.glb" --output "$EXHIBIT_DIR/gltf-optimized-report.json"
 
+      - name: Build measured first-slice offline budget report
+        run: |
+          node scripts/hall-pushkin/build-first-slice-budget.mjs \
+            --policy docs/hall-v3/pushkin-offline-budget.json \
+            --slice docs/hall-v3/pushkin-slice.json \
+            --evidence-dir "$EXHIBIT_DIR" \
+            --source-assets-evidence "$SOURCE_DIR/source-assets-evidence.json" \
+            --output "$EXHIBIT_DIR/first-slice-budget-report.json"
+
+      - name: Validate measured first-slice offline budget report
+        env:
+          HALL_PUSHKIN_OFFLINE_EVIDENCE_DIR: qa-artifacts/hall-pushkin-offline/exhibit
+          HALL_PUSHKIN_SOURCE_ASSETS_EVIDENCE: qa-artifacts/hall-pushkin-offline/sources/source-assets-evidence.json
+        run: node scripts/validate-hall-pushkin-offline-budget.mjs
+
       - name: Build audit-complete 5x2 still contact sheet before walkthrough
         run: |
           set -euo pipefail
@@ -260,6 +280,7 @@ jobs:
             qa-artifacts/hall-pushkin-offline/exhibit/pushkin-offline-optimized.glb
             qa-artifacts/hall-pushkin-offline/exhibit/gltf-raw-report.json
             qa-artifacts/hall-pushkin-offline/exhibit/gltf-optimized-report.json
+            qa-artifacts/hall-pushkin-offline/exhibit/first-slice-budget-report.json
             qa-artifacts/hall-pushkin-offline/exhibit/*.png
           if-no-files-found: error
           retention-days: 14
@@ -288,7 +309,10 @@ jobs:
       - name: Validate final Pushkin offline exhibit evidence
         env:
           HALL_PUSHKIN_OFFLINE_EVIDENCE_DIR: qa-artifacts/hall-pushkin-offline/exhibit
-        run: npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+          HALL_PUSHKIN_SOURCE_ASSETS_EVIDENCE: qa-artifacts/hall-pushkin-offline/sources/source-assets-evidence.json
+        run: |
+          npx tsx scripts/validate-hall-pushkin-offline-exhibit.ts
+          node scripts/validate-hall-pushkin-offline-budget.mjs
 
       - name: Upload Pushkin offline exhibit evidence
         if: ${{ always() }}
