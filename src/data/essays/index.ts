@@ -299,7 +299,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     ) {
       return {
         ...block,
-        sourceIds: ['yes2-pss-chronology', 'yes2-inquiry-nazaryev-1925-12-28'],
+        sourceIds: ['yes2-pss-do-svidanya-commentary', 'yes2-inquiry-nazaryev-1925-12-28'],
       };
     }
     if (
