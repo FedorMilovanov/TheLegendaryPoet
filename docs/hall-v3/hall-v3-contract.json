@@ -3,6 +3,16 @@
   "laneId": "TLP-HALL-001",
   "productIssue": 369,
   "phase": "pushkinVerticalSlice",
+  "tracking": {
+    "architectureLifecycle": "closed-root-owner-gated-roadmap",
+    "architectureLaneOpen": false,
+    "autonomousProductTransactionSelected": false,
+    "issueLifecycleTarget": "close-completed-after-merge",
+    "roadmapAuthority": "docs/hall-v3/OWNER_GATED_ROADMAP.md",
+    "terminalOfflineSliceProductPr": 403,
+    "terminalOfflineSliceTestedHead": "653ed65c102c09c39803193d95addf8aef739a34",
+    "terminalOfflineSliceMerge": "256dd19f1e39eef341ca260a4d8c72e1b6f19d73"
+  },
   "productionRoute": {
     "path": "/hall",
     "mode": "placeholder",

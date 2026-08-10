@@ -19,6 +19,16 @@ const hallContract = JSON.parse(read(hallContractPath)) as {
   laneId?: string;
   productIssue?: number;
   phase?: string;
+  tracking?: {
+    architectureLifecycle?: string;
+    architectureLaneOpen?: boolean;
+    autonomousProductTransactionSelected?: boolean;
+    issueLifecycleTarget?: string;
+    roadmapAuthority?: string;
+    terminalOfflineSliceProductPr?: number;
+    terminalOfflineSliceTestedHead?: string;
+    terminalOfflineSliceMerge?: string;
+  };
   productionRoute?: {
     path?: string;
     mode?: string;
@@ -205,7 +215,7 @@ const routeContract = JSON.parse(read('src/routes/route-contract.json')) as {
   routes?: Array<{ id?: string; path?: string; page?: string; module?: string; budgetBytes?: number }>;
 };
 const projectContract = JSON.parse(read('docs/project-contract.json')) as {
-  architecture?: { openLaneIds?: string[] };
+  architecture?: { openLaneIds?: string[]; currentStateOpenLaneStart?: string; currentStateOpenLaneEnd?: string };
   documentation?: { authoritative?: string[]; historical?: string[]; supersededTechnicalDocuments?: string[] };
 };
 const parsedTsConfig = ts.parseConfigFileTextToJson('tsconfig.json', read('tsconfig.json'));
@@ -217,8 +227,8 @@ const currentState = read('docs/CURRENT_STATE.md');
 const packageManifest = JSON.parse(read('package.json')) as { scripts?: Record<string, string> };
 
 expect(hallContract.schemaVersion === 1, 'Hall v3 machine contract schemaVersion must remain 1');
-expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by TLP-HALL-001');
-expect(hallContract.productIssue === 369, 'Hall v3 machine contract must point to Product #369');
+expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by historical root TLP-HALL-001');
+expect(hallContract.productIssue === 369, 'Hall v3 machine contract must retain Product #369 as historical root identity');
 const knownPhases = [
   'foundation',
   'referenceBible',
@@ -307,8 +317,42 @@ for (const relativePath of new Set(requiredHallDocs)) {
   expect(fs.existsSync(path.join(root, relativePath)), `Hall authority document must exist: ${relativePath}`);
 }
 expect(fs.existsSync(path.join(root, legacyHallDir, 'README.md')), 'legacy Hall directory must declare its non-authoritative status');
-expect(projectContract.architecture?.openLaneIds?.includes(hallContract.laneId ?? '') === true, 'project contract must register the open Hall lane');
-expect(currentState.includes(`\`${hallContract.laneId}\``), 'CURRENT_STATE must register the open Hall lane');
+
+const tracking = hallContract.tracking ?? {};
+expect(tracking.architectureLifecycle === 'closed-root-owner-gated-roadmap', 'Hall architecture lifecycle must remain closed-root-owner-gated-roadmap after #369 closure');
+expect(tracking.architectureLaneOpen === false, 'closed Hall root must not claim an open architecture lane');
+expect(tracking.autonomousProductTransactionSelected === false, 'closed Hall root must not select autonomous Product work without new authority');
+expect(tracking.issueLifecycleTarget === 'close-completed-after-merge', 'Hall root must preserve the close-after-merge issue lifecycle target');
+expect(tracking.roadmapAuthority === 'docs/hall-v3/OWNER_GATED_ROADMAP.md', 'Hall root must register the owner-gated roadmap authority');
+expect(tracking.terminalOfflineSliceProductPr === 403, 'Hall root must retain Product #403 as terminal autonomous offline-slice transaction');
+expect(tracking.terminalOfflineSliceTestedHead === '653ed65c102c09c39803193d95addf8aef739a34', 'Hall root must retain the exact tested #403 head');
+expect(tracking.terminalOfflineSliceMerge === '256dd19f1e39eef341ca260a4d8c72e1b6f19d73', 'Hall root must retain the #403 merge identity');
+expect(typeof tracking.roadmapAuthority === 'string' && fs.existsSync(path.join(root, tracking.roadmapAuthority)), 'closed Hall root must retain a real owner-gated roadmap file');
+
+const roadmap = typeof tracking.roadmapAuthority === 'string' && fs.existsSync(path.join(root, tracking.roadmapAuthority))
+  ? read(tracking.roadmapAuthority)
+  : '';
+for (const requiredRoadmapText of [
+  'No autonomous Product transaction selected',
+  'production `/hall` remains the lightweight placeholder',
+  'production Three/R3F/WebGL remains disabled',
+  '`offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` may not self-promote',
+  'open a **new bounded issue/lane for that concrete transaction**',
+]) {
+  expect(roadmap.includes(requiredRoadmapText), `owner-gated roadmap is missing permanent closure boundary: ${requiredRoadmapText}`);
+}
+
+expect(projectContract.architecture?.openLaneIds?.includes(hallContract.laneId ?? '') === false, 'closed Hall root must be absent from project-contract openLaneIds');
+const openLaneStart = projectContract.architecture?.currentStateOpenLaneStart ?? '<!-- project-contract:open-lanes:start -->';
+const openLaneEnd = projectContract.architecture?.currentStateOpenLaneEnd ?? '<!-- project-contract:open-lanes:end -->';
+const openLaneStartIndex = currentState.indexOf(openLaneStart);
+const openLaneEndIndex = currentState.indexOf(openLaneEnd);
+const currentStateOpenLaneSection = openLaneStartIndex >= 0 && openLaneEndIndex > openLaneStartIndex
+  ? currentState.slice(openLaneStartIndex + openLaneStart.length, openLaneEndIndex)
+  : '';
+expect(openLaneStartIndex >= 0 && openLaneEndIndex > openLaneStartIndex, 'CURRENT_STATE must preserve machine-owned open-lane markers');
+expect(!currentStateOpenLaneSection.includes(`\`${hallContract.laneId}\``), 'closed Hall root must be absent from the CURRENT_STATE open-lane block');
+expect(currentState.includes('docs/hall-v3/OWNER_GATED_ROADMAP.md'), 'CURRENT_STATE must point future Hall work to the owner-gated roadmap');
 expect(projectContract.documentation?.authoritative?.includes(hallDocsPath) === true, 'project contract must register Hall v3 README as authoritative entrypoint');
 for (const legacyDoc of supersededHallDocs) {
   expect(projectContract.documentation?.historical?.includes(legacyDoc) === true, `superseded Hall document must remain historical: ${legacyDoc}`);
@@ -326,4 +370,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Hall v3 foundation invariants passed in phase ${hallContract.phase}: lightweight route, semantic 3D/legacy isolation, public concept exclusion, typecheck isolation, superseded-doc isolation and architecture ownership remain enforced.`);
+console.log(`Hall v3 foundation invariants passed in phase ${hallContract.phase}: lightweight route, semantic 3D/legacy isolation, public concept exclusion, typecheck isolation, superseded-doc isolation and closed-root owner-gated lifecycle remain enforced.`);
