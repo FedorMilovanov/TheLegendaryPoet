@@ -287,13 +287,12 @@ const yeseninPartTwoGrzhebinImageUrl =
   'https://upload.wikimedia.org/wikipedia/commons/9/92/%D0%95%D1%81%D0%B5%D0%BD%D0%B8%D0%BD_%D0%A1.%D0%90._%D0%A1%D0%BE%D0%B1%D1%80%D0%B0%D0%BD%D0%B8%D0%B5_%D1%81%D1%82%D0%B8%D1%85%D0%BE%D0%B2_%D0%B8_%D0%BF%D0%BE%D1%8D%D0%BC._%D0%A2._I._1922%D0%B3_%28%D0%BE%D0%B1%D0%BB%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7%D0%B4._%D0%93%D1%80%D0%B6%D0%B5%D0%B1%D0%B8%D0%BD%D0%B0_%D0%97.%29_%D0%93%D0%98%D0%9C.jpg';
 
 const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
-  dateModified: '2026-08-10',
-  cover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей_Есенин_в_1923_году.jpg',
-  cardCover: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей_Есенин_в_1923_году.jpg',
-  coverAlt: 'Сергей Есенин, 1923 год — архивный портрет для второй части документальной биографии',
-  coverKind: 'archive',
-  coverCredit: 'Неизвестный фотограф · Wikimedia Commons · общественное достояние',
-  coverSourceUrl: 'https://commons.wikimedia.org/wiki/File:Сергей_Есенин_в_1923_году.jpg',
+  dateModified: '2026-08-11',
+  cover: '/images/essays/yesenin/yesenin-part-2-editorial.webp',
+  cardCover: '/images/essays/yesenin/yesenin-part-2-editorial.webp',
+  coverAlt: 'Сергей Есенин за письменным столом — редакционная кинематографическая реконструкция зрелого периода 1921–1925 годов',
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET · редакционная реконструкция на основе архивных портретных референсов',
   sources: [
     ...(yeseninPartTwoPublic.sources ?? [])
       .filter(
