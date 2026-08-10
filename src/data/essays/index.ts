@@ -144,6 +144,24 @@ const yeseninPartTwoP75Sources: EssaySource[] = [
     note: 'Item-level академический комментарий к последнему стихотворению: первые публикации, автограф, экспертизы и границы гипотез об адресате. Не превращает стихотворение в юридически доказанную предсмертную записку.',
   },
   {
+    id: 'yes2-anna-snegina-commentary',
+    title: 'ПСС, т. 3: текстология и публикационная история «Анны Снегиной»',
+    url: 'https://feb-web.ru/feb/esenin/texts/es3/es3-435-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    year: 1998,
+    note: 'Академический комментарий фиксирует рукописную работу, наборный экземпляр и несколько прижизненных публикаций «Анны Снегиной». Используется только для её собственной текстовой и публикационной истории.',
+  },
+  {
+    id: 'yes2-late-winter-poetry-commentary',
+    title: 'ПСС, т. 4: комментарии к поздней зимней лирике 1925 года',
+    url: 'https://feb-web.ru/feb/esenin/texts/e74/e74-323-.htm?cmd=p',
+    kind: 'research',
+    institution: 'ФЭБ / ИМЛИ РАН',
+    year: 1996,
+    note: 'Академический комментарий к стихотворениям конца 1925 года фиксирует рукописную provenance, датировки и первые, в том числе посмертные, публикации. Не используется как медицинское свидетельство.',
+  },
+  {
     id: 'yes2-nasedkin-posledniy-god',
     title: 'В. Ф. Наседкин. «Последний год Есенина»',
     url: 'https://feb-web.ru/feb/esenin/critics/ev2/ev2-303-.htm?cmd=p',
@@ -207,7 +225,8 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       .filter(
         (source) =>
           source.id !== 'yesenin-chagin-1924' &&
-          source.id !== 'yes2-inquiry-protocols-1925-12-28',
+          source.id !== 'yes2-inquiry-protocols-1925-12-28' &&
+          source.id !== 'yes2-pss-poetry-comments',
       )
       .map((source) => {
         const officialUrl = source.id ? yeseninPartTwoOfficialUrls[source.id] : undefined;
@@ -238,6 +257,21 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
           'yes2-pss-declarations-vol7k1',
           'yes2-byt-i-iskusstvo-1921',
           'yes2-ivnev-o-sergee-esenine',
+        ],
+      };
+    }
+    if (
+      block.type === 'paragraph' &&
+      block.text.startsWith('Поздняя поэзия Есенина в 1925 году не складывается')
+    ) {
+      return {
+        ...block,
+        sourceIds: [
+          'yes2-letopis-t5-k1',
+          'yes2-anna-snegina-commentary',
+          'yes2-persian-motifs-commentary',
+          'yes2-black-man-commentary',
+          'yes2-late-winter-poetry-commentary',
         ],
       };
     }
