@@ -17,7 +17,7 @@
     "brand:materialize": "node scripts/materialize-brand-art.mjs",
     "essay:browser-data": "tsx scripts/gen-essay-browser-data.ts",
     "predev": "npm run brand:materialize",
-    "dev": "vite dev",
+    "dev": "vite",
     "prebuild": "npm run brand:materialize && npm run essay:browser-data",
     "build": "vite build",
     "preview": "vite preview",
