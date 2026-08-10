@@ -58,7 +58,7 @@
     }
   },
   "reproductionPolicy": {
-    "reason": "Blender 4.5.12 evaluated UV/tangent float payloads are not bit-reproducible across independent headless runs even when scene/evidence semantics are unchanged. Historical accepted file SHA identities remain frozen evidence; future reproof validates self-identity, exact structural schemas, stable source assets, Khronos/transport semantics and browser visual/cost behavior instead of claiming unsupported full-file determinism.",
+    "reason": "Blender 4.5.12 evaluated UV/tangent payloads and generated raster/bake container bytes are not a sound cross-run bit-identity contract even when the frozen scene, texture functions, decoded lightmaps, transport schema and browser-visible behavior remain unchanged. Historical accepted file SHA identities remain forensic evidence; future reproof validates self-identity plus exact structural and semantic contracts instead of claiming unsupported container-byte determinism.",
     "rawGlb": {
       "expectedBytes": 200672,
       "jsonChunkSha256": "d3c9e45692ad883f28bf99466b289992061e277e681f2d45acf34d554e5bd245",
@@ -75,7 +75,25 @@
       "khronosErrors": 0,
       "khronosWarnings": 0
     },
-    "stableGeneratedEvidence": {
+    "generatedEvidenceReproof": {
+      "fullFileShaMustRepeat": false,
+      "historicalHashesRemainForensicEvidence": true,
+      "requiredSemanticChecks": [
+        "source-evidence-self-identity",
+        "H3-layout-and-geometry-fingerprints",
+        "R1-camera-authority",
+        "periodic-256px-proof-texture-contract",
+        "UV0-meter-scale-and-UV1-reserve",
+        "bounded-lookdev-bevel",
+        "raw-and-optimized-Khronos-zero-errors-zero-warnings",
+        "explicit-tangent-and-UV-transport",
+        "raw-vs-optimized-browser-visual-equivalence",
+        "L0-readability-remains-reviewable",
+        "current-L1-remains-rejected",
+        "decoded-lightmap-GPU-residency-and-UV1-binding"
+      ]
+    },
+    "acceptedHistoricalGeneratedEvidence": {
       "visual-lookdev-evidence.json": "bf3729433442f02a1375306b2f5c74e00be7a2b5b056f11ab5db44a0b0288b0e",
       "lightmap-bindings.json": "598ee9c3807d1eb5a4235bc3794479a470419eba27849205b9e8f482d02e1687",
       "textures/stone-basecolor.png": "043e2bbe5a62d84392d1b9adc1e0e13fcf8859ece911e11b66f9a940deb35f25",
