@@ -274,6 +274,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     }
     if (
       block.type === 'note' &&
+      block.variant === 'myth' &&
       block.claim === 'Последнее стихотворение — юридически доказанная предсмертная записка Эрлиху.'
     ) {
       return {
