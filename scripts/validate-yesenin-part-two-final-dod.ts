@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { getEssayBySlug } from '../src/data/essays/index';
 
 const essay = getEssayBySlug('sergei-yesenin-1921-1925');
@@ -120,10 +122,20 @@ for (const [index, image] of images.entries()) {
   }
 }
 
-const expectedCover = 'https://commons.wikimedia.org/wiki/File:Сергей_Есенин_в_1923_году.jpg';
-if (essay.coverSourceUrl !== expectedCover) throw new Error(`unexpected final cover provenance: ${essay.coverSourceUrl ?? '<none>'}`);
-if (imageSources.includes(expectedCover)) throw new Error('dedicated Part II cover is reused as a body visual');
-if (!essay.coverCredit?.includes('общественное достояние')) throw new Error('dedicated Part II cover lost public-domain credit');
+const expectedCover = '/images/essays/yesenin/yesenin-part-2-editorial.webp';
+const expectedCoverSha256 = '2d76aaf29c0327d3fafa06fabbef5d4c514097f5aa37c36467598354eac59f69';
+if (essay.cover !== expectedCover) throw new Error('unexpected final cover file');
+if (essay.cardCover !== expectedCover) throw new Error('card cover diverges from the approved Part II cover');
+if (essay.coverKind !== 'reconstruction') throw new Error('final Part II cover must remain labelled as a reconstruction');
+if (essay.coverSourceUrl) throw new Error('local Part II editorial reconstruction must not claim an external source page');
+if (!essay.coverCredit?.includes('редакционная реконструкция')) {
+  throw new Error('final Part II cover lost reconstruction disclosure');
+}
+const coverSha256 = createHash('sha256')
+  .update(readFileSync(`public${expectedCover}`))
+  .digest('hex');
+if (coverSha256 !== expectedCoverSha256) throw new Error(`approved Part II cover bytes changed: ${coverSha256}`);
+if (images.some((image) => image.src === expectedCover)) throw new Error('dedicated Part II cover is reused as a body visual');
 
 const visualSourceIds = sources
   .filter((source) => source.id?.startsWith('yes2-visual-'))
@@ -135,8 +147,6 @@ for (const id of visualSourceIds) {
     throw new Error(`visual source unit lost exact Commons provenance: ${id}`);
   }
 }
-const coverSource = sourcesById.get('yes2-cover-esenin-1923');
-if (!coverSource || coverSource.url !== expectedCover) throw new Error('dedicated cover source unit is missing or drifted');
 
 const articleText = essay.blocks.map((block) => {
   if ('text' in block) return block.text;
@@ -154,5 +164,5 @@ for (const boundary of [
 }
 
 console.log(
-  `Yesenin Part II final DoD: ${words} words; ${sourcesById.size} source units; ${primaryOrResearch} primary/research; ${citedIds.size} cited source units; ${images.length} visuals; ${documentary.length} documentary; 2 honest no-URL objects preserved.`,
+  `Yesenin Part II final DoD: ${words} words; ${sourcesById.size} source units; ${primaryOrResearch} primary/research; ${citedIds.size} cited source units; ${images.length} visuals; ${documentary.length} documentary; approved cover=${coverSha256}; 2 honest no-URL objects preserved.`,
 );
