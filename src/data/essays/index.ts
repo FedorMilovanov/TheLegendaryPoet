@@ -8,6 +8,10 @@ import {
   expandYeseninPartTwoBlocks,
   yeseninPartTwoExpansionSources,
 } from './yeseninPartTwoExpansion';
+import {
+  supplementYeseninPartTwoBlocks,
+  yeseninPartTwoSupplementSources,
+} from './yeseninPartTwoSupplement';
 import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
@@ -312,6 +316,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
     ...yeseninPartTwoDecemberInquirySources,
     ...yeseninPartTwoDeathObjectSources,
     ...yeseninPartTwoExpansionSources,
+    ...yeseninPartTwoSupplementSources,
     {
       id: 'yes2-publication-ledger',
       title: 'Как проверялись источники этой части: публичный реестр публикации',
@@ -321,7 +326,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       note: 'Редакционный реестр: какое печатное издание и какая страница стоят за каждым документом, включая архивные дела без публичного адреса.',
     },
   ],
-  blocks: expandYeseninPartTwoBlocks(yeseninPartTwoPublic.blocks.map((block) => {
+  blocks: supplementYeseninPartTwoBlocks(expandYeseninPartTwoBlocks(yeseninPartTwoPublic.blocks.map((block) => {
     if (
       block.type === 'paragraph' &&
       block.text.startsWith('В эти годы рядом существовали вещи')
@@ -504,7 +509,7 @@ const yeseninPartTwoPublished = publishEssay(yeseninPartTwoPublic, {
       ...block,
       credit: `${block.credit ?? 'Wikimedia Commons'} · общественное достояние`,
     };
-  })),
+  }))),
 });
 
 const mayakovskyPartOnePublished = publishEssay(mayakovskyPartOne, {
