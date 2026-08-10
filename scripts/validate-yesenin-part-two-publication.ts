@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { getAllEssays, getEssayBySlug } from '../src/data/essays/index';
 
@@ -28,13 +29,23 @@ const partTwoWords = essay.blocks
 if (partTwoWords < 8500 || partTwoWords > 11500) {
   throw new Error(`Part II body must stay inside the final 8,500–11,500-word longform scope: ${partTwoWords} words`);
 }
-if (essay.coverKind !== 'archive') throw new Error('Part II cover must remain an archive image');
-const expectedCoverSource = 'https://commons.wikimedia.org/wiki/File:Сергей_Есенин_в_1923_году.jpg';
-if (essay.coverSourceUrl !== expectedCoverSource) {
-  throw new Error(`Part II cover lost its distinct public-domain provenance URL: ${essay.coverSourceUrl ?? '<none>'}`);
+const expectedCover = '/images/essays/yesenin/yesenin-part-2-editorial.webp';
+const expectedCoverSha256 = '2d76aaf29c0327d3fafa06fabbef5d4c514097f5aa37c36467598354eac59f69';
+if (essay.cover !== expectedCover || essay.cardCover !== expectedCover) {
+  throw new Error(`Part II lost the approved local cover: ${essay.cover} / ${essay.cardCover}`);
 }
-if (!essay.coverCredit?.includes('общественное достояние')) {
-  throw new Error('Part II cover lost its public-domain credit');
+if (essay.coverKind !== 'reconstruction') throw new Error('Part II cover must remain an editorial reconstruction');
+if (essay.coverSourceUrl) {
+  throw new Error(`Part II local reconstruction must not claim external provenance: ${essay.coverSourceUrl}`);
+}
+if (!essay.coverCredit?.includes('редакционная реконструкция')) {
+  throw new Error('Part II cover lost its reconstruction disclosure');
+}
+const coverPath = `public${expectedCover}`;
+if (!existsSync(coverPath)) throw new Error(`approved Part II cover file is missing: ${coverPath}`);
+const coverSha256 = createHash('sha256').update(readFileSync(coverPath)).digest('hex');
+if (coverSha256 !== expectedCoverSha256) {
+  throw new Error(`approved Part II cover bytes changed: ${coverSha256}`);
 }
 
 const registered = essays.filter((item) => item.slug === essay.slug);
@@ -142,7 +153,7 @@ for (const [index, image] of images.entries()) {
     throw new Error(`image ${index + 1} duplicates a documentary provenance URL: ${image.sourceUrl}`);
   }
   imageSourceUrls.add(image.sourceUrl);
-  if (image.sourceUrl === essay.coverSourceUrl) {
+  if (image.src === essay.cover) {
     throw new Error(`image ${index + 1} reuses the dedicated Part II cover inside the body`);
   }
   if (!image.credit?.includes('общественное достояние')) {
@@ -451,5 +462,5 @@ for (const marker of [
 }
 
 console.log(
-  `Yesenin Part II publication: ${partTwoWords} words, 16 sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} source units, ${images.length} public-domain images; final documentary, visual and rights boundaries passed.`,
+  `Yesenin Part II publication: ${partTwoWords} words, 16 sections, ${proseBlocks.length} prose blocks, ${citationCount} citations, ${sourceIds.size} source units, ${images.length} public-domain images; final documentary, visual, rights and approved-cover boundaries passed.`,
 );
