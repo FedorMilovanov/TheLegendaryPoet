@@ -49,11 +49,24 @@ const expectedLetterIds = [
   'yes2-letter-schneider-1922-06-21',
   'yes2-letter-mariengof-1922-07-09',
   'yes2-letter-schneider-1922-07-13',
+  'yes2-letter-yesenina-1923-04-22',
+  'yes2-letter-mariengof-1923-after-08-03',
+  'yes2-letter-volpin-1923-12-19',
+  'yes2-letter-benislavskaya-1924-04-15',
+  'yes2-letter-benislavskaya-1924-05',
+  'yes2-letter-benislavskaya-1924-10-17',
+  'yes2-letter-benislavskaya-1924-10-20',
   'yes2-letter-benislavskaya-1924-10-29',
   'yes2-letter-benislavskaya-1924-after-11-02',
+  'yes2-letter-chagin-1924-12-14',
+  'yes2-letter-benislavskaya-1924-12-17',
   'yes2-letter-benislavskaya-1925-01-20',
   'yes2-letter-chagin-1925-03',
+  'yes2-letter-benislavskaya-1925-04-22',
+  'yes2-letter-benislavskaya-1925-05-25',
   'yes2-letter-yesenina-1925-06-16',
+  'yes2-letter-chagin-1925-07-06',
+  'yes2-letter-chagin-1925-08-18',
   'yes2-letter-evdokimov-1925-12-06',
   'yes2-letter-ehrlich-1925-12-07',
   'yes2-letter-yesenina-1925-12-07-13',
@@ -76,6 +89,7 @@ for (const block of essay.blocks) {
 for (const id of expectedLetterIds) {
   if (!citedIds.has(id)) throw new Error(`exact expansion letter is bibliography-only dead data: ${id}`);
 }
+if (citedIds.size < 75) throw new Error(`final cited-source-unit floor violated: ${citedIds.size}`);
 
 const noUrlCited = [...citedIds]
   .filter((id) => sourcesById.get(id) && !sourcesById.get(id)?.url)
