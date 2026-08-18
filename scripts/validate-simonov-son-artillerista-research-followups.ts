@@ -77,6 +77,26 @@ if (sakhalin.includes('личная встреча Лоскутова со шк�
   throw new Error('Sakhalin gate invents a meeting that the discovery source leaves unresolved');
 }
 
+const shplPath = 'docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md';
+const shpl = requireFile(shplPath, 'Simonov Red Star SHPL scan gate');
+requireMarkers('Simonov Red Star SHPL', shpl, [
+  'complete 1941 corpus verified / exact № 288 child node and poem page pending',
+  '25135',
+  '36558',
+  '№ 1 (1 января) — № 309 (31 декабря)',
+  'декабрь: **№ 283–309**',
+  'unknown / discover, do not infer',
+  '№ 288 (5043)',
+  'не отмечен как повреждённый',
+  'по полным текстам документов при наличии распознанного текста',
+]);
+if (/exact child node[^\n]*\b37\d{3}\b/ui.test(shpl)) {
+  throw new Error('SHPL gate appears to invent an exact child-node ID before direct discovery');
+}
+if (shpl.includes('Мы просмотрели оригинальную полосу')) {
+  throw new Error('SHPL gate falsely claims direct page inspection');
+}
+
 const addendumPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2026-08.md';
 const addendum = requireFile(addendumPath, 'Simonov second-pass source addendum');
 requireMarkers('Simonov source addendum', addendum, [
@@ -94,5 +114,5 @@ requireMarkers('Simonov source addendum', addendum, [
 ]);
 
 console.log(
-  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; second-pass source hierarchy pinned.',
+  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; second-pass source hierarchy pinned.',
 );
