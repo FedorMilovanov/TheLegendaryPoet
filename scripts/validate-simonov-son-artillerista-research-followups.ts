@@ -77,6 +77,27 @@ if (sakhalin.includes('личная встреча Лоскутова со шк�
   throw new Error('Sakhalin gate invents a meeting that the discovery source leaves unresolved');
 }
 
+const vladivostokSchoolPath = 'docs/research/SIMONOV_LOSKUTOV_VLADIVOSTOK_SCHOOL_ARCHIVE_GATE_2026-08.md';
+const vladivostokSchool = requireFile(vladivostokSchoolPath, 'Simonov Loskutov Vladivostok school archive gate');
+requireMarkers('Simonov Loskutov Vladivostok school archive', vladivostokSchool, [
+  'official school fund located / opis and item inspection pending',
+  'Фонд Р-1510',
+  'Владивостокская школа-интернат № 2',
+  '1961–1967',
+  '1 опись',
+  'arhivpk@bk.ru',
+  'chit.zal.gapk@mail.ru',
+  'заявку на выдачу дела отправлять рано',
+  'Дата не угадывается по доступности сканов',
+  'запрос подготовлен, но **не отправлен**',
+]);
+if (vladivostokSchool.includes('фотография Лоскутова найдена в деле')) {
+  throw new Error('Vladivostok school gate falsely claims an uninspected photo item');
+}
+if (vladivostokSchool.includes('встреча Лоскутова со школьниками документально подтверждена фондом Р-1510')) {
+  throw new Error('Vladivostok school gate falsely upgrades fund existence to event verification');
+}
+
 const shplPath = 'docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md';
 const shpl = requireFile(shplPath, 'Simonov Red Star SHPL scan gate');
 requireMarkers('Simonov Red Star SHPL', shpl, [
@@ -116,5 +137,5 @@ requireMarkers('Simonov source addendum', addendum, [
 ]);
 
 console.log(
-  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; SHPL authority also pinned in second-pass source hierarchy.',
+  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; Vladivostok school fund R-1510 pinned with opis/item inspection pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; second-pass source hierarchy pinned.',
 );
