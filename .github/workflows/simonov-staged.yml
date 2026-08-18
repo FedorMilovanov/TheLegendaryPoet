@@ -55,6 +55,9 @@ jobs:
       - name: Validate Patriot Rodiny RSL holdings gap
         run: npx tsx scripts/validate-simonov-patriot-rodiny-rsl-holdings-gap.ts
 
+      - name: Validate Patriot Rodiny acquisition inquiry
+        run: npx tsx scripts/validate-simonov-patriot-rodiny-acquisition-inquiry.ts
+
       - name: Validate Simonov volume 8 public scan gate
         run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
 
