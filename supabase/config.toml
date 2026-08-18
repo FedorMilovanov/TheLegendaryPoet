@@ -1,0 +1,4 @@
+project_id = "the-legendary-poet"
+
+[functions.community-write]
+verify_jwt = false
