@@ -118,6 +118,20 @@ if (!diary?.note?.includes('машинописная копия') || !diary.note
   throw new Error('Benislavskaya diary/copy boundary drifted');
 }
 
+const reconciliationPath = 'docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_MATRIX_2026-08.md';
+if (!existsSync(reconciliationPath)) throw new Error('Benislavskaya inbound reconciliation matrix is missing');
+const reconciliation = readFileSync(reconciliationPath, 'utf8');
+for (const marker of [
+  'IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous',
+  'letter is absent there',
+  'remained with G. A. Benislavskaya',
+  'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
+]) {
+  if (!reconciliation.includes(marker)) {
+    throw new Error(`Benislavskaya 16 July corrected provenance boundary disappeared: ${marker}`);
+  }
+}
+
 const bodyImages = essay.blocks.filter((block) => block.type === 'image');
 if (bodyImages.length !== 0) {
   throw new Error('Benislavskaya staged draft gained body visuals before item-level rights approval');
@@ -160,5 +174,5 @@ if (!readerText.includes('16 июля 1925 года') || !readerText.includes('�
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 acquisition gate preserved.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 acquisition gate preserved; 16-Jul provenance correction pinned.`,
 );
