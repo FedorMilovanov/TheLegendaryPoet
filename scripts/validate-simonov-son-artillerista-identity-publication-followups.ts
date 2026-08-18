@@ -36,22 +36,27 @@ for (const forbidden of [
 const ortenbergPath = 'docs/research/SIMONOV_ORTENBERG_PUBLICATION_WITNESS_GATE_2026-08.md';
 const ortenberg = read(ortenbergPath, 'Simonov Ortenberg publication witness gate');
 requireAll('Simonov Ortenberg publication witness', ortenberg, [
-  'author handoff verified in Simonov retrospective / Ortenberg quote independently transmitted but exact original locus pending',
+  'author handoff verified / exact Ortenberg print locus strongly corroborated / pp. 95–96 direct scan inspection pending',
   '5 декабря утром',
   'Давид Ортенберг',
   'сразу пошла в номер',
   '`В номер`',
   'Приморская краевая детская библиотека',
+  '`Каким я его знал`',
+  'с. 86–112',
+  '**с. 95–96**',
+  'exact print locus strongly corroborated',
+  'direct page scan not yet inspected',
   '`Июнь — декабрь сорок первого: Рассказ-хроника`',
-  'Текущий поиск **не локализовал в этой книге exact phrase**',
-  'exact original locus ещё должен быть найден',
+  'необходимости насильно приписывать сцену `В номер` этой книге',
 ]);
 for (const forbidden of [
   'рукопись с автографом `В номер` непосредственно просмотрена',
-  'Ортенберг, Июнь—декабрь сорок первого, 1984, стр.',
-  'exact Ortenberg locus verified',
+  'THE LEGENDARY POET визуально проверил с. 95–96',
+  'facsimile первой страницы рукописи найдено',
+  'exact Ortenberg locus verified by direct scan',
 ]) {
   if (ortenberg.includes(forbidden)) throw new Error(`Ortenberg publication gate overstates closure: ${forbidden}`);
 }
 
-console.log('Simonov identity/publication follow-ups: father name remains primary-object pending; Ortenberg “В номер” scene remains exact-locus pending while Simonov handoff is usable.');
+console.log('Simonov identity/publication follow-ups: father name remains primary-object pending; Ortenberg print locus recovered at pp.95–96, direct page scan still pending; Simonov handoff usable.');
