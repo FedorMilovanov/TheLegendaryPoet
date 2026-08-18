@@ -67,6 +67,8 @@ Public clients may select only the public views. Base tables and abuse buckets a
 
 Legacy browser-authoritative mutation RPCs are removed. Hardened mutation functions and the atomic budget helper are executable only by `service_role`, which is available to the Edge Function and never shipped to the browser.
 
+Production rollout is two-phase: the prepare migration adds the trusted service-only path while the old frontend can still function; after the Auth-backed frontend and Edge path are deployed and verified, the cutover migration removes the legacy RPC surface. The final schema represents the post-cutover state.
+
 A rating has one active row per verified Auth actor and target; an update replaces that actor's previous score rather than adding another rating. Helpful votes are unique per verified actor and comment.
 
 ## Remote reads and scale
@@ -100,4 +102,4 @@ npm run typecheck
 npm run build
 ```
 
-`validate:community-authority` additionally proves that the release-derived target manifest matches canonical Product data, browser mutation payloads contain no actor/network authority, the Edge Function verifies Auth and derives the network key server-side, legacy public RPCs are removed, and hardened RPCs are service-role-only.
+`validate:community-authority` additionally proves that the release-derived target manifest matches canonical Product data, browser mutation payloads contain no actor/network authority, the Edge Function verifies Auth and derives the network key server-side, legacy public RPCs are removed by terminal cutover, and hardened RPCs are service-role-only.
