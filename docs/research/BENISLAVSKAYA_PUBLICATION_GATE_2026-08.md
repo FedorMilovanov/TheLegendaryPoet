@@ -35,12 +35,12 @@ Approved production target:
 
 ### Binary-ingestion QC
 
-An initially staged repository blob failed the new exact-byte validator on 2026-08-18:
+An initially staged repository blob failed the exact-byte validator on 2026-08-18:
 
 - observed repository SHA-256: `b6e9c469edda76dc747888bcdca50a6d953f0beef9fa74b39253050747b60caf`;
 - expected approved SHA-256: `0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48`.
 
-The mismatching blob was removed from the branch rather than accepted by changing the expected hash. The staged validator now treats the hero as **pending binary ingestion** while the essay remains unpublished; if a file appears at the intended path, it must match the approved SHA exactly or CI fails.
+The mismatching blob was removed from the branch rather than accepted by changing the expected hash. The staged validator treats the hero as **pending binary ingestion** while the essay remains unpublished; if a file appears at the intended path, it must match the approved SHA exactly or CI fails.
 
 The image is a reader-facing editorial reconstruction. It must never be described as an archival photograph, facsimile, restoration, or documentary witness.
 
@@ -90,11 +90,16 @@ Three observable source layers still disagree in composition:
 2. P. F. Yushin's earlier bibliographic list exposes **16 archival/bibliographic positions**;
 3. the later academic PSS index records **14 known letters** from Benislavskaya to Yesenin.
 
-The working crosswalk is now maintained separately in:
+The working crosswalk is maintained in:
 
 `docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_MATRIX_2026-08.md`
 
-It maps all Yushin positions **121–136** against open units **#1–#13**, including the high-value dating conflict where open unit #6 is headed `19 или 20 октября 1924 г.` but signs itself `10.X.24`, matching Yushin #127 dated 10 October.
+It maps all Yushin positions **121–136** against open units **#1–#13** and records the visible boundary problems instead of silently normalizing them. In particular:
+
+- open #3 is headed 26 April but ends `25.IV.24`;
+- open #4 is a separate 26 April postcard while Yushin exposes one 26 April position;
+- open #6 is headed `19 или 20 октября 1924 г.` but ends `10.X.24`, matching Yushin #127 dated 10 October;
+- open #7 explicitly mentions a business letter that was written but not sent, so writing, sending, delivery and reading must remain separate provenance questions.
 
 This discrepancy must be reconciled item by item. It is not legitimate to choose whichever number is easiest for the narrative.
 
@@ -107,6 +112,7 @@ The final matrix must record for every controlling item:
 - cuts or missing passages;
 - page witness;
 - provenance and any archive cipher available;
+- delivery/recipient status where evidenced;
 - what reader claim the item actually supports.
 
 ## Diary / copy boundary
@@ -119,7 +125,7 @@ Do not call this a viewed autograph diary. The current publication tradition com
 
 ## Staged validation contract
 
-The branch now contains `scripts/validate-benislavskaya-staged.ts`, executed from the common `check:content` gate. It enforces, before publication:
+The branch contains `scripts/validate-benislavskaya-staged.ts`, executed from the common `check:content` gate. It enforces, before publication:
 
 - no accidental catalog/browser-data publication;
 - stable staged identity and section order;
@@ -132,6 +138,8 @@ The branch now contains `scripts/validate-benislavskaya-staged.ts`, executed fro
 - zero documentary body images before item-level rights approval;
 - publication-derived reading-time parity through the universal `publishEssay()` boundary;
 - exact approved hero bytes if/when the binary is ingested.
+
+The raw authoring object currently contains a non-authoritative `readTime` placeholder, while the universal publication boundary recalculates reader time from blocks. The staged DoD validates the **publication-derived** value, not a duplicated manual number.
 
 ## Publication unlock conditions
 
