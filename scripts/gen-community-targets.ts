@@ -4,10 +4,13 @@ import { musicTracks, poets } from '../src/data/poets';
 
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
 
-function uniqueSorted(values: readonly string[]) {
+function uniqueSorted(values: readonly string[], targetType: string) {
   const ids = [...new Set(values)].sort((a, b) => a.localeCompare(b, 'en'));
+  if (ids.length !== values.length) {
+    throw new Error(`Duplicate canonical community target id in ${targetType}`);
+  }
   for (const id of ids) {
-    if (!TARGET_ID.test(id)) throw new Error(`Invalid community target id: ${id}`);
+    if (!TARGET_ID.test(id)) throw new Error(`Invalid community target id: ${targetType}:${id}`);
   }
   return ids;
 }
@@ -15,10 +18,10 @@ function uniqueSorted(values: readonly string[]) {
 const manifest = {
   version: 1,
   targets: {
-    poet: uniqueSorted(poets.map((poet) => poet.id)),
-    poem: uniqueSorted(poets.flatMap((poet) => poet.poems.map((poem) => poem.id))),
-    track: uniqueSorted(musicTracks.map((track) => track.id)),
-    article: uniqueSorted(getAllEssays().map((essay) => essay.id)),
+    poet: uniqueSorted(poets.map((poet) => poet.id), 'poet'),
+    poem: uniqueSorted(poets.flatMap((poet) => poet.poems.map((poem) => poem.id)), 'poem'),
+    track: uniqueSorted(musicTracks.map((track) => track.id), 'track'),
+    article: uniqueSorted(getAllEssays().map((essay) => essay.id), 'article'),
   },
 } as const;
 
