@@ -60,6 +60,29 @@ for (const boundary of [
   if (!ledger.includes(boundary)) throw new Error(`Simonov publication boundary disappeared from ledger: ${boundary}`);
 }
 
+const archivalFollowupPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_ARCHIVAL_FOLLOWUP_2026-08.md';
+if (!existsSync(archivalFollowupPath)) {
+  throw new Error('Simonov archival follow-up ledger is missing');
+}
+const archivalFollowup = readFileSync(archivalFollowupPath, 'utf8');
+for (const marker of [
+  '01006521228',
+  '000199_000009_004509621',
+  'ЦАМО, фонд 33, опись 682524, дело 32',
+  'CC BY-SA 4.0',
+  'File:Petsamo 02.jpg',
+  'Поныри, 1943',
+  'конкретная полоса «Патриот Родины» 03.12.1941',
+  'конкретная полоса «Красной звезды» 07.12.1941',
+]) {
+  if (!archivalFollowup.includes(marker)) {
+    throw new Error(`Simonov archival follow-up boundary disappeared: ${marker}`);
+  }
+}
+if (archivalFollowup.includes('3 декабря 1941 года несомненно была первой публикацией')) {
+  throw new Error('Simonov archival follow-up overstates the unresolved first-publication claim');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -135,5 +158,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; hero=${coverStatus}; newspaper-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; hero=${coverStatus}; newspaper-object gate remains open.`,
 );
