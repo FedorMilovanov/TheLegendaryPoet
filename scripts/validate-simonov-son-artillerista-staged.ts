@@ -156,6 +156,48 @@ if (/«Сын артиллериста» напечатан на страниц�
   throw new Error('Simonov newspaper gate invented a poem page before scan inspection');
 }
 
+const imageRightsGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_IMAGE_RIGHTS_GATE_2026-08.md';
+if (!existsSync(imageRightsGatePath)) {
+  throw new Error('Simonov image-rights gate is missing');
+}
+const imageRightsGate = readFileSync(imageRightsGatePath, 'utf8');
+for (const marker of [
+  'archive images research-only pending item-level reuse authority',
+  'письменного разрешения',
+  'G1 — Иван Алексеевич Лоскутов, 1941',
+  'G2 — Ефим Самсонович Рыклис, 1941',
+  'не скачивать и не вендорить эти изображения в production автоматически',
+  'Запрос о публикации архивных фотографий 1941 года',
+  'не угадывает адрес электронной почты',
+]) {
+  if (!imageRightsGate.includes(marker)) {
+    throw new Error(`Simonov image-rights boundary disappeared: ${marker}`);
+  }
+}
+
+const textRightsGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_TEXT_RIGHTS_GATE_2026-08.md';
+if (!existsSync(textRightsGatePath)) {
+  throw new Error('Simonov text-rights gate is missing');
+}
+const textRightsGate = readFileSync(textRightsGatePath, 'utf8');
+for (const marker of [
+  'full-text publication blocked / short quotation only in staged essay',
+  '28 августа 1979 года',
+  '70 лет',
+  'на четыре года',
+  '31 декабря 2053 года',
+  '1 января 2054 года',
+  'полный текст «Сына артиллериста» не встраивается',
+  "добавлять `type: 'poem'` с полным текстом",
+]) {
+  if (!textRightsGate.includes(marker)) {
+    throw new Error(`Simonov text-rights boundary disappeared: ${marker}`);
+  }
+}
+if (textRightsGate.includes('полный текст уже находится в общественном достоянии')) {
+  throw new Error('Simonov text-rights gate falsely claims current public-domain status');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -231,5 +273,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; hero=${coverStatus}; publication-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; image-rights=research-only; text-rights=full-text-blocked; hero=${coverStatus}; publication-object gate remains open.`,
 );
