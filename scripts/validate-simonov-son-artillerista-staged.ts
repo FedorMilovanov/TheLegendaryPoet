@@ -88,7 +88,7 @@ requireMarkers('Simonov Loskutov print witness', printWitness, [
 ]);
 if (printWitness.includes('страницы 54–62 визуально проверены в РГБ')) throw new Error('RSL print witness falsely closed');
 
-// December 1941 newspaper hierarchy: page 3 is now strong scholarly evidence, not a direct scan.
+// December 1941 newspaper hierarchy: page 3 is strong scholarly evidence, not a direct scan.
 const newspaper = read('docs/research/SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md', 'Simonov newspaper gate');
 requireMarkers('Simonov newspaper gate', newspaper, [
   'issue identity narrowed / Red Star page 3 strongly corroborated / direct page inspection still pending',
@@ -97,14 +97,19 @@ requireMarkers('Simonov newspaper gate', newspaper, [
   'Военно-исторического журнала',
   'Издание Министерства обороны России',
   '7 декабря. С. 3',
+  'Пока **не** разрешено писать:',
+  'direct scan №288, p.3 ещё не открыт',
   'page 3 strongly corroborated / direct newspaper-object inspection required',
+  'только затем повысить статус до `direct page verified`',
   '01006521228',
   '3 декабря 1941 года',
   '**unknown / do not infer**',
   '3 ноября не используется как publication fact',
 ]);
-if (newspaper.includes('THE LEGENDARY POET визуально проверил страницу 3')) {
-  throw new Error('Newspaper gate falsely claims direct p.3 inspection');
+// The gate may quote a forbidden sentence inside its explicit “do not write” policy.
+// Fail only if its declared status itself is upgraded to a direct-page closure.
+if (/Статус страницы:\s*\*\*direct page verified\*\*/u.test(newspaper)) {
+  throw new Error('Newspaper gate falsely marks p.3 direct-verified');
 }
 
 const page3 = read('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Simonov Red Star page-3 scholarly gate');
@@ -118,7 +123,7 @@ requireMarkers('Simonov Red Star page-3 scholarly gate', page3, [
   'direct page verified',
   'direct visual newspaper scan №288, p.3',
 ]);
-if (page3.includes('direct scan verified')) throw new Error('Page-3 scholarly gate falsely upgrades citation to scan');
+if (/Текущий статус[^\n]*direct scan verified/iu.test(page3)) throw new Error('Page-3 scholarly gate falsely upgrades citation to scan');
 
 // Award-object exact locator exists, scan still pending.
 const awardLocator = read('docs/research/SIMONOV_LOSKUTOV_AWARD_OBJECT_LOCATOR_2026-08.md', 'Simonov Loskutov award locator');
