@@ -12,13 +12,14 @@
 
 1. Создайте проект Supabase.
 2. В **Authentication → Providers / Anonymous Sign-Ins** включите anonymous sign-ins.
-3. В **SQL Editor** выполните [`docs/community-schema.sql`](./community-schema.sql). Для уже существующего проекта примените миграцию `supabase/migrations/20260819010000_community_authority.sql`.
+3. Для нового проекта выполните финальную схему [`docs/community-schema.sql`](./community-schema.sql). Для существующего production сначала примените **prepare**-миграцию `supabase/migrations/20260819010000_community_authority.sql`: она добавляет новый trusted path, но специально не ломает старый frontend.
 4. Разверните Edge Function `community-write` из `supabase/functions/community-write/index.ts` с конфигурацией из `supabase/config.toml`.
 5. Создайте секрет функции `COMMUNITY_ABUSE_SECRET`: криптографически случайное значение не короче 32 символов. Он используется только на сервере для HMAC сетевого anti-abuse ключа и никогда не попадает в клиент.
 6. В GitHub Actions Variables задайте:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY` (или публичный ключ проекта, совместимый с текущим frontend contract)
 7. Запустите production build/deploy. `prebuild` генерирует `/community-targets.json` из канонических данных Product; Edge Function принимает запись только для target, присутствующего в этом manifest.
+8. Проверьте production write path и adversarial cases на новом frontend/Edge. Только после этого примените **cutover**-миграцию `supabase/migrations/20260819011000_community_authority_cutover.sql`, которая удаляет старые browser-authoritative RPC. Такой порядок не создаёт намеренного write-downtime между старым и новым клиентом.
 
 ## Защитная модель
 
@@ -28,7 +29,7 @@
 - Postgres атомарно ограничивает частоту rating/comment/helpful операций по сетевому ключу. Поэтому простая очистка localStorage или создание новой анонимной Auth-сессии не обнуляет сетевой budget.
 - Один actor имеет одну активную оценку на target и одну helpful-отметку на комментарий.
 - Target authority берётся не из тела запроса: Edge Function сверяет `target_type + target_id` с release-derived `/community-targets.json`. Неизвестные target fail closed.
-- Старые публичные mutation-RPC удаляются. Новые `*_server` функции доступны только `service_role`.
+- Старые публичные mutation-RPC удаляются на terminal cutover. Новые `*_server` функции доступны только `service_role`.
 - Таблицы ratings/comments/votes/abuse-buckets не дают `anon`/`authenticated` прямых `insert/update/delete`.
 - Публичные views не раскрывают actor id, legacy device UUID или network hash.
 
