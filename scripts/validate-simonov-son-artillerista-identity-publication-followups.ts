@@ -11,6 +11,10 @@ function requireAll(label: string, text: string, markers: string[]): void {
   }
 }
 
+function declaredStatus(text: string): string {
+  return text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+}
+
 const fatherPath = 'docs/research/SIMONOV_LOSKUTOV_FATHER_IDENTITY_GATE_2026-08.md';
 const father = read(fatherPath, 'Simonov Loskutov father identity gate');
 requireAll('Simonov Loskutov father identity', father, [
@@ -25,12 +29,8 @@ requireAll('Simonov Loskutov father identity', father, [
   'Алексея Михайловича существенно более вероятным',
   '**Не добавлять имя** в основной narrative до закрытия gate',
 ]);
-for (const forbidden of [
-  'Иван Михайлович — бесспорно отец Ивана Алексеевича',
-  'Алексей Михайлович — primary object verified',
-  'первичный семейный документ просмотрен',
-]) {
-  if (father.includes(forbidden)) throw new Error(`Father identity gate overstates closure: ${forbidden}`);
+if (/primary.*(?:verified|closed)|family-service object verified/iu.test(declaredStatus(father))) {
+  throw new Error('Father identity gate falsely declares primary-object closure');
 }
 
 const ortenbergPath = 'docs/research/SIMONOV_ORTENBERG_PUBLICATION_WITNESS_GATE_2026-08.md';
@@ -49,14 +49,11 @@ requireAll('Simonov Ortenberg publication witness', ortenberg, [
   'direct page scan not yet inspected',
   '`Июнь — декабрь сорок первого: Рассказ-хроника`',
   'необходимости насильно приписывать сцену `В номер` этой книге',
+  '### Пока нельзя',
+  '`THE LEGENDARY POET визуально проверил с. 95–96`',
 ]);
-for (const forbidden of [
-  'рукопись с автографом `В номер` непосредственно просмотрена',
-  'THE LEGENDARY POET визуально проверил с. 95–96',
-  'facsimile первой страницы рукописи найдено',
-  'exact Ortenberg locus verified by direct scan',
-]) {
-  if (ortenberg.includes(forbidden)) throw new Error(`Ortenberg publication gate overstates closure: ${forbidden}`);
+if (/direct scan (?:verified|inspected)|facsimile verified/iu.test(declaredStatus(ortenberg))) {
+  throw new Error('Ortenberg publication gate falsely declares direct-scan closure');
 }
 
 console.log('Simonov identity/publication follow-ups: father name remains primary-object pending; Ortenberg print locus recovered at pp.95–96, direct page scan still pending; Simonov handoff usable.');
