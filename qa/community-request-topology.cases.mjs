@@ -27,11 +27,7 @@ function corsHeaders(extra = {}) {
 function parseBody(request) {
   const raw = request.postData();
   if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
+  try { return JSON.parse(raw); } catch { return raw; }
 }
 
 async function installCommunityBackend(page) {
@@ -53,7 +49,33 @@ async function installCommunityBackend(page) {
 
     const url = new URL(request.url());
     if (request.method() === 'GET') reads.push(url);
-    else writes.push({ url, method: request.method(), body: parseBody(request) });
+    else writes.push({ url, method: request.method(), body: parseBody(request), headers: request.headers() });
+
+    if (url.pathname.endsWith('/auth/v1/signup')) {
+      await route.fulfill({
+        status: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({
+          access_token: 'browser-access-token-00000000000001',
+          refresh_token: 'browser-refresh-token-0000000000001',
+          expires_in: 3600,
+        }),
+      });
+      return;
+    }
+
+    if (url.pathname.endsWith('/auth/v1/token')) {
+      await route.fulfill({
+        status: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({
+          access_token: 'browser-access-token-00000000000002',
+          refresh_token: 'browser-refresh-token-0000000000002',
+          expires_in: 3600,
+        }),
+      });
+      return;
+    }
 
     if (url.pathname.endsWith('/tlp_feedback_summary_public')) {
       if (url.searchParams.get('target_type') === 'eq.poet') {
@@ -85,7 +107,7 @@ async function installCommunityBackend(page) {
           rating_count: 9,
           comment_count: 12,
           overall: 4.4,
-          dimensions: { clarity: 4.5, evidence: 4.4, depth: 4.3, ethics: 4.4 },
+          dimensions: { clarity: 4.5, depth: 4.3, fairness: 4.4 },
           distribution: { 4: 5, 5: 4 },
           deviation: 0.35,
         }]),
@@ -103,12 +125,23 @@ async function installCommunityBackend(page) {
       return;
     }
 
-    if (url.pathname.endsWith('/rpc/tlp_mark_helpful')) {
-      await route.fulfill({
-        status: 503,
-        headers: corsHeaders(),
-        body: JSON.stringify({ message: 'offline write contract' }),
-      });
+    if (url.pathname.endsWith('/functions/v1/community-write')) {
+      const body = parseBody(request);
+      const serialized = JSON.stringify(body);
+      if (/voterId|voter_id|actorId|actor_id|networkKey|network_key/.test(serialized)) {
+        await route.fulfill({ status: 400, headers: corsHeaders(), body: JSON.stringify({ code: 'client_authority_forbidden' }) });
+        return;
+      }
+      const auth = request.headers().authorization ?? '';
+      if (!auth.startsWith('Bearer browser-access-token-')) {
+        await route.fulfill({ status: 401, headers: corsHeaders(), body: JSON.stringify({ code: 'auth_required' }) });
+        return;
+      }
+      if (body?.kind === 'helpful') {
+        await route.fulfill({ status: 503, headers: corsHeaders(), body: JSON.stringify({ message: 'offline write contract' }) });
+        return;
+      }
+      await route.fulfill({ status: 200, headers: corsHeaders(), body: JSON.stringify({ ok: true }) });
       return;
     }
 
@@ -136,11 +169,7 @@ async function visibleCommunityPanel(page, expect) {
   return panel;
 }
 
-export function registerCommunityRequestTopologyTests({
-  test,
-  expect,
-  projects = ['chromium-core'],
-}) {
+export function registerCommunityRequestTopologyTests({ test, expect, projects = ['chromium-core'] }) {
   test.describe('community request topology', () => {
     test('generic startup performs zero community reads', async ({ page }, testInfo) => {
       useAllowedProject(test, testInfo, projects);
@@ -190,7 +219,7 @@ export function registerCommunityRequestTopologyTests({
       )).size).toBe(12);
     });
 
-    test('remote helpful remains optimistic and queued without persisting the public comment corpus', async ({ page }, testInfo) => {
+    test('remote helpful uses Auth Edge boundary, stays optimistic and queues on failure', async ({ page }, testInfo) => {
       useAllowedProject(test, testInfo, projects);
       const { writes } = await installCommunityBackend(page);
       const response = await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
@@ -205,8 +234,13 @@ export function registerCommunityRequestTopologyTests({
       await expect(commentCard.getByRole('button', { name: /Вы отметили комментарий полезным/ }))
         .toHaveAttribute('aria-pressed', 'true');
 
-      await expect.poll(() => writes.filter((entry) => entry.url.pathname.endsWith('/rpc/tlp_mark_helpful')).length)
+      await expect.poll(() => writes.filter((entry) => entry.url.pathname.endsWith('/functions/v1/community-write')).length)
         .toBe(1);
+      const functionWrite = writes.find((entry) => entry.url.pathname.endsWith('/functions/v1/community-write'));
+      expect(functionWrite?.body).toEqual({ kind: 'helpful', commentId });
+      expect(functionWrite?.headers.authorization).toMatch(/^Bearer browser-access-token-/);
+      expect(JSON.stringify(functionWrite?.body)).not.toMatch(/voter|actor|network/i);
+
       const persisted = await page.evaluate(() => {
         const raw = localStorage.getItem('tlp-community-feedback:v3');
         return raw ? JSON.parse(raw) : null;
@@ -215,6 +249,7 @@ export function registerCommunityRequestTopologyTests({
       expect(persisted.localSnapshot?.comments ?? []).toHaveLength(0);
       expect(persisted.outbox?.some((operation) => operation.kind === 'helpful' && operation.commentId === commentId)).toBe(true);
       expect(Object.values(persisted.helpfulVotes ?? {})).toContain(true);
+      expect(await page.evaluate(() => localStorage.getItem('tlp-community-auth:v1'))).not.toBeNull();
 
       await page.reload({ waitUntil: 'networkidle' });
       const reloadedPanel = await visibleCommunityPanel(page, expect);
