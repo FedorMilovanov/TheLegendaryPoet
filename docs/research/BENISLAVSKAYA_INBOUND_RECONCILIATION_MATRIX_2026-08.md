@@ -9,15 +9,17 @@ This ledger compares two source layers that can already be inspected in public t
 1. the open `Есенин.ру` publication `БЕНИСЛАВСКАЯ Г. Письма к Есенину`, containing 13 numbered units;
 2. P. F. Yushin, `Сергей Есенин. Поэзия` (1969), archival-document bibliography positions 121–136, containing 16 Benislavskaya→Yesenin positions.
 
-The later academic PSS index records **14 known letters** from Benislavskaya to Yesenin. The purpose of this matrix is to isolate what must be reconciled against the controlling page-level witness. It does **not** declare which 14 items are canonical.
+The later academic PSS index records **14 known letters** from Benislavskaya to Yesenin. The purpose of this matrix is to isolate what must be reconciled against controlling page-level witnesses. It does **not** declare which 14 items are canonical.
 
 ## Source anchors
 
 - Open 13-unit publication: `https://esenin.ru/o-esenine/zhenshchiny-esenina/galina-benislavskaia/benislavskaia-g-pisma-k-eseninu`
 - Yushin bibliography: `https://s-a-esenin.ru/books/item/f00/s00/z0000004/st014.shtml`
 - PSS name index / controlling count: `https://feb-web.ru/feb/esenin/texts/es6/es6-754-.htm?cmd=p`
-- IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013
-- Required 1995 book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. **236–281**, plus a separate controlling witness for the 16 July 1925 item or a lawful complete equivalent covering both layers.
+- IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013; connected project PDF/OCR witness; **16 July letter reproduced on pp. 339–340**
+- Required remaining 1995 book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. **236–281**.
+
+The 16 July 1925 page-level branch is now independently covered by the connected IMLI 2013 witness. Zankovskaya 1997 p. 381 and Shubnikova-Guseva 2008 pp. 332–333 remain important upstream publication/provenance references, but acquiring those books is no longer a prerequisite merely to read or page-verify this letter.
 
 ## Crosswalk
 
@@ -41,19 +43,20 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 | 9 Feb 1925 | **open #12** | **#133** | strong date match |
 | 12 Apr 1925 | absent from numbered 13 | **#134** | YUSHIN-ONLY; requires controlling page witness |
 | 4 May 1925 | **open #13** | **#135** | strong date match; IMLI cites this letter across `Письма, 280–281` |
-| 16 Jul 1925 | absent from numbered 13 | **#136** | YUSHIN-ONLY; IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous, states that the letter is absent there and that it remained with Benislavskaya; delivery/reading by Yesenin must not be asserted |
+| 16 Jul 1925 | absent from numbered 13 | **#136** | **PAGE-WITNESS VERIFIED:** IMLI 2013 reproduces the letter in full on pp. **339–340**; it also corrects the published `ЦГАЛИ/РГАЛИ` storage citation as erroneous, states the letter is absent there and remained with Benislavskaya; delivery/reading by Yesenin must not be asserted |
 
-## Verified 1925 page-map inside the 1995 collection
+## Verified academic page-map
 
 The connected academic IMLI chronology explicitly expands the abbreviation `Письма` as the 1995 collection `Сергей Есенин в стихах и жизни: Письма. Документы`. Its dated entries provide a partial page-map for Benislavskaya's inbound correspondence:
 
-- **20 January 1925** → `Письма, 268–269`;
-- **9 February 1925** → `Письма, 271–272`;
-- **4 May 1925** → `Письма, 280–281`.
+- **20 January 1925** → 1995 `Письма`, pp. **268–269**;
+- **9 February 1925** → 1995 `Письма`, pp. **271–272**;
+- **4 May 1925** → 1995 `Письма`, pp. **280–281**;
+- **16 July 1925** → IMLI `Летопись`, т. 5, кн. 1 (2013), pp. **339–340**, where the full letter is reproduced from its opening `Сергей...` through the signed ending `Галя. 16. VII. 25` and followed by the provenance correction.
 
-This corrects the earlier acquisition range. A request ending at p. 280 would omit part of the 4 May letter, so the book-copy gate is now **pp. 236–281 inclusive (46 pages)**, not 236–280.
+The first three markers correct the earlier acquisition range. A request ending at p. 280 would omit part of the 4 May letter, so the remaining book-copy gate is **pp. 236–281 inclusive (46 pages)**, not 236–280.
 
-The 16 July item remains a separate provenance problem: in that chronology it is sourced through Zankovskaya 1997, p. 381 and Shubnikova-Guseva 2008, pp. 332–333, not through a `Письма` page reference. Therefore the 1995 range alone must not be represented as sufficient to close all fourteen items.
+The 16 July item is no longer an unacquired page-witness problem: its text and editorial provenance are already available in the connected academic IMLI volume. The 1997/2008 references remain part of the source chain, not an outstanding acquisition condition.
 
 ## What the crosswalk proves already
 
@@ -81,6 +84,8 @@ Yushin has six positions not represented as numbered units on the open page:
 - 12 Apr 1925;
 - 16 Jul 1925.
 
+One of those six — 16 July — now has an independent full academic page witness in IMLI 2013. The other five still depend on the remaining controlling correspondence acquisition/reconciliation.
+
 The open page, conversely, exposes three units/datings without a separate exact Yushin position:
 
 - the separate 26 Apr postcard (#4);
@@ -101,20 +106,22 @@ The open page itself contains evidence that its date labels and physical/documen
 
 Therefore the open page is a **navigation/version witness**, not final claim authority for the complete 14-letter corpus.
 
-## 16 July 1925 — corrected provenance boundary
+## 16 July 1925 — page witness closed, delivery boundary remains open
 
 Yushin #136 confirms a bibliographic position dated 16 July 1925. A later publication by L. V. Zankovskaya printed the text and cited a storage location in the former ЦГАЛИ / current РГАЛИ.
 
-The academic IMLI `Летопись`, т. 5, кн. 1 (2013), explicitly corrects that provenance: the cited archive location is erroneous because the letter is absent there. The same chronology states that the letter **remained with G. A. Benislavskaya** and points to N. I. Shubnikova-Guseva, `Сергей Есенин и Галина Бениславская` (2008), pp. 332–333.
+The connected academic IMLI `Летопись`, т. 5, кн. 1 (2013), pp. **339–340**, reproduces the letter continuously from the opening `Сергей...` through the closing request, signature and date `Галя. 16. VII. 25`. Immediately after the reproduced text, the editors state that Zankovskaya's cited archive location is erroneous because the letter is absent there; they state that the letter **remained with G. A. Benislavskaya** and cite N. I. Shubnikova-Guseva, `Сергей Есенин и Галина Бениславская` (2008), pp. 332–333.
+
+This closes the project's **text/page-level witness** for the 16 July item. It does **not** create evidence of transmission to Yesenin.
 
 Consequences for reader text:
 
-- it is safe to call the 16 July item the **last known written address / letter of Benislavskaya to Yesenin** at the current evidence level;
+- it is safe to call the 16 July item the **last known written address / letter of Benislavskaya to Yesenin**;
 - do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance to it;
 - do **not** state that the letter was sent, delivered, received or read by Yesenin unless a controlling source establishes that chain;
-- the staged article remains deliberately non-quotational here until the final 14-item page matrix is closed.
+- there is no need to purchase Zankovskaya 1997 p. 381 or Shubnikova-Guseva 2008 pp. 332–333 merely to obtain the letter text already reproduced by IMLI; those references remain useful for upstream provenance and historiography.
 
-## Tasks for the controlling witness
+## Tasks for the remaining controlling witness
 
 For every final PSS-count item, record:
 
@@ -131,6 +138,6 @@ For every final PSS-count item, record:
 
 ## Publication gate
 
-**OPEN.**
+**OPEN — narrowed.**
 
-This file narrows the acquisition question but does not replace pp. **236–281** plus a controlling witness for the 16 July item (or a lawful complete equivalent covering both layers) and does not authorize public registration of the Benislavskaya essay.
+The separate 16 July page-witness branch is closed by IMLI 2013, pp. 339–340. The remaining acquisition gate is the lawful 1995 `Письма. Документы` witness, pp. **236–281**, followed by item-by-item reconciliation of the final 14-item corpus. This file still does not authorize public registration of the Benislavskaya essay.
