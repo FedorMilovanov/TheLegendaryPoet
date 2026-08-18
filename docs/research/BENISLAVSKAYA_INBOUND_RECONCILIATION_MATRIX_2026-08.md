@@ -16,6 +16,7 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 - Open 13-unit publication: `https://esenin.ru/o-esenine/zhenshchiny-esenina/galina-benislavskaia/benislavskaia-g-pisma-k-eseninu`
 - Yushin bibliography: `https://s-a-esenin.ru/books/item/f00/s00/z0000004/st014.shtml`
 - PSS name index / controlling count: `https://feb-web.ru/feb/esenin/texts/es6/es6-754-.htm?cmd=p`
+- IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013
 - Required controlling book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. 236–280, or lawful complete equivalent.
 
 ## Crosswalk
@@ -40,7 +41,7 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 | 9 Feb 1925 | **open #12** | **#133** | strong date match |
 | 12 Apr 1925 | absent from numbered 13 | **#134** | YUSHIN-ONLY; requires controlling page witness |
 | 4 May 1925 | **open #13** | **#135** | strong date match |
-| 16 Jul 1925 | absent from numbered 13 | **#136** | YUSHIN-ONLY; independently cited later as `ЦГАЛИ/РГАЛИ, ф.190, оп.1, ед. хр.105, л.27–29`; delivery/recipient-status and publication tradition still require controlling reconciliation |
+| 16 Jul 1925 | absent from numbered 13 | **#136** | YUSHIN-ONLY; IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous, states that the letter is absent there and that it remained with Benislavskaya; delivery/reading by Yesenin must not be asserted |
 
 ## What the crosswalk proves already
 
@@ -88,11 +89,18 @@ The open page itself contains evidence that its date labels and physical/documen
 
 Therefore the open page is a **navigation/version witness**, not final claim authority for the complete 14-letter corpus.
 
-## 16 July 1925 — special caution
+## 16 July 1925 — corrected provenance boundary
 
-Yushin #136 confirms a bibliographic/archive position dated 16 July 1925. Later secondary literature cites the item as `ЦГАЛИ/РГАЛИ, ф.190, оп.1, ед. хр.105, л.27–29` and reports publication by L. V. Zankovskaya.
+Yushin #136 confirms a bibliographic position dated 16 July 1925. A later publication by L. V. Zankovskaya printed the text and cited a storage location in the former ЦГАЛИ / current РГАЛИ.
 
-A separate later retelling states that the item remained in Benislavskaya's personal archive and questions whether Yesenin ever read it. That statement is **not yet promoted to controlling fact** here. Until the page-level publication/commentary and provenance are inspected, reader text should say `последнее известное письмо/письменное обращение, датированное 16 июля 1925 года` and should not assert successful delivery or reading by Yesenin.
+The academic IMLI `Летопись`, т. 5, кн. 1 (2013), explicitly corrects that provenance: the cited archive location is erroneous because the letter is absent there. The same chronology states that the letter **remained with G. A. Benislavskaya** and points to N. I. Shubnikova-Guseva, `Сергей Есенин и Галина Бениславская` (2008), pp. 332–333.
+
+Consequences for reader text:
+
+- it is safe to call the 16 July item the **last known written address / letter of Benislavskaya to Yesenin** at the current evidence level;
+- do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance to it;
+- do **not** state that the letter was sent, delivered, received or read by Yesenin unless a controlling source establishes that chain;
+- the staged article remains deliberately non-quotational here until the final 14-item page matrix is closed.
 
 ## Tasks for the controlling witness
 
