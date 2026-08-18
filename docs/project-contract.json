@@ -13,7 +13,7 @@
     "brandComponent": "src/components/SpectralBrandMark.tsx",
     "brandMaterializer": "scripts/materialize-brand-art.mjs",
     "brandApprovedSourceDirectory": "qa/reference/approved-brand",
-    "communitySchema": "docs/community-schema.sql"
+    "communitySchema": "workers/community-api/schema.sql"
   },
   "governance": {
     "packageName": "the-legendary-poet",
