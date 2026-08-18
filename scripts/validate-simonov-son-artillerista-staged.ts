@@ -61,165 +61,119 @@ for (const boundary of [
 }
 
 const archivalFollowupPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_ARCHIVAL_FOLLOWUP_2026-08.md';
-if (!existsSync(archivalFollowupPath)) {
-  throw new Error('Simonov archival follow-up ledger is missing');
-}
+if (!existsSync(archivalFollowupPath)) throw new Error('Simonov archival follow-up ledger is missing');
 const archivalFollowup = readFileSync(archivalFollowupPath, 'utf8');
 for (const marker of [
-  '01006521228',
-  '000199_000009_004509621',
-  'ЦАМО, фонд 33, опись 682524, дело 32',
-  'CC BY-SA 4.0',
-  'File:Petsamo 02.jpg',
-  'Поныри, 1943',
-  'конкретная полоса «Патриот Родины» 03.12.1941',
-  'конкретная полоса «Красной звезды» 07.12.1941',
+  '01006521228', '000199_000009_004509621', 'ЦАМО, фонд 33, опись 682524, дело 32',
+  'CC BY-SA 4.0', 'File:Petsamo 02.jpg', 'Поныри, 1943',
+  'конкретная полоса «Патриот Родины» 03.12.1941', 'конкретная полоса «Красной звезды» 07.12.1941',
 ]) {
-  if (!archivalFollowup.includes(marker)) {
-    throw new Error(`Simonov archival follow-up boundary disappeared: ${marker}`);
-  }
+  if (!archivalFollowup.includes(marker)) throw new Error(`Simonov archival follow-up boundary disappeared: ${marker}`);
 }
 if (archivalFollowup.includes('3 декабря 1941 года несомненно была первой публикацией')) {
   throw new Error('Simonov archival follow-up overstates the unresolved first-publication claim');
 }
 
 const loskutovPrintWitnessPath = 'docs/research/SIMONOV_LOSKUTOV_PRINT_WITNESS_2026-08.md';
-if (!existsSync(loskutovPrintWitnessPath)) {
-  throw new Error('Simonov Loskutov print-witness gate is missing');
-}
+if (!existsSync(loskutovPrintWitnessPath)) throw new Error('Simonov Loskutov print-witness gate is missing');
 const loskutovPrintWitness = readFileSync(loskutovPrintWitnessPath, 'utf8');
 for (const marker of [
-  '01007444220',
-  'От Халхингола до Берлина',
-  '1973',
-  'с. 54–62',
+  '01007444220', 'От Халхингола до Берлина', '1973', 'с. 54–62',
   'bibliographic object verified / page inspection pending',
   'письмо Ивана Лоскутова Симонову от 3 марта 1966 года в опубликованной Симоновым передаче',
-  'точный календарный день боя',
-  'шесть суток',
+  'точный календарный день боя', 'шесть суток',
 ]) {
-  if (!loskutovPrintWitness.includes(marker)) {
-    throw new Error(`Simonov Loskutov print-witness boundary disappeared: ${marker}`);
-  }
+  if (!loskutovPrintWitness.includes(marker)) throw new Error(`Simonov Loskutov print-witness boundary disappeared: ${marker}`);
 }
 if (loskutovPrintWitness.includes('архивный автограф письма Лоскутова подтверждён')) {
   throw new Error('Simonov Loskutov witness incorrectly claims archival-autograph closure');
 }
 
 const witnessReconciliationPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_WITNESS_RECONCILIATION_2026-08.md';
-if (!existsSync(witnessReconciliationPath)) {
-  throw new Error('Simonov witness reconciliation is missing');
-}
+if (!existsSync(witnessReconciliationPath)) throw new Error('Simonov witness reconciliation is missing');
 const witnessReconciliation = readFileSync(witnessReconciliationPath, 'utf8');
 for (const marker of [
-  'Лоскутов controlling',
-  'примерно в **три километра**',
-  '**двухкилометровом** пути',
-  '**миномётную батарею**',
-  '**двух миномётных батареях**',
-  'Государственного архива Мурманской области',
-  'Рока-Пахте',
-  'портрет И. А. Лоскутова, 1941',
-  'rights pending',
-  'не скачивать и не вендорить эти изображения в production автоматически',
+  'Лоскутов controlling', 'примерно в **три километра**', '**двухкилометровом** пути',
+  '**миномётную батарею**', '**двух миномётных батареях**',
+  'Государственного архива Мурманской области', 'Рока-Пахте', 'портрет И. А. Лоскутова, 1941',
+  'rights pending', 'не скачивать и не вендорить эти изображения в production автоматически',
 ]) {
-  if (!witnessReconciliation.includes(marker)) {
-    throw new Error(`Simonov witness-reconciliation boundary disappeared: ${marker}`);
-  }
+  if (!witnessReconciliation.includes(marker)) throw new Error(`Simonov witness-reconciliation boundary disappeared: ${marker}`);
 }
 if (witnessReconciliation.includes('расхождение источников устранено')) {
   throw new Error('Simonov witness reconciliation falsely claims the conflicting details are resolved');
 }
 
 const newspaperGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md';
-if (!existsSync(newspaperGatePath)) {
-  throw new Error('Simonov December 1941 newspaper object gate is missing');
-}
+if (!existsSync(newspaperGatePath)) throw new Error('Simonov December 1941 newspaper object gate is missing');
 const newspaperGate = readFileSync(newspaperGatePath, 'utf8');
 for (const marker of [
-  'issue identity narrowed / poem page still pending',
-  '№ 288 (5043)',
-  '7 декабря 1941, воскресенье',
-  '4 258 147 байт',
-  'poem placement/page остаётся object-level gate',
-  '01006521228',
-  '3 декабря 1941 года',
-  'номер выпуска `Патриота Родины` 3 декабря',
-  '**unknown / do not infer**',
-  '3 ноября не используется как publication fact',
+  'issue identity narrowed / poem page still pending', '№ 288 (5043)', '7 декабря 1941, воскресенье',
+  '4 258 147 байт', 'poem placement/page остаётся object-level gate', '01006521228', '3 декабря 1941 года',
+  'номер выпуска `Патриота Родины` 3 декабря', '**unknown / do not infer**', '3 ноября не используется как publication fact',
 ]) {
-  if (!newspaperGate.includes(marker)) {
-    throw new Error(`Simonov newspaper-object boundary disappeared: ${marker}`);
-  }
+  if (!newspaperGate.includes(marker)) throw new Error(`Simonov newspaper-object boundary disappeared: ${marker}`);
 }
 if (/«Сын артиллериста» напечатан на странице \d+/u.test(newspaperGate)) {
   throw new Error('Simonov newspaper gate invented a poem page before scan inspection');
 }
 
 const imageRightsGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_IMAGE_RIGHTS_GATE_2026-08.md';
-if (!existsSync(imageRightsGatePath)) {
-  throw new Error('Simonov image-rights gate is missing');
-}
+if (!existsSync(imageRightsGatePath)) throw new Error('Simonov image-rights gate is missing');
 const imageRightsGate = readFileSync(imageRightsGatePath, 'utf8');
 for (const marker of [
-  'archive images research-only pending item-level reuse authority',
-  'письменного разрешения',
-  'G1 — Иван Алексеевич Лоскутов, 1941',
-  'G2 — Ефим Самсонович Рыклис, 1941',
+  'archive images research-only pending item-level reuse authority', 'письменного разрешения',
+  'G1 — Иван Алексеевич Лоскутов, 1941', 'G2 — Ефим Самсонович Рыклис, 1941',
   'не скачивать и не вендорить эти изображения в production автоматически',
-  'Запрос о публикации архивных фотографий 1941 года',
-  'не угадывает адрес электронной почты',
+  'Запрос о публикации архивных фотографий 1941 года', 'не угадывает адрес электронной почты',
 ]) {
-  if (!imageRightsGate.includes(marker)) {
-    throw new Error(`Simonov image-rights boundary disappeared: ${marker}`);
-  }
+  if (!imageRightsGate.includes(marker)) throw new Error(`Simonov image-rights boundary disappeared: ${marker}`);
 }
 
 const textRightsGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_TEXT_RIGHTS_GATE_2026-08.md';
-if (!existsSync(textRightsGatePath)) {
-  throw new Error('Simonov text-rights gate is missing');
-}
+if (!existsSync(textRightsGatePath)) throw new Error('Simonov text-rights gate is missing');
 const textRightsGate = readFileSync(textRightsGatePath, 'utf8');
 for (const marker of [
-  'full-text publication blocked / short quotation only in staged essay',
-  '28 августа 1979 года',
-  '70 лет',
-  'на четыре года',
-  '31 декабря 2053 года',
-  '1 января 2054 года',
-  'полный текст «Сына артиллериста» не встраивается',
-  "добавлять `type: 'poem'` с полным текстом",
+  'full-text publication blocked / short quotation only in staged essay', '28 августа 1979 года',
+  '70 лет', 'на четыре года', '31 декабря 2053 года', '1 января 2054 года',
+  'полный текст «Сына артиллериста» не встраивается', "добавлять `type: 'poem'` с полным текстом",
 ]) {
-  if (!textRightsGate.includes(marker)) {
-    throw new Error(`Simonov text-rights boundary disappeared: ${marker}`);
-  }
+  if (!textRightsGate.includes(marker)) throw new Error(`Simonov text-rights boundary disappeared: ${marker}`);
 }
 if (textRightsGate.includes('полный текст уже находится в общественном достоянии')) {
   throw new Error('Simonov text-rights gate falsely claims current public-domain status');
 }
 
 const rgaliGatePath = 'docs/research/SIMONOV_LOSKUTOV_RGALI_SEARCH_GATE_2026-08.md';
-if (!existsSync(rgaliGatePath)) {
-  throw new Error('Simonov Loskutov RGALI search gate is missing');
-}
+if (!existsSync(rgaliGatePath)) throw new Error('Simonov Loskutov RGALI search gate is missing');
 const rgaliGate = readFileSync(rgaliGatePath, 'utf8');
 for (const marker of [
-  'exact Loskutov storage unit not surfaced in public catalogue',
-  'ф. 1814',
-  '7330 единиц хранения',
-  'ф. 1814, оп. 8',
-  'rgali@rgali.ru',
-  '3 марта 1966 года',
-  'От Халхингола до Берлина',
+  'exact Loskutov storage unit not surfaced in public catalogue', 'ф. 1814', '7330 единиц хранения',
+  'ф. 1814, оп. 8', 'rgali@rgali.ru', '3 марта 1966 года', 'От Халхингола до Берлина',
   'не является доказательством отсутствия письма в фонде',
   'Поиск письма И. А. Лоскутова К. М. Симонову от 3 марта 1966 года',
 ]) {
-  if (!rgaliGate.includes(marker)) {
-    throw new Error(`Simonov RGALI-search boundary disappeared: ${marker}`);
-  }
+  if (!rgaliGate.includes(marker)) throw new Error(`Simonov RGALI-search boundary disappeared: ${marker}`);
 }
 if (/РГАЛИ, ф\. 1814, оп\. \d+, ед\. хр\. \d+[^\n]*Лоскутов/u.test(rgaliGate)) {
   throw new Error('Simonov RGALI gate invented an exact Loskutov storage unit');
+}
+
+const earlyEditionsPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_EARLY_EDITIONS_2026-08.md';
+if (!existsSync(earlyEditionsPath)) throw new Error('Simonov early-edition collation is missing');
+const earlyEditions = readFileSync(earlyEditionsPath, 'utf8');
+for (const marker of [
+  'multiple early editions verified / object collation incomplete',
+  '01005250204', 'Воениздат, **1941**', '13 с.; 14 см',
+  '372658', 'Воениздат НКО СССР, **1942**', '13, [1] с.',
+  '01008367861', '**Правда, 1942**', '8 с.',
+  'два близких ранних выпуска/переиздания',
+  'не превращать ещё не сопоставленные экземпляры в один вымышленно точный выпуск',
+]) {
+  if (!earlyEditions.includes(marker)) throw new Error(`Simonov early-edition boundary disappeared: ${marker}`);
+}
+if (earlyEditions.includes('Президентская библиотека ошибочно датирует издание 1942 годом')) {
+  throw new Error('Simonov early-edition ledger falsely resolves the 1941/1942 object distinction');
 }
 
 const sources = essay.sources ?? [];
@@ -229,9 +183,7 @@ for (const source of sources) {
   if (sourcesById.has(source.id)) throw new Error(`duplicate Simonov staged source id: ${source.id}`);
   sourcesById.set(source.id, source);
 }
-if (sourcesById.size < 18) {
-  throw new Error(`Simonov staged bibliography is unexpectedly thin: ${sourcesById.size}`);
-}
+if (sourcesById.size < 18) throw new Error(`Simonov staged bibliography is unexpectedly thin: ${sourcesById.size}`);
 
 const citedIds = new Set<string>();
 for (const block of essay.blocks) {
@@ -244,7 +196,6 @@ for (const block of essay.blocks) {
 for (const id of sourcesById.keys()) {
   if (!citedIds.has(id)) throw new Error(`Simonov staged bibliography contains uncited source: ${id}`);
 }
-
 for (const id of ['rsl-1941', 'simonov-diary-neb', 'simonov-loskutov-letter', 'kola-ryklis']) {
   const source = sourcesById.get(id);
   if (!source?.url?.startsWith('https://')) throw new Error(`Simonov strong source lost HTTPS provenance: ${id}`);
@@ -259,36 +210,17 @@ const readerText = essay.blocks.map((block) => {
 const words = readerText.match(/[\p{L}\p{N}]+/gu)?.length ?? 0;
 if (words < 1800 || words > 6000) throw new Error(`Simonov staged longform scope drifted: ${words} words`);
 
-for (const forbidden of [
-  '31 июля 1941 года',
-  'шесть суток',
-  '3 ноября 1941 года впервые',
-]) {
-  if (readerText.includes(forbidden)) {
-    throw new Error(`Simonov staged prose promoted a blocked claim: ${forbidden}`);
-  }
+for (const forbidden of ['31 июля 1941 года', 'шесть суток', '3 ноября 1941 года впервые']) {
+  if (readerText.includes(forbidden)) throw new Error(`Simonov staged prose promoted a blocked claim: ${forbidden}`);
 }
-
-for (const required of [
-  'июлем 1941-го',
-  'два разведчика',
-  'радиостанция была разбита',
-  'Отец я тебе иль нет?',
-  '3 декабря 1941 года',
-  '7 декабря',
-]) {
+for (const required of ['июлем 1941-го', 'два разведчика', 'радиостанция была разбита', 'Отец я тебе иль нет?', '3 декабря 1941 года', '7 декабря']) {
   if (!readerText.includes(required)) throw new Error(`Simonov staged evidence boundary disappeared: ${required}`);
 }
 
 const fullPoemWarning = essay.blocks.filter((block) => block.type === 'poem');
-if (fullPoemWarning.length !== 0) {
-  throw new Error('Simonov staged article must not embed the full copyrighted poem');
-}
-
+if (fullPoemWarning.length !== 0) throw new Error('Simonov staged article must not embed the full copyrighted poem');
 const bodyImages = essay.blocks.filter((block) => block.type === 'image');
-if (bodyImages.length !== 0) {
-  throw new Error('Simonov staged draft gained documentary body images before item-level rights ingestion');
-}
+if (bodyImages.length !== 0) throw new Error('Simonov staged draft gained documentary body images before item-level rights ingestion');
 
 const publicationCandidate = publishEssay(essay);
 const expectedReadTime = estimateReadTime(essay.blocks);
@@ -297,5 +229,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; image-rights=research-only; text-rights=full-text-blocked; RGALI-Loskutov=search-open; hero=${coverStatus}; publication-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; early-editions=1941+1942-multiple/object-collation-pending; image-rights=research-only; text-rights=full-text-blocked; RGALI-Loskutov=search-open; hero=${coverStatus}; publication-object gate remains open.`,
 );
