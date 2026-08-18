@@ -52,6 +52,9 @@ jobs:
       - name: Validate Uchitelskaya Gazeta PRLIB inquiry
         run: npx tsx scripts/validate-simonov-uchitelskaya-gazeta-prlib-inquiry.ts
 
+      - name: Validate Pravda 1966 acquisition inquiry
+        run: npx tsx scripts/validate-simonov-pravda-1966-acquisition-inquiry.ts
+
       - name: Validate Red Star scan routes
         run: npx tsx scripts/validate-simonov-red-star-direct-mirrors-gate.ts
 
