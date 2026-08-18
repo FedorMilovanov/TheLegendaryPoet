@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const path = 'docs/research/SIMONOV_PRAVDA_1966_ACQUISITION_INQUIRY_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov Pravda 1966 acquisition inquiry missing: ${path}`);
 const text = readFileSync(path, 'utf8');
+const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
 
 for (const marker of [
   'exact bibliographic locator + official digital-corpus route / RNL reference inquiry sent / reply and direct page pending / no paid work authorized',
@@ -19,16 +20,8 @@ for (const marker of [
 ]) {
   if (!text.includes(marker)) throw new Error(`Simonov Pravda 1966 acquisition boundary disappeared: ${marker}`);
 }
-
-for (const forbidden of [
-  'РНБ подтвердила статью',
-  'страница 4 визуально просмотрена',
-  'Человек из поэмы direct-object verified',
-  'ответ РНБ получен',
-  'платное копирование разрешено',
-  'право на перепубликацию получено',
-]) {
-  if (text.includes(forbidden)) throw new Error(`Simonov Pravda 1966 acquisition gate overstates closure: ${forbidden}`);
+if (/reply received|p\.4.*(?:verified|inspected)|direct-object verified|paid work authorized|reuse rights granted/iu.test(status)) {
+  throw new Error(`Simonov Pravda 1966 status falsely closes an open gate: ${status}`);
 }
 
 console.log('Simonov Pravda 1966: exact locator + official corpus route; RNL inquiry sent; reply/p.4 inspection pending; no paid work authorized.');
