@@ -76,15 +76,15 @@ The open page, conversely, exposes three units/datings without a separate exact 
 
 That arithmetic is consistent with `16 Yushin positions` versus `13 open numbered units`, but it does **not** explain the later academic count of 14. The controlling publication may merge, split, redate, reclassify, omit or restore specific units. Only page-level reconciliation may decide that.
 
-## Important editorial signals inside the open publication
+## Open-publication QC notes
 
-The open page itself warns against treating it as a clean complete corpus. Among its annotations are:
+The open page itself contains evidence that its date labels and physical/document boundaries are editorial constructions rather than a simple facsimile list:
 
-- explicit cuts of several lines;
-- references to letters/telegrams that are unknown or not preserved;
-- a note that the original of one cited letter was not found;
-- publication plans that did not occur;
-- editorial headings whose date can conflict with an internal signature, most notably open #6.
+- open #3 is headed `Москва, 26 апреля 1924 г.`, but its body ends `25.IV.24`;
+- open #4 is a separate 26 April postcard, while Yushin has only one 26 April bibliographic position;
+- open #6 is headed `Москва, 19 или 20 октября 1924 г.`, but its body ends `10.X.24`; Yushin #127 is dated 10 October;
+- open #7 says that Benislavskaya had written one business letter and **did not send it**, proving that a written text and a successfully sent/received correspondence item must not be treated as synonyms;
+- the annotations contain explicit cuts of several lines, references to unknown or unpreserved letters/telegrams, and at least one note that an original letter was not found.
 
 Therefore the open page is a **navigation/version witness**, not final claim authority for the complete 14-letter corpus.
 
