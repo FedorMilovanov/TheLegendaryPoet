@@ -156,17 +156,25 @@ function validateScores(targetType: FeedbackTargetType, value: unknown) {
   return scores;
 }
 
+function hasOnlyKeys(body: Record<string, unknown>, allowed: readonly string[]) {
+  if (Object.keys(body).length !== allowed.length) return false;
+  const allowedSet = new Set(allowed);
+  return Object.keys(body).every((key) => allowedSet.has(key));
+}
+
 function validateBody(value: unknown): CommunityMutationBody | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
 
   if (body.kind === 'rating') {
+    if (!hasOnlyKeys(body, ['kind', 'targetType', 'targetId', 'scores'])) return null;
     if (!validTargetType(body.targetType) || typeof body.targetId !== 'string' || !TARGET_ID.test(body.targetId)) return null;
     const scores = validateScores(body.targetType, body.scores);
     return scores ? { kind: 'rating', targetType: body.targetType, targetId: body.targetId, scores } : null;
   }
 
   if (body.kind === 'comment') {
+    if (!hasOnlyKeys(body, ['kind', 'commentId', 'targetType', 'targetId', 'author', 'text', 'commentKind'])) return null;
     if (
       !validTargetType(body.targetType)
       || typeof body.targetId !== 'string'
@@ -193,7 +201,12 @@ function validateBody(value: unknown): CommunityMutationBody | null {
     };
   }
 
-  if (body.kind === 'helpful' && typeof body.commentId === 'string' && COMMENT_ID.test(body.commentId)) {
+  if (
+    body.kind === 'helpful'
+    && hasOnlyKeys(body, ['kind', 'commentId'])
+    && typeof body.commentId === 'string'
+    && COMMENT_ID.test(body.commentId)
+  ) {
     return { kind: 'helpful', commentId: body.commentId };
   }
 
