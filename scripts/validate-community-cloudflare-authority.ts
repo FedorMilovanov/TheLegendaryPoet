@@ -8,9 +8,11 @@ const remote = read('src/utils/communityRemote.ts');
 const config = read('src/utils/communityConfig.ts');
 const humanCheck = read('src/utils/communityHumanCheck.ts');
 const worker = read('workers/community-api/src/index.ts');
+const workerTsconfig = read('workers/community-api/tsconfig.json');
 const schema = read('workers/community-api/schema.sql');
 const generator = read('scripts/gen-community-targets.ts');
 const deploy = read('.github/workflows/deploy.yml');
+const packageJson = read('package.json');
 const setup = read('docs/COMMENTS_SETUP.md');
 const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
 const browserTopology = read('qa/community-request-topology.cases.mjs');
@@ -39,9 +41,12 @@ expect(worker.includes("result.action !== 'community_session'") && worker.includ
 expect(worker.includes("throw new HttpError(400, 'unexpected_authority_field')"), 'mutation bodies must reject caller-supplied authority fields');
 expect(worker.includes('requireCanonicalTarget'), 'mutations must require release-canonical target membership');
 expect(worker.includes('COMMUNITY_TARGET_MANIFEST_URL'), 'canonical target authority must come from the release manifest');
+expect(worker.includes("takeBudget(env.DB, key, 'session', '*', 86400, 30)"), 'Turnstile-backed actor issuance must be abuse-limited without an unusably tiny shared-network cap');
 expect(worker.includes("INSERT INTO tlp_rate_buckets") && worker.includes('ON CONFLICT(network_key, action, scope, window_start)'), 'network budgets must be atomic D1 upserts');
 expect(worker.includes("ON CONFLICT(target_type, target_id, actor_id)"), 'rating uniqueness must be server actor + target');
-expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful retries must be idempotent under the database uniqueness constraint');
+expect(worker.includes('scoresEqual(body.targetType, existing.scores_json, scores)') && worker.includes('idempotent: true'), 'lost-response rating retries must short-circuit before spending another abuse budget');
+expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
+expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
 expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
 
 expect(schema.includes('PRIMARY KEY (target_type, target_id, actor_id)'), 'D1 schema must enforce one active rating per actor/target');
@@ -54,6 +59,9 @@ expect(generator.includes('getAllEssays') && generator.includes('musicTracks') &
 expect(generator.includes("writeFileSync('public/community-targets.json'"), 'site build must materialize the target manifest at a stable public path');
 expect(deploy.includes('VITE_COMMUNITY_API_URL') && deploy.includes('VITE_TURNSTILE_SITE_KEY'), 'Pages deploy must inject only the public Worker URL and Turnstile site key');
 expect(!deploy.includes('VITE_SUPABASE_URL') && !deploy.includes('VITE_SUPABASE_ANON_KEY'), 'Pages deploy must not retain obsolete Supabase runtime variables');
+expect(packageJson.includes('"validate:community-worker-types": "tsc -p workers/community-api/tsconfig.json"'), 'repository checks must typecheck the Worker with the pinned project TypeScript');
+expect(packageJson.includes('npm run validate:community-worker-types'), 'community scaling gate must include the Worker typecheck');
+expect(workerTsconfig.includes('"WebWorker"') && workerTsconfig.includes('"noEmit": true'), 'Worker typecheck must use web-worker platform types without producing artifacts');
 expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
@@ -66,5 +74,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, target authority, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, target authority, retry idempotency, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
