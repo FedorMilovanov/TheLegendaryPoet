@@ -131,6 +131,31 @@ if (witnessReconciliation.includes('расхождение источников 
   throw new Error('Simonov witness reconciliation falsely claims the conflicting details are resolved');
 }
 
+const newspaperGatePath = 'docs/research/SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md';
+if (!existsSync(newspaperGatePath)) {
+  throw new Error('Simonov December 1941 newspaper object gate is missing');
+}
+const newspaperGate = readFileSync(newspaperGatePath, 'utf8');
+for (const marker of [
+  'issue identity narrowed / poem page still pending',
+  '№ 288 (5043)',
+  '7 декабря 1941, воскресенье',
+  '4 258 147 байт',
+  'poem placement/page остаётся object-level gate',
+  '01006521228',
+  '3 декабря 1941 года',
+  'номер выпуска `Патриота Родины` 3 декабря',
+  '**unknown / do not infer**',
+  '3 ноября не используется как publication fact',
+]) {
+  if (!newspaperGate.includes(marker)) {
+    throw new Error(`Simonov newspaper-object boundary disappeared: ${marker}`);
+  }
+}
+if (/«Сын артиллериста» напечатан на странице \d+/u.test(newspaperGate)) {
+  throw new Error('Simonov newspaper gate invented a poem page before scan inspection');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -206,5 +231,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; hero=${coverStatus}; newspaper-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; hero=${coverStatus}; publication-object gate remains open.`,
 );
