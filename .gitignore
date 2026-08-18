@@ -26,6 +26,10 @@ qa-artifacts/
 # The payloads are parity-validated before use and must not become a second committed source of truth.
 /public/data/essays/
 
+# Generated from canonical Product poet/poem/published-track/essay inventories.
+# The Edge Function consumes the deployed copy; source truth stays in typed Product data.
+/public/community-targets.json
+
 # Logs
 logs/
 *.log
