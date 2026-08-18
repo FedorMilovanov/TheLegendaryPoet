@@ -37,6 +37,10 @@ type CommentsResponse = {
   nextCursor?: CommentCursor | null;
 };
 
+type BrowserLockManager = {
+  request<T>(name: string, callback: () => Promise<T>): Promise<T>;
+};
+
 export { remoteEnabled };
 
 export function emptyCommunityAggregate(
@@ -151,8 +155,18 @@ function readActorSession(): StoredActorSession | null {
   }
 }
 
+function currentActorToken() {
+  const existing = readActorSession();
+  return existing && existing.expiresAt > Date.now() + ACTOR_EXPIRY_SKEW_MS ? existing.actorToken : null;
+}
+
 function persistActorSession(value: StoredActorSession) {
   return safeWrite(ACTOR_KEY, JSON.stringify(value));
+}
+
+function invalidateActorSession(staleToken: string) {
+  const current = readActorSession();
+  if (current?.actorToken === staleToken) safeRemove(ACTOR_KEY);
 }
 
 async function mintActorSession(): Promise<string | null> {
@@ -183,42 +197,51 @@ async function mintActorSession(): Promise<string | null> {
   }
 }
 
+async function withActorLock<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator === 'undefined') return task();
+  const locks = (navigator as Navigator & { locks?: BrowserLockManager }).locks;
+  return locks?.request ? locks.request(ACTOR_KEY, task) : task();
+}
+
+async function resolveActorToken() {
+  const existing = currentActorToken();
+  if (existing) return existing;
+  return mintActorSession();
+}
+
 let actorPromise: Promise<string | null> | null = null;
-async function getActorToken(forceRefresh = false): Promise<string | null> {
-  if (!remoteEnabled) return null;
-  if (!forceRefresh) {
-    const existing = readActorSession();
-    if (existing && existing.expiresAt > Date.now() + ACTOR_EXPIRY_SKEW_MS) return existing.actorToken;
-  } else {
-    safeRemove(ACTOR_KEY);
-  }
+function getActorToken(): Promise<string | null> {
+  if (!remoteEnabled) return Promise.resolve(null);
+  const existing = currentActorToken();
+  if (existing) return Promise.resolve(existing);
   if (actorPromise) return actorPromise;
-  const pending = mintActorSession().finally(() => { actorPromise = null; });
+  const pending = withActorLock(resolveActorToken).finally(() => { actorPromise = null; });
   actorPromise = pending;
   return pending;
 }
 
 async function mutation(path: string, body: Record<string, unknown>): Promise<boolean> {
   if (!remoteEnabled || !URL) return false;
-  const attempt = async (forceRefresh: boolean) => {
-    const actorToken = await getActorToken(forceRefresh);
-    if (!actorToken) return { ok: false, unauthorized: false };
+  const attempt = async () => {
+    const actorToken = await getActorToken();
+    if (!actorToken) return { ok: false, unauthorized: false, actorToken: null as string | null };
     try {
       const response = await fetchWithTimeout(apiUrl(path), {
         method: 'POST',
         headers: jsonHeaders({ Authorization: `Bearer ${actorToken}` }),
         body: JSON.stringify(body),
       });
-      return { ok: response.ok, unauthorized: response.status === 401 };
+      return { ok: response.ok, unauthorized: response.status === 401, actorToken };
     } catch {
-      return { ok: false, unauthorized: false };
+      return { ok: false, unauthorized: false, actorToken };
     }
   };
 
-  const first = await attempt(false);
+  const first = await attempt();
   if (first.ok) return true;
-  if (!first.unauthorized) return false;
-  return (await attempt(true)).ok;
+  if (!first.unauthorized || !first.actorToken) return false;
+  invalidateActorSession(first.actorToken);
+  return (await attempt()).ok;
 }
 
 export async function fetchTargetAggregate(
