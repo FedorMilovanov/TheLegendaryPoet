@@ -74,13 +74,13 @@ No email is treated as evidence that the request was submitted or fulfilled.
 
 A fresh connected-Drive search found the central research registry and other Yesenin academic volumes, but **not** the target pp. 236–280 scan or an equivalent complete page-level witness.
 
-Drive presence of adjacent research material does not close this gate.
+The connected academic `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1 (ИМЛИ РАН, 2013), did provide a decisive provenance correction for the 16 July 1925 letter: it says the earlier published ЦГАЛИ/РГАЛИ storage citation is erroneous because the item is absent there, and states that the letter remained with G. A. Benislavskaya. It points to Shubnikova-Guseva 2008, pp. 332–333. The staged research matrix has been corrected accordingly.
+
+Drive presence of adjacent research material still does not close the full 14-letter page-level gate.
 
 ### Open-web / institutional search
 
 A fresh search confirmed bibliographic holdings for the 1995 edition and the 1997 TERRA/Respublika reprint, but did not locate a lawful open complete scan of the required page range. Library catalogue holdings and Google Books metadata are discovery witnesses only; they do not substitute for the page-level controlling witness.
-
-A secondary research lead independently identifies the 16 July 1925 Benislavskaya→Yesenin letter as `ЦГАЛИ/РГАЛИ, ф.190, оп.1, ед. хр.105, л.27–29` and reports publication by L. V. Zankovskaya. This is useful for the reconciliation matrix, but it does not by itself close the full 14-letter gate.
 
 ## The unresolved 13 ↔ 16 ↔ 14 problem
 
@@ -99,7 +99,8 @@ It maps all Yushin positions **121–136** against open units **#1–#13** and r
 - open #3 is headed 26 April but ends `25.IV.24`;
 - open #4 is a separate 26 April postcard while Yushin exposes one 26 April position;
 - open #6 is headed `19 или 20 октября 1924 г.` but ends `10.X.24`, matching Yushin #127 dated 10 October;
-- open #7 explicitly mentions a business letter that was written but not sent, so writing, sending, delivery and reading must remain separate provenance questions.
+- open #7 explicitly mentions a business letter that was written but not sent, so writing, sending, delivery and reading must remain separate provenance questions;
+- the 16 July 1925 item must **not** be assigned the previously repeated РГАЛИ storage cipher: IMLI 2013 explicitly corrects that claim and says the letter remained with Benislavskaya.
 
 This discrepancy must be reconciled item by item. It is not legitimate to choose whichever number is easiest for the narrative.
 
