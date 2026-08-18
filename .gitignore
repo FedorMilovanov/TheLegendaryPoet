@@ -22,9 +22,15 @@ qa-artifacts/
 /public/icon-maskable-512.png
 /public/mstile-150x150.png
 
+# Generated from canonical Product catalogs for the community Worker target allowlist.
+/public/community-targets.json
+
 # Generated from the canonical published Essay catalog by scripts/gen-essay-browser-data.ts.
 # The payloads are parity-validated before use and must not become a second committed source of truth.
 /public/data/essays/
+
+# Real Cloudflare resource IDs belong to the owner environment, not git.
+/workers/community-api/wrangler.jsonc
 
 # Logs
 logs/
