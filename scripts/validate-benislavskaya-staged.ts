@@ -128,14 +128,33 @@ const reconciliationPath = 'docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_M
 if (!existsSync(reconciliationPath)) throw new Error('Benislavskaya inbound reconciliation matrix is missing');
 const reconciliation = readFileSync(reconciliationPath, 'utf8');
 for (const marker of [
+  'PAGE-WITNESS VERIFIED',
+  'pp. **339–340**',
   'IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous',
   'letter is absent there',
   'remained with G. A. Benislavskaya',
   'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
+  'there is no need to purchase Zankovskaya 1997 p. 381 or Shubnikova-Guseva 2008 pp. 332–333',
 ]) {
   if (!reconciliation.includes(marker)) {
-    throw new Error(`Benislavskaya 16 July corrected provenance boundary disappeared: ${marker}`);
+    throw new Error(`Benislavskaya 16 July verified IMLI boundary disappeared: ${marker}`);
   }
+}
+
+const gateLedgerPath = 'docs/research/BENISLAVSKAYA_PUBLICATION_GATE_2026-08.md';
+if (!existsSync(gateLedgerPath)) throw new Error('Benislavskaya publication gate ledger is missing');
+const gateLedger = readFileSync(gateLedgerPath, 'utf8');
+for (const marker of [
+  '16 July text/page witness: VERIFIED via IMLI 2013, pp. 339–340',
+  'remaining acquisition problem is the 1995 correspondence range pp. **236–281**',
+  'not an outstanding acquisition prerequisite',
+]) {
+  if (!gateLedger.includes(marker)) {
+    throw new Error(`Benislavskaya narrowed acquisition gate disappeared: ${marker}`);
+  }
+}
+if (/acquire\/verify (?:a|the) controlling witness for the 16 July/iu.test(gateLedger)) {
+  throw new Error('Benislavskaya gate incorrectly re-opened acquisition of the already verified 16 July IMLI witness');
 }
 
 const bodyImages = essay.blocks.filter((block) => block.type === 'image');
@@ -178,12 +197,12 @@ for (const boundary of [
 }
 
 if (!readerText.includes('16 июля 1925 года') || !readerText.includes('не публикует')) {
-  throw new Error('Benislavskaya staged draft lost the qualified 16 July 1925 letter boundary');
+  throw new Error('Benislavskaya staged draft lost the qualified 16 July letter boundary');
 }
 if (!readerText.includes('указанного ранее письма в ЦГАЛИ/РГАЛИ нет') || !readerText.includes('оно осталось у Бениславской')) {
   throw new Error('Benislavskaya reader text lost the corrected 16 July provenance boundary');
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 gate preserved; 1995 page gate=236–281; 16-Jul provenance correction pinned.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 gate preserved; remaining 1995 page gate=236–281; IMLI 16-Jul witness=339–340 verified.`,
 );
