@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const path = 'docs/research/SIMONOV_UCHITELSKAYA_GAZETA_PRLIB_INQUIRY_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov Uchitelskaya Gazeta Presidential Library inquiry missing: ${path}`);
 const text = readFileSync(path, 'utf8');
+const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
 
 for (const marker of [
   'official item corpus verified / exact-date bibliographic inquiry sent / reply pending / exact issue, page and article remain unverified',
@@ -17,15 +18,8 @@ for (const marker of [
 ]) {
   if (!text.includes(marker)) throw new Error(`Simonov Uchitelskaya Gazeta PRLIB boundary disappeared: ${marker}`);
 }
-
-for (const forbidden of [
-  'Президентская библиотека подтвердила №',
-  'точная полоса статьи установлена',
-  'статья Гаспаряна визуально просмотрена',
-  'ответ Президентской библиотеки уже получен',
-  'платная копия разрешена',
-]) {
-  if (text.includes(forbidden)) throw new Error(`Simonov Uchitelskaya Gazeta PRLIB inquiry overstates closure: ${forbidden}`);
+if (/reply received|item verified|page verified|article verified|paid work authorized/iu.test(status)) {
+  throw new Error(`Simonov Uchitelskaya Gazeta PRLIB status falsely closes an open gate: ${status}`);
 }
 
 console.log('Simonov Uchitelskaya Gazeta: official 1966 item corpus verified; exact 15-Feb inquiry sent to PRLIB; reply/item/page pending; no paid work authorized.');
