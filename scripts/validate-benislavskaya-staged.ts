@@ -114,10 +114,13 @@ if (!controllingBook?.note?.includes('236–281') || !controllingBook.note.inclu
   throw new Error('Benislavskaya controlling 1995-book source no longer discloses the corrected page-level gate');
 }
 const chronology1925 = sourcesById.get('ben-letopis-t5-k1');
-for (const pageMarker of ['268–269', '271–272', '280–281']) {
+for (const pageMarker of ['268–269', '271–272', '280–281', '339–340']) {
   if (!chronology1925?.note?.includes(pageMarker)) {
     throw new Error(`Benislavskaya 1925 page-map lost IMLI marker: ${pageMarker}`);
   }
+}
+if (!chronology1925?.note?.includes('воспроизводит полностью')) {
+  throw new Error('Benislavskaya 16 July source note no longer states that IMLI reproduces the full letter');
 }
 const diary = sourcesById.get('ben-diary-copy');
 if (!diary?.note?.includes('машинописная копия') || !diary.note.includes('Автограф дневника не заявляется')) {
@@ -188,6 +191,7 @@ for (const boundary of [
   'Публикационный gate остаётся честно открытым',
   '236–281',
   '280–281',
+  '339–340',
   'машинописная копия',
   'не доказывает самостоятельной редакционной власти',
   'не учреждает современную должность «агента»',
@@ -200,6 +204,12 @@ if (!readerText.includes('16 июля 1925 года') || !readerText.includes('�
 }
 if (!readerText.includes('указанного ранее письма в ЦГАЛИ/РГАЛИ нет') || !readerText.includes('оно осталось у Бениславской')) {
   throw new Error('Benislavskaya reader text lost the corrected 16 July provenance boundary');
+}
+if (!readerText.includes('Письмо 16 июля уже имеет отдельный полный академический page-witness')) {
+  throw new Error('Benislavskaya reader text no longer closes the 16 July acquisition branch with IMLI evidence');
+}
+if (/Для последнего известного письма от 16 июля нужен отдельный controlling witness/iu.test(readerText)) {
+  throw new Error('Benislavskaya reader text revived the obsolete 1997/2008 acquisition requirement for 16 July');
 }
 
 console.log(
