@@ -17,7 +17,7 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 - Yushin bibliography: `https://s-a-esenin.ru/books/item/f00/s00/z0000004/st014.shtml`
 - PSS name index / controlling count: `https://feb-web.ru/feb/esenin/texts/es6/es6-754-.htm?cmd=p`
 - IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013
-- Required controlling book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. 236–280, or lawful complete equivalent.
+- Required 1995 book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. **236–281**, plus a separate controlling witness for the 16 July 1925 item or a lawful complete equivalent covering both layers.
 
 ## Crosswalk
 
@@ -40,8 +40,20 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 | 20 Jan 1925 | **open #11** | **#132** | strong date match |
 | 9 Feb 1925 | **open #12** | **#133** | strong date match |
 | 12 Apr 1925 | absent from numbered 13 | **#134** | YUSHIN-ONLY; requires controlling page witness |
-| 4 May 1925 | **open #13** | **#135** | strong date match |
+| 4 May 1925 | **open #13** | **#135** | strong date match; IMLI cites this letter across `Письма, 280–281` |
 | 16 Jul 1925 | absent from numbered 13 | **#136** | YUSHIN-ONLY; IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous, states that the letter is absent there and that it remained with Benislavskaya; delivery/reading by Yesenin must not be asserted |
+
+## Verified 1925 page-map inside the 1995 collection
+
+The connected academic IMLI chronology explicitly expands the abbreviation `Письма` as the 1995 collection `Сергей Есенин в стихах и жизни: Письма. Документы`. Its dated entries provide a partial page-map for Benislavskaya's inbound correspondence:
+
+- **20 January 1925** → `Письма, 268–269`;
+- **9 February 1925** → `Письма, 271–272`;
+- **4 May 1925** → `Письма, 280–281`.
+
+This corrects the earlier acquisition range. A request ending at p. 280 would omit part of the 4 May letter, so the book-copy gate is now **pp. 236–281 inclusive (46 pages)**, not 236–280.
+
+The 16 July item remains a separate provenance problem: in that chronology it is sourced through Zankovskaya 1997, p. 381 and Shubnikova-Guseva 2008, pp. 332–333, not through a `Письма` page reference. Therefore the 1995 range alone must not be represented as sufficient to close all fourteen items.
 
 ## What the crosswalk proves already
 
@@ -121,4 +133,4 @@ For every final PSS-count item, record:
 
 **OPEN.**
 
-This file narrows the acquisition question but does not replace pp. 236–280 (or a lawful equivalent complete witness) and does not authorize public registration of the Benislavskaya essay.
+This file narrows the acquisition question but does not replace pp. **236–281** plus a controlling witness for the 16 July item (or a lawful complete equivalent covering both layers) and does not authorize public registration of the Benislavskaya essay.
