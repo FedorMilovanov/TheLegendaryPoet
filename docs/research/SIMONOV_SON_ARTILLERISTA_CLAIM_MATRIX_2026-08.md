@@ -49,7 +49,7 @@
 | C14 | На высоте было около 20 бойцов боевого охранения | письмо Лоскутова | B participant | `по словам Лоскутова` | direct print witness |
 | C15 | Противник начал артиллерийско-миномётный обстрел высоты и затем атаку пехотой | письмо Лоскутова | B participant | можно писать в narrative | direct print witness |
 | C16 | Группа потребовала огонь собственной артиллерии непосредственно по занимаемой высоте | письмо Лоскутова + поздний мемуарный cross-check | B participant + B corroboration | установленная кульминация; предпочтительно `открыть огонь непосредственно по высоте/позиции`, а не рекламная формула `огонь на себя` | direct print witness |
-| C17 | КП переспросил команду, считая её ошибкой | письмо Лоскутова | B participant | можно писать | direct print witness |
+| C17 | КП переспросил команду, считая её ошибкой | письмо Лоскутова в двух delivery variants | B participant / textual variant | нейтрально: `на командном пункте запросили подтверждение`; не называть командира/комиссара до print collation | RSL 1973 pp.54–62 direct inspection |
 | C18 | Группа выжила | письмо Лоскутова | B participant | можно писать | direct print witness |
 | C19 | Радиостанция была разбита | письмо Лоскутова | B participant | можно писать | direct print witness |
 | C20 | Уйти удалось при тумане; в полку группу считали погибшей | письмо Лоскутова | B participant | можно писать | direct print witness |
@@ -57,24 +57,24 @@
 | C22 | Расстояние до противника 500–600 м | тот же award-object lead | A locator + B delivery | research note only до scan | визуальный просмотр `10800112` |
 | C23 | Лоскутов был награждён медалью «За отвагу» за этот эпизод | secondary transcription + legacy award object leads | A locator/B delivery | не писать номер медали и связь с конкретным award object без direct scan | award card/лист |
 | C24 | Номер медали `20881` | третичные/поисковые повторы | C | **не публиковать** | direct award/account card |
-| C25 | Реальный отец Лоскутова не погиб на войне; был тяжело ранен и умер в 1965 | Симонов после знакомства с Лоскутовым | B author retrospective | можно писать как позднее уточнение Симонова | participant/family/archive cross-check |
-| C26 | Симонов сознательно изменил биографию отца в литературном сюжете | сравнение C25 с текстом поэмы | inference from primary literary text + B author comment | `поэма расходится с реальной биографией`; не приписывать намерение без прямого авторского высказывания | прямое авторское объяснение мотивировки, если найдено |
+| C25 | Реальный отец Лоскутова не погиб на войне; был тяжело ранен и умер в 1965 | Симонов после знакомства с Лоскутовым | B author retrospective | можно писать как позднее уточнение Симонова, пока без имени отца | participant/family/archive cross-check |
+| C26 | Симонов сознательно изменил биографию отца в литературном сюжете | сравнение C25 с текстом поэмы | inference from primary literary text + B author comment | `поэма расходится с реальной биографией`; не приписывать мотивировку без прямого авторского высказывания | прямое авторское объяснение мотивировки, если найдено |
 | C27 | Симонов написал поэму в Архангельске в ноябре 1941 за сутки / «в один присест» | собственный комментарий Симонова | B author retrospective | можно писать с атрибуцией | ранний дневник/письмо может усилить |
 | C28 | `Спартак` подошёл к Архангельску 28 ноября 1941 | Архангельская областная научная библиотека / региональная институциональная хроника | A/B institutional | можно давать как регионально документированную хронологию, с источником | судовой/портовый журнал или contemporaneous local press |
-| C29 | `Патриот Родины` опубликовал поэму 3 декабря 1941 | AONB + `Правда Севера` + городские/региональные institutional witnesses; RSL anchors newspaper identity | A/B institutional, object page pending | `архангельские институциональные источники указывают 3 декабря 1941` | issue/page object inspection |
-| C30 | 3 декабря — безусловно первая публикация | те же witnesses, но есть конфликтные поздние страницы и без прямой полосы | **open** | **не писать безоговорочно `впервые`**, пока полоса не просмотрена | `Патриот Родины` 03.12.1941 direct issue/page |
+| C29 | `Патриот Родины` опубликовал поэму 3 декабря 1941 | AONB + `Правда Севера` + RSL anchors newspaper identity | A/B institutional, object page pending | `архангельские институциональные источники указывают 3 декабря 1941` | issue/page object inspection |
+| C30 | 3 декабря — безусловно первая публикация | те же witnesses, но без прямой полосы | **open** | **не писать безоговорочно `впервые`**, пока полоса не просмотрена | `Патриот Родины` 03.12.1941 direct issue/page |
 | C31 | Муниципальная страница даёт 3 ноября | Архангельская библиотечная/муниципальная публикация | C/conflicting institutional derivative | фиксировать только как ошибочную/конфликтную дату; не использовать как chronology fact | direct issue proves Dec/Nov |
 | C32 | 4 декабря 1941 Сергей Плотников прочитал поэму со сцены | AONB institutional account + позднее воспоминание Плотникова в пересказе | A/B institutional | `по данным Архангельской областной библиотеки, 4 декабря поэму читал Сергей Плотников` | programme/newspaper/theatre archive object |
 | C33 | Это было первое публичное исполнение | regional tradition only | open | **не писать `первое` без qualification** | theatre/programme/newspaper object |
-| C34 | `Красная звезда` напечатала поэму 7 декабря 1941 | Симонов corpus delivery + multiple indexes + issue identity №288 (5043); SHPL complete 1941 corpus | A issue identity / page pending | `7 декабря поэма вышла в «Красной звезде»` допустимо как strongly corroborated; точную страницу не придумывать | visual inspection №288 page/columns |
-| C35 | Номер `Красной звезды` — №288 (5043), воскресенье | independent newspaper index + SHPL sequence/context | A/B bibliographic | можно фиксировать как issue identity | direct issue metadata/page |
-| C36 | Поэма занимала конкретную страницу/колонки в №288 | не просмотрено | open | **не указывать страницу** | SHPL/NEB scan inspection |
+| C34 | `Красная звезда` напечатала поэму 7 декабря 1941 | Simonov author chronology + indexes + issue identity №288 (5043) + SHPL full corpus + `Военно-исторический журнал` | A/B very strong publication chain | `7 декабря поэма вышла в «Красной звезде»` | visual inspection №288 p.3 |
+| C35 | Номер `Красной звезды` — №288 (5043), воскресенье | independent newspaper indexes + SHPL sequence/context | A/B bibliographic | можно фиксировать как issue identity | direct issue metadata/page |
+| C36 | `Сын артиллериста` опубликован на с.3 №288 | `Военно-исторический журнал` — Издание Министерства обороны России; Е. Ю. Колобов, прим.39: `Красная звезда. 1941. 7 декабря. С. 3.` | **A/B scholarly page citation; direct scan pending** | можно писать: `Военно-исторический журнал Министерства обороны России указывает с.3`; не писать `мы визуально проверили p.3`, не указывать колонки | SHPL/GPIB visual inspection №288, p.3 + columns/continuation |
 | C37 | РГБ каталогизирует отдельное издание Воениздата уже 1941 годом, 13 с. | RSL record `01005250204` | A+ bibliographic object | можно писать | title/copyright page scan for typesetting-level claims |
 | C38 | В 1942 были отдельные издания Воениздата и `Правды` | Presidential Library `372658`; RSL `01008367861` | A+ bibliographic | можно писать | object collation only if comparing exact editions |
-| C39 | Жанровое раннее обозначение — «фронтовая поэма» | RSL early edition record | A+ bibliographic | можно писать | direct title page desirable but not required for catalog fact |
+| C39 | Жанровое раннее обозначение — «фронтовая поэма» | RSL early edition record + scholarly bibliography | A+ bibliographic | можно писать | direct title page desirable but not required for catalog fact |
 | C40 | В 1964 Симонов узнал, что реальный прототип жив | собственный дневниковый/авторский комментарий | B author retrospective | можно писать с атрибуцией | contemporaneous correspondence/press |
 | C41 | Письмо Лоскутова Симонову датировано 3 марта 1966 | опубликованная Симоновым передача | B participant through author publication | можно писать как `письмо ... в опубликованной Симоновым передаче` | RGALI autograph / 1973 print pages |
-| C42 | `Правда`, 22.03.1966, №81 (17398), с.4: О. Манько, `Человек из поэмы` | exact bibliographic locator + digital object slug | A locator | можно дать библиографический locator; **не пересказывать содержание до page inspection** | visual page inspection |
+| C42 | `Правда`, 22.03.1966, №81 (17398), с.4: О. Манько, `Человек из поэмы` | exact bibliographic locator + digital object slug | A locator | можно дать bibliographic locator; **не пересказывать содержание до page inspection** | visual page inspection |
 | C43 | Переписка Лоскутова с И. Е. Солодовниковым началась после заметки 1966 г.; есть письмо 1969 | SAKH.ONLINE / museum-associated regional report | B delivery lead | research layer only; в основной текст — только после museum item verification | фондовый ответ ММК `Победа` |
 | C44 | Существуют фото Лоскутова 1941 из семейного архива и музейные материалы | KP family-photo caption + Museum Arseniev institutional publication | A institution + B delivery provenance | использовать только после rights/item-level permission | family/museum permission + exact copy |
 | C45 | Фото Лоскутова/Рыклиса/Симонова на сайте ГОКУ ГАМО можно свободно брать | нет свободной лицензии | blocked | **нет**; research-only | письменное разрешение/item rights |
@@ -90,11 +90,11 @@
 2. **Не смешивать числа из разных witnesses.** `~3 км` и `~2 км`; `1` и `2` миномётные батареи должны оставаться источниковым расхождением, пока direct objects его не объяснят.
 3. **Не повышать locator до scan.** Наличие `10800112` и архивного шифра — крупный прогресс, но не повод писать, будто лист уже прочитан редакцией.
 4. **Не писать `первая публикация` как закрытый факт**, пока `Патриот Родины` 03.12.1941 не увиден на уровне номера/полосы.
-5. **Не писать страницу `Красной звезды`**, пока №288 не просмотрен визуально.
+5. **Страницу 3 `Красной звезды` можно называть только с provenance scholarly citation**, пока №288 p.3 не просмотрен визуально. Колонки/продолжение не указывать.
 6. **Не перепечатывать полный текст поэмы.** Использовать только короткие фразы, необходимые для критики и анализа.
 7. **Не выдавать свободно доступную картинку за свободно лицензированную.** Для архивных фото нужен item-level rights decision.
 8. **Каждый визуал должен иметь provenance class:** `documentary`, `facsimile`, `context`, `reconstruction`.
-9. **Direct object supersedes delivery copy**, но более ранний административный документ не «отменяет» поздний рассказ участника там, где они описывают разные аспекты события.
+9. **Direct object supersedes delivery copy**, но более ранний административный документ не `отменяет` поздний рассказ участника там, где они описывают разные аспекты события.
 10. **Все новые сильные claims должны либо получить sourceId в Essay, либо остаться в research notes до следующего prose pass.**
 
 ---
@@ -103,10 +103,10 @@
 
 ### P0 — до production registration
 
-- `Красная звезда` №288 (5043), 07.12.1941 — direct page/column inspection;
+- `Красная звезда` №288 (5043), 07.12.1941 — direct **p.3 + column/continuation inspection**;
 - `Патриот Родины`, 03.12.1941 — direct issue/page witness;
 - award record `10800112` — direct scan inspection;
-- RSL 1973 `От Халхингола до Берлина`, pp. 54–62 — direct page inspection;
+- RSL 1973 `От Халхингола до Берлина`, pp.54–62 — direct page inspection;
 - owner approval + exact bytes для reconstruction hero;
 - rights decision для каждого documentary visual.
 
@@ -120,4 +120,4 @@
 
 ## Итог
 
-Материал уже позволяет писать сильную документальную статью без легендаризации. Главные оставшиеся пробелы — не «ещё больше пересказов», а **четыре конкретных объекта**: газетная полоса Архангельска, газетная полоса `Красной звезды`, наградной scan `10800112` и страницы 54–62 авторского сборника 1973 года. Пока они не закрыты, статья должна сохранять квалифицированные формулировки, зафиксированные в этой matrix.
+Материал уже позволяет писать сильную документальную статью без легендаризации. Один из четырёх крупных пробелов сузился: **для `Красной звезды` теперь scholarly-corroborated target — p.3**, а не неизвестная полоса. Осталось визуально проверить эту страницу и колонки, а также закрыть три других ключевых объекта: `Патриот Родины`, award scan `10800112` и pp.54–62 авторского сборника 1973 года.
