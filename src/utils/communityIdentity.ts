@@ -9,9 +9,9 @@ function fallbackUuid() {
 }
 
 /**
- * Stable anonymous browser identifier. It is not a fingerprint and contains no
- * personal data; it only lets the backend enforce one active vote per object
- * from the same browser installation.
+ * Legacy local-only identifier used by the v3 browser outbox envelope.
+ * It is not authentication, is never sent by the hardened remote transport,
+ * and is removed after a durable Supabase anonymous Auth session is created.
  */
 export function getCommunityDeviceId(): string {
   if (typeof window === 'undefined') return '00000000-0000-4000-8000-000000000000';
