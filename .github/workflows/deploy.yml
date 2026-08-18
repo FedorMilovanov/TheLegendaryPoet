@@ -133,8 +133,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /
-          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          VITE_COMMUNITY_API_URL: ${{ vars.COMMUNITY_API_URL }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           VITE_GA_ID: ${{ vars.VITE_GA_ID }}
           VITE_YANDEX_METRIKA_ID: ${{ vars.VITE_YANDEX_METRIKA_ID }}
 
