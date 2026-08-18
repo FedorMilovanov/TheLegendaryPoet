@@ -49,6 +49,9 @@ jobs:
       - name: Validate 1966 Uchitelskaya Gazeta gate
         run: npx tsx scripts/validate-simonov-1966-uchitelskaya-gazeta-gate.ts
 
+      - name: Validate Uchitelskaya Gazeta PRLIB inquiry
+        run: npx tsx scripts/validate-simonov-uchitelskaya-gazeta-prlib-inquiry.ts
+
       - name: Validate Red Star scan routes
         run: npx tsx scripts/validate-simonov-red-star-direct-mirrors-gate.ts
 
