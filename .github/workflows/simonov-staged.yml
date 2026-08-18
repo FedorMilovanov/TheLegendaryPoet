@@ -28,6 +28,9 @@ jobs:
       - name: Validate staged editorial contract
         run: npx tsx scripts/validate-simonov-son-artillerista-staged.ts
 
+      - name: Validate reader evidence reconciliation
+        run: npx tsx scripts/validate-simonov-reader-evidence-reconciliation.ts
+
       - name: Validate research follow-ups
         run: npx tsx scripts/validate-simonov-son-artillerista-research-followups.ts
 
