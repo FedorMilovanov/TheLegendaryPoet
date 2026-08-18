@@ -61,6 +61,38 @@ if (press1966.includes('страница 4 визуально просмотре
   throw new Error('1966 Pravda gate falsely claims page inspection');
 }
 
+const sakhalinPath = 'docs/research/SIMONOV_LOSKUTOV_SAKHALIN_ARCHIVE_GATE_2026-08.md';
+const sakhalin = requireFile(sakhalinPath, 'Simonov Loskutov Sakhalin archive gate');
+requireMarkers('Simonov Loskutov Sakhalin archive', sakhalin, [
+  'high-value correspondence lead / museum item inspection pending',
+  'Иван Елисеевич Солодовников',
+  '1969 года',
+  '2-й Владивостокской школы-интерната',
+  'Музейно-мемориальный комплекс `Победа`',
+  'Mmk-info@sakhalin.gov.ru',
+  'не item-level музейная опись',
+  'не реконструировать',
+]);
+if (sakhalin.includes('личная встреча Лоскутова со школьниками подтверждена')) {
+  throw new Error('Sakhalin gate invents a meeting that the discovery source leaves unresolved');
+}
+
+const addendumPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2026-08.md';
+const addendum = requireFile(addendumPath, 'Simonov second-pass source addendum');
+requireMarkers('Simonov source addendum', addendum, [
+  'second-pass addendum / does not mutate the closed 40-row ledger',
+  'A2-01',
+  '10800112',
+  'A2-03',
+  'Музейно-мемориальный комплекс «Победа»',
+  'A2-07',
+  '№ 288 (5043)',
+  'A2-09',
+  'Человек из поэмы',
+  'A2-12',
+  'direct object supersedes locator',
+]);
+
 console.log(
-  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending.',
+  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; second-pass source hierarchy pinned.',
 );
