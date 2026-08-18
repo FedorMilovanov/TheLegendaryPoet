@@ -198,6 +198,30 @@ if (textRightsGate.includes('полный текст уже находится �
   throw new Error('Simonov text-rights gate falsely claims current public-domain status');
 }
 
+const rgaliGatePath = 'docs/research/SIMONOV_LOSKUTOV_RGALI_SEARCH_GATE_2026-08.md';
+if (!existsSync(rgaliGatePath)) {
+  throw new Error('Simonov Loskutov RGALI search gate is missing');
+}
+const rgaliGate = readFileSync(rgaliGatePath, 'utf8');
+for (const marker of [
+  'exact Loskutov storage unit not surfaced in public catalogue',
+  'ф. 1814',
+  '7330 единиц хранения',
+  'ф. 1814, оп. 8',
+  'rgali@rgali.ru',
+  '3 марта 1966 года',
+  'От Халхингола до Берлина',
+  'не является доказательством отсутствия письма в фонде',
+  'Поиск письма И. А. Лоскутова К. М. Симонову от 3 марта 1966 года',
+]) {
+  if (!rgaliGate.includes(marker)) {
+    throw new Error(`Simonov RGALI-search boundary disappeared: ${marker}`);
+  }
+}
+if (/РГАЛИ, ф\. 1814, оп\. \d+, ед\. хр\. \d+[^\n]*Лоскутов/u.test(rgaliGate)) {
+  throw new Error('Simonov RGALI gate invented an exact Loskutov storage unit');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -273,5 +297,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; image-rights=research-only; text-rights=full-text-blocked; hero=${coverStatus}; publication-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; image-rights=research-only; text-rights=full-text-blocked; RGALI-Loskutov=search-open; hero=${coverStatus}; publication-object gate remains open.`,
 );
