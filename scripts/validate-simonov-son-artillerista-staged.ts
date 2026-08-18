@@ -106,6 +106,31 @@ if (loskutovPrintWitness.includes('архивный автограф письм�
   throw new Error('Simonov Loskutov witness incorrectly claims archival-autograph closure');
 }
 
+const witnessReconciliationPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_WITNESS_RECONCILIATION_2026-08.md';
+if (!existsSync(witnessReconciliationPath)) {
+  throw new Error('Simonov witness reconciliation is missing');
+}
+const witnessReconciliation = readFileSync(witnessReconciliationPath, 'utf8');
+for (const marker of [
+  'Лоскутов controlling',
+  'примерно в **три километра**',
+  '**двухкилометровом** пути',
+  '**миномётную батарею**',
+  '**двух миномётных батареях**',
+  'Государственного архива Мурманской области',
+  'Рока-Пахте',
+  'портрет И. А. Лоскутова, 1941',
+  'rights pending',
+  'не скачивать и не вендорить эти изображения в production автоматически',
+]) {
+  if (!witnessReconciliation.includes(marker)) {
+    throw new Error(`Simonov witness-reconciliation boundary disappeared: ${marker}`);
+  }
+}
+if (witnessReconciliation.includes('расхождение источников устранено')) {
+  throw new Error('Simonov witness reconciliation falsely claims the conflicting details are resolved');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -181,5 +206,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; hero=${coverStatus}; newspaper-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; hero=${coverStatus}; newspaper-object gate remains open.`,
 );
