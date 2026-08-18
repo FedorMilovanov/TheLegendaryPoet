@@ -80,7 +80,7 @@ Drive presence of adjacent research material does not close this gate.
 
 A fresh search confirmed bibliographic holdings for the 1995 edition and the 1997 TERRA/Respublika reprint, but did not locate a lawful open complete scan of the required page range. Library catalogue holdings and Google Books metadata are discovery witnesses only; they do not substitute for the page-level controlling witness.
 
-A secondary research lead independently identifies the 16 July 1925 Benislavskaya→Yesenin letter as `ЦГАЛИ/РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` and reports publication by L. V. Zankovskaya. This is useful for the reconciliation matrix, but it does not by itself close the full 14-letter gate.
+A secondary research lead independently identifies the 16 July 1925 Benislavskaya→Yesenin letter as `ЦГАЛИ/РГАЛИ, ф.190, оп.1, ед. хр.105, л.27–29` and reports publication by L. V. Zankovskaya. This is useful for the reconciliation matrix, but it does not by itself close the full 14-letter gate.
 
 ## The unresolved 13 ↔ 16 ↔ 14 problem
 
@@ -89,6 +89,12 @@ Three observable source layers still disagree in composition:
 1. the open `Есенин.ру` page exposes **13 numbered units**, with explicit cuts, losses and editorial boundaries;
 2. P. F. Yushin's earlier bibliographic list exposes **16 archival/bibliographic positions**;
 3. the later academic PSS index records **14 known letters** from Benislavskaya to Yesenin.
+
+The working crosswalk is now maintained separately in:
+
+`docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_MATRIX_2026-08.md`
+
+It maps all Yushin positions **121–136** against open units **#1–#13**, including the high-value dating conflict where open unit #6 is headed `19 или 20 октября 1924 г.` but signs itself `10.X.24`, matching Yushin #127 dated 10 October.
 
 This discrepancy must be reconciled item by item. It is not legitimate to choose whichever number is easiest for the narrative.
 
@@ -124,7 +130,7 @@ The branch now contains `scripts/validate-benislavskaya-staged.ts`, executed fro
 - machine-copy diary disclosure;
 - no unsupported editor/agent occupational claims;
 - zero documentary body images before item-level rights approval;
-- derived reading-time parity;
+- publication-derived reading-time parity through the universal `publishEssay()` boundary;
 - exact approved hero bytes if/when the binary is ingested.
 
 ## Publication unlock conditions
