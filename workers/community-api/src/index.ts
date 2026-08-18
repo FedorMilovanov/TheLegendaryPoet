@@ -280,6 +280,17 @@ function validateScores(type: FeedbackTargetType, value: unknown) {
   return result;
 }
 
+function scoresEqual(type: FeedbackTargetType, storedJson: string, requested: Record<string, number>) {
+  try {
+    const stored = JSON.parse(storedJson) as Record<string, unknown>;
+    const keys = EXPECTED_SCORE_KEYS[type];
+    return keys.every((key) => Number(stored[key]) === requested[key])
+      && Object.keys(stored).length === keys.length;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeComment(body: Record<string, unknown>) {
   if (
     typeof body.commentId !== 'string' || !COMMENT_ID.test(body.commentId)
@@ -394,7 +405,7 @@ async function handleSession(request: Request, env: Env) {
   const key = await networkKey(request, env);
   await takeBudget(env.DB, key, 'session-attempt', '*', 3600, 30);
   await verifyTurnstile(body.turnstileToken, request, env);
-  await takeBudget(env.DB, key, 'session', '*', 86400, 6);
+  await takeBudget(env.DB, key, 'session', '*', 86400, 30);
   const now = Date.now();
   const payload: SessionPayload = { v: 1, actor: crypto.randomUUID(), iat: now, exp: now + SESSION_TTL_MS };
   const actorToken = await signSession(payload, env);
@@ -409,6 +420,9 @@ async function handleRating(request: Request, env: Env) {
   if (!validTargetType(body.targetType) || typeof body.targetId !== 'string' || !TARGET_ID.test(body.targetId)) throw new HttpError(400, 'invalid_target');
   const scores = validateScores(body.targetType, body.scores);
   await requireCanonicalTarget(env, body.targetType, body.targetId);
+  const existing = await env.DB.prepare('SELECT scores_json FROM tlp_ratings WHERE target_type = ? AND target_id = ? AND actor_id = ?')
+    .bind(body.targetType, body.targetId, actor).first<{ scores_json: string }>();
+  if (existing && scoresEqual(body.targetType, existing.scores_json, scores)) return { ok: true, idempotent: true };
   const key = await networkKey(request, env);
   await takeBudget(env.DB, key, 'rating', '*', 3600, 60);
   await takeBudget(env.DB, key, 'rating', targetKey(body.targetType, body.targetId), 3600, 8);
@@ -458,6 +472,9 @@ async function handleHelpful(request: Request, env: Env) {
   const comment = await env.DB.prepare(`SELECT target_type, target_id FROM tlp_comments WHERE id = ? AND status = 'published'`)
     .bind(body.commentId).first<{ target_type: FeedbackTargetType; target_id: string }>();
   if (!comment || !validTargetType(comment.target_type) || !TARGET_ID.test(comment.target_id)) throw new HttpError(404, 'comment_not_found');
+  const existingVote = await env.DB.prepare('SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1')
+    .bind(body.commentId, actor).first<{ found: number }>();
+  if (existingVote) return { ok: true, idempotent: true };
   const key = await networkKey(request, env);
   await takeBudget(env.DB, key, 'helpful', '*', 3600, 120);
   await takeBudget(env.DB, key, 'helpful', targetKey(comment.target_type, comment.target_id), 3600, 40);
