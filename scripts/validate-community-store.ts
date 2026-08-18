@@ -1,7 +1,6 @@
 export {};
 
-process.env.VITE_SUPABASE_URL = 'https://community.test.invalid';
-process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.VITE_COMMUNITY_API_URL = 'https://community.test.invalid';
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -22,6 +21,7 @@ const storage = new MemoryStorage();
 const listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
 const testWindow = {
   localStorage: storage,
+  location: { hostname: '127.0.0.1' },
   addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
     const bucket = listeners.get(type) ?? new Set<EventListenerOrEventListenerObject>();
     bucket.add(listener);
@@ -41,6 +41,12 @@ const testWindow = {
 
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } });
+Object.assign(globalThis, {
+  __TLP_COMMUNITY_TEST_CONFIG__: {
+    url: 'https://community.test.invalid',
+    humanProof: 'turnstile-test-proof',
+  },
+});
 
 const now = Date.now();
 const iso = (offsetMs: number) => new Date(now + offsetMs).toISOString();
@@ -80,8 +86,8 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
     ],
   },
   outbox: [
-    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId: voterId, entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
-    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId: voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
+    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId, entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
+    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
   ],
   cooldowns: { 'rating:poet:alexander-pushkin': now + 5000 },
   helpfulVotes: {},
@@ -93,11 +99,20 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
 }));
 
 let requestCount = 0;
-let rpcSucceeds = false;
-globalThis.fetch = async (input) => {
-  requestCount += 1;
-  const url = String(input);
-  if (url.includes('/rest/v1/rpc/')) return new Response(null, { status: rpcSucceeds ? 204 : 503 });
+let mutationSucceeds = false;
+globalThis.fetch = async (input, init) => {
+  const url = new URL(String(input));
+  if (url.pathname === '/v1/session') {
+    return Response.json({
+      actorToken: 'v1.test-signed-actor-token-that-is-long-enough.signature',
+      expiresAt: Date.now() + 30 * 24 * 60 * 60_000,
+    });
+  }
+  if (['/v1/rating', '/v1/comment', '/v1/helpful'].includes(url.pathname)) {
+    requestCount += 1;
+    return Response.json({ ok: mutationSucceeds }, { status: mutationSucceeds ? 200 : 503 });
+  }
+  if ((init?.method ?? 'GET') === 'GET') return Response.json({});
   return new Response(null, { status: 500 });
 };
 
@@ -106,7 +121,7 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 
 const migrated = store.getFeedbackSnapshot();
-expect(requestCount === 0, 'importing or subscribing to the store must not start community reads');
+expect(requestCount === 0, 'importing or subscribing to the store must not start community reads/writes');
 expect(migrated.ratings.length === 2, 'v2 migration must retain only the pending and device-owned ratings');
 expect(migrated.ratings.some((rating) => rating.id === pendingRatingId), 'pending rating must survive v2 migration');
 expect(migrated.ratings.some((rating) => rating.id === ownRatingId), 'device-owned rating must survive v2 migration');
@@ -133,12 +148,13 @@ expect(store.getCommunitySyncSnapshot().phase === 'offline', 'a failed concurren
 expect(syncNotifications > 0, 'remote read state changes must notify sync subscribers');
 stopSync();
 
-rpcSucceeds = false;
+mutationSucceeds = false;
 await store.flushCommunityOutbox();
 expect(store.getCommunitySyncSnapshot().phase === 'offline', 'failed outbox delivery must expose offline state');
 expect(store.getCommunitySyncSnapshot().pendingCount === 2, 'failed delivery must retain all queued mutations');
+expect(storage.getItem('tlp-community-actor:v1') !== null, 'successful Turnstile-backed session mint must persist the signed actor token');
 
-rpcSucceeds = true;
+mutationSucceeds = true;
 await store.flushCommunityOutbox();
 expect(store.getCommunitySyncSnapshot().phase === 'online', 'successful outbox retry must restore online state');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'successful retry must empty the outbox');
@@ -150,7 +166,7 @@ expect(store.commitRatingFeedback({
   targetId: 'anna-akhmatova',
   scores: { language: 5, depth: 4 },
   createdAt: iso(100),
-}, 'rating:poet:anna-akhmatova', voterId), 'UUID-based rating ids must be accepted by the client store');
+}, 'rating:poet:anna-akhmatova', voterId), 'UUID-based local rating ids must be accepted by the client store');
 expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'new remote-enabled writes must enter the outbox');
 
 const remoteHelpfulId = 'comment-55555555-5555-4555-8555-555555555555';
@@ -182,5 +198,5 @@ stopFeedback();
 expect(localNotifications === 1, 'cross-tab v3 storage events must notify once');
 
 for (const failure of failures) console.error(`ERROR community-store: ${failure}`);
-console.log(`Community store validation: ${failures.length} error(s), ${requestCount} write request(s), no startup reads.`);
+console.log(`Community store validation: ${failures.length} error(s), ${requestCount} Worker mutation request(s), no startup reads.`);
 if (failures.length) process.exit(1);
