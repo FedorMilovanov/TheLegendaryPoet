@@ -4,10 +4,11 @@ Date: 2026-08-18
 Status: **WORKING RECONCILIATION / NOT A CANONICAL 14-ITEM MATRIX YET**  
 Owner issue: `#200`
 
-This ledger compares two source layers that can already be inspected in public text:
+This ledger compares source layers that can already be inspected without pretending that their document boundaries are identical:
 
 1. the open `Есенин.ру` publication `БЕНИСЛАВСКАЯ Г. Письма к Есенину`, containing 13 numbered units;
-2. P. F. Yushin, `Сергей Есенин. Поэзия` (1969), archival-document bibliography positions 121–136, containing 16 Benislavskaya→Yesenin positions.
+2. P. F. Yushin, `Сергей Есенин. Поэзия` (1969), archival-document bibliography positions 121–136, containing 16 Benislavskaya→Yesenin positions;
+3. later academic FEB/PSS and IMLI commentary used as a stronger dating/page-control layer where it explicitly identifies a document.
 
 The later academic PSS index records **14 known letters** from Benislavskaya to Yesenin. The purpose of this matrix is to isolate what must be reconciled against controlling page-level witnesses. It does **not** declare which 14 items are canonical.
 
@@ -16,7 +17,8 @@ The later academic PSS index records **14 known letters** from Benislavskaya to 
 - Open 13-unit publication: `https://esenin.ru/o-esenine/zhenshchiny-esenina/galina-benislavskaia/benislavskaia-g-pisma-k-eseninu`
 - Yushin bibliography: `https://s-a-esenin.ru/books/item/f00/s00/z0000004/st014.shtml`
 - PSS name index / controlling count: `https://feb-web.ru/feb/esenin/texts/es6/es6-754-.htm?cmd=p`
-- IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013; connected project PDF/OCR witness; **16 July letter reproduced on pp. 339–340**
+- Academic FEB commentary to `Есенин в воспоминаниях современников`, т. 1 (1986): later dating evidence for the 1 December 1924 letter and an independent academic quotation of the 1924 `пьяную канитель` letter.
+- IMLI chronology control for 1925: `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1, 2013; connected project PDF/OCR witness; **16 July letter reproduced on pp. 339–340**.
 - Required remaining 1995 book witness: `Сергей Есенин в стихах и жизни. Письма. Документы`, 1995, pp. **236–281**.
 
 The 16 July 1925 page-level branch is now independently covered by the connected IMLI 2013 witness. Zankovskaya 1997 p. 381 and Shubnikova-Guseva 2008 pp. 332–333 remain important upstream publication/provenance references, but acquiring those books is no longer a prerequisite merely to read or page-verify this letter.
@@ -25,38 +27,77 @@ The 16 July 1925 page-level branch is now independently covered by the connected
 
 | Candidate date | Open publication | Yushin | Current reconciliation state |
 |---|---|---|---|
-| 18 Jan 1924 | absent from numbered 13 | **#121** | YUSHIN-ONLY; requires controlling page witness |
-| 8 Feb 1924 | absent from numbered 13 | **#122** | YUSHIN-ONLY; requires controlling page witness |
+| 18 Jan 1924 | absent from numbered 13 | **#121** | YUSHIN-ONLY; no later academic page/date confirmation located yet; requires controlling page witness |
+| 8 Feb 1924 | absent from numbered 13 | **#122** | DOCUMENT/TEXT INDEPENDENTLY ATTESTED: later academic FEB commentary quotes the `Бросьте эту пьяную канитель` letter as one of Benislavskaya's 1924 letters; the exact **8 Feb** dating remains tied to the earlier publication/Yushin layer until controlling page witness |
 | 4 Mar 1924 | **open #1**, heading/signature 4 Mar | **#123** | strong date match |
 | 6 Apr 1924 | **open #2**, 6 Apr | **#124** | strong date match; open text contains an explicit cut |
 | 26 Apr 1924 | **open #3**, heading 26 Apr; body signs `25.IV.24` | **#125**, 26 Apr | probable same archival unit, but heading/signature discrepancy must be explained |
 | 26 Apr 1924 postcard | **open #4**, separate short postcard | no separate Yushin position visible | OPEN-ONLY AS SEPARATE UNIT; candidate for bundling/classification difference |
 | 28 Apr 1924 | **open #5**, 28 Apr | **#126** | strong date match; open text notes a substantial cut |
 | 10 Oct 1924 | **open #6** is headed `19 или 20 октября`, but signs `10.X.24` | **#127**, 10 Oct | high-value discrepancy: internal signature matches Yushin; open editorial heading does not |
-| 30 Nov 1924 | absent as a numbered open unit | **#128** | YUSHIN-ONLY; requires controlling page witness |
+| 30 Nov 1924 | absent as a numbered open unit | **#128** | **LATER-ACADEMIC-REDATING CANDIDATE:** FEB 1986 explicitly identifies the quoted Benislavskaya→Yesenin text as a letter of **1 Dec 1924** and points to `Русская литература`, 1970, № 3, p. 177; do not collapse 30 Nov/1 Dec at physical-document level until the controlling page witness confirms boundaries |
 | between 10–12 Dec 1924 | **open #7** | no exact Yushin date | OPEN-ONLY DATE/LAYER; may represent a differently dated or differently classified position; do not merge by guess |
 | 15 Dec 1924 | **open #8** | no exact Yushin date | OPEN-ONLY DATE/LAYER; do not merge by guess |
 | 25 Dec 1924 | **open #9** | **#129** | strong date match |
 | 27 Dec 1924 | **open #10** | **#130** | strong date match |
-| 29 Dec 1924 | absent from numbered 13 | **#131** | YUSHIN-ONLY; requires controlling page witness |
+| 29 Dec 1924 | absent from numbered 13 | **#131** | YUSHIN-ONLY; no later academic page/date confirmation located yet; requires controlling page witness |
 | 20 Jan 1925 | **open #11** | **#132** | strong date match |
 | 9 Feb 1925 | **open #12** | **#133** | strong date match |
-| 12 Apr 1925 | absent from numbered 13 | **#134** | YUSHIN-ONLY; requires controlling page witness |
+| 12 Apr 1925 | absent from numbered 13 | **#134** | YUSHIN-ONLY; connected IMLI 1925 chronology has 12-Apr calendar material but no identified Benislavskaya inbound letter on that date; this is a **negative signal only**, not grounds to reject the Yushin position |
 | 4 May 1925 | **open #13** | **#135** | strong date match; IMLI cites this letter across `Письма, 280–281` |
 | 16 Jul 1925 | absent from numbered 13 | **#136** | **PAGE-WITNESS VERIFIED:** IMLI 2013 reproduces the letter in full on pp. **339–340**; it also corrects the published `ЦГАЛИ/РГАЛИ` storage citation as erroneous, states the letter is absent there and remained with Benislavskaya; delivery/reading by Yesenin must not be asserted |
 
 ## Verified academic page-map
 
-The connected academic IMLI chronology explicitly expands the abbreviation `Письма` as the 1995 collection `Сергей Есенин в стихах и жизни: Письма. Документы`. Its dated entries provide a partial page-map for Benislavskaya's inbound correspondence:
+The connected academic IMLI chronology explicitly expands the abbreviation `Письма` as the 1995 collection `Сергей Есенин в стихах и жизни: Письма. Документы`. Its dated entries and FEB academic comments provide a partial page-map for Benislavskaya's inbound correspondence:
 
+- **26 April 1924** → 1995 `Письма`, p. **238** page anchor;
+- **28 April 1924** → 1995 `Письма`, p. **239** page anchor;
+- **10.X.24 / later editorial heading 19–20 October** → 1995 `Письма`, p. **251** page evidence;
+- **November 1924 response concerning `Русь уходящая`** → 1995 `Письма`, p. **255** page evidence;
+- **between 10–12 December 1924** → 1995 `Письма`, pp. **256–257** page evidence in academic commentary;
+- **15 December 1924** → 1995 `Письма`, pp. **258–259** page evidence in academic commentary;
+- **25 December 1924** → 1995 `Письма`, p. **262** page evidence;
+- **27 December 1924** → 1995 `Письма`, pp. **263–264** page evidence;
 - **20 January 1925** → 1995 `Письма`, pp. **268–269**;
 - **9 February 1925** → 1995 `Письма`, pp. **271–272**;
 - **4 May 1925** → 1995 `Письма`, pp. **280–281**;
 - **16 July 1925** → IMLI `Летопись`, т. 5, кн. 1 (2013), pp. **339–340**, where the full letter is reproduced from its opening `Сергей...` through the signed ending `Галя. 16. VII. 25` and followed by the provenance correction.
 
-The first three markers correct the earlier acquisition range. A request ending at p. 280 would omit part of the 4 May letter, so the remaining book-copy gate is **pp. 236–281 inclusive (46 pages)**, not 236–280.
+A page anchor is not automatically the complete page span of a document. Where academic commentary cites only a fragment or one page, this matrix records only that evidence and does not infer unseen boundaries.
+
+The markers for 1925 correct the earlier acquisition range. A request ending at p. 280 would omit part of the 4 May letter, so the remaining book-copy gate is **pp. 236–281 inclusive (46 pages)**, not 236–280.
 
 The 16 July item is no longer an unacquired page-witness problem: its text and editorial provenance are already available in the connected academic IMLI volume. The 1997/2008 references remain part of the source chain, not an outstanding acquisition condition.
+
+## Academic reconciliation advances
+
+### Yushin #128: 30 November → 1 December 1924
+
+The later academic FEB commentary to `Есенин в воспоминаниях современников`, т. 1 (1986), does more than quote a similar passage. It explicitly labels the source as **a letter from G. A. Benislavskaya to Yesenin dated 1 December 1924** and directs the reader to `Русская литература`, 1970, № 3, p. 177. It also ties the letter to Benislavskaya's answer to Yesenin's 20 October 1924 statement about where he would live in Leningrad.
+
+This is positive evidence that the early 16-position layer contains at least one dating that was treated differently by later scholarship. Current status: **redating candidate established; physical-unit identity still awaits the controlling 1995 page witness**.
+
+### Yushin #122: 8 February 1924
+
+Later academic FEB commentary independently reproduces the distinctive letter passage beginning `Милый, хороший Сергей Александрович!` and including `Бросьте эту пьяную канитель`, identifying it as one of Benislavskaya's letters to Yesenin from 1924. This independently establishes the existence/content layer of the document.
+
+However, that later comment does not itself state `8 February`. The exact date is present in the earlier scholarly publication/Yushin tradition. Therefore the project must distinguish:
+
+- **document/text existence: independently academically attested**;
+- **exact 8-Feb dating: not yet page-controlled by the later source layer**.
+
+This avoids converting corroboration of a text into stronger dating evidence than the source actually supplies.
+
+### Still unresolved after targeted academic search
+
+No later academic page/date witness strong enough to replace the controlling 1995 check has yet been located for:
+
+- **18 January 1924** (#121);
+- **29 December 1924** (#131);
+- **12 April 1925** (#134).
+
+For 12 April, the connected 1925 IMLI chronology was specifically checked: the date exists in the calendar, but the searchable academic text does not identify a Benislavskaya→Yesenin letter there, unlike the explicit entries for 9 February and 4 May. Treat that only as a negative signal. Absence from a chronology search is not proof that the bibliographic position is invalid.
 
 ## What the crosswalk proves already
 
@@ -84,7 +125,12 @@ Yushin has six positions not represented as numbered units on the open page:
 - 12 Apr 1925;
 - 16 Jul 1925.
 
-One of those six — 16 July — now has an independent full academic page witness in IMLI 2013. The other five still depend on the remaining controlling correspondence acquisition/reconciliation.
+Those six are no longer equally opaque:
+
+- 16 July has an independent full academic page witness;
+- 30 November has a strong later-academic **1 December redating candidate**;
+- 8 February has independently attested document text but still requires exact-date/page control;
+- 18 January, 29 December and 12 April remain unresolved at the required level.
 
 The open page, conversely, exposes three units/datings without a separate exact Yushin position:
 
@@ -92,7 +138,7 @@ The open page, conversely, exposes three units/datings without a separate exact 
 - between 10–12 Dec (#7);
 - 15 Dec (#8).
 
-That arithmetic is consistent with `16 Yushin positions` versus `13 open numbered units`, but it does **not** explain the later academic count of 14. The controlling publication may merge, split, redate, reclassify, omit or restore specific units. Only page-level reconciliation may decide that.
+That arithmetic is consistent with `16 Yushin positions` versus `13 open numbered units`, but it does **not** explain the later academic count of 14 by itself. The controlling publication may merge, split, redate, reclassify, omit or restore specific units. Only page-level reconciliation may decide that.
 
 ## Open-publication QC notes
 
