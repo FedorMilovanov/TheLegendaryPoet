@@ -110,8 +110,14 @@ for (const id of expectedStrongSources) {
 }
 
 const controllingBook = sourcesById.get('ben-1995-book');
-if (!controllingBook?.note?.includes('236–280') || !controllingBook.note.includes('не приобретены')) {
-  throw new Error('Benislavskaya controlling 1995-book source no longer discloses the open page-level gate');
+if (!controllingBook?.note?.includes('236–281') || !controllingBook.note.includes('не приобретены')) {
+  throw new Error('Benislavskaya controlling 1995-book source no longer discloses the corrected page-level gate');
+}
+const chronology1925 = sourcesById.get('ben-letopis-t5-k1');
+for (const pageMarker of ['268–269', '271–272', '280–281']) {
+  if (!chronology1925?.note?.includes(pageMarker)) {
+    throw new Error(`Benislavskaya 1925 page-map lost IMLI marker: ${pageMarker}`);
+  }
 }
 const diary = sourcesById.get('ben-diary-copy');
 if (!diary?.note?.includes('машинописная копия') || !diary.note.includes('Автограф дневника не заявляется')) {
@@ -162,6 +168,8 @@ for (const boundary of [
   '13 пронумерованных единиц',
   '16 позиций',
   'Публикационный gate остаётся честно открытым',
+  '236–281',
+  '280–281',
   'машинописная копия',
   'не доказывает самостоятельной редакционной власти',
   'не учреждает современную должность «агента»',
@@ -172,7 +180,10 @@ for (const boundary of [
 if (!readerText.includes('16 июля 1925 года') || !readerText.includes('не публикует')) {
   throw new Error('Benislavskaya staged draft lost the qualified 16 July 1925 letter boundary');
 }
+if (!readerText.includes('указанного ранее письма в ЦГАЛИ/РГАЛИ нет') || !readerText.includes('оно осталось у Бениславской')) {
+  throw new Error('Benislavskaya reader text lost the corrected 16 July provenance boundary');
+}
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 acquisition gate preserved; 16-Jul provenance correction pinned.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 gate preserved; 1995 page gate=236–281; 16-Jul provenance correction pinned.`,
 );
