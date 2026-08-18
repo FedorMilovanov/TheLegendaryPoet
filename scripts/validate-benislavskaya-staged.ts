@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { benislavskayaDraft as essay } from '../src/data/essays/benislavskayaDraft';
 import { getAllEssays, getEssayBySlug } from '../src/data/essays/index';
+import { publishEssay } from '../src/data/essays/publishEssay';
 import { estimateReadTime } from '../src/utils/readTime';
 
 const published = getAllEssays();
@@ -132,8 +133,12 @@ const readerText = essay.blocks.map((block) => {
 const words = readerText.match(/[\p{L}\p{N}]+/gu)?.length ?? 0;
 if (words < 2000 || words > 5000) throw new Error(`Benislavskaya staged longform scope drifted: ${words} words`);
 const expectedReadTime = estimateReadTime(essay.blocks);
-if (essay.readTime !== expectedReadTime) {
-  throw new Error(`Benislavskaya staged readTime drift: ${essay.readTime} !== ${expectedReadTime}`);
+const publicationCandidate = publishEssay(essay);
+if (publicationCandidate === essay) throw new Error('publishEssay reused mutable Benislavskaya authoring identity');
+if (publicationCandidate.readTime !== expectedReadTime) {
+  throw new Error(
+    `Benislavskaya publication-derived readTime drift: ${publicationCandidate.readTime} !== ${expectedReadTime}`,
+  );
 }
 
 for (const boundary of [
@@ -155,5 +160,5 @@ if (!readerText.includes('16 июля 1925 года') || !readerText.includes('�
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; ${expectedReadTime} min; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 acquisition gate preserved.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 acquisition gate preserved.`,
 );
