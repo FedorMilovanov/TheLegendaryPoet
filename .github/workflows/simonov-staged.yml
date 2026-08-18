@@ -1,0 +1,56 @@
+name: Simonov staged source gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/data/essays/simonovSonArtilleristaDraft.ts'
+      - 'docs/research/SIMONOV_*.md'
+      - 'scripts/validate-simonov-*.ts'
+      - '.github/workflows/simonov-staged.yml'
+
+concurrency:
+  group: simonov-staged-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  staged-source-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Validate staged editorial contract
+        run: npx tsx scripts/validate-simonov-son-artillerista-staged.ts
+
+      - name: Validate research follow-ups
+        run: npx tsx scripts/validate-simonov-son-artillerista-research-followups.ts
+
+      - name: Validate claim matrix
+        run: npx tsx scripts/validate-simonov-son-artillerista-claim-matrix.ts
+
+      - name: Validate identity and publication follow-ups
+        run: npx tsx scripts/validate-simonov-son-artillerista-identity-publication-followups.ts
+
+      - name: Validate source addendum III
+        run: npx tsx scripts/validate-simonov-son-artillerista-source-addendum-3.ts
+
+      - name: Validate source addendum IV
+        run: npx tsx scripts/validate-simonov-son-artillerista-source-addendum-4.ts
+
+      - name: Validate 1966 Uchitelskaya Gazeta gate
+        run: npx tsx scripts/validate-simonov-1966-uchitelskaya-gazeta-gate.ts
+
+      - name: Validate Red Star scan routes
+        run: npx tsx scripts/validate-simonov-red-star-direct-mirrors-gate.ts
+
+      - name: Validate Simonov volume 8 public scan gate
+        run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
+
+      - name: Validate visual acquisition manifest
+        run: npx tsx scripts/validate-simonov-son-artillerista-visual-manifest.ts
