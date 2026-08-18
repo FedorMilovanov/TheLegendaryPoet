@@ -130,8 +130,7 @@ const reconciliation = readFileSync(reconciliationPath, 'utf8');
 for (const marker of [
   'PAGE-WITNESS VERIFIED',
   'pp. **339–340**',
-  'IMLI 2013 calls the published `ЦГАЛИ/РГАЛИ` storage citation erroneous',
-  'letter is absent there',
+  "editors state that Zankovskaya's cited archive location is erroneous because the letter is absent there",
   'remained with G. A. Benislavskaya',
   'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
   'there is no need to purchase Zankovskaya 1997 p. 381 or Shubnikova-Guseva 2008 pp. 332–333',
