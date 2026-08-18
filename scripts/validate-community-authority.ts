@@ -13,7 +13,8 @@ const identity = read('src/utils/communityIdentity.ts');
 const edge = read('supabase/functions/community-write/index.ts');
 const edgeConfig = read('supabase/config.toml');
 const schema = read('docs/community-schema.sql');
-const migration = read('supabase/migrations/20260819010000_community_authority.sql');
+const prepareMigration = read('supabase/migrations/20260819010000_community_authority.sql');
+const cutoverMigration = read('supabase/migrations/20260819011000_community_authority_cutover.sql');
 const setup = read('docs/COMMENTS_SETUP.md');
 const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
 const manifest = JSON.parse(read('public/community-targets.json')) as {
@@ -56,25 +57,32 @@ expect(!/body\.(?:actor|actorId|voter|voterId|network|networkKey)/.test(edge), '
 expect(edge.includes('function hasOnlyKeys') && edge.includes("hasOnlyKeys(body, ['kind', 'targetType', 'targetId', 'scores'])"), 'Edge Function must reject extra request fields');
 expect(edgeConfig.includes('[functions.community-write]') && edgeConfig.includes('verify_jwt = false'), '@supabase/server must own current user JWT authorization');
 
-expect(schema === migration, 'checked-in migration must exactly match the repeatable authority schema');
-for (const sql of [schema, migration]) {
+expect(prepareMigration.includes('PREPARE PHASE') && !prepareMigration.includes('drop function if exists public.tlp_submit_rating'), 'prepare migration must add trusted authority without breaking the old frontend');
+expect(cutoverMigration.includes('CUTOVER PHASE'), 'cutover migration must be explicitly staged');
+for (const legacyDrop of [
+  'drop function if exists public.tlp_submit_rating(text, text, text, uuid, jsonb)',
+  'drop function if exists public.tlp_submit_comment(text, text, text, uuid, text, text, text)',
+  'drop function if exists public.tlp_mark_helpful(text, uuid)',
+]) {
+  expect(schema.includes(legacyDrop), `final schema must remove legacy mutation surface: ${legacyDrop}`);
+  expect(cutoverMigration.includes(legacyDrop), `cutover migration must remove legacy mutation surface: ${legacyDrop}`);
+}
+
+for (const sql of [schema, prepareMigration]) {
   expect(sql.includes('create table if not exists public.tlp_community_abuse_buckets'), 'backend must own atomic network abuse buckets');
   expect(sql.includes('create or replace function public.tlp_take_community_budget'), 'backend must enforce an atomic abuse budget helper');
   expect(sql.includes("raise exception 'community rate limit'"), 'backend must fail closed after abuse budget exhaustion');
   expect(sql.includes('p_actor_id uuid') && sql.includes('p_network_key text'), 'server-only mutations must receive trusted Edge-derived actor/network fields');
-  expect(sql.includes('drop function if exists public.tlp_submit_rating(text, text, text, uuid, jsonb)'), 'legacy public rating RPC must be removed');
-  expect(sql.includes('drop function if exists public.tlp_submit_comment(text, text, text, uuid, text, text, text)'), 'legacy public comment RPC must be removed');
-  expect(sql.includes('drop function if exists public.tlp_mark_helpful(text, uuid)'), 'legacy public helpful RPC must be removed');
   expect(sql.includes('grant execute on function public.tlp_submit_rating_server') && sql.includes('to service_role'), 'rating server RPC must be service-role-only');
   expect(sql.includes('grant execute on function public.tlp_submit_comment_server') && sql.includes('to service_role'), 'comment server RPC must be service-role-only');
   expect(sql.includes('grant execute on function public.tlp_mark_helpful_server') && sql.includes('to service_role'), 'helpful server RPC must be service-role-only');
-  expect(!/grant execute on function public\.tlp_(?:submit|mark)[^;]+to anon/si.test(sql), 'no mutation RPC may be executable by anon');
-  expect(!/grant execute on function public\.tlp_(?:submit|mark)[^;]+to authenticated/si.test(sql), 'no mutation RPC may be executable by authenticated');
+  expect(!/grant execute on function public\.tlp_(?:submit|mark)[^;]+to anon/si.test(sql), 'no hardened mutation RPC may be executable by anon');
+  expect(!/grant execute on function public\.tlp_(?:submit|mark)[^;]+to authenticated/si.test(sql), 'no hardened mutation RPC may be executable by authenticated');
 }
 
-expect(setup.includes('Edge Function') && setup.includes('анонимной сессии Supabase Auth'), 'setup docs must describe trusted write authority');
-expect(storageDoc.includes('не передаётся на сервер') && storageDoc.includes('server-issued'), 'storage docs must separate legacy local UUID from server identity');
+expect(setup.includes('Edge Function') && setup.includes('анонимной сессии Supabase Auth') && setup.includes('cutover'), 'setup docs must describe trusted write authority and staged cutover');
+expect(storageDoc.includes('не передаётся на сервер') && storageDoc.includes('server-issued') && storageDoc.includes('two-phase'), 'storage docs must separate legacy local UUID from server identity and rollout');
 
 for (const failure of failures) console.error(`ERROR community-authority: ${failure}`);
-console.log(`Community authority contract: ${failures.length} error(s); Auth actor, HMAC network budget, canonical targets and service-only RPC boundary checked.`);
+console.log(`Community authority contract: ${failures.length} error(s); Auth actor, HMAC network budget, canonical targets, staged cutover and service-only RPC boundary checked.`);
 if (failures.length) process.exit(1);
