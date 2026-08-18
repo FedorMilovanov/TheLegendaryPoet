@@ -6,26 +6,12 @@ import type {
   FeedbackTargetType,
   RatingEntry,
 } from '../types/community';
-
-const VITE_ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
-const NODE_ENV = typeof process !== 'undefined' ? process.env : undefined;
-const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
-type CommunityTestConfig = { url: string; key: string };
-
-function readLoopbackTestConfig(): CommunityTestConfig | undefined {
-  if (typeof window === 'undefined' || !LOOPBACK_HOSTS.has(window.location?.hostname ?? '')) return undefined;
-  const candidate = (globalThis as typeof globalThis & {
-    __TLP_COMMUNITY_TEST_CONFIG__?: Partial<CommunityTestConfig>;
-  }).__TLP_COMMUNITY_TEST_CONFIG__;
-  const url = typeof candidate?.url === 'string' ? candidate.url.replace(/\/$/, '') : '';
-  const key = typeof candidate?.key === 'string' ? candidate.key : '';
-  if (!/^https:\/\/[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(url) || key.length < 8) return undefined;
-  return { url, key };
-}
-
-const LOOPBACK_TEST_CONFIG = readLoopbackTestConfig();
-const URL = (VITE_ENV?.VITE_SUPABASE_URL ?? LOOPBACK_TEST_CONFIG?.url ?? NODE_ENV?.VITE_SUPABASE_URL)?.replace(/\/$/, '');
-const KEY = VITE_ENV?.VITE_SUPABASE_ANON_KEY ?? LOOPBACK_TEST_CONFIG?.key ?? NODE_ENV?.VITE_SUPABASE_ANON_KEY;
+import { getCommunityAccessToken, refreshCommunityAccessToken } from './communityAuth';
+import {
+  communityPublicHeaders,
+  communityUrl,
+  remoteEnabled as configuredRemoteEnabled,
+} from './communityConfig';
 
 const RATINGS_VIEW = 'tlp_ratings_public';
 const COMMENTS_VIEW = 'tlp_comments_public';
@@ -35,16 +21,12 @@ const DEFAULT_COMMENT_PAGE_SIZE = 10;
 const MAX_COMMENT_PAGE_SIZE = 50;
 const MAX_LEADERBOARD_TARGETS = 100;
 const REQUEST_TIMEOUT_MS = 12_000;
+const COMMUNITY_WRITE_FUNCTION = 'community-write';
 
-export const remoteEnabled = Boolean(URL && KEY);
+export const remoteEnabled = configuredRemoteEnabled;
 
 function headers(extra: Record<string, string> = {}): Record<string, string> {
-  return {
-    apikey: KEY as string,
-    Authorization: `Bearer ${KEY}`,
-    'Content-Type': 'application/json',
-    ...extra,
-  };
+  return communityPublicHeaders(extra);
 }
 
 interface RatingRow {
@@ -76,6 +58,27 @@ interface AggregateRow {
   distribution: Record<string, number> | null;
   deviation: number | null;
 }
+
+type CommunityMutationBody =
+  | {
+      kind: 'rating';
+      targetType: FeedbackTargetType;
+      targetId: string;
+      scores: Record<string, number>;
+    }
+  | {
+      kind: 'comment';
+      commentId: string;
+      targetType: FeedbackTargetType;
+      targetId: string;
+      author: string;
+      text: string;
+      commentKind: CommentEntry['kind'];
+    }
+  | {
+      kind: 'helpful';
+      commentId: string;
+    };
 
 function rowToRating(row: RatingRow): RatingEntry {
   return {
@@ -154,7 +157,7 @@ async function fetchWithTimeout(input: string, init: RequestInit = {}) {
 }
 
 function buildRestUrl(view: string, params: URLSearchParams) {
-  return `${URL}/rest/v1/${view}?${params.toString()}`;
+  return `${communityUrl}/rest/v1/${view}?${params.toString()}`;
 }
 
 function parseTotal(response: Response, fallback: number) {
@@ -346,42 +349,58 @@ export async function fetchTargetCommentsPage(
   }
 }
 
-async function rpc(name: string, body: Record<string, unknown>): Promise<boolean> {
-  if (!remoteEnabled) return false;
+async function invokeCommunityMutation(
+  body: CommunityMutationBody,
+  retryAuth = true,
+  tokenOverride?: string,
+): Promise<boolean> {
+  if (!remoteEnabled || !communityUrl) return false;
+  const accessToken = tokenOverride ?? await getCommunityAccessToken();
+  if (!accessToken) return false;
+
   try {
-    const response = await fetchWithTimeout(`${URL}/rest/v1/rpc/${name}`, {
+    const response = await fetchWithTimeout(`${communityUrl}/functions/v1/${COMMUNITY_WRITE_FUNCTION}`, {
       method: 'POST',
-      headers: headers({ Prefer: 'return=minimal' }),
+      headers: headers({ Authorization: `Bearer ${accessToken}` }),
       body: JSON.stringify(body),
     });
-    return response.ok;
+    if (response.ok) return true;
+    if (response.status === 401 && retryAuth) {
+      const refreshed = await refreshCommunityAccessToken(accessToken);
+      return refreshed ? invokeCommunityMutation(body, false, refreshed) : false;
+    }
+    return false;
   } catch {
     return false;
   }
 }
 
-export async function submitRatingRemote(entry: RatingEntry, voterId: string): Promise<boolean> {
-  return rpc('tlp_submit_rating', {
-    p_id: entry.id,
-    p_target_type: entry.targetType,
-    p_target_id: entry.targetId,
-    p_voter_id: voterId,
-    p_scores: entry.scores,
+/**
+ * The second argument is retained only for the existing local v3 outbox shape.
+ * It is intentionally never serialized into a network request and is not a
+ * remote identity or anti-abuse signal.
+ */
+export async function submitRatingRemote(entry: RatingEntry, _localDeviceId: string): Promise<boolean> {
+  return invokeCommunityMutation({
+    kind: 'rating',
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    scores: entry.scores,
   });
 }
 
-export async function submitCommentRemote(entry: CommentEntry, voterId: string): Promise<boolean> {
-  return rpc('tlp_submit_comment', {
-    p_id: entry.id,
-    p_target_type: entry.targetType,
-    p_target_id: entry.targetId,
-    p_voter_id: voterId,
-    p_author: entry.author,
-    p_text: entry.text,
-    p_kind: entry.kind,
+export async function submitCommentRemote(entry: CommentEntry, _localDeviceId: string): Promise<boolean> {
+  return invokeCommunityMutation({
+    kind: 'comment',
+    commentId: entry.id,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    author: entry.author,
+    text: entry.text,
+    commentKind: entry.kind,
   });
 }
 
-export async function markHelpfulRemote(commentId: string, voterId: string): Promise<boolean> {
-  return rpc('tlp_mark_helpful', { p_comment_id: commentId, p_voter_id: voterId });
+export async function markHelpfulRemote(commentId: string, _localDeviceId: string): Promise<boolean> {
+  return invokeCommunityMutation({ kind: 'helpful', commentId });
 }
