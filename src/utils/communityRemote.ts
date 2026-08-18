@@ -193,8 +193,9 @@ async function getActorToken(forceRefresh = false): Promise<string | null> {
     safeRemove(ACTOR_KEY);
   }
   if (actorPromise) return actorPromise;
-  actorPromise = mintActorSession().finally(() => { actorPromise = null; });
-  return actorPromise;
+  const pending = mintActorSession().finally(() => { actorPromise = null; });
+  actorPromise = pending;
+  return pending;
 }
 
 async function mutation(path: string, body: Record<string, unknown>): Promise<boolean> {
