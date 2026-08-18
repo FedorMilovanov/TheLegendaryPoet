@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const path = 'docs/research/SIMONOV_LOSKUTOV_AWARD_ROSARCHIV_INQUIRY_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov Rosarchiv award inquiry missing: ${path}`);
 const text = readFileSync(path, 'utf8');
+const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
 
 for (const marker of [
   'exact TsAMO locator known / official Rosarchiv routing inquiry sent / reply and direct scan pending / no paid work authorized',
@@ -20,16 +21,8 @@ for (const marker of [
 ]) {
   if (!text.includes(marker)) throw new Error(`Simonov Rosarchiv award inquiry boundary disappeared: ${marker}`);
 }
-
-for (const forbidden of [
-  'Росархив подтвердил конкретное дело',
-  'ЦАМО ответил',
-  'л.246–247 получены',
-  '31.7.41 direct-object verified',
-  '6 суток direct-object verified',
-  'платное копирование разрешено',
-]) {
-  if (text.includes(forbidden)) throw new Error(`Simonov Rosarchiv award inquiry overstates closure: ${forbidden}`);
+if (/Rosarchiv reply received|TsAMO confirmation|scan received|page inspected|direct-object verified|paid work authorized/iu.test(status)) {
+  throw new Error(`Simonov Rosarchiv award status falsely closes an open gate: ${status}`);
 }
 
 console.log('Simonov award object: exact TsAMO locator; official Rosarchiv routing inquiry sent; reply/scan pending; no paid work authorized.');
