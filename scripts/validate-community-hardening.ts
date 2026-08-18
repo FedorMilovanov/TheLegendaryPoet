@@ -86,10 +86,35 @@ storage.setItem('tlp-community-feedback:v3', JSON.stringify({
   lastSyncedAt: null,
 }));
 
-let postRequests = 0;
-globalThis.fetch = async (_input, init) => {
-  if ((init?.method ?? 'GET') === 'POST') postRequests += 1;
-  return new Response(null, { status: 204 });
+const mutationBodies: unknown[] = [];
+let authSignups = 0;
+let functionRequests = 0;
+globalThis.fetch = async (input, init) => {
+  const url = String(input);
+  if (url.includes('/auth/v1/signup')) {
+    authSignups += 1;
+    return Response.json({
+      access_token: 'test-access-token-0000000000000001',
+      refresh_token: 'test-refresh-token-000000000000001',
+      expires_in: 3600,
+    });
+  }
+  if (url.includes('/auth/v1/token?grant_type=refresh_token')) {
+    return Response.json({
+      access_token: 'test-access-token-0000000000000002',
+      refresh_token: 'test-refresh-token-000000000000002',
+      expires_in: 3600,
+    });
+  }
+  if (url.includes('/functions/v1/community-write')) {
+    functionRequests += 1;
+    const body = typeof init?.body === 'string' ? JSON.parse(init.body) : init?.body;
+    mutationBodies.push(body);
+    const authorization = new Headers(init?.headers).get('authorization') ?? '';
+    if (!authorization.startsWith('Bearer test-access-token-')) return Response.json({ ok: false }, { status: 401 });
+    return Response.json({ ok: true });
+  }
+  return Response.json({ ok: false }, { status: 404 });
 };
 
 const failures: string[] = [];
@@ -97,14 +122,21 @@ const expect = (condition: unknown, message: string) => { if (!condition) failur
 
 const identity = await import('../src/utils/communityIdentity');
 const repairedDeviceId = identity.getCommunityDeviceId();
-expect(UUID.test(repairedDeviceId), 'invalid persisted device id must be replaced with a UUID');
-expect(storage.getItem('tlp-community-device-v1') === repairedDeviceId, 'repaired UUID must replace the invalid stored identity');
+expect(UUID.test(repairedDeviceId), 'invalid persisted device id must be repaired for legacy local v3 state');
+expect(storage.getItem('tlp-community-device-v1') === repairedDeviceId, 'repaired legacy UUID must persist until trusted Auth is established');
 
 const store = await import('../src/utils/communityStore');
 expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'malformed persisted operation must be discarded before retry');
 await store.flushCommunityOutbox();
-expect(postRequests === 1, 'valid operation behind malformed state must still be delivered exactly once');
+expect(functionRequests === 1, 'valid operation behind malformed state must be delivered exactly once');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'poison-safe outbox must reach zero');
+expect(authSignups === 1, 'first shared mutation must establish exactly one server-issued anonymous Auth session');
+expect(storage.getItem('tlp-community-auth:v1') !== null, 'anonymous Auth session must be durably persisted');
+expect(storage.getItem('tlp-community-device-v1') === null, 'trusted Auth establishment must retire the legacy local device key');
+expect(mutationBodies.every((body) => {
+  const text = JSON.stringify(body);
+  return !/voterId|voter_id|actorId|actor_id|networkKey|network_key/.test(text);
+}), 'browser mutation payload must contain no caller-selected actor or network authority');
 
 const baseCount = 10;
 const baseSum = 40;
@@ -134,8 +166,9 @@ const newCount = baseCount + (newOverlay.ratings[0]?.previousScores ? 0 : 1);
 const newSum = baseSum
   - (newOverlay.ratings[0]?.previousScores?.language ?? 0)
   + (newOverlay.ratings[0]?.entry.scores.language ?? 0);
-expect(newCount === 11 && newSum === 41, 'new pending vote must increase count exactly once and add only the latest score');
+expect(newCount === 11 && newSum === 41, 'new pending vote must increase count exactly once and add only latest score');
 await store.flushCommunityOutbox();
+expect(authSignups === 1, 'subsequent writes must reuse the persisted server Auth session');
 
 const syncedScope = 'rating:poet:alexander-pushkin';
 const syncedRatingId = 'rating-44444444-4444-4444-8444-444444444444';
@@ -161,13 +194,13 @@ expect(store.commitRatingFeedback({
 
 const syncedOverlay = store.getPendingTargetOverlay('poet', 'alexander-pushkin');
 expect(syncedOverlay.ratings.length === 1, 'synced rating edits must retain one operation');
-expect(syncedOverlay.ratings[0]?.previousScores?.language === 5, 'repeated edits must retain the original server-side score');
+expect(syncedOverlay.ratings[0]?.previousScores?.language === 5, 'repeated edits must retain original server-side score');
 expect(syncedOverlay.ratings[0]?.entry.scores.language === 1, 'latest synced edit must win');
 const syncedCount = baseCount + (syncedOverlay.ratings[0]?.previousScores ? 0 : 1);
 const syncedSum = baseSum
   - (syncedOverlay.ratings[0]?.previousScores?.language ?? 0)
   + (syncedOverlay.ratings[0]?.entry.scores.language ?? 0);
-expect(syncedCount === 10 && syncedSum === 36, 'synced edit must keep count and replace the original server score exactly once');
+expect(syncedCount === 10 && syncedSum === 36, 'synced edit must keep count and replace original server score once');
 
 const { readFileSync } = await import('node:fs');
 const quickNav = readFileSync('src/components/poet-detail/PoemQuickNav.tsx', 'utf8');
@@ -178,5 +211,5 @@ expect(/\bdeferRemote\b/.test(poemCard), 'poem cards must defer remote community
 expect(/data-community-activate-target/.test(panel), 'deferred panels need an explicit user activation boundary');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
-console.log(`Community hardening validation: ${failures.length} error(s), poison-safe queue, stable rating baselines, deferred poem reads.`);
+console.log(`Community hardening validation: ${failures.length} error(s), poison-safe queue, server-issued Auth boundary, stable rating baselines, deferred poem reads.`);
 if (failures.length) process.exit(1);
