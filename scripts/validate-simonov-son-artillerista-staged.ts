@@ -79,14 +79,19 @@ if (!existsSync(loskutovPrintWitnessPath)) throw new Error('Simonov Loskutov pri
 const loskutovPrintWitness = readFileSync(loskutovPrintWitnessPath, 'utf8');
 for (const marker of [
   '01007444220', 'От Халхингола до Берлина', '1973', 'с. 54–62',
-  'bibliographic object verified / page inspection pending',
+  'bibliographic object + full-RSL-viewer availability verified / page 54–62 inspection pending',
+  'Документ находится в открытом доступе в полном объёме',
   'письмо Ивана Лоскутова Симонову от 3 марта 1966 года в опубликованной Симоновым передаче',
+  'командир / комиссар',
   'точный календарный день боя', 'шесть суток',
 ]) {
   if (!loskutovPrintWitness.includes(marker)) throw new Error(`Simonov Loskutov print-witness boundary disappeared: ${marker}`);
 }
 if (loskutovPrintWitness.includes('архивный автограф письма Лоскутова подтверждён')) {
   throw new Error('Simonov Loskutov witness incorrectly claims archival-autograph closure');
+}
+if (loskutovPrintWitness.includes('страницы 54–62 визуально проверены в РГБ')) {
+  throw new Error('Simonov Loskutov witness incorrectly claims page-level RSL closure');
 }
 
 const witnessReconciliationPath = 'docs/research/SIMONOV_SON_ARTILLERISTA_WITNESS_RECONCILIATION_2026-08.md';
@@ -278,5 +283,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; early-editions=1941+1942-multiple/object-collation-pending; image-rights=research-only; Loskutov-photo=high-value/rights-pending; text-rights=full-text-blocked; RGALI-Loskutov=search-open; award-document=secondary-transcription/direct-object-pending; identity=2-Nov-probable/direct-card-pending; hero=${coverStatus}; publication-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=RSL-full-viewer-available/page-54-62-pending/commander-commissar-gated; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; early-editions=1941+1942-multiple/object-collation-pending; image-rights=research-only; Loskutov-photo=high-value/rights-pending; text-rights=full-text-blocked; RGALI-Loskutov=search-open; award-document=secondary-transcription/direct-object-pending; identity=2-Nov-probable/direct-card-pending; hero=${coverStatus}; publication-object gate remains open.`,
 );
