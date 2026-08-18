@@ -9,6 +9,9 @@ function requireMarkers(label: string, text: string, markers: string[]): void {
     if (!text.includes(marker)) throw new Error(`${label} boundary disappeared: ${marker}`);
   }
 }
+function declaredStatus(text: string): string {
+  return text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+}
 
 const arkhangelsk = requireFile('docs/research/SIMONOV_SON_ARTILLERISTA_ARKHANGELSK_RECEPTION_2026-08.md', 'Arkhangelsk reception gate');
 requireMarkers('Arkhangelsk reception', arkhangelsk, [
@@ -17,7 +20,9 @@ requireMarkers('Arkhangelsk reception', arkhangelsk, [
   'не используется как publication fact',
   'institutional report / independent primary or theatre-object corroboration pending',
 ]);
-if (arkhangelsk.includes('первое публичное исполнение безусловно состоялось 4 декабря')) throw new Error('Arkhangelsk first-performance claim overstated');
+if (/first performance.*verified|первое публичное исполнение.*verified/iu.test(declaredStatus(arkhangelsk))) {
+  throw new Error('Arkhangelsk first-performance status overstated');
+}
 
 const award = requireFile('docs/research/SIMONOV_LOSKUTOV_AWARD_OBJECT_LOCATOR_2026-08.md', 'Loskutov award locator');
 requireMarkers('Loskutov award locator', award, [
@@ -25,7 +30,9 @@ requireMarkers('Loskutov award locator', award, [
   '10800112', 'ЦАМО, ф. 33, оп. 682524, д. 34, л. 246–247',
   '50998202', '50678280', '31.7.41', '6 суток', '500–600 метров',
 ]);
-if (award.includes('scan verified')) throw new Error('Award locator falsely upgraded to scan');
+if (/scan(?:-text)?\s+(?:directly\s+)?verified/iu.test(declaredStatus(award))) {
+  throw new Error('Award locator falsely upgraded to scan in declared status');
+}
 
 const pravda1966 = requireFile('docs/research/SIMONOV_LOSKUTOV_1966_PRESS_WITNESS_2026-08.md', '1966 Pravda witness');
 requireMarkers('1966 Pravda witness', pravda1966, [
@@ -41,7 +48,9 @@ requireMarkers('Sakhalin archive gate', sakhalin, [
   'Иван Елисеевич Солодовников', '1969 года', 'Музейно-мемориальный комплекс `Победа`',
   'Mmk-info@sakhalin.gov.ru', 'не item-level музейная опись',
 ]);
-if (sakhalin.includes('личная встреча Лоскутова со школьниками подтверждена')) throw new Error('Sakhalin gate invented a meeting');
+if (/meeting.*verified|личн(?:ая|ую) встреч(?:а|у).*подтвержден/iu.test(declaredStatus(sakhalin))) {
+  throw new Error('Sakhalin gate declared an unverified personal meeting');
+}
 
 const vladivostok = requireFile('docs/research/SIMONOV_LOSKUTOV_VLADIVOSTOK_SCHOOL_ARCHIVE_GATE_2026-08.md', 'Vladivostok school gate');
 requireMarkers('Vladivostok school gate', vladivostok, [
@@ -67,8 +76,11 @@ requireMarkers('Red Star SHPL gate', shpl, [
   '№288 (5043)', 'page 3 strongly corroborated / direct scan still pending',
   'Военно-исторический журнал', 'Издание Министерства обороны России',
   '7 декабря. С. 3', '**открыть page 3 первым**',
+  'Пока нельзя:', '`Мы просмотрели оригинальную полосу`',
 ]);
-if (shpl.includes('Мы просмотрели оригинальную полосу')) throw new Error('SHPL gate falsely claims direct page inspection');
+if (/direct scan verified|direct page verified/iu.test(declaredStatus(shpl))) {
+  throw new Error('SHPL gate falsely declares direct page inspection');
+}
 
 const page3 = requireFile('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Red Star page-3 scholarly gate');
 requireMarkers('Red Star page-3 scholarly gate', page3, [
@@ -76,6 +88,9 @@ requireMarkers('Red Star page-3 scholarly gate', page3, [
   'КОЛОБОВ Евгений Юрьевич', 'примечании **39**', '7 декабря. С. 3',
   'direct visual newspaper scan №288, p.3',
 ]);
+if (/direct scan verified|direct page verified/iu.test(declaredStatus(page3))) {
+  throw new Error('Page-3 scholarly gate falsely declares direct scan closure');
+}
 
 const addendum2 = requireFile('docs/research/SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2026-08.md', 'second-pass source addendum');
 requireMarkers('second-pass source addendum', addendum2, [
