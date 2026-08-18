@@ -1,7 +1,6 @@
 export {};
 
-process.env.VITE_SUPABASE_URL = 'https://community.test.invalid';
-process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.VITE_COMMUNITY_API_URL = 'https://community.test.invalid';
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -16,11 +15,18 @@ class MemoryStorage implements Storage {
 const storage = new MemoryStorage();
 const testWindow = {
   localStorage: storage,
+  location: { hostname: '127.0.0.1' },
   addEventListener() {},
   removeEventListener() {},
 };
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } });
+Object.assign(globalThis, {
+  __TLP_COMMUNITY_TEST_CONFIG__: {
+    url: 'https://community.test.invalid',
+    humanProof: 'turnstile-test-proof',
+  },
+});
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const voterId = '11111111-1111-4111-8111-111111111111';
@@ -86,10 +92,26 @@ storage.setItem('tlp-community-feedback:v3', JSON.stringify({
   lastSyncedAt: null,
 }));
 
-let postRequests = 0;
-globalThis.fetch = async (_input, init) => {
-  if ((init?.method ?? 'GET') === 'POST') postRequests += 1;
-  return new Response(null, { status: 204 });
+const requests: Array<{ path: string; body: unknown; authorization: string | null }> = [];
+globalThis.fetch = async (input, init) => {
+  const url = new URL(String(input));
+  if ((init?.method ?? 'GET') === 'POST') {
+    let body: unknown = null;
+    try { body = JSON.parse(String(init?.body ?? '{}')); } catch { body = init?.body; }
+    requests.push({
+      path: url.pathname,
+      body,
+      authorization: new Headers(init?.headers).get('Authorization'),
+    });
+  }
+  if (url.pathname === '/v1/session') {
+    return Response.json({
+      actorToken: 'v1.test-signed-actor-token-that-is-long-enough.signature',
+      expiresAt: Date.now() + 30 * 24 * 60 * 60_000,
+    });
+  }
+  if (url.pathname.startsWith('/v1/')) return Response.json({ ok: true });
+  return new Response(null, { status: 404 });
 };
 
 const failures: string[] = [];
@@ -103,12 +125,16 @@ expect(storage.getItem('tlp-community-device-v1') === repairedDeviceId, 'repaire
 const store = await import('../src/utils/communityStore');
 expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'malformed persisted operation must be discarded before retry');
 await store.flushCommunityOutbox();
-expect(postRequests === 1, 'valid operation behind malformed state must still be delivered exactly once');
+expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'first shared write must mint one server actor session');
+expect(requests.filter((entry) => entry.path === '/v1/comment').length === 1, 'valid operation behind malformed state must be delivered exactly once');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'poison-safe outbox must reach zero');
+const deliveredComment = requests.find((entry) => entry.path === '/v1/comment');
+expect(Boolean(deliveredComment?.authorization?.startsWith('Bearer v1.')), 'mutation must carry the server-signed actor token');
+expect(!JSON.stringify(deliveredComment?.body).includes(voterId), 'local device UUID must never be transmitted as server authority');
+expect(!/voter|actorId|network/i.test(JSON.stringify(deliveredComment?.body)), 'mutation body must not contain caller-selected authority fields');
 
 const baseCount = 10;
 const baseSum = 40;
-
 const newScope = 'rating:poet:anna-akhmatova';
 const newRatingId = 'rating-33333333-3333-4333-8333-333333333333';
 expect(store.commitRatingFeedback({
@@ -125,17 +151,17 @@ expect(store.commitRatingFeedback({
   scores: { language: 1 },
   createdAt: new Date(Date.now() + 2).toISOString(),
 }, newScope, voterId), 'editing one unsent rating must replace its pending operation');
-
 const newOverlay = store.getPendingTargetOverlay('poet', 'anna-akhmatova');
 expect(newOverlay.ratings.length === 1, 'repeated unsent edits must retain one pending vote');
 expect(newOverlay.ratings[0]?.previousScores === undefined, 'new unsent vote must preserve an undefined server baseline');
 expect(newOverlay.ratings[0]?.entry.scores.language === 1, 'latest unsent score must win');
 const newCount = baseCount + (newOverlay.ratings[0]?.previousScores ? 0 : 1);
-const newSum = baseSum
-  - (newOverlay.ratings[0]?.previousScores?.language ?? 0)
-  + (newOverlay.ratings[0]?.entry.scores.language ?? 0);
+const newSum = baseSum - (newOverlay.ratings[0]?.previousScores?.language ?? 0) + (newOverlay.ratings[0]?.entry.scores.language ?? 0);
 expect(newCount === 11 && newSum === 41, 'new pending vote must increase count exactly once and add only the latest score');
 await store.flushCommunityOutbox();
+expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'valid actor session must be reused instead of minting per mutation');
+const deliveredRating = requests.find((entry) => entry.path === '/v1/rating');
+expect(!JSON.stringify(deliveredRating?.body).includes(newRatingId), 'server rating identity must not be client-selected');
 
 const syncedScope = 'rating:poet:alexander-pushkin';
 const syncedRatingId = 'rating-44444444-4444-4444-8444-444444444444';
@@ -158,15 +184,12 @@ expect(store.commitRatingFeedback({
   scores: { language: 1 },
   createdAt: new Date(Date.now() + 4).toISOString(),
 }, syncedScope, voterId), 'repeated pending edit of synced rating must be accepted');
-
 const syncedOverlay = store.getPendingTargetOverlay('poet', 'alexander-pushkin');
 expect(syncedOverlay.ratings.length === 1, 'synced rating edits must retain one operation');
 expect(syncedOverlay.ratings[0]?.previousScores?.language === 5, 'repeated edits must retain the original server-side score');
 expect(syncedOverlay.ratings[0]?.entry.scores.language === 1, 'latest synced edit must win');
 const syncedCount = baseCount + (syncedOverlay.ratings[0]?.previousScores ? 0 : 1);
-const syncedSum = baseSum
-  - (syncedOverlay.ratings[0]?.previousScores?.language ?? 0)
-  + (syncedOverlay.ratings[0]?.entry.scores.language ?? 0);
+const syncedSum = baseSum - (syncedOverlay.ratings[0]?.previousScores?.language ?? 0) + (syncedOverlay.ratings[0]?.entry.scores.language ?? 0);
 expect(syncedCount === 10 && syncedSum === 36, 'synced edit must keep count and replace the original server score exactly once');
 
 const { readFileSync } = await import('node:fs');
@@ -178,5 +201,5 @@ expect(/\bdeferRemote\b/.test(poemCard), 'poem cards must defer remote community
 expect(/data-community-activate-target/.test(panel), 'deferred panels need an explicit user activation boundary');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
-console.log(`Community hardening validation: ${failures.length} error(s), poison-safe queue, stable rating baselines, deferred poem reads.`);
+console.log(`Community hardening validation: ${failures.length} error(s), signed actor session, poison-safe queue, stable rating baselines, deferred poem reads.`);
 if (failures.length) process.exit(1);
