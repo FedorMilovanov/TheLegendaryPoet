@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
@@ -12,6 +12,8 @@ const schema = read('workers/community-api/schema.sql');
 const generator = read('scripts/gen-community-targets.ts');
 const deploy = read('.github/workflows/deploy.yml');
 const setup = read('docs/COMMENTS_SETUP.md');
+const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
+const browserTopology = read('qa/community-request-topology.cases.mjs');
 
 expect(config.includes('VITE_COMMUNITY_API_URL'), 'browser config must use the Cloudflare community API URL');
 expect(config.includes('VITE_TURNSTILE_SITE_KEY'), 'browser config must expose only the public Turnstile site key');
@@ -20,6 +22,7 @@ expect(!/\/rest\/v1\/rpc\/|p_voter_id|apikey:/i.test(remote), 'browser mutation 
 expect(remote.includes("mutation('/v1/rating'") && remote.includes("mutation('/v1/comment'") && remote.includes("mutation('/v1/helpful'"), 'all writes must cross the Worker mutation boundary');
 expect(remote.includes("apiUrl('/v1/session')") && remote.includes('requestCommunityHumanProof'), 'shared writes must acquire a Turnstile-backed server actor session');
 expect(remote.includes("const ACTOR_KEY = 'tlp-community-actor:v1'"), 'signed actor session must have a dedicated browser envelope');
+expect(!remote.includes('_localDeviceId: string): Promise<boolean>') || !/body:\s*JSON\.stringify\([^)]*_localDeviceId/.test(remote), 'local device bookkeeping must never become remote write authority');
 
 expect(humanCheck.includes('challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'), 'Turnstile must use Cloudflare explicit rendering');
 expect(humanCheck.includes("execution: 'execute'") && humanCheck.includes("appearance: 'interaction-only'"), 'Turnstile must defer verification until a shared write needs a session');
@@ -29,6 +32,7 @@ expect(humanCheck.includes('LOOPBACK') === false, 'human-check runtime must not 
 expect(worker.includes("request.headers.get('CF-Connecting-IP')"), 'Worker must derive network authority from Cloudflare connection metadata');
 expect(worker.includes("crypto.subtle.sign('HMAC'") && worker.includes("crypto.subtle.verify("), 'network and actor authority must be cryptographically server-derived');
 expect(worker.includes('COMMUNITY_SESSION_SECRET') && worker.includes('COMMUNITY_NETWORK_SECRET'), 'Worker must separate session and network secrets');
+expect(worker.includes("secret === env.COMMUNITY_NETWORK_SECRET"), 'Worker must reject reusing the same secret for actor sessions and network hashing');
 expect(worker.includes('TURNSTILE_SECRET') && worker.includes('TURNSTILE_HOSTNAMES'), 'Worker must keep Turnstile verification server-side');
 expect(worker.includes('https://challenges.cloudflare.com/turnstile/v0/siteverify'), 'Worker must call canonical Turnstile Siteverify');
 expect(worker.includes("result.action !== 'community_session'") && worker.includes('!hosts.has(result.hostname)'), 'Worker must validate Turnstile action and hostname, not just success');
@@ -43,7 +47,7 @@ expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not 
 expect(schema.includes('PRIMARY KEY (target_type, target_id, actor_id)'), 'D1 schema must enforce one active rating per actor/target');
 expect(schema.includes('PRIMARY KEY (comment_id, actor_id)'), 'D1 schema must enforce one helpful vote per actor/comment');
 expect(schema.includes('PRIMARY KEY (network_key, action, scope, window_start)'), 'D1 schema must enforce one atomic abuse bucket row');
-expect(!/\bip\b|ip_address|raw_ip/i.test(schema), 'D1 schema must not persist raw IP fields');
+expect(!/\b(?:raw_ip|ip_address|client_ip|remote_ip)\b/i.test(schema), 'D1 schema must not define a raw-IP column');
 expect(schema.includes('CHECK (length(network_key) = 64)'), 'D1 must store only fixed-length HMAC network keys');
 
 expect(generator.includes('getAllEssays') && generator.includes('musicTracks') && generator.includes('poets'), 'community target manifest must derive from canonical Product catalogs');
@@ -51,7 +55,16 @@ expect(generator.includes("writeFileSync('public/community-targets.json'"), 'sit
 expect(deploy.includes('VITE_COMMUNITY_API_URL') && deploy.includes('VITE_TURNSTILE_SITE_KEY'), 'Pages deploy must inject only the public Worker URL and Turnstile site key');
 expect(!deploy.includes('VITE_SUPABASE_URL') && !deploy.includes('VITE_SUPABASE_ANON_KEY'), 'Pages deploy must not retain obsolete Supabase runtime variables');
 expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
+expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
+
+expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser QA must use only the loopback test proof boundary');
+expect(browserTopology.includes("url.pathname === '/v1/session'"), 'browser QA must exercise actor-session issuance');
+expect(browserTopology.includes("url.pathname === '/v1/helpful'"), 'browser QA must exercise Worker mutations rather than legacy RPCs');
+expect(!/tlp_feedback_summary_public|\/rpc\/tlp_|test-anon-key/.test(browserTopology), 'browser QA must not preserve the old Supabase topology');
+
+expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres schema must be removed, not left as a second backend authority');
+expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, target authority and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, target authority, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
