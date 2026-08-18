@@ -36,7 +36,7 @@ const PROOF_TIMEOUT_MS = 45_000;
 let scriptPromise: Promise<TurnstileApi | null> | null = null;
 let proofPromise: Promise<string | null> | null = null;
 
-function getTurnstile() {
+function getTurnstile(): TurnstileApi | null {
   return typeof window !== 'undefined' ? window.turnstile ?? null : null;
 }
 
@@ -46,7 +46,7 @@ function loadTurnstile(): Promise<TurnstileApi | null> {
   if (scriptPromise) return scriptPromise;
   if (typeof document === 'undefined') return Promise.resolve(null);
 
-  scriptPromise = new Promise((resolve) => {
+  const pending = new Promise<TurnstileApi | null>((resolve) => {
     const finish = () => resolve(getTurnstile());
     const existingScript = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
     if (existingScript) {
@@ -64,11 +64,13 @@ function loadTurnstile(): Promise<TurnstileApi | null> {
     script.onload = finish;
     script.onerror = () => resolve(null);
     document.head.appendChild(script);
-  }).finally(() => {
-    if (!getTurnstile()) scriptPromise = null;
+  }).then((value) => {
+    if (!value) scriptPromise = null;
+    return value;
   });
 
-  return scriptPromise;
+  scriptPromise = pending;
+  return pending;
 }
 
 async function obtainProof() {
@@ -91,21 +93,17 @@ async function obtainProof() {
 
     let widgetId = '';
     let settled = false;
-    const timer = window.setTimeout(() => finish(null), PROOF_TIMEOUT_MS);
-
-    const cleanup = () => {
+    const finish = (token: string | null) => {
+      if (settled) return;
+      settled = true;
       window.clearTimeout(timer);
       if (widgetId) {
         try { turnstile.remove(widgetId); } catch { /* widget already gone */ }
       }
       container.remove();
-    };
-    const finish = (token: string | null) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
       resolve(token && token.length <= 2048 ? token : null);
     };
+    const timer = window.setTimeout(() => finish(null), PROOF_TIMEOUT_MS);
 
     try {
       widgetId = turnstile.render(container, {
@@ -130,8 +128,9 @@ async function obtainProof() {
 
 export function requestCommunityHumanProof(): Promise<string | null> {
   if (proofPromise) return proofPromise;
-  proofPromise = obtainProof().finally(() => {
+  const pending = obtainProof().finally(() => {
     proofPromise = null;
   });
-  return proofPromise;
+  proofPromise = pending;
+  return pending;
 }
