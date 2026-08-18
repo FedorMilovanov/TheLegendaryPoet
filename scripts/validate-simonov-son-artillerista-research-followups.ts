@@ -98,6 +98,30 @@ if (vladivostokSchool.includes('встреча Лоскутова со школ�
   throw new Error('Vladivostok school gate falsely upgrades fund existence to event verification');
 }
 
+const authorCollationPath = 'docs/research/SIMONOV_AUTHOR_WITNESS_COLLATION_2026-08.md';
+const authorCollation = requireFile(authorCollationPath, 'Simonov author witness collation');
+requireMarkers('Simonov author witness collation', authorCollation, [
+  'author-witness strengthened / two textual conflicts explicitly gated',
+  '28 ноября 1941 года',
+  '5 декабря утром',
+  'Давидом Ортенбергом',
+  'сразу была принята в номер',
+  'вымышленное имя Лёнька',
+  'вымышленные фамилии Деева и Петрова',
+  'командир полка',
+  'комиссар полка',
+  '`Иваном Михайловичем`',
+  '**Иван Алексеевич Лоскутов**',
+  '**Алексеем Лоскутовым**',
+  'Основной article draft правильно **не называет имя отца**',
+]);
+if (authorCollation.includes('Иван Михайлович — бесспорно отец Ивана Алексеевича Лоскутова')) {
+  throw new Error('Author witness collation falsely closes the father-name conflict');
+}
+if (authorCollation.includes('thefireofthewar.ru доказанно ошибочно заменил командира на комиссара')) {
+  throw new Error('Author witness collation overstates commander/commissar variant before print collation');
+}
+
 const shplPath = 'docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md';
 const shpl = requireFile(shplPath, 'Simonov Red Star SHPL scan gate');
 requireMarkers('Simonov Red Star SHPL', shpl, [
@@ -137,5 +161,5 @@ requireMarkers('Simonov source addendum', addendum, [
 ]);
 
 console.log(
-  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; Vladivostok school fund R-1510 pinned with opis/item inspection pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; second-pass source hierarchy pinned.',
+  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; Vladivostok school fund R-1510 pinned with opis/item inspection pending; author diary chronology and commander/commissar + father-name conflicts pinned; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; second-pass source hierarchy pinned.',
 );
