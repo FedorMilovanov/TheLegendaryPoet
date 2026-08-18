@@ -176,6 +176,55 @@ if (earlyEditions.includes('Президентская библиотека ош
   throw new Error('Simonov early-edition ledger falsely resolves the 1941/1942 object distinction');
 }
 
+const photoProvenancePath = 'docs/research/SIMONOV_LOSKUTOV_PHOTO_PROVENANCE_2026-08.md';
+if (!existsSync(photoProvenancePath)) throw new Error('Simonov Loskutov photo-provenance gate is missing');
+const photoProvenance = readFileSync(photoProvenancePath, 'utf8');
+for (const marker of [
+  'high-value photo candidates found / reproduction rights pending',
+  'Фото из семейного архива Светланы Филипповой',
+  'Музея истории Дальнего Востока имени В. К. Арсеньева',
+  'office@arseniev.org',
+  'reference/research only',
+  'не копирование изображения из СМИ',
+]) {
+  if (!photoProvenance.includes(marker)) throw new Error(`Simonov photo-provenance boundary disappeared: ${marker}`);
+}
+
+const awardGatePath = 'docs/research/SIMONOV_LOSKUTOV_AWARD_DOCUMENT_GATE_2026-08.md';
+if (!existsSync(awardGatePath)) throw new Error('Simonov Loskutov award-document gate is missing');
+const awardGate = readFileSync(awardGatePath, 'utf8');
+for (const marker of [
+  'secondary transcription of claimed A+ military object / direct object pending',
+  '**31.7.41 г.**',
+  '**около двух километров**',
+  '**6 суток**',
+  '**500–600 метров**',
+  'Память народа',
+  'SEARCH LEAD ONLY — не публиковать как установленный факт',
+  'не менять основной исторический текст на `31 июля / 6 суток`',
+]) {
+  if (!awardGate.includes(marker)) throw new Error(`Simonov award-document boundary disappeared: ${marker}`);
+}
+if (awardGate.includes('direct object verified')) {
+  throw new Error('Simonov award-document gate falsely claims direct-object closure');
+}
+
+const identityGatePath = 'docs/research/SIMONOV_LOSKUTOV_IDENTITY_GATE_2026-08.md';
+if (!existsSync(identityGatePath)) throw new Error('Simonov Loskutov identity gate is missing');
+const identityGate = readFileSync(identityGatePath, 'utf8');
+for (const marker of [
+  'identity strongly narrowed / direct service-card object still pending',
+  '2 ноября 1918 года', '2 января 1918 года',
+  'семейный источник', 'Центрального военно-морского архива',
+  '8 ноября 1994 года', '6 ноября 1994 года',
+  '2 ноября 1918 года — наиболее вероятная дата',
+]) {
+  if (!identityGate.includes(marker)) throw new Error(`Simonov identity boundary disappeared: ${marker}`);
+}
+if (identityGate.includes('служебная карточка непосредственно просмотрена')) {
+  throw new Error('Simonov identity gate falsely claims direct service-card inspection');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -229,5 +278,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; early-editions=1941+1942-multiple/object-collation-pending; image-rights=research-only; text-rights=full-text-blocked; RGALI-Loskutov=search-open; hero=${coverStatus}; publication-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; witness-reconciliation=verified; newspaper-issue=KZ-288(5043)-strongly-corroborated/page-pending; early-editions=1941+1942-multiple/object-collation-pending; image-rights=research-only; Loskutov-photo=high-value/rights-pending; text-rights=full-text-blocked; RGALI-Loskutov=search-open; award-document=secondary-transcription/direct-object-pending; identity=2-Nov-probable/direct-card-pending; hero=${coverStatus}; publication-object gate remains open.`,
 );
