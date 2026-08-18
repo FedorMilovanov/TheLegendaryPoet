@@ -1,147 +1,91 @@
-# Community feedback storage and sync
+# Community feedback storage, sync, and authority
 
-This document defines the reliability, privacy, and scale boundary for reader ratings, comments, and helpful votes.
+This document defines the reliability, privacy, and trust boundaries for reader ratings, comments, and helpful votes.
 
 ## Goals
 
-The community subsystem must remain usable when:
+The community subsystem must remain usable when the shared backend is not configured, the visitor is temporarily offline, a remote request fails, browser storage is unavailable, older local state is malformed, the catalog grows, or several tabs are open at once.
 
-- the shared backend is not configured;
-- the visitor is temporarily offline;
-- a remote request times out or returns an error;
-- browser storage is unavailable or reaches its quota;
-- an older local format contains malformed or duplicate records;
-- the archive grows to many poets, poems, tracks, articles, ratings, and comments;
-- several tabs are open at the same time.
+The interface must never claim that an action reached the shared database when the corresponding durable write has not been acknowledged.
 
-The interface must never claim that an action was saved or synchronized when the corresponding durable write failed.
+## Browser envelope
 
-## Storage envelope
+The canonical browser envelope is `tlp-community-feedback:v3`. It stores only device-owned state needed for optimistic UI and reliable retry:
 
-The canonical browser key is `tlp-community-feedback:v2`.
+- a bounded local snapshot of the visitor's own/pending ratings and comments;
+- a persistent outbox of operations not yet acknowledged by the shared backend;
+- local cooldown timestamps;
+- local helpful-state markers;
+- the visitor's own rating records used to edit an existing rating in the UI;
+- update and successful-sync timestamps.
 
-The envelope contains:
+All reads pass through validation. Unknown target types, malformed IDs, invalid scores, broken timestamps and oversized fields are discarded before entering runtime state.
 
-- a validated local snapshot of public ratings and comments;
-- a persistent outbox of operations that have not reached the shared backend;
-- cooldown timestamps;
-- device-local helpful-vote records;
-- device-local own-rating records;
-- local update and successful-sync timestamps.
+The old `tlp-community-device-v1` UUID exists only inside the legacy v3 outbox shape. It is **not authentication or person identity and не передаётся на сервер hardened transport**. After a durable Supabase Auth session is established the legacy key is removed. A future storage-format migration may remove the unused field from persisted outbox records without changing the remote security model.
 
-All reads pass through validation. Unknown target types, malformed IDs, invalid scores, unsupported comment kinds, broken timestamps, oversized fields, and structurally invalid records are discarded rather than entering the runtime.
+## Shared-mode identity
 
-## Migration
+When shared mode is enabled, a mutation first obtains a **server-issued** anonymous Supabase Auth session. No email, password, profile or mandatory registration is required. The browser persists the access/refresh session so normal reloads and tabs reuse the same server actor rather than minting an identity for every action.
 
-The v2 reader migrates these earlier keys:
-
-- `tlp-community-feedback-v1`;
-- `tlp-community-cooldowns-v1`;
-- `tlp-community-helpful-v1`;
-- `tlp-community-rated-v1`.
-
-Legacy keys are removed only after the validated v2 envelope is written successfully. A quota or private-mode failure therefore cannot destroy the only surviving copy of the visitor's state.
+The browser cannot choose the actor used by Postgres. The Edge Function verifies the Auth bearer token and derives the actor UUID from the verified server response. Caller-provided `voter_id`, `actor_id`, network hash and similar authority fields are not accepted in the mutation body.
 
 ## Local and shared modes
 
-When Supabase configuration is absent, community feedback runs in local mode. The interface explicitly says that the data belongs to the current browser.
+Without backend configuration, feedback stays local to the current browser and the UI must say so.
 
-When the backend is configured, the visible state distinguishes:
+With backend configuration, public reads use the safe aggregate/comment views while writes use the trusted `community-write` Edge Function. `remoteEnabled` means configuration exists; it does not prove the last network request succeeded. User-facing state is therefore driven by `CommunitySyncState`, not by the configuration flag alone.
 
-- waiting for the first synchronization;
-- synchronizing;
-- online and synchronized;
-- online with queued writes;
-- offline with a cached snapshot;
-- offline with queued writes.
+## Atomic local actions and outbox
 
-`remoteEnabled` means that a shared backend is configured. It does not by itself prove that the latest request succeeded, so user-facing text must be driven by `CommunitySyncState`, not by the configuration flag alone.
+A rating, comment or helpful action is accepted locally only when the complete browser envelope can be persisted. Successful local acceptance updates the optimistic state, local ownership marker/cooldown and (in shared mode) the outbox atomically. If browser storage rejects the write, the in-memory interface does not pretend the action succeeded.
 
-## Atomic user actions
+Pending operations are delivered in order. A failed operation remains queued and stops the current flush, preventing a hot retry loop. Retry occurs on creation, successful remote hydration and return to online state. Stable operation IDs keep comment/helpful retries idempotent; ratings are upserted by the verified server actor and canonical target.
 
-A rating, comment, or helpful vote is accepted only when the complete local envelope can be persisted.
+## Trusted remote write boundary
 
-A successful action updates together:
+The remote write path is:
 
-- the visible optimistic snapshot;
-- own-rating or helpful-vote metadata where applicable;
-- the cooldown;
-- the remote outbox operation when shared mode is enabled.
+`browser → Supabase Auth → community-write Edge Function → service-only RPC → Postgres`.
 
-If browser storage rejects the write, none of those changes are committed to the in-memory interface. The user receives a failure message instead of a false success state.
+The Edge Function independently enforces:
 
-## Persistent outbox
+- verified Auth actor identity;
+- canonical target membership from the deployed Product manifest `/community-targets.json`;
+- exact target-specific rating dimension keys and integer range 1–5;
+- comment kind, author and text bounds;
+- published-comment existence for helpful votes;
+- request size and origin policy;
+- a keyed network abuse budget derived from the trusted gateway client-IP header.
 
-Remote writes are not fire-and-forget. Each pending operation contains a stable operation ID, device ID, validated payload, creation timestamp, and attempt count.
+The raw IP is not written to the community tables. The function converts the gateway value to an HMAC-SHA256 network key with `COMMUNITY_ABUSE_SECRET`, and Postgres applies atomic rate budgets to that keyed value. Clearing localStorage or creating another anonymous Auth actor therefore does not create an unlimited write path.
 
-Operations are delivered in order. A failed operation remains in the outbox and stops the current flush, preserving ordering and avoiding a rapid retry loop. The outbox is retried when:
+The canonical target manifest is generated from the same Product sources that render public poet, poem, published-track and article pages. Unknown or stale target IDs fail closed instead of becoming arbitrary database namespaces.
 
-- the action is created;
-- remote hydration succeeds;
-- the browser returns online.
+## Database permissions
 
-Successful delivery removes only the matching operation. Repeating an operation is safe because ratings and comments use stable IDs and the backend RPC layer is expected to be idempotent for those IDs and device identities.
+Public clients may select only the public views. Base tables and abuse buckets are not writable by `anon` or `authenticated`.
 
-## Remote hydration and conflict handling
+Legacy browser-authoritative mutation RPCs are removed. Hardened mutation functions and the atomic budget helper are executable only by `service_role`, which is available to the Edge Function and never shipped to the browser.
 
-Remote ratings and comments are authoritative for already synchronized data. Before replacing the local cache, the client preserves unsent local work:
+A rating has one active row per verified Auth actor and target; an update replaces that actor's previous score rather than adding another rating. Helpful votes are unique per verified actor and comment.
 
-- pending ratings override a remote row with the same stable ID;
-- pending comments remain visible even when the server has not received them;
-- an optimistic helpful count is retained until its queued vote is delivered.
+## Remote reads and scale
 
-Malformed remote rows are rejected by the same validation boundary used for local data.
+Remote data is target-scoped. The target store loads an aggregate row and bounded cursor-paginated comments for the active target. The ratings hub loads aggregate poet rows only. Public raw-rating downloads are not part of the normal reader path.
 
-Remote lists are fetched in explicit pages of 1000 rows, up to the current safety ceiling of 20,000 rows per view. Requests have a 12-second timeout. Reaching that ceiling is an operational signal that the backend should expose target-scoped or cursor-based endpoints rather than silently loading an unbounded global table.
+A page may contain many community panels, so components subscribe through `communityTargetStore`. Stable snapshots are retained only while needed, unrelated targets are not notified, and target records are released after their last subscriber unmounts.
 
-## Target-scoped rendering
+## Cross-tab and failure behavior
 
-A page may contain many `CommunityPanel` instances, especially when one poet has many poems. Components therefore subscribe through `communityTargetStore` rather than directly to the full global snapshot.
+Browser storage events keep persisted community state observable across tabs. Offline writes stay in the outbox. A failed remote read must not be rendered as authoritative zero/empty data; read-state semantics are owned separately by the current community read-state repair root.
 
-The target store:
-
-- keeps stable snapshots for unchanged targets;
-- recomputes only targets that currently have subscribers;
-- notifies only the poet, poem, track, or article whose ratings or comments changed;
-- releases the global subscription and cached target records after the last consumer unmounts.
-
-This prevents one helpful vote or comment from rerendering every community panel on a long page.
-
-## Comments and ratings at scale
-
-Comment lists render five entries at a time and support:
-
-- stable newest/helpful ordering;
-- filtering by comment kind;
-- progressive “show more” rendering;
-- a visible result count;
-- explicit already-marked helpful state.
-
-Rating controls implement radio-group keyboard behavior with arrow keys, Home, and End. The form reports how many required dimensions are complete and submits only the known dimension keys.
-
-The ratings hub supports search and stable sorting. Search, tag, sort, and rated-only state are encoded in the URL so a filtered view can be shared or restored.
+The current v3 envelope still serializes a legacy local outbox UUID for migration compatibility, but remote transport ignores it completely. This compatibility field has no security meaning and cannot alter Auth actor, canonical target checks or network budgets.
 
 ## Privacy boundary
 
-The browser stores a generated device identifier used to make rating updates and helpful votes device-specific. It is not an account, authentication proof, legal identity, or reliable person-level deduplication mechanism.
+The anonymous Auth actor is a pseudonymous backend identifier, not a verified human identity. The HMAC network key is an abuse-control pseudonym and is not exposed in public views. Public views omit actor IDs and network keys.
 
-The client must not describe local browser state as a verified human identity. Stronger abuse prevention, moderation, account recovery, cross-device ownership, deletion requests, and legal retention controls belong to the backend and administrative workflow.
-
-## Backend invariants
-
-The shared backend is expected to enforce independently:
-
-- accepted target types and target IDs;
-- score keys and the integer range 1–5;
-- comment length and allowed comment kinds;
-- one mutable rating per device and target;
-- one helpful vote per device and comment;
-- stable-ID idempotency for retried operations;
-- rate limits and abuse controls;
-- moderation and removal rules;
-- safe public views that never expose voter or device identifiers.
-
-Client checks improve usability and resilience but are not a security boundary.
+Stronger account recovery, cross-device ownership, formal deletion workflows, moderation/reporting tools and optional CAPTCHA challenges are separate product/operations capabilities. None may weaken the rule that client-side fields are not a server authority.
 
 ## Required validation
 
@@ -150,10 +94,10 @@ Run:
 ```bash
 npm run validate:community-store
 npm run validate:community-target-store
+npm run validate:community-scaling
+npm run validate:community-authority
 npm run typecheck
 npm run build
 ```
 
-The community store validator covers migration, malformed data, remote hydration, outbox retention and retry, pending-write conflict handling, duplicate helpful votes, quota failures, cross-tab events, and corrupt-state recovery.
-
-The target-store validator verifies stable snapshot identity and proves that a mutation for one target does not notify unrelated community panels.
+`validate:community-authority` additionally proves that the release-derived target manifest matches canonical Product data, browser mutation payloads contain no actor/network authority, the Edge Function verifies Auth and derives the network key server-side, legacy public RPCs are removed, and hardened RPCs are service-role-only.
