@@ -1,54 +1,12 @@
--- The Legendary Poet: shared ratings and comments (Supabase/Postgres)
--- Hardened authority model: public reads only; writes are service-only behind
--- the community-write Edge Function, which supplies verified Auth actor IDs,
--- a keyed network-abuse hash, and canonical target membership.
--- Safe to run repeatedly. Existing legacy rows remain readable.
+-- PREPARE PHASE for TLP community write authority.
+-- Existing production schema is assumed to be installed already. This migration
+-- adds the trusted path without removing legacy browser RPCs, so the old client
+-- continues to work until the new frontend + Edge path is verified.
 
-create extension if not exists pgcrypto;
-
-create table if not exists public.tlp_ratings (
-  id text primary key,
-  target_type text not null,
-  target_id text not null,
-  scores jsonb not null,
-  created_at timestamptz not null default now()
-);
-alter table public.tlp_ratings add column if not exists voter_id uuid;
 drop index if exists public.tlp_ratings_one_vote_per_browser;
 create unique index if not exists tlp_ratings_one_vote_per_actor
   on public.tlp_ratings(target_type, target_id, voter_id)
   where voter_id is not null;
-create index if not exists tlp_ratings_target_idx
-  on public.tlp_ratings(target_type, target_id, created_at desc);
-create index if not exists tlp_ratings_target_cursor_idx
-  on public.tlp_ratings(target_type, target_id, created_at desc, id desc);
-
-create table if not exists public.tlp_comments (
-  id text primary key,
-  target_type text not null,
-  target_id text not null,
-  author text not null,
-  text text not null,
-  kind text not null,
-  helpful integer not null default 0,
-  created_at timestamptz not null default now()
-);
-alter table public.tlp_comments add column if not exists voter_id uuid;
-alter table public.tlp_comments add column if not exists status text not null default 'published';
-create index if not exists tlp_comments_target_idx
-  on public.tlp_comments(target_type, target_id, status, created_at desc);
-create index if not exists tlp_comments_target_cursor_idx
-  on public.tlp_comments(target_type, target_id, status, created_at desc, id desc);
-create index if not exists tlp_comments_voter_time_idx
-  on public.tlp_comments(voter_id, created_at desc)
-  where voter_id is not null;
-
-create table if not exists public.tlp_comment_votes (
-  comment_id text not null references public.tlp_comments(id) on delete cascade,
-  voter_id uuid not null,
-  created_at timestamptz not null default now(),
-  primary key (comment_id, voter_id)
-);
 
 create table if not exists public.tlp_community_abuse_buckets (
   network_key text not null,
@@ -63,103 +21,6 @@ create table if not exists public.tlp_community_abuse_buckets (
 );
 create index if not exists tlp_community_abuse_window_idx
   on public.tlp_community_abuse_buckets(window_start);
-
-create or replace view public.tlp_ratings_public
-with (security_barrier = true) as
-select id, target_type, target_id, scores, created_at
-from public.tlp_ratings;
-
-create or replace view public.tlp_comments_public
-with (security_barrier = true) as
-select
-  c.id,
-  c.target_type,
-  c.target_id,
-  c.author,
-  c.text,
-  c.kind,
-  (c.helpful + count(v.comment_id))::integer as helpful,
-  c.created_at
-from public.tlp_comments c
-left join public.tlp_comment_votes v on v.comment_id = c.id
-where c.status = 'published'
-group by c.id, c.target_type, c.target_id, c.author, c.text, c.kind, c.helpful, c.created_at;
-
-create or replace view public.tlp_feedback_summary_public
-with (security_barrier = true) as
-with rating_values as (
-  select
-    r.target_type,
-    r.target_id,
-    r.id,
-    item.key as dimension,
-    (item.value::text)::numeric as score
-  from public.tlp_ratings r
-  cross join lateral jsonb_each(r.scores) item
-  where jsonb_typeof(item.value) = 'number'
-),
-rating_per_vote as (
-  select target_type, target_id, id, avg(score) as overall
-  from rating_values
-  group by target_type, target_id, id
-),
-rating_summary as (
-  select
-    target_type,
-    target_id,
-    count(*)::integer as rating_count,
-    avg(overall)::double precision as overall,
-    stddev_pop(overall)::double precision as deviation
-  from rating_per_vote
-  group by target_type, target_id
-),
-dimension_summary as (
-  select target_type, target_id, jsonb_object_agg(dimension, average_score order by dimension) as dimensions
-  from (
-    select target_type, target_id, dimension, avg(score)::double precision as average_score
-    from rating_values
-    group by target_type, target_id, dimension
-  ) values_by_dimension
-  group by target_type, target_id
-),
-distribution_summary as (
-  select target_type, target_id, jsonb_object_agg(bucket::text, bucket_count order by bucket) as distribution
-  from (
-    select
-      target_type,
-      target_id,
-      greatest(1, least(5, round(overall)::integer)) as bucket,
-      count(*)::integer as bucket_count
-    from rating_per_vote
-    group by target_type, target_id, greatest(1, least(5, round(overall)::integer))
-  ) values_by_bucket
-  group by target_type, target_id
-),
-comment_summary as (
-  select target_type, target_id, count(*)::integer as comment_count
-  from public.tlp_comments
-  where status = 'published'
-  group by target_type, target_id
-),
-targets as (
-  select target_type, target_id from rating_summary
-  union
-  select target_type, target_id from comment_summary
-)
-select
-  targets.target_type,
-  targets.target_id,
-  coalesce(rating_summary.rating_count, 0)::integer as rating_count,
-  coalesce(comment_summary.comment_count, 0)::integer as comment_count,
-  coalesce(rating_summary.overall, 0)::double precision as overall,
-  rating_summary.deviation,
-  coalesce(dimension_summary.dimensions, '{}'::jsonb) as dimensions,
-  coalesce(distribution_summary.distribution, '{}'::jsonb) as distribution
-from targets
-left join rating_summary using (target_type, target_id)
-left join dimension_summary using (target_type, target_id)
-left join distribution_summary using (target_type, target_id)
-left join comment_summary using (target_type, target_id);
 
 create or replace function public.tlp_take_community_budget(
   p_network_key text,
@@ -341,26 +202,17 @@ begin
 end
 $$;
 
-alter table public.tlp_ratings enable row level security;
-alter table public.tlp_comments enable row level security;
-alter table public.tlp_comment_votes enable row level security;
 alter table public.tlp_community_abuse_buckets enable row level security;
-
-revoke all on public.tlp_ratings, public.tlp_comments, public.tlp_comment_votes, public.tlp_community_abuse_buckets
-  from anon, authenticated;
-
--- Remove the legacy browser-authoritative write surface entirely.
-drop function if exists public.tlp_submit_rating(text, text, text, uuid, jsonb);
-drop function if exists public.tlp_submit_comment(text, text, text, uuid, text, text, text);
-drop function if exists public.tlp_mark_helpful(text, uuid);
-
+revoke all on public.tlp_community_abuse_buckets from anon, authenticated;
 revoke all on function public.tlp_take_community_budget(text, text, text, integer, integer) from public, anon, authenticated;
 revoke all on function public.tlp_submit_rating_server(text, text, uuid, text, jsonb) from public, anon, authenticated;
 revoke all on function public.tlp_submit_comment_server(text, text, text, uuid, text, text, text, text) from public, anon, authenticated;
 revoke all on function public.tlp_mark_helpful_server(text, uuid, text) from public, anon, authenticated;
 
-grant select on public.tlp_ratings_public, public.tlp_comments_public, public.tlp_feedback_summary_public to anon, authenticated;
 grant execute on function public.tlp_take_community_budget(text, text, text, integer, integer) to service_role;
 grant execute on function public.tlp_submit_rating_server(text, text, uuid, text, jsonb) to service_role;
 grant execute on function public.tlp_submit_comment_server(text, text, text, uuid, text, text, text, text) to service_role;
 grant execute on function public.tlp_mark_helpful_server(text, uuid, text) to service_role;
+
+-- Deliberately do NOT revoke/drop legacy browser mutation RPCs here.
+-- 20260819011000_community_authority_cutover.sql owns that terminal cutover.
