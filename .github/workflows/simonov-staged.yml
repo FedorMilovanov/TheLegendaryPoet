@@ -73,6 +73,9 @@ jobs:
       - name: Validate Rosarchiv award-object route inquiry
         run: npx tsx scripts/validate-simonov-loskutov-award-rosarchiv-inquiry.ts
 
+      - name: Validate regional archive acquisition inquiries
+        run: npx tsx scripts/validate-simonov-regional-archive-acquisition-inquiries.ts
+
       - name: Validate Simonov volume 8 public scan gate
         run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
 
