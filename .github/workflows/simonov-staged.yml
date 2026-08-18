@@ -70,6 +70,9 @@ jobs:
       - name: Validate Pacific Surf acquisition inquiry
         run: npx tsx scripts/validate-simonov-tikhookeansky-priboy-acquisition-inquiry.ts
 
+      - name: Validate Rosarchiv award-object route inquiry
+        run: npx tsx scripts/validate-simonov-loskutov-award-rosarchiv-inquiry.ts
+
       - name: Validate Simonov volume 8 public scan gate
         run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
 
