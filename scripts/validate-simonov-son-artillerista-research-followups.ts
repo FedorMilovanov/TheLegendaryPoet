@@ -56,8 +56,10 @@ const vladivostok = requireFile('docs/research/SIMONOV_LOSKUTOV_VLADIVOSTOK_SCHO
 requireMarkers('Vladivostok school gate', vladivostok, [
   'official school fund located / opis and item inspection pending',
   'Фонд Р-1510', 'Владивостокская школа-интернат № 2', '1961–1967',
-  'arhivpk@bk.ru', 'chit.zal.gapk@mail.ru', 'запрос подготовлен, но **не отправлен**',
+  'arhivpk@bk.ru', 'chit.zal.gapk@mail.ru',
 ]);
+// Current sending state is controlled by SIMONOV_REGIONAL_ARCHIVE_ACQUISITION_INQUIRIES_2026-08.md;
+// this older file remains the discovery/history layer only.
 
 const author = requireFile('docs/research/SIMONOV_AUTHOR_WITNESS_COLLATION_2026-08.md', 'author witness collation');
 requireMarkers('author witness collation', author, [
