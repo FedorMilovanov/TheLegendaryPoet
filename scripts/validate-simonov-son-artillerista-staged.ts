@@ -83,6 +83,29 @@ if (archivalFollowup.includes('3 декабря 1941 года несомненн
   throw new Error('Simonov archival follow-up overstates the unresolved first-publication claim');
 }
 
+const loskutovPrintWitnessPath = 'docs/research/SIMONOV_LOSKUTOV_PRINT_WITNESS_2026-08.md';
+if (!existsSync(loskutovPrintWitnessPath)) {
+  throw new Error('Simonov Loskutov print-witness gate is missing');
+}
+const loskutovPrintWitness = readFileSync(loskutovPrintWitnessPath, 'utf8');
+for (const marker of [
+  '01007444220',
+  'От Халхингола до Берлина',
+  '1973',
+  'с. 54–62',
+  'bibliographic object verified / page inspection pending',
+  'письмо Ивана Лоскутова Симонову от 3 марта 1966 года в опубликованной Симоновым передаче',
+  'точный календарный день боя',
+  'шесть суток',
+]) {
+  if (!loskutovPrintWitness.includes(marker)) {
+    throw new Error(`Simonov Loskutov print-witness boundary disappeared: ${marker}`);
+  }
+}
+if (loskutovPrintWitness.includes('архивный автограф письма Лоскутова подтверждён')) {
+  throw new Error('Simonov Loskutov witness incorrectly claims archival-autograph closure');
+}
+
 const sources = essay.sources ?? [];
 const sourcesById = new Map<string, (typeof sources)[number]>();
 for (const source of sources) {
@@ -158,5 +181,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; hero=${coverStatus}; newspaper-object gate remains open.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; research-ledger=${ledgerRows}; archival-follow-up=verified; Loskutov-print-witness=verified-bibliographic/pending-pages; hero=${coverStatus}; newspaper-object gate remains open.`,
 );
