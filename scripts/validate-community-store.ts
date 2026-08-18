@@ -6,7 +6,6 @@ process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
   failWrites = false;
-
   get length() { return this.values.size; }
   clear() { this.values.clear(); }
   getItem(key: string) { return this.values.get(key) ?? null; }
@@ -38,7 +37,6 @@ const testWindow = {
     return true;
   },
 };
-
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } });
 
@@ -80,8 +78,8 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
     ],
   },
   outbox: [
-    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId: voterId, entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
-    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId: voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
+    { id: `rating:${pendingRatingId}`, kind: 'rating', voterId, entry: { id: pendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-500) }, createdAt: iso(-500), attempts: 0 },
+    { id: `comment:${pendingCommentId}`, kind: 'comment', voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
   ],
   cooldowns: { 'rating:poet:alexander-pushkin': now + 5000 },
   helpfulVotes: {},
@@ -93,12 +91,30 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
 }));
 
 let requestCount = 0;
-let rpcSucceeds = false;
-globalThis.fetch = async (input) => {
-  requestCount += 1;
+let functionSucceeds = false;
+const mutationBodies: unknown[] = [];
+globalThis.fetch = async (input, init) => {
   const url = String(input);
-  if (url.includes('/rest/v1/rpc/')) return new Response(null, { status: rpcSucceeds ? 204 : 503 });
-  return new Response(null, { status: 500 });
+  if (url.includes('/auth/v1/signup')) {
+    return Response.json({
+      access_token: 'store-access-token-00000000000001',
+      refresh_token: 'store-refresh-token-0000000000001',
+      expires_in: 3600,
+    });
+  }
+  if (url.includes('/auth/v1/token?grant_type=refresh_token')) {
+    return Response.json({
+      access_token: 'store-access-token-00000000000002',
+      refresh_token: 'store-refresh-token-0000000000002',
+      expires_in: 3600,
+    });
+  }
+  if (url.includes('/functions/v1/community-write')) {
+    requestCount += 1;
+    if (typeof init?.body === 'string') mutationBodies.push(JSON.parse(init.body));
+    return Response.json({ ok: functionSucceeds }, { status: functionSucceeds ? 200 : 503 });
+  }
+  return Response.json({ ok: false }, { status: 404 });
 };
 
 const store = await import('../src/utils/communityStore');
@@ -106,8 +122,8 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 
 const migrated = store.getFeedbackSnapshot();
-expect(requestCount === 0, 'importing or subscribing to the store must not start community reads');
-expect(migrated.ratings.length === 2, 'v2 migration must retain only the pending and device-owned ratings');
+expect(requestCount === 0, 'importing or subscribing to store must not start community requests');
+expect(migrated.ratings.length === 2, 'v2 migration must retain only pending and device-owned ratings');
 expect(migrated.ratings.some((rating) => rating.id === pendingRatingId), 'pending rating must survive v2 migration');
 expect(migrated.ratings.some((rating) => rating.id === ownRatingId), 'device-owned rating must survive v2 migration');
 expect(migrated.comments.length === 1 && migrated.comments[0]?.id === pendingCommentId, 'only pending comments may survive v2 migration');
@@ -119,29 +135,30 @@ expect(storage.getItem('tlp-community-feedback:v3') !== null, 'bounded v3 envelo
 const persisted = JSON.parse(storage.getItem('tlp-community-feedback:v3') ?? '{}') as { localSnapshot?: { ratings?: unknown[]; comments?: unknown[] }; outbox?: unknown[] };
 expect((persisted.localSnapshot?.ratings?.length ?? 0) === 2, 'v3 persistence must contain only device-owned ratings');
 expect((persisted.localSnapshot?.comments?.length ?? 0) === 1, 'v3 persistence must contain only pending/device comments');
-expect((persisted.outbox?.length ?? 0) === 2, 'v3 persistence must retain the outbox');
+expect((persisted.outbox?.length ?? 0) === 2, 'v3 persistence must retain outbox');
 
 let syncNotifications = 0;
 const stopSync = store.subscribeCommunitySync(() => { syncNotifications += 1; });
-expect(requestCount === 0, 'sync subscription must not hydrate the remote corpus');
+expect(requestCount === 0, 'sync subscription must not hydrate remote corpus');
 
 store.beginCommunityRemoteRead('read-a');
 store.beginCommunityRemoteRead('read-b');
 store.finishCommunityRemoteRead(false);
 store.finishCommunityRemoteRead(true);
-expect(store.getCommunitySyncSnapshot().phase === 'offline', 'a failed concurrent read must not be hidden by a later successful read');
+expect(store.getCommunitySyncSnapshot().phase === 'offline', 'failed concurrent read must not be hidden by later success');
 expect(syncNotifications > 0, 'remote read state changes must notify sync subscribers');
 stopSync();
 
-rpcSucceeds = false;
+functionSucceeds = false;
 await store.flushCommunityOutbox();
 expect(store.getCommunitySyncSnapshot().phase === 'offline', 'failed outbox delivery must expose offline state');
 expect(store.getCommunitySyncSnapshot().pendingCount === 2, 'failed delivery must retain all queued mutations');
 
-rpcSucceeds = true;
+functionSucceeds = true;
 await store.flushCommunityOutbox();
 expect(store.getCommunitySyncSnapshot().phase === 'online', 'successful outbox retry must restore online state');
-expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'successful retry must empty the outbox');
+expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'successful retry must empty outbox');
+expect(mutationBodies.every((body) => !/voter|actor|network/i.test(JSON.stringify(body))), 'remote mutation body must not contain client-selected authority fields');
 
 const newRatingId = 'rating-44444444-4444-4444-8444-444444444444';
 expect(store.commitRatingFeedback({
@@ -150,11 +167,11 @@ expect(store.commitRatingFeedback({
   targetId: 'anna-akhmatova',
   scores: { language: 5, depth: 4 },
   createdAt: iso(100),
-}, 'rating:poet:anna-akhmatova', voterId), 'UUID-based rating ids must be accepted by the client store');
-expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'new remote-enabled writes must enter the outbox');
+}, 'rating:poet:anna-akhmatova', voterId), 'UUID-based local rating ids must be accepted by client store');
+expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'new remote-enabled writes must enter outbox');
 
 const remoteHelpfulId = 'comment-55555555-5555-4555-8555-555555555555';
-expect(store.commitHelpfulFeedback(remoteHelpfulId, `helpful:article:sergei-yesenin-1921-1925:${remoteHelpfulId}`, voterId), 'helpful vote for a non-persisted remote comment must queue');
+expect(store.commitHelpfulFeedback(remoteHelpfulId, `helpful:article:sergei-yesenin-1921-1925:${remoteHelpfulId}`, voterId), 'helpful vote for non-persisted remote comment must queue');
 expect(store.getPendingTargetOverlay('article', 'sergei-yesenin-1921-1925').helpfulCommentIds.includes(remoteHelpfulId), 'remote helpful overlay must remain target-scoped');
 
 const countBeforeFailure = store.getFeedbackSnapshot().comments.length;
@@ -182,5 +199,5 @@ stopFeedback();
 expect(localNotifications === 1, 'cross-tab v3 storage events must notify once');
 
 for (const failure of failures) console.error(`ERROR community-store: ${failure}`);
-console.log(`Community store validation: ${failures.length} error(s), ${requestCount} write request(s), no startup reads.`);
+console.log(`Community store validation: ${failures.length} error(s), ${requestCount} Edge write request(s), no startup reads.`);
 if (failures.length) process.exit(1);
