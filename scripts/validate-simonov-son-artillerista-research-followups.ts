@@ -110,9 +110,11 @@ requireMarkers('Simonov source addendum', addendum, [
   'A2-09',
   'Человек из поэмы',
   'A2-12',
+  'A2-13',
+  'ГПИБ / SHPL',
   'direct object supersedes locator',
 ]);
 
 console.log(
-  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; second-pass source hierarchy pinned.',
+  'Simonov follow-up gates: Arkhangelsk chronology pinned; award record 10800112 locator pinned with scan pending; Pravda 22.03.1966 issue/article locator pinned with page pending; Sakhalin correspondence archive remains item-level pending; SHPL full 1941 Red Star corpus pinned with №288 child/page discovery pending; SHPL authority also pinned in second-pass source hierarchy.',
 );
