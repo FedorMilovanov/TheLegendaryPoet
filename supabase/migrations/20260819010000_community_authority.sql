@@ -1,0 +1,366 @@
+-- The Legendary Poet: shared ratings and comments (Supabase/Postgres)
+-- Hardened authority model: public reads only; writes are service-only behind
+-- the community-write Edge Function, which supplies verified Auth actor IDs,
+-- a keyed network-abuse hash, and canonical target membership.
+-- Safe to run repeatedly. Existing legacy rows remain readable.
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.tlp_ratings (
+  id text primary key,
+  target_type text not null,
+  target_id text not null,
+  scores jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table public.tlp_ratings add column if not exists voter_id uuid;
+drop index if exists public.tlp_ratings_one_vote_per_browser;
+create unique index if not exists tlp_ratings_one_vote_per_actor
+  on public.tlp_ratings(target_type, target_id, voter_id)
+  where voter_id is not null;
+create index if not exists tlp_ratings_target_idx
+  on public.tlp_ratings(target_type, target_id, created_at desc);
+create index if not exists tlp_ratings_target_cursor_idx
+  on public.tlp_ratings(target_type, target_id, created_at desc, id desc);
+
+create table if not exists public.tlp_comments (
+  id text primary key,
+  target_type text not null,
+  target_id text not null,
+  author text not null,
+  text text not null,
+  kind text not null,
+  helpful integer not null default 0,
+  created_at timestamptz not null default now()
+);
+alter table public.tlp_comments add column if not exists voter_id uuid;
+alter table public.tlp_comments add column if not exists status text not null default 'published';
+create index if not exists tlp_comments_target_idx
+  on public.tlp_comments(target_type, target_id, status, created_at desc);
+create index if not exists tlp_comments_target_cursor_idx
+  on public.tlp_comments(target_type, target_id, status, created_at desc, id desc);
+create index if not exists tlp_comments_voter_time_idx
+  on public.tlp_comments(voter_id, created_at desc)
+  where voter_id is not null;
+
+create table if not exists public.tlp_comment_votes (
+  comment_id text not null references public.tlp_comments(id) on delete cascade,
+  voter_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, voter_id)
+);
+
+create table if not exists public.tlp_community_abuse_buckets (
+  network_key text not null,
+  action text not null,
+  scope text not null,
+  window_start timestamptz not null,
+  hits integer not null check (hits > 0),
+  primary key (network_key, action, scope, window_start),
+  check (network_key ~ '^[a-f0-9]{64}$'),
+  check (char_length(action) between 1 and 32),
+  check (char_length(scope) between 1 and 220)
+);
+create index if not exists tlp_community_abuse_window_idx
+  on public.tlp_community_abuse_buckets(window_start);
+
+create or replace view public.tlp_ratings_public
+with (security_barrier = true) as
+select id, target_type, target_id, scores, created_at
+from public.tlp_ratings;
+
+create or replace view public.tlp_comments_public
+with (security_barrier = true) as
+select
+  c.id,
+  c.target_type,
+  c.target_id,
+  c.author,
+  c.text,
+  c.kind,
+  (c.helpful + count(v.comment_id))::integer as helpful,
+  c.created_at
+from public.tlp_comments c
+left join public.tlp_comment_votes v on v.comment_id = c.id
+where c.status = 'published'
+group by c.id, c.target_type, c.target_id, c.author, c.text, c.kind, c.helpful, c.created_at;
+
+create or replace view public.tlp_feedback_summary_public
+with (security_barrier = true) as
+with rating_values as (
+  select
+    r.target_type,
+    r.target_id,
+    r.id,
+    item.key as dimension,
+    (item.value::text)::numeric as score
+  from public.tlp_ratings r
+  cross join lateral jsonb_each(r.scores) item
+  where jsonb_typeof(item.value) = 'number'
+),
+rating_per_vote as (
+  select target_type, target_id, id, avg(score) as overall
+  from rating_values
+  group by target_type, target_id, id
+),
+rating_summary as (
+  select
+    target_type,
+    target_id,
+    count(*)::integer as rating_count,
+    avg(overall)::double precision as overall,
+    stddev_pop(overall)::double precision as deviation
+  from rating_per_vote
+  group by target_type, target_id
+),
+dimension_summary as (
+  select target_type, target_id, jsonb_object_agg(dimension, average_score order by dimension) as dimensions
+  from (
+    select target_type, target_id, dimension, avg(score)::double precision as average_score
+    from rating_values
+    group by target_type, target_id, dimension
+  ) values_by_dimension
+  group by target_type, target_id
+),
+distribution_summary as (
+  select target_type, target_id, jsonb_object_agg(bucket::text, bucket_count order by bucket) as distribution
+  from (
+    select
+      target_type,
+      target_id,
+      greatest(1, least(5, round(overall)::integer)) as bucket,
+      count(*)::integer as bucket_count
+    from rating_per_vote
+    group by target_type, target_id, greatest(1, least(5, round(overall)::integer))
+  ) values_by_bucket
+  group by target_type, target_id
+),
+comment_summary as (
+  select target_type, target_id, count(*)::integer as comment_count
+  from public.tlp_comments
+  where status = 'published'
+  group by target_type, target_id
+),
+targets as (
+  select target_type, target_id from rating_summary
+  union
+  select target_type, target_id from comment_summary
+)
+select
+  targets.target_type,
+  targets.target_id,
+  coalesce(rating_summary.rating_count, 0)::integer as rating_count,
+  coalesce(comment_summary.comment_count, 0)::integer as comment_count,
+  coalesce(rating_summary.overall, 0)::double precision as overall,
+  rating_summary.deviation,
+  coalesce(dimension_summary.dimensions, '{}'::jsonb) as dimensions,
+  coalesce(distribution_summary.distribution, '{}'::jsonb) as distribution
+from targets
+left join rating_summary using (target_type, target_id)
+left join dimension_summary using (target_type, target_id)
+left join distribution_summary using (target_type, target_id)
+left join comment_summary using (target_type, target_id);
+
+create or replace function public.tlp_take_community_budget(
+  p_network_key text,
+  p_action text,
+  p_scope text,
+  p_window_seconds integer,
+  p_limit integer
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  bucket_start timestamptz;
+  current_hits integer;
+begin
+  if p_network_key is null or p_network_key !~ '^[a-f0-9]{64}$' then raise exception 'invalid network authority'; end if;
+  if p_action is null or char_length(p_action) > 32 then raise exception 'invalid abuse action'; end if;
+  if p_scope is null or char_length(p_scope) > 220 then raise exception 'invalid abuse scope'; end if;
+  if p_window_seconds < 10 or p_window_seconds > 86400 then raise exception 'invalid abuse window'; end if;
+  if p_limit < 1 or p_limit > 10000 then raise exception 'invalid abuse limit'; end if;
+
+  bucket_start := to_timestamp(
+    floor(extract(epoch from clock_timestamp()) / p_window_seconds) * p_window_seconds
+  );
+
+  insert into public.tlp_community_abuse_buckets(network_key, action, scope, window_start, hits)
+  values (p_network_key, p_action, p_scope, bucket_start, 1)
+  on conflict (network_key, action, scope, window_start)
+  do update set hits = public.tlp_community_abuse_buckets.hits + 1
+  returning hits into current_hits;
+
+  if current_hits > p_limit then
+    raise exception 'community rate limit' using errcode = 'P0001';
+  end if;
+
+  delete from public.tlp_community_abuse_buckets
+  where window_start < clock_timestamp() - interval '48 hours';
+end
+$$;
+
+create or replace function public.tlp_submit_rating_server(
+  p_target_type text,
+  p_target_id text,
+  p_actor_id uuid,
+  p_network_key text,
+  p_scores jsonb
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  item record;
+  score numeric;
+  expected_keys text[];
+begin
+  if p_actor_id is null then raise exception 'actor id is required'; end if;
+  if p_target_type not in ('poet', 'poem', 'track', 'article') then raise exception 'invalid target type'; end if;
+  if p_target_id is null or p_target_id !~ '^[a-z0-9][a-z0-9-]{1,159}$' then raise exception 'invalid target id'; end if;
+  if jsonb_typeof(p_scores) <> 'object' or p_scores = '{}'::jsonb then raise exception 'scores must be an object'; end if;
+
+  expected_keys := case p_target_type
+    when 'poet' then array['language', 'depth', 'legacy', 'truth']
+    when 'poem' then array['beauty', 'form', 'impact']
+    when 'track' then array['voice', 'music', 'text']
+    when 'article' then array['clarity', 'depth', 'fairness']
+  end;
+
+  if jsonb_object_length(p_scores) <> array_length(expected_keys, 1) or not (p_scores ?& expected_keys) then
+    raise exception 'score dimensions do not match target type';
+  end if;
+
+  for item in select key, value from jsonb_each(p_scores) loop
+    if jsonb_typeof(item.value) <> 'number' then raise exception 'score is not numeric'; end if;
+    score := (item.value::text)::numeric;
+    if score < 1 or score > 5 or score <> trunc(score) then raise exception 'score outside integer range 1..5'; end if;
+  end loop;
+
+  perform public.tlp_take_community_budget(p_network_key, 'rating', '*', 3600, 60);
+  perform public.tlp_take_community_budget(p_network_key, 'rating', p_target_type || ':' || p_target_id, 3600, 8);
+
+  insert into public.tlp_ratings(id, target_type, target_id, voter_id, scores, created_at)
+  values ('rating-' || gen_random_uuid()::text, p_target_type, p_target_id, p_actor_id, p_scores, now())
+  on conflict (target_type, target_id, voter_id) where voter_id is not null
+  do update set scores = excluded.scores, created_at = now();
+end
+$$;
+
+create or replace function public.tlp_submit_comment_server(
+  p_id text,
+  p_target_type text,
+  p_target_id text,
+  p_actor_id uuid,
+  p_network_key text,
+  p_author text,
+  p_text text,
+  p_kind text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  clean_author text;
+  clean_text text;
+begin
+  if p_actor_id is null then raise exception 'actor id is required'; end if;
+  if p_id is null or p_id !~ '^comment-[a-z0-9][a-z0-9-]{7,199}$' then raise exception 'invalid comment id'; end if;
+  if p_target_type not in ('poet', 'poem', 'track', 'article') then raise exception 'invalid target type'; end if;
+  if p_target_id is null or p_target_id !~ '^[a-z0-9][a-z0-9-]{1,159}$' then raise exception 'invalid target id'; end if;
+  if p_kind not in ('literary', 'history', 'moral', 'performance') then raise exception 'invalid comment kind'; end if;
+
+  clean_author := regexp_replace(coalesce(trim(p_author), ''), '[[:cntrl:]]', '', 'g');
+  clean_text := trim(coalesce(p_text, ''));
+  if char_length(clean_author) > 60 then raise exception 'author too long'; end if;
+  if char_length(clean_text) < 8 or char_length(clean_text) > 2000 then raise exception 'invalid comment length'; end if;
+
+  if exists (
+    select 1 from public.tlp_comments
+    where voter_id = p_actor_id and created_at > now() - interval '20 seconds'
+  ) then
+    raise exception 'comment rate limit';
+  end if;
+
+  perform public.tlp_take_community_budget(p_network_key, 'comment', '*', 3600, 12);
+  perform public.tlp_take_community_budget(p_network_key, 'comment', p_target_type || ':' || p_target_id, 3600, 6);
+
+  insert into public.tlp_comments(id, target_type, target_id, voter_id, author, text, kind, status, created_at)
+  values (
+    p_id,
+    p_target_type,
+    p_target_id,
+    p_actor_id,
+    coalesce(nullif(clean_author, ''), 'Анонимный читатель'),
+    clean_text,
+    p_kind,
+    'published',
+    now()
+  )
+  on conflict (id) do nothing;
+end
+$$;
+
+create or replace function public.tlp_mark_helpful_server(
+  p_comment_id text,
+  p_actor_id uuid,
+  p_network_key text
+) returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  comment_target_type text;
+  comment_target_id text;
+begin
+  if p_actor_id is null then raise exception 'actor id is required'; end if;
+  if p_comment_id is null or p_comment_id !~ '^comment-[a-z0-9][a-z0-9-]{7,199}$' then raise exception 'invalid comment id'; end if;
+
+  select target_type, target_id into comment_target_type, comment_target_id
+  from public.tlp_comments
+  where id = p_comment_id and status = 'published';
+
+  if comment_target_type is null or comment_target_id is null then raise exception 'comment not found'; end if;
+
+  perform public.tlp_take_community_budget(p_network_key, 'helpful', '*', 3600, 120);
+  perform public.tlp_take_community_budget(
+    p_network_key,
+    'helpful',
+    comment_target_type || ':' || comment_target_id,
+    3600,
+    40
+  );
+
+  insert into public.tlp_comment_votes(comment_id, voter_id)
+  values (p_comment_id, p_actor_id)
+  on conflict do nothing;
+end
+$$;
+
+alter table public.tlp_ratings enable row level security;
+alter table public.tlp_comments enable row level security;
+alter table public.tlp_comment_votes enable row level security;
+alter table public.tlp_community_abuse_buckets enable row level security;
+
+revoke all on public.tlp_ratings, public.tlp_comments, public.tlp_comment_votes, public.tlp_community_abuse_buckets
+  from anon, authenticated;
+
+-- Remove the legacy browser-authoritative write surface entirely.
+drop function if exists public.tlp_submit_rating(text, text, text, uuid, jsonb);
+drop function if exists public.tlp_submit_comment(text, text, text, uuid, text, text, text);
+drop function if exists public.tlp_mark_helpful(text, uuid);
+
+revoke all on function public.tlp_take_community_budget(text, text, text, integer, integer) from public, anon, authenticated;
+revoke all on function public.tlp_submit_rating_server(text, text, uuid, text, jsonb) from public, anon, authenticated;
+revoke all on function public.tlp_submit_comment_server(text, text, text, uuid, text, text, text, text) from public, anon, authenticated;
+revoke all on function public.tlp_mark_helpful_server(text, uuid, text) from public, anon, authenticated;
+
+grant select on public.tlp_ratings_public, public.tlp_comments_public, public.tlp_feedback_summary_public to anon, authenticated;
+grant execute on function public.tlp_take_community_budget(text, text, text, integer, integer) to service_role;
+grant execute on function public.tlp_submit_rating_server(text, text, uuid, text, jsonb) to service_role;
+grant execute on function public.tlp_submit_comment_server(text, text, text, uuid, text, text, text, text) to service_role;
+grant execute on function public.tlp_mark_helpful_server(text, uuid, text) to service_role;
