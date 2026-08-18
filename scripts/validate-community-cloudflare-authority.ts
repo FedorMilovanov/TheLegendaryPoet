@@ -24,6 +24,8 @@ expect(!/\/rest\/v1\/rpc\/|p_voter_id|apikey:/i.test(remote), 'browser mutation 
 expect(remote.includes("mutation('/v1/rating'") && remote.includes("mutation('/v1/comment'") && remote.includes("mutation('/v1/helpful'"), 'all writes must cross the Worker mutation boundary');
 expect(remote.includes("apiUrl('/v1/session')") && remote.includes('requestCommunityHumanProof'), 'shared writes must acquire a Turnstile-backed server actor session');
 expect(remote.includes("const ACTOR_KEY = 'tlp-community-actor:v1'"), 'signed actor session must have a dedicated browser envelope');
+expect(remote.includes('locks.request(ACTOR_KEY, task)') && remote.includes('resolveActorToken'), 'parallel tabs must serialize actor-session minting through the browser lock manager');
+expect(remote.includes('const existing = currentActorToken();') && remote.includes('invalidateActorSession(first.actorToken)'), 'actor mint/recovery must re-read shared storage and never erase a newer cross-tab token');
 expect(!remote.includes('_localDeviceId: string): Promise<boolean>') || !/body:\s*JSON\.stringify\([^)]*_localDeviceId/.test(remote), 'local device bookkeeping must never become remote write authority');
 
 expect(humanCheck.includes('challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'), 'Turnstile must use Cloudflare explicit rendering');
@@ -74,5 +76,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, target authority, retry idempotency, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, cross-tab actor authority, retry idempotency, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
