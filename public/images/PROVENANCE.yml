@@ -124,7 +124,7 @@ assets:
     origin_class: local_cinematic_editorial_reconstruction
     evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
     master_file_id: file_00000000c76c81f49d5f28281decdbe9
-    master_name: "Homme en costume, rue brumeuse.png"
+    master_name: "Homme en costume, rue brumeuse】【。.png"
     production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
     bytes: 130398
     sha256: de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30
