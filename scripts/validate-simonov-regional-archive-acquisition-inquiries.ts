@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_REGIONAL_ARCHIVE_ACQUISITION_INQUIRIES_2026-
 if (!existsSync(path)) throw new Error(`Simonov regional archive acquisition gate missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'GAPK inquiry sent / Sakhalin museum + ministry email routes all SMTP-blocked / authenticated government-channel or phone route required / item-level evidence pending / no paid work authorized',
@@ -29,11 +30,23 @@ for (const marker of [
   if (!text.includes(marker)) throw new Error(`Simonov regional archive boundary disappeared: ${marker}`);
 }
 
-if (/item inspected|opis verified|meeting verified|paid work authorized|museum confirmation|portal submitted|ticket received/iu.test(status)) {
+const forbiddenPositiveStatusParts = [
+  'item inspected',
+  'opis verified',
+  'meeting verified',
+  'paid work authorized',
+  'museum confirmation',
+  'portal submitted',
+  'ticket received',
+];
+if (statusParts.some((part) => forbiddenPositiveStatusParts.includes(part))) {
   throw new Error(`Simonov regional archive status falsely closes an open gate: ${status}`);
 }
 if (/routing request sent|museum.*reply pending/iu.test(status)) {
   throw new Error(`Simonov regional archive status erased the proven ministry SMTP failure/manual-auth requirement: ${status}`);
+}
+if (!statusParts.includes('no paid work authorized')) {
+  throw new Error(`Simonov regional archive status lost no-paid-work boundary: ${status}`);
 }
 
 console.log('Simonov regional archives: GAPK inquiry pending; both museum emails and ministry email SMTP-blocked; authenticated Sakhalin government portal/phone required; museum items/meeting remain unverified; no paid work authorized.');
