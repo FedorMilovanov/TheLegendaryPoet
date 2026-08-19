@@ -200,7 +200,7 @@ for (const id of sourcesById.keys()) {
   if (!citedIds.has(id)) throw new Error(`Simonov staged bibliography contains uncited source: ${id}`);
 }
 
-// Reader-text boundaries.
+// Reader-text boundaries. Required factual anchors are case-insensitive; forbidden overclaims remain exact.
 const readerText = essay.blocks.map((block) => {
   if ('text' in block) return block.text;
   if (block.type === 'section') return block.heading;
@@ -212,8 +212,11 @@ if (words < 1800 || words > 6000) throw new Error(`Simonov staged longform scope
 for (const forbidden of ['31 июля 1941 года', 'шесть суток', '3 ноября 1941 года впервые']) {
   if (readerText.includes(forbidden)) throw new Error(`Simonov staged prose promoted a blocked claim: ${forbidden}`);
 }
+const readerTextFolded = readerText.toLocaleLowerCase('ru-RU');
 for (const required of ['июль 1941 года', 'Точного дня в письме нет', 'два разведчика', 'радиостанция была разбита', 'Отец я тебе иль нет?', '3 декабря 1941 года', '7 декабря']) {
-  if (!readerText.includes(required)) throw new Error(`Simonov staged evidence boundary disappeared: ${required}`);
+  if (!readerTextFolded.includes(required.toLocaleLowerCase('ru-RU'))) {
+    throw new Error(`Simonov staged evidence boundary disappeared: ${required}`);
+  }
 }
 if (essay.blocks.some((block) => block.type === 'poem')) throw new Error('Simonov staged article must not embed the full copyrighted poem');
 if (essay.blocks.some((block) => block.type === 'image')) throw new Error('Documentary body images appeared before item-level rights ingestion');
