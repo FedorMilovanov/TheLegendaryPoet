@@ -79,5 +79,8 @@ jobs:
       - name: Validate Simonov volume 8 public scan gate
         run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
 
+      - name: Validate Simonov volume 8 same-edition OCR collation
+        run: npx tsx scripts/validate-simonov-t8-same-edition-ocr-collation.ts
+
       - name: Validate visual acquisition manifest
         run: npx tsx scripts/validate-simonov-son-artillerista-visual-manifest.ts
