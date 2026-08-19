@@ -39,8 +39,13 @@ requireMarkers('1966 Pravda witness', pravda1966, [
   'exact issue/article locator recovered / scan inspection pending',
   'Человек из поэмы', '22 марта 1966', '№ 81 (17398)', 'страница 4',
   'pravda-1966-no.-81-17398-22-mar-1966',
-  'не пересказывать содержание статьи как будто оно прочитано',
+  'Пока недопустимо:',
+  '- пересказывать содержание статьи как будто оно прочитано;',
+  'страница 4 ещё не визуально просмотрена редакцией',
 ]);
+if (/^Статус:.*(?:page|scan).*(?:verified|inspected|closed)/imu.test(pravda1966)) {
+  throw new Error('1966 Pravda witness falsely declares page inspection');
+}
 
 const sakhalin = requireFile('docs/research/SIMONOV_LOSKUTOV_SAKHALIN_ARCHIVE_GATE_2026-08.md', 'Sakhalin archive gate');
 requireMarkers('Sakhalin archive gate', sakhalin, [
@@ -101,4 +106,4 @@ requireMarkers('second-pass source addendum', addendum2, [
   'A2-01', '10800112', 'A2-07', '№ 288 (5043)', 'A2-09', 'Человек из поэмы', 'A2-13', 'ГПИБ / SHPL',
 ]);
 
-console.log('Simonov research follow-ups: award/1966/archive gates remain open; Red Star №288 p.3 is direct-page verified, scholarly-corroborated, and SHPL remains a holder-specific institutional provenance cross-check.');
+console.log('Simonov research follow-ups: award/1966/archive gates remain open; Pravda 1966 stays fail-closed pending p.4; Red Star №288 p.3 is direct-page verified, scholarly-corroborated, and SHPL remains a holder-specific institutional provenance cross-check.');
