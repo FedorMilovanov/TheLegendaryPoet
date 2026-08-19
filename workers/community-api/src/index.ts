@@ -63,6 +63,7 @@ const MAX_BATCH_TARGETS = 100;
 const MANIFEST_TTL_MS = 5 * 60_000;
 const SESSION_TTL_MS = 90 * 24 * 60 * 60_000;
 const MAX_SESSION_TOKEN = 4096;
+const COMMENT_COOLDOWN_MS = 20_000;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 let manifestCache: { expiresAt: number; keys: Set<string> } | null = null;
@@ -224,14 +225,18 @@ function targetKey(type: FeedbackTargetType, id: string) {
 function parseManifest(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<TargetManifest>;
-  if (candidate.version !== 1 || !candidate.targets || typeof candidate.targets !== 'object') return null;
+  if (candidate.version !== 1 || !candidate.targets || typeof candidate.targets !== 'object' || Array.isArray(candidate.targets)) return null;
+  const manifestTypes = Object.keys(candidate.targets);
+  if (manifestTypes.length !== TARGET_TYPES.size || manifestTypes.some((type) => !TARGET_TYPES.has(type as FeedbackTargetType))) return null;
   const keys = new Set<string>();
   for (const type of TARGET_TYPES) {
     const ids = candidate.targets[type];
     if (!Array.isArray(ids) || ids.length > 20_000) return null;
     for (const id of ids) {
       if (typeof id !== 'string' || !TARGET_ID.test(id)) return null;
-      keys.add(targetKey(type, id));
+      const key = targetKey(type, id);
+      if (keys.has(key)) return null;
+      keys.add(key);
     }
   }
   return keys;
@@ -282,7 +287,7 @@ function validateScores(type: FeedbackTargetType, value: unknown) {
   const result: Record<string, number> = {};
   for (const [key, raw] of entries) {
     const score = Number(raw);
-    if (!SCORE_KEY.test(key) || !expected.includes(key as never) || !Number.isInteger(score) || score < 1 || score > 5) {
+    if (!SCORE_KEY.test(key) || !expected.some((expectedKey) => expectedKey === key) || !Number.isInteger(score) || score < 1 || score > 5) {
       throw new HttpError(400, 'invalid_scores');
     }
     result[key] = score;
@@ -471,20 +476,34 @@ async function handleComment(request: Request, env: Env) {
     if (commentMatches(existing, actor, comment)) return { ok: true, idempotent: true };
     throw new HttpError(409, 'comment_id_conflict');
   }
-  const now = Date.now();
-  const recent = await env.DB.prepare('SELECT 1 AS found FROM tlp_comments WHERE actor_id = ? AND created_at > ? LIMIT 1')
-    .bind(actor, now - 20_000).first<{ found: number }>();
-  if (recent) throw new HttpError(429, 'comment_cooldown');
   const key = await networkKey(request, env);
   await takeBudget(env.DB, key, 'comment', '*', 3600, 12);
   await takeBudget(env.DB, key, 'comment', targetKey(comment.targetType, comment.targetId), 3600, 6);
+  const now = Date.now();
   await env.DB.prepare(`
     INSERT OR IGNORE INTO tlp_comments(id, target_type, target_id, actor_id, author, text, kind, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'published', ?)
-  `).bind(comment.commentId, comment.targetType, comment.targetId, actor, comment.author, comment.text, comment.commentKind, now).run();
+    SELECT ?, ?, ?, ?, ?, ?, ?, 'published', ?
+    WHERE NOT EXISTS (
+      SELECT 1 FROM tlp_comments WHERE actor_id = ? AND created_at > ?
+    )
+  `).bind(
+    comment.commentId,
+    comment.targetType,
+    comment.targetId,
+    actor,
+    comment.author,
+    comment.text,
+    comment.commentKind,
+    now,
+    actor,
+    now - COMMENT_COOLDOWN_MS,
+  ).run();
   const persisted = await readExisting();
-  if (!persisted || !commentMatches(persisted, actor, comment)) throw new HttpError(409, 'comment_id_conflict');
-  return { ok: true };
+  if (persisted) {
+    if (commentMatches(persisted, actor, comment)) return { ok: true };
+    throw new HttpError(409, 'comment_id_conflict');
+  }
+  throw new HttpError(429, 'comment_cooldown');
 }
 
 async function handleHelpful(request: Request, env: Env) {
