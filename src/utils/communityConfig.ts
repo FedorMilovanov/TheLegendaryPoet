@@ -35,10 +35,10 @@ function readLoopbackTestConfig(): CommunityTestConfig | undefined {
     __TLP_COMMUNITY_TEST_CONFIG__?: Partial<CommunityTestConfig>;
   }).__TLP_COMMUNITY_TEST_CONFIG__;
   const url = normalizeHttpsApiUrl(typeof candidate?.url === 'string' ? candidate.url : undefined);
-  const siteKey = typeof candidate?.siteKey === 'string' ? candidate.siteKey : undefined;
-  const humanProof = typeof candidate?.humanProof === 'string' ? candidate.humanProof : undefined;
+  const siteKey = typeof candidate?.siteKey === 'string' ? candidate.siteKey.trim() : undefined;
+  const humanProof = typeof candidate?.humanProof === 'string' ? candidate.humanProof.trim() : undefined;
   if (!url) return undefined;
-  return { url, siteKey, humanProof };
+  return { url, siteKey: siteKey || undefined, humanProof: humanProof || undefined };
 }
 
 const LOOPBACK_TEST_CONFIG = readLoopbackTestConfig();
@@ -53,11 +53,19 @@ export const communityTurnstileSiteKey = (
   VITE_ENV?.VITE_TURNSTILE_SITE_KEY
   ?? LOOPBACK_TEST_CONFIG?.siteKey
   ?? NODE_ENV?.VITE_TURNSTILE_SITE_KEY
-)?.trim();
+)?.trim() || undefined;
 
 // The Node-only value is used by repository validators. In browser builds the only
 // test injection path is loopback-only, so production pages cannot bypass Turnstile.
-export const communityTestHumanProof = LOOPBACK_TEST_CONFIG?.humanProof
-  ?? (typeof window === 'undefined' ? NODE_ENV?.TLP_COMMUNITY_TEST_HUMAN_PROOF : undefined);
+export const communityTestHumanProof = (
+  LOOPBACK_TEST_CONFIG?.humanProof
+  ?? (typeof window === 'undefined' ? NODE_ENV?.TLP_COMMUNITY_TEST_HUMAN_PROOF : undefined)
+)?.trim() || undefined;
 
-export const remoteEnabled = Boolean(communityApiUrl);
+// Shared mode includes durable writes, not just public reads. An API URL without a
+// usable Turnstile path is therefore an incomplete production configuration: fail
+// closed to local mode rather than queueing writes that can never mint an actor.
+export const remoteEnabled = Boolean(
+  communityApiUrl
+  && (communityTurnstileSiteKey || communityTestHumanProof),
+);
