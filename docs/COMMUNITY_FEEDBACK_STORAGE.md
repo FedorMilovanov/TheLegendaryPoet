@@ -33,9 +33,11 @@ The actor session is deliberately longer-lived than a Turnstile token so the dur
 
 ## Local and shared modes
 
-When `VITE_COMMUNITY_API_URL` is absent, community runs in local mode and the UI must say that data belongs to the current browser.
+Production shared mode is enabled only when both public client inputs are present and valid: `VITE_COMMUNITY_API_URL` and `VITE_TURNSTILE_SITE_KEY`. If either is missing or the API URL is malformed, community fails closed to local mode instead of creating a queue that can never mint a signed actor session.
 
-When the Worker is configured, visible state distinguishes waiting, synchronizing, online, queued and offline states. `remoteEnabled` means only that a shared API URL exists; it never proves a successful write.
+When shared mode is configured, visible state distinguishes waiting, synchronizing, online, queued and offline states. `remoteEnabled` means the complete client-side shared-write configuration exists; it still never proves that the latest read or write succeeded. Runtime success is represented by `CommunitySyncState`.
+
+Repository/browser tests may substitute a loopback-only human-proof fixture on `127.0.0.1` or `localhost`; that path is unavailable to production hostnames.
 
 ## Atomic user actions and outbox
 
