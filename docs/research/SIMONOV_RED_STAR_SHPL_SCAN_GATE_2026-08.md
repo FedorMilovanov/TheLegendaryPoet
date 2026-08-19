@@ -1,20 +1,21 @@
-# «Красная звезда», 7 декабря 1941 — ГПИБ direct-scan gate
+# «Красная звезда», 7 декабря 1941 — ГПИБ / SHPL institutional cross-check gate
 
-Дата прохода: 2026-08-18  
-Статус: **complete 1941 corpus verified / page 3 strongly corroborated / exact №288 child node and direct scan pending**
+Дата прохода: 2026-08-19  
+Статус: **complete 1941 SHPL corpus verified / global p.3 content direct-verified via exact №288 PDF / exact SHPL child node and institutional comparison pending**
 
 Связанные файлы:
 - `SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md`
 - `SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md`
+- `SIMONOV_RED_STAR_DIRECT_MIRRORS_GATE_2026-08.md`
 - `SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2026-08.md`
 
-## Почему этот проход важен
+## Зачем этот gate теперь нужен
 
-Publication gate уже уверенно сужал центральную публикацию до `Красной звезды`, **7 декабря 1941 года, №288 (5043)**. ГПИБ / SHPL подтверждает полный цифровой комплект газеты за 1941 год, включая декабрь №283–309.
+Изначально ГПИБ / SHPL был главным direct-scan target: корпус 1941 года был подтверждён, scholarly bibliography уже указывала **с. 3**, но сама полоса №288 редакцией ещё не была просмотрена.
 
-Новый scholarly witness теперь добавляет **конкретную страницу**: `Военно-исторический журнал`, официально обозначенный как `Издание Министерства обороны России`, в примечании 39 к статье Е. Ю. Колобова локализует `Сына артиллериста` на **с. 3**.
+Этот глобальный page-content gap **закрыт 19 августа 2026 года другим direct object**: exact standalone PDF выпуска `Красной звезды` №288 от 07.12.1941 был получен из Internet Archive item `no2661212191941`, захеширован и визуально проверен на printed p.3 и p.4.
 
-Следовательно, direct-scan hunt больше не должен начинаться с просмотра номера вслепую: после открытия exact child node №288 первым target становится **page 3**.
+Поэтому SHPL gate больше нельзя формулировать как `p.3 uninspected`. Его правильная роль теперь — **independent institutional provenance/page-identity cross-check**.
 
 ---
 
@@ -23,6 +24,8 @@ Publication gate уже уверенно сужал центральную пу�
 **ГПИБ, родительский объект:**  
 https://elib.shpl.ru/ru/nodes/25135-krasnaya-zvezda-tsentralnyy-organ-ministerstva-oborony-rossiyskoy-federatsii-m-1924-ezhedn
 
+Object id: **25135**.
+
 ---
 
 ## 2. 1941 год — полный комплект
@@ -30,7 +33,9 @@ https://elib.shpl.ru/ru/nodes/25135-krasnaya-zvezda-tsentralnyy-organ-ministerst
 **ГПИБ year node:**  
 https://elib.shpl.ru/ru/nodes/36558-1941
 
-Object-level metadata фиксирует:
+Object id: **36558**.
+
+Metadata фиксирует:
 
 - год: **1941**;
 - **№ 1 (1 января) — № 309 (31 декабря)**;
@@ -40,133 +45,107 @@ Object-level metadata фиксирует:
 
 ### Что закрыто
 
-В цифровом корпусе подтверждён диапазон, содержащий нужный №288.
+ГПИБ институционально подтверждает цифровой корпус и диапазон, содержащий нужный №288.
 
-### Что НЕ закрыто
+### Что остаётся SHPL-specific
 
-- exact child-node URL №288;
-- прямой просмотр p.3;
-- колонки и границы публикации;
-- continuation на другие страницы;
-- exact display title/byline на полосе.
+- exact SHPL child-node URL №288;
+- просмотр **именно SHPL-копии** p.3;
+- comparison её page identity/geometry с уже inspected direct PDF;
+- provenance цифровой копии, если SHPL UI её сообщает.
 
----
-
-## 3. Новый scholarly page witness — с. 3
-
-**Военно-исторический журнал**  
-`Издание Министерства обороны России`
-
-**Е. Ю. Колобов. `Советские писатели в первые месяцы войны на фронте и в тылу`.**  
-URL: https://history.milportal.ru/sovetskie-pisateli-v-pervye-mesyacy-vojny-na-fronte-i-v-tylu/
-
-Примечание 39:
-
-> `Симонов К. Сын артиллериста (фронтовая поэма) // Красная звезда. 1941. 7 декабря. С. 3.`
-
-### Новый статус
-
-**page 3 strongly corroborated / direct scan still pending.**
-
-Это не guess и не вычисление номера страницы. Но это всё ещё bibliographic/scholarly witness, а не визуальная проверка газетной полосы.
+Это **не** означает, что p.3 в целом остаётся непросмотренной.
 
 ---
 
-## 4. Надёжность корпуса и техническая возможность page-level работы
+## 3. Уже закрытый global page-content result
 
-### История оцифровки
+Direct-object gate фиксирует exact PDF:
 
-Архив обновлений ГПИБ фиксирует добавление `Красной звезды` за **1941 год** в электронную коллекцию во второй половине июня 2017 года.
+`Газета «Красная Звезда» №288 от 07 декабря 1941 года.pdf`
 
-Authority:
-https://elib.shpl.ru/ru/docs/6
+Internet Archive item: **`no2661212191941`**  
+SHA-256: **`9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`**.
 
-### Поиск по OCR
+На pixels printed p.3 установлено:
 
-Документация ГПИБ говорит о поиске:
+- `7 декабря 1941 г., воскресенье, № 288 (5043)`;
+- printed page **3**;
+- `Сын артиллериста`;
+- `(Фронтовая поэма)`;
+- **шесть газетных колонок**;
+- конец с `К. СИМОНОВ.` / `СЕВЕРНЫЙ ФРОНТ.`;
+- following printed p.4 просмотрена и продолжения поэмы не содержит.
 
-- по полям описаний;
-- **по полным текстам документов при наличии распознанного текста**;
-- в узле и подузлах.
-
-Search documentation:
-https://elib.shpl.ru/ru/docs/2-poisk
-
-OCR используется только как навигация к page image, не как замена визуальному witness.
+Следовательно, **global Red Star page-content gate is closed**. SHPL нужен как второй, institutional holder-level контроль.
 
 ---
 
-## 5. Почему нельзя угадывать child-node ID
+## 4. Independent scholarly control
+
+**Военно-исторический журнал** (`Издание Министерства обороны России`) в статье Е. Ю. Колобова, примечание 39, даёт:
+
+`Симонов К. Сын артиллериста (фронтовая поэма) // Красная звезда. 1941. 7 декабря. С. 3.`
+
+Scholarly locator теперь не заменяет scan и не ждёт scan для своего подтверждения: он **независимо совпал с direct visual result**.
+
+---
+
+## 5. Почему exact SHPL child-node ID всё ещё нельзя угадывать
 
 Exact child node остаётся:
 
 **unknown / discover, do not infer**.
 
-Внутренний node ID платформы не равен номеру газеты и не должен вычисляться по соседним узлам.
-
-Даже если guessed URL случайно открывается, evidence gate требует подтвердить breadcrumb/title/date самого объекта.
+Внутренний node ID платформы не равен номеру газеты и не вычисляется по соседним узлам. Даже если guessed URL случайно открывается, comparison gate требует подтвердить breadcrumb/title/date самого объекта.
 
 ---
 
-## 6. Что уже независимо известно о выпуске
+## 6. SHPL comparison checklist
 
-- дата: **7 декабря 1941 года**;
-- номер: **№288 (5043)**;
-- воскресенье;
-- Libinfo даёт размер цифрового файла **4 258 147 байт**;
-- ГПИБ подтверждает полный декабрьский диапазон **№283–309**;
-- scholarly citation Министерства обороны локализует поэму на **с. 3**.
+После обнаружения exact child node №288:
 
----
+- [ ] подтвердить breadcrumb `Красная звезда > 1941 > декабрь`;
+- [ ] подтвердить issue **№288 (5043), 07.12.1941**;
+- [ ] открыть **SHPL p.3**;
+- [ ] сопоставить title/subtitle с direct PDF;
+- [ ] сопоставить **six-column** geometry;
+- [ ] сопоставить конец `К. СИМОНОВ. / СЕВЕРНЫЙ ФРОНТ.`;
+- [ ] проверить following page на отсутствие continuation;
+- [ ] записать stable SHPL object/viewer URL;
+- [ ] сохранить provenance metadata, если она дана holder’ом;
+- [ ] reuse/licence facsimile решать отдельно.
 
-## 7. Exact hunt plan — теперь page-first
-
-- [ ] локализовать exact child node `№288, 7 декабря`;
-- [ ] проверить breadcrumb `Красная звезда > 1941 > декабрь`;
-- [ ] **открыть page 3 первым**;
-- [ ] найти `Сын артиллериста` и `К. Симонов` визуально;
-- [ ] записать column span / начало и конец;
-- [ ] проверить continuation marker;
-- [ ] если текста на p.3 нет, зафиксировать конфликт scholarly citation vs scanned object, а не молча переносить страницу;
-- [ ] сохранить exact object/viewer URL;
-- [ ] использовать OCR только для навигации;
-- [ ] после visual verification обновить article/source labels и facsimile manifest.
-
-### Навигационные запросы
-
-- `Сын артиллериста`;
-- `Симонов`;
-- `Два майора`;
-- короткая уникальная фраза начала — только для поиска страницы.
+OCR SHPL может использоваться только для навигации к page image.
 
 ---
 
-## 8. Редакционная формулировка после нового evidence
+## 7. Редакционная формулировка сейчас
 
-Сейчас безопасно:
+Безопасно:
 
-> ГПИБ хранит полный цифровой комплект `Красной звезды` за 1941 год, включая декабрь №283–309. `Военно-исторический журнал` Министерства обороны России указывает для публикации `Сына артиллериста` 7 декабря 1941 года **страницу 3**. Page number therefore strongly corroborated, но direct scan p.3 редакция ещё не просмотрела.
+> ГПИБ хранит полный цифровой комплект `Красной звезды` за 1941 год, включая декабрь №283–309. Сам выпуск №288 уже независимо получен и визуально проверен по direct PDF: `Сын артиллериста` находится на p.3, занимает шесть колонок и заканчивается на этой полосе; p.4 продолжения не содержит. Exact SHPL child object остаётся нужен для institutional provenance/page-identity cross-check.
 
-Пока нельзя:
+Нельзя:
 
-> `Мы просмотрели оригинальную полосу`.
+> `SHPL p.3 уже просмотрена редакцией`.
 
-И нельзя указывать точные колонки или утверждать, что текст целиком помещён на p.3.
+пока exact SHPL child/page действительно не открыт.
+
+И нельзя из наличия direct PDF выводить, что facsimile автоматически свободно для перепубликации.
 
 ---
 
-## 9. Приоритет газетных маршрутов
+## 8. Приоритет после page closure
 
-Для `Красной звезды` 07.12.1941:
+1. **ГПИБ / SHPL exact №288** — institutional page/provenance comparison;
+2. Ministry of Defence individual PDF route — второй institutional comparison;
+3. scholarly citation — independent bibliographic corroboration;
+4. Internet Archive exact PDF — уже inspected direct page-content object;
+5. другие mirrors — только дополнительное сравнение.
 
-1. **ГПИБ / SHPL direct scan** — target №288 → p.3;
-2. `Военно-исторический журнал` / Минобороны — strong scholarly page-3 witness;
-3. НЭБ/РГБ — official parent corpus;
-4. issue indexes — number/date identity;
-5. secondary delivery copies — context only.
-
-Для `Патриота Родины` 03.12.1941 этот evidence ничего автоматически не закрывает.
+Для `Патриота Родины` 03.12.1941 этот closure ничего автоматически не решает.
 
 ## Итог
 
-Publication gate сузился ещё сильнее: **нужен уже не поиск неизвестной страницы, а точечная визуальная проверка p.3 выпуска №288**. Пока она не выполнена, `с. 3` считается strongly corroborated scholarly evidence, а не direct-object verified.
+SHPL gate не удалён и не «засчитан по чужой ссылке»: он **правильно понижен из global page blocker в holder-specific institutional cross-check**. Центральная p.3 уже direct-verified по exact №288 PDF; exact SHPL child node и сравнение его копии остаются открытыми без выдуманных ID.
