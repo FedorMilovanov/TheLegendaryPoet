@@ -64,6 +64,9 @@ jobs:
       - name: Validate Patriot Rodiny acquisition inquiry
         run: npx tsx scripts/validate-simonov-patriot-rodiny-acquisition-inquiry.ts
 
+      - name: Validate Patriot Rodiny bibliographic follow-ups
+        run: npx tsx scripts/validate-simonov-patriot-rodiny-bibliographic-followups.ts
+
       - name: Validate direct-object acquisition inquiries
         run: npx tsx scripts/validate-simonov-direct-object-acquisition-inquiries.ts
 
