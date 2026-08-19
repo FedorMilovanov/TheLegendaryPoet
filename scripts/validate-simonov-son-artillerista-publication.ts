@@ -32,6 +32,9 @@ if (!essay.coverCredit?.includes('не документальная фотогр
   throw new Error('Simonov cover lost explicit non-documentary Loskutov disclosure');
 }
 if (essay.coverSourceUrl) throw new Error('Simonov editorial reconstruction must not carry an archival coverSourceUrl');
+if (!essay.tags.includes('документальное исследование')) {
+  throw new Error('Simonov publication lost the documents-category discovery tag');
+}
 
 if (!existsSync(heroPath)) throw new Error(`Simonov production hero missing: ${heroPath}`);
 const bytes = readFileSync(heroPath);
@@ -61,6 +64,10 @@ for (const forbidden of [
   'До production merge',
   'рекламной формулой',
   'С ним шли два разведчика и радиостанция',
+  'точный locator',
+  'exact выпуск',
+  'institutional provenance',
+  'reuse rights',
   '6 суток',
   '500–600 метров',
   '500-600 метров',
@@ -76,21 +83,42 @@ for (const required of [
   'публицистической формулой',
   'На командном пункте решили, что произошла ошибка, и запросили подтверждение.',
   'Точного дня в письме нет.',
+  'точный архивный указатель наградного объекта `10800112`',
   'с которым связывают дату 31 июля, но сам архивный лист редакцией ещё не просмотрен',
   'не повышается до безусловно установленного факта',
   'не превращает эту дату в безоговорочно доказанную «самую первую» публикацию',
-  'exact выпуск № 288 и его p.3 уже визуально проверены',
-  'отсутствие продолжения на p.4',
+  'точный выпуск № 288 и его печатная страница 3 уже визуально проверены',
+  'отсутствие продолжения на странице 4',
   'Обложка этой публикации — редакционная художественная реконструкция.',
   'Она не является документальной фотографией Ивана Лоскутова, конкретной высоты или боя 1941 года.',
 ]) {
   if (!readerText.includes(required)) throw new Error(`Simonov publication lost required reader-safety wording: ${required}`);
 }
 
-const publicSourceIds = new Set((essay.sources ?? []).map((source) => source.id).filter(Boolean));
+const publicSources = essay.sources ?? [];
+const publicSourceIds = new Set(publicSources.map((source) => source.id).filter(Boolean));
 for (const removedVisualSource of ['mustatunturi-commons', 'simonov-1943-commons']) {
   if (publicSourceIds.has(removedVisualSource)) {
     throw new Error(`Unused rights-sensitive visual source leaked into public bibliography: ${removedVisualSource}`);
+  }
+}
+
+const publicSourceText = publicSources
+  .map((source) => `${source.title}\n${source.note ?? ''}`)
+  .join('\n');
+for (const forbidden of [
+  'библиографическая authority',
+  'Exact locator',
+  'direct-object facts',
+  'direct issue facsimile',
+  'Local acquisition',
+  'Institutional provenance',
+  'direct inspection exact',
+  'geometry/границы',
+  'evidence расхождения',
+]) {
+  if (publicSourceText.includes(forbidden)) {
+    throw new Error(`Simonov public bibliography leaked internal research shorthand: ${forbidden}`);
   }
 }
 
@@ -106,4 +134,4 @@ for (const marker of [
   if (!closeout.includes(marker)) throw new Error(`Simonov closeout contract marker missing: ${marker}`);
 }
 
-console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, no full poem/body documentary images, and publication closeout all validated.');
+console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public bibliography language, no full poem/body documentary images, and publication closeout all validated.');
