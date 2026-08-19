@@ -162,7 +162,7 @@ async function verifySession(request: Request, env: Env) {
   const parts = token.split('.');
   if (parts.length !== 3 || parts[0] !== 'v1') throw new HttpError(401, 'invalid_session');
   const secret = env.COMMUNITY_SESSION_SECRET ?? '';
-  if (secret.length < 32) throw new HttpError(503, 'server_not_ready');
+  if (secret.length < 32 || secret === env.COMMUNITY_NETWORK_SECRET) throw new HttpError(503, 'server_not_ready');
   let signature: ArrayBuffer;
   let payloadBytes: ArrayBuffer;
   try {
@@ -561,14 +561,28 @@ async function route(request: Request, env: Env) {
   const url = new URL(request.url);
 
   if (request.method === 'GET' && url.pathname === '/health') {
-    const writesReady = Boolean(
+    let databaseReady = false;
+    try {
+      const row = await env.DB.prepare(`
+        SELECT COUNT(*) AS table_count
+        FROM sqlite_master
+        WHERE type = 'table'
+          AND name IN ('tlp_ratings', 'tlp_comments', 'tlp_helpful_votes', 'tlp_rate_buckets')
+      `).first<{ table_count: number }>();
+      databaseReady = Number(row?.table_count) === 4;
+    } catch {
+      databaseReady = false;
+    }
+    const targetAuthorityReady = Boolean(await canonicalTargets(env));
+    const secretsReady = Boolean(
       (env.COMMUNITY_SESSION_SECRET?.length ?? 0) >= 32
       && (env.COMMUNITY_NETWORK_SECRET?.length ?? 0) >= 32
       && env.COMMUNITY_SESSION_SECRET !== env.COMMUNITY_NETWORK_SECRET
       && env.TURNSTILE_SECRET
       && env.TURNSTILE_HOSTNAMES,
     );
-    return json(200, { ok: true, database: 'd1', writesReady }, origin, env);
+    const writesReady = databaseReady && targetAuthorityReady && secretsReady;
+    return json(200, { ok: databaseReady, database: 'd1', databaseReady, targetAuthorityReady, writesReady }, origin, env);
   }
 
   if (request.method === 'GET' && url.pathname === '/v1/summary') {
