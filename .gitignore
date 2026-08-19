@@ -29,9 +29,6 @@ qa-artifacts/
 # The payloads are parity-validated before use and must not become a second committed source of truth.
 /public/data/essays/
 
-# Real Cloudflare resource IDs belong to the owner environment, not git.
-/workers/community-api/wrangler.jsonc
-
 # Logs
 logs/
 *.log
