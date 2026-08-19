@@ -1,24 +1,30 @@
-# Simonov direct-object acquisition inquiries — Red Star + RSL witnesses
+# Simonov direct-object acquisition inquiries — 47news cross-check + RSL print witnesses
 
 Дата: 2026-08-19  
-Статус: **47news exact p.3 fragment image URL recovered but pixels undelivered / 47news and RSL replies pending / no paid work authorized / no page promoted to direct-inspected**
+Статус: **Red Star №288 p.3 direct-inspected independently / 47news fragment bytes still undelivered / RSL 1973+1982 pages still pending / no paid work authorized**
 
 ## Цель
 
-После того как библиография и exact locators уже сузили главные targets, дальнейший прогресс должен происходить не накоплением повторных ссылок, а получением lawful page evidence.
+Этот gate фиксирует состояние **внешних acquisition routes**, не подменяя ими глобальный evidence state.
 
-Этот gate фиксирует два внешних запроса, отправленных 19 августа 2026 года:
+19 августа 2026 года были отправлены два запроса:
 
 1. в редакцию **47news** — по сохранённому у них фрагменту 3-й полосы `Красной звезды` №288 от 07.12.1941;
 2. в **Российскую государственную библиотеку** — по печатным страницам Симонова 1973 и 1982 годов.
 
+Изначально 47news был одним из маршрутов к первому visual inspection p.3. Позже exact №288 PDF был получен независимо через Internet Archive и p.3/p.4 визуально проверены. Поэтому теперь надо различать:
+
+- **global Red Star page-content state:** direct-inspected independently;
+- **47news fragment route:** exact image URL known, bytes unavailable, fragment itself uninspected;
+- **RSL print routes:** requested pages still uninspected.
+
 Во всех случаях действует граница:
 
-**inquiry sent ≠ exact delivery URL recovered ≠ reply received ≠ bytes received ≠ page visually inspected.**
+**inquiry sent ≠ exact delivery URL recovered ≠ reply received ≠ bytes received ≠ a particular source object visually inspected.**
 
 ---
 
-## 1. 47news — `Красная звезда` №288, p.3
+## 1. 47news — `Красная звезда` №288, p.3 fragment
 
 ### Почему запрос предметный
 
@@ -29,7 +35,7 @@
 Страница статьи:
 https://47news.ru/articles/204402/
 
-Официальные контакты 47news указывают редакционный адрес:
+Официальный редакционный адрес:
 
 `news@47news.ru`
 
@@ -41,17 +47,17 @@ https://47news.ru/articles/204402/
 
 Это **не вычисленный путь**: URL получен из реального image link на странице статьи.
 
-Текущий delivery result:
+Текущий delivery result **именно для 47news object**:
 
 - web click по image object дошёл до exact URL, но fetch вернул `Cache miss`;
 - отдельная прямая попытка скачать тот же exact URL также не получила bytes;
-- следовательно, **pixels текущим toolchain не просмотрены**;
-- нельзя утверждать, что именно показано внутри этого фрагмента помимо caption 47news;
-- нельзя утверждать присутствие/отсутствие `Сына артиллериста` в видимой части фрагмента.
+- следовательно, **47news fragment pixels текущим toolchain не просмотрены**;
+- нельзя утверждать, что именно показано внутри этого fragment помимо caption 47news;
+- нельзя приписывать этому fragment собственные layout findings, пока его bytes не получены.
 
-Новый статус этой линии:
+Статус этой линии:
 
-**exact 47news p.3 fragment image URL recovered / bytes not acquired / visual inspection pending.**
+**exact 47news p.3 fragment image URL recovered / bytes not acquired / fragment visual inspection pending.**
 
 ### Отправленный запрос
 
@@ -66,8 +72,10 @@ Thread ID: **`1a01724745b80300`**
 - есть ли полный scan p.3 или всего №288;
 - виден ли на исходнике `Сын артиллериста`;
 - provenance их архивной копии;
-- исследовательская копия для проверки колонок, начала/конца и continuation;
-- отдельное решение по reuse rights, если изображение когда-либо понадобится в production.
+- исследовательская копия;
+- отдельное решение по reuse rights, если изображение понадобится в production.
+
+Исторически в отправленном письме также запрашивалась проверка колонок/границ/continuation. После independent direct-page closure эта часть запроса **больше не является page-content blocker**; ответ 47news теперь нужен главным образом для provenance, сравнения digital derivatives, high-resolution copy и reuse status.
 
 Финансовая граница:
 
@@ -75,48 +83,71 @@ Thread ID: **`1a01724745b80300`**
 
 ### Текущий статус запроса
 
-**reply pending / exact published image URL known / source pixels not received / p.3 remains direct-inspection pending.**
+**reply pending / exact published 47news image URL known / 47news source pixels not received / fragment inspection pending / global №288 p.3 already direct-verified independently.**
 
-Сам факт существования у 47news фрагмента 3-й полосы и восстановленный exact image URL усиливают acquisition map, но не доказывают расположение текста Симонова внутри видимой части изображения до просмотра pixels.
+Сам факт существования у 47news фрагмента и recovered exact URL усиливает provenance/acquisition map, но не является источником уже установленной six-column geometry до просмотра именно 47news pixels.
 
 ---
 
-## 2. РГБ — Симонов 1973, pp.54–62
+## 2. Independent Red Star direct-page closure
+
+Exact standalone PDF:
+
+**`Газета «Красная Звезда» №288 от 07 декабря 1941 года.pdf`**  
+Internet Archive item: **`no2661212191941`**  
+Размер: **6 506 121 bytes**  
+SHA-256: **`9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`**.
+
+Printed p.3 и p.4 визуально inspected. Установлены:
+
+- `7 декабря 1941 г., воскресенье, № 288 (5043)`;
+- printed p.3;
+- `Сын артиллериста`;
+- `(Фронтовая поэма)`;
+- **шесть газетных колонок**;
+- конец `К. СИМОНОВ.` / `СЕВЕРНЫЙ ФРОНТ.`;
+- на p.4 продолжения нет.
+
+Это closure относится к **page content**, но не автоматически к institutional provenance или facsimile reuse rights.
+
+---
+
+## 3. РГБ — Симонов 1973, pp.54–62
 
 **Object:** К. М. Симонов. `От Халхингола до Берлина`. Москва: ДОСААФ, 1973. 335 с.  
 **RSL record:** `01007444220`  
 **Target:** printed **pp.54–62**.
 
-Официальная карточка РГБ помечает документ как находящийся в свободном доступе в полном объёме в Просмотрщике.
+Официальная карточка РГБ помечает документ как находящийся в открытом доступе в полном объёме в Просмотрщике.
 
-Нужна именно page-level collation, прежде всего для textual variant:
+Нужна page-level collation, прежде всего для textual variant:
 
 **командир / комиссар** при переспросе команды огня.
 
-В текущем web layer search-result карточка подтверждает full-viewer access, но underlying viewer/document ID не surfaced; прямое открытие карточки возвращает cache miss. Поэтому viewer URL не конструируется по предположению.
+Search-result карточка подтверждает full-viewer access, но underlying exact viewer/document route для этого record текущему toolchain не delivered; inferred dlib path не повышается до факта. Поэтому pp.54–62 остаются visually pending.
 
 ---
 
-## 3. РГБ — Симонов, Собрание сочинений, т.8 (1982)
+## 4. РГБ — Симонов, Собрание сочинений, т.8 (1982)
 
 **Object:** К. М. Симонов. `Собрание сочинений в 10 т. Т. 8. Разные дни войны. Дневник писателя. Т. 1. 1941 год`. Москва: Художественная литература, 1982. 479 с.  
 **Targets:** printed **p.393 and pp.430–433**.
 
-Публичный scan package этого же тома уже локализован на publ.lib.ru, но bytes текущим toolchain не получены. Поэтому РГБ запрошена как institutional delivery route и как authority для точной карточки/просмотрщика тома.
+Публичные exact scan packages этого же издания уже локализованы, а same-edition OCR отдельно collated, но bytes/page images target pages текущим toolchain всё ещё не получены.
 
 Критические readings:
 
 - литературные имена `Лёнька / Деев / Петров`;
-- авторская формула о выборе фамилий для стихотворного размера;
+- авторская формула о выборе фамилий;
 - поздняя встреча с реальным прототипом;
 - судьба отца Лоскутова;
-- exact printed father name — важно для конфликта `Иван Михайлович / Алексей Михайлович`.
+- exact printed father name для конфликта `Иван Михайлович / Алексей Михайлович`.
 
 ---
 
-## 4. Запрос в РГБ
+## 5. Запрос в РГБ
 
-Официальная справочная служба РГБ принимает вопросы по адресу **`sbo@rsl.ru`**; РГБ также официально предоставляет онлайн-копирование фрагментов с предварительной обработкой заявки и оплатой после оформления услуги.
+Официальная справочная служба РГБ принимает вопросы по адресу **`sbo@rsl.ru`**; РГБ также предоставляет онлайн-копирование фрагментов по своей процедуре.
 
 Дата: **2026-08-19**  
 Получатель: **`sbo@rsl.ru`**  
@@ -138,15 +169,14 @@ Thread ID: **`1a017249f09e2e53`**
 
 ---
 
-## 5. Что делать после ответов / delivery
+## 6. Что делать после ответов / delivery
 
-### Если exact 47news URL становится доступен или редакция присылает файл
+### Если 47news присылает файл
 
 - [ ] сохранить original bytes;
 - [ ] SHA-256;
-- [ ] визуально установить, какой участок p.3 показан;
-- [ ] проверить наличие/отсутствие `Сына артиллериста` в самом fragment;
-- [ ] если есть full page — зафиксировать title/byline/columns/start/end/continuation;
+- [ ] визуально установить участок p.3;
+- [ ] compare title/layout с уже inspected exact №288 PDF;
 - [ ] записать сообщённый provenance отдельно от собственных выводов;
 - [ ] reuse rights решать отдельно.
 
@@ -168,4 +198,4 @@ Thread ID: **`1a017249f09e2e53`**
 
 ## Итог
 
-Один acquisition route стал конкретнее: **для опубликованного 47news фрагмента p.3 восстановлен exact image-object URL**, но bytes текущим toolchain всё ещё не получены и изображение не просмотрено. РГБ остаётся официальным delivery route для печатных страниц 1973/1982. Ни один claim не повышен до `direct object inspected`.
+Global Red Star page-content P0 уже закрыт независимо по exact №288 facsimile. **47news остаётся отдельным uninspected source object** и полезен для provenance/high-resolution comparison/reuse inquiry. РГБ остаётся официальным delivery route для printed pp.54–62 (1973) и p.393/430–433 (1982). Эти RSL page gates остаются открыты.
