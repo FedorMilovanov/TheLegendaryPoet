@@ -8,6 +8,7 @@ const slug = 'simonov-syn-artillerista-realnaya-istoriya';
 const heroPath = 'public/images/essays/simonov/simonov-son-artillerista-hero.webp';
 const heroSha256 = '5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5';
 const heroBytes = 130386;
+const provenancePath = 'public/images/PROVENANCE.yml';
 const closeoutPath = 'docs/research/SIMONOV_PUBLICATION_CLOSEOUT_2026-08.md';
 
 const published = essays.filter((essay) => essay.id === id || essay.slug === slug);
@@ -41,6 +42,21 @@ const bytes = readFileSync(heroPath);
 if (bytes.length !== heroBytes) throw new Error(`Simonov production hero byte-size drift: ${bytes.length}`);
 const actualHeroSha = createHash('sha256').update(bytes).digest('hex');
 if (actualHeroSha !== heroSha256) throw new Error(`Simonov production hero SHA-256 drift: ${actualHeroSha}`);
+
+if (!existsSync(provenancePath)) throw new Error(`Root image provenance missing: ${provenancePath}`);
+const provenance = readFileSync(provenancePath, 'utf8');
+for (const marker of [
+  `path: ${heroPath}`,
+  'role: essay_hero_and_card',
+  'origin_class: local_cinematic_editorial_reconstruction',
+  'evidence: docs/research/SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md',
+  `bytes: ${heroBytes}`,
+  `sha256: ${heroSha256}`,
+  'review_status: VERIFIED-LOCAL-EDITORIAL',
+  'source_use: not_primary_evidence',
+]) {
+  if (!provenance.includes(marker)) throw new Error(`Simonov root provenance marker missing: ${marker}`);
+}
 
 if (essay.blocks.some((block) => block.type === 'image')) {
   throw new Error('Simonov public article must not contain documentary/body image blocks before item-level rights closure');
@@ -138,4 +154,4 @@ for (const marker of [
   if (!closeout.includes(marker)) throw new Error(`Simonov closeout contract marker missing: ${marker}`);
 }
 
-console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public language and bibliography, stable pre-merge closeout, no full poem/body documentary images, and exact-head execution requirement all validated.');
+console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, root provenance, reconstruction disclosure, reader-safe claim boundaries, clean public language and bibliography, stable pre-merge closeout, no full poem/body documentary images, and exact-head execution requirement all validated.');
