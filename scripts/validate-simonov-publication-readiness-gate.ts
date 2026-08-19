@@ -114,7 +114,7 @@ for (const researchStillOpen of [
 
 for (const marker of [
   'PUBLICATION ARTIFACT COMPLETE / APPROVED HERO PRESENT / CLAIM-AWARE READER SAFETY PRESERVED / MERGE REQUIRES GREEN EXACT-HEAD CHECKS',
-  'Execution evidence живёт in checks'.replace(' in ', ' в '),
+  'Execution evidence живёт в checks самого PR на его exact head',
   'После успешной матрицы не требуется технический «closeout commit»',
 ]) {
   if (!closeout.includes(marker)) throw new Error(`Simonov readiness/closeout transaction boundary disappeared: ${marker}`);
