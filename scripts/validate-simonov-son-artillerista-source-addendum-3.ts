@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const path = 'docs/research/SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov third-pass source addendum missing: ${path}`);
 const text = readFileSync(path, 'utf8');
+const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
 
 for (const marker of [
   'third-pass source addendum / direct-object hierarchy preserved',
@@ -32,12 +33,8 @@ for (const marker of [
   if (!text.includes(marker)) throw new Error(`Simonov third-pass source boundary disappeared: ${marker}`);
 }
 
-for (const forbidden of [
-  'Тихоокеанский прибой 1984 direct object verified',
-  'В номер original Ortenberg locus verified',
-  'Учительская газета 15.02.1966 verified primary object',
-]) {
-  if (text.includes(forbidden)) throw new Error(`Simonov third-pass addendum overstates closure: ${forbidden}`);
+if (/direct object verified|original locus verified|primary object verified|print page inspected/iu.test(status)) {
+  throw new Error(`Simonov third-pass addendum falsely closes an object gate: ${status}`);
 }
 
-console.log('Simonov source addendum III: author handoff and invented-name facts usable; Primorye 1984, Ortenberg exact locus and Feb-1966 press lead remain object-pending.');
+console.log('Simonov source addendum III: author handoff and invented-name facts usable; Primorye 1984, Ortenberg printed pages and Feb-1966 press lead remain object-pending.');
