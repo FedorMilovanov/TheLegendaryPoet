@@ -51,6 +51,8 @@ After this branch is merged and exact-head repository gates are green, use Cloud
 
 Cloudflare may create the build API token automatically. Do not create or paste a broad account API token unless there is a specific need.
 
+The Worker imports the canonical rating score contract from the repository `src/` tree. Wrangler's normal bundled mode follows static imports into the final Worker bundle; do not copy that contract into a second Worker-only list.
+
 ## Runtime configuration in Cloudflare
 
 In the Worker **Settings → Variables and Secrets**, add these three values as type **Secret**:
@@ -73,7 +75,8 @@ The non-secret runtime variables and D1 binding are already declared in `wrangle
 1. Apply `schema.sql` to D1.
 2. Confirm the Turnstile widget is **Managed** and restricted to the two production hostnames.
 3. Deploy the Worker through Workers Builds.
-4. Verify `GET /health` reports all of the following:
+4. Verify `GET /health` returns HTTP **200** and reports all of the following:
+   - `ok: true`
    - `database: "d1"`
    - `databaseReady: true`
    - `targetAuthorityReady: true`
@@ -85,20 +88,22 @@ The non-secret runtime variables and D1 binding are already declared in `wrangle
 7. Deploy the static site.
 8. Run live adversarial checks before AuditRepo P1 closure.
 
-`/health` is deliberately fail-closed. It does not infer readiness from the D1 binding name or from the mere presence of secrets. It verifies that the four canonical D1 tables exist, that the release target manifest is reachable and valid, and that the required secrets are present and separated. A partial rollout must therefore remain `writesReady: false` rather than producing a false green.
+`/health` is deliberately fail-closed. It does not infer readiness from the D1 binding name or from the mere presence of secrets. It verifies that the four canonical D1 tables exist, that the release target manifest is reachable and valid, and that the required secrets are present and separated. A partial rollout returns HTTP **503**, `ok: false`, and `writesReady: false` rather than producing a false green.
 
 ## Security invariants
 
 - Turnstile is validated server-side on anonymous session issuance and checked for expected action + hostname.
 - Anonymous actor tokens are HMAC-signed by the Worker and expire after 90 days.
 - Creating another actor session requires another Turnstile verification and is network-budgeted.
+- Rating score keys come from one shared canonical contract used by the UI, local outbox and Worker. Incomplete legacy pending ratings are removed from the remote-delivery queue rather than retried forever; historical local data can remain readable without inventing missing scores.
 - Rating uniqueness is `(target_type, target_id, actor_id)` in D1.
 - Comment retries are idempotent only when the stable comment ID belongs to the same actor **and** the same normalized immutable payload (`target`, author, text, kind). Reusing an ID with different content is a `409 comment_id_conflict`. Concurrent identical retries converge on the single stored row.
+- The 20-second per-actor comment cooldown is enforced inside the D1 `INSERT ... WHERE NOT EXISTS` statement, so two concurrent requests cannot both pass a separate read-before-write check.
 - Helpful uniqueness is `(comment_id, actor_id)`.
 - Network abuse budgets are atomic D1 upserts; the client never supplies the network key, actor ID or budget fields.
-- Mutation target IDs must exist in the release-generated canonical manifest.
+- Mutation target IDs must exist in the release-generated canonical manifest. The Worker rejects malformed manifests, unexpected target-type keys and duplicate target IDs instead of silently widening or collapsing authority.
 - Reads expose no actor IDs, network keys or secrets.
 
 ## Deterministic target authority
 
-`npm run community:targets` derives `public/community-targets.json` from the canonical Product catalogs: published poets, their poems, published music tracks, and published essays. It is generated during the site build, so it is not a second editorial source of truth.
+`npm run community:targets` derives `public/community-targets.json` from the canonical Product catalogs: published poets, their poems, published music tracks, and published essays. It is generated during the site build, so it is not a second editorial source of truth. Generation fails on duplicate canonical IDs instead of silently de-duplicating them.
