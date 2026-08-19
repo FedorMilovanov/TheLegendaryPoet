@@ -17,11 +17,13 @@ const wrangler = JSON.parse(wranglerText) as {
   name?: string;
   main?: string;
   vars?: Record<string, string>;
+  secrets?: { required?: string[] };
   d1_databases?: Array<{ binding?: string; database_name?: string; database_id?: string }>;
 };
 const schema = read('workers/community-api/schema.sql');
 const generator = read('scripts/gen-community-targets.ts');
 const deploy = read('.github/workflows/deploy.yml');
+const gitignore = read('.gitignore');
 const packageJson = read('package.json');
 const setup = read('docs/COMMENTS_SETUP.md');
 const workerSetup = read('workers/community-api/README.md');
@@ -88,7 +90,11 @@ expect(d1?.database_id === '16928bb2-13e7-462a-b788-652e95618917', 'Wrangler D1 
 expect(wrangler.vars?.ALLOWED_ORIGINS === 'https://thelegendarypoet.ru,https://www.thelegendarypoet.ru', 'Worker origin allowlist must remain production-scoped');
 expect(wrangler.vars?.TURNSTILE_HOSTNAMES === 'thelegendarypoet.ru,www.thelegendarypoet.ru', 'Turnstile hostname verification must remain production-scoped');
 expect(wrangler.vars?.COMMUNITY_TARGET_MANIFEST_URL === 'https://thelegendarypoet.ru/community-targets.json', 'Worker target authority must point at the production release manifest');
-expect(!/COMMUNITY_SESSION_SECRET|COMMUNITY_NETWORK_SECRET|TURNSTILE_SECRET/.test(wranglerText), 'Wrangler config must never contain Worker secret values or secret bindings as plain vars');
+const requiredSecrets = [...(wrangler.secrets?.required ?? [])].sort();
+const expectedRequiredSecrets = ['COMMUNITY_NETWORK_SECRET', 'COMMUNITY_SESSION_SECRET', 'TURNSTILE_SECRET'].sort();
+expect(JSON.stringify(requiredSecrets) === JSON.stringify(expectedRequiredSecrets), 'Wrangler must declare the exact three required Worker secret bindings so deploy fails closed when one is missing');
+expect(!/COMMUNITY_SESSION_SECRET|COMMUNITY_NETWORK_SECRET|TURNSTILE_SECRET/.test(JSON.stringify(wrangler.vars ?? {})), 'Worker secrets must never be configured as plaintext Wrangler vars');
+expect(gitignore.includes('.dev.vars'), 'local Cloudflare secret files must be ignored by git');
 expect(!existsSync('workers/community-api/wrangler.example.jsonc'), 'placeholder Wrangler config must be retired once the production D1 binding exists');
 
 expect(schema.includes('PRIMARY KEY (target_type, target_id, actor_id)'), 'D1 schema must enforce one active rating per actor/target');
@@ -107,6 +113,7 @@ expect(packageJson.includes('npm run validate:community-worker-types'), 'communi
 expect(workerTsconfig.includes('"WebWorker"') && workerTsconfig.includes('"noEmit": true'), 'Worker typecheck must use web-worker platform types without producing artifacts');
 expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
 expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes wrangler@4.120.0 deploy'), 'Worker deployment must be reproducible from the connected Git repository');
+expect(workerSetup.includes('secrets.required') || workerSetup.includes('required secret'), 'Worker operator documentation must explain deploy-time required-secret validation');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
 expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser QA must use only the loopback test proof boundary');
@@ -118,5 +125,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
