@@ -55,6 +55,9 @@ expect(worker.includes("takeBudget(env.DB, key, 'session', '*', 86400, 30)"), 'T
 expect(worker.includes("INSERT INTO tlp_rate_buckets") && worker.includes('ON CONFLICT(network_key, action, scope, window_start)'), 'network budgets must be atomic D1 upserts');
 expect(worker.includes("ON CONFLICT(target_type, target_id, actor_id)"), 'rating uniqueness must be server actor + target');
 expect(worker.includes('scoresEqual(body.targetType, existing.scores_json, scores)') && worker.includes('idempotent: true'), 'lost-response rating retries must short-circuit before spending another abuse budget');
+expect(worker.includes('SELECT actor_id, target_type, target_id, author, text, kind FROM tlp_comments WHERE id = ?'), 'comment replay checks must compare the complete immutable stored payload');
+expect(worker.includes('commentMatches(existing, actor, comment)') && worker.includes('comment_id_conflict'), 'comment IDs must be idempotent only for the same actor and normalized payload');
+expect(worker.includes('INSERT OR IGNORE INTO tlp_comments') && worker.includes('const persisted = await readExisting()'), 'concurrent comment retries must converge on one row and re-verify ownership/payload instead of surfacing a uniqueness 500');
 expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
 expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
@@ -97,5 +100,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, retry idempotency, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
