@@ -129,11 +129,13 @@ function base64urlEncode(bytes: Uint8Array) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function base64urlDecode(value: string) {
+function base64urlDecode(value: string): ArrayBuffer {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
   const binary = atob(padded);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes.buffer;
 }
 
 async function signSession(payload: SessionPayload, env: Env) {
@@ -152,8 +154,8 @@ async function verifySession(request: Request, env: Env) {
   if (parts.length !== 3 || parts[0] !== 'v1') throw new HttpError(401, 'invalid_session');
   const secret = env.COMMUNITY_SESSION_SECRET ?? '';
   if (secret.length < 32) throw new HttpError(503, 'server_not_ready');
-  let signature: Uint8Array;
-  let payloadBytes: Uint8Array;
+  let signature: ArrayBuffer;
+  let payloadBytes: ArrayBuffer;
   try {
     signature = base64urlDecode(parts[2]);
     payloadBytes = base64urlDecode(parts[1]);
