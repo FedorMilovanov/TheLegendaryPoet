@@ -1,6 +1,7 @@
 export {};
 
 process.env.VITE_COMMUNITY_API_URL = 'https://community.test.invalid';
+process.env.VITE_TURNSTILE_SITE_KEY = 'test-turnstile-site-key';
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
