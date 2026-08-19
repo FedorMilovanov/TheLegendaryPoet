@@ -65,6 +65,7 @@ for (const forbidden of [
   'рекламной формулой',
   'С ним шли два разведчика и радиостанция',
   'точный locator',
+  'Exact PDF',
   'exact выпуск',
   'institutional provenance',
   'reuse rights',
@@ -86,6 +87,7 @@ for (const required of [
   'точный архивный указатель наградного объекта `10800112`',
   'с которым связывают дату 31 июля, но сам архивный лист редакцией ещё не просмотрен',
   'не повышается до безусловно установленного факта',
+  'Полный файл этого выпуска редакция получила и визуально сверила',
   'не превращает эту дату в безоговорочно доказанную «самую первую» публикацию',
   'точный выпуск № 288 и его печатная страница 3 уже визуально проверены',
   'отсутствие продолжения на странице 4',
@@ -134,4 +136,4 @@ for (const marker of [
   if (!closeout.includes(marker)) throw new Error(`Simonov closeout contract marker missing: ${marker}`);
 }
 
-console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public bibliography language, no full poem/body documentary images, and publication closeout all validated.');
+console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public language and bibliography, no full poem/body documentary images, and publication closeout all validated.');
