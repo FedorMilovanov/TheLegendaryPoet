@@ -1,17 +1,61 @@
 # «Патриот Родины», 03.12.1941 — lawful acquisition inquiry gate
 
 Дата: 2026-08-19  
-Статус: **AONB inquiry sent / AONB reply pending / GAAO email reply received with authenticated-channel requirement / GAAO item search not initiated / no page evidence / no paid work authorized**
+Статус: **AONB inquiry sent / GAAO procedural reply received / exact RSL serial record 01004527271 recovered and viewer-route clarification sent / no 03.12 issue-page evidence / no paid work authorized**
 
 ## Причина
 
-RSL parent record `01006521228` подтверждает газету и большой цифровой комплект, но late-1941 holdings list имеет лакуну `№286–289`. Поэтому повторный поиск только внутри parent viewer не является достаточной acquisition strategy.
+Главная задача остаётся object-level: получить или открыть **сам выпуск `Патриота Родины` от 03.12.1941** и увидеть masthead + полосу `Сына артиллериста`, не вычисляя номер выпуска по соседним holdings.
 
-Следующий корректный путь — запрашивать item-level наличие выпуска **по точной дате 03.12.1941** у региональных хранителей, не выдавая candidate issue number за установленный факт.
+В раннем проходе использовался RSL parent/holdings record `01006521228`; его late-1941 holdings list имеет лакуну `№286–289`. 19 августа найден второй, более точный официальный serial record РГБ **`01004527271`**, который РГБ помечает как документ, находящийся **в открытом доступе в полном объёме**, и снабжает действием `Читать онлайн`.
+
+Новый record не даёт нам права угадывать скрытый viewer URL, но превращает РГБ в ещё более конкретный acquisition route.
 
 ---
 
-## 1. Архангельская областная научная библиотека им. Н. А. Добролюбова
+## 1. Российская государственная библиотека — exact serial record `01004527271`
+
+**RSL record:** `01004527271`  
+**Шифр:** `OVL ВО 200/21`  
+**Access marker:** `Документ находится в открытом доступе в полном объёме` / `Читать онлайн`.
+
+Карточка полезна ещё и для catalog-history ambiguity:
+
+- выходные данные сохраняют историческую формулу `Петрозаводск, 1940-`;
+- при этом bibliographic description для военного периода связывает газету с **Архангельским военным округом**;
+- для 1941 года в metadata присутствует редакционная authority, включая Н. Потапова.
+
+Это помогает объяснить, почему поздние источники могут механически повторять `петрозаводская`, но **не доказывает** ни ранне-ноябрьскую дату, ни конкретный выпуск 03.12.1941.
+
+### Viewer boundary
+
+HTML-карточка показывает `Читать онлайн`, но underlying child/viewer URL текущему инструменту не surfaced. Он **не конструируется по шаблону** и не угадывается.
+
+Правильный текущий статус:
+
+**exact RSL serial record + full-viewer availability verified / exact 03.12.1941 child issue and page still unresolved.**
+
+### Уточнение, отправленное в РГБ
+
+Существующий справочный запрос в РГБ дополнен новым exact locator.
+
+Дата уточнения: **2026-08-19**  
+Адресат: **`sbo@rsl.ru`**  
+Исходный thread: **`1a017249f09e2e53`**  
+Новый Gmail message ID: **`1a01b4933d588caa`**.
+
+Запрошено:
+
+1. stable viewer/child-object route **именно к выпуску 03.12.1941**;
+2. подтверждённый exact issue number;
+3. валовый номер, если он присутствует на объекте/в записи;
+4. printed page `Сына артиллериста`;
+5. не вычислять номер по соседним выпускам;
+6. если нужна платная копия — сначала exact quote и условия, **без начала платной работы до отдельного подтверждения**.
+
+---
+
+## 2. Архангельская областная научная библиотека им. Н. А. Добролюбова
 
 Адресат: отдел краеведения `Русский Север`  
 E-mail: **`krai@aonb.ru`**
@@ -42,7 +86,7 @@ Gmail message/thread ID: **`1a017204907bb559`**
 
 ---
 
-## 2. Государственный архив Архангельской области — e-mail accepted only as routing reply, not as archival request
+## 3. Государственный архив Архангельской области — e-mail accepted only as routing reply, not as archival request
 
 Первоначальный e-mail был направлен на **`arkhiv@dvinaland.ru`** 19 августа 2026 года с exact-date запросом по `Патриоту Родины`.
 
@@ -85,9 +129,9 @@ Gmail thread ID: **`1a017207f585d998`**.
 
 ---
 
-## 3. Почему запросы идут по дате, а не по candidate №287
+## 4. Почему запросы идут по дате, а не по candidate №287
 
-Sequence analysis RSL holdings позволяет получить navigation candidate, но direct masthead не просмотрен. Поэтому номер выпуска **сознательно не заявлен** как факт.
+Sequence analysis старого RSL holdings record позволяет получить navigation candidate, но direct masthead не просмотрен. Поэтому номер выпуска **сознательно не заявлен** как факт.
 
 Формула поиска:
 
@@ -97,7 +141,14 @@ Sequence analysis RSL holdings позволяет получить navigation ca
 
 ---
 
-## 4. Следующие действия
+## 5. Следующие действия
+
+### РГБ
+
+- [ ] получить stable `Читать онлайн` / child route для 03.12.1941;
+- [ ] если РГБ сообщает issue/page — записать как institutional metadata до visual inspection;
+- [ ] открыть masthead + relevant page;
+- [ ] не повышать `first publication` до page inspection.
 
 ### AONB
 
@@ -125,4 +176,4 @@ Sequence analysis RSL holdings позволяет получить navigation ca
 
 ## Итог
 
-Acquisition gate стал точнее: **АОНБ-запрос остаётся содержательно pending; ГААО уже ответил, но только по процедуре и требует авторизованный через ЕСИА/Госуслуги либо почтовый канал.** Ни номер выпуска, ни полоса 03.12.1941 не подтверждены. Денежных обязательств нет, а `first publication` остаётся fail-closed.
+Acquisition gate стал конкретнее сразу по трём routes: **AONB inquiry pending; GAAO procedural route требует ESIA/post; РГБ теперь имеет exact serial record `01004527271` с full-viewer declaration, и в РГБ отправлено уточнение на stable child route к 03.12.1941.** Ни номер выпуска, ни полоса 03.12.1941 пока не подтверждены на pixels. Денежных обязательств нет, а `first publication` остаётся fail-closed.
