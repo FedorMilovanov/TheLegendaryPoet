@@ -74,19 +74,24 @@ requireMarkers('Simonov witness reconciliation', witness, [
 ]);
 if (witness.includes('расхождение источников устранено')) throw new Error('Witness conflicts were falsely harmonized');
 
-// Loskutov print witness remains page-level pending despite full RSL viewer availability.
+// Loskutov print witnesses: delivery variants mapped; controlling printed pages remain pending.
 const printWitness = read('docs/research/SIMONOV_LOSKUTOV_PRINT_WITNESS_2026-08.md', 'Simonov Loskutov print witness');
 requireMarkers('Simonov Loskutov print witness', printWitness, [
   '01007444220',
   'От Халхингола до Берлина',
   '1973',
-  'с. 54–62',
-  'bibliographic object + full-RSL-viewer availability verified / page 54–62 inspection pending',
+  'с.54–62',
+  'bibliographic object + full-RSL-viewer availability verified / delivery variants mapped / page 54–62 inspection pending',
   'Документ находится в открытом доступе в полном объёме',
-  'командир / комиссар',
-  'письмо Ивана Лоскутова Симонову от 3 марта 1966 года в опубликованной Симоновым передаче',
+  '1973-attributed delivery',
+  '`комиссар полка`',
+  '1982 same-edition OCR',
+  '`командир полка`',
+  'Controlling printed reading остаётся direct-page pending',
 ]);
-if (printWitness.includes('страницы 54–62 визуально проверены в РГБ')) throw new Error('RSL print witness falsely closed');
+if (/Статус:.*(?:direct page|page.*inspected|print.*verified)/iu.test(printWitness)) {
+  throw new Error('RSL print witness falsely closed');
+}
 
 // December 1941 newspaper hierarchy: page 3 is strong scholarly evidence, not a direct scan.
 const newspaper = read('docs/research/SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md', 'Simonov newspaper gate');
@@ -220,5 +225,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-scholarly-corroborated/direct-scan-pending; Loskutov1973=RSL-full-viewer/page54-62-pending; award=10800112-scan-pending; father=two-lineage-conflict-primary-object-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-scholarly-corroborated/direct-scan-pending; Loskutov1973=RSL-full-viewer/delivery-variant-mapped/page54-62-pending; award=10800112-scan-pending; father=two-lineage-conflict-primary-object-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
 );
