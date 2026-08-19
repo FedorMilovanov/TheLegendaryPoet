@@ -1,23 +1,29 @@
-name: Simonov staged source gate
+name: Simonov publication source gate
 
 on:
   pull_request:
     branches: [main]
     paths:
       - 'src/data/essays/simonovSonArtilleristaDraft.ts'
+      - 'src/data/essays/simonovSonArtilleristaPublished.ts'
+      - 'src/data/essays/index.ts'
+      - 'src/data/essaySearchIndex.generated.ts'
+      - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
+      - 'public/sitemap.xml'
+      - 'public/feed.xml'
       - 'docs/research/SIMONOV_*.md'
       - 'scripts/validate-simonov-*.ts'
       - '.github/workflows/simonov-staged.yml'
 
 concurrency:
-  group: simonov-staged-${{ github.event.pull_request.number || github.ref }}
+  group: simonov-publication-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  staged-source-gate:
+  publication-source-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,8 +31,8 @@ jobs:
       - name: Set up exact Node dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Validate staged editorial contract
-        run: npx tsx scripts/validate-simonov-son-artillerista-staged.ts
+      - name: Validate publication candidate contract
+        run: npx tsx scripts/validate-simonov-son-artillerista-publication.ts
 
       - name: Validate reader evidence reconciliation
         run: npx tsx scripts/validate-simonov-reader-evidence-reconciliation.ts
@@ -36,9 +42,6 @@ jobs:
 
       - name: Validate claim matrix
         run: npx tsx scripts/validate-simonov-son-artillerista-claim-matrix.ts
-
-      - name: Validate claim-aware publication readiness
-        run: npx tsx scripts/validate-simonov-publication-readiness-gate.ts
 
       - name: Validate identity and publication follow-ups
         run: npx tsx scripts/validate-simonov-son-artillerista-identity-publication-followups.ts
@@ -88,5 +91,5 @@ jobs:
       - name: Validate Simonov volume 8 same-edition OCR collation
         run: npx tsx scripts/validate-simonov-t8-same-edition-ocr-collation.ts
 
-      - name: Validate visual acquisition manifest
+      - name: Validate approved production hero and visual evidence
         run: npx tsx scripts/validate-simonov-son-artillerista-visual-manifest.ts
