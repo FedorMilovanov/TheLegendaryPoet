@@ -73,7 +73,11 @@ The non-secret runtime variables and D1 binding are already declared in `wrangle
 1. Apply `schema.sql` to D1.
 2. Confirm the Turnstile widget is **Managed** and restricted to the two production hostnames.
 3. Deploy the Worker through Workers Builds.
-4. Verify `GET /health` returns `database: "d1"` and `writesReady: true`.
+4. Verify `GET /health` reports all of the following:
+   - `database: "d1"`
+   - `databaseReady: true`
+   - `targetAuthorityReady: true`
+   - `writesReady: true`
 5. Use the `workers.dev` URL only for bring-up. Prefer `community.thelegendarypoet.ru` as the production custom domain.
 6. In GitHub Actions variables set:
    - `COMMUNITY_API_URL` — final HTTPS Worker/custom-domain URL;
@@ -81,13 +85,15 @@ The non-secret runtime variables and D1 binding are already declared in `wrangle
 7. Deploy the static site.
 8. Run live adversarial checks before AuditRepo P1 closure.
 
+`/health` is deliberately fail-closed. It does not infer readiness from the D1 binding name or from the mere presence of secrets. It verifies that the four canonical D1 tables exist, that the release target manifest is reachable and valid, and that the required secrets are present and separated. A partial rollout must therefore remain `writesReady: false` rather than producing a false green.
+
 ## Security invariants
 
 - Turnstile is validated server-side on anonymous session issuance and checked for expected action + hostname.
 - Anonymous actor tokens are HMAC-signed by the Worker and expire after 90 days.
 - Creating another actor session requires another Turnstile verification and is network-budgeted.
 - Rating uniqueness is `(target_type, target_id, actor_id)` in D1.
-- Comment retries are idempotent by stable client comment ID, but a different actor cannot claim an existing ID.
+- Comment retries are idempotent only when the stable comment ID belongs to the same actor **and** the same normalized immutable payload (`target`, author, text, kind). Reusing an ID with different content is a `409 comment_id_conflict`. Concurrent identical retries converge on the single stored row.
 - Helpful uniqueness is `(comment_id, actor_id)`.
 - Network abuse budgets are atomic D1 upserts; the client never supplies the network key, actor ID or budget fields.
 - Mutation target IDs must exist in the release-generated canonical manifest.
