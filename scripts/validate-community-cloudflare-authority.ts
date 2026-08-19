@@ -1,0 +1,144 @@
+import { existsSync, readFileSync } from 'node:fs';
+
+const failures: string[] = [];
+const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
+const read = (path: string) => readFileSync(path, 'utf8');
+
+const remote = read('src/utils/communityRemote.ts');
+const config = read('src/utils/communityConfig.ts');
+const humanCheck = read('src/utils/communityHumanCheck.ts');
+const store = read('src/utils/communityStore.ts');
+const ratingContract = read('src/data/ratingDimensionContract.ts');
+const ratingDimensions = read('src/data/ratingDimensions.ts');
+const worker = read('workers/community-api/src/index.ts');
+const workerTsconfig = read('workers/community-api/tsconfig.json');
+const wranglerText = read('workers/community-api/wrangler.jsonc');
+const wrangler = JSON.parse(wranglerText) as {
+  name?: string;
+  main?: string;
+  vars?: Record<string, string>;
+  secrets?: { required?: string[] };
+  d1_databases?: Array<{ binding?: string; database_name?: string; database_id?: string }>;
+};
+const schema = read('workers/community-api/schema.sql');
+const generator = read('scripts/gen-community-targets.ts');
+const deploy = read('.github/workflows/deploy.yml');
+const gitignore = read('.gitignore');
+const packageJson = read('package.json');
+const setup = read('docs/COMMENTS_SETUP.md');
+const workerSetup = read('workers/community-api/README.md');
+const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
+const browserTopology = read('qa/community-request-topology.cases.mjs');
+const poetDetailTopology = read('qa/community-poet-detail-topology.cases.mjs');
+const readerCertification = read('qa/premium-reader-certification.spec.mjs');
+const communityBrowserQa = [browserTopology, poetDetailTopology, readerCertification].join('\n');
+
+expect(config.includes('VITE_COMMUNITY_API_URL'), 'browser config must use the Cloudflare community API URL');
+expect(config.includes('VITE_TURNSTILE_SITE_KEY'), 'browser config must expose only the public Turnstile site key');
+expect(config.includes("parsed.protocol !== 'https:'") && config.includes('parsed.username') && config.includes('parsed.password'), 'browser API config must reject non-HTTPS or credential-bearing endpoints');
+expect(!/VITE_SUPABASE|SUPABASE_ANON_KEY/.test(config + remote + deploy), 'Supabase browser authority must be removed from runtime/deploy config');
+expect(!/\/rest\/v1\/rpc\/|p_voter_id|apikey:/i.test(remote), 'browser mutation client must not call public database RPCs or transmit voter authority');
+expect(remote.includes("mutation('/v1/rating'") && remote.includes("mutation('/v1/comment'") && remote.includes("mutation('/v1/helpful'"), 'all writes must cross the Worker mutation boundary');
+expect(remote.includes("apiUrl('/v1/session')") && remote.includes('requestCommunityHumanProof'), 'shared writes must acquire a Turnstile-backed server actor session');
+expect(remote.includes("const ACTOR_KEY = 'tlp-community-actor:v1'"), 'signed actor session must have a dedicated browser envelope');
+expect(remote.includes('locks.request(ACTOR_KEY, task)') && remote.includes('resolveActorToken'), 'parallel tabs must serialize actor-session minting through the browser lock manager');
+expect(remote.includes('const existing = currentActorToken();') && remote.includes('invalidateActorSession(first.actorToken)'), 'actor mint/recovery must re-read shared storage and never erase a newer cross-tab token');
+expect(!remote.includes('_localDeviceId: string): Promise<boolean>') || !/body:\s*JSON\.stringify\([^)]*_localDeviceId/.test(remote), 'local device bookkeeping must never become remote write authority');
+
+expect(ratingContract.includes('ratingDimensionKeysByTarget') && ratingContract.includes('hasCanonicalRatingScores'), 'rating score shape must have one shared runtime contract');
+expect(ratingDimensions.includes("from './ratingDimensionContract'"), 'reader-facing rating dimensions must derive keys from the shared score contract');
+expect(worker.includes("from '../../../src/data/ratingDimensionContract'"), 'Worker score validation/aggregation must consume the same rating contract as the UI/store');
+expect(store.includes("from '../data/ratingDimensionContract'"), 'local persistence/outbox must consume the same rating contract as the Worker');
+expect(store.includes('sanitizeDeliverableRating') && store.includes('hasCanonicalRatingScores(entry.targetType, entry.scores)'), 'outbox sanitization must quarantine incomplete legacy ratings instead of retrying permanently rejected writes');
+expect(store.includes('const entry = sanitizeDeliverableRating(entryValue);'), 'new rating commits must satisfy the canonical full-score contract before local/outbox mutation');
+
+expect(humanCheck.includes('challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'), 'Turnstile must use Cloudflare explicit rendering');
+expect(humanCheck.includes("execution: 'execute'") && humanCheck.includes("appearance: 'interaction-only'"), 'Turnstile must defer verification until a shared write needs a session');
+expect(humanCheck.includes("action: 'community_session'"), 'Turnstile client action must be stable and server-verifiable');
+expect(humanCheck.includes('LOOPBACK') === false, 'human-check runtime must not carry a standalone production bypass');
+
+expect(worker.includes("request.headers.get('CF-Connecting-IP')"), 'Worker must derive network authority from Cloudflare connection metadata');
+expect(worker.includes("crypto.subtle.sign('HMAC'") && worker.includes("crypto.subtle.verify("), 'network and actor authority must be cryptographically server-derived');
+expect(worker.includes('COMMUNITY_SESSION_SECRET') && worker.includes('COMMUNITY_NETWORK_SECRET'), 'Worker must separate session and network secrets');
+expect(worker.includes("secret.length < 32 || secret === env.COMMUNITY_NETWORK_SECRET"), 'session signing and verification must fail closed when session/network secrets are missing or reused');
+expect(worker.includes('TURNSTILE_SECRET') && worker.includes('TURNSTILE_HOSTNAMES'), 'Worker must keep Turnstile verification server-side');
+expect(worker.includes('https://challenges.cloudflare.com/turnstile/v0/siteverify'), 'Worker must call canonical Turnstile Siteverify');
+expect(worker.includes("result.action !== 'community_session'") && worker.includes('!hosts.has(result.hostname)'), 'Worker must validate Turnstile action and hostname, not just success');
+expect(worker.includes("throw new HttpError(400, 'unexpected_authority_field')"), 'mutation bodies must reject caller-supplied authority fields');
+expect(worker.includes('requireCanonicalTarget'), 'mutations must require release-canonical target membership');
+expect(worker.includes('COMMUNITY_TARGET_MANIFEST_URL'), 'canonical target authority must come from the release manifest');
+expect(worker.includes('manifestTypes.length !== TARGET_TYPES.size') && worker.includes('if (keys.has(key)) return null'), 'Worker must reject malformed or duplicate target manifests rather than silently widening/collapsing authority');
+expect(worker.includes('async function requireCanonicalTargets') && worker.includes("throw new HttpError(404, 'unknown_target')"), 'single and batch target authority must share one fail-closed canonical membership check');
+expect(/async function handleComments[\s\S]*await requireCanonicalTarget\(env, type, id\)/.test(worker), 'public comment reads must reject retired or unpublished targets before querying D1');
+expect(/url\.pathname === '\/v1\/summary'[\s\S]*await requireCanonicalTarget\(env, type, id\)/.test(worker), 'public aggregate reads must reject retired or unpublished targets before querying D1');
+expect(/url\.pathname === '\/v1\/summary\/batch'[\s\S]*await requireCanonicalTargets\(env, body\.targetType, ids\)/.test(worker), 'public aggregate batches must reject any non-canonical target before querying D1');
+expect(/async function handleHelpful[\s\S]*await requireCanonicalTarget\(env, comment\.target_type, comment\.target_id\)/.test(worker), 'helpful mutations must not revive a comment attached to a retired target');
+expect(worker.includes("takeBudget(env.DB, key, 'session', '*', 86400, 30)"), 'Turnstile-backed actor issuance must be abuse-limited without an unusably tiny shared-network cap');
+expect(worker.includes("INSERT INTO tlp_rate_buckets") && worker.includes('ON CONFLICT(network_key, action, scope, window_start)'), 'network budgets must be atomic D1 upserts');
+expect(worker.includes("ON CONFLICT(target_type, target_id, actor_id)"), 'rating uniqueness must be server actor + target');
+expect(worker.includes('scoresEqual(body.targetType, existing.scores_json, scores)') && worker.includes('idempotent: true'), 'lost-response rating retries must short-circuit before spending another abuse budget');
+expect(worker.includes('SELECT actor_id, target_type, target_id, author, text, kind FROM tlp_comments WHERE id = ?'), 'comment replay checks must compare the complete immutable stored payload');
+expect(worker.includes('commentMatches(existing, actor, comment)') && worker.includes('comment_id_conflict'), 'comment IDs must be idempotent only for the same actor and normalized payload');
+expect(worker.includes('INSERT OR IGNORE INTO tlp_comments') && worker.includes('const persisted = await readExisting()'), 'concurrent comment retries must converge on one row and re-verify ownership/payload instead of surfacing a uniqueness 500');
+expect(worker.includes('WHERE NOT EXISTS (') && worker.includes('actor_id = ? AND created_at > ?') && worker.includes('COMMENT_COOLDOWN_MS'), 'comment cooldown must be enforced inside the atomic insert statement so concurrent requests cannot both pass a pre-check');
+expect(!worker.includes("SELECT 1 AS found FROM tlp_comments WHERE actor_id = ? AND created_at > ? LIMIT 1"), 'comment cooldown must not rely on a race-prone read-before-write check');
+expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
+expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
+expect(worker.includes('FROM sqlite_master') && worker.includes("name IN ('tlp_ratings', 'tlp_comments', 'tlp_helpful_votes', 'tlp_rate_buckets')"), 'health readiness must verify the actual four-table D1 schema instead of trusting the binding name');
+expect(worker.includes('targetAuthorityReady = Boolean(await canonicalTargets(env))') && worker.includes('writesReady = databaseReady && targetAuthorityReady && secretsReady'), 'health readiness must fail closed when D1 schema, target authority, or secrets are not actually ready');
+expect(worker.includes('json(writesReady ? 200 : 503') && worker.includes('ok: writesReady'), 'health endpoint must return an unhealthy status/body until the complete write path is ready');
+expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
+
+expect(wrangler.name === 'the-legendary-poet-community', 'Wrangler Worker name must match the Cloudflare production Worker');
+expect(wrangler.main === 'src/index.ts', 'Wrangler must deploy the reviewed Worker entrypoint');
+const d1 = wrangler.d1_databases?.find((entry) => entry.binding === 'DB');
+expect(Boolean(d1), 'Wrangler must bind production D1 as env.DB');
+expect(d1?.database_name === 'the-legendary-poet-community', 'Wrangler D1 binding must target the canonical production database name');
+expect(d1?.database_id === '16928bb2-13e7-462a-b788-652e95618917', 'Wrangler D1 binding must target the owner-created production database ID');
+expect(wrangler.vars?.ALLOWED_ORIGINS === 'https://thelegendarypoet.ru,https://www.thelegendarypoet.ru', 'Worker origin allowlist must remain production-scoped');
+expect(wrangler.vars?.TURNSTILE_HOSTNAMES === 'thelegendarypoet.ru,www.thelegendarypoet.ru', 'Turnstile hostname verification must remain production-scoped');
+expect(wrangler.vars?.COMMUNITY_TARGET_MANIFEST_URL === 'https://thelegendarypoet.ru/community-targets.json', 'Worker target authority must point at the production release manifest');
+const requiredSecrets = [...(wrangler.secrets?.required ?? [])].sort();
+const expectedRequiredSecrets = ['COMMUNITY_NETWORK_SECRET', 'COMMUNITY_SESSION_SECRET', 'TURNSTILE_SECRET'].sort();
+expect(JSON.stringify(requiredSecrets) === JSON.stringify(expectedRequiredSecrets), 'Wrangler must declare the exact three required Worker secret bindings so deploy fails closed when one is missing');
+expect(!/COMMUNITY_SESSION_SECRET|COMMUNITY_NETWORK_SECRET|TURNSTILE_SECRET/.test(JSON.stringify(wrangler.vars ?? {})), 'Worker secrets must never be configured as plaintext Wrangler vars');
+expect(gitignore.includes('.dev.vars'), 'local Cloudflare secret files must be ignored by git');
+expect(!existsSync('workers/community-api/wrangler.example.jsonc'), 'placeholder Wrangler config must be retired once the production D1 binding exists');
+
+expect(schema.includes('PRIMARY KEY (target_type, target_id, actor_id)'), 'D1 schema must enforce one active rating per actor/target');
+expect(schema.includes('PRIMARY KEY (comment_id, actor_id)'), 'D1 schema must enforce one helpful vote per actor/comment');
+expect(schema.includes('PRIMARY KEY (network_key, action, scope, window_start)'), 'D1 schema must enforce one atomic abuse bucket row');
+expect(!/\b(?:raw_ip|ip_address|client_ip|remote_ip)\b/i.test(schema), 'D1 schema must not define a raw-IP column');
+expect(schema.includes('CHECK (length(network_key) = 64)'), 'D1 must store only fixed-length HMAC network keys');
+
+expect(generator.includes('getAllEssays') && generator.includes('musicTracks') && generator.includes('poets'), 'community target manifest must derive from canonical Product catalogs');
+expect(generator.includes('Duplicate community ${kind} target id'), 'canonical target generation must fail on duplicate source IDs instead of silently collapsing them');
+expect(generator.includes("writeFileSync('public/community-targets.json'"), 'site build must materialize the target manifest at a stable public path');
+expect(deploy.includes('VITE_COMMUNITY_API_URL') && deploy.includes('VITE_TURNSTILE_SITE_KEY'), 'Pages deploy must inject only the public Worker URL and Turnstile site key');
+expect(!deploy.includes('VITE_SUPABASE_URL') && !deploy.includes('VITE_SUPABASE_ANON_KEY'), 'Pages deploy must not retain obsolete Supabase runtime variables');
+expect(packageJson.includes('"validate:community-worker-types": "tsc -p workers/community-api/tsconfig.json"'), 'repository checks must typecheck the Worker with the pinned project TypeScript');
+expect(packageJson.includes('npm run validate:community-worker-types'), 'community scaling gate must include the Worker typecheck');
+expect(workerTsconfig.includes('"WebWorker"') && workerTsconfig.includes('"noEmit": true'), 'Worker typecheck must use web-worker platform types without producing artifacts');
+expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
+expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes wrangler@4.120.0 deploy'), 'Worker deployment must be reproducible from the connected Git repository');
+expect(workerSetup.includes('secrets.required') || workerSetup.includes('required secret'), 'Worker operator documentation must explain deploy-time required-secret validation');
+expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
+
+expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser request-topology QA must use the loopback-only human-proof boundary');
+expect(browserTopology.includes("url.pathname === '/v1/session'") && browserTopology.includes("url.pathname === '/v1/helpful'"), 'browser request-topology QA must exercise Worker session and mutation routes');
+expect(poetDetailTopology.includes("'/v1/summary'") && poetDetailTopology.includes("'/v1/comments'"), 'poet-detail QA must exercise Worker target-scoped read routes');
+expect(poetDetailTopology.includes("url.searchParams.get('targetType') !== 'poem'"), 'poet-detail QA must prove inactive poem panels stay target-scoped under the Worker query contract');
+expect(readerCertification.includes("humanProof: 'turnstile-reader-certification-proof'"), 'reader durability QA must mint its actor through the loopback-only human-proof boundary');
+expect(readerCertification.includes("url.pathname === '/v1/session'") && readerCertification.includes("url.pathname === '/v1/comment'"), 'reader durability QA must fail the real Worker comment route rather than a legacy RPC');
+expect(!communityBrowserQa.includes("url.pathname.endsWith('/tlp_feedback_summary_public')"), 'community browser QA must not mock the removed Supabase summary view');
+expect(!communityBrowserQa.includes("url.pathname.endsWith('/tlp_comments_public')"), 'community browser QA must not mock the removed Supabase comments view');
+expect(!communityBrowserQa.includes("url.pathname.includes('/rpc/')"), 'community browser QA must not preserve a legacy RPC mutation path');
+expect(!communityBrowserQa.includes("key: 'test-anon-key'"), 'community browser QA must not inject an obsolete Supabase anon key');
+expect(!communityBrowserQa.includes("searchParams.get('target_type')"), 'community browser QA must use Worker targetType/targetId query names');
+
+expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres schema must be removed, not left as a second backend authority');
+expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
+
+for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest on reads/writes, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
+if (failures.length) process.exit(1);

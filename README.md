@@ -30,11 +30,13 @@ Workflow `Project contracts` использует общий Node/dependency set
 - `src/config/site.ts` — домен, каналы и контакты.
 - `src/components/SpectralBrandMark.tsx` + `scripts/materialize-brand-art.mjs` — production-бренд.
 - `src/assets/fonts/` — локальные WOFF2; внешние Google Fonts не используются.
-- `docs/community-schema.sql` — серверный контракт общей системы оценок и комментариев.
+- `workers/community-api/` — доверенная Cloudflare Worker + D1 + Turnstile граница общей системы оценок и комментариев; D1 schema authority — `workers/community-api/schema.sql`.
 
 ## Публикация
 
 Production обслуживается с корня кастомного домена (`VITE_BASE=/`). `.github/workflows/deploy.yml` собирает multi-file Vite build, проверяет точный SHA и публикует GitHub Pages. Deep links защищены статическим fallback и prerender/SEO-гейтами.
+
+Shared community backend разворачивается отдельно от статического сайта. Публичный Pages build получает только `COMMUNITY_API_URL` и `TURNSTILE_SITE_KEY`; серверные HMAC/Turnstile secrets не должны попадать в git, GitHub Variables или клиентский bundle. Пошаговая настройка находится в `workers/community-api/README.md`.
 
 ## Контент и доказательность
 

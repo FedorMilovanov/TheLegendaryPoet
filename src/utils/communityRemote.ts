@@ -6,99 +6,42 @@ import type {
   FeedbackTargetType,
   RatingEntry,
 } from '../types/community';
+import { safeRead, safeRemove, safeWrite } from './browserStorage';
+import { communityApiUrl, remoteEnabled } from './communityConfig';
+import { requestCommunityHumanProof } from './communityHumanCheck';
 
-const VITE_ENV = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
-const NODE_ENV = typeof process !== 'undefined' ? process.env : undefined;
-const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
-type CommunityTestConfig = { url: string; key: string };
-
-function readLoopbackTestConfig(): CommunityTestConfig | undefined {
-  if (typeof window === 'undefined' || !LOOPBACK_HOSTS.has(window.location?.hostname ?? '')) return undefined;
-  const candidate = (globalThis as typeof globalThis & {
-    __TLP_COMMUNITY_TEST_CONFIG__?: Partial<CommunityTestConfig>;
-  }).__TLP_COMMUNITY_TEST_CONFIG__;
-  const url = typeof candidate?.url === 'string' ? candidate.url.replace(/\/$/, '') : '';
-  const key = typeof candidate?.key === 'string' ? candidate.key : '';
-  if (!/^https:\/\/[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(url) || key.length < 8) return undefined;
-  return { url, key };
-}
-
-const LOOPBACK_TEST_CONFIG = readLoopbackTestConfig();
-const URL = (VITE_ENV?.VITE_SUPABASE_URL ?? LOOPBACK_TEST_CONFIG?.url ?? NODE_ENV?.VITE_SUPABASE_URL)?.replace(/\/$/, '');
-const KEY = VITE_ENV?.VITE_SUPABASE_ANON_KEY ?? LOOPBACK_TEST_CONFIG?.key ?? NODE_ENV?.VITE_SUPABASE_ANON_KEY;
-
-const RATINGS_VIEW = 'tlp_ratings_public';
-const COMMENTS_VIEW = 'tlp_comments_public';
-const SUMMARY_VIEW = 'tlp_feedback_summary_public';
-const TARGET_RATING_FALLBACK_LIMIT = 2_000;
+const URL = communityApiUrl;
+const REQUEST_TIMEOUT_MS = 12_000;
+const MAX_LEADERBOARD_TARGETS = 100;
 const DEFAULT_COMMENT_PAGE_SIZE = 10;
 const MAX_COMMENT_PAGE_SIZE = 50;
-const MAX_LEADERBOARD_TARGETS = 100;
-const REQUEST_TIMEOUT_MS = 12_000;
+const ACTOR_KEY = 'tlp-community-actor:v1';
+const ACTOR_EXPIRY_SKEW_MS = 60_000;
+const MAX_ACTOR_TOKEN_LENGTH = 4096;
 
-export const remoteEnabled = Boolean(URL && KEY);
+type StoredActorSession = {
+  version: 1;
+  actorToken: string;
+  expiresAt: number;
+};
 
-function headers(extra: Record<string, string> = {}): Record<string, string> {
-  return {
-    apikey: KEY as string,
-    Authorization: `Bearer ${KEY}`,
-    'Content-Type': 'application/json',
-    ...extra,
-  };
-}
+type SessionResponse = {
+  actorToken?: unknown;
+  expiresAt?: unknown;
+};
 
-interface RatingRow {
-  id: string;
-  target_type: string;
-  target_id: string;
-  scores: Record<string, number>;
-  created_at: string;
-}
+type AggregateResponse = CommunityAggregate;
+type AggregateBatchResponse = { aggregates?: CommunityAggregate[] };
+type CommentsResponse = {
+  comments?: CommentEntry[];
+  nextCursor?: CommentCursor | null;
+};
 
-interface CommentRow {
-  id: string;
-  target_type: string;
-  target_id: string;
-  author: string;
-  text: string;
-  kind: string;
-  helpful: number;
-  created_at: string;
-}
+type BrowserLockManager = {
+  request<T>(name: string, callback: () => Promise<T>): Promise<T>;
+};
 
-interface AggregateRow {
-  target_type: string;
-  target_id: string;
-  rating_count: number;
-  comment_count: number;
-  overall: number | null;
-  dimensions: Record<string, number> | null;
-  distribution: Record<string, number> | null;
-  deviation: number | null;
-}
-
-function rowToRating(row: RatingRow): RatingEntry {
-  return {
-    id: row.id,
-    targetType: row.target_type as RatingEntry['targetType'],
-    targetId: row.target_id,
-    scores: row.scores || {},
-    createdAt: row.created_at,
-  };
-}
-
-function rowToComment(row: CommentRow): CommentEntry {
-  return {
-    id: row.id,
-    targetType: row.target_type as CommentEntry['targetType'],
-    targetId: row.target_id,
-    author: row.author,
-    text: row.text,
-    kind: row.kind as CommentEntry['kind'],
-    helpful: row.helpful ?? 0,
-    createdAt: row.created_at,
-  };
-}
+export { remoteEnabled };
 
 export function emptyCommunityAggregate(
   targetType: FeedbackTargetType,
@@ -116,33 +59,6 @@ export function emptyCommunityAggregate(
   };
 }
 
-function rowToAggregate(row: AggregateRow): CommunityAggregate {
-  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (const [key, value] of Object.entries(row.distribution ?? {})) {
-    const bucket = Number(key);
-    if (Number.isInteger(bucket) && bucket >= 1 && bucket <= 5) {
-      distribution[bucket] = Math.max(0, Math.floor(Number(value) || 0));
-    }
-  }
-
-  return {
-    targetType: row.target_type as FeedbackTargetType,
-    targetId: row.target_id,
-    ratingCount: Math.max(0, Math.floor(Number(row.rating_count) || 0)),
-    commentCount: Math.max(0, Math.floor(Number(row.comment_count) || 0)),
-    overall: Math.max(0, Math.min(5, Number(row.overall) || 0)),
-    dimensions: Object.fromEntries(
-      Object.entries(row.dimensions ?? {})
-        .map(([key, value]) => [key, Math.max(0, Math.min(5, Number(value) || 0))] as const)
-        .filter(([, value]) => value > 0),
-    ),
-    distribution,
-    deviation: row.deviation === null || !Number.isFinite(Number(row.deviation))
-      ? null
-      : Math.max(0, Number(row.deviation)),
-  };
-}
-
 async function fetchWithTimeout(input: string, init: RequestInit = {}) {
   const controller = new AbortController();
   const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -153,156 +69,218 @@ async function fetchWithTimeout(input: string, init: RequestInit = {}) {
   }
 }
 
-function buildRestUrl(view: string, params: URLSearchParams) {
-  return `${URL}/rest/v1/${view}?${params.toString()}`;
+function apiUrl(path: string) {
+  return `${URL}${path}`;
 }
 
-function parseTotal(response: Response, fallback: number) {
-  const contentRange = response.headers.get('Content-Range');
-  const total = Number(contentRange?.split('/')[1]);
-  return Number.isFinite(total) && total >= 0 ? total : fallback;
-}
-
-function aggregateRatings(
-  targetType: FeedbackTargetType,
-  targetId: string,
-  ratings: RatingEntry[],
-  commentCount: number,
-): CommunityAggregate {
-  const dimensionTotals = new Map<string, { sum: number; count: number }>();
-  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  const overallValues: number[] = [];
-
-  for (const rating of ratings) {
-    const scores = Object.entries(rating.scores)
-      .map(([key, value]) => [key, Number(value)] as const)
-      .filter(([, value]) => Number.isFinite(value) && value >= 1 && value <= 5);
-    if (!scores.length) continue;
-
-    const overall = scores.reduce((sum, [, value]) => sum + value, 0) / scores.length;
-    overallValues.push(overall);
-    distribution[Math.max(1, Math.min(5, Math.round(overall)))] += 1;
-
-    for (const [key, value] of scores) {
-      const current = dimensionTotals.get(key) ?? { sum: 0, count: 0 };
-      current.sum += value;
-      current.count += 1;
-      dimensionTotals.set(key, current);
-    }
-  }
-
-  const overall = overallValues.length
-    ? overallValues.reduce((sum, value) => sum + value, 0) / overallValues.length
-    : 0;
-  const deviation = overallValues.length > 1
-    ? Math.sqrt(overallValues.reduce((sum, value) => sum + (value - overall) ** 2, 0) / overallValues.length)
-    : null;
-
+function jsonHeaders(extra: Record<string, string> = {}): Record<string, string> {
   return {
-    targetType,
-    targetId,
-    ratingCount: overallValues.length,
-    commentCount,
-    overall,
-    dimensions: Object.fromEntries(
-      [...dimensionTotals].map(([key, value]) => [key, value.count ? value.sum / value.count : 0]),
-    ),
-    distribution,
-    deviation,
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    ...extra,
   };
 }
 
-async function fetchCommentCount(targetType: FeedbackTargetType, targetId: string): Promise<number | null> {
-  const params = new URLSearchParams({
-    select: 'id',
-    target_type: `eq.${targetType}`,
-    target_id: `eq.${targetId}`,
-    limit: '1',
-  });
-  const response = await fetchWithTimeout(buildRestUrl(COMMENTS_VIEW, params), {
-    headers: headers({ Prefer: 'count=exact', Range: '0-0' }),
-  });
-  if (!response.ok) return null;
-  return parseTotal(response, 0);
+function sanitizeAggregate(value: unknown, targetType: FeedbackTargetType, targetId: string): CommunityAggregate | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<CommunityAggregate>;
+  if (candidate.targetType !== targetType || candidate.targetId !== targetId) return null;
+  const dimensions = candidate.dimensions && typeof candidate.dimensions === 'object' && !Array.isArray(candidate.dimensions)
+    ? Object.fromEntries(Object.entries(candidate.dimensions)
+        .map(([key, raw]) => [key, Number(raw)] as const)
+        .filter(([, score]) => Number.isFinite(score) && score >= 0 && score <= 5))
+    : {};
+  const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  if (candidate.distribution && typeof candidate.distribution === 'object' && !Array.isArray(candidate.distribution)) {
+    for (const [key, raw] of Object.entries(candidate.distribution)) {
+      const bucket = Number(key);
+      const count = Number(raw);
+      if (Number.isInteger(bucket) && bucket >= 1 && bucket <= 5 && Number.isFinite(count) && count >= 0) {
+        distribution[bucket] = Math.floor(count);
+      }
+    }
+  }
+  const deviation = candidate.deviation === null ? null : Number(candidate.deviation);
+  return {
+    targetType,
+    targetId,
+    ratingCount: Math.max(0, Math.floor(Number(candidate.ratingCount) || 0)),
+    commentCount: Math.max(0, Math.floor(Number(candidate.commentCount) || 0)),
+    overall: Math.max(0, Math.min(5, Number(candidate.overall) || 0)),
+    dimensions,
+    distribution,
+    deviation: deviation === null || !Number.isFinite(deviation) ? null : Math.max(0, deviation),
+  };
 }
 
-async function fetchTargetAggregateFallback(
-  targetType: FeedbackTargetType,
-  targetId: string,
-): Promise<CommunityAggregate | null> {
-  const params = new URLSearchParams({
-    select: 'id,target_type,target_id,scores,created_at',
-    target_type: `eq.${targetType}`,
-    target_id: `eq.${targetId}`,
-    order: 'created_at.desc,id.desc',
-    limit: String(TARGET_RATING_FALLBACK_LIMIT),
-  });
+function sanitizeComment(value: unknown): CommentEntry | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<CommentEntry>;
+  if (
+    typeof candidate.id !== 'string'
+    || typeof candidate.targetId !== 'string'
+    || !['poet', 'poem', 'track', 'article'].includes(String(candidate.targetType))
+    || typeof candidate.author !== 'string'
+    || typeof candidate.text !== 'string'
+    || !['literary', 'history', 'moral', 'performance'].includes(String(candidate.kind))
+    || typeof candidate.createdAt !== 'string'
+  ) return null;
+  return {
+    id: candidate.id,
+    targetType: candidate.targetType as FeedbackTargetType,
+    targetId: candidate.targetId,
+    author: candidate.author,
+    text: candidate.text,
+    kind: candidate.kind as CommentEntry['kind'],
+    helpful: Math.max(0, Math.floor(Number(candidate.helpful) || 0)),
+    createdAt: candidate.createdAt,
+  };
+}
 
-  const [ratingsResponse, commentCount] = await Promise.all([
-    fetchWithTimeout(buildRestUrl(RATINGS_VIEW, params), {
-      headers: headers({ Prefer: 'count=exact', Range: `0-${TARGET_RATING_FALLBACK_LIMIT - 1}` }),
-    }),
-    fetchCommentCount(targetType, targetId),
-  ]);
-  if (!ratingsResponse.ok || commentCount === null) return null;
+function readActorSession(): StoredActorSession | null {
+  const raw = safeRead(ACTOR_KEY);
+  if (!raw) return null;
+  try {
+    const candidate = JSON.parse(raw) as Partial<StoredActorSession>;
+    if (
+      candidate.version !== 1
+      || typeof candidate.actorToken !== 'string'
+      || candidate.actorToken.length < 32
+      || candidate.actorToken.length > MAX_ACTOR_TOKEN_LENGTH
+      || !Number.isFinite(Number(candidate.expiresAt))
+    ) return null;
+    return { version: 1, actorToken: candidate.actorToken, expiresAt: Number(candidate.expiresAt) };
+  } catch {
+    return null;
+  }
+}
 
-  const rows = await ratingsResponse.json() as RatingRow[];
-  if (!Array.isArray(rows)) return null;
-  const total = parseTotal(ratingsResponse, rows.length);
-  if (total > TARGET_RATING_FALLBACK_LIMIT) return null;
-  return aggregateRatings(targetType, targetId, rows.map(rowToRating), commentCount);
+function currentActorToken() {
+  const existing = readActorSession();
+  return existing && existing.expiresAt > Date.now() + ACTOR_EXPIRY_SKEW_MS ? existing.actorToken : null;
+}
+
+function persistActorSession(value: StoredActorSession) {
+  return safeWrite(ACTOR_KEY, JSON.stringify(value));
+}
+
+function invalidateActorSession(staleToken: string) {
+  const current = readActorSession();
+  if (current?.actorToken === staleToken) safeRemove(ACTOR_KEY);
+}
+
+async function mintActorSession(): Promise<string | null> {
+  if (!remoteEnabled || !URL) return null;
+  const humanProof = await requestCommunityHumanProof();
+  if (!humanProof) return null;
+  try {
+    const response = await fetchWithTimeout(apiUrl('/v1/session'), {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ turnstileToken: humanProof }),
+    });
+    if (!response.ok) return null;
+    const payload = await response.json() as SessionResponse;
+    const actorToken = typeof payload.actorToken === 'string' ? payload.actorToken : '';
+    const expiresAt = Number(payload.expiresAt);
+    if (
+      actorToken.length < 32
+      || actorToken.length > MAX_ACTOR_TOKEN_LENGTH
+      || !Number.isFinite(expiresAt)
+      || expiresAt <= Date.now() + ACTOR_EXPIRY_SKEW_MS
+    ) return null;
+    const session: StoredActorSession = { version: 1, actorToken, expiresAt };
+    if (!persistActorSession(session)) return null;
+    return actorToken;
+  } catch {
+    return null;
+  }
+}
+
+async function withActorLock<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator === 'undefined') return task();
+  const locks = (navigator as Navigator & { locks?: BrowserLockManager }).locks;
+  return locks?.request ? locks.request(ACTOR_KEY, task) : task();
+}
+
+async function resolveActorToken() {
+  const existing = currentActorToken();
+  if (existing) return existing;
+  return mintActorSession();
+}
+
+let actorPromise: Promise<string | null> | null = null;
+function getActorToken(): Promise<string | null> {
+  if (!remoteEnabled) return Promise.resolve(null);
+  const existing = currentActorToken();
+  if (existing) return Promise.resolve(existing);
+  if (actorPromise) return actorPromise;
+  const pending = withActorLock(resolveActorToken).finally(() => { actorPromise = null; });
+  actorPromise = pending;
+  return pending;
+}
+
+async function mutation(path: string, body: Record<string, unknown>): Promise<boolean> {
+  if (!remoteEnabled || !URL) return false;
+  const attempt = async () => {
+    const actorToken = await getActorToken();
+    if (!actorToken) return { ok: false, unauthorized: false, actorToken: null as string | null };
+    try {
+      const response = await fetchWithTimeout(apiUrl(path), {
+        method: 'POST',
+        headers: jsonHeaders({ Authorization: `Bearer ${actorToken}` }),
+        body: JSON.stringify(body),
+      });
+      return { ok: response.ok, unauthorized: response.status === 401, actorToken };
+    } catch {
+      return { ok: false, unauthorized: false, actorToken };
+    }
+  };
+
+  const first = await attempt();
+  if (first.ok) return true;
+  if (!first.unauthorized || !first.actorToken) return false;
+  invalidateActorSession(first.actorToken);
+  return (await attempt()).ok;
 }
 
 export async function fetchTargetAggregate(
   targetType: FeedbackTargetType,
   targetId: string,
 ): Promise<CommunityAggregate | null> {
-  if (!remoteEnabled) return null;
+  if (!remoteEnabled || !URL) return null;
   try {
-    const params = new URLSearchParams({
-      select: '*',
-      target_type: `eq.${targetType}`,
-      target_id: `eq.${targetId}`,
-      limit: '1',
+    const params = new URLSearchParams({ targetType, targetId });
+    const response = await fetchWithTimeout(apiUrl(`/v1/summary?${params.toString()}`), {
+      headers: { Accept: 'application/json' },
     });
-    const response = await fetchWithTimeout(buildRestUrl(SUMMARY_VIEW, params), { headers: headers() });
-    if (response.ok) {
-      const rows = await response.json() as AggregateRow[];
-      if (!Array.isArray(rows)) return null;
-      return rows[0] ? rowToAggregate(rows[0]) : emptyCommunityAggregate(targetType, targetId);
-    }
-    if (response.status !== 404) return null;
-    return fetchTargetAggregateFallback(targetType, targetId);
+    if (!response.ok) return null;
+    return sanitizeAggregate(await response.json() as AggregateResponse, targetType, targetId);
   } catch {
     return null;
   }
 }
 
-function postgrestIn(values: readonly string[]) {
-  return `in.(${values.map((value) => `"${value.replace(/["\\]/g, '')}"`).join(',')})`;
-}
-
 export async function fetchPoetAggregates(targetIds: readonly string[]): Promise<CommunityAggregate[] | null> {
-  if (!remoteEnabled) return null;
+  if (!remoteEnabled || !URL) return null;
   const ids = [...new Set(targetIds)].filter(Boolean).slice(0, MAX_LEADERBOARD_TARGETS);
   if (!ids.length) return [];
-
   try {
-    const params = new URLSearchParams({
-      select: '*',
-      target_type: 'eq.poet',
-      target_id: postgrestIn(ids),
-      order: 'target_id.asc',
-      limit: String(ids.length),
+    const response = await fetchWithTimeout(apiUrl('/v1/summary/batch'), {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify({ targetType: 'poet', targetIds: ids }),
     });
-    const response = await fetchWithTimeout(buildRestUrl(SUMMARY_VIEW, params), { headers: headers() });
-    if (response.ok) {
-      const rows = await response.json() as AggregateRow[];
-      if (!Array.isArray(rows)) return null;
-      const byId = new Map(rows.map((row) => [row.target_id, rowToAggregate(row)]));
-      return ids.map((targetId) => byId.get(targetId) ?? emptyCommunityAggregate('poet', targetId));
+    if (!response.ok) return null;
+    const payload = await response.json() as AggregateBatchResponse;
+    if (!Array.isArray(payload.aggregates)) return null;
+    const byId = new Map<string, CommunityAggregate>();
+    for (const id of ids) {
+      const raw = payload.aggregates.find((entry) => entry?.targetType === 'poet' && entry?.targetId === id);
+      const aggregate = sanitizeAggregate(raw, 'poet', id);
+      if (aggregate) byId.set(id, aggregate);
     }
-    return null;
+    return ids.map((targetId) => byId.get(targetId) ?? emptyCommunityAggregate('poet', targetId));
   } catch {
     return null;
   }
@@ -314,74 +292,50 @@ export async function fetchTargetCommentsPage(
   cursor: CommentCursor | null = null,
   requestedLimit = DEFAULT_COMMENT_PAGE_SIZE,
 ): Promise<CommunityCommentPage | null> {
-  if (!remoteEnabled) return null;
+  if (!remoteEnabled || !URL) return null;
   const limit = Math.max(1, Math.min(MAX_COMMENT_PAGE_SIZE, Math.floor(requestedLimit) || DEFAULT_COMMENT_PAGE_SIZE));
-
   try {
-    const params = new URLSearchParams({
-      select: '*',
-      target_type: `eq.${targetType}`,
-      target_id: `eq.${targetId}`,
-      order: 'created_at.desc,id.desc',
-      limit: String(limit + 1),
-    });
+    const params = new URLSearchParams({ targetType, targetId, limit: String(limit) });
     if (cursor) {
-      params.set('or', `(created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id}))`);
+      params.set('cursorCreatedAt', cursor.createdAt);
+      params.set('cursorId', cursor.id);
     }
-
-    const response = await fetchWithTimeout(buildRestUrl(COMMENTS_VIEW, params), { headers: headers() });
+    const response = await fetchWithTimeout(apiUrl(`/v1/comments?${params.toString()}`), {
+      headers: { Accept: 'application/json' },
+    });
     if (!response.ok) return null;
-    const rows = await response.json() as CommentRow[];
-    if (!Array.isArray(rows)) return null;
-
-    const hasMore = rows.length > limit;
-    const comments = rows.slice(0, limit).map(rowToComment);
-    const last = comments.at(-1);
-    return {
-      comments,
-      nextCursor: hasMore && last ? { createdAt: last.createdAt, id: last.id } : null,
-    };
+    const payload = await response.json() as CommentsResponse;
+    if (!Array.isArray(payload.comments)) return null;
+    const comments = payload.comments.map(sanitizeComment).filter((entry): entry is CommentEntry => Boolean(entry));
+    const nextCursor = payload.nextCursor && typeof payload.nextCursor === 'object'
+      && typeof payload.nextCursor.createdAt === 'string' && typeof payload.nextCursor.id === 'string'
+      ? { createdAt: payload.nextCursor.createdAt, id: payload.nextCursor.id }
+      : null;
+    return { comments, nextCursor };
   } catch {
     return null;
   }
 }
 
-async function rpc(name: string, body: Record<string, unknown>): Promise<boolean> {
-  if (!remoteEnabled) return false;
-  try {
-    const response = await fetchWithTimeout(`${URL}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: headers({ Prefer: 'return=minimal' }),
-      body: JSON.stringify(body),
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
-
-export async function submitRatingRemote(entry: RatingEntry, voterId: string): Promise<boolean> {
-  return rpc('tlp_submit_rating', {
-    p_id: entry.id,
-    p_target_type: entry.targetType,
-    p_target_id: entry.targetId,
-    p_voter_id: voterId,
-    p_scores: entry.scores,
+export async function submitRatingRemote(entry: RatingEntry, _localDeviceId: string): Promise<boolean> {
+  return mutation('/v1/rating', {
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    scores: entry.scores,
   });
 }
 
-export async function submitCommentRemote(entry: CommentEntry, voterId: string): Promise<boolean> {
-  return rpc('tlp_submit_comment', {
-    p_id: entry.id,
-    p_target_type: entry.targetType,
-    p_target_id: entry.targetId,
-    p_voter_id: voterId,
-    p_author: entry.author,
-    p_text: entry.text,
-    p_kind: entry.kind,
+export async function submitCommentRemote(entry: CommentEntry, _localDeviceId: string): Promise<boolean> {
+  return mutation('/v1/comment', {
+    commentId: entry.id,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    author: entry.author,
+    text: entry.text,
+    commentKind: entry.kind,
   });
 }
 
-export async function markHelpfulRemote(commentId: string, voterId: string): Promise<boolean> {
-  return rpc('tlp_mark_helpful', { p_comment_id: commentId, p_voter_id: voterId });
+export async function markHelpfulRemote(commentId: string, _localDeviceId: string): Promise<boolean> {
+  return mutation('/v1/helpful', { commentId });
 }

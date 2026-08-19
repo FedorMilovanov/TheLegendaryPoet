@@ -1,0 +1,34 @@
+import { writeFileSync } from 'node:fs';
+import { getAllEssays } from '../src/data/essays';
+import { musicTracks, poets } from '../src/data/poets';
+
+const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
+
+function uniqueSorted(kind: string, values: readonly string[]) {
+  const seen = new Set<string>();
+  for (const id of values) {
+    if (!TARGET_ID.test(id)) throw new Error(`Invalid community ${kind} target id: ${id}`);
+    if (seen.has(id)) throw new Error(`Duplicate community ${kind} target id: ${id}`);
+    seen.add(id);
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+const manifest = {
+  version: 1,
+  targets: {
+    poet: uniqueSorted('poet', poets.map((poet) => poet.id)),
+    poem: uniqueSorted('poem', poets.flatMap((poet) => poet.poems.map((poem) => poem.id))),
+    track: uniqueSorted('track', musicTracks.map((track) => track.id)),
+    article: uniqueSorted('article', getAllEssays().map((essay) => essay.id)),
+  },
+} as const;
+
+writeFileSync('public/community-targets.json', `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+const total = Object.values(manifest.targets).reduce((sum, ids) => sum + ids.length, 0);
+console.log(
+  `Community target manifest: ${total} canonical targets `
+  + `(${manifest.targets.poet.length} poets, ${manifest.targets.poem.length} poems, `
+  + `${manifest.targets.track.length} tracks, ${manifest.targets.article.length} articles).`,
+);

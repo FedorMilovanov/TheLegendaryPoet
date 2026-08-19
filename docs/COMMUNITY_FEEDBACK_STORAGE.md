@@ -1,159 +1,94 @@
 # Community feedback storage and sync
 
-This document defines the reliability, privacy, and scale boundary for reader ratings, comments, and helpful votes.
+This document defines the reliability, privacy, and scale boundary for reader ratings, comments and helpful votes.
 
-## Goals
+## Local durability
 
-The community subsystem must remain usable when:
+The canonical browser key is `tlp-community-feedback:v3`.
 
-- the shared backend is not configured;
-- the visitor is temporarily offline;
-- a remote request times out or returns an error;
-- browser storage is unavailable or reaches its quota;
-- an older local format contains malformed or duplicate records;
-- the archive grows to many poets, poems, tracks, articles, ratings, and comments;
-- several tabs are open at the same time.
+The envelope contains only device-owned state needed for resilience:
 
-The interface must never claim that an action was saved or synchronized when the corresponding durable write failed.
+- optimistic local ratings/comments that belong to this browser;
+- a persistent outbox of operations not yet acknowledged by the shared backend;
+- local cooldown timestamps;
+- local helpful-vote records;
+- local own-rating records;
+- update and successful-sync timestamps.
 
-## Storage envelope
+All reads pass through validation. Malformed IDs, target types, scores, comment kinds, timestamps and oversized fields are discarded.
 
-The canonical browser key is `tlp-community-feedback:v2`.
+The legacy `tlp-community-device-v1` UUID is **local bookkeeping only**. It is not authentication, legal identity, fingerprinting, person-level deduplication, or server authority.
 
-The envelope contains:
+## Shared backend
 
-- a validated local snapshot of public ratings and comments;
-- a persistent outbox of operations that have not reached the shared backend;
-- cooldown timestamps;
-- device-local helpful-vote records;
-- device-local own-rating records;
-- local update and successful-sync timestamps.
+The production shared path is:
 
-All reads pass through validation. Unknown target types, malformed IDs, invalid scores, unsupported comment kinds, broken timestamps, oversized fields, and structurally invalid records are discarded rather than entering the runtime.
+`browser → Cloudflare Worker → D1`
 
-## Migration
+The browser never writes directly to D1 and never supplies a trusted actor ID, network key or server rate-limit bucket.
 
-The v2 reader migrates these earlier keys:
+For the first shared write without a valid actor session, the client executes Cloudflare Turnstile with action `community_session`. The Worker validates the one-time token server-side, checks its hostname/action, derives a keyed network-abuse hash from Cloudflare connection metadata, and mints a signed anonymous actor session. The browser persists only that signed token and its expiry under `tlp-community-actor:v1`.
 
-- `tlp-community-feedback-v1`;
-- `tlp-community-cooldowns-v1`;
-- `tlp-community-helpful-v1`;
-- `tlp-community-rated-v1`.
-
-Legacy keys are removed only after the validated v2 envelope is written successfully. A quota or private-mode failure therefore cannot destroy the only surviving copy of the visitor's state.
+The actor session is deliberately longer-lived than a Turnstile token so the durable outbox can retry after an outage. Turnstile tokens themselves are never placed in the outbox or localStorage.
 
 ## Local and shared modes
 
-When Supabase configuration is absent, community feedback runs in local mode. The interface explicitly says that the data belongs to the current browser.
+Production shared mode is enabled only when both public client inputs are present and valid: `VITE_COMMUNITY_API_URL` and `VITE_TURNSTILE_SITE_KEY`. If either is missing or the API URL is malformed, community fails closed to local mode instead of creating a queue that can never mint a signed actor session.
 
-When the backend is configured, the visible state distinguishes:
+When shared mode is configured, visible state distinguishes waiting, synchronizing, online, queued and offline states. `remoteEnabled` means the complete client-side shared-write configuration exists; it still never proves that the latest read or write succeeded. Runtime success is represented by `CommunitySyncState`.
 
-- waiting for the first synchronization;
-- synchronizing;
-- online and synchronized;
-- online with queued writes;
-- offline with a cached snapshot;
-- offline with queued writes.
+Repository/browser tests may substitute a loopback-only human-proof fixture on `127.0.0.1` or `localhost`; that path is unavailable to production hostnames.
 
-`remoteEnabled` means that a shared backend is configured. It does not by itself prove that the latest request succeeded, so user-facing text must be driven by `CommunitySyncState`, not by the configuration flag alone.
+## Atomic user actions and outbox
 
-## Atomic user actions
+A rating, comment or helpful vote is accepted locally only when the complete v3 envelope can be persisted. Optimistic state, own-vote metadata, cooldown and the pending operation are committed together.
 
-A rating, comment, or helpful vote is accepted only when the complete local envelope can be persisted.
+Remote writes are delivered in order. A failed operation remains at the head of the outbox and stops the current flush, avoiding reordering and retry storms. A server acknowledgement removes only the matching operation.
 
-A successful action updates together:
+Comment writes use a stable client comment ID for network-retry idempotency. Ratings are unique server-side by signed actor + target, and helpful votes by signed actor + comment.
 
-- the visible optimistic snapshot;
-- own-rating or helpful-vote metadata where applicable;
-- the cooldown;
-- the remote outbox operation when shared mode is enabled.
+## Public reads and scale
 
-If browser storage rejects the write, none of those changes are committed to the in-memory interface. The user receives a failure message instead of a false success state.
+The browser never hydrates a global raw ratings corpus.
 
-## Persistent outbox
+- Detail pages request one target aggregate and a cursor-paginated comment page.
+- Ratings leaderboards request bounded aggregate batches only.
+- Comment pages use stable `created_at/id` cursors.
+- Compact poem panels remain passive until explicitly opened.
+- Local persistence is bounded and contains device-owned work, not the public corpus.
 
-Remote writes are not fire-and-forget. Each pending operation contains a stable operation ID, device ID, validated payload, creation timestamp, and attempt count.
+The Worker calculates aggregates in D1 and returns only public fields. Actor IDs and network hashes are never included in read DTOs.
 
-Operations are delivered in order. A failed operation remains in the outbox and stops the current flush, preserving ordering and avoiding a rapid retry loop. The outbox is retried when:
+## Canonical target authority
 
-- the action is created;
-- remote hydration succeeds;
-- the browser returns online.
+`npm run community:targets` derives `public/community-targets.json` from the Product's canonical published poet/poem/track/article catalogs during build.
 
-Successful delivery removes only the matching operation. Repeating an operation is safe because ratings and comments use stable IDs and the backend RPC layer is expected to be idempotent for those IDs and device identities.
+Shared reads and mutations fail closed when that manifest is unavailable or when a syntactically valid target is not in it. If a target is retired from the published catalog, stale D1 rows do not keep its ratings or comments publicly addressable through the Worker. A client-side regex alone is never treated as proof that an object exists.
 
-## Remote hydration and conflict handling
+## Privacy and abuse boundary
 
-Remote ratings and comments are authoritative for already synchronized data. Before replacing the local cache, the client preserves unsent local work:
+D1 stores:
 
-- pending ratings override a remote row with the same stable ID;
-- pending comments remain visible even when the server has not received them;
-- an optimistic helpful count is retained until its queued vote is delivered.
+- signed-session actor UUIDs on private tables;
+- a 64-character HMAC network key in short-lived abuse buckets;
+- community content and rating values.
 
-Malformed remote rows are rejected by the same validation boundary used for local data.
+It does **not** store raw IP addresses, passwords, emails, Turnstile tokens or browser fingerprints.
 
-Remote lists are fetched in explicit pages of 1000 rows, up to the current safety ceiling of 20,000 rows per view. Requests have a 12-second timeout. Reaching that ceiling is an operational signal that the backend should expose target-scoped or cursor-based endpoints rather than silently loading an unbounded global table.
-
-## Target-scoped rendering
-
-A page may contain many `CommunityPanel` instances, especially when one poet has many poems. Components therefore subscribe through `communityTargetStore` rather than directly to the full global snapshot.
-
-The target store:
-
-- keeps stable snapshots for unchanged targets;
-- recomputes only targets that currently have subscribers;
-- notifies only the poet, poem, track, or article whose ratings or comments changed;
-- releases the global subscription and cached target records after the last consumer unmounts.
-
-This prevents one helpful vote or comment from rerendering every community panel on a long page.
-
-## Comments and ratings at scale
-
-Comment lists render five entries at a time and support:
-
-- stable newest/helpful ordering;
-- filtering by comment kind;
-- progressive “show more” rendering;
-- a visible result count;
-- explicit already-marked helpful state.
-
-Rating controls implement radio-group keyboard behavior with arrow keys, Home, and End. The form reports how many required dimensions are complete and submits only the known dimension keys.
-
-The ratings hub supports search and stable sorting. Search, tag, sort, and rated-only state are encoded in the URL so a filtered view can be shared or restored.
-
-## Privacy boundary
-
-The browser stores a generated device identifier used to make rating updates and helpful votes device-specific. It is not an account, authentication proof, legal identity, or reliable person-level deduplication mechanism.
-
-The client must not describe local browser state as a verified human identity. Stronger abuse prevention, moderation, account recovery, cross-device ownership, deletion requests, and legal retention controls belong to the backend and administrative workflow.
+A registration-free system cannot prove that one physical human has exactly one identity forever. The production control is layered instead: Turnstile-gated actor issuance, signed server identity, per-actor uniqueness, HMAC network budgets, canonical targets, bounded payloads and database constraints.
 
 ## Backend invariants
 
-The shared backend is expected to enforce independently:
+The shared backend independently enforces:
 
-- accepted target types and target IDs;
-- score keys and the integer range 1–5;
-- comment length and allowed comment kinds;
-- one mutable rating per device and target;
-- one helpful vote per device and comment;
-- stable-ID idempotency for retried operations;
-- rate limits and abuse controls;
-- moderation and removal rules;
-- safe public views that never expose voter or device identifiers.
+- accepted target types and canonical target IDs on public reads and mutations;
+- exact score keys and integer range 1–5;
+- comment length/kind constraints;
+- one mutable rating per signed actor and target;
+- one helpful vote per signed actor and comment;
+- stable comment-ID idempotency;
+- actor cooldown plus network abuse budgets;
+- moderation status;
+- public responses without actor/network authority fields.
 
-Client checks improve usability and resilience but are not a security boundary.
-
-## Required validation
-
-Run:
-
-```bash
-npm run validate:community-store
-npm run validate:community-target-store
-npm run typecheck
-npm run build
-```
-
-The community store validator covers migration, malformed data, remote hydration, outbox retention and retry, pending-write conflict handling, duplicate helpful votes, quota failures, cross-tab events, and corrupt-state recovery.
-
-The target-store validator verifies stable snapshot identity and proves that a mutation for one target does not notify unrelated community panels.
+Client checks are usability and durability controls, not the security boundary.

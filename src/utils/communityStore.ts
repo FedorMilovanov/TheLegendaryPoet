@@ -5,6 +5,7 @@ import type {
   FeedbackTargetType,
   RatingEntry,
 } from '../types/community';
+import { hasCanonicalRatingScores } from '../data/ratingDimensionContract';
 import {
   markHelpfulRemote,
   remoteEnabled,
@@ -159,6 +160,11 @@ function sanitizeRating(value: unknown): RatingEntry | null {
   };
 }
 
+function sanitizeDeliverableRating(value: unknown) {
+  const entry = sanitizeRating(value);
+  return entry && hasCanonicalRatingScores(entry.targetType, entry.scores) ? entry : null;
+}
+
 function sanitizeComment(value: unknown): CommentEntry | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<CommentEntry>;
@@ -277,7 +283,7 @@ function sanitizeOperation(value: unknown): PendingOperation | null {
   ) return null;
 
   if (candidate.kind === 'rating') {
-    const entry = sanitizeRating(candidate.entry);
+    const entry = sanitizeDeliverableRating(candidate.entry);
     const previousScores = sanitizeScores(candidate.previousScores) ?? undefined;
     return entry && candidate.id === `rating:${entry.id}`
       ? { id: candidate.id, kind: 'rating', voterId: candidate.voterId, entry, previousScores, createdAt, attempts }
@@ -661,7 +667,7 @@ function enqueueOperation(outbox: PendingOperation[], operation: PendingOperatio
 }
 
 export function commitRatingFeedback(entryValue: RatingEntry, scope: string, voterId: string) {
-  const entry = sanitizeRating(entryValue);
+  const entry = sanitizeDeliverableRating(entryValue);
   if (!entry || !UUID.test(voterId)) return false;
   const operationId = `rating:${entry.id}`;
   const pending = currentState.outbox.find((item) => item.kind === 'rating' && item.id === operationId);

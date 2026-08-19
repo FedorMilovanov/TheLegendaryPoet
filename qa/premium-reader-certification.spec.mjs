@@ -5,6 +5,7 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const COMMUNITY_ORIGIN = 'https://community.test.invalid';
 const ARTICLE_ID = 'essay-yesenin-biography-part-two';
+const ACTOR_TOKEN = 'v1.reader-certification-signed-actor-token-that-is-long-enough.signature';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'premium-reader-certification');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -44,17 +45,27 @@ function assertDiagnostics(result) {
 function corsHeaders() {
   return {
     'access-control-allow-origin': '*',
-    'access-control-allow-headers': 'apikey, authorization, content-type, prefer, range',
+    'access-control-allow-headers': 'authorization, content-type',
     'access-control-allow-methods': 'GET, POST, OPTIONS',
     'content-type': 'application/json',
   };
+}
+
+function parseBody(request) {
+  const raw = request.postData();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
 }
 
 async function installFailingCommunityBackend(page) {
   await page.addInitScript(() => {
     globalThis.__TLP_COMMUNITY_TEST_CONFIG__ = {
       url: 'https://community.test.invalid',
-      key: 'test-anon-key',
+      humanProof: 'turnstile-reader-certification-proof',
     };
   });
 
@@ -67,41 +78,68 @@ async function installFailingCommunityBackend(page) {
     }
 
     const url = new URL(request.url());
-    if (request.method() !== 'GET') writes.push({ method: request.method(), pathname: url.pathname });
+    if (request.method() !== 'GET') {
+      writes.push({
+        method: request.method(),
+        pathname: url.pathname,
+        body: parseBody(request),
+        authorization: request.headers()['authorization'] ?? null,
+      });
+    }
 
-    if (url.pathname.endsWith('/tlp_feedback_summary_public')) {
+    if (url.pathname === '/v1/summary' && request.method() === 'GET') {
       await route.fulfill({
         status: 200,
         headers: corsHeaders(),
-        body: JSON.stringify([{
-          target_type: 'article',
-          target_id: ARTICLE_ID,
-          rating_count: 7,
-          comment_count: 0,
+        body: JSON.stringify({
+          targetType: 'article',
+          targetId: ARTICLE_ID,
+          ratingCount: 7,
+          commentCount: 0,
           overall: 4.6,
-          dimensions: { clarity: 4.7, evidence: 4.5, depth: 4.6, ethics: 4.6 },
+          dimensions: { clarity: 4.7, depth: 4.6, fairness: 4.5 },
           distribution: { 4: 3, 5: 4 },
           deviation: 0.24,
-        }]),
+        }),
       });
       return;
     }
 
-    if (url.pathname.endsWith('/tlp_comments_public')) {
-      await route.fulfill({ status: 200, headers: corsHeaders(), body: '[]' });
+    if (url.pathname === '/v1/comments' && request.method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({ comments: [], nextCursor: null }),
+      });
       return;
     }
 
-    if (url.pathname.includes('/rpc/')) {
+    if (url.pathname === '/v1/session' && request.method() === 'POST') {
+      await route.fulfill({
+        status: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({
+          actorToken: ACTOR_TOKEN,
+          expiresAt: Date.now() + 30 * 24 * 60 * 60_000,
+        }),
+      });
+      return;
+    }
+
+    if (url.pathname === '/v1/comment' && request.method() === 'POST') {
       await route.fulfill({
         status: 503,
         headers: corsHeaders(),
-        body: JSON.stringify({ message: 'reader certification offline write' }),
+        body: JSON.stringify({ ok: false, code: 'reader_certification_offline_write' }),
       });
       return;
     }
 
-    await route.fulfill({ status: 404, headers: corsHeaders(), body: '[]' });
+    await route.fulfill({
+      status: 404,
+      headers: corsHeaders(),
+      body: JSON.stringify({ ok: false, code: 'not_found' }),
+    });
   });
 
   return writes;
@@ -239,7 +277,14 @@ test.describe('W5 premium reader certification', () => {
     const optimisticCommentSurfaces = panel.getByText(commentText);
     expect(await optimisticCommentSurfaces.count()).toBeGreaterThanOrEqual(1);
     await expect(optimisticCommentSurfaces.first()).toBeVisible();
-    await expect.poll(() => writes.filter((entry) => entry.pathname.includes('/rpc/')).length).toBeGreaterThan(0);
+    await expect.poll(() => writes.filter((entry) => entry.pathname === '/v1/comment').length).toBe(1);
+    expect(writes.filter((entry) => entry.pathname === '/v1/session')).toHaveLength(1);
+    const sessionWrite = writes.find((entry) => entry.pathname === '/v1/session');
+    expect(sessionWrite?.body).toEqual({ turnstileToken: 'turnstile-reader-certification-proof' });
+    const commentWrite = writes.find((entry) => entry.pathname === '/v1/comment');
+    expect(commentWrite?.authorization).toBe(`Bearer ${ACTOR_TOKEN}`);
+    expect(commentWrite?.body?.text).toBe(commentText);
+    expect(JSON.stringify(commentWrite?.body ?? {})).not.toMatch(/voter|actorId|network/i);
     await expect(panel.locator('p[aria-live="polite"]')).toContainText(/Сервер недоступен|В очереди|ничего не потеряно/i, { timeout: 15_000 });
 
     const persisted = await page.evaluate(() => {
@@ -247,6 +292,9 @@ test.describe('W5 premium reader certification', () => {
       return raw ? JSON.parse(raw) : null;
     });
     expect(persisted?.outbox?.some((operation) => operation.kind === 'comment' && operation.entry?.text === commentText)).toBe(true);
+    const actorSession = await page.evaluate(() => JSON.parse(localStorage.getItem('tlp-community-actor:v1') ?? '{}'));
+    expect(actorSession.actorToken).toBe(ACTOR_TOKEN);
+    expect(JSON.stringify(persisted)).not.toContain(ACTOR_TOKEN);
     assertDiagnostics(diagnostics);
   });
 

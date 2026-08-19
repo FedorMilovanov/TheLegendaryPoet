@@ -1,0 +1,25 @@
+{
+  "name": "the-legendary-poet-community",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-19",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "https://thelegendarypoet.ru,https://www.thelegendarypoet.ru",
+    "TURNSTILE_HOSTNAMES": "thelegendarypoet.ru,www.thelegendarypoet.ru",
+    "COMMUNITY_TARGET_MANIFEST_URL": "https://thelegendarypoet.ru/community-targets.json"
+  },
+  "secrets": {
+    "required": [
+      "COMMUNITY_SESSION_SECRET",
+      "COMMUNITY_NETWORK_SECRET",
+      "TURNSTILE_SECRET"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "the-legendary-poet-community",
+      "database_id": "16928bb2-13e7-462a-b788-652e95618917"
+    }
+  ]
+}

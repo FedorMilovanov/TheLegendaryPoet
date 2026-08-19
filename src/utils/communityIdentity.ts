@@ -9,9 +9,9 @@ function fallbackUuid() {
 }
 
 /**
- * Stable anonymous browser identifier. It is not a fingerprint and contains no
- * personal data; it only lets the backend enforce one active vote per object
- * from the same browser installation.
+ * Legacy-compatible local operation tag for the v3 browser outbox. It is not a
+ * fingerprint, authentication credential, person identity, deduplication key,
+ * or server authority. Cloudflare community requests never transmit this value.
  */
 export function getCommunityDeviceId(): string {
   if (typeof window === 'undefined') return '00000000-0000-4000-8000-000000000000';

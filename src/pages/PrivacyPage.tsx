@@ -11,7 +11,7 @@ const breadcrumbs: SeoBreadcrumb[] = [
 
 export default function PrivacyPage() {
   const title = 'Политика конфиденциальности — THE LEGENDARY POET';
-  const description = 'Какие технические данные использует THE LEGENDARY POET, как работает аналитика и как управлять согласием.';
+  const description = 'Какие технические данные использует THE LEGENDARY POET, как работают общественные функции и аналитика и как управлять согласием.';
 
   useSeo({
     title,
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300/65">Данные посетителей</p>
         <h1 className="mt-4 font-serif text-4xl font-bold leading-tight sm:text-6xl">Политика конфиденциальности</h1>
         <p className="mt-6 text-lg leading-relaxed text-cyan-100/60">
-          THE LEGENDARY POET собирает только данные, необходимые для работы сайта, добровольных пользовательских функций и оценки качества публикаций.
+          THE LEGENDARY POET использует только данные, необходимые для работы сайта, добровольных пользовательских функций, защиты от злоупотреблений и оценки качества публикаций.
         </p>
 
         <div className="mt-12 space-y-5">
@@ -49,14 +49,17 @@ export default function PrivacyPage() {
           <section className="rounded-3xl border border-cyan-400/10 bg-white/[0.025] p-6 sm:p-8">
             <h2 className="font-serif text-2xl font-semibold">Локальное хранение</h2>
             <p className="mt-3 leading-relaxed text-cyan-100/55">
-              Браузер может хранить настройки интерфейса, состояние аудиоплеера, личный архив, выбор согласия и служебные маркеры восстановления. Эти данные помогают продолжить сеанс и не являются публичным профилем.
+              Браузер может хранить настройки интерфейса, состояние аудиоплеера, личный архив, выбор согласия, локальную очередь общественных действий и подписанную анонимную сессию участника. Эти данные помогают продолжить сеанс и не являются публичным профилем. Одноразовые Turnstile-токены в localStorage и очередь не записываются.
             </p>
           </section>
 
           <section className="rounded-3xl border border-cyan-400/10 bg-white/[0.025] p-6 sm:p-8">
-            <h2 className="font-serif text-2xl font-semibold">Оценки и комментарии</h2>
+            <h2 className="font-serif text-2xl font-semibold">Оценки, комментарии и защита от накрутки</h2>
             <p className="mt-3 leading-relaxed text-cyan-100/55">
-              При использовании общественных функций введённые данные могут передаваться подключённому хранилищу проекта. Не публикуйте секретные сведения, адреса, документы и персональные данные третьих лиц.
+              Пока общая база не подключена полностью, оценки и комментарии остаются в текущем браузере. В общем режиме введённые вами оценки, имя или псевдоним и текст комментария передаются через Cloudflare Worker в базу Cloudflare D1. Для выпуска анонимной серверной сессии используется Cloudflare Turnstile. Не публикуйте секретные сведения, адреса, документы и персональные данные третьих лиц.
+            </p>
+            <p className="mt-3 leading-relaxed text-cyan-100/55">
+              Для ограничения злоупотреблений Worker получает сетевой адрес соединения от инфраструктуры Cloudflare и преобразует его отдельным серверным HMAC-секретом. В D1 сохраняется только 64-символьный HMAC-ключ для краткоживущих лимитов; исходный IP-адрес и Turnstile-токен в таблицы сообщества не записываются. Публичные ответы API не содержат actor ID или сетевой HMAC-ключ.
             </p>
           </section>
 
@@ -77,7 +80,7 @@ export default function PrivacyPage() {
         </section>
 
         <p className="mt-10 text-sm text-cyan-100/35">
-          Дата публикации: 28 июля 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
+          Обновлено: 19 августа 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
         </p>
       </main>
     </div>

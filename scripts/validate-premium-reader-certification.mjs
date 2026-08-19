@@ -42,10 +42,16 @@ for (const token of [
   "page.emulateMedia({ forcedColors: 'active', reducedMotion: 'reduce' })",
   "localStorage.getItem('tlp-community-feedback:v3')",
   'Storage.prototype',
-  'reader certification offline write',
+  "url.pathname === '/v1/session'",
+  "url.pathname === '/v1/comment'",
+  'reader_certification_offline_write',
+  'turnstile-reader-certification-proof',
+  "authorization: request.headers()['authorization']",
 ]) {
   expect(premium.includes(token), `premium reader suite is missing outcome contract: ${token}`);
 }
+expect(!premium.includes("url.pathname.includes('/rpc/')"), 'premium reader certification must not retain a legacy database-RPC failure path');
+expect(!premium.includes('test-anon-key'), 'premium reader certification must not inject obsolete Supabase authority');
 
 expect(packageJson.scripts?.['validate:reader-certification'] === 'node scripts/validate-premium-reader-certification.mjs', 'package must expose validate:reader-certification');
 expect(packageJson.scripts?.check?.includes('validate:reader-certification'), 'repository-wide check must include reader certification validation');
@@ -79,4 +85,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('premium reader certification contract: OK (archive add/remove honesty, observable route readiness, longform sources, Chromium desktop, Android, desktop WebKit, iPhone, reduced motion, blocked storage, failed writes and forced colors)');
+console.log('premium reader certification contract: OK (archive add/remove honesty, observable route readiness, longform sources, Worker-authenticated failed-write durability, Chromium desktop, Android, desktop WebKit, iPhone, reduced motion, blocked storage and forced colors)');

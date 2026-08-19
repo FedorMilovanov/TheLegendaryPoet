@@ -16,6 +16,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -94,6 +95,24 @@ jobs:
           path: typecheck.log
           if-no-files-found: error
           retention-days: 3
+      - name: Dry-run production Cloudflare community Worker bundle
+        run: |
+          set -euo pipefail
+          secret_file="$RUNNER_TEMP/community-worker-dry-run.env"
+          bundle_dir="$RUNNER_TEMP/community-worker-bundle"
+          rm -rf "$bundle_dir"
+          cat > "$secret_file" <<'EOF'
+          COMMUNITY_SESSION_SECRET=ci-dry-run-session-secret-000000000000000000000001
+          COMMUNITY_NETWORK_SECRET=ci-dry-run-network-secret-000000000000000000000002
+          TURNSTILE_SECRET=ci-dry-run-turnstile-secret-not-production
+          EOF
+          (
+            cd workers/community-api
+            npx --yes wrangler@4.120.0 deploy --dry-run --outdir "$bundle_dir" --secrets-file "$secret_file"
+          )
+          test -n "$(find "$bundle_dir" -type f -name '*.js' -print -quit)"
+          rm -f "$secret_file"
+          rm -rf "$bundle_dir"
       - name: Generate sitemap and Atom feed
         run: npm run seo:generate
       - name: Snapshot deterministic discovery files
