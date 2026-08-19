@@ -62,6 +62,7 @@ expect(worker.includes("result.action !== 'community_session'") && worker.includ
 expect(worker.includes("throw new HttpError(400, 'unexpected_authority_field')"), 'mutation bodies must reject caller-supplied authority fields');
 expect(worker.includes('requireCanonicalTarget'), 'mutations must require release-canonical target membership');
 expect(worker.includes('COMMUNITY_TARGET_MANIFEST_URL'), 'canonical target authority must come from the release manifest');
+expect(worker.includes('manifestTypes.length !== TARGET_TYPES.size') && worker.includes('if (keys.has(key)) return null'), 'Worker must reject malformed or duplicate target manifests rather than silently widening/collapsing authority');
 expect(worker.includes("takeBudget(env.DB, key, 'session', '*', 86400, 30)"), 'Turnstile-backed actor issuance must be abuse-limited without an unusably tiny shared-network cap');
 expect(worker.includes("INSERT INTO tlp_rate_buckets") && worker.includes('ON CONFLICT(network_key, action, scope, window_start)'), 'network budgets must be atomic D1 upserts');
 expect(worker.includes("ON CONFLICT(target_type, target_id, actor_id)"), 'rating uniqueness must be server actor + target');
@@ -69,6 +70,8 @@ expect(worker.includes('scoresEqual(body.targetType, existing.scores_json, score
 expect(worker.includes('SELECT actor_id, target_type, target_id, author, text, kind FROM tlp_comments WHERE id = ?'), 'comment replay checks must compare the complete immutable stored payload');
 expect(worker.includes('commentMatches(existing, actor, comment)') && worker.includes('comment_id_conflict'), 'comment IDs must be idempotent only for the same actor and normalized payload');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_comments') && worker.includes('const persisted = await readExisting()'), 'concurrent comment retries must converge on one row and re-verify ownership/payload instead of surfacing a uniqueness 500');
+expect(worker.includes('WHERE NOT EXISTS (') && worker.includes('actor_id = ? AND created_at > ?') && worker.includes('COMMENT_COOLDOWN_MS'), 'comment cooldown must be enforced inside the atomic insert statement so concurrent requests cannot both pass a pre-check');
+expect(!worker.includes("SELECT 1 AS found FROM tlp_comments WHERE actor_id = ? AND created_at > ? LIMIT 1"), 'comment cooldown must not rely on a race-prone read-before-write check');
 expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
 expect(worker.includes('FROM sqlite_master') && worker.includes("name IN ('tlp_ratings', 'tlp_comments', 'tlp_helpful_votes', 'tlp_rate_buckets')"), 'health readiness must verify the actual four-table D1 schema instead of trusting the binding name');
@@ -115,5 +118,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
