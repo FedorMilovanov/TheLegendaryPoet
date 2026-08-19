@@ -117,7 +117,7 @@ function polishSourceForPublication(source: EssaySource): EssaySource {
 }
 
 export const simonovSonArtilleristaPublished = publishEssay(simonovSonArtilleristaDraft, {
-  dateModified: '2026-08-19',
+  dateModified: '2026-08-20',
   excerpt:
     'За Лёнькой стоял реальный артиллерийский разведчик Иван Лоскутов. Он корректировал огонь из опасного передового пункта и, когда высоту окружили, потребовал открыть огонь прямо по занимаемой высоте. Свидетельство самого Лоскутова позволяет увидеть, где заканчивается документ и начинается художественное решение Симонова.',
   tags: [...simonovSonArtilleristaDraft.tags, 'документальное исследование'],
