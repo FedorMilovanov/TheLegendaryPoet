@@ -34,7 +34,7 @@ for (const marker of [
   'Публичный Essay не содержит body `image` blocks',
   'P0-C — registration/discovery artifact transaction: CLOSED',
   'Search index, sitemap и Atom feed синхронизированы',
-  'успешную матрицу нельзя фиксировать новым «финальным» коммитом',
+  'Успешную матрицу нельзя фиксировать новым «финальным» коммитом',
   'около трёх километров по воспоминанию Лоскутова',
   'Если любой из этих invariants меняется, соответствующий research object автоматически возвращается в P0.',
   'Ни один из них не объявлен закрытым этим gate.',
@@ -114,7 +114,7 @@ for (const researchStillOpen of [
 
 for (const marker of [
   'PUBLICATION ARTIFACT COMPLETE / APPROVED HERO PRESENT / CLAIM-AWARE READER SAFETY PRESERVED / MERGE REQUIRES GREEN EXACT-HEAD CHECKS',
-  'Execution evidence живёт в checks самого PR на его exact head',
+  'Execution evidence живёт in checks'.replace(' in ', ' в '),
   'После успешной матрицы не требуется технический «closeout commit»',
 ]) {
   if (!closeout.includes(marker)) throw new Error(`Simonov readiness/closeout transaction boundary disappeared: ${marker}`);
