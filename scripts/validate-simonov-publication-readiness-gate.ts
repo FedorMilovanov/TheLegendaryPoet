@@ -36,7 +36,7 @@ const folded = readerText.toLocaleLowerCase('ru-RU');
 for (const required of [
   'июль 1941 года',
   'Точного дня в письме нет',
-  'Три километра до высоты',
+  'Около трёх километров до высоты',
   'На командном пункте решили, что произошла ошибка, и запросили подтверждение',
   'Архангельские институциональные источники относят публикацию в «Патриоте Родины» к 3 декабря 1941 года',
   'Саму полосу «Патриота Родины» от 3 декабря редакция ещё не просмотрела',
@@ -55,6 +55,7 @@ for (const forbidden of [
   'Алексей Михайлович',
   'самая первая публикация была 3 декабря',
   '3 декабря 1941 года впервые',
+  'осложнённая старой дружбой семей',
 ]) {
   if (readerText.includes(forbidden)) throw new Error(`Simonov reader promoted a P1-only unresolved claim: ${forbidden}`);
 }
@@ -87,4 +88,4 @@ for (const researchStillOpen of [
   if (!gate.includes(researchStillOpen)) throw new Error(`Simonov readiness gate silently dropped an open research route: ${researchStillOpen}`);
 }
 
-console.log('Simonov publication readiness: current reader is claim-safe without promoting unresolved P1 objects; hard blockers are artifact-specific hero approval/bytes plus the final registration and QA transaction.');
+console.log('Simonov publication readiness: current reader is claim-safe without promoting unresolved P1 objects; route distance is explicitly approximate; unsupported family-friendship wording is barred; hard blockers are artifact-specific hero approval/bytes plus the final registration and QA transaction.');
