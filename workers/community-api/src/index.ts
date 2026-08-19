@@ -1,3 +1,8 @@
+import {
+  hasCanonicalRatingScores,
+  ratingDimensionKeysByTarget,
+} from '../../../src/data/ratingDimensionContract';
+
 type FeedbackTargetType = 'poet' | 'poem' | 'track' | 'article';
 type CommentKind = 'literary' | 'history' | 'moral' | 'performance';
 
@@ -49,12 +54,7 @@ const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
 const COMMENT_ID = /^comment-[a-z0-9][a-z0-9-]{7,199}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SCORE_KEY = /^[a-z0-9][a-z0-9-]{0,79}$/;
-const EXPECTED_SCORE_KEYS: Record<FeedbackTargetType, readonly string[]> = {
-  poet: ['language', 'depth', 'legacy', 'truth'],
-  poem: ['beauty', 'form', 'impact'],
-  track: ['voice', 'music', 'text'],
-  article: ['clarity', 'depth', 'fairness'],
-};
+const EXPECTED_SCORE_KEYS = ratingDimensionKeysByTarget;
 const DEFAULT_ALLOWED_ORIGINS = 'https://thelegendarypoet.ru,https://www.thelegendarypoet.ru';
 const DEFAULT_MANIFEST_URL = 'https://thelegendarypoet.ru/community-targets.json';
 const MAX_BODY_BYTES = 12_000;
@@ -282,12 +282,12 @@ function validateScores(type: FeedbackTargetType, value: unknown) {
   const result: Record<string, number> = {};
   for (const [key, raw] of entries) {
     const score = Number(raw);
-    if (!SCORE_KEY.test(key) || !expected.includes(key) || !Number.isInteger(score) || score < 1 || score > 5) {
+    if (!SCORE_KEY.test(key) || !expected.includes(key as never) || !Number.isInteger(score) || score < 1 || score > 5) {
       throw new HttpError(400, 'invalid_scores');
     }
     result[key] = score;
   }
-  if (!expected.every((key) => Object.hasOwn(result, key))) throw new HttpError(400, 'invalid_scores');
+  if (!hasCanonicalRatingScores(type, result)) throw new HttpError(400, 'invalid_scores');
   return result;
 }
 
@@ -484,7 +484,7 @@ async function handleComment(request: Request, env: Env) {
   `).bind(comment.commentId, comment.targetType, comment.targetId, actor, comment.author, comment.text, comment.commentKind, now).run();
   const persisted = await readExisting();
   if (!persisted || !commentMatches(persisted, actor, comment)) throw new HttpError(409, 'comment_id_conflict');
-  return { ok: true, idempotent: Boolean(existing) };
+  return { ok: true };
 }
 
 async function handleHelpful(request: Request, env: Env) {
@@ -582,7 +582,13 @@ async function route(request: Request, env: Env) {
       && env.TURNSTILE_HOSTNAMES,
     );
     const writesReady = databaseReady && targetAuthorityReady && secretsReady;
-    return json(200, { ok: databaseReady, database: 'd1', databaseReady, targetAuthorityReady, writesReady }, origin, env);
+    return json(writesReady ? 200 : 503, {
+      ok: writesReady,
+      database: 'd1',
+      databaseReady,
+      targetAuthorityReady,
+      writesReady,
+    }, origin, env);
   }
 
   if (request.method === 'GET' && url.pathname === '/v1/summary') {
