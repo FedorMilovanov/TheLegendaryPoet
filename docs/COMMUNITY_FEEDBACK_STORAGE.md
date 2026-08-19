@@ -63,7 +63,7 @@ The Worker calculates aggregates in D1 and returns only public fields. Actor IDs
 
 `npm run community:targets` derives `public/community-targets.json` from the Product's canonical published poet/poem/track/article catalogs during build.
 
-Mutation handling fails closed when that manifest is unavailable or when a syntactically valid target is not in it. A client-side regex alone is never treated as proof that an object exists.
+Shared reads and mutations fail closed when that manifest is unavailable or when a syntactically valid target is not in it. If a target is retired from the published catalog, stale D1 rows do not keep its ratings or comments publicly addressable through the Worker. A client-side regex alone is never treated as proof that an object exists.
 
 ## Privacy and abuse boundary
 
@@ -81,7 +81,7 @@ A registration-free system cannot prove that one physical human has exactly one 
 
 The shared backend independently enforces:
 
-- accepted target types and canonical target IDs;
+- accepted target types and canonical target IDs on public reads and mutations;
 - exact score keys and integer range 1–5;
 - comment length/kind constraints;
 - one mutable rating per signed actor and target;
