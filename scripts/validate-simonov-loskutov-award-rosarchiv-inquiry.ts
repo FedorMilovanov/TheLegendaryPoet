@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_LOSKUTOV_AWARD_ROSARCHIV_INQUIRY_2026-08.md'
 if (!existsSync(path)) throw new Error(`Simonov TsAMO route dossier missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'exact TsAMO locator known / Rosarchiv route reply received / direct TsAMO inquiry sent / TsAMO reply and direct scan pending / no paid work authorized',
@@ -28,7 +29,15 @@ for (const marker of [
 if (!status.includes('Rosarchiv route reply received') || !status.includes('direct TsAMO inquiry sent')) {
   throw new Error(`Simonov TsAMO route transition disappeared: ${status}`);
 }
-if (/TsAMO reply received|archive object confirmed|scan received|page inspected|direct-object verified|paid work authorized/iu.test(status)) {
+const forbiddenPositiveParts = [
+  'TsAMO reply received',
+  'archive object confirmed',
+  'scan received',
+  'page inspected',
+  'direct-object verified',
+  'paid work authorized',
+];
+if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
   throw new Error(`Simonov TsAMO dossier falsely closes an open gate: ${status}`);
 }
 
