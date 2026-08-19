@@ -9,6 +9,7 @@ on:
       - 'src/data/essays/index.ts'
       - 'src/data/essaySearchIndex.generated.ts'
       - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
+      - 'public/images/PROVENANCE.yml'
       - 'public/sitemap.xml'
       - 'public/feed.xml'
       - 'docs/research/SIMONOV_*.md'
