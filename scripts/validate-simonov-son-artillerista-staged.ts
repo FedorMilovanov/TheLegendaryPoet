@@ -151,7 +151,8 @@ requireMarkers('Simonov image-rights gate', imageRights, [
   'archive images research-only pending item-level reuse authority',
   'G1 — Иван Алексеевич Лоскутов, 1941',
   'G2 — Ефим Самсонович Рыклис, 1941',
-  'не скачивать и не вендорить эти изображения в production автоматически',
+  'Они не являются разрешением на скачивание и перепубликацию',
+  'В production нельзя переносить ни сами JPEG, ни их производные WebP автоматически',
 ]);
 
 // Strong conflicts remain explicitly isolated.
