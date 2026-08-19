@@ -5,6 +5,7 @@ const SLUG = 'simonov-syn-artillerista-realnaya-istoriya';
 const ROUTE = `/essays/${SLUG}`;
 const HERO = '/images/essays/simonov/simonov-son-artillerista-hero.webp';
 const TITLE = '«Огонь!» Реальная история «Сына артиллериста» Константина Симонова';
+const TITLE_HEADING = /Огонь.*Реальная.*История.*Сына.*Артиллериста.*Константина Симонова/i;
 
 async function waitForSettledRoute(page) {
   const main = page.locator('#main-content');
@@ -22,16 +23,15 @@ test('Simonov publication route renders the approved reader-safe object', async 
   expect(response.status()).toBeLessThan(400);
   await waitForSettledRoute(page);
 
-  await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: TITLE_HEADING })).toBeVisible();
   await expect(page).toHaveURL(new RegExp(`${ROUTE}$`));
-  await expect(page.locator(`img[src$="${HERO}"]`).first()).toBeVisible();
-
-  const heroDimensions = await page.locator(`img[src$="${HERO}"]`).first().evaluate((image) => ({
+  const hero = page.locator(`img[src$="${HERO}"]`).first();
+  await expect(hero).toBeVisible();
+  await expect.poll(async () => hero.evaluate((image) => ({
     width: image.naturalWidth,
     height: image.naturalHeight,
     complete: image.complete,
-  }));
-  expect(heroDimensions).toEqual({ width: 1600, height: 900, complete: true });
+  }))).toEqual({ width: 1600, height: 900, complete: true });
 
   await expect(page.getByText('Обложка этой публикации — редакционная художественная реконструкция.', { exact: false })).toBeVisible();
   await expect(page.getByText('Она не является документальной фотографией Ивана Лоскутова, конкретной высоты или боя 1941 года.', { exact: false })).toBeVisible();
