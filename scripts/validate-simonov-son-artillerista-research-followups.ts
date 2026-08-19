@@ -77,16 +77,28 @@ requireMarkers('author witness collation', author, [
 
 const shpl = requireFile('docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md', 'Red Star SHPL gate');
 requireMarkers('Red Star SHPL gate', shpl, [
-  'complete 1941 SHPL corpus verified / global p.3 content direct-verified via exact №288 PDF / exact SHPL child node and institutional comparison pending',
-  '25135', '36558', '№ 1 (1 января) — № 309 (31 декабря)',
-  'декабрь: **№ 283–309**', 'unknown / discover, do not infer',
-  '№288 (5043)', 'global Red Star page-content gate is closed',
-  'Военно-исторический журнал', 'Издание Министерства обороны России',
-  '7 декабря. С. 3', 'institutional provenance/page-identity cross-check',
-  '`SHPL p.3 уже просмотрена редакцией`',
+  'complete 1941 SHPL corpus verified / exact SHPL №288 node + p.3 inspect route confirmed by holder reply / SHPL pixels not independently rendered in current toolchain / global p.3 content already direct-verified',
+  '25135', '36558', '№1–309',
+  'Декабрь (№№ 283-309)',
+  'Exact issue node:', '`http://elib.shpl.ru/ru/nodes/37037`',
+  'Exact p.3 inspect route:', '#mode/inspect/page/3/zoom/4',
+  '`загрузить` → `крупный размер`',
+  '`1a019ce26e1553d8`', '`1a01a18e755ec4d7`',
+  'exact SHPL object/page route: VERIFIED BY HOLDER REPLY',
+  'SHPL pixels independently rendered by this toolchain: PENDING',
+  'global Red Star page-content gate remains CLOSED',
+  'Военно-исторический журнал', '7 декабря. С. 3',
+  '`THE LEGENDARY POET визуально сверил SHPL p.3`',
 ]);
-if (/SHPL p\.3.*(?:verified|просмотрена редакцией)/iu.test(declaredStatus(shpl))) {
-  throw new Error('SHPL gate falsely declares holder-specific page inspection');
+for (const stale of [
+  'unknown / discover, do not infer',
+  'exact SHPL child node and institutional comparison pending',
+  'Exact SHPL child object остаётся нужен',
+]) {
+  if (shpl.includes(stale)) throw new Error(`SHPL gate retained stale pre-reply state: ${stale}`);
+}
+if (/SHPL pixels.*(?:verified|inspected|rendered by this toolchain: VERIFIED)/iu.test(declaredStatus(shpl))) {
+  throw new Error('SHPL gate falsely declares holder-specific pixel inspection');
 }
 
 const page3 = requireFile('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Red Star page-3 scholarly gate');
@@ -106,4 +118,4 @@ requireMarkers('second-pass source addendum', addendum2, [
   'A2-01', '10800112', 'A2-07', '№ 288 (5043)', 'A2-09', 'Человек из поэмы', 'A2-13', 'ГПИБ / SHPL',
 ]);
 
-console.log('Simonov research follow-ups: award/1966/archive gates remain open; Pravda 1966 stays fail-closed pending p.4; Red Star №288 p.3 is direct-page verified, scholarly-corroborated, and SHPL remains a holder-specific institutional provenance cross-check.');
+console.log('Simonov research follow-ups: award/1966/archive gates remain open; Pravda 1966 stays fail-closed pending p.4; Red Star №288 p.3 is direct-page verified; SHPL holder reply now pins exact node 37037 and p.3 inspect route while SHPL pixels remain a holder-specific comparison task.');
