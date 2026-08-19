@@ -1,7 +1,7 @@
 # «Сын артиллериста» — visual acquisition manifest
 
-Дата прохода: 2026-08-18  
-Статус: **three contextual assets object-verified / documentary Loskutov-Ryklis-Simonov 1941 assets still rights-pending / no bytes vendored yet**
+Дата прохода: 2026-08-19  
+Статус: **three contextual assets object-verified / Red Star p.3 facsimile page-content direct-verified / documentary Loskutov-Ryklis-Simonov 1941 assets still rights-pending / no visual bytes vendored yet**
 
 ## Зачем отдельный manifest
 
@@ -182,9 +182,39 @@
 ## F1 — `Красная звезда`, №288 (5043), 07.12.1941
 
 **Class:** facsimile  
-**Status:** exact issue identity strongly corroborated; page/columns pending direct SHPL/GPIB inspection.
+**Status:** **page-content DIRECT VERIFIED by exact №288 PDF / SHPL exact node 37037 + p.3 inspect route holder-confirmed / SHPL derivative pixels not independently rendered / facsimile reuse rights separate**.
 
-При нахождении полосы будущий визуал должен быть не декоративным скриншотом, а точным факсимиле с подписью номера, даты, страницы/колонки и источника цифровой копии.
+Direct-object fingerprint:
+
+- exact PDF: `Газета «Красная Звезда» №288 от 07 декабря 1941 года.pdf`;
+- Internet Archive item: `no2661212191941`;
+- bytes: **6 506 121**;
+- SHA-256: **`9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`**.
+
+На rendered printed p.3 установлены:
+
+- `7 декабря 1941 г., воскресенье, № 288 (5043)`;
+- `Сын артиллериста`;
+- `(Фронтовая поэма)`;
+- **шесть газетных колонок**;
+- конец `К. СИМОНОВ. / СЕВЕРНЫЙ ФРОНТ.`.
+
+Following printed p.4 просмотрена и продолжения поэмы не содержит.
+
+ГПИБ/SHPL отдельно подтвердила holder route:
+
+- exact issue node **37037**;
+- exact p.3 inspect state `#mode/inspect/page/3/zoom/4`;
+- штатная выгрузка: `загрузить` → `крупный размер`.
+
+Текущий automated environment не отрендерил **именно SHPL derivative pixels**, поэтому нельзя писать, что SHPL-копия визуально сверена этим toolchain. Это не отменяет direct inspection independent №288 facsimile.
+
+Если facsimile будет реально включаться в production как изображение, отдельно нужны:
+
+- exact bytes выбранного visual derivative;
+- truthful holder/source credit;
+- reuse/licence decision;
+- подпись номера, даты и страницы.
 
 ## F2 — `Патриот Родины`, 03.12.1941
 
@@ -261,4 +291,4 @@ Item-level Commons pages и лицензии проверены, но текущ
 
 ## Итог
 
-У нас теперь есть **три предметно проверенных contextual visual candidates** с точными историческими ограничениями и правовым статусом, плюс понятная очередь на три намного более ценных documentary visuals и три facsimile. Это позволяет собирать статью по профессиональной схеме: `эмоциональная реконструкция → реальное лицо → место → документ → автор → ранняя печать`, не выдавая поздние или контекстные изображения за конкретное событие 1941 года.
+У нас есть **три предметно проверенных contextual visual candidates** с точными историческими ограничениями и правовым статусом; `Красная звезда` №288 p.3 уже закрыта на уровне direct facsimile page-content, а SHPL holder route подтверждён отдельно. Documentary portraits, другие facsimiles и любые реально включаемые visual bytes остаются fail-closed до item-level rights/provenance/ingestion. Схема статьи остаётся профессиональной: `эмоциональная реконструкция → реальное лицо → место → документ → автор → ранняя печать`, без выдачи поздних или контекстных изображений за конкретное событие 1941 года.
