@@ -72,26 +72,27 @@ requireMarkers('author witness collation', author, [
 
 const shpl = requireFile('docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md', 'Red Star SHPL gate');
 requireMarkers('Red Star SHPL gate', shpl, [
-  'complete 1941 corpus verified / page 3 strongly corroborated / exact №288 child node and direct scan pending',
+  'complete 1941 SHPL corpus verified / global p.3 content direct-verified via exact №288 PDF / exact SHPL child node and institutional comparison pending',
   '25135', '36558', '№ 1 (1 января) — № 309 (31 декабря)',
   'декабрь: **№ 283–309**', 'unknown / discover, do not infer',
-  '№288 (5043)', 'page 3 strongly corroborated / direct scan still pending',
+  '№288 (5043)', 'global Red Star page-content gate is closed',
   'Военно-исторический журнал', 'Издание Министерства обороны России',
-  '7 декабря. С. 3', '**открыть page 3 первым**',
-  'Пока нельзя:', '`Мы просмотрели оригинальную полосу`',
+  '7 декабря. С. 3', 'institutional provenance/page-identity cross-check',
+  '`SHPL p.3 уже просмотрена редакцией`',
 ]);
-if (/direct scan verified|direct page verified/iu.test(declaredStatus(shpl))) {
-  throw new Error('SHPL gate falsely declares direct page inspection');
+if (/SHPL p\.3.*(?:verified|просмотрена редакцией)/iu.test(declaredStatus(shpl))) {
+  throw new Error('SHPL gate falsely declares holder-specific page inspection');
 }
 
 const page3 = requireFile('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Red Star page-3 scholarly gate');
 requireMarkers('Red Star page-3 scholarly gate', page3, [
-  'page 3 strongly corroborated by official military-history scholarly citation / direct newspaper scan still pending',
+  'official military-history scholarly p.3 locator independently confirmed by direct №288 page inspection',
   'КОЛОБОВ Евгений Юрьевич', 'примечании **39**', '7 декабря. С. 3',
-  'direct visual newspaper scan №288, p.3',
+  'A+ direct visual object', 'six-column', 'following p.4',
+  'independent institutional scholarly corroboration',
 ]);
-if (/direct scan verified|direct page verified/iu.test(declaredStatus(page3))) {
-  throw new Error('Page-3 scholarly gate falsely declares direct scan closure');
+if (/direct newspaper scan still pending|direct object inspection required for page verification and columns/iu.test(declaredStatus(page3))) {
+  throw new Error('Page-3 scholarly gate retained a stale pre-inspection status');
 }
 
 const addendum2 = requireFile('docs/research/SIMONOV_SON_ARTILLERISTA_SOURCE_ADDENDUM_2026-08.md', 'second-pass source addendum');
@@ -100,4 +101,4 @@ requireMarkers('second-pass source addendum', addendum2, [
   'A2-01', '10800112', 'A2-07', '№ 288 (5043)', 'A2-09', 'Человек из поэмы', 'A2-13', 'ГПИБ / SHPL',
 ]);
 
-console.log('Simonov research follow-ups: award/1966/archive gates remain open; Red Star №288 page 3 is scholarly-corroborated and direct SHPL p.3 inspection remains the publication target.');
+console.log('Simonov research follow-ups: award/1966/archive gates remain open; Red Star №288 p.3 is direct-page verified, scholarly-corroborated, and SHPL remains a holder-specific institutional provenance cross-check.');
