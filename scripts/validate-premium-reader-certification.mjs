@@ -46,7 +46,7 @@ for (const token of [
   "url.pathname === '/v1/comment'",
   'reader_certification_offline_write',
   'turnstile-reader-certification-proof',
-  'Authorization',
+  "authorization: request.headers()['authorization']",
 ]) {
   expect(premium.includes(token), `premium reader suite is missing outcome contract: ${token}`);
 }
