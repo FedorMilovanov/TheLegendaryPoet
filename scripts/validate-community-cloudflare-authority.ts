@@ -68,6 +68,11 @@ expect(worker.includes("throw new HttpError(400, 'unexpected_authority_field')")
 expect(worker.includes('requireCanonicalTarget'), 'mutations must require release-canonical target membership');
 expect(worker.includes('COMMUNITY_TARGET_MANIFEST_URL'), 'canonical target authority must come from the release manifest');
 expect(worker.includes('manifestTypes.length !== TARGET_TYPES.size') && worker.includes('if (keys.has(key)) return null'), 'Worker must reject malformed or duplicate target manifests rather than silently widening/collapsing authority');
+expect(worker.includes('async function requireCanonicalTargets') && worker.includes("throw new HttpError(404, 'unknown_target')"), 'single and batch target authority must share one fail-closed canonical membership check');
+expect(/async function handleComments[\s\S]*await requireCanonicalTarget\(env, type, id\)/.test(worker), 'public comment reads must reject retired or unpublished targets before querying D1');
+expect(/url\.pathname === '\/v1\/summary'[\s\S]*await requireCanonicalTarget\(env, type, id\)/.test(worker), 'public aggregate reads must reject retired or unpublished targets before querying D1');
+expect(/url\.pathname === '\/v1\/summary\/batch'[\s\S]*await requireCanonicalTargets\(env, body\.targetType, ids\)/.test(worker), 'public aggregate batches must reject any non-canonical target before querying D1');
+expect(/async function handleHelpful[\s\S]*await requireCanonicalTarget\(env, comment\.target_type, comment\.target_id\)/.test(worker), 'helpful mutations must not revive a comment attached to a retired target');
 expect(worker.includes("takeBudget(env.DB, key, 'session', '*', 86400, 30)"), 'Turnstile-backed actor issuance must be abuse-limited without an unusably tiny shared-network cap');
 expect(worker.includes("INSERT INTO tlp_rate_buckets") && worker.includes('ON CONFLICT(network_key, action, scope, window_start)'), 'network budgets must be atomic D1 upserts');
 expect(worker.includes("ON CONFLICT(target_type, target_id, actor_id)"), 'rating uniqueness must be server actor + target');
@@ -135,5 +140,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest on reads/writes, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
