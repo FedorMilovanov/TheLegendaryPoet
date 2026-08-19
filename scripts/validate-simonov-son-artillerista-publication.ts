@@ -127,13 +127,15 @@ for (const forbidden of [
 if (!existsSync(closeoutPath)) throw new Error(`Simonov publication closeout missing: ${closeoutPath}`);
 const closeout = readFileSync(closeoutPath, 'utf8');
 for (const marker of [
-  'PUBLICATION CANDIDATE REGISTERED / APPROVED HERO PRESENT / CLAIM-AWARE READER SAFETY PRESERVED / EXACT-HEAD CI + BROWSER QA PENDING',
+  'PUBLICATION ARTIFACT COMPLETE / APPROVED HERO PRESENT / CLAIM-AWARE READER SAFETY PRESERVED / MERGE REQUIRES GREEN EXACT-HEAD CHECKS',
   heroSha256,
   '1600×900',
   '130 386 bytes',
+  'Execution evidence живёт в checks самого PR на его exact head',
+  'После успешной матрицы не требуется технический «closeout commit»',
   'Merge в `main` этим документом не разрешается автоматически.',
 ]) {
   if (!closeout.includes(marker)) throw new Error(`Simonov closeout contract marker missing: ${marker}`);
 }
 
-console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public language and bibliography, no full poem/body documentary images, and publication closeout all validated.');
+console.log('Simonov publication gate: canonical catalog registration, exact approved hero bytes, reconstruction disclosure, reader-safe claim boundaries, clean public language and bibliography, stable pre-merge closeout, no full poem/body documentary images, and exact-head execution requirement all validated.');
