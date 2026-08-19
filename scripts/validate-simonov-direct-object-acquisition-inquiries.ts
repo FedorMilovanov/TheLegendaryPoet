@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_DIRECT_OBJECT_ACQUISITION_INQUIRIES_2026-08.
 if (!existsSync(path)) throw new Error(`Simonov direct-object acquisition inquiry gate missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   '47news exact p.3 fragment image URL recovered but pixels undelivered / 47news and RSL replies pending / no paid work authorized / no page promoted to direct-inspected',
@@ -26,7 +27,15 @@ for (const marker of [
 if (!status.includes('exact p.3 fragment image URL recovered but pixels undelivered')) {
   throw new Error(`Simonov 47news exact-image transition disappeared: ${status}`);
 }
-if (/reply received|bytes received|page (?:visually )?inspected|direct-inspected|paid work authorized/iu.test(status)) {
+const forbiddenPositiveParts = [
+  '47news reply received',
+  'RSL reply received',
+  'bytes received',
+  'page visually inspected',
+  'direct-inspected',
+  'paid work authorized',
+];
+if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
   throw new Error(`Simonov direct-object acquisition status falsely closes an open gate: ${status}`);
 }
 
