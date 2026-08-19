@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import communityWorker from '../workers/community-api/src/index';
 
 const failures: string[] = [];
@@ -7,6 +8,11 @@ const MANIFEST_URL = 'https://manifest.test.invalid/community-targets.json';
 const ORIGIN = 'https://thelegendarypoet.ru';
 const KNOWN_TARGET = 'alexander-pushkin';
 const RETIRED_TARGET = 'retired-poet';
+const workerSource = readFileSync('workers/community-api/src/index.ts', 'utf8');
+
+expect(workerSource.includes('request.body.getReader()'), 'Worker must enforce body limits while consuming the request stream');
+expect(workerSource.includes('value.byteLength') && workerSource.includes('MAX_BODY_BYTES'), 'Worker body limit must count bytes, not decoded JS characters');
+expect(!workerSource.includes('await request.text()'), 'Worker must not fully buffer an unbounded request before checking its size');
 
 let manifestAvailable = false;
 let dbTouches = 0;
@@ -75,6 +81,14 @@ try {
   manifestAvailable = true;
 
   dbTouches = 0;
+  response = await communityWorker.fetch(request('/v1/summary/batch', {
+    method: 'POST',
+    body: JSON.stringify({ targetType: 'poet', targetIds: [], padding: 'x'.repeat(13_000) }),
+  }), env);
+  expect(response.status === 413 && await code(response) === 'payload_too_large', 'oversized public POST bodies must fail with 413 before parsing or authority lookup');
+  expect(dbTouches === 0, 'oversized public POST bodies must be rejected before D1 access');
+
+  dbTouches = 0;
   response = await communityWorker.fetch(request(`/v1/summary?targetType=poet&targetId=${RETIRED_TARGET}`), env);
   expect(response.status === 404 && await code(response) === 'unknown_target', 'public summary must reject a syntactically valid retired target');
   expect(dbTouches === 0, 'retired-target summary must be rejected before querying D1');
@@ -101,5 +115,5 @@ try {
 }
 
 for (const failure of failures) console.error(`ERROR community-worker-target-authority: ${failure}`);
-console.log(`Community Worker target authority: ${failures.length} error(s); unavailable manifest and retired-target reads fail before D1, canonical read proceeds.`);
+console.log(`Community Worker target authority: ${failures.length} error(s); request bodies are byte-bounded while streaming, unavailable manifest and retired-target reads fail before D1, canonical read proceeds.`);
 if (failures.length) process.exit(1);
