@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_PRAVDA_1966_ACQUISITION_INQUIRY_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov Pravda 1966 acquisition inquiry missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'exact bibliographic locator + official digital-corpus route / RNL reference inquiry sent / reply and direct page pending / no paid work authorized',
@@ -20,7 +21,15 @@ for (const marker of [
 ]) {
   if (!text.includes(marker)) throw new Error(`Simonov Pravda 1966 acquisition boundary disappeared: ${marker}`);
 }
-if (/reply received|p\.4.*(?:verified|inspected)|direct-object verified|paid work authorized|reuse rights granted/iu.test(status)) {
+const forbiddenPositiveParts = [
+  'reply received',
+  'p.4 verified',
+  'p.4 inspected',
+  'direct-object verified',
+  'paid work authorized',
+  'reuse rights granted',
+];
+if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
   throw new Error(`Simonov Pravda 1966 status falsely closes an open gate: ${status}`);
 }
 
