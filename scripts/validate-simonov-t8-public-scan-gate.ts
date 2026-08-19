@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_T8_PUBLIC_SCAN_GATE_2026-08.md';
 if (!existsSync(path)) throw new Error(`Simonov T8 public scan gate missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'exact public PDF/DjVu scan files located / same-edition OCR collated / relevant pages not yet visually inspected in current toolchain',
@@ -27,8 +28,17 @@ for (const marker of [
   if (!text.includes(marker)) throw new Error(`Simonov T8 scan boundary disappeared: ${marker}`);
 }
 
-if (/visually inspected|direct page verified|PDF SHA-256 verified|freely licensed/iu.test(status)) {
+const forbiddenPositiveStatusParts = [
+  'relevant pages visually inspected in current toolchain',
+  'direct page verified',
+  'PDF SHA-256 verified',
+  'freely licensed',
+];
+if (statusParts.some((part) => forbiddenPositiveStatusParts.includes(part))) {
   throw new Error(`Simonov T8 scan gate falsely closes an open page/rights boundary: ${status}`);
+}
+if (!statusParts.includes('relevant pages not yet visually inspected in current toolchain')) {
+  throw new Error(`Simonov T8 scan gate lost the explicit visual-inspection boundary: ${status}`);
 }
 
 console.log('Simonov T8 scan: exact public packages located and same-edition OCR collated; printed pp.393/430–433 remain byte/page-inspection pending.');
