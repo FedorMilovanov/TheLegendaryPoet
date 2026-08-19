@@ -32,7 +32,7 @@ for (const marker of [
   '6 506 121',
   '9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229',
   '**шесть газетных колонок**',
-  'p.4 продолжения поэмы не содержит',
+  'Following printed p.4 просмотрена и продолжения поэмы не содержит.',
   'F3 — наградной документ Лоскутова `10800112`',
   '13ba95ba05eaa87eb8a7f6eac7fe888e0f5710bd9dc91a50c5b83dd2b6e7a087',
   'owner visual approval pending; bytes are intentionally not in production yet',
