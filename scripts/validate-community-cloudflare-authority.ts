@@ -7,6 +7,9 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const remote = read('src/utils/communityRemote.ts');
 const config = read('src/utils/communityConfig.ts');
 const humanCheck = read('src/utils/communityHumanCheck.ts');
+const store = read('src/utils/communityStore.ts');
+const ratingContract = read('src/data/ratingDimensionContract.ts');
+const ratingDimensions = read('src/data/ratingDimensions.ts');
 const worker = read('workers/community-api/src/index.ts');
 const workerTsconfig = read('workers/community-api/tsconfig.json');
 const wranglerText = read('workers/community-api/wrangler.jsonc');
@@ -27,6 +30,7 @@ const browserTopology = read('qa/community-request-topology.cases.mjs');
 
 expect(config.includes('VITE_COMMUNITY_API_URL'), 'browser config must use the Cloudflare community API URL');
 expect(config.includes('VITE_TURNSTILE_SITE_KEY'), 'browser config must expose only the public Turnstile site key');
+expect(config.includes("parsed.protocol !== 'https:'") && config.includes('parsed.username') && config.includes('parsed.password'), 'browser API config must reject non-HTTPS or credential-bearing endpoints');
 expect(!/VITE_SUPABASE|SUPABASE_ANON_KEY/.test(config + remote + deploy), 'Supabase browser authority must be removed from runtime/deploy config');
 expect(!/\/rest\/v1\/rpc\/|p_voter_id|apikey:/i.test(remote), 'browser mutation client must not call public database RPCs or transmit voter authority');
 expect(remote.includes("mutation('/v1/rating'") && remote.includes("mutation('/v1/comment'") && remote.includes("mutation('/v1/helpful'"), 'all writes must cross the Worker mutation boundary');
@@ -35,6 +39,13 @@ expect(remote.includes("const ACTOR_KEY = 'tlp-community-actor:v1'"), 'signed ac
 expect(remote.includes('locks.request(ACTOR_KEY, task)') && remote.includes('resolveActorToken'), 'parallel tabs must serialize actor-session minting through the browser lock manager');
 expect(remote.includes('const existing = currentActorToken();') && remote.includes('invalidateActorSession(first.actorToken)'), 'actor mint/recovery must re-read shared storage and never erase a newer cross-tab token');
 expect(!remote.includes('_localDeviceId: string): Promise<boolean>') || !/body:\s*JSON\.stringify\([^)]*_localDeviceId/.test(remote), 'local device bookkeeping must never become remote write authority');
+
+expect(ratingContract.includes('ratingDimensionKeysByTarget') && ratingContract.includes('hasCanonicalRatingScores'), 'rating score shape must have one shared runtime contract');
+expect(ratingDimensions.includes("from './ratingDimensionContract'"), 'reader-facing rating dimensions must derive keys from the shared score contract');
+expect(worker.includes("from '../../../src/data/ratingDimensionContract'"), 'Worker score validation/aggregation must consume the same rating contract as the UI/store');
+expect(store.includes("from '../data/ratingDimensionContract'"), 'local persistence/outbox must consume the same rating contract as the Worker');
+expect(store.includes('sanitizeDeliverableRating') && store.includes('hasCanonicalRatingScores(entry.targetType, entry.scores)'), 'outbox sanitization must quarantine incomplete legacy ratings instead of retrying permanently rejected writes');
+expect(store.includes('const entry = sanitizeDeliverableRating(entryValue);'), 'new rating commits must satisfy the canonical full-score contract before local/outbox mutation');
 
 expect(humanCheck.includes('challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'), 'Turnstile must use Cloudflare explicit rendering');
 expect(humanCheck.includes("execution: 'execute'") && humanCheck.includes("appearance: 'interaction-only'"), 'Turnstile must defer verification until a shared write needs a session');
@@ -62,6 +73,7 @@ expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_i
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
 expect(worker.includes('FROM sqlite_master') && worker.includes("name IN ('tlp_ratings', 'tlp_comments', 'tlp_helpful_votes', 'tlp_rate_buckets')"), 'health readiness must verify the actual four-table D1 schema instead of trusting the binding name');
 expect(worker.includes('targetAuthorityReady = Boolean(await canonicalTargets(env))') && worker.includes('writesReady = databaseReady && targetAuthorityReady && secretsReady'), 'health readiness must fail closed when D1 schema, target authority, or secrets are not actually ready');
+expect(worker.includes('json(writesReady ? 200 : 503') && worker.includes('ok: writesReady'), 'health endpoint must return an unhealthy status/body until the complete write path is ready');
 expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
 
 expect(wrangler.name === 'the-legendary-poet-community', 'Wrangler Worker name must match the Cloudflare production Worker');
@@ -83,6 +95,7 @@ expect(!/\b(?:raw_ip|ip_address|client_ip|remote_ip)\b/i.test(schema), 'D1 schem
 expect(schema.includes('CHECK (length(network_key) = 64)'), 'D1 must store only fixed-length HMAC network keys');
 
 expect(generator.includes('getAllEssays') && generator.includes('musicTracks') && generator.includes('poets'), 'community target manifest must derive from canonical Product catalogs');
+expect(generator.includes('Duplicate community ${kind} target id'), 'canonical target generation must fail on duplicate source IDs instead of silently collapsing them');
 expect(generator.includes("writeFileSync('public/community-targets.json'"), 'site build must materialize the target manifest at a stable public path');
 expect(deploy.includes('VITE_COMMUNITY_API_URL') && deploy.includes('VITE_TURNSTILE_SITE_KEY'), 'Pages deploy must inject only the public Worker URL and Turnstile site key');
 expect(!deploy.includes('VITE_SUPABASE_URL') && !deploy.includes('VITE_SUPABASE_ANON_KEY'), 'Pages deploy must not retain obsolete Supabase runtime variables');
@@ -102,5 +115,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
