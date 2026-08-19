@@ -1,7 +1,7 @@
 # Simonov direct-object acquisition inquiries — Red Star + RSL witnesses
 
 Дата: 2026-08-19  
-Статус: **two additional non-binding acquisition inquiries sent / replies pending / no paid work authorized / no page promoted to direct-inspected**
+Статус: **47news exact p.3 fragment image URL recovered but pixels undelivered / 47news and RSL replies pending / no paid work authorized / no page promoted to direct-inspected**
 
 ## Цель
 
@@ -14,7 +14,7 @@
 
 Во всех случаях действует граница:
 
-**inquiry sent ≠ reply received ≠ bytes received ≠ page visually inspected.**
+**inquiry sent ≠ exact delivery URL recovered ≠ reply received ≠ bytes received ≠ page visually inspected.**
 
 ---
 
@@ -32,6 +32,26 @@ https://47news.ru/articles/204402/
 Официальные контакты 47news указывают редакционный адрес:
 
 `news@47news.ru`
+
+### Exact image object recovered 19.08.2026
+
+Мобильная HTML-версия статьи раскрывает underlying image-link непосредственно у подписи фрагмента p.3. Exact published image URL:
+
+`https://i.47news.ru/photos/2021/12//1280x1024_20211211_kzm9dp0vn4jze7ap9btg.jpg`
+
+Это **не вычисленный путь**: URL получен из реального image link на странице статьи.
+
+Текущий delivery result:
+
+- web click по image object дошёл до exact URL, но fetch вернул `Cache miss`;
+- отдельная прямая попытка скачать тот же exact URL также не получила bytes;
+- следовательно, **pixels текущим toolchain не просмотрены**;
+- нельзя утверждать, что именно показано внутри этого фрагмента помимо caption 47news;
+- нельзя утверждать присутствие/отсутствие `Сына артиллериста` в видимой части фрагмента.
+
+Новый статус этой линии:
+
+**exact 47news p.3 fragment image URL recovered / bytes not acquired / visual inspection pending.**
 
 ### Отправленный запрос
 
@@ -53,11 +73,11 @@ Thread ID: **`1a01724745b80300`**
 
 **если предоставление связано с оплатой — сначала exact quote + terms; никакой платной работы без отдельного подтверждения.**
 
-### Текущий статус
+### Текущий статус запроса
 
-**reply pending / source pixels not received / p.3 remains direct-inspection pending.**
+**reply pending / exact published image URL known / source pixels not received / p.3 remains direct-inspection pending.**
 
-Сам факт существования у 47news фрагмента 3-й полосы усиливает acquisition map, но не доказывает расположение текста Симонова внутри видимой части изображения до просмотра pixels.
+Сам факт существования у 47news фрагмента 3-й полосы и восстановленный exact image URL усиливают acquisition map, но не доказывают расположение текста Симонова внутри видимой части изображения до просмотра pixels.
 
 ---
 
@@ -72,6 +92,8 @@ Thread ID: **`1a01724745b80300`**
 Нужна именно page-level collation, прежде всего для textual variant:
 
 **командир / комиссар** при переспросе команды огня.
+
+В текущем web layer search-result карточка подтверждает full-viewer access, но underlying viewer/document ID не surfaced; прямое открытие карточки возвращает cache miss. Поэтому viewer URL не конструируется по предположению.
 
 ---
 
@@ -116,11 +138,11 @@ Thread ID: **`1a017249f09e2e53`**
 
 ---
 
-## 5. Что делать после ответов
+## 5. Что делать после ответов / delivery
 
-### Если 47news присылает файл
+### Если exact 47news URL становится доступен или редакция присылает файл
 
-- [ ] сохранить original attachment bytes;
+- [ ] сохранить original bytes;
 - [ ] SHA-256;
 - [ ] визуально установить, какой участок p.3 показан;
 - [ ] проверить наличие/отсутствие `Сына артиллериста` в самом fragment;
@@ -146,4 +168,4 @@ Thread ID: **`1a017249f09e2e53`**
 
 ## Итог
 
-Два крупных direct-object gaps теперь имеют официально инициированные delivery paths. 47news запрошен по физически опубликованному ими фрагменту p.3 №288, РГБ — по точным page ranges 1973 и 1982 годов. До получения и визуальной проверки файлов ни один claim не повышен до `direct object inspected`.
+Один acquisition route стал конкретнее: **для опубликованного 47news фрагмента p.3 восстановлен exact image-object URL**, но bytes текущим toolchain всё ещё не получены и изображение не просмотрено. РГБ остаётся официальным delivery route для печатных страниц 1973/1982. Ни один claim не повышен до `direct object inspected`.
