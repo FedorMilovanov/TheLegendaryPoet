@@ -9,11 +9,19 @@ const config = read('src/utils/communityConfig.ts');
 const humanCheck = read('src/utils/communityHumanCheck.ts');
 const worker = read('workers/community-api/src/index.ts');
 const workerTsconfig = read('workers/community-api/tsconfig.json');
+const wranglerText = read('workers/community-api/wrangler.jsonc');
+const wrangler = JSON.parse(wranglerText) as {
+  name?: string;
+  main?: string;
+  vars?: Record<string, string>;
+  d1_databases?: Array<{ binding?: string; database_name?: string; database_id?: string }>;
+};
 const schema = read('workers/community-api/schema.sql');
 const generator = read('scripts/gen-community-targets.ts');
 const deploy = read('.github/workflows/deploy.yml');
 const packageJson = read('package.json');
 const setup = read('docs/COMMENTS_SETUP.md');
+const workerSetup = read('workers/community-api/README.md');
 const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
 const browserTopology = read('qa/community-request-topology.cases.mjs');
 
@@ -51,6 +59,18 @@ expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_i
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
 expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
 
+expect(wrangler.name === 'the-legendary-poet-community', 'Wrangler Worker name must match the Cloudflare production Worker');
+expect(wrangler.main === 'src/index.ts', 'Wrangler must deploy the reviewed Worker entrypoint');
+const d1 = wrangler.d1_databases?.find((entry) => entry.binding === 'DB');
+expect(Boolean(d1), 'Wrangler must bind production D1 as env.DB');
+expect(d1?.database_name === 'the-legendary-poet-community', 'Wrangler D1 binding must target the canonical production database name');
+expect(d1?.database_id === '16928bb2-13e7-462a-b788-652e95618917', 'Wrangler D1 binding must target the owner-created production database ID');
+expect(wrangler.vars?.ALLOWED_ORIGINS === 'https://thelegendarypoet.ru,https://www.thelegendarypoet.ru', 'Worker origin allowlist must remain production-scoped');
+expect(wrangler.vars?.TURNSTILE_HOSTNAMES === 'thelegendarypoet.ru,www.thelegendarypoet.ru', 'Turnstile hostname verification must remain production-scoped');
+expect(wrangler.vars?.COMMUNITY_TARGET_MANIFEST_URL === 'https://thelegendarypoet.ru/community-targets.json', 'Worker target authority must point at the production release manifest');
+expect(!/COMMUNITY_SESSION_SECRET|COMMUNITY_NETWORK_SECRET|TURNSTILE_SECRET/.test(wranglerText), 'Wrangler config must never contain Worker secret values or secret bindings as plain vars');
+expect(!existsSync('workers/community-api/wrangler.example.jsonc'), 'placeholder Wrangler config must be retired once the production D1 binding exists');
+
 expect(schema.includes('PRIMARY KEY (target_type, target_id, actor_id)'), 'D1 schema must enforce one active rating per actor/target');
 expect(schema.includes('PRIMARY KEY (comment_id, actor_id)'), 'D1 schema must enforce one helpful vote per actor/comment');
 expect(schema.includes('PRIMARY KEY (network_key, action, scope, window_start)'), 'D1 schema must enforce one atomic abuse bucket row');
@@ -65,6 +85,7 @@ expect(packageJson.includes('"validate:community-worker-types": "tsc -p workers/
 expect(packageJson.includes('npm run validate:community-worker-types'), 'community scaling gate must include the Worker typecheck');
 expect(workerTsconfig.includes('"WebWorker"') && workerTsconfig.includes('"noEmit": true'), 'Worker typecheck must use web-worker platform types without producing artifacts');
 expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
+expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes wrangler@4.120.0 deploy'), 'Worker deployment must be reproducible from the connected Git repository');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
 expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser QA must use only the loopback test proof boundary');
@@ -76,5 +97,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, D1, Turnstile, cross-tab actor authority, retry idempotency, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, retry idempotency, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
