@@ -93,40 +93,48 @@ if (/Статус:.*(?:direct page|page.*inspected|print.*verified)/iu.test(prin
   throw new Error('RSL print witness falsely closed');
 }
 
-// December 1941 newspaper hierarchy: page 3 is strong scholarly evidence, not a direct scan.
+// December 1941 newspaper hierarchy: Red Star p.3 is direct-verified; Patriot Rodiny first-publication claim remains open.
 const newspaper = read('docs/research/SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md', 'Simonov newspaper gate');
 requireMarkers('Simonov newspaper gate', newspaper, [
-  'issue identity narrowed / Red Star page 3 strongly corroborated / direct page inspection still pending',
+  'Red Star №288 p.3 direct-inspected / Patriot Rodiny 03.12 issue-page still pending / first-publication superlative blocked',
   '№288 (5043)',
-  '4 258 147 байт',
+  '6 506 121 bytes',
+  '9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229',
+  'шесть газетных колонок',
+  '`К. СИМОНОВ.`',
+  '`СЕВЕРНЫЙ ФРОНТ.`',
+  'continuation поэмы отсутствует',
   'Военно-исторического журнала',
-  'Издание Министерства обороны России',
-  '7 декабря. С. 3',
-  'Пока **не** разрешено писать:',
-  'direct scan №288, p.3 ещё не открыт',
-  'page 3 strongly corroborated / direct newspaper-object inspection required',
-  'только затем повысить статус до `direct page verified`',
+  'Red Star №288 / p.3 / text geometry: DIRECT PAGE VERIFIED.',
   '01006521228',
   '3 декабря 1941 года',
   '**unknown / do not infer**',
-  '3 ноября не используется как publication fact',
+  'безоговорочная формула `самая первая публикация — 3 декабря`',
 ]);
-if (/Статус страницы:\s*\*\*direct page verified\*\*/u.test(newspaper)) {
-  throw new Error('Newspaper gate falsely marks p.3 direct-verified');
+for (const stale of [
+  'direct scan №288, p.3 ещё не открыт',
+  'page 3 strongly corroborated / direct newspaper-object inspection required',
+  'только затем повысить статус до `direct page verified`',
+]) {
+  if (newspaper.includes(stale)) throw new Error(`Newspaper gate retained stale Red Star state: ${stale}`);
 }
 
 const page3 = read('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Simonov Red Star page-3 scholarly gate');
 requireMarkers('Simonov Red Star page-3 scholarly gate', page3, [
-  'page 3 strongly corroborated by official military-history scholarly citation / direct newspaper scan still pending',
+  'official military-history scholarly p.3 locator independently confirmed by direct №288 page inspection',
   'Военно-исторический журнал',
   'Издание Министерства обороны России',
   'КОЛОБОВ Евгений Юрьевич',
   'примечании **39**',
   '7 декабря. С. 3',
-  'direct page verified',
-  'direct visual newspaper scan №288, p.3',
+  'A+ direct visual object',
+  'A/B scholarly institutional corroboration',
+  'six-column',
+  'Following printed p.4',
 ]);
-if (/Текущий статус[^\n]*direct scan verified/iu.test(page3)) throw new Error('Page-3 scholarly gate falsely upgrades citation to scan');
+if (/^Статус:.*direct newspaper scan still pending/imu.test(page3)) {
+  throw new Error('Page-3 scholarly gate retained stale pre-inspection status');
+}
 
 // Award-object exact locator exists, scan still pending.
 const awardLocator = read('docs/research/SIMONOV_LOSKUTOV_AWARD_OBJECT_LOCATOR_2026-08.md', 'Simonov Loskutov award locator');
@@ -174,9 +182,12 @@ const claimRows = claimMatrix.match(/^\| C\d{2} \|/gmu)?.length ?? 0;
 if (claimRows !== 48) throw new Error(`Simonov claim matrix drifted: expected 48 rows, found ${claimRows}`);
 requireMarkers('Simonov claim matrix', claimMatrix, [
   'C36',
-  '`Сын артиллериста` опубликован на с.3 №288',
-  'A/B scholarly page citation; direct scan pending',
-  'Страницу 3 `Красной звезды` можно называть только с provenance scholarly citation',
+  '`Сын артиллериста` опубликован на с.3 №288; занимает шесть колонок и заканчивается там же',
+  '**A+ direct page verified**',
+  '9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229',
+  'на p.4 продолжения нет',
+  '`Красная звезда` №288 p.3 теперь direct-inspected',
+  'institutional scan comparison и reuse rights остаются отдельными вопросами',
 ]);
 
 // Bibliography integrity inside the Essay object.
@@ -187,7 +198,8 @@ for (const source of sources) {
   if (sourcesById.has(source.id)) throw new Error(`duplicate Simonov staged source id: ${source.id}`);
   sourcesById.set(source.id, source);
 }
-if (sourcesById.size < 18) throw new Error(`Simonov staged bibliography unexpectedly thin: ${sourcesById.size}`);
+if (sourcesById.size < 19) throw new Error(`Simonov staged bibliography unexpectedly thin: ${sourcesById.size}`);
+if (!sourcesById.has('red-star-direct-288')) throw new Error('Simonov staged bibliography lost the direct Red Star №288 facsimile source');
 const citedIds = new Set<string>();
 for (const block of essay.blocks) {
   if (!('sourceIds' in block)) continue;
@@ -209,11 +221,21 @@ const readerText = essay.blocks.map((block) => {
 }).join('\n');
 const words = readerText.match(/[\p{L}\p{N}]+/gu)?.length ?? 0;
 if (words < 1800 || words > 6000) throw new Error(`Simonov staged longform scope drifted: ${words} words`);
-for (const forbidden of ['31 июля 1941 года', 'шесть суток', '3 ноября 1941 года впервые']) {
+for (const forbidden of ['31 июля 1941 года', 'шесть суток', '3 ноября 1941 года впервые', 'самая первая публикация была 3 декабря']) {
   if (readerText.includes(forbidden)) throw new Error(`Simonov staged prose promoted a blocked claim: ${forbidden}`);
 }
 const readerTextFolded = readerText.toLocaleLowerCase('ru-RU');
-for (const required of ['июль 1941 года', 'Точного дня в письме нет', 'два разведчика', 'радиостанция была разбита', 'Отец я тебе иль нет?', '3 декабря 1941 года', '7 декабря']) {
+for (const required of [
+  'июль 1941 года',
+  'Точного дня в письме нет',
+  'два разведчика',
+  'радиостанция была разбита',
+  'Отец я тебе иль нет?',
+  '3 декабря 1941 года',
+  '7 декабря',
+  'шесть газетных колонок',
+  'на следующей странице продолжения нет',
+]) {
   if (!readerTextFolded.includes(required.toLocaleLowerCase('ru-RU'))) {
     throw new Error(`Simonov staged evidence boundary disappeared: ${required}`);
   }
@@ -228,5 +250,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-scholarly-corroborated/direct-scan-pending; Loskutov1973=RSL-full-viewer/delivery-variant-mapped/page54-62-pending; award=10800112-scan-pending; father=two-lineage-conflict-primary-object-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-direct-page-verified/scholarly-corroborated/provenance-rights-separate; Loskutov1973=RSL-full-viewer/delivery-variant-mapped/page54-62-pending; award=10800112-scan-pending; father=two-lineage-conflict-primary-object-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
 );
