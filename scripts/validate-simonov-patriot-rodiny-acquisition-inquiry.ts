@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_PATRIOT_RODINY_ACQUISITION_INQUIRY_2026-08.m
 if (!existsSync(path)) throw new Error(`Simonov Patriot Rodiny acquisition inquiry missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'AONB inquiry sent / AONB reply pending / GAAO email reply received with authenticated-channel requirement / GAAO item search not initiated / no page evidence / no paid work authorized',
@@ -23,7 +24,14 @@ for (const marker of [
 if (!status.includes('GAAO email reply received') || !status.includes('GAAO item search not initiated')) {
   throw new Error(`Simonov Patriot Rodiny GAAO route transition disappeared: ${status}`);
 }
-if (/page verified|issue verified|direct-object verified|scan received|paid work authorized/iu.test(status)) {
+const forbiddenPositiveParts = [
+  'page verified',
+  'issue verified',
+  'direct-object verified',
+  'scan received',
+  'paid work authorized',
+];
+if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
   throw new Error(`Simonov Patriot Rodiny status falsely closes an open object gate: ${status}`);
 }
 
