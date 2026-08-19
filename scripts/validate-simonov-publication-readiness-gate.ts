@@ -18,6 +18,7 @@ for (const marker of [
   'P0-B — visual rights только для реально включаемых documentary assets',
   'Текущий Essay не содержит body `image` blocks',
   'P0-C — final reader/registration transaction',
+  'около трёх километров по воспоминанию Лоскутова',
   'Если любой из этих invariants меняется, соответствующий research object автоматически возвращается в P0.',
   'Ни один из них не объявлен закрытым этим gate.',
 ]) {
@@ -35,6 +36,7 @@ const folded = readerText.toLocaleLowerCase('ru-RU');
 for (const required of [
   'июль 1941 года',
   'Точного дня в письме нет',
+  'Три километра до высоты',
   'На командном пункте решили, что произошла ошибка, и запросили подтверждение',
   'Архангельские институциональные источники относят публикацию в «Патриоте Родины» к 3 декабря 1941 года',
   'Саму полосу «Патриота Родины» от 3 декабря редакция ещё не просмотрела',
@@ -57,9 +59,6 @@ for (const forbidden of [
   if (readerText.includes(forbidden)) throw new Error(`Simonov reader promoted a P1-only unresolved claim: ${forbidden}`);
 }
 
-if (!folded.includes('около трёх километров') && !folded.includes('около трех километров')) {
-  throw new Error('Simonov reader lost the controlling ~3 km Loskutov wording');
-}
 if (folded.includes('около двух километров') || folded.includes('примерно два километра')) {
   throw new Error('Simonov reader promoted the competing ~2 km route without direct closure');
 }
