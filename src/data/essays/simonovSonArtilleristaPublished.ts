@@ -32,6 +32,19 @@ function polishForPublication(block: EssayBlock): EssayBlock {
   }
 
   if (
+    block.type === 'paragraph'
+    && block.text.startsWith('РГБ фиксирует отдельное воениздатовское издание уже 1941 годом')
+  ) {
+    return {
+      ...block,
+      text: block.text.replace(
+        'Exact PDF этого выпуска редакция получила и визуально сверила:',
+        'Полный файл этого выпуска редакция получила и визуально сверила:',
+      ),
+    };
+  }
+
+  if (
     block.type === 'note'
     && block.variant === 'editorial'
     && block.text.includes('рекламной формулой')
