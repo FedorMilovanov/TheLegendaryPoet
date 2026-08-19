@@ -1,7 +1,7 @@
 # «Сын артиллериста» — claim/evidence matrix перед production prose pass
 
 Дата: 2026-08-19  
-Статус: **editorial claim map / publication-blocking where noted**
+Статус: **editorial claim map / publication-blocking where noted / Red Star direct-page closure incorporated**
 
 ## Цель
 
@@ -63,15 +63,15 @@
 | C28 | `Спартак` подошёл к Архангельску 28 ноября 1941 | Архангельская областная научная библиотека / региональная институциональная хроника | A/B institutional | можно давать как регионально документированную хронологию, с источником | судовой/портовый журнал или contemporaneous local press |
 | C29 | `Патриот Родины` опубликовал поэму 3 декабря 1941 | AONB + `Правда Севера` + RSL anchors newspaper identity | A/B institutional, object page pending | `архангельские институциональные источники указывают 3 декабря 1941` | issue/page object inspection |
 | C30 | 3 декабря — безусловно первая публикация | те же witnesses, но без прямой полосы | **open** | **не писать безоговорочно `впервые`**, пока полоса не просмотрена | `Патриот Родины` 03.12.1941 direct issue/page |
-| C31 | Муниципальная страница даёт 3 ноября | Архангельская библиотечная/муниципальная публикация | C/conflicting institutional derivative | фиксировать только как конфликтную дату; не использовать как chronology fact | direct issue proves Dec/Nov |
+| C31 | Муниципальная/поздняя линия даёт начало или 3 ноября | derivative regional/museum tradition | C/conflicting derivative | фиксировать только как ошибочную/конфликтную дату; не использовать как chronology fact | author chronology already makes early-November creation impossible; direct issue settles publication object |
 | C32 | 4 декабря 1941 Сергей Плотников прочитал поэму со сцены | AONB institutional account + позднее воспоминание Плотникова в пересказе | A/B institutional | `по данным Архангельской областной библиотеки, 4 декабря поэму читал Сергей Плотников` | programme/newspaper/theatre archive object |
 | C33 | Это было первое публичное исполнение | regional tradition only | open | **не писать `первое` без qualification** | theatre/programme/newspaper object |
-| C34 | `Красная звезда` напечатала поэму 7 декабря 1941 | Simonov author chronology + indexes + issue identity №288 (5043) + SHPL full corpus + `Военно-исторический журнал` | A/B very strong publication chain | `7 декабря поэма вышла в «Красной звезде»` | visual inspection №288 p.3 |
-| C35 | Номер `Красной звезды` — №288 (5043), воскресенье | independent newspaper indexes + SHPL sequence/context | A/B bibliographic | можно фиксировать как issue identity | direct issue metadata/page |
-| C36 | `Сын артиллериста` опубликован на с.3 №288 | `Военно-исторический журнал` — Издание Министерства обороны России; Е. Ю. Колобов, прим.39: `Красная звезда. 1941. 7 декабря. С. 3.` | **A/B scholarly page citation; direct scan pending** | можно писать: `Военно-исторический журнал Министерства обороны России указывает с.3`; не писать `мы визуально проверили p.3`, не указывать колонки | SHPL/GPIB visual inspection №288, p.3 + columns/continuation |
+| C34 | `Красная звезда` напечатала поэму 7 декабря 1941 | exact Internet Archive issue PDF `no2661212191941` + printed p.3 visual inspection + `Военно-исторический журнал` cross-check | **A+ direct page verified** | `7 декабря 1941 года поэма была напечатана в «Красной звезде»` | claim closed for page content; institutional scan only desirable for provenance cross-check |
+| C35 | Номер `Красной звезды` — №288 (5043), воскресенье | printed header exact issue PDF | **A+ direct issue identity** | можно фиксировать без locator qualification | independent SHPL/MoD comparison desirable, not required for issue identity |
+| C36 | `Сын артиллериста` опубликован на с.3 №288; занимает шесть колонок и заканчивается там же | exact №288 PDF: p.3 + following p.4 visual inspection; SHA-256 `9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`; scholarly page citation independently agrees | **A+ direct page verified** | можно писать: `p.3, шесть колонок, (Фронтовая поэма), К. Симонов. Северный фронт.; на p.4 продолжения нет` | page-content claim closed; facsimile rights and institutional provenance remain separate gates |
 | C37 | РГБ каталогизирует отдельное издание Воениздата уже 1941 годом, 13 с. | RSL record `01005250204` | A+ bibliographic object | можно писать | title/copyright page scan for typesetting-level claims |
 | C38 | В 1942 были отдельные издания Воениздата и `Правды` | Presidential Library `372658`; RSL `01008367861` | A+ bibliographic | можно писать | object collation only if comparing exact editions |
-| C39 | Жанровое раннее обозначение — «фронтовая поэма» | RSL early edition record + scholarly bibliography | A+ bibliographic | можно писать | direct title page desirable but not required for catalog fact |
+| C39 | Жанровое раннее обозначение — «фронтовая поэма» | direct `Красная звезда` p.3 + RSL early edition record + scholarly bibliography | **A+ direct/bibliographic** | можно писать; newspaper p.3 прямо печатает `(Фронтовая поэма)` | no further closure needed for 07.12 newspaper genre line |
 | C40 | В 1964 Симонов узнал, что реальный прототип жив | собственный дневниковый/авторский комментарий | B author retrospective | можно писать с атрибуцией | contemporaneous correspondence/press |
 | C41 | Письмо Лоскутова Симонову датировано 3 марта 1966 | опубликованная Симоновым передача | B participant through author publication | можно писать как `письмо ... в опубликованной Симоновым передаче` | RGALI autograph / 1973 print pages |
 | C42 | `Правда`, 22.03.1966, №81 (17398), с.4: О. Манько, `Человек из поэмы` | exact bibliographic locator + digital object slug | A locator | можно дать bibliographic locator; **не пересказывать содержание до page inspection** | visual page inspection |
@@ -90,7 +90,7 @@
 2. **Не смешивать числа из разных witnesses.** `~3 км` и `~2 км`; `1` и `2` миномётные батареи должны оставаться источниковым расхождением, пока direct objects его не объяснят.
 3. **Не повышать locator до scan.** Наличие `10800112` и архивного шифра — крупный прогресс, но не повод писать, будто лист уже прочитан редакцией.
 4. **Не писать `первая публикация` как закрытый факт**, пока `Патриот Родины` 03.12.1941 не увиден на уровне номера/полосы.
-5. **Страницу 3 `Красной звезды` можно называть только с provenance scholarly citation**, пока №288 p.3 не просмотрен визуально. Колонки/продолжение не указывать.
+5. **`Красная звезда` №288 p.3 теперь direct-inspected.** Разрешено фиксировать p.3, шесть колонок, жанровую строку, конец публикации и отсутствие продолжения на p.4. При этом не смешивать page-content closure с provenance/licence: institutional scan comparison и reuse rights остаются отдельными вопросами.
 6. **Не перепечатывать полный текст поэмы.** Использовать только короткие фразы, необходимые для критики и анализа.
 7. **Не выдавать свободно доступную картинку за свободно лицензированную.** Для архивных фото нужен item-level rights decision.
 8. **Каждый визуал должен иметь provenance class:** `documentary`, `facsimile`, `context`, `reconstruction`.
@@ -104,7 +104,6 @@
 
 ### P0 — до production registration
 
-- `Красная звезда` №288 (5043), 07.12.1941 — direct **p.3 + column/continuation inspection**;
 - `Патриот Родины`, 03.12.1941 — direct issue/page witness;
 - award record `10800112` — direct scan inspection;
 - Simonov 1982 pp.393/430–433 — direct page inspection;
@@ -114,6 +113,7 @@
 
 ### P1 — сильно повышает качество, но не обязательно блокирует публикацию
 
+- independent institutional scan cross-check `Красной звезды` №288 p.3 (SHPL/MoD) для provenance;
 - `Правда`, 22.03.1966, p.4 — direct page inspection;
 - RGALI exact storage unit для письма 03.03.1966;
 - theatre/programme witness по чтению Плотникова 04.12.1941;
@@ -122,4 +122,4 @@
 
 ## Итог
 
-Материал уже позволяет писать сильную документальную статью без легендаризации. Для `Красной звезды` target pinned to p.3; для тома 8 same-edition OCR уже collated, но printed pages всё ещё pending. Ключевые object gaps: `Красная звезда` p.3, `Патриот Родины`, award scan `10800112`, Simonov 1982 pp.393/430–433 и RSL 1973 pp.54–62.
+Материал уже позволяет писать сильную документальную статью без легендаризации. **`Красная звезда` №288 p.3 закрыта на уровне direct pixels**: issue/date/page, шесть колонок, жанровая строка, конец подписью `К. Симонов. Северный фронт.` и отсутствие продолжения на p.4 установлены визуально. Для тома 8 same-edition OCR уже collated, но printed pages всё ещё pending. Ключевые object gaps теперь: `Патриот Родины`, award scan `10800112`, Simonov 1982 pp.393/430–433 и RSL 1973 pp.54–62.
