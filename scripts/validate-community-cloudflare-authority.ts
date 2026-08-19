@@ -29,6 +29,9 @@ const setup = read('docs/COMMENTS_SETUP.md');
 const workerSetup = read('workers/community-api/README.md');
 const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
 const browserTopology = read('qa/community-request-topology.cases.mjs');
+const poetDetailTopology = read('qa/community-poet-detail-topology.cases.mjs');
+const readerCertification = read('qa/premium-reader-certification.spec.mjs');
+const communityBrowserQa = [browserTopology, poetDetailTopology, readerCertification].join('\n');
 
 expect(config.includes('VITE_COMMUNITY_API_URL'), 'browser config must use the Cloudflare community API URL');
 expect(config.includes('VITE_TURNSTILE_SITE_KEY'), 'browser config must expose only the public Turnstile site key');
@@ -116,14 +119,21 @@ expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes
 expect(workerSetup.includes('secrets.required') || workerSetup.includes('required secret'), 'Worker operator documentation must explain deploy-time required-secret validation');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
-expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser QA must use only the loopback test proof boundary');
-expect(browserTopology.includes("url.pathname === '/v1/session'"), 'browser QA must exercise actor-session issuance');
-expect(browserTopology.includes("url.pathname === '/v1/helpful'"), 'browser QA must exercise Worker mutations rather than legacy RPCs');
-expect(!/tlp_feedback_summary_public|\/rpc\/tlp_|test-anon-key/.test(browserTopology), 'browser QA must not preserve the old Supabase topology');
+expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser request-topology QA must use the loopback-only human-proof boundary');
+expect(browserTopology.includes("url.pathname === '/v1/session'") && browserTopology.includes("url.pathname === '/v1/helpful'"), 'browser request-topology QA must exercise Worker session and mutation routes');
+expect(poetDetailTopology.includes("'/v1/summary'") && poetDetailTopology.includes("'/v1/comments'"), 'poet-detail QA must exercise Worker target-scoped read routes');
+expect(poetDetailTopology.includes("url.searchParams.get('targetType') !== 'poem'"), 'poet-detail QA must prove inactive poem panels stay target-scoped under the Worker query contract');
+expect(readerCertification.includes("humanProof: 'turnstile-reader-certification-proof'"), 'reader durability QA must mint its actor through the loopback-only human-proof boundary');
+expect(readerCertification.includes("url.pathname === '/v1/session'") && readerCertification.includes("url.pathname === '/v1/comment'"), 'reader durability QA must fail the real Worker comment route rather than a legacy RPC');
+expect(!communityBrowserQa.includes("url.pathname.endsWith('/tlp_feedback_summary_public')"), 'community browser QA must not mock the removed Supabase summary view');
+expect(!communityBrowserQa.includes("url.pathname.endsWith('/tlp_comments_public')"), 'community browser QA must not mock the removed Supabase comments view');
+expect(!communityBrowserQa.includes("url.pathname.includes('/rpc/')"), 'community browser QA must not preserve a legacy RPC mutation path');
+expect(!communityBrowserQa.includes("key: 'test-anon-key'"), 'community browser QA must not inject an obsolete Supabase anon key');
+expect(!communityBrowserQa.includes("searchParams.get('target_type')"), 'community browser QA must use Worker targetType/targetId query names');
 
 expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres schema must be removed, not left as a second backend authority');
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
