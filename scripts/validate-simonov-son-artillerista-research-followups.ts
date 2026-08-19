@@ -63,8 +63,6 @@ requireMarkers('Vladivostok school gate', vladivostok, [
   'Фонд Р-1510', 'Владивостокская школа-интернат № 2', '1961–1967',
   'arhivpk@bk.ru', 'chit.zal.gapk@mail.ru',
 ]);
-// Current sending state is controlled by SIMONOV_REGIONAL_ARCHIVE_ACQUISITION_INQUIRIES_2026-08.md;
-// this older file remains the discovery/history layer only.
 
 const author = requireFile('docs/research/SIMONOV_AUTHOR_WITNESS_COLLATION_2026-08.md', 'author witness collation');
 requireMarkers('author witness collation', author, [
@@ -76,6 +74,7 @@ requireMarkers('author witness collation', author, [
 ]);
 
 const shpl = requireFile('docs/research/SIMONOV_RED_STAR_SHPL_SCAN_GATE_2026-08.md', 'Red Star SHPL gate');
+const shplStatus = declaredStatus(shpl);
 requireMarkers('Red Star SHPL gate', shpl, [
   'complete 1941 SHPL corpus verified / exact SHPL №288 node + p.3 inspect route confirmed by holder reply / SHPL pixels not independently rendered in current toolchain / global p.3 content already direct-verified',
   '25135', '36558', '№1–309',
@@ -95,9 +94,15 @@ for (const stale of [
   'exact SHPL child node and institutional comparison pending',
   'Exact SHPL child object остаётся нужен',
 ]) {
-  if (shpl.includes(stale)) throw new Error(`SHPL gate retained stale pre-reply state: ${stale}`);
+  if (shplStatus.includes(stale)) throw new Error(`SHPL declared status retained stale pre-reply state: ${stale}`);
 }
-if (/SHPL pixels.*(?:verified|inspected|rendered by this toolchain: VERIFIED)/iu.test(declaredStatus(shpl))) {
+if (!shplStatus.includes('exact SHPL №288 node + p.3 inspect route confirmed by holder reply')) {
+  throw new Error(`SHPL declared status lost holder-confirmed route: ${shplStatus}`);
+}
+if (!shplStatus.includes('SHPL pixels not independently rendered in current toolchain')) {
+  throw new Error(`SHPL declared status lost holder-specific pixel boundary: ${shplStatus}`);
+}
+if (/SHPL pixels.*(?:verified|inspected|rendered by this toolchain: VERIFIED)/iu.test(shplStatus)) {
   throw new Error('SHPL gate falsely declares holder-specific pixel inspection');
 }
 
@@ -118,4 +123,4 @@ requireMarkers('second-pass source addendum', addendum2, [
   'A2-01', '10800112', 'A2-07', '№ 288 (5043)', 'A2-09', 'Человек из поэмы', 'A2-13', 'ГПИБ / SHPL',
 ]);
 
-console.log('Simonov research follow-ups: award/1966/archive gates remain open; Pravda 1966 stays fail-closed pending p.4; Red Star №288 p.3 is direct-page verified; SHPL holder reply now pins exact node 37037 and p.3 inspect route while SHPL pixels remain a holder-specific comparison task.');
+console.log('Simonov research follow-ups: award/1966/archive gates remain open; Pravda 1966 stays fail-closed pending p.4; Red Star №288 p.3 is direct-page verified; SHPL holder reply pins node 37037 and p.3 inspect route while SHPL pixels remain a holder-specific comparison task.');
