@@ -8,6 +8,13 @@
     "TURNSTILE_HOSTNAMES": "thelegendarypoet.ru,www.thelegendarypoet.ru",
     "COMMUNITY_TARGET_MANIFEST_URL": "https://thelegendarypoet.ru/community-targets.json"
   },
+  "secrets": {
+    "required": [
+      "COMMUNITY_SESSION_SECRET",
+      "COMMUNITY_NETWORK_SECRET",
+      "TURNSTILE_SECRET"
+    ]
+  },
   "d1_databases": [
     {
       "binding": "DB",
