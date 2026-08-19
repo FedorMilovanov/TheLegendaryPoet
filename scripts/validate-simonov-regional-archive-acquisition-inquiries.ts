@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_REGIONAL_ARCHIVE_ACQUISITION_INQUIRIES_2026-
 if (!existsSync(path)) throw new Error(`Simonov regional archive acquisition gate missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'two official regional archive/museum inquiries sent / replies and item-level evidence pending / no paid work authorized',
@@ -18,7 +19,14 @@ for (const marker of [
 ]) {
   if (!text.includes(marker)) throw new Error(`Simonov regional archive boundary disappeared: ${marker}`);
 }
-if (/reply received|item inspected|opis verified|meeting verified|paid work authorized/iu.test(status)) {
+const forbiddenPositiveParts = [
+  'reply received',
+  'item inspected',
+  'opis verified',
+  'meeting verified',
+  'paid work authorized',
+];
+if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
   throw new Error(`Simonov regional archive status falsely closes an open gate: ${status}`);
 }
 
