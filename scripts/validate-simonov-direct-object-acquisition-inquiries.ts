@@ -4,6 +4,7 @@ const path = 'docs/research/SIMONOV_DIRECT_OBJECT_ACQUISITION_INQUIRIES_2026-08.
 if (!existsSync(path)) throw new Error(`Simonov direct-object acquisition inquiry gate missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const statusParts = status.split('/').map((part) => part.trim());
 
 for (const marker of [
   'Red Star №288 p.3 direct-inspected independently / 47news fragment bytes still undelivered / RSL 1973+1982 pages still pending / no paid work authorized',
@@ -41,14 +42,17 @@ for (const stale of [
   if (text.includes(stale)) throw new Error(`Simonov direct-object acquisition retained stale global Red Star state: ${stale}`);
 }
 
-for (const forbidden of [
+const forbiddenPositiveStatusParts = [
   '47news fragment visually inspected',
   'RSL pp.54–62 direct-inspected',
   'RSL pp.393,430–433 direct-inspected',
   'paid work authorized',
   'facsimile reuse rights cleared',
-]) {
-  if (text.includes(forbidden)) throw new Error(`Simonov direct-object acquisition falsely closes an external route: ${forbidden}`);
+];
+for (const forbidden of forbiddenPositiveStatusParts) {
+  if (statusParts.includes(forbidden)) {
+    throw new Error(`Simonov direct-object acquisition falsely closes an external route: ${forbidden}`);
+  }
 }
 
 if (!status.includes('Red Star №288 p.3 direct-inspected independently')) {
@@ -56,6 +60,9 @@ if (!status.includes('Red Star №288 p.3 direct-inspected independently')) {
 }
 if (!status.includes('47news fragment bytes still undelivered') || !status.includes('RSL 1973+1982 pages still pending')) {
   throw new Error(`Simonov acquisition gate lost open external-route boundaries: ${status}`);
+}
+if (!statusParts.includes('no paid work authorized')) {
+  throw new Error(`Simonov acquisition gate lost no-paid-work boundary: ${status}`);
 }
 
 console.log('Simonov direct-object acquisition: Red Star №288 p.3 is independently direct-verified; 47news fragment remains undelivered/uninspected; RSL 1973/1982 target pages and replies remain pending; no paid work authorized.');
