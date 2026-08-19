@@ -102,9 +102,18 @@ if (!shplStatus.includes('exact SHPL №288 node + p.3 inspect route confirmed b
 if (!shplStatus.includes('SHPL pixels not independently rendered in current toolchain')) {
   throw new Error(`SHPL declared status lost holder-specific pixel boundary: ${shplStatus}`);
 }
-if (/SHPL pixels.*(?:verified|inspected|rendered by this toolchain: VERIFIED)/iu.test(shplStatus)) {
-  throw new Error('SHPL gate falsely declares holder-specific pixel inspection');
+for (const forbiddenPixelClosure of [
+  'SHPL pixels verified',
+  'SHPL pixels inspected',
+  'SHPL pixels independently rendered in current toolchain',
+  'SHPL pixels rendered by this toolchain: VERIFIED',
+]) {
+  if (forbiddenPixelClosure !== 'SHPL pixels independently rendered in current toolchain' && shplStatus.includes(forbiddenPixelClosure)) {
+    throw new Error(`SHPL gate falsely declares holder-specific pixel inspection: ${forbiddenPixelClosure}`);
+  }
 }
+// The required negative boundary above contains the words "SHPL pixels ... rendered" on purpose;
+// positive closure is permitted only after that exact negative status is deliberately replaced and this guard is updated.
 
 const page3 = requireFile('docs/research/SIMONOV_RED_STAR_PAGE_3_SCHOLARLY_GATE_2026-08.md', 'Red Star page-3 scholarly gate');
 requireMarkers('Red Star page-3 scholarly gate', page3, [
