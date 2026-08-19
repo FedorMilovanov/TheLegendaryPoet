@@ -18,18 +18,18 @@ function declaredStatus(text: string): string {
 const fatherPath = 'docs/research/SIMONOV_LOSKUTOV_FATHER_IDENTITY_GATE_2026-08.md';
 const father = read(fatherPath, 'Simonov Loskutov father identity gate');
 requireAll('Simonov Loskutov father identity', father, [
-  'strong conflict isolated / Alexei Mikhailovich substantially better supported / primary family-service object pending',
-  '`Иваном Михайловичем`',
-  '**Иван Алексеевич Лоскутов**',
-  '**Алексея Михайловича Лоскутова**',
-  'Александр Санжара. `Сын артиллериста`',
+  'strong conflict isolated / same-edition 1982 OCR supports Ivan Mikhailovich / Primorye+family line supports Alexei / primary object pending',
+  '**`Иван Михайлович`**',
+  '**Иван Алексеевич**',
+  '**Алексей Михайлович**',
+  'Александр Санжара',
   '`Тихоокеанский прибой`',
   '**1984**',
-  'Светланы Филипповой',
-  'Алексея Михайловича существенно более вероятным',
+  'Светлана Филиппова',
+  'два сильных конкурирующих textual lineages',
   '**Не добавлять имя** в основной narrative до закрытия gate',
 ]);
-if (/primary.*(?:verified|closed)|family-service object verified/iu.test(declaredStatus(father))) {
+if (/primary.*(?:verified|closed)|family-service object verified|conflict closed/iu.test(declaredStatus(father))) {
   throw new Error('Father identity gate falsely declares primary-object closure');
 }
 
@@ -56,4 +56,4 @@ if (/direct scan (?:verified|inspected)|facsimile verified/iu.test(declaredStatu
   throw new Error('Ortenberg publication gate falsely declares direct-scan closure');
 }
 
-console.log('Simonov identity/publication follow-ups: father name remains primary-object pending; Ortenberg print locus recovered at pp.95–96, direct page scan still pending; Simonov handoff usable.');
+console.log('Simonov identity/publication follow-ups: father name remains a two-lineage conflict pending primary/printed objects; Ortenberg pp.95–96 remain direct-page pending; Simonov handoff usable.');
