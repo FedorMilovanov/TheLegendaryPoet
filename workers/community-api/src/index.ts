@@ -261,10 +261,14 @@ async function canonicalTargets(env: Env) {
   }
 }
 
-async function requireCanonicalTarget(env: Env, type: FeedbackTargetType, id: string) {
+async function requireCanonicalTargets(env: Env, type: FeedbackTargetType, ids: readonly string[]) {
   const targets = await canonicalTargets(env);
   if (!targets) throw new HttpError(503, 'target_manifest_unavailable');
-  if (!targets.has(targetKey(type, id))) throw new HttpError(404, 'unknown_target');
+  if (ids.some((id) => !targets.has(targetKey(type, id)))) throw new HttpError(404, 'unknown_target');
+}
+
+async function requireCanonicalTarget(env: Env, type: FeedbackTargetType, id: string) {
+  await requireCanonicalTargets(env, type, [id]);
 }
 
 async function parseJson(request: Request) {
@@ -514,6 +518,7 @@ async function handleHelpful(request: Request, env: Env) {
   const comment = await env.DB.prepare(`SELECT target_type, target_id FROM tlp_comments WHERE id = ? AND status = 'published'`)
     .bind(body.commentId).first<{ target_type: FeedbackTargetType; target_id: string }>();
   if (!comment || !validTargetType(comment.target_type) || !TARGET_ID.test(comment.target_id)) throw new HttpError(404, 'comment_not_found');
+  await requireCanonicalTarget(env, comment.target_type, comment.target_id);
   const existingVote = await env.DB.prepare('SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1')
     .bind(body.commentId, actor).first<{ found: number }>();
   if (existingVote) return { ok: true, idempotent: true };
@@ -529,6 +534,7 @@ async function handleComments(url: URL, env: Env) {
   const type = url.searchParams.get('targetType');
   const id = url.searchParams.get('targetId');
   if (!validTargetType(type) || !id || !TARGET_ID.test(id)) throw new HttpError(400, 'invalid_target');
+  await requireCanonicalTarget(env, type, id);
   const limit = Math.max(1, Math.min(MAX_COMMENT_PAGE, Math.floor(Number(url.searchParams.get('limit'))) || 10));
   const cursorCreatedAt = url.searchParams.get('cursorCreatedAt');
   const cursorId = url.searchParams.get('cursorId');
@@ -614,6 +620,7 @@ async function route(request: Request, env: Env) {
     const type = url.searchParams.get('targetType');
     const id = url.searchParams.get('targetId');
     if (!validTargetType(type) || !id || !TARGET_ID.test(id)) throw new HttpError(400, 'invalid_target');
+    await requireCanonicalTarget(env, type, id);
     return json(200, await aggregateForTarget(env.DB, type, id), origin, env);
   }
 
@@ -622,6 +629,7 @@ async function route(request: Request, env: Env) {
     if (!validTargetType(body.targetType) || !Array.isArray(body.targetIds) || body.targetIds.length > MAX_BATCH_TARGETS) throw new HttpError(400, 'invalid_target_batch');
     const ids = body.targetIds.filter((value): value is string => typeof value === 'string' && TARGET_ID.test(value));
     if (ids.length !== body.targetIds.length) throw new HttpError(400, 'invalid_target_batch');
+    await requireCanonicalTargets(env, body.targetType, ids);
     return json(200, { aggregates: await aggregateBatch(env.DB, body.targetType, ids) }, origin, env);
   }
 
