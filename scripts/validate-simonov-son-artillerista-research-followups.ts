@@ -89,7 +89,7 @@ requireMarkers('Red Star page-3 scholarly gate', page3, [
   'official military-history scholarly p.3 locator independently confirmed by direct №288 page inspection',
   'КОЛОБОВ Евгений Юрьевич', 'примечании **39**', '7 декабря. С. 3',
   'A+ direct visual object', 'six-column', 'following p.4',
-  'independent institutional scholarly corroboration',
+  'A/B scholarly institutional corroboration',
 ]);
 if (/direct newspaper scan still pending|direct object inspection required for page verification and columns/iu.test(declaredStatus(page3))) {
   throw new Error('Page-3 scholarly gate retained a stale pre-inspection status');
