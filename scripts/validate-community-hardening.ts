@@ -129,9 +129,11 @@ expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'f
 expect(requests.filter((entry) => entry.path === '/v1/comment').length === 1, 'valid operation behind malformed state must be delivered exactly once');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'poison-safe outbox must reach zero');
 const deliveredComment = requests.find((entry) => entry.path === '/v1/comment');
+const deliveredCommentBody = JSON.stringify(deliveredComment?.body ?? {});
+expect(Boolean(deliveredComment), 'successful comment flush must produce one Worker mutation request');
 expect(Boolean(deliveredComment?.authorization?.startsWith('Bearer v1.')), 'mutation must carry the server-signed actor token');
-expect(!JSON.stringify(deliveredComment?.body).includes(voterId), 'local device UUID must never be transmitted as server authority');
-expect(!/voter|actorId|network/i.test(JSON.stringify(deliveredComment?.body)), 'mutation body must not contain caller-selected authority fields');
+expect(!deliveredCommentBody.includes(voterId), 'local device UUID must never be transmitted as server authority');
+expect(!/voter|actorId|network/i.test(deliveredCommentBody), 'mutation body must not contain caller-selected authority fields');
 
 const baseCount = 10;
 const baseSum = 40;
@@ -141,14 +143,14 @@ expect(store.commitRatingFeedback({
   id: newRatingId,
   targetType: 'poet',
   targetId: 'anna-akhmatova',
-  scores: { language: 5 },
+  scores: { language: 5, depth: 4, legacy: 5, truth: 4 },
   createdAt: new Date(Date.now() + 1).toISOString(),
 }, newScope, voterId), 'first unsent rating must be accepted');
 expect(store.commitRatingFeedback({
   id: newRatingId,
   targetType: 'poet',
   targetId: 'anna-akhmatova',
-  scores: { language: 1 },
+  scores: { language: 1, depth: 4, legacy: 5, truth: 4 },
   createdAt: new Date(Date.now() + 2).toISOString(),
 }, newScope, voterId), 'editing one unsent rating must replace its pending operation');
 const newOverlay = store.getPendingTargetOverlay('poet', 'anna-akhmatova');
@@ -161,27 +163,30 @@ expect(newCount === 11 && newSum === 41, 'new pending vote must increase count e
 await store.flushCommunityOutbox();
 expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'valid actor session must be reused instead of minting per mutation');
 const deliveredRating = requests.find((entry) => entry.path === '/v1/rating');
-expect(!JSON.stringify(deliveredRating?.body).includes(newRatingId), 'server rating identity must not be client-selected');
+const deliveredRatingBody = JSON.stringify(deliveredRating?.body ?? {});
+expect(Boolean(deliveredRating), 'canonical full-score rating must reach the Worker mutation boundary');
+expect(!deliveredRatingBody.includes(newRatingId), 'server rating identity must not be client-selected');
+expect(!/voter|actorId|network/i.test(deliveredRatingBody), 'rating mutation body must not contain caller-selected authority fields');
 
 const syncedScope = 'rating:poet:alexander-pushkin';
 const syncedRatingId = 'rating-44444444-4444-4444-8444-444444444444';
 expect(store.rememberRating(syncedScope, {
   id: syncedRatingId,
-  scores: { language: 5 },
+  scores: { language: 5, depth: 5, legacy: 4, truth: 4 },
   updatedAt: new Date(Date.now() - 1000).toISOString(),
 }), 'synced own rating baseline must be stored');
 expect(store.commitRatingFeedback({
   id: syncedRatingId,
   targetType: 'poet',
   targetId: 'alexander-pushkin',
-  scores: { language: 4 },
+  scores: { language: 4, depth: 5, legacy: 4, truth: 4 },
   createdAt: new Date(Date.now() + 3).toISOString(),
 }, syncedScope, voterId), 'first pending edit of synced rating must be accepted');
 expect(store.commitRatingFeedback({
   id: syncedRatingId,
   targetType: 'poet',
   targetId: 'alexander-pushkin',
-  scores: { language: 1 },
+  scores: { language: 1, depth: 5, legacy: 4, truth: 4 },
   createdAt: new Date(Date.now() + 4).toISOString(),
 }, syncedScope, voterId), 'repeated pending edit of synced rating must be accepted');
 const syncedOverlay = store.getPendingTargetOverlay('poet', 'alexander-pushkin');
