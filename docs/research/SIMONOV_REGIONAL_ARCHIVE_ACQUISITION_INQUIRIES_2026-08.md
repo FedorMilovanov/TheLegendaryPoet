@@ -1,7 +1,7 @@
 # Simonov regional archive acquisition — Vladivostok school + Sakhalin museum
 
 Дата: 2026-08-19  
-Статус: **GAPK inquiry sent / Sakhalin museum first address delivery failed then rerouted / replies and item-level evidence pending / no paid work authorized**
+Статус: **GAPK inquiry sent / both published Sakhalin museum email routes SMTP-blocked / ministry routing request sent / replies and item-level evidence pending / no paid work authorized**
 
 > **Current-status authority.** Этот файл supersedes прежнюю operational-фразу `запрос подготовлен, но не отправлен` в `SIMONOV_LOSKUTOV_VLADIVOSTOK_SCHOOL_ARCHIVE_GATE_2026-08.md`. Старый файл сохраняет историю обнаружения фонда; текущий acquisition-status определяется здесь.
 
@@ -38,60 +38,80 @@ Evidence boundary:
 
 Музейный route нужен для upstream-проверки линии Ивана Елисеевича Солодовникова: газетная фотография Лоскутова в 1966 году, школьная переписка и последующие письма, включая материал 1969 года.
 
-### Первая отправка и доказанный delivery failure
+### Попытка 1 — опубликованный адрес Культура.РФ
 
-Первый адрес, опубликованный в Культура.РФ и некоторых региональных каталогах:
+Адрес:
 
 `Mmk-info@sakhalin.gov.ru`
 
-Дата первой отправки: **2026-08-19**  
-Gmail message ID: **`1a0173bb91ce4eaf`**
-
-Gmail DSN: **`1a0173bdfca2bbc7`**
+Дата отправки: **2026-08-19**  
+Gmail message ID: **`1a0173bb91ce4eaf`**  
+DSN: **`1a0173bdfca2bbc7`**
 
 SMTP result:
 
 **`554 5.7.1 Access denied`**.
 
-Следовательно, этот первый запрос нельзя считать `inquiry sent / reply pending`: доставка на данный адрес доказанно не состоялась.
+Доставка доказанно не состоялась.
 
-### Рабочий официальный reroute
+### Попытка 2 — адрес актуальной музейной платформы
 
-Актуальная музейная платформа ММК `Победа` и проект `Территория Победы` публикуют другой адрес:
+Актуальная музейная платформа Muscom публикует:
 
 **`mmk-pobeda@sakhalin.gov.ru`**
 
-Дата повторной отправки: **2026-08-19**  
-Тема: `Повторный запрос музейных материалов: И. Е. Солодовников — И. А. Лоскутов, 1966–1969`  
-Gmail message ID: **`1a019baa84f7f995`**
+Дата отправки: **2026-08-19**  
+Gmail message ID: **`1a019baa84f7f995`**  
+DSN: **`1a019bad09fb168d`**
 
-Повторно запрошено наличие и item-level provenance:
+SMTP result:
 
-- писем И. Е. Солодовникова и И. А. Лоскутова 1966–1969;
-- газетной вырезки из `Учительской газеты` 1966 года;
-- фотографии Лоскутова среди учащихся Владивостокской школы-интерната №2;
-- конвертов, подписей, школьных материалов;
-- музейных учётных номеров / коллекции / датировки;
+**`554 5.7.1 Access denied`**.
+
+Таким образом, и второй опубликованный адрес отклонён тем же почтовым шлюзом. Это уже не основание искать третий музейный e-mail по каталогам: фактическая граница — **museum-domain delivery blocked from current sender/channel**.
+
+### Официальный escalation через профильное министерство
+
+Официальный интернет-сайт Министерства культуры и архивного дела Сахалинской области установлен на `culture.admsakhalin.ru`; региональные учреждения публикуют контакт министерства:
+
+**`culture@sakhalin.gov.ru`**  
+Телефон: **+7 (4242) 67-23-23**
+
+Дата routing-запроса: **2026-08-19**  
+Gmail message ID: **`1a019c2ceabb6074`**
+
+Министерству сообщены оба SMTP 554 и передан тот же узкий item-level scope. Просьба:
+
+1. официально переадресовать запрос компетентному сотруднику ММК `Победа`; либо
+2. указать действующий официальный неслучайный канал для исследовательского обращения.
+
+На момент фиксации мгновенного DSN для `culture@sakhalin.gov.ru` не получено, но это **не считается substantive reply или delivery confirmation**.
+
+## 3. Что именно запрашивается у музейной линии
+
+- письма И. Е. Солодовникова и И. А. Лоскутова 1966–1969;
+- газетная вырезка из `Учительской газеты` 1966 года;
+- фотография Лоскутова среди учащихся Владивостокской школы-интерната №2;
+- конверты, подписи, школьные материалы;
+- музейные inventory numbers / collection / dating;
 - research copies или item descriptions;
 - отдельно оговорено, что **личная встреча Солодовникова и Лоскутова не считается установленной**;
 - research access не равен permission to republish;
 - **никакой платной работы до точной стоимости и отдельного подтверждения**.
 
-Evidence boundary:
+## 4. State machine
 
-**museum first address delivery failed / reroute sent / reply pending / no museum item inspected / no personal meeting promoted to fact.**
-
-## 3. State machine
-
-Текущие региональные состояния должны различаться машинно:
+Текущие состояния должны различаться машинно:
 
 - `GAPK: inquiry sent → reply pending → opis/item pending`;
-- `MMK first address: attempted → SMTP 554 failure`;
-- `MMK current address: reroute sent → reply pending → item pending`.
+- `MMK email #1: attempted → SMTP 554 failure`;
+- `MMK email #2: attempted → SMTP 554 failure`;
+- `Sakhalin Ministry: routing request sent → routing/substantive reply pending`;
+- `museum item: still uninspected`.
 
-Нельзя превращать `delivery failed` в `reply pending` и нельзя превращать `reroute sent` в `item confirmed`.
+Нельзя превращать SMTP failure в `reply pending`, routing request — в `museum confirmation`, а отсутствие DSN — в доказательство получения/обработки.
 
-## 4. Что делать после ответов
+## 5. Что делать после ответа
 
 ### Если ГАПК локализует дела
 
@@ -101,14 +121,21 @@ Evidence boundary:
 - [ ] сопоставить с exact `Учительская газета` item;
 - [ ] не выводить причинность `визит → статья` без документа.
 
-### Если музей локализует предметы
+### Если министерство/музей локализует предметы
 
+- [ ] сохранить официальный routing/reply;
 - [ ] записать inventory numbers;
 - [ ] отличить оригинал письма от копии/транскрипции;
 - [ ] проверить даты, адресатов, конверты и подписи;
 - [ ] проверить газетную вырезку: date/issue/page/title;
 - [ ] отдельно проверить утверждение о встрече;
 - [ ] reuse rights решать отдельно от research access.
+
+### Если email routing также блокируется
+
+- [ ] зафиксировать DSN;
+- [ ] использовать официальный телефон министерства/музея или государственную форму обращения владельцем проекта;
+- [ ] не перебирать случайные e-mail адреса.
 
 ### Если предлагается платная услуга
 
@@ -118,4 +145,4 @@ Evidence boundary:
 
 ## Итог
 
-GAPK route остаётся нормально доставленным и pending. По ММК выявлен и устранён скрытый delivery failure: **`Mmk-info@...` был отклонён SMTP 554, после чего тот же узкий item-level запрос отправлен на актуальный `mmk-pobeda@sakhalin.gov.ru`.** До substantive replies/копий школа, музейные items, личная встреча, газетная вырезка и переписка остаются fail-closed.
+GAPK route остаётся нормально отправленным и pending. По сахалинской музейной линии выявлена системная email-delivery проблема: **оба опубликованных адреса ММК отклонены с `554 5.7.1 Access denied`; после этого запрос эскалирован через профильное Министерство культуры и архивного дела Сахалинской области.** До официального routing/substantive reply и object evidence музейные items, личная встреча, газетная вырезка и переписка остаются fail-closed.
