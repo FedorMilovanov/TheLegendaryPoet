@@ -8,25 +8,46 @@ export type CommunityTestConfig = {
   humanProof?: string;
 };
 
+function normalizeHttpsApiUrl(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  try {
+    const parsed = new URL(trimmed);
+    if (
+      parsed.protocol !== 'https:'
+      || parsed.username
+      || parsed.password
+      || parsed.search
+      || parsed.hash
+    ) return undefined;
+    const pathname = parsed.pathname === '/'
+      ? ''
+      : parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.origin}${pathname}`;
+  } catch {
+    return undefined;
+  }
+}
+
 function readLoopbackTestConfig(): CommunityTestConfig | undefined {
   if (typeof window === 'undefined' || !LOOPBACK_HOSTS.has(window.location?.hostname ?? '')) return undefined;
   const candidate = (globalThis as typeof globalThis & {
     __TLP_COMMUNITY_TEST_CONFIG__?: Partial<CommunityTestConfig>;
   }).__TLP_COMMUNITY_TEST_CONFIG__;
-  const url = typeof candidate?.url === 'string' ? candidate.url.replace(/\/$/, '') : '';
+  const url = normalizeHttpsApiUrl(typeof candidate?.url === 'string' ? candidate.url : undefined);
   const siteKey = typeof candidate?.siteKey === 'string' ? candidate.siteKey : undefined;
   const humanProof = typeof candidate?.humanProof === 'string' ? candidate.humanProof : undefined;
-  if (!/^https:\/\/[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i.test(url)) return undefined;
+  if (!url) return undefined;
   return { url, siteKey, humanProof };
 }
 
 const LOOPBACK_TEST_CONFIG = readLoopbackTestConfig();
 
-export const communityApiUrl = (
-  VITE_ENV?.VITE_COMMUNITY_API_URL
-  ?? LOOPBACK_TEST_CONFIG?.url
-  ?? NODE_ENV?.VITE_COMMUNITY_API_URL
-)?.replace(/\/$/, '');
+export const communityApiUrl = [
+  VITE_ENV?.VITE_COMMUNITY_API_URL,
+  LOOPBACK_TEST_CONFIG?.url,
+  NODE_ENV?.VITE_COMMUNITY_API_URL,
+].map(normalizeHttpsApiUrl).find((value): value is string => Boolean(value));
 
 export const communityTurnstileSiteKey = (
   VITE_ENV?.VITE_TURNSTILE_SITE_KEY
