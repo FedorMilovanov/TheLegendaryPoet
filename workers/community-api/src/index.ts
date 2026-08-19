@@ -271,9 +271,37 @@ async function requireCanonicalTarget(env: Env, type: FeedbackTargetType, id: st
   await requireCanonicalTargets(env, type, [id]);
 }
 
+async function readBoundedBodyText(request: Request) {
+  const declaredLength = Number(request.headers.get('Content-Length') ?? Number.NaN);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    throw new HttpError(413, 'payload_too_large');
+  }
+  if (!request.body) return '';
+
+  const reader = request.body.getReader();
+  const bodyDecoder = new TextDecoder();
+  let totalBytes = 0;
+  let text = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel('payload_too_large').catch(() => undefined);
+        throw new HttpError(413, 'payload_too_large');
+      }
+      text += bodyDecoder.decode(value, { stream: true });
+    }
+    text += bodyDecoder.decode();
+    return text;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function parseJson(request: Request) {
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) throw new HttpError(413, 'payload_too_large');
+  const text = await readBoundedBodyText(request);
   try {
     const value = JSON.parse(text || '{}');
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('shape');
