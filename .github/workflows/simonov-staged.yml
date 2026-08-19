@@ -43,6 +43,9 @@ jobs:
       - name: Validate claim matrix
         run: npx tsx scripts/validate-simonov-son-artillerista-claim-matrix.ts
 
+      - name: Validate claim-aware publication readiness
+        run: npx tsx scripts/validate-simonov-publication-readiness-gate.ts
+
       - name: Validate identity and publication follow-ups
         run: npx tsx scripts/validate-simonov-son-artillerista-identity-publication-followups.ts
 

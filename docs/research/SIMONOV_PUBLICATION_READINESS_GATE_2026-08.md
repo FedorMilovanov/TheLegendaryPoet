@@ -1,7 +1,7 @@
 # «Сын артиллериста» — publication readiness gate
 
-Дата: 2026-08-19  
-Статус: **claim-aware publication gate / research closure separated from reader safety / owner-approved hero bytes + final publication transaction remain hard blockers**
+Дата актуализации: 2026-08-20  
+Статус: **claim-aware publication gate / artifact blockers closed / research closure separated from reader safety / exact-head execution gate remains**
 
 ## Зачем нужен отдельный gate
 
@@ -17,9 +17,9 @@ Publication readiness отвечает на другой вопрос: **как�
 - не объявляет 3 декабря безусловно `первой публикацией`;
 - не использует поздние газетные/мемуарные детали, которые ещё не просмотрены;
 
-то ожидание этих scans **не повышает достоверность уже сформулированного текста**, а лишь закрывает будущие исследовательские возможности.
+то ожидание этих scans не повышает достоверность уже сформулированного текста, а лишь закрывает будущие исследовательские возможности.
 
-Поэтому этот файл является authoritative gate **для production registration текущего reader**. Он не отменяет claim matrix и не объявляет открытые research objects закрытыми.
+Этот файл остаётся authoritative для **claim-aware границ production reader**. Транзакционное состояние публикационного артефакта фиксируется также в `SIMONOV_PUBLICATION_CLOSEOUT_2026-08.md`. Ни один из двух документов не объявляет открытые research objects закрытыми.
 
 ---
 
@@ -27,23 +27,23 @@ Publication readiness отвечает на другой вопрос: **как�
 
 ### Центральная публикация 7 декабря 1941
 
-`Красная звезда` №288 (5043), p.3 закрыта direct pixels:
+`Красная звезда` №288 (5043), печатная страница 3 закрыта прямой визуальной проверкой:
 
-- exact PDF получен;
+- полный PDF получен;
 - SHA-256 `9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`;
-- p.3 и following p.4 визуально просмотрены;
-- title + `(Фронтовая поэма)`;
+- p.3 и следующая p.4 визуально просмотрены;
+- заголовок + `(Фронтовая поэма)`;
 - шесть колонок;
 - конец `К. СИМОНОВ. / СЕВЕРНЫЙ ФРОНТ.`;
 - p.4 продолжения не содержит.
 
-Reader может утверждать эти детали без qualification.
+Reader может утверждать эти детали без дополнительной оговорки о непроверенном объекте.
 
 ### Исторический эпизод
 
 Reader опирается на опубликованную Симоновым передачу письма И. А. Лоскутова и явно атрибутирует участнику детали, которые не являются административным документом 1941 года.
 
-Для production используются только те значения, которые controlling witness поддерживает без спорного award extrapolation:
+Для production используются только значения, которые controlling witness поддерживает без спорного award extrapolation:
 
 - июль 1941, без точного дня;
 - два разведчика/радиста + проводник;
@@ -55,7 +55,7 @@ Reader опирается на опубликованную Симоновым �
 
 ### Text rights
 
-Полный текст поэмы не публикуется. Reader использует только короткие фразы, необходимые для критики/анализа. Full-text gate остаётся fail-closed.
+Полный текст поэмы не публикуется. Reader использует только короткие фразы, необходимые для критики и анализа. Full-text gate остаётся fail-closed.
 
 ---
 
@@ -65,23 +65,19 @@ Reader опирается на опубликованную Симоновым �
 
 Direct issue/page всё ещё нужен для окончательного closure `first publication`.
 
-Но reader **не пишет**, что 3 декабря безусловно была первая публикация. Он пишет:
-
-> архангельские институциональные источники относят публикацию к 3 декабря;
-
-и отдельно сообщает, что сама полоса редакцией не просмотрена.
+Но reader не пишет, что 3 декабря безусловно была первая публикация. Он сообщает, что архангельские институциональные источники относят публикацию к 3 декабря, и отдельно говорит, что сама полоса редакцией не просмотрена.
 
 Следовательно:
 
 **03.12 issue/page = P1 research closure, не P0 publication blocker, пока qualification сохраняется.**
 
-Если в reader появляется `впервые`, `первая публикация — 3 декабря`, exact issue number или page без direct object — gate должен снова стать P0.
+Если в reader появляется `впервые`, `первая публикация — 3 декабря`, exact issue number или page без direct object — gate снова становится P0 для этого claim.
 
 ### Award record `10800112`
 
 Direct scan нужен для `31 июля`, `6 суток`, `500–600 м`, `~2 км`, exact award linkage.
 
-Reader эти значения **не утверждает**. Напротив, он прямо говорит, что письмо даёт только `июль 1941`, а exact day из locator не повышается до факта.
+Reader эти значения не утверждает как установленные. Напротив, он прямо говорит, что письмо даёт только `июль 1941`, а связанная с award locator дата не повышается до безусловного факта.
 
 Следовательно:
 
@@ -95,7 +91,7 @@ Direct print collation нужна для окончательного выбор
 - printed father name;
 - edition-level page readings.
 
-Reader не выбирает спорный чин/должность: использует нейтральное `на командном пункте запросили подтверждение`.
+Reader не выбирает спорный чин/должность: использует нейтральное `На командном пункте решили, что произошла ошибка, и запросили подтверждение.`
 
 Reader не публикует имя отца.
 
@@ -111,70 +107,60 @@ Reader не публикует имя отца.
 - имя отца из Sanjara не публикуется;
 - `Правда` 1966 и `Учительская газета` 1966 не используются для фактов reader.
 
-Их page inspection не блокирует регистрацию текущей статьи.
+Их page inspection не блокирует текущую публикацию.
 
 ---
 
-## 3. Hard blockers перед production registration
+## 3. Artifact blockers закрыты; execution gate остаётся
 
-### P0-A — exact hero bytes + owner approval
+### P0-A — approved production hero: CLOSED
 
-Текущий cover contract:
+Production cover:
 
 `/images/essays/simonov/simonov-son-artillerista-hero.webp`
 
-Expected SHA-256:
+Exact production properties:
 
-`13ba95ba05eaa87eb8a7f6eac7fe888e0f5710bd9dc91a50c5b83dd2b6e7a087`
+- 1600×900;
+- 130 386 bytes;
+- SHA-256 `5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5`;
+- owner approval: `SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md`;
+- root provenance: `public/images/PROVENANCE.yml`;
+- generic cover pin: `scripts/validate-essay-covers.ts`.
 
-Hero class: **reconstruction**.
+Hero class остаётся **reconstruction**.
 
-Обязательная подпись:
+Обязательная публичная подпись:
 
 `редакционная реконструкция; не документальная фотография Ивана Лоскутова`.
 
-До наличия exact bytes и явного owner approval hero gate остаётся hard-blocking. Общее поручение `доделать проект` не подменяет approval конкретного изображения.
+Архивный `coverSourceUrl` для этой реконструкции запрещён.
 
-### P0-B — visual rights только для реально включаемых documentary assets
+### P0-B — visual rights для реально включаемых documentary assets: CLOSED BY ABSENCE
 
-Текущий Essay не содержит body `image` blocks. Поэтому исследовательские кандидаты Musta-Tunturi / Petsamo / Simonov 1943 / archive portraits **не блокируют publication, пока не вставлены в reader**.
+Публичный Essay не содержит body `image` blocks. Поэтому исследовательские кандидаты Musta-Tunturi / Petsamo / Simonov 1943 / archive portraits не блокируют publication, пока не вставлены в reader.
 
-Если body image добавляется:
+Если body image добавляется в будущем, exact bytes, item-level attribution/licence и truthful caption/provenance снова становятся P0 для этого файла.
 
-- exact bytes;
-- item-level attribution/licence;
-- truthful caption/provenance
+### P0-C — registration/discovery artifact transaction: CLOSED
 
-становятся P0 для этого файла.
+Публичный wrapper зарегистрирован в каноническом Essay catalog. Search index, sitemap и Atom feed синхронизированы. Отдельный browser acceptance покрывает опубликованный slug.
 
-### P0-C — final reader/registration transaction
-
-Перед снятием draft-status должны пройти на exact head:
-
-- staged editorial contract;
-- reader evidence reconciliation;
-- claim-aware publication readiness;
-- text-rights gate;
-- TypeScript/content contracts;
-- build;
-- SEO/catalog/sitemap/feed generation after registration;
-- browser QA на опубликованном route.
-
-Registration должна быть отдельной publication-транзакцией после закрытия P0-A и всех machine checks.
+Остаётся **execution gate**, а не новый контентный blocker: на одном и том же exact head должны пройти CI, Simonov publication source gate, catalog/browser acceptance и остальные применимые contracts. Успешную матрицу нельзя фиксировать новым «финальным» коммитом, потому что такой коммит сам создаст другой head и обнулит exact-head доказательство.
 
 ---
 
 ## 4. Machine-enforced reader invariants
 
-Production readiness действует **только пока** reader сохраняет эти границы:
+Publication readiness действует только пока reader сохраняет эти границы:
 
 1. есть `июль 1941 года` и `Точного дня в письме нет`;
 2. нет безусловного `31 июля 1941 года` как факта боя;
 3. нет `6 суток`, `500–600 м`, `2 км` как установленных reader facts;
-4. спор `командир / комиссар` нейтрализован формулой `на командном пункте ... запросили подтверждение`;
+4. спор `командир / комиссар` нейтрализован формулой `На командном пункте решили, что произошла ошибка, и запросили подтверждение.`;
 5. имя отца Лоскутова отсутствует в narrative;
 6. `3 декабря` подано как institutional attribution, а `впервые` остаётся blocked;
-7. `Красная звезда` p.3 может быть direct-asserted, потому что pixels уже inspected;
+7. `Красная звезда` p.3 может быть прямо описана как проверенная, потому что pixels уже inspected;
 8. reconstruction hero никогда не называется документальной фотографией;
 9. полный текст поэмы не встроен;
 10. body documentary images не появляются до item-level rights/bytes.
@@ -205,6 +191,6 @@ Production readiness действует **только пока** reader сох�
 
 ## Итог
 
-Текущий documentary reader уже построен так, чтобы **не зависеть от незакрытых спорных readings**. Поэтому publication readiness нельзя смешивать с максимальным research closure.
+Текущий documentary reader построен так, чтобы не зависеть от незакрытых спорных readings. Artifact-specific blockers уже закрыты: approved hero присутствует, documentary body images отсутствуют, full poem не публикуется, registration/discovery transaction выполнена.
 
-Hard blockers теперь соответствуют реальному артефакту: **exact approved hero bytes, права на реально включённые visuals и полный финальный publication/QA transaction.** Остальные direct-object targets продолжают исследование и могут усилить будущую редакцию, но не должны бесконечно удерживать безопасно квалифицированный текст в draft.
+Оставшийся hard gate перед merge — **зелёная exact-head execution matrix без подмены queue-state результатом и без нового self-invalidating closeout commit после проверки**. Остальные direct-object targets продолжают исследование и могут усилить будущую редакцию, но не должны бесконечно удерживать безопасно квалифицированный текст в draft.
