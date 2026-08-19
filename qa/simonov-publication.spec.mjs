@@ -37,11 +37,12 @@ test('Simonov publication route renders the approved reader-safe object', async 
   await expect(page.getByText('Она не является документальной фотографией Ивана Лоскутова, конкретной высоты или боя 1941 года.', { exact: false })).toBeVisible();
   await expect(page.getByText('На командном пункте решили, что произошла ошибка, и запросили подтверждение.', { exact: false })).toBeVisible();
   await expect(page.getByText('не превращает эту дату в безоговорочно доказанную «самую первую» публикацию', { exact: false })).toBeVisible();
-  await expect(page.getByText('exact выпуск № 288 и его p.3 уже визуально проверены', { exact: false })).toBeVisible();
+  await expect(page.getByText('точный выпуск № 288 и его печатная страница 3 уже визуально проверены', { exact: false })).toBeVisible();
 
   await expect(page.getByText('Hero-кандидат', { exact: false })).toHaveCount(0);
   await expect(page.getByText('До production merge', { exact: false })).toHaveCount(0);
   await expect(page.getByText('рекламной формулой', { exact: false })).toHaveCount(0);
+  await expect(page.getByText('exact выпуск', { exact: false })).toHaveCount(0);
 
   const state = await page.evaluate(() => ({
     overflow: Math.max(document.body.scrollWidth, document.documentElement.scrollWidth) - document.documentElement.clientWidth,
@@ -61,6 +62,7 @@ test('Simonov catalog, payload, sitemap and feed all expose the same canonical s
   expect(matches[0].title).toBe(TITLE);
   expect(matches[0].cover).toBe(HERO);
   expect(matches[0].coverKind).toBe('reconstruction');
+  expect(matches[0].tags).toContain('документальное исследование');
 
   const payloadResponse = await request.get(`${BASE_URL}/data/essays/${SLUG}.json`);
   expect(payloadResponse.ok()).toBeTruthy();
@@ -83,4 +85,5 @@ test('Simonov catalog, payload, sitemap and feed all expose the same canonical s
   const feed = await feedResponse.text();
   expect(feed).toContain(`https://thelegendarypoet.ru${ROUTE}`);
   expect(feed).toContain(TITLE);
+  expect(feed).toContain('<category term="документальное исследование" />');
 });
