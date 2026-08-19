@@ -63,6 +63,10 @@ In the Worker **Settings → Variables and Secrets**, add these three values as 
 
 The two HMAC secrets must be different random values of at least 32 bytes. Generate them locally or with a password manager and paste them directly into Cloudflare; never send them through chat, git, GitHub Variables, screenshots, or logs.
 
+`wrangler.jsonc` declares those exact three names under `secrets.required`. The declaration contains names only, never values. Wrangler must refuse `deploy`/`versions upload` if a required secret binding is missing, so an incomplete secret setup cannot silently become a new production Worker version.
+
+For local Worker development, put values only in an ignored `.dev.vars`/`.dev.vars.*` file. Those files are gitignored and must never be committed.
+
 The non-secret runtime variables and D1 binding are already declared in `wrangler.jsonc`:
 
 - `ALLOWED_ORIGINS=https://thelegendarypoet.ru,https://www.thelegendarypoet.ru`
