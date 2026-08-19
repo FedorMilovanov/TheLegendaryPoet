@@ -6,7 +6,7 @@ const text = readFileSync(path, 'utf8');
 
 for (const marker of [
   'exact №288 PDF bytes acquired / p.3 visually inspected / poem boundaries and no-continuation verified / institutional scan cross-check still desirable',
-  'Internet Archive item: `no2661212191941`',
+  '**Internet Archive item:** `no2661212191941`',
   'Газета «Красная Звезда» №288 от 07 декабря 1941 года.pdf',
   '**6 506 121 bytes**',
   '9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229',
