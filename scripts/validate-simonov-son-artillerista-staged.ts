@@ -160,7 +160,7 @@ const father = read('docs/research/SIMONOV_LOSKUTOV_FATHER_IDENTITY_GATE_2026-08
 requireMarkers('Loskutov father identity gate', father, [
   'Alexei Mikhailovich substantially better supported',
   '`Иваном Михайловичем`',
-  'Алексеем Михайловичем Лоскутовым',
+  'Алексея Михайловича Лоскутова',
   '**Не добавлять имя** в основной narrative до закрытия gate',
 ]);
 
