@@ -1,7 +1,7 @@
 # «Красная звезда», 7 декабря 1941 — ГПИБ / SHPL institutional cross-check gate
 
 Дата прохода: 2026-08-19  
-Статус: **complete 1941 SHPL corpus verified / global p.3 content direct-verified via exact №288 PDF / exact SHPL child node and institutional comparison pending**
+Статус: **complete 1941 SHPL corpus verified / exact SHPL №288 node + p.3 inspect route confirmed by holder reply / SHPL pixels not independently rendered in current toolchain / global p.3 content already direct-verified**
 
 Связанные файлы:
 - `SIMONOV_SON_ARTILLERISTA_NEWSPAPER_OBJECT_GATE_2026-08.md`
@@ -11,11 +11,16 @@
 
 ## Зачем этот gate теперь нужен
 
-Изначально ГПИБ / SHPL был главным direct-scan target: корпус 1941 года был подтверждён, scholarly bibliography уже указывала **с. 3**, но сама полоса №288 редакцией ещё не была просмотрена.
+Глобальный page-content gap уже закрыт independently: exact standalone PDF `Красной звезды` №288 от 07.12.1941 получен через Internet Archive, захеширован, а printed p.3 и p.4 визуально проверены.
 
-Этот глобальный page-content gap **закрыт 19 августа 2026 года другим direct object**: exact standalone PDF выпуска `Красной звезды` №288 от 07.12.1941 был получен из Internet Archive item `no2661212191941`, захеширован и визуально проверен на printed p.3 и p.4.
+Оставалась holder-specific задача: не угадывать внутренний SHPL node ID, а получить от самой ГПИБ точный маршрут к №288 и p.3. **19 августа 2026 года ГПИБ ответила напрямую и этот navigation/provenance route закрыла.**
 
-Поэтому SHPL gate больше нельзя формулировать как `p.3 uninspected`. Его правильная роль теперь — **independent institutional provenance/page-identity cross-check**.
+При этом текущий web/toolchain всё ещё не отрендерил pixels именно SHPL-копии из-за redirect/fetch layer. Поэтому две вещи разделены:
+
+- **exact SHPL object/page route: VERIFIED BY HOLDER REPLY**;
+- **SHPL pixels independently rendered by this toolchain: PENDING**.
+
+Это не влияет на уже закрытый global p.3 content result по independent direct facsimile.
 
 ---
 
@@ -26,41 +31,103 @@ https://elib.shpl.ru/ru/nodes/25135-krasnaya-zvezda-tsentralnyy-organ-ministerst
 
 Object id: **25135**.
 
+ГПИБ публично каталогизирует полный комплект 1941 года: **№1–309**. Web index отдельно подтверждает root newspaper object и 1941 holdings.
+
 ---
 
-## 2. 1941 год — полный комплект
+## 2. 1941 / декабрь
 
-**ГПИБ year node:**  
+**Year node:** `36558`  
 https://elib.shpl.ru/ru/nodes/36558-1941
 
-Object id: **36558**.
+Из institutional route, присланного самой ГПИБ:
 
-Metadata фиксирует:
+`Красная звезда → 1941 → Декабрь (№№ 283-309) → № 288, 7 дек.`
 
-- год: **1941**;
-- **№ 1 (1 января) — № 309 (31 декабря)**;
-- декабрь: **№ 283–309**;
-- №288 не отмечен в опубликованном списке повреждённых выпусков/страниц;
-- большинство номеров отреставрировано.
-
-### Что закрыто
-
-ГПИБ институционально подтверждает цифровой корпус и диапазон, содержащий нужный №288.
-
-### Что остаётся SHPL-specific
-
-- exact SHPL child-node URL №288;
-- просмотр **именно SHPL-копии** p.3;
-- comparison её page identity/geometry с уже inspected direct PDF;
-- provenance цифровой копии, если SHPL UI её сообщает.
-
-Это **не** означает, что p.3 в целом остаётся непросмотренной.
+**December node:** `37031`  
+http://elib.shpl.ru/ru/nodes/37031-dekabr-locale-nil-locale-nil-283-309
 
 ---
 
-## 3. Уже закрытый global page-content result
+## 3. Holder reply — exact №288 node recovered
 
-Direct-object gate фиксирует exact PDF:
+### Inquiry
+
+Дата: **2026-08-19**  
+Адрес: **`elib@shpl.ru`**  
+Gmail thread ID: **`1a019ce26e1553d8`**.
+
+В запросе просили:
+
+- stable issue node №288 от 07.12.1941;
+- direct p.3 viewer/JPG route;
+- штатную инструкцию выгрузки страницы;
+- без изготовления платной копии без отдельного согласования.
+
+### Reply from SHPL administration
+
+Ответ ГПИБ: Gmail message ID **`1a01a18e755ec4d7`**.
+
+ГПИБ сама указала:
+
+**Exact issue node:**  
+`http://elib.shpl.ru/ru/nodes/37037`
+
+**Canonical issue URL:**  
+`http://elib.shpl.ru/ru/nodes/37037-locale-nil-288-7-dek`
+
+**Exact p.3 inspect route:**  
+`http://elib.shpl.ru/ru/nodes/37037-locale-nil-288-7-dek#mode/inspect/page/3/zoom/4`
+
+Штатная инструкция для page JPG:
+
+> открыть страницу → кнопка `загрузить` → `крупный размер`.
+
+Таким образом, прежняя формула **`exact SHPL child node unknown / discover, do not infer` больше не актуальна**.
+
+Node **37037** получен не из арифметики соседних ID, а от администрации держателя цифрового объекта.
+
+---
+
+## 4. Что именно закрыто holder reply
+
+Теперь institutionally verified:
+
+- holder: **Государственная публичная историческая библиотека России**;
+- corpus: `Красная звезда`, 1941;
+- month branch: `Декабрь (№№ 283–309)`;
+- exact child node: **37037**;
+- issue label: **`№ 288, 7 дек.`**;
+- exact viewer state for target: **page 3**;
+- штатный route выгрузки страницы в JPG.
+
+Это существенно сильнее прежнего inferred/mirror route и достаточно, чтобы считать **SHPL issue/page navigation identity closed**.
+
+---
+
+## 5. Что пока НЕ закрыто именно для SHPL pixels
+
+Попытка открыть exact inspect route через текущий automated web layer упирается в redirect/safe-fetch limitation. Поэтому редакция пока **не заявляет**, что pixels именно SHPL derivative были независимо отрендерены этим toolchain.
+
+Нельзя писать:
+
+> `THE LEGENDARY POET визуально сверил SHPL p.3`.
+
+пока SHPL page image не будет фактически rendered/downloaded здесь либо предоставлен как byte object.
+
+Но также больше нельзя писать:
+
+> `exact SHPL node неизвестен`.
+
+или
+
+> `неясно, как перейти к p.3 в ГПИБ`.
+
+---
+
+## 6. Уже закрытый global page-content result
+
+Independent direct-object gate фиксирует exact PDF:
 
 `Газета «Красная Звезда» №288 от 07 декабря 1941 года.pdf`
 
@@ -74,78 +141,41 @@ SHA-256: **`9e644dd79fd9d22199ec9cef158d2f1a9cf5ce5efbdc60f2eb3e578c8999e229`**.
 - `Сын артиллериста`;
 - `(Фронтовая поэма)`;
 - **шесть газетных колонок**;
-- конец с `К. СИМОНОВ.` / `СЕВЕРНЫЙ ФРОНТ.`;
+- конец `К. СИМОНОВ.` / `СЕВЕРНЫЙ ФРОНТ.`;
 - following printed p.4 просмотрена и продолжения поэмы не содержит.
 
-Следовательно, **global Red Star page-content gate is closed**. SHPL нужен как второй, institutional holder-level контроль.
+Следовательно, **global Red Star page-content gate remains CLOSED**.
 
 ---
 
-## 4. Independent scholarly control
+## 7. Independent scholarly control
 
-**Военно-исторический журнал** (`Издание Министерства обороны России`) в статье Е. Ю. Колобова, примечание 39, даёт:
+`Военно-исторический журнал` (`Издание Министерства обороны России`) в статье Е. Ю. Колобова, примечание 39, даёт:
 
 `Симонов К. Сын артиллериста (фронтовая поэма) // Красная звезда. 1941. 7 декабря. С. 3.`
 
-Scholarly locator теперь не заменяет scan и не ждёт scan для своего подтверждения: он **независимо совпал с direct visual result**.
+Теперь evidence stack для центральной публикации выглядит так:
+
+1. **direct IA facsimile p.3/p.4 inspected** — page content/geometry;
+2. **SHPL holder reply** — exact institutional issue node + exact p.3 inspect route;
+3. **MoD scholarly bibliography** — independent p.3 citation;
+4. public SHPL root/year holdings — corpus authority.
 
 ---
 
-## 5. Почему exact SHPL child-node ID всё ещё нельзя угадывать
+## 8. Remaining SHPL checklist
 
-Exact child node остаётся:
-
-**unknown / discover, do not infer**.
-
-Внутренний node ID платформы не равен номеру газеты и не вычисляется по соседним узлам. Даже если guessed URL случайно открывается, comparison gate требует подтвердить breadcrumb/title/date самого объекта.
-
----
-
-## 6. SHPL comparison checklist
-
-После обнаружения exact child node №288:
-
-- [ ] подтвердить breadcrumb `Красная звезда > 1941 > декабрь`;
-- [ ] подтвердить issue **№288 (5043), 07.12.1941**;
-- [ ] открыть **SHPL p.3**;
-- [ ] сопоставить title/subtitle с direct PDF;
-- [ ] сопоставить **six-column** geometry;
-- [ ] сопоставить конец `К. СИМОНОВ. / СЕВЕРНЫЙ ФРОНТ.`;
-- [ ] проверить following page на отсутствие continuation;
-- [ ] записать stable SHPL object/viewer URL;
-- [ ] сохранить provenance metadata, если она дана holder’ом;
-- [ ] reuse/licence facsimile решать отдельно.
-
-OCR SHPL может использоваться только для навигации к page image.
-
----
-
-## 7. Редакционная формулировка сейчас
-
-Безопасно:
-
-> ГПИБ хранит полный цифровой комплект `Красной звезды` за 1941 год, включая декабрь №283–309. Сам выпуск №288 уже независимо получен и визуально проверен по direct PDF: `Сын артиллериста` находится на p.3, занимает шесть колонок и заканчивается на этой полосе; p.4 продолжения не содержит. Exact SHPL child object остаётся нужен для institutional provenance/page-identity cross-check.
-
-Нельзя:
-
-> `SHPL p.3 уже просмотрена редакцией`.
-
-пока exact SHPL child/page действительно не открыт.
-
-И нельзя из наличия direct PDF выводить, что facsimile автоматически свободно для перепубликации.
-
----
-
-## 8. Приоритет после page closure
-
-1. **ГПИБ / SHPL exact №288** — institutional page/provenance comparison;
-2. Ministry of Defence individual PDF route — второй institutional comparison;
-3. scholarly citation — independent bibliographic corroboration;
-4. Internet Archive exact PDF — уже inspected direct page-content object;
-5. другие mirrors — только дополнительное сравнение.
-
-Для `Патриота Родины` 03.12.1941 этот closure ничего автоматически не решает.
+- [x] root corpus verified;
+- [x] 1941 year node verified;
+- [x] December range №283–309 verified;
+- [x] exact child node №288 recovered from holder reply: **37037**;
+- [x] exact p.3 inspect URL recovered from holder reply;
+- [x] official JPG download procedure documented;
+- [ ] render/download **SHPL derivative p.3 pixels** in an accessible environment;
+- [ ] compare derivative identity/geometry with already inspected IA p.3;
+- [ ] record any provenance metadata exposed by SHPL viewer;
+- [ ] facsimile reuse/licence remains a separate decision.
 
 ## Итог
 
-SHPL gate не удалён и не «засчитан по чужой ссылке»: он **правильно понижен из global page blocker в holder-specific institutional cross-check**. Центральная p.3 уже direct-verified по exact №288 PDF; exact SHPL child node и сравнение его копии остаются открытыми без выдуманных ID.
+Главный institutional navigation gap закрыт качественно: **администрация ГПИБ сама подтвердила exact issue node `37037` и exact viewer route к p.3**. SHPL больше не является `child node unknown`. Осталась только узкая техническая задача holder-specific pixel comparison; содержание и geometry центральной публикации уже независимо закрыты direct facsimile.
