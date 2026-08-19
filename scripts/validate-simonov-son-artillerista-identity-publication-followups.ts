@@ -29,7 +29,7 @@ requireAll('Simonov Loskutov father identity', father, [
   'Светлана Филиппова',
   'два сильных конкурирующих textual lineages',
   '**Не добавлять имя** в основной narrative до закрытия gate',
-  'primary identity object не просмотрен',
+  'первичный identity object не просмотрен',
 ]);
 if (/primary.*(?:verified|closed)|family-service object verified|conflict closed/iu.test(declaredStatus(father))) {
   throw new Error('Father identity gate falsely declares primary-object closure');
