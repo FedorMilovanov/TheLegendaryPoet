@@ -4,21 +4,23 @@ import { musicTracks, poets } from '../src/data/poets';
 
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
 
-function uniqueSorted(values: readonly string[]) {
-  const ids = [...new Set(values)].sort((a, b) => a.localeCompare(b, 'en'));
-  for (const id of ids) {
-    if (!TARGET_ID.test(id)) throw new Error(`Invalid community target id: ${id}`);
+function uniqueSorted(kind: string, values: readonly string[]) {
+  const seen = new Set<string>();
+  for (const id of values) {
+    if (!TARGET_ID.test(id)) throw new Error(`Invalid community ${kind} target id: ${id}`);
+    if (seen.has(id)) throw new Error(`Duplicate community ${kind} target id: ${id}`);
+    seen.add(id);
   }
-  return ids;
+  return [...seen].sort((a, b) => a.localeCompare(b, 'en'));
 }
 
 const manifest = {
   version: 1,
   targets: {
-    poet: uniqueSorted(poets.map((poet) => poet.id)),
-    poem: uniqueSorted(poets.flatMap((poet) => poet.poems.map((poem) => poem.id))),
-    track: uniqueSorted(musicTracks.map((track) => track.id)),
-    article: uniqueSorted(getAllEssays().map((essay) => essay.id)),
+    poet: uniqueSorted('poet', poets.map((poet) => poet.id)),
+    poem: uniqueSorted('poem', poets.flatMap((poet) => poet.poems.map((poem) => poem.id))),
+    track: uniqueSorted('track', musicTracks.map((track) => track.id)),
+    article: uniqueSorted('article', getAllEssays().map((essay) => essay.id)),
   },
 } as const;
 
