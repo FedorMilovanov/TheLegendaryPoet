@@ -34,6 +34,15 @@ type SessionPayload = {
   exp: number;
 };
 
+type StoredCommentRow = {
+  actor_id: string;
+  target_type: string;
+  target_id: string;
+  author: string;
+  text: string;
+  kind: string;
+};
+
 const TARGET_TYPES = new Set<FeedbackTargetType>(['poet', 'poem', 'track', 'article']);
 const COMMENT_KINDS = new Set<CommentKind>(['literary', 'history', 'moral', 'performance']);
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
@@ -315,6 +324,15 @@ function normalizeComment(body: Record<string, unknown>) {
   };
 }
 
+function commentMatches(row: StoredCommentRow, actor: string, comment: ReturnType<typeof normalizeComment>) {
+  return row.actor_id === actor
+    && row.target_type === comment.targetType
+    && row.target_id === comment.targetId
+    && row.author === comment.author
+    && row.text === comment.text
+    && row.kind === comment.commentKind;
+}
+
 function overallExpression(type: FeedbackTargetType) {
   const keys = EXPECTED_SCORE_KEYS[type];
   return `(${keys.map((key) => `CAST(json_extract(scores_json, '$.${key}') AS REAL)`).join(' + ')}) / ${keys.length}.0`;
@@ -446,10 +464,11 @@ async function handleComment(request: Request, env: Env) {
   }
   const comment = normalizeComment(body);
   await requireCanonicalTarget(env, comment.targetType, comment.targetId);
-  const existing = await env.DB.prepare('SELECT actor_id, target_type, target_id FROM tlp_comments WHERE id = ?')
-    .bind(comment.commentId).first<{ actor_id: string; target_type: string; target_id: string }>();
+  const readExisting = () => env.DB.prepare('SELECT actor_id, target_type, target_id, author, text, kind FROM tlp_comments WHERE id = ?')
+    .bind(comment.commentId).first<StoredCommentRow>();
+  const existing = await readExisting();
   if (existing) {
-    if (existing.actor_id === actor && existing.target_type === comment.targetType && existing.target_id === comment.targetId) return { ok: true, idempotent: true };
+    if (commentMatches(existing, actor, comment)) return { ok: true, idempotent: true };
     throw new HttpError(409, 'comment_id_conflict');
   }
   const now = Date.now();
@@ -460,10 +479,12 @@ async function handleComment(request: Request, env: Env) {
   await takeBudget(env.DB, key, 'comment', '*', 3600, 12);
   await takeBudget(env.DB, key, 'comment', targetKey(comment.targetType, comment.targetId), 3600, 6);
   await env.DB.prepare(`
-    INSERT INTO tlp_comments(id, target_type, target_id, actor_id, author, text, kind, status, created_at)
+    INSERT OR IGNORE INTO tlp_comments(id, target_type, target_id, actor_id, author, text, kind, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, 'published', ?)
   `).bind(comment.commentId, comment.targetType, comment.targetId, actor, comment.author, comment.text, comment.commentKind, now).run();
-  return { ok: true };
+  const persisted = await readExisting();
+  if (!persisted || !commentMatches(persisted, actor, comment)) throw new HttpError(409, 'comment_id_conflict');
+  return { ok: true, idempotent: Boolean(existing) };
 }
 
 async function handleHelpful(request: Request, env: Env) {
