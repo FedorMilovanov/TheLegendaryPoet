@@ -1,7 +1,7 @@
 # Simonov regional archive acquisition — Vladivostok school + Sakhalin museum
 
 Дата: 2026-08-19  
-Статус: **two official regional archive/museum inquiries sent / replies and item-level evidence pending / no paid work authorized**
+Статус: **GAPK inquiry sent / Sakhalin museum first address delivery failed then rerouted / replies and item-level evidence pending / no paid work authorized**
 
 > **Current-status authority.** Этот файл supersedes прежнюю operational-фразу `запрос подготовлен, но не отправлен` в `SIMONOV_LOSKUTOV_VLADIVOSTOK_SCHOOL_ARCHIVE_GATE_2026-08.md`. Старый файл сохраняет историю обнаружения фонда; текущий acquisition-status определяется здесь.
 
@@ -11,8 +11,7 @@
 
 - e-mail: **`arhivpk@bk.ru`**;
 - фонд **Р-1510** — `Владивостокская школа-интернат № 2`;
-- крайние даты фонда: **1961–1967**;
-- фонд перекрывает 1966 год, к которому относится газетно-школьная линия Ивана Лоскутова.
+- крайние даты фонда: **1961–1967**.
 
 ### Отправленный запрос
 
@@ -26,32 +25,47 @@ Gmail message/thread ID: **`1a0173aec38d1bfe`**
 - К. М. Симонов / `Сын артиллериста` / Лёнька Петров;
 - школьная переписка, визиты, приглашения, фото, газетные вырезки, альбомы, краеведческие материалы;
 - item-level архивные шифры до заказа копий;
-- дистанционный lawful access / ЭЧЗ / отдельные digital copies;
+- дистанционный lawful access / отдельные digital copies;
 - **никакой платной работы до точной стоимости и отдельного подтверждения**.
 
-### Evidence boundary
+Evidence boundary:
 
-**inquiry sent / reply pending / opis and specific storage units remain uninspected.**
+**GAPK inquiry sent / reply pending / opis and specific storage units remain uninspected.**
 
-Сам фонд не доказывает ни встречу Лоскутова со школьниками, ни наличие вырезки, ни конкретную переписку.
-
----
+Сам факт существования фонда не доказывает ни встречу, ни конкретную переписку, ни газетную вырезку.
 
 ## 2. Музейно-мемориальный комплекс «Победа», Южно-Сахалинск
 
-Официальные региональные/федеральные страницы учреждения подтверждают контакт:
+Музейный route нужен для upstream-проверки линии Ивана Елисеевича Солодовникова: газетная фотография Лоскутова в 1966 году, школьная переписка и последующие письма, включая материал 1969 года.
 
-**`Mmk-info@sakhalin.gov.ru`**
+### Первая отправка и доказанный delivery failure
 
-Музейный route важен для upstream-проверки линии Ивана Елисеевича Солодовникова, которую SAKH.ONLINE передаёт как музейно связанную историю: газетная фотография Лоскутова в 1966 году, школьная переписка и последующие письма, включая материал 1969 года.
+Первый адрес, опубликованный в Культура.РФ и некоторых региональных каталогах:
 
-### Отправленный запрос
+`Mmk-info@sakhalin.gov.ru`
 
-Дата: **2026-08-19**  
-Получатель: **`Mmk-info@sakhalin.gov.ru`**  
-Gmail message/thread ID: **`1a0173bb91ce4eaf`**
+Дата первой отправки: **2026-08-19**  
+Gmail message ID: **`1a0173bb91ce4eaf`**
 
-Запрошено наличие и item-level provenance:
+Gmail DSN: **`1a0173bdfca2bbc7`**
+
+SMTP result:
+
+**`554 5.7.1 Access denied`**.
+
+Следовательно, этот первый запрос нельзя считать `inquiry sent / reply pending`: доставка на данный адрес доказанно не состоялась.
+
+### Рабочий официальный reroute
+
+Актуальная музейная платформа ММК `Победа` и проект `Территория Победы` публикуют другой адрес:
+
+**`mmk-pobeda@sakhalin.gov.ru`**
+
+Дата повторной отправки: **2026-08-19**  
+Тема: `Повторный запрос музейных материалов: И. Е. Солодовников — И. А. Лоскутов, 1966–1969`  
+Gmail message ID: **`1a019baa84f7f995`**
+
+Повторно запрошено наличие и item-level provenance:
 
 - писем И. Е. Солодовникова и И. А. Лоскутова 1966–1969;
 - газетной вырезки из `Учительской газеты` 1966 года;
@@ -63,28 +77,36 @@ Gmail message/thread ID: **`1a0173bb91ce4eaf`**
 - research access не равен permission to republish;
 - **никакой платной работы до точной стоимости и отдельного подтверждения**.
 
-### Evidence boundary
+Evidence boundary:
 
-**museum inquiry sent / reply pending / no museum item inspected / no personal meeting promoted to fact.**
+**museum first address delivery failed / reroute sent / reply pending / no museum item inspected / no personal meeting promoted to fact.**
 
----
+## 3. State machine
 
-## 3. Что делать после ответов
+Текущие региональные состояния должны различаться машинно:
+
+- `GAPK: inquiry sent → reply pending → opis/item pending`;
+- `MMK first address: attempted → SMTP 554 failure`;
+- `MMK current address: reroute sent → reply pending → item pending`.
+
+Нельзя превращать `delivery failed` в `reply pending` и нельзя превращать `reroute sent` в `item confirmed`.
+
+## 4. Что делать после ответов
 
 ### Если ГАПК локализует дела
 
 - [ ] записать фонд / опись / дело / заголовок / даты / число листов;
 - [ ] заказать только релевантные листы после оценки стоимости;
-- [ ] визуально проверить подписи и context;
-- [ ] отдельно сопоставить с exact `Учительская газета` item, когда ПБ ответит;
+- [ ] визуально проверить подписи/context;
+- [ ] сопоставить с exact `Учительская газета` item;
 - [ ] не выводить причинность `визит → статья` без документа.
 
 ### Если музей локализует предметы
 
-- [ ] записать музейные inventory numbers;
+- [ ] записать inventory numbers;
 - [ ] отличить оригинал письма от копии/транскрипции;
 - [ ] проверить даты, адресатов, конверты и подписи;
-- [ ] проверить, сохранилась ли газетная вырезка и виден ли на ней date/issue/page/title;
+- [ ] проверить газетную вырезку: date/issue/page/title;
 - [ ] отдельно проверить утверждение о встрече;
 - [ ] reuse rights решать отдельно от research access.
 
@@ -96,4 +118,4 @@ Gmail message/thread ID: **`1a0173bb91ce4eaf`**
 
 ## Итог
 
-Две региональные линии больше не являются `готовыми, но не отправленными` запросами. **ГАПК и ММК «Победа» получили item-level обращения по своим официальным адресам.** До ответов/копий статус остаётся fail-closed: фонд школы, музейная коллекция, личная встреча, газетная вырезка и конкретная переписка не считаются просмотренными или подтверждёнными.
+GAPK route остаётся нормально доставленным и pending. По ММК выявлен и устранён скрытый delivery failure: **`Mmk-info@...` был отклонён SMTP 554, после чего тот же узкий item-level запрос отправлен на актуальный `mmk-pobeda@sakhalin.gov.ru`.** До substantive replies/копий школа, музейные items, личная встреча, газетная вырезка и переписка остаются fail-closed.
