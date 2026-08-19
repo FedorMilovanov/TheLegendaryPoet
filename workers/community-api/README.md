@@ -18,21 +18,68 @@ Set these as Worker secrets, never as repository variables or `VITE_*` values:
 
 D1 stores only the resulting 64-character HMAC network key. Raw IP addresses and Turnstile tokens are never persisted.
 
-## One-time account setup
+The Turnstile **sitekey** and D1 `database_id` are public deployment identifiers, not credentials. The Turnstile secret and Worker HMAC secrets remain private.
 
-Do not copy the example config into production until the real D1 database exists.
+## Production resource binding
 
-1. Create D1 database `the-legendary-poet-community` in the owner Cloudflare account.
-2. Copy `wrangler.example.jsonc` to a local uncommitted `wrangler.jsonc` and replace the database ID with the real D1 ID.
-3. Apply `schema.sql` to that exact database.
-4. Create a Turnstile **Managed** widget for the production hostnames.
-5. Put the three secrets above into the Worker secret store.
-6. Deploy the Worker and verify `/health` reports `database: "d1"` and `writesReady: true`.
-7. Prefer a same-site custom domain such as `community.thelegendarypoet.ru` for production. `workers.dev` is acceptable for bring-up only.
-8. Set GitHub Actions variables `COMMUNITY_API_URL` and `TURNSTILE_SITE_KEY`. They are public runtime configuration; no secret goes into the site bundle.
-9. Run the full exact-head repository and browser QA gates before merge/closure.
+The owner Cloudflare account already contains D1 database `the-legendary-poet-community`. Its production binding is committed in [`wrangler.jsonc`](./wrangler.jsonc) as `DB`, which is the normal Cloudflare deployment contract. No Cloudflare account ID, API token, Turnstile secret or HMAC secret is committed.
 
-The current repository intentionally does not commit a real `database_id`, account ID, Turnstile secret or Worker secrets.
+## Initial database schema
+
+Apply [`schema.sql`](./schema.sql) once to the exact production database before enabling writes.
+
+From the Cloudflare D1 dashboard, open the database **Console**, paste the complete schema, and execute it. The equivalent Wrangler command from this directory is:
+
+```bash
+npx --yes wrangler@4.120.0 d1 execute the-legendary-poet-community --remote --file=schema.sql
+```
+
+Afterward the database must contain exactly the community tables/indexes defined by `schema.sql`; do not hand-create a parallel schema.
+
+## Worker deployment from GitHub
+
+After this branch is merged and exact-head repository gates are green, use Cloudflare Workers Builds rather than copying Worker source into the dashboard editor:
+
+1. **Workers & Pages → Create application → Import a repository**.
+2. Connect GitHub repository `FedorMilovanov/TheLegendaryPoet`.
+3. Worker name must be exactly `the-legendary-poet-community`.
+4. Production branch: `main`.
+5. Root directory: `/workers/community-api`.
+6. Build command: leave blank.
+7. Deploy command: `npx --yes wrangler@4.120.0 deploy`.
+8. Keep production branch builds only until the initial rollout is certified; preview branch builds can be enabled later deliberately.
+
+Cloudflare may create the build API token automatically. Do not create or paste a broad account API token unless there is a specific need.
+
+## Runtime configuration in Cloudflare
+
+In the Worker **Settings → Variables and Secrets**, add these three values as type **Secret**:
+
+- `COMMUNITY_SESSION_SECRET`
+- `COMMUNITY_NETWORK_SECRET`
+- `TURNSTILE_SECRET`
+
+The two HMAC secrets must be different random values of at least 32 bytes. Generate them locally or with a password manager and paste them directly into Cloudflare; never send them through chat, git, GitHub Variables, screenshots, or logs.
+
+The non-secret runtime variables and D1 binding are already declared in `wrangler.jsonc`:
+
+- `ALLOWED_ORIGINS=https://thelegendarypoet.ru,https://www.thelegendarypoet.ru`
+- `TURNSTILE_HOSTNAMES=thelegendarypoet.ru,www.thelegendarypoet.ru`
+- `COMMUNITY_TARGET_MANIFEST_URL=https://thelegendarypoet.ru/community-targets.json`
+- D1 binding `DB=the-legendary-poet-community`
+
+## Bring-up and activation
+
+1. Apply `schema.sql` to D1.
+2. Confirm the Turnstile widget is **Managed** and restricted to the two production hostnames.
+3. Deploy the Worker through Workers Builds.
+4. Verify `GET /health` returns `database: "d1"` and `writesReady: true`.
+5. Use the `workers.dev` URL only for bring-up. Prefer `community.thelegendarypoet.ru` as the production custom domain.
+6. In GitHub Actions variables set:
+   - `COMMUNITY_API_URL` — final HTTPS Worker/custom-domain URL;
+   - `TURNSTILE_SITE_KEY` — public Turnstile sitekey.
+7. Deploy the static site.
+8. Run live adversarial checks before AuditRepo P1 closure.
 
 ## Security invariants
 
