@@ -106,8 +106,6 @@ requireMarkers('Simonov newspaper gate', newspaper, [
   '**unknown / do not infer**',
   '3 ноября не используется как publication fact',
 ]);
-// The gate may quote a forbidden sentence inside its explicit “do not write” policy.
-// Fail only if its declared status itself is upgraded to a direct-page closure.
 if (/Статус страницы:\s*\*\*direct page verified\*\*/u.test(newspaper)) {
   throw new Error('Newspaper gate falsely marks p.3 direct-verified');
 }
@@ -158,9 +156,11 @@ requireMarkers('Simonov image-rights gate', imageRights, [
 // Strong conflicts remain explicitly isolated.
 const father = read('docs/research/SIMONOV_LOSKUTOV_FATHER_IDENTITY_GATE_2026-08.md', 'Loskutov father identity gate');
 requireMarkers('Loskutov father identity gate', father, [
-  'Alexei Mikhailovich substantially better supported',
-  '`Иваном Михайловичем`',
-  'Алексея Михайловича Лоскутова',
+  'same-edition 1982 OCR supports Ivan Mikhailovich',
+  'Primorye+family line supports Alexei',
+  '**`Иван Михайлович`**',
+  '**Алексей Михайлович**',
+  'два сильных конкурирующих textual lineages',
   '**Не добавлять имя** в основной narrative до закрытия gate',
 ]);
 
@@ -220,5 +220,5 @@ if (publicationCandidate.readTime !== expectedReadTime) {
 }
 
 console.log(
-  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-scholarly-corroborated/direct-scan-pending; Loskutov1973=RSL-full-viewer/page54-62-pending; award=10800112-scan-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
+  `Simonov staged DoD: unpublished; ${words} words; ${sourcesById.size} cited source units; baseline=${ledgerRows}; claims=${claimRows}; RedStar=№288/p3-scholarly-corroborated/direct-scan-pending; Loskutov1973=RSL-full-viewer/page54-62-pending; award=10800112-scan-pending; father=two-lineage-conflict-primary-object-pending; image-rights=fail-closed; text-rights=full-text-blocked; hero=${coverStatus}.`,
 );
