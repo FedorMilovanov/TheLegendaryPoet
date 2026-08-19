@@ -9,41 +9,53 @@ function json(route, value, status = 200) {
   });
 }
 
-function queryValue(url, name) {
-  const raw = url.searchParams.get(name) ?? '';
-  return raw.startsWith('eq.') ? raw.slice(3) : raw;
+function isPoemRead(record, targetId = null) {
+  if (record.method !== 'GET') return false;
+  const url = new URL(record.url);
+  if (!['/v1/summary', '/v1/comments'].includes(url.pathname)) return false;
+  if (url.searchParams.get('targetType') !== 'poem') return false;
+  return targetId === null || url.searchParams.get('targetId') === targetId;
 }
 
 async function installBackend(page, requests) {
-  await page.addInitScript(({ url, key }) => {
-    window.__TLP_COMMUNITY_TEST_CONFIG__ = { url, key };
-  }, { url: COMMUNITY_ORIGIN, key: 'hardening-test-key' });
+  await page.addInitScript(({ url }) => {
+    window.__TLP_COMMUNITY_TEST_CONFIG__ = {
+      url,
+      humanProof: 'turnstile-poet-detail-proof',
+    };
+  }, { url: COMMUNITY_ORIGIN });
 
   await page.route(`${COMMUNITY_ORIGIN}/**`, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     requests.push({ method: request.method(), url: url.toString() });
 
-    if (request.method() !== 'GET') return json(route, null, 204);
+    if (request.method() === 'OPTIONS') return json(route, null, 204);
+    if (request.method() !== 'GET') return json(route, { ok: false }, 405);
 
-    if (url.pathname.endsWith('/tlp_feedback_summary_public')) {
-      const targetType = queryValue(url, 'target_type');
-      const targetId = queryValue(url, 'target_id');
-      return json(route, [{
-        target_type: targetType,
-        target_id: targetId,
-        rating_count: 3,
-        comment_count: 1,
+    if (url.pathname === '/v1/summary') {
+      const targetType = url.searchParams.get('targetType');
+      const targetId = url.searchParams.get('targetId');
+      if (!targetType || !targetId) return json(route, { ok: false }, 400);
+      return json(route, {
+        targetType,
+        targetId,
+        ratingCount: 3,
+        commentCount: 1,
         overall: 4.5,
         deviation: 0.2,
-        dimensions: { language: 4.5 },
+        dimensions: targetType === 'poem'
+          ? { beauty: 4.6, form: 4.4, impact: 4.5 }
+          : { language: 4.6, depth: 4.4, legacy: 4.5, truth: 4.5 },
         distribution: { 4: 1, 5: 2 },
-      }]);
+      });
     }
 
-    if (url.pathname.endsWith('/tlp_comments_public')) return json(route, []);
-    if (url.pathname.endsWith('/tlp_ratings_public')) return json(route, []);
-    return json(route, []);
+    if (url.pathname === '/v1/comments') {
+      return json(route, { comments: [], nextCursor: null });
+    }
+
+    return json(route, { ok: false }, 404);
   });
 }
 
@@ -62,11 +74,10 @@ export function registerCommunityPoetDetailTopologyTests({ test, expect }) {
       expect(await activators.count()).toBeGreaterThanOrEqual(3);
 
       await page.waitForTimeout(500);
-      const initialPoemReads = requests.filter(({ method, url }) => (
-        method === 'GET'
-        && new URL(url).searchParams.get('target_type') === 'eq.poem'
-      ));
-      expect(initialPoemReads, 'poem panels and quick navigation must stay remote-passive before activation').toEqual([]);
+      expect(
+        requests.filter((record) => isPoemRead(record)),
+        'poem panels and quick navigation must stay remote-passive before activation',
+      ).toEqual([]);
 
       const first = activators.first();
       const activationTarget = await first.getAttribute('data-community-activate-target');
@@ -74,21 +85,14 @@ export function registerCommunityPoetDetailTopologyTests({ test, expect }) {
       const targetId = activationTarget.split(':')[1];
 
       await first.click();
-      await expect.poll(() => requests.filter(({ method, url }) => {
-        if (method !== 'GET') return false;
-        const parsed = new URL(url);
-        return parsed.searchParams.get('target_type') === 'eq.poem'
-          && parsed.searchParams.get('target_id') === `eq.${targetId}`;
-      }).length).toBe(2);
+      await expect.poll(() => requests.filter((record) => isPoemRead(record, targetId)).length).toBe(2);
 
-      const poemReads = requests.filter(({ method, url }) => (
-        method === 'GET'
-        && new URL(url).searchParams.get('target_type') === 'eq.poem'
-      ));
+      const poemReads = requests.filter((record) => isPoemRead(record));
       expect(poemReads).toHaveLength(2);
-      expect(poemReads.every(({ url }) => new URL(url).searchParams.get('target_id') === `eq.${targetId}`)).toBe(true);
-      expect(poemReads.filter(({ url }) => new URL(url).pathname.endsWith('/tlp_feedback_summary_public'))).toHaveLength(1);
-      expect(poemReads.filter(({ url }) => new URL(url).pathname.endsWith('/tlp_comments_public'))).toHaveLength(1);
+      expect(poemReads.every((record) => new URL(record.url).searchParams.get('targetId') === targetId)).toBe(true);
+      expect(poemReads.filter((record) => new URL(record.url).pathname === '/v1/summary')).toHaveLength(1);
+      expect(poemReads.filter((record) => new URL(record.url).pathname === '/v1/comments')).toHaveLength(1);
+      expect(poemReads.some((record) => /tlp_feedback|tlp_comments_public|\/rest\/v1\//.test(record.url))).toBe(false);
     });
   });
 }
