@@ -44,7 +44,7 @@ expect(humanCheck.includes('LOOPBACK') === false, 'human-check runtime must not 
 expect(worker.includes("request.headers.get('CF-Connecting-IP')"), 'Worker must derive network authority from Cloudflare connection metadata');
 expect(worker.includes("crypto.subtle.sign('HMAC'") && worker.includes("crypto.subtle.verify("), 'network and actor authority must be cryptographically server-derived');
 expect(worker.includes('COMMUNITY_SESSION_SECRET') && worker.includes('COMMUNITY_NETWORK_SECRET'), 'Worker must separate session and network secrets');
-expect(worker.includes("secret === env.COMMUNITY_NETWORK_SECRET"), 'Worker must reject reusing the same secret for actor sessions and network hashing');
+expect(worker.includes("secret.length < 32 || secret === env.COMMUNITY_NETWORK_SECRET"), 'session signing and verification must fail closed when session/network secrets are missing or reused');
 expect(worker.includes('TURNSTILE_SECRET') && worker.includes('TURNSTILE_HOSTNAMES'), 'Worker must keep Turnstile verification server-side');
 expect(worker.includes('https://challenges.cloudflare.com/turnstile/v0/siteverify'), 'Worker must call canonical Turnstile Siteverify');
 expect(worker.includes("result.action !== 'community_session'") && worker.includes('!hosts.has(result.hostname)'), 'Worker must validate Turnstile action and hostname, not just success');
@@ -60,6 +60,8 @@ expect(worker.includes('commentMatches(existing, actor, comment)') && worker.inc
 expect(worker.includes('INSERT OR IGNORE INTO tlp_comments') && worker.includes('const persisted = await readExisting()'), 'concurrent comment retries must converge on one row and re-verify ownership/payload instead of surfacing a uniqueness 500');
 expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
+expect(worker.includes('FROM sqlite_master') && worker.includes("name IN ('tlp_ratings', 'tlp_comments', 'tlp_helpful_votes', 'tlp_rate_buckets')"), 'health readiness must verify the actual four-table D1 schema instead of trusting the binding name');
+expect(worker.includes('targetAuthorityReady = Boolean(await canonicalTargets(env))') && worker.includes('writesReady = databaseReady && targetAuthorityReady && secretsReady'), 'health readiness must fail closed when D1 schema, target authority, or secrets are not actually ready');
 expect(!/localStorage|sessionStorage|p_voter_id/.test(worker), 'Worker must not trust browser storage or legacy voter IDs');
 
 expect(wrangler.name === 'the-legendary-poet-community', 'Wrangler Worker name must match the Cloudflare production Worker');
@@ -100,5 +102,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, Worker, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
