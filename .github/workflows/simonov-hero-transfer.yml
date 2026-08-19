@@ -16,18 +16,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch approved full-resolution hero
+      - name: Fetch exact owner-approved production hero
         shell: bash
         run: |
           set -euo pipefail
           url='https://media.canva.com/v2/image-resize/format:WEBP/height:900/quality:82/uri:ifs%3A%2F%2FM%2F11537666-f412-401b-911c-319071de0d88/watermark:F/width:1600?csig=AAAAAAAAAAAAAAAAAAAAAFyO-WrlhtINSEpSru2ymCCxP0b4ocQkA_JnZnXy1N99&exp=1787194697&osig=AAAAAAAAAAAAAAAAAAAAAIBjp2x8KFcu2mV7q7QgMyEyqyzBHfMOYnVe-yZEXAYd&signer=media-rpc&x-canva-quality=thumbnail'
+          expected_sha='5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5'
+          expected_bytes='130386'
           curl --fail --location --silent --show-error --retry 2 "$url" --output /tmp/simonov-hero.webp
-          bytes=$(wc -c < /tmp/simonov-hero.webp)
-          echo "downloaded bytes=$bytes"
-          sha256sum /tmp/simonov-hero.webp
-          file /tmp/simonov-hero.webp
-          test "$bytes" -ge 80000
-          test "$bytes" -le 500000
+          actual_bytes=$(wc -c < /tmp/simonov-hero.webp | tr -d ' ')
+          actual_sha=$(sha256sum /tmp/simonov-hero.webp | awk '{print $1}')
+          echo "downloaded bytes=${actual_bytes} sha256=${actual_sha}"
+          test "$actual_bytes" = "$expected_bytes"
+          test "$actual_sha" = "$expected_sha"
           test "$(head -c 4 /tmp/simonov-hero.webp)" = 'RIFF'
           test "$(dd if=/tmp/simonov-hero.webp bs=1 skip=8 count=4 status=none)" = 'WEBP'
           mkdir -p public/images/essays/simonov
@@ -41,8 +42,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add public/images/essays/simonov/simonov-son-artillerista-hero.webp
           if git diff --cached --quiet; then
-            echo 'Hero already matches transferred asset.'
+            echo 'Hero already matches exact approved asset.'
             exit 0
           fi
-          git commit -m 'fix(simonov): replace corrupted hero with full-resolution asset'
+          git commit -m 'fix(simonov): restore exact approved hero bytes'
           git push origin HEAD:${GITHUB_REF_NAME}
