@@ -21,6 +21,7 @@ for (const marker of [
   '`К. СИМОНОВ.`',
   '`СЕВЕРНЫЙ ФРОНТ.`',
   'cross-copy content/geometry identity',
+  'а не утверждение о byte-identical деривативах',
   'facsimile reuse/publication permission: **OPEN / separate**',
   'Исследовательский JPG **не вендорится в repository**',
   'THE LEGENDARY POET фактически получил и визуально сверил exact SHPL/GPIB p.3 derivative',
@@ -31,7 +32,9 @@ for (const marker of [
 for (const forbidden of [
   'facsimile reuse/publication permission: **CLOSED',
   'ГПИБ разрешила публичную републикацию',
-  'byte-identical деривативах',
+  'IA PDF и SHPL JPG являются byte-identical',
+  'IA PDF и SHPL JPG — byte-identical деривативы',
+  'IA и SHPL имеют одинаковый SHA-256',
   'ГПИБ прислала p.4',
 ]) {
   if (text.includes(forbidden)) throw new Error(`Simonov SHPL holder-JPG closeout overstates evidence/rights: ${forbidden}`);
