@@ -1,32 +1,28 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { safeRead, safeWrite } from '../utils/browserStorage';
-
-type ThemeMode = 'dark' | 'light';
-
-const STORAGE_KEY = 'tlp-theme-mode';
-
-function applyTheme(mode: ThemeMode) {
-  document.documentElement.classList.toggle('theme-light', mode === 'light');
-  document.documentElement.style.colorScheme = mode;
-}
+import {
+  getAppliedTheme,
+  readStoredTheme,
+  setTheme,
+  subscribeTheme,
+  type ThemeMode,
+} from '../lib/theme';
 
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<ThemeMode>('dark');
+  const [mode, setMode] = useState<ThemeMode>(() => getAppliedTheme());
 
   useEffect(() => {
-    const stored = safeRead(STORAGE_KEY) as ThemeMode | null;
-    const next = stored === 'light' ? 'light' : 'dark';
-    setMode(next);
-    applyTheme(next);
+    // Prepaint owns the initial DOM state. Reconcile it with persistence once
+    // React is live, then subscribe every mounted toggle to one observable
+    // authority (same-tab custom event + cross-tab storage event).
+    const stored = readStoredTheme();
+    if (stored !== getAppliedTheme()) setTheme(stored);
+    setMode(stored);
+    return subscribeTheme(setMode);
   }, []);
 
   const toggle = () => {
-    const next = mode === 'dark' ? 'light' : 'dark';
-    setMode(next);
-    applyTheme(next);
-    // Theme still changes for the current session if browser storage is blocked.
-    safeWrite(STORAGE_KEY, next);
+    setTheme(mode === 'dark' ? 'light' : 'dark');
   };
 
   const isLight = mode === 'light';
@@ -35,9 +31,10 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="theme-toggle group relative inline-flex h-10 w-10 items-center justify-center rounded-full text-cyan-200/65 transition hover:text-cyan-300"
+      className="theme-toggle theme-control-idle group relative inline-flex h-10 w-10 items-center justify-center rounded-full transition"
       aria-label={isLight ? 'Включить темную тему' : 'Включить светлую тему'}
       title={isLight ? 'Темная тема' : 'Светлая тема'}
+      data-theme-mode={mode}
     >
       <svg viewBox="0 0 44 44" className="h-8 w-8" fill="none" aria-hidden="true">
         <motion.circle
@@ -47,7 +44,7 @@ export default function ThemeToggle() {
           stroke="currentColor"
           strokeWidth="1.35"
           strokeLinecap="round"
-          animate={{ opacity: isLight ? 0.92 : 0.52, scale: isLight ? 1.06 : 0.92 }}
+          animate={{ opacity: isLight ? 0.92 : 0.72, scale: isLight ? 1.06 : 0.92 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         />
         <motion.path
