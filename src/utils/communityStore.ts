@@ -162,6 +162,12 @@ function latestIso(left: string | null, right: string | null) {
   return Date.parse(left) >= Date.parse(right) ? left : right;
 }
 
+function nextRevisionIso(previous?: string) {
+  const now = Date.now();
+  const previousMs = previous ? Date.parse(previous) : Number.NaN;
+  return new Date(Number.isFinite(previousMs) ? Math.max(now, previousMs + 1) : now).toISOString();
+}
+
 function normalizeText(value: unknown, maxLength: number) {
   if (typeof value !== 'string') return '';
   const normalized = value.replace(/\r\n?/g, '\n').replace(/[\t ]+/g, ' ').trim();
@@ -915,7 +921,7 @@ export function commitRatingFeedback(entryValue: RatingEntry, scope: string, vot
     voterId,
     entry,
     previousScores,
-    createdAt: new Date().toISOString(),
+    createdAt: nextRevisionIso(pending?.createdAt),
     attempts: 0,
   };
   const nextOutbox = remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox;
