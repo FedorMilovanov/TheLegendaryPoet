@@ -30,9 +30,9 @@ export default function CommunityPanel({
   compact = false,
   deferRemote = false,
 }: CommunityPanelProps) {
+  const feedbackTargetKey = `${targetType}:${targetId}`;
   const [remoteActivated, setRemoteActivated] = useState(!deferRemote);
   const feedback = useCommunityFeedback(targetType, targetId, { mode: remoteActivated ? 'full' : 'passive' });
-  const hasRatings = feedback.ratingCount > 0;
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
@@ -42,10 +42,21 @@ export default function CommunityPanel({
   const actionGrid = compact ? 'space-y-5' : 'grid gap-6 lg:grid-cols-[0.9fr_1.1fr]';
 
   useEffect(() => {
+    setRemoteActivated(!deferRemote);
+    setToast(null);
+  }, [deferRemote, feedbackTargetKey]);
+
+  useEffect(() => {
     if (!toast) return;
     const timeout = window.setTimeout(() => setToast(null), 2600);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  const localMode = feedback.sync.phase === 'local';
+  const summaryReady = localMode || feedback.summaryPhase === 'ready';
+  const summaryLoading = !localMode && (feedback.summaryPhase === 'idle' || feedback.summaryPhase === 'loading');
+  const summaryFailed = !localMode && feedback.summaryPhase === 'error';
+  const hasRatings = summaryReady && feedback.ratingCount > 0;
 
   const syncPresentation = (() => {
     if (feedback.sync.phase === 'local') return {
@@ -90,7 +101,7 @@ export default function CommunityPanel({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
-              <ShieldCheck size={13} /> Оценка сообщества
+              <ShieldCheck size={13} aria-hidden="true" /> Оценка сообщества
             </div>
             <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
             <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/45">
@@ -99,7 +110,7 @@ export default function CommunityPanel({
           </div>
           <button
             type="button"
-            data-community-activate-target={`${targetType}:${targetId}`}
+            data-community-activate-target={feedbackTargetKey}
             onClick={() => setRemoteActivated(true)}
             className="min-h-11 shrink-0 rounded-full border border-cyan-300/25 bg-cyan-400/[0.06] px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-cyan-100 transition hover:border-cyan-200/45 hover:bg-cyan-400/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
           >
@@ -110,46 +121,59 @@ export default function CommunityPanel({
     );
   }
 
+  const ratingStateLabel = summaryLoading
+    ? 'Загружаем оценки…'
+    : summaryFailed
+      ? 'Данные оценок сейчас недоступны'
+      : hasRatings
+        ? `${feedback.ratingCount} оценок · ${feedback.trust}`
+        : 'Оценок пока нет';
+
   return (
-    <section className={`luxury-card relative border border-cyan-400/15 bg-[#061018]/70 ${shell}`}>
+    <section className={`luxury-card relative border border-cyan-400/15 bg-[#061018]/70 ${shell}`} data-community-target={feedbackTargetKey}>
       {toast && <div className="pointer-events-none absolute right-4 top-4 z-20 w-[min(320px,calc(100%-2rem))]"><ActionToast message={toast.message} tone={toast.tone} /></div>}
       <div className={topGrid}>
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
-            <ShieldCheck size={13} /> Оценка сообщества
+            <ShieldCheck size={13} aria-hidden="true" /> Оценка сообщества
           </div>
           <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
-          <p className={`mt-2 flex max-w-xl items-start gap-2 leading-relaxed ${compact ? 'text-[11px]' : 'text-xs'} ${syncPresentation.className}`} aria-live="polite">
-            <syncPresentation.Icon size={13} className={`mt-0.5 shrink-0 ${syncPresentation.spin ? 'animate-spin' : ''}`} />
+          <p className={`mt-2 flex max-w-xl items-start gap-2 leading-relaxed ${compact ? 'text-[11px]' : 'text-xs'} ${syncPresentation.className}`} aria-live="polite" aria-atomic="true">
+            <syncPresentation.Icon size={13} aria-hidden="true" className={`mt-0.5 shrink-0 ${syncPresentation.spin ? 'animate-spin' : ''}`} />
             <span>{syncPresentation.text}</span>
           </p>
         </div>
-        <div className="text-left md:text-right">
-          <div className={`mb-1 font-bold text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>{hasRatings ? feedback.summary.overall.toFixed(1) : '—'}</div>
-          <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
-          <div className="mt-1 text-xs text-cyan-100/40">{feedback.ratingCount} оценок · {feedback.trust}</div>
+        <div className="text-left md:text-right" data-community-summary-phase={localMode ? 'local' : feedback.summaryPhase}>
+          <div className={`mb-1 font-bold text-white ${compact ? 'text-2xl' : 'text-3xl'}`}>{summaryLoading ? '…' : hasRatings ? feedback.summary.overall.toFixed(1) : '—'}</div>
+          {hasRatings ? (
+            <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
+          ) : (
+            <div className="text-xs text-cyan-100/35" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
+          )}
+          {hasRatings && <div className="mt-1 text-xs text-cyan-100/40">{ratingStateLabel}</div>}
         </div>
       </div>
 
       <div className={analyticsGrid}>
         <div className="space-y-5">
-          <CommunityInsights dimensions={dimensions} values={feedback.summary.dimensions} />
-          <RatingBars dimensions={dimensions} values={feedback.summary.dimensions} />
-          {!compact && <RatingDistribution distribution={feedback.distribution} total={feedback.ratingCount} />}
+          <CommunityInsights dimensions={dimensions} values={summaryReady ? feedback.summary.dimensions : {}} />
+          <RatingBars dimensions={dimensions} values={summaryReady ? feedback.summary.dimensions : {}} />
+          {!compact && summaryReady && <RatingDistribution distribution={feedback.distribution} total={feedback.ratingCount} />}
         </div>
         {!compact && <FeedbackPair positive={positiveComment} critical={criticalComment} />}
       </div>
 
       {feedback.error && (
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-xs text-amber-100/65" role="status">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-xs text-amber-100/65" role="status" aria-live="polite">
           <span>{feedback.error}</span>
-          <button type="button" onClick={() => { void feedback.retry(); }} className="min-h-9 rounded-full border border-amber-300/20 px-3 font-bold text-amber-100 transition hover:border-amber-200/40">Повторить</button>
+          <button type="button" onClick={() => { void feedback.retry(); }} className="min-h-9 rounded-full border border-amber-300/20 px-3 font-bold text-amber-100 transition hover:border-amber-200/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/60">Повторить</button>
         </div>
       )}
 
       <div className={actionGrid}>
         <div className="space-y-5">
           <RatingForm
+            key={`rating:${feedbackTargetKey}`}
             dimensions={dimensions}
             initialScores={feedback.ownRating?.scores}
             onSubmit={feedback.addRating}
@@ -157,12 +181,18 @@ export default function CommunityPanel({
           />
         </div>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} className="text-cyan-300" /> Комментарии</div>
-          <CommentComposer onSubmit={feedback.addComment} onStatus={(message, tone) => setToast({ message, tone })} />
+          <div className="flex items-center gap-2 text-sm font-bold text-white"><MessageSquare size={17} aria-hidden="true" className="text-cyan-300" /> Комментарии</div>
+          <CommentComposer
+            key={`composer:${feedbackTargetKey}`}
+            onSubmit={feedback.addComment}
+            onStatus={(message, tone) => setToast({ message, tone })}
+          />
           <CommentList
+            key={`comments:${feedbackTargetKey}`}
             comments={feedback.comments}
-            total={feedback.commentCount}
+            total={summaryReady ? feedback.commentCount : null}
             hasMore={feedback.hasMoreComments}
+            phase={localMode ? 'ready' : feedback.commentsPhase}
             loading={feedback.commentsPhase === 'loading'}
             onLoadMore={feedback.loadMoreComments}
             onHelpful={feedback.markHelpful}
