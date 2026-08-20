@@ -68,6 +68,9 @@ jobs:
       - name: Validate Red Star scan routes
         run: npx tsx scripts/validate-simonov-red-star-direct-mirrors-gate.ts
 
+      - name: Validate SHPL holder-supplied p.3 JPG closeout
+        run: npx tsx scripts/validate-simonov-red-star-shpl-holder-jpg-closeout.ts
+
       - name: Validate Patriot Rodiny RSL holdings gap
         run: npx tsx scripts/validate-simonov-patriot-rodiny-rsl-holdings-gap.ts
 
