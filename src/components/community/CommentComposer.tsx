@@ -39,7 +39,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
           onChange={(event) => setAuthor(truncateCommunityText(event.target.value, COMMUNITY_AUTHOR_MAX_LENGTH))}
           placeholder="Ваше имя или псевдоним — необязательно"
           autoComplete="nickname"
-          className="min-h-11 w-full rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
+          className="theme-input min-h-11 w-full rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
       </label>
 
@@ -57,13 +57,13 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
           placeholder="Что особенно точно, спорно, сильно или слабо?"
           rows={5}
           aria-describedby={helpId}
-          className="w-full resize-y rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm leading-relaxed text-white outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
+          className="theme-input w-full resize-y rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm leading-relaxed text-white outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
       </label>
 
-      <div id={helpId} className="flex flex-wrap items-center justify-between gap-2 text-[10px] leading-relaxed text-cyan-100/34">
+      <div id={helpId} className="theme-functional-muted flex flex-wrap items-center justify-between gap-2 text-[10px] leading-relaxed">
         <span>Минимум {COMMUNITY_COMMENT_MIN_LENGTH} символов · Ctrl/⌘ + Enter для отправки</span>
-        <span className={normalizedLength >= COMMUNITY_COMMENT_MAX_LENGTH * 0.9 ? 'text-amber-200/70' : ''}>{normalizedLength} / {COMMUNITY_COMMENT_MAX_LENGTH}</span>
+        <span className={normalizedLength >= COMMUNITY_COMMENT_MAX_LENGTH * 0.9 ? 'text-amber-200' : ''}>{normalizedLength} / {COMMUNITY_COMMENT_MAX_LENGTH}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Тип комментария">
@@ -78,7 +78,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
               className={`min-h-11 rounded-full border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.11em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
                 selected
                   ? 'border-cyan-300 bg-cyan-400/10 text-cyan-200'
-                  : 'border-cyan-400/10 text-cyan-100/40 hover:border-cyan-400/25 hover:text-cyan-200'
+                  : 'theme-functional-muted theme-control-border hover:text-cyan-200'
               }`}
             >
               {option.label}
