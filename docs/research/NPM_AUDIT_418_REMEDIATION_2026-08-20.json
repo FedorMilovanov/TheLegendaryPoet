@@ -1,0 +1,53 @@
+{
+  "capturedAt": "2026-08-20T16:31:22.098Z",
+  "headBeforeFix": "6b2b01ff135835444f0a97f2b7780f8e3c236e70",
+  "node": "v24.19.0",
+  "npm": "11.17.0",
+  "dependencyTreeBefore": {
+    "version": "0.0.0-private",
+    "name": "the-legendary-poet",
+    "dependencies": {
+      "vite": {
+        "version": "7.3.6",
+        "resolved": "https://registry.npmjs.org/vite/-/vite-7.3.6.tgz",
+        "overridden": false,
+        "dependencies": {
+          "postcss": {
+            "version": "8.5.25",
+            "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.25.tgz",
+            "overridden": true,
+            "dependencies": {
+              "nanoid": {
+                "version": "3.3.17",
+                "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.17.tgz",
+                "overridden": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "auditAfter": {
+    "auditReportVersion": 2,
+    "vulnerabilities": {},
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencies": {
+        "prod": 80,
+        "dev": 167,
+        "optional": 82,
+        "peer": 0,
+        "peerOptional": 0,
+        "total": 246
+      }
+    }
+  }
+}
