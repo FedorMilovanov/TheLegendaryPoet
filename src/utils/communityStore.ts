@@ -646,7 +646,7 @@ const remoteMutationListeners = new Set<(mutation: CommunityRemoteMutation) => v
 let storageBound = false;
 let networkBound = false;
 let flushPromise: Promise<void> | null = null;
-let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryTimer: number | null = null;
 let activeRemoteReads = 0;
 let remoteReadFailed = false;
 
