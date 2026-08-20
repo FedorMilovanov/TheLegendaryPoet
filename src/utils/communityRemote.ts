@@ -6,6 +6,7 @@ import type {
   FeedbackTargetType,
   RatingEntry,
 } from '../types/community';
+import { isCommunityCommentKind } from '../data/communityContract';
 import { safeRead, safeRemove, safeWrite } from './browserStorage';
 import { communityApiUrl, remoteEnabled } from './communityConfig';
 import { requestCommunityHumanProof } from './communityHumanCheck';
@@ -40,6 +41,15 @@ type CommentsResponse = {
 type BrowserLockManager = {
   request<T>(name: string, callback: () => Promise<T>): Promise<T>;
 };
+
+export type CommunityMutationResult =
+  | { outcome: 'ack'; code: 'ok'; idempotent: boolean }
+  | { outcome: 'retry'; code: string; retryAfterMs: number | null }
+  | { outcome: 'reject'; code: string };
+
+export interface CommunityMutationOptions {
+  interactive?: boolean;
+}
 
 export { remoteEnabled };
 
@@ -122,7 +132,7 @@ function sanitizeComment(value: unknown): CommentEntry | null {
     || !['poet', 'poem', 'track', 'article'].includes(String(candidate.targetType))
     || typeof candidate.author !== 'string'
     || typeof candidate.text !== 'string'
-    || !['literary', 'history', 'moral', 'performance'].includes(String(candidate.kind))
+    || !isCommunityCommentKind(candidate.kind)
     || typeof candidate.createdAt !== 'string'
   ) return null;
   return {
@@ -131,7 +141,7 @@ function sanitizeComment(value: unknown): CommentEntry | null {
     targetId: candidate.targetId,
     author: candidate.author,
     text: candidate.text,
-    kind: candidate.kind as CommentEntry['kind'],
+    kind: candidate.kind,
     helpful: Math.max(0, Math.floor(Number(candidate.helpful) || 0)),
     createdAt: candidate.createdAt,
   };
@@ -203,45 +213,101 @@ async function withActorLock<T>(task: () => Promise<T>): Promise<T> {
   return locks?.request ? locks.request(ACTOR_KEY, task) : task();
 }
 
-async function resolveActorToken() {
+async function resolveActorToken(interactive: boolean) {
   const existing = currentActorToken();
   if (existing) return existing;
-  return mintActorSession();
+  return interactive ? mintActorSession() : null;
 }
 
 let actorPromise: Promise<string | null> | null = null;
-function getActorToken(): Promise<string | null> {
+function getActorToken(interactive: boolean): Promise<string | null> {
   if (!remoteEnabled) return Promise.resolve(null);
   const existing = currentActorToken();
   if (existing) return Promise.resolve(existing);
+  if (!interactive) return Promise.resolve(null);
   if (actorPromise) return actorPromise;
-  const pending = withActorLock(resolveActorToken).finally(() => { actorPromise = null; });
+  const pending = withActorLock(() => resolveActorToken(true)).finally(() => { actorPromise = null; });
   actorPromise = pending;
   return pending;
 }
 
-async function mutation(path: string, body: Record<string, unknown>): Promise<boolean> {
-  if (!remoteEnabled || !URL) return false;
+function parseRetryAfter(response: Response) {
+  const raw = response.headers.get('Retry-After');
+  if (!raw) return null;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(10 * 60_000, seconds * 1000);
+  const at = Date.parse(raw);
+  if (!Number.isFinite(at)) return null;
+  return Math.max(0, Math.min(10 * 60_000, at - Date.now()));
+}
+
+async function responseCode(response: Response) {
+  try {
+    const payload = await response.clone().json() as { code?: unknown; idempotent?: unknown };
+    return {
+      code: typeof payload.code === 'string' ? payload.code : `http_${response.status}`,
+      idempotent: payload.idempotent === true,
+    };
+  } catch {
+    return { code: `http_${response.status}`, idempotent: false };
+  }
+}
+
+async function classifyMutationResponse(response: Response): Promise<CommunityMutationResult> {
+  const payload = await responseCode(response);
+  if (response.ok) return { outcome: 'ack', code: 'ok', idempotent: payload.idempotent };
+  if (response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500) {
+    return {
+      outcome: 'retry',
+      code: payload.code,
+      retryAfterMs: parseRetryAfter(response) ?? (response.status === 429 ? 30_000 : null),
+    };
+  }
+  return { outcome: 'reject', code: payload.code };
+}
+
+async function mutation(
+  path: string,
+  body: Record<string, unknown>,
+  options: CommunityMutationOptions = {},
+): Promise<CommunityMutationResult> {
+  if (!remoteEnabled || !URL) return { outcome: 'retry', code: 'remote_disabled', retryAfterMs: null };
+  const interactive = options.interactive === true;
+
   const attempt = async () => {
-    const actorToken = await getActorToken();
-    if (!actorToken) return { ok: false, unauthorized: false, actorToken: null as string | null };
+    const actorToken = await getActorToken(interactive);
+    if (!actorToken) {
+      return {
+        result: { outcome: 'retry', code: 'actor_session_required', retryAfterMs: null } as CommunityMutationResult,
+        unauthorized: false,
+        actorToken: null as string | null,
+      };
+    }
     try {
       const response = await fetchWithTimeout(apiUrl(path), {
         method: 'POST',
         headers: jsonHeaders({ Authorization: `Bearer ${actorToken}` }),
         body: JSON.stringify(body),
       });
-      return { ok: response.ok, unauthorized: response.status === 401, actorToken };
+      return {
+        result: await classifyMutationResponse(response),
+        unauthorized: response.status === 401,
+        actorToken,
+      };
     } catch {
-      return { ok: false, unauthorized: false, actorToken };
+      return {
+        result: { outcome: 'retry', code: 'network_unavailable', retryAfterMs: null } as CommunityMutationResult,
+        unauthorized: false,
+        actorToken,
+      };
     }
   };
 
   const first = await attempt();
-  if (first.ok) return true;
-  if (!first.unauthorized || !first.actorToken) return false;
+  if (!first.unauthorized || !first.actorToken) return first.result;
   invalidateActorSession(first.actorToken);
-  return (await attempt()).ok;
+  if (!interactive) return { outcome: 'retry', code: 'actor_session_required', retryAfterMs: null };
+  return (await attempt()).result;
 }
 
 export async function fetchTargetAggregate(
@@ -317,15 +383,23 @@ export async function fetchTargetCommentsPage(
   }
 }
 
-export async function submitRatingRemote(entry: RatingEntry, _localDeviceId: string): Promise<boolean> {
+export async function submitRatingRemote(
+  entry: RatingEntry,
+  _localDeviceId: string,
+  options?: CommunityMutationOptions,
+): Promise<CommunityMutationResult> {
   return mutation('/v1/rating', {
     targetType: entry.targetType,
     targetId: entry.targetId,
     scores: entry.scores,
-  });
+  }, options);
 }
 
-export async function submitCommentRemote(entry: CommentEntry, _localDeviceId: string): Promise<boolean> {
+export async function submitCommentRemote(
+  entry: CommentEntry,
+  _localDeviceId: string,
+  options?: CommunityMutationOptions,
+): Promise<CommunityMutationResult> {
   return mutation('/v1/comment', {
     commentId: entry.id,
     targetType: entry.targetType,
@@ -333,9 +407,13 @@ export async function submitCommentRemote(entry: CommentEntry, _localDeviceId: s
     author: entry.author,
     text: entry.text,
     commentKind: entry.kind,
-  });
+  }, options);
 }
 
-export async function markHelpfulRemote(commentId: string, _localDeviceId: string): Promise<boolean> {
-  return mutation('/v1/helpful', { commentId });
+export async function markHelpfulRemote(
+  commentId: string,
+  _localDeviceId: string,
+  options?: CommunityMutationOptions,
+): Promise<CommunityMutationResult> {
+  return mutation('/v1/helpful', { commentId }, options);
 }
