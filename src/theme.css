@@ -60,6 +60,11 @@ html.theme-light {
   border-color: var(--tlp-control-border) !important;
 }
 
+.theme-input::placeholder {
+  color: var(--tlp-text-subtle) !important;
+  opacity: 1;
+}
+
 .rating-star[data-active='false'] {
   color: var(--tlp-rating-star-idle) !important;
 }
