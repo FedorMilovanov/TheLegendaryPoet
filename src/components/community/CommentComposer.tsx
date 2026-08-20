@@ -31,7 +31,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
   };
 
   return (
-    <div className="space-y-3 rounded-3xl border border-cyan-400/10 bg-[#050b12]/80 p-4">
+    <div className="theme-community-surface space-y-3 rounded-3xl border border-cyan-400/10 p-4">
       <label className="block">
         <span className="sr-only">Имя или псевдоним</span>
         <input
@@ -39,7 +39,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
           onChange={(event) => setAuthor(truncateCommunityText(event.target.value, COMMUNITY_AUTHOR_MAX_LENGTH))}
           placeholder="Ваше имя или псевдоним — необязательно"
           autoComplete="nickname"
-          className="theme-input min-h-11 w-full rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
+          className="theme-input min-h-11 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
       </label>
 
@@ -57,13 +57,13 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
           placeholder="Что особенно точно, спорно, сильно или слабо?"
           rows={5}
           aria-describedby={helpId}
-          className="theme-input w-full resize-y rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm leading-relaxed text-white outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
+          className="theme-input w-full resize-y rounded-2xl border px-4 py-3 text-sm leading-relaxed outline-none transition focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
       </label>
 
       <div id={helpId} className="theme-functional-muted flex flex-wrap items-center justify-between gap-2 text-[10px] leading-relaxed">
         <span>Минимум {COMMUNITY_COMMENT_MIN_LENGTH} символов · Ctrl/⌘ + Enter для отправки</span>
-        <span className={normalizedLength >= COMMUNITY_COMMENT_MAX_LENGTH * 0.9 ? 'text-amber-200' : ''}>{normalizedLength} / {COMMUNITY_COMMENT_MAX_LENGTH}</span>
+        <span className={normalizedLength >= COMMUNITY_COMMENT_MAX_LENGTH * 0.9 ? 'theme-functional-warning' : ''}>{normalizedLength} / {COMMUNITY_COMMENT_MAX_LENGTH}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Тип комментария">
@@ -77,7 +77,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
               aria-pressed={selected}
               className={`min-h-11 rounded-full border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.11em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
                 selected
-                  ? 'border-cyan-300 bg-cyan-400/10 text-cyan-200'
+                  ? 'theme-control-selected bg-cyan-400/10'
                   : 'theme-functional-muted theme-control-border hover:text-cyan-200'
               }`}
             >
@@ -91,7 +91,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
         type="button"
         onClick={send}
         disabled={!canSend}
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-cyan-400/25 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300 transition hover:bg-cyan-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 disabled:cursor-not-allowed disabled:opacity-35"
+        className="theme-control-action inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-cyan-400/25 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] transition hover:bg-cyan-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 disabled:cursor-not-allowed disabled:opacity-35"
       >
         <Send size={15} aria-hidden="true" /> Добавить комментарий
       </button>
