@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 export {};
 
 process.env.VITE_COMMUNITY_API_URL = 'https://community.test.invalid';
@@ -119,6 +121,18 @@ result = await remote.submitCommentRemote(entry, '11111111-1111-4111-8111-111111
 expect(result.outcome === 'retry' && result.code === 'actor_session_required', 'background replay without actor session must keep work queued');
 expect(sessionRequests === sessionsBeforeBackground, 'background replay must never summon Turnstile/session minting');
 
+const commentContract = readFileSync('src/data/communityContract.ts', 'utf8');
+const feedbackHook = readFileSync('src/hooks/useCommunityFeedback.ts', 'utf8');
+const panel = readFileSync('src/components/community/CommunityPanel.tsx', 'utf8');
+const remoteSource = readFileSync('src/utils/communityRemote.ts', 'utf8');
+expect(commentContract.includes("COMMUNITY_COMMENT_COOLDOWN_SCOPE = 'comment:global'"), 'client comment cooldown scope must be one global actor-level scope matching Worker enforcement');
+expect(feedbackHook.includes('checkCooldown(COMMUNITY_COMMENT_COOLDOWN_SCOPE)'), 'comment UX admission must check the shared global cooldown scope');
+expect(feedbackHook.includes('commitCommentFeedback(entry, COMMUNITY_COMMENT_COOLDOWN_SCOPE'), 'comment persistence must record the same global cooldown scope after local admission');
+expect(remoteSource.includes('TERMINAL_MUTATION_CODES') && remoteSource.includes("'comment_id_conflict'"), 'remote delivery must use an explicit terminal Worker-code allowlist');
+expect(remoteSource.includes('AMBIGUOUS_CLIENT_RETRY_MS') && remoteSource.includes('TERMINAL_MUTATION_CODES.has(payload.code)'), 'unknown 4xx responses must default to durable retry rather than destructive rejection');
+expect(panel.includes('if (feedback.sync.message)') && panel.includes("role={syncPresentation.alert ? 'alert' : 'status'}"), 'terminal reconciliation message must remain visible and programmatically announced after the sync phase returns online');
+expect(panel.includes("aria-live={syncPresentation.alert ? 'assertive' : 'polite'}"), 'warning reconciliation state must use assertive live semantics');
+
 for (const failure of failures) console.error(`ERROR community-delivery-policy: ${failure}`);
-console.log(`Community delivery policy: ${failures.length} error(s); explicit terminal allowlist, ambiguous-4xx preservation, Retry-After, bounded 401 recovery and no background actor mint checked.`);
+console.log(`Community delivery policy: ${failures.length} error(s); explicit terminal allowlist, ambiguous-4xx preservation, Retry-After, bounded 401 recovery, global cooldown scope, announced reconciliation and no background actor mint checked.`);
 if (failures.length) process.exit(1);
