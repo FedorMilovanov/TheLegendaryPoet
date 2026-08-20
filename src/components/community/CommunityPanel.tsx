@@ -177,7 +177,13 @@ export default function CommunityPanel({
           <RatingBars dimensions={dimensions} values={summaryReady ? feedback.summary.dimensions : {}} />
           {!compact && summaryReady && <RatingDistribution distribution={feedback.distribution} total={feedback.ratingCount} />}
         </div>
-        {!compact && <FeedbackPair positive={positiveComment} critical={criticalComment} />}
+        {!compact && (
+          <FeedbackPair
+            positive={positiveComment}
+            critical={criticalComment}
+            partial={feedback.hasMoreComments}
+          />
+        )}
       </div>
 
       {feedback.error && (
