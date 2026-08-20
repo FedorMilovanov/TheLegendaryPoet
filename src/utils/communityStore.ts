@@ -5,12 +5,23 @@ import type {
   FeedbackTargetType,
   RatingEntry,
 } from '../types/community';
+import {
+  COMMUNITY_AUTHOR_MAX_LENGTH,
+  COMMUNITY_COMMENT_COOLDOWN_MS,
+  COMMUNITY_COMMENT_MAX_LENGTH,
+  COMMUNITY_COMMENT_MIN_LENGTH,
+  communityTextLength,
+  isCommunityCommentKind,
+  truncateCommunityText,
+} from '../data/communityContract';
 import { hasCanonicalRatingScores } from '../data/ratingDimensionContract';
 import {
   markHelpfulRemote,
   remoteEnabled,
   submitCommentRemote,
   submitRatingRemote,
+  type CommunityMutationOptions,
+  type CommunityMutationResult,
 } from './communityRemote';
 
 const STORE_KEY = 'tlp-community-feedback:v3';
@@ -19,16 +30,18 @@ const LEGACY_STORE_KEY = 'tlp-community-feedback-v1';
 const LEGACY_COOLDOWN_KEY = 'tlp-community-cooldowns-v1';
 const LEGACY_HELPFUL_KEY = 'tlp-community-helpful-v1';
 const LEGACY_RATED_KEY = 'tlp-community-rated-v1';
-const COOLDOWN_MS = 30 * 1000;
 const MAX_OUTBOX_ITEMS = 500;
+const MAX_MERGED_OUTBOX_ITEMS = 1000;
+const MAX_SETTLED_OPERATIONS = 5000;
 const MAX_LOCAL_ENTRIES = 500;
+const STARTUP_REPLAY_DELAY_MS = 750;
+const MAX_RETRY_DELAY_MS = 5 * 60_000;
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/i;
 const RATING_ID = /^rating-[a-z0-9][a-z0-9-]{7,199}$/i;
 const COMMENT_ID = /^comment-[a-z0-9][a-z0-9-]{7,199}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SCORE_KEY = /^[a-z0-9][a-z0-9-]{0,79}$/i;
 const TARGET_TYPES = new Set<FeedbackTargetType>(['poet', 'poem', 'track', 'article']);
-const COMMENT_KINDS = new Set(['literary', 'history', 'moral', 'performance']);
 
 export interface OwnRatingRecord {
   id: string;
@@ -66,6 +79,19 @@ type PendingOperation =
       attempts: number;
     };
 
+type OperationSettlement = {
+  at: string;
+  outcome: 'ack' | 'reject';
+  code: string;
+  kind: PendingOperation['kind'];
+  targetType?: FeedbackTargetType;
+  targetId?: string;
+  ratingId?: string;
+  rejectedScores?: Record<string, number>;
+  previousScores?: Record<string, number>;
+  helpfulScope?: string;
+};
+
 interface PersistedCommunityState {
   version: 3;
   localSnapshot: FeedbackSnapshot;
@@ -73,6 +99,7 @@ interface PersistedCommunityState {
   cooldowns: Record<string, number>;
   helpfulVotes: Record<string, true>;
   ownRatings: RatedScopes;
+  settledOperations: Record<string, OperationSettlement>;
   updatedAt: string;
   lastSyncedAt: string | null;
 }
@@ -89,6 +116,10 @@ export interface CommunityRemoteMutation {
   kind: PendingOperation['kind'];
 }
 
+export interface FlushCommunityOutboxOptions {
+  interactive?: boolean;
+}
+
 const emptySnapshot: FeedbackSnapshot = { ratings: [], comments: [] };
 
 function defaultState(): PersistedCommunityState {
@@ -99,6 +130,7 @@ function defaultState(): PersistedCommunityState {
     cooldowns: {},
     helpfulVotes: {},
     ownRatings: {},
+    settledOperations: {},
     updatedAt: new Date().toISOString(),
     lastSyncedAt: null,
   };
@@ -120,10 +152,16 @@ function validIsoDate(value: unknown) {
   return new Date(Math.min(parsed, Date.now() + 5 * 60_000)).toISOString();
 }
 
+function latestIso(left: string | null, right: string | null) {
+  if (!left) return right;
+  if (!right) return left;
+  return Date.parse(left) >= Date.parse(right) ? left : right;
+}
+
 function normalizeText(value: unknown, maxLength: number) {
-  return typeof value === 'string'
-    ? value.replace(/\r\n?/g, '\n').replace(/[\t ]+/g, ' ').trim().slice(0, maxLength)
-    : '';
+  if (typeof value !== 'string') return '';
+  const normalized = value.replace(/\r\n?/g, '\n').replace(/[\t ]+/g, ' ').trim();
+  return truncateCommunityText(normalized, maxLength);
 }
 
 function sanitizeScores(value: unknown) {
@@ -135,6 +173,14 @@ function sanitizeScores(value: unknown) {
     scores[key] = score;
   }
   return Object.keys(scores).length ? scores : null;
+}
+
+function scoresEqual(left: Record<string, number> | undefined, right: Record<string, number> | undefined) {
+  if (!left || !right) return left === right;
+  const leftKeys = Object.keys(left).sort();
+  const rightKeys = Object.keys(right).sort();
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index] && left[key] === right[key]);
 }
 
 function sanitizeRating(value: unknown): RatingEntry | null {
@@ -169,8 +215,8 @@ function sanitizeComment(value: unknown): CommentEntry | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<CommentEntry>;
   const createdAt = validIsoDate(candidate.createdAt);
-  const author = normalizeText(candidate.author, 60) || 'Анонимный читатель';
-  const text = normalizeText(candidate.text, 2000);
+  const author = normalizeText(candidate.author, COMMUNITY_AUTHOR_MAX_LENGTH) || 'Анонимный читатель';
+  const text = normalizeText(candidate.text, COMMUNITY_COMMENT_MAX_LENGTH);
   const helpful = Math.max(0, Math.min(1_000_000, Math.floor(Number(candidate.helpful) || 0)));
   if (
     typeof candidate.id !== 'string'
@@ -178,8 +224,8 @@ function sanitizeComment(value: unknown): CommentEntry | null {
     || !TARGET_TYPES.has(candidate.targetType as FeedbackTargetType)
     || typeof candidate.targetId !== 'string'
     || !TARGET_ID.test(candidate.targetId)
-    || !COMMENT_KINDS.has(String(candidate.kind))
-    || text.length < 8
+    || !isCommunityCommentKind(candidate.kind)
+    || communityTextLength(text) < COMMUNITY_COMMENT_MIN_LENGTH
     || !createdAt
   ) return null;
   return {
@@ -188,7 +234,7 @@ function sanitizeComment(value: unknown): CommentEntry | null {
     targetId: candidate.targetId,
     author,
     text,
-    kind: candidate.kind as CommentEntry['kind'],
+    kind: candidate.kind,
     helpful,
     createdAt,
   };
@@ -254,7 +300,7 @@ function sanitizeRecord(value: unknown, mode: 'cooldowns' | 'helpful' | 'ratings
     if (!key || key.length > 420) continue;
     if (mode === 'cooldowns') {
       const until = Number(raw);
-      if (Number.isFinite(until) && until > Date.now() - COOLDOWN_MS) result[key] = until;
+      if (Number.isFinite(until) && until > Date.now() - COMMUNITY_COMMENT_COOLDOWN_MS) result[key] = until;
     } else if (mode === 'helpful') {
       if (raw === true) result[key] = true;
     } else {
@@ -308,22 +354,173 @@ function sanitizeOperation(value: unknown): PendingOperation | null {
   return null;
 }
 
+function sanitizeSettlement(value: unknown): OperationSettlement | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Partial<OperationSettlement>;
+  const at = validIsoDate(candidate.at);
+  if (!at || (candidate.outcome !== 'ack' && candidate.outcome !== 'reject') || typeof candidate.code !== 'string') return null;
+  if (candidate.kind !== 'rating' && candidate.kind !== 'comment' && candidate.kind !== 'helpful') return null;
+  const targetType = candidate.targetType && TARGET_TYPES.has(candidate.targetType) ? candidate.targetType : undefined;
+  const targetId = typeof candidate.targetId === 'string' && TARGET_ID.test(candidate.targetId) ? candidate.targetId : undefined;
+  const ratingId = typeof candidate.ratingId === 'string' && RATING_ID.test(candidate.ratingId) ? candidate.ratingId : undefined;
+  const rejectedScores = sanitizeScores(candidate.rejectedScores) ?? undefined;
+  const previousScores = sanitizeScores(candidate.previousScores) ?? undefined;
+  const helpfulScope = typeof candidate.helpfulScope === 'string' && candidate.helpfulScope.length <= 420
+    ? candidate.helpfulScope
+    : undefined;
+  return {
+    at,
+    outcome: candidate.outcome,
+    code: candidate.code.slice(0, 120),
+    kind: candidate.kind,
+    targetType,
+    targetId,
+    ratingId,
+    rejectedScores,
+    previousScores,
+    helpfulScope,
+  };
+}
+
+function sanitizeSettlements(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {} as Record<string, OperationSettlement>;
+  return Object.fromEntries(Object.entries(value)
+    .map(([id, raw]) => [id, sanitizeSettlement(raw)] as const)
+    .filter((entry): entry is [string, OperationSettlement] => Boolean(entry[0]) && entry[0].length <= 420 && Boolean(entry[1]))
+    .sort((left, right) => Date.parse(right[1].at) - Date.parse(left[1].at) || left[0].localeCompare(right[0]))
+    .slice(0, MAX_SETTLED_OPERATIONS));
+}
+
+function operationIsSettled(id: string, createdAt: string, settled: Record<string, OperationSettlement>) {
+  const settlement = settled[id];
+  return Boolean(settlement && Date.parse(settlement.at) >= Date.parse(createdAt));
+}
+
 function sanitizeState(value: unknown): PersistedCommunityState {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return defaultState();
   const candidate = value as Partial<PersistedCommunityState>;
+  const settledOperations = sanitizeSettlements(candidate.settledOperations);
   const outbox = Array.isArray(candidate.outbox)
-    ? candidate.outbox.map(sanitizeOperation).filter((operation): operation is PendingOperation => Boolean(operation)).slice(-MAX_OUTBOX_ITEMS)
+    ? candidate.outbox
+        .map(sanitizeOperation)
+        .filter((operation): operation is PendingOperation => Boolean(operation))
+        .filter((operation) => !operationIsSettled(operation.id, operation.createdAt, settledOperations))
+        .slice(-MAX_MERGED_OUTBOX_ITEMS)
     : [];
+  const snapshot = sanitizeSnapshot(candidate.localSnapshot);
   return {
     version: 3,
-    localSnapshot: sanitizeSnapshot(candidate.localSnapshot),
+    localSnapshot: {
+      ratings: snapshot.ratings.filter((rating) => !operationIsSettled(`rating:${rating.id}`, rating.createdAt, settledOperations)),
+      comments: snapshot.comments.filter((comment) => !operationIsSettled(`comment:${comment.id}`, comment.createdAt, settledOperations)),
+    },
     outbox,
     cooldowns: sanitizeRecord(candidate.cooldowns, 'cooldowns') as Record<string, number>,
     helpfulVotes: sanitizeRecord(candidate.helpfulVotes, 'helpful') as Record<string, true>,
     ownRatings: sanitizeRecord(candidate.ownRatings, 'ratings') as RatedScopes,
+    settledOperations,
     updatedAt: validIsoDate(candidate.updatedAt) ?? new Date().toISOString(),
     lastSyncedAt: candidate.lastSyncedAt ? validIsoDate(candidate.lastSyncedAt) : null,
   };
+}
+
+function mergeSettlements(left: Record<string, OperationSettlement>, right: Record<string, OperationSettlement>) {
+  const merged: Record<string, OperationSettlement> = { ...left };
+  for (const [id, settlement] of Object.entries(right)) {
+    const existing = merged[id];
+    if (!existing || Date.parse(settlement.at) >= Date.parse(existing.at)) merged[id] = settlement;
+  }
+  return sanitizeSettlements(merged);
+}
+
+function mergeOwnRatings(left: RatedScopes, right: RatedScopes, settled: Record<string, OperationSettlement>) {
+  const merged: RatedScopes = { ...left };
+  for (const [scope, value] of Object.entries(right)) {
+    const existing = merged[scope];
+    if (!existing) {
+      merged[scope] = value;
+      continue;
+    }
+    if (existing === true && value !== true) {
+      merged[scope] = value;
+      continue;
+    }
+    if (value === true || existing === true) continue;
+    if (Date.parse(value.updatedAt) >= Date.parse(existing.updatedAt)) merged[scope] = value;
+  }
+
+  for (const settlement of Object.values(settled)) {
+    if (
+      settlement.outcome !== 'reject'
+      || settlement.kind !== 'rating'
+      || !settlement.targetType
+      || !settlement.targetId
+      || !settlement.ratingId
+      || !settlement.rejectedScores
+    ) continue;
+    const scope = `rating:${settlement.targetType}:${settlement.targetId}`;
+    const current = merged[scope];
+    if (!current || current === true || current.id !== settlement.ratingId) continue;
+    if (Date.parse(current.updatedAt) > Date.parse(settlement.at)) continue;
+    if (!scoresEqual(current.scores, settlement.rejectedScores)) continue;
+    if (settlement.previousScores) {
+      merged[scope] = {
+        id: current.id,
+        scores: { ...settlement.previousScores },
+        updatedAt: settlement.at,
+      };
+    } else {
+      delete merged[scope];
+    }
+  }
+  return merged;
+}
+
+function mergeStates(leftValue: PersistedCommunityState, rightValue: PersistedCommunityState): PersistedCommunityState {
+  const left = sanitizeState(leftValue);
+  const right = sanitizeState(rightValue);
+  const settledOperations = mergeSettlements(left.settledOperations, right.settledOperations);
+
+  const operations = new Map<string, PendingOperation>();
+  for (const operation of [...left.outbox, ...right.outbox]) {
+    const existing = operations.get(operation.id);
+    if (
+      !existing
+      || Date.parse(operation.createdAt) > Date.parse(existing.createdAt)
+      || (operation.createdAt === existing.createdAt && operation.attempts > existing.attempts)
+    ) operations.set(operation.id, operation);
+  }
+  const outbox = [...operations.values()]
+    .filter((operation) => !operationIsSettled(operation.id, operation.createdAt, settledOperations))
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id))
+    .slice(0, MAX_MERGED_OUTBOX_ITEMS);
+
+  const cooldowns = { ...left.cooldowns };
+  for (const [scope, until] of Object.entries(right.cooldowns)) cooldowns[scope] = Math.max(cooldowns[scope] ?? 0, until);
+
+  const helpfulVotes = { ...left.helpfulVotes, ...right.helpfulVotes };
+  for (const settlement of Object.values(settledOperations)) {
+    if (settlement.outcome === 'reject' && settlement.kind === 'helpful' && settlement.helpfulScope) {
+      delete helpfulVotes[settlement.helpfulScope];
+    }
+  }
+
+  const ratings = dedupeRatings([...left.localSnapshot.ratings, ...right.localSnapshot.ratings])
+    .filter((rating) => !operationIsSettled(`rating:${rating.id}`, rating.createdAt, settledOperations));
+  const comments = dedupeComments([...left.localSnapshot.comments, ...right.localSnapshot.comments])
+    .filter((comment) => !operationIsSettled(`comment:${comment.id}`, comment.createdAt, settledOperations));
+
+  return sanitizeState({
+    version: 3,
+    localSnapshot: { ratings, comments },
+    outbox,
+    cooldowns,
+    helpfulVotes,
+    ownRatings: mergeOwnRatings(left.ownRatings, right.ownRatings, settledOperations),
+    settledOperations,
+    updatedAt: latestIso(left.updatedAt, right.updatedAt) ?? new Date().toISOString(),
+    lastSyncedAt: latestIso(left.lastSyncedAt, right.lastSyncedAt),
+  });
 }
 
 function persistState(storage: Storage, state: PersistedCommunityState) {
@@ -391,6 +588,7 @@ function migrateV2(value: unknown) {
     cooldowns: candidate.cooldowns,
     helpfulVotes: candidate.helpfulVotes,
     ownRatings,
+    settledOperations: {},
     updatedAt: candidate.updatedAt,
     lastSyncedAt: candidate.lastSyncedAt,
   });
@@ -448,6 +646,7 @@ const remoteMutationListeners = new Set<(mutation: CommunityRemoteMutation) => v
 let storageBound = false;
 let networkBound = false;
 let flushPromise: Promise<void> | null = null;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let activeRemoteReads = 0;
 let remoteReadFailed = false;
 
@@ -471,15 +670,43 @@ function setSyncState(patch: Partial<CommunitySyncState>) {
   emitSync();
 }
 
-function applyState(nextValue: PersistedCommunityState, allowMemoryFallback = false) {
-  const next = sanitizeState({ ...nextValue, version: 3, updatedAt: new Date().toISOString() });
-  const storage = getStorage();
-  const persisted = storage ? persistState(storage, next) : false;
-  if (!persisted && !allowMemoryFallback) return false;
+function adoptState(next: PersistedCommunityState) {
   currentState = next;
   emit();
   setSyncState({ pendingCount: next.outbox.length, lastSyncedAt: next.lastSyncedAt });
+}
+
+function applyState(nextValue: PersistedCommunityState, allowMemoryFallback = false) {
+  const candidate = sanitizeState({ ...nextValue, version: 3, updatedAt: new Date().toISOString() });
+  const storage = getStorage();
+  let merged = mergeStates(currentState, candidate);
+  if (storage) {
+    const persistedRaw = readJson(storage, STORE_KEY);
+    if (persistedRaw && typeof persistedRaw === 'object' && (persistedRaw as { version?: number }).version === 3) {
+      merged = mergeStates(mergeStates(currentState, sanitizeState(persistedRaw)), candidate);
+    }
+  }
+  const persisted = storage ? persistState(storage, merged) : false;
+  if (!persisted && !allowMemoryFallback) return false;
+  adoptState(merged);
   return persisted || allowMemoryFallback;
+}
+
+function reconcileStorageEvent() {
+  const storage = getStorage();
+  if (!storage) return;
+  const incomingRaw = readJson(storage, STORE_KEY);
+  if (!incomingRaw || typeof incomingRaw !== 'object' || (incomingRaw as { version?: number }).version !== 3) {
+    adoptState(readState());
+    return;
+  }
+  const incoming = sanitizeState(incomingRaw);
+  const merged = mergeStates(currentState, incoming);
+  const incomingJson = JSON.stringify(incoming);
+  const mergedJson = JSON.stringify(merged);
+  if (mergedJson !== incomingJson) persistState(storage, merged);
+  adoptState(merged);
+  if (remoteEnabled && merged.outbox.length > 0) scheduleCommunityOutboxReplay(STARTUP_REPLAY_DELAY_MS);
 }
 
 function bindStorageListener() {
@@ -487,9 +714,7 @@ function bindStorageListener() {
   storageBound = true;
   window.addEventListener('storage', (event) => {
     if (![STORE_KEY, LEGACY_V2_STORE_KEY, LEGACY_STORE_KEY, LEGACY_COOLDOWN_KEY, LEGACY_HELPFUL_KEY, LEGACY_RATED_KEY].includes(event.key ?? '')) return;
-    currentState = readState();
-    emit();
-    setSyncState({ pendingCount: currentState.outbox.length, lastSyncedAt: currentState.lastSyncedAt });
+    reconcileStorageEvent();
   });
 }
 
@@ -497,7 +722,8 @@ function bindNetworkListeners() {
   if (networkBound || typeof window === 'undefined' || !remoteEnabled) return;
   networkBound = true;
   window.addEventListener('offline', () => setSyncState({ phase: 'offline', message: 'Нет соединения; изменения останутся в очереди.' }));
-  window.addEventListener('online', () => { void flushCommunityOutbox(); });
+  window.addEventListener('online', () => { void flushCommunityOutbox({ interactive: false }); });
+  if (currentState.outbox.length > 0) scheduleCommunityOutboxReplay(STARTUP_REPLAY_DELAY_MS);
 }
 
 export function subscribeFeedback(listener: () => void) {
@@ -630,7 +856,7 @@ export function checkCooldown(scope: string) {
 }
 
 export function setCooldown(scope: string) {
-  return applyState({ ...currentState, cooldowns: { ...currentState.cooldowns, [scope]: Date.now() + COOLDOWN_MS } });
+  return applyState({ ...currentState, cooldowns: { ...currentState.cooldowns, [scope]: Date.now() + COMMUNITY_COMMENT_COOLDOWN_MS } });
 }
 
 export function canMarkHelpful(scope: string) {
@@ -662,8 +888,10 @@ export function rememberRated(scope: string) {
 }
 
 function enqueueOperation(outbox: PendingOperation[], operation: PendingOperation) {
+  const existing = outbox.some((item) => item.id === operation.id);
+  if (!existing && outbox.length >= MAX_OUTBOX_ITEMS) return null;
   const withoutDuplicate = outbox.filter((item) => item.id !== operation.id);
-  return [...withoutDuplicate, operation].slice(-MAX_OUTBOX_ITEMS);
+  return [...withoutDuplicate, operation];
 }
 
 export function commitRatingFeedback(entryValue: RatingEntry, scope: string, voterId: string) {
@@ -681,6 +909,8 @@ export function commitRatingFeedback(entryValue: RatingEntry, scope: string, vot
     createdAt: new Date().toISOString(),
     attempts: 0,
   };
+  const nextOutbox = remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox;
+  if (remoteEnabled && !nextOutbox) return false;
   return applyState({
     ...currentState,
     localSnapshot: {
@@ -691,8 +921,7 @@ export function commitRatingFeedback(entryValue: RatingEntry, scope: string, vot
       ...currentState.ownRatings,
       [scope]: { id: entry.id, scores: { ...entry.scores }, updatedAt: entry.createdAt },
     },
-    cooldowns: { ...currentState.cooldowns, [scope]: Date.now() + COOLDOWN_MS },
-    outbox: remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox,
+    outbox: nextOutbox ?? currentState.outbox,
   });
 }
 
@@ -707,11 +936,13 @@ export function commitCommentFeedback(entryValue: CommentEntry, scope: string, v
     createdAt: new Date().toISOString(),
     attempts: 0,
   };
+  const nextOutbox = remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox;
+  if (remoteEnabled && !nextOutbox) return false;
   return applyState({
     ...currentState,
     localSnapshot: { ...currentState.localSnapshot, comments: dedupeComments([entry, ...currentState.localSnapshot.comments]) },
-    cooldowns: { ...currentState.cooldowns, [scope]: Date.now() + COOLDOWN_MS },
-    outbox: remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox,
+    cooldowns: { ...currentState.cooldowns, [scope]: Date.now() + COMMUNITY_COMMENT_COOLDOWN_MS },
+    outbox: nextOutbox ?? currentState.outbox,
   });
 }
 
@@ -726,6 +957,8 @@ export function commitHelpfulFeedback(commentId: string, scope: string, voterId:
     createdAt: new Date().toISOString(),
     attempts: 0,
   };
+  const nextOutbox = remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox;
+  if (remoteEnabled && !nextOutbox) return false;
   return applyState({
     ...currentState,
     localSnapshot: {
@@ -735,7 +968,7 @@ export function commitHelpfulFeedback(commentId: string, scope: string, voterId:
         : comment),
     },
     helpfulVotes: { ...currentState.helpfulVotes, [scope]: true },
-    outbox: remoteEnabled ? enqueueOperation(currentState.outbox, operation) : currentState.outbox,
+    outbox: nextOutbox ?? currentState.outbox,
   });
 }
 
@@ -747,26 +980,99 @@ function targetForOperation(operation: PendingOperation): CommunityRemoteMutatio
   return match ? { targetType: match[1] as FeedbackTargetType, targetId: match[2], kind: 'helpful' } : null;
 }
 
-async function sendOperation(operation: PendingOperation) {
-  if (operation.kind === 'rating') return submitRatingRemote(operation.entry, operation.voterId);
-  if (operation.kind === 'comment') return submitCommentRemote(operation.entry, operation.voterId);
-  return markHelpfulRemote(operation.commentId, operation.voterId);
+function settlementForOperation(operation: PendingOperation, result: Extract<CommunityMutationResult, { outcome: 'ack' | 'reject' }>) {
+  const at = new Date().toISOString();
+  if (operation.kind === 'rating') {
+    return {
+      at,
+      outcome: result.outcome,
+      code: result.code,
+      kind: operation.kind,
+      targetType: operation.entry.targetType,
+      targetId: operation.entry.targetId,
+      ratingId: operation.entry.id,
+      rejectedScores: result.outcome === 'reject' ? { ...operation.entry.scores } : undefined,
+      previousScores: result.outcome === 'reject' && operation.previousScores ? { ...operation.previousScores } : undefined,
+    } satisfies OperationSettlement;
+  }
+  if (operation.kind === 'comment') {
+    return {
+      at,
+      outcome: result.outcome,
+      code: result.code,
+      kind: operation.kind,
+      targetType: operation.entry.targetType,
+      targetId: operation.entry.targetId,
+    } satisfies OperationSettlement;
+  }
+  return {
+    at,
+    outcome: result.outcome,
+    code: result.code,
+    kind: operation.kind,
+    helpfulScope: operation.scope,
+  } satisfies OperationSettlement;
 }
 
-export function flushCommunityOutbox() {
+function settleOperation(operation: PendingOperation, result: Extract<CommunityMutationResult, { outcome: 'ack' | 'reject' }>) {
+  const settlement = settlementForOperation(operation, result);
+  const now = settlement.at;
+  return applyState({
+    ...currentState,
+    settledOperations: { ...currentState.settledOperations, [operation.id]: settlement },
+    outbox: currentState.outbox.filter((item) => item.id !== operation.id),
+    localSnapshot: {
+      ratings: currentState.localSnapshot.ratings.filter((rating) => operation.kind !== 'rating' || rating.id !== operation.entry.id),
+      comments: currentState.localSnapshot.comments.filter((comment) => operation.kind !== 'comment' || comment.id !== operation.entry.id),
+    },
+    lastSyncedAt: result.outcome === 'ack' ? now : currentState.lastSyncedAt,
+  }, true);
+}
+
+async function sendOperation(operation: PendingOperation, options: CommunityMutationOptions) {
+  if (operation.kind === 'rating') return submitRatingRemote(operation.entry, operation.voterId, options);
+  if (operation.kind === 'comment') return submitCommentRemote(operation.entry, operation.voterId, options);
+  return markHelpfulRemote(operation.commentId, operation.voterId, options);
+}
+
+function retryDelay(operation: PendingOperation, result: Extract<CommunityMutationResult, { outcome: 'retry' }>) {
+  if (result.retryAfterMs !== null) return Math.min(MAX_RETRY_DELAY_MS, Math.max(0, result.retryAfterMs));
+  if (result.code === 'actor_session_required') return null;
+  return Math.min(MAX_RETRY_DELAY_MS, 1000 * (2 ** Math.min(8, operation.attempts)));
+}
+
+function clearRetryTimer() {
+  if (!retryTimer) return;
+  clearTimeout(retryTimer);
+  retryTimer = null;
+}
+
+function scheduleCommunityOutboxReplay(delayMs: number) {
+  if (!remoteEnabled || currentState.outbox.length === 0 || typeof window === 'undefined') return;
+  if (retryTimer) return;
+  retryTimer = window.setTimeout(() => {
+    retryTimer = null;
+    void flushCommunityOutbox({ interactive: false });
+  }, Math.max(0, Math.min(MAX_RETRY_DELAY_MS, delayMs)));
+}
+
+export function flushCommunityOutbox(options: FlushCommunityOutboxOptions = {}) {
   if (!remoteEnabled || currentState.outbox.length === 0) return Promise.resolve();
   if (flushPromise) return flushPromise;
+  clearRetryTimer();
 
   flushPromise = (async () => {
     setSyncState({ phase: 'syncing', message: 'Отправляем сохранённые изменения…' });
-    let failed = false;
+    let transientFailure: { operation: PendingOperation; result: Extract<CommunityMutationResult, { outcome: 'retry' }> } | null = null;
+    let rejected = false;
 
     for (const queued of [...currentState.outbox]) {
       const operation = currentState.outbox.find((item) => item.id === queued.id);
       if (!operation) continue;
-      const ok = await sendOperation(operation);
-      if (!ok) {
-        failed = true;
+      const result = await sendOperation(operation, { interactive: options.interactive === true });
+
+      if (result.outcome === 'retry') {
+        transientFailure = { operation, result };
         applyState({
           ...currentState,
           outbox: currentState.outbox.map((item) => item.id === operation.id ? { ...item, attempts: item.attempts + 1 } : item),
@@ -774,20 +1080,29 @@ export function flushCommunityOutbox() {
         break;
       }
 
-      const now = new Date().toISOString();
-      applyState({
-        ...currentState,
-        outbox: currentState.outbox.filter((item) => item.id !== operation.id),
-        lastSyncedAt: now,
-      }, true);
+      settleOperation(operation, result);
       const mutation = targetForOperation(operation);
       if (mutation) for (const listener of remoteMutationListeners) listener(mutation);
+      if (result.outcome === 'reject') rejected = true;
     }
 
-    if (failed) {
-      setSyncState({ phase: 'offline', message: 'Сервер недоступен; изменения безопасно сохранены и будут повторены.' });
+    if (transientFailure) {
+      const delay = retryDelay(transientFailure.operation, transientFailure.result);
+      if (delay !== null) scheduleCommunityOutboxReplay(delay);
+      setSyncState({
+        phase: 'offline',
+        message: transientFailure.result.code === 'actor_session_required'
+          ? 'Для продолжения общей синхронизации подтвердите следующее действие; сохранённые изменения остаются в очереди.'
+          : 'Сервер временно недоступен; изменения безопасно сохранены и будут повторены.',
+      });
+    } else if (rejected) {
+      setSyncState({
+        phase: 'online',
+        message: 'Общая база отклонила несовместимое локальное изменение; локальное состояние согласовано с сервером.',
+        lastSyncedAt: currentState.lastSyncedAt,
+      });
     } else {
-      setSyncState({ phase: 'online', message: null, pendingCount: 0, lastSyncedAt: currentState.lastSyncedAt });
+      setSyncState({ phase: 'online', message: null, pendingCount: currentState.outbox.length, lastSyncedAt: currentState.lastSyncedAt });
     }
   })().finally(() => { flushPromise = null; });
 
