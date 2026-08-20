@@ -9,6 +9,23 @@
     <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta name="theme-color" content="#050810" />
     <meta name="color-scheme" content="dark" />
+    <script>
+      (() => {
+        let mode = 'dark';
+        try {
+          if (window.localStorage.getItem('tlp-theme-mode') === 'light') mode = 'light';
+        } catch {
+          // Storage can be unavailable in hardened/private contexts; dark is
+          // the deterministic fail-safe and runtime remains fully usable.
+        }
+        const root = document.documentElement;
+        root.dataset.theme = mode;
+        root.classList.toggle('theme-light', mode === 'light');
+        root.style.colorScheme = mode;
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', mode === 'light' ? '#fffaf0' : '#050810');
+        document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', mode);
+      })();
+    </script>
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="brand-release" content="approved-single-reference-20260804-1" />
     <meta name="msapplication-TileColor" content="#02050b" />
@@ -71,7 +88,7 @@
     }
     </script>
   </head>
-  <body class="bg-[#050505] text-white">
+  <body class="theme-page-surface">
     <div class="noise-bg"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
