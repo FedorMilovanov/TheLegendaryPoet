@@ -122,8 +122,8 @@ Production cover:
 Exact production properties:
 
 - 1600×900;
-- 130 548 bytes;
-- SHA-256 `1fd150a4b1e6ff493d7103e5037d306a302471fb8c520524fbd1ae4d45e4bd1a`;
+- 130 386 bytes;
+- SHA-256 `5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5`;
 - owner approval: `SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md`;
 - root provenance: `public/images/PROVENANCE.yml`;
 - generic cover pin: `scripts/validate-essay-covers.ts`.
