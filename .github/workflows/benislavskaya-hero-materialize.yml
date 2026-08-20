@@ -1,0 +1,60 @@
+name: Benislavskaya hero materialize
+
+on:
+  push:
+    branches:
+      - editorial/benislavskaya-publication-20260820
+    paths:
+      - .github/workflows/benislavskaya-hero-materialize.yml
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Pillow
+        run: python -m pip install --disable-pip-version-check 'Pillow==12.3.0'
+      - name: Read approved source from staged owner branch
+        run: |
+          git fetch --no-tags origin agent/benislavskaya-longform-draft
+          git show FETCH_HEAD:public/images/essays/benislavskaya/benislavskaya-source.png > /tmp/benislavskaya-source.png
+          test "$(wc -c < /tmp/benislavskaya-source.png)" -eq 1923030
+      - name: Materialize and verify exact production WebP
+        run: |
+          mkdir -p public/images/essays/benislavskaya
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import hashlib
+
+          src = Path('/tmp/benislavskaya-source.png')
+          out = Path('public/images/essays/benislavskaya/benislavskaya-editorial-hero.webp')
+          with Image.open(src) as image:
+              if image.size != (1672, 941):
+                  raise SystemExit(f'unexpected source dimensions: {image.size}')
+              image.save(out, 'WEBP', quality=88, method=6)
+          data = out.read_bytes()
+          digest = hashlib.sha256(data).hexdigest()
+          print(f'hero bytes={len(data)} sha256={digest}')
+          if len(data) != 132172:
+              raise SystemExit(f'unexpected hero size: {len(data)}')
+          expected = '0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48'
+          if digest != expected:
+              raise SystemExit(f'unexpected hero sha256: {digest}')
+          PY
+      - name: Commit exact hero only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- public/images/essays/benislavskaya/benislavskaya-editorial-hero.webp
+          git diff --cached --quiet && exit 0
+          git commit -m 'assets(benislavskaya): materialize approved hero bytes'
+          git push origin HEAD:editorial/benislavskaya-publication-20260820
