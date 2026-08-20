@@ -19,6 +19,19 @@ const MAX_COMMENT_PAGE_SIZE = 50;
 const ACTOR_KEY = 'tlp-community-actor:v1';
 const ACTOR_EXPIRY_SKEW_MS = 60_000;
 const MAX_ACTOR_TOKEN_LENGTH = 4096;
+const AMBIGUOUS_CLIENT_RETRY_MS = 30_000;
+const TERMINAL_MUTATION_CODES = new Set([
+  'unexpected_authority_field',
+  'invalid_target',
+  'invalid_target_batch',
+  'invalid_scores',
+  'invalid_comment',
+  'invalid_json',
+  'payload_too_large',
+  'unknown_target',
+  'comment_not_found',
+  'comment_id_conflict',
+]);
 
 type StoredActorSession = {
   version: 1;
@@ -263,7 +276,12 @@ async function classifyMutationResponse(response: Response): Promise<CommunityMu
       retryAfterMs: parseRetryAfter(response) ?? (response.status === 429 ? 30_000 : null),
     };
   }
-  return { outcome: 'reject', code: payload.code };
+  if (TERMINAL_MUTATION_CODES.has(payload.code)) return { outcome: 'reject', code: payload.code };
+  return {
+    outcome: 'retry',
+    code: payload.code,
+    retryAfterMs: parseRetryAfter(response) ?? AMBIGUOUS_CLIENT_RETRY_MS,
+  };
 }
 
 async function mutation(
@@ -307,7 +325,12 @@ async function mutation(
   if (!first.unauthorized || !first.actorToken) return first.result;
   invalidateActorSession(first.actorToken);
   if (!interactive) return { outcome: 'retry', code: 'actor_session_required', retryAfterMs: null };
-  return (await attempt()).result;
+  const second = await attempt();
+  if (second.unauthorized && second.actorToken) {
+    invalidateActorSession(second.actorToken);
+    return { outcome: 'retry', code: 'actor_session_required', retryAfterMs: null };
+  }
+  return second.result;
 }
 
 export async function fetchTargetAggregate(
