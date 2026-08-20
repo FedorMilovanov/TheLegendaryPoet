@@ -130,9 +130,9 @@ expect(feedbackHook.includes('checkCooldown(COMMUNITY_COMMENT_COOLDOWN_SCOPE)'),
 expect(feedbackHook.includes('commitCommentFeedback(entry, COMMUNITY_COMMENT_COOLDOWN_SCOPE'), 'comment persistence must record the same global cooldown scope after local admission');
 expect(remoteSource.includes('TERMINAL_MUTATION_CODES') && remoteSource.includes("'comment_id_conflict'"), 'remote delivery must use an explicit terminal Worker-code allowlist');
 expect(remoteSource.includes('AMBIGUOUS_CLIENT_RETRY_MS') && remoteSource.includes('TERMINAL_MUTATION_CODES.has(payload.code)'), 'unknown 4xx responses must default to durable retry rather than destructive rejection');
-expect(panel.includes('if (feedback.sync.message)') && panel.includes("role={syncPresentation.alert ? 'alert' : 'status'}"), 'terminal reconciliation message must remain visible and programmatically announced after the sync phase returns online');
-expect(panel.includes("aria-live={syncPresentation.alert ? 'assertive' : 'polite'}"), 'warning reconciliation state must use assertive live semantics');
+expect(panel.includes('if (feedback.sync.message)') && !panel.includes('syncPresentation.alert'), 'terminal reconciliation message must remain visible without escalating durable sync state to an interruptive alert');
+expect(panel.includes('syncPresentation.className') && /role="status"\s+aria-live="polite"\s+aria-atomic="true"/.test(panel), 'durable sync status must use stable polite atomic live semantics');
 
 for (const failure of failures) console.error(`ERROR community-delivery-policy: ${failure}`);
-console.log(`Community delivery policy: ${failures.length} error(s); explicit terminal allowlist, ambiguous-4xx preservation, Retry-After, bounded 401 recovery, global cooldown scope, announced reconciliation and no background actor mint checked.`);
+console.log(`Community delivery policy: ${failures.length} error(s); explicit terminal allowlist, ambiguous-4xx preservation, Retry-After, bounded 401 recovery, global cooldown scope, polite durable reconciliation and no background actor mint checked.`);
 if (failures.length) process.exit(1);

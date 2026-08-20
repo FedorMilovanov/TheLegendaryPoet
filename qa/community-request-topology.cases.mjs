@@ -353,7 +353,7 @@ export function registerCommunityRequestTopologyTests({
       expect(urls.some((url) => url.includes('tlp_ratings') || url.includes('tlp_comments_public'))).toBe(false);
 
       await communityPanel.getByRole('button', { name: /Показать ещё/ }).click();
-      const loadMoreComments = communityPanel.getByRole('button', { name: 'Загрузить ещё комментарии' });
+      const loadMoreComments = communityPanel.getByRole('button', { name: 'Загрузить ещё из общей ленты' });
       await expect(loadMoreComments).toBeVisible();
       await loadMoreComments.click();
       await expect(communityPanel.getByText('Показано 10 из 12', { exact: false })).toBeVisible({ timeout: 10_000 });
@@ -518,7 +518,7 @@ export function registerCommunityRequestTopologyTests({
       await expect(mutationStatus).toHaveAttribute('aria-live', 'polite');
       await expect(mutationStatus).toHaveAttribute('aria-atomic', 'true');
 
-      const historyFilter = panel.getByRole('button', { name: /История ·/ });
+      const historyFilter = panel.getByRole('button', { name: /Историческая справка ·/ });
       await historyFilter.click();
       await expect(historyFilter).toHaveAttribute('aria-pressed', 'true');
       const loadGlobal = panel.getByRole('button', { name: 'Загрузить ещё из общей ленты' });

@@ -64,14 +64,12 @@ export default function CommunityPanel({
       className: 'text-amber-100/52',
       text: 'Локальный режим: ответы сохраняются только в этом браузере.',
       spin: false,
-      alert: false,
     };
     if (feedback.sync.phase === 'syncing') return {
       Icon: LoaderCircle,
       className: 'text-cyan-100/58',
       text: feedback.sync.message ?? 'Синхронизируем общую базу…',
       spin: true,
-      alert: false,
     };
     if (feedback.sync.phase === 'offline') return {
       Icon: CloudOff,
@@ -80,21 +78,18 @@ export default function CommunityPanel({
         ? `Сервер недоступен. В очереди: ${feedback.sync.pendingCount}; ничего не потеряно.`
         : (feedback.sync.message ?? 'Сервер временно недоступен; локальные изменения сохранены.'),
       spin: false,
-      alert: true,
     };
     if (feedback.sync.phase === 'idle') return {
       Icon: Clock3,
       className: 'text-cyan-100/48',
       text: 'Общая база подключена; ожидаем первую синхронизацию.',
       spin: false,
-      alert: false,
     };
     if (feedback.sync.message) return {
       Icon: Cloud,
       className: 'text-amber-100/65',
       text: feedback.sync.message,
       spin: false,
-      alert: true,
     };
     return {
       Icon: Cloud,
@@ -103,7 +98,6 @@ export default function CommunityPanel({
         ? `Общая база подключена. В очереди на отправку: ${feedback.sync.pendingCount}.`
         : 'Общая база синхронизирована: оценки и комментарии видны всем посетителям.',
       spin: false,
-      alert: false,
     };
   })();
 
@@ -152,8 +146,8 @@ export default function CommunityPanel({
           <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
           <p
             className={`mt-2 flex max-w-xl items-start gap-2 leading-relaxed ${compact ? 'text-[11px]' : 'text-xs'} ${syncPresentation.className}`}
-            role={syncPresentation.alert ? 'alert' : 'status'}
-            aria-live={syncPresentation.alert ? 'assertive' : 'polite'}
+            role="status"
+            aria-live="polite"
             aria-atomic="true"
           >
             <syncPresentation.Icon size={13} aria-hidden="true" className={`mt-0.5 shrink-0 ${syncPresentation.spin ? 'animate-spin' : ''}`} />
