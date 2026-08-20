@@ -2,14 +2,18 @@
   --tlp-page-bg: #050505;
   --tlp-surface: #061018;
   --tlp-surface-elevated: #0b1822;
+  --tlp-input-bg: #07131b;
   --tlp-text: #f5f1e8;
   --tlp-text-muted: #a9c6d1;
   --tlp-text-subtle: #91b5c2;
   --tlp-control-idle: #67e8f9;
   --tlp-control-active: #a5f3fc;
   --tlp-control-border: #3a879a;
+  --tlp-control-selected: #a5f3fc;
+  --tlp-control-action: #67e8f9;
   --tlp-rating-star-idle: #22d3ee;
   --tlp-rating-star-active: #67e8f9;
+  --tlp-warning: #fcd34d;
   --tlp-focus-offset: #061018;
   --tlp-theme-color: #050810;
 }
@@ -18,14 +22,18 @@ html.theme-light {
   --tlp-page-bg: #fffaf0;
   --tlp-surface: #fffaf0;
   --tlp-surface-elevated: #f4ecdb;
+  --tlp-input-bg: #ffffff;
   --tlp-text: #13202a;
   --tlp-text-muted: #465c67;
   --tlp-text-subtle: #526873;
   --tlp-control-idle: #0d748c;
   --tlp-control-active: #075f75;
   --tlp-control-border: #347d8d;
+  --tlp-control-selected: #075f75;
+  --tlp-control-action: #075f75;
   --tlp-rating-star-idle: #0d748c;
   --tlp-rating-star-active: #075f75;
+  --tlp-warning: #7a4d00;
   --tlp-focus-offset: #fffaf0;
   --tlp-theme-color: #fffaf0;
 }
@@ -39,12 +47,21 @@ html.theme-light {
   background-color: color-mix(in srgb, var(--tlp-page-bg) 85%, transparent) !important;
 }
 
+.theme-community-surface {
+  background-color: var(--tlp-surface-elevated) !important;
+  color: var(--tlp-text);
+}
+
 .theme-functional-muted {
   color: var(--tlp-text-muted) !important;
 }
 
 .theme-functional-subtle {
   color: var(--tlp-text-subtle) !important;
+}
+
+.theme-functional-warning {
+  color: var(--tlp-warning) !important;
 }
 
 .theme-control-idle {
@@ -56,8 +73,28 @@ html.theme-light {
   color: var(--tlp-control-active) !important;
 }
 
+.theme-control-selected {
+  color: var(--tlp-control-selected) !important;
+  border-color: var(--tlp-control-selected) !important;
+}
+
+.theme-control-action {
+  color: var(--tlp-control-action) !important;
+}
+
+.theme-control-action:hover,
+.theme-control-action:focus-visible {
+  color: var(--tlp-control-active) !important;
+}
+
 .theme-control-border {
   border-color: var(--tlp-control-border) !important;
+}
+
+.theme-input {
+  background-color: var(--tlp-input-bg) !important;
+  color: var(--tlp-text) !important;
+  border-color: color-mix(in srgb, var(--tlp-control-border) 45%, transparent) !important;
 }
 
 .theme-input::placeholder {
