@@ -6,8 +6,8 @@ import { simonovSonArtilleristaPublished } from '../src/data/essays/simonovSonAr
 const id = 'simonov-son-artillerista-real-story';
 const slug = 'simonov-syn-artillerista-realnaya-istoriya';
 const heroPath = 'public/images/essays/simonov/simonov-son-artillerista-hero.webp';
-const heroSha256 = '5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5';
-const heroBytes = 130386;
+const heroSha256 = '1fd150a4b1e6ff493d7103e5037d306a302471fb8c520524fbd1ae4d45e4bd1a';
+const heroBytes = 130548;
 const provenancePath = 'public/images/PROVENANCE.yml';
 const closeoutPath = 'docs/research/SIMONOV_PUBLICATION_CLOSEOUT_2026-08.md';
 
@@ -146,7 +146,7 @@ for (const marker of [
   'PUBLICATION ARTIFACT COMPLETE / APPROVED HERO PRESENT / CLAIM-AWARE READER SAFETY PRESERVED / MERGE REQUIRES GREEN EXACT-HEAD CHECKS',
   heroSha256,
   '1600×900',
-  '130 386 bytes',
+  '130 548 bytes',
   'Execution evidence живёт в checks самого PR на его exact head',
   'После успешной матрицы не требуется технический «closeout commit»',
   'Merge в `main` этим документом не разрешается автоматически.',

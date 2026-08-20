@@ -124,7 +124,7 @@ assets:
     origin_class: local_cinematic_editorial_reconstruction
     evidence: docs/APPROVED_COVER_IMPLEMENTATION_AUDIT_2026-08-04.md
     master_file_id: file_00000000c76c81f49d5f28281decdbe9
-    master_name: "Homme en costume, rue brumeuse】【。.png"
+    master_name: "Homme en costume, rue brumeuse。.png"
     production_recipe: "ImageOps.fit 1280x720 LANCZOS; WebP quality 90; method 6"
     bytes: 130398
     sha256: de1faac7d747a919c1f8f0b0468f4c8f6333f72b833b42d5ebd2697da0ab0b30
@@ -158,11 +158,11 @@ assets:
     role: essay_hero_and_card
     origin_class: local_cinematic_editorial_reconstruction
     evidence: docs/research/SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md
-    master_file_id: file_000000009110820ab0ac788189e0d5c2
-    master_name: "owner-supplied Simonov hero"
-    production_recipe: "centre crop to 16:9; resize 1600x900; WebP optimization; metadata stripped; no generative or stylistic transformation"
-    bytes: 130386
-    sha256: 5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5
+    master_file_id: file_00000000b8d88246837fea37b12a6e24
+    master_name: "owner-supplied Simonov hero source PNG"
+    production_recipe: "centre crop to 16:9; resize 1600x900; WebP quality 82; method 6; metadata stripped; no generative or stylistic transformation"
+    bytes: 130548
+    sha256: 1fd150a4b1e6ff493d7103e5037d306a302471fb8c520524fbd1ae4d45e4bd1a
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
     notes: Owner-approved editorial reconstruction; not a documentary photograph of Ivan Loskutov, the exact height, or the July 1941 battle.

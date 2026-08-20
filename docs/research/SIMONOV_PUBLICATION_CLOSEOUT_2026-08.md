@@ -7,7 +7,7 @@
 ## Что закрыто
 
 - Публичный объект статьи сформирован через `src/data/essays/simonovSonArtilleristaPublished.ts` и зарегистрирован в каноническом каталоге `src/data/essays/index.ts`.
-- Exact production hero присутствует только как оптимизированный WebP: `public/images/essays/simonov/simonov-son-artillerista-hero.webp`, 1600×900, 130 386 bytes, SHA-256 `5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5`.
+- Exact production hero присутствует только как оптимизированный WebP: `public/images/essays/simonov/simonov-son-artillerista-hero.webp`, 1600×900, 130 548 bytes, SHA-256 `1fd150a4b1e6ff493d7103e5037d306a302471fb8c520524fbd1ae4d45e4bd1a`.
 - Owner approval exact hero объекта отдельно зафиксирован в `SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md`.
 - Обложка публично классифицируется только как редакционная реконструкция; она не выдаётся за документальную фотографию Ивана Лоскутова, конкретной высоты или боя 1941 года.
 - Exact hero также зарегистрирован в `public/images/PROVENANCE.yml` и независимо закреплён общим валидатором `scripts/validate-essay-covers.ts`: path, byte-size, SHA-256, alt и credit должны совпадать.
