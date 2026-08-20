@@ -1,50 +1,51 @@
 # Benislavskaya longform — publication gate ledger
 
-Date: 2026-08-18  
-Product anchor: `FedorMilovanov/TheLegendaryPoet@d59cceccb0c49af59b1be38d4c547a6240b3005a`  
-Owner issue: `#200 — Отдельная статья: Галина Бениславская — рукописи, издательские дела и архив Есенина`
+Date: 2026-08-20  
+Owner issue: `#200 — Отдельная статья: Галина Бениславская — рукописи, издательские дела и архив Есенина`  
+Current lane: `editorial/benislavskaya-publication-20260820`
 
 ## Disposition
 
-**STAGED-DRAFT / PUBLICATION-BLOCKED**
+**STAGED-DRAFT / SOURCE-GATED / HERO-CLOSED**
 
-This lane stages a typed longform draft and the owner-approved editorial hero contract. It does **not** register a new public essay and does not claim that the outstanding correspondence acquisition has been completed.
+The article is written and remains intentionally outside the canonical public essay catalog until the inbound-correspondence matrix is reconciled from a lawful complete witness.
 
-The following production surfaces must remain unchanged until the source gate is closed:
+Until that source gate is closed, do not register the essay in:
 
 - `src/data/essays/index.ts`;
-- generated essay search/catalog metadata;
+- generated browser/search/catalog data;
 - sitemap/feed discovery;
-- public route registration and announcement surfaces.
+- public route or announcement surfaces.
 
-## Owner-approved hero reconstruction
+## Owner-approved hero — CLOSED
 
-Source supplied in the working conversation on 2026-08-18 and explicitly selected for the article.
+The owner supplied the approved source PNG through a normal binary-safe Git push. The clean current-main lane contains the deterministic production WebP:
 
-Approved production target:
+`public/images/essays/benislavskaya/benislavskaya-editorial-hero.webp`
 
-- intended path: `public/images/essays/benislavskaya/benislavskaya-editorial-hero.webp`;
+Production contract:
+
 - source-frame dimensions: `1672 × 941`;
-- source PNG SHA-256: `468a6d2ffc2894e254fe72fc3b0ce7dea75efce13703f89313b475f8d9e0fc56`;
 - deterministic WebP profile: Pillow WebP `quality=88`, `method=6`;
-- approved WebP bytes: `132172`;
-- approved WebP SHA-256: `0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48`;
+- production bytes: `132172`;
+- SHA-256: `0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48`;
 - classification: `reconstruction`;
 - credit: `THE LEGENDARY POET · редакционная кинематографическая реконструкция по историческому портретному референсу`;
 - external `sourceUrl`: intentionally none.
 
-### Binary-ingestion QC
+The exact approved WebP is now a required staged asset. Missing bytes or any SHA drift are CI failures.
 
-An initially staged repository blob failed the exact-byte validator on 2026-08-18:
+The image is an editorial reconstruction. It must never be described as an archival photograph, facsimile, restoration or documentary witness.
 
-- observed repository SHA-256: `b6e9c469edda76dc747888bcdca50a6d953f0beef9fa74b39253050747b60caf`;
-- expected approved SHA-256: `0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48`.
+The 1.9 MB source PNG is not required in the clean publication lane.
 
-The mismatching blob was removed from the branch rather than accepted by changing the expected hash. The staged validator treats the hero as **pending binary ingestion** while the essay remains unpublished; if a file appears at the intended path, it must match the approved SHA exactly or CI fails.
+## Reader visual scope for v1
 
-The image is a reader-facing editorial reconstruction. It must never be described as an archival photograph, facsimile, restoration, or documentary witness.
+The v1 article may publish with **0 documentary body images** plus the approved reconstruction hero.
 
-## Current documentary baseline
+This is a deliberate rights-safe scope, not an unfinished visual state. Future archival/facsimile visuals are separate enrichment and require item-level identity, reuse permission/status, credit, production SHA and truthful captioning. Their absence does not block v1 publication.
+
+## Documentary baseline
 
 The safe corpus formula remains:
 
@@ -52,92 +53,110 @@ The safe corpus formula remains:
 - **1 gift inscription**;
 - **14 known letters** from Benislavskaya to Yesenin.
 
-Do not replace this with `35 писем / 14 ответов`: that formula changes document classes and falsely implies one-to-one correspondence.
+Do not rewrite this as `35 писем / 14 ответов`: that changes document classes and falsely implies one-to-one correspondence.
 
-The article uses documentary actions rather than inflated occupational labels. Current evidence supports work with manuscripts, publishing errands, contracts, negotiations, money, correspondence and archive/paper handling. It does not establish independent editorial authority over Yesenin's authorial composition.
+The article describes documented actions — manuscript handling, publishing errands, contracts, negotiations, money, correspondence and archive/paper handling — rather than assigning an unsupported modern occupational title. Current evidence does not establish autonomous editorial authority over Yesenin's authorial composition.
 
-## Fresh gate recheck — 2026-08-18
+## 16 July 1925 — CLOSED page witness
 
-### Gmail / EDD preparation
+The connected academic `Летопись жизни и творчества С. А. Есенина`, vol. 5, book 1 (IMLI RAN, 2013), reproduces the 16 July 1925 letter continuously on printed pp. **339–340**, from its opening `Сергей...` through `Галя. 16. VII. 25`.
 
-A fresh search after the previous 2026-08-08 rebaseline found no delivered scan, library response or attachment for the target request.
-
-The original working range `236–280` was found to be incomplete. The connected academic IMLI chronology cites Benislavskaya's 4 May 1925 letter across `Письма, 280–281`. Therefore the corrected request is:
-
-`Сергей Есенин в стихах и жизни. Книга 3: Письма. Документы`, printed pp. **236–281 inclusive (46 pages)**.
-
-The official Perm M. Gorky Regional Library EDD contact is `mba@gorkilib.ru`. The saved Gmail draft was updated on 2026-08-18 to the corrected 236–281 range and asks the library to confirm availability, exact copying cost, format and turnaround **before** any paid work begins.
-
-Status: **DRAFT UPDATED / NOT SENT / NO PAYMENT AUTHORIZED**.
-
-No email is treated as evidence that the request was submitted or fulfilled.
-
-### Connected Drive / academic page-map
-
-A fresh connected-Drive search found the central research registry and academic Yesenin volumes, but **not** the target 1995 pp. 236–281 scan.
-
-The connected academic `Летопись жизни и творчества С. А. Есенина`, т. 5, кн. 1 (ИМЛИ РАН, 2013), provides a partial page-map inside the 1995 `Письма. Документы` collection:
-
-- 20 January 1925 → `Письма, 268–269`;
-- 9 February 1925 → `Письма, 271–272`;
-- 4 May 1925 → `Письма, 280–281`.
-
-That page-map is the reason the acquisition range now ends at p. 281.
-
-### 16 July 1925 — page-level witness now verified in IMLI
-
-The same connected IMLI volume does more than cite secondary literature for the last known Benislavskaya letter. On printed pp. **339–340** it reproduces the 16 July 1925 letter continuously from its opening `Сергей...` through the signed ending `Галя. 16. VII. 25`.
-
-Immediately after the reproduced text, the IMLI editors state that the storage citation printed by L. V. Zankovskaya (`Новый Есенин`, 1997, p. 381) to the former ЦГАЛИ / current РГАЛИ is erroneous because the letter is absent there. They state that the letter **remained with G. A. Benislavskaya** and cite N. I. Shubnikova-Guseva, `Сергей Есенин и Галина Бениславская` (2008), pp. 332–333.
+Immediately after the text the IMLI editors state that the archive location cited by L. V. Zankovskaya is erroneous because the letter is absent from the former ЦГАЛИ / current РГАЛИ. They state that the document **remained with G. A. Benislavskaya** and point upstream to later publication/provenance literature.
 
 Project disposition:
 
 - **16 July text/page witness: VERIFIED via IMLI 2013, pp. 339–340**;
 - old RGALI storage attribution: rejected;
-- successful sending/delivery/reading by Yesenin: **not established and must not be asserted**;
-- Zankovskaya 1997 and Shubnikova-Guseva 2008 remain upstream provenance/historiography references, but are **not an outstanding acquisition prerequisite** merely to obtain this letter's text.
+- sending, delivery, receipt and reading by Yesenin: **not established and must not be asserted**;
+- Zankovskaya 1997 and Shubnikova-Guseva 2008 are not an outstanding acquisition prerequisite merely to obtain this letter text.
 
-This materially narrows the publication gate. The remaining acquisition problem is the 1995 correspondence range pp. **236–281** and the item-by-item reconciliation it enables.
+## Direct holder inspection — 2026-08-20
 
-### Open-web / institutional search
+Perm M. Gorky Regional Library physically inspected the requested 1995 volume:
 
-A fresh search confirmed bibliographic holdings for the 1995 edition and the 1997 TERRA/Respublika reprint, but did not locate a lawful open complete scan of the required 1995 page range. Library catalogue holdings and metadata are discovery witnesses only; they do not substitute for the page-level controlling witness.
+`Сергей Есенин в стихах и жизни. Письма. Документы` (Moscow: Respublika, 1995), ISBN `5-250-02529-3`.
 
-The Russian State Library publicly offers a digital `copy of a fragment` service for documents from its holdings, where the requester can specify page ranges and receive a digital copy after online ordering/payment, subject to copyright rules. This is a fallback acquisition route only after the exact target holding is confirmed; no RSL order has been placed.
+The holder reported:
+
+- letters under the old dates **18 January 1924** and **8 February 1924** are apparently not present in this volume under those dates;
+- **4 March 1924** appears on printed p. **234**;
+- **6 April 1924** appears on p. **236**;
+- **26 April 1924** appears on p. **238**;
+- later correspondence continues from there.
+
+This is direct holder evidence about the **1995 publication**, not proof that the 18-Jan or 8-Feb texts never existed. Those older bibliography positions may involve redating, identity/duplication, editorial inclusion criteria or another document-boundary problem.
+
+The finding proves that the old acquisition range `236–281` is too narrow at the front edge.
+
+### Current acquisition transaction
+
+The controlling request is now:
+
+**the complete continuous published sequence from the 4 March 1924 item through the 4 May 1925 item ending on p. 281.**
+
+Working range: **234–281 provisional**.
+
+The exact first page is still holder-confirmation pending: if the 4 March item begins before printed p. 234, the preceding page must be included.
+
+A follow-up was sent in the same Perm EDD thread requesting:
+
+1. exact first page / complete continuous range;
+2. final price including any fees;
+3. format/quality;
+4. turnaround;
+5. if readily visible without paid research, the sequence of letter dates in the relevant run.
+
+**NO PAYMENT AUTHORIZED.** Chargeable copying must not begin until the owner separately approves the exact quoted price.
+
+No newer holder reply had arrived at the latest 2026-08-20 recheck.
+
+## Connected research fallback
+
+A fresh connected-Drive search still does not expose the target 1995 page run as a lawful complete scan. The available academic IMLI chronology is valuable for page anchors and for the independently closed 16-July witness, but it does not yet replace the missing complete 1995 correspondence run.
+
+Therefore the project does not promote OCR snippets, catalog metadata, page arithmetic or disconnected academic quotations into a fake complete witness.
 
 ## The unresolved 13 ↔ 16 ↔ 14 problem
 
-Three observable source layers still disagree in composition:
+Three source layers disagree in composition:
 
-1. the open `Есенин.ру` page exposes **13 numbered units**, with explicit cuts, losses and editorial boundaries;
-2. P. F. Yushin's earlier bibliographic list exposes **16 archival/bibliographic positions**;
-3. the later academic PSS index records **14 known letters** from Benislavskaya to Yesenin.
+1. the open `Есенин.ру` page exposes **13 numbered units**;
+2. P. F. Yushin's 1969 bibliography exposes **16 positions**;
+3. the later academic PSS name index records **14 known letters** from Benislavskaya to Yesenin.
 
-The working crosswalk is maintained in:
+The open publication itself proves that `numbered unit ≠ letter`: unit #4 explicitly says `Эта открытка вместо сдачи.`
+
+Additional high-value boundary nodes:
+
+- open #3 is headed 26 April but signs `25.IV.24`;
+- open #6 is headed `19 или 20 октября 1924 г.` but signs `10.X.24`;
+- academic commentary independently identifies a **1 December 1924** Benislavskaya→Yesenin letter outside the open 13-unit page;
+- the text beginning `Бросьте эту пьяную канитель` is academically attested as a Benislavskaya→Yesenin 1924 letter, while the older 8-Feb dating now conflicts with the direct holder observation for the 1995 volume;
+- open #7 distinguishes a written but unsent business letter, so writing ≠ sending ≠ delivery ≠ reading;
+- 16 July has a complete page witness but no proved transmission to Yesenin.
+
+No arithmetic shortcut such as `13 ± selected items = 14` is accepted as proof.
+
+The working crosswalk lives in:
 
 `docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_MATRIX_2026-08.md`
 
-It maps all Yushin positions **121–136** against open units **#1–#13**, records the IMLI page-map, and preserves visible boundary problems instead of silently normalizing them. In particular:
+## Final controlling-witness transaction
 
-- open #3 is headed 26 April but ends `25.IV.24`;
-- open #4 is a separate 26 April postcard while Yushin exposes one 26 April position;
-- open #6 is headed `19 или 20 октября 1924 г.` but ends `10.X.24`, matching Yushin #127 dated 10 October;
-- open #7 explicitly mentions a business letter that was written but not sent, so writing, sending, delivery and reading must remain separate provenance questions;
-- the 16 July 1925 item has a verified IMLI page witness but must **not** be assigned the previously repeated RGALI storage cipher or treated as proved delivered/read.
+When the lawful continuous page run arrives, verify in this order:
 
-The remaining discrepancy must be reconciled item by item. It is not legitimate to choose whichever number is easiest for the narrative.
-
-The final matrix must record for every controlling item:
-
-- date / dating range;
-- document class;
-- publication/source tradition;
-- autograph / copy / prior publication status where known;
-- cuts or missing passages;
-- page witness;
-- provenance and any archive cipher available;
-- delivery/recipient status where evidenced;
-- what reader claim the item actually supports.
+1. bibliographic identity: title, publisher, year, ISBN/edition;
+2. printed-page sequence with no omissions or duplicates;
+3. file SHA-256 and visual readability;
+4. heading/date/signature for every correspondence item;
+5. document class: letter / postcard / note / telegram / draft / copy / excerpt;
+6. beginning and ending printed page of every item;
+7. editorial cuts, supplied dates, brackets and restorations;
+8. source/provenance statement for every item;
+9. whether the publication distinguishes written / sent / delivered / read;
+10. map each 1995 item against Yushin positions and later PSS/IMLI evidence;
+11. explicitly record merged, redated, rejected or reclassified older positions;
+12. derive the canonical **14-letter** matrix only after physical/document identity is closed.
 
 ## Diary / copy boundary
 
@@ -145,59 +164,35 @@ The diary corpus is tracked as:
 
 `РГАЛИ, ф. 1604, оп. 1, ед. хр. 1123`, 35 leaves, **typewritten copy**.
 
-Do not call this a viewed autograph diary. The current publication tradition combines diary entries, copies of letters and memoir-like material; the autograph location is not established by the current project evidence.
-
-## Staged validation contract
-
-The branch contains `scripts/validate-benislavskaya-staged.ts`, executed from the common `check:content` gate. It enforces, before publication:
-
-- no accidental catalog/browser-data publication;
-- stable staged identity and section order;
-- resolved and actually cited source ids;
-- exact 13-source staged bibliography;
-- explicit 13 ↔ 16 ↔ 14 discrepancy language;
-- the corrected **pp. 236–281** remaining acquisition boundary and IMLI 1925 page-map;
-- verified IMLI **pp. 339–340** 16 July witness and corrected provenance;
-- machine-copy diary disclosure;
-- no unsupported editor/agent occupational claims;
-- zero documentary body images before item-level rights approval;
-- publication-derived reading-time parity through the universal `publishEssay()` boundary;
-- exact approved hero bytes if/when the binary is ingested.
-
-The raw authoring object currently contains a non-authoritative `readTime` placeholder, while the universal publication boundary recalculates reader time from blocks. The staged DoD validates the **publication-derived** value, not a duplicated manual number.
+Do not call this a viewed autograph diary. The current publication tradition combines diary entries, copies of letters and memoir-like material; the autograph location is not established by current project evidence.
 
 ## Publication unlock conditions
 
 A public Product transaction may start only after all of the following are true:
 
-1. obtain and inspect pp. **236–281** of the 1995 `Письма. Документы` volume **or another lawful complete page-level witness of equivalent controlling value for the remaining corpus**;
-2. reconcile the canonical 14-item inbound-letter matrix against the 13-unit open publication, the 16-position earlier bibliography, the acquired 1995 pages and the already verified IMLI 16 July witness;
-3. record page order, completeness and SHA for the acquired 1995/equivalent witness; preserve the connected IMLI identity/page citation for 16 July;
-4. re-read the staged article against the closed matrix and remove/qualify any claim that exceeds it;
-5. ingest the approved hero bytes and pass the exact SHA guard;
-6. keep the selected hero classified as `reconstruction`;
-7. make separate item-level rights decisions for any future archival/facsimile images added inside the article;
-8. only then register the essay in the canonical catalog and regenerate discovery;
-9. run content/citation/style/TypeScript/build/SEO and the full browser matrix required by the current project contracts.
+1. obtain and inspect the complete continuous 1995 correspondence run from the complete 4-March item through p. **281**, currently **234–281 provisional**, **or another lawful complete page-level witness of equivalent controlling value**;
+2. reconcile the canonical 14-item inbound-letter matrix against the open 13-unit publication, Yushin's 16-position bibliography, the complete controlling witness and the independently verified IMLI 16-July witness;
+3. record completeness, page order, SHA and item-level identity/provenance;
+4. re-read the staged article against the closed matrix and remove or qualify every claim that exceeds it;
+5. keep the exact approved hero and its `reconstruction` classification;
+6. retain **0 documentary body images** for v1 unless a separate rights-approved package is explicitly added;
+7. remove staged metadata and register the essay in the canonical catalog only after source closure;
+8. regenerate browser/search/sitemap/feed/discovery;
+9. run content, citation, literary-style, TypeScript, production-build, SEO/route and full required browser QA on the exact publication head.
 
 ## Explicit non-claims
 
 This staged lane does **not** mean:
 
-- all 14 inbound items have been reconciled into the final canonical matrix;
-- the Perm EDD request was submitted;
-- the target 1995 pages were paid for or delivered;
+- all 14 inbound letters have already been reconciled;
+- 18 January or 8 February 1924 are proven fictional/nonexistent texts;
+- the target 1995 pages have been paid for or delivered;
 - the 16 July letter was sent, delivered, received or read by Yesenin;
-- the approved hero binary is currently ingested in the repository;
 - the diary autograph was inspected;
-- Benislavskaya was an autonomous editor or literary agent in a modern professional sense;
-- an archive catalogue card grants reproduction rights to a scan;
-- the generated hero is documentary evidence.
+- Benislavskaya was an autonomous editor or literary agent in the modern professional sense;
+- a holder-supplied research scan grants reuse rights;
+- the reconstruction hero is documentary evidence.
 
-## Staged source file
+## Current status
 
-The draft lives in:
-
-`src/data/essays/benislavskayaDraft.ts`
-
-It is intentionally absent from the canonical public essay catalog until this ledger's source gate is closed.
+**HERO CLOSED / ARTICLE STAGED / CONTROLLING CORRESPONDENCE WITNESS + ITEM-BY-ITEM RECONCILIATION OPEN.**
