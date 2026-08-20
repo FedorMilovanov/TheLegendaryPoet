@@ -215,7 +215,14 @@ expect(storeSource.includes('settledOperations') && storeSource.includes('mergeS
 expect(storeSource.includes('if (!existing && outbox.length >= MAX_OUTBOX_ITEMS) return null'), 'outbox saturation must fail admission instead of silently dropping older pending work');
 expect(remoteSource.includes("outcome: 'ack'") && remoteSource.includes("outcome: 'retry'") && remoteSource.includes("outcome: 'reject'"), 'remote mutation boundary must return typed ACK/retry/reject outcomes');
 expect(remoteSource.includes('if (!interactive) return Promise.resolve(null)'), 'background replay must never summon Turnstile without a fresh reader action');
-expect(expandable.includes('Intl.Segmenter') && expandable.includes('whitespace-pre-wrap'), 'comment rendering must preserve plain-text newlines and truncate on Unicode grapheme boundaries');
+expect(
+  expandable.includes('SegmenterConstructor')
+  && expandable.includes('.Segmenter')
+  && expandable.includes("granularity: 'grapheme'")
+  && expandable.includes('Array.from(value)')
+  && expandable.includes('whitespace-pre-wrap'),
+  'comment rendering must preserve plain-text newlines and truncate on Unicode grapheme/code-point boundaries',
+);
 expect(list.includes('Сортировка и фильтр применяются к уже загруженным комментариям') && list.includes('Загрузить ещё из общей ленты'), 'comment sort/filter scope must be explicit and pagination must remain reachable under filtered views');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
