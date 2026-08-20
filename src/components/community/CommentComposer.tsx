@@ -5,6 +5,8 @@ import {
   COMMUNITY_AUTHOR_MAX_LENGTH,
   COMMUNITY_COMMENT_MAX_LENGTH,
   COMMUNITY_COMMENT_MIN_LENGTH,
+  communityTextLength,
+  truncateCommunityText,
 } from '../../data/communityContract';
 import type { CommentKind } from '../../types/community';
 
@@ -18,7 +20,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
   const [text, setText] = useState('');
   const [kind, setKind] = useState<CommentKind>('literary');
   const helpId = useId();
-  const normalizedLength = text.trim().length;
+  const normalizedLength = communityTextLength(text.trim());
   const canSend = normalizedLength >= COMMUNITY_COMMENT_MIN_LENGTH && normalizedLength <= COMMUNITY_COMMENT_MAX_LENGTH;
 
   const send = () => {
@@ -34,9 +36,8 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
         <span className="sr-only">Имя или псевдоним</span>
         <input
           value={author}
-          onChange={(event) => setAuthor(event.target.value.slice(0, COMMUNITY_AUTHOR_MAX_LENGTH))}
+          onChange={(event) => setAuthor(truncateCommunityText(event.target.value, COMMUNITY_AUTHOR_MAX_LENGTH))}
           placeholder="Ваше имя или псевдоним — необязательно"
-          maxLength={COMMUNITY_AUTHOR_MAX_LENGTH}
           autoComplete="nickname"
           className="min-h-11 w-full rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
@@ -46,7 +47,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
         <span className="sr-only">Текст комментария</span>
         <textarea
           value={text}
-          onChange={(event) => setText(event.target.value.slice(0, COMMUNITY_COMMENT_MAX_LENGTH))}
+          onChange={(event) => setText(truncateCommunityText(event.target.value, COMMUNITY_COMMENT_MAX_LENGTH))}
           onKeyDown={(event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
               event.preventDefault();
@@ -55,7 +56,6 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
           }}
           placeholder="Что особенно точно, спорно, сильно или слабо?"
           rows={5}
-          maxLength={COMMUNITY_COMMENT_MAX_LENGTH}
           aria-describedby={helpId}
           className="w-full resize-y rounded-2xl border border-cyan-400/10 bg-black/30 px-4 py-3 text-sm leading-relaxed text-white outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-400/45 focus:ring-2 focus:ring-cyan-300/10"
         />
