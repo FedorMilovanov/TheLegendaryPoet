@@ -1,0 +1,70 @@
+name: npm audit 418 remediate
+
+on:
+  push:
+    branches:
+      - security/npm-audit-418-20260820
+    paths:
+      - .github/workflows/npm-audit-418-remediate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Capture dependency path
+        run: |
+          npm ci
+          npm ls nanoid --all --json > /tmp/nanoid-tree.json
+      - name: Apply lock-only transitive fix
+        run: |
+          cp package.json /tmp/package.json.before
+          npm update nanoid --package-lock-only --ignore-scripts
+          cmp --silent package.json /tmp/package.json.before
+          node - <<'NODE'
+          const lock = require('./package-lock.json');
+          const nano = lock.packages?.['node_modules/nanoid'];
+          if (!nano) throw new Error('nanoid lock entry missing');
+          if (nano.version !== '3.3.18') throw new Error(`unexpected nanoid version ${nano.version}`);
+          if (nano.dev !== true) throw new Error('nanoid is no longer dev-only');
+          NODE
+      - name: Verify clean install and audit
+        run: |
+          npm ci
+          npm audit --json > /tmp/npm-audit-after.json || true
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const cp = require('node:child_process');
+          const audit = JSON.parse(fs.readFileSync('/tmp/npm-audit-after.json', 'utf8'));
+          const vuln = audit.metadata?.vulnerabilities ?? {};
+          if ((vuln.high ?? 0) !== 0 || (vuln.critical ?? 0) !== 0) {
+            throw new Error(`audit still has high/critical findings: ${JSON.stringify(vuln)}`);
+          }
+          const report = {
+            capturedAt: new Date().toISOString(),
+            headBeforeFix: cp.execFileSync('git', ['rev-parse', 'HEAD'], {encoding:'utf8'}).trim(),
+            node: cp.execFileSync('node', ['--version'], {encoding:'utf8'}).trim(),
+            npm: cp.execFileSync('npm', ['--version'], {encoding:'utf8'}).trim(),
+            dependencyTreeBefore: JSON.parse(fs.readFileSync('/tmp/nanoid-tree.json', 'utf8')),
+            auditAfter: audit
+          };
+          fs.writeFileSync('docs/research/NPM_AUDIT_418_REMEDIATION_2026-08-20.json', JSON.stringify(report, null, 2) + '\n');
+          NODE
+      - name: Commit lock-only fix and evidence
+        run: |
+          test -n "$(git status --short -- package-lock.json)"
+          test -z "$(git status --short -- package.json)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- package-lock.json docs/research/NPM_AUDIT_418_REMEDIATION_2026-08-20.json
+          git commit -m 'fix(security): update transitive nanoid to 3.3.18'
+          git push origin HEAD:security/npm-audit-418-20260820
