@@ -1,4 +1,13 @@
 import {
+  COMMUNITY_AUTHOR_MAX_LENGTH,
+  COMMUNITY_COMMENT_COOLDOWN_MS,
+  COMMUNITY_COMMENT_MAX_LENGTH,
+  COMMUNITY_COMMENT_MIN_LENGTH,
+  communityTextLength,
+  isCommunityCommentKind,
+  truncateCommunityText,
+} from '../../../src/data/communityContract';
+import {
   hasCanonicalRatingScores,
   ratingDimensionKeysByTarget,
 } from '../../../src/data/ratingDimensionContract';
@@ -49,7 +58,6 @@ type StoredCommentRow = {
 };
 
 const TARGET_TYPES = new Set<FeedbackTargetType>(['poet', 'poem', 'track', 'article']);
-const COMMENT_KINDS = new Set<CommentKind>(['literary', 'history', 'moral', 'performance']);
 const TARGET_ID = /^[a-z0-9][a-z0-9-]{1,159}$/;
 const COMMENT_ID = /^comment-[a-z0-9][a-z0-9-]{7,199}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -63,7 +71,6 @@ const MAX_BATCH_TARGETS = 100;
 const MANIFEST_TTL_MS = 5 * 60_000;
 const SESSION_TTL_MS = 90 * 24 * 60 * 60_000;
 const MAX_SESSION_TOKEN = 4096;
-const COMMENT_COOLDOWN_MS = 20_000;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 let manifestCache: { expiresAt: number; keys: Set<string> } | null = null;
@@ -344,18 +351,22 @@ function normalizeComment(body: Record<string, unknown>) {
     typeof body.commentId !== 'string' || !COMMENT_ID.test(body.commentId)
     || !validTargetType(body.targetType)
     || typeof body.targetId !== 'string' || !TARGET_ID.test(body.targetId)
-    || typeof body.commentKind !== 'string' || !COMMENT_KINDS.has(body.commentKind as CommentKind)
-    || typeof body.author !== 'string' || body.author.length > 120
+    || !isCommunityCommentKind(body.commentKind)
+    || typeof body.author !== 'string'
     || typeof body.text !== 'string'
   ) throw new HttpError(400, 'invalid_comment');
   const text = body.text.replace(/\r\n?/g, '\n').replace(/[\t ]+/g, ' ').trim();
-  if (text.length < 8 || text.length > 2000) throw new HttpError(400, 'invalid_comment');
-  const author = body.author.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 60) || 'Анонимный читатель';
+  const textLength = communityTextLength(text);
+  if (textLength < COMMUNITY_COMMENT_MIN_LENGTH || textLength > COMMUNITY_COMMENT_MAX_LENGTH) {
+    throw new HttpError(400, 'invalid_comment');
+  }
+  const cleanAuthor = body.author.replace(/[\x00-\x1f\x7f]/g, '').trim();
+  const author = truncateCommunityText(cleanAuthor, COMMUNITY_AUTHOR_MAX_LENGTH) || 'Анонимный читатель';
   return {
     commentId: body.commentId,
     targetType: body.targetType,
     targetId: body.targetId,
-    commentKind: body.commentKind as CommentKind,
+    commentKind: body.commentKind,
     author,
     text,
   };
@@ -528,7 +539,7 @@ async function handleComment(request: Request, env: Env) {
     comment.commentKind,
     now,
     actor,
-    now - COMMENT_COOLDOWN_MS,
+    now - COMMUNITY_COMMENT_COOLDOWN_MS,
   ).run();
   const persisted = await readExisting();
   if (persisted) {

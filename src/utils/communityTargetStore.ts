@@ -236,7 +236,7 @@ function refreshRecord(record: TargetRecord, notify = true) {
     commentsPhase: record.commentsPhase,
     hasMoreComments: Boolean(record.nextCursor),
     error: record.summaryPhase === 'error' || record.commentsPhase === 'error'
-      ? 'Общая база временно недоступна. Локальные изменения сохранены.'
+      ? 'Общая база временно недоступна. Ранее загруженные и локальные данные сохранены.'
       : null,
   };
   const nextFingerprint = fingerprint(next);
@@ -298,10 +298,6 @@ async function loadComments(record: TargetRecord, reset = false) {
   if (record.commentsPromise) return record.commentsPromise;
   if (!reset && record.commentsPhase === 'ready' && !record.nextCursor) return;
 
-  if (reset) {
-    record.remoteComments = [];
-    record.nextCursor = null;
-  }
   record.commentsPhase = 'loading';
   refreshRecord(record);
   beginCommunityRemoteRead('Загружаем комментарии…');
@@ -314,7 +310,7 @@ async function loadComments(record: TargetRecord, reset = false) {
       return;
     }
 
-    const byId = new Map(record.remoteComments.map((comment) => [comment.id, comment]));
+    const byId = new Map((reset ? [] : record.remoteComments).map((comment) => [comment.id, comment]));
     for (const comment of page.comments) byId.set(comment.id, comment);
     record.remoteComments = [...byId.values()].sort(
       (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.id.localeCompare(left.id),

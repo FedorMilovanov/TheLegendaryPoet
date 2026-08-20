@@ -1,4 +1,12 @@
 import { useMemo, useSyncExternalStore } from 'react';
+import {
+  COMMUNITY_AUTHOR_MAX_LENGTH,
+  COMMUNITY_COMMENT_COOLDOWN_SCOPE,
+  COMMUNITY_COMMENT_MAX_LENGTH,
+  COMMUNITY_COMMENT_MIN_LENGTH,
+  communityTextLength,
+  truncateCommunityText,
+} from '../data/communityContract';
 import type { CommentEntry, CommentKind, FeedbackTargetType, RatingEntry } from '../types/community';
 import {
   canMarkHelpful,
@@ -53,11 +61,6 @@ export function useCommunityFeedback(
   const ownRating = useMemo(() => getOwnRating(ratingScope), [ratingScope, snapshot]);
 
   const addRating = (scores: Record<string, number>) => {
-    const cooldown = checkCooldown(ratingScope);
-    if (!cooldown.allowed) {
-      return { ok: false as const, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
-    }
-
     const previous = getOwnRating(ratingScope);
     const entry: RatingEntry = {
       id: previous?.id ?? makeFeedbackId('rating'),
@@ -68,35 +71,35 @@ export function useCommunityFeedback(
     };
 
     const stored = commitRatingFeedback(entry, ratingScope, getCommunityDeviceId());
-    if (!stored) return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
+    if (!stored) return { ok: false as const, message: 'Не удалось сохранить: локальное хранилище или очередь недоступны' };
 
-    void flushCommunityOutbox();
+    void flushCommunityOutbox({ interactive: true });
     return { ok: true as const, message: previous ? 'Оценка обновлена' : 'Оценка сохранена' };
   };
 
   const addComment = (author: string, text: string, kind: CommentKind) => {
-    const scope = `comment:${targetType}:${targetId}`;
-    const cooldown = checkCooldown(scope);
+    const cooldown = checkCooldown(COMMUNITY_COMMENT_COOLDOWN_SCOPE);
     if (!cooldown.allowed) return { ok: false as const, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
 
     const normalizedText = text.replace(/\r\n?/g, '\n').trim();
-    if (normalizedText.length < 8) return { ok: false as const, message: 'Комментарий слишком короткий' };
-    if (normalizedText.length > 2000) return { ok: false as const, message: 'Комментарий превышает 2000 символов' };
+    const textLength = communityTextLength(normalizedText);
+    if (textLength < COMMUNITY_COMMENT_MIN_LENGTH) return { ok: false as const, message: 'Комментарий слишком короткий' };
+    if (textLength > COMMUNITY_COMMENT_MAX_LENGTH) return { ok: false as const, message: `Комментарий превышает ${COMMUNITY_COMMENT_MAX_LENGTH} символов` };
 
     const entry: CommentEntry = {
       id: makeFeedbackId('comment'),
       targetType,
       targetId,
-      author: author.trim().slice(0, 60) || 'Анонимный читатель',
+      author: truncateCommunityText(author.trim(), COMMUNITY_AUTHOR_MAX_LENGTH) || 'Анонимный читатель',
       text: normalizedText,
       kind,
       helpful: 0,
       createdAt: new Date().toISOString(),
     };
-    const stored = commitCommentFeedback(entry, scope, getCommunityDeviceId());
-    if (!stored) return { ok: false as const, message: 'Не удалось сохранить: браузер блокирует локальное хранилище' };
+    const stored = commitCommentFeedback(entry, COMMUNITY_COMMENT_COOLDOWN_SCOPE, getCommunityDeviceId());
+    if (!stored) return { ok: false as const, message: 'Не удалось сохранить: локальное хранилище или очередь недоступны' };
 
-    void flushCommunityOutbox();
+    void flushCommunityOutbox({ interactive: true });
     return { ok: true as const, message: 'Комментарий добавлен' };
   };
 
@@ -108,9 +111,9 @@ export function useCommunityFeedback(
     if (!canMarkHelpful(scope)) return { ok: false as const, message: 'Вы уже отметили этот комментарий' };
 
     const stored = commitHelpfulFeedback(commentId, scope, getCommunityDeviceId());
-    if (!stored) return { ok: false as const, message: 'Не удалось сохранить отметку' };
+    if (!stored) return { ok: false as const, message: 'Не удалось сохранить отметку: локальная очередь недоступна' };
 
-    void flushCommunityOutbox();
+    void flushCommunityOutbox({ interactive: true });
     return { ok: true as const, message: 'Спасибо, мнение учтено' };
   };
 

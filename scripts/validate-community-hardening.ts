@@ -88,6 +88,7 @@ storage.setItem('tlp-community-feedback:v3', JSON.stringify({
   cooldowns: {},
   helpfulVotes: {},
   ownRatings: {},
+  settledOperations: {},
   updatedAt: now,
   lastSyncedAt: null,
 }));
@@ -124,8 +125,8 @@ expect(storage.getItem('tlp-community-device-v1') === repairedDeviceId, 'repaire
 
 const store = await import('../src/utils/communityStore');
 expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'malformed persisted operation must be discarded before retry');
-await store.flushCommunityOutbox();
-expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'first shared write must mint one server actor session');
+await store.flushCommunityOutbox({ interactive: true });
+expect(requests.filter((entry) => entry.path === '/v1/session').length === 1, 'interactive shared write must mint one server actor session');
 expect(requests.filter((entry) => entry.path === '/v1/comment').length === 1, 'valid operation behind malformed state must be delivered exactly once');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'poison-safe outbox must reach zero');
 const deliveredComment = requests.find((entry) => entry.path === '/v1/comment');
@@ -134,6 +135,7 @@ expect(Boolean(deliveredComment), 'successful comment flush must produce one Wor
 expect(Boolean(deliveredComment?.authorization?.startsWith('Bearer v1.')), 'mutation must carry the server-signed actor token');
 expect(!deliveredCommentBody.includes(voterId), 'local device UUID must never be transmitted as server authority');
 expect(!/voter|actorId|network/i.test(deliveredCommentBody), 'mutation body must not contain caller-selected authority fields');
+expect(!store.getFeedbackSnapshot().comments.some((comment) => comment.id === validCommentId), 'ACKed optimistic comment must leave local corpus so later moderation remains server-authoritative');
 
 const baseCount = 10;
 const baseSum = 40;
@@ -201,10 +203,28 @@ const { readFileSync } = await import('node:fs');
 const quickNav = readFileSync('src/components/poet-detail/PoemQuickNav.tsx', 'utf8');
 const poemCard = readFileSync('src/components/poet-detail/PoemCard.tsx', 'utf8');
 const panel = readFileSync('src/components/community/CommunityPanel.tsx', 'utf8');
+const storeSource = readFileSync('src/utils/communityStore.ts', 'utf8');
+const remoteSource = readFileSync('src/utils/communityRemote.ts', 'utf8');
+const expandable = readFileSync('src/components/community/ExpandableText.tsx', 'utf8');
+const list = readFileSync('src/components/community/CommentList.tsx', 'utf8');
 expect(/mode:\s*'passive'/.test(quickNav), 'poem quick navigation must not start one summary request per row');
 expect(/\bdeferRemote\b/.test(poemCard), 'poem cards must defer remote community reads');
-expect(/data-community-activate-target/.test(panel), 'deferred panels need an explicit user activation boundary');
+expect(panel.includes('feedbackTargetKey') && panel.includes('key={`composer:${feedbackTargetKey}`}'), 'community editor state must be keyed/reset by target identity');
+expect(panel.includes("feedback.summaryPhase === 'error'") && panel.includes('Данные оценок сейчас недоступны'), 'unresolved/failed summary state must not masquerade as zero ratings');
+expect(storeSource.includes('settledOperations') && storeSource.includes('mergeStates') && storeSource.includes('scheduleCommunityOutboxReplay'), 'delivery store must own stale-tab-safe settlement, merge and bounded startup replay');
+expect(storeSource.includes('if (!existing && outbox.length >= MAX_OUTBOX_ITEMS) return null'), 'outbox saturation must fail admission instead of silently dropping older pending work');
+expect(remoteSource.includes("outcome: 'ack'") && remoteSource.includes("outcome: 'retry'") && remoteSource.includes("outcome: 'reject'"), 'remote mutation boundary must return typed ACK/retry/reject outcomes');
+expect(remoteSource.includes('if (!interactive) return Promise.resolve(null)'), 'background replay must never summon Turnstile without a fresh reader action');
+expect(
+  expandable.includes('SegmenterConstructor')
+  && expandable.includes('.Segmenter')
+  && expandable.includes("granularity: 'grapheme'")
+  && expandable.includes('Array.from(value)')
+  && expandable.includes('whitespace-pre-wrap'),
+  'comment rendering must preserve plain-text newlines and truncate on Unicode grapheme/code-point boundaries',
+);
+expect(list.includes('Сортировка и фильтр применяются к уже загруженным комментариям') && list.includes('Загрузить ещё из общей ленты'), 'comment sort/filter scope must be explicit and pagination must remain reachable under filtered views');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
-console.log(`Community hardening validation: ${failures.length} error(s), signed actor session, poison-safe queue, stable rating baselines, deferred poem reads.`);
+console.log(`Community hardening validation: ${failures.length} error(s), signed actor session, typed delivery outcomes, stale-tab-safe settlement, target-keyed editors, honest read state, loaded-row ordering and Unicode text fidelity.`);
 if (failures.length) process.exit(1);

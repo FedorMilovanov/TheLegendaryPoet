@@ -11,6 +11,7 @@ import { localCommunityAggregate, overlayPendingCommunityAggregate } from './com
 export interface CommunityLeaderboardSnapshot {
   aggregates: readonly CommunityAggregate[];
   phase: 'local' | 'idle' | 'loading' | 'ready' | 'error';
+  resolved: boolean;
   error: string | null;
 }
 
@@ -45,6 +46,7 @@ function refreshRecord(record: LeaderboardRecord, notify = true) {
   const next: CommunityLeaderboardSnapshot = {
     aggregates: buildAggregates(record),
     phase: record.snapshot.phase,
+    resolved: record.snapshot.resolved,
     error: record.snapshot.error,
   };
   const fingerprint = JSON.stringify(next);
@@ -59,6 +61,7 @@ function createRecord(ids: readonly string[]): LeaderboardRecord {
   const snapshot: CommunityLeaderboardSnapshot = {
     aggregates: normalized.map((id) => localCommunityAggregate('poet', id)),
     phase: remoteEnabled ? 'idle' : 'local',
+    resolved: !remoteEnabled,
     error: null,
   };
   const record: LeaderboardRecord = {
@@ -95,12 +98,18 @@ async function load(record: LeaderboardRecord, force = false) {
   record.promise = (async () => {
     const aggregates = await fetchPoetAggregates(record.ids);
     if (!aggregates) {
-      record.snapshot = { ...record.snapshot, phase: 'error', error: 'Сводный рейтинг временно недоступен.' };
+      record.snapshot = {
+        ...record.snapshot,
+        phase: 'error',
+        error: record.snapshot.resolved
+          ? 'Не удалось обновить сводный рейтинг. Показаны последние успешно загруженные данные.'
+          : 'Сводный рейтинг временно недоступен. Данные ещё не загружены.',
+      };
       finishCommunityRemoteRead(false);
       return;
     }
     record.remoteAggregates = aggregates;
-    record.snapshot = { ...record.snapshot, phase: 'ready', error: null };
+    record.snapshot = { ...record.snapshot, phase: 'ready', resolved: true, error: null };
     finishCommunityRemoteRead(true);
   })().finally(() => {
     record.promise = null;

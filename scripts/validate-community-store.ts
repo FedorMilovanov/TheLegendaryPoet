@@ -22,6 +22,8 @@ const listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
 const testWindow = {
   localStorage: storage,
   location: { hostname: '127.0.0.1' },
+  setTimeout: globalThis.setTimeout.bind(globalThis),
+  clearTimeout: globalThis.clearTimeout.bind(globalThis),
   addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
     const bucket = listeners.get(type) ?? new Set<EventListenerOrEventListenerObject>();
     bucket.add(listener);
@@ -93,7 +95,7 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
     { id: `rating:${incompletePendingRatingId}`, kind: 'rating', voterId, entry: { id: incompletePendingRatingId, targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 5 }, createdAt: iso(-450) }, createdAt: iso(-450), attempts: 9 },
     { id: `comment:${pendingCommentId}`, kind: 'comment', voterId, entry: { id: pendingCommentId, targetType: 'article', targetId: 'sergei-yesenin-1921-1925', author: 'Локальный автор', text: 'Этот ожидающий комментарий должен пережить миграцию.', kind: 'history', helpful: 0, createdAt: iso(-400) }, createdAt: iso(-400), attempts: 0 },
   ],
-  cooldowns: { 'rating:poet:alexander-pushkin': now + 5000 },
+  cooldowns: { 'comment:article:sergei-yesenin-1921-1925': now + 5000 },
   helpfulVotes: {},
   ownRatings: {
     'rating:poet:sergei-yesenin': { id: ownRatingId, scores: { language: 4, depth: 5 }, updatedAt: iso(-600) },
@@ -102,22 +104,29 @@ storage.setItem('tlp-community-feedback:v2', JSON.stringify({
   lastSyncedAt: iso(-1000),
 }));
 
-let requestCount = 0;
-let mutationSucceeds = false;
-globalThis.fetch = async (input, init) => {
+type MutationMode = 'retry' | 'ack' | 'reject' | 'rate-limit';
+let mutationMode: MutationMode = 'retry';
+let mutationRequestCount = 0;
+let sessionRequestCount = 0;
+globalThis.fetch = async (input) => {
   const url = new URL(String(input));
   if (url.pathname === '/v1/session') {
+    sessionRequestCount += 1;
     return Response.json({
       actorToken: 'v1.test-signed-actor-token-that-is-long-enough.signature',
       expiresAt: Date.now() + 30 * 24 * 60 * 60_000,
     });
   }
   if (['/v1/rating', '/v1/comment', '/v1/helpful'].includes(url.pathname)) {
-    requestCount += 1;
-    return Response.json({ ok: mutationSucceeds }, { status: mutationSucceeds ? 200 : 503 });
+    mutationRequestCount += 1;
+    if (mutationMode === 'ack') return Response.json({ ok: true });
+    if (mutationMode === 'reject') return Response.json({ ok: false, code: 'invalid_comment' }, { status: 400 });
+    if (mutationMode === 'rate-limit') {
+      return Response.json({ ok: false, code: 'rate_limited' }, { status: 429, headers: { 'Retry-After': '1' } });
+    }
+    return Response.json({ ok: false, code: 'temporary_failure' }, { status: 503 });
   }
-  if ((init?.method ?? 'GET') === 'GET') return Response.json({});
-  return new Response(null, { status: 500 });
+  return new Response(null, { status: 404 });
 };
 
 const store = await import('../src/utils/communityStore');
@@ -125,7 +134,7 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 
 const migrated = store.getFeedbackSnapshot();
-expect(requestCount === 0, 'importing or subscribing to the store must not start community reads/writes');
+expect(mutationRequestCount === 0 && sessionRequestCount === 0, 'importing or subscribing to the store must not start community writes');
 expect(migrated.ratings.length === 2, 'v2 migration must retain only a deliverable pending rating and device-owned rating');
 expect(migrated.ratings.some((rating) => rating.id === pendingRatingId), 'complete pending rating must survive v2 migration');
 expect(!migrated.ratings.some((rating) => rating.id === incompletePendingRatingId), 'incomplete legacy pending rating must not survive as a remote-deliverable local overlay');
@@ -136,16 +145,21 @@ expect(!migrated.comments.some((comment) => comment.id.startsWith('comment-remot
 expect(storage.getItem('tlp-community-feedback:v2') === null, 'v2 envelope must be removed after successful migration');
 expect(storage.getItem('tlp-community-feedback:v3') !== null, 'bounded v3 envelope must be persisted');
 
-const persisted = JSON.parse(storage.getItem('tlp-community-feedback:v3') ?? '{}') as { localSnapshot?: { ratings?: Array<{ id?: string }>; comments?: unknown[] }; outbox?: Array<{ id?: string }> };
-expect((persisted.localSnapshot?.ratings?.length ?? 0) === 2, 'v3 persistence must contain only device-owned/deliverable ratings');
-expect(!(persisted.localSnapshot?.ratings ?? []).some((rating) => rating.id === incompletePendingRatingId), 'v3 migration must quarantine an incomplete pending rating rather than retry it forever');
-expect((persisted.localSnapshot?.comments?.length ?? 0) === 1, 'v3 persistence must contain only pending/device comments');
-expect((persisted.outbox?.length ?? 0) === 2, 'v3 persistence must retain only deliverable mutations');
-expect(!(persisted.outbox ?? []).some((operation) => operation.id === `rating:${incompletePendingRatingId}`), 'incomplete legacy rating operation must be removed from the remote outbox');
+const persistedAfterMigration = JSON.parse(storage.getItem('tlp-community-feedback:v3') ?? '{}') as {
+  localSnapshot?: { ratings?: Array<{ id?: string }>; comments?: unknown[] };
+  outbox?: Array<{ id?: string }>;
+  settledOperations?: Record<string, unknown>;
+};
+expect((persistedAfterMigration.localSnapshot?.ratings?.length ?? 0) === 2, 'v3 persistence must contain only device-owned/deliverable ratings');
+expect(!(persistedAfterMigration.localSnapshot?.ratings ?? []).some((rating) => rating.id === incompletePendingRatingId), 'v3 migration must quarantine an incomplete pending rating rather than retry it forever');
+expect((persistedAfterMigration.localSnapshot?.comments?.length ?? 0) === 1, 'v3 persistence must contain only pending/device comments');
+expect((persistedAfterMigration.outbox?.length ?? 0) === 2, 'v3 persistence must retain only deliverable mutations');
+expect(!(persistedAfterMigration.outbox ?? []).some((operation) => operation.id === `rating:${incompletePendingRatingId}`), 'incomplete legacy rating operation must be removed from the remote outbox');
+expect(Boolean(persistedAfterMigration.settledOperations), 'v3 persistence must carry delivery settlement tombstones');
 
 let syncNotifications = 0;
 const stopSync = store.subscribeCommunitySync(() => { syncNotifications += 1; });
-expect(requestCount === 0, 'sync subscription must not hydrate the remote corpus');
+expect(mutationRequestCount === 0, 'sync subscription must not immediately mutate the backend');
 
 store.beginCommunityRemoteRead('read-a');
 store.beginCommunityRemoteRead('read-b');
@@ -155,16 +169,18 @@ expect(store.getCommunitySyncSnapshot().phase === 'offline', 'a failed concurren
 expect(syncNotifications > 0, 'remote read state changes must notify sync subscribers');
 stopSync();
 
-mutationSucceeds = false;
-await store.flushCommunityOutbox();
-expect(store.getCommunitySyncSnapshot().phase === 'offline', 'failed outbox delivery must expose offline state');
-expect(store.getCommunitySyncSnapshot().pendingCount === 2, 'failed delivery must retain all queued deliverable mutations');
+mutationMode = 'retry';
+await store.flushCommunityOutbox({ interactive: true });
+expect(store.getCommunitySyncSnapshot().phase === 'offline', 'transient delivery failure must expose offline/queued state');
+expect(store.getCommunitySyncSnapshot().pendingCount === 2, 'transient failure must retain all queued deliverable mutations in order');
+expect(sessionRequestCount === 1, 'interactive flush without an actor session must mint exactly one signed actor session');
 expect(storage.getItem('tlp-community-actor:v1') !== null, 'successful Turnstile-backed session mint must persist the signed actor token');
 
-mutationSucceeds = true;
+mutationMode = 'ack';
 await store.flushCommunityOutbox();
-expect(store.getCommunitySyncSnapshot().phase === 'online', 'successful outbox retry must restore online state');
+expect(store.getCommunitySyncSnapshot().phase === 'online', 'successful background retry with an existing actor session must restore online state');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'successful retry must empty the outbox');
+expect(sessionRequestCount === 1, 'background retry must reuse the existing signed actor instead of minting another session');
 
 const incompleteNewRatingId = 'rating-88888888-8888-4888-8888-888888888888';
 expect(!store.commitRatingFeedback({
@@ -176,19 +192,99 @@ expect(!store.commitRatingFeedback({
 }, 'rating:poet:anna-akhmatova', voterId), 'new incomplete rating payloads must be rejected before local/outbox commit');
 expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'rejected incomplete rating must never enter the outbox');
 
-const newRatingId = 'rating-44444444-4444-4444-8444-444444444444';
-expect(store.commitRatingFeedback({
-  id: newRatingId,
-  targetType: 'poet',
-  targetId: 'anna-akhmatova',
-  scores: completePoetScores,
+const rejectedCommentId = 'comment-88888888-8888-4888-8888-888888888888';
+expect(store.commitCommentFeedback({
+  id: rejectedCommentId,
+  targetType: 'article',
+  targetId: 'sergei-yesenin-1921-1925',
+  author: 'Автор',
+  text: 'Этот комментарий сервер отвергнет окончательно.',
+  kind: 'literary',
+  helpful: 0,
   createdAt: iso(100),
-}, 'rating:poet:anna-akhmatova', voterId), 'complete canonical rating payload must be accepted by the client store');
-expect(store.getCommunitySyncSnapshot().pendingCount === 1, 'new remote-enabled canonical writes must enter the outbox');
+}, 'comment:article:sergei-yesenin-1921-1925', voterId), 'valid comment must enter the durable outbox');
+mutationMode = 'reject';
+await store.flushCommunityOutbox({ interactive: true });
+expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'permanent server rejection must remove poison work instead of retrying forever');
+expect(!store.getFeedbackSnapshot().comments.some((comment) => comment.id === rejectedCommentId), 'permanent rejection must remove the optimistic local comment so server truth wins');
+const afterReject = JSON.parse(storage.getItem('tlp-community-feedback:v3') ?? '{}') as { settledOperations?: Record<string, { outcome?: string }> };
+expect(afterReject.settledOperations?.[`comment:${rejectedCommentId}`]?.outcome === 'reject', 'permanent rejection must persist a settlement tombstone against stale-tab resurrection');
 
-const remoteHelpfulId = 'comment-55555555-5555-4555-8555-555555555555';
-expect(store.commitHelpfulFeedback(remoteHelpfulId, `helpful:article:sergei-yesenin-1921-1925:${remoteHelpfulId}`, voterId), 'helpful vote for a non-persisted remote comment must queue');
-expect(store.getPendingTargetOverlay('article', 'sergei-yesenin-1921-1925').helpfulCommentIds.includes(remoteHelpfulId), 'remote helpful overlay must remain target-scoped');
+const rateLimitedCommentId = 'comment-99999999-9999-4999-8999-999999999999';
+expect(store.commitCommentFeedback({
+  id: rateLimitedCommentId,
+  targetType: 'article',
+  targetId: 'sergei-yesenin-1921-1925',
+  author: 'Автор',
+  text: 'Этот комментарий временно ограничен серверным бюджетом.',
+  kind: 'history',
+  helpful: 0,
+  createdAt: iso(150),
+}, 'comment:article:sergei-yesenin-1921-1925', voterId), 'second valid comment must queue');
+mutationMode = 'rate-limit';
+await store.flushCommunityOutbox({ interactive: true });
+expect(store.getCommunitySyncSnapshot().pendingCount === 1, '429 must remain retryable and retain the operation');
+mutationMode = 'ack';
+await store.flushCommunityOutbox();
+expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'rate-limited operation must clear after a later successful retry');
+
+const crossTabA = 'comment-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+expect(store.commitCommentFeedback({
+  id: crossTabA,
+  targetType: 'article',
+  targetId: 'sergei-yesenin-1921-1925',
+  author: 'Вкладка A',
+  text: 'Операция из первой вкладки должна пережить слияние.',
+  kind: 'literary',
+  helpful: 0,
+  createdAt: iso(200),
+}, 'comment:article:sergei-yesenin-1921-1925', voterId), 'tab A operation must persist');
+const staleTabA = JSON.parse(storage.getItem('tlp-community-feedback:v3') ?? '{}');
+const tabAOperation = staleTabA.outbox?.find((operation: { id?: string }) => operation.id === `comment:${crossTabA}`);
+const tabAComment = staleTabA.localSnapshot?.comments?.find((comment: { id?: string }) => comment.id === crossTabA);
+expect(Boolean(tabAOperation && tabAComment), 'tab A snapshot must contain its pending operation and optimistic comment');
+
+const crossTabB = 'comment-bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const externalB = structuredClone(staleTabA);
+externalB.outbox = [{
+  ...tabAOperation,
+  id: `comment:${crossTabB}`,
+  entry: {
+    ...tabAOperation.entry,
+    id: crossTabB,
+    author: 'Вкладка B',
+    text: 'Независимая операция второй вкладки не должна потеряться.',
+    createdAt: iso(210),
+  },
+  createdAt: iso(210),
+  attempts: 0,
+}];
+externalB.localSnapshot.comments = [{
+  ...tabAComment,
+  id: crossTabB,
+  author: 'Вкладка B',
+  text: 'Независимая операция второй вкладки не должна потеряться.',
+  createdAt: iso(210),
+}];
+externalB.updatedAt = iso(220);
+storage.setItem('tlp-community-feedback:v3', JSON.stringify(externalB));
+const mergeEvent = new Event('storage') as Event & { key?: string };
+mergeEvent.key = 'tlp-community-feedback:v3';
+testWindow.dispatchEvent(mergeEvent);
+expect(store.getCommunitySyncSnapshot().pendingCount === 2, 'cross-tab reconciliation must union independent pending operations instead of last-writer-wins loss');
+expect(store.getFeedbackSnapshot().comments.some((comment) => comment.id === crossTabA), 'tab A optimistic work must survive tab B storage event');
+expect(store.getFeedbackSnapshot().comments.some((comment) => comment.id === crossTabB), 'tab B optimistic work must be adopted by tab A');
+
+const staleBeforeAck = JSON.stringify(externalB);
+mutationMode = 'ack';
+await store.flushCommunityOutbox();
+expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'merged cross-tab queue must deliver completely');
+storage.setItem('tlp-community-feedback:v3', staleBeforeAck);
+const staleEvent = new Event('storage') as Event & { key?: string };
+staleEvent.key = 'tlp-community-feedback:v3';
+testWindow.dispatchEvent(staleEvent);
+expect(store.getCommunitySyncSnapshot().pendingCount === 0, 'settlement tombstones must prevent a stale tab from resurrecting already-ACKed operations');
+expect(!store.getFeedbackSnapshot().comments.some((comment) => comment.id === crossTabA || comment.id === crossTabB), 'ACKed optimistic comments must not shadow later server moderation truth');
 
 const countBeforeFailure = store.getFeedbackSnapshot().comments.length;
 storage.failWrites = true;
@@ -200,20 +296,12 @@ const blocked = store.commitCommentFeedback({
   text: 'Запись при переполненном хранилище не должна появиться только в памяти.',
   kind: 'literary',
   helpful: 0,
-  createdAt: iso(200),
+  createdAt: iso(300),
 }, 'comment:article:sergei-yesenin-1921-1925', voterId);
 storage.failWrites = false;
 expect(!blocked, 'quota failures must be reported');
 expect(store.getFeedbackSnapshot().comments.length === countBeforeFailure, 'failed persistence must not create dishonest in-memory state');
 
-let localNotifications = 0;
-const stopFeedback = store.subscribeFeedback(() => { localNotifications += 1; });
-const event = new Event('storage') as Event & { key?: string };
-event.key = 'tlp-community-feedback:v3';
-testWindow.dispatchEvent(event);
-stopFeedback();
-expect(localNotifications === 1, 'cross-tab v3 storage events must notify once');
-
 for (const failure of failures) console.error(`ERROR community-store: ${failure}`);
-console.log(`Community store validation: ${failures.length} error(s), ${requestCount} Worker mutation request(s), no startup reads; incomplete legacy rating writes quarantined.`);
+console.log(`Community store validation: ${failures.length} error(s), ${mutationRequestCount} Worker mutation request(s), typed ACK/retry/reject reconciliation, stale-tab-safe settlement and no startup writes.`);
 if (failures.length) process.exit(1);

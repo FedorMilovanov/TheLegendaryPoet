@@ -8,6 +8,7 @@ const remote = read('src/utils/communityRemote.ts');
 const config = read('src/utils/communityConfig.ts');
 const humanCheck = read('src/utils/communityHumanCheck.ts');
 const store = read('src/utils/communityStore.ts');
+const commentContract = read('src/data/communityContract.ts');
 const ratingContract = read('src/data/ratingDimensionContract.ts');
 const ratingDimensions = read('src/data/ratingDimensions.ts');
 const worker = read('workers/community-api/src/index.ts');
@@ -44,6 +45,23 @@ expect(remote.includes("const ACTOR_KEY = 'tlp-community-actor:v1'"), 'signed ac
 expect(remote.includes('locks.request(ACTOR_KEY, task)') && remote.includes('resolveActorToken'), 'parallel tabs must serialize actor-session minting through the browser lock manager');
 expect(remote.includes('const existing = currentActorToken();') && remote.includes('invalidateActorSession(first.actorToken)'), 'actor mint/recovery must re-read shared storage and never erase a newer cross-tab token');
 expect(!remote.includes('_localDeviceId: string): Promise<boolean>') || !/body:\s*JSON\.stringify\([^)]*_localDeviceId/.test(remote), 'local device bookkeeping must never become remote write authority');
+expect(remote.includes("outcome: 'ack'") && remote.includes("outcome: 'retry'") && remote.includes("outcome: 'reject'"), 'browser delivery must distinguish ACK, retryable failure and permanent rejection');
+expect(remote.includes('if (!interactive) return Promise.resolve(null)'), 'background delivery must never mint a new Turnstile actor without a fresh reader action');
+
+expect(commentContract.includes('COMMUNITY_COMMENT_MIN_LENGTH = 8'), 'comment minimum length must have one shared Product contract');
+expect(commentContract.includes('COMMUNITY_COMMENT_MAX_LENGTH = 2000'), 'comment maximum length must have one shared Product contract');
+expect(commentContract.includes('COMMUNITY_AUTHOR_MAX_LENGTH = 60'), 'comment author maximum must have one shared Product contract');
+expect(commentContract.includes('COMMUNITY_COMMENT_COOLDOWN_MS = 20_000'), 'comment cooldown must have one shared Product contract');
+expect(commentContract.includes('communityTextLength') && commentContract.includes('truncateCommunityText') && commentContract.includes('isCommunityCommentKind'), 'shared comment contract must own Unicode length/truncation and kind authority');
+expect(worker.includes("from '../../../src/data/communityContract'"), 'Worker comment validation must consume the shared Product comment contract');
+expect(store.includes("from '../data/communityContract'"), 'browser persistence/outbox must consume the shared Product comment contract');
+expect(worker.includes('communityTextLength(text)') && worker.includes('COMMUNITY_COMMENT_MIN_LENGTH') && worker.includes('COMMUNITY_COMMENT_MAX_LENGTH'), 'Worker text validation must use the shared Unicode-safe length contract');
+expect(worker.includes('truncateCommunityText(cleanAuthor, COMMUNITY_AUTHOR_MAX_LENGTH)'), 'Worker author normalization must use the shared author limit');
+expect(worker.includes('isCommunityCommentKind(body.commentKind)'), 'Worker comment kinds must come from the shared contract');
+expect(worker.includes('now - COMMUNITY_COMMENT_COOLDOWN_MS'), 'atomic Worker cooldown must use the shared cooldown constant');
+expect(!worker.includes('const COMMENT_COOLDOWN_MS =') && !worker.includes('const COMMENT_KINDS ='), 'Worker must not duplicate comment cooldown/kind authorities');
+expect(store.includes('settledOperations') && store.includes('mergeStates') && store.includes('scheduleCommunityOutboxReplay'), 'browser delivery must persist settlements, merge cross-tab state and support bounded replay');
+expect(store.includes('if (!existing && outbox.length >= MAX_OUTBOX_ITEMS) return null'), 'outbox saturation must fail admission instead of silently dropping older pending work');
 
 expect(ratingContract.includes('ratingDimensionKeysByTarget') && ratingContract.includes('hasCanonicalRatingScores'), 'rating score shape must have one shared runtime contract');
 expect(ratingDimensions.includes("from './ratingDimensionContract'"), 'reader-facing rating dimensions must derive keys from the shared score contract');
@@ -80,7 +98,7 @@ expect(worker.includes('scoresEqual(body.targetType, existing.scores_json, score
 expect(worker.includes('SELECT actor_id, target_type, target_id, author, text, kind FROM tlp_comments WHERE id = ?'), 'comment replay checks must compare the complete immutable stored payload');
 expect(worker.includes('commentMatches(existing, actor, comment)') && worker.includes('comment_id_conflict'), 'comment IDs must be idempotent only for the same actor and normalized payload');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_comments') && worker.includes('const persisted = await readExisting()'), 'concurrent comment retries must converge on one row and re-verify ownership/payload instead of surfacing a uniqueness 500');
-expect(worker.includes('WHERE NOT EXISTS (') && worker.includes('actor_id = ? AND created_at > ?') && worker.includes('COMMENT_COOLDOWN_MS'), 'comment cooldown must be enforced inside the atomic insert statement so concurrent requests cannot both pass a pre-check');
+expect(worker.includes('WHERE NOT EXISTS (') && worker.includes('actor_id = ? AND created_at > ?') && worker.includes('COMMUNITY_COMMENT_COOLDOWN_MS'), 'comment cooldown must be enforced inside the atomic insert statement so concurrent requests cannot both pass a pre-check');
 expect(!worker.includes("SELECT 1 AS found FROM tlp_comments WHERE actor_id = ? AND created_at > ? LIMIT 1"), 'comment cooldown must not rely on a race-prone read-before-write check');
 expect(worker.includes("SELECT 1 AS found FROM tlp_helpful_votes WHERE comment_id = ? AND actor_id = ? LIMIT 1"), 'helpful retries must test the server uniqueness key before rate-budget consumption');
 expect(worker.includes('INSERT OR IGNORE INTO tlp_helpful_votes'), 'helpful concurrency must remain protected by the database uniqueness constraint');
@@ -140,5 +158,5 @@ expect(!existsSync('docs/community-schema.sql'), 'obsolete Supabase/Postgres sch
 expect(!existsSync('scripts/validate-community-scaling.ts'), 'obsolete Supabase scaling validator must be removed rather than bypassed');
 
 for (const failure of failures) console.error(`ERROR community-cloudflare-authority: ${failure}`);
-console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser, shared rating contract, Worker, strict target manifest on reads/writes, atomic comment cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
+console.log(`Community Cloudflare authority contract: ${failures.length} error(s); browser delivery reconciliation, shared comment/rating contracts, Worker, strict target manifest on reads/writes, atomic cooldown, required secret bindings, production D1 binding, Turnstile, cross-tab actor authority, payload-safe retry idempotency, fail-closed readiness, full browser-QA topology and deploy boundaries checked.`);
 if (failures.length) process.exit(1);
