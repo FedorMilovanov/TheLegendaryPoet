@@ -33,6 +33,7 @@ for (const forbidden of [/редактор без должности/iu, /лит
 
 const expectedCover = '/images/essays/benislavskaya/benislavskaya-editorial-hero.webp';
 const expectedCoverSha256 = '0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48';
+const expectedCoverBytes = 132172;
 if (essay.cover !== expectedCover || essay.cardCover !== expectedCover) {
   throw new Error(`Benislavskaya staged hero target drifted: ${essay.cover} / ${essay.cardCover}`);
 }
@@ -47,13 +48,16 @@ if (!essay.coverCredit?.includes('редакционная кинематогр�
 }
 
 const coverPath = `public${expectedCover}`;
-let coverStatus = `pending-ingestion:${expectedCoverSha256}`;
-if (existsSync(coverPath)) {
-  const coverSha256 = createHash('sha256').update(readFileSync(coverPath)).digest('hex');
-  if (coverSha256 !== expectedCoverSha256) {
-    throw new Error(`Benislavskaya hero exists but does not match approved bytes: ${coverSha256}`);
-  }
-  coverStatus = `verified:${coverSha256}`;
+if (!existsSync(coverPath)) {
+  throw new Error('Benislavskaya approved production hero is missing after owner-approved binary ingestion');
+}
+const coverBytes = readFileSync(coverPath);
+if (coverBytes.byteLength !== expectedCoverBytes) {
+  throw new Error(`Benislavskaya hero byte length drifted: ${coverBytes.byteLength} !== ${expectedCoverBytes}`);
+}
+const coverSha256 = createHash('sha256').update(coverBytes).digest('hex');
+if (coverSha256 !== expectedCoverSha256) {
+  throw new Error(`Benislavskaya hero does not match approved bytes: ${coverSha256}`);
 }
 
 const expectedHeadings = [
@@ -110,8 +114,10 @@ for (const id of expectedStrongSources) {
 }
 
 const controllingBook = sourcesById.get('ben-1995-book');
-if (!controllingBook?.note?.includes('236–281') || !controllingBook.note.includes('не приобретены')) {
-  throw new Error('Benislavskaya controlling 1995-book source no longer discloses the corrected page-level gate');
+for (const marker of ['234–281 provisional', '4 марта', '18 января', '8 февраля', 'не приобретены']) {
+  if (!controllingBook?.note?.includes(marker)) {
+    throw new Error(`Benislavskaya controlling-book source note lost current holder/acquisition boundary: ${marker}`);
+  }
 }
 const chronology1925 = sourcesById.get('ben-letopis-t5-k1');
 for (const pageMarker of ['268–269', '271–272', '280–281', '339–340']) {
@@ -131,37 +137,49 @@ const reconciliationPath = 'docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_M
 if (!existsSync(reconciliationPath)) throw new Error('Benislavskaya inbound reconciliation matrix is missing');
 const reconciliation = readFileSync(reconciliationPath, 'utf8');
 for (const marker of [
+  'DIRECT HOLDER INSPECTION — 2026-08-20',
+  '4 Mar 1924 → p. **234**',
+  '6 Apr 1924 → p. **236**',
+  '234–281 provisional',
   'PAGE-WITNESS VERIFIED',
   'pp. **339–340**',
-  "editors state that Zankovskaya's cited archive location is erroneous because the letter is absent there",
   'remained with G. A. Benislavskaya',
   'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
-  'there is no need to purchase Zankovskaya 1997 p. 381 or Shubnikova-Guseva 2008 pp. 332–333',
 ]) {
   if (!reconciliation.includes(marker)) {
-    throw new Error(`Benislavskaya 16 July verified IMLI boundary disappeared: ${marker}`);
+    throw new Error(`Benislavskaya reconciliation boundary disappeared: ${marker}`);
   }
+}
+if (reconciliation.includes('remaining research blocker is the lawful 1995 witness pp. **236–281**')) {
+  throw new Error('Benislavskaya reconciliation revived the obsolete 236–281-only acquisition boundary');
 }
 
 const gateLedgerPath = 'docs/research/BENISLAVSKAYA_PUBLICATION_GATE_2026-08.md';
 if (!existsSync(gateLedgerPath)) throw new Error('Benislavskaya publication gate ledger is missing');
 const gateLedger = readFileSync(gateLedgerPath, 'utf8');
 for (const marker of [
+  'STAGED-DRAFT / SOURCE-GATED / HERO-CLOSED',
   '16 July text/page witness: VERIFIED via IMLI 2013, pp. 339–340',
-  'remaining acquisition problem is the 1995 correspondence range pp. **236–281**',
+  'Direct holder inspection — 2026-08-20',
+  'Working range: **234–281 provisional**',
+  '**NO PAYMENT AUTHORIZED.**',
+  '0 documentary body images',
   'not an outstanding acquisition prerequisite',
 ]) {
   if (!gateLedger.includes(marker)) {
-    throw new Error(`Benislavskaya narrowed acquisition gate disappeared: ${marker}`);
+    throw new Error(`Benislavskaya current publication gate disappeared: ${marker}`);
   }
 }
 if (/acquire\/verify (?:a|the) controlling witness for the 16 July/iu.test(gateLedger)) {
   throw new Error('Benislavskaya gate incorrectly re-opened acquisition of the already verified 16 July IMLI witness');
 }
+if (gateLedger.includes('pending binary ingestion')) {
+  throw new Error('Benislavskaya ledger incorrectly reports the already-ingested hero as pending');
+}
 
 const bodyImages = essay.blocks.filter((block) => block.type === 'image');
 if (bodyImages.length !== 0) {
-  throw new Error('Benislavskaya staged draft gained body visuals before item-level rights approval');
+  throw new Error('Benislavskaya staged v1 gained documentary body visuals without a separate item-level rights package');
 }
 
 const readerText = essay.blocks.map((block) => {
@@ -189,7 +207,10 @@ for (const boundary of [
   '13 пронумерованных единиц',
   '16 позиций',
   'Публикационный gate остаётся честно открытым',
-  '236–281',
+  '20 августа 2026 года',
+  '4 марта находится на с. 234',
+  '6 апреля — на с. 236',
+  '234–281 provisional',
   '280–281',
   '339–340',
   'машинописная копия',
@@ -208,10 +229,13 @@ if (!readerText.includes('указанного ранее письма в ЦГА
 if (!readerText.includes('Письмо 16 июля уже имеет отдельный полный академический page-witness')) {
   throw new Error('Benislavskaya reader text no longer closes the 16 July acquisition branch with IMLI evidence');
 }
+if (/для финальной reader-версии нужны законные страницы 236–281/iu.test(readerText)) {
+  throw new Error('Benislavskaya staged reader revived the obsolete 236–281-only acquisition request');
+}
 if (/Для последнего известного письма от 16 июля нужен отдельный controlling witness/iu.test(readerText)) {
   throw new Error('Benislavskaya reader text revived the obsolete 1997/2008 acquisition requirement for 16 July');
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=${coverStatus}; 13↔16↔14 gate preserved; remaining 1995 page gate=236–281; IMLI 16-Jul witness=339–340 verified.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=verified:${coverSha256}; 13↔16↔14 gate preserved; current 1995 gate=complete 4-Mar item through p.281 (234–281 provisional); IMLI 16-Jul witness=339–340 verified.`,
 );
