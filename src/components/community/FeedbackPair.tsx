@@ -1,10 +1,12 @@
 import { AlertTriangle, Sparkles } from 'lucide-react';
-import { CommentEntry } from '../../types/community';
+import type { CommentEntry } from '../../types/community';
 import { commentKindLabels } from '../../data/commentKinds';
+import ExpandableText from './ExpandableText';
 
 interface FeedbackPairProps {
   positive?: CommentEntry;
   critical?: CommentEntry;
+  partial?: boolean;
 }
 
 function Item({
@@ -30,24 +32,25 @@ function Item({
     <div className="rounded-3xl border border-cyan-400/12 bg-black/20 p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/15 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-cyan-300">
-          {tone === 'positive' ? <Sparkles size={12} /> : <AlertTriangle size={12} />}
+          {tone === 'positive' ? <Sparkles size={12} aria-hidden="true" /> : <AlertTriangle size={12} aria-hidden="true" />}
           {title}
         </div>
         <span className="text-[10px] uppercase tracking-[0.14em] text-cyan-100/35">
           {commentKindLabels[comment.kind] || 'Комментарий'}
         </span>
       </div>
-      <p className="text-sm leading-relaxed text-cyan-50/72">{comment.text}</p>
+      <ExpandableText text={comment.text} collapsedChars={180} />
       <div className="mt-3 text-xs text-cyan-100/34">{comment.author}</div>
     </div>
   );
 }
 
-export default function FeedbackPair({ positive, critical }: FeedbackPairProps) {
+export default function FeedbackPair({ positive, critical, partial = false }: FeedbackPairProps) {
+  const suffix = partial ? ' · среди загруженных' : '';
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Item tone="positive" title="Положительный отзыв" comment={positive} />
-      <Item tone="critical" title="Критический отзыв" comment={critical} />
+      <Item tone="positive" title={`Положительный отзыв${suffix}`} comment={positive} />
+      <Item tone="critical" title={`Критический отзыв${suffix}`} comment={critical} />
     </div>
   );
 }
