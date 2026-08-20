@@ -1,0 +1,99 @@
+name: Simonov publication source gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/data/essays/simonovSonArtilleristaDraft.ts'
+      - 'src/data/essays/simonovSonArtilleristaPublished.ts'
+      - 'src/data/essays/index.ts'
+      - 'src/data/essaySearchIndex.generated.ts'
+      - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
+      - 'public/images/PROVENANCE.yml'
+      - 'public/sitemap.xml'
+      - 'public/feed.xml'
+      - 'docs/research/SIMONOV_*.md'
+      - 'scripts/validate-simonov-*.ts'
+      - '.github/workflows/simonov-staged.yml'
+
+concurrency:
+  group: simonov-publication-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publication-source-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Validate publication candidate contract
+        run: npx tsx scripts/validate-simonov-son-artillerista-publication.ts
+
+      - name: Validate reader evidence reconciliation
+        run: npx tsx scripts/validate-simonov-reader-evidence-reconciliation.ts
+
+      - name: Validate research follow-ups
+        run: npx tsx scripts/validate-simonov-son-artillerista-research-followups.ts
+
+      - name: Validate claim matrix
+        run: npx tsx scripts/validate-simonov-son-artillerista-claim-matrix.ts
+
+      - name: Validate claim-aware publication readiness
+        run: npx tsx scripts/validate-simonov-publication-readiness-gate.ts
+
+      - name: Validate identity and publication follow-ups
+        run: npx tsx scripts/validate-simonov-son-artillerista-identity-publication-followups.ts
+
+      - name: Validate source addendum III
+        run: npx tsx scripts/validate-simonov-son-artillerista-source-addendum-3.ts
+
+      - name: Validate source addendum IV
+        run: npx tsx scripts/validate-simonov-son-artillerista-source-addendum-4.ts
+
+      - name: Validate 1966 Uchitelskaya Gazeta gate
+        run: npx tsx scripts/validate-simonov-1966-uchitelskaya-gazeta-gate.ts
+
+      - name: Validate Uchitelskaya Gazeta PRLIB inquiry
+        run: npx tsx scripts/validate-simonov-uchitelskaya-gazeta-prlib-inquiry.ts
+
+      - name: Validate Pravda 1966 acquisition inquiry
+        run: npx tsx scripts/validate-simonov-pravda-1966-acquisition-inquiry.ts
+
+      - name: Validate Red Star scan routes
+        run: npx tsx scripts/validate-simonov-red-star-direct-mirrors-gate.ts
+
+      - name: Validate Patriot Rodiny RSL holdings gap
+        run: npx tsx scripts/validate-simonov-patriot-rodiny-rsl-holdings-gap.ts
+
+      - name: Validate Patriot Rodiny acquisition inquiry
+        run: npx tsx scripts/validate-simonov-patriot-rodiny-acquisition-inquiry.ts
+
+      - name: Validate Patriot Rodiny bibliographic follow-ups
+        run: npx tsx scripts/validate-simonov-patriot-rodiny-bibliographic-followups.ts
+
+      - name: Validate direct-object acquisition inquiries
+        run: npx tsx scripts/validate-simonov-direct-object-acquisition-inquiries.ts
+
+      - name: Validate Pacific Surf acquisition inquiry
+        run: npx tsx scripts/validate-simonov-tikhookeansky-priboy-acquisition-inquiry.ts
+
+      - name: Validate Rosarchiv award-object route inquiry
+        run: npx tsx scripts/validate-simonov-loskutov-award-rosarchiv-inquiry.ts
+
+      - name: Validate regional archive acquisition inquiries
+        run: npx tsx scripts/validate-simonov-regional-archive-acquisition-inquiries.ts
+
+      - name: Validate Simonov volume 8 public scan gate
+        run: npx tsx scripts/validate-simonov-t8-public-scan-gate.ts
+
+      - name: Validate Simonov volume 8 same-edition OCR collation
+        run: npx tsx scripts/validate-simonov-t8-same-edition-ocr-collation.ts
+
+      - name: Validate approved production hero and visual evidence
+        run: npx tsx scripts/validate-simonov-son-artillerista-visual-manifest.ts

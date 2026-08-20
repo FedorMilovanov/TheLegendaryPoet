@@ -11,6 +11,10 @@ on:
       - 'src/routes/routeModules.ts'
       - 'src/data/essays/**'
       - 'qa/articles-catalog.spec.mjs'
+      - 'qa/simonov-publication.spec.mjs'
+      - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
+      - 'public/sitemap.xml'
+      - 'public/feed.xml'
       - 'playwright.config.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -24,6 +28,10 @@ on:
       - 'src/routes/routeModules.ts'
       - 'src/data/essays/**'
       - 'qa/articles-catalog.spec.mjs'
+      - 'qa/simonov-publication.spec.mjs'
+      - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
+      - 'public/sitemap.xml'
+      - 'public/feed.xml'
       - 'playwright.config.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -71,9 +79,9 @@ jobs:
           done
           cat preview.log
           exit 1
-      - name: Run catalog on three browser profiles
+      - name: Run catalog and Simonov publication acceptance on three browser profiles
         run: >-
-          npx playwright test qa/articles-catalog.spec.mjs
+          npx playwright test qa/articles-catalog.spec.mjs qa/simonov-publication.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=android-pixel7

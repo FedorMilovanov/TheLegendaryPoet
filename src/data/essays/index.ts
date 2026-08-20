@@ -38,6 +38,7 @@ import {
   placeEssayImages,
 } from './essayVisualLayout';
 import { publishEssay, publishEssayCatalog } from './publishEssay';
+import { simonovSonArtilleristaPublished } from './simonovSonArtilleristaPublished';
 
 function uniqueSources(sources: readonly EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
@@ -553,6 +554,7 @@ const brikCasePublished = publishEssay(brikCaseVisual, {
 });
 
 export const essays: readonly Essay[] = publishEssayCatalog([
+  simonovSonArtilleristaPublished,
   lermontovRoadPublished,
   yeseninKutezhiPublished,
   yeseninPartOnePublished,
