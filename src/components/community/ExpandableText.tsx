@@ -5,9 +5,20 @@ interface ExpandableTextProps {
   collapsedChars?: number;
 }
 
+type GraphemeSegment = { segment: string };
+type SegmenterLike = {
+  segment(input: string): Iterable<GraphemeSegment>;
+};
+type SegmenterConstructor = new (
+  locales?: string | string[],
+  options?: { granularity: 'grapheme' },
+) => SegmenterLike;
+
 function graphemeSegments(value: string) {
-  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-    const Segmenter = Intl.Segmenter as typeof Intl.Segmenter;
+  const Segmenter = typeof Intl !== 'undefined'
+    ? (Intl as unknown as { Segmenter?: SegmenterConstructor }).Segmenter
+    : undefined;
+  if (Segmenter) {
     const segmenter = new Segmenter('ru', { granularity: 'grapheme' });
     return [...segmenter.segment(value)].map((entry) => entry.segment);
   }
