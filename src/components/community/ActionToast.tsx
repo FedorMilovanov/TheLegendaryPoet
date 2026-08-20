@@ -11,6 +11,9 @@ export default function ActionToast({ message, tone }: ActionToastProps) {
   return (
     <AnimatePresence>
       <motion.div
+        role={tone === 'warning' ? 'alert' : 'status'}
+        aria-live={tone === 'warning' ? 'assertive' : 'polite'}
+        aria-atomic="true"
         initial={{ opacity: 0, y: -8, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -22,7 +25,7 @@ export default function ActionToast({ message, tone }: ActionToastProps) {
         }`}
       >
         <div className="flex items-center gap-2">
-          <Icon size={16} className={tone === 'success' ? 'text-cyan-300' : 'text-amber-300'} />
+          <Icon size={16} aria-hidden="true" className={tone === 'success' ? 'text-cyan-300' : 'text-amber-300'} />
           <span>{message}</span>
         </div>
       </motion.div>
