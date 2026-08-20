@@ -16,3 +16,11 @@ export function isCommunityCommentKind(value: unknown): value is CommentKind {
   return typeof value === 'string'
     && communityCommentKinds.some((kind) => kind === value);
 }
+
+export function communityTextLength(value: string) {
+  return Array.from(value).length;
+}
+
+export function truncateCommunityText(value: string, maxLength: number) {
+  return Array.from(value).slice(0, Math.max(0, maxLength)).join('');
+}
