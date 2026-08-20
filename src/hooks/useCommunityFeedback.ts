@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import {
   COMMUNITY_AUTHOR_MAX_LENGTH,
+  COMMUNITY_COMMENT_COOLDOWN_SCOPE,
   COMMUNITY_COMMENT_MAX_LENGTH,
   COMMUNITY_COMMENT_MIN_LENGTH,
   communityTextLength,
@@ -77,8 +78,7 @@ export function useCommunityFeedback(
   };
 
   const addComment = (author: string, text: string, kind: CommentKind) => {
-    const scope = `comment:${targetType}:${targetId}`;
-    const cooldown = checkCooldown(scope);
+    const cooldown = checkCooldown(COMMUNITY_COMMENT_COOLDOWN_SCOPE);
     if (!cooldown.allowed) return { ok: false as const, message: `Подождите ${Math.ceil(cooldown.remainingMs / 1000)} сек.` };
 
     const normalizedText = text.replace(/\r\n?/g, '\n').trim();
@@ -96,7 +96,7 @@ export function useCommunityFeedback(
       helpful: 0,
       createdAt: new Date().toISOString(),
     };
-    const stored = commitCommentFeedback(entry, scope, getCommunityDeviceId());
+    const stored = commitCommentFeedback(entry, COMMUNITY_COMMENT_COOLDOWN_SCOPE, getCommunityDeviceId());
     if (!stored) return { ok: false as const, message: 'Не удалось сохранить: локальное хранилище или очередь недоступны' };
 
     void flushCommunityOutbox({ interactive: true });
