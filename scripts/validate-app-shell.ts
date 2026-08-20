@@ -25,6 +25,11 @@ const browserStorage = read('src/utils/browserStorage.ts');
 const communityIdentity = read('src/utils/communityIdentity.ts');
 const analytics = read('src/utils/analytics.ts');
 const themeToggle = read('src/components/ThemeToggle.tsx');
+const themeRuntime = read('src/lib/theme.ts');
+const themeCss = read('src/theme.css');
+const indexHtml = read('index.html');
+const ratingStars = read('src/components/community/RatingStars.tsx');
+const commentComposer = read('src/components/community/CommentComposer.tsx');
 const audioProvider = read('src/components/music/AudioPlayerProvider.tsx');
 const commandPalette = read('src/components/command/CommandPalette.tsx');
 const header = read('src/components/Header.tsx');
@@ -71,6 +76,8 @@ expect(app.includes('applicationRoutes.map'), 'App.tsx must render route element
 expect(app.includes('legacyRedirects.map'), 'App.tsx must render explicit redirects from the route contract runtime');
 expect(app.includes('<Route path="*" element={<NotFoundPage />}'), 'App.tsx must retain the contract-owned NotFound boundary');
 expect(!app.includes('path="/articles/:id"'), 'unknown article ids must not use a broad soft-404 redirect');
+expect(app.includes('theme-page-surface'), 'persistent SiteLayout must consume the semantic page surface instead of a dark-only literal');
+expect(header.includes('theme-chrome-surface'), 'persistent header must consume the semantic chrome surface');
 
 for (const page of expectedPages) {
   expect(routes.includes(`import('../pages/${page}')`), `missing lazy importer for ${page}`);
@@ -148,7 +155,7 @@ expect(cursor.includes('activatedRef.current'), 'the native cursor must remain v
 for (const [source, label] of [
   [communityIdentity, 'community identity'],
   [analytics, 'analytics consent'],
-  [themeToggle, 'theme preference'],
+  [themeRuntime, 'theme preference'],
   [audioProvider, 'audio coordination'],
 ] as const) {
   expect(source.includes('safeWrite('), `${label} must use safeWrite for browser persistence`);
@@ -156,6 +163,27 @@ for (const [source, label] of [
 }
 expect(browserStorage.includes('export function safeWrite'), 'shared safeWrite helper must remain available');
 expect(browserStorage.includes("typeof window === 'undefined'"), 'browser storage helper must remain SSR-safe');
+
+expect(indexHtml.includes("window.localStorage.getItem('tlp-theme-mode')"), 'prepaint must read the persisted theme before React mounts');
+expect(indexHtml.includes('root.dataset.theme = mode'), 'prepaint must stamp an explicit DOM theme authority');
+expect(indexHtml.includes("root.classList.toggle('theme-light'"), 'prepaint must apply the light-theme class before first paint');
+expect(indexHtml.includes("meta[name=\"theme-color\"]"), 'prepaint must synchronize browser chrome theme-color metadata');
+expect(indexHtml.includes("meta[name=\"color-scheme\"]"), 'prepaint must synchronize browser color-scheme metadata');
+expect(themeRuntime.includes("window.addEventListener('storage'"), 'runtime theme authority must converge across tabs');
+expect(themeRuntime.includes('THEME_CHANGE_EVENT'), 'runtime theme authority must converge duplicate same-document toggles');
+expect(themeRuntime.includes("meta[name=\"theme-color\"]"), 'runtime theme changes must synchronize theme-color metadata');
+expect(themeRuntime.includes("meta[name=\"color-scheme\"]"), 'runtime theme changes must synchronize color-scheme metadata');
+expect(themeToggle.includes('subscribeTheme(setMode)'), 'ThemeToggle must subscribe to the shared observable theme authority');
+expect(themeToggle.includes('setTheme('), 'ThemeToggle must mutate theme only through the shared authority');
+expect(!themeToggle.includes('localStorage'), 'ThemeToggle must not own browser storage directly');
+expect(themeCss.includes('--tlp-text-muted:'), 'theme layer must own semantic functional text tokens');
+expect(themeCss.includes('--tlp-rating-star-idle:'), 'theme layer must own semantic rating-state tokens');
+expect(themeCss.includes(".rating-star[data-active='false']"), 'unselected rating state must consume the semantic non-text contrast token');
+expect(ratingStars.includes("data-active={active ? 'true' : 'false'}"), 'RatingStars must expose visual state to the semantic contrast layer');
+expect(!ratingStars.includes('text-cyan-900'), 'RatingStars must not regress to the low-contrast dark-cyan literal');
+expect(commentComposer.includes('theme-functional-muted'), 'comment help and unselected options must consume semantic functional text contrast');
+expect(commentComposer.includes('theme-input'), 'comment placeholders must consume semantic placeholder contrast');
+expect(!commentComposer.includes('text-cyan-100/25') && !commentComposer.includes('text-cyan-100/34') && !commentComposer.includes('text-cyan-100/40'), 'known low-opacity comment functional-text literals must stay retired');
 
 expect(commandPalette.includes('if (!open) return null;'), 'closed search must not render a duplicate fixed desktop trigger');
 expect(!commandPalette.includes('palette-fab'), 'the retired floating Ctrl K pill must stay out of the command palette DOM');
@@ -212,4 +240,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`App shell validation passed: ${expectedPages.length} lazy routes, canonical legacy redirects, persistent chrome, single search entry points, native document scrolling, bounded restoration, intent prefetch and exact-head Pages provenance.`);
+console.log(`App shell validation passed: ${expectedPages.length} lazy routes, canonical legacy redirects, persistent chrome, semantic theme/contrast authority, native document scrolling, bounded restoration, intent prefetch and exact-head Pages provenance.`);

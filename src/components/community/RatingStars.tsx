@@ -19,7 +19,8 @@ export default function RatingStars({ value, onChange, size = 18, label = 'Оц�
       <Star
         size={size}
         aria-hidden="true"
-        className={active ? 'fill-cyan-300 text-cyan-300 drop-shadow-[0_0_8px_rgba(0,212,255,0.55)]' : 'text-cyan-900'}
+        data-active={active ? 'true' : 'false'}
+        className="rating-star drop-shadow-[0_0_8px_rgba(0,212,255,0.38)]"
       />
     );
   };
@@ -78,7 +79,7 @@ export default function RatingStars({ value, onChange, size = 18, label = 'Оц�
           aria-checked={score === value}
           tabIndex={score === value || (value === 0 && score === 1) ? 0 : -1}
           onClick={() => onChange(score)}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061018] active:scale-95"
+          className="rating-star-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 active:scale-95"
           aria-label={`${score} из 5`}
         >
           {star(score)}
