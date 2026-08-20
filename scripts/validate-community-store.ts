@@ -22,6 +22,8 @@ const listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
 const testWindow = {
   localStorage: storage,
   location: { hostname: '127.0.0.1' },
+  setTimeout: globalThis.setTimeout.bind(globalThis),
+  clearTimeout: globalThis.clearTimeout.bind(globalThis),
   addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
     const bucket = listeners.get(type) ?? new Set<EventListenerOrEventListenerObject>();
     bucket.add(listener);
