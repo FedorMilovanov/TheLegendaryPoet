@@ -53,12 +53,13 @@ const commentRows = Array.from({ length: 12 }, (_, index) => ({
 
 let requestUrls: string[] = [];
 let summaryAvailable = true;
+let commentsAvailable = true;
 globalThis.fetch = async (input, init) => {
   const url = new URL(String(input));
   requestUrls.push(url.toString());
 
   if (url.pathname === '/v1/summary') {
-    if (!summaryAvailable) return new Response(null, { status: 404 });
+    if (!summaryAvailable) return new Response(null, { status: 503 });
     return Response.json({
       targetType: 'article',
       targetId,
@@ -72,7 +73,7 @@ globalThis.fetch = async (input, init) => {
   }
 
   if (url.pathname === '/v1/summary/batch') {
-    if (!summaryAvailable) return new Response(null, { status: 404 });
+    if (!summaryAvailable) return new Response(null, { status: 503 });
     const body = JSON.parse(String(init?.body ?? '{}')) as { targetIds?: string[] };
     return Response.json({
       aggregates: (body.targetIds ?? []).map((id, index) => ({
@@ -89,6 +90,7 @@ globalThis.fetch = async (input, init) => {
   }
 
   if (url.pathname === '/v1/comments') {
+    if (!commentsAvailable) return new Response(null, { status: 503 });
     const hasCursor = url.searchParams.has('cursorCreatedAt');
     const slice = hasCursor ? commentRows.slice(10) : commentRows.slice(0, 10);
     const last = slice.at(-1);
@@ -156,6 +158,22 @@ expect(!secondPage.hasMoreComments, 'final page must clear the cursor');
 expect(new Set(secondPage.comments.map((comment) => comment.id)).size === 12, 'cursor merge must not create duplicates');
 expect(fullNotifications > 0, 'full mode must notify as summary/comments arrive');
 
+summaryAvailable = false;
+commentsAvailable = false;
+await targets.retryFeedbackTarget('article', targetId, 'full');
+await settle();
+const failedRefresh = targets.getFeedbackTargetSnapshot('article', targetId);
+expect(failedRefresh.summaryPhase === 'error' && failedRefresh.commentsPhase === 'error', 'failed refresh must expose explicit error phases');
+expect(failedRefresh.aggregate.ratingCount === 9 && failedRefresh.aggregate.commentCount === 12, 'failed summary refresh must preserve the last known aggregate instead of manufacturing zero');
+expect(failedRefresh.comments.length === 12, 'failed comments refresh must preserve the already loaded corpus instead of clearing it before the request succeeds');
+expect(failedRefresh.error?.includes('Ранее загруженные') === true, 'read-state error copy must state that prior loaded data remains visible');
+summaryAvailable = true;
+commentsAvailable = true;
+await targets.retryFeedbackTarget('article', targetId, 'full');
+await settle();
+expect(targets.getFeedbackTargetSnapshot('article', targetId).summaryPhase === 'ready', 'successful retry must restore summary readiness');
+expect(targets.getFeedbackTargetSnapshot('article', targetId).comments.length === 10, 'successful reset refresh may replace the cached comment page only after success');
+
 const unrelatedBefore = targets.getFeedbackTargetSnapshot('poet', 'anna-akhmatova');
 let unrelatedNotifications = 0;
 const stopUnrelated = targets.subscribeFeedbackTarget('poet', 'anna-akhmatova', () => { unrelatedNotifications += 1; }, 'passive');
@@ -199,5 +217,5 @@ stopUnrelated();
 stopFull();
 
 for (const failure of failures) console.error(`ERROR community-target-store: ${failure}`);
-console.log(`Community target validation: ${failures.length} error(s), ${requestUrls.length} target-scoped Worker request(s).`);
+console.log(`Community target validation: ${failures.length} error(s), explicit read phases, prior-data preservation and bounded target-scoped Worker requests.`);
 if (failures.length) process.exit(1);
