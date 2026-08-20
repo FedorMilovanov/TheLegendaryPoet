@@ -17,6 +17,13 @@ type ApprovedCover = {
 };
 
 const approvedCovers: Record<string, ApprovedCover> = {
+  'simonov-syn-artillerista-realnaya-istoriya': {
+    cover: '/images/essays/simonov/simonov-son-artillerista-hero.webp',
+    bytes: 130_386,
+    sha256: '5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5',
+    alt: 'Молодой советский артиллерийский разведчик среди холодных камней у полевой радиостанции — редакционная реконструкция сцены по мотивам «Сына артиллериста»',
+    credit: 'THE LEGENDARY POET · редакционная реконструкция; не документальная фотография Ивана Лоскутова',
+  },
   'vykhozhu-odin-ya-na-dorogu-lermontov': {
     cover: '/images/essays/lermontov/lermontov-road-hero.webp',
     bytes: 98_178,

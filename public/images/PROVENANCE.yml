@@ -1,5 +1,5 @@
 schema_version: 1
-reviewed_at: 2026-08-04
+reviewed_at: 2026-08-20
 scope: public/images
 policy:
   purpose: >-
@@ -80,7 +80,6 @@ assets:
     review_status: PENDING-GENERATION-RECORD
     source_use: not_primary_evidence
 
-
   - path: public/images/essays/lermontov/lermontov-road-hero.webp
     role: essay_hero_and_card
     origin_class: local_cinematic_editorial_reconstruction
@@ -145,6 +144,7 @@ assets:
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
     notes: Unified black-and-white interior composition; archive photographs remain separately credited inside the essay.
+
   - path: public/images/essays/yesenin/yesenin-duncan-first-meeting-editorial.webp
     role: essay_hero
     origin_class: local_cinematic_editorial_reconstruction
@@ -153,3 +153,16 @@ assets:
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
     notes: The audit preserves the approved prompt and states that archival references are not authors of this reconstruction.
+
+  - path: public/images/essays/simonov/simonov-son-artillerista-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/research/SIMONOV_SON_ARTILLERISTA_HERO_APPROVAL_2026-08.md
+    master_file_id: file_00000000b8d88246837fea37b12a6e24
+    master_name: "owner-supplied Simonov hero source PNG"
+    production_recipe: "minimal geometric preparation; resize 1600x900; WebP compression; metadata stripped; no generative or stylistic transformation"
+    bytes: 130386
+    sha256: 5aa9024cab522b4a6b4686231ba09b91dcc66969b85ba8f5f6dcecce67e16dd5
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Owner-approved editorial reconstruction; not a documentary photograph of Ivan Loskutov, the exact height, or the July 1941 battle.
