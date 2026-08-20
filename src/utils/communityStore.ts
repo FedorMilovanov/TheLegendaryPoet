@@ -368,7 +368,7 @@ function sanitizeSettlement(value: unknown): OperationSettlement | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const candidate = value as Partial<OperationSettlement>;
   const at = validIsoDate(candidate.at);
-  const operationCreatedAt = candidate.operationCreatedAt ? validIsoDate(candidate.operationCreatedAt) : undefined;
+  const operationCreatedAt = candidate.operationCreatedAt ? (validIsoDate(candidate.operationCreatedAt) ?? undefined) : undefined;
   if (!at || (candidate.outcome !== 'ack' && candidate.outcome !== 'reject') || typeof candidate.code !== 'string') return null;
   if (candidate.kind !== 'rating' && candidate.kind !== 'comment' && candidate.kind !== 'helpful') return null;
   const targetType = candidate.targetType && TARGET_TYPES.has(candidate.targetType) ? candidate.targetType : undefined;
