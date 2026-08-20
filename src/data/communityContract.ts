@@ -4,6 +4,7 @@ export const COMMUNITY_COMMENT_MIN_LENGTH = 8;
 export const COMMUNITY_COMMENT_MAX_LENGTH = 2000;
 export const COMMUNITY_AUTHOR_MAX_LENGTH = 60;
 export const COMMUNITY_COMMENT_COOLDOWN_MS = 20_000;
+export const COMMUNITY_COMMENT_COOLDOWN_SCOPE = 'comment:global';
 
 export const communityCommentKinds = [
   'literary',
