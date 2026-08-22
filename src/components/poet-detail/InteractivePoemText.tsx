@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
  */
 export default function InteractivePoemText({ text }: { text: string }) {
   const lines = text.split('\n');
-  const canonicalTokens = text.split(/(\s+)/u);
   const [focusedWord, setFocusedWord] = useState<string | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [returningWord, setReturningWord] = useState<string | null>(null);
@@ -64,19 +63,27 @@ export default function InteractivePoemText({ text }: { text: string }) {
         className="pointer-events-auto relative z-0 block whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
         style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
       >
-        {canonicalTokens.map((token, tokenIdx) => {
-          if (/^\s+$/u.test(token)) return token;
-          const previousWhitespace = canonicalTokens.slice(0, tokenIdx).filter((item) => /^\s+$/u.test(item)).length;
-          const key = `${previousWhitespace}-${tokenIdx}`;
+        {lines.map((line, lineIdx) => {
+          let wordIdx = 0;
+          const tokens = line.split(/(\s+)/u);
           return (
-            <span
-              key={`${tokenIdx}-${token}`}
-              data-poem-canonical-word
-              onPointerEnter={() => startDwell(key)}
-              onPointerLeave={stopDwell}
-              className="cursor-default text-transparent"
-            >
-              {token}
+            <span key={lineIdx}>
+              {lineIdx > 0 ? '\n' : ''}
+              {tokens.map((token, tokenIdx) => {
+                if (/^\s+$/u.test(token)) return token;
+                const key = `${lineIdx}-${wordIdx++}`;
+                return (
+                  <span
+                    key={`${tokenIdx}-${token}`}
+                    data-poem-canonical-word
+                    onPointerEnter={() => startDwell(key)}
+                    onPointerLeave={stopDwell}
+                    className="cursor-default text-transparent"
+                  >
+                    {token}
+                  </span>
+                );
+              })}
             </span>
           );
         })}
