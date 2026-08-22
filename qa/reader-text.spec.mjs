@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
+const POET_PATH = '/poets/sergei-yesenin';
 
 function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'reader text certification runs once in Chromium core');
@@ -9,7 +10,7 @@ function useChromiumCore(testInfo) {
 test('poem text has an exact selectable canonical layer separate from animated visual text', async ({ page }, testInfo) => {
   useChromiumCore(testInfo);
 
-  const response = await page.goto(`${BASE_URL}/poets/esenin`, { waitUntil: 'networkidle' });
+  const response = await page.goto(`${BASE_URL}${POET_PATH}`, { waitUntil: 'networkidle' });
   expect(response?.status()).toBeLessThan(400);
 
   const poem = page.locator('[data-poem-text]').first();
