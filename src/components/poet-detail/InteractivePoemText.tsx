@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
  */
 export default function InteractivePoemText({ text }: { text: string }) {
   const lines = text.split('\n');
+  const canonicalTokens = text.split(/(\s+)/u);
   const [focusedWord, setFocusedWord] = useState<string | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [returningWord, setReturningWord] = useState<string | null>(null);
@@ -63,7 +64,22 @@ export default function InteractivePoemText({ text }: { text: string }) {
         className="pointer-events-auto relative z-0 block whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
         style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
       >
-        {text}
+        {canonicalTokens.map((token, tokenIdx) => {
+          if (/^\s+$/u.test(token)) return token;
+          const previousWhitespace = canonicalTokens.slice(0, tokenIdx).filter((item) => /^\s+$/u.test(item)).length;
+          const key = `${previousWhitespace}-${tokenIdx}`;
+          return (
+            <span
+              key={`${tokenIdx}-${token}`}
+              data-poem-canonical-word
+              onPointerEnter={() => startDwell(key)}
+              onPointerLeave={stopDwell}
+              className="cursor-default text-transparent"
+            >
+              {token}
+            </span>
+          );
+        })}
       </span>
 
       <div
@@ -92,8 +108,6 @@ export default function InteractivePoemText({ text }: { text: string }) {
                     <motion.span
                       key={key}
                       layout
-                      onPointerEnter={() => startDwell(key)}
-                      onPointerLeave={stopDwell}
                       className="relative mr-[0.3em] inline-block cursor-default"
                       animate={
                         isFocused
