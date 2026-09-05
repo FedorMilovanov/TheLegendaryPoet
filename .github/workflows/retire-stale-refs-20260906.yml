@@ -1,0 +1,266 @@
+name: Retire audited stale source refs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/retire-stale-refs-20260906.yml
+
+permissions:
+  contents: write
+  pull-requests: read
+
+env:
+  TEMPORARY_BRANCH: maintenance/retire-stale-refs-20260906
+  RETAINED_ARCHIVE_BRANCH: archive/deep-research-local-images-20260724
+  ACTIVE_EDITORIAL_BRANCH: editorial/benislavskaya-publication-20260820
+
+jobs:
+  retire-stale-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exact preflight, delete audited refs, and verify steady state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          repository = os.environ['GITHUB_REPOSITORY']
+          owner = repository.split('/', 1)[0]
+          token = os.environ['GH_TOKEN']
+          temporary_branch = os.environ['TEMPORARY_BRANCH']
+          archive_branch = os.environ['RETAINED_ARCHIVE_BRANCH']
+          active_editorial_branch = os.environ['ACTIVE_EDITORIAL_BRANCH']
+
+          if os.environ['GITHUB_REF_NAME'] != 'main':
+              raise SystemExit(f'wrong execution branch: {os.environ["GITHUB_REF_NAME"]}')
+
+          expected_targets = {
+              'agent/benislavskaya-longform-draft': '1b1bd1416270d7519593a495d389193944d42765',
+              'agent/fix-archive-cross-tab-363': 'c34672f24d4fa01fab5ec508bc3dba0fb75d5923',
+              'architecture/hall-v3-foundation-369': '96085f343f3ce03c8b2b1be3794cfcbe07112fdf',
+              'architecture/tlp-hall-001-foundation': 'b744317a5aa7cbc3d611896a09681a0ee97cfa5a',
+              'architecture/tlp-hall-001-foundation-current-main': '4ca7507ebb12182452e475a81163385fb99f58bd',
+              'architecture/tlp-hall-001-material-export-spike': '1f612f8f5c12e838360e64ad109e0c072a3e8713',
+              'architecture/tlp-hall-001-metric-greybox': 'cc81858626c8ddcf8e59016231068c45cbb6e246',
+              'forensic/lock-candidate-55106': 'b6f731263211208a31de1e36ed7830d7a46ffa87',
+              'noop': '6f92da1741e7480d65f3a23b04aab407bafe76a5',
+              'repair/community-abuse-authority': '945b02b4e8ccc7bac591e42a4c425ccfcb57a190',
+              'tmp/rebase-pr403-20260810': 'ca2168ac52fe442dac8b49001df32d222902631f',
+          }
+          retained_exact = {
+              archive_branch: '909df9f73b8d9be6faa58cbee767603954e3fb17',
+              active_editorial_branch: '67328c0649c07d4fc702d6826fbee5b6b4617a93',
+          }
+
+          if len(expected_targets) != 11:
+              raise SystemExit(f'allowlist must contain exactly 11 refs, got {len(expected_targets)}')
+          protected = {'main', archive_branch, active_editorial_branch, temporary_branch}
+          overlap = protected.intersection(expected_targets)
+          if overlap:
+              raise SystemExit(f'deletion allowlist contains protected refs: {sorted(overlap)}')
+
+          headers = {
+              'Accept': 'application/vnd.github+json',
+              'Authorization': f'Bearer {token}',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'tlp-stale-ref-retirement-20260906',
+          }
+
+          def request(method, url):
+              call = urllib.request.Request(url, method=method, headers=headers)
+              try:
+                  with urllib.request.urlopen(call) as response:
+                      body = response.read()
+                      return response.status, json.loads(body) if body else None
+              except urllib.error.HTTPError as error:
+                  return error.code, error.read().decode('utf-8', errors='replace')
+
+          def ref_url(branch, plural=False):
+              encoded = urllib.parse.quote(f'heads/{branch}', safe='')
+              noun = 'refs' if plural else 'ref'
+              return f'https://api.github.com/repos/{repository}/git/{noun}/{encoded}'
+
+          def open_prs_url(branch):
+              query = urllib.parse.urlencode({
+                  'state': 'open',
+                  'head': f'{owner}:{branch}',
+                  'per_page': '100',
+              })
+              return f'https://api.github.com/repos/{repository}/pulls?{query}'
+
+          def branch_list():
+              status, payload = request('GET', f'https://api.github.com/repos/{repository}/branches?per_page=100')
+              if status != 200 or not isinstance(payload, list):
+                  raise SystemExit(f'branch inventory lookup failed: HTTP {status} {payload}')
+              if len(payload) >= 100:
+                  raise SystemExit('branch inventory reached pagination limit; refuse non-exhaustive retirement')
+              return {item['name']: item['commit']['sha'] for item in payload}
+
+          # Global inventory barrier: no unknown source refs may be silently swept into this transaction.
+          inventory = branch_list()
+          allowed_inventory = set(expected_targets) | {'main', archive_branch, active_editorial_branch, temporary_branch}
+          unexpected = set(inventory) - allowed_inventory
+          missing_targets = set(expected_targets) - set(inventory)
+          if unexpected:
+              raise SystemExit(f'unexpected live branches; open a new audited transaction instead: {sorted(unexpected)}')
+          if missing_targets:
+              raise SystemExit(f'allowlisted targets already missing or renamed: {sorted(missing_targets)}')
+
+          # Retained refs must exist; archive identity is immutable. The active editorial branch may
+          # legitimately advance before this transaction merges, so it is checked for existence and PR ownership,
+          # while its observed head is recorded rather than force-pinned.
+          retained_before = {}
+          for branch in ['main', archive_branch, active_editorial_branch]:
+              status, payload = request('GET', ref_url(branch))
+              if status != 200:
+                  raise SystemExit(f'retained ref missing before deletion: {branch}: HTTP {status} {payload}')
+              retained_before[branch] = payload['object']['sha']
+          if retained_before[archive_branch] != retained_exact[archive_branch]:
+              raise SystemExit(
+                  f'archive identity drifted: expected {retained_exact[archive_branch]}, got {retained_before[archive_branch]}'
+              )
+
+          editorial_pr_status, editorial_prs = request('GET', open_prs_url(active_editorial_branch))
+          if editorial_pr_status != 200:
+              raise SystemExit(f'active editorial PR lookup failed: HTTP {editorial_pr_status} {editorial_prs}')
+          if [item.get('number') for item in editorial_prs] != [425]:
+              raise SystemExit(f'active editorial branch ownership changed: {[item.get("number") for item in editorial_prs]}')
+
+          preflight = []
+          for branch, expected_head in expected_targets.items():
+              status, payload = request('GET', ref_url(branch))
+              if status != 200:
+                  raise SystemExit(f'preflight ref lookup failed for {branch}: HTTP {status} {payload}')
+              head = payload['object']['sha']
+              if head != expected_head:
+                  raise SystemExit(f'head drift for {branch}: expected {expected_head}, got {head}')
+
+              pr_status, pr_payload = request('GET', open_prs_url(branch))
+              if pr_status != 200:
+                  raise SystemExit(f'open-PR lookup failed for {branch}: HTTP {pr_status} {pr_payload}')
+              if pr_payload:
+                  numbers = [item.get('number') for item in pr_payload]
+                  raise SystemExit(f'open PR still owns {branch}: {numbers}')
+
+              preflight.append({
+                  'branch': branch,
+                  'expectedHead': expected_head,
+                  'verifiedHead': head,
+                  'openPullRequests': 0,
+              })
+
+          # Second complete identity pass immediately before the first destructive request.
+          for item in preflight:
+              status, payload = request('GET', ref_url(item['branch']))
+              if status != 200 or payload['object']['sha'] != item['expectedHead']:
+                  raise SystemExit(f'final identity recheck failed for {item["branch"]}: HTTP {status} {payload}')
+
+          deleted = []
+          for item in preflight:
+              status, payload = request('DELETE', ref_url(item['branch'], plural=True))
+              if status != 204:
+                  raise SystemExit(f'delete failed for {item["branch"]}: HTTP {status} {payload}')
+              deleted.append(item)
+
+          absent = []
+          for item in deleted:
+              status, payload = request('GET', ref_url(item['branch']))
+              if status != 404:
+                  raise SystemExit(f'absence verification failed for {item["branch"]}: HTTP {status} {payload}')
+              absent.append(item['branch'])
+
+          retained_after = {}
+          for branch in ['main', archive_branch, active_editorial_branch]:
+              status, payload = request('GET', ref_url(branch))
+              if status != 200:
+                  raise SystemExit(f'retained ref missing after deletion: {branch}: HTTP {status} {payload}')
+              retained_after[branch] = payload['object']['sha']
+          if retained_after[archive_branch] != retained_exact[archive_branch]:
+              raise SystemExit('retained archive changed during retirement')
+          if retained_after[active_editorial_branch] != retained_before[active_editorial_branch]:
+              raise SystemExit('active editorial branch moved during destructive window; investigate before closure')
+
+          final_inventory = branch_list()
+          expected_final = {'main', archive_branch, active_editorial_branch, temporary_branch}
+          final_names = set(final_inventory)
+          if final_names not in (expected_final, expected_final - {temporary_branch}):
+              raise SystemExit(f'unexpected post-deletion inventory: {sorted(final_names)}')
+
+          evidence = {
+              'schemaVersion': 1,
+              'repository': repository,
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'triggeringMainSha': os.environ['GITHUB_SHA'],
+              'retainedBefore': retained_before,
+              'preflight': preflight,
+              'deletedCount': len(deleted),
+              'absentCount': len(absent),
+              'absentBranches': absent,
+              'retainedAfter': retained_after,
+              'postDeletionInventoryBeforeTemporaryBranchCleanup': final_inventory,
+          }
+          Path('stale-ref-retirement-evidence-20260906.json').write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(evidence, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload exact retirement evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: stale-ref-retirement-evidence-20260906
+          path: stale-ref-retirement-evidence-20260906.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Remove the temporary maintenance source branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          repository = os.environ['GITHUB_REPOSITORY']
+          branch = os.environ['TEMPORARY_BRANCH']
+          encoded = urllib.parse.quote(f'heads/{branch}', safe='')
+          headers = {
+              'Accept': 'application/vnd.github+json',
+              'Authorization': f'Bearer {os.environ["GH_TOKEN"]}',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'tlp-stale-ref-retirement-20260906',
+          }
+          get_url = f'https://api.github.com/repos/{repository}/git/ref/{encoded}'
+          delete_url = f'https://api.github.com/repos/{repository}/git/refs/{encoded}'
+
+          try:
+              with urllib.request.urlopen(urllib.request.Request(get_url, headers=headers)) as response:
+                  if response.status != 200:
+                      raise SystemExit(f'temporary branch lookup returned {response.status}')
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  print(f'temporary branch already absent: {branch}')
+                  raise SystemExit(0)
+              raise SystemExit(f'temporary branch lookup failed: HTTP {error.code} {error.read().decode()}')
+
+          try:
+              with urllib.request.urlopen(urllib.request.Request(delete_url, method='DELETE', headers=headers)) as response:
+                  if response.status != 204:
+                      raise SystemExit(f'temporary branch deletion returned {response.status}')
+          except urllib.error.HTTPError as error:
+              raise SystemExit(f'temporary branch deletion failed: HTTP {error.code} {error.read().decode()}')
+          print(f'deleted temporary branch {branch}')
+          PY
