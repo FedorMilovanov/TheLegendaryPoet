@@ -138,13 +138,15 @@ if (!existsSync(reconciliationPath)) throw new Error('Benislavskaya inbound reco
 const reconciliation = readFileSync(reconciliationPath, 'utf8');
 for (const marker of [
   'DIRECT HOLDER INSPECTION — 2026-08-20',
-  '4 Mar 1924 → p. **234**',
+  '4 Mar 1924 → pp. **234–235**',
   '6 Apr 1924 → p. **236**',
-  '234–281 provisional',
+  'Free-source priority before any paid acquisition',
+  'Paid copying is currently **not authorized**',
   'PAGE-WITNESS VERIFIED',
   'pp. **339–340**',
   'remained with G. A. Benislavskaya',
   'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
+  'No payment and no merge are authorized by this ledger',
 ]) {
   if (!reconciliation.includes(marker)) {
     throw new Error(`Benislavskaya reconciliation boundary disappeared: ${marker}`);
@@ -236,5 +238,5 @@ if (/Для последнего известного письма от 16 ию�
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=verified:${coverSha256}; 13↔16↔14 gate preserved; current 1995 gate=complete 4-Mar item through p.281 (234–281 provisional); IMLI 16-Jul witness=339–340 verified.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=verified:${coverSha256}; 13↔16↔14 gate preserved; reconciliation=free-source-first/no-payment; holder map=4-Mar pp.234–235 onward; IMLI 16-Jul witness=339–340 verified.`,
 );
