@@ -74,6 +74,8 @@ jobs:
           qa/manual-e2e.spec.mjs
           qa/audio-cross-tab.spec.mjs
           qa/focused-interactions.spec.mjs
+          qa/theme-contrast.spec.mjs
+          qa/reader-text.spec.mjs
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
           qa/mobile-platforms.spec.mjs

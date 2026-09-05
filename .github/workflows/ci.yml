@@ -29,6 +29,8 @@ jobs:
         run: npm run check:content
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
+      - name: Validate canonical reader text contract
+        run: node scripts/validate-reader-text.mjs
       - name: Validate Hall v3 foundation invariants
         run: npm run validate:hall-foundation
       - name: Validate Hall v3 Reference Bible invariants
