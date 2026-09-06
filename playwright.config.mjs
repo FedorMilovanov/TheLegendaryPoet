@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology|reader-journeys|premium-reader-certification|poets-status)\.spec\.mjs/;
+const mobileSpec = /(mobile-platforms|mobile-home-webkit|yesenin-part-one|articles-catalog|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology|reader-journeys|premium-reader-certification|poets-status|rating-urlstate)\.spec\.mjs/;
 const finePointerOnly = /(?:TiltCard follows live pointer input without a transition backlog|article title remains painted throughout live 3D pointer tracking)/;
 
 export default defineConfig({
