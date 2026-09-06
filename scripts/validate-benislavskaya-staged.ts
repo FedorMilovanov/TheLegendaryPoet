@@ -137,15 +137,17 @@ const reconciliationPath = 'docs/research/BENISLAVSKAYA_INBOUND_RECONCILIATION_M
 if (!existsSync(reconciliationPath)) throw new Error('Benislavskaya inbound reconciliation matrix is missing');
 const reconciliation = readFileSync(reconciliationPath, 'utf8');
 for (const marker of [
-  'DIRECT HOLDER INSPECTION — 2026-08-20',
+  'Direct Yushin p. 411 holder evidence — CLOSED AS A 1969 RECORD WITNESS',
+  'IMG_20260906_170814.jpg',
+  '9c880be1979039c4f0dd95b9e42b4f313d00321e1bfcc636dcd36323294a84a8',
+  '#121, #122, #128, #131 and #134 are no longer `unread Yushin records`',
   '4 Mar 1924 → pp. **234–235**',
   '6 Apr 1924 → p. **236**',
-  'Free-source priority before any paid acquisition',
-  'Paid copying is currently **not authorized**',
-  'PAGE-WITNESS VERIFIED',
+  'HISTORICALLY ATTESTED ARCHIVAL-LETTER RECORD',
   'pp. **339–340**',
-  'remained with G. A. Benislavskaya',
-  'do **not** attach the previously repeated `РГАЛИ, ф. 190, оп. 1, ед. хр. 105, л. 27–29` provenance',
+  'text/page witness = **VERIFIED**',
+  'do not claim sent/delivered/received/read without a transmission witness',
+  'No paid scan, paid thematic search, paid reproduction, paid document delivery or paid source-acquisition route is authorized',
   'No payment and no merge are authorized by this ledger',
 ]) {
   if (!reconciliation.includes(marker)) {
@@ -238,5 +240,5 @@ if (/Для последнего известного письма от 16 ию�
 }
 
 console.log(
-  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=verified:${coverSha256}; 13↔16↔14 gate preserved; reconciliation=free-source-first/no-payment; holder map=4-Mar pp.234–235 onward; IMLI 16-Jul witness=339–340 verified.`,
+  `Benislavskaya staged DoD: unpublished; ${words} words; raw readTime=${essay.readTime}; publication readTime=${publicationCandidate.readTime}; ${sourcesById.size} cited source units; hero=verified:${coverSha256}; 13↔16↔14 gate preserved; reconciliation=Yushin-p411-direct/no-payment; holder map=4-Mar pp.234–235 onward; IMLI 16-Jul witness=339–340 verified.`,
 );
