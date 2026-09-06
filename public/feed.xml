@@ -5,8 +5,23 @@
   <subtitle>Новые статьи, биографические исследования и музыкальные публикации проекта.</subtitle>
   <link href="https://thelegendarypoet.ru/" />
   <link rel="self" type="application/atom+xml" href="https://thelegendarypoet.ru/feed.xml" />
-  <updated>2026-08-20T00:00:00Z</updated>
+  <updated>2026-09-06T00:00:00Z</updated>
   <author><name>THE LEGENDARY POET</name><uri>https://thelegendarypoet.ru/about</uri></author>
+  <entry>
+    <id>https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive</id>
+    <title>Галина Бениславская: рукописи, издательские дела и архив Есенина</title>
+    <link href="https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive" />
+    <published>2026-09-06T00:00:00Z</published>
+    <updated>2026-09-06T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Галина Бениславская рядом с Есениным — не только сюжет несчастной любви. Письма, доверенности, договоры и академические комментарии показывают её практическую роль в движении рукописей, издательских поручениях и повседневной литературной инфраструктуре 1924–1925 годов.</summary>
+    <category term="Галина Бениславская" />
+    <category term="Сергей Есенин" />
+    <category term="Письма" />
+    <category term="Рукописи" />
+    <category term="Архив" />
+    <category term="Издательские дела" />
+  </entry>
   <entry>
     <id>https://thelegendarypoet.ru/essays/simonov-syn-artillerista-realnaya-istoriya</id>
     <title>«Огонь!» Реальная история «Сына артиллериста» Константина Симонова</title>
