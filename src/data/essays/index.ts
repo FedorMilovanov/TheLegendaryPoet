@@ -39,6 +39,7 @@ import {
 } from './essayVisualLayout';
 import { publishEssay, publishEssayCatalog } from './publishEssay';
 import { simonovSonArtilleristaPublished } from './simonovSonArtilleristaPublished';
+import { benislavskayaPublished } from './benislavskayaPublished';
 
 function uniqueSources(sources: readonly EssaySource[] = []): EssaySource[] {
   const seen = new Set<string>();
@@ -555,6 +556,7 @@ const brikCasePublished = publishEssay(brikCaseVisual, {
 
 export const essays: readonly Essay[] = publishEssayCatalog([
   simonovSonArtilleristaPublished,
+  benislavskayaPublished,
   lermontovRoadPublished,
   yeseninKutezhiPublished,
   yeseninPartOnePublished,
@@ -567,8 +569,4 @@ export const essays: readonly Essay[] = publishEssayCatalog([
 
 export function getAllEssays(): readonly Essay[] {
   return essays;
-}
-
-export function getEssayBySlug(slug: string): Essay | undefined {
-  return essays.find((essay) => essay.slug === slug);
 }
