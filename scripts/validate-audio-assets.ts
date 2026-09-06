@@ -15,8 +15,13 @@ type ManifestTrack = {
 };
 type Manifest = { tracks: ManifestTrack[] };
 
+// Compatibility mode may suppress redundant missing-art diagnostics only after
+// a published master has already failed. It must never make a missing published
+// master non-fatal.
 const allowMissing = process.argv.includes('--allow-missing');
-const root = process.cwd();
+const root = process.env.TLP_AUDIO_VALIDATION_ROOT
+  ? resolve(process.env.TLP_AUDIO_VALIDATION_ROOT)
+  : process.cwd();
 const manifestPath = resolve(root, 'public/audio/manifest.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Manifest;
 const manifestById = new Map(manifest.tracks.map((track) => [track.id, track]));
@@ -79,8 +84,8 @@ for (const track of publishedTracks) {
     validated += 1;
   } catch (error) {
     audioExists = false;
-    if (allowMissing && isMissing(error)) warnings.push(`${track.id}: master is not uploaded yet`);
-    else errors.push(`${track.id}: audio missing or unreadable (${String(error)})`);
+    if (isMissing(error)) errors.push(`${track.id}: published master is missing`);
+    else errors.push(`${track.id}: audio unreadable (${String(error)})`);
   }
 
   if (!track.coverUrl || !track.wideCoverUrl) {
