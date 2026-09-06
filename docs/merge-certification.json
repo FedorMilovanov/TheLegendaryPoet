@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "lanes": {
+    "hall-pushkin-offline-exhibit": {
+      "workflowFile": ".github/workflows/hall-pushkin-offline-exhibit.yml",
+      "event": "pull_request",
+      "pollTimeoutSeconds": 7200,
+      "pollIntervalSeconds": 20,
+      "paths": [
+        ".github/workflows/hall-pushkin-offline-exhibit.yml",
+        "docs/hall-v3/hall-v3-contract.json",
+        "docs/hall-v3/RIGHTS_REGISTER.md",
+        "docs/hall-v3/AI_USAGE_POLICY.md",
+        "docs/hall-v3/SCENE_CONTRACT.md",
+        "docs/hall-v3/VISUAL_ACCEPTANCE.md",
+        "docs/hall-v3/ASSET_PIPELINE.md",
+        "docs/hall-v3/greybox-layouts.json",
+        "docs/hall-v3/greybox-decision.json",
+        "docs/hall-v3/camera-decision.json",
+        "docs/hall-v3/camera-gate-promotion.json",
+        "docs/hall-v3/material-spike.json",
+        "docs/hall-v3/material-decision.json",
+        "docs/hall-v3/material-gate-promotion.json",
+        "docs/hall-v3/pushkin-rights.json",
+        "docs/hall-v3/pushkin-acquisition.json",
+        "docs/hall-v3/pushkin-rights-review.json",
+        "docs/hall-v3/pushkin-slice.json",
+        "docs/hall-v3/pushkin-owner-disposition.json",
+        "docs/hall-v3/pushkin-offline-exhibit.json",
+        "docs/hall-v3/pushkin-offline-budget.json",
+        "scripts/hall-greybox/generate-candidates.py",
+        "scripts/hall-material/generate-material-spike.py",
+        "scripts/hall-material/prepare-material-visual-evidence.py",
+        "scripts/hall-pushkin/**",
+        "scripts/validate-hall-pushkin-rights.ts",
+        "scripts/validate-hall-pushkin-acquisition.ts",
+        "scripts/validate-hall-pushkin-offline-exhibit.ts",
+        "scripts/validate-hall-pushkin-offline-budget.mjs",
+        "scripts/hall-material/validate-gltf.mjs",
+        "package.json",
+        "package-lock.json",
+        ".github/actions/setup-node-deps/**"
+      ]
+    }
+  }
+}
