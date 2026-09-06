@@ -138,10 +138,9 @@ for (const marker of [
   if (!resolution.includes(marker)) throw new Error(`Benislavskaya publication resolution boundary disappeared: ${marker}`);
 }
 
-const browserPayload = readFileSync('src/data/essays/browserEssayData.ts', 'utf8');
-if (!browserPayload.includes(essay.slug) || !browserPayload.includes(essay.id)) {
-  throw new Error('Generated browser essay data does not contain the published Benislavskaya essay');
-}
+// Browser payload parity is enforced by validate-essay-browser-data, which runs earlier in
+// check:content and compares every generated catalog/route JSON payload against the canonical
+// published essay objects. Do not look for article ids/slugs inside the generic runtime adapter.
 
 console.log(
   `Benislavskaya publication DoD: catalogued=${essay.slug}; sources=${sources.length}; body-images=0; hero=${coverSha256}; 13↔16↔14 uncertainty preserved; paid acquisition not required.`,
