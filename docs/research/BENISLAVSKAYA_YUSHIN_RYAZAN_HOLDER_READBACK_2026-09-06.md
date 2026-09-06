@@ -76,6 +76,37 @@ This direct physical-page receipt closes a narrower question that had remained t
 
 Therefore the project must stop saying that these five Yushin positions are `unread` or only indirectly known.
 
+## Academic chronology cross-check after the holder receipt
+
+The direct Yushin readback can now be compared against later academic control without erasing either layer.
+
+### #122 / 8 Feb 1924
+
+Naumov 1970 does not merely list the date: he reproduces the opening of the warning beginning `Бросьте эту пьяную канитель...` and identifies it as the 8-Feb letter. This independently establishes a **real textual object in the early layer**. The later 1995/2001 holder sequence no longer exposes an 8-Feb item under that date. Therefore the current status remains:
+
+**TEXT REAL / OLD DATE DIRECTLY VERIFIED / MODERN DATE-IDENTITY UNRESOLVED.**
+
+Public Naumov transcription:
+`https://esenin.ru/o-esenine/zhenshchiny-esenina/galina-benislavskaia/naumov-e-k-istorii-odnoi-druzhby`
+
+### #134 / 12 Apr 1925
+
+Later PSS commentary to Yesenin's **8-Apr-1925** letter states explicitly that Benislavskaya wrote the response **only on 4 May**, because she had been in Konstantinovo for Easter. Her surviving 4-May letter itself says that they had been in Konstantinovo for Easter and found Yesenin's letter only after the holidays.
+
+Academic commentary witness:
+`https://predanie.ru/book/221933-tom-6-pisma/?chapter=chapter_472`
+
+Open Benislavskaya-letter witness:
+`https://esenin.ru/o-esenine/zhenshchiny-esenina/galina-benislavskaia/benislavskaia-g-pisma-k-eseninu`
+
+This materially narrows #134. A Yushin position dated 12 Apr **cannot be used as the later-academic response to Yesenin's 8-Apr letter**. If #134 represents a distinct physical text, its identity/content still has to be recovered; alternatively the old date may belong to a superseded/misdated editorial layer.
+
+Current status:
+
+**OLD 12-APR POSITION VERIFIED / 12-APR AS RESPONSE TO 8-APR REJECTED BY LATER PSS CHRONOLOGY / PHYSICAL TEXT IDENTITY OPEN.**
+
+This is stronger than the previous generic `date conflict`, but it still does not justify declaring the Yushin position fictional.
+
 ## What this does NOT close
 
 This page does **not** unlock a canonical 14-letter matrix by itself.
@@ -86,7 +117,7 @@ The remaining problem is now more precise:
 - **#122 / 8 Feb**: old position exists and the text is independently real; exact old date versus later redating remains unresolved.
 - **#128 / 30 Nov**: old position exists; relation to the same identifying paragraph dated 1 Dec in the Naumov/1986 layer and 15 Dec in the later corpus remains unresolved.
 - **#131 / 29 Dec**: old position exists; later academic exchange reconstruction still recognizes 25 + 27 Dec replies rather than an independently exposed 29-Dec reply.
-- **#134 / 12 Apr**: old position exists; later response chronology still places Benislavskaya's reply only on 4 May.
+- **#134 / 12 Apr**: old position exists, but later PSS chronology rejects it as the response to Yesenin's 8-Apr letter; physical text identity or superseded-date mechanism remains open.
 
 These are now **identity/redating/provenance/editorial-history problems**, not questions about whether Yushin actually printed the dates.
 
@@ -96,6 +127,6 @@ Do not use this receipt to claim that the 18-Jan, 29-Dec or 12-Apr items are can
 
 Safe formulation:
 
-> Yushin's 1969 archival-document bibliography explicitly records positions under these dates, while later editorial/academic layers expose a different 13/14-item horizon and several demonstrable date revisions. The historical crosswalk therefore remains source-layered until object identity/provenance is resolved.
+> Yushin's 1969 archival-document bibliography explicitly records positions under these dates, while later editorial/academic layers expose a different 13/14-item horizon and several demonstrable date revisions. In particular, later PSS chronology places the reply to Yesenin's 8-Apr-1925 letter on 4 May, not 12 April. The historical crosswalk therefore remains source-layered until object identity/provenance is resolved.
 
 No paid scan, EDD, reproduction or acquisition is required or authorized by this result.
