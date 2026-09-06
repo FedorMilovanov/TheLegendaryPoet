@@ -64,6 +64,21 @@ export function useRatingsUrlState(validTags: readonly string[]) {
   }, []);
 
   useEffect(() => {
+    const handlePopState = () => {
+      // Browser Back/Forward is external authority. A POP can arrive after the
+      // address bar has reached an optimistic target but before React Router's
+      // transition/effect has acknowledged it, so any queued local intent must
+      // be discarded synchronously from the browser's new URL.
+      pendingTargetRef.current = null;
+      internalTargetsRef.current.clear();
+      syncIntent(readCanonicalState(new URLSearchParams(window.location.search), validTagSet));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [syncIntent, validTagSet]);
+
+  useEffect(() => {
     if (currentQuery === canonicalQuery) return;
 
     setSearchParams((latestParams) => {
