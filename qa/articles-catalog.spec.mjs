@@ -74,7 +74,7 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   expect(response.status()).toBeLessThan(400);
 
   await expect(page.getByRole('heading', { level: 1, name: /Исследования.*большие статьи/i })).toBeVisible();
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expect(await essayLinks(page)).toHaveCount(10);
   await expect(page.locator('a[href="/essays/sergei-yesenin-1921-1925"]')).toHaveCount(1);
   await expect(page.locator('a[href^="/articles/article-"]')).toHaveCount(0);
   await expect(page.getByText('Тайна русской души в поэзии: христианский взгляд')).toHaveCount(0);
@@ -85,19 +85,19 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   );
 
   const cards = await essayLinks(page);
-  await expect(cards.locator('img')).toHaveCount(9);
+  await expect(cards.locator('img')).toHaveCount(10);
   const emptyAlts = await cards.locator('img').evaluateAll((images) => images.filter((image) => !image.getAttribute('alt')?.trim()).length);
   expect(emptyAlts).toBe(0);
 
   await page.getByRole('button', { name: 'Сергей Есенин', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(4);
+  await expect(await essayLinks(page)).toHaveCount(5);
   await expect(page.locator('a[href="/essays/sergei-yesenin-1921-1925"]')).toHaveCount(1);
   await page.getByRole('button', { name: 'Владимир Маяковский', exact: true }).click();
   await expect(await essayLinks(page)).toHaveCount(3);
   await page.getByRole('button', { name: 'Михаил Лермонтов', exact: true }).click();
   await expect(await essayLinks(page)).toHaveCount(1);
   await page.getByRole('button', { name: 'Все материалы', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expect(await essayLinks(page)).toHaveCount(10);
 
   const state = await page.evaluate(() => ({
     pathname: location.pathname,
@@ -122,7 +122,7 @@ test('browser essay payloads remain target-scoped and unknown slugs stay honest'
     expect(response).not.toBeNull();
     expect(response.status()).toBeLessThan(400);
     await waitForSettledRoute(listing);
-    await expect(await essayLinks(listing)).toHaveCount(9);
+    await expect(await essayLinks(listing)).toHaveCount(10);
     expect([...new Set(listingRequests)]).toEqual(['/data/essays/catalog.json']);
   } finally {
     await listing.close();
@@ -233,7 +233,7 @@ test('failed catalog Suspense visit stays stable until a later SPA visit retries
   await page.getByRole('link', { name: /Изучить статьи/i }).click();
   await expect(page).toHaveURL(/\/articles$/);
   await waitForSettledRoute(page);
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expect(await essayLinks(page)).toHaveCount(10);
   expect(catalogAttempts).toBe(2);
   expect(documentRequests).toBe(1);
 });
