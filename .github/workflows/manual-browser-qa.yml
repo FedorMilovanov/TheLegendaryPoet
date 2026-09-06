@@ -73,6 +73,7 @@ jobs:
           npx playwright test
           qa/manual-e2e.spec.mjs
           qa/shell-noise-singleton.spec.mjs
+          qa/poets-status.spec.mjs
           qa/audio-cross-tab.spec.mjs
           qa/focused-interactions.spec.mjs
           qa/theme-contrast.spec.mjs
