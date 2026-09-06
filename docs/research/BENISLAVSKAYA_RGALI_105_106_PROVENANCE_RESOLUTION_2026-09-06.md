@@ -16,19 +16,23 @@ The purpose of this note is to decide which reference may control current projec
 
 ## Evidence hierarchy
 
-### 1. Official archive fund identity — CLOSED
+### 1. Official archive fund identity and carrier class — CLOSED
 
 RGALI's official fund card confirms:
 
 - fund **190**;
 - `Есенин Сергей Александрович (1895–1925) — поэт`;
 - personal-origin fund;
-- 4 inventories / 456 storage units.
+- 4 inventories / 456 storage units;
+- within inventories 1–2, the fund annotation explicitly includes `Переписка С. А. Есенина и Г. А. Бениславской — маш. коп. 35 (1921–1925)`.
 
 Public fund card:
 `https://www.rgali.ru/fund/8211`
 
-This confirms the archive/fund identity, but the currently exposed public search result does not independently display the title of op.1 unit 105. Therefore this note does **not** claim `OFFICIAL INVENTORY CARD VERIFIED` for unit 105.
+Official storage-unit listing:
+`https://www.rgali.ru/storage-unit?fundId=8211`
+
+This is important new control: the current official RGALI catalogue independently confirms that the Yesenin/Benislavskaya correspondence survives in **machine-copy form** inside fund 190. The public annotation does not, however, assign that 35-copy correspondence block to unit 105 or expose its leaf map. Therefore this note still does **not** claim `OFFICIAL UNIT-105 INVENTORY CARD VERIFIED`.
 
 ### 2. Naumov 1970 — early conflicting citation: 106
 
@@ -91,27 +95,28 @@ Preserve `ед. хр. 106` only as:
 
 Do not present 105 and 106 as equally probable alternatives.
 
-## Why this is a resolution rather than an official-inventory claim
+## Why this is a resolution rather than an official-unit claim
 
 The evidence is asymmetric:
 
 - one early publication says 106;
-- a later memoir source explicitly calls the letters `ед. хр. 105, машинопись`;
-- independent bibliographic scholarship cites the same correspondence corpus as 105;
+- current official RGALI catalogue confirms the parent fund and a 35-machine-copy Yesenin/Benislavskaya correspondence block;
+- Royzman explicitly calls Benislavskaya's `Письма` `ед. хр. 105, машинопись`;
+- independent bibliographic scholarship cites Benislavskaya correspondence as unit 105;
 - a separate later publication chain gives a specific 16-Jul leaf range inside 105;
-- official RGALI confirms the parent fund 190, but an official public unit-105 title card has not yet been recovered in this pass.
+- an official public unit-105 title/leaf card has not yet been recovered in this pass.
 
 Accordingly:
 
 - **105 = controlling current reference**;
 - **106 = historical citation discrepancy**;
-- **official unit-title/card verification = desirable enrichment, not a reason to keep the two numbers co-equal**.
+- **official unit-title/leaf-card verification = desirable enrichment, not a reason to keep the two numbers co-equal**.
 
 ## Effect on the 13 ↔ 16 ↔ 14 reconciliation
 
 This resolves only the **container/provenance conflict**. It does not by itself identify Yushin #121/#122/#128/#131/#134 as unique physical documents or settle their modern dates.
 
-It does strengthen the next free research target: if a free official finding aid/item card for `ф.190, оп.1, ед.хр.105` becomes available, compare its leaf structure and object descriptions against:
+It does strengthen the next free research target: if a free official item-level card for `ф.190, оп.1, ед.хр.105` becomes available, compare its leaf structure and object descriptions against:
 
 - Yushin p.411 old-date sequence;
 - Naumov's ten typed-copy textual layer;
@@ -124,8 +129,8 @@ No paid archive copy or search is required or authorized.
 
 Safe:
 
-> Later independent witnesses identify the typed-copy corpus of Benislavskaya's letters as RGALI/TsGALI fund 190, inventory 1, unit 105; Naumov's 1970 citation to unit 106 is retained as an early provenance discrepancy rather than the controlling modern reference.
+> Later independent witnesses identify the typed-copy corpus of Benislavskaya's letters as RGALI/TsGALI fund 190, inventory 1, unit 105; Naumov's 1970 citation to unit 106 is retained as an early provenance discrepancy rather than the controlling modern reference. RGALI's current fund annotation independently confirms that the Yesenin/Benislavskaya correspondence survives in machine-copy form in fund 190.
 
 Unsafe until an official unit card is directly recovered:
 
-> RGALI's current inventory officially proves every Benislavskaya letter is in unit 105 with the following exact leaf map...
+> RGALI's current unit-105 inventory card proves every Benislavskaya letter has the following exact leaf map...
