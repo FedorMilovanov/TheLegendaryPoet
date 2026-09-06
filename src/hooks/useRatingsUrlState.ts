@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 export type RatingsSortKey = 'reader' | 'votes' | 'discussion' | 'editorial' | 'consensus';
@@ -35,14 +35,33 @@ function buildCanonicalParams({ query, tag, sortBy, ratedOnly }: RatingsUrlState
   return next;
 }
 
+function sameState(left: RatingsUrlState, right: RatingsUrlState) {
+  return left.query === right.query
+    && left.tag === right.tag
+    && left.sortBy === right.sortBy
+    && left.ratedOnly === right.ratedOnly;
+}
+
 export function useRatingsUrlState(validTags: readonly string[]) {
   const [searchParams, setSearchParams] = useSearchParams();
   const validTagSet = useMemo(() => new Set(validTags), [validTags]);
-  const state = useMemo(() => readCanonicalState(searchParams, validTagSet), [searchParams, validTagSet]);
-  const { query, tag, sortBy, ratedOnly } = state;
-
-  const canonicalQuery = useMemo(() => buildCanonicalParams(state).toString(), [state]);
+  const canonicalState = useMemo(
+    () => readCanonicalState(searchParams, validTagSet),
+    [searchParams, validTagSet],
+  );
+  const canonicalQuery = useMemo(() => buildCanonicalParams(canonicalState).toString(), [canonicalState]);
   const currentQuery = searchParams.toString();
+
+  const [intentState, setIntentState] = useState<RatingsUrlState>(canonicalState);
+  const intentRef = useRef<RatingsUrlState>(canonicalState);
+  const pendingTargetRef = useRef<string | null>(null);
+  const internalTargetsRef = useRef<Set<string>>(new Set());
+  const lastCanonicalQueryRef = useRef(canonicalQuery);
+
+  const syncIntent = useCallback((next: RatingsUrlState) => {
+    intentRef.current = next;
+    setIntentState((current) => sameState(current, next) ? current : next);
+  }, []);
 
   useEffect(() => {
     if (currentQuery === canonicalQuery) return;
@@ -53,15 +72,55 @@ export function useRatingsUrlState(validTags: readonly string[]) {
     }, { replace: true });
   }, [canonicalQuery, currentQuery, setSearchParams, validTagSet]);
 
+  useEffect(() => {
+    const previousCanonical = lastCanonicalQueryRef.current;
+    lastCanonicalQueryRef.current = canonicalQuery;
+    const pendingTarget = pendingTargetRef.current;
+
+    if (pendingTarget === canonicalQuery) {
+      pendingTargetRef.current = null;
+      internalTargetsRef.current.clear();
+      syncIntent(canonicalState);
+      return;
+    }
+
+    if (pendingTarget && internalTargetsRef.current.has(canonicalQuery)) {
+      internalTargetsRef.current.delete(canonicalQuery);
+      return;
+    }
+
+    if (pendingTarget && canonicalQuery !== previousCanonical) {
+      pendingTargetRef.current = null;
+      internalTargetsRef.current.clear();
+      syncIntent(canonicalState);
+      return;
+    }
+
+    if (!pendingTarget) syncIntent(canonicalState);
+  }, [canonicalQuery, canonicalState, syncIntent]);
+
   const updateState = useCallback((
     update: (current: RatingsUrlState) => RatingsUrlState,
     options?: { replace?: boolean },
   ) => {
-    setSearchParams((latestParams) => {
-      const current = readCanonicalState(latestParams, validTagSet);
-      return buildCanonicalParams(update(current));
-    }, options);
-  }, [setSearchParams, validTagSet]);
+    const requested = update(intentRef.current);
+    const next = readCanonicalState(buildCanonicalParams(requested), validTagSet);
+    const nextParams = buildCanonicalParams(next);
+    const targetQuery = nextParams.toString();
+    const hadPendingNavigation = pendingTargetRef.current !== null;
+
+    syncIntent(next);
+
+    if (!hadPendingNavigation && targetQuery === canonicalQuery) {
+      pendingTargetRef.current = null;
+      internalTargetsRef.current.clear();
+      return;
+    }
+
+    pendingTargetRef.current = targetQuery;
+    internalTargetsRef.current.add(targetQuery);
+    setSearchParams(nextParams, options);
+  }, [canonicalQuery, setSearchParams, syncIntent, validTagSet]);
 
   const setQuery = useCallback((value: string) => {
     const bounded = value.slice(0, QUERY_LIMIT).trim();
@@ -87,14 +146,11 @@ export function useRatingsUrlState(validTags: readonly string[]) {
   }, [updateState]);
 
   const resetFilters = useCallback(() => {
-    setSearchParams(new URLSearchParams());
-  }, [setSearchParams]);
+    updateState(() => ({ query: '', tag: '', sortBy: 'reader', ratedOnly: false }));
+  }, [updateState]);
 
   return {
-    query,
-    tag,
-    sortBy,
-    ratedOnly,
+    ...intentState,
     setQuery,
     setTag,
     setSortBy,
