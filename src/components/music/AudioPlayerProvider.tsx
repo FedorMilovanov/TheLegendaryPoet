@@ -572,7 +572,6 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
       updatePositionState();
       if (!track || audio.ended) return;
       persistCurrentPosition();
-      if (audio.duration > 30 && audio.currentTime / audio.duration >= 0.97) persistCompleted(track.id);
     };
 
     const syncDuration = () => {
