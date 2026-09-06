@@ -27,6 +27,8 @@ jobs:
         run: npm run validate:workflow-consolidation
       - name: Validate content, stores, and literary style
         run: npm run check:content
+      - name: Validate published audio release fail-closed behavior
+        run: node scripts/validate-audio-release-gate.mjs
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Validate canonical reader text contract
