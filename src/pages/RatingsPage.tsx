@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { useSearchParams } from 'react-router';
+import { useMemo, useSyncExternalStore } from 'react';
 import {
   ArrowRight,
   Award,
@@ -23,6 +22,7 @@ import { Link } from '../components/ui/Link';
 import { poets } from '../data/poets';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
+import { useRatingsUrlState, type RatingsSortKey } from '../hooks/useRatingsUrlState';
 import { asset } from '../utils/asset';
 import {
   getCommunitySyncSnapshot,
@@ -31,8 +31,7 @@ import {
 import { useCommunityLeaderboard } from '../hooks/useCommunityLeaderboard';
 
 const PRIOR_WEIGHT = 5;
-type SortKey = 'reader' | 'votes' | 'discussion' | 'editorial' | 'consensus';
-const SORT_KEYS = new Set<SortKey>(['reader', 'votes', 'discussion', 'editorial', 'consensus']);
+type SortKey = RatingsSortKey;
 
 const sortOptions: Array<{ value: SortKey; label: string }> = [
   { value: 'reader', label: 'Индекс читателей' },
@@ -77,21 +76,21 @@ export default function RatingsPage() {
   const poetIds = useMemo(() => poets.map((poet) => poet.id), []);
   const leaderboard = useCommunityLeaderboard(poetIds);
   const sync = useSyncExternalStore(subscribeCommunitySync, getCommunitySyncSnapshot, getCommunitySyncSnapshot);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const initialSort = searchParams.get('sort') as SortKey | null;
-  const [sortBy, setSortBy] = useState<SortKey>(() => initialSort && SORT_KEYS.has(initialSort) ? initialSort : 'reader');
-  const [tag, setTag] = useState(() => searchParams.get('tag') ?? '');
-  const [ratedOnly, setRatedOnly] = useState(() => searchParams.get('rated') === '1');
-  const [query, setQuery] = useState(() => searchParams.get('q')?.slice(0, 100) ?? '');
-
-  useEffect(() => {
-    const next = new URLSearchParams();
-    if (query.trim()) next.set('q', query.trim());
-    if (tag) next.set('tag', tag);
-    if (sortBy !== 'reader') next.set('sort', sortBy);
-    if (ratedOnly) next.set('rated', '1');
-    setSearchParams(next, { replace: true });
-  }, [query, ratedOnly, setSearchParams, sortBy, tag]);
+  const tags = useMemo(
+    () => Array.from(new Set(poets.flatMap((poet) => poet.tags))).sort((left, right) => left.localeCompare(right, 'ru')),
+    [],
+  );
+  const {
+    sortBy,
+    setSortBy,
+    tag,
+    setTag,
+    ratedOnly,
+    setRatedOnly,
+    query,
+    setQuery,
+    resetFilters,
+  } = useRatingsUrlState(tags);
 
   const aggregateById = useMemo(
     () => new Map(leaderboard.aggregates.map((aggregate) => [aggregate.targetId, aggregate])),
@@ -142,11 +141,6 @@ export default function RatingsPage() {
       dimensionIndexes,
     };
   }), [aggregateById, globalMean, globalDimensionMeans]);
-
-  const tags = useMemo(
-    () => Array.from(new Set(poets.flatMap((poet) => poet.tags))).sort((left, right) => left.localeCompare(right, 'ru')),
-    [],
-  );
 
   const filtered = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
@@ -220,7 +214,7 @@ export default function RatingsPage() {
         </section>
 
         <section className="mb-8 rounded-[2rem] border border-cyan-400/10 bg-[#071018]/60 p-5 sm:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-200/55"><span className="inline-flex items-center gap-2"><Filter size={15} /> Настройка таблицы</span>{filtersActive && <button type="button" onClick={() => { setQuery(''); setTag(''); setRatedOnly(false); setSortBy('reader'); }} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 px-3 text-[10px] text-white/45 transition hover:text-white"><X size={13} /> Сбросить</button>}</div>
+          <div className="mb-4 flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.16em] text-cyan-200/55"><span className="inline-flex items-center gap-2"><Filter size={15} /> Настройка таблицы</span>{filtersActive && <button type="button" onClick={resetFilters} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-white/10 px-3 text-[10px] text-white/45 transition hover:text-white"><X size={13} /> Сбросить</button>}</div>
           <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto]">
             <label className="group relative block">
               <span className="sr-only">Найти поэта в рейтинге</span>
@@ -245,7 +239,7 @@ export default function RatingsPage() {
 
         <section className="space-y-4 md:hidden" aria-label="Рейтинг поэтов">
           {filtered.map((row, index) => <MobileRankCard key={row.poet.id} row={row} rank={index + 1} />)}
-          {!filtered.length && <EmptyRatingResults onReset={() => { setQuery(''); setTag(''); setRatedOnly(false); setSortBy('reader'); }} />}
+          {!filtered.length && <EmptyRatingResults onReset={resetFilters} />}
         </section>
 
         <section className="hidden overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[#061018]/65 md:block">
@@ -264,7 +258,7 @@ export default function RatingsPage() {
               </tr>)}</tbody>
             </table>
           </div>
-          {!filtered.length && <EmptyRatingResults onReset={() => { setQuery(''); setTag(''); setRatedOnly(false); setSortBy('reader'); }} />}
+          {!filtered.length && <EmptyRatingResults onReset={resetFilters} />}
         </section>
 
         <section className="mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">

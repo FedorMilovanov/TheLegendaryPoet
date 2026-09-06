@@ -25,6 +25,8 @@ jobs:
 
       - name: Validate workflow consolidation and performance contract
         run: npm run validate:workflow-consolidation
+      - name: Validate conditional exact-head merge certification contract
+        run: npm run validate:merge-certification
       - name: Validate content, stores, and literary style
         run: npm run check:content
       - name: Validate published audio release fail-closed behavior
