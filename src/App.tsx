@@ -122,7 +122,6 @@ function SiteLayout() {
         </a>
         <AmbientBackdrop />
         <PoetryBackdrop />
-        <div className="noise-bg" />
         <CustomCursor />
         <Header />
         <CommandPalette />
