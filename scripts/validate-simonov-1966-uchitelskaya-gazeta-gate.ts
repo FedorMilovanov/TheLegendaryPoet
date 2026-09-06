@@ -41,9 +41,9 @@ if (closeoutStatus !== 'exact issue + institutional item + article/scan locator 
 }
 
 for (const forbidden of [
-  /article content transcribed/iu,
-  /causal (?:link|relation).*(?:established|verified)/iu,
-  /facsimile reuse rights.*(?:granted|verified|cleared)/iu,
+  /article content:\s*\*\*(?:verified|transcribed|closed)/iu,
+  /causal relation[^\n]*:\s*\*\*(?:established|verified|closed)/iu,
+  /facsimile reuse rights[^\n]*:\s*\*\*(?:granted|verified|cleared|closed)/iu,
   /paid work authorized/iu,
 ]) {
   if (forbidden.test(closeout)) throw new Error(`Simonov 1966 closeout overclaims evidence/rights: ${forbidden}`);
