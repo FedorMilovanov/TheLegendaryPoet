@@ -570,3 +570,7 @@ export const essays: readonly Essay[] = publishEssayCatalog([
 export function getAllEssays(): readonly Essay[] {
   return essays;
 }
+
+export function getEssayBySlug(slug: string): Essay | undefined {
+  return essays.find((essay) => essay.slug === slug);
+}
