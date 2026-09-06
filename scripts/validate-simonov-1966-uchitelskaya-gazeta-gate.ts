@@ -1,24 +1,52 @@
 import { existsSync, readFileSync } from 'node:fs';
 
-const path = 'docs/research/SIMONOV_1966_UCHITELSKAYA_GAZETA_GATE_2026-08.md';
-if (!existsSync(path)) throw new Error(`Simonov 1966 Uchitelskaya Gazeta gate missing: ${path}`);
-const text = readFileSync(path, 'utf8');
-const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
+const historicalPath = 'docs/research/SIMONOV_1966_UCHITELSKAYA_GAZETA_GATE_2026-08.md';
+const closeoutPath = 'docs/research/SIMONOV_1966_UCHITELSKAYA_GAZETA_PRLIB_CLOSEOUT_2026-09.md';
+
+for (const path of [historicalPath, closeoutPath]) {
+  if (!existsSync(path)) throw new Error(`Simonov 1966 Uchitelskaya Gazeta control missing: ${path}`);
+}
+
+const historical = readFileSync(historicalPath, 'utf8');
+const closeout = readFileSync(closeoutPath, 'utf8');
+const closeoutStatus = closeout.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
 
 for (const marker of [
-  'exact tertiary citation + official 1966 newspaper corpus/access route recovered / exact 15.02 issue and article page pending',
-  'Гаспарян В.', '`Отец артиллериста / о тайне майора Деева`', '`Учительская газета`', '15 февраля',
-  'C — tertiary bibliographic lead', 'Российской национальной библиотеки', '1957–1987',
-  'центрах удалённого доступа Президентской библиотеки', '1966, № 36 (5553) (24 марта)',
-  'https://www.prlib.ru/item/1986967', 'источник электронной копии: Президентская библиотека',
-  'место хранения оригинала: Издательский дом `Учительская газета`', 'номер выпуска не вычисляется',
-  'Газетной летописи', 'RKP entry ещё не recovery-closed', 'Приоритетный маршрут теперь известен',
-  'не использует', 'не доказывает',
+  'C — tertiary bibliographic lead',
+  '15 февраля',
+  'Приоритетный маршрут теперь известен',
+  'не доказывает',
 ]) {
-  if (!text.includes(marker)) throw new Error(`Simonov 1966 Uchitelskaya Gazeta boundary disappeared: ${marker}`);
-}
-if (/direct scan verified|exact 15\.02.*(?:verified|inspected)|article page verified|causal link verified/iu.test(status)) {
-  throw new Error(`Simonov 1966 Uchitelskaya Gazeta status falsely closes an open gate: ${status}`);
+  if (!historical.includes(marker)) throw new Error(`Simonov 1966 historical gate lost provenance marker: ${marker}`);
 }
 
-console.log('Simonov 1966 Uchitelskaya Gazeta: tertiary article citation remains unverified, but official Presidential Library 1966 corpus and restricted access route are pinned; exact 15.02 item/page remains open.');
+for (const marker of [
+  'exact issue + institutional item + article/scan locator verified / article content not transcribed',
+  '15 февраля 1966 года',
+  '№ 20 (5537)',
+  'В. Гаспарян',
+  '`Отец артиллериста`',
+  'https://www.prlib.ru/item/1986920',
+  'скан 3',
+  'Bibliographic/object gate: CLOSED',
+  'NOT ESTABLISHED',
+  'NOT CLAIMED',
+  'Никакие платные копии',
+]) {
+  if (!closeout.includes(marker)) throw new Error(`Simonov 1966 PRLIB closeout boundary disappeared: ${marker}`);
+}
+
+if (closeoutStatus !== 'exact issue + institutional item + article/scan locator verified / article content not transcribed') {
+  throw new Error(`Unexpected Simonov 1966 closeout status: ${closeoutStatus}`);
+}
+
+for (const forbidden of [
+  /article content:\s*\*\*(?:verified|transcribed|closed)/iu,
+  /causal relation[^\n]*:\s*\*\*(?:established|verified|closed)/iu,
+  /facsimile reuse rights[^\n]*:\s*\*\*(?:granted|verified|cleared|closed)/iu,
+  /paid work authorized/iu,
+]) {
+  if (forbidden.test(closeout)) throw new Error(`Simonov 1966 closeout overclaims evidence/rights: ${forbidden}`);
+}
+
+console.log('Simonov 1966 Uchitelskaya Gazeta: PRLIB closes exact issue/item/author/title/scan locator; article content, causality and facsimile reuse remain explicitly unclaimed; paid acquisition is closed.');
