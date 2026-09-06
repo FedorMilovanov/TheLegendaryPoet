@@ -1,4 +1,4 @@
-import type { EssayBlock } from '../../types/essay';
+import type { EssayBlock, EssaySource } from '../../types/essay';
 import { benislavskayaDraft } from './benislavskayaDraft';
 import { publishEssay } from './publishEssay';
 
@@ -32,8 +32,30 @@ if (replacedBoundaryCount !== 1) {
   throw new Error(`Benislavskaya publication boundary replacement drifted: ${replacedBoundaryCount}`);
 }
 
+const publicationSources = (benislavskayaDraft.sources ?? []).map((source): EssaySource => {
+  if (source.id === 'ben-yushin-bibliography') {
+    return {
+      ...source,
+      title: 'П. Ф. Юшин. «Сергей Есенин: Идейно-творческая эволюция» (1969): архивно-библиографический ряд',
+      note:
+        'Прямой бесплатный holder readback РОУНБ от 06.09.2026 подтверждает на печатной с. 411 позиции #121–#134 под заголовком архивных документов, включая старые даты 18.01, 08.02, 30.11, 29.12.1924 и 12.04.1925. Эти записи используются как свидетельство раннего библиографического слоя, а не как автоматически канонические современные датировки.',
+    };
+  }
+
+  if (source.id === 'ben-1995-book') {
+    return {
+      ...source,
+      note:
+        'Поздний издательский контроль: прямой holder readback Пермской библиотеки фиксирует 13-письменный горизонт, начало письма 4 марта на с. 234–235, 6 апреля на с. 236, 26 апреля на с. 238 и финальный майский материал до с. 281. Отсутствие старых заголовков 18 января / 8 февраля в этом слое трактуется как редакционно-датировочное различие, а не как доказательство несуществования ранних записей. Полный платный скан для v1 не требуется и не заказывается.',
+    };
+  }
+
+  return source;
+});
+
 export const benislavskayaPublished = publishEssay(benislavskayaDraft, {
   kicker: 'Документальное исследование',
   date: '2026-09-06',
   blocks: publicationBlocks,
+  sources: publicationSources,
 });
