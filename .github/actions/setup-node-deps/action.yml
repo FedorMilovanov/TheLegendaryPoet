@@ -16,7 +16,7 @@ inputs:
   install-command:
     description: Exact dependency installation command.
     required: false
-    default: npm ci
+    default: npm ci --include=dev
 runs:
   using: composite
   steps:

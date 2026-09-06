@@ -4,10 +4,47 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
+const EXPECTED_PUBLISHED_ESSAY_HREFS = [
+  '/essays/simonov-syn-artillerista-realnaya-istoriya',
+  '/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive',
+  '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
+  '/essays/yesenin-kutezhi',
+  '/essays/sergei-yesenin-1895-1921',
+  '/essays/sergei-yesenin-1921-1925',
+  '/essays/yesenin-duncan-first-meeting-documents',
+  '/essays/mayakovsky-before-revolution',
+  '/essays/mayakovsky-gromovoy',
+  '/essays/brik-case',
+];
+const EXPECTED_YESENIN_ESSAY_HREFS = [
+  '/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive',
+  '/essays/yesenin-kutezhi',
+  '/essays/sergei-yesenin-1895-1921',
+  '/essays/sergei-yesenin-1921-1925',
+  '/essays/yesenin-duncan-first-meeting-documents',
+];
+const EXPECTED_MAYAKOVSKY_ESSAY_HREFS = [
+  '/essays/mayakovsky-before-revolution',
+  '/essays/mayakovsky-gromovoy',
+  '/essays/brik-case',
+];
+const EXPECTED_LERMONTOV_ESSAY_HREFS = [
+  '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
+];
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 async function essayLinks(page) {
   return page.locator('a[href^="/essays/"]');
+}
+
+async function expectEssayHrefSet(page, expectedHrefs) {
+  const links = await essayLinks(page);
+  await expect(links).toHaveCount(expectedHrefs.length);
+  const hrefs = await links.evaluateAll((anchors) => anchors
+    .map((anchor) => anchor.getAttribute('href'))
+    .filter(Boolean)
+    .sort());
+  expect(hrefs).toEqual([...expectedHrefs].sort());
 }
 
 async function waitForSettledRoute(page) {
@@ -74,7 +111,7 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   expect(response.status()).toBeLessThan(400);
 
   await expect(page.getByRole('heading', { level: 1, name: /Исследования.*большие статьи/i })).toBeVisible();
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expectEssayHrefSet(page, EXPECTED_PUBLISHED_ESSAY_HREFS);
   await expect(page.locator('a[href="/essays/sergei-yesenin-1921-1925"]')).toHaveCount(1);
   await expect(page.locator('a[href^="/articles/article-"]')).toHaveCount(0);
   await expect(page.getByText('Тайна русской души в поэзии: христианский взгляд')).toHaveCount(0);
@@ -85,19 +122,18 @@ test('articles catalog exposes the complete premium longform library', async ({ 
   );
 
   const cards = await essayLinks(page);
-  await expect(cards.locator('img')).toHaveCount(9);
+  await expect(cards.locator('img')).toHaveCount(EXPECTED_PUBLISHED_ESSAY_HREFS.length);
   const emptyAlts = await cards.locator('img').evaluateAll((images) => images.filter((image) => !image.getAttribute('alt')?.trim()).length);
   expect(emptyAlts).toBe(0);
 
   await page.getByRole('button', { name: 'Сергей Есенин', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(4);
-  await expect(page.locator('a[href="/essays/sergei-yesenin-1921-1925"]')).toHaveCount(1);
+  await expectEssayHrefSet(page, EXPECTED_YESENIN_ESSAY_HREFS);
   await page.getByRole('button', { name: 'Владимир Маяковский', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(3);
+  await expectEssayHrefSet(page, EXPECTED_MAYAKOVSKY_ESSAY_HREFS);
   await page.getByRole('button', { name: 'Михаил Лермонтов', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(1);
+  await expectEssayHrefSet(page, EXPECTED_LERMONTOV_ESSAY_HREFS);
   await page.getByRole('button', { name: 'Все материалы', exact: true }).click();
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expectEssayHrefSet(page, EXPECTED_PUBLISHED_ESSAY_HREFS);
 
   const state = await page.evaluate(() => ({
     pathname: location.pathname,
@@ -122,7 +158,7 @@ test('browser essay payloads remain target-scoped and unknown slugs stay honest'
     expect(response).not.toBeNull();
     expect(response.status()).toBeLessThan(400);
     await waitForSettledRoute(listing);
-    await expect(await essayLinks(listing)).toHaveCount(9);
+    await expectEssayHrefSet(listing, EXPECTED_PUBLISHED_ESSAY_HREFS);
     expect([...new Set(listingRequests)]).toEqual(['/data/essays/catalog.json']);
   } finally {
     await listing.close();
@@ -233,7 +269,7 @@ test('failed catalog Suspense visit stays stable until a later SPA visit retries
   await page.getByRole('link', { name: /Изучить статьи/i }).click();
   await expect(page).toHaveURL(/\/articles$/);
   await waitForSettledRoute(page);
-  await expect(await essayLinks(page)).toHaveCount(9);
+  await expectEssayHrefSet(page, EXPECTED_PUBLISHED_ESSAY_HREFS);
   expect(catalogAttempts).toBe(2);
   expect(documentRequests).toBe(1);
 });
