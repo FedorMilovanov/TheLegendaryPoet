@@ -1,0 +1,103 @@
+name: Merge certification
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: merge-certification-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  scope:
+    name: classify exact-head scope
+    runs-on: ubuntu-latest
+    outputs:
+      tested_sha: ${{ steps.classify.outputs.tested_sha }}
+      hall_required: ${{ steps.classify.outputs.hall_required }}
+    steps:
+      - name: Checkout exact PR head with base history
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Verify exact checkout identity
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Classify conditional certification lanes
+        id: classify
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/classify-merge-certification.mjs --base "$BASE_SHA" --head "$HEAD_SHA"
+
+      - name: Upload scope evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: merge-certification-scope-${{ github.event.pull_request.head.sha }}
+          path: merge-certification-scope.json
+          if-no-files-found: error
+          retention-days: 7
+
+  hall-pushkin:
+    name: wait for Hall Pushkin exact-head certification
+    needs: scope
+    if: needs.scope.outputs.hall_required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 125
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.scope.outputs.tested_sha }}
+
+      - name: Verify exact checkout identity
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.scope.outputs.tested_sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Wait for canonical Hall Pushkin workflow on the same head
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/wait-for-workflow-certification.mjs --lane hall-pushkin-offline-exhibit --head "${{ needs.scope.outputs.tested_sha }}"
+
+  merge-certification:
+    name: merge-certification
+    needs: [scope, hall-pushkin]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce conditional exact-head outcomes
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          HALL_REQUIRED: ${{ needs.scope.outputs.hall_required }}
+          HALL_RESULT: ${{ needs.hall-pushkin.result }}
+          TESTED_SHA: ${{ needs.scope.outputs.tested_sha }}
+        run: |
+          set -euo pipefail
+          test "$SCOPE_RESULT" = "success"
+          test -n "$TESTED_SHA"
+
+          if [ "$HALL_REQUIRED" = "true" ]; then
+            test "$HALL_RESULT" = "success"
+            hall_state="required / success"
+          else
+            test "$HALL_REQUIRED" = "false"
+            test "$HALL_RESULT" = "skipped"
+            hall_state="not applicable"
+          fi
+
+          {
+            echo '### Exact-head merge certification'
+            echo
+            echo "- tested head: \`$TESTED_SHA\`"
+            echo "- Hall Pushkin: $hall_state"
+          } >> "$GITHUB_STEP_SUMMARY"
