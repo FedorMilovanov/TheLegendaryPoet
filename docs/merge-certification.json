@@ -41,6 +41,26 @@
         "package-lock.json",
         ".github/actions/setup-node-deps/**"
       ]
+    },
+    "hall-pushkin-visual-remediation": {
+      "workflowFile": ".github/workflows/hall-pushkin-visual-remediation.yml",
+      "event": "pull_request",
+      "pollTimeoutSeconds": 7800,
+      "pollIntervalSeconds": 20,
+      "paths": [
+        ".github/workflows/hall-pushkin-visual-remediation.yml",
+        "docs/hall-v3/pushkin-visual-remediation.json",
+        "docs/hall-v3/pushkin-offline-exhibit.json",
+        "docs/hall-v3/pushkin-offline-budget.json",
+        "docs/hall-v3/material-spike.json",
+        "docs/hall-v3/material-decision.json",
+        "docs/hall-v3/greybox-layouts.json",
+        "scripts/hall-lookdev/**",
+        "scripts/hall-greybox/generate-candidates.py",
+        "scripts/hall-material/generate-material-spike.py",
+        "scripts/hall-material/prepare-material-visual-evidence.py",
+        "scripts/hall-pushkin/**"
+      ]
     }
   }
 }
