@@ -94,6 +94,16 @@
       }
     }
   },
+  "transportPortability": {
+    "issue": 442,
+    "status": "tangent-space-hardening",
+    "explicitTangentsRequired": true,
+    "normalMappedPrimitivesRequireTangentAttribute": true,
+    "meshoptMustPreserveTangents": true,
+    "forbiddenKhronosWarningCodes": [
+      "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE"
+    ]
+  },
   "evidence": {
     "renderEngine": "BLENDER_EEVEE_NEXT",
     "stillIds": [
