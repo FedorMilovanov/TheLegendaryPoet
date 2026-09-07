@@ -361,6 +361,9 @@ def export_candidate_glb(output: Path) -> None:
     exhibit_collection = bpy.data.collections.get("COLL_PUSHKIN_OFFLINE_EXHIBIT")
     if exhibit_collection is None:
         fail("canonical packed scene lost Pushkin exhibit collection")
+    export_properties = {prop.identifier for prop in bpy.ops.export_scene.gltf.get_rna_type().properties}
+    if "export_tangents" not in export_properties:
+        fail("Blender 4.5.12 glTF exporter does not expose export_tangents")
     bpy.ops.object.select_all(action="DESELECT")
     selected_meshes = 0
     for obj in exhibit_collection.all_objects:
@@ -381,6 +384,7 @@ def export_candidate_glb(output: Path) -> None:
         export_materials="EXPORT",
         export_yup=True,
         export_apply=True,
+        export_tangents=True,
     )
     if selected_meshes < 15 or not output.exists() or output.stat().st_size == 0:
         fail("candidate GLB export did not contain the substantive Pushkin mesh set")
@@ -527,6 +531,10 @@ def main() -> None:
         "files": {
             "blend": {"path": candidate_blend.name, "bytes": candidate_blend.stat().st_size, "sha256": sha256_file(candidate_blend)},
             "rawGlb": {"path": raw_glb.name, "bytes": raw_glb.stat().st_size, "sha256": sha256_file(raw_glb)},
+        },
+        "transport": {
+            "tangentPortabilityIssue": int(contract["transportPortability"]["issue"]),
+            "explicitTangentsRequested": bool(contract["transportPortability"]["explicitTangentsRequired"]),
         },
         "productionBoundary": {
             "productionAsset": False,
