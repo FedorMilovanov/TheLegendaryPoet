@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "issue": 440,
+  "status": "lookdev-candidate-authoring",
+  "sourceAuthority": {
+    "canonicalExhibitContract": "docs/hall-v3/pushkin-offline-exhibit.json",
+    "topology": "H3",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "meshGeometryFingerprint": "b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777",
+    "approvedRig": "R1",
+    "productionLightingAuthority": "L0-minimal-runtime",
+    "surfaceUv": "UV0"
+  },
+  "scope": {
+    "candidateOnly": true,
+    "canonicalGeneratorUnchanged": true,
+    "frozenH3ArchitectureMayChange": false,
+    "approvedCameraMayChange": false,
+    "productionLightingAuthorityMayChange": false,
+    "productionHallMayActivate": false,
+    "productionWebglMayBegin": false,
+    "offlineVisualApprovalMayPromote": false
+  },
+  "edgeTreatment": {
+    "modifierName": "PUSHKIN_LOOKDEV_BEVEL",
+    "segments": 3,
+    "profile": 0.5,
+    "maximumWidthMeters": 0.008,
+    "maximumFractionOfSmallestLocalDimension": 0.18,
+    "minimumWidthMeters": 0.0015,
+    "targetObjects": [
+      "PUSHKIN_HERO_SHADOW_BACK",
+      "PUSHKIN_HERO_LINEN_MAT",
+      "PUSHKIN_HERO_FRAME_TOP",
+      "PUSHKIN_HERO_FRAME_BOTTOM",
+      "PUSHKIN_HERO_FRAME_LEFT",
+      "PUSHKIN_HERO_FRAME_RIGHT",
+      "PUSHKIN_ONEGIN_PLINTH",
+      "PUSHKIN_ONEGIN_CAP",
+      "PUSHKIN_ONEGIN_DECK",
+      "PUSHKIN_ONEGIN_RAIL_FRONT",
+      "PUSHKIN_ONEGIN_RAIL_BACK",
+      "PUSHKIN_ONEGIN_RAIL_LEFT",
+      "PUSHKIN_ONEGIN_RAIL_RIGHT",
+      "PUSHKIN_CONTEXT_PLINTH",
+      "PUSHKIN_CONTEXT_TABLET",
+      "PUSHKIN_CONTEXT_BRASS_RULE"
+    ]
+  },
+  "materialResponse": {
+    "textureResolution": 64,
+    "wrap": "repeat",
+    "maps": ["roughness", "normal"],
+    "materials": {
+      "MAT_PUSHKIN_CHARCOAL": {
+        "baseRoughness": 0.68,
+        "roughnessAmplitude": 0.055,
+        "normalAmplitude8Bit": 7.0,
+        "normalStrength": 0.24,
+        "texturePeriodMeters": 0.28,
+        "seed": 11
+      },
+      "MAT_PUSHKIN_WARM_STONE": {
+        "baseRoughness": 0.74,
+        "roughnessAmplitude": 0.075,
+        "normalAmplitude8Bit": 9.0,
+        "normalStrength": 0.30,
+        "texturePeriodMeters": 0.42,
+        "seed": 23
+      },
+      "MAT_PUSHKIN_LINEN": {
+        "baseRoughness": 0.86,
+        "roughnessAmplitude": 0.045,
+        "normalAmplitude8Bit": 8.0,
+        "normalStrength": 0.28,
+        "texturePeriodMeters": 0.16,
+        "seed": 37
+      },
+      "MAT_PUSHKIN_PAPER": {
+        "baseRoughness": 0.92,
+        "roughnessAmplitude": 0.025,
+        "normalAmplitude8Bit": 4.0,
+        "normalStrength": 0.14,
+        "texturePeriodMeters": 0.12,
+        "seed": 41
+      },
+      "MAT_PUSHKIN_BRASS": {
+        "baseRoughness": 0.30,
+        "roughnessAmplitude": 0.04,
+        "normalAmplitude8Bit": 3.0,
+        "normalStrength": 0.10,
+        "texturePeriodMeters": 0.20,
+        "seed": 53
+      }
+    }
+  },
+  "evidence": {
+    "renderEngine": "BLENDER_EEVEE_NEXT",
+    "stillIds": [
+      "01-r1-hero",
+      "02-approach",
+      "03-portrait-close",
+      "04-frame-material",
+      "05-onegin-medium",
+      "06-onegin-close",
+      "07-room-context",
+      "08-side-light",
+      "09-mobile-portrait",
+      "10-mobile-onegin"
+    ],
+    "candidateRawGlbRequired": true,
+    "khronosValidationRequired": true,
+    "contactSheetRequired": true,
+    "walkthroughRequiredForFinalDisposition": true,
+    "walkthroughMayBeDeferredDuringLookdevIterations": true
+  },
+  "productionBoundary": {
+    "productionAsset": false,
+    "productionManifestAllowed": false,
+    "productionWebglMayBegin": false,
+    "canonicalOfflineExhibitReplaced": false,
+    "offlineVisualApprovalPromoted": false,
+    "humanOwnerVisualDispositionRequired": true
+  }
+}
