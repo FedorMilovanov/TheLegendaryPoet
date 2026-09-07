@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "issue": 444,
+  "status": "redundant-uv-transport-cleanup",
+  "sourceAuthority": {
+    "visualRemediationContract": "docs/hall-v3/pushkin-visual-remediation.json",
+    "visualRemediationIssue": 440,
+    "tangentPortabilityIssue": 442,
+    "topology": "H3",
+    "approvedRig": "R1",
+    "productionLightingAuthority": "L0-minimal-runtime",
+    "surfaceUv": "UV0"
+  },
+  "cleanup": {
+    "targetInventory": "visualRemediation.edgeTreatment.targetObjects",
+    "expectedTargetCount": 16,
+    "authoritativeUvLayer": "UV0",
+    "removeAllOtherUvLayersOnTargets": true,
+    "normalMappedTexturesMustUseTexcoord": 0,
+    "normalMappedPrimitivesMustNotExportTexcoord1": true,
+    "normalMappedPrimitivesRequireTangent": true,
+    "forbiddenKhronosInfoCodes": [
+      "UNUSED_OBJECT"
+    ]
+  },
+  "acceptedExporterInfo": {
+    "code": "UNUSED_MESH_TANGENT",
+    "expectedCount": 2,
+    "scope": "two documentary base-color planes without normalTexture",
+    "disposition": "accepted-blender-exporter-overhead",
+    "reason": "Blender export_tangents is global. Selective removal would require bespoke post-export GLB binary rewriting for negligible payload and would add more maintenance risk than the standards-valid info-level overhead."
+  },
+  "scope": {
+    "candidateOnly": true,
+    "canonicalGeneratorMayChange": false,
+    "frozenH3ArchitectureMayChange": false,
+    "approvedCameraMayChange": false,
+    "productionLightingAuthorityMayChange": false,
+    "materialAppearanceMayChange": false,
+    "documentaryMediaMayChange": false,
+    "productionHallMayActivate": false,
+    "productionWebglMayBegin": false,
+    "offlineVisualApprovalMayPromote": false
+  }
+}
