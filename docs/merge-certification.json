@@ -50,6 +50,7 @@
       "paths": [
         ".github/workflows/hall-pushkin-visual-remediation.yml",
         "docs/hall-v3/pushkin-visual-remediation.json",
+        "docs/hall-v3/pushkin-transport-cleanup.json",
         "docs/hall-v3/pushkin-offline-exhibit.json",
         "docs/hall-v3/pushkin-offline-budget.json",
         "docs/hall-v3/material-spike.json",
