@@ -1,0 +1,278 @@
+name: Hall Pushkin visual remediation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-visual-remediation.yml'
+      - 'docs/hall-v3/pushkin-visual-remediation.json'
+      - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'docs/hall-v3/pushkin-offline-budget.json'
+      - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'scripts/hall-lookdev/**'
+      - 'scripts/hall-greybox/generate-candidates.py'
+      - 'scripts/hall-material/generate-material-spike.py'
+      - 'scripts/hall-material/prepare-material-visual-evidence.py'
+      - 'scripts/hall-pushkin/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hall-pushkin-visual-remediation.yml'
+      - 'docs/hall-v3/pushkin-visual-remediation.json'
+      - 'docs/hall-v3/pushkin-offline-exhibit.json'
+      - 'docs/hall-v3/pushkin-offline-budget.json'
+      - 'docs/hall-v3/material-spike.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'scripts/hall-lookdev/**'
+      - 'scripts/hall-greybox/generate-candidates.py'
+      - 'scripts/hall-material/generate-material-spike.py'
+      - 'scripts/hall-material/prepare-material-visual-evidence.py'
+      - 'scripts/hall-pushkin/**'
+  workflow_dispatch:
+
+concurrency:
+  group: hall-pushkin-visual-remediation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz
+  BLENDER_CHECKSUM_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12.sha256
+  BLENDER_ARCHIVE: blender-4.5.12-linux-x64.tar.xz
+  SOURCE_DIR: qa-artifacts/hall-pushkin-lookdev/sources
+  CANONICAL_DIR: qa-artifacts/hall-pushkin-lookdev/canonical
+  CANDIDATE_DIR: qa-artifacts/hall-pushkin-lookdev/candidate
+
+jobs:
+  lookdev-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+
+    steps:
+      - name: Checkout exact visual-remediation head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact checkout identity
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$TESTED_SHA" > hall-pushkin-visual-remediation-tested-head.txt
+
+      - name: Validate bounded remediation contract before rendering
+        run: node scripts/hall-lookdev/validate-pushkin-visual-remediation.mjs
+
+      - name: Install exact-source and headless render system tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils libegl1 ffmpeg
+          pdftoppm -v 2>&1 | head -1
+          ffmpeg -version | head -1
+
+      - name: Prepare exact offline source assets
+        run: node scripts/hall-pushkin/prepare-offline-source-assets.mjs "$SOURCE_DIR"
+
+      - name: Download pinned Blender 4.5.12 LTS and vendor checksum
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/download .tools/blender
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_ARCHIVE_URL" --output ".tools/download/$BLENDER_ARCHIVE"
+          curl --fail --location --retry 3 --retry-delay 2 "$BLENDER_CHECKSUM_URL" --output .tools/download/blender-4.5.12.sha256
+          grep "${BLENDER_ARCHIVE}$" .tools/download/blender-4.5.12.sha256 > .tools/download/blender-linux.sha256
+          (
+            cd .tools/download
+            sha256sum -c blender-linux.sha256
+          )
+          tar -xJf ".tools/download/$BLENDER_ARCHIVE" -C .tools/blender --strip-components=1
+          test -x .tools/blender/blender
+          printf 'BLENDER_BIN=%s/.tools/blender/blender\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+
+      - name: Record Blender runtime identity
+        run: "$BLENDER_BIN --version | tee hall-pushkin-visual-remediation-blender-version.txt"
+
+      - name: Regenerate frozen H1 H2 H3 source authority
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-pushkin-lookdev/greybox
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-greybox/generate-candidates.py \
+            -- \
+            --layouts docs/hall-v3/greybox-layouts.json \
+            --output-dir qa-artifacts/hall-pushkin-lookdev/greybox
+
+      - name: Rebuild frozen H3 material bay
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-pushkin-lookdev/material
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/generate-material-spike.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --source-blend qa-artifacts/hall-pushkin-lookdev/greybox/H3/H3.blend \
+            --source-manifest qa-artifacts/hall-pushkin-lookdev/greybox/H3/manifest.json \
+            --output-dir qa-artifacts/hall-pushkin-lookdev/material
+
+      - name: Apply selected bounded H3 material lookdev
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-material/prepare-material-visual-evidence.py \
+            -- \
+            --contract docs/hall-v3/material-spike.json \
+            --blend qa-artifacts/hall-pushkin-lookdev/material/material-spike.blend \
+            --source-evidence qa-artifacts/hall-pushkin-lookdev/material/source-evidence.json
+
+      - name: Reproduce canonical packed Pushkin exhibit source
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANONICAL_DIR"
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-pushkin/run-offline-exhibit.py \
+            -- \
+            --contract docs/hall-v3/pushkin-offline-exhibit.json \
+            --source-blend qa-artifacts/hall-pushkin-lookdev/material/material-spike.blend \
+            --source-evidence qa-artifacts/hall-pushkin-lookdev/material/source-evidence.json \
+            --source-assets-evidence "$SOURCE_DIR/source-assets-evidence.json" \
+            --portrait "$SOURCE_DIR/kiprensky-1827-source.jpg" \
+            --onegin-page "$SOURCE_DIR/onegin-1833-title-page.png" \
+            --output-dir "$CANONICAL_DIR"
+
+      - name: Build isolated material-response candidate
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANDIDATE_DIR"
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-lookdev/remediate-pushkin-visual.py \
+            -- \
+            --contract docs/hall-v3/pushkin-visual-remediation.json \
+            --canonical-contract docs/hall-v3/pushkin-offline-exhibit.json \
+            --source-blend "$CANONICAL_DIR/pushkin-offline-exhibit.blend" \
+            --output-dir "$CANDIDATE_DIR" \
+            --tested-sha "$TESTED_SHA"
+
+      - name: Install pinned Khronos validation and optimization tools
+        run: |
+          set -euo pipefail
+          rm -rf .tools/hall-lookdev-gltf
+          mkdir -p .tools/hall-lookdev-gltf
+          printf '%s\n' '{"name":"hall-lookdev-gltf-tools","version":"0.0.0","private":true}' > .tools/hall-lookdev-gltf/package.json
+          npm install --prefix .tools/hall-lookdev-gltf --save-exact --ignore-scripts --omit=dev --no-audit --no-fund gltf-validator@2.0.0-dev.3.10 gltfpack@1.2.0
+          test "$(node -p "require('./.tools/hall-lookdev-gltf/node_modules/gltf-validator/package.json').version")" = "2.0.0-dev.3.10"
+          test "$(node -p "require('./.tools/hall-lookdev-gltf/node_modules/gltfpack/package.json').version")" = "1.2.0"
+          test -x .tools/hall-lookdev-gltf/node_modules/.bin/gltfpack
+
+      - name: Validate candidate raw GLB with Khronos validator
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-lookdev-gltf --input "$CANDIDATE_DIR/pushkin-lookdev-candidate-raw.glb" --output "$CANDIDATE_DIR/gltf-candidate-raw-report.json"
+
+      - name: Optimize candidate GLB through preservation-safe Meshopt path
+        run: .tools/hall-lookdev-gltf/node_modules/.bin/gltfpack -i "$CANDIDATE_DIR/pushkin-lookdev-candidate-raw.glb" -o "$CANDIDATE_DIR/pushkin-lookdev-candidate-optimized.glb" -cc -kn -km -ke -kv -vpf
+
+      - name: Validate candidate optimized GLB with Khronos validator
+        run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-lookdev-gltf --input "$CANDIDATE_DIR/pushkin-lookdev-candidate-optimized.glb" --output "$CANDIDATE_DIR/gltf-candidate-optimized-report.json"
+
+      - name: Measure candidate against existing first-slice budget contract
+        run: |
+          node scripts/hall-lookdev/build-pushkin-candidate-budget.mjs \
+            --policy docs/hall-v3/pushkin-offline-budget.json \
+            --candidate-evidence "$CANDIDATE_DIR/visual-remediation-evidence.json" \
+            --raw "$CANDIDATE_DIR/pushkin-lookdev-candidate-raw.glb" \
+            --optimized "$CANDIDATE_DIR/pushkin-lookdev-candidate-optimized.glb" \
+            --raw-report "$CANDIDATE_DIR/gltf-candidate-raw-report.json" \
+            --optimized-report "$CANDIDATE_DIR/gltf-candidate-optimized-report.json" \
+            --source-assets-evidence "$SOURCE_DIR/source-assets-evidence.json" \
+            --output "$CANDIDATE_DIR/first-slice-budget-report.json"
+
+      - name: Build candidate 5x2 contact sheet
+        run: |
+          set -euo pipefail
+          rm -rf "$CANDIDATE_DIR/contact-tiles"
+          mkdir -p "$CANDIDATE_DIR/contact-tiles"
+          mapfile -t stills < <(find "$CANDIDATE_DIR" -maxdepth 1 -type f \( -name '0[1-9]-*.png' -o -name '10-*.png' \) | sort)
+          test "${#stills[@]}" -eq 10
+          index=0
+          for still in "${stills[@]}"; do
+            tile="$CANDIDATE_DIR/contact-tiles/$(printf '%02d' "$index").png"
+            ffmpeg -loglevel error -y -i "$still" \
+              -vf "scale=480:270:force_original_aspect_ratio=decrease,pad=480:270:(ow-iw)/2:(oh-ih)/2:color=black" \
+              -frames:v 1 "$tile"
+            test -s "$tile"
+            index=$((index + 1))
+          done
+          ffmpeg -loglevel error -y -framerate 1 -start_number 0 -i "$CANDIDATE_DIR/contact-tiles/%02d.png" \
+            -vf "tile=5x2:padding=8:margin=8" -frames:v 1 "$CANDIDATE_DIR/contact-sheet.png"
+          test -s "$CANDIDATE_DIR/contact-sheet.png"
+          dimensions="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$CANDIDATE_DIR/contact-sheet.png")"
+          test "$dimensions" = "2448x564"
+          rm -rf "$CANDIDATE_DIR/contact-tiles"
+
+      - name: Render authored 24-second candidate walkthrough
+        run: |
+          "$BLENDER_BIN" \
+            --background \
+            --disable-autoexec \
+            --python-exit-code 17 \
+            --python scripts/hall-lookdev/render-pushkin-visual-sequence.py \
+            -- \
+            --contract docs/hall-v3/pushkin-visual-remediation.json \
+            --canonical-contract docs/hall-v3/pushkin-offline-exhibit.json \
+            --blend "$CANDIDATE_DIR/pushkin-lookdev-candidate.blend" \
+            --evidence "$CANDIDATE_DIR/visual-remediation-evidence.json" \
+            --output-dir "$CANDIDATE_DIR"
+
+      - name: Verify rendered candidate sequence with ffprobe
+        run: |
+          set -euo pipefail
+          video="$(find "$CANDIDATE_DIR" -maxdepth 1 -name 'pushkin-sequence*.mp4' -type f | head -1)"
+          test -n "$video"
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate,nb_frames -of json "$video" > "$CANDIDATE_DIR/ffprobe-sequence.json"
+          cat "$CANDIDATE_DIR/ffprobe-sequence.json"
+
+      - name: Validate complete generated candidate evidence
+        env:
+          HALL_PUSHKIN_VISUAL_REMEDIATION_EVIDENCE_DIR: qa-artifacts/hall-pushkin-lookdev/candidate
+        run: node scripts/hall-lookdev/validate-pushkin-visual-remediation.mjs
+
+      - name: Upload complete Pushkin visual-remediation candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: hall-pushkin-visual-remediation-${{ env.TESTED_SHA }}
+          path: |
+            hall-pushkin-visual-remediation-tested-head.txt
+            hall-pushkin-visual-remediation-blender-version.txt
+            qa-artifacts/hall-pushkin-lookdev/sources/source-assets-evidence.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/visual-remediation-evidence.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate.blend
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate-raw.glb
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate-optimized.glb
+            qa-artifacts/hall-pushkin-lookdev/candidate/gltf-candidate-raw-report.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/gltf-candidate-optimized-report.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/first-slice-budget-report.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/ffprobe-sequence.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/contact-sheet.png
+            qa-artifacts/hall-pushkin-lookdev/candidate/*.png
+            qa-artifacts/hall-pushkin-lookdev/candidate/*.mp4
+            qa-artifacts/hall-pushkin-lookdev/candidate/textures/*.png
+          if-no-files-found: error
+          retention-days: 14
