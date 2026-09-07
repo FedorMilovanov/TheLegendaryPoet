@@ -170,14 +170,15 @@ jobs:
             --output-dir "$CANDIDATE_DIR" \
             --tested-sha "$TESTED_SHA"
 
-      - name: Install pinned Khronos validation tool
+      - name: Install pinned Khronos validation and optimization tools
         run: |
           set -euo pipefail
           rm -rf .tools/hall-lookdev-gltf
           mkdir -p .tools/hall-lookdev-gltf
           printf '%s\n' '{"name":"hall-lookdev-gltf-tools","version":"0.0.0","private":true}' > .tools/hall-lookdev-gltf/package.json
-          npm install --prefix .tools/hall-lookdev-gltf --save-exact --ignore-scripts --omit=dev --no-audit --no-fund gltf-validator@2.0.0-dev.3.10
+          npm install --prefix .tools/hall-lookdev-gltf --save-exact --ignore-scripts --omit=dev --no-audit --no-fund gltf-validator@2.0.0-dev.3.10 gltfpack@1.2.0
           test "$(node -p "require('./.tools/hall-lookdev-gltf/node_modules/gltf-validator/package.json').version")" = "2.0.0-dev.3.10"
+          test "$(node -p "require('./.tools/hall-lookdev-gltf/node_modules/gltfpack/package.json').version")" = "1.2.0"
 
       - name: Validate candidate raw GLB with Khronos validator
         run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-lookdev-gltf --input "$CANDIDATE_DIR/pushkin-lookdev-candidate-raw.glb" --output "$CANDIDATE_DIR/gltf-candidate-report.json"
