@@ -3,6 +3,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const CONTRACT_PATH = 'docs/merge-certification.json';
+const OFFLINE_LANE = 'hall-pushkin-offline-exhibit';
+const VISUAL_LANE = 'hall-pushkin-visual-remediation';
 
 function escapeRegexChar(char) {
   return /[\\^$.*+?()[\]{}|]/.test(char) ? `\\${char}` : char;
@@ -32,32 +34,21 @@ export function globToRegExp(pattern) {
 }
 
 export function loadMergeCertificationContract(root = process.cwd()) {
-  const contractPath = path.join(root, CONTRACT_PATH);
-  return JSON.parse(fs.readFileSync(contractPath, 'utf8'));
+  return JSON.parse(fs.readFileSync(path.join(root, CONTRACT_PATH), 'utf8'));
 }
 
 export function classifyChangedFiles(changedFiles, contract) {
   const normalizedFiles = [...new Set(changedFiles.map((file) => file.replaceAll('\\\\', '/')))].sort();
   const lanes = {};
-
   for (const [laneId, lane] of Object.entries(contract.lanes ?? {})) {
-    const patterns = lane.paths ?? [];
-    const regexes = patterns.map((pattern) => [pattern, globToRegExp(pattern)]);
+    const regexes = (lane.paths ?? []).map((pattern) => [pattern, globToRegExp(pattern)]);
     const matches = [];
-
     for (const file of normalizedFiles) {
       const matchedPattern = regexes.find(([, regex]) => regex.test(file))?.[0];
       if (matchedPattern) matches.push({ file, pattern: matchedPattern });
     }
-
-    lanes[laneId] = {
-      required: matches.length > 0,
-      matches,
-      workflowFile: lane.workflowFile,
-      event: lane.event,
-    };
+    lanes[laneId] = { required: matches.length > 0, matches, workflowFile: lane.workflowFile, event: lane.event };
   }
-
   return { changedFiles: normalizedFiles, lanes };
 }
 
@@ -76,34 +67,25 @@ function parseArgs(argv) {
 }
 
 function requireExactSha(value, label) {
-  if (!/^[0-9a-f]{40}$/.test(value ?? '')) {
-    throw new Error(`${label} must be an exact 40-character lowercase commit SHA`);
-  }
+  if (!/^[0-9a-f]{40}$/.test(value ?? '')) throw new Error(`${label} must be an exact 40-character lowercase commit SHA`);
   return value;
 }
 
 function changedFilesFromGit(baseSha, headSha) {
-  const stdout = execFileSync(
-    'git',
-    ['diff', '--name-only', `${baseSha}...${headSha}`],
-    { encoding: 'utf8' },
-  );
-  return stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  return execFileSync('git', ['diff', '--name-only', `${baseSha}...${headSha}`], { encoding: 'utf8' })
+    .split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 }
 
 function appendOutput(file, key, value) {
-  if (!file) return;
-  fs.appendFileSync(file, `${key}=${value}\n`);
+  if (file) fs.appendFileSync(file, `${key}=${value}\n`);
 }
 
 function appendSummary(file, report) {
   if (!file) return;
   const lines = [
-    '### Merge certification scope',
-    '',
+    '### Merge certification scope', '',
     `Exact head: \`${report.headSha}\``,
-    `Base: \`${report.baseSha}\``,
-    '',
+    `Base: \`${report.baseSha}\``, '',
     '| Conditional lane | Required | Matching files |',
     '| --- | --- | --- |',
   ];
@@ -119,14 +101,16 @@ function main() {
   const baseSha = requireExactSha(args.base, '--base');
   const headSha = requireExactSha(args.head, '--head');
   const contract = loadMergeCertificationContract();
-  const classification = classifyChangedFiles(changedFilesFromGit(baseSha, headSha), contract);
-  const report = { baseSha, headSha, ...classification };
-  const hall = report.lanes['hall-pushkin-offline-exhibit'];
-  if (!hall) throw new Error('merge certification contract is missing hall-pushkin-offline-exhibit');
+  const report = { baseSha, headSha, ...classifyChangedFiles(changedFilesFromGit(baseSha, headSha), contract) };
+  const offline = report.lanes[OFFLINE_LANE];
+  const visual = report.lanes[VISUAL_LANE];
+  if (!offline) throw new Error(`merge certification contract is missing ${OFFLINE_LANE}`);
+  if (!visual) throw new Error(`merge certification contract is missing ${VISUAL_LANE}`);
 
   fs.writeFileSync('merge-certification-scope.json', `${JSON.stringify(report, null, 2)}\n`);
   appendOutput(process.env.GITHUB_OUTPUT, 'tested_sha', headSha);
-  appendOutput(process.env.GITHUB_OUTPUT, 'hall_required', hall.required ? 'true' : 'false');
+  appendOutput(process.env.GITHUB_OUTPUT, 'hall_offline_required', offline.required ? 'true' : 'false');
+  appendOutput(process.env.GITHUB_OUTPUT, 'hall_visual_required', visual.required ? 'true' : 'false');
   appendSummary(process.env.GITHUB_STEP_SUMMARY, report);
   console.log(JSON.stringify(report, null, 2));
 }
@@ -134,9 +118,7 @@ function main() {
 const invokedAsScript = process.argv[1]
   && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
 if (invokedAsScript) {
-  try {
-    main();
-  } catch (error) {
+  try { main(); } catch (error) {
     console.error(error instanceof Error ? error.stack : error);
     process.exit(1);
   }
