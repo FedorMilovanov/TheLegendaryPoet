@@ -45,7 +45,7 @@ jobs:
           VITE_BASE: /
         run: |
           set +e
-          { npm run sitemap; npm run build; } > production-build.log 2>&1
+          { npm run sitemap; npm run build; npm run validate:build-output; } > production-build.log 2>&1
           status=$?
           cat production-build.log
           exit $status
@@ -136,7 +136,9 @@ jobs:
         id: webkit_home_build
         env:
           VITE_BASE: /
-        run: npm run build
+        run: |
+          npm run build
+          npm run validate:build-output
       - name: Install locked Playwright WebKit
         uses: ./.github/actions/install-playwright
         with:
@@ -182,7 +184,9 @@ jobs:
         id: premium_build
         env:
           VITE_BASE: /
-        run: npm run build
+        run: |
+          npm run build
+          npm run validate:build-output
       - name: Install locked Playwright browsers
         uses: ./.github/actions/install-playwright
         with:
@@ -231,7 +235,9 @@ jobs:
         id: premium_iphone_critical_build
         env:
           VITE_BASE: /
-        run: npm run build
+        run: |
+          npm run build
+          npm run validate:build-output
       - name: Install locked Playwright WebKit
         uses: ./.github/actions/install-playwright
         with:
