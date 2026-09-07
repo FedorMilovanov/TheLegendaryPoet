@@ -87,6 +87,14 @@ for (const [name, spec] of Object.entries(materials)) {
   expect(Number(spec.texturePeriodMeters) >= 0.1 && Number(spec.texturePeriodMeters) <= 0.5, `${name}: metre texture period outside bounded lookdev range`);
 }
 
+const transport = contract.transportPortability ?? {};
+const forbiddenKhronosWarnings = transport.forbiddenKhronosWarningCodes ?? [];
+expect(transport.issue === 442 && transport.status === 'tangent-space-hardening', 'transport portability hardening must belong only to issue #442');
+expect(transport.explicitTangentsRequired === true, 'issue #442 must require explicit tangent export');
+expect(transport.normalMappedPrimitivesRequireTangentAttribute === true, 'normal-mapped primitives must require TANGENT attributes');
+expect(transport.meshoptMustPreserveTangents === true, 'Meshopt must preserve tangent attributes');
+expect(same(forbiddenKhronosWarnings, ['MESH_PRIMITIVE_GENERATED_TANGENT_SPACE']), 'issue #442 forbidden Khronos warning inventory drifted');
+
 expect(contract.evidence?.renderEngine === 'BLENDER_EEVEE_NEXT', 'candidate evidence must use Eevee Next');
 expect((contract.evidence?.stillIds ?? []).length === 10, 'candidate must reproduce all ten canonical fixed still views');
 expect(same(contract.evidence?.stillIds, (canonical.evidence?.stills ?? []).map((entry) => entry.id)), 'candidate still IDs must exactly mirror canonical evidence order');
@@ -114,6 +122,8 @@ expect(budgetPolicy.schemaVersion === 1 && budgetPolicy.laneId === 'TLP-HALL-001
 expect(script.includes('visual remediation must remain candidate-only'), 'remediation script must fail closed on candidate-only scope');
 expect(script.includes('visual remediation mutated mesh/transform data outside the explicit target set'), 'remediation script must fingerprint untouched mesh authority');
 expect(script.includes('export_apply=True'), 'candidate GLB export must explicitly apply bounded exhibit-local modifiers');
+expect(script.includes('export_tangents=True'), 'candidate GLB export must explicitly request tangent attributes');
+expect(script.includes('Blender 4.5.12 glTF exporter does not expose export_tangents'), 'candidate exporter must fail closed if explicit tangent export is unavailable');
 expect(script.includes('offlineVisualApprovalPromoted') && script.includes('humanOwnerVisualDispositionRequired'), 'candidate evidence must retain human-only visual disposition boundary');
 expect(!script.includes('ARCH_') && !script.includes('EXHIBIT_alexander-pushkin'), 'remediation implementation must not contain direct architecture/proxy mutation targets');
 expect(budgetScript.includes('optimized candidate changed embedded image bytes/dimensions'), 'candidate budget must fail closed if optimization changes embedded images');
@@ -139,17 +149,64 @@ function pngDimensions(filePath) {
   return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
 }
 
+function parseGlbJson(filePath) {
+  const bytes = fs.readFileSync(filePath);
+  if (bytes.length < 20 || bytes.toString('ascii', 0, 4) !== 'glTF') throw new Error(`${path.basename(filePath)} is not a GLB`);
+  if (bytes.readUInt32LE(4) !== 2 || bytes.readUInt32LE(8) !== bytes.length) throw new Error(`${path.basename(filePath)} GLB header is invalid`);
+  let offset = 12;
+  while (offset < bytes.length) {
+    if (offset + 8 > bytes.length) throw new Error(`${path.basename(filePath)} has a truncated chunk header`);
+    const chunkLength = bytes.readUInt32LE(offset);
+    const chunkType = bytes.readUInt32LE(offset + 4);
+    offset += 8;
+    if (offset + chunkLength > bytes.length) throw new Error(`${path.basename(filePath)} has a truncated chunk`);
+    const chunk = bytes.subarray(offset, offset + chunkLength);
+    offset += chunkLength;
+    if (chunkType === 0x4e4f534a) return JSON.parse(chunk.toString('utf8').replace(/[\u0000\u0020]+$/u, ''));
+  }
+  throw new Error(`${path.basename(filePath)} has no JSON chunk`);
+}
+
+function tangentCoverage(filePath) {
+  const gltf = parseGlbJson(filePath);
+  const normalMappedMaterials = new Set();
+  for (const [index, material] of (gltf.materials ?? []).entries()) {
+    if (material?.normalTexture && Number.isInteger(material.normalTexture.index)) normalMappedMaterials.add(index);
+  }
+  let normalMappedPrimitives = 0;
+  let primitivesWithTangents = 0;
+  const missing = [];
+  for (const [meshIndex, mesh] of (gltf.meshes ?? []).entries()) {
+    for (const [primitiveIndex, primitive] of (mesh.primitives ?? []).entries()) {
+      if (!Number.isInteger(primitive.material) || !normalMappedMaterials.has(primitive.material)) continue;
+      normalMappedPrimitives += 1;
+      if (Number.isInteger(primitive.attributes?.TANGENT)) {
+        primitivesWithTangents += 1;
+      } else {
+        missing.push(`/meshes/${meshIndex}/primitives/${primitiveIndex}`);
+      }
+    }
+  }
+  return { normalMappedMaterials: normalMappedMaterials.size, normalMappedPrimitives, primitivesWithTangents, missing };
+}
+
+function forbiddenWarningCodes(report) {
+  const forbidden = new Set(forbiddenKhronosWarnings);
+  return (report.issues?.messages ?? []).filter((entry) => forbidden.has(entry.code)).map((entry) => entry.code);
+}
+
 const evidenceDirValue = process.env.HALL_PUSHKIN_VISUAL_REMEDIATION_EVIDENCE_DIR;
 if (evidenceDirValue) {
   const evidenceDir = path.resolve(evidenceDirValue);
   const evidencePath = path.join(evidenceDir, 'visual-remediation-evidence.json');
+  const rawPath = path.join(evidenceDir, 'pushkin-lookdev-candidate-raw.glb');
   const rawReportPath = path.join(evidenceDir, 'gltf-candidate-raw-report.json');
   const optimizedPath = path.join(evidenceDir, 'pushkin-lookdev-candidate-optimized.glb');
   const optimizedReportPath = path.join(evidenceDir, 'gltf-candidate-optimized-report.json');
   const budgetPath = path.join(evidenceDir, 'first-slice-budget-report.json');
   const contactSheetPath = path.join(evidenceDir, 'contact-sheet.png');
   const ffprobePath = path.join(evidenceDir, 'ffprobe-sequence.json');
-  for (const required of [evidencePath, rawReportPath, optimizedPath, optimizedReportPath, budgetPath, contactSheetPath, ffprobePath]) {
+  for (const required of [evidencePath, rawPath, rawReportPath, optimizedPath, optimizedReportPath, budgetPath, contactSheetPath, ffprobePath]) {
     expect(fs.existsSync(required), `generated remediation evidence missing: ${path.basename(required)}`);
   }
 
@@ -164,6 +221,7 @@ if (evidenceDirValue) {
     expect(evidence.integrity?.explicitTargetCount === targets.length, 'generated candidate edge target count drifted');
     expect(evidence.integrity?.untouchedMeshFingerprintMatched === true && evidence.integrity?.untouchedMeshFingerprintBefore === evidence.integrity?.untouchedMeshFingerprintAfter, 'generated candidate mutated non-target meshes');
     expect(Number(evidence.integrity?.maximumScaleApplyBoundsDeltaMeters) <= 0.00001, 'candidate scale normalization changed world bounds');
+    expect(evidence.transport?.tangentPortabilityIssue === 442 && evidence.transport?.explicitTangentsRequested === true, 'generated candidate did not record explicit tangent portability evidence');
     expect(Array.isArray(evidence.edgeTreatment) && evidence.edgeTreatment.length === targets.length, 'candidate must prove every bounded edge target');
     for (const item of evidence.edgeTreatment ?? []) {
       expect(targets.includes(item.object), `unexpected generated edge target ${item.object}`);
@@ -192,10 +250,23 @@ if (evidenceDirValue) {
     }
   }
 
+  for (const glbPath of [rawPath, optimizedPath]) {
+    if (fs.existsSync(glbPath)) {
+      try {
+        const coverage = tangentCoverage(glbPath);
+        expect(coverage.normalMappedMaterials > 0 && coverage.normalMappedPrimitives > 0, `${path.basename(glbPath)} must contain substantive normal-mapped material usage`);
+        expect(coverage.missing.length === 0 && coverage.primitivesWithTangents === coverage.normalMappedPrimitives, `${path.basename(glbPath)} normal-mapped primitives missing explicit TANGENT: ${coverage.missing.join(', ')}`);
+      } catch (error) {
+        expect(false, `${path.basename(glbPath)} tangent coverage parse failed: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+  }
+
   for (const reportPath of [rawReportPath, optimizedReportPath]) {
     if (fs.existsSync(reportPath)) {
       const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
       expect(Number(report.issues?.numErrors ?? 0) === 0, `${path.basename(reportPath)} must be Khronos error-free`);
+      expect(forbiddenWarningCodes(report).length === 0, `${path.basename(reportPath)} contains forbidden tangent-space portability warning`);
       expect(report._hallToolchain?.gltfValidator?.version === '2.0.0-dev.3.10', `${path.basename(reportPath)} validator version drifted`);
       expect(report._hallToolchain?.gltfpack?.version === '1.2.0', `${path.basename(reportPath)} gltfpack version drifted`);
     }
