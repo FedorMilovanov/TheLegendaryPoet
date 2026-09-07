@@ -109,10 +109,13 @@
       "10-mobile-onegin"
     ],
     "candidateRawGlbRequired": true,
+    "candidateOptimizedGlbRequired": true,
     "khronosValidationRequired": true,
+    "optimizedKhronosValidationRequired": true,
+    "firstSliceBudgetEvidenceRequired": true,
     "contactSheetRequired": true,
     "walkthroughRequiredForFinalDisposition": true,
-    "walkthroughMayBeDeferredDuringLookdevIterations": true
+    "walkthroughMayBeDeferredDuringLookdevIterations": false
   },
   "productionBoundary": {
     "productionAsset": false,
