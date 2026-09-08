@@ -31,7 +31,8 @@
     "reducedMotionBehavior": "deterministic-cut",
     "webglUnavailableFallbackRequired": true,
     "webglContextLossFallbackRequired": true,
-    "documentaryMedia": "excluded"
+    "documentaryMedia": "excluded",
+    "applicationTextureSourcesAllowed": false
   },
   "browserWitnesses": {
     "requiredWebglSuccess": "chromium-desktop",
@@ -44,7 +45,8 @@
     "cssBytesMax": 65536,
     "drawCallsMax": 40,
     "trianglesMax": 15000,
-    "texturesMax": 0,
+    "applicationTextureSourcesMax": 0,
+    "rendererTexturesMax": 1,
     "chromiumFirstFrameMsMax": 5000
   },
   "evidence": {
