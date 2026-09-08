@@ -55,6 +55,7 @@ const smoothScrollSource = readFileSync(new URL('../src/utils/smoothScroll.ts', 
 const poetryBackdropSource = readFileSync(new URL('../src/components/PoetryBackdrop.tsx', import.meta.url), 'utf8');
 const scrollTopSource = readFileSync(new URL('../src/components/ScrollToTop.tsx', import.meta.url), 'utf8');
 const readingProgressSource = readFileSync(new URL('../src/components/articles/ReadingProgress.tsx', import.meta.url), 'utf8');
+const essayPageSource = readFileSync(new URL('../src/pages/EssayPage.tsx', import.meta.url), 'utf8');
 
 const coordinatorAst = inspectSource(coordinatorSource, 'SmoothScroll.tsx');
 const scrollTopAst = inspectSource(scrollTopSource, 'ScrollToTop.tsx');
@@ -86,10 +87,26 @@ assertContract(!poetryBackdropSource.includes('useScroll'), 'decorative poetry m
 assertContract(!poetryBackdropSource.includes('useTransform'), 'decorative poetry must not derive motion values from document scrolling');
 assertContract(!scrollTopSource.includes('useMotionValueEvent'), 'scroll-top visibility must not create a Framer document-scroll subscription');
 assertContract(scrollTopAst.hasEventListener('scroll', { options: { passive: true } }), 'scroll-top visibility must use a passive native listener');
-assertContract(readingProgressAst.hasEventListener('scroll', { options: { passive: true } }), 'reading progress fallback must use a passive native listener');
-assertContract(readingProgressAst.hasMethodCall('requestAnimationFrame'), 'reading progress fallback must coalesce React updates through requestAnimationFrame');
-assertContract(readingProgressAst.hasMethodCall('cancelAnimationFrame'), 'reading progress fallback must cancel its pending frame when unmounted');
-assertContract(!readingProgressAst.hasEventListener('scroll', { handlerName: 'update' }), 'reading progress fallback must not set React state directly on every scroll event');
+
+// Reading progress is one article-bounded authority. The explicit EssayPage ref
+// owns its semantic start/end; post-article community/footer geometry must never
+// re-enter through document/root scroll height or a second CSS scroll timeline.
+assertContract(essayPageSource.includes('<ReadingProgress articleRef={articleRef} />'), 'EssayPage must pass its explicit semantic article ref to ReadingProgress');
+assertContract(readingProgressSource.includes('articleRef.current'), 'reading progress must resolve geometry from the explicit article ref');
+assertContract(readingProgressSource.includes('article.getBoundingClientRect()'), 'reading progress must derive its boundaries from article geometry');
+assertContract(readingProgressSource.includes('articleBottom - viewportHeight'), 'reading progress must complete when the article bottom reaches the viewport bottom');
+assertContract(!readingProgressSource.includes('document.documentElement.scrollHeight'), 'reading progress must not use document height as its denominator');
+assertContract(!readingProgressSource.includes('supportsScrollTimeline'), 'reading progress must not split authority between JS geometry and a root CSS timeline');
+assertContract(!readingProgressSource.includes('reading-progress-fill'), 'reading progress must not reactivate the legacy root scroll-timeline class');
+assertContract(readingProgressSource.includes('new ResizeObserver(scheduleUpdate)'), 'article height changes must schedule the same progress calculation through ResizeObserver');
+assertContract(readingProgressSource.includes('resizeObserver?.disconnect()'), 'reading progress must disconnect its ResizeObserver on unmount');
+assertContract(readingProgressAst.hasEventListener('scroll', { options: { passive: true } }), 'reading progress must use a passive native scroll observer');
+assertContract(readingProgressAst.hasEventListener('resize', { options: { passive: true } }), 'reading progress must use a passive resize observer');
+assertContract(readingProgressAst.hasMethodCall('requestAnimationFrame'), 'reading progress must coalesce geometry updates through requestAnimationFrame');
+assertContract(readingProgressAst.hasMethodCall('cancelAnimationFrame'), 'reading progress must cancel its pending frame when unmounted');
+assertContract(!readingProgressAst.hasEventListener('scroll', { handlerName: 'update' }), 'reading progress must not set React state directly on every scroll event');
+assertContract(readingProgressSource.includes('role="progressbar"'), 'reading progress must expose its semantic progress role');
+assertContract(readingProgressSource.includes('aria-valuenow={semanticProgress}'), 'reading progress must expose the same computed value to assistive technology and browser QA');
 
 // Mutation-style harness checks: equivalent syntax must pass, forbidden behavior must not.
 const passiveFixture = inspectSource(`
@@ -166,4 +183,4 @@ if (failures.length > 0) {
   throw new Error(`Scroll runtime validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
 }
 
-console.log('Scroll runtime validation passed: native wheel continuity, bounded race-safe delayed-anchor observation, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
+console.log('Scroll runtime validation passed: native wheel continuity, bounded race-safe delayed-anchor observation, anchor geometry, reduced motion, nested overlays and article-bounded semantic RAF/passive-observer progress contracts are enforced.');
