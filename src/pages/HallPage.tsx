@@ -1,71 +1,12 @@
-import { Link } from '../components/ui/Link';
-import { motion } from 'framer-motion';
+import { HallProductionRuntime } from '../components/hall-v3/HallProductionRuntime';
 import { useSeo } from '../hooks/useSeo';
-import { titleCase } from '../utils/titleCase';
 
-/**
- * Hall of Poets — lightweight production shell while Hall v3 is designed and
- * certified outside the runtime.
- *
- * The old R3F prototype under src/components/hall/* is legacy evidence only and
- * is deliberately not imported here. Early architectural concepts are also kept
- * out of the production route so they cannot masquerade as the approved Hall.
- */
 export default function HallPage() {
   useSeo({
-    title: 'Зал Поэтов — в разработке — THE LEGENDARY POET',
-    description: 'Иммерсивный музей русской поэзии проектируется заново: сначала архитектура, материалы, свет и исторические экспонаты, затем — браузерная 3D-версия.',
+    title: 'Зал Поэтов — THE LEGENDARY POET',
+    description: 'Иммерсивный браузерный зал русской поэзии: первый H3/R1/L0/UV0 музейный срез с экскурсионной камерой и доступным fallback.',
     path: '/hall',
   });
 
-  return (
-    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[#050505]">
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(212,175,55,0.10),transparent_28%,rgba(5,5,5,0)_56%)]" />
-        <div className="absolute inset-x-[12%] top-[18%] h-px bg-gradient-to-r from-transparent via-luxury-gold/20 to-transparent" />
-        <div className="absolute inset-x-[22%] bottom-[20%] h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(5,5,5,0.66)_76%)]" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 mx-auto max-w-2xl px-6 text-center"
-      >
-        <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-luxury-gold/30 bg-luxury-gold/5 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-luxury-gold">
-          <span className="h-1.5 w-1.5 rounded-full bg-luxury-gold" />
-          В разработке
-        </span>
-
-        <h1 className="editorial-title mb-6 font-serif text-5xl font-bold leading-[0.95] text-white md:text-7xl">
-          <span className="gold-gradient gold-glow-text">{titleCase('Зал Поэтов')}</span>
-        </h1>
-
-        <p className="mx-auto mb-4 max-w-xl font-serif text-xl italic leading-relaxed text-luxury-gray-light md:text-2xl">
-          Иммерсивный музей проектируется заново.
-        </p>
-        <p className="mx-auto mb-10 max-w-lg text-base leading-relaxed text-luxury-gray-light/70">
-          Сначала мы отдельно утверждаем пространство, камеры, реальные материалы, свет и
-          исторические экспонаты. Только после визуальной и технической проверки новая 3D-версия
-          вернётся в браузер — без выдачи ранних концептов за финальную архитектуру.
-        </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            to="/poets"
-            className="inline-flex items-center gap-2 rounded-full bg-luxury-gold px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-[#050505] transition-all hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
-          >
-            Перейти к поэтам
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-luxury-gold/40 px-8 py-4 text-sm font-bold uppercase tracking-[0.16em] text-luxury-gold transition-all hover:border-luxury-gold/70 hover:bg-luxury-gold/5"
-          >
-            На главную
-          </Link>
-        </div>
-      </motion.div>
-    </div>
-  );
+  return <HallProductionRuntime />;
 }
