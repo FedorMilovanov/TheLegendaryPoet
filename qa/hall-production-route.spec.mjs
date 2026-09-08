@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
+const DOCUMENTARY_REQUEST = /(?:pushkin|kiprensky|onegin|manuscript|autograph).*(?:\.jpe?g|\.png|\.webp|\.avif|\.pdf|\.glb|\.gltf)(?:$|[?#])/i;
 
 async function openHall(page) {
   await page.goto(`${BASE_URL}/hall`, { waitUntil: 'domcontentloaded' });
@@ -11,6 +12,11 @@ async function openHall(page) {
 }
 
 test('production Hall uses bounded H3 guided WebGL runtime in Chromium/Android', async ({ page }, testInfo) => {
+  const documentaryRequests = [];
+  page.on('request', (request) => {
+    if (DOCUMENTARY_REQUEST.test(request.url())) documentaryRequests.push(request.url());
+  });
+
   const root = await openHall(page);
   const mode = await root.getAttribute('data-hall-production-mode');
   if (testInfo.project.name === 'iphone-safari') {
@@ -21,15 +27,17 @@ test('production Hall uses bounded H3 guided WebGL runtime in Chromium/Android',
   }
 
   await expect(page.getByText('Hall v3 · H3 / R1 / L0 / UV0')).toBeVisible();
-  await expect(page.getByText(/свободного FPS-перемещения/)).toBeVisible();
-
   if (mode === 'webgl') {
+    await expect(page.getByText(/свободного FPS-перемещения/)).toBeVisible();
     await expect(page.getByText(/Точка маршрута: entryReveal/)).toBeVisible();
     await page.getByRole('button', { name: 'Дальше' }).click();
     await expect(page.getByText(/Точка маршрута: orientation/)).toBeVisible();
     await page.getByRole('button', { name: 'Назад' }).click();
     await expect(page.getByText(/Точка маршрута: entryReveal/)).toBeVisible();
+  } else {
+    await expect(page.getByText('Доступная версия зала')).toBeVisible();
   }
+  expect(documentaryRequests, `rights-pending documentary requests escaped into production Hall: ${documentaryRequests.join(', ')}`).toEqual([]);
 });
 
 test('production Hall provides semantic fallback when WebGL is unavailable', async ({ page }) => {
