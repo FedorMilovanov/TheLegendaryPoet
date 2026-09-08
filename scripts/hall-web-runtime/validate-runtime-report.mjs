@@ -12,7 +12,7 @@ if (!fs.existsSync(reportPath)) {
 }
 
 const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-const expectedSha = process.env.GITHUB_SHA || null;
+const expectedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
 
 expect(report.schemaVersion === 1, 'schemaVersion must be 1');
 expect(report.laneId === 'TLP-HALL-WEB-PROOF-001' && report.productIssue === 463, 'runtime report identity must remain exact');
