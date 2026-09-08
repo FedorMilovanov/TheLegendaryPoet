@@ -1,0 +1,131 @@
+name: Hall web runtime proof
+
+on:
+  pull_request:
+    paths:
+      - 'qa/hall-web-runtime/**'
+      - 'qa/hall-web-runtime.spec.mjs'
+      - 'scripts/hall-web-runtime/**'
+      - 'scripts/validate-hall-web-runtime-proof.mjs'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
+      - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/hall-v3-contract.json'
+      - '.github/workflows/hall-web-runtime-proof.yml'
+      - '.github/actions/setup-node-deps/action.yml'
+      - '.github/actions/install-playwright/action.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'qa/hall-web-runtime/**'
+      - 'qa/hall-web-runtime.spec.mjs'
+      - 'scripts/hall-web-runtime/**'
+      - 'scripts/validate-hall-web-runtime-proof.mjs'
+      - 'docs/hall-v3/greybox-layouts.json'
+      - 'docs/hall-v3/greybox-decision.json'
+      - 'docs/hall-v3/camera-decision.json'
+      - 'docs/hall-v3/material-decision.json'
+      - 'docs/hall-v3/hall-v3-contract.json'
+      - '.github/workflows/hall-web-runtime-proof.yml'
+      - '.github/actions/setup-node-deps/action.yml'
+      - '.github/actions/install-playwright/action.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hall-web-runtime-proof-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-runtime-proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      HALL_WEB_PROOF_URL: http://127.0.0.1:4174
+    steps:
+      - name: Checkout exact Hall web proof head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+
+      - name: Verify exact checkout identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual"
+
+      - name: Set up exact repository Node dependencies
+        uses: ./.github/actions/setup-node-deps
+
+      - name: Validate isolated Hall web runtime contract
+        run: node scripts/validate-hall-web-runtime-proof.mjs
+
+      - name: Build isolated Hall web runtime proof
+        run: npx vite build --config qa/hall-web-runtime/vite.config.ts
+
+      - name: Install locked Chromium and WebKit
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium webkit
+
+      - name: Start isolated Hall web runtime preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup npx vite preview --config qa/hall-web-runtime/vite.config.ts --host 127.0.0.1 --port 4174 > hall-web-runtime-preview.log 2>&1 &
+          echo $! > /tmp/hall-web-runtime-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error "$HALL_WEB_PROOF_URL/" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat hall-web-runtime-preview.log
+          exit 1
+
+      - name: Run exact browser runtime proof
+        run: npx playwright test --config qa/hall-web-runtime/playwright.config.mjs
+
+      - name: Build measured Hall web runtime report
+        run: node scripts/hall-web-runtime/build-runtime-report.mjs
+
+      - name: Validate measured Hall web runtime report
+        run: node scripts/hall-web-runtime/validate-runtime-report.mjs
+
+      - name: Record exact evidence manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-artifacts/hall-web-runtime
+          {
+            printf 'tested_commit=%s\n' "$TESTED_SHA"
+            find qa-artifacts/hall-web-runtime -maxdepth 1 -type f -name '*.json' -print0 | sort -z | xargs -0 sha256sum
+          } > qa-artifacts/hall-web-runtime/evidence-manifest.txt
+          cat qa-artifacts/hall-web-runtime/evidence-manifest.txt
+
+      - name: Upload exact Hall web runtime evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hall-web-runtime-proof-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts/hall-web-runtime
+            dist-hall-web-runtime
+            test-results/hall-web-runtime
+            hall-web-runtime-preview.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Stop isolated preview
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/hall-web-runtime-preview.pid ]; then
+            kill "$(cat /tmp/hall-web-runtime-preview.pid)" 2>/dev/null || true
+          fi
