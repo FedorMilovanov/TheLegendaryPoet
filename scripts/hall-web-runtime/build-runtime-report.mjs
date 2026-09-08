@@ -37,12 +37,17 @@ const totalBytes = relativeBuildFiles.reduce((sum, file) => sum + file.bytes, 0)
 const runtimeFiles = fs.readdirSync(evidenceDir)
   .filter((name) => /-(runtime|forced-fallback|reduced-motion|context-loss)\.json$/.test(name))
   .sort();
-const runtimeEvidence = runtimeFiles.map((name) => JSON.parse(fs.readFileSync(path.join(evidenceDir, name), 'utf8')));
-const chromiumRuntime = runtimeEvidence.find((entry) => entry.project === 'chromium-desktop' && entry.state?.mode === 'webgl' && entry.state?.metrics?.firstFrameMs != null);
-const webkitRuntime = runtimeEvidence.find((entry) => entry.project === 'webkit-iphone' && entry.state?.ready === true);
+const runtimeEvidence = runtimeFiles.map((name) => ({
+  file: name,
+  ...JSON.parse(fs.readFileSync(path.join(evidenceDir, name), 'utf8')),
+}));
+const chromiumRuntime = runtimeEvidence.find((entry) => entry.file === 'chromium-desktop-runtime.json');
+const webkitRuntime = runtimeEvidence.find((entry) => entry.file === 'webkit-iphone-runtime.json');
 
-if (!chromiumRuntime) throw new Error('Chromium WebGL runtime evidence is missing');
-if (!webkitRuntime) throw new Error('WebKit/iPhone runtime-or-fallback evidence is missing');
+if (!chromiumRuntime || chromiumRuntime.state?.mode !== 'webgl' || chromiumRuntime.state?.metrics?.firstFrameMs == null) {
+  throw new Error('Canonical Chromium WebGL runtime evidence is missing');
+}
+if (!webkitRuntime || webkitRuntime.state?.ready !== true) throw new Error('Canonical WebKit/iPhone runtime-or-fallback evidence is missing');
 if (testedSha && chromiumRuntime.testedSha !== testedSha) throw new Error(`Chromium evidence SHA ${chromiumRuntime.testedSha} does not match ${testedSha}`);
 if (testedSha && webkitRuntime.testedSha !== testedSha) throw new Error(`WebKit evidence SHA ${webkitRuntime.testedSha} does not match ${testedSha}`);
 
@@ -61,11 +66,13 @@ const report = {
     files: relativeBuildFiles,
   },
   chromium: {
+    evidenceFile: chromiumRuntime.file,
     project: chromiumRuntime.project,
     mode: chromiumRuntime.state.mode,
     metrics: chromiumRuntime.state.metrics,
   },
   webkit: {
+    evidenceFile: webkitRuntime.file,
     project: webkitRuntime.project,
     mode: webkitRuntime.state.mode,
     reason: webkitRuntime.state.reason,
