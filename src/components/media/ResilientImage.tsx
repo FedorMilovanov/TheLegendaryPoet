@@ -35,6 +35,8 @@ export default function ResilientImage({
   decoding = 'async',
   fetchPriority,
   draggable,
+  srcSet,
+  sizes,
   onLoad,
   onError,
   onFinalError,
@@ -60,6 +62,7 @@ export default function ResilientImage({
 
   const hasActiveCandidate = !terminalFailure && sourceIndex < candidates.length;
   const currentSrc = hasActiveCandidate ? candidates[sourceIndex] : TRANSPARENT_PIXEL;
+  const hasResponsivePrimary = Boolean(src?.trim()) && hasActiveCandidate && sourceIndex === 0;
   const { ref, state: nativeState } = useNativeImageState(currentSrc);
 
   const state: ImageLoadState = !hasActiveCandidate
@@ -92,6 +95,8 @@ export default function ResilientImage({
       {...props}
       ref={ref}
       src={currentSrc}
+      srcSet={hasResponsivePrimary ? srcSet : undefined}
+      sizes={hasResponsivePrimary ? sizes : undefined}
       loading={priority ? 'eager' : (loading ?? 'lazy')}
       decoding={decoding}
       fetchPriority={priority ? 'high' : (fetchPriority ?? 'auto')}
