@@ -86,6 +86,7 @@ let currentStopIndex = 0;
 let renderer: THREE.WebGLRenderer | null = null;
 let animationFrame = 0;
 let firstFrameRecorded = false;
+let cleanupRuntimeListeners = () => {};
 
 const baseMetrics = (): RuntimeMetrics => ({
   firstFrameMs: null,
@@ -130,7 +131,10 @@ function setStatus(message: string) {
 }
 
 function enterFallback(reason: string) {
+  cleanupRuntimeListeners();
+  cleanupRuntimeListeners = () => {};
   if (animationFrame) cancelAnimationFrame(animationFrame);
+  animationFrame = 0;
   renderer?.dispose();
   renderer = null;
   canvasHost.replaceChildren();
@@ -283,10 +287,10 @@ if (renderer) {
   targetLookAt = mapPosition(initialWitness.target);
   camera.lookAt(targetLookAt);
 
-  prev.addEventListener('click', () => applyCameraStop(currentStopIndex - 1));
-  next.addEventListener('click', () => applyCameraStop(currentStopIndex + 1));
-
-  function resize() {
+  const onPrev = () => applyCameraStop(currentStopIndex - 1);
+  const onNext = () => applyCameraStop(currentStopIndex + 1);
+  const onResize = () => {
+    if (renderer !== activeRenderer) return;
     const width = Math.max(1, canvasHost.clientWidth);
     const height = Math.max(1, canvasHost.clientHeight);
     activeRenderer.setSize(width, height, false);
@@ -294,17 +298,26 @@ if (renderer) {
     camera.updateProjectionMatrix();
     proofState.metrics.canvasWidth = width;
     proofState.metrics.canvasHeight = height;
-  }
-  resize();
-  window.addEventListener('resize', resize, { passive: true });
-
-  activeRenderer.domElement.addEventListener('webglcontextlost', (event) => {
+  };
+  const onContextLost = (event: Event) => {
     event.preventDefault();
     enterFallback('webgl-context-lost');
-  });
+  };
+
+  prev.addEventListener('click', onPrev);
+  next.addEventListener('click', onNext);
+  window.addEventListener('resize', onResize, { passive: true });
+  activeRenderer.domElement.addEventListener('webglcontextlost', onContextLost);
+  cleanupRuntimeListeners = () => {
+    prev.removeEventListener('click', onPrev);
+    next.removeEventListener('click', onNext);
+    window.removeEventListener('resize', onResize);
+    activeRenderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+  };
+  onResize();
 
   function frame(now: number) {
-    if (!renderer) return;
+    if (renderer !== activeRenderer) return;
     if (transition) {
       const elapsed = Math.min(1, (now - transition.start) / transition.duration);
       const eased = 1 - Math.pow(1 - elapsed, 3);
