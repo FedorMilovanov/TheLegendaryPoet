@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout exact visual-remediation head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.TESTED_SHA }}
 
@@ -277,7 +277,7 @@ jobs:
           node scripts/hall-lookdev/validate-pushkin-transport-cleanup.mjs
 
       - name: Upload complete Pushkin visual-remediation candidate
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: hall-pushkin-visual-remediation-${{ env.TESTED_SHA }}
           path: |
