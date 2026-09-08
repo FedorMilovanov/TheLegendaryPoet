@@ -14,12 +14,15 @@ const required = [
   'qa/hall-web-runtime/vite.config.ts',
   'qa/hall-web-runtime/playwright.config.mjs',
   'qa/hall-web-runtime.spec.mjs',
+  '.github/workflows/hall-web-runtime-proof.yml',
 ];
 for (const file of required) expect(exists(file), `missing Hall web runtime proof source: ${file}`);
 
 const hallPage = read('src/pages/HallPage.tsx');
 const harness = read('qa/hall-web-runtime/main.ts');
 const harnessHtml = read('qa/hall-web-runtime/index.html');
+const harnessStyles = read('qa/hall-web-runtime/styles.css');
+const proofWorkflow = read('.github/workflows/hall-web-runtime-proof.yml');
 const legacyReadme = read('src/components/hall/README.md');
 const greyboxDecision = JSON.parse(read('docs/hall-v3/greybox-decision.json'));
 const cameraDecision = JSON.parse(read('docs/hall-v3/camera-decision.json'));
@@ -37,16 +40,18 @@ expect(cameraDecision.selectedTopology === 'H3' && cameraDecision.selectedRig ==
 expect(materialDecision.lightingDecision?.selected === 'L0-minimal-runtime', 'web proof requires selected L0 lighting authority');
 expect(materialDecision.uvDecision?.surfaceMaterialUv === 'UV0', 'web proof requires UV0 surface authority');
 
-for (const token of [
-  "from '../../docs/hall-v3/greybox-layouts.json'",
-  "from '../../docs/hall-v3/camera-decision.json'",
-  "from '../../docs/hall-v3/material-decision.json'",
-  "documentaryMedia: 'excluded'",
-  "cameraStopNames = ['entryReveal', 'orientation', 'firstTransition', 'pushkinApproach', 'pushkinViewing', 'reverseExit']",
-  "forceWebglFailure",
-  "webglcontextlost",
-  "prefers-reduced-motion: reduce",
-]) expect(harness.includes(token) || harnessHtml.includes(token), `Hall web proof missing required contract token: ${token}`);
+for (const [token, sources] of [
+  ["from '../../docs/hall-v3/greybox-layouts.json'", [harness]],
+  ["from '../../docs/hall-v3/camera-decision.json'", [harness]],
+  ["from '../../docs/hall-v3/material-decision.json'", [harness]],
+  ["documentaryMedia: 'excluded'", [harness]],
+  ["cameraStopNames = ['entryReveal', 'orientation', 'firstTransition', 'pushkinApproach', 'pushkinViewing', 'reverseExit']", [harness]],
+  ['forceWebglFailure', [harness]],
+  ['webglcontextlost', [harness]],
+  ['prefers-reduced-motion: reduce', [harnessStyles]],
+  ['TESTED_SHA:', [proofWorkflow]],
+  ['hall-web-runtime-proof-${{ env.TESTED_SHA }}', [proofWorkflow]],
+]) expect(sources.some((source) => source.includes(token)), `Hall web proof missing required contract token: ${token}`);
 
 expect(!harness.includes('src/components/hall') && !harness.includes('FirstPersonControls') && !harness.includes('HallOfPoets'), 'Hall v2 implementation may not become web proof authority');
 expect(legacyReadme.includes('retired/dormant Hall v2 prototype'), 'legacy Hall boundary marker must remain explicit');
@@ -56,6 +61,7 @@ expect(!/PointerLockControls|FirstPerson|WASD|free.?walk/i.test(harness), 'web p
 expect(harness.includes('new THREE.HemisphereLight') && harness.includes('new THREE.AmbientLight'), 'L0 proof must use minimal non-shadow runtime lighting');
 expect(harness.includes('activeRenderer.shadowMap.enabled = false'), 'web proof must keep realtime shadow maps disabled');
 expect(harness.includes('proofState.metrics.drawCalls') && harness.includes('proofState.metrics.triangles') && harness.includes('proofState.metrics.textures'), 'web proof must expose measurable renderer metrics');
+expect(harnessHtml.includes('noindex,nofollow'), 'isolated Hall proof document must remain non-indexable');
 
 if (failures.length) {
   console.error('Hall web runtime proof validation failed:');
