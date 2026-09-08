@@ -1,0 +1,14 @@
+/*
+ * Persistent Tailwind utility animations are status decoration, not required
+ * motion. Keep their visual state, but remove looping movement when the reader
+ * requests reduced motion. This file is imported last in main.tsx so the policy
+ * remains authoritative across every production surface.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+}
