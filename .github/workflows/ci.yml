@@ -25,6 +25,10 @@ jobs:
 
       - name: Validate workflow consolidation and performance contract
         run: npm run validate:workflow-consolidation
+      - name: Validate premium reader certification contract
+        run: npm run validate:reader-certification
+      - name: Validate locked browser runtime contract
+        run: npm run validate:browser-runtime
       - name: Validate conditional exact-head merge certification contract
         run: npm run validate:merge-certification
       - name: Validate content, stores, and literary style

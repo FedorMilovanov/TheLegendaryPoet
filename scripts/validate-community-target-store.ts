@@ -40,36 +40,54 @@ Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { on
 const targetId = 'sergei-yesenin-1921-1925';
 const voterId = '11111111-1111-4111-8111-111111111111';
 const equalTimestamp = '2026-08-05T10:00:00.000Z';
-const commentRows = Array.from({ length: 12 }, (_, index) => ({
+const baseCommentRows = Array.from({ length: 12 }, (_, index) => ({
   id: `comment-${String(99 - index).padStart(8, '0')}`,
-  targetType: 'article',
+  targetType: 'article' as const,
   targetId,
   author: `Читатель ${index + 1}`,
   text: `Содержательное адресное наблюдение номер ${index + 1}.`,
-  kind: index % 2 ? 'history' : 'literary',
+  kind: index % 2 ? 'history' as const : 'literary' as const,
   helpful: index,
   createdAt: index < 3 ? equalTimestamp : new Date(Date.parse(equalTimestamp) - index * 1000).toISOString(),
 }));
-
+let serverCommentRows = [...baseCommentRows];
+let serverRatingCount = 9;
 let requestUrls: string[] = [];
 let summaryAvailable = true;
 let commentsAvailable = true;
+let summaryHold: Promise<void> | null = null;
+let commentsHold: Promise<void> | null = null;
+
+function deferredResponse(kind: 'summary' | 'comments') {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  if (kind === 'summary') summaryHold = gate;
+  else commentsHold = gate;
+  return release;
+}
+
 globalThis.fetch = async (input, init) => {
   const url = new URL(String(input));
   requestUrls.push(url.toString());
 
   if (url.pathname === '/v1/summary') {
     if (!summaryAvailable) return new Response(null, { status: 503 });
-    return Response.json({
+    const snapshot = {
       targetType: 'article',
       targetId,
-      ratingCount: 9,
-      commentCount: 12,
+      ratingCount: serverRatingCount,
+      commentCount: serverCommentRows.length,
       overall: 4.4,
       dimensions: { clarity: 4.5, depth: 4.3, fairness: 4.4 },
       distribution: { 4: 5, 5: 4 },
       deviation: 0.35,
-    });
+    };
+    const hold = summaryHold;
+    if (hold) {
+      summaryHold = null;
+      await hold;
+    }
+    return Response.json(snapshot);
   }
 
   if (url.pathname === '/v1/summary/batch') {
@@ -91,8 +109,14 @@ globalThis.fetch = async (input, init) => {
 
   if (url.pathname === '/v1/comments') {
     if (!commentsAvailable) return new Response(null, { status: 503 });
+    const rowsAtRequest = [...serverCommentRows];
+    const hold = commentsHold;
+    if (hold) {
+      commentsHold = null;
+      await hold;
+    }
     const hasCursor = url.searchParams.has('cursorCreatedAt');
-    const slice = hasCursor ? commentRows.slice(10) : commentRows.slice(0, 10);
+    const slice = hasCursor ? rowsAtRequest.slice(10) : rowsAtRequest.slice(0, 10);
     const last = slice.at(-1);
     return Response.json({
       comments: slice,
@@ -174,6 +198,38 @@ await settle();
 expect(targets.getFeedbackTargetSnapshot('article', targetId).summaryPhase === 'ready', 'successful retry must restore summary readiness');
 expect(targets.getFeedbackTargetSnapshot('article', targetId).comments.length === 10, 'successful reset refresh may replace the cached comment page only after success');
 
+// Reproduce the mutation-ACK race: a first forced read captures stale server data
+// and remains in flight while a second force arrives. The second force must not
+// be swallowed by the first promise; exactly one follow-up authoritative read
+// must run after the stale request settles.
+const releaseSummary = deferredResponse('summary');
+const releaseComments = deferredResponse('comments');
+const raceStart = requestUrls.length;
+const staleRefresh = targets.retryFeedbackTarget('article', targetId, 'full');
+await new Promise((resolve) => setTimeout(resolve, 0));
+serverRatingCount = 10;
+serverCommentRows = [{
+  id: 'comment-00000100',
+  targetType: 'article',
+  targetId,
+  author: 'Новый читатель',
+  text: 'Новый серверный комментарий после подтверждённой записи.',
+  kind: 'literary',
+  helpful: 0,
+  createdAt: new Date(Date.parse(equalTimestamp) + 1000).toISOString(),
+}, ...baseCommentRows];
+const authoritativeRefresh = targets.retryFeedbackTarget('article', targetId, 'full');
+releaseSummary();
+releaseComments();
+await Promise.all([staleRefresh, authoritativeRefresh]);
+await settle();
+const raceRequests = requestUrls.slice(raceStart);
+expect(raceRequests.filter((url) => url.includes('/v1/summary?')).length === 2, 'overlapping forced summary refreshes must collapse to stale read plus exactly one authoritative follow-up');
+expect(raceRequests.filter((url) => url.includes('/v1/comments?')).length === 2, 'overlapping forced comment resets must collapse to stale read plus exactly one authoritative follow-up');
+const authoritativeSnapshot = targets.getFeedbackTargetSnapshot('article', targetId);
+expect(authoritativeSnapshot.aggregate.ratingCount === 10 && authoritativeSnapshot.aggregate.commentCount === 13, 'authoritative summary follow-up must replace the stale in-flight aggregate');
+expect(authoritativeSnapshot.comments.some((comment) => comment.id === 'comment-00000100'), 'authoritative comments follow-up must expose the post-ACK server comment');
+
 const unrelatedBefore = targets.getFeedbackTargetSnapshot('poet', 'anna-akhmatova');
 let unrelatedNotifications = 0;
 const stopUnrelated = targets.subscribeFeedbackTarget('poet', 'anna-akhmatova', () => { unrelatedNotifications += 1; }, 'passive');
@@ -217,5 +273,5 @@ stopUnrelated();
 stopFull();
 
 for (const failure of failures) console.error(`ERROR community-target-store: ${failure}`);
-console.log(`Community target validation: ${failures.length} error(s), explicit read phases, prior-data preservation and bounded target-scoped Worker requests.`);
+console.log(`Community target validation: ${failures.length} error(s), explicit read phases, prior-data preservation, forced-refresh race reconciliation and bounded target-scoped Worker requests.`);
 if (failures.length) process.exit(1);

@@ -17,6 +17,7 @@ const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
 export const ANALYTICS_CONSENT_EVENT = 'tlp:analytics-consent-change';
 
 let started = false;
+let sessionConsent: AnalyticsConsent | null = null;
 
 function metrikaId() {
   return (import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined)?.trim();
@@ -31,13 +32,21 @@ export function hasConfiguredAnalytics() {
 }
 
 export function getAnalyticsConsent(): AnalyticsConsent | null {
+  if (sessionConsent !== null) return sessionConsent;
   const value = safeRead(CONSENT_STORAGE_KEY);
-  return value === 'granted' || value === 'denied' ? value : null;
+  if (value === 'granted' || value === 'denied') {
+    sessionConsent = value;
+    return value;
+  }
+  return null;
 }
 
 export function setAnalyticsConsent(value: AnalyticsConsent) {
   if (typeof window === 'undefined') return;
-  // Consent still applies to the current page even when storage is blocked.
+  // The user's explicit choice is authoritative for this tab even when the
+  // browser blocks persistence. A reload still fails closed if storage did not
+  // retain the choice; no cookie or alternate persistence bypass is used.
+  sessionConsent = value;
   safeWrite(CONSENT_STORAGE_KEY, value);
   window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
 }
