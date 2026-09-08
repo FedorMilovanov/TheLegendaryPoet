@@ -66,6 +66,11 @@ assertContract(!coordinatorAst.hasMethodCall('raf'), 'document scrolling must no
 assertContract(!coordinatorAst.hasEventListener('wheel'), 'the app shell must not intercept wheel input');
 assertContract(!coordinatorAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document scrolling');
 assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native scroll coordinator must retain the scroll-to-top command');
+assertContract(coordinatorSource.includes('new MutationObserver'), 'lazy hash restoration must observe route DOM mutations instead of using a short retry timer');
+assertContract(coordinatorSource.includes("observer.observe(document.body, { childList: true, subtree: true })"), 'lazy hash restoration must observe only active route subtree insertions');
+assertContract(coordinatorSource.includes('observer?.disconnect()'), 'lazy hash observation must disconnect after resolution and on route cleanup');
+assertContract(!coordinatorSource.includes('HASH_RETRY_LIMIT'), 'hash restoration must not regress to a fixed retry budget');
+assertContract(!coordinatorSource.includes('setTimeout(restore'), 'hash restoration must not depend on fixed polling intervals');
 assertContract(!smoothScrollSource.includes('setActiveLenis'), 'the native scroll utility must not retain a legacy Lenis registration API');
 assertContract(!poetryBackdropSource.includes('useScroll'), 'decorative poetry must not subscribe to scroll frames');
 assertContract(!poetryBackdropSource.includes('useTransform'), 'decorative poetry must not derive motion values from document scrolling');
@@ -151,4 +156,4 @@ if (failures.length > 0) {
   throw new Error(`Scroll runtime validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
 }
 
-console.log('Scroll runtime validation passed: native wheel continuity, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
+console.log('Scroll runtime validation passed: native wheel continuity, lifecycle-bound lazy anchors, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
