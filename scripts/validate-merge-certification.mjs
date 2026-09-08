@@ -64,6 +64,24 @@ const laneSpecs = [
       'scripts/hall-pushkin/**',
     ],
   },
+  {
+    id: 'hall-web-runtime-proof',
+    workflowFile: '.github/workflows/hall-web-runtime-proof.yml',
+    timeoutMin: 1800,
+    timeoutMax: 3000,
+    requiredPaths: [
+      '.github/workflows/hall-web-runtime-proof.yml',
+      'docs/hall-v3/web-runtime-proof.json',
+      'qa/hall-web-runtime/**',
+      'qa/hall-web-runtime.spec.mjs',
+      'scripts/hall-web-runtime/**',
+      'scripts/validate-hall-web-runtime-proof.mjs',
+      'package.json',
+      'package-lock.json',
+      '.github/actions/setup-node-deps/action.yml',
+      '.github/actions/install-playwright/action.yml',
+    ],
+  },
 ];
 
 for (const spec of laneSpecs) {
@@ -71,7 +89,7 @@ for (const spec of laneSpecs) {
   expect(Boolean(lane), `${spec.id} conditional lane is missing`);
   expect(lane?.workflowFile === spec.workflowFile, `${spec.id} workflow file drifted`);
   expect(lane?.event === 'pull_request', `${spec.id} must observe pull_request evidence`);
-  expect(lane?.pollTimeoutSeconds >= spec.timeoutMin && lane?.pollTimeoutSeconds <= spec.timeoutMax, `${spec.id} poll timeout is outside bounded render/queue headroom`);
+  expect(lane?.pollTimeoutSeconds >= spec.timeoutMin && lane?.pollTimeoutSeconds <= spec.timeoutMax, `${spec.id} poll timeout is outside bounded execution/queue headroom`);
   expect(lane?.pollIntervalSeconds >= 10 && lane?.pollIntervalSeconds <= 60, `${spec.id} poll interval must remain bounded`);
 
   const paths = lane?.paths ?? [];
@@ -93,18 +111,32 @@ for (const spec of laneSpecs) {
 const outside = classifyChangedFiles(['README.md', 'docs/research/example.md'], contract);
 expect(outside.lanes['hall-pushkin-offline-exhibit']?.required === false, 'unrelated docs must not require offline Hall');
 expect(outside.lanes['hall-pushkin-visual-remediation']?.required === false, 'unrelated docs must not require visual-remediation Hall');
+expect(outside.lanes['hall-web-runtime-proof']?.required === false, 'unrelated docs must not require Hall web runtime proof');
 
 const packageScope = classifyChangedFiles(['package.json'], contract);
 expect(packageScope.lanes['hall-pushkin-offline-exhibit']?.required === true, 'package.json must require offline Hall');
 expect(packageScope.lanes['hall-pushkin-visual-remediation']?.required === false, 'package.json must not require visual-remediation Hall unless its workflow trigger changes');
+expect(packageScope.lanes['hall-web-runtime-proof']?.required === true, 'package.json must require Hall web runtime proof');
 
 const lookdevScope = classifyChangedFiles(['scripts/hall-lookdev/example.mjs'], contract);
 expect(lookdevScope.lanes['hall-pushkin-offline-exhibit']?.required === false, 'lookdev-only change must not require offline Hall');
 expect(lookdevScope.lanes['hall-pushkin-visual-remediation']?.required === true, 'lookdev-only change must require visual-remediation Hall');
+expect(lookdevScope.lanes['hall-web-runtime-proof']?.required === false, 'lookdev-only change must not require web runtime proof');
 
 const sharedHallScope = classifyChangedFiles(['scripts/hall-pushkin/example.mjs'], contract);
 expect(sharedHallScope.lanes['hall-pushkin-offline-exhibit']?.required === true, 'shared Hall Pushkin script must require offline Hall');
 expect(sharedHallScope.lanes['hall-pushkin-visual-remediation']?.required === true, 'shared Hall Pushkin script must require visual-remediation Hall');
+expect(sharedHallScope.lanes['hall-web-runtime-proof']?.required === false, 'offline Pushkin tooling alone must not require web runtime proof');
+
+const webScope = classifyChangedFiles(['qa/hall-web-runtime/main.ts'], contract);
+expect(webScope.lanes['hall-pushkin-offline-exhibit']?.required === false, 'web proof harness must not require offline Hall');
+expect(webScope.lanes['hall-pushkin-visual-remediation']?.required === false, 'web proof harness must not require visual remediation');
+expect(webScope.lanes['hall-web-runtime-proof']?.required === true, 'web proof harness must require web runtime exact-head certification');
+
+const sharedAuthorityScope = classifyChangedFiles(['docs/hall-v3/greybox-layouts.json'], contract);
+expect(sharedAuthorityScope.lanes['hall-pushkin-offline-exhibit']?.required === true, 'H3 layout authority must require offline Hall');
+expect(sharedAuthorityScope.lanes['hall-pushkin-visual-remediation']?.required === true, 'H3 layout authority must require visual remediation');
+expect(sharedAuthorityScope.lanes['hall-web-runtime-proof']?.required === true, 'H3 layout authority must require web runtime proof');
 
 const mergeWorkflow = read('.github/workflows/merge-certification.yml');
 for (const token of [
@@ -118,22 +150,28 @@ for (const token of [
   'scripts/classify-merge-certification.mjs',
   'hall_offline_required:',
   'hall_visual_required:',
+  'hall_web_runtime_required:',
   "if: needs.scope.outputs.hall_offline_required == 'true'",
   "if: needs.scope.outputs.hall_visual_required == 'true'",
+  "if: needs.scope.outputs.hall_web_runtime_required == 'true'",
   '--lane hall-pushkin-offline-exhibit',
   '--lane hall-pushkin-visual-remediation',
-  'needs: [scope, hall-pushkin-offline, hall-pushkin-visual]',
+  '--lane hall-web-runtime-proof',
+  'needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime]',
   'name: merge-certification',
   'test "$OFFLINE_RESULT" = "success"',
   'test "$OFFLINE_RESULT" = "skipped"',
   'test "$VISUAL_RESULT" = "success"',
   'test "$VISUAL_RESULT" = "skipped"',
+  'test "$WEB_RUNTIME_RESULT" = "success"',
+  'test "$WEB_RUNTIME_RESULT" = "skipped"',
 ]) {
   expect(mergeWorkflow.includes(token), `Merge certification workflow lost invariant: ${token}`);
 }
 expect(!mergeWorkflow.includes('if: always()'), 'final aggregate job must not use always(); stale concurrency cancellation must terminate instead of scheduling another job');
 expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-pushkin-offline-exhibit.yml'), 'aggregate certification must observe offline Hall rather than start a duplicate render');
 expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-pushkin-visual-remediation.yml'), 'aggregate certification must observe visual-remediation Hall rather than start a duplicate render');
+expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-web-runtime-proof.yml'), 'aggregate certification must observe web runtime proof rather than start duplicate browser work');
 
 const waiter = read('scripts/wait-for-workflow-certification.mjs');
 for (const token of [
