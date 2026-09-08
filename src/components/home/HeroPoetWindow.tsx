@@ -96,14 +96,25 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
 
   useEffect(() => {
     if (isHighPriority || mediaReleased) return;
+
+    let releaseFrame: number | null = null;
+    const releaseAfterLoad = () => {
+      releaseFrame = requestAnimationFrame(() => {
+        releaseFrame = null;
+        setMediaReleased(true);
+      });
+    };
+
     if (document.readyState === 'complete') {
-      setMediaReleased(true);
-      return;
+      releaseAfterLoad();
+    } else {
+      window.addEventListener('load', releaseAfterLoad, { once: true });
     }
 
-    const releaseAfterLoad = () => setMediaReleased(true);
-    window.addEventListener('load', releaseAfterLoad, { once: true });
-    return () => window.removeEventListener('load', releaseAfterLoad);
+    return () => {
+      window.removeEventListener('load', releaseAfterLoad);
+      if (releaseFrame !== null) cancelAnimationFrame(releaseFrame);
+    };
   }, [isHighPriority, mediaReleased]);
 
   return (
