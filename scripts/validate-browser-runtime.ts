@@ -127,6 +127,20 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   }
 }
 
+const analyticsSource = read('src/utils/analytics.ts');
+if (!analyticsSource.includes('let sessionConsent: AnalyticsConsent | null = null')) {
+  fail('analytics consent must retain an explicit same-tab memory authority when persistence is blocked');
+}
+if (!analyticsSource.includes('if (sessionConsent !== null) return sessionConsent')) {
+  fail('analytics consent reads must prefer the same-tab authority before best-effort persistence');
+}
+if (!analyticsSource.includes('sessionConsent = value;\n  safeWrite(CONSENT_STORAGE_KEY, value);')) {
+  fail('analytics consent writes must update same-tab authority before best-effort storage');
+}
+if (/document\.cookie|sessionStorage/.test(analyticsSource)) {
+  fail('analytics consent must not bypass blocked localStorage with alternate persistence');
+}
+
 const webkitRouteSuitePath = 'qa/mobile-webkit-isolated.spec.mjs';
 const webkitRouteHelperPath = 'qa/mobile-webkit-isolated.helpers.mjs';
 const webkitRouteRunnerPath = 'scripts/run-webkit-home-reveal-process-isolated.mjs';
@@ -161,5 +175,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, analytics consent retains same-tab authority without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
