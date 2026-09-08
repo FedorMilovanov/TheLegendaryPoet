@@ -37,6 +37,9 @@ expect(webProofContract.schemaVersion === 1 && webProofContract.laneId === 'TLP-
 expect(webProofContract.productionBoundary?.productionRouteActivated === false && webProofContract.productionBoundary?.productionAcceptance === false, 'web proof contract may not claim production route activation/acceptance');
 expect(webProofContract.productionBoundary?.documentaryMediaAllowed === false && webProofContract.runtimeContract?.documentaryMedia === 'excluded', 'web proof contract must exclude documentary media');
 expect(webProofContract.runtimeContract?.freeWalkAllowed === false && webProofContract.runtimeContract?.reducedMotionBehavior === 'deterministic-cut', 'web proof contract must remain guided and reduced-motion deterministic');
+expect(webProofContract.runtimeContract?.applicationTextureSourcesAllowed === false, 'web proof contract must explicitly forbid application texture sources');
+expect(webProofContract.thresholds?.applicationTextureSourcesMax === 0, 'application texture source budget must remain zero');
+expect(webProofContract.thresholds?.rendererTexturesMax === 1, 'renderer-internal texture baseline must remain bounded at one');
 
 expect(!hallPage.includes('@react-three/') && !hallPage.includes("from 'three'") && !hallPage.includes('from "three"'), 'production HallPage must remain free of Three/R3F imports');
 expect(!hallPage.includes('hall-web-runtime'), 'production HallPage must not import or link the isolated web proof');
@@ -74,6 +77,8 @@ expect(legacyReadme.includes('retired/dormant Hall v2 prototype'), 'legacy Hall 
 expect(!/https?:\/\//.test(harness), 'browser proof must not fetch remote documentary/runtime media');
 expect(!/\.jpe?g|\.png|\.webp|\.avif|\.pdf|\.glb|\.gltf/i.test(harness), 'browser proof must not embed documentary/image/GLB asset paths in this transaction');
 expect(!/PointerLockControls|FirstPerson|WASD|free.?walk/i.test(harness), 'web proof must remain guided and must not reintroduce FPS/free-walk controls');
+expect(!/\b(?:TextureLoader|CubeTextureLoader|DataTexture|CanvasTexture|VideoTexture|CompressedTexture|KTX2Loader)\b/.test(harness), 'web proof must not create application/documentary texture sources in this transaction');
+expect(!/\bmap\s*:/.test(harness), 'web proof materials must not attach texture maps in this transaction');
 expect(harness.includes('new THREE.HemisphereLight') && harness.includes('new THREE.AmbientLight'), 'L0 proof must use minimal non-shadow runtime lighting');
 expect(harness.includes('activeRenderer.shadowMap.enabled = false'), 'web proof must keep realtime shadow maps disabled');
 expect(harness.includes('proofState.metrics.drawCalls') && harness.includes('proofState.metrics.triangles') && harness.includes('proofState.metrics.textures'), 'web proof must expose measurable renderer metrics');
@@ -85,4 +90,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall web runtime proof contract: OK — isolated typed H3/R1/L0/UV0 harness, guided camera, lifecycle-safe semantic fallback, no documentary media, no legacy authority, production /hall unchanged.');
+console.log('Hall web runtime proof contract: OK — isolated typed H3/R1/L0/UV0 harness, guided camera, zero application texture sources, bounded renderer texture baseline, lifecycle-safe semantic fallback, no documentary media, no legacy authority, production /hall unchanged.');
