@@ -8,6 +8,7 @@ const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 const exists = (relative) => fs.existsSync(path.join(root, relative));
 
 const required = [
+  'docs/hall-v3/web-runtime-proof.json',
   'qa/hall-web-runtime/index.html',
   'qa/hall-web-runtime/main.ts',
   'qa/hall-web-runtime/styles.css',
@@ -28,17 +29,23 @@ const greyboxDecision = JSON.parse(read('docs/hall-v3/greybox-decision.json'));
 const cameraDecision = JSON.parse(read('docs/hall-v3/camera-decision.json'));
 const materialDecision = JSON.parse(read('docs/hall-v3/material-decision.json'));
 const hallContract = JSON.parse(read('docs/hall-v3/hall-v3-contract.json'));
+const webProofContract = JSON.parse(read('docs/hall-v3/web-runtime-proof.json'));
+
+expect(webProofContract.schemaVersion === 1 && webProofContract.laneId === 'TLP-HALL-WEB-PROOF-001' && webProofContract.productIssue === 463, 'web runtime proof contract identity must remain exact');
+expect(webProofContract.productionBoundary?.productionRouteActivated === false && webProofContract.productionBoundary?.productionAcceptance === false, 'web proof contract may not claim production route activation/acceptance');
+expect(webProofContract.productionBoundary?.documentaryMediaAllowed === false && webProofContract.runtimeContract?.documentaryMedia === 'excluded', 'web proof contract must exclude documentary media');
+expect(webProofContract.runtimeContract?.freeWalkAllowed === false && webProofContract.runtimeContract?.reducedMotionBehavior === 'deterministic-cut', 'web proof contract must remain guided and reduced-motion deterministic');
 
 expect(!hallPage.includes('@react-three/') && !hallPage.includes("from 'three'") && !hallPage.includes('from "three"'), 'production HallPage must remain free of Three/R3F imports');
 expect(!hallPage.includes('hall-web-runtime'), 'production HallPage must not import or link the isolated web proof');
 expect(hallContract.productionRoute?.mode === 'placeholder' && hallContract.productionRoute?.allowThreeRuntimeImports === false, 'production Hall route must remain placeholder/fail-closed');
 expect(hallContract.gates?.webVerticalSlice === 'blocked' && hallContract.gates?.fullMuseumScaleOut === 'blocked', 'web/full scale-out gates may not be promoted by the proof transaction');
 
-expect(greyboxDecision.selectedCandidate === 'H3', 'web proof requires frozen H3 topology authority');
-expect(greyboxDecision.candidates?.H3?.layoutFingerprint === '5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65', 'H3 layout fingerprint drifted');
-expect(cameraDecision.selectedTopology === 'H3' && cameraDecision.selectedRig === 'R1', 'web proof requires selected R1 camera authority');
-expect(materialDecision.lightingDecision?.selected === 'L0-minimal-runtime', 'web proof requires selected L0 lighting authority');
-expect(materialDecision.uvDecision?.surfaceMaterialUv === 'UV0', 'web proof requires UV0 surface authority');
+expect(greyboxDecision.selectedCandidate === webProofContract.authority?.topology, 'web proof topology must match frozen H3 authority');
+expect(greyboxDecision.candidates?.H3?.layoutFingerprint === webProofContract.authority?.layoutFingerprint, 'web proof layout fingerprint must match H3 authority');
+expect(cameraDecision.selectedTopology === 'H3' && cameraDecision.selectedRig === webProofContract.authority?.cameraRig, 'web proof camera must match selected R1 authority');
+expect(materialDecision.lightingDecision?.selected === webProofContract.authority?.lighting, 'web proof lighting must match selected L0 authority');
+expect(materialDecision.uvDecision?.surfaceMaterialUv === webProofContract.authority?.surfaceUv, 'web proof UV must match UV0 authority');
 
 for (const [token, sources] of [
   ["from '../../docs/hall-v3/greybox-layouts.json'", [harness]],
@@ -50,6 +57,7 @@ for (const [token, sources] of [
   ['webglcontextlost', [harness]],
   ['prefers-reduced-motion: reduce', [harnessStyles]],
   ['TESTED_SHA:', [proofWorkflow]],
+  ["'docs/hall-v3/web-runtime-proof.json'", [proofWorkflow]],
   ['hall-web-runtime-proof-${{ env.TESTED_SHA }}', [proofWorkflow]],
 ]) expect(sources.some((source) => source.includes(token)), `Hall web proof missing required contract token: ${token}`);
 
