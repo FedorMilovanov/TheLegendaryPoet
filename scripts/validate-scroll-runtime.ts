@@ -68,9 +68,17 @@ assertContract(!coordinatorAst.hasMethodCall('preventDefault'), 'the app shell m
 assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native scroll coordinator must retain the scroll-to-top command');
 assertContract(coordinatorSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');
 assertContract(coordinatorSource.includes('HASH_OBSERVER_TIMEOUT_MS = 15_000'), 'hash observation must have a bounded 15-second lifetime for slow lazy routes');
-assertContract(coordinatorSource.includes("observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true })"), 'hash observation must watch bounded DOM insertions for the requested anchor');
+const observerRegistration = "observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true })";
+const observerIndex = coordinatorSource.indexOf(observerRegistration);
+const postRegistrationLookupIndex = coordinatorSource.indexOf('if (findAndScrollToHash()) {', observerIndex + observerRegistration.length);
+const observerTimeoutIndex = coordinatorSource.indexOf('window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS)', observerIndex + observerRegistration.length);
+assertContract(observerIndex >= 0, 'hash observation must watch bounded DOM insertions for the requested anchor');
+assertContract(
+  postRegistrationLookupIndex > observerIndex && observerTimeoutIndex > postRegistrationLookupIndex,
+  'hash restoration must re-check synchronously after observer registration to close the lookup/observe race before arming timeout cleanup',
+);
 assertContract(coordinatorSource.includes('observer?.disconnect()'), 'hash observation must disconnect deterministically');
-assertContract(coordinatorSource.includes('window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS)'), 'hash observation must retain a bounded timeout cleanup');
+assertContract(observerTimeoutIndex >= 0, 'hash observation must retain a bounded timeout cleanup');
 assertContract(!coordinatorSource.includes('HASH_RETRY_LIMIT'), 'fixed-count hash retry windows must remain removed');
 assertContract(!coordinatorSource.includes('setTimeout(restore, 60)'), 'hash restoration must not regress to repeated polling');
 assertContract(!smoothScrollSource.includes('setActiveLenis'), 'the native scroll utility must not retain a legacy Lenis registration API');
@@ -158,4 +166,4 @@ if (failures.length > 0) {
   throw new Error(`Scroll runtime validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
 }
 
-console.log('Scroll runtime validation passed: native wheel continuity, bounded delayed-anchor observation, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
+console.log('Scroll runtime validation passed: native wheel continuity, bounded race-safe delayed-anchor observation, anchor geometry, reduced motion, nested overlays and semantic RAF/passive-observer contracts are enforced.');
