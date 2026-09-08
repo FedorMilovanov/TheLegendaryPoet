@@ -38,7 +38,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
 
             {/* Top Badges */}
             <div className="absolute top-4 right-4 z-20 bg-[#050505]/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-              <Star size={14} className="text-luxury-gold fill-luxury-gold animate-pulse" />
+              <Star size={14} className="text-luxury-gold fill-luxury-gold animate-pulse motion-reduce:animate-none" />
               <span className="text-sm font-bold text-luxury-gold gold-glow-text">{poet.rating}</span>
             </div>
 
