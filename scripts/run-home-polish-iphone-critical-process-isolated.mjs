@@ -10,10 +10,17 @@ const common = [
 const suites = [
   {
     id: 'iphone-first-viewport',
+    file: 'qa/home-polish.spec.mjs',
     grep: 'first viewport keeps six decoded portraits, crisp title and usable labels',
   },
   {
+    id: 'iphone-media-perf',
+    file: 'qa/home-media-perf.spec.mjs',
+    grep: 'home hero media',
+  },
+  {
     id: 'iphone-reduced-motion',
+    file: 'qa/home-polish.spec.mjs',
     grep: 'reduced motion removes title, hero-root, window and decorative movement',
   },
 ];
@@ -22,7 +29,7 @@ for (const [index, suite] of suites.entries()) {
   const args = [
     'playwright',
     'test',
-    'qa/home-polish.spec.mjs',
+    suite.file,
     ...common,
     '--grep',
     suite.grep,
