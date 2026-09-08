@@ -1,0 +1,90 @@
+name: Home media text repair
+
+on:
+  push:
+    branches: [fix/home-media-perf-471]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[home-media-text-repair]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: fix/home-media-perf-471
+          fetch-depth: 1
+
+      - name: Apply exact home media repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'exact repair anchor missing in {path}: {old!r}')
+              if text.count(old) != 1:
+                  raise SystemExit(f'exact repair anchor not unique in {path}: {old!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          hero = 'src/components/home/HeroPoetWindow.tsx'
+          replace_exact(
+              hero,
+              "function buildHeroPortraitSrcSet(photo: string | undefined) {\n  if (!photo || !/\\.jpg$/i.test(photo)) return undefined;\n  const stem = photo.replace(/\\.jpg$/i, '');\n  return [",
+              "function buildHeroPortraitPrimary(photo: string | undefined) {\n  return photo?.replace(/\\.jpg$/i, '-320.jpg');\n}\n\nfunction buildHeroPortraitSrcSet(photo: string | undefined) {\n  if (!photo || !/\\.jpg$/i.test(photo)) return undefined;\n  const stem = photo.replace(/\\.jpg$/i, '');\n  return [",
+          )
+          replace_exact(
+              hero,
+              "  const portraitSrcSet = mediaReleased ? buildHeroPortraitSrcSet(poet.photo) : undefined;",
+              "  const portraitPrimary = mediaReleased ? buildHeroPortraitPrimary(poet.photo) : undefined;\n  const portraitSrcSet = mediaReleased ? buildHeroPortraitSrcSet(poet.photo) : undefined;",
+          )
+          replace_exact(
+              hero,
+              "                src={mediaReleased ? poet.photo : undefined}",
+              "                src={portraitPrimary}",
+          )
+
+          resilient = 'src/components/media/ResilientImage.tsx'
+          replace_exact(
+              resilient,
+              "      ref={ref}\n      src={currentSrc}\n      srcSet={hasResponsivePrimary ? srcSet : undefined}\n      sizes={hasResponsivePrimary ? sizes : undefined}",
+              "      ref={ref}\n      srcSet={hasResponsivePrimary ? srcSet : undefined}\n      sizes={hasResponsivePrimary ? sizes : undefined}\n      src={currentSrc}",
+          )
+
+          polish = 'qa/home-polish.spec.mjs'
+          replace_exact(
+              polish,
+              "  expect(imageHints.every((image) => image.loading === 'eager')).toBe(true);\n  expect(imageHints.slice(0, 2).every((image) => image.fetchPriority === 'high')).toBe(true);\n  expect(imageHints.slice(2).every((image) => image.fetchPriority !== 'high')).toBe(true);",
+              "  expect(imageHints.slice(0, 2).every((image) => image.loading === 'eager' && image.fetchPriority === 'high')).toBe(true);\n  expect(imageHints.slice(2).every((image) => image.loading === 'lazy' && image.fetchPriority === 'low')).toBe(true);",
+          )
+
+          validator = 'scripts/validate-home-media-perf.mjs'
+          replace_exact(
+              validator,
+              "  \"src={mediaReleased ? poet.photo : undefined}\",",
+              "  \"return photo?.replace(/\\\\.jpg$/i, '-320.jpg');\",\n  'src={portraitPrimary}',",
+          )
+          replace_exact(
+              validator,
+              "  'srcSet={hasResponsivePrimary ? srcSet : undefined}',\n  'sizes={hasResponsivePrimary ? sizes : undefined}',",
+              "  'srcSet={hasResponsivePrimary ? srcSet : undefined}',\n  'sizes={hasResponsivePrimary ? sizes : undefined}',\n  'src={currentSrc}',",
+          )
+          PY
+
+          git diff --check
+          git diff -- src/components/home/HeroPoetWindow.tsx src/components/media/ResilientImage.tsx qa/home-polish.spec.mjs scripts/validate-home-media-perf.mjs
+
+      - name: Commit exact repair
+        run: |
+          set -euo pipefail
+          git add src/components/home/HeroPoetWindow.tsx src/components/media/ResilientImage.tsx qa/home-polish.spec.mjs scripts/validate-home-media-perf.mjs
+          git diff --cached --quiet && { echo 'No repair diff'; exit 1; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(home): bound responsive fallback requests [home-media-text-repair]'
+          git push origin HEAD:fix/home-media-perf-471
