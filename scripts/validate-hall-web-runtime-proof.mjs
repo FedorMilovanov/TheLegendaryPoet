@@ -13,6 +13,7 @@ const required = [
   'qa/hall-web-runtime/main.ts',
   'qa/hall-web-runtime/styles.css',
   'qa/hall-web-runtime/vite.config.ts',
+  'qa/hall-web-runtime/tsconfig.json',
   'qa/hall-web-runtime/playwright.config.mjs',
   'qa/hall-web-runtime.spec.mjs',
   '.github/workflows/hall-web-runtime-proof.yml',
@@ -23,6 +24,7 @@ const hallPage = read('src/pages/HallPage.tsx');
 const harness = read('qa/hall-web-runtime/main.ts');
 const harnessHtml = read('qa/hall-web-runtime/index.html');
 const harnessStyles = read('qa/hall-web-runtime/styles.css');
+const harnessTsconfig = read('qa/hall-web-runtime/tsconfig.json');
 const proofWorkflow = read('.github/workflows/hall-web-runtime-proof.yml');
 const legacyReadme = read('src/components/hall/README.md');
 const greyboxDecision = JSON.parse(read('docs/hall-v3/greybox-decision.json'));
@@ -59,8 +61,11 @@ for (const [token, sources] of [
   ['TESTED_SHA:', [proofWorkflow]],
   ["'docs/hall-v3/web-runtime-proof.json'", [proofWorkflow]],
   ['hall-web-runtime-proof-${{ env.TESTED_SHA }}', [proofWorkflow]],
+  ['npx tsc -p qa/hall-web-runtime/tsconfig.json', [proofWorkflow]],
 ]) expect(sources.some((source) => source.includes(token)), `Hall web proof missing required contract token: ${token}`);
 
+expect(harnessTsconfig.includes('"extends": "../../tsconfig.json"'), 'Hall web proof must inherit the repository TypeScript contract');
+expect(harnessTsconfig.includes('"main.ts"') && harnessTsconfig.includes('"vite.config.ts"'), 'Hall web proof TypeScript config must cover runtime and Vite config');
 expect(!harness.includes('src/components/hall') && !harness.includes('FirstPersonControls') && !harness.includes('HallOfPoets'), 'Hall v2 implementation may not become web proof authority');
 expect(legacyReadme.includes('retired/dormant Hall v2 prototype'), 'legacy Hall boundary marker must remain explicit');
 expect(!/https?:\/\//.test(harness), 'browser proof must not fetch remote documentary/runtime media');
@@ -77,4 +82,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall web runtime proof contract: OK — isolated H3/R1/L0/UV0 harness, guided camera, no documentary media, no legacy authority, production /hall unchanged.');
+console.log('Hall web runtime proof contract: OK — isolated typed H3/R1/L0/UV0 harness, guided camera, no documentary media, no legacy authority, production /hall unchanged.');
