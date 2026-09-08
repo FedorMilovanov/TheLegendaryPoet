@@ -11,6 +11,7 @@ const contractPath = 'docs/hall-v3/hall-v3-contract.json';
 const ownerDirectionPath = 'docs/hall-v3/web-vertical-slice-owner-direction.json';
 const hallPagePath = 'src/pages/HallPage.tsx';
 const runtimePath = 'src/components/hall-v3/HallProductionRuntime.tsx';
+const threeAdapterPath = 'src/components/hall-v3/three-runtime.ts';
 const legacyHallDir = 'src/components/hall';
 const routeRegistryPath = 'src/routes/routeModules.ts';
 const stalePublicConceptPath = 'public/images/hall-preview.webp';
@@ -93,6 +94,8 @@ function resolveLocal(importer: string, specifier: string): string | null {
 
 const hallPage = read(hallPagePath);
 const runtime = read(runtimePath);
+const threeAdapter = read(threeAdapterPath);
+const viteConfig = read('vite.config.ts');
 const routeRegistry = read(routeRegistryPath);
 const hallRoute = routeContract.routes?.find((route) => route.id === 'hall');
 
@@ -156,6 +159,13 @@ for (const forbiddenMediaToken of ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.
   expect(!runtime.toLowerCase().includes(forbiddenMediaToken), `production Hall runtime must not embed documentary/media asset token ${forbiddenMediaToken}`);
 }
 
+expect(threeAdapter.includes("from 'three/src/Three.js'"), 'Hall Three adapter must source the canonical Three module without importing the full bare namespace');
+for (const requiredExport of ['WebGLRenderer','Scene','PerspectiveCamera','Mesh','BufferGeometry','MeshStandardMaterial','Vector3']) {
+  expect(threeAdapter.includes(requiredExport), `Hall Three adapter must retain required runtime export: ${requiredExport}`);
+}
+expect(viteConfig.includes('{ find: /^three$/, replacement: path.resolve(__dirname, \'src/components/hall-v3/three-runtime.ts\') }'), 'production Vite must alias only the exact bare Three specifier to the narrow Hall adapter');
+
+const allowedThreeRuntimeFiles = new Set([runtimePath, threeAdapterPath]);
 for (const relativePath of sourceFiles('src')) {
   if (relativePath === legacyHallDir || relativePath.startsWith(`${legacyHallDir}/`)) continue;
   for (const specifier of moduleSpecifiers(relativePath)) {
@@ -163,13 +173,13 @@ for (const relativePath of sourceFiles('src')) {
     const reachesLegacy = specifier.includes('/components/hall/') || resolved === legacyHallDir || resolved?.startsWith(`${legacyHallDir}/`) === true;
     expect(!reachesLegacy, `current production source must not import legacy Hall v2: ${relativePath} -> ${specifier}`);
     const isThree = specifier === 'three' || specifier.startsWith('three/') || specifier.startsWith('@react-three/') || specifier === 'postprocessing' || specifier.startsWith('postprocessing/');
-    if (isThree) expect(relativePath === runtimePath, `Three/R3F runtime imports are bounded to ${runtimePath}: found ${relativePath} -> ${specifier}`);
+    if (isThree) expect(allowedThreeRuntimeFiles.has(relativePath), `Three/R3F runtime imports are bounded to the exact Hall runtime allowlist: found ${relativePath} -> ${specifier}`);
   }
 }
 
 expect(!fs.existsSync(path.join(root, stalePublicConceptPath)), 'unapproved Hall concept art must not return under public/');
-for (const requiredPath of [contractPath, ownerDirectionPath, 'docs/hall-v3/web-runtime-proof.json', ...Object.values(contract.sourceAuthority ?? {})]) {
-  expect(fs.existsSync(path.join(root, requiredPath)), `Hall authority document must exist: ${requiredPath}`);
+for (const requiredPath of [contractPath, ownerDirectionPath, 'docs/hall-v3/web-runtime-proof.json', threeAdapterPath, ...Object.values(contract.sourceAuthority ?? {})]) {
+  expect(fs.existsSync(path.join(root, requiredPath)), `Hall authority/runtime file must exist: ${requiredPath}`);
 }
 expect(projectContract.architecture?.openLaneIds?.includes('TLP-HALL-001') === false, 'closed historical Hall root must not re-enter project-contract openLaneIds');
 for (const legacyDoc of ['docs/HALL_RESEARCH.md', 'docs/UPGRADE_NOTES.md']) {
@@ -183,4 +193,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall v3 production web-slice invariants passed: H3/R1/L0/UV0 authority, lazy Three isolation, semantic fallbacks, neutral documentary-free proxies and owner-directed gate state are consistent.');
+console.log('Hall v3 production web-slice invariants passed: H3/R1/L0/UV0 authority, exact two-file Three transport allowlist, semantic fallbacks, neutral documentary-free proxies and owner-directed gate state are consistent.');
