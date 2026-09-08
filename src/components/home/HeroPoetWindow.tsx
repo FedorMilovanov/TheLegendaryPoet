@@ -20,6 +20,10 @@ interface HeroPoetWindowProps {
 const pointerSpring = { stiffness: 205, damping: 27, mass: 0.7 };
 const HERO_PORTRAIT_SIZES = '(min-width: 1088px) 164px, (min-width: 1024px) calc((100vw - 204px) / 6 + 16px), (min-width: 640px) calc((100vw - 148px) / 6 + 16px), calc((100vw - 64px) / 3 + 16px)';
 
+function buildHeroPortraitPrimary(photo: string | undefined) {
+  return photo?.replace(/\.jpg$/i, '-320.jpg');
+}
+
 function buildHeroPortraitSrcSet(photo: string | undefined) {
   if (!photo || !/\.jpg$/i.test(photo)) return undefined;
   const stem = photo.replace(/\.jpg$/i, '');
@@ -44,6 +48,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
   const pointerY = useMotionValue(0);
   const smoothX = useSpring(pointerX, pointerSpring);
   const smoothY = useSpring(pointerY, pointerSpring);
+  const portraitPrimary = mediaReleased ? buildHeroPortraitPrimary(poet.photo) : undefined;
   const portraitSrcSet = mediaReleased ? buildHeroPortraitSrcSet(poet.photo) : undefined;
 
   // One pair of smoothed pointer values drives every depth layer. The previous
@@ -155,7 +160,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
               className="absolute -inset-2"
             >
               <PoetImage
-                src={mediaReleased ? poet.photo : undefined}
+                src={portraitPrimary}
                 srcSet={portraitSrcSet}
                 sizes={portraitSrcSet ? HERO_PORTRAIT_SIZES : undefined}
                 name={poet.name}

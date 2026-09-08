@@ -94,9 +94,9 @@ export default function ResilientImage({
     <img
       {...props}
       ref={ref}
-      src={currentSrc}
       srcSet={hasResponsivePrimary ? srcSet : undefined}
       sizes={hasResponsivePrimary ? sizes : undefined}
+      src={currentSrc}
       loading={priority ? 'eager' : (loading ?? 'lazy')}
       decoding={decoding}
       fetchPriority={priority ? 'high' : (fetchPriority ?? 'auto')}

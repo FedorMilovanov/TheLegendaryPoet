@@ -68,7 +68,8 @@ if (critical480 > 56 * 1024) fail(`critical 480w pair exceeds 56 KiB: ${critical
 const hero = read('src/components/home/HeroPoetWindow.tsx');
 for (const required of [
   'const isHighPriority = index < 2;',
-  "src={mediaReleased ? poet.photo : undefined}",
+  "return photo?.replace(/\\.jpg$/i, '-320.jpg');",
+  'src={portraitPrimary}',
   "loading={isHighPriority ? 'eager' : 'lazy'}",
   "fetchPriority={isHighPriority ? 'high' : 'low'}",
   "window.addEventListener('load', releaseAfterLoad, { once: true });",
@@ -85,6 +86,7 @@ for (const required of [
   'const hasResponsivePrimary = Boolean(src?.trim()) && hasActiveCandidate && sourceIndex === 0;',
   'srcSet={hasResponsivePrimary ? srcSet : undefined}',
   'sizes={hasResponsivePrimary ? sizes : undefined}',
+  'src={currentSrc}',
 ]) {
   if (!resilient.includes(required)) fail(`ResilientImage responsive fallback contract missing: ${required}`);
 }
