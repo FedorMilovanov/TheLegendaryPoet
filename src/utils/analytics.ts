@@ -17,6 +17,7 @@ const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
 export const ANALYTICS_CONSENT_EVENT = 'tlp:analytics-consent-change';
 
 let started = false;
+let currentTabConsent: AnalyticsConsent | null = null;
 
 function metrikaId() {
   return (import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined)?.trim();
@@ -31,13 +32,20 @@ export function hasConfiguredAnalytics() {
 }
 
 export function getAnalyticsConsent(): AnalyticsConsent | null {
+  if (currentTabConsent) return currentTabConsent;
   const value = safeRead(CONSENT_STORAGE_KEY);
-  return value === 'granted' || value === 'denied' ? value : null;
+  if (value === 'granted' || value === 'denied') {
+    currentTabConsent = value;
+    return value;
+  }
+  return null;
 }
 
 export function setAnalyticsConsent(value: AnalyticsConsent) {
   if (typeof window === 'undefined') return;
-  // Consent still applies to the current page even when storage is blocked.
+  // The current tab remains authoritative even when privacy settings, quota or
+  // another storage restriction prevents persistence. Persistence is best-effort.
+  currentTabConsent = value;
   safeWrite(CONSENT_STORAGE_KEY, value);
   window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
 }
