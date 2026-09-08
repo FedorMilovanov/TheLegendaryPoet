@@ -93,7 +93,7 @@ export default function EssayPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
-      <ReadingProgress />
+      <ReadingProgress articleRef={articleRef} />
       <SectionChip toc={toc} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} className="mb-4" />
