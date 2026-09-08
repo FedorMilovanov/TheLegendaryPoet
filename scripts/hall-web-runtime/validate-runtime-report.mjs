@@ -31,6 +31,9 @@ expect(report.productionAcceptance === false && report.productionRouteActivated 
 for (const [key, value] of Object.entries(contract.authority)) expect(report.authority?.[key] === value, `runtime report authority drifted for ${key}`);
 expect(report.authority?.documentaryMedia === contract.runtimeContract.documentaryMedia, 'runtime report must prove documentary media exclusion');
 expect(JSON.stringify(report.thresholds) === JSON.stringify(thresholds), 'runtime report thresholds must be copied exactly from contract');
+expect(contract.runtimeContract.applicationTextureSourcesAllowed === false, 'web proof contract must explicitly forbid application texture sources');
+expect(report.applicationTextureSources?.count === thresholds.applicationTextureSourcesMax, `application texture source count must remain ${thresholds.applicationTextureSourcesMax}`);
+expect(Array.isArray(report.applicationTextureSources?.tokens) && report.applicationTextureSources.tokens.length === 0, 'application texture source token inventory must remain empty');
 
 expect(report.build?.totalBytes <= thresholds.totalBuildBytesMax, `total proof build ${report.build?.totalBytes} exceeds ${thresholds.totalBuildBytesMax}`);
 expect(report.build?.jsBytes <= thresholds.jsBytesMax, `proof JS ${report.build?.jsBytes} exceeds ${thresholds.jsBytesMax}`);
@@ -41,7 +44,7 @@ expect(report.chromium?.project === contract.browserWitnesses.requiredWebglSucce
 expect(report.chromium?.mode === 'webgl', 'Chromium must prove the real WebGL success path');
 expect(report.chromium?.metrics?.drawCalls > 0 && report.chromium.metrics.drawCalls <= thresholds.drawCallsMax, `Chromium draw calls must be within 1..${thresholds.drawCallsMax}`);
 expect(report.chromium?.metrics?.triangles > 0 && report.chromium.metrics.triangles <= thresholds.trianglesMax, `Chromium triangles must be within 1..${thresholds.trianglesMax}`);
-expect(report.chromium?.metrics?.textures === thresholds.texturesMax, `Chromium texture count must remain ${thresholds.texturesMax} for documentary-free proof`);
+expect(report.chromium?.metrics?.textures >= 0 && report.chromium.metrics.textures <= thresholds.rendererTexturesMax, `Chromium renderer texture allocation must be within 0..${thresholds.rendererTexturesMax}`);
 expect(report.chromium?.metrics?.firstFrameMs > 0 && report.chromium.metrics.firstFrameMs <= thresholds.chromiumFirstFrameMsMax, `Chromium first frame must be within ${thresholds.chromiumFirstFrameMsMax} ms`);
 expect(report.chromium?.metrics?.canvasWidth > 0 && report.chromium?.metrics?.canvasHeight > 0, 'Chromium canvas dimensions must be measured');
 
@@ -51,6 +54,9 @@ if (report.webkit?.mode === 'fallback') {
   expect(contract.browserWitnesses.mobileWebkitMayUseSemanticFallback === true, 'contract must explicitly allow semantic WebKit fallback');
   expect(Boolean(report.webkit?.reason), 'WebKit fallback must record a reason');
 }
+if (report.webkit?.mode === 'webgl') {
+  expect(report.webkit?.metrics?.textures >= 0 && report.webkit.metrics.textures <= thresholds.rendererTexturesMax, `WebKit renderer texture allocation must be within 0..${thresholds.rendererTexturesMax}`);
+}
 
 if (failures.length) {
   console.error('Hall web runtime report validation failed:');
@@ -58,4 +64,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Hall web runtime report: OK — ${report.build.totalBytes} total bytes, ${report.chromium.metrics.drawCalls} draw calls, ${report.chromium.metrics.triangles} triangles, ${report.chromium.metrics.textures} textures, ${report.chromium.metrics.firstFrameMs} ms first frame; production acceptance remains false.`);
+console.log(`Hall web runtime report: OK — ${report.build.totalBytes} total bytes, ${report.chromium.metrics.drawCalls} draw calls, ${report.chromium.metrics.triangles} triangles, ${report.applicationTextureSources.count} application texture sources, ${report.chromium.metrics.textures} renderer textures, ${report.chromium.metrics.firstFrameMs} ms first frame; production acceptance remains false.`);
