@@ -7,6 +7,7 @@ on:
       - 'qa/hall-web-runtime.spec.mjs'
       - 'scripts/hall-web-runtime/**'
       - 'scripts/validate-hall-web-runtime-proof.mjs'
+      - 'docs/hall-v3/web-runtime-proof.json'
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-decision.json'
@@ -22,6 +23,7 @@ on:
       - 'qa/hall-web-runtime.spec.mjs'
       - 'scripts/hall-web-runtime/**'
       - 'scripts/validate-hall-web-runtime-proof.mjs'
+      - 'docs/hall-v3/web-runtime-proof.json'
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-decision.json'
@@ -105,7 +107,7 @@ jobs:
           mkdir -p qa-artifacts/hall-web-runtime
           {
             printf 'tested_commit=%s\n' "$TESTED_SHA"
-            find qa-artifacts/hall-web-runtime -maxdepth 1 -type f -name '*.json' -print0 | sort -z | xargs -0 sha256sum
+            find qa-artifacts/hall-web-runtime -maxdepth 1 -type f -name '*.json' -print0 | sort -z | xargs -0 -r sha256sum
           } > qa-artifacts/hall-web-runtime/evidence-manifest.txt
           cat qa-artifacts/hall-web-runtime/evidence-manifest.txt
 
