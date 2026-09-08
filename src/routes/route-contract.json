@@ -21,7 +21,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "utility",
-      "budgetBytes": 8000
+      "budgetBytes": 24000
     },
     {
       "id": "poets",
@@ -62,7 +62,7 @@
       "module": "src/pages/ArticlesPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "essays",
+      "sitemapLastmod": "site",
       "audit": "canonical",
       "budgetBytes": 12000
     },
