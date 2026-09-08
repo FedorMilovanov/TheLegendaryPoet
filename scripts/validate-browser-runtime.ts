@@ -119,7 +119,7 @@ for (const fileName of expectedBrowserWorkflows) {
     fail(`${fileName}: must not embed a second Playwright version`);
   }
   if (/--no-save|--no-package-lock/.test(source)) {
-    fail(`${fileName}: ephemeral dependency flags are forbidden in browser workflows`);
+    fail(`${fileName}: ephemeral dependency flags are forbidden`);
   }
 }
 
@@ -136,31 +136,42 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   }
 }
 
-// Persistent utility animation is a state affordance, not an accessibility
-// exemption. Every production string literal that opts into Tailwind's looping
-// spin/ping/pulse/bounce utilities must carry the same reduced-motion guard.
-// Scanning the complete src tree makes this a producer policy rather than a
-// component-specific assertion: future utilities fail the canonical check too.
+// Persistent Tailwind utility animation is a state affordance, not an
+// accessibility exemption. One CSS authority is imported last and suppresses
+// all canonical looping utility classes under prefers-reduced-motion: reduce.
+// The full src inventory is still counted here so this policy cannot silently
+// become detached from production usage.
 const persistentUtility = /\banimate-(?:spin|ping|pulse|bounce)\b/g;
-const quotedMotionLiteral = /(['"])([^'"\n]*\banimate-(?:spin|ping|pulse|bounce)\b[^'"\n]*)\1/g;
-const templateMotionLiteral = /`([^`\n]*\banimate-(?:spin|ping|pulse|bounce)\b[^`\n]*)`/g;
-let persistentMotionLiteralCount = 0;
+let persistentMotionTokenCount = 0;
 for (const relativePath of collectSourceFiles('src')) {
   const source = read(relativePath);
-  const literals = [
-    ...Array.from(source.matchAll(quotedMotionLiteral), (match) => match[2]),
-    ...Array.from(source.matchAll(templateMotionLiteral), (match) => match[1]),
-  ];
-  for (const literal of literals) {
-    const utilities = literal.match(persistentUtility) ?? [];
-    persistentMotionLiteralCount += utilities.length;
-    if (!literal.includes('motion-reduce:animate-none')) {
-      fail(`${relativePath}: persistent utility motion "${utilities.join(', ')}" must include motion-reduce:animate-none in the same class literal`);
-    }
+  persistentMotionTokenCount += source.match(persistentUtility)?.length ?? 0;
+}
+if (persistentMotionTokenCount === 0) {
+  fail('persistent reduced-motion policy became vacuous: expected at least one production utility animation');
+}
+
+const reducedMotionPath = 'src/reduced-motion.css';
+const reducedMotionSource = fs.existsSync(path.join(root, reducedMotionPath)) ? read(reducedMotionPath) : '';
+if (!reducedMotionSource.includes('@media (prefers-reduced-motion: reduce)')) {
+  fail(`${reducedMotionPath}: must own the reduced-motion media query`);
+}
+for (const utility of ['spin', 'ping', 'pulse', 'bounce']) {
+  if (!reducedMotionSource.includes(`.animate-${utility}`)) {
+    fail(`${reducedMotionPath}: must cover .animate-${utility}`);
   }
 }
-if (persistentMotionLiteralCount === 0) {
-  fail('persistent reduced-motion policy became vacuous: expected at least one production utility animation');
+if (!/animation:\s*none\s*!important\s*;/.test(reducedMotionSource)) {
+  fail(`${reducedMotionPath}: persistent utility motion must resolve to animation: none !important`);
+}
+const mainSource = read('src/main.tsx');
+if (!mainSource.includes('import "./reduced-motion.css";')) {
+  fail('src/main.tsx must load the persistent reduced-motion policy');
+}
+const reducedMotionImport = mainSource.indexOf('import "./reduced-motion.css";');
+const otherCssImports = Array.from(mainSource.matchAll(/import "\.\/[^\"]+\.css";/g), (match) => match.index ?? -1);
+if (otherCssImports.some((index) => index > reducedMotionImport)) {
+  fail('src/reduced-motion.css must be the final production CSS import so its accessibility policy stays authoritative');
 }
 
 const analyticsSource = read('src/utils/analytics.ts');
@@ -251,5 +262,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, ${persistentMotionLiteralCount} persistent utility animation token(s) obey the canonical reduced-motion guard, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, ${persistentMotionTokenCount} persistent utility animation token(s) are governed by the final reduced-motion CSS authority, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
