@@ -105,6 +105,13 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
           if (findAndScrollToHash()) stopHashObserver();
         });
         observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true });
+        // Close the race between the first lookup and observer registration: a
+        // target inserted in that narrow window must still be resolved without
+        // polling or waiting for an unrelated later mutation.
+        if (findAndScrollToHash()) {
+          stopHashObserver();
+          return;
+        }
         timeoutId = window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS);
         return;
       }
