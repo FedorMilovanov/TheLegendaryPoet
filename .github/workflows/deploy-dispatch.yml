@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Read exact release metadata from PR head
         id: release
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -47,7 +47,7 @@ jobs:
             core.setOutput('source_sha256', lines[2].slice('source-sha256='.length));
 
       - name: Mark exact release request pending
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             await github.rest.repos.createCommitStatus({
@@ -60,7 +60,7 @@ jobs:
             });
 
       - name: Dispatch trusted main Pages workflow
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
           SOURCE_SHA256: ${{ steps.release.outputs.source_sha256 }}
