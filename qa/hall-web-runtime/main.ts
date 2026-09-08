@@ -6,6 +6,7 @@ import './styles.css';
 
 type Vec2 = [number, number];
 type Vec3 = [number, number, number];
+type WallSegment = [number, number, number, number];
 type CameraWitness = {
   position: Vec3;
   target: Vec3;
@@ -15,7 +16,7 @@ type CameraWitness = {
 type LayoutCandidate = {
   id: string;
   floorPolygon: Vec2[];
-  walls: [number, number, number, number][];
+  walls: WallSegment[];
   route: Vec2[];
   cameras: Record<string, CameraWitness>;
   pushkin: {
@@ -59,8 +60,60 @@ declare global {
   }
 }
 
-const layout = (layouts.candidates as LayoutCandidate[]).find((candidate) => candidate.id === 'H3');
-if (!layout) throw new Error('H3 layout authority is missing');
+function asVec2(value: readonly number[], label: string): Vec2 {
+  if (value.length !== 2 || value.some((entry) => !Number.isFinite(entry))) throw new Error(`${label} must contain exactly two finite numbers`);
+  return [value[0], value[1]];
+}
+
+function asVec3(value: readonly number[], label: string): Vec3 {
+  if (value.length !== 3 || value.some((entry) => !Number.isFinite(entry))) throw new Error(`${label} must contain exactly three finite numbers`);
+  return [value[0], value[1], value[2]];
+}
+
+function asWall(value: readonly number[], label: string): WallSegment {
+  if (value.length !== 4 || value.some((entry) => !Number.isFinite(entry))) throw new Error(`${label} must contain exactly four finite numbers`);
+  return [value[0], value[1], value[2], value[3]];
+}
+
+function requiredElement<T extends Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Hall proof DOM is missing ${selector}`);
+  return element;
+}
+
+const rawLayout = layouts.candidates.find((candidate) => candidate.id === 'H3');
+if (!rawLayout) throw new Error('H3 layout authority is missing');
+
+const cameras: Record<string, CameraWitness> = {};
+for (const [name, source] of Object.entries(rawLayout.cameras)) {
+  cameras[name] = {
+    position: asVec3(source.position, `H3 camera ${name}.position`),
+    target: asVec3(source.target, `H3 camera ${name}.target`),
+    nextDestination: asVec3(source.nextDestination, `H3 camera ${name}.nextDestination`),
+    note: source.note,
+  };
+}
+
+const layout: LayoutCandidate = {
+  id: rawLayout.id,
+  floorPolygon: rawLayout.floorPolygon.map((value, index) => asVec2(value, `H3 floorPolygon[${index}]`)),
+  walls: rawLayout.walls.map((value, index) => asWall(value, `H3 walls[${index}]`)),
+  route: rawLayout.route.map((value, index) => asVec2(value, `H3 route[${index}]`)),
+  cameras,
+  pushkin: {
+    anchor: {
+      center: asVec3(rawLayout.pushkin.anchor.center, 'H3 Pushkin anchor.center'),
+      size: asVec3(rawLayout.pushkin.anchor.size, 'H3 Pushkin anchor.size'),
+      rotationZ: rawLayout.pushkin.anchor.rotationZ,
+    },
+    documentCases: rawLayout.pushkin.documentCases.map((item, index) => ({
+      name: item.name,
+      center: asVec3(item.center, `H3 documentCases[${index}].center`),
+      size: asVec3(item.size, `H3 documentCases[${index}].size`),
+      rotationZ: item.rotationZ,
+    })),
+  },
+};
 
 const approvedCamera = cameraDecision.approvedCamera;
 if (cameraDecision.selectedTopology !== 'H3' || cameraDecision.selectedRig !== 'R1' || approvedCamera.rigId !== 'R1') {
@@ -70,12 +123,11 @@ if (materialDecision.lightingDecision.selected !== 'L0-minimal-runtime' || mater
   throw new Error('L0/UV0 material authority drifted');
 }
 
-const canvasHost = document.querySelector<HTMLElement>('#hall-proof-canvas');
-const fallback = document.querySelector<HTMLElement>('#hall-proof-fallback');
-const status = document.querySelector<HTMLElement>('#hall-proof-status');
-const prev = document.querySelector<HTMLButtonElement>('#hall-proof-prev');
-const next = document.querySelector<HTMLButtonElement>('#hall-proof-next');
-if (!canvasHost || !fallback || !status || !prev || !next) throw new Error('Hall proof DOM is incomplete');
+const canvasHost = requiredElement<HTMLElement>('#hall-proof-canvas');
+const fallback = requiredElement<HTMLElement>('#hall-proof-fallback');
+const status = requiredElement<HTMLElement>('#hall-proof-status');
+const prev = requiredElement<HTMLButtonElement>('#hall-proof-prev');
+const next = requiredElement<HTMLButtonElement>('#hall-proof-next');
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const params = new URLSearchParams(window.location.search);
@@ -140,6 +192,8 @@ function enterFallback(reason: string) {
   canvasHost.replaceChildren();
   fallback.hidden = false;
   canvasHost.hidden = true;
+  prev.disabled = true;
+  next.disabled = true;
   proofState.ready = true;
   proofState.mode = 'fallback';
   proofState.reason = reason;
@@ -233,9 +287,9 @@ if (renderer) {
     if (source) cameraWitnesses.set(name, source);
   }
   cameraWitnesses.set('pushkinViewing', {
-    position: approvedCamera.position as Vec3,
-    target: approvedCamera.target as Vec3,
-    nextDestination: approvedCamera.nextDestination as Vec3,
+    position: asVec3(approvedCamera.position, 'R1 approvedCamera.position'),
+    target: asVec3(approvedCamera.target, 'R1 approvedCamera.target'),
+    nextDestination: asVec3(approvedCamera.nextDestination, 'R1 approvedCamera.nextDestination'),
     note: 'R1 approved Pushkin viewing witness',
   });
 
