@@ -68,6 +68,9 @@ jobs:
       - name: Validate isolated Hall web runtime contract
         run: node scripts/validate-hall-web-runtime-proof.mjs
 
+      - name: Typecheck isolated Hall web runtime proof
+        run: npx tsc -p qa/hall-web-runtime/tsconfig.json
+
       - name: Build isolated Hall web runtime proof
         run: npx vite build --config qa/hall-web-runtime/vite.config.ts
 
