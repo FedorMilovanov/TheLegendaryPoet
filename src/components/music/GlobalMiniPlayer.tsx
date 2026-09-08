@@ -96,7 +96,7 @@ export default function GlobalMiniPlayer() {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex min-w-0 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/38" aria-live="polite" title={status === 'error' ? failure?.message : undefined}>
-                  <span className={`h-1.5 w-1.5 flex-none rounded-full ${playing ? 'animate-pulse motion-reduce:animate-none' : ''}`} style={{ backgroundColor: playing ? 'var(--track-secondary)' : status === 'error' ? '#fbbf24' : 'rgba(255,255,255,.25)' }} />
+                  <span className={`h-1.5 w-1.5 flex-none rounded-full ${playing ? 'animate-pulse' : ''}`} style={{ backgroundColor: playing ? 'var(--track-secondary)' : status === 'error' ? '#fbbf24' : 'rgba(255,255,255,.25)' }} />
                   <span className="truncate">
                     {status === 'error'
                       ? 'Ошибка загрузки'
@@ -129,7 +129,7 @@ export default function GlobalMiniPlayer() {
                   style={{ backgroundColor: status === 'error' ? '#fbbf24' : 'var(--track-accent)' }}
                 >
                   {busy && !playing
-                    ? <LoaderCircle size={19} className="animate-spin motion-reduce:animate-none" />
+                    ? <LoaderCircle size={19} className="animate-spin" />
                     : status === 'error'
                       ? <RotateCw size={19} />
                       : playing
