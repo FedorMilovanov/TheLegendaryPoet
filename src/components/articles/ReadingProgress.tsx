@@ -1,49 +1,79 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
+
+type ReadingProgressProps = {
+  articleRef: RefObject<HTMLElement | null>;
+};
 
 /**
- * Hairline reading-progress bar. Where the browser supports CSS scroll-driven
- * animations (Chrome 115+, Safari 26+) the bar is animated entirely on the
- * compositor via `animation-timeline: scroll(root)` — zero JS per frame.
- * Elsewhere it falls back to one passive listener with one RAF-coalesced React
- * update per frame. Rides just below the header and glides to the top edge when
- * the reading chrome auto-hides (see .reading-progress rules in index.css).
+ * Hairline reading-progress bar owned by the semantic article boundary.
+ * One passive scroll/resize observer and one ResizeObserver all schedule the
+ * same RAF-coalesced calculation, so late media/layout changes never create a
+ * second progress authority. Post-article community/footer content is excluded.
  */
-const supportsScrollTimeline =
-  typeof CSS !== 'undefined' && CSS.supports?.('animation-timeline: scroll()');
-
-export default function ReadingProgress() {
+export default function ReadingProgress({ articleRef }: ReadingProgressProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (supportsScrollTimeline) return; // CSS drives the bar — no listener needed
-
     let frame = 0;
+
     const update = () => {
       frame = 0;
+      const article = articleRef.current;
+      if (!article) {
+        setProgress(0);
+        return;
+      }
+
+      const rect = article.getBoundingClientRect();
       const scrollTop = window.scrollY;
-      const height = document.documentElement.scrollHeight - window.innerHeight;
-      const nextProgress = height > 0 ? Math.min(100, (scrollTop / height) * 100) : 0;
+      const viewportHeight = window.innerHeight;
+      const articleTop = scrollTop + rect.top;
+      const articleBottom = scrollTop + rect.bottom;
+      const articleEndScroll = Math.max(articleTop, articleBottom - viewportHeight);
+      const span = articleEndScroll - articleTop;
+      const nextProgress = span > 0
+        ? Math.min(100, Math.max(0, ((scrollTop - articleTop) / span) * 100))
+        : scrollTop >= articleTop ? 100 : 0;
+
       setProgress((current) => (Math.abs(current - nextProgress) < 0.05 ? current : nextProgress));
     };
-    const onScroll = () => {
+
+    const scheduleUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
     };
 
-    update();
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const article = articleRef.current;
+    const resizeObserver = article && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(scheduleUpdate)
+      : null;
+
+    if (article) resizeObserver?.observe(article);
+    scheduleUpdate();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      resizeObserver?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [articleRef]);
+
+  const semanticProgress = Math.round(progress);
 
   return (
-    <div className="reading-progress fixed left-0 z-[70] h-[2px] w-full bg-cyan-950/60">
+    <div
+      className="reading-progress fixed left-0 z-[70] h-[2px] w-full bg-cyan-950/60"
+      role="progressbar"
+      aria-label="Прогресс чтения статьи"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={semanticProgress}
+    >
       <div
-        className={`h-full w-full origin-left bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(0,212,255,0.65)] ${
-          supportsScrollTimeline ? 'reading-progress-fill' : ''
-        }`}
-        style={supportsScrollTimeline ? undefined : { transform: `scaleX(${progress / 100})` }}
+        className="h-full w-full origin-left bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(0,212,255,0.65)]"
+        style={{ transform: `scaleX(${progress / 100})` }}
       />
     </div>
   );
