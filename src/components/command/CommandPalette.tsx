@@ -89,7 +89,7 @@ export default function CommandPalette() {
     close();
   }, [close, location.pathname]);
 
-  const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       if (results.length > 0) setActiveIndex((value) => Math.min(value + 1, results.length - 1));
@@ -124,7 +124,6 @@ export default function CommandPalette() {
         aria-modal="true"
         aria-label="Поиск по сайту"
         tabIndex={-1}
-        onKeyDown={onDialogKeyDown}
         className="mx-auto flex max-h-[min(78dvh,46rem)] max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)] outline-none"
       >
         <div className="flex flex-none items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
@@ -133,6 +132,7 @@ export default function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onInputKeyDown}
             placeholder="Найти поэта, статью, трек или раздел..."
             aria-label="Поисковый запрос"
             aria-controls={listId}
