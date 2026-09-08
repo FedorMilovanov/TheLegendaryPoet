@@ -29,4 +29,18 @@ test.describe('poets result status accessibility', () => {
     await expect(status).not.toContainText(/Найдено гениев\s+0\b/);
     await expect(search).toBeFocused();
   });
+
+  test('persistent rating pulse stops under reduced motion without hiding its state', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
+
+    const pulse = page.locator('#main-content .animate-pulse').first();
+    await expect(pulse).toBeVisible();
+    await expect.poll(() => pulse.evaluate((node) => getComputedStyle(node).animationName)).not.toBe('none');
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(() => pulse.evaluate((node) => getComputedStyle(node).animationName)).toBe('none');
+    await expect(pulse).toBeVisible();
+    await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
+  });
 });
