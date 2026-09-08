@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Hall Web Runtime Proof</title>
+  </head>
+  <body>
+    <main id="hall-proof-root" aria-label="Hall web runtime proof">
+      <div id="hall-proof-canvas" aria-hidden="true"></div>
+      <section id="hall-proof-fallback" role="status" hidden>
+        <h1>Зал поэтов</h1>
+        <p>3D-режим недоступен. Содержимое остаётся доступным без WebGL.</p>
+      </section>
+      <section class="proof-panel" aria-label="Управление проверочным маршрутом">
+        <p class="proof-kicker">H3 / R1 / L0 / UV0</p>
+        <h1>Browser runtime proof</h1>
+        <p id="hall-proof-status" role="status">Инициализация…</p>
+        <div class="proof-actions">
+          <button id="hall-proof-prev" type="button">Назад</button>
+          <button id="hall-proof-next" type="button">Далее</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
