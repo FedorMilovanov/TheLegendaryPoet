@@ -4,6 +4,7 @@ import { test, expect } from '@playwright/test';
 
 const artifactDir = path.resolve('qa-artifacts/hall-web-runtime');
 fs.mkdirSync(artifactDir, { recursive: true });
+const testedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
 
 async function readProofState(page) {
   await page.waitForFunction(() => window.__HALL_WEB_PROOF__?.ready === true);
@@ -57,7 +58,7 @@ test('canonical H3/R1/L0/UV0 authority reaches browser readiness without documen
   }
 
   writeEvidence(testInfo, 'runtime', {
-    testedSha: process.env.GITHUB_SHA || null,
+    testedSha,
     project: testInfo.project.name,
     state,
   });
@@ -71,7 +72,7 @@ test('forced WebGL unavailability is semantic and fail-closed', async ({ page },
   await expect(page.getByRole('status').filter({ hasText: '3D-режим недоступен' })).toBeVisible();
 
   writeEvidence(testInfo, 'forced-fallback', {
-    testedSha: process.env.GITHUB_SHA || null,
+    testedSha,
     project: testInfo.project.name,
     state,
   });
@@ -92,7 +93,7 @@ test('reduced motion turns the guided camera into deterministic cuts', async ({ 
   }
 
   writeEvidence(testInfo, 'reduced-motion', {
-    testedSha: process.env.GITHUB_SHA || null,
+    testedSha,
     project: testInfo.project.name,
     state: await page.evaluate(() => window.__HALL_WEB_PROOF__),
   });
@@ -113,7 +114,7 @@ test('WebGL context loss falls back without leaving a dead canvas', async ({ pag
   await expect(page.getByText('3D-режим недоступен. Содержимое остаётся доступным без WebGL.')).toBeVisible();
 
   writeEvidence(testInfo, 'context-loss', {
-    testedSha: process.env.GITHUB_SHA || null,
+    testedSha,
     project: testInfo.project.name,
     state,
   });
