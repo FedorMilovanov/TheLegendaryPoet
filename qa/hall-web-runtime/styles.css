@@ -49,6 +49,15 @@ body {
   display: none;
 }
 
+#hall-proof-fallback ol {
+  margin: 0.4rem auto 0;
+  padding-left: 1.5rem;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
 .proof-panel {
   position: absolute;
   z-index: 2;
@@ -91,6 +100,10 @@ body {
   display: flex;
   gap: 0.6rem;
   margin-top: 0.8rem;
+}
+
+html[data-hall-proof-state='fallback'] .proof-actions {
+  display: none;
 }
 
 .proof-actions button {
