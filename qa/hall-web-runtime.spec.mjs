@@ -105,9 +105,16 @@ test('WebGL context loss falls back without leaving a dead canvas', async ({ pag
   const initial = await readProofState(page);
   expect(initial.mode).toBe('webgl');
 
-  await page.locator('[data-hall-proof-canvas="true"]').evaluate((canvas) => {
-    canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true }));
+  const lossTriggered = await page.locator('[data-hall-proof-canvas="true"]').evaluate((canvas) => {
+    const gl = canvas.getContext('webgl2');
+    if (!gl) return false;
+    const extension = gl.getExtension('WEBGL_lose_context');
+    if (!extension) return false;
+    extension.loseContext();
+    return true;
   });
+  expect(lossTriggered).toBe(true);
+
   await expect.poll(async () => (await page.evaluate(() => window.__HALL_WEB_PROOF__?.mode))).toBe('fallback');
   const state = await page.evaluate(() => window.__HALL_WEB_PROOF__);
   expect(state.reason).toBe('webgl-context-lost');
