@@ -16,6 +16,15 @@ function readJson(relativePath: string) {
   return JSON.parse(read(relativePath)) as Record<string, any>;
 }
 
+function collectSourceFiles(directory: string): string[] {
+  const absolute = path.join(root, directory);
+  return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
+    const relative = path.join(directory, entry.name);
+    if (entry.isDirectory()) return collectSourceFiles(relative);
+    return /\.(?:ts|tsx)$/.test(entry.name) ? [relative] : [];
+  });
+}
+
 const manifest = readJson('package.json');
 const lock = readJson('package-lock.json');
 const playwrightVersion = manifest.devDependencies?.['@playwright/test'];
@@ -127,6 +136,44 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   }
 }
 
+// Persistent Tailwind utility animation is a state affordance, not an
+// accessibility exemption. One CSS authority is imported last and suppresses
+// all canonical looping utility classes under prefers-reduced-motion: reduce.
+// The full src inventory is still counted here so this policy cannot silently
+// become detached from production usage.
+const persistentUtility = /\banimate-(?:spin|ping|pulse|bounce)\b/g;
+let persistentMotionTokenCount = 0;
+for (const relativePath of collectSourceFiles('src')) {
+  const source = read(relativePath);
+  persistentMotionTokenCount += source.match(persistentUtility)?.length ?? 0;
+}
+if (persistentMotionTokenCount === 0) {
+  fail('persistent reduced-motion policy became vacuous: expected at least one production utility animation');
+}
+
+const reducedMotionPath = 'src/reduced-motion.css';
+const reducedMotionSource = fs.existsSync(path.join(root, reducedMotionPath)) ? read(reducedMotionPath) : '';
+if (!reducedMotionSource.includes('@media (prefers-reduced-motion: reduce)')) {
+  fail(`${reducedMotionPath}: must own the reduced-motion media query`);
+}
+for (const utility of ['spin', 'ping', 'pulse', 'bounce']) {
+  if (!reducedMotionSource.includes(`.animate-${utility}`)) {
+    fail(`${reducedMotionPath}: must cover .animate-${utility}`);
+  }
+}
+if (!/animation:\s*none\s*!important\s*;/.test(reducedMotionSource)) {
+  fail(`${reducedMotionPath}: persistent utility motion must resolve to animation: none !important`);
+}
+const mainSource = read('src/main.tsx');
+if (!mainSource.includes('import "./reduced-motion.css";')) {
+  fail('src/main.tsx must load the persistent reduced-motion policy');
+}
+const reducedMotionImport = mainSource.indexOf('import "./reduced-motion.css";');
+const otherCssImports = Array.from(mainSource.matchAll(/import "\.\/[^\"]+\.css";/g), (match) => match.index ?? -1);
+if (otherCssImports.some((index) => index > reducedMotionImport)) {
+  fail('src/reduced-motion.css must be the final production CSS import so its accessibility policy stays authoritative');
+}
+
 const analyticsSource = read('src/utils/analytics.ts');
 if (!analyticsSource.includes('let sessionConsent: AnalyticsConsent | null = null')) {
   fail('analytics consent must retain an explicit same-tab memory authority when persistence is blocked');
@@ -215,5 +262,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, ${persistentMotionTokenCount} persistent utility animation token(s) are governed by the final reduced-motion CSS authority, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
