@@ -141,6 +141,46 @@ if (/document\.cookie|sessionStorage/.test(analyticsSource)) {
   fail('analytics consent must not bypass blocked localStorage with alternate persistence');
 }
 
+const analyticsEvents: Event[] = [];
+class AnalyticsTestCustomEvent<T = unknown> extends Event {
+  readonly detail: T;
+  constructor(type: string, init?: CustomEventInit<T>) {
+    super(type);
+    this.detail = init?.detail as T;
+  }
+}
+Object.defineProperty(globalThis, 'CustomEvent', { configurable: true, value: AnalyticsTestCustomEvent });
+Object.defineProperty(globalThis, 'window', {
+  configurable: true,
+  value: {
+    get localStorage() {
+      throw new Error('storage blocked by privacy policy');
+    },
+    dispatchEvent(event: Event) {
+      analyticsEvents.push(event);
+      return true;
+    },
+  },
+});
+const analytics = await import('../src/utils/analytics');
+if (analytics.getAnalyticsConsent() !== null) {
+  fail('blocked analytics storage must begin without implicit consent');
+}
+analytics.setAnalyticsConsent('granted');
+if (analytics.getAnalyticsConsent() !== 'granted') {
+  fail('granted analytics consent must remain authoritative in the current tab when persistence is blocked');
+}
+if (analyticsEvents.length !== 1 || (analyticsEvents[0] as CustomEvent).detail !== 'granted') {
+  fail('blocked-storage analytics grant must still publish the consent-change event');
+}
+analytics.setAnalyticsConsent('denied');
+if (analytics.getAnalyticsConsent() !== 'denied') {
+  fail('denied analytics consent must immediately replace a same-tab grant when persistence is blocked');
+}
+if (analyticsEvents.length !== 2 || (analyticsEvents[1] as CustomEvent).detail !== 'denied') {
+  fail('blocked-storage analytics denial must publish the consent-change event');
+}
+
 const webkitRouteSuitePath = 'qa/mobile-webkit-isolated.spec.mjs';
 const webkitRouteHelperPath = 'qa/mobile-webkit-isolated.helpers.mjs';
 const webkitRouteRunnerPath = 'scripts/run-webkit-home-reveal-process-isolated.mjs';
@@ -175,5 +215,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, analytics consent retains same-tab authority without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
