@@ -119,7 +119,7 @@ for (const fileName of expectedBrowserWorkflows) {
     fail(`${fileName}: must not embed a second Playwright version`);
   }
   if (/--no-save|--no-package-lock/.test(source)) {
-    fail(`${fileName}: ephemeral dependency flags are forbidden`);
+    fail(`${fileName}: ephemeral dependency flags are forbidden in browser workflows`);
   }
 }
 
