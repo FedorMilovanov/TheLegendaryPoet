@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
 
-const HASH_RETRY_LIMIT = 20;
 const FIXED_HEADER_OFFSET = 96;
 
 function decodeHash(hash: string) {
@@ -64,8 +63,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     document.documentElement.classList.remove('chrome-hidden');
 
     let cancelled = false;
-    let timeoutId = 0;
-    let attempts = 0;
+    let observer: MutationObserver | null = null;
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
@@ -78,28 +76,34 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     };
 
     const restore = () => {
-      if (cancelled) return;
+      if (cancelled) return false;
       if (location.hash) {
         const id = decodeHash(location.hash);
         const target = id ? document.getElementById(id) : null;
-        if (target) {
-          scrollToHashTarget(target);
-          return;
-        }
-        attempts += 1;
-        if (attempts < HASH_RETRY_LIMIT) timeoutId = window.setTimeout(restore, 60);
-        return;
+        if (!target) return false;
+        observer?.disconnect();
+        observer = null;
+        scrollToHashTarget(target);
+        return true;
       }
 
       if (navigationType === 'POP') scrollToNumber(positionsRef.current.get(location.key) ?? 0);
       else if (!firstRoute) scrollToNumber(0);
+      return true;
     };
 
-    const frame = requestAnimationFrame(restore);
+    const frame = requestAnimationFrame(() => {
+      if (restore() || !location.hash || cancelled) return;
+      observer = new MutationObserver(() => { restore(); });
+      observer.observe(document.body, { childList: true, subtree: true });
+      // Close the race between the first lookup and observer registration.
+      restore();
+    });
+
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
-      if (timeoutId) window.clearTimeout(timeoutId);
+      observer?.disconnect();
     };
   }, [location.hash, location.key, location.pathname, navigationType]);
 
