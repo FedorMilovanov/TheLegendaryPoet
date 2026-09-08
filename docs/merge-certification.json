@@ -62,6 +62,29 @@
         "scripts/hall-material/prepare-material-visual-evidence.py",
         "scripts/hall-pushkin/**"
       ]
+    },
+    "hall-web-runtime-proof": {
+      "workflowFile": ".github/workflows/hall-web-runtime-proof.yml",
+      "event": "pull_request",
+      "pollTimeoutSeconds": 2400,
+      "pollIntervalSeconds": 15,
+      "paths": [
+        ".github/workflows/hall-web-runtime-proof.yml",
+        "docs/hall-v3/web-runtime-proof.json",
+        "docs/hall-v3/greybox-layouts.json",
+        "docs/hall-v3/greybox-decision.json",
+        "docs/hall-v3/camera-decision.json",
+        "docs/hall-v3/material-decision.json",
+        "docs/hall-v3/hall-v3-contract.json",
+        "qa/hall-web-runtime/**",
+        "qa/hall-web-runtime.spec.mjs",
+        "scripts/hall-web-runtime/**",
+        "scripts/validate-hall-web-runtime-proof.mjs",
+        "package.json",
+        "package-lock.json",
+        ".github/actions/setup-node-deps/action.yml",
+        ".github/actions/install-playwright/action.yml"
+      ]
     }
   }
 }

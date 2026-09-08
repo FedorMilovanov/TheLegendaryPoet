@@ -97,6 +97,7 @@ for (const outcome of [
 expect(ci.includes('./.github/actions/setup-node-deps'), 'CI must use the shared Node dependency setup');
 expect(ci.includes('./.github/actions/install-build-tools'), 'CI must use the shared deterministic build tools setup');
 expect(ci.includes('dist/build-budget-report.json'), 'CI must retain the machine-readable build budget report');
+expect(ci.includes('node scripts/validate-hall-web-runtime-proof.mjs'), 'required CI verify must execute Hall web runtime proof contract validation');
 
 const canonicalRequiredValidators = [
   'validate:reader-certification',
@@ -171,7 +172,7 @@ for (const { sourcePath, use } of unsupportedExternalActionUses) {
 for (const { sourcePath, use } of mutableExternalActionUses) {
   failures.push(`${sourcePath}: external action must be pinned to a full 40-hex commit SHA: ${use}`);
 }
-expect(workflowPaths.length === 22, `workflow inventory drifted: expected 22 workflow YAML files, found ${workflowPaths.length}`);
+expect(workflowPaths.length === 23, `workflow inventory drifted: expected 23 workflow YAML files, found ${workflowPaths.length}`);
 expect(compositeActionPaths.length === 4, `composite action inventory drifted: expected 4 action YAML files, found ${compositeActionPaths.length}`);
 expect(externalActionUses.length > 0, 'external action inventory unexpectedly empty');
 

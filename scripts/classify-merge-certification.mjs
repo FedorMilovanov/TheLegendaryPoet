@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 const CONTRACT_PATH = 'docs/merge-certification.json';
 const OFFLINE_LANE = 'hall-pushkin-offline-exhibit';
 const VISUAL_LANE = 'hall-pushkin-visual-remediation';
+const WEB_RUNTIME_LANE = 'hall-web-runtime-proof';
 
 function escapeRegexChar(char) {
   return /[\\^$.*+?()[\]{}|]/.test(char) ? `\\${char}` : char;
@@ -104,13 +105,16 @@ function main() {
   const report = { baseSha, headSha, ...classifyChangedFiles(changedFilesFromGit(baseSha, headSha), contract) };
   const offline = report.lanes[OFFLINE_LANE];
   const visual = report.lanes[VISUAL_LANE];
+  const webRuntime = report.lanes[WEB_RUNTIME_LANE];
   if (!offline) throw new Error(`merge certification contract is missing ${OFFLINE_LANE}`);
   if (!visual) throw new Error(`merge certification contract is missing ${VISUAL_LANE}`);
+  if (!webRuntime) throw new Error(`merge certification contract is missing ${WEB_RUNTIME_LANE}`);
 
   fs.writeFileSync('merge-certification-scope.json', `${JSON.stringify(report, null, 2)}\n`);
   appendOutput(process.env.GITHUB_OUTPUT, 'tested_sha', headSha);
   appendOutput(process.env.GITHUB_OUTPUT, 'hall_offline_required', offline.required ? 'true' : 'false');
   appendOutput(process.env.GITHUB_OUTPUT, 'hall_visual_required', visual.required ? 'true' : 'false');
+  appendOutput(process.env.GITHUB_OUTPUT, 'hall_web_runtime_required', webRuntime.required ? 'true' : 'false');
   appendSummary(process.env.GITHUB_STEP_SUMMARY, report);
   console.log(JSON.stringify(report, null, 2));
 }

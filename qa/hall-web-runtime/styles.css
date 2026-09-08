@@ -1,0 +1,132 @@
+html,
+body,
+#hall-proof-root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+html,
+body {
+  background: #090909;
+  color: #f5f0e6;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+body {
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#hall-proof-root {
+  position: relative;
+  min-height: 100vh;
+}
+
+#hall-proof-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+#hall-proof-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#hall-proof-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  background: radial-gradient(circle at center, #191713 0%, #090909 70%);
+}
+
+#hall-proof-fallback[hidden] {
+  display: none;
+}
+
+#hall-proof-fallback ol {
+  margin: 0.4rem auto 0;
+  padding-left: 1.5rem;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.proof-panel {
+  position: absolute;
+  z-index: 2;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  width: min(30rem, calc(100vw - 2.5rem));
+  box-sizing: border-box;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(208, 177, 112, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(8, 8, 8, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+.proof-panel h1,
+.proof-panel p {
+  margin: 0;
+}
+
+.proof-panel h1 {
+  margin-top: 0.2rem;
+  font-size: 1.15rem;
+}
+
+.proof-kicker {
+  color: #d0b170;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+#hall-proof-status {
+  margin-top: 0.6rem;
+  color: #c8c1b6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+}
+
+.proof-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+html[data-hall-proof-state='fallback'] .proof-actions {
+  display: none;
+}
+
+.proof-actions button {
+  appearance: none;
+  border: 1px solid rgba(208, 177, 112, 0.45);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  color: #f5f0e6;
+  background: rgba(208, 177, 112, 0.08);
+  cursor: pointer;
+}
+
+.proof-actions button:focus-visible {
+  outline: 2px solid #d0b170;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

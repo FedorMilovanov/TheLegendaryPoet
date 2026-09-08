@@ -21,6 +21,7 @@ jobs:
       tested_sha: ${{ steps.classify.outputs.tested_sha }}
       hall_offline_required: ${{ steps.classify.outputs.hall_offline_required }}
       hall_visual_required: ${{ steps.classify.outputs.hall_visual_required }}
+      hall_web_runtime_required: ${{ steps.classify.outputs.hall_web_runtime_required }}
     steps:
       - name: Checkout exact PR head with base history
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -92,9 +93,31 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/wait-for-workflow-certification.mjs --lane hall-pushkin-visual-remediation --head "${{ needs.scope.outputs.tested_sha }}"
 
+  hall-web-runtime:
+    name: wait for Hall web runtime exact-head certification
+    needs: scope
+    if: needs.scope.outputs.hall_web_runtime_required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.scope.outputs.tested_sha }}
+
+      - name: Verify exact checkout identity
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.scope.outputs.tested_sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Wait for canonical Hall web runtime proof on the same head
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/wait-for-workflow-certification.mjs --lane hall-web-runtime-proof --head "${{ needs.scope.outputs.tested_sha }}"
+
   merge-certification:
     name: merge-certification
-    needs: [scope, hall-pushkin-offline, hall-pushkin-visual]
+    needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -105,6 +128,8 @@ jobs:
           OFFLINE_RESULT: ${{ needs.hall-pushkin-offline.result }}
           VISUAL_REQUIRED: ${{ needs.scope.outputs.hall_visual_required }}
           VISUAL_RESULT: ${{ needs.hall-pushkin-visual.result }}
+          WEB_RUNTIME_REQUIRED: ${{ needs.scope.outputs.hall_web_runtime_required }}
+          WEB_RUNTIME_RESULT: ${{ needs.hall-web-runtime.result }}
           TESTED_SHA: ${{ needs.scope.outputs.tested_sha }}
         run: |
           set -euo pipefail
@@ -129,10 +154,20 @@ jobs:
             visual_state="not applicable"
           fi
 
+          if [ "$WEB_RUNTIME_REQUIRED" = "true" ]; then
+            test "$WEB_RUNTIME_RESULT" = "success"
+            web_runtime_state="required / success"
+          else
+            test "$WEB_RUNTIME_REQUIRED" = "false"
+            test "$WEB_RUNTIME_RESULT" = "skipped"
+            web_runtime_state="not applicable"
+          fi
+
           {
             echo '### Exact-head merge certification'
             echo
             echo "- tested head: \`$TESTED_SHA\`"
             echo "- Hall Pushkin offline exhibit: $offline_state"
             echo "- Hall Pushkin visual remediation: $visual_state"
+            echo "- Hall web runtime proof: $web_runtime_state"
           } >> "$GITHUB_STEP_SUMMARY"
