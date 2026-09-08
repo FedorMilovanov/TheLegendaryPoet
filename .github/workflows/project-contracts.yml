@@ -44,6 +44,8 @@ jobs:
         run: node scripts/validate-hall-pushkin-offline-budget.mjs
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
+      - name: Validate isolated Hall web runtime proof contract
+        run: node scripts/validate-hall-web-runtime-proof.mjs
       - name: Validate premium reader certification wiring
         run: node scripts/validate-premium-reader-certification.mjs
       - name: Validate UTC daily rotation
