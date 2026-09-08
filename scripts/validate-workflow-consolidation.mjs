@@ -97,6 +97,12 @@ for (const outcome of [
 expect(ci.includes('./.github/actions/setup-node-deps'), 'CI must use the shared Node dependency setup');
 expect(ci.includes('./.github/actions/install-build-tools'), 'CI must use the shared deterministic build tools setup');
 expect(ci.includes('dist/build-budget-report.json'), 'CI must retain the machine-readable build budget report');
+for (const requiredCertification of ['validate:reader-certification', 'validate:browser-runtime']) {
+  expect(
+    ci.includes(`run: npm run ${requiredCertification}`),
+    `required verify job must execute ${requiredCertification} before merge`,
+  );
+}
 
 for (const token of [
   'ENTRY_BUDGET_BYTES = 665_000',
