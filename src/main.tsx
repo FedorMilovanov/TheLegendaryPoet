@@ -5,6 +5,7 @@ import "./theme.css";
 import "./audio-player.css";
 import "./essay-motion.css";
 import "./hover-stability.css";
+import "./reduced-motion.css";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
