@@ -45,14 +45,18 @@ for (const profile of [
       colorScheme: 'dark',
     });
 
-    test('hall placeholder is readable and navigable', async ({ page }) => {
+    test('production Hall deep route is readable and bounded', async ({ page }) => {
       const pageErrors = [];
       page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
       const response = await page.goto(`${BASE_URL}/hall`, { waitUntil: 'domcontentloaded' });
       expect(response.status()).toBeLessThan(400);
       await settle(page);
       await expect(page.getByRole('heading', { name: /Зал Поэтов/i })).toBeVisible();
-      await expect(page.getByRole('link', { name: /Перейти к поэтам/i })).toBeVisible();
+      const hallRoot = page.locator('[data-hall-production-mode]');
+      await expect(hallRoot).toBeVisible();
+      await expect.poll(async () => hallRoot.getAttribute('data-hall-production-mode'), { timeout: 20_000 }).not.toBe('loading');
+      expect(['webgl', 'fallback']).toContain(await hallRoot.getAttribute('data-hall-production-mode'));
+      await expect(page.getByText('Hall v3 · H3 / R1 / L0 / UV0')).toBeVisible();
       const state = await diagnostics(page);
       fs.writeFileSync(path.join(ARTIFACT_DIR, `${profile.name}-hall.json`), JSON.stringify(state, null, 2));
       await page.screenshot({ path: path.join(ARTIFACT_DIR, `${profile.name}-hall.png`), fullPage: true });

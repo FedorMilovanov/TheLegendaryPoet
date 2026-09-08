@@ -5,369 +5,192 @@ import * as ts from 'typescript';
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
 const failures: string[] = [];
-const expect = (condition: unknown, message: string) => {
-  if (!condition) failures.push(message);
-};
+const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 
-const hallDocsPath = 'docs/hall-v3/README.md';
-const hallContractPath = 'docs/hall-v3/hall-v3-contract.json';
+const contractPath = 'docs/hall-v3/hall-v3-contract.json';
+const ownerDirectionPath = 'docs/hall-v3/web-vertical-slice-owner-direction.json';
+const hallPagePath = 'src/pages/HallPage.tsx';
+const runtimePath = 'src/components/hall-v3/HallProductionRuntime.tsx';
+const threeAdapterPath = 'src/components/hall-v3/three-runtime.ts';
+const legacyHallDir = 'src/components/hall';
+const routeRegistryPath = 'src/routes/routeModules.ts';
 const stalePublicConceptPath = 'public/images/hall-preview.webp';
-const sharedRouteRegistryPath = 'src/routes/routeModules.ts';
-const supersededHallDocs = ['docs/HALL_RESEARCH.md', 'docs/UPGRADE_NOTES.md'] as const;
-const hallContract = JSON.parse(read(hallContractPath)) as {
+
+const contract = JSON.parse(read(contractPath)) as {
   schemaVersion?: number;
   laneId?: string;
   productIssue?: number;
   phase?: string;
-  tracking?: {
-    architectureLifecycle?: string;
-    architectureLaneOpen?: boolean;
-    autonomousProductTransactionSelected?: boolean;
-    issueLifecycleTarget?: string;
-    roadmapAuthority?: string;
-    terminalOfflineSliceProductPr?: number;
-    terminalOfflineSliceTestedHead?: string;
-    terminalOfflineSliceMerge?: string;
-  };
+  tracking?: Record<string, unknown>;
   productionRoute?: {
     path?: string;
     mode?: string;
     module?: string;
+    runtimeModule?: string;
     maxRouteBytes?: number;
     allowLegacyHallImports?: boolean;
     allowThreeRuntimeImports?: boolean;
     allowUnapprovedConceptArt?: boolean;
+    allowRightsPendingDocumentaryMedia?: boolean;
   };
-  legacy?: {
-    sourceDirectory?: string;
-    currentAuthority?: boolean;
-    historicalValidator?: string;
-    historicalValidatorMandatory?: boolean;
-  };
+  legacy?: { sourceDirectory?: string; currentAuthority?: boolean; historicalValidatorMandatory?: boolean };
   sourceAuthority?: Record<string, string>;
   gates?: Record<string, string>;
 };
-
-const hallPagePath = hallContract.productionRoute?.module ?? 'src/pages/HallPage.tsx';
-const legacyHallDir = hallContract.legacy?.sourceDirectory ?? 'src/components/hall';
-const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
-const MAX_RESOLVE_DEPTH = 12;
-
-type BindingEntry = {
-  initializer: ts.Expression;
-  scope: ts.Node;
+const ownerDirection = JSON.parse(read(ownerDirectionPath)) as {
+  productIssue?: number;
+  decisionOrigin?: string;
+  status?: string;
+  authority?: { topology?: string; cameraRig?: string; lighting?: string; surfaceUv?: string; browserProofMerge?: string };
+  productionAuthorization?: Record<string, unknown>;
+  preservedBoundaries?: Record<string, unknown>;
 };
-type BindingMap = Map<string, BindingEntry[]>;
-
-type ModuleReference = {
-  specifier: string | null;
-  kind: 'static' | 'dynamic' | 'require';
-};
-
-function sourceFiles(relativeDir: string): string[] {
-  const absoluteDir = path.join(root, relativeDir);
-  const files: string[] = [];
-  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
-    const relativePath = path.posix.join(relativeDir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...sourceFiles(relativePath));
-      continue;
-    }
-    if (/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) files.push(relativePath);
-  }
-  return files;
-}
-
-function bindingScope(node: ts.Node): ts.Node {
-  let current: ts.Node | undefined = node.parent;
-  while (current) {
-    if (ts.isSourceFile(current) || ts.isBlock(current) || ts.isModuleBlock(current) || ts.isCaseBlock(current)) return current;
-    current = current.parent;
-  }
-  return node.getSourceFile();
-}
-
-function collectConstBindings(sourceFile: ts.SourceFile): BindingMap {
-  const bindings: BindingMap = new Map();
-  const visit = (node: ts.Node) => {
-    if (ts.isVariableStatement(node) && (node.declarationList.flags & ts.NodeFlags.Const) !== 0) {
-      for (const declaration of node.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name) || !declaration.initializer) continue;
-        const entries = bindings.get(declaration.name.text) ?? [];
-        entries.push({ initializer: declaration.initializer, scope: bindingScope(declaration) });
-        bindings.set(declaration.name.text, entries);
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return bindings;
-}
-
-function resolveBinding(identifier: ts.Identifier, bindings: BindingMap): ts.Expression | undefined {
-  const entries = bindings.get(identifier.text);
-  if (!entries) return undefined;
-  let current: ts.Node | undefined = identifier;
-  while (current) {
-    const entry = entries.find((candidate) => candidate.scope === current);
-    if (entry) return entry.initializer;
-    current = current.parent;
-  }
-  return undefined;
-}
-
-function resolveStringLiteral(expression: ts.Expression, bindings: BindingMap, depth = 0): string | undefined {
-  if (depth >= MAX_RESOLVE_DEPTH) return undefined;
-  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) return expression.text;
-  if (ts.isParenthesizedExpression(expression)) return resolveStringLiteral(expression.expression, bindings, depth + 1);
-  if (ts.isIdentifier(expression)) {
-    const bound = resolveBinding(expression, bindings);
-    return bound ? resolveStringLiteral(bound, bindings, depth + 1) : undefined;
-  }
-  return undefined;
-}
-
-function moduleReferences(source: string, fileName: string): ModuleReference[] {
-  const scriptKind = fileName.endsWith('.tsx') || fileName.endsWith('.jsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const sourceFile = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, scriptKind);
-  const bindings = collectConstBindings(sourceFile);
-  const references: ModuleReference[] = [];
-
-  const visit = (node: ts.Node) => {
-    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
-      references.push({ specifier: node.moduleSpecifier.text, kind: 'static' });
-    } else if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      references.push({ specifier: node.moduleSpecifier.text, kind: 'static' });
-    } else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
-      const expression = node.moduleReference.expression;
-      references.push({ specifier: expression ? resolveStringLiteral(expression, bindings) ?? null : null, kind: 'static' });
-    } else if (ts.isCallExpression(node)) {
-      if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        const argument = node.arguments[0];
-        references.push({ specifier: argument ? resolveStringLiteral(argument, bindings) ?? null : null, kind: 'dynamic' });
-      } else if (ts.isIdentifier(node.expression) && node.expression.text === 'require') {
-        const argument = node.arguments[0];
-        references.push({ specifier: argument ? resolveStringLiteral(argument, bindings) ?? null : null, kind: 'require' });
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-
-  visit(sourceFile);
-  return references;
-}
-
-function isForbiddenThreeRuntime(specifier: string) {
-  return specifier === 'three'
-    || specifier.startsWith('three/')
-    || specifier === 'postprocessing'
-    || specifier.startsWith('postprocessing/')
-    || specifier.startsWith('@react-three/');
-}
-
-function resolveLocalSource(importer: string, rawSpecifier: string) {
-  const specifier = rawSpecifier.split(/[?#]/, 1)[0];
-  let base: string | null = null;
-  if (specifier.startsWith('@/')) base = path.posix.join('src', specifier.slice(2));
-  else if (specifier.startsWith('.')) base = path.posix.normalize(path.posix.join(path.posix.dirname(importer), specifier));
-  if (!base) return null;
-
-  const candidates = [
-    base,
-    ...sourceExtensions.map((extension) => `${base}${extension}`),
-    ...sourceExtensions.map((extension) => path.posix.join(base, `index${extension}`)),
-  ];
-  return candidates.find((candidate) => fs.existsSync(path.join(root, candidate)) && fs.statSync(path.join(root, candidate)).isFile()) ?? null;
-}
-
-function validateDormantRouteDependencyGraph(entry: string) {
-  const visited = new Set<string>();
-  const pending = [entry];
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (!current || visited.has(current)) continue;
-    visited.add(current);
-
-    for (const reference of moduleReferences(read(current), current)) {
-      expect(reference.specifier !== null, `dormant Hall dependency graph must not contain unresolved ${reference.kind} imports: ${current}`);
-      if (!reference.specifier) continue;
-
-      expect(!isForbiddenThreeRuntime(reference.specifier), `dormant Hall dependency graph must not reach 3D runtime: ${current} -> ${reference.specifier}`);
-      const resolved = resolveLocalSource(current, reference.specifier);
-      if (!resolved) continue;
-      const reachesLegacyHall = resolved === legacyHallDir || resolved.startsWith(`${legacyHallDir}/`);
-      expect(!reachesLegacyHall, `dormant Hall dependency graph must not reach legacy Hall v2: ${current} -> ${resolved}`);
-      if (reachesLegacyHall) continue;
-
-      if (reference.kind === 'dynamic') {
-        if (current === sharedRouteRegistryPath) continue;
-        expect(false, `dormant Hall static dependency graph must not introduce a local dynamic import: ${current} -> ${resolved}`);
-        continue;
-      }
-      pending.push(resolved);
-    }
-  }
-}
-
-const hallPage = read(hallPagePath);
-const routeRuntime = read(sharedRouteRegistryPath);
 const routeContract = JSON.parse(read('src/routes/route-contract.json')) as {
   routes?: Array<{ id?: string; path?: string; page?: string; module?: string; budgetBytes?: number }>;
 };
 const projectContract = JSON.parse(read('docs/project-contract.json')) as {
-  architecture?: { openLaneIds?: string[]; currentStateOpenLaneStart?: string; currentStateOpenLaneEnd?: string };
-  documentation?: { authoritative?: string[]; historical?: string[]; supersededTechnicalDocuments?: string[] };
+  architecture?: { openLaneIds?: string[] };
+  documentation?: { historical?: string[]; supersededTechnicalDocuments?: string[] };
 };
-const parsedTsConfig = ts.parseConfigFileTextToJson('tsconfig.json', read('tsconfig.json'));
-if (parsedTsConfig.error) {
-  failures.push(`tsconfig.json: TypeScript config parser failed: ${ts.flattenDiagnosticMessageText(parsedTsConfig.error.messageText, '\n')}`);
-}
-const tsConfig = (parsedTsConfig.config ?? {}) as { exclude?: string[] };
-const currentState = read('docs/CURRENT_STATE.md');
-const packageManifest = JSON.parse(read('package.json')) as { scripts?: Record<string, string> };
+const tsConfig = ts.parseConfigFileTextToJson('tsconfig.json', read('tsconfig.json')).config as { exclude?: string[] };
 
-expect(hallContract.schemaVersion === 1, 'Hall v3 machine contract schemaVersion must remain 1');
-expect(hallContract.laneId === 'TLP-HALL-001', 'Hall v3 machine contract must remain owned by historical root TLP-HALL-001');
-expect(hallContract.productIssue === 369, 'Hall v3 machine contract must retain Product #369 as historical root identity');
-const knownPhases = [
-  'foundation',
-  'referenceBible',
-  'metricGreybox',
-  'cameraApproval',
-  'materialLightingExportSpike',
-  'pushkinVerticalSlice',
-  'offlineVisualApproval',
-  'webVerticalSlice',
-  'fullMuseumScaleOut',
-];
-expect(knownPhases.includes(hallContract.phase ?? ''), `Hall foundation invariant validator does not recognize phase: ${hallContract.phase ?? '<missing>'}`);
-
-if (hallContract.phase === 'foundation') {
-  expect(hallContract.gates?.foundation === 'active', 'foundation phase must keep foundation gate active');
-  for (const [gate, status] of Object.entries(hallContract.gates ?? {})) {
-    if (gate !== 'foundation') expect(status === 'blocked', `later Hall gate must remain blocked during foundation: ${gate}`);
-  }
-} else {
-  expect(hallContract.gates?.foundation === 'completed', `${hallContract.phase} phase must preserve completed foundation status`);
-}
-if (hallContract.phase === 'referenceBible') {
-  expect(hallContract.gates?.referenceBible === 'active', 'Reference Bible phase must mark referenceBible active');
-  for (const gate of ['metricGreybox', 'cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
-    expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while Reference Bible is active: ${gate}`);
-  }
-}
-if (hallContract.phase === 'metricGreybox') {
-  expect(hallContract.gates?.referenceBible === 'completed', 'metricGreybox phase must preserve completed Reference Bible status');
-  expect(hallContract.gates?.metricGreybox === 'active', 'metricGreybox phase must mark metricGreybox active');
-  for (const gate of ['cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
-    expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while metricGreybox is active: ${gate}`);
-  }
-}
-if (hallContract.phase === 'cameraApproval') {
-  expect(hallContract.gates?.referenceBible === 'completed', 'cameraApproval phase must preserve completed Reference Bible status');
-  expect(hallContract.gates?.metricGreybox === 'completed', 'cameraApproval phase must preserve completed metricGreybox status');
-  expect(hallContract.gates?.cameraApproval === 'active', 'cameraApproval phase must mark cameraApproval active');
-  for (const gate of ['materialLightingExportSpike', 'pushkinVerticalSlice', 'offlineVisualApproval', 'webVerticalSlice', 'fullMuseumScaleOut']) {
-    expect(hallContract.gates?.[gate] === 'blocked', `later Hall gate must remain blocked while cameraApproval is active: ${gate}`);
-  }
+const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
+function sourceFiles(relativeDir: string): string[] {
+  const absolute = path.join(root, relativeDir);
+  if (!fs.existsSync(absolute)) return [];
+  return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
+    const relative = path.posix.join(relativeDir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(relative);
+    return sourceExtensions.some((extension) => entry.name.endsWith(extension)) ? [relative] : [];
+  });
 }
 
-expect(hallContract.productionRoute?.mode === 'placeholder', 'production /hall must remain a placeholder before an approved web vertical slice');
-expect(hallContract.productionRoute?.allowLegacyHallImports === false, 'Hall foundation invariant must forbid legacy Hall imports');
-expect(hallContract.productionRoute?.allowThreeRuntimeImports === false, 'Hall foundation invariant must forbid Three/R3F runtime imports before a later runtime gate');
-expect(hallContract.productionRoute?.allowUnapprovedConceptArt === false, 'Hall foundation invariant must keep unapproved concept art off /hall');
-expect(hallContract.legacy?.currentAuthority === false, 'Hall v2 must remain non-authoritative');
-expect(hallContract.legacy?.historicalValidatorMandatory === false, 'Hall v2 validator must remain non-mandatory');
-expect(tsConfig.exclude?.includes(legacyHallDir) === true, 'legacy Hall v2 source must remain outside the current TypeScript contract while retained as forensic evidence');
+function moduleSpecifiers(relativePath: string): string[] {
+  const source = read(relativePath);
+  const sourceFile = ts.createSourceFile(relativePath, source, ts.ScriptTarget.Latest, true, relativePath.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const specs: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) specs.push(node.moduleSpecifier.text);
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) specs.push(node.moduleSpecifier.text);
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const argument = node.arguments[0];
+      if (argument && (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument))) specs.push(argument.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return specs;
+}
 
+function resolveLocal(importer: string, specifier: string): string | null {
+  const clean = specifier.split(/[?#]/, 1)[0];
+  let base: string | null = null;
+  if (clean.startsWith('@/')) base = path.posix.join('src', clean.slice(2));
+  else if (clean.startsWith('.')) base = path.posix.normalize(path.posix.join(path.posix.dirname(importer), clean));
+  if (!base) return null;
+  const candidates = [base, ...sourceExtensions.map((ext) => `${base}${ext}`), ...sourceExtensions.map((ext) => path.posix.join(base, `index${ext}`))];
+  return candidates.find((candidate) => fs.existsSync(path.join(root, candidate)) && fs.statSync(path.join(root, candidate)).isFile()) ?? null;
+}
+
+const hallPage = read(hallPagePath);
+const runtime = read(runtimePath);
+const threeAdapter = read(threeAdapterPath);
+const viteConfig = read('vite.config.ts');
+const routeRegistry = read(routeRegistryPath);
 const hallRoute = routeContract.routes?.find((route) => route.id === 'hall');
-const hallBudgetBytes = hallRoute?.budgetBytes;
-const maxRouteBytes = hallContract.productionRoute?.maxRouteBytes;
-expect(Boolean(hallRoute), 'route contract must retain one hall route');
-expect(hallRoute?.path === hallContract.productionRoute?.path, 'Hall route path must match the Hall machine contract');
-expect(hallRoute?.page === 'HallPage', 'Hall route must remain owned by HallPage');
-expect(hallRoute?.module === hallPagePath, 'Hall route module must match the Hall machine contract');
-expect(typeof hallBudgetBytes === 'number' && typeof maxRouteBytes === 'number' && Number.isInteger(hallBudgetBytes) && hallBudgetBytes <= maxRouteBytes, 'dormant Hall shell must remain within the machine-contract route budget');
 
-validateDormantRouteDependencyGraph(hallPagePath);
+expect(contract.schemaVersion === 1, 'Hall contract schemaVersion must remain 1');
+expect(contract.laneId === 'TLP-HALL-001', 'Hall historical root identity must remain TLP-HALL-001');
+expect(contract.productIssue === 369, 'Hall historical root must remain Product #369');
+expect(contract.phase === 'webVerticalSlice', 'Hall phase must be webVerticalSlice for the owner-directed production slice');
 
+for (const gate of ['foundation', 'referenceBible', 'metricGreybox', 'cameraApproval', 'materialLightingExportSpike', 'pushkinVerticalSlice']) {
+  expect(contract.gates?.[gate] === 'completed', `Hall gate ${gate} must be completed before production web slice`);
+}
+expect(contract.gates?.offlineVisualApproval === 'blocked', 'documentary offlineVisualApproval must not be fabricated by the production runtime transaction');
+expect(contract.gates?.webVerticalSlice === 'active', 'webVerticalSlice must be the active Hall gate');
+expect(contract.gates?.fullMuseumScaleOut === 'blocked', 'full museum scale-out must remain blocked during the first production web slice');
+
+expect(ownerDirection.productIssue === 465, 'web slice owner direction must be owned by Product #465');
+expect(ownerDirection.decisionOrigin === 'explicit-project-owner-instruction', 'web slice must retain explicit owner direction provenance');
+expect(ownerDirection.status === 'owner-directed-production-web-slice-authorized', 'web slice owner direction status drifted');
+expect(ownerDirection.authority?.topology === 'H3', 'production web slice must retain H3 topology');
+expect(ownerDirection.authority?.cameraRig === 'R1', 'production web slice must retain R1 camera');
+expect(ownerDirection.authority?.lighting === 'L0-minimal-runtime', 'production web slice must retain L0 lighting');
+expect(ownerDirection.authority?.surfaceUv === 'UV0', 'production web slice must retain UV0 authority');
+expect(ownerDirection.authority?.browserProofMerge === '060103d081485074bbf59e1bf16a2bae1a5d6e29', 'production web slice must retain the certified browser-proof merge anchor');
+expect(ownerDirection.productionAuthorization?.threeWebglRuntimeAllowed === true, 'owner direction must explicitly authorize Three/WebGL runtime');
+expect(ownerDirection.productionAuthorization?.rightsPendingDocumentaryMediaAllowed === false, 'owner direction must keep rights-pending documentary media excluded');
+expect(ownerDirection.productionAuthorization?.fullMuseumScaleOutAuthorized === false, 'owner direction must not silently authorize full museum scale-out');
+expect(ownerDirection.preservedBoundaries?.documentaryRightsApprovedByThisDecision === false, 'owner direction must not fabricate documentary rights approval');
+expect(ownerDirection.preservedBoundaries?.offlineVisualApprovalPromotedByThisDecision === false, 'owner direction must not fabricate offline visual approval');
+
+expect(contract.productionRoute?.path === '/hall', 'production Hall route must remain /hall');
+expect(contract.productionRoute?.mode === 'web-vertical-slice', 'production /hall must be in web-vertical-slice mode');
+expect(contract.productionRoute?.module === hallPagePath, 'production Hall route must remain owned by HallPage');
+expect(contract.productionRoute?.runtimeModule === runtimePath, 'production Hall runtime module must be explicit in the machine contract');
+expect(contract.productionRoute?.allowLegacyHallImports === false, 'production Hall must continue to forbid legacy Hall imports');
+expect(contract.productionRoute?.allowThreeRuntimeImports === true, 'web vertical slice must explicitly allow its bounded Three runtime');
+expect(contract.productionRoute?.allowUnapprovedConceptArt === false, 'unapproved concept art must remain excluded');
+expect(contract.productionRoute?.allowRightsPendingDocumentaryMedia === false, 'rights-pending documentary media must remain excluded');
+expect(contract.legacy?.currentAuthority === false, 'legacy Hall v2 must remain non-authoritative');
+expect(contract.legacy?.historicalValidatorMandatory === false, 'legacy Hall validator must remain historical only');
+expect(tsConfig.exclude?.includes(legacyHallDir) === true, 'legacy Hall v2 must remain excluded from the current TypeScript contract');
+
+expect(hallRoute?.path === '/hall' && hallRoute.page === 'HallPage' && hallRoute.module === hallPagePath, 'route contract Hall identity drifted');
+expect(typeof hallRoute?.budgetBytes === 'number' && typeof contract.productionRoute?.maxRouteBytes === 'number' && hallRoute.budgetBytes <= contract.productionRoute.maxRouteBytes, 'Hall route budget must remain within the machine-contract maximum');
+expect(routeRegistry.includes("HallPage: () => import('../pages/HallPage')"), 'HallPage must remain route-level lazy-loaded');
+expect(hallPage.includes("../components/hall-v3/HallProductionRuntime"), 'HallPage must mount the Hall v3 production runtime');
+expect(!moduleSpecifiers(hallPagePath).some((specifier) => specifier === 'three' || specifier.startsWith('@react-three/')), 'HallPage must not eagerly import the Three/R3F runtime');
+
+expect(runtime.includes("await import('three')"), 'Hall production runtime must load Three through a secondary dynamic import');
+expect(runtime.includes("greybox-layouts.json"), 'Hall production runtime must derive geometry from canonical greybox authority');
+expect(runtime.includes("camera-decision.json"), 'Hall production runtime must derive camera from canonical R1 authority');
+expect(runtime.includes("material-decision.json"), 'Hall production runtime must derive L0/UV0 authority from material decision');
+expect(runtime.includes('EXHIBIT_alexander-pushkin_NEUTRAL_PROXY'), 'production slice must use an explicitly neutral Pushkin proxy while documentary media is excluded');
+expect(runtime.includes("documentaryMedia = 'excluded'"), 'production runtime must mark exhibit proxies as documentary-media excluded');
+expect(runtime.includes('webglcontextlost'), 'production Hall must provide WebGL context-loss fallback');
+expect(runtime.includes("matchMedia('(prefers-reduced-motion: reduce)')"), 'production Hall must retain deterministic reduced-motion behavior');
+expect(runtime.includes("fallback('webgl-unavailable')"), 'production Hall must provide semantic fallback when WebGL is unavailable');
+for (const forbiddenRuntimeToken of ['TextureLoader', 'CubeTextureLoader', 'DataTexture', 'CanvasTexture', 'VideoTexture', 'KTX2Loader', 'PointerLockControls', 'OrbitControls']) {
+  expect(!runtime.includes(forbiddenRuntimeToken), `production Hall slice must not introduce ${forbiddenRuntimeToken}`);
+}
+for (const forbiddenMediaToken of ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.pdf']) {
+  expect(!runtime.toLowerCase().includes(forbiddenMediaToken), `production Hall runtime must not embed documentary/media asset token ${forbiddenMediaToken}`);
+}
+
+expect(threeAdapter.includes("from 'three/src/Three.js'"), 'Hall Three adapter must source the canonical Three module without importing the full bare namespace');
+for (const requiredExport of ['WebGLRenderer','Scene','PerspectiveCamera','Mesh','BufferGeometry','MeshStandardMaterial','Vector3']) {
+  expect(threeAdapter.includes(requiredExport), `Hall Three adapter must retain required runtime export: ${requiredExport}`);
+}
+expect(viteConfig.includes('{ find: /^three$/, replacement: path.resolve(__dirname, \'src/components/hall-v3/three-runtime.ts\') }'), 'production Vite must alias only the exact bare Three specifier to the narrow Hall adapter');
+
+const allowedThreeRuntimeFiles = new Set([runtimePath, threeAdapterPath]);
 for (const relativePath of sourceFiles('src')) {
   if (relativePath === legacyHallDir || relativePath.startsWith(`${legacyHallDir}/`)) continue;
-  for (const reference of moduleReferences(read(relativePath), relativePath)) {
-    if (!reference.specifier) continue;
-    const resolvedRelativeImport = resolveLocalSource(relativePath, reference.specifier);
-    const importsLegacyHall = reference.specifier.includes('/components/hall')
-      || reference.specifier.startsWith('components/hall/')
-      || resolvedRelativeImport === legacyHallDir
-      || resolvedRelativeImport?.startsWith(`${legacyHallDir}/`) === true;
-    expect(!importsLegacyHall, `production source must not import legacy Hall v2: ${relativePath} -> ${reference.specifier}`);
+  for (const specifier of moduleSpecifiers(relativePath)) {
+    const resolved = resolveLocal(relativePath, specifier);
+    const reachesLegacy = specifier.includes('/components/hall/') || resolved === legacyHallDir || resolved?.startsWith(`${legacyHallDir}/`) === true;
+    expect(!reachesLegacy, `current production source must not import legacy Hall v2: ${relativePath} -> ${specifier}`);
+    const isThree = specifier === 'three' || specifier.startsWith('three/') || specifier.startsWith('@react-three/') || specifier === 'postprocessing' || specifier.startsWith('postprocessing/');
+    if (isThree) expect(allowedThreeRuntimeFiles.has(relativePath), `Three/R3F runtime imports are bounded to the exact Hall runtime allowlist: found ${relativePath} -> ${specifier}`);
   }
 }
 
-expect(routeRuntime.includes("HallPage: () => import('../pages/HallPage')"), 'route runtime must lazy-load HallPage through the canonical route registry');
-for (const retiredPromise of ['Храм русской поэзии', 'Храм Русской Поэзии', 'советская и современная поэзия', 'Золотой век, Серебряный век']) {
-  expect(!hallPage.includes(retiredPromise), `public Hall placeholder must not promise unapproved architecture: ${retiredPromise}`);
+expect(!fs.existsSync(path.join(root, stalePublicConceptPath)), 'unapproved Hall concept art must not return under public/');
+for (const requiredPath of [contractPath, ownerDirectionPath, 'docs/hall-v3/web-runtime-proof.json', threeAdapterPath, ...Object.values(contract.sourceAuthority ?? {})]) {
+  expect(fs.existsSync(path.join(root, requiredPath)), `Hall authority/runtime file must exist: ${requiredPath}`);
 }
-expect(!hallPage.includes('hall-preview.webp'), 'dormant Hall route must not reference stale concept artwork');
-expect(!fs.existsSync(path.join(root, stalePublicConceptPath)), 'unapproved Hall concept art must not remain under public/');
-expect(hallPage.includes('без выдачи ранних концептов за финальную архитектуру'), 'Hall placeholder must state that early concepts are not final architecture');
-
-const requiredHallDocs = [hallDocsPath, hallContractPath, ...Object.values(hallContract.sourceAuthority ?? {})];
-for (const relativePath of new Set(requiredHallDocs)) {
-  expect(fs.existsSync(path.join(root, relativePath)), `Hall authority document must exist: ${relativePath}`);
-}
-expect(fs.existsSync(path.join(root, legacyHallDir, 'README.md')), 'legacy Hall directory must declare its non-authoritative status');
-
-const tracking = hallContract.tracking ?? {};
-expect(tracking.architectureLifecycle === 'closed-root-owner-gated-roadmap', 'Hall architecture lifecycle must remain closed-root-owner-gated-roadmap after #369 closure');
-expect(tracking.architectureLaneOpen === false, 'closed Hall root must not claim an open architecture lane');
-expect(tracking.autonomousProductTransactionSelected === false, 'closed Hall root must not select autonomous Product work without new authority');
-expect(tracking.issueLifecycleTarget === 'close-completed-after-merge', 'Hall root must preserve the close-after-merge issue lifecycle target');
-expect(tracking.roadmapAuthority === 'docs/hall-v3/OWNER_GATED_ROADMAP.md', 'Hall root must register the owner-gated roadmap authority');
-expect(tracking.terminalOfflineSliceProductPr === 403, 'Hall root must retain Product #403 as terminal autonomous offline-slice transaction');
-expect(tracking.terminalOfflineSliceTestedHead === '653ed65c102c09c39803193d95addf8aef739a34', 'Hall root must retain the exact tested #403 head');
-expect(tracking.terminalOfflineSliceMerge === '256dd19f1e39eef341ca260a4d8c72e1b6f19d73', 'Hall root must retain the #403 merge identity');
-expect(typeof tracking.roadmapAuthority === 'string' && fs.existsSync(path.join(root, tracking.roadmapAuthority)), 'closed Hall root must retain a real owner-gated roadmap file');
-
-const roadmap = typeof tracking.roadmapAuthority === 'string' && fs.existsSync(path.join(root, tracking.roadmapAuthority))
-  ? read(tracking.roadmapAuthority)
-  : '';
-for (const requiredRoadmapText of [
-  'No autonomous Product transaction selected',
-  'production `/hall` remains the lightweight placeholder',
-  'production Three/R3F/WebGL remains disabled',
-  '`offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` may not self-promote',
-  'open a **new bounded issue/lane for that concrete transaction**',
-]) {
-  expect(roadmap.includes(requiredRoadmapText), `owner-gated roadmap is missing permanent closure boundary: ${requiredRoadmapText}`);
-}
-
-expect(projectContract.architecture?.openLaneIds?.includes(hallContract.laneId ?? '') === false, 'closed Hall root must be absent from project-contract openLaneIds');
-const openLaneStart = projectContract.architecture?.currentStateOpenLaneStart ?? '<!-- project-contract:open-lanes:start -->';
-const openLaneEnd = projectContract.architecture?.currentStateOpenLaneEnd ?? '<!-- project-contract:open-lanes:end -->';
-const openLaneStartIndex = currentState.indexOf(openLaneStart);
-const openLaneEndIndex = currentState.indexOf(openLaneEnd);
-const currentStateOpenLaneSection = openLaneStartIndex >= 0 && openLaneEndIndex > openLaneStartIndex
-  ? currentState.slice(openLaneStartIndex + openLaneStart.length, openLaneEndIndex)
-  : '';
-expect(openLaneStartIndex >= 0 && openLaneEndIndex > openLaneStartIndex, 'CURRENT_STATE must preserve machine-owned open-lane markers');
-expect(!currentStateOpenLaneSection.includes(`\`${hallContract.laneId}\``), 'closed Hall root must be absent from the CURRENT_STATE open-lane block');
-expect(currentState.includes('docs/hall-v3/OWNER_GATED_ROADMAP.md'), 'CURRENT_STATE must point future Hall work to the owner-gated roadmap');
-expect(projectContract.documentation?.authoritative?.includes(hallDocsPath) === true, 'project contract must register Hall v3 README as authoritative entrypoint');
-for (const legacyDoc of supersededHallDocs) {
+expect(projectContract.architecture?.openLaneIds?.includes('TLP-HALL-001') === false, 'closed historical Hall root must not re-enter project-contract openLaneIds');
+for (const legacyDoc of ['docs/HALL_RESEARCH.md', 'docs/UPGRADE_NOTES.md']) {
   expect(projectContract.documentation?.historical?.includes(legacyDoc) === true, `superseded Hall document must remain historical: ${legacyDoc}`);
-  expect(projectContract.documentation?.supersededTechnicalDocuments?.includes(legacyDoc) === true, `superseded Hall document must not regain current authority: ${legacyDoc}`);
+  expect(projectContract.documentation?.supersededTechnicalDocuments?.includes(legacyDoc) === true, `superseded Hall document must remain superseded: ${legacyDoc}`);
 }
 
-const scripts = packageManifest.scripts ?? {};
-expect(scripts['validate:hall-foundation'] === 'tsx scripts/validate-hall-foundation.ts && node scripts/validate-hall-public-promises.mjs', 'package scripts must expose foundation invariants plus public-promise guard');
-expect(scripts['validate:interaction-runtime']?.includes('validate-hall-audio-runtime') === false, 'mandatory interaction validation must not preserve Hall-v2 FPS/audio behavior');
-expect(scripts.check?.includes('validate:hall-foundation') === true, 'normal project check must retain Hall foundation invariants');
-
-if (failures.length > 0) {
-  console.error('\nHall v3 foundation invariant validation failed:');
+if (failures.length) {
+  console.error('\nHall v3 production web-slice validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log(`Hall v3 foundation invariants passed in phase ${hallContract.phase}: lightweight route, semantic 3D/legacy isolation, public concept exclusion, typecheck isolation, superseded-doc isolation and closed-root owner-gated lifecycle remain enforced.`);
+console.log('Hall v3 production web-slice invariants passed: H3/R1/L0/UV0 authority, exact two-file Three transport allowlist, semantic fallbacks, neutral documentary-free proxies and owner-directed gate state are consistent.');

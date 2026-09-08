@@ -1,110 +1,94 @@
 # Hall v3 — staged production authority
 
-This directory is the permanent technical/art-production authority for Hall v3. The historical architecture root is `TLP-HALL-001` / Product #369.
+This directory is the permanent technical and art-production authority for Hall v3. The historical architecture root remains `TLP-HALL-001` / Product #369; later bounded transactions advance concrete gates without reopening that root.
 
-Product #369 is closed as the completed **architecture root / autonomous staging program** after the source-based Pushkin offline-exhibit milestone. Closing that root does **not** mean that the production museum or WebGL runtime is complete. Future Hall work is preserved in [`OWNER_GATED_ROADMAP.md`](OWNER_GATED_ROADMAP.md) and becomes selectable only when a new material owner/legal/institutional/evidence input exists.
+## Current machine stage — owner-directed web vertical slice
 
-The current machine phase and gate state remain in [`hall-v3-contract.json`](hall-v3-contract.json). Prose, a closed issue, CI success or an agent decision cannot silently advance a Hall gate.
-
-## Current machine stage — Pushkin vertical slice frozen / owner-gated
-
-The machine contract intentionally remains at `phase=pushkinVerticalSlice`:
+The current machine contract is [`hall-v3-contract.json`](hall-v3-contract.json) with `phase=webVerticalSlice`.
 
 - `foundation`: completed;
 - `referenceBible`: completed;
 - `metricGreybox`: completed;
 - `cameraApproval`: completed;
 - `materialLightingExportSpike`: completed;
-- `pushkinVerticalSlice`: active as the frozen staging gate;
-- `offlineVisualApproval`: blocked;
-- `webVerticalSlice`: blocked;
+- `pushkinVerticalSlice`: completed;
+- `offlineVisualApproval`: blocked for documentary-media approval;
+- `webVerticalSlice`: active;
 - `fullMuseumScaleOut`: blocked.
 
-`active` here means the current fail-closed machine gate, **not** an open GitHub architecture lane and not permission for autonomous implementation. `docs/project-contract.json` has zero open architecture lanes after the #369 closure transaction.
+The transition is owner-directed by [`web-vertical-slice-owner-direction.json`](web-vertical-slice-owner-direction.json), Product #465. It relies on the independently certified isolated browser proof from Product #463 / merge `060103d081485074bbf59e1bf16a2bae1a5d6e29`.
 
 ## Frozen authority
 
-The staged Hall authority remains:
+The production web slice keeps the previously frozen authority:
 
-- **H3** — selected topology; H1 reserve, H2 rejected;
-- H3 layout fingerprint `5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65`;
-- H3 mesh fingerprint `b3de770858a423305db8fcab15b405414e66b3d3de93ab1deaa5b3b35b418777`;
-- **R1** — approved guided camera, Pushkin witness position `[8.0, 2.5, 1.60]`, target `[11.15, 5.45, 1.95]`, lens `28 mm`; R3 reserve, R0/R2 rejected;
-- **L0 minimal runtime lighting** — selected baseline;
-- **UV0** — selected surface mapping at `1.5 m / UV unit`;
-- **UV1** — optional static-bake reserve only;
-- current L1 external-lightmap bake — rejected;
-- production texture encoding — still not a production decision.
+- **H3** selected topology, layout fingerprint `5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65`;
+- **R1** guided camera; no FPS/free-walk;
+- **L0 minimal runtime lighting**;
+- **UV0** surface mapping;
+- legacy Hall v2 remains non-authoritative;
+- the rejected L1 bake is not promoted.
 
-Any later change to H3/R1/L0/UV0 must reopen the owning earlier gate with new evidence; closure of #369 does not make those authorities informal.
+Any later change to H3/R1/L0/UV0 requires a new bounded authority transaction.
 
-## Pushkin offline slice — completed autonomous milestone
+## Production `/hall`
 
-Merged Product #403 completed the current autonomous source/offline slice transaction.
+The production route is no longer a text-only placeholder. It now owns a bounded Hall v3 web vertical slice:
 
-Exact identities preserved in the machine/audit record:
+- route-level lazy `HallPage`;
+- secondary dynamic `three` import only after `/hall` mounts;
+- geometry derived from canonical `greybox-layouts.json`;
+- camera derived from `camera-decision.json`;
+- L0/UV0 authority derived from `material-decision.json`;
+- guided camera stops only;
+- deterministic reduced-motion cuts;
+- semantic fallback when WebGL is unavailable or the WebGL context is lost;
+- neutral, clearly non-facsimile exhibit proxies while documentary production media remain unresolved;
+- no full-museum preload.
 
-- exact tested head: `653ed65c102c09c39803193d95addf8aef739a34`;
-- merge/current-main at closure review: `256dd19f1e39eef341ca260a4d8c72e1b6f19d73`;
-- fixed still-review artifact id: `9057080606`;
-- final exhibit artifact id: `9058946051`;
-- final authored walkthrough: H.264, 960×540, 24 fps, 577 frames, 24.041667 s;
-- raw and optimized GLBs: Khronos `0 errors / 0 warnings`;
-- measured offline first-slice budget evidence now exists and is fail-closed validated.
+The isolated proof contract remains in [`web-runtime-proof.json`](web-runtime-proof.json); it is evidence for the runtime architecture, not permission to ship documentary source bytes.
 
-The budget evidence closes the earlier false-green class where `budgetReportRequired: true` existed without a required generated/validated budget report. Offline evidence deliberately does not invent production GPU residency, browser frame time, renderer.info, decode/load time or a production texture-encoding decision.
+## Documentary and rights boundary
 
-## Documentary/rights boundary
+The web slice deliberately separates **runtime activation** from **documentary-media approval**.
 
-The Pushkin documentary source model remains fail closed.
-
-- Kiprensky 1827 portrait exact source hash: `sha256:316d5f366a46f23cd0a181e570f2d09a6b0d12bc368dab18fdb394b8b8b8bf4b`;
-- 1833 `Eugene Onegin` exact source hash: `sha256:d629c10943cbf6428eabb194ee5c17c1b763c27108a2238eaf72fadb275643e5`;
-- both may be used for the already-authorized offline evidence path but remain non-approved for production shipping until the canonical owner/rights/credit disposition is satisfied;
-- the Pushkin House manuscript candidate remains optional/deferred and may be used later only from an actually supplied or otherwise reusable source;
-- the weak autograph mirror remains blocked as a negative control;
+- rights-pending portrait, publication and manuscript bytes do not enter the production runtime;
 - byte availability is not permission;
-- public-domain age or a public catalogue page is not by itself a final production decision;
-- AI cannot substitute for missing documentary rights or impersonate a facsimile/autograph/manuscript.
+- AI-generated historical facsimiles, autographs or manuscripts remain forbidden;
+- neutral geometric proxies may occupy the approved exhibit positions without claiming to be historical objects;
+- documentary rights/credits and documentary `offlineVisualApproval` remain separate later decisions;
+- the optional Pushkin House candidate remains deferred unless an actually reusable source becomes available.
 
-## Permanent production boundary
+Current documentary source and provenance authority remains in `pushkin-rights.json`, `pushkin-acquisition.json`, `pushkin-rights-review.json` and `pushkin-owner-disposition.json`.
 
-Until a later bounded transaction independently promotes its own gate:
+## Production acceptance contract
 
-- `/hall` remains a lightweight DOM placeholder;
-- `src/components/hall/*` remains legacy/forensic evidence only;
-- Three.js/R3F/WebGL remains outside the dormant `/hall` dependency graph;
-- rights-pending documentary media cannot enter the production manifest or receive a runtime path;
-- QA `.blend`, PNG/SVG evidence and GLBs do not become production assets merely because an Actions artifact exists;
-- the current L1 bake remains rejected;
-- no production budget acceptance may be inferred from offline GLB evidence;
-- `offlineVisualApproval`, `webVerticalSlice` and `fullMuseumScaleOut` cannot self-promote;
-- FPS/free-walk, hover whispers, fake autographs, mirror-floor spectacle and effect-driven rescue remain non-goals.
+Product #465 must prove the production route itself, not merely the isolated harness:
 
-## Current source authority
+- normal project typecheck/build/route budgets;
+- exact-head Hall machine validator;
+- Chromium production `/hall` WebGL success;
+- Android and WebKit/iPhone route acceptance;
+- guided navigation behavior;
+- reduced-motion behavior;
+- forced/unavailable WebGL semantic fallback;
+- real context-loss fallback where supported;
+- no rights-pending documentary asset request;
+- route-level chunk isolation so unrelated routes do not preload Three;
+- exact-head merge certification and Manual Browser QA.
 
-Key current authorities include:
+## What remains after the first production web slice
 
-- [`hall-v3-contract.json`](hall-v3-contract.json) — machine stage, safety gates and lifecycle tracking;
-- [`OWNER_GATED_ROADMAP.md`](OWNER_GATED_ROADMAP.md) — future trigger conditions and bounded sequence after #369;
-- [`REFERENCE_BIBLE.md`](REFERENCE_BIBLE.md), [`SPATIAL_BRIEF.md`](SPATIAL_BRIEF.md), [`reference-bible.json`](reference-bible.json) — reference/metric evidence;
-- [`greybox-decision.json`](greybox-decision.json), [`greybox-layouts.json`](greybox-layouts.json) — frozen topology authority;
-- [`camera-decision.json`](camera-decision.json), [`camera-gate-promotion.json`](camera-gate-promotion.json) — R1 decision/promotion;
-- [`material-decision.json`](material-decision.json), [`material-gate-promotion.json`](material-gate-promotion.json), [`material-spike.json`](material-spike.json) — material/light/export authority;
-- [`pushkin-rights.json`](pushkin-rights.json), [`pushkin-acquisition.json`](pushkin-acquisition.json), [`pushkin-rights-review.json`](pushkin-rights-review.json), [`pushkin-owner-disposition.json`](pushkin-owner-disposition.json) — object/right/acquisition/owner boundaries;
-- [`pushkin-slice.json`](pushkin-slice.json), [`pushkin-offline-exhibit.json`](pushkin-offline-exhibit.json), [`pushkin-offline-budget.json`](pushkin-offline-budget.json) — offline slice, exhibit and budget contracts;
-- permanent Hall validators and workflows — source, topology, material transport, rights/acquisition, offline exhibit/budget and dormant-route boundaries.
+The Hall is not yet the full museum. Later bounded transactions may address:
 
-Earlier camera/material phase-specific generators and validators remain for forensic reproducibility; they are not permission to reopen a completed gate casually.
+1. documentary production rights, attribution and final derivatives;
+2. independent visual approval of the documentary presentation;
+3. production exhibit-media integration after those decisions;
+4. additional poets/exhibits and full-museum scale-out;
+5. broader performance budgets once the museum expands beyond the first H3 slice.
 
-## Future work
+`fullMuseumScaleOut` remains blocked until its own measured transaction.
 
-No autonomous Product transaction is selected after #403. A later Hall transaction requires a material new trigger such as owner/legal documentary disposition, institutional evidence, explicit human offline visual approval, a newly reproduced engineering defect, or runtime evidence sufficient to propose the next bounded web slice.
+## Historical closure
 
-When such a trigger exists, open a **new bounded issue/lane for that transition** and follow [`OWNER_GATED_ROADMAP.md`](OWNER_GATED_ROADMAP.md). Do not reopen #369 as a mega-umbrella merely because the long-term museum is not yet shipped.
-
-## Closure
-
-`TLP-HALL-001` / Product #369 is terminal as the architecture root. The root closed after retiring Hall-v2 authority, establishing permanent Hall-v3 contracts, completing the Reference Bible/greybox/camera/material stages and producing the source-based Pushkin offline exhibit with exact artifacts and measured offline-budget evidence.
-
-The production Hall remains deliberately dormant, placeholder-backed and owner-gated. That is the correct safe terminal state for #369, not an assertion that the future museum has already shipped.
+Product #369 remains terminal as the architecture root. Product #403 completed the source-based Pushkin offline exhibit. Product #463 proved the H3/R1/L0/UV0 browser runtime in isolation. Product #465 is the first owner-directed transaction that activates the bounded web vertical slice on production `/hall` while preserving the documentary-rights boundary.
