@@ -70,6 +70,10 @@ test('forced WebGL unavailability is semantic and fail-closed', async ({ page },
   expect(state.mode).toBe('fallback');
   expect(state.reason).toBe('forced-webgl-unavailable');
   await expect(page.getByRole('status').filter({ hasText: '3D-режим недоступен' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Маршрут H3/R1' })).toBeVisible();
+  await expect(page.getByRole('listitem')).toHaveCount(6);
+  await expect(page.getByRole('button', { name: 'Назад' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Далее' })).toBeHidden();
 
   writeEvidence(testInfo, 'forced-fallback', {
     testedSha,
@@ -118,7 +122,10 @@ test('WebGL context loss falls back without leaving a dead canvas', async ({ pag
   await expect.poll(async () => (await page.evaluate(() => window.__HALL_WEB_PROOF__?.mode))).toBe('fallback');
   const state = await page.evaluate(() => window.__HALL_WEB_PROOF__);
   expect(state.reason).toBe('webgl-context-lost');
-  await expect(page.getByText('3D-режим недоступен. Содержимое остаётся доступным без WebGL.')).toBeVisible();
+  await expect(page.getByText('Проверочный маршрут остаётся доступным без WebGL.')).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Маршрут H3/R1' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Назад' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Далее' })).toBeHidden();
 
   writeEvidence(testInfo, 'context-loss', {
     testedSha,
