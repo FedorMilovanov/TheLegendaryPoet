@@ -163,6 +163,60 @@ test.describe('reader outcome journeys', () => {
 test.describe('reduced-motion longform reader journey', () => {
   test.use({ locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark', reducedMotion: 'reduce' });
 
+  test('reading progress is bounded to the article instead of the post-article tail', async ({ page }, testInfo) => {
+    const runtime = attachRuntimeDiagnostics(page);
+    await page.goto(`${BASE_URL}/essays/yesenin-duncan-first-meeting-documents`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+
+    const progress = page.getByRole('progressbar', { name: 'Прогресс чтения статьи' });
+    const article = page.locator('#main-content article').first();
+    await expect(progress).toBeVisible();
+    await expect(article).toBeVisible();
+
+    const geometry = await article.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const articleTop = window.scrollY + rect.top;
+      const articleBottom = window.scrollY + rect.bottom;
+      const articleEndScroll = Math.max(articleTop, articleBottom - window.innerHeight);
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      return {
+        articleTop,
+        articleBottom,
+        articleEndScroll,
+        maxScroll,
+        postArticleTail: maxScroll - articleEndScroll,
+      };
+    });
+
+    expect(geometry.articleEndScroll).toBeGreaterThan(geometry.articleTop + 500);
+    expect(geometry.postArticleTail).toBeGreaterThan(120);
+
+    const readProgress = async () => Number(await progress.getAttribute('aria-valuenow'));
+    const scrollTo = async (top) => {
+      await page.evaluate((nextTop) => window.scrollTo({ top: nextTop, behavior: 'auto' }), top);
+    };
+
+    await scrollTo(geometry.articleTop);
+    await expect.poll(readProgress).toBeLessThanOrEqual(1);
+
+    const midpoint = geometry.articleTop + (geometry.articleEndScroll - geometry.articleTop) / 2;
+    await scrollTo(midpoint);
+    await expect.poll(readProgress).toBeGreaterThanOrEqual(48);
+    await expect.poll(readProgress).toBeLessThanOrEqual(52);
+
+    await scrollTo(geometry.articleEndScroll);
+    await expect.poll(readProgress).toBe(100);
+
+    const tailScroll = Math.min(geometry.maxScroll, geometry.articleEndScroll + Math.max(120, geometry.postArticleTail / 2));
+    expect(tailScroll).toBeGreaterThan(geometry.articleEndScroll + 100);
+    await scrollTo(tailScroll);
+    await expect.poll(readProgress).toBe(100);
+
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-article-bounded-progress.png`), fullPage: false });
+    expect(runtime.pageErrors).toEqual([]);
+    expect(runtime.consoleErrors).toEqual([]);
+  });
+
   test('citation focus reveals its source and keeps the longform readable', async ({ page }, testInfo) => {
     const runtime = attachRuntimeDiagnostics(page);
     await page.goto(`${BASE_URL}/essays/yesenin-duncan-first-meeting-documents`, { waitUntil: 'domcontentloaded' });
