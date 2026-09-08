@@ -55,6 +55,8 @@ jobs:
         run: npm run validate:hall-pushkin-acquisition
       - name: Validate Hall v3 material transport invariants
         run: npm run validate:hall-material-transport
+      - name: Validate isolated Hall web runtime proof contract
+        run: node scripts/validate-hall-web-runtime-proof.mjs
       - name: Validate overlays, images, and pointer interactions
         id: interaction_runtime
         run: |
