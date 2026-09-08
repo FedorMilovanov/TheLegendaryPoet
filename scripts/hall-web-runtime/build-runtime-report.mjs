@@ -5,6 +5,7 @@ const root = process.cwd();
 const distDir = path.join(root, 'dist-hall-web-runtime');
 const evidenceDir = path.join(root, 'qa-artifacts', 'hall-web-runtime');
 const outputPath = path.join(evidenceDir, 'runtime-budget.json');
+const testedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
 
 function walk(dir) {
   const out = [];
@@ -42,12 +43,14 @@ const webkitRuntime = runtimeEvidence.find((entry) => entry.project === 'webkit-
 
 if (!chromiumRuntime) throw new Error('Chromium WebGL runtime evidence is missing');
 if (!webkitRuntime) throw new Error('WebKit/iPhone runtime-or-fallback evidence is missing');
+if (testedSha && chromiumRuntime.testedSha !== testedSha) throw new Error(`Chromium evidence SHA ${chromiumRuntime.testedSha} does not match ${testedSha}`);
+if (testedSha && webkitRuntime.testedSha !== testedSha) throw new Error(`WebKit evidence SHA ${webkitRuntime.testedSha} does not match ${testedSha}`);
 
 const report = {
   schemaVersion: 1,
   laneId: 'TLP-HALL-WEB-PROOF-001',
   productIssue: 463,
-  testedSha: process.env.GITHUB_SHA || null,
+  testedSha,
   productionAcceptance: false,
   productionRouteActivated: false,
   authority: chromiumRuntime.state.authority,
