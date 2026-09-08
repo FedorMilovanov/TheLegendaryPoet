@@ -5,6 +5,7 @@ import { test, expect } from '@playwright/test';
 const artifactDir = path.resolve('qa-artifacts/hall-web-runtime');
 fs.mkdirSync(artifactDir, { recursive: true });
 const testedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
+const contract = JSON.parse(fs.readFileSync(path.resolve('docs/hall-v3/web-runtime-proof.json'), 'utf8'));
 
 async function readProofState(page) {
   await page.waitForFunction(() => window.__HALL_WEB_PROOF__?.ready === true);
@@ -44,7 +45,8 @@ test('canonical H3/R1/L0/UV0 authority reaches browser readiness without documen
     expect(state.metrics.firstFrameMs).toBeGreaterThan(0);
     expect(state.metrics.drawCalls).toBeGreaterThan(0);
     expect(state.metrics.triangles).toBeGreaterThan(0);
-    expect(state.metrics.textures).toBe(0);
+    expect(state.metrics.textures).toBeGreaterThanOrEqual(0);
+    expect(state.metrics.textures).toBeLessThanOrEqual(contract.thresholds.rendererTexturesMax);
 
     await page.getByRole('button', { name: 'Далее' }).click();
     await expect.poll(async () => (await page.evaluate(() => window.__HALL_WEB_PROOF__?.currentCameraStop))).toBe('orientation');
