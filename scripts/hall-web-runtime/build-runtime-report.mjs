@@ -7,6 +7,7 @@ const evidenceDir = path.join(root, 'qa-artifacts', 'hall-web-runtime');
 const outputPath = path.join(evidenceDir, 'runtime-budget.json');
 const testedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
 const contract = JSON.parse(fs.readFileSync(path.join(root, 'docs/hall-v3/web-runtime-proof.json'), 'utf8'));
+const expectedBrowserAuthority = { ...contract.authority, documentaryMedia: contract.runtimeContract.documentaryMedia };
 
 function walk(dir) {
   const out = [];
@@ -40,6 +41,8 @@ if (!chromiumRuntime || chromiumRuntime.state?.mode !== 'webgl' || chromiumRunti
 if (!webkitRuntime || webkitRuntime.state?.ready !== true) throw new Error('Canonical WebKit/iPhone runtime-or-fallback evidence is missing');
 if (testedSha && chromiumRuntime.testedSha !== testedSha) throw new Error(`Chromium evidence SHA ${chromiumRuntime.testedSha} does not match ${testedSha}`);
 if (testedSha && webkitRuntime.testedSha !== testedSha) throw new Error(`WebKit evidence SHA ${webkitRuntime.testedSha} does not match ${testedSha}`);
+if (JSON.stringify(chromiumRuntime.state.authority) !== JSON.stringify(expectedBrowserAuthority)) throw new Error('Chromium runtime authority does not match web-runtime-proof contract');
+if (JSON.stringify(webkitRuntime.state.authority) !== JSON.stringify(expectedBrowserAuthority)) throw new Error('WebKit runtime authority does not match web-runtime-proof contract');
 
 const report = {
   schemaVersion: 1,
@@ -48,7 +51,7 @@ const report = {
   testedSha,
   productionAcceptance: contract.productionBoundary.productionAcceptance,
   productionRouteActivated: contract.productionBoundary.productionRouteActivated,
-  authority: { ...contract.authority, documentaryMedia: contract.runtimeContract.documentaryMedia },
+  authority: chromiumRuntime.state.authority,
   build: { totalBytes, jsBytes, cssBytes, files: relativeBuildFiles },
   chromium: {
     evidenceFile: chromiumRuntime.file,
