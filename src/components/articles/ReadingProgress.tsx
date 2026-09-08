@@ -70,6 +70,7 @@ export default function ReadingProgress({ articleRef }: ReadingProgressProps) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={semanticProgress}
+      aria-valuetext={`${semanticProgress}% прочитано`}
     >
       <div
         className="h-full w-full origin-left bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(0,212,255,0.65)]"
