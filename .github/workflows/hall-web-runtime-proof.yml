@@ -5,14 +5,23 @@ on:
     paths:
       - '.github/workflows/hall-web-runtime-proof.yml'
       - 'docs/hall-v3/web-runtime-proof.json'
+      - 'docs/hall-v3/web-vertical-slice-owner-direction.json'
+      - 'docs/hall-v3/README.md'
+      - 'docs/hall-v3/OWNER_GATED_ROADMAP.md'
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/material-decision.json'
       - 'docs/hall-v3/hall-v3-contract.json'
+      - 'src/pages/HallPage.tsx'
+      - 'src/components/hall-v3/**'
+      - 'src/routes/route-contract.json'
+      - 'playwright.config.mjs'
+      - 'qa/hall-production-route.spec.mjs'
       - 'qa/hall-web-runtime/**'
       - 'qa/hall-web-runtime.spec.mjs'
       - 'scripts/hall-web-runtime/**'
+      - 'scripts/validate-hall-foundation.ts'
       - 'scripts/validate-hall-web-runtime-proof.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -23,14 +32,23 @@ on:
     paths:
       - '.github/workflows/hall-web-runtime-proof.yml'
       - 'docs/hall-v3/web-runtime-proof.json'
+      - 'docs/hall-v3/web-vertical-slice-owner-direction.json'
+      - 'docs/hall-v3/README.md'
+      - 'docs/hall-v3/OWNER_GATED_ROADMAP.md'
       - 'docs/hall-v3/greybox-layouts.json'
       - 'docs/hall-v3/greybox-decision.json'
       - 'docs/hall-v3/camera-decision.json'
       - 'docs/hall-v3/material-decision.json'
       - 'docs/hall-v3/hall-v3-contract.json'
+      - 'src/pages/HallPage.tsx'
+      - 'src/components/hall-v3/**'
+      - 'src/routes/route-contract.json'
+      - 'playwright.config.mjs'
+      - 'qa/hall-production-route.spec.mjs'
       - 'qa/hall-web-runtime/**'
       - 'qa/hall-web-runtime.spec.mjs'
       - 'scripts/hall-web-runtime/**'
+      - 'scripts/validate-hall-foundation.ts'
       - 'scripts/validate-hall-web-runtime-proof.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -48,10 +66,11 @@ concurrency:
 jobs:
   browser-runtime-proof:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 55
     env:
       TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       HALL_WEB_PROOF_URL: http://127.0.0.1:4174
+      QA_BASE_URL: http://127.0.0.1:4173
     steps:
       - name: Checkout exact Hall web proof head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -69,8 +88,10 @@ jobs:
       - name: Set up exact repository Node dependencies
         uses: ./.github/actions/setup-node-deps
 
-      - name: Validate isolated Hall web runtime contract
-        run: node scripts/validate-hall-web-runtime-proof.mjs
+      - name: Validate Hall production and isolated runtime contracts
+        run: |
+          npm run validate:hall-foundation
+          node scripts/validate-hall-web-runtime-proof.mjs
 
       - name: Typecheck isolated Hall web runtime proof
         run: npx tsc -p qa/hall-web-runtime/tsconfig.json
@@ -98,7 +119,7 @@ jobs:
           cat hall-web-runtime-preview.log
           exit 1
 
-      - name: Run exact browser runtime proof
+      - name: Run exact isolated browser runtime proof
         run: npx playwright test --config qa/hall-web-runtime/playwright.config.mjs
 
       - name: Build measured Hall web runtime report
@@ -106,6 +127,27 @@ jobs:
 
       - name: Validate measured Hall web runtime report
         run: node scripts/hall-web-runtime/validate-runtime-report.mjs
+
+      - name: Build production site with Hall route
+        run: npm run build
+
+      - name: Start production preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup npx vite preview --host 127.0.0.1 --port 4173 > hall-production-preview.log 2>&1 &
+          echo $! > /tmp/hall-production-preview.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error "$QA_BASE_URL/hall" >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat hall-production-preview.log
+          exit 1
+
+      - name: Certify production Hall route across Chromium Android and iPhone WebKit
+        run: npx playwright test qa/hall-production-route.spec.mjs --project=chromium-core --project=android-pixel7 --project=iphone-safari
 
       - name: Record exact evidence manifest
         shell: bash
@@ -126,15 +168,19 @@ jobs:
           path: |
             qa-artifacts/hall-web-runtime
             dist-hall-web-runtime
-            test-results/hall-web-runtime
+            test-results
             hall-web-runtime-preview.log
+            hall-production-preview.log
           if-no-files-found: warn
           retention-days: 30
 
-      - name: Stop isolated preview
+      - name: Stop previews
         if: always()
         shell: bash
         run: |
           if [ -f /tmp/hall-web-runtime-preview.pid ]; then
             kill "$(cat /tmp/hall-web-runtime-preview.pid)" 2>/dev/null || true
+          fi
+          if [ -f /tmp/hall-production-preview.pid ]; then
+            kill "$(cat /tmp/hall-production-preview.pid)" 2>/dev/null || true
           fi
