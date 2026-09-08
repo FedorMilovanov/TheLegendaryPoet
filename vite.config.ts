@@ -58,9 +58,12 @@ export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
+    alias: [
+      // Keep Three route-isolated, but expose only the Hall runtime surface to
+      // Rollup instead of retaining the full namespace dynamic-import chunk.
+      { find: /^three$/, replacement: path.resolve(__dirname, 'src/components/hall-v3/three-runtime.ts') },
+      { find: '@', replacement: path.resolve(__dirname, 'src') },
+    ],
   },
   build: {
     target: 'esnext',

@@ -26,6 +26,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/actions/setup-node-deps/action.yml'
+      - '.github/actions/install-build-tools/action.yml'
       - '.github/actions/install-playwright/action.yml'
   push:
     branches: [main]
@@ -53,6 +54,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/actions/setup-node-deps/action.yml'
+      - '.github/actions/install-build-tools/action.yml'
       - '.github/actions/install-playwright/action.yml'
   workflow_dispatch:
 
@@ -127,6 +129,9 @@ jobs:
 
       - name: Validate measured Hall web runtime report
         run: node scripts/hall-web-runtime/validate-runtime-report.mjs
+
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
 
       - name: Build production site with Hall route
         run: npm run build
