@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
 
-const HASH_RETRY_LIMIT = 20;
+const HASH_OBSERVER_TIMEOUT_MS = 15_000;
 const FIXED_HEADER_OFFSET = 96;
 
 function decodeHash(hash: string) {
@@ -64,8 +64,8 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     document.documentElement.classList.remove('chrome-hidden');
 
     let cancelled = false;
+    let observer: MutationObserver | null = null;
     let timeoutId = 0;
-    let attempts = 0;
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
@@ -77,17 +77,35 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
     };
 
+    const findAndScrollToHash = () => {
+      if (!location.hash) return false;
+      const id = decodeHash(location.hash);
+      const target = id ? document.getElementById(id) : null;
+      if (!target) return false;
+      scrollToHashTarget(target);
+      return true;
+    };
+
+    const stopHashObserver = () => {
+      observer?.disconnect();
+      observer = null;
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+        timeoutId = 0;
+      }
+    };
+
     const restore = () => {
       if (cancelled) return;
       if (location.hash) {
-        const id = decodeHash(location.hash);
-        const target = id ? document.getElementById(id) : null;
-        if (target) {
-          scrollToHashTarget(target);
-          return;
-        }
-        attempts += 1;
-        if (attempts < HASH_RETRY_LIMIT) timeoutId = window.setTimeout(restore, 60);
+        if (findAndScrollToHash()) return;
+
+        observer = new MutationObserver(() => {
+          if (cancelled) return;
+          if (findAndScrollToHash()) stopHashObserver();
+        });
+        observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true });
+        timeoutId = window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS);
         return;
       }
 
@@ -99,7 +117,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
-      if (timeoutId) window.clearTimeout(timeoutId);
+      stopHashObserver();
     };
   }, [location.hash, location.key, location.pathname, navigationType]);
 
