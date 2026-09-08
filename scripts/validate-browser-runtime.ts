@@ -16,6 +16,15 @@ function readJson(relativePath: string) {
   return JSON.parse(read(relativePath)) as Record<string, any>;
 }
 
+function collectSourceFiles(directory: string): string[] {
+  const absolute = path.join(root, directory);
+  return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
+    const relative = path.join(directory, entry.name);
+    if (entry.isDirectory()) return collectSourceFiles(relative);
+    return /\.(?:ts|tsx)$/.test(entry.name) ? [relative] : [];
+  });
+}
+
 const manifest = readJson('package.json');
 const lock = readJson('package-lock.json');
 const playwrightVersion = manifest.devDependencies?.['@playwright/test'];
@@ -127,6 +136,33 @@ for (const fileName of fs.readdirSync(workflowDir).filter((name) => /\.ya?ml$/.t
   }
 }
 
+// Persistent utility animation is a state affordance, not an accessibility
+// exemption. Every production string literal that opts into Tailwind's looping
+// spin/ping/pulse/bounce utilities must carry the same reduced-motion guard.
+// Scanning the complete src tree makes this a producer policy rather than a
+// component-specific assertion: future utilities fail the canonical check too.
+const persistentUtility = /\banimate-(?:spin|ping|pulse|bounce)\b/g;
+const quotedMotionLiteral = /(['"])([^'"\n]*\banimate-(?:spin|ping|pulse|bounce)\b[^'"\n]*)\1/g;
+const templateMotionLiteral = /`([^`\n]*\banimate-(?:spin|ping|pulse|bounce)\b[^`\n]*)`/g;
+let persistentMotionLiteralCount = 0;
+for (const relativePath of collectSourceFiles('src')) {
+  const source = read(relativePath);
+  const literals = [
+    ...Array.from(source.matchAll(quotedMotionLiteral), (match) => match[2]),
+    ...Array.from(source.matchAll(templateMotionLiteral), (match) => match[1]),
+  ];
+  for (const literal of literals) {
+    const utilities = literal.match(persistentUtility) ?? [];
+    persistentMotionLiteralCount += utilities.length;
+    if (!literal.includes('motion-reduce:animate-none')) {
+      fail(`${relativePath}: persistent utility motion "${utilities.join(', ')}" must include motion-reduce:animate-none in the same class literal`);
+    }
+  }
+}
+if (persistentMotionLiteralCount === 0) {
+  fail('persistent reduced-motion policy became vacuous: expected at least one production utility animation');
+}
+
 const analyticsSource = read('src/utils/analytics.ts');
 if (!analyticsSource.includes('let sessionConsent: AnalyticsConsent | null = null')) {
   fail('analytics consent must retain an explicit same-tab memory authority when persistence is blocked');
@@ -215,5 +251,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
+  `Browser runtime validation passed: @playwright/test ${playwrightVersion}; ${expectedBrowserWorkflows.length} workflows use direct or shared committed-lockfile primitives, ${persistentMotionLiteralCount} persistent utility animation token(s) obey the canonical reduced-motion guard, blocked-storage analytics consent is executable and same-tab authoritative without persistence bypass, /hall remains in fresh-process iPhone Safari route certification, and Safari evidence waits for real route visual readiness.`,
 );
