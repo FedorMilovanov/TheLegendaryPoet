@@ -24,25 +24,27 @@ jobs:
           sudo apt-get install -y imagemagick
           convert -version
 
-      - name: Materialize 320px hero candidates
+      - name: Materialize 320px and 480px hero candidates
         run: |
           set -euo pipefail
           for name in yesenin lermontov pushkin tyutchev mayakovsky fet; do
-            convert "public/images/${name}.jpg" \
-              -auto-orient \
-              -resize 320x \
-              -strip \
-              -sampling-factor 4:2:0 \
-              -quality 70 \
-              "public/images/${name}-320.jpg"
+            for width in 320 480; do
+              convert "public/images/${name}.jpg" \
+                -auto-orient \
+                -resize "${width}x" \
+                -strip \
+                -sampling-factor 4:2:0 \
+                -quality 70 \
+                "public/images/${name}-${width}.jpg"
+            done
           done
-          identify -format '%f %wx%h %b\n' public/images/*-320.jpg | sort
-          sha256sum public/images/*-320.jpg | sort
+          identify -format '%f %wx%h %b\n' public/images/*-320.jpg public/images/*-480.jpg | sort
+          sha256sum public/images/*-320.jpg public/images/*-480.jpg | sort
 
       - name: Commit exact derivatives to repair branch
         run: |
           set -euo pipefail
-          git add public/images/*-320.jpg
+          git add public/images/*-320.jpg public/images/*-480.jpg
           if git diff --cached --quiet; then
             echo 'Derivatives already match.'
             exit 0
