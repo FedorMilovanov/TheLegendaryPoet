@@ -46,6 +46,8 @@ type TargetRecord = {
   commentsPhase: LoadPhase;
   summaryPromise: Promise<void> | null;
   commentsPromise: Promise<void> | null;
+  summaryRefreshQueued: boolean;
+  commentsResetQueued: boolean;
   snapshot: FeedbackTargetSnapshot;
   fingerprint: string;
   listeners: Set<() => void>;
@@ -200,6 +202,8 @@ function createRecord(targetType: FeedbackTargetType, targetId: string): TargetR
     commentsPhase: snapshot.commentsPhase,
     summaryPromise: null,
     commentsPromise: null,
+    summaryRefreshQueued: false,
+    commentsResetQueued: false,
     snapshot,
     fingerprint: '',
     listeners: new Set(),
@@ -270,22 +274,30 @@ function releaseSharedSubscriptionsIfIdle() {
 
 async function loadSummary(record: TargetRecord, force = false) {
   if (!remoteEnabled) return;
-  if (record.summaryPromise) return record.summaryPromise;
+  if (record.summaryPromise) {
+    if (force) record.summaryRefreshQueued = true;
+    return record.summaryPromise;
+  }
   if (!force && record.summaryPhase === 'ready') return;
 
-  record.summaryPhase = 'loading';
-  refreshRecord(record);
-  beginCommunityRemoteRead('Загружаем сводку сообщества…');
+  record.summaryRefreshQueued = false;
   record.summaryPromise = (async () => {
-    const aggregate = await fetchTargetAggregate(record.targetType, record.targetId);
-    if (!aggregate) {
-      record.summaryPhase = 'error';
-      finishCommunityRemoteRead(false);
-      return;
-    }
-    record.remoteAggregate = aggregate;
-    record.summaryPhase = 'ready';
-    finishCommunityRemoteRead(true);
+    do {
+      record.summaryRefreshQueued = false;
+      record.summaryPhase = 'loading';
+      refreshRecord(record);
+      beginCommunityRemoteRead('Загружаем сводку сообщества…');
+      const aggregate = await fetchTargetAggregate(record.targetType, record.targetId);
+      if (!aggregate) {
+        record.summaryPhase = 'error';
+        finishCommunityRemoteRead(false);
+      } else {
+        record.remoteAggregate = aggregate;
+        record.summaryPhase = 'ready';
+        finishCommunityRemoteRead(true);
+      }
+      refreshRecord(record);
+    } while (record.summaryRefreshQueued);
   })().finally(() => {
     record.summaryPromise = null;
     refreshRecord(record);
@@ -295,29 +307,38 @@ async function loadSummary(record: TargetRecord, force = false) {
 
 async function loadComments(record: TargetRecord, reset = false) {
   if (!remoteEnabled) return;
-  if (record.commentsPromise) return record.commentsPromise;
+  if (record.commentsPromise) {
+    if (reset) record.commentsResetQueued = true;
+    return record.commentsPromise;
+  }
   if (!reset && record.commentsPhase === 'ready' && !record.nextCursor) return;
 
-  record.commentsPhase = 'loading';
-  refreshRecord(record);
-  beginCommunityRemoteRead('Загружаем комментарии…');
-  const cursor = reset ? null : record.nextCursor;
+  record.commentsResetQueued = false;
   record.commentsPromise = (async () => {
-    const page = await fetchTargetCommentsPage(record.targetType, record.targetId, cursor);
-    if (!page) {
-      record.commentsPhase = 'error';
-      finishCommunityRemoteRead(false);
-      return;
-    }
-
-    const byId = new Map((reset ? [] : record.remoteComments).map((comment) => [comment.id, comment]));
-    for (const comment of page.comments) byId.set(comment.id, comment);
-    record.remoteComments = [...byId.values()].sort(
-      (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.id.localeCompare(left.id),
-    );
-    record.nextCursor = page.nextCursor;
-    record.commentsPhase = 'ready';
-    finishCommunityRemoteRead(true);
+    let resetThisPass = reset;
+    do {
+      record.commentsResetQueued = false;
+      record.commentsPhase = 'loading';
+      refreshRecord(record);
+      beginCommunityRemoteRead('Загружаем комментарии…');
+      const cursor = resetThisPass ? null : record.nextCursor;
+      const page = await fetchTargetCommentsPage(record.targetType, record.targetId, cursor);
+      if (!page) {
+        record.commentsPhase = 'error';
+        finishCommunityRemoteRead(false);
+      } else {
+        const byId = new Map((resetThisPass ? [] : record.remoteComments).map((comment) => [comment.id, comment]));
+        for (const comment of page.comments) byId.set(comment.id, comment);
+        record.remoteComments = [...byId.values()].sort(
+          (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.id.localeCompare(left.id),
+        );
+        record.nextCursor = page.nextCursor;
+        record.commentsPhase = 'ready';
+        finishCommunityRemoteRead(true);
+      }
+      refreshRecord(record);
+      resetThisPass = record.commentsResetQueued;
+    } while (resetThisPass);
   })().finally(() => {
     record.commentsPromise = null;
     refreshRecord(record);
