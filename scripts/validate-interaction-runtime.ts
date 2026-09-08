@@ -177,6 +177,9 @@ expect(commandSource.includes('restoreFocusRef.current = false'), 'command navig
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
 expect(commandSource.includes('onPointerDown'), 'the command backdrop must support pointer and touch input');
+expect(commandSource.includes('const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>)'), 'command Arrow/Enter handling must be owned by the combobox input');
+expect(commandSource.includes('onKeyDown={onInputKeyDown}'), 'the command combobox must bind its keyboard navigation directly');
+expect(!commandSource.includes('onKeyDown={onDialogKeyDown}'), 'the command dialog must not intercept Enter from focused close/result buttons');
 expect(immersiveSource.includes('useDialogSurface'), 'immersive playback must use the shared dialog lifecycle');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');
@@ -201,4 +204,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Interaction runtime validation passed: centralized Escape, route focus, rating draft safety, resilient images and bounded pointer effects.');
+console.log('Interaction runtime validation passed: centralized Escape, command keyboard ownership, route focus, rating draft safety, resilient images and bounded pointer effects.');
