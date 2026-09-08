@@ -5,6 +5,7 @@ const files = [
   'qa/home-polish.spec.mjs',
   'qa/home-labels.spec.mjs',
   'qa/home-ambient.spec.mjs',
+  'qa/home-media-perf.spec.mjs',
 ];
 const common = [
   '--config=playwright.home-polish.config.mjs',
