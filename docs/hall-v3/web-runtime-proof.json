@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "laneId": "TLP-HALL-WEB-PROOF-001",
+  "productIssue": 463,
+  "status": "owner-directed-isolated-runtime-proof",
+  "authority": {
+    "topology": "H3",
+    "layoutFingerprint": "5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65",
+    "cameraRig": "R1",
+    "lighting": "L0-minimal-runtime",
+    "surfaceUv": "UV0"
+  },
+  "productionBoundary": {
+    "productionRoute": "/hall",
+    "productionRouteActivated": false,
+    "productionAcceptance": false,
+    "documentaryMediaAllowed": false,
+    "legacyHallAuthorityAllowed": false,
+    "fullMuseumScaleOutAllowed": false
+  },
+  "runtimeContract": {
+    "guidedCameraStops": [
+      "entryReveal",
+      "orientation",
+      "firstTransition",
+      "pushkinApproach",
+      "pushkinViewing",
+      "reverseExit"
+    ],
+    "freeWalkAllowed": false,
+    "reducedMotionBehavior": "deterministic-cut",
+    "webglUnavailableFallbackRequired": true,
+    "webglContextLossFallbackRequired": true,
+    "documentaryMedia": "excluded"
+  },
+  "browserWitnesses": {
+    "requiredWebglSuccess": "chromium-desktop",
+    "requiredMobileWebkit": "webkit-iphone",
+    "mobileWebkitMayUseSemanticFallback": true
+  },
+  "thresholds": {
+    "totalBuildBytesMax": 1500000,
+    "jsBytesMax": 1200000,
+    "cssBytesMax": 65536,
+    "drawCallsMax": 40,
+    "trianglesMax": 15000,
+    "texturesMax": 0,
+    "chromiumFirstFrameMsMax": 5000
+  },
+  "evidence": {
+    "reportPath": "qa-artifacts/hall-web-runtime/runtime-budget.json",
+    "artifactNamePrefix": "hall-web-runtime-proof-",
+    "exactTestedShaRequired": true
+  }
+}
