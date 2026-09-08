@@ -74,7 +74,23 @@ expect(contract.productionBoundary?.productionAsset === false && contract.produc
 expect(owner.status === 'owner-offline-authoring-authorized' && owner.offlineAuthoring?.authorized === true && owner.offlineAuthoring?.productionShippingAuthorizedByThisDecision === false, 'offline exhibit requires exact owner authoring authority without production shipping');
 expect(slice.status === 'offline-authoring-authorized-production-rights-pending' && slice.productionBoundary?.offlineSourceEvidenceMediaAllowed === true && slice.productionBoundary?.productionManifestAllowed === false, 'slice must allow offline evidence while production remains blocked');
 expect(acquisition.currentOutcome?.offlineBlenderSourceEvidenceAllowed === true && acquisition.currentOutcome?.productionManifestAllowed === false && acquisition.currentOutcome?.productionWebglMayBegin === false, 'acquisition authority must allow only bounded offline source evidence');
-expect(hallContract.productionRoute?.mode === 'placeholder' && hallContract.productionRoute?.allowThreeRuntimeImports === false, 'production /hall must remain lightweight placeholder during offline exhibit authoring');
+if (hallContract.phase === 'pushkinVerticalSlice') {
+  expect(
+    hallContract.productionRoute?.mode === 'placeholder' && hallContract.productionRoute?.allowThreeRuntimeImports === false,
+    'pushkinVerticalSlice must keep production /hall as lightweight placeholder',
+  );
+} else {
+  expect(hallContract.phase === 'webVerticalSlice', `offline exhibit validator does not recognize later Hall phase: ${hallContract.phase ?? '<missing>'}`);
+  expect(
+    hallContract.productionRoute?.mode === 'web-vertical-slice' &&
+      hallContract.productionRoute?.allowThreeRuntimeImports === true &&
+      hallContract.productionRoute?.allowRightsPendingDocumentaryMedia === false &&
+      hallContract.gates?.offlineVisualApproval === 'blocked' &&
+      hallContract.gates?.webVerticalSlice === 'active' &&
+      hallContract.gates?.fullMuseumScaleOut === 'blocked',
+    'later owner-directed webVerticalSlice must preserve documentary/offline-approval/full-scale gates while allowing bounded production WebGL',
+  );
+}
 
 expect(prep.includes("hostname !== 'upload.wikimedia.org'") && prep.includes('source hash mismatch'), 'offline source preparation must re-download exact Wikimedia bytes and verify hashes');
 expect(prep.includes("pdftoppm") && prep.includes("'-f', '1'") && prep.includes("'-r', '240'"), 'Onegin offline title page must be deterministic page-1 240 DPI derivative');

@@ -75,5 +75,5 @@ test('production Hall falls back after a real WebGL context loss when extension 
   });
   test.skip(!lost, 'WEBGL_lose_context extension is unavailable on this runner');
   await expect(root).toHaveAttribute('data-hall-production-mode', 'fallback', { timeout: 10_000 });
-  await expect(page.getByText(/webgl-context-lost/)).toBeVisible();
+  await expect(page.getByText('3D недоступен: webgl-context-lost', { exact: true })).toBeAttached();
 });

@@ -91,7 +91,9 @@
         "scripts/validate-hall-web-runtime-proof.mjs",
         "package.json",
         "package-lock.json",
+        "vite.config.ts",
         ".github/actions/setup-node-deps/action.yml",
+        ".github/actions/install-build-tools/action.yml",
         ".github/actions/install-playwright/action.yml"
       ]
     }
