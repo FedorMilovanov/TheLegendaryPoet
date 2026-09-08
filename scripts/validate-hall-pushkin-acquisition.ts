@@ -155,7 +155,7 @@ expect(byteEvidenceWorkflow.includes('\n  pull_request:\n') && byteEvidenceWorkf
 for (const triggerInput of SOURCE_BYTE_TRIGGER_INPUTS) {
   expect(countOccurrences(byteEvidenceWorkflow, `'${triggerInput}'`) >= 2, `source-byte evidence workflow must cover ${triggerInput} in both pull_request and main push paths`);
 }
-expect(byteEvidenceWorkflow.includes('uses: actions/setup-node@v4') && byteEvidenceWorkflow.includes("node-version: '24'"), 'source-byte workflow must use an explicit isolated Node 24 runtime');
+expect(byteEvidenceWorkflow.includes('uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4') && byteEvidenceWorkflow.includes("node-version: '24'"), 'source-byte workflow must use the immutable setup-node v4 commit with an explicit isolated Node 24 runtime');
 expect(!byteEvidenceWorkflow.includes('./.github/actions/setup-node-deps'), 'source-byte workflow must not depend on the repository npm-installing setup action');
 expect(!byteEvidenceWorkflow.includes('npm ci') && !byteEvidenceWorkflow.includes('npm install') && !byteEvidenceWorkflow.includes('pnpm ') && !byteEvidenceWorkflow.includes('yarn '), 'source-byte workflow must not install application package dependencies');
 expect(byteEvidenceWorkflow.includes('Upload source-byte identity evidence only'), 'source-byte workflow must upload evidence rather than source media');

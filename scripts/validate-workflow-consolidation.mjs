@@ -131,13 +131,57 @@ for (const [modulePath, budgetBytes] of expectedRouteBudgets) {
   expect(route?.budgetBytes === budgetBytes, `route contract budget drifted for ${modulePath}: expected ${budgetBytes}, found ${route?.budgetBytes}`);
 }
 
-const workflowDir = path.join(root, '.github', 'workflows');
-const workflowTexts = fs.readdirSync(workflowDir)
-  .filter((name) => /\.ya?ml$/i.test(name))
-  .map((name) => [name, fs.readFileSync(path.join(workflowDir, name), 'utf8')]);
+function collectYamlFiles(relativeDir, predicate = () => true) {
+  const absoluteDir = path.join(root, relativeDir);
+  const files = [];
+  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
+    const relativePath = path.posix.join(relativeDir, entry.name);
+    if (entry.isDirectory()) files.push(...collectYamlFiles(relativePath, predicate));
+    else if (predicate(entry.name)) files.push(relativePath);
+  }
+  return files;
+}
+
+const workflowPaths = collectYamlFiles('.github/workflows', (name) => /\.ya?ml$/i.test(name));
+const compositeActionPaths = collectYamlFiles('.github/actions', (name) => /^action\.ya?ml$/i.test(name));
+const actionSourcePaths = [...workflowPaths, ...compositeActionPaths].sort();
+const externalActionUses = [];
+const mutableExternalActionUses = [];
+const unsupportedExternalActionUses = [];
+const externalUsePattern = /^\s*uses:\s*([^\s#]+)(?:\s+#.*)?$/gm;
+const immutableExternalUsePattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*@[0-9a-f]{40}$/i;
+
+for (const sourcePath of actionSourcePaths) {
+  const source = read(sourcePath);
+  for (const match of source.matchAll(externalUsePattern)) {
+    const use = match[1];
+    if (use.startsWith('./')) continue;
+    externalActionUses.push({ sourcePath, use });
+    if (!use.includes('@') || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*@/.test(use)) {
+      unsupportedExternalActionUses.push({ sourcePath, use });
+      continue;
+    }
+    if (!immutableExternalUsePattern.test(use)) mutableExternalActionUses.push({ sourcePath, use });
+  }
+}
+
+for (const { sourcePath, use } of unsupportedExternalActionUses) {
+  failures.push(`${sourcePath}: unsupported external uses reference must be reviewed and immutable: ${use}`);
+}
+for (const { sourcePath, use } of mutableExternalActionUses) {
+  failures.push(`${sourcePath}: external action must be pinned to a full 40-hex commit SHA: ${use}`);
+}
+expect(workflowPaths.length === 22, `workflow inventory drifted: expected 22 workflow YAML files, found ${workflowPaths.length}`);
+expect(compositeActionPaths.length === 4, `composite action inventory drifted: expected 4 action YAML files, found ${compositeActionPaths.length}`);
+expect(externalActionUses.length > 0, 'external action inventory unexpectedly empty');
+
+const workflowTexts = workflowPaths.map((relativePath) => [path.basename(relativePath), read(relativePath)]);
 const inventory = {
   workflows: workflowTexts.length,
-  setupNode: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/actions\/setup-node@v4/g) ?? []).length, 0),
+  compositeActions: compositeActionPaths.length,
+  externalActionUses: externalActionUses.length,
+  mutableExternalActionUses: mutableExternalActionUses.length + unsupportedExternalActionUses.length,
+  setupNode: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/actions\/setup-node@[^\s#]+/g) ?? []).length, 0),
   npmCi: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/\bnpm ci\b/g) ?? []).length, 0),
   aptInstall: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/apt-get install/g) ?? []).length, 0),
   previewLoops: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/npm run preview -- --host/g) ?? []).length, 0),
@@ -152,4 +196,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical reader/browser validators are merge-blocking`);
+console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical reader/browser validators are merge-blocking; external GitHub Actions are immutable-SHA pinned`);

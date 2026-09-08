@@ -50,7 +50,7 @@ const setupAction = fs.existsSync(path.join(root, setupActionPath)) ? read(setup
 const playwrightAction = fs.existsSync(path.join(root, playwrightActionPath)) ? read(playwrightActionPath) : '';
 
 if (setupAction) {
-  if (!setupAction.includes('actions/setup-node@v4')) fail(`${setupActionPath}: must use actions/setup-node@v4`);
+  if (!setupAction.includes('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4')) fail(`${setupActionPath}: must use the immutable setup-node v4 commit`);
   if (!setupAction.includes('npm ci')) fail(`${setupActionPath}: default dependency installation must be npm ci`);
   if (!setupAction.includes('cache: npm')) fail(`${setupActionPath}: npm cache must remain enabled`);
 }

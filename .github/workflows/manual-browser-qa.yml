@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout exact browser tested head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact browser checkout identity
@@ -51,7 +51,7 @@ jobs:
           exit $status
       - name: Upload production build diagnostics
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: production-build-diagnostics-${{ env.TESTED_SHA }}
           path: |
@@ -102,7 +102,7 @@ jobs:
         run: node scripts/run-webkit-process-isolated.mjs
       - name: Upload core browser QA evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: manual-browser-core-evidence-${{ env.TESTED_SHA }}
           path: |
@@ -121,7 +121,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout exact Safari home tested head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact Safari home checkout identity
@@ -152,7 +152,7 @@ jobs:
         run: node scripts/run-webkit-home-reveal-process-isolated.mjs
       - name: Upload Safari home browser QA evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: manual-browser-webkit-home-evidence-${{ env.TESTED_SHA }}
           path: |
@@ -169,7 +169,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout exact premium tested head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact premium checkout identity
@@ -202,7 +202,7 @@ jobs:
           node scripts/run-home-polish-process-isolated.mjs 2>&1 | tee home-polish.log
       - name: Upload standard premium browser QA evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: manual-browser-premium-evidence-${{ env.TESTED_SHA }}
           path: |
@@ -220,7 +220,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout exact critical iPhone tested head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact critical iPhone checkout identity
@@ -253,7 +253,7 @@ jobs:
           node scripts/run-home-polish-iphone-critical-process-isolated.mjs 2>&1 | tee home-iphone-critical.log
       - name: Upload critical iPhone browser QA evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: manual-browser-premium-iphone-critical-evidence-${{ env.TESTED_SHA }}
           path: |
