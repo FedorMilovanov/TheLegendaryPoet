@@ -8,6 +8,9 @@ const outputPath = path.join(evidenceDir, 'runtime-budget.json');
 const testedSha = process.env.TESTED_SHA || process.env.GITHUB_SHA || null;
 const contract = JSON.parse(fs.readFileSync(path.join(root, 'docs/hall-v3/web-runtime-proof.json'), 'utf8'));
 const expectedBrowserAuthority = { ...contract.authority, documentaryMedia: contract.runtimeContract.documentaryMedia };
+const harnessSource = fs.readFileSync(path.join(root, 'qa/hall-web-runtime/main.ts'), 'utf8');
+const applicationTextureApiPattern = /\b(?:TextureLoader|CubeTextureLoader|DataTexture|CanvasTexture|VideoTexture|CompressedTexture|KTX2Loader)\b/g;
+const applicationTextureSources = harnessSource.match(applicationTextureApiPattern) ?? [];
 
 function walk(dir) {
   const out = [];
@@ -52,6 +55,10 @@ const report = {
   productionAcceptance: contract.productionBoundary.productionAcceptance,
   productionRouteActivated: contract.productionBoundary.productionRouteActivated,
   authority: chromiumRuntime.state.authority,
+  applicationTextureSources: {
+    count: applicationTextureSources.length,
+    tokens: [...new Set(applicationTextureSources)].sort(),
+  },
   build: { totalBytes, jsBytes, cssBytes, files: relativeBuildFiles },
   chromium: {
     evidenceFile: chromiumRuntime.file,
@@ -71,4 +78,10 @@ const report = {
 
 fs.mkdirSync(evidenceDir, { recursive: true });
 fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-console.log(JSON.stringify({ outputPath: path.relative(root, outputPath), ...report.build, chromium: report.chromium, webkit: report.webkit }, null, 2));
+console.log(JSON.stringify({
+  outputPath: path.relative(root, outputPath),
+  ...report.build,
+  applicationTextureSources: report.applicationTextureSources,
+  chromium: report.chromium,
+  webkit: report.webkit,
+}, null, 2));
