@@ -98,6 +98,16 @@ expect(ci.includes('./.github/actions/setup-node-deps'), 'CI must use the shared
 expect(ci.includes('./.github/actions/install-build-tools'), 'CI must use the shared deterministic build tools setup');
 expect(ci.includes('dist/build-budget-report.json'), 'CI must retain the machine-readable build budget report');
 
+const canonicalRequiredValidators = [
+  'validate:reader-certification',
+  'validate:browser-runtime',
+];
+for (const validator of canonicalRequiredValidators) {
+  expect(packageJson.scripts?.check?.includes(validator), `repository-wide check must retain ${validator}`);
+  expect(ci.includes(`npm run ${validator}`), `required verify must execute canonical validator ${validator} before merge`);
+  expect((ci.match(new RegExp(`npm run ${validator.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g')) ?? []).length === 1, `required verify must execute ${validator} exactly once`);
+}
+
 for (const token of [
   'ENTRY_BUDGET_BYTES = 665_000',
   'SINGLE_JS_BUDGET_BYTES = 665_000',
@@ -142,4 +152,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}`);
+console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical reader/browser validators are merge-blocking`);
