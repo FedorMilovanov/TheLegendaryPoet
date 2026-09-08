@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './qa',
-  testMatch: /home-(?:polish|labels|ambient)\.spec\.mjs/,
+  testMatch: /home-(?:polish|labels|ambient|media-perf)\.spec\.mjs/,
   timeout: 45_000,
   expect: { timeout: 20_000 },
   // Keep one fresh browser retry for process-level diagnosis, but do not call
