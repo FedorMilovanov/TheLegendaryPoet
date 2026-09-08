@@ -57,6 +57,9 @@ for (const [token, sources] of [
   ["cameraStopNames = ['entryReveal', 'orientation', 'firstTransition', 'pushkinApproach', 'pushkinViewing', 'reverseExit']", [harness]],
   ['forceWebglFailure', [harness]],
   ['webglcontextlost', [harness]],
+  ['cleanupRuntimeListeners', [harness]],
+  ["window.removeEventListener('resize', onResize)", [harness]],
+  ["activeRenderer.domElement.removeEventListener('webglcontextlost', onContextLost)", [harness]],
   ['prefers-reduced-motion: reduce', [harnessStyles]],
   ['TESTED_SHA:', [proofWorkflow]],
   ["'docs/hall-v3/web-runtime-proof.json'", [proofWorkflow]],
@@ -82,4 +85,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Hall web runtime proof contract: OK — isolated typed H3/R1/L0/UV0 harness, guided camera, no documentary media, no legacy authority, production /hall unchanged.');
+console.log('Hall web runtime proof contract: OK — isolated typed H3/R1/L0/UV0 harness, guided camera, lifecycle-safe semantic fallback, no documentary media, no legacy authority, production /hall unchanged.');
