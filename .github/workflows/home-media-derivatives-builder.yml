@@ -1,0 +1,53 @@
+name: Home media derivatives builder
+
+on:
+  push:
+    branches: [fix/home-media-perf-471]
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: ${{ !contains(github.event.head_commit.message, '[home-media-derived]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: fix/home-media-perf-471
+          fetch-depth: 1
+
+      - name: Install deterministic image tooling from runner distribution
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+          convert -version
+
+      - name: Materialize 320px hero candidates
+        run: |
+          set -euo pipefail
+          for name in yesenin lermontov pushkin tyutchev mayakovsky fet; do
+            convert "public/images/${name}.jpg" \
+              -auto-orient \
+              -resize 320x \
+              -strip \
+              -sampling-factor 4:2:0 \
+              -quality 70 \
+              "public/images/${name}-320.jpg"
+          done
+          identify -format '%f %wx%h %b\n' public/images/*-320.jpg | sort
+          sha256sum public/images/*-320.jpg | sort
+
+      - name: Commit exact derivatives to repair branch
+        run: |
+          set -euo pipefail
+          git add public/images/*-320.jpg
+          if git diff --cached --quiet; then
+            echo 'Derivatives already match.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build(home): add responsive hero derivatives [home-media-derived]'
+          git push origin HEAD:fix/home-media-perf-471
