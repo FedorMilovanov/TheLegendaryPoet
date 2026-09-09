@@ -12,12 +12,20 @@
 import { safeRead, safeWrite } from './browserStorage';
 
 export type AnalyticsConsent = 'granted' | 'denied';
+export type AnalyticsRouteSnapshot = Readonly<{
+  pathname: string;
+  search: string;
+  path: string;
+  title: string;
+}>;
 
 const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
 export const ANALYTICS_CONSENT_EVENT = 'tlp:analytics-consent-change';
+export const ANALYTICS_ROUTE_SETTLED_EVENT = 'tlp:analytics-route-settled';
 
 let started = false;
 let sessionConsent: AnalyticsConsent | null = null;
+let settledRoute: AnalyticsRouteSnapshot | null = null;
 
 function metrikaId() {
   return (import.meta.env.VITE_YANDEX_METRIKA_ID as string | undefined)?.trim();
@@ -49,6 +57,22 @@ export function setAnalyticsConsent(value: AnalyticsConsent) {
   sessionConsent = value;
   safeWrite(CONSENT_STORAGE_KEY, value);
   window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
+}
+
+export function getSettledAnalyticsRoute() {
+  return settledRoute;
+}
+
+export function settleAnalyticsRoute(pathname: string, search: string, title: string) {
+  if (typeof window === 'undefined') return;
+  const snapshot: AnalyticsRouteSnapshot = Object.freeze({
+    pathname,
+    search,
+    path: `${pathname}${search}`,
+    title,
+  });
+  settledRoute = snapshot;
+  window.dispatchEvent(new CustomEvent<AnalyticsRouteSnapshot>(ANALYTICS_ROUTE_SETTLED_EVENT, { detail: snapshot }));
 }
 
 export function initAnalytics() {
