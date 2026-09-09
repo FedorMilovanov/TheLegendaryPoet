@@ -192,8 +192,17 @@ test.describe('reduced-motion longform reader journey', () => {
     expect(geometry.postArticleTail).toBeGreaterThan(120);
 
     const readProgress = async () => Number(await progress.getAttribute('aria-valuenow'));
+    const readScrollTop = async () => page.evaluate(() => Math.round(window.scrollY));
     const scrollTo = async (top) => {
-      await page.evaluate((nextTop) => window.scrollTo({ top: nextTop, behavior: 'auto' }), top);
+      const target = Math.round(top);
+      await page.evaluate((nextTop) => {
+        const scroller = document.scrollingElement || document.documentElement;
+        scroller.scrollTop = nextTop;
+      }, target);
+      await expect.poll(
+        readScrollTop,
+        { timeout: 5_000, message: `physical reader scroll should reach ${target}px before progress is asserted` },
+      ).toBeCloseTo(target, 0);
     };
 
     await scrollTo(geometry.articleTop);
