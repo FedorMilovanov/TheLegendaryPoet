@@ -139,6 +139,14 @@ export function getBrowserEssayBySlug(slug: string, visitKey: string): Promise<E
           throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
         }
 
+        const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+        if (contentType.includes('text/html')) {
+          // Static SPA hosts and Vite preview may answer a missing JSON asset
+          // with index.html + 200. Treat that host fallback as route-not-found,
+          // while real JSON errors and malformed JSON remain fail-closed.
+          return undefined;
+        }
+
         const value = await response.json() as unknown;
         const summary = assertSummary(value, `Essay payload ${slug}`);
         const essay = value as Partial<Essay>;

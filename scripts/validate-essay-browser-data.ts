@@ -87,6 +87,15 @@ if (!primaryLoaderSource.includes('fetch(`${payloadRoot}${encodeURIComponent(slu
 if (!primaryLoaderSource.includes('response.status === 404')) {
   throw new Error('primary essay loader must preserve an explicit payload-level not-found outcome');
 }
+if (!primaryLoaderSource.includes("response.headers.get('content-type')")) {
+  throw new Error('primary essay loader must inspect payload content type before parsing host fallbacks');
+}
+if (!primaryLoaderSource.includes("contentType.includes('text/html')")) {
+  throw new Error('primary essay loader must classify only HTML SPA fallback as a host-level not-found outcome');
+}
+if (!primaryLoaderSource.includes('const value = await response.json() as unknown')) {
+  throw new Error('primary essay loader must continue parsing actual non-HTML success responses as JSON');
+}
 
 if (!browserAdapterSource.includes('export function getOptionalBrowserEssayCatalog')) {
   throw new Error('browser essay adapter must expose a fail-soft optional catalog authority');
@@ -123,5 +132,5 @@ if (!/<Suspense\s+fallback=\{null\}>[\s\S]*?<EssaySeriesNavigation\s+essay=\{ess
 }
 
 console.log(
-  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser src scan found no eager full-corpus consumer, ${browserPublishedConsumers.length} expected consumers use the generated adapter, and primary-route readiness is isolated from optional catalog failure.`,
+  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser src scan found no eager full-corpus consumer, ${browserPublishedConsumers.length} expected consumers use the generated adapter, primary-route readiness is isolated from optional catalog failure, and HTML SPA fallback preserves honest unknown-slug semantics without weakening JSON failures.`,
 );
