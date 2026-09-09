@@ -22,6 +22,7 @@ import ImmersivePlayer from './components/music/ImmersivePlayer';
 import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 import { applicationRoutes, legacyRedirects, NotFoundPage } from './routes/routeModules';
+import { settleAnalyticsRoute } from './utils/analytics';
 
 const WipeOverlay = () => (
   <motion.div
@@ -58,16 +59,20 @@ function RouteContent() {
   const location = useLocation();
   const outlet = useOutlet();
   const renderedPathRef = useRef(location.pathname);
+  const locationSearchRef = useRef(location.search);
   const shouldFocusOnSettleRef = useRef(false);
   const [announcement, setAnnouncement] = useState('');
 
+  locationSearchRef.current = location.search;
   if (renderedPathRef.current !== location.pathname) {
     renderedPathRef.current = location.pathname;
     shouldFocusOnSettleRef.current = true;
   }
 
   const handleSettled = useCallback(() => {
-    setAnnouncement(document.title || 'Страница открыта');
+    const settledTitle = document.title || 'Страница открыта';
+    setAnnouncement(settledTitle);
+    settleAnalyticsRoute(location.pathname, locationSearchRef.current, settledTitle);
     // The render boundary records every pathname transition, including a
     // return to the URL that opened the session. The first document render is
     // passive, while every real SPA transition owns focus after lazy content
