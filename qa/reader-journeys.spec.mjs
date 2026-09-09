@@ -191,18 +191,33 @@ test.describe('reduced-motion longform reader journey', () => {
     expect(geometry.articleEndScroll).toBeGreaterThan(geometry.articleTop + 500);
     expect(geometry.postArticleTail).toBeGreaterThan(120);
 
+    await page.evaluate(() => {
+      window.__tlpReaderNativeScrollEvents = 0;
+      window.addEventListener('scroll', () => {
+        window.__tlpReaderNativeScrollEvents += 1;
+      }, { passive: true });
+    });
+
     const readProgress = async () => Number(await progress.getAttribute('aria-valuenow'));
     const readScrollTop = async () => page.evaluate(() => Math.round(window.scrollY));
+    const readScrollEvents = async () => page.evaluate(() => window.__tlpReaderNativeScrollEvents || 0);
     const scrollTo = async (top) => {
       const target = Math.round(top);
+      const eventsBefore = await readScrollEvents();
       await page.evaluate((nextTop) => {
-        const scroller = document.scrollingElement || document.documentElement;
-        scroller.scrollTop = nextTop;
+        window.scrollTo({ top: nextTop, left: 0, behavior: 'auto' });
       }, target);
       await expect.poll(
         readScrollTop,
         { timeout: 5_000, message: `physical reader scroll should reach ${target}px before progress is asserted` },
       ).toBeCloseTo(target, 0);
+      await expect.poll(
+        readScrollEvents,
+        { timeout: 5_000, message: `native reader scroll event should be delivered after reaching ${target}px` },
+      ).toBeGreaterThan(eventsBefore);
+      await page.evaluate(() => new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }));
     };
 
     await scrollTo(geometry.articleTop);
