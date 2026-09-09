@@ -43,6 +43,7 @@ jobs:
         id: production_build
         env:
           VITE_BASE: /
+          VITE_GA_ID: G-TLP-ROUTE-QA
         run: |
           set +e
           { npm run sitemap; npm run build; npm run validate:build-output; } > production-build.log 2>&1
@@ -77,6 +78,7 @@ jobs:
           qa/rating-urlstate.spec.mjs
           qa/audio-completion.spec.mjs
           qa/audio-cross-tab.spec.mjs
+          qa/analytics-route.spec.mjs
           qa/focused-interactions.spec.mjs
           qa/theme-contrast.spec.mjs
           qa/reader-text.spec.mjs
@@ -95,6 +97,15 @@ jobs:
           --project=chromium-core
           --project=android-pixel7
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
+          --workers=1
+          --reporter=line
+      - name: Run analytics route lifecycle on iPhone Safari
+        if: ${{ always() && steps.production_build.outcome == 'success' }}
+        run: >-
+          npx playwright test
+          qa/analytics-route.spec.mjs
+          --config=playwright.config.mjs
+          --project=iphone-safari
           --workers=1
           --reporter=line
       - name: Run base iPhone Safari QA in fresh browser processes
