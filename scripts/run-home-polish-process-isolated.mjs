@@ -5,12 +5,20 @@ const files = [
   'qa/home-polish.spec.mjs',
   'qa/home-labels.spec.mjs',
   'qa/home-ambient.spec.mjs',
+  'qa/home-media-perf.spec.mjs',
 ];
 const common = [
   '--config=playwright.home-polish.config.mjs',
   '--workers=1',
   '--reporter=line',
 ];
+
+const contract = spawnSync(process.execPath, ['scripts/validate-home-media-perf.mjs'], { stdio: 'inherit' });
+if (contract.error) throw contract.error;
+if (contract.signal || contract.status !== 0) {
+  console.error(`[home-process] media performance contract failed${contract.signal ? ` with signal ${contract.signal}` : ` with status ${contract.status}`}`);
+  process.exit(contract.status ?? 1);
+}
 
 const suites = [
   { id: 'desktop-premium', project: 'home-desktop', files },

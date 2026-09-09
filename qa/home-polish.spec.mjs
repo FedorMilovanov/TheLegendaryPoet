@@ -172,9 +172,8 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
     loading: image.getAttribute('loading'),
     fetchPriority: image.getAttribute('fetchpriority'),
   })));
-  expect(imageHints.every((image) => image.loading === 'eager')).toBe(true);
-  expect(imageHints.slice(0, 2).every((image) => image.fetchPriority === 'high')).toBe(true);
-  expect(imageHints.slice(2).every((image) => image.fetchPriority !== 'high')).toBe(true);
+  expect(imageHints.slice(0, 2).every((image) => image.loading === 'eager' && image.fetchPriority === 'high')).toBe(true);
+  expect(imageHints.slice(2).every((image) => image.loading === 'lazy' && image.fetchPriority === 'low')).toBe(true);
 
   await waitForHeroReveal(page);
 

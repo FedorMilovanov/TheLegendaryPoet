@@ -1,4 +1,4 @@
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   motion,
   useMotionValue,
@@ -7,6 +7,7 @@ import {
   useTransform,
 } from 'framer-motion';
 import type { Poet } from '../../types/poet';
+import { asset } from '../../utils/asset';
 import PoetImage from '../PoetImage';
 import { Link } from '../ui/Link';
 import './hero-poet-window.css';
@@ -17,8 +18,27 @@ interface HeroPoetWindowProps {
 }
 
 const pointerSpring = { stiffness: 205, damping: 27, mass: 0.7 };
+const HERO_PORTRAIT_SIZES = '(min-width: 1088px) 164px, (min-width: 1024px) calc((100vw - 204px) / 6 + 16px), (min-width: 640px) calc((100vw - 148px) / 6 + 16px), calc((100vw - 64px) / 3 + 16px)';
+
+function buildHeroPortraitPrimary(photo: string | undefined) {
+  return photo?.replace(/\.jpg$/i, '-320.jpg');
+}
+
+function buildHeroPortraitSrcSet(photo: string | undefined) {
+  if (!photo || !/\.jpg$/i.test(photo)) return undefined;
+  const stem = photo.replace(/\.jpg$/i, '');
+  return [
+    `${asset(`${stem}-320.jpg`)} 320w`,
+    `${asset(`${stem}-480.jpg`)} 480w`,
+    `${asset(photo)} 1000w`,
+  ].join(', ');
+}
 
 export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
+  const isHighPriority = index < 2;
+  const [mediaReleased, setMediaReleased] = useState(() => (
+    isHighPriority || (typeof document !== 'undefined' && document.readyState === 'complete')
+  ));
   const cardRef = useRef<HTMLDivElement>(null);
   const boundsRef = useRef<DOMRect | null>(null);
   const pointerFrameRef = useRef<number | null>(null);
@@ -28,7 +48,8 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
   const pointerY = useMotionValue(0);
   const smoothX = useSpring(pointerX, pointerSpring);
   const smoothY = useSpring(pointerY, pointerSpring);
-  const isHighPriority = index < 2;
+  const portraitPrimary = mediaReleased ? buildHeroPortraitPrimary(poet.photo) : undefined;
+  const portraitSrcSet = mediaReleased ? buildHeroPortraitSrcSet(poet.photo) : undefined;
 
   // One pair of smoothed pointer values drives every depth layer. The previous
   // implementation allocated six independent springs per card, multiplying
@@ -78,6 +99,29 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
 
   useEffect(() => () => cancelPointerFrame(), []);
 
+  useEffect(() => {
+    if (isHighPriority || mediaReleased) return;
+
+    let releaseFrame: number | null = null;
+    const releaseAfterLoad = () => {
+      releaseFrame = requestAnimationFrame(() => {
+        releaseFrame = null;
+        setMediaReleased(true);
+      });
+    };
+
+    if (document.readyState === 'complete') {
+      releaseAfterLoad();
+    } else {
+      window.addEventListener('load', releaseAfterLoad, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener('load', releaseAfterLoad);
+      if (releaseFrame !== null) cancelAnimationFrame(releaseFrame);
+    };
+  }, [isHighPriority, mediaReleased]);
+
   return (
     <motion.div
       data-hero-poet-window-shell
@@ -116,12 +160,16 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
               className="absolute -inset-2"
             >
               <PoetImage
-                src={poet.photo}
+                src={portraitPrimary}
+                srcSet={portraitSrcSet}
+                sizes={portraitSrcSet ? HERO_PORTRAIT_SIZES : undefined}
                 name={poet.name}
                 alt={`Портрет: ${poet.name}`}
                 priority={isHighPriority}
-                loading="eager"
-                fetchPriority={isHighPriority ? 'high' : 'auto'}
+                loading={isHighPriority ? 'eager' : 'lazy'}
+                fetchPriority={isHighPriority ? 'high' : 'low'}
+                data-hero-portrait-critical={isHighPriority ? 'true' : 'false'}
+                data-hero-portrait-released={mediaReleased ? 'true' : 'false'}
                 className="hero-poet-window-image h-full w-full scale-[1.04] object-cover grayscale contrast-125 opacity-75 saturate-[0.68]"
               />
             </motion.div>
