@@ -73,10 +73,12 @@ for (const required of [
   "loading={isHighPriority ? 'eager' : 'lazy'}",
   "fetchPriority={isHighPriority ? 'high' : 'low'}",
   "window.addEventListener('load', releaseAfterLoad, { once: true });",
+  "document.readyState === 'complete'",
   'requestAnimationFrame(() => {',
   "`${asset(`${stem}-320.jpg`)} 320w`",
   "`${asset(`${stem}-480.jpg`)} 480w`",
   "`${asset(photo)} 1000w`",
+  "data-hero-portrait-released={mediaReleased ? 'true' : 'false'}",
 ]) {
   if (!hero.includes(required)) fail(`HeroPoetWindow contract missing: ${required}`);
 }
@@ -93,22 +95,27 @@ for (const required of [
 
 const perfSpec = read('qa/home-media-perf.spec.mjs');
 for (const required of [
+  "page.addInitScript",
+  'MutationObserver',
+  '__tlpHeroReleaseQa',
+  'data-hero-portrait-released',
+  'loadAtWhenReleased',
+  "window.addEventListener('load'",
   "page.on('request'",
-  "page.route('**/images/*.jpg'",
-  'criticalGate',
-  "waitUntil: 'domcontentloaded'",
-  "page.waitForLoadState('load')",
   'derivativeRequests',
   'boundedFallbacks',
   'isHeroDerivative(identity)',
 ]) {
-  if (!perfSpec.includes(required)) fail(`home media browser proof missing causal network contract: ${required}`);
+  if (!perfSpec.includes(required)) fail(`home media browser proof missing browser-lifecycle contract: ${required}`);
 }
 if (perfSpec.includes("getEntriesByType('resource')")) {
   fail('home media browser proof must not depend on optional Resource Timing exposure');
 }
 if (perfSpec.includes('loadObserved') || perfSpec.includes("page.once('load'")) {
   fail('home media browser proof must not infer request phase from Playwright load callback ordering');
+}
+if (perfSpec.includes('criticalGate') || perfSpec.includes("waitUntil: 'domcontentloaded'")) {
+  fail('home media browser proof must not infer the browser load boundary by blocking intercepted image responses');
 }
 
 const config = read('playwright.home-polish.config.mjs');
@@ -126,4 +133,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B; causal load-boundary proof wired`);
+console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B; browser-side load/release ordering proof wired`);
