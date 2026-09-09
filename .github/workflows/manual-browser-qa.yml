@@ -43,7 +43,6 @@ jobs:
         id: production_build
         env:
           VITE_BASE: /
-          VITE_GA_ID: G-TLP-ROUTE-QA
         run: |
           set +e
           { npm run sitemap; npm run build; npm run validate:build-output; } > production-build.log 2>&1
@@ -78,7 +77,6 @@ jobs:
           qa/rating-urlstate.spec.mjs
           qa/audio-completion.spec.mjs
           qa/audio-cross-tab.spec.mjs
-          qa/analytics-route.spec.mjs
           qa/focused-interactions.spec.mjs
           qa/theme-contrast.spec.mjs
           qa/reader-text.spec.mjs
@@ -99,15 +97,6 @@ jobs:
           --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
           --reporter=line
-      - name: Run analytics route lifecycle on iPhone Safari
-        if: ${{ always() && steps.production_build.outcome == 'success' }}
-        run: >-
-          npx playwright test
-          qa/analytics-route.spec.mjs
-          --config=playwright.config.mjs
-          --project=iphone-safari
-          --workers=1
-          --reporter=line
       - name: Run base iPhone Safari QA in fresh browser processes
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs
@@ -123,6 +112,60 @@ jobs:
             preview.log
             production-build.log
             manual-browser-tested-head.txt
+            dist/build-budget-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  analytics-route-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact analytics tested head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact analytics checkout identity
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
+      - name: Validate analytics route lifecycle contract
+        run: npx tsx scripts/validate-analytics-route.ts
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
+      - name: Build isolated analytics production site
+        env:
+          VITE_BASE: /
+          VITE_GA_ID: G-TLP-ROUTE-QA
+        run: |
+          npm run build
+          npm run validate:build-output
+      - name: Install locked analytics Playwright browsers
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium webkit
+      - name: Start isolated analytics production preview
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: analytics-route-preview.log
+      - name: Run emitted page-view lifecycle on Chromium, Android and iPhone Safari
+        run: >-
+          npx playwright test
+          qa/analytics-route.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --project=android-pixel7
+          --project=iphone-safari
+          --workers=1
+          --reporter=line
+      - name: Upload analytics route browser evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: analytics-route-evidence-${{ env.TESTED_SHA }}
+          path: |
+            playwright-report
+            test-results
+            analytics-route-preview.log
             dist/build-budget-report.json
           if-no-files-found: warn
           retention-days: 7
