@@ -35,9 +35,10 @@ async function waitForAllHeroPortraits(page) {
   ).toBe(true);
 }
 
-test('home hero media keeps two critical requests before load and uses bounded responsive candidates', async ({ page }, testInfo) => {
-  let loadObserved = false;
-  const heroDerivativeRequests = [];
+test('home hero media issues only two critical derivatives while window load is physically blocked', async ({ page }, testInfo) => {
+  let releaseCritical;
+  const criticalGate = new Promise((resolve) => { releaseCritical = resolve; });
+  const derivativeRequests = [];
   const allPortraitRequests = [];
 
   page.on('request', (request) => {
@@ -47,81 +48,106 @@ test('home hero media keeps two critical requests before load and uses bounded r
     const record = {
       url: request.url(),
       identity,
-      phase: loadObserved ? 'post-load' : 'pre-load',
       resourceType: request.resourceType(),
     };
     allPortraitRequests.push(record);
-    if (isHeroDerivative(identity)) heroDerivativeRequests.push(record);
-  });
-  page.once('load', () => {
-    loadObserved = true;
+    if (isHeroDerivative(identity)) derivativeRequests.push(record);
   });
 
-  await page.goto(BASE_URL, { waitUntil: 'load' });
-  await waitForAllHeroPortraits(page);
+  await page.route('**/images/*.jpg', async (route) => {
+    const identity = portraitIdentity(route.request().url());
+    if (isHeroDerivative(identity) && CRITICAL_NAMES.has(identity.poet)) {
+      await criticalGate;
+    }
+    await route.continue();
+  });
 
-  const images = page.locator('[data-hero-poet-window] img');
-  const imageState = await images.evaluateAll((nodes) => nodes.map((image) => ({
-    loading: image.getAttribute('loading'),
-    fetchPriority: image.getAttribute('fetchpriority'),
-    critical: image.getAttribute('data-hero-portrait-critical'),
-    released: image.getAttribute('data-hero-portrait-released'),
-    src: image.getAttribute('src'),
-    currentSrc: image.currentSrc,
-    srcSet: image.getAttribute('srcset'),
-    sizes: image.getAttribute('sizes'),
-  })));
+  try {
+    // DOMContentLoaded can complete while the two eager hero responses are held.
+    // Because those responses are still outstanding, window.load cannot have
+    // completed. The deferred four have no src until the production load + RAF
+    // release path runs, so they must be absent from the request set here.
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await expect.poll(
+      () => derivativeRequests.length,
+      { timeout: 12_000, message: 'exactly two critical hero derivatives should start before window load can complete' },
+    ).toBe(2);
+    await page.waitForTimeout(250);
 
-  expect(imageState.slice(0, 2).every((image) => (
-    image.loading === 'eager'
-    && image.fetchPriority === 'high'
-    && image.critical === 'true'
-    && image.released === 'true'
-  ))).toBe(true);
-  expect(imageState.slice(2).every((image) => (
-    image.loading === 'lazy'
-    && image.fetchPriority === 'low'
-    && image.critical === 'false'
-    && image.released === 'true'
-  ))).toBe(true);
-  expect(imageState.every((image) => image.srcSet?.includes(' 320w') && image.srcSet?.includes(' 480w') && image.srcSet?.includes(' 1000w'))).toBe(true);
-  expect(imageState.every((image) => Boolean(image.sizes))).toBe(true);
+    expect(derivativeRequests).toHaveLength(2);
+    expect(new Set(derivativeRequests.map((request) => request.identity.poet))).toEqual(CRITICAL_NAMES);
+    expect(derivativeRequests.every((request) => request.resourceType === 'image')).toBe(true);
+    expect(derivativeRequests.some((request) => DEFERRED_NAMES.has(request.identity.poet))).toBe(false);
 
-  // The fallback `src` itself is bounded to 320w. This prevents a transient
-  // full-size request while the browser parses responsive metadata. The six
-  // derivative URLs are unique to the hero surface, so Playwright protocol
-  // request events provide cross-browser network evidence without depending on
-  // optional Resource Timing exposure (which Linux WebKit may omit).
-  const boundedFallbacks = imageState.map((image) => portraitIdentity(image.src || ''));
-  expect(boundedFallbacks.every((candidate) => candidate?.width === 320)).toBe(true);
+    releaseCritical();
+    await page.waitForLoadState('load');
 
-  expect(heroDerivativeRequests).toHaveLength(6);
-  expect(new Set(heroDerivativeRequests.map((request) => request.identity.poet))).toEqual(new Set(HERO_NAMES));
-  expect(heroDerivativeRequests.every((request) => request.resourceType === 'image')).toBe(true);
+    // Production releases the remaining four only from the window.load handler
+    // on the next animation frame. Require the complete exact six-poet set after
+    // load rather than inferring phase from Playwright event callback ordering.
+    await expect.poll(
+      () => derivativeRequests.length,
+      { timeout: 12_000, message: 'four deferred hero derivatives should start after the critical pair allows window load' },
+    ).toBe(6);
+    await waitForAllHeroPortraits(page);
 
-  const preLoad = heroDerivativeRequests.filter((request) => request.phase === 'pre-load');
-  const postLoad = heroDerivativeRequests.filter((request) => request.phase === 'post-load');
-  expect(preLoad).toHaveLength(2);
-  expect(new Set(preLoad.map((request) => request.identity.poet))).toEqual(CRITICAL_NAMES);
-  expect(postLoad).toHaveLength(4);
-  expect(new Set(postLoad.map((request) => request.identity.poet))).toEqual(DEFERRED_NAMES);
+    expect(new Set(derivativeRequests.map((request) => request.identity.poet))).toEqual(new Set(HERO_NAMES));
+    const deferredRequests = derivativeRequests.filter((request) => DEFERRED_NAMES.has(request.identity.poet));
+    expect(deferredRequests).toHaveLength(4);
+    expect(new Set(deferredRequests.map((request) => request.identity.poet))).toEqual(DEFERRED_NAMES);
+    expect(derivativeRequests.every((request) => request.resourceType === 'image')).toBe(true);
 
-  const expectedWidth = testInfo.project.name === 'home-desktop' ? 320 : 480;
-  expect(heroDerivativeRequests.every((request) => request.identity.width === expectedWidth)).toBe(true);
+    const images = page.locator('[data-hero-poet-window] img');
+    const imageState = await images.evaluateAll((nodes) => nodes.map((image) => ({
+      loading: image.getAttribute('loading'),
+      fetchPriority: image.getAttribute('fetchpriority'),
+      critical: image.getAttribute('data-hero-portrait-critical'),
+      released: image.getAttribute('data-hero-portrait-released'),
+      src: image.getAttribute('src'),
+      currentSrc: image.currentSrc,
+      srcSet: image.getAttribute('srcset'),
+      sizes: image.getAttribute('sizes'),
+    })));
 
-  const currentCandidates = imageState.map((image) => portraitIdentity(image.currentSrc));
-  expect(currentCandidates.every(Boolean)).toBe(true);
-  expect(currentCandidates.every((candidate) => candidate.width === expectedWidth)).toBe(true);
+    expect(imageState.slice(0, 2).every((image) => (
+      image.loading === 'eager'
+      && image.fetchPriority === 'high'
+      && image.critical === 'true'
+      && image.released === 'true'
+    ))).toBe(true);
+    expect(imageState.slice(2).every((image) => (
+      image.loading === 'lazy'
+      && image.fetchPriority === 'low'
+      && image.critical === 'false'
+      && image.released === 'true'
+    ))).toBe(true);
+    expect(imageState.every((image) => image.srcSet?.includes(' 320w') && image.srcSet?.includes(' 480w') && image.srcSet?.includes(' 1000w'))).toBe(true);
+    expect(imageState.every((image) => Boolean(image.sizes))).toBe(true);
 
-  fs.writeFileSync(
-    path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-media-perf.json`),
-    JSON.stringify({
-      project: testInfo.project.name,
-      imageState,
-      heroDerivativeRequests,
-      allPortraitRequests,
-    }, null, 2),
-  );
+    // The fallback src itself is bounded to 320w, preventing a transient
+    // full-size fallback while responsive metadata is applied.
+    const boundedFallbacks = imageState.map((image) => portraitIdentity(image.src || ''));
+    expect(boundedFallbacks.every((candidate) => candidate?.width === 320)).toBe(true);
+
+    const expectedWidth = testInfo.project.name === 'home-desktop' ? 320 : 480;
+    expect(derivativeRequests.every((request) => request.identity.width === expectedWidth)).toBe(true);
+
+    const currentCandidates = imageState.map((image) => portraitIdentity(image.currentSrc));
+    expect(currentCandidates.every(Boolean)).toBe(true);
+    expect(currentCandidates.every((candidate) => candidate.width === expectedWidth)).toBe(true);
+
+    fs.writeFileSync(
+      path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-media-perf.json`),
+      JSON.stringify({
+        project: testInfo.project.name,
+        imageState,
+        derivativeRequests,
+        allPortraitRequests,
+      }, null, 2),
+    );
+  } finally {
+    releaseCritical?.();
+  }
 });
 
 test('home hero media preserves portrait geometry while deferred images release', async ({ page }, testInfo) => {
