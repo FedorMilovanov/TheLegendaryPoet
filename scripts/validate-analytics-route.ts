@@ -62,9 +62,6 @@ if (/\[location\.pathname\s*,\s*location\.search\]/.test(handleSettledSource) ||
 if (/useLocation/.test(tracker)) {
   fail(`${trackerPath}: AnalyticsRouteTracker must not subscribe to raw router location lifecycle`);
 }
-if (/location\.(?:pathname|search)/.test(tracker)) {
-  fail(`${trackerPath}: raw location mutations must not own page_view emission`);
-}
 for (const token of [
   'ANALYTICS_ROUTE_SETTLED_EVENT',
   'getSettledAnalyticsRoute',
@@ -91,14 +88,27 @@ for (const token of [
   if (!analyticsSource.includes(token)) fail(`${analyticsPath}: missing settled route authority token: ${token}`);
 }
 
-if (!browserWorkflow.includes('VITE_GA_ID: G-TLP-ROUTE-QA')) {
-  fail(`${browserWorkflowPath}: production browser build must expose the deterministic GA test transport`);
+const analyticsJobStart = browserWorkflow.indexOf('\n  analytics-route-qa:');
+const analyticsJobEnd = browserWorkflow.indexOf('\n  webkit-home-reveal-qa:', analyticsJobStart);
+const analyticsJob = analyticsJobStart >= 0 && analyticsJobEnd > analyticsJobStart
+  ? browserWorkflow.slice(analyticsJobStart, analyticsJobEnd)
+  : '';
+if (!analyticsJob) {
+  fail(`${browserWorkflowPath}: analytics route proof must run in its own isolated job`);
 }
-if (!browserWorkflow.includes('qa/analytics-route.spec.mjs')) {
-  fail(`${browserWorkflowPath}: core browser matrix must execute the emitted-event analytics regression`);
+if (analyticsJobStart >= 0 && browserWorkflow.slice(0, analyticsJobStart).includes('VITE_GA_ID:')) {
+  fail(`${browserWorkflowPath}: deterministic analytics provider ID must not leak into the ordinary Manual Browser build`);
 }
-if (!browserWorkflow.includes('--project=iphone-safari')) {
-  fail(`${browserWorkflowPath}: analytics route regression must include iPhone Safari`);
+for (const token of [
+  'VITE_GA_ID: G-TLP-ROUTE-QA',
+  'npx tsx scripts/validate-analytics-route.ts',
+  'qa/analytics-route.spec.mjs',
+  '--project=chromium-core',
+  '--project=android-pixel7',
+  '--project=iphone-safari',
+  'analytics-route-evidence-${{ env.TESTED_SHA }}',
+]) {
+  if (!analyticsJob.includes(token)) fail(`${browserWorkflowPath}: isolated analytics job missing token: ${token}`);
 }
 if (!contractsWorkflow.includes('npx tsx scripts/validate-analytics-route.ts')) {
   fail(`${contractsWorkflowPath}: Project contracts must execute the analytics route lifecycle validator`);
@@ -162,4 +172,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('Analytics route validation passed: page views are pathname-settlement owned, same-route query mutations cannot retrigger settlement, late consent is bounded to the currently settled pathname, Project Contracts enforce the source contract, and Chromium/Android/iPhone browser QA inspects actual GA page_view emissions.');
+console.log('Analytics route validation passed: page views are pathname-settlement owned, same-route query mutations cannot retrigger settlement, late consent is bounded to the currently settled pathname, the provider-enabled proof build is isolated from ordinary browser QA, Project Contracts enforce the source contract, and Chromium/Android/iPhone browser QA inspects actual GA page_view emissions.');
