@@ -1,11 +1,12 @@
-import { use, useRef } from 'react';
+import { Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
-import { getBrowserEssayBySlug, getBrowserEssayCatalog } from '../data/essays/browserEssayData';
+import { getBrowserEssayBySlug, getOptionalBrowserEssayCatalog } from '../data/essays/browserEssayData';
 import { poets } from '../data/poets';
+import type { Essay } from '../types/essay';
 import ReadingProgress from '../components/articles/ReadingProgress';
 import EssayHero from '../components/essay/EssayHero';
 import ArticleRenderer, { getEssayToc } from '../components/essay/ArticleRenderer';
@@ -19,11 +20,50 @@ import { titleCase } from '../utils/titleCase';
 
 const missingEssayPromise = Promise.resolve(undefined);
 
+function EssaySeriesNavigation({ essay, visitKey }: { essay: Essay; visitKey: string }) {
+  const essayCatalog = use(getOptionalBrowserEssayCatalog(visitKey));
+  const seriesEntries = essayCatalog
+    .filter((entry) => entry.series?.id === essay.series?.id)
+    .sort((a, b) => (a.series?.part ?? 0) - (b.series?.part ?? 0));
+
+  if (seriesEntries.length <= 1) return null;
+
+  const previous = seriesEntries.find((entry) => entry.series?.part === (essay.series?.part ?? 0) - 1);
+  const next = seriesEntries.find((entry) => entry.series?.part === (essay.series?.part ?? 0) + 1);
+
+  return (
+    <nav aria-label="Навигация по серии" className="mt-14 rounded-[2rem] border border-luxury-gold/10 bg-[#0a0a0a]/60 p-6 md:p-8">
+      <div className="mb-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/65">
+        <Layers3 size={13} /> {essay.series?.label}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {previous ? (
+          <Link to={`/essays/${previous.slug}`} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-left transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
+            <ArrowLeft size={16} className="shrink-0 text-luxury-gold/55 transition group-hover:-translate-x-1" />
+            <span>
+              <span className="block text-[9px] uppercase tracking-[0.16em] text-luxury-gray-light/40">Предыдущая часть</span>
+              <span className="mt-1 block font-serif text-lg text-white/85">{previous.title}</span>
+            </span>
+          </Link>
+        ) : <span />}
+        {next ? (
+          <Link to={`/essays/${next.slug}`} className="group flex min-h-24 items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-right transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
+            <span>
+              <span className="block text-[9px] uppercase tracking-[0.16em] text-luxury-gray-light/40">Следующая часть</span>
+              <span className="mt-1 block font-serif text-lg text-white/85">{next.title}</span>
+            </span>
+            <ArrowRight size={16} className="shrink-0 text-luxury-gold/55 transition group-hover:translate-x-1" />
+          </Link>
+        ) : null}
+      </div>
+    </nav>
+  );
+}
+
 export default function EssayPage() {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const essay = use(slug ? getBrowserEssayBySlug(slug, location.key) : missingEssayPromise);
-  const essayCatalog = use(getBrowserEssayCatalog(location.key));
   const poet = essay?.poetId ? poets.find((candidate) => candidate.id === essay.poetId) : undefined;
   const articleRef = useRef<HTMLElement>(null);
   const routePath = `/essays/${slug ?? ''}`;
@@ -81,13 +121,6 @@ export default function EssayPage() {
   }
 
   const toc = getEssayToc(essay.blocks);
-  const seriesEntries = essay.series
-    ? essayCatalog
-        .filter((entry) => entry.series?.id === essay.series?.id)
-        .sort((a, b) => (a.series?.part ?? 0) - (b.series?.part ?? 0))
-    : [];
-  const previous = seriesEntries.find((entry) => entry.series?.part === (essay.series?.part ?? 0) - 1);
-  const next = seriesEntries.find((entry) => entry.series?.part === (essay.series?.part ?? 0) + 1);
   const sourceCount = essay.sources?.length ?? 0;
   const primarySourceCount = essay.sources?.filter((source) => source.kind === 'primary').length ?? 0;
 
@@ -155,32 +188,10 @@ export default function EssayPage() {
             <ShareLine scopeRef={articleRef} />
             <ArticleRenderer blocks={essay.blocks} sources={essay.sources} />
 
-            {seriesEntries.length > 1 && (
-              <nav aria-label="Навигация по серии" className="mt-14 rounded-[2rem] border border-luxury-gold/10 bg-[#0a0a0a]/60 p-6 md:p-8">
-                <div className="mb-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/65">
-                  <Layers3 size={13} /> {essay.series?.label}
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {previous ? (
-                    <Link to={`/essays/${previous.slug}`} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-left transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
-                      <ArrowLeft size={16} className="shrink-0 text-luxury-gold/55 transition group-hover:-translate-x-1" />
-                      <span>
-                        <span className="block text-[9px] uppercase tracking-[0.16em] text-luxury-gray-light/40">Предыдущая часть</span>
-                        <span className="mt-1 block font-serif text-lg text-white/85">{previous.title}</span>
-                      </span>
-                    </Link>
-                  ) : <span />}
-                  {next ? (
-                    <Link to={`/essays/${next.slug}`} className="group flex min-h-24 items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-right transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
-                      <span>
-                        <span className="block text-[9px] uppercase tracking-[0.16em] text-luxury-gray-light/40">Следующая часть</span>
-                        <span className="mt-1 block font-serif text-lg text-white/85">{next.title}</span>
-                      </span>
-                      <ArrowRight size={16} className="shrink-0 text-luxury-gold/55 transition group-hover:translate-x-1" />
-                    </Link>
-                  ) : null}
-                </div>
-              </nav>
+            {essay.series && (
+              <Suspense fallback={null}>
+                <EssaySeriesNavigation essay={essay} visitKey={location.key} />
+              </Suspense>
             )}
 
             {essay.sources && essay.sources.length > 0 && <SourceLibrary sources={essay.sources} />}

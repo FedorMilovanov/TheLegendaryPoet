@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
@@ -97,7 +97,9 @@ export default function PoetDetailPage() {
               "{poet.shortBio}"
             </p>
 
-            <RelatedEssays poetId={poet.id} />
+            <Suspense fallback={null}>
+              <RelatedEssays poetId={poet.id} />
+            </Suspense>
 
             <div className="space-y-8">
               <h2 className="border-b border-luxury-dark-300 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">

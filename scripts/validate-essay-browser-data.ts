@@ -12,6 +12,9 @@ const browserPublishedConsumers = [
   'src/components/poet-detail/RelatedEssays.tsx',
 ] as const;
 const browserAdapterPath = 'src/data/essays/browserEssayData.ts';
+const relatedEssaysPath = 'src/components/poet-detail/RelatedEssays.tsx';
+const poetDetailPath = 'src/pages/PoetDetailPage.tsx';
+const essayPagePath = 'src/pages/EssayPage.tsx';
 const eagerCatalogImportPattern = /from\s+['"][^'"]*data\/essays(?:\/index(?:\.ts)?)?['"]/;
 const rawEssayImportPattern = /from\s+['"][^'"]*data\/essays\/(?!index(?:\.ts)?['"]|browserEssayData(?:\.ts)?['"])[^'"]+['"]/;
 const browserAdapterImportPattern = /from\s+['"][^'"]*data\/essays\/browserEssayData(?:\.ts)?['"]/;
@@ -72,6 +75,53 @@ if (eagerCatalogImportPattern.test(browserAdapterSource) || rawEssayImportPatter
   throw new Error('browserEssayData.ts must remain payload-only and must not import the canonical full corpus');
 }
 
+const primaryLoaderStart = browserAdapterSource.indexOf('export function getBrowserEssayBySlug');
+if (primaryLoaderStart < 0) throw new Error('browserEssayData.ts lost the primary essay loader');
+const primaryLoaderSource = browserAdapterSource.slice(primaryLoaderStart);
+if (primaryLoaderSource.includes('getBrowserEssayCatalog(')) {
+  throw new Error('primary essay readiness must not depend on the optional browser catalog');
+}
+if (!primaryLoaderSource.includes('fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, requestOptions)')) {
+  throw new Error('primary essay loader must fetch the requested route payload directly');
+}
+if (!primaryLoaderSource.includes('response.status === 404')) {
+  throw new Error('primary essay loader must preserve an explicit payload-level not-found outcome');
+}
+
+if (!browserAdapterSource.includes('export function getOptionalBrowserEssayCatalog')) {
+  throw new Error('browser essay adapter must expose a fail-soft optional catalog authority');
+}
+if (!/const promise = source\.catch\(\(\) => \[\]/.test(browserAdapterSource)) {
+  throw new Error('optional catalog authority must convert catalog rejection to a stable empty secondary result');
+}
+if (!browserAdapterSource.includes('optionalCatalogRequest?.source === source')) {
+  throw new Error('optional catalog authority must keep the caught promise stable for each source request');
+}
+
+const relatedEssaysSource = readFileSync(relatedEssaysPath, 'utf8');
+if (!relatedEssaysSource.includes('getOptionalBrowserEssayCatalog')) {
+  throw new Error('RelatedEssays must consume the fail-soft optional catalog authority');
+}
+if (relatedEssaysSource.includes('getBrowserEssayCatalog(')) {
+  throw new Error('RelatedEssays must not consume the fatal/raw catalog authority directly');
+}
+
+const poetDetailSource = readFileSync(poetDetailPath, 'utf8');
+if (!/<Suspense\s+fallback=\{null\}>[\s\S]*?<RelatedEssays\s+poetId=\{poet\.id\}\s*\/>[\s\S]*?<\/Suspense>/.test(poetDetailSource)) {
+  throw new Error('PoetDetailPage must isolate RelatedEssays behind a local null-fallback Suspense boundary');
+}
+
+const essayPageSource = readFileSync(essayPagePath, 'utf8');
+if (essayPageSource.includes('use(getBrowserEssayCatalog(')) {
+  throw new Error('EssayPage primary route must not block on the full essay catalog');
+}
+if (!essayPageSource.includes('getOptionalBrowserEssayCatalog')) {
+  throw new Error('EssayPage series enrichment must use the fail-soft optional catalog authority');
+}
+if (!/<Suspense\s+fallback=\{null\}>[\s\S]*?<EssaySeriesNavigation\s+essay=\{essay\}\s+visitKey=\{location\.key\}\s*\/>[\s\S]*?<\/Suspense>/.test(essayPageSource)) {
+  throw new Error('EssayPage must isolate series navigation behind a local null-fallback Suspense boundary');
+}
+
 console.log(
-  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser src scan found no eager full-corpus consumer, and ${browserPublishedConsumers.length} expected consumers use the generated adapter.`,
+  `Browser essay data parity: ${essays.length} lightweight catalog entries + ${essays.length} exact route payloads; browser src scan found no eager full-corpus consumer, ${browserPublishedConsumers.length} expected consumers use the generated adapter, and primary-route readiness is isolated from optional catalog failure.`,
 );
