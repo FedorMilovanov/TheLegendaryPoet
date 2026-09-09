@@ -15,7 +15,13 @@ interface VisitScopedRequest<T> {
   status: RequestStatus;
 }
 
+interface OptionalCatalogRequest {
+  source: Promise<readonly EssaySummary[]>;
+  promise: Promise<readonly EssaySummary[]>;
+}
+
 let catalogRequest: VisitScopedRequest<readonly EssaySummary[]> | undefined;
+let optionalCatalogRequest: OptionalCatalogRequest | undefined;
 const essayRequests = new Map<string, VisitScopedRequest<Essay | undefined>>();
 
 function summaryOf(essay: Essay): EssaySummary {
@@ -110,6 +116,15 @@ export function getBrowserEssayCatalog(visitKey: string): Promise<readonly Essay
   return entry.promise;
 }
 
+export function getOptionalBrowserEssayCatalog(visitKey: string): Promise<readonly EssaySummary[]> {
+  const source = getBrowserEssayCatalog(visitKey);
+  if (optionalCatalogRequest?.source === source) return optionalCatalogRequest.promise;
+
+  const promise = source.catch(() => [] as readonly EssaySummary[]);
+  optionalCatalogRequest = { source, promise };
+  return promise;
+}
+
 export function getBrowserEssayBySlug(slug: string, visitKey: string): Promise<Essay | undefined> {
   if (!validSlugPattern.test(slug)) return Promise.resolve(undefined);
 
@@ -118,23 +133,24 @@ export function getBrowserEssayBySlug(slug: string, visitKey: string): Promise<E
 
   const request = import.meta.env.DEV
     ? getDevEssayBySlug(slug)
-    : Promise.all([
-        getBrowserEssayCatalog(visitKey),
-        fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, requestOptions),
-      ]).then(async ([catalog, response]) => {
-        const catalogEntry = catalog.find((entry) => entry.slug === slug);
-        if (!catalogEntry) return undefined;
+    : fetch(`${payloadRoot}${encodeURIComponent(slug)}.json`, requestOptions).then(async (response) => {
+        if (response.status === 404) return undefined;
         if (!response.ok) {
           throw new Error(`Essay payload request failed (${response.status}) for ${slug}`);
+        }
+
+        const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+        if (contentType.includes('text/html')) {
+          // Static SPA hosts and Vite preview may answer a missing JSON asset
+          // with index.html + 200. Treat that host fallback as route-not-found,
+          // while real JSON errors and malformed JSON remain fail-closed.
+          return undefined;
         }
 
         const value = await response.json() as unknown;
         const summary = assertSummary(value, `Essay payload ${slug}`);
         const essay = value as Partial<Essay>;
         if (summary.slug !== slug) throw new Error(`Essay payload slug mismatch: requested ${slug}, received ${summary.slug}`);
-        if (summary.id !== catalogEntry.id || summary.title !== catalogEntry.title || summary.series?.id !== catalogEntry.series?.id) {
-          throw new Error(`Essay payload identity diverged from browser catalog for ${slug}`);
-        }
         if (!Array.isArray(essay.blocks)) throw new Error(`Essay payload ${slug} has no block array`);
         if (essay.sources !== undefined && !Array.isArray(essay.sources)) {
           throw new Error(`Essay payload ${slug} has an invalid source list`);

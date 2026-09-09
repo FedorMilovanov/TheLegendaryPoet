@@ -7,10 +7,14 @@ on:
     paths:
       - 'src/pages/ArticlesPage.tsx'
       - 'src/pages/HomePage.tsx'
+      - 'src/pages/PoetDetailPage.tsx'
+      - 'src/pages/EssayPage.tsx'
+      - 'src/components/poet-detail/RelatedEssays.tsx'
       - 'src/App.tsx'
       - 'src/routes/routeModules.ts'
       - 'src/data/essays/**'
       - 'qa/articles-catalog.spec.mjs'
+      - 'qa/secondary-data-failure.spec.mjs'
       - 'qa/simonov-publication.spec.mjs'
       - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
       - 'public/sitemap.xml'
@@ -19,15 +23,20 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/validate-browser-runtime.ts'
+      - 'scripts/validate-essay-browser-data.ts'
       - '.github/workflows/articles-catalog.yml'
   pull_request:
     paths:
       - 'src/pages/ArticlesPage.tsx'
       - 'src/pages/HomePage.tsx'
+      - 'src/pages/PoetDetailPage.tsx'
+      - 'src/pages/EssayPage.tsx'
+      - 'src/components/poet-detail/RelatedEssays.tsx'
       - 'src/App.tsx'
       - 'src/routes/routeModules.ts'
       - 'src/data/essays/**'
       - 'qa/articles-catalog.spec.mjs'
+      - 'qa/secondary-data-failure.spec.mjs'
       - 'qa/simonov-publication.spec.mjs'
       - 'public/images/essays/simonov/simonov-son-artillerista-hero.webp'
       - 'public/sitemap.xml'
@@ -36,6 +45,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/validate-browser-runtime.ts'
+      - 'scripts/validate-essay-browser-data.ts'
       - '.github/workflows/articles-catalog.yml'
   workflow_dispatch:
 
@@ -79,9 +89,9 @@ jobs:
           done
           cat preview.log
           exit 1
-      - name: Run catalog and Simonov publication acceptance on three browser profiles
+      - name: Run catalog, secondary-data containment and Simonov publication acceptance on three browser profiles
         run: >-
-          npx playwright test qa/articles-catalog.spec.mjs qa/simonov-publication.spec.mjs
+          npx playwright test qa/articles-catalog.spec.mjs qa/secondary-data-failure.spec.mjs qa/simonov-publication.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=android-pixel7
