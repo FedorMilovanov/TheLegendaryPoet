@@ -91,6 +91,20 @@ for (const required of [
   if (!resilient.includes(required)) fail(`ResilientImage responsive fallback contract missing: ${required}`);
 }
 
+const perfSpec = read('qa/home-media-perf.spec.mjs');
+for (const required of [
+  "page.on('request'",
+  "page.once('load'",
+  'heroDerivativeRequests',
+  'boundedFallbacks',
+  'isHeroDerivative(identity)',
+]) {
+  if (!perfSpec.includes(required)) fail(`home media browser proof missing protocol ownership contract: ${required}`);
+}
+if (perfSpec.includes("getEntriesByType('resource')")) {
+  fail('home media browser proof must not depend on optional Resource Timing exposure');
+}
+
 const config = read('playwright.home-polish.config.mjs');
 if (!config.includes('media-perf')) fail('home media perf spec is not selected by playwright.home-polish.config.mjs');
 
