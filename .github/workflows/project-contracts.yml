@@ -24,6 +24,8 @@ jobs:
         run: node scripts/validate-project-contracts.mjs
       - name: Validate workflow consolidation and performance contract
         run: node scripts/validate-workflow-consolidation.mjs
+      - name: Validate analytics route lifecycle contract
+        run: npx tsx scripts/validate-analytics-route.ts
       - name: Validate Hall v3 foundation invariants
         run: npm run validate:hall-foundation
       - name: Validate Hall v3 Reference Bible invariants
