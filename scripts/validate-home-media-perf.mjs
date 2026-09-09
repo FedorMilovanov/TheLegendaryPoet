@@ -95,7 +95,7 @@ for (const required of [
 
 const perfSpec = read('qa/home-media-perf.spec.mjs');
 for (const required of [
-  "page.addInitScript",
+  'page.addInitScript',
   'MutationObserver',
   '__tlpHeroReleaseQa',
   'data-hero-portrait-released',
@@ -105,8 +105,13 @@ for (const required of [
   'derivativeRequests',
   'boundedFallbacks',
   'isHeroDerivative(identity)',
+  'offsetParent',
+  'offsetLeft',
+  'offsetTop',
+  'offsetWidth',
+  'offsetHeight',
 ]) {
-  if (!perfSpec.includes(required)) fail(`home media browser proof missing browser-lifecycle contract: ${required}`);
+  if (!perfSpec.includes(required)) fail(`home media browser proof missing browser-lifecycle/layout contract: ${required}`);
 }
 if (perfSpec.includes("getEntriesByType('resource')")) {
   fail('home media browser proof must not depend on optional Resource Timing exposure');
@@ -116,6 +121,9 @@ if (perfSpec.includes('loadObserved') || perfSpec.includes("page.once('load'")) 
 }
 if (perfSpec.includes('criticalGate') || perfSpec.includes("waitUntil: 'domcontentloaded'")) {
   fail('home media browser proof must not infer the browser load boundary by blocking intercepted image responses');
+}
+if (perfSpec.includes('getBoundingClientRect')) {
+  fail('home media layout-stability proof must measure layout boxes, not compositor-transformed client rects');
 }
 
 const config = read('playwright.home-polish.config.mjs');
@@ -133,4 +141,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B; browser-side load/release ordering proof wired`);
+console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B; browser-side load/release ordering and transform-independent layout proof wired`);
