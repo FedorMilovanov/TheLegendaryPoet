@@ -94,15 +94,21 @@ for (const required of [
 const perfSpec = read('qa/home-media-perf.spec.mjs');
 for (const required of [
   "page.on('request'",
-  "page.once('load'",
-  'heroDerivativeRequests',
+  "page.route('**/images/*.jpg'",
+  'criticalGate',
+  "waitUntil: 'domcontentloaded'",
+  "page.waitForLoadState('load')",
+  'derivativeRequests',
   'boundedFallbacks',
   'isHeroDerivative(identity)',
 ]) {
-  if (!perfSpec.includes(required)) fail(`home media browser proof missing protocol ownership contract: ${required}`);
+  if (!perfSpec.includes(required)) fail(`home media browser proof missing causal network contract: ${required}`);
 }
 if (perfSpec.includes("getEntriesByType('resource')")) {
   fail('home media browser proof must not depend on optional Resource Timing exposure');
+}
+if (perfSpec.includes('loadObserved') || perfSpec.includes("page.once('load'")) {
+  fail('home media browser proof must not infer request phase from Playwright load callback ordering');
 }
 
 const config = read('playwright.home-polish.config.mjs');
@@ -120,4 +126,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B`);
+console.log(`Home media performance contract passed: 12 derivatives; critical320=${critical320}B; critical480=${critical480}B; causal load-boundary proof wired`);
