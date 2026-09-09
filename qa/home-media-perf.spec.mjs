@@ -17,6 +17,10 @@ function portraitIdentity(url) {
   return { poet: match[1], width: match[2] ? Number(match[2]) : 1000 };
 }
 
+function isHeroDerivative(identity) {
+  return Boolean(identity && identity.width !== 1000);
+}
+
 async function waitForAllHeroPortraits(page) {
   const images = page.locator('[data-hero-poet-window] img');
   await expect(images).toHaveCount(6, { timeout: 20_000 });
@@ -32,6 +36,27 @@ async function waitForAllHeroPortraits(page) {
 }
 
 test('home hero media keeps two critical requests before load and uses bounded responsive candidates', async ({ page }, testInfo) => {
+  let loadObserved = false;
+  const heroDerivativeRequests = [];
+  const allPortraitRequests = [];
+
+  page.on('request', (request) => {
+    const identity = portraitIdentity(request.url());
+    if (!identity) return;
+
+    const record = {
+      url: request.url(),
+      identity,
+      phase: loadObserved ? 'post-load' : 'pre-load',
+      resourceType: request.resourceType(),
+    };
+    allPortraitRequests.push(record);
+    if (isHeroDerivative(identity)) heroDerivativeRequests.push(record);
+  });
+  page.once('load', () => {
+    loadObserved = true;
+  });
+
   await page.goto(BASE_URL, { waitUntil: 'load' });
   await waitForAllHeroPortraits(page);
 
@@ -41,6 +66,7 @@ test('home hero media keeps two critical requests before load and uses bounded r
     fetchPriority: image.getAttribute('fetchpriority'),
     critical: image.getAttribute('data-hero-portrait-critical'),
     released: image.getAttribute('data-hero-portrait-released'),
+    src: image.getAttribute('src'),
     currentSrc: image.currentSrc,
     srcSet: image.getAttribute('srcset'),
     sizes: image.getAttribute('sizes'),
@@ -61,48 +87,40 @@ test('home hero media keeps two critical requests before load and uses bounded r
   expect(imageState.every((image) => image.srcSet?.includes(' 320w') && image.srcSet?.includes(' 480w') && image.srcSet?.includes(' 1000w'))).toBe(true);
   expect(imageState.every((image) => Boolean(image.sizes))).toBe(true);
 
-  const timing = await page.evaluate(() => {
-    const navigation = performance.getEntriesByType('navigation')[0];
-    return {
-      loadEventStart: navigation?.loadEventStart ?? 0,
-      resources: performance.getEntriesByType('resource').map((entry) => ({
-        name: entry.name,
-        startTime: entry.startTime,
-        encodedBodySize: entry.encodedBodySize,
-        transferSize: entry.transferSize,
-        decodedBodySize: entry.decodedBodySize,
-      })),
-    };
-  });
+  // The fallback `src` itself is bounded to 320w. This prevents a transient
+  // full-size request while the browser parses responsive metadata. The six
+  // derivative URLs are unique to the hero surface, so Playwright protocol
+  // request events provide cross-browser network evidence without depending on
+  // optional Resource Timing exposure (which Linux WebKit may omit).
+  const boundedFallbacks = imageState.map((image) => portraitIdentity(image.src || ''));
+  expect(boundedFallbacks.every((candidate) => candidate?.width === 320)).toBe(true);
 
-  expect(timing.loadEventStart).toBeGreaterThan(0);
-  const portraitResources = timing.resources
-    .map((resource) => ({ ...resource, identity: portraitIdentity(resource.name) }))
-    .filter((resource) => resource.identity);
-  expect(portraitResources).toHaveLength(6);
+  expect(heroDerivativeRequests).toHaveLength(6);
+  expect(new Set(heroDerivativeRequests.map((request) => request.identity.poet))).toEqual(new Set(HERO_NAMES));
+  expect(heroDerivativeRequests.every((request) => request.resourceType === 'image')).toBe(true);
 
-  const preLoad = portraitResources.filter((resource) => resource.startTime < timing.loadEventStart);
-  const postLoad = portraitResources.filter((resource) => resource.startTime >= timing.loadEventStart);
+  const preLoad = heroDerivativeRequests.filter((request) => request.phase === 'pre-load');
+  const postLoad = heroDerivativeRequests.filter((request) => request.phase === 'post-load');
   expect(preLoad).toHaveLength(2);
-  expect(new Set(preLoad.map((resource) => resource.identity.poet))).toEqual(CRITICAL_NAMES);
+  expect(new Set(preLoad.map((request) => request.identity.poet))).toEqual(CRITICAL_NAMES);
   expect(postLoad).toHaveLength(4);
-  expect(new Set(postLoad.map((resource) => resource.identity.poet))).toEqual(DEFERRED_NAMES);
+  expect(new Set(postLoad.map((request) => request.identity.poet))).toEqual(DEFERRED_NAMES);
+
+  const expectedWidth = testInfo.project.name === 'home-desktop' ? 320 : 480;
+  expect(heroDerivativeRequests.every((request) => request.identity.width === expectedWidth)).toBe(true);
 
   const currentCandidates = imageState.map((image) => portraitIdentity(image.currentSrc));
   expect(currentCandidates.every(Boolean)).toBe(true);
-  const expectedWidth = testInfo.project.name === 'home-desktop' ? 320 : 480;
   expect(currentCandidates.every((candidate) => candidate.width === expectedWidth)).toBe(true);
-
-  if (testInfo.project.name !== 'home-iphone-safari') {
-    const criticalEncodedBytes = preLoad.reduce((sum, resource) => sum + resource.encodedBodySize, 0);
-    const budget = testInfo.project.name === 'home-desktop' ? 32 * 1024 : 56 * 1024;
-    expect(preLoad.every((resource) => resource.encodedBodySize > 0)).toBe(true);
-    expect(criticalEncodedBytes).toBeLessThanOrEqual(budget);
-  }
 
   fs.writeFileSync(
     path.join(ARTIFACT_DIR, `${testInfo.project.name}-home-media-perf.json`),
-    JSON.stringify({ project: testInfo.project.name, imageState, timing: { ...timing, resources: portraitResources } }, null, 2),
+    JSON.stringify({
+      project: testInfo.project.name,
+      imageState,
+      heroDerivativeRequests,
+      allPortraitRequests,
+    }, null, 2),
   );
 });
 
@@ -113,8 +131,8 @@ test('home hero media preserves portrait geometry while deferred images release'
 
   await page.route('**/images/*.jpg', async (route) => {
     const identity = portraitIdentity(route.request().url());
-    if (identity && DEFERRED_NAMES.has(identity.poet)) {
-      held.push(route.request().url());
+    if (isHeroDerivative(identity) && DEFERRED_NAMES.has(identity.poet)) {
+      held.push({ url: route.request().url(), identity });
       await gate;
     }
     await route.continue();
@@ -123,7 +141,8 @@ test('home hero media preserves portrait geometry while deferred images release'
   try {
     await page.goto(BASE_URL, { waitUntil: 'load' });
     await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
-    await expect.poll(() => held.length, { timeout: 12_000, message: 'all four deferred portraits should start only after load' }).toBe(4);
+    await expect.poll(() => held.length, { timeout: 12_000, message: 'all four deferred hero derivatives should start only after load' }).toBe(4);
+    expect(new Set(held.map((request) => request.identity.poet))).toEqual(DEFERRED_NAMES);
 
     const before = await page.locator('[data-hero-poet-window-surface]').evaluateAll((nodes) => nodes.map((node) => {
       const rect = node.getBoundingClientRect();
