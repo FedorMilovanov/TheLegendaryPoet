@@ -1,34 +1,41 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
 import { Link } from './ui/Link';
 import {
   ANALYTICS_CONSENT_EVENT,
+  ANALYTICS_ROUTE_SETTLED_EVENT,
   getAnalyticsConsent,
+  getSettledAnalyticsRoute,
   hasConfiguredAnalytics,
-  initAnalytics,
   setAnalyticsConsent,
   trackPageView,
   type AnalyticsConsent,
+  type AnalyticsRouteSnapshot,
 } from '../utils/analytics';
 
 export function AnalyticsRouteTracker() {
-  const location = useLocation();
-
   useEffect(() => {
-    const pagePath = `${location.pathname}${location.search}`;
-    const send = () => {
+    const send = (snapshot: AnalyticsRouteSnapshot, pagePath = snapshot.path) => {
       if (getAnalyticsConsent() !== 'granted') return;
-      initAnalytics();
-      window.setTimeout(() => trackPageView(pagePath, document.title), 0);
+      trackPageView(pagePath, snapshot.title);
     };
 
-    send();
-    const handleConsent = (event: Event) => {
-      if ((event as CustomEvent<AnalyticsConsent>).detail === 'granted') send();
+    const handleSettled = (event: Event) => {
+      send((event as CustomEvent<AnalyticsRouteSnapshot>).detail);
     };
+    const handleConsent = (event: Event) => {
+      if ((event as CustomEvent<AnalyticsConsent>).detail !== 'granted') return;
+      const settled = getSettledAnalyticsRoute();
+      if (!settled || settled.pathname !== window.location.pathname) return;
+      send(settled, `${settled.pathname}${window.location.search}`);
+    };
+
+    window.addEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettled);
     window.addEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
-    return () => window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
-  }, [location.pathname, location.search]);
+    return () => {
+      window.removeEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettled);
+      window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
+    };
+  }, []);
 
   return null;
 }
