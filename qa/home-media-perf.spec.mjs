@@ -182,7 +182,7 @@ test('home hero media releases deferred portraits only after the browser load bo
   );
 });
 
-test('home hero media preserves portrait geometry while deferred images release', async ({ page }, testInfo) => {
+test('home hero media preserves layout geometry while deferred images release', async ({ page }, testInfo) => {
   let releaseDeferred;
   const gate = new Promise((resolve) => { releaseDeferred = resolve; });
   const held = [];
@@ -196,24 +196,35 @@ test('home hero media preserves portrait geometry while deferred images release'
     await route.continue();
   });
 
+  const readLayoutBoxes = async () => page.locator('[data-hero-poet-window-surface]').evaluateAll((nodes) => nodes.map((node) => {
+    let x = 0;
+    let y = 0;
+    let current = node;
+    while (current instanceof HTMLElement) {
+      x += current.offsetLeft;
+      y += current.offsetTop;
+      current = current.offsetParent;
+    }
+    return {
+      x,
+      y,
+      width: node.offsetWidth,
+      height: node.offsetHeight,
+    };
+  }));
+
   try {
     await page.goto(BASE_URL, { waitUntil: 'load' });
     await expect(page.locator('[data-hero-poet-window]')).toHaveCount(6, { timeout: 20_000 });
     await expect.poll(() => held.length, { timeout: 12_000, message: 'all four deferred hero derivatives should start only after load' }).toBe(4);
     expect(new Set(held.map((request) => request.identity.poet))).toEqual(DEFERRED_NAMES);
 
-    const before = await page.locator('[data-hero-poet-window-surface]').evaluateAll((nodes) => nodes.map((node) => {
-      const rect = node.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    }));
+    const before = await readLayoutBoxes();
 
     releaseDeferred();
     await waitForAllHeroPortraits(page);
 
-    const after = await page.locator('[data-hero-poet-window-surface]').evaluateAll((nodes) => nodes.map((node) => {
-      const rect = node.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    }));
+    const after = await readLayoutBoxes();
 
     expect(after).toHaveLength(before.length);
     for (let index = 0; index < before.length; index += 1) {
