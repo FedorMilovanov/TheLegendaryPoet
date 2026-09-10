@@ -1,6 +1,6 @@
 # POET_AUTHORING_GUIDE.md — добавление и унификация поэтов
 
-Последний раз обновлено: 2026-07-21. Владелец: Фёдор Милованов.
+Последний раз обновлено: 2026-09-10. Владелец: Фёдор Милованов.
 
 Это обязательный рабочий стандарт для новых и существующих страниц поэтов THE LEGENDARY POET. Его задача — сохранить единую архитектуру, точность источников и живой русский голос без школьного глянца, сенсационности и машинной риторики. Осознанное отступление фиксируется в PR.
 
@@ -11,6 +11,8 @@
 > - `src/docs/THEOLOGICAL_GUIDELINES.md` — богословская оптика.
 > - `AGENT_ANTI_REGRESSION_PROTOCOL.md` — проверки и защита от откатов.
 > - `ARENA_PROJECT_PROTOCOL.md` — архитектура и дизайн.
+> - `scripts/poet-authoring-contract.ts` — машинный release-контракт identity/registry/portrait authority.
+> - `public/images/PROVENANCE.yml` — единственный image-provenance SSOT; отдельный реестр портретов поэтов не создаётся.
 
 ---
 
@@ -26,18 +28,33 @@
 
 ```text
 src/data/library/
-  <poetName>.ts        ← отдельный файл, camelCase латиницей
-  index.ts             ← импорт и запись в массив poets[]
+  <poetName>.draft.ts  ← непубликуемый authoring draft
+  <poetName>.ts        ← опубликованный canonical module, camelCase ASCII
+  index.ts             ← единственный canonical registry poets[]
 src/types/poet.ts      ← общий тип Poet
+scripts/new-poet.ts    ← создаёт только draft
+scripts/register-poet.ts ← валидирует и публикует draft в index.ts
 ```
 
 Правила:
 
-- Один поэт — один файл. Не собирать библиотеку обратно в гигантский `poets.ts`.
-- Имя файла: `sergeiYesenin.ts`, `annaAkhmatova.ts`.
-- `id`: kebab-case, например `sergei-yesenin`.
-- Порядок массива определяет владелец по эпохе и значению; не сортировать вслепую.
+- Один опубликованный поэт — один файл. Не собирать библиотеку обратно в гигантский `poets.ts`.
+- `id` задаётся **явно** и только в ASCII kebab-case по правилу `[a-z0-9]+(?:-[a-z0-9]+)*`, например `sergei-yesenin`. Автоматический ID из одной фамилии запрещён.
+- Имя canonical-файла механически выводится из полного `id`: `sergei-yesenin` → `sergeiYesenin.ts`. Ручной второй naming authority не допускается.
+- `new-poet.ts` не публикует поэта и не меняет `index.ts`: он создаёт `<poetName>.draft.ts` и прямо помечает результат как unreleasable.
+- Публикация выполняется только командой `register-poet.ts --id <id> --after <existing-id>`. Команда до мутации проверяет ID/collision, обязательные поля, portrait bytes, item-level provenance и будущую registry convergence.
+- `src/data/library/index.ts` остаётся единственным canonical registry. Никакой второй список/manifest опубликованных поэтов не создаётся.
+- Порядок массива определяет владелец по эпохе и значению; поэтому `register-poet.ts` требует явный `--after`, а не сортирует поэтов вслепую.
 - Общие редакторские преобразования допустимы как временный этап аудита. Перед слиянием зрелый текст следует перенести в читаемые исходные данные, а лишние слои удалить.
+
+Минимальный authoring flow:
+
+```bash
+npx tsx scripts/new-poet.ts "Имя Отчество Фамилия" --id ascii-kebab-id --portrait /images/portrait.jpg
+# заполнить .draft.ts, добавить/проверить portrait и item-level запись в public/images/PROVENANCE.yml
+npx tsx scripts/register-poet.ts --id ascii-kebab-id --after existing-poet-id
+npm run validate:poet-authority
+```
 
 ---
 
@@ -45,26 +62,36 @@ src/types/poet.ts      ← общий тип Poet
 
 | Поле | Стандарт |
 |---|---|
-| `id` | Уникальный kebab-case; становится маршрутом `/poets/<id>`. |
+| `id` | Уникальный **ASCII kebab-case**; становится маршрутом `/poets/<id>`. |
 | `name` | Краткое имя с правильной орфографией и `ё`, где она нормативна. |
 | `fullName` | Полное имя. |
 | `birthYear`, `deathYear` | Проверенные годы; `deathYear` отсутствует только у живущего человека. |
 | `nationality` | `Русский` / `Русская`. |
-| `photo` | `/images/<translit>.jpg`; путь проверяется сборкой. |
+| `photo` | Явный `/images/...` путь. Перед registration файл обязан существовать и иметь matching item-level запись в `public/images/PROVENANCE.yml`. |
 | `shortBio` | 1–2 предложения, примерно 280–360 знаков. Конкретный портрет, не рекламный лозунг. |
 | `fullBio` | Обычно 5–9 абзацев. Хронология, даты, произведения, отношения, кризисы, смерть и наследие. |
 | `rating` | Редакционная оценка 0–10. |
 | `tags` | 3–6 содержательных тегов. |
 | `poems` | Не менее двух стихотворений с проверенным текстом. |
-| `famousWorks` | 5–7 главных произведений. |
+| `moralPortrait` | Документированный нравственный портрет; current publication authority требует непустое поле. |
+| `authorCommentary` | Краткая итоговая ремарка; current publication authority требует непустое поле. |
+| `famousWorks` | Не менее 5 главных произведений. |
 
 Сильно рекомендуются:
 
 - `testimonies` — 5–9 свидетельств современников и исследователей;
 - `historicalNote` — короткий контекст эпохи;
-- `spiritualSearch` — религиозный путь и мировоззрение;
-- `moralPortrait` — документированный нравственный портрет;
-- `authorCommentary` — краткая итоговая ремарка, только если она добавляет новую мысль.
+- `spiritualSearch` — религиозный путь и мировоззрение.
+
+### Portrait release authority
+
+`photo` не считается подтверждённым потому, что файл «похож на нужного поэта» или правильно назван. Для нового поэта `register-poet.ts` принимает только item-level provenance из существующего `public/images/PROVENANCE.yml`:
+
+- archival/public-domain portrait: exact `source_url`, `rights_statement`, `credit`, ISO `accessed_at`, SHA-256 и release-approved status;
+- local editorial portrait/reconstruction: explicit local `origin_class`, evidence record, SHA-256, `source_use: not_primary_evidence` и release-approved status;
+- `LEGACY-PROVENANCE-UNRESOLVED` существует только как честная frozen boundary для уже опубликованных canonical portraits на Product `main@49337c0ab502b056ee503995ae0fa0051c693962`. Новый поэт с таким status **не регистрируется**.
+
+Не восстанавливать происхождение старого изображения догадкой и не подменять неизвестный источник вымышленной ссылкой.
 
 ---
 
@@ -92,7 +119,7 @@ src/types/poet.ts      ← общий тип Poet
 
 ### `authorCommentary`
 
-Один короткий абзац после уже завершённого портрета. Он не пересказывает `moralPortrait`, не произносит второй приговор и не заканчивается обязательной эффектной формулой. Поле можно опустить.
+Один короткий абзац после уже завершённого портрета. Он не пересказывает `moralPortrait`, не произносит второй приговор и не заканчивается обязательной эффектной формулой. Для published canonical poet поле должно быть непустым; если отдельная новая мысль минимальна, ремарка остаётся короткой, а не превращается в повтор портрета.
 
 ---
 
@@ -206,8 +233,8 @@ src/types/poet.ts      ← общий тип Poet
 ## 9. Чек-лист перед публикацией
 
 ```text
-[ ] Файл импортирован и добавлен в poets[]
-[ ] Все обязательные поля заполнены
+[ ] Draft создан new-poet.ts с явными --id и --portrait; id — ASCII kebab-case
+[ ] Все обязательные поля заполнены; TODO/FIXME/TBD/XXX отсутствуют
 [ ] id и poem-id уникальны
 [ ] Даты проверены и образуют непротиворечивую хронологию
 [ ] Каждый стих сверен по 2+ источникам, один A+
@@ -218,26 +245,33 @@ src/types/poet.ts      ← общий тип Poet
 [ ] Явный грех назван без эвфемизма
 [ ] Библейские ссылки точны и не заменяют анализ
 [ ] Текст прочитан вслух и не звучит машинно
-[ ] Изображение существует по указанному пути либо отсутствие сознательно обработано
-[ ] Пройдены validate-library, validate-essays, validate-literary-style, typecheck и build
-[ ] В PR описаны источники, исправленные легенды и оставшиеся неопределённости
+[ ] Portrait существует по точному /images/... пути
+[ ] В public/images/PROVENANCE.yml есть matching role: poet_portrait + poet_id
+[ ] Новый portrait имеет release-approved provenance; LEGACY-PROVENANCE-UNRESOLVED для нового поэта запрещён
+[ ] Registration выполнен scripts/register-poet.ts с явным --after; ручного второго registry нет
+[ ] Пройдены validate-library, validate-poet-authority, validate-essays, validate-literary-style, typecheck и build
+[ ] В PR описаны источники, portrait provenance, исправленные легенды и оставшиеся неопределённости
 ```
+
+`npm run check:content` включает `validate:poet-authority`; этот gate динамически сверяет published `.ts` modules с единственным `library/index.ts`, проверяет release contract каждого canonical poet и запускает adversarial fixtures для Unicode ID, collision, registry omission, missing portrait/provenance и запрета legacy-status для новой регистрации.
 
 ---
 
 ## 10. Краткий шаблон
 
+Не копируйте этот блок как способ обойти scaffold. Для нового поэта source draft создаётся `new-poet.ts`, затем публикуется `register-poet.ts`. Блок показывает только итоговую форму canonical module.
+
 ```ts
-import { Poet } from '../../types/poet';
+import type { Poet } from '../../types/poet';
 
 export const <nameVar>: Poet = {
-  id: '<kebab-id>',
+  id: '<ascii-kebab-id>',
   name: '<Имя Фамилия>',
   fullName: '<Имя Отчество Фамилия>',
   birthYear: <YYYY>,
   deathYear: <YYYY>,
   nationality: 'Русский',
-  photo: '/images/<translit>.jpg',
+  photo: '/images/<explicit-file>.jpg',
   shortBio: '<1–2 конкретных предложения>',
   fullBio: `<Хронологическая биография с пустой строкой между абзацами>`,
   rating: <0–10>,
@@ -249,16 +283,21 @@ export const <nameVar>: Poet = {
       year: <YYYY>,
       text: `<проверенный текст>`,
       analysis: '<литературный разбор>',
-      // biblicalPerspective — только при органичной связи
+      rating: <0–10>,
+    },
+    {
+      id: '<poet>-2',
+      title: '<Название>',
+      text: `<второй проверенный текст>`,
+      analysis: '<литературный разбор>',
       rating: <0–10>,
     },
   ],
-  articles: [],
   historicalNote: '<контекст эпохи>',
   spiritualSearch: '<религиозный путь и мировоззрение>',
   moralPortrait: `<документированный нравственный портрет>`,
-  authorCommentary: '<необязательная короткая ремарка>',
+  authorCommentary: '<короткая итоговая ремарка>',
   testimonies: [],
-  famousWorks: ['<Произведение>'],
+  famousWorks: ['<1>', '<2>', '<3>', '<4>', '<5>'],
 };
 ```
