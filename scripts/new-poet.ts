@@ -62,18 +62,22 @@ if (fs.existsSync(draftPath) || fs.existsSync(finalPath)) {
 
 const nameParts = fullName.split(/\s+/);
 const shortName = `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+const idLiteral = JSON.stringify(id);
+const shortNameLiteral = JSON.stringify(shortName);
+const fullNameLiteral = JSON.stringify(fullName);
+const portraitLiteral = JSON.stringify(portrait);
 const template = `import type { Poet } from '../../types/poet';
 
 // DRAFT ONLY. This file is not part of the canonical poets[] registry.
 // Complete the content and item-level portrait provenance, then use register-poet.ts.
 export const ${stem}: Poet = {
-  id: '${id}',
-  name: '${shortName}',
-  fullName: '${fullName}',
+  id: ${idLiteral},
+  name: ${shortNameLiteral},
+  fullName: ${fullNameLiteral},
   birthYear: 0, // TODO: YYYY (verify)
   deathYear: 0, // TODO: YYYY (undefined if living)
   nationality: 'Русский',
-  photo: '${portrait}', // release requires existing bytes + acceptable public/images/PROVENANCE.yml record
+  photo: ${portraitLiteral}, // release requires existing bytes + acceptable public/images/PROVENANCE.yml record
   shortBio: ` + '`TODO: 1–2 предложения, ~280–360 знаков. Конкретный портрет, не рекламный лозунг.`' + `,
   fullBio: ` + '`TODO: 5–9 абзацев (\\n\\n между ними). Жизнь по этапам, с датами.`' + `,
   rating: 9.5, // 0–10
