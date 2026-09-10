@@ -1,5 +1,5 @@
 schema_version: 1
-reviewed_at: 2026-08-20
+reviewed_at: 2026-09-10
 scope: public/images
 policy:
   purpose: >-
@@ -13,6 +13,17 @@ policy:
     PENDING-GENERATION-RECORD is not a rights clearance. It is an honest queue for
     recovering the original generation prompt, source/reference set, creator/tool
     record, and approval date before reuse outside this project.
+  poet_portrait_release_rule: >-
+    Every published Poet.photo must resolve to an item-level role=poet_portrait
+    record with matching poet_id. New registrations require release-approved
+    provenance and exact bytes; LEGACY-PROVENANCE-UNRESOLVED is never valid for a
+    new registration.
+  legacy_poet_portrait_rule: >-
+    The ten canonical portraits already published at Product
+    main@49337c0ab502b056ee503995ae0fa0051c693962 have unknown item-level origin in
+    the current repository record. They are recorded honestly as a frozen legacy
+    boundary with exact git blob identity, not promoted to archival evidence and
+    not assigned guessed source, rights or credit metadata.
 
 assets:
   - path: public/images/essays/yesenin-kutezhi.jpg
@@ -166,3 +177,103 @@ assets:
     review_status: VERIFIED-LOCAL-EDITORIAL
     source_use: not_primary_evidence
     notes: Owner-approved editorial reconstruction; not a documentary photograph of Ivan Loskutov, the exact height, or the July 1941 battle.
+
+  - path: public/images/tyutchev.jpg
+    role: poet_portrait
+    poet_id: fyodor-tyutchev
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 4ad10d9f13cd00831dfeab29354b79e3edb308fd
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/mayakovsky.jpg
+    role: poet_portrait
+    poet_id: vladimir-mayakovsky
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 19f9213e6ff96f844aa447a250bbadeed9604359
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/pushkin.jpg
+    role: poet_portrait
+    poet_id: alexander-pushkin
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 26504e1ac49242f1800b2785de41820b2867a979
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/lermontov.jpg
+    role: poet_portrait
+    poet_id: mikhail-lermontov
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: ecc02978db10a99695b1d85ddcb1a722d25c7131
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/pasternak.jpg
+    role: poet_portrait
+    poet_id: boris-pasternak
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 52b389ed03b1c7baea40eff0116a5cbf56129c2d
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/fet.jpg
+    role: poet_portrait
+    poet_id: afanasy-fet
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: fac6ff84e9431e197d921a08cd4ceb561f782b7c
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/gumilev.jpg
+    role: poet_portrait
+    poet_id: nikolay-gumilev
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: e2338178066c6b0895a8b3970ee03258ab35b105
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/yesenin.jpg
+    role: poet_portrait
+    poet_id: sergei-yesenin
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 3469d9dd6d3b931a1eed458eea703b24b28ff8c4
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/akhmatova.jpg
+    role: poet_portrait
+    poet_id: anna-akhmatova
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: 14deeb0f3e9b89b0479b98caf7122fd157baf1d9
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+  - path: public/images/blok.jpg
+    role: poet_portrait
+    poet_id: alexander-blok
+    origin_class: legacy_canonical_portrait
+    review_status: LEGACY-PROVENANCE-UNRESOLVED
+    source_use: not_primary_evidence
+    git_blob_sha: ea6a341101134a5d061b3dea0247b54debc6f20b
+    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
+    required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
