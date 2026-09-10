@@ -198,14 +198,16 @@ test('audio session registers converge across two live pages without aggregate l
 
     // Use a real keyboard interaction on the range input. Home drives volume to
     // zero through React's normal onChange path, which also sets muted=true.
-    const volume = pageA.getByRole('slider', { name: 'Громкость' });
+    const immersiveDialog = pageA.getByRole('dialog');
+    await expect(immersiveDialog).toBeVisible();
+    const volume = immersiveDialog.getByRole('slider', { name: 'Громкость' });
     await expect(volume).toBeVisible();
     await volume.focus();
     await volume.press('Home');
     await expect.poll(() => audioB.evaluate((element) => element.volume)).toBe(0);
     await expect.poll(() => audioB.evaluate((element) => element.muted)).toBe(true);
 
-    const unmute = pageA.getByRole('button', { name: 'Включить звук' });
+    const unmute = immersiveDialog.getByRole('button', { name: 'Включить звук' });
     await expect(unmute).toBeVisible();
     await unmute.click();
     await expect.poll(() => audioB.evaluate((element) => element.volume)).toBeCloseTo(0.75, 2);
@@ -214,7 +216,7 @@ test('audio session registers converge across two live pages without aggregate l
     await audioA.evaluate((element) => {
       element.currentTime = Math.max(0, element.duration - 0.75);
     });
-    const resume = pageA.getByRole('button', { name: 'Воспроизвести' });
+    const resume = immersiveDialog.getByRole('button', { name: 'Воспроизвести' });
     await expect(resume).toBeEnabled();
     await resume.click();
     await expect.poll(
