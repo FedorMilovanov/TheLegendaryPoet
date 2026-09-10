@@ -111,15 +111,15 @@ for (const essay of essaySearchIndex) {
   expect(item?.path === `/essays/${essay.slug}`, `essay ${essay.id} must retain its generated canonical deep route`);
   expect(item?.label === essay.title, `essay ${essay.id} must derive its label from generated search metadata`);
 
-  const anchors = essay.sections.map((section) => section.anchor);
+  const anchors = essay.sections.map(([, anchor]) => anchor);
   expect(new Set(anchors).size === anchors.length, `essay ${essay.id} section anchors must remain unique`);
-  for (const section of essay.sections) {
-    const sectionItem = byId.get(`essay-section-${essay.id}-${section.anchor}`);
-    const expectedPath = `/essays/${essay.slug}#${encodeURIComponent(section.anchor)}`;
-    expect(Boolean(sectionItem), `missing command item for essay section ${essay.id}/${section.anchor}`);
-    expect(sectionItem?.label === section.heading, `essay section ${essay.id}/${section.anchor} must derive its visible heading`);
-    expect(sectionItem?.path === expectedPath, `essay section ${essay.id}/${section.anchor} must deep-link to ${expectedPath}`);
-    expect(sectionItem?.group === 'Разделы статей', `essay section ${essay.id}/${section.anchor} must remain in the essay-section group`);
+  for (const [heading, anchor] of essay.sections) {
+    const sectionItem = byId.get(`essay-section-${essay.id}-${anchor}`);
+    const expectedPath = `/essays/${essay.slug}#${encodeURIComponent(anchor)}`;
+    expect(Boolean(sectionItem), `missing command item for essay section ${essay.id}/${anchor}`);
+    expect(sectionItem?.label === heading, `essay section ${essay.id}/${anchor} must derive its visible heading`);
+    expect(sectionItem?.path === expectedPath, `essay section ${essay.id}/${anchor} must deep-link to ${expectedPath}`);
+    expect(sectionItem?.group === 'Разделы статей', `essay section ${essay.id}/${anchor} must remain in the essay-section group`);
   }
 }
 for (const track of musicTracks) {
@@ -159,7 +159,7 @@ const fixtureItems = buildCommandItems({
     title: 'Новая статья',
     excerpt: 'Проверка',
     slug: 'fixture-essay',
-    sections: [{ heading: 'Невиданный раздел', anchor: 'fixture-section' }],
+    sections: [['Невиданный раздел', 'fixture-section']],
   }],
   tracks: [{ id: 'fixture-track', title: 'Новый трек', poet: 'Фёдор Йота', duration: '1:23' }],
 });
