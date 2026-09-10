@@ -23,10 +23,7 @@ interface CommandPoetSource {
   poems: readonly CommandPoemSource[];
 }
 
-interface CommandEssaySectionSource {
-  heading: string;
-  anchor: string;
-}
+type CommandEssaySectionSource = readonly [heading: string, anchor: string];
 
 interface CommandEssaySource {
   id: string;
@@ -55,7 +52,7 @@ export interface CommandSectionPresentation {
 
 export const commandSectionPresentations = {
   home: { label: 'Главная', description: 'Обложка проекта' },
-  hall: { label: 'Зал поэтов', description: 'Иммерсивный музейный раздел' },
+  hall: { label: 'Зал поэтов', description: 'Иммерсивный музейный раздел в разработке' },
   poets: { label: 'Поэты', description: 'Каталог поэтов' },
   ratings: { label: 'Рейтинг поэтов', description: 'Сводная таблица оценок и комментариев читателей' },
   articles: { label: 'Статьи', description: 'Материалы и анализы' },
@@ -144,11 +141,11 @@ export function buildCommandItems({
     group: 'Статьи',
   }));
 
-  const essaySectionItems = essays.flatMap((essay) => essay.sections.map((section) => ({
-    id: `essay-section-${essay.id}-${section.anchor}`,
-    label: section.heading,
+  const essaySectionItems = essays.flatMap((essay) => essay.sections.map(([heading, anchor]) => ({
+    id: `essay-section-${essay.id}-${anchor}`,
+    label: heading,
     description: essay.title,
-    path: `/essays/${essay.slug}#${encodeURIComponent(section.anchor)}`,
+    path: `/essays/${essay.slug}#${encodeURIComponent(anchor)}`,
     group: 'Разделы статей',
   })));
 
