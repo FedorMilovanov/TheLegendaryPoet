@@ -6,6 +6,19 @@ import type { Poet } from '../src/types/poet';
 export const POET_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 export const POET_PORTRAIT_PATTERN = /^\/images\/[a-z0-9][a-z0-9/_-]*\.(?:jpe?g|png|webp)$/;
 export const LEGACY_PORTRAIT_STATUS = 'LEGACY-PROVENANCE-UNRESOLVED';
+export const LEGACY_PORTRAIT_BOUNDARY = 'Product main@49337c0ab502b056ee503995ae0fa0051c693962';
+const LEGACY_POET_IDS = new Set([
+  'fyodor-tyutchev',
+  'vladimir-mayakovsky',
+  'alexander-pushkin',
+  'mikhail-lermontov',
+  'boris-pasternak',
+  'afanasy-fet',
+  'nikolay-gumilev',
+  'sergei-yesenin',
+  'anna-akhmatova',
+  'alexander-blok',
+]);
 const VERIFIED_STATUSES = new Set(['VERIFIED-ARCHIVAL', 'VERIFIED-PUBLIC-DOMAIN', 'VERIFIED-LOCAL-EDITORIAL']);
 const TODO_PATTERN = /\b(?:TODO|FIXME|TBD|XXX)\b/i;
 
@@ -97,12 +110,21 @@ function defaultAssetReader(relativePath: string): Buffer | null {
   return fs.existsSync(absolute) ? fs.readFileSync(absolute) : null;
 }
 
+function defaultFileExists(relativePath: string): boolean {
+  return fs.existsSync(path.resolve(relativePath));
+}
+
+function isSafeRepoRelativePath(relativePath: string): boolean {
+  return relativePath.length > 0 && !path.isAbsolute(relativePath) && !relativePath.includes('..') && !relativePath.includes('\\');
+}
+
 export function validatePortraitProvenance(options: {
   poetId: string;
   photo: string;
   provenanceText: string;
   allowLegacy: boolean;
   assetReader?: (relativePath: string) => Buffer | null;
+  fileExists?: (relativePath: string) => boolean;
 }): string[] {
   const errors: string[] = [];
   let publicPath = '';
@@ -112,8 +134,10 @@ export function validatePortraitProvenance(options: {
     return [(error as Error).message];
   }
 
-  const record = parseImageProvenance(options.provenanceText).find((candidate) => candidate.path === publicPath);
-  if (!record) return [`${options.poetId}: portrait ${publicPath} has no item-level PROVENANCE.yml record`];
+  const matchingRecords = parseImageProvenance(options.provenanceText).filter((candidate) => candidate.path === publicPath);
+  if (matchingRecords.length === 0) return [`${options.poetId}: portrait ${publicPath} has no item-level PROVENANCE.yml record`];
+  if (matchingRecords.length !== 1) return [`${options.poetId}: portrait ${publicPath} must have exactly one PROVENANCE.yml record`];
+  const record = matchingRecords[0];
 
   if (record.role !== 'poet_portrait') errors.push(`${options.poetId}: portrait provenance role must be poet_portrait`);
   if (record.poet_id !== options.poetId) {
@@ -128,8 +152,8 @@ export function validatePortraitProvenance(options: {
   }
 
   if (record.review_status === LEGACY_PORTRAIT_STATUS) {
-    if (!options.allowLegacy) {
-      errors.push(`${options.poetId}: new poet registration may not use ${LEGACY_PORTRAIT_STATUS}`);
+    if (!options.allowLegacy || !LEGACY_POET_IDS.has(options.poetId)) {
+      errors.push(`${options.poetId}: ${LEGACY_PORTRAIT_STATUS} is restricted to the frozen legacy poet set`);
       return errors;
     }
     if (record.origin_class !== 'legacy_canonical_portrait') {
@@ -138,8 +162,8 @@ export function validatePortraitProvenance(options: {
     if (record.source_use !== 'not_primary_evidence') {
       errors.push(`${options.poetId}: unresolved legacy portrait must be marked not_primary_evidence`);
     }
-    if (!/^Product main@[0-9a-f]{40}$/.test(record.legacy_boundary ?? '')) {
-      errors.push(`${options.poetId}: unresolved legacy portrait needs an exact Product main@<sha> boundary`);
+    if (record.legacy_boundary !== LEGACY_PORTRAIT_BOUNDARY) {
+      errors.push(`${options.poetId}: unresolved legacy portrait must retain the frozen ${LEGACY_PORTRAIT_BOUNDARY} boundary`);
     }
     if (!/^[0-9a-f]{40}$/.test(record.git_blob_sha ?? '')) {
       errors.push(`${options.poetId}: unresolved legacy portrait needs its exact git_blob_sha`);
@@ -157,18 +181,33 @@ export function validatePortraitProvenance(options: {
     return errors;
   }
 
+  if (!record.origin_class) errors.push(`${options.poetId}: verified portrait provenance needs origin_class`);
   if (!/^[0-9a-f]{64}$/.test(record.sha256 ?? '')) {
     errors.push(`${options.poetId}: verified portrait provenance needs a lowercase SHA-256`);
   } else if (sha256(bytes) !== record.sha256) {
     errors.push(`${options.poetId}: portrait SHA-256 does not match PROVENANCE.yml`);
   }
 
-  if ((record.origin_class ?? '').includes('local')) {
-    if (!record.evidence) errors.push(`${options.poetId}: verified local portrait needs an evidence record`);
+  const isLocal = (record.origin_class ?? '').includes('local');
+  if (isLocal) {
+    if (record.review_status !== 'VERIFIED-LOCAL-EDITORIAL') {
+      errors.push(`${options.poetId}: local portrait must use VERIFIED-LOCAL-EDITORIAL review_status`);
+    }
+    if (!record.evidence) {
+      errors.push(`${options.poetId}: verified local portrait needs an evidence record`);
+    } else {
+      const fileExists = options.fileExists ?? defaultFileExists;
+      if (!isSafeRepoRelativePath(record.evidence) || !fileExists(record.evidence)) {
+        errors.push(`${options.poetId}: verified local portrait evidence must be an existing repository-relative record`);
+      }
+    }
     if (record.source_use !== 'not_primary_evidence') {
       errors.push(`${options.poetId}: local editorial portrait must be marked not_primary_evidence`);
     }
   } else {
+    if (!new Set(['VERIFIED-ARCHIVAL', 'VERIFIED-PUBLIC-DOMAIN']).has(record.review_status ?? '')) {
+      errors.push(`${options.poetId}: archival/public-domain portrait must use an archival/public-domain review_status`);
+    }
     if (!/^https:\/\//.test(record.source_url ?? '')) {
       errors.push(`${options.poetId}: archival portrait needs an item-level https source_url`);
     }
@@ -189,6 +228,7 @@ export function validatePoetReleaseCandidate(options: {
   allowLegacy: boolean;
   existingIds?: ReadonlySet<string>;
   assetReader?: (relativePath: string) => Buffer | null;
+  fileExists?: (relativePath: string) => boolean;
 }): string[] {
   const { poet, moduleStem } = options;
   const errors: string[] = [];
@@ -232,6 +272,7 @@ export function validatePoetReleaseCandidate(options: {
       provenanceText: options.provenanceText,
       allowLegacy: options.allowLegacy,
       assetReader: options.assetReader,
+      fileExists: options.fileExists,
     }),
   );
   return errors;
@@ -302,6 +343,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
     famousWorks: ['Один', 'Два', 'Три', 'Четыре', 'Пять'],
   };
   const assetReader = (relativePath: string) => (relativePath === 'public/images/test-poet.jpg' ? bytes : null);
+  const fileExists = (relativePath: string) => relativePath === 'docs/test-poet-portrait.md';
 
   const valid = validatePoetReleaseCandidate({
     poet: basePoet,
@@ -309,6 +351,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
     provenanceText: validProvenance,
     allowLegacy: false,
     assetReader,
+    fileExists,
   });
   if (valid.length > 0) failures.push(`valid fixture failed: ${valid.join('; ')}`);
 
@@ -320,6 +363,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader,
+      fileExists,
     }),
   );
   expectError(
@@ -330,6 +374,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader,
+      fileExists,
     }),
   );
   expectError(
@@ -341,6 +386,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       allowLegacy: false,
       existingIds: new Set(['test-poet']),
       assetReader,
+      fileExists,
     }),
   );
   expectError(
@@ -351,6 +397,7 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader,
+      fileExists,
     }),
   );
   expectError(
@@ -361,6 +408,18 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: 'assets:\n',
       allowLegacy: false,
       assetReader,
+      fileExists,
+    }),
+  );
+  expectError(
+    'duplicate provenance',
+    validatePoetReleaseCandidate({
+      poet: basePoet,
+      moduleStem: 'testPoet',
+      provenanceText: `${validProvenance}\n${validProvenance.replace(/^assets:\n/, '')}`,
+      allowLegacy: false,
+      assetReader,
+      fileExists,
     }),
   );
   expectError(
@@ -371,9 +430,21 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader: () => null,
+      fileExists,
     }),
   );
-  const legacyProvenance = `assets:\n  - path: public/images/test-poet.jpg\n    role: poet_portrait\n    poet_id: test-poet\n    origin_class: legacy_canonical_portrait\n    review_status: ${LEGACY_PORTRAIT_STATUS}\n    source_use: not_primary_evidence\n    git_blob_sha: ${gitBlobSha(bytes)}\n    legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962\n    required_follow_up: recover provenance\n`;
+  expectError(
+    'missing local evidence file',
+    validatePoetReleaseCandidate({
+      poet: basePoet,
+      moduleStem: 'testPoet',
+      provenanceText: validProvenance,
+      allowLegacy: false,
+      assetReader,
+      fileExists: () => false,
+    }),
+  );
+  const legacyProvenance = `assets:\n  - path: public/images/test-poet.jpg\n    role: poet_portrait\n    poet_id: test-poet\n    origin_class: legacy_canonical_portrait\n    review_status: ${LEGACY_PORTRAIT_STATUS}\n    source_use: not_primary_evidence\n    git_blob_sha: ${gitBlobSha(bytes)}\n    legacy_boundary: ${LEGACY_PORTRAIT_BOUNDARY}\n    required_follow_up: recover provenance\n`;
   expectError(
     'new poet using legacy provenance',
     validatePoetReleaseCandidate({
@@ -382,6 +453,18 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: legacyProvenance,
       allowLegacy: false,
       assetReader,
+      fileExists,
+    }),
+  );
+  expectError(
+    'future poet cannot inherit legacy exception',
+    validatePoetReleaseCandidate({
+      poet: basePoet,
+      moduleStem: 'testPoet',
+      provenanceText: legacyProvenance,
+      allowLegacy: true,
+      assetReader,
+      fileExists,
     }),
   );
   expectError(
