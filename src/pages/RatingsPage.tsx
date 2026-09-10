@@ -29,6 +29,7 @@ import {
   subscribeCommunitySync,
 } from '../utils/communityStore';
 import { useCommunityLeaderboard } from '../hooks/useCommunityLeaderboard';
+import { compareEditorialRankingRows, compareReaderRankingRows } from '../utils/ratingRanking';
 
 const PRIOR_WEIGHT = 5;
 type SortKey = RatingsSortKey;
@@ -64,6 +65,23 @@ function normalizeSearch(value: string) {
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
     .toLocaleLowerCase('ru-RU');
+}
+
+function readerRankSource(row: RankedPoet) {
+  return {
+    id: row.poet.id,
+    name: row.poet.name,
+    readerScore: row.readerScore,
+    votes: row.votes,
+  };
+}
+
+function editorialRankSource(row: RankedPoet) {
+  return {
+    id: row.poet.id,
+    name: row.poet.name,
+    editorialScore: row.poet.rating,
+  };
 }
 
 export default function RatingsPage() {
@@ -156,15 +174,15 @@ export default function RatingsPage() {
         let result = 0;
         if (sortBy === 'votes') result = right.votes - left.votes || (right.readerScore ?? -1) - (left.readerScore ?? -1);
         else if (sortBy === 'discussion') result = right.comments - left.comments || right.votes - left.votes;
-        else if (sortBy === 'editorial') result = right.poet.rating - left.poet.rating;
+        else if (sortBy === 'editorial') result = compareEditorialRankingRows(editorialRankSource(left), editorialRankSource(right));
         else if (sortBy === 'consensus') result = (left.deviation ?? 999) - (right.deviation ?? 999) || right.votes - left.votes;
-        else result = (right.readerScore ?? -1) - (left.readerScore ?? -1) || right.votes - left.votes || right.poet.rating - left.poet.rating;
+        else result = compareReaderRankingRows(readerRankSource(left), readerRankSource(right));
         return result || left.poet.name.localeCompare(right.poet.name, 'ru') || left.poet.id.localeCompare(right.poet.id);
       });
   }, [query, ratedOnly, rows, sortBy, tag]);
 
   const ratedRows = rows.filter((row) => row.votes > 0);
-  const topReader = ratedRows.slice().sort((left, right) => (right.readerScore ?? 0) - (left.readerScore ?? 0) || right.votes - left.votes)[0];
+  const topReader = ratedRows.slice().sort((left, right) => compareReaderRankingRows(readerRankSource(left), readerRankSource(right)))[0];
   const mostDiscussed = rows.slice().sort((left, right) => right.comments - left.comments || right.votes - left.votes)[0];
   const consensus = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (left.deviation ?? 9) - (right.deviation ?? 9) || right.votes - left.votes)[0];
   const controversial = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (right.deviation ?? 0) - (left.deviation ?? 0) || right.votes - left.votes)[0];
@@ -238,7 +256,7 @@ export default function RatingsPage() {
         </section>
 
         <section className="space-y-4 md:hidden" aria-label="Рейтинг поэтов">
-          {filtered.map((row, index) => <MobileRankCard key={row.poet.id} row={row} rank={index + 1} />)}
+          {filtered.map((row, index) => <MobileRankCard key={row.poet.id} row={row} rank={sortBy === 'reader' && row.readerScore === null ? null : index + 1} />)}
           {!filtered.length && <EmptyRatingResults onReset={resetFilters} />}
         </section>
 
@@ -246,16 +264,18 @@ export default function RatingsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] border-collapse">
               <thead className="sticky top-20 z-10 bg-[#071018]/95 backdrop-blur-xl"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/40"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
-              <tbody>{filtered.map((row, index) => <tr key={row.poet.id} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
-                <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${index < 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/30 text-cyan-100/50'}`}>{index + 1}</span></td>
+              <tbody>{filtered.map((row, index) => {
+                const readerPlace = sortBy === 'reader' && row.readerScore === null ? null : index + 1;
+                return <tr key={row.poet.id} data-reader-status={row.readerScore === null ? 'unrated' : 'rated'} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
+                <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${readerPlace !== null && readerPlace <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/30 text-cyan-100/50'}`}>{readerPlace ?? '—'}</span></td>
                 <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div className="max-w-[260px] truncate text-xs text-cyan-100/35">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
-                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{fmt(row.readerScore)}</div><div className="text-[10px] text-cyan-100/30">с поправкой на выборку</div></td>
-                <td className="px-5 py-4 text-cyan-100/70">{fmt(row.rawScore)}</td>
+                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/30">{row.readerScore === null ? 'нет читательских голосов' : 'с поправкой на выборку'}</div></td>
+                <td className="px-5 py-4 text-cyan-100/70">{row.rawScore === null ? '—' : `${fmt(row.rawScore)} / 5`}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.votes}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.comments}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.poet.rating.toFixed(1)} / 10</td>
                 <td className="px-5 py-4 text-cyan-100/45">{row.deviation === null ? '—' : fmt(row.deviation)}</td>
-              </tr>)}</tbody>
+              </tr>})}</tbody>
             </table>
           </div>
           {!filtered.length && <EmptyRatingResults onReset={resetFilters} />}
@@ -270,7 +290,7 @@ export default function RatingsPage() {
           </div>
           <div className="rounded-[2rem] border border-cyan-400/12 bg-[#071018]/70 p-6 sm:p-8">
             <div className="mb-4 flex items-center gap-2 text-cyan-300"><ShieldCheck size={19} /><h2 className="font-serif text-2xl font-bold text-white">Как считается место</h2></div>
-            <p className="text-sm leading-relaxed text-cyan-100/55">Индекс читателей — байесовская оценка: фактический средний балл постепенно получает больший вес по мере роста числа голосов. До накопления выборки результат мягко тяготеет к общему среднему по сайту. Та же поправка применяется к лидерам по отдельным качествам. Редакционная оценка отображается отдельно и не подменяет мнение читателей.</p>
+            <p className="text-sm leading-relaxed text-cyan-100/55">Индекс читателей — байесовская оценка по шкале /5: фактический средний балл постепенно получает больший вес по мере роста числа голосов. До накопления выборки результат мягко тяготеет к общему среднему по сайту. Та же поправка применяется к лидерам по отдельным качествам. Редакционная оценка /10 отображается отдельно и не участвует в читательских местах.</p>
             <Link to="/poets" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-cyan-300 px-5 text-xs font-bold uppercase tracking-[0.14em] text-black">Перейти к поэтам и голосовать <ArrowRight size={15} /></Link>
           </div>
         </section>
@@ -283,11 +303,11 @@ function EmptyRatingResults({ onReset }: { onReset: () => void }) {
   return <div className="p-12 text-center text-cyan-100/40"><Search className="mx-auto text-cyan-100/20" size={28} /><div className="mt-4 font-serif text-2xl font-bold text-white/72">Поэты не найдены</div><p className="mt-2 text-sm">Измените поиск или очистите фильтры.</p><button type="button" onClick={onReset} className="mt-5 inline-flex min-h-10 items-center rounded-full bg-cyan-300 px-4 text-xs font-bold text-black">Показать весь рейтинг</button></div>;
 }
 
-function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number }) {
+function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number | null }) {
   return (
-    <Link to={`/poets/${row.poet.id}`} className="group block rounded-[1.75rem] border border-cyan-400/10 bg-[#071018]/72 p-5 transition hover:border-luxury-gold/25">
+    <Link to={`/poets/${row.poet.id}`} data-reader-status={row.readerScore === null ? 'unrated' : 'rated'} className="group block rounded-[1.75rem] border border-cyan-400/10 bg-[#071018]/72 p-5 transition hover:border-luxury-gold/25">
       <div className="flex items-start gap-4">
-        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/35 text-cyan-100/55'}`}>{rank}</span>
+        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank !== null && rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/35 text-cyan-100/55'}`}>{rank ?? '—'}</span>
         <img src={asset(row.poet.photo)} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h3>
@@ -296,8 +316,8 @@ function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number }) {
         <ArrowRight size={17} className="mt-2 shrink-0 text-cyan-300 transition group-hover:translate-x-1" />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <Metric label="Индекс читателей" value={fmt(row.readerScore)} accent />
-        <Metric label="Средний балл" value={fmt(row.rawScore)} />
+        <Metric label="Индекс читателей" value={row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`} accent />
+        <Metric label="Средний балл читателей" value={row.rawScore === null ? '—' : `${fmt(row.rawScore)} / 5`} />
         <Metric label="Голоса / мнения" value={`${row.votes} / ${row.comments}`} />
         <Metric label="Редакция" value={`${row.poet.rating.toFixed(1)} / 10`} />
       </div>
