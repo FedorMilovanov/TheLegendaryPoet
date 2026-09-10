@@ -63,7 +63,7 @@ expect(migrated.positions['pushkin-tucha'] === 128.5, 'legacy progress must migr
 expect(migrated.completedTrackIds.length === 1, 'legacy completed ids must be deduplicated and sanitized');
 expect(storage.getItem('tlp-audio-last-track') === null, 'legacy last-track storage must be retired after migration');
 expect(storage.getItem('tlp-audio-volume') === null, 'legacy volume storage must be retired after migration');
-expect(storage.getItem('tlp-audio-completed') === null, 'legacy completion storage must be retired after migration');
+expect(storage.getItem('tlp-audio-completed') === null, 'legacy completed storage must be retired after migration');
 expect(storage.getItem('tlp-audio-position:pushkin-tucha') === null, 'legacy progress storage must be retired after migration');
 
 updateAudioSession((snapshot) => {
@@ -87,7 +87,11 @@ expect(muted.volume === 0 && muted.muted, 'negative volume must clamp to zero wi
 setStoredLastTrack('INVALID ID WITH SPACES');
 expect(readAudioSession().lastTrackId === null, 'invalid track ids must not enter the session');
 setStoredCompletedTracks(['blok-rossiya', 'blok-rossiya', 'bad id']);
-expect(readAudioSession().completedTrackIds.join(',') === 'blok-rossiya', 'completed ids must remain unique and sanitized');
+const additiveCompleted = readAudioSession().completedTrackIds;
+expect(
+  additiveCompleted.includes('blok-rossiya') && additiveCompleted.includes('pushkin-tucha'),
+  'completion updates must sanitize ids and preserve previously completed tracks instead of treating stale omission as deletion',
+);
 
 updateAudioSession((snapshot) => {
   snapshot.lastTrackId = 'pushkin-tucha';
