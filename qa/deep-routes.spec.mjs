@@ -109,7 +109,7 @@ for (const profile of [
       expect(pageErrors).toEqual([]);
     });
 
-    test('command search derives poems, preserves Russian semantics and lands on the exact poem', async ({ page }) => {
+    test('command search derives poems and essay sections, preserves Russian semantics and lands on exact anchors', async ({ page }) => {
       const pageErrors = [];
       page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -138,19 +138,47 @@ for (const profile of [
       await poemResult.click();
       await expect(page).toHaveURL(/\/poets\/sergei-yesenin#poem-yesenin-3$/);
 
-      const target = page.locator('#poem-yesenin-3');
-      await expect(target).toBeVisible();
-      await expect.poll(async () => target.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
-      await expect.poll(async () => target.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(112);
+      const poemTarget = page.locator('#poem-yesenin-3');
+      await expect(poemTarget).toBeVisible();
+      await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
+      await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(112);
 
-      const proof = await page.evaluate(() => ({
+      const poemProof = await page.evaluate(() => ({
         href: `${location.pathname}${location.hash}`,
         scrollY: window.scrollY,
         targetTop: document.getElementById('poem-yesenin-3')?.getBoundingClientRect().top ?? null,
       }));
-      fs.writeFileSync(path.join(ARTIFACT_DIR, `${profile.name}-command-search.json`), JSON.stringify(proof, null, 2));
-      await page.screenshot({ path: path.join(ARTIFACT_DIR, `${profile.name}-command-search-poem.png`), fullPage: false });
-      expect(proof.href).toBe('/poets/sergei-yesenin#poem-yesenin-3');
+      expect(poemProof.href).toBe('/poets/sergei-yesenin#poem-yesenin-3');
+
+      await page.evaluate(() => window.dispatchEvent(new Event('tlp-open-command-palette')));
+      await expect(dialog).toBeVisible();
+      await expect(input).toBeFocused();
+      await input.fill('Когда и где появилось стихотворение');
+      const essaySectionResult = page.getByRole('button', { name: /Когда и где появилось стихотворение/i });
+      await expect(essaySectionResult).toBeVisible();
+      await essaySectionResult.click();
+      await expect(page).toHaveURL(/\/essays\/vykhozhu-odin-ya-na-dorogu-lermontov#history$/);
+
+      const essaySectionTarget = page.locator('#history');
+      await expect(essaySectionTarget).toBeVisible({ timeout: 20_000 });
+      await expect(essaySectionTarget).toContainText('Когда и где появилось стихотворение');
+      await expect.poll(async () => essaySectionTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
+      await expect.poll(async () => essaySectionTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(128);
+
+      const essaySectionProof = await page.evaluate(() => ({
+        href: `${location.pathname}${location.hash}`,
+        scrollY: window.scrollY,
+        targetTop: document.getElementById('history')?.getBoundingClientRect().top ?? null,
+        heading: document.getElementById('history')?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
+      }));
+      expect(essaySectionProof.href).toBe('/essays/vykhozhu-odin-ya-na-dorogu-lermontov#history');
+      expect(essaySectionProof.heading).toContain('Когда и где появилось стихотворение');
+
+      fs.writeFileSync(
+        path.join(ARTIFACT_DIR, `${profile.name}-command-search.json`),
+        JSON.stringify({ poem: poemProof, essaySection: essaySectionProof }, null, 2),
+      );
+      await page.screenshot({ path: path.join(ARTIFACT_DIR, `${profile.name}-command-search-essay-section.png`), fullPage: false });
       expect(pageErrors).toEqual([]);
     });
   });
