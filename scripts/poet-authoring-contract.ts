@@ -19,6 +19,56 @@ const LEGACY_POET_IDS = new Set([
   'anna-akhmatova',
   'alexander-blok',
 ]);
+const RESERVED_MODULE_BINDINGS = new Set([
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'debugger',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'enum',
+  'eval',
+  'export',
+  'extends',
+  'false',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'instanceof',
+  'interface',
+  'let',
+  'new',
+  'null',
+  'package',
+  'private',
+  'protected',
+  'public',
+  'return',
+  'static',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typeof',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
+  'arguments',
+]);
 const VERIFIED_STATUSES = new Set(['VERIFIED-ARCHIVAL', 'VERIFIED-PUBLIC-DOMAIN', 'VERIFIED-LOCAL-EDITORIAL']);
 const TODO_PATTERN = /\b(?:TODO|FIXME|TBD|XXX)\b/i;
 
@@ -47,12 +97,12 @@ function stripYamlScalar(value: string): string {
 }
 
 export function isValidPoetId(id: string): boolean {
-  return POET_ID_PATTERN.test(id);
+  return POET_ID_PATTERN.test(id) && !RESERVED_MODULE_BINDINGS.has(id);
 }
 
 export function assertPoetId(id: string): void {
   if (!isValidPoetId(id)) {
-    throw new Error(`poet id must be identifier-safe ASCII kebab-case and start with a letter: ${JSON.stringify(id)}`);
+    throw new Error(`poet id must be identifier-safe ASCII kebab-case, start with a letter, and not be a reserved module binding: ${JSON.stringify(id)}`);
   }
 }
 
@@ -233,7 +283,7 @@ export function validatePoetReleaseCandidate(options: {
   const { poet, moduleStem } = options;
   const errors: string[] = [];
 
-  if (!isValidPoetId(poet.id)) errors.push(`poet id must be identifier-safe ASCII kebab-case starting with a letter: ${JSON.stringify(poet.id)}`);
+  if (!isValidPoetId(poet.id)) errors.push(`poet id must be identifier-safe ASCII kebab-case starting with a letter and not a reserved module binding: ${JSON.stringify(poet.id)}`);
   if (isValidPoetId(poet.id) && moduleStemFromPoetId(poet.id) !== moduleStem) {
     errors.push(`${poet.id}: module stem must be ${moduleStemFromPoetId(poet.id)}, got ${moduleStem}`);
   }
@@ -371,6 +421,17 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
     validatePoetReleaseCandidate({
       poet: { ...basePoet, id: '123-poet' },
       moduleStem: '123Poet',
+      provenanceText: validProvenance,
+      allowLegacy: false,
+      assetReader,
+      fileExists,
+    }),
+  );
+  expectError(
+    'reserved module binding',
+    validatePoetReleaseCandidate({
+      poet: { ...basePoet, id: 'class' },
+      moduleStem: 'class',
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader,
