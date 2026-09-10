@@ -1,33 +1,20 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { Poet } from '../src/types/poet';
 import { poets } from '../src/data/library/index';
-import { fyodorTyutchev } from '../src/data/library/fyodorTyutchev';
-import { vladimirMayakovsky } from '../src/data/library/vladimirMayakovsky';
-import { alexanderPushkin } from '../src/data/library/alexanderPushkin';
-import { mikhailLermontov } from '../src/data/library/mikhailLermontov';
-import { borisPasternak } from '../src/data/library/borisPasternak';
-import { afanasyFet } from '../src/data/library/afanasyFet';
-import { nikolayGumilev } from '../src/data/library/nikolayGumilev';
-import { sergeiYesenin } from '../src/data/library/sergeiYesenin';
-import { annaAkhmatova } from '../src/data/library/annaAkhmatova';
-import { alexanderBlok } from '../src/data/library/alexanderBlok';
+import {
+  runPoetAuthoringAdversarialFixtures,
+  validatePoetRegistrySource,
+  validatePoetReleaseCandidate,
+} from './poet-authoring-contract';
 
 const failures: string[] = [];
 const fail = (message: string) => failures.push(message);
-
-const canonicalPoets: ReadonlyArray<readonly [Poet, string]> = [
-  [fyodorTyutchev, 'fyodorTyutchev.ts'],
-  [vladimirMayakovsky, 'vladimirMayakovsky.ts'],
-  [alexanderPushkin, 'alexanderPushkin.ts'],
-  [mikhailLermontov, 'mikhailLermontov.ts'],
-  [borisPasternak, 'borisPasternak.ts'],
-  [afanasyFet, 'afanasyFet.ts'],
-  [nikolayGumilev, 'nikolayGumilev.ts'],
-  [sergeiYesenin, 'sergeiYesenin.ts'],
-  [annaAkhmatova, 'annaAkhmatova.ts'],
-  [alexanderBlok, 'alexanderBlok.ts'],
-];
+const root = process.cwd();
+const libraryDir = path.join(root, 'src', 'data', 'library');
+const indexPath = path.join(libraryDir, 'index.ts');
+const provenancePath = path.join(root, 'public', 'images', 'PROVENANCE.yml');
 
 const forbiddenServiceVoice = [
   'честный портрет',
@@ -40,13 +27,14 @@ const forbiddenServiceVoice = [
   'не умаляем',
 ] as const;
 
-const overrideUrl = new URL('../src/data/library/editorialPortraitOverrides.ts', import.meta.url);
-if (existsSync(overrideUrl)) {
+const overridePath = path.join(libraryDir, 'editorialPortraitOverrides.ts');
+if (fs.existsSync(overridePath)) {
   fail('shared editorialPortraitOverrides.ts must not exist; each poet file owns its publication prose');
 }
+if (!fs.existsSync(indexPath)) fail('src/data/library/index.ts is missing');
+if (!fs.existsSync(provenancePath)) fail('public/images/PROVENANCE.yml is missing');
 
-const indexUrl = new URL('../src/data/library/index.ts', import.meta.url);
-const indexSource = readFileSync(indexUrl, 'utf8');
+const indexSource = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
 for (const forbiddenIndexMechanism of [
   'editorialPortraitOverrides',
   'sourcePoets.map',
@@ -57,48 +45,84 @@ for (const forbiddenIndexMechanism of [
   }
 }
 
-if (poets.length !== canonicalPoets.length) {
-  fail(`published poet count must equal canonical source count: ${poets.length}/${canonicalPoets.length}`);
+const moduleFiles = fs.existsSync(libraryDir) ? fs.readdirSync(libraryDir) : [];
+const registry = validatePoetRegistrySource(indexSource, moduleFiles);
+for (const error of registry.errors) fail(`authoring registry: ${error}`);
+if (poets.length !== registry.entries.length) {
+  fail(`published poet runtime count must equal canonical registry count: ${poets.length}/${registry.entries.length}`);
+}
+if (new Set(poets.map((poet) => poet.id)).size !== poets.length) {
+  fail('published poet ids must be unique');
 }
 
-for (const [poet, filename] of canonicalPoets) {
-  const published = poets.find((candidate) => candidate.id === poet.id);
-  if (!published) {
-    fail(`${poet.id}: canonical poet is missing from the published catalog`);
-  } else if (published !== poet) {
-    fail(`${poet.id}: published catalog must expose the canonical object directly, without an override clone`);
+for (const fixtureFailure of runPoetAuthoringAdversarialFixtures()) {
+  fail(`authoring fixture: ${fixtureFailure}`);
+}
+
+const provenanceText = fs.existsSync(provenancePath) ? fs.readFileSync(provenancePath, 'utf8') : '';
+const publishedById = new Map(poets.map((poet) => [poet.id, poet] as const));
+const sourcePaths = new Set<string>();
+
+for (const entry of registry.entries) {
+  const sourcePath = path.join(libraryDir, `${entry.stem}.ts`);
+  sourcePaths.add(sourcePath);
+  if (!fs.existsSync(sourcePath)) {
+    fail(`${entry.stem}: registered source file is missing`);
+    continue;
   }
 
-  const sourceUrl = new URL(`../src/data/library/${filename}`, import.meta.url);
-  const source = readFileSync(sourceUrl, 'utf8');
+  let canonical: Poet | undefined;
+  try {
+    const sourceModule = (await import(`${pathToFileURL(sourcePath).href}?authority=${Date.now()}`)) as Record<string, unknown>;
+    canonical = sourceModule[entry.variable] as Poet | undefined;
+  } catch (error) {
+    fail(`${entry.stem}: source module cannot be imported: ${(error as Error).message}`);
+    continue;
+  }
+  if (!canonical || typeof canonical !== 'object') {
+    fail(`${entry.stem}: module must export const ${entry.variable}: Poet`);
+    continue;
+  }
+
+  const published = publishedById.get(canonical.id);
+  if (!published) {
+    fail(`${canonical.id}: canonical poet is missing from the published catalog`);
+  } else if (published !== canonical) {
+    fail(`${canonical.id}: published catalog must expose the canonical object directly, without an override clone`);
+  }
+
+  for (const error of validatePoetReleaseCandidate({
+    poet: canonical,
+    moduleStem: entry.stem,
+    provenanceText,
+    allowLegacy: true,
+  })) {
+    fail(`${canonical.id}: authoring release contract: ${error}`);
+  }
+
+  const source = fs.readFileSync(sourcePath, 'utf8');
   const moralCount = source.match(/^  moralPortrait:/gm)?.length ?? 0;
   const conclusionCount = source.match(/^  authorCommentary:/gm)?.length ?? 0;
   if (moralCount !== 1 || conclusionCount !== 1) {
-    fail(`${poet.id}: ${filename} must contain exactly one moralPortrait and authorCommentary; found ${moralCount}/${conclusionCount}`);
-  }
-
-  if (!poet.moralPortrait?.trim() || !poet.authorCommentary?.trim()) {
-    fail(`${poet.id}: canonical moral portrait and conclusion must both be non-empty`);
+    fail(`${canonical.id}: ${entry.stem}.ts must contain exactly one moralPortrait and authorCommentary; found ${moralCount}/${conclusionCount}`);
   }
 
   const editorialText = [
-    poet.shortBio,
-    poet.fullBio,
-    poet.historicalNote ?? '',
-    poet.spiritualSearch ?? '',
-    poet.moralPortrait ?? '',
-    poet.authorCommentary ?? '',
+    canonical.shortBio,
+    canonical.fullBio,
+    canonical.historicalNote ?? '',
+    canonical.spiritualSearch ?? '',
+    canonical.moralPortrait ?? '',
+    canonical.authorCommentary ?? '',
   ].join('\n').toLocaleLowerCase('ru');
-
   for (const marker of forbiddenServiceVoice) {
     if (editorialText.includes(marker)) {
-      fail(`${poet.id}: service/editorial scaffolding remains in ${filename}: “${marker}”`);
+      fail(`${canonical.id}: service/editorial scaffolding remains in ${entry.stem}.ts: “${marker}”`);
     }
   }
 }
 
-const directSourcePaths = canonicalPoets.map(([, filename]) => fileURLToPath(new URL(`../src/data/library/${filename}`, import.meta.url)));
-if (new Set(directSourcePaths).size !== directSourcePaths.length) {
+if (sourcePaths.size !== registry.entries.length) {
   fail('canonical poet source paths must be unique');
 }
 
@@ -106,4 +130,6 @@ if (failures.length > 0) {
   throw new Error(`Poet authority validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
 }
 
-console.log(`Poet authority validation passed: ${canonicalPoets.length} canonical files publish directly with no hidden editorial override or service voice.`);
+console.log(
+  `Poet authority validation passed: ${registry.entries.length} registry-driven canonical files, shared authoring contract, portrait provenance and adversarial fixtures.`,
+);
