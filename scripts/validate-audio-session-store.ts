@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   AUDIO_SESSION_COMPLETED_PREFIX,
   AUDIO_SESSION_LAST_TRACK_KEY,
@@ -42,6 +44,37 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
+
+function collectSourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return collectSourceFiles(path);
+    return /\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name) ? [path] : [];
+  });
+}
+
+const repositoryRoot = process.cwd();
+const productionAggregateCallers = collectSourceFiles(join(repositoryRoot, 'src'))
+  .filter((path) => !path.endsWith(join('components', 'music', 'audioSessionStore.ts')))
+  .filter((path) => {
+    const source = readFileSync(path, 'utf8');
+    return /\b(?:writeAudioSession|updateAudioSession)\b/.test(source);
+  });
+expect(
+  productionAggregateCallers.length === 0,
+  `production source must use field-level audio session writes only; aggregate caller(s): ${productionAggregateCallers.join(', ')}`,
+);
+
+const completionQaSource = readFileSync(join(repositoryRoot, 'qa', 'audio-completion.spec.mjs'), 'utf8');
+expect(
+  !completionQaSource.includes(AUDIO_SESSION_STORAGE_KEY),
+  'audio completion browser proof must read v3 registers rather than the retired v2 aggregate',
+);
+const manualBrowserWorkflow = readFileSync(join(repositoryRoot, '.github', 'workflows', 'manual-browser-qa.yml'), 'utf8');
+expect(
+  manualBrowserWorkflow.includes('qa/audio-cross-tab.spec.mjs') && manualBrowserWorkflow.includes('qa/audio-completion.spec.mjs'),
+  'manual browser admission must execute both audio cross-tab and completion proofs',
+);
 
 storage.clear();
 const fresh = readAudioSession();
