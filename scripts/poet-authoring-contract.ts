@@ -212,7 +212,7 @@ export function validatePoetReleaseCandidate(options: {
     else if (TODO_PATTERN.test(value)) errors.push(`${poet.id}: ${field} still contains draft placeholder text`);
   }
 
-  if (!Number.isInteger(poet.birthYear) || poet.birthYear < 1700) errors.push(`${poet.id}: birthYear must be a verified year >= 1700`);
+  if (!Number.isInteger(poet.birthYear) || poet.birthYear <= 0) errors.push(`${poet.id}: birthYear must be a verified positive year`);
   if (poet.deathYear !== undefined && (!Number.isInteger(poet.deathYear) || poet.deathYear <= poet.birthYear)) {
     errors.push(`${poet.id}: deathYear must be later than birthYear or omitted for a living poet`);
   }
@@ -330,6 +330,16 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
       provenanceText: validProvenance,
       allowLegacy: false,
       existingIds: new Set(['test-poet']),
+      assetReader,
+    }),
+  );
+  expectError(
+    'placeholder birth year',
+    validatePoetReleaseCandidate({
+      poet: { ...basePoet, birthYear: 0 },
+      moduleStem: 'testPoet',
+      provenanceText: validProvenance,
+      allowLegacy: false,
       assetReader,
     }),
   );
