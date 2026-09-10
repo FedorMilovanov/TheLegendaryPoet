@@ -214,7 +214,7 @@ for (const notFoundRoute of notFoundRoutes) {
   test(`not-found route remains a healthy app shell: ${notFoundRoute}`, async ({ page }) => {
   const runtime = attachRuntimeDiagnostics(page);
   const response = await page.goto(`${BASE_URL}${notFoundRoute}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  expect(response?.status() ?? 0).toBeLessThan(400);
+  expect(response?.status()).toBe(404);
   await settleRoute(page);
   const snapshot = await page.evaluate(() => ({
     pathname: window.location.pathname,
@@ -232,6 +232,8 @@ for (const notFoundRoute of notFoundRoutes) {
   expect(snapshot.footerPresent).toBe(true);
   await writeEvidence(notFoundRoute, { kind: 'not-found', route: notFoundRoute, snapshot, runtime });
   expect(runtime.pageErrors).toEqual([]);
-  expect(runtime.failedResponses).toEqual([]);
+  expect(runtime.failedResponses).toHaveLength(1);
+  expect(runtime.failedResponses[0]?.status).toBe(404);
+  expect(new URL(runtime.failedResponses[0]?.url || BASE_URL).pathname).toBe(notFoundRoute);
 });
 }
