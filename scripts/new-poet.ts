@@ -1,98 +1,115 @@
 /**
- * Scaffold a new poet module from the canonical template.
+ * Scaffold an explicit, unreleasable poet draft.
  *
  * Usage:
- *   npx tsx scripts/new-poet.ts "Имя Отчество Фамилия" [--id kebab-id]
+ *   npx tsx scripts/new-poet.ts "Имя Отчество Фамилия" --id ascii-kebab-id --portrait /images/file.jpg
  *
- * Creates src/data/library/<camel>.ts, prints the two lines to add to
- * src/data/library/index.ts, and reminds you of the checklist in
- * POET_AUTHORING_GUIDE.md. Refuses to overwrite an existing file.
- *
- * This does NOT touch package.json (Arena package rule) and does NOT auto-edit
- * index.ts — you add the import + array entry by hand, deliberately.
+ * The command never edits the canonical registry. It writes
+ * `src/data/library/<camel>.draft.ts`; only `register-poet.ts` may promote a
+ * completed draft into the published module set after the release contract,
+ * portrait bytes and item-level provenance all pass.
  */
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+import { poets } from '../src/data/library/index';
+import {
+  assertPoetId,
+  isValidPortraitPath,
+  moduleStemFromPoetId,
+} from './poet-authoring-contract';
 
-function toKebab(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+function option(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
 }
 
-// Map a kebab slug to a camelCase file/variable stem by transliterating the
-// surname. Keep it simple: agent will refine the filename if needed.
-function camelFromKebab(kebab: string): string {
-  return kebab
-    .split('-')
-    .map((w, i) => (i === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join('');
+function fail(message: string): never {
+  console.error(`✗ ${message}`);
+  process.exit(1);
 }
 
 const args = process.argv.slice(2);
 if (!args.length || args[0] === '--help' || args[0] === '-h') {
-  console.log('Usage: npx tsx scripts/new-poet.ts "<Full Name>" [--id <kebab-id>]');
+  console.log('Usage: npx tsx scripts/new-poet.ts "<Full Name>" --id <ascii-kebab-id> --portrait </images/file.jpg>');
   process.exit(0);
 }
 
-const fullName = args.find((a) => !a.startsWith('--'))!;
-const idIdx = args.indexOf('--id');
-const id = idIdx >= 0 ? args[idIdx + 1] : toKebab(fullName.split(' ').slice(-1)[0]);
-const camel = camelFromKebab(id);
-const filePath = path.resolve('src/data/library', `${camel}.ts`);
+const fullName = args[0]?.trim();
+const id = option(args, '--id');
+const portrait = option(args, '--portrait');
+if (!fullName || fullName.startsWith('--')) fail('quoted full name must be the first argument');
+if (fullName.split(/\s+/).length < 2) fail('full name must contain at least given name and surname');
+if (!id) fail('explicit --id is required; surname-only implicit ids are forbidden');
+if (!portrait) fail('explicit --portrait path is required; the scaffold does not invent an image path');
 
-if (fs.existsSync(filePath)) {
-  console.error(`✗ Refusing to overwrite existing file: ${filePath}`);
-  process.exit(1);
+try {
+  assertPoetId(id);
+} catch (error) {
+  fail((error as Error).message);
+}
+if (!isValidPortraitPath(portrait)) {
+  fail(`portrait must be a lowercase public /images path without traversal: ${JSON.stringify(portrait)}`);
+}
+if (poets.some((poet) => poet.id === id)) fail(`canonical poet id already exists: ${id}`);
+
+const stem = moduleStemFromPoetId(id);
+const libraryDir = path.resolve('src/data/library');
+const draftPath = path.join(libraryDir, `${stem}.draft.ts`);
+const finalPath = path.join(libraryDir, `${stem}.ts`);
+if (fs.existsSync(draftPath) || fs.existsSync(finalPath)) {
+  fail(`refusing to overwrite existing authoring module for ${id}`);
 }
 
-const translitPhoto = id;
+const nameParts = fullName.split(/\s+/);
+const shortName = `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+const template = `import type { Poet } from '../../types/poet';
 
-const template = `import { Poet } from '../../types/poet';
-
-export const ${camel}: Poet = {
+// DRAFT ONLY. This file is not part of the canonical poets[] registry.
+// Complete the content and item-level portrait provenance, then use register-poet.ts.
+export const ${stem}: Poet = {
   id: '${id}',
-  name: '${fullName.split(' ')[0]} ${fullName.split(' ').slice(-1)[0]}',
+  name: '${shortName}',
   fullName: '${fullName}',
   birthYear: 0, // TODO: YYYY (verify)
   deathYear: 0, // TODO: YYYY (undefined if living)
   nationality: 'Русский',
-  photo: '/images/${translitPhoto}.jpg', // TODO: add image to public/images/
-  shortBio: ` + '`TODO: 1–2 предложения, ~280–360 знаков. Эпиграмматичный, не умильный портрет.`' + `,
+  photo: '${portrait}', // release requires existing bytes + acceptable public/images/PROVENANCE.yml record
+  shortBio: ` + '`TODO: 1–2 предложения, ~280–360 знаков. Конкретный портрет, не рекламный лозунг.`' + `,
   fullBio: ` + '`TODO: 5–9 абзацев (\\n\\n между ними). Жизнь по этапам, с датами.`' + `,
   rating: 9.5, // 0–10
-  tags: ['TODO-эпоха', 'TODO-течение'],
+  tags: ['TODO-эпоха', 'TODO-течение', 'TODO-тема'],
   poems: [
     {
       id: '${id}-1',
       title: 'TODO Название',
       year: 0, // TODO
-      text: ` + '`TODO: канонический текст, сверен по >=2 источникам (>=1 A+): ФЭБ/РВБ/Викитека`' + `,
+      text: ` + '`TODO: канонический текст, сверен по >=2 источникам (>=1 A+)`' + `,
       analysis: 'TODO: краткий литературный разбор',
-      // biblicalPerspective — только если есть реальный библейский образ; цитируй те же слова, что в text
       rating: 9.5,
     },
-    // минимум 2–4 стихотворения
+    {
+      id: '${id}-2',
+      title: 'TODO Второе название',
+      year: 0, // TODO
+      text: ` + '`TODO: второй проверенный канонический текст`' + `,
+      analysis: 'TODO: краткий литературный разбор',
+      rating: 9.5,
+    },
   ],
   historicalNote: 'TODO: 2–4 предложения об эпохе',
-  spiritualSearch: 'TODO: духовный путь и мировоззрение — аналитически, без баптизирования',
-  moralPortrait: ` + '`TODO (опционально): честная моральная оценка грехов; цензура POET_AUTHORING_GUIDE §6. Можно опустить.`' + `,
-  authorCommentary: 'TODO (опционально): короткая итоговая ремарка',
+  spiritualSearch: 'TODO: духовный путь и мировоззрение — аналитически, без подмены источников',
+  moralPortrait: ` + '`TODO: документированный нравственный портрет; release-authority требует непустое поле.`' + `,
+  authorCommentary: 'TODO: короткая итоговая ремарка; release-authority требует непустое поле.',
   testimonies: [
-    // цель 5–9: микс contemporary + historian; у каждой источник (книга+год), желательно sourceUrl
+    // цель 5–9: contemporary + historian; у каждой записи проверяемый source
   ],
   famousWorks: ['TODO 1', 'TODO 2', 'TODO 3', 'TODO 4', 'TODO 5'],
 };
 `;
 
-fs.writeFileSync(filePath, template, 'utf8');
-console.log(`✓ Created ${path.relative(process.cwd(), filePath)}`);
-console.log(`\nNext — add to src/data/library/index.ts:`);
-console.log(`  import { ${camel} } from './${camel}';`);
-console.log(`  ...and  ${camel},  in the poets[] array (in epoch/importance order).`);
-console.log(`\nThen follow the checklist in POET_AUTHORING_GUIDE.md §9,`);
-console.log(`and run:  npx tsx scripts/validate-library.ts`);
+fs.writeFileSync(draftPath, template, { encoding: 'utf8', flag: 'wx' });
+console.log(`✓ Created unreleasable draft ${path.relative(process.cwd(), draftPath)}`);
+console.log('✓ Canonical src/data/library/index.ts was not changed.');
+console.log(`\nBefore release, add/verify ${portrait} and its item-level record in public/images/PROVENANCE.yml.`);
+console.log(`Then run: npx tsx scripts/register-poet.ts --id ${id} --after <existing-poet-id>`);
+console.log('Registration fails closed until identity, content, portrait bytes, provenance and registry placement all pass.');
