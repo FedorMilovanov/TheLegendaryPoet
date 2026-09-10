@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
-const SESSION_KEY = 'tlp-audio-session:v2';
+const LAST_TRACK_KEY = 'tlp-audio-session:v3:last-track';
+const COMPLETED_PREFIX = 'tlp-audio-session:v3:completed:';
 
-async function readSession(page) {
-  return page.evaluate((key) => {
-    const raw = window.localStorage.getItem(key);
+async function readRegister(page, key) {
+  return page.evaluate((storageKey) => {
+    const raw = window.localStorage.getItem(storageKey);
     return raw ? JSON.parse(raw) : null;
-  }, SESSION_KEY);
+  }, key);
 }
 
 test('seeking to 97% stays progress-only while native ended owns categorical completion', async ({ page }) => {
@@ -28,10 +29,17 @@ test('seeking to 97% stays progress-only while native ended owns categorical com
 
   await audio.evaluate((element) => element.pause());
 
-  const initialSession = await readSession(page);
-  const trackId = initialSession?.lastTrackId;
-  expect(trackId).toBeTruthy();
-  expect(initialSession.completedTrackIds).not.toContain(trackId);
+  await expect.poll(async () => {
+    const register = await readRegister(page, LAST_TRACK_KEY);
+    return typeof register?.value === 'string' ? register.value : '';
+  }).not.toBe('');
+  const lastTrack = await readRegister(page, LAST_TRACK_KEY);
+  const trackId = lastTrack?.value;
+  expect(typeof trackId).toBe('string');
+
+  const completionKey = `${COMPLETED_PREFIX}${trackId}`;
+  const initialCompletion = await readRegister(page, completionKey);
+  expect(initialCompletion?.value === true).toBe(false);
 
   await audio.evaluate((element) => {
     element.currentTime = element.duration * 0.97;
@@ -39,8 +47,8 @@ test('seeking to 97% stays progress-only while native ended owns categorical com
   });
 
   await expect.poll(async () => {
-    const session = await readSession(page);
-    return session?.completedTrackIds?.includes(trackId) ?? false;
+    const register = await readRegister(page, completionKey);
+    return register?.value === true;
   }).toBe(false);
 
   await audio.evaluate((element) => {
@@ -59,8 +67,8 @@ test('seeking to 97% stays progress-only while native ended owns categorical com
   ).toBe(true);
 
   await expect.poll(async () => {
-    const session = await readSession(page);
-    return session?.completedTrackIds?.includes(trackId) ?? false;
+    const register = await readRegister(page, completionKey);
+    return register?.value === true;
   }).toBe(true);
 
   await page.goto(`${BASE_URL}/archive`, { waitUntil: 'domcontentloaded' });
