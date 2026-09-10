@@ -54,15 +54,15 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 const repositoryRoot = process.cwd();
-const productionAggregateCallers = collectSourceFiles(join(repositoryRoot, 'src'))
+const internalSessionCallers = collectSourceFiles(join(repositoryRoot, 'src'))
   .filter((path) => !path.endsWith(join('components', 'music', 'audioSessionStore.ts')))
   .filter((path) => {
     const source = readFileSync(path, 'utf8');
-    return /\b(?:writeAudioSession|updateAudioSession)\b/.test(source);
+    return /\b(?:writeAudioSession|updateAudioSession|createAudioSessionReplica)\b/.test(source);
   });
 expect(
-  productionAggregateCallers.length === 0,
-  `production source must use field-level audio session writes only; aggregate caller(s): ${productionAggregateCallers.join(', ')}`,
+  internalSessionCallers.length === 0,
+  `production source must use field-level audio session writes only; internal/aggregate caller(s): ${internalSessionCallers.join(', ')}`,
 );
 
 const completionQaSource = readFileSync(join(repositoryRoot, 'qa', 'audio-completion.spec.mjs'), 'utf8');
