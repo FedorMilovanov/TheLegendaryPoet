@@ -2,7 +2,7 @@ export function normalizeRussianSearch(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase('ru-RU')
-    .replaceAll('ё', 'е')
+    .replace(/ё/gu, 'е')
     .replace(/\s+/gu, ' ')
     .trim();
 }
