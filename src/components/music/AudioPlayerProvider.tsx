@@ -20,6 +20,7 @@ import {
   setStoredLastTrack,
   setStoredTrackPosition,
   setStoredVolume,
+  subscribeAudioSession,
 } from './audioSessionStore';
 import {
   isPlaybackCoordinationClaim,
@@ -162,6 +163,14 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const [resumeAt, setResumeAt] = useState<number | null>(null);
   const [immersiveOpen, setImmersiveOpen] = useState(false);
   const [completedTrackIds, setCompletedTrackIds] = useState<ReadonlySet<string>>(() => new Set(completedRef.current));
+
+  useEffect(() => subscribeAudioSession((session) => {
+    const nextCompleted = new Set(session.completedTrackIds);
+    completedRef.current = nextCompleted;
+    setCompletedTrackIds(new Set(nextCompleted));
+    setVolumeState(clamp(session.volume, 0, 1));
+    setMuted(session.muted);
+  }), []);
 
   const getSavedPosition = useCallback((trackId: string) => getStoredTrackPosition(trackId), []);
 
