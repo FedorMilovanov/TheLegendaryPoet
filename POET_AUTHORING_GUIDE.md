@@ -39,7 +39,7 @@ scripts/register-poet.ts ← валидирует и публикует draft в
 Правила:
 
 - Один опубликованный поэт — один файл. Не собирать библиотеку обратно в гигантский `poets.ts`.
-- `id` задаётся **явно** и только в ASCII kebab-case по правилу `[a-z0-9]+(?:-[a-z0-9]+)*`, например `sergei-yesenin`. Автоматический ID из одной фамилии запрещён.
+- `id` задаётся **явно** и только в identifier-safe ASCII kebab-case по правилу `[a-z][a-z0-9]*(?:-[a-z0-9]+)*`, например `sergei-yesenin`. Первый символ обязан быть латинской строчной буквой; автоматический ID из одной фамилии запрещён.
 - Имя canonical-файла механически выводится из полного `id`: `sergei-yesenin` → `sergeiYesenin.ts`. Ручной второй naming authority не допускается.
 - `new-poet.ts` не публикует поэта и не меняет `index.ts`: он создаёт `<poetName>.draft.ts` и прямо помечает результат как unreleasable.
 - Публикация выполняется только командой `register-poet.ts --id <id> --after <existing-id>`. Команда до мутации проверяет ID/collision, обязательные поля, portrait bytes, item-level provenance и будущую registry convergence.
@@ -62,7 +62,7 @@ npm run validate:poet-authority
 
 | Поле | Стандарт |
 |---|---|
-| `id` | Уникальный **ASCII kebab-case**; становится маршрутом `/poets/<id>`. |
+| `id` | Уникальный **identifier-safe ASCII kebab-case**, начинающийся с `[a-z]`; становится маршрутом `/poets/<id>`. |
 | `name` | Краткое имя с правильной орфографией и `ё`, где она нормативна. |
 | `fullName` | Полное имя. |
 | `birthYear`, `deathYear` | Проверенные годы; `deathYear` отсутствует только у живущего человека. |
@@ -233,7 +233,7 @@ npm run validate:poet-authority
 ## 9. Чек-лист перед публикацией
 
 ```text
-[ ] Draft создан new-poet.ts с явными --id и --portrait; id — ASCII kebab-case
+[ ] Draft создан new-poet.ts с явными --id и --portrait; id — identifier-safe ASCII kebab-case и начинается с [a-z]
 [ ] Все обязательные поля заполнены; TODO/FIXME/TBD/XXX отсутствуют
 [ ] id и poem-id уникальны
 [ ] Даты проверены и образуют непротиворечивую хронологию
@@ -253,7 +253,7 @@ npm run validate:poet-authority
 [ ] В PR описаны источники, portrait provenance, исправленные легенды и оставшиеся неопределённости
 ```
 
-`npm run check:content` включает `validate:poet-authority`; этот gate динамически сверяет published `.ts` modules с единственным `library/index.ts`, проверяет release contract каждого canonical poet и запускает adversarial fixtures для Unicode ID, collision, registry omission, missing portrait/provenance и запрета legacy-status для новой регистрации.
+`npm run check:content` включает `validate:poet-authority`; этот gate динамически сверяет published `.ts` modules с единственным `library/index.ts`, проверяет release contract каждого canonical poet и запускает adversarial fixtures для Unicode/numeric-leading ID, collision, placeholder birth year, registry omission, missing portrait/provenance и запрета legacy-status для новой регистрации.
 
 ---
 
