@@ -33,6 +33,8 @@ jobs:
         run: npm run validate:merge-certification
       - name: Validate content, stores, and literary style
         run: npm run check:content
+      - name: Validate source-derived command search contract
+        run: npx tsx scripts/validate-command-search.ts
       - name: Validate published audio release fail-closed behavior
         run: node scripts/validate-audio-release-gate.mjs
       - name: Validate persistent app shell invariants
