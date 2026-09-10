@@ -25,6 +25,7 @@ const feed = read('feed.xml');
 const robots = read('robots.txt');
 const rootHtml = read('index.html');
 const notFoundHtml = read('404.html');
+const routeContract = JSON.parse(fs.readFileSync(path.resolve('src/routes/route-contract.json'), 'utf8'));
 
 expect(sitemap.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'), 'sitemap must declare the image namespace');
 expect(sitemap.includes('<lastmod>'), 'sitemap must include truthful lastmod values');
@@ -55,6 +56,20 @@ for (const urlString of uniqueUrls) {
   expect(html.includes('type="application/ld+json"'), `structured data missing for ${url.pathname}`);
 }
 
+for (const { from, to } of routeContract.redirects) {
+  const aliasHtml = htmlForPath(from);
+  const canonicalTarget = `${SITE_URL}${to}`;
+  expect(!uniqueUrls.has(`${SITE_URL}${from}`), `legacy alias leaked into sitemap: ${from}`);
+  expect(aliasHtml.includes(`data-legacy-alias="${from}"`), `legacy alias marker missing for ${from}`);
+  expect(aliasHtml.includes('<meta name="robots" content="noindex,follow" />'), `legacy alias must be noindex,follow: ${from}`);
+  expect(aliasHtml.includes('<meta name="googlebot" content="noindex,follow" />'), `legacy alias googlebot policy mismatch: ${from}`);
+  expect(aliasHtml.includes(`<meta name="tlp-legacy-alias-target" content="${to}" />`), `legacy alias target marker mismatch: ${from}`);
+  expect(aliasHtml.includes(`<link rel="canonical" href="${canonicalTarget}" />`), `legacy alias canonical target mismatch: ${from}`);
+  expect(aliasHtml.includes(`<meta http-equiv="refresh" content="0;url=${to}" />`), `legacy alias refresh target mismatch: ${from}`);
+  expect(aliasHtml.includes(`window.location.replace(${JSON.stringify(to)})`), `legacy alias script target mismatch: ${from}`);
+  expect(aliasHtml.includes(`<a href="${to}">Перейти к актуальной странице</a>`), `legacy alias fallback link missing: ${from}`);
+}
+
 function collectHtmlFiles(dir, relative = '') {
   const results = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -80,4 +95,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`SEO output validation passed: ${uniqueUrls.size} canonical URLs, ${htmlFiles.length} HTML documents, Atom feed and noindex 404 verified.`);
+console.log(`SEO output validation passed: ${uniqueUrls.size} canonical URLs, ${routeContract.redirects.length} materialized legacy aliases, ${htmlFiles.length} HTML documents, Atom feed and noindex 404 verified.`);
