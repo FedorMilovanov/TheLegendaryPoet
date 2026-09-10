@@ -161,6 +161,7 @@ for (const profile of [
 
       const essaySectionTarget = page.locator('#history');
       await expect(essaySectionTarget).toBeVisible({ timeout: 20_000 });
+      // Structural headings are rendered through the site's titleCase authority.
       await expect(essaySectionTarget).toContainText('Когда и Где Появилось Стихотворение');
       await expect.poll(async () => essaySectionTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
       await expect.poll(async () => essaySectionTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(128);
