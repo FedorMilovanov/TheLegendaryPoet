@@ -1,5 +1,6 @@
 import { essaySearchIndex } from '../../data/essaySearchIndex.generated';
 import { musicTracks, poets } from '../../data/poets';
+import routeContract from '../../routes/route-contract.json';
 
 export interface CommandItem {
   id: string;
@@ -22,11 +23,17 @@ interface CommandPoetSource {
   poems: readonly CommandPoemSource[];
 }
 
+interface CommandEssaySectionSource {
+  heading: string;
+  anchor: string;
+}
+
 interface CommandEssaySource {
   id: string;
   title: string;
   excerpt: string;
   slug: string;
+  sections: readonly CommandEssaySectionSource[];
 }
 
 interface CommandTrackSource {
@@ -36,23 +43,77 @@ interface CommandTrackSource {
   duration?: string;
 }
 
+export interface CommandRouteSource {
+  id: string;
+  path: string;
+}
+
+export interface CommandSectionPresentation {
+  label: string;
+  description: string;
+}
+
+export const commandSectionPresentations = {
+  home: { label: 'Главная', description: 'Обложка проекта' },
+  hall: { label: 'Зал поэтов', description: 'Иммерсивный музейный раздел' },
+  poets: { label: 'Поэты', description: 'Каталог поэтов' },
+  ratings: { label: 'Рейтинг поэтов', description: 'Сводная таблица оценок и комментариев читателей' },
+  articles: { label: 'Статьи', description: 'Материалы и анализы' },
+  music: { label: 'Музыка', description: 'Официальные музыкальные публикации' },
+  about: { label: 'О проекте', description: 'Миссия и контакты' },
+  'editorial-policy': { label: 'Редакционная политика', description: 'Принципы редакционной работы и источников' },
+  privacy: { label: 'Конфиденциальность', description: 'Политика данных и настройки согласия' },
+  archive: { label: 'Мой архив', description: 'Сохранённые материалы этого браузера' },
+} as const satisfies Readonly<Record<string, CommandSectionPresentation>>;
+
 export interface CommandSources {
   poets: readonly CommandPoetSource[];
   essays: readonly CommandEssaySource[];
   tracks: readonly CommandTrackSource[];
+  routes?: readonly CommandRouteSource[];
+  sectionPresentations?: Readonly<Record<string, CommandSectionPresentation>>;
 }
 
-const baseItems: CommandItem[] = [
-  { id: 'home', label: 'Главная', description: 'Обложка проекта', path: '/', group: 'Разделы' },
-  { id: 'poets', label: 'Поэты', description: 'Каталог поэтов', path: '/poets', group: 'Разделы' },
-  { id: 'ratings', label: 'Рейтинг поэтов', description: 'Сводная таблица оценок и комментариев читателей', path: '/ratings', group: 'Разделы' },
-  { id: 'hall', label: 'Зал поэтов', description: 'Иммерсивный музейный раздел в разработке', path: '/hall', group: 'Разделы' },
-  { id: 'articles', label: 'Статьи', description: 'Материалы и анализы', path: '/articles', group: 'Разделы' },
-  { id: 'music', label: 'Музыка', description: 'Официальные музыкальные публикации', path: '/music', group: 'Разделы' },
-  { id: 'about', label: 'О проекте', description: 'Миссия и контакты', path: '/about', group: 'Разделы' },
-];
+function isStaticCommandRoute(route: CommandRouteSource): boolean {
+  return route.path !== '*' && !route.path.includes(':');
+}
 
-export function buildCommandItems({ poets: poetSources, essays, tracks }: CommandSources): CommandItem[] {
+export function buildSectionCommandItems(
+  routes: readonly CommandRouteSource[],
+  presentations: Readonly<Record<string, CommandSectionPresentation>>,
+): CommandItem[] {
+  const staticRoutes = routes.filter(isStaticCommandRoute);
+  const routeIds = staticRoutes.map((route) => route.id);
+  const routeIdSet = new Set(routeIds);
+  const presentationIds = Object.keys(presentations);
+  const missing = routeIds.filter((id) => !presentations[id]);
+  const extra = presentationIds.filter((id) => !routeIdSet.has(id));
+
+  if (routeIdSet.size !== routeIds.length) {
+    throw new Error('Command route contract contains duplicate static route ids');
+  }
+  if (missing.length || extra.length) {
+    throw new Error(`Command section presentation drift: missing=[${missing.join(',')}], extra=[${extra.join(',')}]`);
+  }
+
+  return staticRoutes.map((route) => ({
+    id: route.id,
+    label: presentations[route.id].label,
+    description: presentations[route.id].description,
+    path: route.path,
+    group: 'Разделы',
+  }));
+}
+
+export function buildCommandItems({
+  poets: poetSources,
+  essays,
+  tracks,
+  routes = routeContract.routes,
+  sectionPresentations = commandSectionPresentations,
+}: CommandSources): CommandItem[] {
+  const sectionItems = buildSectionCommandItems(routes, sectionPresentations);
+
   const poetItems = poetSources.map((poet) => ({
     id: `poet-${poet.id}`,
     label: poet.name,
@@ -71,9 +132,9 @@ export function buildCommandItems({ poets: poetSources, essays, tracks }: Comman
 
   /*
    * Keep the persistent command palette lightweight. Importing the full essay
-   * registry here pulled every longform block and source record into the entry
-   * bundle. The generated index contains only reader-facing search metadata and
-   * is verified against the canonical essay registry in CI.
+   * registry here would pull every longform block and source record into the
+   * entry bundle. The generated index contains only reader-facing essay and
+   * section metadata and is parity-validated against the canonical registry.
    */
   const essayItems = essays.map((essay) => ({
     id: `essay-${essay.id}`,
@@ -83,6 +144,14 @@ export function buildCommandItems({ poets: poetSources, essays, tracks }: Comman
     group: 'Статьи',
   }));
 
+  const essaySectionItems = essays.flatMap((essay) => essay.sections.map((section) => ({
+    id: `essay-section-${essay.id}-${section.anchor}`,
+    label: section.heading,
+    description: essay.title,
+    path: `/essays/${essay.slug}#${encodeURIComponent(section.anchor)}`,
+    group: 'Разделы статей',
+  })));
+
   const trackItems = tracks.map((track) => ({
     id: `track-${track.id}`,
     label: track.title,
@@ -91,7 +160,7 @@ export function buildCommandItems({ poets: poetSources, essays, tracks }: Comman
     group: 'Музыка',
   }));
 
-  return [...baseItems, ...poetItems, ...poemItems, ...essayItems, ...trackItems];
+  return [...sectionItems, ...poetItems, ...poemItems, ...essayItems, ...essaySectionItems, ...trackItems];
 }
 
 export function getCommandItems(): CommandItem[] {
