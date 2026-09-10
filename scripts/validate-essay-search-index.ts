@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { sectionAnchor } from '../src/components/essay/anchor';
 import { essays } from '../src/data/essays/index';
 import { essaySearchIndex } from '../src/data/essaySearchIndex.generated';
@@ -55,14 +53,6 @@ for (const entry of essaySearchIndex as readonly Record<string, unknown>[]) {
 }
 
 if (failures.length) {
-  const artifactDir = path.resolve('qa-artifacts');
-  fs.mkdirSync(artifactDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(artifactDir, 'expected-essay-search-index.json'),
-    `${JSON.stringify(canonical)}\n`,
-    'utf8',
-  );
-
   console.error('\nEssay search index validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   console.error('\nRun: npm run search-index');
