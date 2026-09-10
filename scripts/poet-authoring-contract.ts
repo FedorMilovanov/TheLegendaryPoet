@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Poet } from '../src/types/poet';
 
-export const POET_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const POET_ID_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 export const POET_PORTRAIT_PATTERN = /^\/images\/[a-z0-9][a-z0-9/_-]*\.(?:jpe?g|png|webp)$/;
 export const LEGACY_PORTRAIT_STATUS = 'LEGACY-PROVENANCE-UNRESOLVED';
 const VERIFIED_STATUSES = new Set(['VERIFIED-ARCHIVAL', 'VERIFIED-PUBLIC-DOMAIN', 'VERIFIED-LOCAL-EDITORIAL']);
@@ -39,7 +39,7 @@ export function isValidPoetId(id: string): boolean {
 
 export function assertPoetId(id: string): void {
   if (!isValidPoetId(id)) {
-    throw new Error(`poet id must be ASCII kebab-case ([a-z0-9-]): ${JSON.stringify(id)}`);
+    throw new Error(`poet id must be identifier-safe ASCII kebab-case and start with a letter: ${JSON.stringify(id)}`);
   }
 }
 
@@ -193,7 +193,7 @@ export function validatePoetReleaseCandidate(options: {
   const { poet, moduleStem } = options;
   const errors: string[] = [];
 
-  if (!isValidPoetId(poet.id)) errors.push(`poet id must be ASCII kebab-case: ${JSON.stringify(poet.id)}`);
+  if (!isValidPoetId(poet.id)) errors.push(`poet id must be identifier-safe ASCII kebab-case starting with a letter: ${JSON.stringify(poet.id)}`);
   if (isValidPoetId(poet.id) && moduleStemFromPoetId(poet.id) !== moduleStem) {
     errors.push(`${poet.id}: module stem must be ${moduleStemFromPoetId(poet.id)}, got ${moduleStem}`);
   }
@@ -317,6 +317,16 @@ export function runPoetAuthoringAdversarialFixtures(): string[] {
     validatePoetReleaseCandidate({
       poet: { ...basePoet, id: 'тест-поэт' },
       moduleStem: 'testPoet',
+      provenanceText: validProvenance,
+      allowLegacy: false,
+      assetReader,
+    }),
+  );
+  expectError(
+    'numeric-leading id',
+    validatePoetReleaseCandidate({
+      poet: { ...basePoet, id: '123-poet' },
+      moduleStem: '123Poet',
       provenanceText: validProvenance,
       allowLegacy: false,
       assetReader,
