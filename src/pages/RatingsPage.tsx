@@ -30,8 +30,11 @@ import {
 } from '../utils/communityStore';
 import { useCommunityLeaderboard } from '../hooks/useCommunityLeaderboard';
 import { compareEditorialRankingRows, compareReaderRankingRows } from '../utils/ratingRanking';
-
-const PRIOR_WEIGHT = 5;
+import {
+  hasQualifiedRatingSample,
+  READER_RANKING_MIN_VOTES,
+  sampleAwareRatingIndex,
+} from '../utils/ratingMethod';
 type SortKey = RatingsSortKey;
 
 const sortOptions: Array<{ value: SortKey; label: string }> = [
@@ -50,7 +53,7 @@ type RankedPoet = {
   readerScore: number | null;
   deviation: number | null;
   dimensions: Record<string, number>;
-  dimensionIndexes: Record<string, number>;
+  dimensionIndexes: Record<string, number | null>;
 };
 
 function fmt(value: number | null, digits = 2) {
@@ -115,37 +118,17 @@ export default function RatingsPage() {
     [leaderboard.aggregates],
   );
   const totalVotes = leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.ratingCount, 0);
-  const globalMean = totalVotes
-    ? leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.overall * aggregate.ratingCount, 0) / totalVotes
-    : 4.0;
-  const globalDimensionMeans = useMemo(() => Object.fromEntries(
-    poetRatingDimensions.map((dimension) => {
-      const weighted = leaderboard.aggregates.reduce((sum, aggregate) => {
-        const value = aggregate.dimensions[dimension.key];
-        return sum + (typeof value === 'number' ? value * aggregate.ratingCount : 0);
-      }, 0);
-      const count = leaderboard.aggregates.reduce((sum, aggregate) => (
-        typeof aggregate.dimensions[dimension.key] === 'number' ? sum + aggregate.ratingCount : sum
-      ), 0);
-      return [dimension.key, count ? weighted / count : globalMean];
-    }),
-  ), [globalMean, leaderboard.aggregates]);
 
   const rows = useMemo<RankedPoet[]>(() => poets.map((poet) => {
     const aggregate = aggregateById.get(poet.id);
     const votes = aggregate?.ratingCount ?? 0;
     const comments = aggregate?.commentCount ?? 0;
     const rawScore = votes ? aggregate?.overall ?? null : null;
-    const readerScore = votes && rawScore !== null
-      ? (votes * rawScore + PRIOR_WEIGHT * globalMean) / (votes + PRIOR_WEIGHT)
-      : null;
+    const readerScore = sampleAwareRatingIndex(rawScore, votes);
     const dimensions = aggregate?.dimensions ?? {};
     const dimensionIndexes = Object.fromEntries(poetRatingDimensions.map((dimension) => {
       const raw = dimensions[dimension.key];
-      const adjusted = votes && raw
-        ? (votes * raw + PRIOR_WEIGHT * globalDimensionMeans[dimension.key]) / (votes + PRIOR_WEIGHT)
-        : 0;
-      return [dimension.key, adjusted];
+      return [dimension.key, sampleAwareRatingIndex(typeof raw === 'number' ? raw : null, votes)];
     }));
 
     return {
@@ -158,7 +141,7 @@ export default function RatingsPage() {
       dimensions,
       dimensionIndexes,
     };
-  }), [aggregateById, globalMean, globalDimensionMeans]);
+  }), [aggregateById]);
 
   const filtered = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
@@ -182,14 +165,16 @@ export default function RatingsPage() {
   }, [query, ratedOnly, rows, sortBy, tag]);
 
   const ratedRows = rows.filter((row) => row.votes > 0);
-  const topReader = ratedRows.slice().sort((left, right) => compareReaderRankingRows(readerRankSource(left), readerRankSource(right)))[0];
+  const qualifiedRows = rows.filter((row) => row.readerScore !== null);
+  const topReader = qualifiedRows.slice().sort((left, right) => compareReaderRankingRows(readerRankSource(left), readerRankSource(right)))[0];
   const mostDiscussed = rows.slice().sort((left, right) => right.comments - left.comments || right.votes - left.votes)[0];
-  const consensus = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (left.deviation ?? 9) - (right.deviation ?? 9) || right.votes - left.votes)[0];
-  const controversial = ratedRows.filter((row) => row.votes >= 3 && row.deviation !== null).sort((left, right) => (right.deviation ?? 0) - (left.deviation ?? 0) || right.votes - left.votes)[0];
+  const consensus = ratedRows.filter((row) => hasQualifiedRatingSample(row.votes) && row.deviation !== null).sort((left, right) => (left.deviation ?? 9) - (right.deviation ?? 9) || right.votes - left.votes)[0];
+  const controversial = ratedRows.filter((row) => hasQualifiedRatingSample(row.votes) && row.deviation !== null).sort((left, right) => (right.deviation ?? 0) - (left.deviation ?? 0) || right.votes - left.votes)[0];
   const totalComments = leaderboard.aggregates.reduce((sum, aggregate) => sum + aggregate.commentCount, 0);
 
   const dimensionLeaders = poetRatingDimensions.map((dimension) => {
     const leader = ratedRows
+      .filter((row) => hasQualifiedRatingSample(row.votes) && row.dimensionIndexes[dimension.key] !== null)
       .slice()
       .sort((left, right) => (right.dimensionIndexes[dimension.key] ?? 0) - (left.dimensionIndexes[dimension.key] ?? 0) || right.votes - left.votes || left.poet.name.localeCompare(right.poet.name, 'ru'))[0];
     return { ...dimension, leader };
@@ -210,7 +195,7 @@ export default function RatingsPage() {
           <div className="relative z-10 max-w-4xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-luxury-gold/25 bg-luxury-gold/7 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-luxury-gold"><Trophy size={14} /> Живой читательский рейтинг</div>
             <h1 className="editorial-title mb-5 font-serif text-5xl font-bold leading-[0.95] sm:text-6xl lg:text-8xl">Поэты <span className="gold-gradient italic">в оценке читателей</span></h1>
-            <p className="max-w-2xl text-base leading-relaxed text-cyan-100/60 sm:text-xl">Не один безымянный балл, а четыре понятных измерения: язык, глубина, наследие и правда. Таблица учитывает размер выборки, поэтому один случайный голос не захватывает первое место.</p>
+            <p className="max-w-2xl text-base leading-relaxed text-cyan-100/60 sm:text-xl">Не один безымянный балл, а четыре понятных измерения: язык, глубина, наследие и правда. Место появляется после 3 голосов, а индекс консервативно снижает малые выборки — один случайный голос не может захватить первое место.</p>
             <div className={`mt-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs ${syncBadge.className}`} aria-live="polite"><syncBadge.Icon size={14} className={syncBadge.spin ? 'animate-spin' : ''} /> {syncBadge.text}</div>
           </div>
         </section>
@@ -266,10 +251,10 @@ export default function RatingsPage() {
               <thead className="sticky top-20 z-10 bg-[#071018]/95 backdrop-blur-xl"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/40"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
               <tbody>{filtered.map((row, index) => {
                 const readerPlace = sortBy === 'reader' && row.readerScore === null ? null : index + 1;
-                return <tr key={row.poet.id} data-reader-status={row.readerScore === null ? 'unrated' : 'rated'} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
+                return <tr key={row.poet.id} data-reader-status={row.votes === 0 ? 'unrated' : row.readerScore === null ? 'sample-pending' : 'qualified'} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
                 <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${readerPlace !== null && readerPlace <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/30 text-cyan-100/50'}`}>{readerPlace ?? '—'}</span></td>
                 <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div className="max-w-[260px] truncate text-xs text-cyan-100/35">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
-                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/30">{row.readerScore === null ? 'нет читательских голосов' : 'с поправкой на выборку'}</div></td>
+                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/30">{row.readerScore === null ? (row.votes === 0 ? 'нет читательских голосов' : `нужно ${READER_RANKING_MIN_VOTES}+ голоса для места`) : 'консервативный индекс выборки'}</div></td>
                 <td className="px-5 py-4 text-cyan-100/70">{row.rawScore === null ? '—' : `${fmt(row.rawScore)} / 5`}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.votes}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.comments}</td>
@@ -285,12 +270,12 @@ export default function RatingsPage() {
           <div className="rounded-[2rem] border border-luxury-gold/12 bg-luxury-gold/[0.035] p-6 sm:p-8">
             <div className="mb-4 flex items-center gap-2 text-luxury-gold"><Award size={19} /><h2 className="font-serif text-2xl font-bold">Лидеры по отдельным качествам</h2></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {dimensionLeaders.map((item) => <div key={item.key} className="rounded-2xl border border-luxury-gold/10 bg-black/20 p-4"><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/65">{item.label}</div><div className="mt-2 font-serif text-lg text-white">{item.leader?.poet.name ?? 'Пока нет данных'}</div><div className="text-xs text-cyan-100/35">{item.leader ? `${item.leader.dimensionIndexes[item.key].toFixed(2)} / 5 · ${item.leader.votes} голосов` : item.hint}</div></div>)}
+              {dimensionLeaders.map((item) => <div key={item.key} className="rounded-2xl border border-luxury-gold/10 bg-black/20 p-4"><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/65">{item.label}</div><div className="mt-2 font-serif text-lg text-white">{item.leader?.poet.name ?? 'Пока нет данных'}</div><div className="text-xs text-cyan-100/35">{item.leader ? `${(item.leader.dimensionIndexes[item.key] ?? 0).toFixed(2)} / 5 · ${item.leader.votes} голосов` : `Нужно ${READER_RANKING_MIN_VOTES}+ голоса`}</div></div>)}
             </div>
           </div>
           <div className="rounded-[2rem] border border-cyan-400/12 bg-[#071018]/70 p-6 sm:p-8">
             <div className="mb-4 flex items-center gap-2 text-cyan-300"><ShieldCheck size={19} /><h2 className="font-serif text-2xl font-bold text-white">Как считается место</h2></div>
-            <p className="text-sm leading-relaxed text-cyan-100/55">Индекс читателей — байесовская оценка по шкале /5: фактический средний балл постепенно получает больший вес по мере роста числа голосов. До накопления выборки результат мягко тяготеет к общему среднему по сайту. Та же поправка применяется к лидерам по отдельным качествам. Редакционная оценка /10 отображается отдельно и не участвует в читательских местах.</p>
+            <p className="text-sm leading-relaxed text-cyan-100/55">Индекс читателей — консервативная оценка по шкале /5. Место появляется с 3 голосов. Для среднего балла m и числа голосов n индекс равен max(1, m − 4 × √(ln 5 / (2n))). Та же формула и порог применяются к лидерам по отдельным качествам. Это поправка на размер выборки, а не заявление о репрезентативности аудитории. Редакционная оценка /10 отображается отдельно и не участвует в читательских местах.</p>
             <Link to="/poets" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-cyan-300 px-5 text-xs font-bold uppercase tracking-[0.14em] text-black">Перейти к поэтам и голосовать <ArrowRight size={15} /></Link>
           </div>
         </section>
