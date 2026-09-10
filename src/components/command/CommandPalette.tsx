@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { matchesRussianSearch } from '../../utils/searchText';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
 import CommandResult from './CommandResult';
@@ -21,10 +22,9 @@ export default function CommandPalette() {
 
   const items = useMemo(() => getCommandItems(), []);
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return items.slice(0, 8);
+    if (!query.trim()) return items.slice(0, 8);
     return items
-      .filter((item) => `${item.label} ${item.description} ${item.group}`.toLowerCase().includes(q))
+      .filter((item) => matchesRussianSearch(query, [item.label, item.description, item.group]))
       .slice(0, 10);
   }, [items, query]);
 
@@ -133,7 +133,7 @@ export default function CommandPalette() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onInputKeyDown}
-            placeholder="Найти поэта, статью, трек или раздел..."
+            placeholder="Найти поэта, стихотворение, статью, трек или раздел..."
             aria-label="Поисковый запрос"
             aria-controls={listId}
             aria-expanded={results.length > 0}

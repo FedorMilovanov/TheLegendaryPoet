@@ -108,5 +108,50 @@ for (const profile of [
       expect(state.failedImages).toBe(0);
       expect(pageErrors).toEqual([]);
     });
+
+    test('command search derives poems, preserves Russian semantics and lands on the exact poem', async ({ page }) => {
+      const pageErrors = [];
+      page.on('pageerror', (error) => pageErrors.push(String(error?.stack || error)));
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+      await settle(page);
+
+      await page.evaluate(() => window.dispatchEvent(new Event('tlp-open-command-palette')));
+      const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
+      const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+      const results = page.getByRole('listbox', { name: 'Результаты поиска' });
+      await expect(dialog).toBeVisible();
+      await expect(input).toBeFocused();
+
+      await input.fill('федор тютчев');
+      await expect(results).toContainText('Фёдор Тютчев');
+
+      await input.fill('николаи гумилев');
+      await expect(results).not.toContainText('Николай Гумилёв');
+      await expect(results).toContainText('Ничего не найдено.');
+
+      await input.fill('николай гумилев');
+      await expect(results).toContainText('Николай Гумилёв');
+
+      await input.fill('Гой ты, Русь');
+      const poemResult = page.getByRole('button', { name: /Гой ты, Русь, моя родная/i });
+      await expect(poemResult).toBeVisible();
+      await poemResult.click();
+      await expect(page).toHaveURL(/\/poets\/sergei-yesenin#poem-yesenin-3$/);
+
+      const target = page.locator('#poem-yesenin-3');
+      await expect(target).toBeVisible();
+      await expect.poll(async () => target.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
+      await expect.poll(async () => target.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(112);
+
+      const proof = await page.evaluate(() => ({
+        href: `${location.pathname}${location.hash}`,
+        scrollY: window.scrollY,
+        targetTop: document.getElementById('poem-yesenin-3')?.getBoundingClientRect().top ?? null,
+      }));
+      fs.writeFileSync(path.join(ARTIFACT_DIR, `${profile.name}-command-search.json`), JSON.stringify(proof, null, 2));
+      await page.screenshot({ path: path.join(ARTIFACT_DIR, `${profile.name}-command-search-poem.png`), fullPage: false });
+      expect(proof.href).toBe('/poets/sergei-yesenin#poem-yesenin-3');
+      expect(pageErrors).toEqual([]);
+    });
   });
 }
