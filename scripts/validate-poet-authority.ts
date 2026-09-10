@@ -73,7 +73,10 @@ for (const entry of registry.entries) {
 
   let canonical: Poet | undefined;
   try {
-    const sourceModule = (await import(`${pathToFileURL(sourcePath).href}?authority=${Date.now()}`)) as Record<string, unknown>;
+    // Import the exact same module URL consumed by library/index.ts. Adding a
+    // cache-busting query would intentionally create a second ESM instance and
+    // make reference-identity checks false-negative even when no clone exists.
+    const sourceModule = (await import(pathToFileURL(sourcePath).href)) as Record<string, unknown>;
     canonical = sourceModule[entry.variable] as Poet | undefined;
   } catch (error) {
     fail(`${entry.stem}: source module cannot be imported: ${(error as Error).message}`);
