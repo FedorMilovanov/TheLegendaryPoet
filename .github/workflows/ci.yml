@@ -32,7 +32,16 @@ jobs:
       - name: Validate conditional exact-head merge certification contract
         run: npm run validate:merge-certification
       - name: Validate content, stores, and literary style
+        id: content_validation
         run: npm run check:content
+      - name: Upload generated search-index diagnostic
+        if: ${{ failure() && steps.content_validation.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: search-index-diagnostic-${{ github.event.pull_request.head.sha || github.sha }}
+          path: qa-artifacts/expected-essay-search-index.json
+          if-no-files-found: warn
+          retention-days: 3
       - name: Validate source-derived command search contract
         run: npx tsx scripts/validate-command-search.ts
       - name: Validate published audio release fail-closed behavior
