@@ -10,20 +10,17 @@ const failures: string[] = [];
 const canonical = essays.map(({ id, title, excerpt, slug, blocks }) => {
   const sections = blocks.flatMap((block) => (
     block.type === 'section'
-      ? [{
-          heading: titleCase(block.heading),
-          anchor: sectionAnchor(block.heading, block.anchor),
-        }]
+      ? [[titleCase(block.heading), sectionAnchor(block.heading, block.anchor)] as const]
       : []
   ));
 
-  const anchors = sections.map((section) => section.anchor);
+  const anchors = sections.map(([, anchor]) => anchor);
   if (new Set(anchors).size !== anchors.length) {
     failures.push(`canonical essay ${slug} contains duplicate section anchors`);
   }
-  for (const section of sections) {
-    if (!section.heading.trim()) failures.push(`canonical essay ${slug} contains an empty section heading`);
-    if (!section.anchor.trim()) failures.push(`canonical essay ${slug} contains an empty section anchor`);
+  for (const [heading, anchor] of sections) {
+    if (!heading.trim()) failures.push(`canonical essay ${slug} contains an empty section heading`);
+    if (!anchor.trim()) failures.push(`canonical essay ${slug} contains an empty section anchor`);
   }
 
   return { id, title, excerpt, slug, sections };
@@ -35,7 +32,7 @@ const actual = essaySearchIndex.map((entry) => ({
   excerpt: entry.excerpt,
   slug: entry.slug,
   sections: Array.isArray((entry as { sections?: unknown }).sections)
-    ? (entry as { sections: readonly { heading: string; anchor: string }[] }).sections.map(({ heading, anchor }) => ({ heading, anchor }))
+    ? (entry as { sections: readonly (readonly [string, string])[] }).sections.map(([heading, anchor]) => [heading, anchor] as const)
     : null,
 }));
 
@@ -50,10 +47,9 @@ for (const entry of essaySearchIndex as readonly Record<string, unknown>[]) {
   }
   const sections = entry.sections;
   if (!Array.isArray(sections)) continue;
-  for (const section of sections as Record<string, unknown>[]) {
-    const sectionKeys = Object.keys(section).sort().join(',');
-    if (sectionKeys !== 'anchor,heading') {
-      failures.push(`generated essay section has unexpected fields: ${sectionKeys}`);
+  for (const section of sections) {
+    if (!Array.isArray(section) || section.length !== 2 || section.some((value) => typeof value !== 'string')) {
+      failures.push('generated essay section must be exactly [heading, anchor]');
     }
   }
 }
@@ -63,15 +59,12 @@ if (failures.length) {
   fs.mkdirSync(artifactDir, { recursive: true });
   fs.writeFileSync(
     path.join(artifactDir, 'expected-essay-search-index.json'),
-    `${JSON.stringify(canonical, null, 2)}\n`,
+    `${JSON.stringify(canonical)}\n`,
     'utf8',
   );
 
   console.error('\nEssay search index validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
-  console.error('\nEXPECTED_ESSAY_SEARCH_INDEX_JSON_BEGIN');
-  console.error(JSON.stringify(canonical, null, 2));
-  console.error('EXPECTED_ESSAY_SEARCH_INDEX_JSON_END');
   console.error('\nRun: npm run search-index');
   process.exit(1);
 }
