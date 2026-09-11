@@ -97,7 +97,8 @@ assert.match(ci, /npm run validate:route-audit/);
 assert.match(vite, /legacy-alias-documents/);
 assert.match(vite, /ROUTE_CONTRACT_PATH/);
 assert.match(vite, /data-legacy-alias/);
-assert.match(vite, /noindex,follow/);
+assert.match(vite, /DISCOVERY_POLICY_PATH/);
+assert.match(vite, /redirectPolicy\\.robots/);
 assert.match(vite, /window\.location\.replace/);
 assert.match(vite, /legacy alias chains are forbidden/);
 
