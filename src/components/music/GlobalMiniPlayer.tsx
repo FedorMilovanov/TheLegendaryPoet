@@ -70,7 +70,7 @@ export default function GlobalMiniPlayer() {
             )}
             <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: 'radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--track-accent) 16%, transparent), transparent 34%), radial-gradient(circle at 82% 30%, color-mix(in srgb, var(--track-secondary) 12%, transparent), transparent 38%)' }} />
 
-            <div className="absolute inset-x-0 top-0 z-20 h-2">
+            <div className="absolute inset-x-0 top-0 z-20 h-2 rounded-sm">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-white/[0.07]">
                 <motion.div className="h-full origin-left" animate={{ scaleX: progress }} transition={{ duration: 0.18, ease: 'linear' }} style={{ backgroundColor: 'var(--track-accent)' }} />
               </div>
@@ -84,8 +84,9 @@ export default function GlobalMiniPlayer() {
                 onInput={(event) => seekTo(Number(event.currentTarget.value))}
                 aria-label="Позиция текущего релиза"
                 aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`}
-                className="absolute inset-0 h-3 w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                className="peer absolute inset-0 h-3 w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
+              <span aria-hidden="true" className="pointer-events-none absolute -inset-x-1 -inset-y-1 rounded-md opacity-0 ring-2 ring-white ring-offset-2 ring-offset-[#071018] transition-opacity peer-focus-visible:opacity-100" />
             </div>
 
             <div className="flex min-w-0 items-center gap-3 p-2.5 pr-3 sm:gap-4 sm:p-3 sm:pr-4">
