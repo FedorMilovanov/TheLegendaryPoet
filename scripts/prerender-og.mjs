@@ -242,7 +242,7 @@ async function main() {
       image: imagePath,
       imageAlt: `Обложка: ${track.title} — ${track.poet}`,
       type: track.availability === 'published' ? 'music.song' : 'website',
-      robots: track.availability === 'published' ? INDEX_ROBOTS : 'noindex,follow',
+      discoveryState: track.availability === 'published' ? 'ready' : 'noindex',
       jsonLd: buildMusicPageSchema({ title, description, path: routePath, image: imagePath, breadcrumbs, track }),
     }));
     count++;
