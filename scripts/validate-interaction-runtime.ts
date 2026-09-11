@@ -159,6 +159,14 @@ const poetCardSource = read('src/components/PoetCard.tsx');
 const essayCoverSource = read('src/components/essay/EssayCover.tsx');
 const tiltSource = read('src/components/TiltCard.tsx');
 const smoothSource = read('src/utils/smoothScroll.ts');
+const focusSource = read('src/utils/focusRuntime.ts');
+const smoothComponentSource = read('src/components/SmoothScroll.tsx');
+const autoHideSource = read('src/hooks/useAutoHideChrome.ts');
+const headerSource = read('src/components/Header.tsx');
+const mobileDockSource = read('src/components/MobileDock.tsx');
+const sourceLibrarySource = read('src/components/essay/SourceLibrary.tsx');
+const archivePageSource = read('src/pages/MyArchivePage.tsx');
+const miniPlayerSource = read('src/components/music/GlobalMiniPlayer.tsx');
 
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
@@ -167,6 +175,10 @@ expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must g
 expect(overlaySource.includes('pruneDetachedOverlays'), 'keyboard ownership must recover from detached portal entries');
 expect(overlaySource.includes('onOverlayKeyDown'), 'Escape must be dispatched by one shared stack listener');
 expect(overlaySource.includes('setEscapeHandler'), 'overlay handles must register their close behavior with the runtime');
+expect(overlaySource.includes('isolateBackgroundForTopOverlay'), 'topmost overlays must own background accessibility isolation');
+expect(overlaySource.includes("sibling.setAttribute('inert', '')"), 'background branches must become inert while covered');
+expect(overlaySource.includes("sibling.setAttribute('aria-hidden', 'true')"), 'covered background branches must be hidden from assistive technology');
+expect(overlaySource.includes('restoreOverlayIsolation'), 'overlay isolation must restore pre-existing inert/aria-hidden state');
 expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog focus containment must run in capture phase');
 expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus without competing for Escape');
 expect(dialogSource.includes('handle.setEscapeHandler'), 'dialogs must delegate Escape to the shared runtime');
@@ -198,10 +210,28 @@ expect(tiltSource.includes("event.pointerType !== 'mouse'"), 'tilt effects must 
 expect(!tiltSource.includes('will-change-transform'), 'large card grids must not permanently promote every tilt card');
 expect(smoothSource.includes('pauseTokens'), 'smooth scrolling must remain reference-counted across stacked overlays');
 
+expect(focusSource.includes('focusProgrammaticTarget'), 'programmatic route/mutation focus must use one shared helper');
+expect(focusSource.includes("element.setAttribute('tabindex', '-1')"), 'non-interactive focus targets must enter focus order only temporarily');
+expect(focusSource.includes("element.addEventListener('blur'"), 'temporary programmatic tabindex must be removed after focus leaves');
+expect(smoothComponentSource.includes('focusProgrammaticTarget(target'), 'route/hash restoration must transfer focus to the resolved target');
+expect(sourceLibrarySource.includes('focusProgrammaticTarget(target'), 'citation source reveal must transfer focus to the exact source target');
+expect(autoHideSource.includes("[data-auto-hide-chrome]"), 'auto-hide accessibility state must derive from one chrome marker');
+expect(autoHideSource.includes("surface.toggleAttribute('inert', next)"), 'hidden chrome must leave the focus tree');
+expect(autoHideSource.includes("surface.setAttribute('aria-hidden', 'true')"), 'hidden chrome must leave the accessibility tree');
+expect(autoHideSource.includes('focusMainContent()'), 'hiding chrome must hand focus out of a disappearing fixed surface');
+expect(headerSource.includes('data-auto-hide-chrome'), 'desktop/header chrome must opt into shared hidden-state semantics');
+expect(mobileDockSource.includes('data-auto-hide-chrome'), 'mobile dock must opt into shared hidden-state semantics');
+expect(archivePageSource.includes('pendingRemovalFocusRef'), 'archive mutation must preserve deterministic focus handoff state');
+expect(archivePageSource.includes('data-archive-remove-id'), 'archive removal targets must expose stable focus identities');
+expect(archivePageSource.includes('focusProgrammaticTarget(next)'), 'archive removal must focus the surviving adjacent action');
+expect(archivePageSource.includes('focusMainContent()'), 'archive removal must have a stable fallback when the collection empties');
+expect(miniPlayerSource.includes('peer-focus-visible:opacity-100'), 'mini-player seek must expose a visible keyboard focus ring');
+expect(immersiveSource.includes('peer-focus-visible:opacity-100'), 'immersive seek must expose a visible keyboard focus ring');
+
 if (failures.length) {
   console.error('\nInteraction runtime validation failed:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log('Interaction runtime validation passed: centralized Escape, command keyboard ownership, route focus, rating draft safety, resilient images and bounded pointer effects.');
+console.log('Interaction runtime validation passed: overlay isolation, hidden-chrome semantics, hash/mutation focus handoff, visible audio seek focus and existing interaction invariants are locked.');
