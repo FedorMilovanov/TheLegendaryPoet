@@ -10,6 +10,8 @@ import {
   Network,
 } from 'lucide-react';
 import type { EssaySource, EssaySourceKind } from '../../types/essay';
+import { focusProgrammaticTarget } from '../../utils/focusRuntime';
+import { scrollToId } from '../../utils/smoothScroll';
 
 const sourceKinds: Record<
   EssaySourceKind,
@@ -76,10 +78,10 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       setExpanded(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          document.getElementById(`source-${sourceId}`)?.scrollIntoView({
-            behavior: reduceMotion ? 'auto' : 'smooth',
-            block: 'center',
-          });
+          const target = document.getElementById(`source-${sourceId}`);
+          if (!target) return;
+          scrollToId(`source-${sourceId}`);
+          focusProgrammaticTarget(target, { preventScroll: true });
         });
       });
     };
