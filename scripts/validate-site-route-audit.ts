@@ -9,8 +9,10 @@ const contractPath = 'src/routes/route-contract.json';
 const configPath = 'playwright.route-audit.config.mjs';
 const workflowPath = '.github/workflows/site-route-integrity-audit.yml';
 const ciPath = '.github/workflows/ci.yml';
+const vitePath = 'vite.config.ts';
+const seoOutputPath = 'scripts/validate-seo-output.mjs';
 
-for (const file of [specPath, contractPath, configPath, workflowPath, ciPath]) {
+for (const file of [specPath, contractPath, configPath, workflowPath, ciPath, vitePath, seoOutputPath]) {
   assert.ok(fs.existsSync(path.resolve(file)), `${file}: route audit file is missing`);
 }
 
@@ -19,6 +21,8 @@ const contract = JSON.parse(read(contractPath));
 const config = read(configPath);
 const workflow = read(workflowPath);
 const ci = read(ciPath);
+const vite = read(vitePath);
+const seoOutput = read(seoOutputPath);
 
 assert.equal(contract.schemaVersion, 1);
 assert.ok(contract.routes.some((route: { audit: string; path: string }) => route.audit === 'utility' && route.path === '/hall'));
@@ -27,6 +31,9 @@ assert.ok(contract.redirects.some((redirect: { from: string }) => redirect.from 
 assert.ok(contract.notFoundProbes.includes('/route-audit-page-that-must-not-exist'));
 assert.ok(contract.notFoundProbes.includes('/articles/route-audit-legacy'));
 assert.ok(!contract.redirects.some((redirect: { from: string }) => redirect.from === '/articles/route-audit-legacy'));
+assert.equal(new Set(contract.redirects.map((redirect: { from: string }) => redirect.from)).size, contract.redirects.length, 'legacy redirect sources must be unique');
+assert.equal(fs.existsSync(path.resolve('public/_redirects')), false, 'Netlify-style public/_redirects is not GitHub Pages authority and must stay retired');
+assert.equal(fs.existsSync(path.resolve('vercel.json')), false, 'Vercel rewrite config is not GitHub Pages authority and must stay retired');
 
 assert.match(spec, /public\/sitemap\.xml/);
 assert.match(spec, /src\/routes\/route-contract\.json/);
@@ -46,6 +53,12 @@ assert.match(spec, /link\[rel="canonical"\]/);
 assert.match(spec, /ChunkLoadError/);
 assert.match(spec, /for \(const route of renderedRoutes\)/);
 assert.match(spec, /for \(const \[source, target\] of redirects\)/);
+assert.match(spec, /page\.request\.get/);
+assert.match(spec, /maxRedirects:\s*0/);
+assert.match(spec, /data-legacy-alias/);
+assert.match(spec, /tlp-legacy-alias-target/);
+assert.match(spec, /expect\(response\?\.status\(\)\)\.toBe\(404\)/);
+assert.match(spec, /runtime\.failedResponses\)\.toHaveLength\(1\)/);
 assert.match(spec, /for \(const notFoundRoute of notFoundRoutes\)/);
 assert.doesNotMatch(spec, /const canonicalRoutes = \[/);
 assert.doesNotMatch(spec, /waitForTimeout\(/);
@@ -62,6 +75,9 @@ assert.match(workflow, /name: Site route integrity audit/);
 assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
 assert.match(workflow, /npm run sitemap/);
 assert.match(workflow, /npm run build/);
+assert.match(workflow, /npm run prerender/);
+assert.match(workflow, /scripts\/serve-pages-static\.mjs/);
+assert.doesNotMatch(workflow, /npm run preview/);
 assert.match(workflow, /playwright install --with-deps chromium/);
 assert.match(workflow, /qa\/site-route-integrity\.spec\.mjs/);
 assert.match(workflow, /playwright\.route-audit\.config\.mjs/);
@@ -72,4 +88,16 @@ assert.doesNotMatch(workflow, /webkit|firefox/i);
 assert.match(ci, /Validate site route audit architecture/);
 assert.match(ci, /npm run validate:route-audit/);
 
-console.log('site route audit: route-contract inventory, behavioral URLs, strict runtime evidence, primary-CI lock and isolated Chromium execution locked');
+assert.match(vite, /legacy-alias-documents/);
+assert.match(vite, /ROUTE_CONTRACT_PATH/);
+assert.match(vite, /data-legacy-alias/);
+assert.match(vite, /noindex,follow/);
+assert.match(vite, /window\.location\.replace/);
+assert.match(vite, /legacy alias chains are forbidden/);
+
+assert.match(seoOutput, /routeContract\.redirects/);
+assert.match(seoOutput, /legacy alias leaked into sitemap/);
+assert.match(seoOutput, /legacy alias canonical target mismatch/);
+assert.match(seoOutput, /legacy alias refresh target mismatch/);
+
+console.log('site route audit: route-contract inventory, materialized GitHub Pages aliases, strict initial/final URL evidence, primary-CI lock and isolated Chromium execution locked');

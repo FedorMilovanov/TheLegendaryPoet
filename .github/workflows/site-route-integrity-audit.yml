@@ -45,13 +45,14 @@ jobs:
         run: |
           npm run sitemap
           npm run build
+          npm run prerender
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Start production preview
+      - name: Start Pages-like static host
         run: |
-          npm run preview -- --host 127.0.0.1 > route-audit-preview.log 2>&1 &
+          node scripts/serve-pages-static.mjs dist 4173 > route-audit-preview.log 2>&1 &
           echo $! > route-audit-preview.pid
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
