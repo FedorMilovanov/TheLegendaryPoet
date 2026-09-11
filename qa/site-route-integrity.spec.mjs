@@ -164,6 +164,24 @@ async function writeEvidence(route, payload) {
   fs.writeFileSync(path.join(ARTIFACT_DIR, filename), `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+async function machineHeadSnapshot(page) {
+  return page.evaluate(() => ({
+    title: document.title,
+    robots: document.querySelector('meta[name="robots"]')?.getAttribute('content') || null,
+    canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || null,
+    ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute('content') || null,
+    routeJsonLd: Boolean(document.getElementById('route-jsonld')),
+  }));
+}
+
+function expectNonCanonicalMachineState(snapshot, titlePattern) {
+  expect(snapshot.title).toMatch(titlePattern);
+  expect(snapshot.robots).toMatch(/^noindex/);
+  expect(snapshot.canonical).toBeNull();
+  expect(snapshot.ogUrl).toBeNull();
+  expect(snapshot.routeJsonLd).toBe(false);
+}
+
 test('route inventory is generated from production sitemap and covers at least 35 URLs', async () => {
   expect(canonicalRoutes.length).toBeGreaterThanOrEqual(MIN_CANONICAL_ROUTES);
   expect(auditedRouteCount).toBeGreaterThanOrEqual(MIN_AUDITED_ROUTES);
@@ -211,29 +229,113 @@ for (const [source, target] of redirects) {
 }
 
 for (const notFoundRoute of notFoundRoutes) {
-  test(`not-found route remains a healthy app shell: ${notFoundRoute}`, async ({ page }) => {
-  const runtime = attachRuntimeDiagnostics(page);
-  const response = await page.goto(`${BASE_URL}${notFoundRoute}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  expect(response?.status()).toBe(404);
-  await settleRoute(page);
-  const snapshot = await page.evaluate(() => ({
-    pathname: window.location.pathname,
-    title: document.title.trim(),
-    mainText: document.querySelector('#main-content')?.textContent?.replace(/\s+/g, ' ').trim() || '',
-    horizontalOverflow: Math.max(document.body.scrollWidth, document.documentElement.scrollWidth) - window.innerWidth,
-    headerPresent: Boolean(document.querySelector('header')),
-    footerPresent: Boolean(document.querySelector('footer')),
-  }));
-  expect(snapshot.pathname).toBe(notFoundRoute);
-  expect(snapshot.title.length).toBeGreaterThan(5);
-  expect(snapshot.mainText).toMatch(/404|не найден|не существует/i);
-  expect(snapshot.horizontalOverflow).toBeLessThanOrEqual(2);
-  expect(snapshot.headerPresent).toBe(true);
-  expect(snapshot.footerPresent).toBe(true);
-  await writeEvidence(notFoundRoute, { kind: 'not-found', route: notFoundRoute, snapshot, runtime });
-  expect(runtime.pageErrors).toEqual([]);
-  expect(runtime.failedResponses).toHaveLength(1);
-  expect(runtime.failedResponses[0]?.status).toBe(404);
-  expect(new URL(runtime.failedResponses[0]?.url || BASE_URL).pathname).toBe(notFoundRoute);
-});
+  test(`not-found route keeps static and hydrated machine metadata equivalent: ${notFoundRoute}`, async ({ page }) => {
+    const staticResponse = await page.request.get(`${BASE_URL}${notFoundRoute}`, { maxRedirects: 0 });
+    expect(staticResponse.status()).toBe(404);
+    const staticHtml = await staticResponse.text();
+    expect(staticHtml).toContain('<meta name="robots" content="noindex,follow" />');
+    expect(staticHtml).not.toContain('rel="canonical"');
+    expect(staticHtml).not.toContain('property="og:url"');
+    expect(staticHtml).not.toContain('id="route-jsonld"');
+
+    const runtime = attachRuntimeDiagnostics(page);
+    const response = await page.goto(`${BASE_URL}${notFoundRoute}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    expect(response?.status()).toBe(404);
+    await settleRoute(page);
+
+    const snapshot = await page.evaluate(() => ({
+      pathname: window.location.pathname,
+      title: document.title.trim(),
+      mainText: document.querySelector('#main-content')?.textContent?.replace(/\s+/g, ' ').trim() || '',
+      horizontalOverflow: Math.max(document.body.scrollWidth, document.documentElement.scrollWidth) - window.innerWidth,
+      headerPresent: Boolean(document.querySelector('header')),
+      footerPresent: Boolean(document.querySelector('footer')),
+    }));
+    const head = await machineHeadSnapshot(page);
+
+    expect(snapshot.pathname).toBe(notFoundRoute);
+    expect(snapshot.mainText).toMatch(/404|не найден|не существует/i);
+    expect(snapshot.horizontalOverflow).toBeLessThanOrEqual(2);
+    expect(snapshot.headerPresent).toBe(true);
+    expect(snapshot.footerPresent).toBe(true);
+    expectNonCanonicalMachineState(head, /Страница не найдена/i);
+
+    await writeEvidence(notFoundRoute, { kind: 'not-found', route: notFoundRoute, snapshot, head, runtime });
+    expect(runtime.pageErrors).toEqual([]);
+    expect(runtime.failedResponses).toHaveLength(1);
+    expect(runtime.failedResponses[0]?.status).toBe(404);
+    expect(new URL(runtime.failedResponses[0]?.url || BASE_URL).pathname).toBe(notFoundRoute);
+  });
 }
+
+test('SPA navigation to not-found removes previous canonical, og:url and route schema', async ({ page }) => {
+  await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await settleRoute(page);
+  const before = await machineHeadSnapshot(page);
+  expect(new URL(before.canonical).pathname).toBe('/about');
+  expect(before.routeJsonLd).toBe(true);
+
+  const missing = '/discovery-spa-missing-route';
+  await page.evaluate((pathname) => {
+    window.history.pushState({}, '', pathname);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, missing);
+  await expect(page.locator('#main-content')).toContainText(/404|не найден|не существует/i);
+  const after = await machineHeadSnapshot(page);
+  expect(page.url()).toBe(`${BASE_URL}${missing}`);
+  expectNonCanonicalMachineState(after, /Страница не найдена/i);
+});
+
+test('lazy loading owns a neutral machine head before the destination settles', async ({ page }) => {
+  await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await settleRoute(page);
+
+  let delayNextAssetScript = true;
+  await page.route('**/*.js', async (route) => {
+    const url = new URL(route.request().url());
+    if (delayNextAssetScript && url.origin === BASE_ORIGIN && url.pathname.startsWith('/assets/')) {
+      delayNextAssetScript = false;
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+    }
+    await route.continue();
+  });
+
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/privacy');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+
+  await expect.poll(async () => (await machineHeadSnapshot(page)).title, { timeout: 1_000 }).toMatch(/Загрузка страницы/i);
+  expectNonCanonicalMachineState(await machineHeadSnapshot(page), /Загрузка страницы/i);
+
+  await settleRoute(page);
+  const ready = await machineHeadSnapshot(page);
+  expect(new URL(ready.canonical).pathname).toBe('/privacy');
+  expect(ready.ogUrl).toContain('/privacy');
+  expect(ready.routeJsonLd).toBe(true);
+});
+
+test('lazy route error clears stale head and reload recovery restores canonical metadata', async ({ page, context }) => {
+  await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await settleRoute(page);
+  const before = await machineHeadSnapshot(page);
+  expect(new URL(before.canonical).pathname).toBe('/about');
+
+  await context.setOffline(true);
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/ratings');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 10_000 });
+  expectNonCanonicalMachineState(await machineHeadSnapshot(page), /Ошибка загрузки страницы/i);
+
+  await context.setOffline(false);
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await settleRoute(page);
+  const recovered = await machineHeadSnapshot(page);
+  expect(new URL(recovered.canonical).pathname).toBe('/ratings');
+  expect(recovered.ogUrl).toContain('/ratings');
+  expect(recovered.routeJsonLd).toBe(true);
+  expect(recovered.title).not.toMatch(/Ошибка загрузки страницы/i);
+});
+
