@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import { musicTracks, poets } from '../data/poets';
@@ -11,6 +11,7 @@ import { useFavoritePoems } from '../hooks/useFavoritePoems';
 import { useSeo } from '../hooks/useSeo';
 import { reconcileFavoritePoems, removeFavoritePoem } from '../utils/myArchiveStore';
 import { titleCase } from '../utils/titleCase';
+import { focusMainContent, focusProgrammaticTarget } from '../utils/focusRuntime';
 
 const PAGE_SIZE = 20;
 const addedDateFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -44,6 +45,7 @@ export default function MyArchivePage() {
   const [query, setQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [archiveMessage, setArchiveMessage] = useState('');
+  const pendingRemovalFocusRef = useRef<{ nextId: string | null; previousId: string | null } | null>(null);
   const deferredQuery = useDeferredValue(query);
   const searchPending = deferredQuery !== query;
 
@@ -112,8 +114,18 @@ export default function MyArchivePage() {
   const authorCount = new Set(archivedPoems.map((entry) => entry.poetId)).size;
 
   const handleRemoveFavorite = (poemId: string) => {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-archive-remove-id]')];
+    const index = buttons.findIndex((button) => button.dataset.archiveRemoveId === poemId);
+    pendingRemovalFocusRef.current = index >= 0
+      ? {
+          nextId: buttons[index + 1]?.dataset.archiveRemoveId ?? null,
+          previousId: buttons[index - 1]?.dataset.archiveRemoveId ?? null,
+        }
+      : null;
+
     const result = removeFavoritePoem(poemId);
     if (result.status === 'failed') {
+      pendingRemovalFocusRef.current = null;
       setArchiveMessage('Не удалось удалить стихотворение: архив браузера недоступен, список не изменён.');
       return;
     }
@@ -121,8 +133,24 @@ export default function MyArchivePage() {
       setArchiveMessage('Стихотворение удалено из архива.');
       return;
     }
+    pendingRemovalFocusRef.current = null;
     setArchiveMessage('Архив уже не содержит это стихотворение.');
   };
+
+  useEffect(() => {
+    const pending = pendingRemovalFocusRef.current;
+    if (!pending) return;
+    const frame = requestAnimationFrame(() => {
+      const ids = [pending.nextId, pending.previousId].filter((value): value is string => Boolean(value));
+      const next = ids
+        .map((id) => document.querySelector<HTMLButtonElement>(`[data-archive-remove-id="${CSS.escape(id)}"]`))
+        .find((button): button is HTMLButtonElement => Boolean(button?.isConnected));
+      if (next) focusProgrammaticTarget(next);
+      else focusMainContent();
+      pendingRemovalFocusRef.current = null;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [favorites]);
 
   if (!hasAnyArchive) {
     return (
@@ -243,7 +271,7 @@ export default function MyArchivePage() {
                       </div>
                       <div className="flex flex-shrink-0 items-center gap-3">
                         <div className="flex items-center gap-1 text-luxury-gold"><Star size={14} className="fill-luxury-gold" /><span className="text-sm font-bold">{poem.rating}</span></div>
-                        <button type="button" onClick={() => handleRemoveFavorite(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
+                        <button type="button" data-archive-remove-id={poem.id} onClick={() => handleRemoveFavorite(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
                       </div>
                     </article>
                   ))}
