@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
+import { focusProgrammaticTarget } from '../utils/focusRuntime';
 
 const HASH_OBSERVER_TIMEOUT_MS = 15_000;
 const FIXED_HEADER_OFFSET = 96;
@@ -75,6 +76,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     const scrollToHashTarget = (target: HTMLElement) => {
       const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+      focusProgrammaticTarget(target, { preventScroll: true });
     };
 
     const findAndScrollToHash = () => {
