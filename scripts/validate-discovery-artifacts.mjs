@@ -123,11 +123,16 @@ try {
     'sitemap URL inventory must equal discovery manifest canonical URL inventory',
   );
 
-  const lastmodPaths = [...sitemap.matchAll(/<url>[\s\S]*?<loc>https:\/\/thelegendarypoet\.ru([^<]*)<\/loc>[\s\S]*?<lastmod>([^<]+)<\/lastmod>[\s\S]*?<\/url>/g)]
-    .map((match) => [match[1], match[2]]);
-  for (const [pathname, date] of lastmodPaths) {
+  const lastmodPaths = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)]
+    .map((match) => match[1])
+    .map((block) => ({
+      pathname: block.match(/<loc>https:\/\/thelegendarypoet\.ru([^<]*)<\/loc>/)?.[1] || '',
+      date: block.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1] || null,
+    }))
+    .filter((record) => record.date !== null);
+  for (const { pathname, date } of lastmodPaths) {
     expect(pathname.startsWith('/essays/'), `only essays with owned editorial clocks may emit sitemap lastmod: ${pathname}`);
-    expect(/^\d{4}-\d{2}-\d{2}$/.test(date), `invalid sitemap lastmod date for ${pathname}`);
+    expect(/^\d{4}-\d{2}-\d{2}$/.test(date || ''), `invalid sitemap lastmod date for ${pathname}`);
   }
 
   const unchanged = fakeManifest([
