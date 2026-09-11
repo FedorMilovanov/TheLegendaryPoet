@@ -58,7 +58,11 @@ function stableValue(value) {
 }
 
 function sha256(value) {
-  const input = typeof value === 'string' ? value : JSON.stringify(stableValue(value));
+  const input = Buffer.isBuffer(value)
+    ? value
+    : typeof value === 'string'
+      ? value
+      : JSON.stringify(stableValue(value));
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
