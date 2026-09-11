@@ -1,6 +1,7 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath, type To } from 'react-router';
 import routeContractData from './route-contract.json';
+import { applyTransientDiscoveryHead, type DiscoveryStateName } from './discoveryHead';
 
 type PageModule = { default: ComponentType };
 type PageImporter = () => Promise<PageModule>;
@@ -14,6 +15,7 @@ type RouteContractRecord = {
   prefetch: boolean;
   sitemap: boolean;
   audit: RouteAuditKind;
+  discoveryState: Extract<DiscoveryStateName, 'ready' | 'noindex' | 'not-found'>;
   budgetBytes: number;
 };
 
@@ -88,12 +90,17 @@ function clearRecoveryMarker(routeId: string) {
 }
 
 async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load'>) {
+  if (typeof window !== 'undefined') applyTransientDiscoveryHead('loading', window.location.pathname);
+
   try {
     const module = await record.load();
     clearRecoveryMarker(record.id);
     return module;
   } catch (firstError) {
-    if (!isChunkLoadFailure(firstError)) throw firstError;
+    if (!isChunkLoadFailure(firstError)) {
+      if (typeof window !== 'undefined') applyTransientDiscoveryHead('error', window.location.pathname);
+      throw firstError;
+    }
 
     await new Promise((resolve) => globalThis.setTimeout(resolve, 240));
     try {
@@ -101,7 +108,10 @@ async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load'>) {
       clearRecoveryMarker(record.id);
       return module;
     } catch (secondError) {
-      if (!isChunkLoadFailure(secondError) || !canAttemptRecovery(record.id) || typeof window === 'undefined') throw secondError;
+      if (!isChunkLoadFailure(secondError) || !canAttemptRecovery(record.id) || typeof window === 'undefined') {
+        if (typeof window !== 'undefined') applyTransientDiscoveryHead('error', window.location.pathname);
+        throw secondError;
+      }
       window.location.reload();
       return new Promise<PageModule>(() => undefined);
     }
