@@ -11,7 +11,7 @@ export default function NotFoundPage() {
     title: 'Страница не найдена — THE LEGENDARY POET',
     description: 'Запрошенная страница не существует или была перемещена.',
     path: location.pathname,
-    robots: 'noindex,follow',
+    state: 'not-found',
   });
 
   return (
