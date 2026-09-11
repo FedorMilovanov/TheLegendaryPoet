@@ -81,12 +81,14 @@ function restoreOverlayIsolation() {
 }
 
 function isolateBackgroundForTopOverlay() {
-  restoreOverlayIsolation();
   if (typeof document === 'undefined') return;
 
   const top = overlayStack[overlayStack.length - 1];
   const root = top?.root;
+  // During a keyed portal replacement keep the previous isolation until the
+  // new concrete root is connected; never expose the background for one frame.
   if (!root?.isConnected) return;
+  restoreOverlayIsolation();
 
   let branch: HTMLElement | null = root;
   while (branch?.parentElement) {
