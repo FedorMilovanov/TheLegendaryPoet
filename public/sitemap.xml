@@ -2,7 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://thelegendarypoet.ru/</loc>
-    <lastmod>2026-09-06</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/og-image.jpg</image:loc>
       <image:title>THE LEGENDARY POET</image:title>
@@ -11,31 +10,24 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets</loc>
-    <lastmod>2026-09-06</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/ratings</loc>
-    <lastmod>2026-09-06</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/articles</loc>
-    <lastmod>2026-09-06</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music</loc>
-    <lastmod>2026-07-23</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/about</loc>
-    <lastmod>2026-07-28</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/editorial-policy</loc>
-    <lastmod>2026-07-28</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/privacy</loc>
-    <lastmod>2026-07-28</lastmod>
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/essays/simonov-syn-artillerista-realnaya-istoriya</loc>
@@ -129,7 +121,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl</loc>
-    <lastmod>2026-07-23</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/music/yesenin-ya-ustalym-wide.webp</image:loc>
       <image:title>Я усталым таким ещё не был — Сергей Есенин</image:title>
@@ -138,7 +129,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music/pushkin-tucha</loc>
-    <lastmod>2026-07-23</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/music/pushkin-tucha-wide.webp</image:loc>
       <image:title>Туча — Александр Пушкин</image:title>
@@ -147,7 +137,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/music/blok-rossiya</loc>
-    <lastmod>2026-07-23</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/music/blok-rossiya-wide.webp</image:loc>
       <image:title>Россия — Александр Блок</image:title>
@@ -164,7 +153,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/vladimir-mayakovsky</loc>
-    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/mayakovsky.jpg</image:loc>
       <image:title>Владимир Владимирович Маяковский</image:title>
@@ -173,7 +161,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/alexander-pushkin</loc>
-    <lastmod>2026-07-23</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/pushkin.jpg</image:loc>
       <image:title>Александр Сергеевич Пушкин</image:title>
@@ -182,7 +169,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/mikhail-lermontov</loc>
-    <lastmod>2026-08-04</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/lermontov.jpg</image:loc>
       <image:title>Михаил Юрьевич Лермонтов</image:title>
@@ -215,7 +201,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/sergei-yesenin</loc>
-    <lastmod>2026-09-06</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/yesenin.jpg</image:loc>
       <image:title>Сергей Александрович Есенин</image:title>
@@ -232,7 +217,6 @@
   </url>
   <url>
     <loc>https://thelegendarypoet.ru/poets/alexander-blok</loc>
-    <lastmod>2026-07-23</lastmod>
     <image:image>
       <image:loc>https://thelegendarypoet.ru/images/blok.jpg</image:loc>
       <image:title>Александр Александрович Блок</image:title>
