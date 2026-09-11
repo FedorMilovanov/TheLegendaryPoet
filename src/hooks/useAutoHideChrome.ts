@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { focusMainContent } from '../utils/focusRuntime';
 
 /**
  * Universal "reading mode" chrome auto-hide (the Medium / iOS-Safari pattern).
@@ -23,10 +24,24 @@ export function useAutoHideChrome() {
     let hidden = false;
     let ticking = false;
 
+    const syncAccessibilityState = (next: boolean) => {
+      const surfaces = [...document.querySelectorAll<HTMLElement>('[data-auto-hide-chrome]')];
+      const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      if (next && active && surfaces.some((surface) => surface.contains(active))) {
+        focusMainContent();
+      }
+      for (const surface of surfaces) {
+        surface.toggleAttribute('inert', next);
+        if (next) surface.setAttribute('aria-hidden', 'true');
+        else surface.removeAttribute('aria-hidden');
+      }
+    };
+
     const apply = (next: boolean) => {
       if (next !== hidden) {
         hidden = next;
         root.classList.toggle('chrome-hidden', hidden);
+        syncAccessibilityState(hidden);
       }
     };
 
@@ -50,6 +65,7 @@ export function useAutoHideChrome() {
     return () => {
       window.removeEventListener('scroll', onScroll);
       root.classList.remove('chrome-hidden');
+      syncAccessibilityState(false);
     };
   }, []);
 }
