@@ -24,7 +24,7 @@ const Header = () => {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <header className="site-header theme-chrome-surface fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 backdrop-blur-xl">
+    <header data-auto-hide-chrome className="site-header theme-chrome-surface fixed inset-x-0 top-0 z-50 border-b border-cyan-400/10 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between gap-3 lg:gap-8">
           <Link to="/" className="group flex min-h-11 min-w-0 flex-1 items-center gap-3 md:flex-none">
