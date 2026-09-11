@@ -26,6 +26,12 @@ type OverlayEntry = {
   onEscape: (() => void) | null;
 };
 
+type IsolationSnapshot = {
+  element: HTMLElement;
+  inert: boolean;
+  ariaHidden: string | null;
+};
+
 type OverlayDebugState = {
   depth: number;
   labels: string[];
@@ -47,6 +53,7 @@ let styleSnapshot: StyleSnapshot | null = null;
 let resumeSmoothScroll: ((restoredScrollY?: number) => void) | null = null;
 let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
+let isolationSnapshots: IsolationSnapshot[] = [];
 
 function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: boolean | OverlayDebugState) {
   if (typeof window === 'undefined') return;
@@ -62,6 +69,41 @@ function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: 
 
 function setLegacyModalFlag(open: boolean) {
   setWindowValue('__TLP_MODAL_OPEN', open);
+}
+
+function restoreOverlayIsolation() {
+  for (const snapshot of isolationSnapshots.reverse()) {
+    snapshot.element.toggleAttribute('inert', snapshot.inert);
+    if (snapshot.ariaHidden === null) snapshot.element.removeAttribute('aria-hidden');
+    else snapshot.element.setAttribute('aria-hidden', snapshot.ariaHidden);
+  }
+  isolationSnapshots = [];
+}
+
+function isolateBackgroundForTopOverlay() {
+  restoreOverlayIsolation();
+  if (typeof document === 'undefined') return;
+
+  const top = overlayStack[overlayStack.length - 1];
+  const root = top?.root;
+  if (!root?.isConnected) return;
+
+  let branch: HTMLElement | null = root;
+  while (branch?.parentElement) {
+    const parent = branch.parentElement;
+    for (const sibling of [...parent.children]) {
+      if (!(sibling instanceof HTMLElement) || sibling === branch) continue;
+      isolationSnapshots.push({
+        element: sibling,
+        inert: sibling.hasAttribute('inert'),
+        ariaHidden: sibling.getAttribute('aria-hidden'),
+      });
+      sibling.setAttribute('inert', '');
+      sibling.setAttribute('aria-hidden', 'true');
+    }
+    if (parent === document.body) break;
+    branch = parent;
+  }
 }
 
 function publishOverlayDebug() {
@@ -94,7 +136,10 @@ function pruneDetachedOverlays() {
     overlayStack.splice(index, 1);
     removed = true;
   }
-  if (removed) publishOverlayDebug();
+  if (removed) {
+    if (overlayStack.length > 0) isolateBackgroundForTopOverlay();
+    publishOverlayDebug();
+  }
   if (removed && overlayStack.length === 0 && styleSnapshot) unlockDocument();
 }
 
@@ -167,6 +212,7 @@ function lockDocument() {
 function unlockDocument() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
+  restoreOverlayIsolation();
   const snapshot = styleSnapshot;
   const body = document.body;
   const html = document.documentElement;
@@ -214,6 +260,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
   const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null };
   overlayStack.push(entry);
   if (overlayStack.length === 1) lockDocument();
+  isolateBackgroundForTopOverlay();
   publishOverlayDebug();
   let released = false;
 
@@ -222,6 +269,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
     setRoot: (nextRoot) => {
       if (!released) {
         entry.root = nextRoot;
+        if (entry === overlayStack[overlayStack.length - 1]) isolateBackgroundForTopOverlay();
         publishOverlayDebug();
       }
     },
@@ -233,6 +281,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       released = true;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
+      if (overlayStack.length > 0) isolateBackgroundForTopOverlay();
       publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
     },
