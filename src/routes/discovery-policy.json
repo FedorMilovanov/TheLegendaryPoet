@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "states": {
+    "ready": {
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "canonical": "self",
+      "ogUrl": "self",
+      "schema": true,
+      "sitemap": true,
+      "indexNow": true
+    },
+    "noindex": {
+      "robots": "noindex,follow",
+      "canonical": "self",
+      "ogUrl": "self",
+      "schema": true,
+      "sitemap": false,
+      "indexNow": false
+    },
+    "not-found": {
+      "robots": "noindex,follow",
+      "canonical": "none",
+      "ogUrl": "none",
+      "schema": false,
+      "sitemap": false,
+      "indexNow": false,
+      "title": "Страница не найдена — THE LEGENDARY POET",
+      "description": "Запрошенная страница не существует или была перемещена."
+    },
+    "loading": {
+      "robots": "noindex,follow",
+      "canonical": "none",
+      "ogUrl": "none",
+      "schema": false,
+      "sitemap": false,
+      "indexNow": false,
+      "title": "Загрузка страницы — THE LEGENDARY POET",
+      "description": "Страница загружается. Машинные метаданные появятся после успешного завершения навигации."
+    },
+    "error": {
+      "robots": "noindex,follow",
+      "canonical": "none",
+      "ogUrl": "none",
+      "schema": false,
+      "sitemap": false,
+      "indexNow": false,
+      "title": "Ошибка загрузки страницы — THE LEGENDARY POET",
+      "description": "Страница не смогла загрузиться. Повторите попытку или вернитесь на главную."
+    },
+    "redirect": {
+      "robots": "noindex,follow",
+      "canonical": "target",
+      "ogUrl": "none",
+      "schema": false,
+      "sitemap": false,
+      "indexNow": false,
+      "title": "Страница перемещена — THE LEGENDARY POET",
+      "description": "Запрошенная страница перемещена на канонический адрес."
+    }
+  }
+}
