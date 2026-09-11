@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Home, RotateCw, WifiOff } from 'lucide-react';
 import { Link } from './ui/Link';
 import { titleCase } from '../utils/titleCase';
+import { applyTransientDiscoveryHead } from '../routes/discoveryHead';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -26,7 +27,9 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   componentDidCatch(_error: Error, _info: ErrorInfo) {
-    // Keep production recoverable without exposing stack traces or internals.
+    // A render failure owns machine metadata too; never leave the previous
+    // route's canonical/schema under the new URL.
+    if (typeof window !== 'undefined') applyTransientDiscoveryHead('error', window.location.pathname);
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps) {
