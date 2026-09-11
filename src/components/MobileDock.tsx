@@ -55,7 +55,7 @@ export default function MobileDock() {
   };
 
   return (
-    <nav className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
+    <nav data-auto-hide-chrome className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
       <motion.div
         className="dock-rail"
         initial={{ y: 90, opacity: 0 }}
