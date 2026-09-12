@@ -153,6 +153,8 @@ expect(liveCertifier.includes("tokenA === tokenB || sessionA.actor === sessionB.
 expect(liveCertifier.includes("Promise.all([") && liveCertifier.includes("postComment(options.apiUrl, tokenA, basePayload)"), 'live certifier must exercise concurrent identical comment delivery');
 expect(liveCertifier.includes("replay.body?.idempotent !== true"), 'live certifier must require an explicit idempotent stable replay');
 expect(liveCertifier.includes("'unknown_target'") && liveCertifier.includes("'comment_id_conflict'"), 'live certifier must prove target rejection and immutable comment-ID conflict outcomes');
+expect(liveCertifier.includes('proveSignedSession(options.apiUrl, tokenA') && liveCertifier.includes('proveSignedSession(options.apiUrl, tokenB'), 'live certifier must authenticate both signed sessions against the Worker before trusting decoded actor UUIDs');
+expect(liveCertifier.includes('cleanupAuthorized = true') && liveCertifier.includes('if (cleanupAuthorized)'), 'D1 cleanup authority must be gated on successful Worker authentication of both signed sessions');
 expect(liveCertifier.includes('visibleMatches !== 1'), 'live certifier must verify concurrent requests converge to one public row');
 expect(liveCertifier.includes("wrangler@${WRANGLER_VERSION}") && liveCertifier.includes("const WRANGLER_VERSION = '4.120.0'"), 'live certifier cleanup must use the pinned production Wrangler version');
 expect(liveCertifier.includes("const DATABASE_NAME = 'the-legendary-poet-community'"), 'live certifier cleanup must target the canonical production D1 database');
