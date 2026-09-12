@@ -730,7 +730,7 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   await expect(search).toBeHidden();
   await expect.poll(() => immersive.evaluate((element) => element.inert)).toBe(false);
   await expect(immersive).not.toHaveAttribute('aria-hidden', 'true');
-  expect(await main.evaluate((element) => element.inert)).toBe(true);
+  expect((await readEffectiveA11yIsolation(main)).inert).toBe(true);
   expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(true);
 
   await immersive.getByRole('button', { name: 'Выйти' }).click();
