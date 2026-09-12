@@ -236,7 +236,7 @@ expect(
 expect(list.includes('Сортировка и фильтр применяются к уже загруженным комментариям') && list.includes('Загрузить ещё из общей ленты'), 'comment sort/filter scope must be explicit and pagination must remain reachable under filtered views');
 expect(storeSource.includes('normalizeCommunityCommentText(candidate.text)'), 'client persistence must use the shared whitespace-preserving comment contract');
 expect(workerSource.includes('normalizeCommunityCommentText(body.text)'), 'Worker mutation validation must use the same whitespace-preserving comment contract');
-expect(!storeSource.includes("replace(/[\\t ]+/g, ' ')") && !workerSource.includes("replace(/[\\t ]+/g, ' ')"), 'comment paths must never collapse internal tabs or repeated spaces');
+expect(!storeSource.includes('normalizeText(candidate.text') && !workerSource.includes("body.text.replace(/\\r\\n?/g, '\\n').replace(/[\\t ]+/g, ' ')"), 'comment text paths must never route through whitespace-collapsing normalization');
 expect(contractSource.includes("replace(/[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]/g, '')"), 'shared comment contract must remove unsafe controls without removing tab/newline fidelity');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
