@@ -235,7 +235,6 @@ export function initAnalytics() {
   if (typeof window === 'undefined' || getAnalyticsConsent() !== 'granted') return;
   if (!hasConfiguredAnalytics()) return;
 
-  setProviderCollectionEnabled(true);
   ensureYandexProvider();
   ensureGoogleProvider();
 }
