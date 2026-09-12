@@ -60,11 +60,75 @@ async function contrastRatio(locator) {
   });
 }
 
+
+async function nonTextContrast(locator, mode = 'border') {
+  return locator.evaluate((node, mode) => {
+    const parse = (value) => {
+      const match = value.match(/rgba?\(([^)]+)\)/i);
+      if (!match) throw new Error(`Unsupported computed color: ${value}`);
+      const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+      return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
+    };
+    const composite = (front, back) => {
+      const alpha = front.a + back.a * (1 - front.a);
+      if (alpha <= 0) return { r: 255, g: 255, b: 255, a: 1 };
+      return {
+        r: (front.r * front.a + back.r * back.a * (1 - front.a)) / alpha,
+        g: (front.g * front.a + back.g * back.a * (1 - front.a)) / alpha,
+        b: (front.b * front.a + back.b * back.a * (1 - front.a)) / alpha,
+        a: alpha,
+      };
+    };
+    const luminance = ({ r, g, b }) => {
+      const channel = (raw) => {
+        const c = raw / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    };
+    const ratio = (a, b) => {
+      const l1 = luminance(a);
+      const l2 = luminance(b);
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    };
+
+    let background = { r: 255, g: 255, b: 255, a: 1 };
+    const chain = [];
+    for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
+    for (const current of chain.reverse()) {
+      const bg = parse(getComputedStyle(current).backgroundColor);
+      if (bg.a > 0) background = composite(bg, background);
+    }
+
+    const style = getComputedStyle(node);
+    if (mode === 'border') {
+      return ratio(composite(parse(style.borderTopColor), background), background);
+    }
+
+    const shadowColors = [...style.boxShadow.matchAll(/rgba?\([^)]+\)/gi)].map((match) => parse(match[0]));
+    const visibleShadow = shadowColors.findLast((color) => color.a >= 0.5);
+    if (visibleShadow) return ratio(composite(visibleShadow, background), background);
+
+    if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) {
+      return ratio(composite(parse(style.outlineColor), background), background);
+    }
+    return 1;
+  }, mode);
+}
+
 async function setThemeFromUi(page, mode) {
   const snapshot = await themeSnapshot(page);
   if (snapshot.dataset === mode) return;
   const label = mode === 'light' ? 'Включить светлую тему' : 'Включить темную тему';
-  await page.getByRole('button', { name: label }).filter({ visible: true }).first().click();
+  const toggle = page.getByRole('button', { name: label }).filter({ visible: true }).first();
+  if (!(await toggle.isVisible().catch(() => false))) {
+    // Longform reading mode intentionally hides fixed chrome after deep focus.
+    // A real upward scroll restores the chrome; do not force-click hidden UI.
+    await page.mouse.move(100, 100);
+    await page.mouse.wheel(0, -2500);
+    await expect(toggle).toBeVisible({ timeout: 5_000 });
+  }
+  await toggle.click();
   await expect.poll(async () => (await themeSnapshot(page)).dataset).toBe(mode);
 }
 
@@ -129,6 +193,35 @@ test.describe('theme authority and contrast', () => {
     const dark = await themeSnapshot(page);
     expect(dark.themeColor).toBe('#050810');
     expect(dark.colorSchemeMeta).toBe('dark');
+  });
+
+
+  test('community control boundaries and focus indicators meet non-text contrast in dark/light themes', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    const response = await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+    expect(response?.status()).toBeLessThan(400);
+
+    const help = page.getByText(/Минимум \d+ символов/).filter({ visible: true }).first();
+    await expect(help).toBeVisible({ timeout: 15_000 });
+    const panel = help.locator('xpath=ancestor::section[1]');
+    const kind = panel.getByRole('button', { name: 'Историческая справка' });
+    const textarea = panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
+    await expect(kind).toBeVisible();
+    await expect(textarea).toBeVisible();
+
+    for (const mode of ['dark', 'light']) {
+      await setThemeFromUi(page, mode);
+
+      expect(await nonTextContrast(kind), `${mode} comment-kind boundary`).toBeGreaterThanOrEqual(3);
+
+      await kind.focus();
+      await expect(kind).toBeFocused();
+      expect(await nonTextContrast(kind, 'focus'), `${mode} comment-kind focus indicator`).toBeGreaterThanOrEqual(3);
+
+      await textarea.focus();
+      await expect(textarea).toBeFocused();
+      expect(await nonTextContrast(textarea, 'focus'), `${mode} comment textarea focus indicator`).toBeGreaterThanOrEqual(3);
+    }
   });
 
   test('functional comment text and unselected rating controls meet computed dark/light contrast', async ({ page }, testInfo) => {
