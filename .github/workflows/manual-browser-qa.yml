@@ -138,13 +138,14 @@ jobs:
         env:
           VITE_BASE: /
           VITE_GA_ID: G-TLPQA00001
+          VITE_YANDEX_METRIKA_ID: '98765432'
         run: |
           npm run build
           npm run validate:build-output
-      - name: Install locked Playwright Chromium
+      - name: Install locked analytics browsers
         uses: ./.github/actions/install-playwright
         with:
-          browsers: chromium
+          browsers: chromium webkit
       - name: Start analytics QA production preview
         uses: ./.github/actions/start-preview
         with:
@@ -156,6 +157,7 @@ jobs:
           qa/analytics-route.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
+          --project=iphone-safari
           --workers=1
           --reporter=line
       - name: Upload analytics route QA evidence

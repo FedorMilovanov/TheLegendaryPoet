@@ -175,17 +175,57 @@ if (otherCssImports.some((index) => index > reducedMotionImport)) {
 }
 
 const analyticsSource = read('src/utils/analytics.ts');
-if (!analyticsSource.includes('let sessionConsent: AnalyticsConsent | null = null')) {
+if (!analyticsSource.includes('let sessionConsent: AnalyticsConsentState = null')) {
   fail('analytics consent must retain an explicit same-tab memory authority when persistence is blocked');
 }
 if (!analyticsSource.includes('if (sessionConsent !== null) return sessionConsent')) {
   fail('analytics consent reads must prefer the same-tab authority before best-effort persistence');
 }
-if (!analyticsSource.includes('sessionConsent = value;\n  safeWrite(CONSENT_STORAGE_KEY, value);')) {
-  fail('analytics consent writes must update same-tab authority before best-effort storage');
+if (!analyticsSource.includes('applyConsent(value, { persist: true, publish: true })')) {
+  fail('analytics consent writes must flow through the single lifecycle authority');
+}
+if (!analyticsSource.includes('if (persist && value !== null)')) {
+  fail('analytics consent persistence must remain explicit and fail closed for unset state');
+}
+if (!analyticsSource.includes("window.addEventListener('storage', handleStorage)")) {
+  fail('analytics consent must converge across open tabs through the browser storage event');
+}
+if (!analyticsSource.includes('analytics_storage: value === \'granted\' ? \'granted\' : \'denied\'')) {
+  fail('Google analytics storage consent must follow the current user choice');
+}
+if (!analyticsSource.includes('ga-disable-')) {
+  fail('Google analytics revoke must retain the hard collection kill switch');
+}
+if (!analyticsSource.includes('disableYaCounter')) {
+  fail('Yandex analytics must expose the documented pre-init collection kill switch');
+}
+if (!analyticsSource.includes("'destruct'")) {
+  fail('Yandex analytics revoke must destruct an initialized SPA counter');
+}
+if (!analyticsSource.includes('script[data-tlp-analytics-provider="google"]') || !analyticsSource.includes('script[data-tlp-analytics-provider="yandex"]')) {
+  fail('analytics provider scripts must have duplicate-resistant ownership markers');
 }
 if (/document\.cookie|sessionStorage/.test(analyticsSource)) {
   fail('analytics consent must not bypass blocked localStorage with alternate persistence');
+}
+
+const privacySource = read('src/pages/PrivacyPage.tsx');
+if (!privacySource.includes('data-analytics-consent-action="granted"') || !privacySource.includes('data-analytics-consent-action="denied"')) {
+  fail('privacy page must expose persistent reopenable analytics consent controls');
+}
+if (!privacySource.includes('ANALYTICS_CONSENT_EVENT')) {
+  fail('privacy page must observe the same analytics consent authority as the global banner');
+}
+
+const analyticsBrowserSource = read('qa/analytics-route.spec.mjs');
+if (!analyticsBrowserSource.includes('grant, cross-tab deny and re-grant converge')) {
+  fail('analytics browser QA must cover the full grant/deny/re-grant lifecycle');
+}
+if (!analyticsBrowserSource.includes('context.newPage()')) {
+  fail('analytics browser QA must prove real cross-tab consent convergence');
+}
+if (!analyticsBrowserSource.includes('yandexDestructCount') || !analyticsBrowserSource.includes('googleConfigCount')) {
+  fail('analytics browser QA must prove provider revoke and duplicate-init outcomes');
 }
 
 const analyticsEvents: Event[] = [];
