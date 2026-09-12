@@ -89,7 +89,7 @@ export default function GlobalMiniPlayer() {
               <span
                 aria-hidden="true"
                 data-seek-focus-indicator="mini"
-                className="pointer-events-none absolute inset-x-1 -top-1 h-4 rounded-full border border-transparent opacity-0 transition peer-focus-visible:border-cyan-100/90 peer-focus-visible:opacity-100 peer-focus-visible:shadow-[0_0_0_2px_rgba(34,211,238,0.35)]"
+                className="pointer-events-none absolute inset-x-1 -top-1 h-4 rounded-full border border-transparent opacity-0 transition peer-focus:border-cyan-100/90 peer-focus:opacity-100 peer-focus:shadow-[0_0_0_2px_rgba(34,211,238,0.35)]"
               />
             </div>
 
