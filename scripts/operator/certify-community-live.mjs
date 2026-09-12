@@ -166,15 +166,16 @@ function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
-async function cleanupFreshActors({ actorA, actorB, repoRoot }) {
+async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targetId, commentId, repoRoot }) {
   const temp = await mkdtemp(join(tmpdir(), 'tlp-community-live-cleanup-'));
   const sqlPath = join(temp, 'cleanup.sql');
   const actors = `${sqlLiteral(actorA)}, ${sqlLiteral(actorB)}`;
   const sql = [
     'PRAGMA foreign_keys = ON;',
-    `DELETE FROM tlp_helpful_votes WHERE actor_id IN (${actors});`,
-    `DELETE FROM tlp_comments WHERE actor_id IN (${actors});`,
-    `DELETE FROM tlp_ratings WHERE actor_id IN (${actors});`,
+    `DELETE FROM tlp_helpful_votes WHERE comment_id = ${sqlLiteral(commentId)};`,
+    `DELETE FROM tlp_comments WHERE id = ${sqlLiteral(commentId)} AND actor_id IN (${actors});`,
+    `DELETE FROM tlp_ratings WHERE target_type = ${sqlLiteral(targetType)} AND target_id = ${sqlLiteral(targetId)} AND actor_id IN (${actors});`,
+    '-- Deliberately do not delete unrelated rows for either actor.',
     '-- Deliberately do not delete tlp_rate_buckets: they are shared network-abuse authority.',
     '',
   ].join('\n');
@@ -294,9 +295,12 @@ async function main() {
 
     proofComplete = true;
   } finally {
-    cleanupResult = await cleanupFreshActors({
+    cleanupResult = await cleanupCertificationArtifacts({
       actorA: sessionA.actor,
       actorB: sessionB.actor,
+      targetType: options.targetType,
+      targetId: options.targetId,
+      commentId,
       repoRoot,
     });
   }
@@ -342,7 +346,7 @@ async function main() {
       rotatedActorSameCommentId: '409 comment_id_conflict',
     },
     cleanup: {
-      freshActorRowsDeleted: true,
+      exactCertificationRowsDeleted: true,
       temporaryCommentAbsent: true,
       networkRateBucketsPreserved: true,
     },
