@@ -8,7 +8,6 @@ import type {
 import {
   COMMUNITY_AUTHOR_MAX_LENGTH,
   COMMUNITY_COMMENT_COOLDOWN_MS,
-  COMMUNITY_COMMENT_MAX_LENGTH,
   COMMUNITY_COMMENT_MIN_LENGTH,
   communityTextLength,
   isCommunityCommentKind,
