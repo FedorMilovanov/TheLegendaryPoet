@@ -97,6 +97,42 @@ The target manifest is part of the static Product release, so Worker readiness m
 
 `/health` is deliberately fail-closed. It does not infer readiness from the D1 binding name or from the mere presence of secrets. It verifies that the four canonical D1 tables exist, that the release target manifest is reachable and valid, and that the required secrets are present and separated. A partial rollout returns HTTP **503**, `ok: false`, and `writesReady: false` rather than producing a false green.
 
+## Human-backed live adversarial certification
+
+The final `TLP-COMM-ABUSE-001` production proof must not bypass Cloudflare Turnstile. Use the committed operator harness only after the Worker, D1, target manifest and Pages client are already live and `GET /health` is fully write-ready.
+
+The harness deliberately **does not accept actor bearer tokens in command-line arguments or environment variables**. It asks for them through a local hidden TTY prompt and never prints them.
+
+1. Choose one current canonical target that is safe for a short operator diagnostic. Use the same target for both fresh profiles and for the harness.
+2. Open **two fresh normal browser profiles** on `https://thelegendarypoet.ru` — not Playwright, not a Turnstile bypass and not an existing reader profile.
+3. In each fresh profile, submit one temporary **rating** on that target. Complete Turnstile normally. A rating is used because it mints the signed actor session without consuming the comment cooldown required by the concurrency proof.
+4. In each profile, open DevTools → Application/Storage → Local Storage → `https://thelegendarypoet.ru` and inspect `tlp-community-actor:v1`. Copy only the `actorToken` value locally. Do **not** paste it into chat, an issue, a shell command, an environment variable or a file.
+5. From the repository root run:
+
+```bash
+npm run operator:community-live -- \
+  --target-type <poet|poem|track|article> \
+  --target-id <canonical-target-id>
+```
+
+6. The harness has no API/manifest override flags: the reviewed production Worker and production target manifest are pinned in source so bearer sessions cannot be redirected by an operator typo. Paste profile A and B actor tokens only when the hidden prompts appear. Nothing is echoed.
+7. The harness verifies:
+   - production `/health` is fully write-ready;
+   - the selected target exists in the production manifest;
+   - the two signed session payloads contain distinct actor UUIDs;
+   - **both** bearer sessions first reach the Worker signature-verification boundary and independently receive `404 unknown_target` on a syntactically valid missing target; only after those two authenticated responses may their decoded actor UUIDs be used for exact D1 cleanup;
+   - two concurrent identical comment writes converge successfully;
+   - a stable third replay returns `idempotent=true`;
+   - the temporary comment appears exactly once in the public feed;
+   - reusing the same comment ID with changed content returns `409 comment_id_conflict`;
+   - the second valid rotated actor using that same comment ID also reaches `409 comment_id_conflict`, proving the distinct signed session reached the Worker authority boundary.
+8. In a `finally` path the harness runs pinned Wrangler `4.120.0` against production D1 and deletes only the exact certification artifacts: the temporary comment ID and the two ratings for the selected target made by the two fresh actors. It never wipes unrelated actor history. Shared `tlp_rate_buckets` are intentionally preserved because they are network-abuse authority and may contain real traffic.
+9. After cleanup the harness re-reads the public comment feed and refuses PASS if the temporary certification comment remains visible.
+
+If D1 cleanup fails, the harness exits non-zero and leaves a mode-`0600` SQL file in the local temp directory. That file contains pseudonymous actor UUIDs but no bearer tokens. Do not publish it. Re-run the pinned Wrangler cleanup locally, verify the temporary content is gone, then delete the file.
+
+A successful run emits only sanitized evidence: timestamps, origins, target ID, readiness flags and categorical HTTP outcomes. It never emits actor tokens or actor UUIDs.
+
 ## Security invariants
 
 - Turnstile is validated server-side on anonymous session issuance and checked for expected action + hostname.
