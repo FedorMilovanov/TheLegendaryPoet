@@ -67,7 +67,10 @@ function sha256(value) {
 }
 
 function fileHash(file) {
-  return sha256(fs.readFileSync(path.resolve(file)));
+  // Discovery fingerprints must be stable across Git checkout policies.
+  // Every hashed authority file is text, so canonicalize CRLF/CR to LF before hashing.
+  const text = fs.readFileSync(path.resolve(file), 'utf8').replace(/\r\n?/g, '\n');
+  return sha256(text);
 }
 
 function routeById(id) {
