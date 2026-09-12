@@ -189,7 +189,8 @@ export default function ImmersivePlayer() {
                       );
                     })}
                     <div className="pointer-events-none absolute bottom-0 top-0 w-px bg-white/70 shadow-[0_0_12px_rgba(255,255,255,.46)]" style={{ left: `${progress * 100}%` }} />
-                    <input type="range" min={0} max={totalDuration || 1} step="0.1" value={Math.min(currentTime, totalDuration || 1)} disabled={status === 'error'} onInput={(event) => seekTo(Number(event.currentTarget.value))} aria-label="Позиция воспроизведения" aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`} className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
+                    <input type="range" min={0} max={totalDuration || 1} step="0.1" value={Math.min(currentTime, totalDuration || 1)} disabled={status === 'error'} onInput={(event) => seekTo(Number(event.currentTarget.value))} aria-label="Позиция воспроизведения" aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`} className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed" />
+                    <span aria-hidden="true" data-seek-focus-indicator="immersive" className="pointer-events-none absolute inset-1 rounded-[1.1rem] border-2 border-transparent opacity-0 transition peer-focus:border-white/90 peer-focus:opacity-100 peer-focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--track-accent)_65%,transparent)]" />
                   </div>
                 </div>
 
