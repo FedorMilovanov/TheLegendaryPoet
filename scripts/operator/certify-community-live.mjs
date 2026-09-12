@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const PRODUCTION_ORIGIN = 'https://thelegendarypoet.ru';
-const DEFAULT_MANIFEST_URL = 'https://thelegendarypoet.ru/community-targets.json';
+const PRODUCTION_API_URL = 'https://the-legendary-poet-community.viktorcoy2012.workers.dev';
+const PRODUCTION_MANIFEST_URL = 'https://thelegendarypoet.ru/community-targets.json';
 const DATABASE_NAME = 'the-legendary-poet-community';
 const WRANGLER_VERSION = '4.120.0';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -20,42 +21,24 @@ function fail(message) {
 }
 
 function parseArgs(argv) {
+  const allowedKeys = new Set(['--target-type', '--target-id']);
   const args = new Map();
   for (let index = 0; index < argv.length; index += 1) {
     const key = argv[index];
-    if (!key.startsWith('--')) fail(`Unexpected argument: ${key}`);
+    if (!allowedKeys.has(key)) fail(`Unexpected argument: ${key}`);
+    if (args.has(key)) fail(`Duplicate argument: ${key}`);
     const value = argv[index + 1];
     if (!value || value.startsWith('--')) fail(`Missing value for ${key}`);
     args.set(key, value);
     index += 1;
   }
-  const apiUrl = args.get('--api-url')?.replace(/\/+$/, '');
+
   const targetType = args.get('--target-type');
   const targetId = args.get('--target-id');
-  const manifestUrl = args.get('--manifest-url') ?? DEFAULT_MANIFEST_URL;
-
-  if (!apiUrl) fail('Required: --api-url https://<production-worker-host>');
-  let parsedApi;
-  try {
-    parsedApi = new URL(apiUrl);
-  } catch {
-    fail('--api-url must be an absolute URL');
-  }
-  if (parsedApi.protocol !== 'https:' || parsedApi.username || parsedApi.password) {
-    fail('--api-url must be credential-free HTTPS');
-  }
   if (!TARGET_TYPES.has(targetType)) fail('--target-type must be poet, poem, track or article');
   if (!targetId || !TARGET_ID.test(targetId)) fail('--target-id must satisfy the production canonical ID syntax');
 
-  let parsedManifest;
-  try {
-    parsedManifest = new URL(manifestUrl);
-  } catch {
-    fail('--manifest-url must be an absolute URL');
-  }
-  if (parsedManifest.protocol !== 'https:') fail('--manifest-url must use HTTPS');
-
-  return { apiUrl, targetType, targetId, manifestUrl };
+  return { targetType, targetId };
 }
 
 function readHidden(label) {
@@ -216,7 +199,7 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
-  const health = await fetchJson(`${options.apiUrl}/health`);
+  const health = await fetchJson(`${PRODUCTION_API_URL}/health`);
   expectResponse(health, 200);
   const healthReady = health.body?.ok === true
     && health.body?.database === 'd1'
@@ -225,7 +208,7 @@ async function main() {
     && health.body?.writesReady === true;
   if (!healthReady) fail('Production /health is not fully write-ready');
 
-  const manifest = await fetchJson(options.manifestUrl, { headers: { 'Cache-Control': 'no-cache' } });
+  const manifest = await fetchJson(PRODUCTION_MANIFEST_URL, { headers: { 'Cache-Control': 'no-cache' } });
   expectResponse(manifest, 200);
   const ids = manifest.body?.version === 1 ? manifest.body?.targets?.[options.targetType] : null;
   if (!Array.isArray(ids) || !ids.includes(options.targetId)) {
@@ -271,8 +254,8 @@ async function main() {
       targetId: `live-cert-missing-${nonce.replaceAll('-', '')}`,
     };
     await Promise.all([
-      proveSignedSession(options.apiUrl, tokenA, unknownTargetPayload),
-      proveSignedSession(options.apiUrl, tokenB, {
+      proveSignedSession(PRODUCTION_API_URL, tokenA, unknownTargetPayload),
+      proveSignedSession(PRODUCTION_API_URL, tokenB, {
         ...unknownTargetPayload,
         commentId: `comment-live-cert-missing-b-${nonce}`,
       }),
@@ -280,17 +263,17 @@ async function main() {
     cleanupAuthorized = true;
 
     const concurrent = await Promise.all([
-      postComment(options.apiUrl, tokenA, basePayload),
-      postComment(options.apiUrl, tokenA, basePayload),
+      postComment(PRODUCTION_API_URL, tokenA, basePayload),
+      postComment(PRODUCTION_API_URL, tokenA, basePayload),
     ]);
     for (const result of concurrent) expectResponse(result, 200);
 
-    const replay = await postComment(options.apiUrl, tokenA, basePayload);
+    const replay = await postComment(PRODUCTION_API_URL, tokenA, basePayload);
     expectResponse(replay, 200);
     if (replay.body?.idempotent !== true) fail('Stable comment replay was not explicitly idempotent');
 
     const comments = await fetchJson(
-      `${options.apiUrl}/v1/comments?targetType=${encodeURIComponent(options.targetType)}&targetId=${encodeURIComponent(options.targetId)}&limit=50`,
+      `${PRODUCTION_API_URL}/v1/comments?targetType=${encodeURIComponent(options.targetType)}&targetId=${encodeURIComponent(options.targetId)}&limit=50`,
     );
     expectResponse(comments, 200);
     const visibleMatches = Array.isArray(comments.body?.comments)
@@ -298,13 +281,13 @@ async function main() {
       : -1;
     if (visibleMatches !== 1) fail(`Concurrent identical comment requests did not converge to one public row (matches=${visibleMatches})`);
 
-    const changedPayload = await postComment(options.apiUrl, tokenA, {
+    const changedPayload = await postComment(PRODUCTION_API_URL, tokenA, {
       ...basePayload,
       text: `${basePayload.text} changed`,
     });
     expectResponse(changedPayload, 409, 'comment_id_conflict');
 
-    const rotatedActor = await postComment(options.apiUrl, tokenB, basePayload);
+    const rotatedActor = await postComment(PRODUCTION_API_URL, tokenB, basePayload);
     expectResponse(rotatedActor, 409, 'comment_id_conflict');
 
     proofComplete = true;
@@ -329,7 +312,7 @@ async function main() {
   }
 
   const afterCleanup = await fetchJson(
-    `${options.apiUrl}/v1/comments?targetType=${encodeURIComponent(options.targetType)}&targetId=${encodeURIComponent(options.targetId)}&limit=50`,
+    `${PRODUCTION_API_URL}/v1/comments?targetType=${encodeURIComponent(options.targetType)}&targetId=${encodeURIComponent(options.targetId)}&limit=50`,
   );
   expectResponse(afterCleanup, 200);
   const stillVisible = Array.isArray(afterCleanup.body?.comments)
@@ -341,8 +324,8 @@ async function main() {
   const evidence = {
     schemaVersion: 1,
     testedAt: new Date().toISOString(),
-    apiOrigin: new URL(options.apiUrl).origin,
-    manifestOrigin: new URL(options.manifestUrl).origin,
+    apiOrigin: new URL(PRODUCTION_API_URL).origin,
+    manifestOrigin: new URL(PRODUCTION_MANIFEST_URL).origin,
     target: { type: options.targetType, id: options.targetId },
     health: {
       ok: true,
