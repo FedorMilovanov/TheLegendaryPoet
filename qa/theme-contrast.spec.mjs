@@ -214,11 +214,14 @@ test.describe('theme authority and contrast', () => {
 
       expect(await nonTextContrast(kind), `${mode} comment-kind boundary`).toBeGreaterThanOrEqual(3);
 
-      await kind.focus();
+      await textarea.click();
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
       await expect(kind).toBeFocused();
       expect(await nonTextContrast(kind, 'focus'), `${mode} comment-kind focus indicator`).toBeGreaterThanOrEqual(3);
 
-      await textarea.focus();
+      await page.keyboard.press('Shift+Tab');
+      await page.keyboard.press('Shift+Tab');
       await expect(textarea).toBeFocused();
       expect(await nonTextContrast(textarea, 'focus'), `${mode} comment textarea focus indicator`).toBeGreaterThanOrEqual(3);
     }
