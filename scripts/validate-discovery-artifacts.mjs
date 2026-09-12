@@ -16,7 +16,7 @@ for (const artifact of artifacts) {
   originals.set(artifact.path, fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath) : null);
 }
 
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmCommand = process.platform === 'win32' ? (process.env.ComSpec || 'cmd.exe') : 'npm';
 const failures = [];
 const generatedSnapshots = new Map();
 
@@ -25,7 +25,10 @@ function expect(condition, message) {
 }
 
 function runGenerator(scriptName) {
-  const result = spawnSync(npmCommand, ['run', '--silent', scriptName], {
+  const args = process.platform === 'win32'
+    ? ['/d', '/s', '/c', `npm.cmd run --silent ${scriptName}`]
+    : ['run', '--silent', scriptName];
+  const result = spawnSync(npmCommand, args, {
     cwd: root,
     encoding: 'utf8',
   });
