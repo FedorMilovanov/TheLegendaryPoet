@@ -309,8 +309,16 @@ test('lazy loading owns a neutral machine head before the destination settles', 
   expectNonCanonicalMachineState(await machineHeadSnapshot(page), /Загрузка страницы/i);
 
   await settleRoute(page);
+  await expect.poll(async () => {
+    const canonical = (await machineHeadSnapshot(page)).canonical;
+    return canonical ? new URL(canonical, page.url()).pathname : null;
+  }, {
+    timeout: 5_000,
+    message: 'ready discovery metadata should restore the /privacy canonical after lazy loading',
+  }).toBe('/privacy');
+
   const ready = await machineHeadSnapshot(page);
-  expect(new URL(ready.canonical).pathname).toBe('/privacy');
+  expect(new URL(ready.canonical, page.url()).pathname).toBe('/privacy');
   expect(ready.ogUrl).toContain('/privacy');
   expect(ready.routeJsonLd).toBe(true);
 });
