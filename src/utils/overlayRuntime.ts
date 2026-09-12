@@ -82,7 +82,7 @@ function syncOverlayAccessibility() {
 
   let branch: HTMLElement | null = root;
   while (branch && branch !== document.body) {
-    const parent = branch.parentElement;
+    const parent: HTMLElement | null = branch.parentElement;
     if (!parent) break;
     for (const siblingNode of Array.from(parent.children)) {
       if (siblingNode === branch) continue;
