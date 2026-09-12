@@ -53,13 +53,34 @@ function yandexDisableKey(id: string) {
   return `disableYaCounter${id}`;
 }
 
+function ensureGoogleCommandQueue() {
+  if (typeof window === 'undefined') return;
+  (window as any).dataLayer = (window as any).dataLayer || [];
+  if (typeof (window as any).gtag !== 'function') {
+    (window as any).gtag = (...args: unknown[]) => {
+      (window as any).dataLayer.push(args);
+    };
+  }
+}
+
+function updateGoogleConsent(value: AnalyticsConsentState) {
+  const id = gaId();
+  if (!id || typeof window === 'undefined') return;
+
+  (window as any)[googleDisableKey(id)] = value !== 'granted';
+  ensureGoogleCommandQueue();
+  (window as any).gtag('consent', 'update', {
+    analytics_storage: value === 'granted' ? 'granted' : 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+  });
+}
+
 function setProviderCollectionEnabled(enabled: boolean) {
   if (typeof window === 'undefined') return;
 
-  const googleId = gaId();
-  if (googleId) {
-    (window as any)[googleDisableKey(googleId)] = !enabled;
-  }
+  updateGoogleConsent(enabled ? 'granted' : 'denied');
 
   const yandexId = metrikaId();
   if (yandexId) {
@@ -122,13 +143,7 @@ function ensureGoogleProvider() {
   if (!id || typeof window === 'undefined' || typeof document === 'undefined') return;
 
   (window as any)[googleDisableKey(id)] = false;
-  (window as any).dataLayer = (window as any).dataLayer || [];
-
-  if (typeof (window as any).gtag !== 'function') {
-    (window as any).gtag = (...args: unknown[]) => {
-      (window as any).dataLayer.push(args);
-    };
-  }
+  ensureGoogleCommandQueue();
 
   if (!document.querySelector('script[data-tlp-analytics-provider="google"]')) {
     const script = document.createElement('script');
@@ -148,8 +163,8 @@ function ensureGoogleProvider() {
 function disableGoogleProvider() {
   const id = gaId();
   if (!id || typeof window === 'undefined') return;
-  // Google documents ga-disable-MEASUREMENT_ID as the collection kill switch.
-  (window as any)[googleDisableKey(id)] = true;
+  // Consent Mode updates queued tags and ga-disable is the hard collection kill switch.
+  updateGoogleConsent('denied');
 }
 
 function applyProviderConsent(value: AnalyticsConsentState) {
