@@ -153,6 +153,12 @@ async function postComment(apiUrl, token, payload) {
   });
 }
 
+async function proveSignedSession(apiUrl, token, payload) {
+  const result = await postComment(apiUrl, token, payload);
+  expectResponse(result, 404, 'unknown_target');
+  return true;
+}
+
 function expectResponse(result, status, code = null) {
   if (result.status !== status) {
     fail(`Expected HTTP ${status}, received ${result.status} with code ${String(result.body?.code ?? 'unknown')}`);
@@ -256,14 +262,22 @@ async function main() {
   };
 
   let cleanupResult = { ok: false };
+  let cleanupAuthorized = false;
   let proofComplete = false;
   try {
-    const unknown = await postComment(options.apiUrl, tokenA, {
+    const unknownTargetPayload = {
       ...basePayload,
       commentId: `comment-live-cert-missing-${nonce}`,
       targetId: `live-cert-missing-${nonce.replaceAll('-', '')}`,
-    });
-    expectResponse(unknown, 404, 'unknown_target');
+    };
+    await Promise.all([
+      proveSignedSession(options.apiUrl, tokenA, unknownTargetPayload),
+      proveSignedSession(options.apiUrl, tokenB, {
+        ...unknownTargetPayload,
+        commentId: `comment-live-cert-missing-b-${nonce}`,
+      }),
+    ]);
+    cleanupAuthorized = true;
 
     const concurrent = await Promise.all([
       postComment(options.apiUrl, tokenA, basePayload),
@@ -295,18 +309,23 @@ async function main() {
 
     proofComplete = true;
   } finally {
-    cleanupResult = await cleanupCertificationArtifacts({
-      actorA: sessionA.actor,
-      actorB: sessionB.actor,
-      targetType: options.targetType,
-      targetId: options.targetId,
-      commentId,
-      repoRoot,
-    });
+    if (cleanupAuthorized) {
+      cleanupResult = await cleanupCertificationArtifacts({
+        actorA: sessionA.actor,
+        actorB: sessionB.actor,
+        targetType: options.targetType,
+        targetId: options.targetId,
+        commentId,
+        repoRoot,
+      });
+    }
   }
 
+  if (!cleanupAuthorized) {
+    fail('D1 cleanup authority was not established because both signed sessions did not pass the Worker authentication boundary');
+  }
   if (!cleanupResult.ok) {
-    fail('Live proof is not terminal until the two fresh actors are cleaned from D1');
+    fail('Live proof is not terminal until the exact certification artifacts are cleaned from D1');
   }
 
   const afterCleanup = await fetchJson(
@@ -338,7 +357,7 @@ async function main() {
       tokenMaterialLogged: false,
     },
     outcomes: {
-      unknownTarget: '404 unknown_target',
+      bothSignedSessionsAuthenticatedByUnknownTarget: '2 x 404 unknown_target',
       concurrentIdenticalComment: 'two HTTP 200 responses',
       stableReplay: 'HTTP 200 idempotent=true',
       publicConvergence: 'exactly one temporary comment row',
