@@ -12,6 +12,7 @@ import {
   COMMUNITY_COMMENT_MIN_LENGTH,
   communityTextLength,
   isCommunityCommentKind,
+  normalizeCommunityCommentText,
   truncateCommunityText,
 } from '../data/communityContract';
 import { hasCanonicalRatingScores } from '../data/ratingDimensionContract';
@@ -226,7 +227,7 @@ function sanitizeComment(value: unknown): CommentEntry | null {
   const candidate = value as Partial<CommentEntry>;
   const createdAt = validIsoDate(candidate.createdAt);
   const author = normalizeText(candidate.author, COMMUNITY_AUTHOR_MAX_LENGTH) || 'Анонимный читатель';
-  const text = normalizeText(candidate.text, COMMUNITY_COMMENT_MAX_LENGTH);
+  const text = typeof candidate.text === 'string' ? normalizeCommunityCommentText(candidate.text) : '';
   const helpful = Math.max(0, Math.min(1_000_000, Math.floor(Number(candidate.helpful) || 0)));
   if (
     typeof candidate.id !== 'string'
