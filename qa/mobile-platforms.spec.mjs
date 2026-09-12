@@ -640,7 +640,7 @@ test('reading-mode chrome leaves the accessibility tree and restores exact owner
 });
 
 test('hash destinations and archive removals keep deterministic focus ownership', async ({ page }) => {
-  await page.goto(`${BASE_URL}/articles/mayakovsky-before-revolution`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE_URL}/essays/yesenin-duncan-first-meeting-documents`, { waitUntil: 'domcontentloaded' });
   await settle(page);
 
   const citation = page.locator('a[href^="#source-"]').first();
