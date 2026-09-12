@@ -21,6 +21,7 @@ type RouteContractConfig = {
 
 const PRODUCTION_ORIGIN = 'https://thelegendarypoet.ru';
 const ROUTE_CONTRACT_PATH = path.join(__dirname, 'src/routes/route-contract.json');
+const DISCOVERY_POLICY_PATH = path.join(__dirname, 'src/routes/discovery-policy.json');
 
 function escapeAliasHtml(value: string) {
   return value
@@ -36,6 +37,16 @@ function legacyAliasDocumentsPlugin(): Plugin {
     apply: 'build',
     closeBundle() {
       const contract = JSON.parse(fs.readFileSync(ROUTE_CONTRACT_PATH, 'utf8')) as RouteContractConfig;
+      const discoveryPolicy = JSON.parse(fs.readFileSync(DISCOVERY_POLICY_PATH, 'utf8')) as {
+        states: Record<string, { robots: string; canonical: string; ogUrl: string; schema: boolean; title?: string; description?: string }>;
+      };
+      const redirectPolicy = discoveryPolicy.states.redirect;
+      if (!redirectPolicy
+        || redirectPolicy.canonical !== 'target'
+        || redirectPolicy.ogUrl !== 'none'
+        || redirectPolicy.schema !== false) {
+        throw new Error('redirect discovery policy is invalid');
+      }
       const redirects = contract.redirects ?? [];
       const sources = new Set<string>();
       const canonicalStaticPaths = new Set(
@@ -67,12 +78,13 @@ function legacyAliasDocumentsPlugin(): Plugin {
 <html lang="ru" data-legacy-alias="${sourceAttr}">
   <head>
     <meta charset="UTF-8" />
-    <meta name="robots" content="noindex,follow" />
-    <meta name="googlebot" content="noindex,follow" />
+    <meta name="description" content="${escapeAliasHtml(redirectPolicy.description || '')}" />
+    <meta name="robots" content="${escapeAliasHtml(redirectPolicy.robots)}" />
+    <meta name="googlebot" content="${escapeAliasHtml(redirectPolicy.robots)}" />
     <meta name="tlp-legacy-alias-target" content="${targetAttr}" />
     <link rel="canonical" href="${canonicalAttr}" />
     <meta http-equiv="refresh" content="0;url=${targetAttr}" />
-    <title>Страница перемещена — THE LEGENDARY POET</title>
+    <title>${escapeAliasHtml(redirectPolicy.title || 'Страница перемещена — THE LEGENDARY POET')}</title>
   </head>
   <body>
     <main>

@@ -88,6 +88,8 @@ expect(duplicateRouteFiles.length === 0, `duplicate route HTML files found: ${du
 expect(/<meta name="robots" content="noindex,follow"\s*\/?>/.test(notFoundHtml), '404.html must be noindex,follow');
 expect(notFoundHtml.includes('<title>Страница не найдена — THE LEGENDARY POET</title>'), '404.html must have a dedicated title');
 expect(!notFoundHtml.includes('rel="canonical"'), '404.html must not canonicalize errors to the homepage');
+expect(!notFoundHtml.includes('property="og:url"'), '404.html must not expose an og:url');
+expect(!notFoundHtml.includes('id="route-jsonld"'), '404.html must not expose route-level structured data');
 
 if (failures.length) {
   console.error('\nSEO output validation failed:');

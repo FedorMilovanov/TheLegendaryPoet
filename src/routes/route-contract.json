@@ -8,9 +8,9 @@
       "module": "src/pages/HomePage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "site",
       "sitemapImage": "site",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 32000
     },
     {
@@ -21,6 +21,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "utility",
+      "discoveryState": "noindex",
       "budgetBytes": 24000
     },
     {
@@ -30,8 +31,8 @@
       "module": "src/pages/PoetsPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "site",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 12000
     },
     {
@@ -42,6 +43,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "dynamic",
+      "discoveryState": "ready",
       "budgetBytes": 52000
     },
     {
@@ -51,8 +53,8 @@
       "module": "src/pages/RatingsPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "site",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 34000
     },
     {
@@ -62,8 +64,8 @@
       "module": "src/pages/ArticlesPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "site",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 12000
     },
     {
@@ -74,6 +76,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "dynamic",
+      "discoveryState": "ready",
       "budgetBytes": 58000
     },
     {
@@ -83,8 +86,8 @@
       "module": "src/pages/MusicPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "music",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 32000
     },
     {
@@ -95,6 +98,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "dynamic",
+      "discoveryState": "ready",
       "budgetBytes": 23000
     },
     {
@@ -104,8 +108,8 @@
       "module": "src/pages/AboutPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "policy",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 15000
     },
     {
@@ -115,8 +119,8 @@
       "module": "src/pages/EditorialPolicyPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "policy",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 12000
     },
     {
@@ -126,8 +130,8 @@
       "module": "src/pages/PrivacyPage.tsx",
       "prefetch": true,
       "sitemap": true,
-      "sitemapLastmod": "policy",
       "audit": "canonical",
+      "discoveryState": "ready",
       "budgetBytes": 12000
     },
     {
@@ -138,6 +142,7 @@
       "prefetch": true,
       "sitemap": false,
       "audit": "utility",
+      "discoveryState": "noindex",
       "budgetBytes": 23000
     },
     {
@@ -148,6 +153,7 @@
       "prefetch": false,
       "sitemap": false,
       "audit": "not-found",
+      "discoveryState": "not-found",
       "budgetBytes": 6000
     }
   ],

@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
           persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -30,8 +31,21 @@ jobs:
 
       - run: npm ci
 
-      - name: Generate the exact canonical URL set
+      - name: Resolve previous deployed discovery snapshot
+        run: |
+          set -euo pipefail
+          base_sha="$(git rev-parse HEAD^)"
+          base_manifest="$RUNNER_TEMP/indexnow-base-discovery-manifest.json"
+          if git cat-file -e "$base_sha:public/discovery-manifest.json" 2>/dev/null; then
+            git show "$base_sha:public/discovery-manifest.json" > "$base_manifest"
+            echo "INDEXNOW_BASE_MANIFEST_PATH=$base_manifest" >> "$GITHUB_ENV"
+            echo "Using previous discovery snapshot from $base_sha"
+          else
+            echo "No previous discovery manifest; this deployment will use the explicit bootstrap path"
+          fi
+
+      - name: Generate the exact canonical discovery snapshot
         run: npm run sitemap
 
-      - name: Notify IndexNow about canonical URLs
+      - name: Notify IndexNow about added, changed or deleted canonical URLs
         run: npm run indexnow
