@@ -220,8 +220,8 @@ expect(routeScrollSource.includes('target.isConnected ? target : null'), 'hash f
 expect(archivePageSource.includes('data-archive-remove-id'), 'archive mutation controls must expose stable focus-handoff identity');
 expect(archivePageSource.includes('archiveStatusRef'), 'archive removal must own a stable fallback focus target');
 expect(archivePageSource.includes('scheduleProgrammaticFocus'), 'archive removal must schedule post-mutation focus ownership');
-expect(miniPlayerSource.includes('peer-focus-visible:border-cyan'), 'mini-player seek must expose a visible focus owner');
-expect(immersiveSource.includes('peer-focus-visible:border-white'), 'immersive seek must expose a visible focus owner');
+expect(miniPlayerSource.includes('peer-focus:border-cyan'), 'mini-player seek must expose a visible focus owner');
+expect(immersiveSource.includes('peer-focus:border-white'), 'immersive seek must expose a visible focus owner');
 
 if (failures.length) {
   console.error('\nInteraction runtime validation failed:');
