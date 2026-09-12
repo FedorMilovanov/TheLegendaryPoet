@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { focusProgrammatically } from '../utils/focusRuntime';
 
 /**
  * Universal "reading mode" chrome auto-hide (the Medium / iOS-Safari pattern).
@@ -22,10 +23,45 @@ export function useAutoHideChrome() {
     let lastY = window.scrollY;
     let hidden = false;
     let ticking = false;
+    const a11ySnapshots = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
+
+    const chromeElements = () => [
+      ...document.querySelectorAll<HTMLElement>('.site-header, .mobile-dock, .palette-fab, .section-chip'),
+    ];
+
+    const syncChromeAccessibility = (nextHidden: boolean) => {
+      const elements = chromeElements();
+      if (nextHidden) {
+        const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        if (active && elements.some((element) => element.contains(active))) {
+          focusProgrammatically(document.getElementById('main-content'));
+        }
+        for (const element of elements) {
+          if (!a11ySnapshots.has(element)) {
+            a11ySnapshots.set(element, {
+              inert: element.inert,
+              ariaHidden: element.getAttribute('aria-hidden'),
+            });
+          }
+          element.inert = true;
+          element.setAttribute('aria-hidden', 'true');
+        }
+        return;
+      }
+
+      for (const [element, snapshot] of a11ySnapshots) {
+        if (!element.isConnected) continue;
+        element.inert = snapshot.inert;
+        if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
+        else element.setAttribute('aria-hidden', snapshot.ariaHidden);
+      }
+      a11ySnapshots.clear();
+    };
 
     const apply = (next: boolean) => {
       if (next !== hidden) {
         hidden = next;
+        syncChromeAccessibility(hidden);
         root.classList.toggle('chrome-hidden', hidden);
       }
     };
@@ -50,6 +86,7 @@ export function useAutoHideChrome() {
     return () => {
       window.removeEventListener('scroll', onScroll);
       root.classList.remove('chrome-hidden');
+      syncChromeAccessibility(false);
     };
   }, []);
 }

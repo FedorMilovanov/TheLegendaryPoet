@@ -84,7 +84,12 @@ export default function GlobalMiniPlayer() {
                 onInput={(event) => seekTo(Number(event.currentTarget.value))}
                 aria-label="Позиция текущего релиза"
                 aria-valuetext={`${formatAudioTime(currentTime)} из ${formatAudioTime(totalDuration)}`}
-                className="absolute inset-0 h-3 w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                className="peer absolute inset-0 h-3 w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+              />
+              <span
+                aria-hidden="true"
+                data-seek-focus-indicator="mini"
+                className="pointer-events-none absolute inset-x-1 -top-1 h-4 rounded-full border border-transparent opacity-0 transition peer-focus:border-cyan-100/90 peer-focus:opacity-100 peer-focus:shadow-[0_0_0_2px_rgba(34,211,238,0.35)]"
               />
             </div>
 

@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { Link } from '../components/ui/Link';
 import { musicTracks, poets } from '../data/poets';
@@ -11,6 +11,7 @@ import { useFavoritePoems } from '../hooks/useFavoritePoems';
 import { useSeo } from '../hooks/useSeo';
 import { reconcileFavoritePoems, removeFavoritePoem } from '../utils/myArchiveStore';
 import { titleCase } from '../utils/titleCase';
+import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
 
 const PAGE_SIZE = 20;
 const addedDateFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -44,6 +45,7 @@ export default function MyArchivePage() {
   const [query, setQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE);
   const [archiveMessage, setArchiveMessage] = useState('');
+  const archiveStatusRef = useRef<HTMLParagraphElement>(null);
   const deferredQuery = useDeferredValue(query);
   const searchPending = deferredQuery !== query;
 
@@ -112,6 +114,12 @@ export default function MyArchivePage() {
   const authorCount = new Set(archivedPoems.map((entry) => entry.poetId)).size;
 
   const handleRemoveFavorite = (poemId: string) => {
+    const removeButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-archive-remove-id]')];
+    const currentIndex = removeButtons.findIndex((button) => button.dataset.archiveRemoveId === poemId);
+    const focusCandidateId = currentIndex >= 0
+      ? removeButtons[currentIndex + 1]?.dataset.archiveRemoveId ?? removeButtons[currentIndex - 1]?.dataset.archiveRemoveId ?? null
+      : null;
+
     const result = removeFavoritePoem(poemId);
     if (result.status === 'failed') {
       setArchiveMessage('Не удалось удалить стихотворение: архив браузера недоступен, список не изменён.');
@@ -119,6 +127,14 @@ export default function MyArchivePage() {
     }
     if (result.status === 'removed') {
       setArchiveMessage('Стихотворение удалено из архива.');
+      scheduleProgrammaticFocus(() => {
+        if (focusCandidateId) {
+          const candidate = [...document.querySelectorAll<HTMLButtonElement>('[data-archive-remove-id]')]
+            .find((button) => button.dataset.archiveRemoveId === focusCandidateId);
+          if (candidate) return candidate;
+        }
+        return archiveStatusRef.current;
+      });
       return;
     }
     setArchiveMessage('Архив уже не содержит это стихотворение.');
@@ -134,6 +150,7 @@ export default function MyArchivePage() {
             <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-cyan-100/45">
               Сохраняйте стихотворения и продолжайте музыкальные публикации с того места, где остановились. Всё остаётся только в вашем браузере.
             </p>
+            {archiveMessage && <p ref={archiveStatusRef} tabIndex={-1} className="mx-auto mb-5 max-w-lg rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-3 text-sm text-cyan-100/72 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60" role="status" aria-live="polite" aria-atomic="true">{archiveMessage}</p>}
             <div className="flex flex-wrap justify-center gap-3">
               <Link to="/poets" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-cyan-400/10 px-6 text-sm font-bold uppercase tracking-[0.14em] text-cyan-300 transition hover:bg-cyan-400/15">
                 Перейти к поэтам <ArrowRight size={16} />
@@ -226,7 +243,7 @@ export default function MyArchivePage() {
             </div>
 
             <div className="mb-4 text-xs text-cyan-100/32" aria-live="polite">{searchPending ? 'Обновляем результаты…' : <>Найдено: <strong className="text-white/60">{filteredPoems.length}</strong>{filteredPoems.length !== archivedPoems.length && ` из ${archivedPoems.length}`}</>}</div>
-            {archiveMessage && <p className="mb-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-3 text-sm text-cyan-100/72" role="status" aria-live="polite" aria-atomic="true">{archiveMessage}</p>}
+            {archiveMessage && <p ref={archiveStatusRef} tabIndex={-1} className="mb-4 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-3 text-sm text-cyan-100/72 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60" role="status" aria-live="polite" aria-atomic="true">{archiveMessage}</p>}
 
             {filteredPoems.length > 0 ? (
               <>
@@ -243,7 +260,7 @@ export default function MyArchivePage() {
                       </div>
                       <div className="flex flex-shrink-0 items-center gap-3">
                         <div className="flex items-center gap-1 text-luxury-gold"><Star size={14} className="fill-luxury-gold" /><span className="text-sm font-bold">{poem.rating}</span></div>
-                        <button type="button" onClick={() => handleRemoveFavorite(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
+                        <button type="button" onClick={() => handleRemoveFavorite(poem.id)} className="rounded-full p-2 text-white/25 transition hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" data-archive-remove-id={poem.id} aria-label={`Удалить «${poem.title}» из архива`} title="Удалить из архива"><Heart size={16} className="fill-current" /></button>
                       </div>
                     </article>
                   ))}

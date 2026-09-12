@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
+import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
 
 const HASH_OBSERVER_TIMEOUT_MS = 15_000;
 const FIXED_HEADER_OFFSET = 96;
@@ -66,6 +67,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let cancelled = false;
     let observer: MutationObserver | null = null;
     let timeoutId = 0;
+    let cancelHashFocus: (() => void) | null = null;
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
@@ -75,6 +77,8 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     const scrollToHashTarget = (target: HTMLElement) => {
       const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+      cancelHashFocus?.();
+      cancelHashFocus = scheduleProgrammaticFocus(() => target.isConnected ? target : null);
     };
 
     const findAndScrollToHash = () => {
@@ -125,6 +129,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       cancelled = true;
       cancelAnimationFrame(frame);
       stopHashObserver();
+      cancelHashFocus?.();
     };
   }, [location.hash, location.key, location.pathname, navigationType]);
 
