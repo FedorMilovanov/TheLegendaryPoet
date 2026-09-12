@@ -10,10 +10,15 @@ const artifacts = [
   { path: 'public/feed.xml', generator: 'feed' },
 ];
 
+function readCanonicalArtifact(absolutePath) {
+  if (!fs.existsSync(absolutePath)) return null;
+  return Buffer.from(fs.readFileSync(absolutePath, 'utf8').replace(/\r\n?/g, '\n'), 'utf8');
+}
+
 const originals = new Map();
 for (const artifact of artifacts) {
   const absolutePath = path.join(root, artifact.path);
-  originals.set(artifact.path, fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath) : null);
+  originals.set(artifact.path, readCanonicalArtifact(absolutePath));
 }
 
 const npmCommand = process.platform === 'win32' ? (process.env.ComSpec || 'cmd.exe') : 'npm';
@@ -57,7 +62,7 @@ try {
   for (const artifact of artifacts) {
     const absolutePath = path.join(root, artifact.path);
     const original = originals.get(artifact.path);
-    const generated = fs.existsSync(absolutePath) ? fs.readFileSync(absolutePath) : null;
+    const generated = readCanonicalArtifact(absolutePath);
     generatedSnapshots.set(artifact.path, generated);
 
     if (original === null) {
