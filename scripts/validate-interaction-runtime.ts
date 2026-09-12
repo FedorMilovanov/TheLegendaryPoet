@@ -164,6 +164,7 @@ const focusSource = read('src/utils/focusRuntime.ts');
 const autoHideSource = read('src/hooks/useAutoHideChrome.ts');
 const archivePageSource = read('src/pages/MyArchivePage.tsx');
 const miniPlayerSource = read('src/components/music/GlobalMiniPlayer.tsx');
+const audioPlayerStyleSource = read('src/audio-player.css');
 
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
@@ -221,6 +222,8 @@ expect(archivePageSource.includes('data-archive-remove-id'), 'archive mutation c
 expect(archivePageSource.includes('archiveStatusRef'), 'archive removal must own a stable fallback focus target');
 expect(archivePageSource.includes('scheduleProgrammaticFocus'), 'archive removal must schedule post-mutation focus ownership');
 expect(miniPlayerSource.includes('peer-focus:border-cyan'), 'mini-player seek must expose a visible focus owner');
+expect(audioPlayerStyleSource.includes('max-width: 760px'), 'mini-player must retain a bounded responsive width without motion-owned transform centering');
+expect(!audioPlayerStyleSource.includes('transform: translateX(-50%)'), 'mini-player centering must not compete with Framer Motion transform ownership');
 expect(immersiveSource.includes('peer-focus:border-white'), 'immersive seek must expose a visible focus owner');
 
 if (failures.length) {
