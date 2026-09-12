@@ -116,6 +116,63 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  analytics-route-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact analytics tested head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+      - name: Verify exact analytics checkout identity
+        run: |
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$TESTED_SHA"
+          printf 'tested_commit=%s\n' "$actual" > analytics-route-tested-head.txt
+      - name: Set up exact Node dependencies
+        uses: ./.github/actions/setup-node-deps
+      - name: Install deterministic brand build tools
+        uses: ./.github/actions/install-build-tools
+      - name: Build analytics QA production site
+        id: analytics_build
+        env:
+          VITE_BASE: /
+          VITE_GA_ID: G-TLPQA00001
+        run: |
+          npm run build
+          npm run validate:build-output
+      - name: Install locked Playwright Chromium
+        uses: ./.github/actions/install-playwright
+        with:
+          browsers: chromium
+      - name: Start analytics QA production preview
+        uses: ./.github/actions/start-preview
+        with:
+          log-file: analytics-preview.log
+      - name: Prove settled semantic page-view authority
+        if: ${{ always() && steps.analytics_build.outcome == 'success' }}
+        run: >-
+          npx playwright test
+          qa/analytics-route.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --workers=1
+          --reporter=line
+      - name: Upload analytics route QA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: analytics-route-evidence-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts
+            playwright-report
+            test-results
+            analytics-preview.log
+            analytics-route-tested-head.txt
+            dist/build-budget-report.json
+          if-no-files-found: warn
+          retention-days: 7
+
   webkit-home-reveal-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 45
