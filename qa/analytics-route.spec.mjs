@@ -169,7 +169,7 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
-      expect(state.googleConsentUpdates.at(-1)).toBe('granted');
+      expect(state.googleConsentUpdates).toEqual(['denied', 'granted', 'denied', 'granted']);
       expect(state.yandexInitCount).toBe(2);
       expect(state.yandexDestructCount).toBe(1);
     }
