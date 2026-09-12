@@ -121,7 +121,7 @@ npm run operator:community-live -- \
    - production `/health` is fully write-ready;
    - the selected target exists in the production manifest;
    - the two signed session payloads contain distinct actor UUIDs;
-   - a syntactically valid unknown target is rejected with `404 unknown_target`;
+   - **both** bearer sessions first reach the Worker signature-verification boundary and independently receive `404 unknown_target` on a syntactically valid missing target; only after those two authenticated responses may their decoded actor UUIDs be used for exact D1 cleanup;
    - two concurrent identical comment writes converge successfully;
    - a stable third replay returns `idempotent=true`;
    - the temporary comment appears exactly once in the public feed;
