@@ -118,6 +118,14 @@ globalThis.fetch = async (input, init) => {
 const failures: string[] = [];
 const expect = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 
+const communityContract = await import('../src/data/communityContract');
+const fidelityFixture = 'Unicode QA 👨‍👩‍👧‍👦 е́  два пробела.\r\nВторая строка\tс табом и <b>не HTML</b>.';
+const expectedFidelity = 'Unicode QA 👨‍👩‍👧‍👦 е́  два пробела.\nВторая строка\tс табом и <b>не HTML</b>.';
+expect(
+  communityContract.normalizeCommunityCommentText(fidelityFixture) === expectedFidelity,
+  'shared comment normalization must preserve internal spaces, tabs, Unicode and plain-text markup while canonicalizing line endings',
+);
+
 const identity = await import('../src/utils/communityIdentity');
 const repairedDeviceId = identity.getCommunityDeviceId();
 expect(UUID.test(repairedDeviceId), 'invalid persisted device id must be replaced with a UUID');
@@ -207,6 +215,8 @@ const storeSource = readFileSync('src/utils/communityStore.ts', 'utf8');
 const remoteSource = readFileSync('src/utils/communityRemote.ts', 'utf8');
 const expandable = readFileSync('src/components/community/ExpandableText.tsx', 'utf8');
 const list = readFileSync('src/components/community/CommentList.tsx', 'utf8');
+const workerSource = readFileSync('workers/community-api/src/index.ts', 'utf8');
+const contractSource = readFileSync('src/data/communityContract.ts', 'utf8');
 expect(/mode:\s*'passive'/.test(quickNav), 'poem quick navigation must not start one summary request per row');
 expect(/\bdeferRemote\b/.test(poemCard), 'poem cards must defer remote community reads');
 expect(panel.includes('feedbackTargetKey') && panel.includes('key={`composer:${feedbackTargetKey}`}'), 'community editor state must be keyed/reset by target identity');
@@ -224,6 +234,10 @@ expect(
   'comment rendering must preserve plain-text newlines and truncate on Unicode grapheme/code-point boundaries',
 );
 expect(list.includes('Сортировка и фильтр применяются к уже загруженным комментариям') && list.includes('Загрузить ещё из общей ленты'), 'comment sort/filter scope must be explicit and pagination must remain reachable under filtered views');
+expect(storeSource.includes('normalizeCommunityCommentText(candidate.text)'), 'client persistence must use the shared whitespace-preserving comment contract');
+expect(workerSource.includes('normalizeCommunityCommentText(body.text)'), 'Worker mutation validation must use the same whitespace-preserving comment contract');
+expect(!storeSource.includes('normalizeText(candidate.text') && !workerSource.includes("body.text.replace(/\\r\\n?/g, '\\n').replace(/[\\t ]+/g, ' ')"), 'comment text paths must never route through whitespace-collapsing normalization');
+expect(contractSource.includes("replace(/[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]/g, '')"), 'shared comment contract must remove unsafe controls without removing tab/newline fidelity');
 
 for (const failure of failures) console.error(`ERROR community-hardening: ${failure}`);
 console.log(`Community hardening validation: ${failures.length} error(s), signed actor session, typed delivery outcomes, stale-tab-safe settlement, target-keyed editors, honest read state, loaded-row ordering and Unicode text fidelity.`);
