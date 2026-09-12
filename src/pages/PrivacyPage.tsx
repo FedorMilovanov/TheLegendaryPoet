@@ -1,8 +1,17 @@
+import { useEffect, useState } from 'react';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { Link } from '../components/ui/Link';
 import { siteConfig } from '../config/site';
 import { useSeo } from '../hooks/useSeo';
 import { buildWebPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
+import {
+  ANALYTICS_CONSENT_EVENT,
+  getAnalyticsConsent,
+  hasConfiguredAnalytics,
+  setAnalyticsConsent,
+  type AnalyticsConsent,
+  type AnalyticsConsentState,
+} from '../utils/analytics';
 
 const breadcrumbs: SeoBreadcrumb[] = [
   { name: 'Главная', path: '/' },
@@ -10,6 +19,8 @@ const breadcrumbs: SeoBreadcrumb[] = [
 ];
 
 export default function PrivacyPage() {
+  const [analyticsConsent, setAnalyticsConsentState] = useState<AnalyticsConsentState>(() => getAnalyticsConsent());
+  const analyticsConfigured = hasConfiguredAnalytics();
   const title = 'Политика конфиденциальности — THE LEGENDARY POET';
   const description = 'Какие технические данные использует THE LEGENDARY POET, как работают общественные функции и аналитика и как управлять согласием.';
 
@@ -20,6 +31,25 @@ export default function PrivacyPage() {
     breadcrumbs,
     jsonLd: buildWebPageSchema({ title, description, path: '/privacy', breadcrumbs }),
   });
+
+  useEffect(() => {
+    const handleConsent = (event: Event) => {
+      setAnalyticsConsentState((event as CustomEvent<AnalyticsConsentState>).detail);
+    };
+    window.addEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
+    return () => window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
+  }, []);
+
+  const chooseAnalytics = (value: AnalyticsConsent) => {
+    setAnalyticsConsent(value);
+    setAnalyticsConsentState(value);
+  };
+
+  const analyticsStatus = analyticsConsent === 'granted'
+    ? 'Разрешена'
+    : analyticsConsent === 'denied'
+      ? 'Отключена'
+      : 'Не выбрано';
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
@@ -39,11 +69,43 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          <section className="rounded-3xl border border-cyan-400/10 bg-white/[0.025] p-6 sm:p-8">
-            <h2 className="font-serif text-2xl font-semibold">Аналитика — только после согласия</h2>
-            <p className="mt-3 leading-relaxed text-cyan-100/55">
-              Google Analytics 4 и Яндекс.Метрика загружаются только после явного согласия посетителя и только если соответствующие счётчики включены владельцем проекта. До согласия сайт не отправляет события этим системам. Решение сохраняется в браузере и может быть сброшено удалением данных сайта.
-            </p>
+          <section className="rounded-3xl border border-cyan-400/10 bg-white/[0.025] p-6 sm:p-8" aria-labelledby="analytics-privacy-title">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 id="analytics-privacy-title" className="font-serif text-2xl font-semibold">Аналитика — только после согласия</h2>
+                <p className="mt-3 max-w-2xl leading-relaxed text-cyan-100/55">
+                  Google Analytics 4 и Яндекс.Метрика работают только после явного согласия посетителя и только если соответствующие счётчики включены владельцем проекта. Выбор можно изменить здесь в любой момент; изменение применяется в этой вкладке сразу и синхронизируется между открытыми вкладками сайта.
+                </p>
+              </div>
+              <div className="rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-100/65" role="status" aria-live="polite" aria-atomic="true">
+                Аналитика: <span className="text-cyan-200">{analyticsConfigured ? analyticsStatus : 'Не настроена'}</span>
+              </div>
+            </div>
+
+            {analyticsConfigured ? (
+              <div className="mt-5 flex flex-wrap gap-3" role="group" aria-label="Управление аналитикой">
+                <button
+                  type="button"
+                  onClick={() => chooseAnalytics('denied')}
+                  aria-pressed={analyticsConsent === 'denied'}
+                  className="min-h-11 rounded-full border border-white/14 px-5 text-sm font-bold text-white/65 transition hover:border-white/30 hover:text-white aria-pressed:border-cyan-300/35 aria-pressed:bg-cyan-300/[0.08] aria-pressed:text-cyan-100"
+                >
+                  Отключить аналитику
+                </button>
+                <button
+                  type="button"
+                  onClick={() => chooseAnalytics('granted')}
+                  aria-pressed={analyticsConsent === 'granted'}
+                  className="min-h-11 rounded-full bg-cyan-300 px-5 text-sm font-bold text-[#031017] transition hover:bg-cyan-200 aria-pressed:ring-2 aria-pressed:ring-cyan-100/70"
+                >
+                  Разрешить аналитику
+                </button>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm leading-relaxed text-cyan-100/45">
+                В этой сборке внешние аналитические счётчики не настроены, поэтому данные аналитики не отправляются.
+              </p>
+            )}
           </section>
 
           <section className="rounded-3xl border border-cyan-400/10 bg-white/[0.025] p-6 sm:p-8">
@@ -80,7 +142,7 @@ export default function PrivacyPage() {
         </section>
 
         <p className="mt-10 text-sm text-cyan-100/35">
-          Обновлено: 19 августа 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
+          Обновлено: 12 сентября 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
         </p>
       </main>
     </div>
