@@ -111,12 +111,11 @@ The harness deliberately **does not accept actor bearer tokens in command-line a
 
 ```bash
 npm run operator:community-live -- \
-  --api-url <COMMUNITY_API_URL> \
   --target-type <poet|poem|track|article> \
   --target-id <canonical-target-id>
 ```
 
-6. Paste profile A and B actor tokens only when the hidden prompts appear. Nothing is echoed.
+6. The harness has no API/manifest override flags: the reviewed production Worker and production target manifest are pinned in source so bearer sessions cannot be redirected by an operator typo. Paste profile A and B actor tokens only when the hidden prompts appear. Nothing is echoed.
 7. The harness verifies:
    - production `/health` is fully write-ready;
    - the selected target exists in the production manifest;
