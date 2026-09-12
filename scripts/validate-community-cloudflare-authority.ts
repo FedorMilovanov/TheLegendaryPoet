@@ -141,6 +141,9 @@ expect(workerTsconfig.includes('"WebWorker"') && workerTsconfig.includes('"noEmi
 expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.includes('Turnstile'), 'operator setup must describe the actual production backend');
 expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes wrangler@4.120.0 deploy'), 'Worker deployment must be reproducible from the connected Git repository');
 expect(workerSetup.includes('secrets.required') || workerSetup.includes('required secret'), 'Worker operator documentation must explain deploy-time required-secret validation');
+expect(workerSetup.includes('npm run operator:community-live') && workerSetup.includes('two fresh normal browser profiles'), 'Worker documentation must preserve the human-backed live certification procedure');
+expect(workerSetup.includes('Do **not** paste it into chat') && workerSetup.includes('hidden prompts'), 'operator documentation must keep signed actor bearer material local and hidden');
+expect(packageJson.includes('"operator:community-live": "node scripts/operator/certify-community-live.mjs"'), 'package scripts must expose the reviewed community live certifier entrypoint');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
 expect(liveCertifier.includes("process.stdin.setRawMode(true)"), 'live certifier must accept actor sessions only through a hidden interactive TTY prompt');
