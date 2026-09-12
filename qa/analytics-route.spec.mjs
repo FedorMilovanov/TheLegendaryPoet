@@ -146,7 +146,11 @@ test.describe('analytics consent lifecycle authority', () => {
     expect(await pageViews(page)).toHaveLength(pageViewsBeforeDeny);
     expect(await pageViews(peer)).toHaveLength(peerViewsBeforeDeny);
 
-    await page.goto(`${BASE_URL}/privacy`, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/privacy');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await expect(page).toHaveURL(`${BASE_URL}/privacy`);
     await consentStatus(page, 'Отключена');
     const pageBeforeRegrant = (await pageViews(page)).length;
     const peerBeforeRegrant = (await pageViews(peer)).length;
