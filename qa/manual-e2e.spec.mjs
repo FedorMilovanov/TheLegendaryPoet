@@ -233,13 +233,38 @@ test.describe('desktop interaction pass', () => {
     const author = page.getByPlaceholder('Ваше имя или псевдоним — необязательно').first();
     const comment = page.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?').first();
     await author.fill('Ручной QA');
-    await comment.fill('Проверка сохранения комментария и клавиатурной отправки.');
+    const fidelityComment = 'Unicode QA 👨‍👩‍👧‍👦 е́  два пробела.\nВторая строка\tс табом и <b>не HTML</b>.';
+    await comment.fill(fidelityComment);
     await comment.press('Control+Enter');
     await expect(comment).toHaveValue('');
-    await expect(page.getByText('Проверка сохранения комментария и клавиатурной отправки.')).toBeVisible();
+
+    const fidelityCard = page.locator('[data-community-comment-id]').filter({ hasText: 'Unicode QA' }).first();
+    await expect(fidelityCard).toBeVisible();
+    const fidelityBeforeReload = await fidelityCard.locator('p').first().evaluate((node) => ({
+      text: node.textContent,
+      whiteSpace: getComputedStyle(node).whiteSpace,
+      boldDescendants: node.querySelectorAll('b').length,
+      html: node.innerHTML,
+    }));
+    expect(fidelityBeforeReload.text).toBe(fidelityComment);
+    expect(fidelityBeforeReload.whiteSpace).toBe('pre-wrap');
+    expect(fidelityBeforeReload.boldDescendants).toBe(0);
+    expect(fidelityBeforeReload.html).toContain('&lt;b&gt;не HTML&lt;/b&gt;');
+
     await page.reload({ waitUntil: 'domcontentloaded' });
     await waitForRoute(page);
-    await expect(page.getByText('Проверка сохранения комментария и клавиатурной отправки.')).toBeVisible();
+    const persistedFidelityCard = page.locator('[data-community-comment-id]').filter({ hasText: 'Unicode QA' }).first();
+    await expect(persistedFidelityCard).toBeVisible();
+    const fidelityAfterReload = await persistedFidelityCard.locator('p').first().evaluate((node) => ({
+      text: node.textContent,
+      whiteSpace: getComputedStyle(node).whiteSpace,
+      boldDescendants: node.querySelectorAll('b').length,
+    }));
+    expect(fidelityAfterReload).toEqual({
+      text: fidelityComment,
+      whiteSpace: 'pre-wrap',
+      boldDescendants: 0,
+    });
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'desktop-community-persisted.png'), fullPage: true });
     expect(runtime.pageErrors).toEqual([]);
   });

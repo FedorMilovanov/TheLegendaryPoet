@@ -25,3 +25,11 @@ export function communityTextLength(value: string) {
 export function truncateCommunityText(value: string, maxLength: number) {
   return Array.from(value).slice(0, Math.max(0, maxLength)).join('');
 }
+
+export function normalizeCommunityCommentText(value: string) {
+  const normalized = value
+    .replace(/\r\n?/g, '\n')
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+    .trim();
+  return truncateCommunityText(normalized, COMMUNITY_COMMENT_MAX_LENGTH);
+}
