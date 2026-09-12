@@ -146,7 +146,7 @@ expect(workerSetup.includes('Do **not** paste it into chat') && workerSetup.incl
 expect(packageJson.includes('"operator:community-live": "node scripts/operator/certify-community-live.mjs"'), 'package scripts must expose the reviewed community live certifier entrypoint');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
 
-expect(liveCertifier.includes("process.stdin.setRawMode(true)"), 'live certifier must accept actor sessions only through a hidden interactive TTY prompt');
+expect(liveCertifier.includes("stdin.setRawMode(true)") && liveCertifier.includes("process.stdin.isTTY") && liveCertifier.includes("process.stdout.isTTY"), 'live certifier must accept actor sessions only through a hidden interactive TTY prompt');
 expect(liveCertifier.includes('piping/environment token injection is deliberately unsupported'), 'live certifier must reject non-interactive token injection');
 expect(!/--actor-token|ACTOR_TOKEN|COMMUNITY_SESSION_TOKEN/.test(liveCertifier), 'live certifier must not accept bearer actor sessions through command-line arguments or environment variables');
 expect(liveCertifier.includes("tokenA === tokenB || sessionA.actor === sessionB.actor"), 'live certifier must prove rotated signed actor identity before mutation checks');
