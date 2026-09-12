@@ -232,6 +232,20 @@ async function restoreChromeAtTop(page, { nativeWebKit = false } = {}) {
   await page.waitForTimeout(CHROME_TRANSITION_MS);
 }
 
+async function expectLocatorInsideViewport(locator, message, timeout = 5_000) {
+  await expect(locator).toBeVisible();
+  await expect.poll(
+    () => locator.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left >= -1
+        && rect.right <= window.innerWidth + 1
+        && rect.top >= -1
+        && rect.bottom <= window.innerHeight + 1;
+    }),
+    { timeout, message },
+  ).toBe(true);
+}
+
 async function expectDockInsideViewport(page) {
   const dock = page.locator('.mobile-dock');
   await expect(dock).toBeVisible();
@@ -703,7 +717,11 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
     { timeout: 3_000, message: 'mini-player seek focus indicator should be visibly painted' },
   ).toBeGreaterThan(0.5);
 
-  await page.getByRole('button', { name: 'Открыть режим погружения' }).click();
+  const miniPlayer = page.locator('.global-audio-mini');
+  const openImmersive = miniPlayer.getByRole('button', { name: 'Открыть режим погружения' });
+  await expectLocatorInsideViewport(miniPlayer, 'mini-player must remain fully inside the viewport while focused');
+  await expectLocatorInsideViewport(openImmersive, 'mini-player immersive control must remain actionable inside the viewport');
+  await openImmersive.click();
   const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
   const main = page.locator('#main-content');
   await expect(immersive).toBeVisible();
