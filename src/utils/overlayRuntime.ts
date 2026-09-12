@@ -26,6 +26,11 @@ type OverlayEntry = {
   onEscape: (() => void) | null;
 };
 
+type AccessibilitySnapshot = {
+  inert: boolean;
+  ariaHidden: string | null;
+};
+
 type OverlayDebugState = {
   depth: number;
   labels: string[];
@@ -47,6 +52,48 @@ let styleSnapshot: StyleSnapshot | null = null;
 let resumeSmoothScroll: ((restoredScrollY?: number) => void) | null = null;
 let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
+const accessibilitySnapshots = new Map<HTMLElement, AccessibilitySnapshot>();
+
+function restoreOverlayAccessibility() {
+  for (const [element, snapshot] of accessibilitySnapshots) {
+    element.inert = snapshot.inert;
+    if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
+    else element.setAttribute('aria-hidden', snapshot.ariaHidden);
+  }
+  accessibilitySnapshots.clear();
+}
+
+function isolateAccessibilityBranch(element: HTMLElement) {
+  if (!accessibilitySnapshots.has(element)) {
+    accessibilitySnapshots.set(element, {
+      inert: element.inert,
+      ariaHidden: element.getAttribute('aria-hidden'),
+    });
+  }
+  element.inert = true;
+  element.setAttribute('aria-hidden', 'true');
+}
+
+function syncOverlayAccessibility() {
+  restoreOverlayAccessibility();
+  const top = overlayStack[overlayStack.length - 1];
+  const root = top?.root;
+  if (!root?.isConnected) return;
+
+  let branch: HTMLElement | null = root;
+  while (branch && branch !== document.body) {
+    const parent = branch.parentElement;
+    if (!parent) break;
+    for (const siblingNode of Array.from(parent.children)) {
+      if (siblingNode === branch) continue;
+      const sibling = siblingNode as HTMLElement;
+      if (typeof sibling.setAttribute !== 'function') continue;
+      if (sibling.tagName === 'SCRIPT' || sibling.tagName === 'STYLE' || sibling.tagName === 'LINK') continue;
+      isolateAccessibilityBranch(sibling);
+    }
+    branch = parent;
+  }
+}
 
 function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: boolean | OverlayDebugState) {
   if (typeof window === 'undefined') return;
@@ -94,7 +141,10 @@ function pruneDetachedOverlays() {
     overlayStack.splice(index, 1);
     removed = true;
   }
-  if (removed) publishOverlayDebug();
+  if (removed) {
+    syncOverlayAccessibility();
+    publishOverlayDebug();
+  }
   if (removed && overlayStack.length === 0 && styleSnapshot) unlockDocument();
 }
 
@@ -186,6 +236,7 @@ function unlockDocument() {
     window.scrollTo(snapshot.scrollX, snapshot.scrollY);
   }
 
+  restoreOverlayAccessibility();
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
@@ -214,6 +265,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
   const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null };
   overlayStack.push(entry);
   if (overlayStack.length === 1) lockDocument();
+  syncOverlayAccessibility();
   publishOverlayDebug();
   let released = false;
 
@@ -222,6 +274,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
     setRoot: (nextRoot) => {
       if (!released) {
         entry.root = nextRoot;
+        syncOverlayAccessibility();
         publishOverlayDebug();
       }
     },
@@ -233,6 +286,7 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       released = true;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
       if (index >= 0) overlayStack.splice(index, 1);
+      syncOverlayAccessibility();
       publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
     },
