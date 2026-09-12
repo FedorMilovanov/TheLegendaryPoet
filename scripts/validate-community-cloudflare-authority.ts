@@ -149,6 +149,10 @@ expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage con
 expect(liveCertifier.includes("stdin.setRawMode(true)") && liveCertifier.includes("process.stdin.isTTY") && liveCertifier.includes("process.stdout.isTTY"), 'live certifier must accept actor sessions only through a hidden interactive TTY prompt');
 expect(liveCertifier.includes('piping/environment token injection is deliberately unsupported'), 'live certifier must reject non-interactive token injection');
 expect(!/--actor-token|ACTOR_TOKEN|COMMUNITY_SESSION_TOKEN/.test(liveCertifier), 'live certifier must not accept bearer actor sessions through command-line arguments or environment variables');
+expect(liveCertifier.includes("const allowedKeys = new Set(['--target-type', '--target-id'])"), 'live certifier CLI must reject every argument outside the reviewed target selector');
+expect(liveCertifier.includes("const PRODUCTION_API_URL = 'https://the-legendary-poet-community.viktorcoy2012.workers.dev'"), 'live certifier must pin the reviewed production Worker origin before accepting bearer material');
+expect(liveCertifier.includes("const PRODUCTION_MANIFEST_URL = 'https://thelegendarypoet.ru/community-targets.json'"), 'live certifier must pin the canonical production target manifest');
+expect(!liveCertifier.includes('--api-url') && !liveCertifier.includes('--manifest-url'), 'live certifier must not allow endpoint overrides that could exfiltrate bearer sessions');
 expect(liveCertifier.includes("tokenA === tokenB || sessionA.actor === sessionB.actor"), 'live certifier must prove rotated signed actor identity before mutation checks');
 expect(liveCertifier.includes("Promise.all([") && liveCertifier.includes("postComment(options.apiUrl, tokenA, basePayload)"), 'live certifier must exercise concurrent identical comment delivery');
 expect(liveCertifier.includes("replay.body?.idempotent !== true"), 'live certifier must require an explicit idempotent stable replay');
