@@ -6,6 +6,7 @@ import {
   getAnalyticsConsent,
   hasConfiguredAnalytics,
   initAnalytics,
+  observeAnalyticsConsentStorage,
   setAnalyticsConsent,
   trackPageView,
   type AnalyticsConsent,
@@ -31,14 +32,20 @@ export function AnalyticsRouteTracker() {
       send((event as CustomEvent<AnalyticsRouteSettledDetail>).detail);
     };
     const handleConsent = (event: Event) => {
-      if ((event as CustomEvent<AnalyticsConsent>).detail !== 'granted') return;
+      const next = (event as CustomEvent<AnalyticsConsent | null>).detail;
+      if (next !== 'granted') {
+        lastTrackedNavigationRef.current = null;
+        return;
+      }
       const settledRoute = settledRouteRef.current;
       if (settledRoute) send(settledRoute);
     };
 
     window.addEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettledRoute);
     window.addEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
+    const stopObservingStorage = observeAnalyticsConsentStorage();
     return () => {
+      stopObservingStorage();
       window.removeEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettledRoute);
       window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
     };
@@ -51,7 +58,7 @@ export default function AnalyticsConsentBanner() {
   const [consent, setConsent] = useState<AnalyticsConsent | null>(() => getAnalyticsConsent());
 
   useEffect(() => {
-    const handleConsent = (event: Event) => setConsent((event as CustomEvent<AnalyticsConsent>).detail);
+    const handleConsent = (event: Event) => setConsent((event as CustomEvent<AnalyticsConsent | null>).detail);
     window.addEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
     return () => window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
   }, []);
