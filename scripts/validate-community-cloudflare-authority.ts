@@ -156,7 +156,9 @@ expect(liveCertifier.includes("'unknown_target'") && liveCertifier.includes("'co
 expect(liveCertifier.includes('visibleMatches !== 1'), 'live certifier must verify concurrent requests converge to one public row');
 expect(liveCertifier.includes("wrangler@${WRANGLER_VERSION}") && liveCertifier.includes("const WRANGLER_VERSION = '4.120.0'"), 'live certifier cleanup must use the pinned production Wrangler version');
 expect(liveCertifier.includes("const DATABASE_NAME = 'the-legendary-poet-community'"), 'live certifier cleanup must target the canonical production D1 database');
-expect(liveCertifier.includes('DELETE FROM tlp_comments WHERE actor_id IN') && liveCertifier.includes('DELETE FROM tlp_ratings WHERE actor_id IN'), 'live certifier must remove all rows created by the two fresh certification actors');
+expect(liveCertifier.includes('DELETE FROM tlp_comments WHERE id =') && liveCertifier.includes('DELETE FROM tlp_ratings WHERE target_type ='), 'live certifier cleanup must be scoped to the exact temporary comment and selected-target ratings');
+expect(!liveCertifier.includes('DELETE FROM tlp_comments WHERE actor_id IN') && !liveCertifier.includes('DELETE FROM tlp_ratings WHERE actor_id IN'), 'live certifier must never wipe unrelated actor history during cleanup');
+expect(liveCertifier.includes('Deliberately do not delete unrelated rows for either actor'), 'live certifier must document exact-row cleanup ownership');
 expect(liveCertifier.includes('Deliberately do not delete tlp_rate_buckets'), 'live certifier must preserve shared network-abuse budgets during cleanup');
 expect(liveCertifier.includes('temporaryCommentAbsent: true'), 'live certifier must verify temporary public content disappears after cleanup');
 
