@@ -37,10 +37,10 @@ for (const primitive of [
 ]) {
   expect(manual.includes(primitive), `Manual Browser QA must use ${primitive}`);
 }
-expect((manual.match(/\.\/\.github\/actions\/setup-node-deps/g) ?? []).length === 4, 'all four Manual Browser jobs must share exact Node dependency setup');
-expect((manual.match(/\.\/\.github\/actions\/install-build-tools/g) ?? []).length === 4, 'all four Manual Browser jobs must share deterministic build tools setup');
-expect((manual.match(/\.\/\.github\/actions\/install-playwright/g) ?? []).length === 4, 'all four Manual Browser jobs must share locked Playwright installation');
-expect((manual.match(/\.\/\.github\/actions\/start-preview/g) ?? []).length === 4, 'all four Manual Browser jobs must share preview readiness');
+expect((manual.match(/\.\/\.github\/actions\/setup-node-deps/g) ?? []).length === 5, 'all five Manual Browser jobs must share exact Node dependency setup');
+expect((manual.match(/\.\/\.github\/actions\/install-build-tools/g) ?? []).length === 5, 'all five Manual Browser jobs must share deterministic build tools setup');
+expect((manual.match(/\.\/\.github\/actions\/install-playwright/g) ?? []).length === 5, 'all five Manual Browser jobs must share locked Playwright installation');
+expect((manual.match(/\.\/\.github\/actions\/start-preview/g) ?? []).length === 5, 'all five Manual Browser jobs must share preview readiness');
 
 for (const forbidden of [
   'actions/setup-node@v4',
@@ -66,6 +66,7 @@ const preservedSuites = [
   'qa/brand-reference-comparison.spec.mjs',
   'qa/hover-stability.spec.mjs',
   'qa/essay-lightbox-overlay.spec.mjs',
+  'qa/analytics-route.spec.mjs',
   'scripts/run-webkit-process-isolated.mjs',
   'scripts/run-webkit-home-reveal-process-isolated.mjs',
   'scripts/run-home-polish-process-isolated.mjs',

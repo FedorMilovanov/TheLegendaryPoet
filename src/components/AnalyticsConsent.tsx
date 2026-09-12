@@ -1,34 +1,48 @@
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from './ui/Link';
 import {
   ANALYTICS_CONSENT_EVENT,
+  ANALYTICS_ROUTE_SETTLED_EVENT,
   getAnalyticsConsent,
   hasConfiguredAnalytics,
   initAnalytics,
   setAnalyticsConsent,
   trackPageView,
   type AnalyticsConsent,
+  type AnalyticsRouteSettledDetail,
 } from '../utils/analytics';
 
 export function AnalyticsRouteTracker() {
-  const location = useLocation();
+  const settledRouteRef = useRef<AnalyticsRouteSettledDetail | null>(null);
+  const lastTrackedNavigationRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const pagePath = `${location.pathname}${location.search}`;
-    const send = () => {
+    const send = (detail: AnalyticsRouteSettledDetail) => {
+      settledRouteRef.current = detail;
       if (getAnalyticsConsent() !== 'granted') return;
+      if (lastTrackedNavigationRef.current === detail.navigationToken) return;
+
       initAnalytics();
-      window.setTimeout(() => trackPageView(pagePath, document.title), 0);
+      trackPageView(detail.path, detail.title);
+      lastTrackedNavigationRef.current = detail.navigationToken;
     };
 
-    send();
-    const handleConsent = (event: Event) => {
-      if ((event as CustomEvent<AnalyticsConsent>).detail === 'granted') send();
+    const handleSettledRoute = (event: Event) => {
+      send((event as CustomEvent<AnalyticsRouteSettledDetail>).detail);
     };
+    const handleConsent = (event: Event) => {
+      if ((event as CustomEvent<AnalyticsConsent>).detail !== 'granted') return;
+      const settledRoute = settledRouteRef.current;
+      if (settledRoute) send(settledRoute);
+    };
+
+    window.addEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettledRoute);
     window.addEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
-    return () => window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
-  }, [location.pathname, location.search]);
+    return () => {
+      window.removeEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettledRoute);
+      window.removeEventListener(ANALYTICS_CONSENT_EVENT, handleConsent);
+    };
+  }, []);
 
   return null;
 }

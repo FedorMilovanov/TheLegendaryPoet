@@ -13,8 +13,15 @@ import { safeRead, safeWrite } from './browserStorage';
 
 export type AnalyticsConsent = 'granted' | 'denied';
 
+export type AnalyticsRouteSettledDetail = {
+  path: string;
+  title: string;
+  navigationToken: string;
+};
+
 const CONSENT_STORAGE_KEY = 'tlp:analytics-consent:v1';
 export const ANALYTICS_CONSENT_EVENT = 'tlp:analytics-consent-change';
+export const ANALYTICS_ROUTE_SETTLED_EVENT = 'tlp:analytics-route-settled';
 
 let started = false;
 let sessionConsent: AnalyticsConsent | null = null;
@@ -49,6 +56,11 @@ export function setAnalyticsConsent(value: AnalyticsConsent) {
   sessionConsent = value;
   safeWrite(CONSENT_STORAGE_KEY, value);
   window.dispatchEvent(new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, { detail: value }));
+}
+
+export function notifyAnalyticsRouteSettled(detail: AnalyticsRouteSettledDetail) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent<AnalyticsRouteSettledDetail>(ANALYTICS_ROUTE_SETTLED_EVENT, { detail }));
 }
 
 export function initAnalytics() {
