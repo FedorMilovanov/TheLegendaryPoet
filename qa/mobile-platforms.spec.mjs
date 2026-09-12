@@ -324,6 +324,13 @@ async function collectDiagnostics(page) {
   });
 }
 
+async function readEffectiveA11yIsolation(locator) {
+  return locator.evaluate((element) => ({
+    inert: Boolean(element.closest('[inert]')),
+    ariaHidden: Boolean(element.closest('[aria-hidden="true"]')),
+  }));
+}
+
 async function expectCleanRuntime(runtime) {
   expect(runtime.pageErrors, 'uncaught page errors').toEqual([]);
   expect(runtime.consoleErrors, 'console errors').toEqual([]);
@@ -700,8 +707,8 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
   const main = page.locator('#main-content');
   await expect(immersive).toBeVisible();
-  await expect.poll(() => main.evaluate((element) => element.inert)).toBe(true);
-  await expect(main).toHaveAttribute('aria-hidden', 'true');
+  await expect.poll(async () => (await readEffectiveA11yIsolation(main)).inert).toBe(true);
+  expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(true);
 
   const immersiveSeek = immersive.getByRole('slider', { name: 'Позиция воспроизведения' });
   const immersiveIndicator = immersive.locator('[data-seek-focus-indicator="immersive"]');
@@ -717,19 +724,19 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   await expect(search).toBeVisible();
   await expect.poll(() => immersive.evaluate((element) => element.inert)).toBe(true);
   await expect(immersive).toHaveAttribute('aria-hidden', 'true');
-  expect(await main.evaluate((element) => element.inert)).toBe(true);
+  expect((await readEffectiveA11yIsolation(main)).inert).toBe(true);
 
   await page.keyboard.press('Escape');
   await expect(search).toBeHidden();
   await expect.poll(() => immersive.evaluate((element) => element.inert)).toBe(false);
   await expect(immersive).not.toHaveAttribute('aria-hidden', 'true');
   expect(await main.evaluate((element) => element.inert)).toBe(true);
-  await expect(main).toHaveAttribute('aria-hidden', 'true');
+  expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(true);
 
   await immersive.getByRole('button', { name: 'Выйти' }).click();
   await expect(immersive).toBeHidden({ timeout: 8_000 });
-  await expect.poll(() => main.evaluate((element) => element.inert)).toBe(false);
-  await expect(main).not.toHaveAttribute('aria-hidden', 'true');
+  await expect.poll(async () => (await readEffectiveA11yIsolation(main)).inert).toBe(false);
+  expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(false);
 });
 
 test('engine identity is honest for Android Chrome and iPhone Safari', async ({ page }, testInfo) => {
