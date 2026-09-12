@@ -77,7 +77,7 @@ export default function PrivacyPage() {
                   Google Analytics 4 и Яндекс.Метрика работают только после явного согласия посетителя и только если соответствующие счётчики включены владельцем проекта. Выбор можно изменить здесь в любой момент; изменение применяется в этой вкладке сразу и синхронизируется между открытыми вкладками сайта.
                 </p>
               </div>
-              <div className="rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-100/65" role="status" aria-live="polite" aria-atomic="true">
+              <div data-analytics-consent-status className="rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-100/65" role="status" aria-live="polite" aria-atomic="true">
                 Аналитика: <span className="text-cyan-200">{analyticsConfigured ? analyticsStatus : 'Не настроена'}</span>
               </div>
             </div>
@@ -87,6 +87,7 @@ export default function PrivacyPage() {
                 <button
                   type="button"
                   onClick={() => chooseAnalytics('denied')}
+                  data-analytics-consent-action="denied"
                   aria-pressed={analyticsConsent === 'denied'}
                   className="min-h-11 rounded-full border border-white/14 px-5 text-sm font-bold text-white/65 transition hover:border-white/30 hover:text-white aria-pressed:border-cyan-300/35 aria-pressed:bg-cyan-300/[0.08] aria-pressed:text-cyan-100"
                 >
@@ -95,6 +96,7 @@ export default function PrivacyPage() {
                 <button
                   type="button"
                   onClick={() => chooseAnalytics('granted')}
+                  data-analytics-consent-action="granted"
                   aria-pressed={analyticsConsent === 'granted'}
                   className="min-h-11 rounded-full bg-cyan-300 px-5 text-sm font-bold text-[#031017] transition hover:bg-cyan-200 aria-pressed:ring-2 aria-pressed:ring-cyan-100/70"
                 >
