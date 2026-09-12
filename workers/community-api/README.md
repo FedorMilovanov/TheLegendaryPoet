@@ -127,7 +127,7 @@ npm run operator:community-live -- \
    - the temporary comment appears exactly once in the public feed;
    - reusing the same comment ID with changed content returns `409 comment_id_conflict`;
    - the second valid rotated actor using that same comment ID also reaches `409 comment_id_conflict`, proving the distinct signed session reached the Worker authority boundary.
-8. In a `finally` path the harness runs pinned Wrangler `4.120.0` against production D1 and deletes **all ratings/comments/helpful rows belonging to the two fresh certification actors**. This removes the two ratings used to mint sessions and the temporary proof comment. Shared `tlp_rate_buckets` are intentionally preserved because they are network-abuse authority and may contain real traffic.
+8. In a `finally` path the harness runs pinned Wrangler `4.120.0` against production D1 and deletes only the exact certification artifacts: the temporary comment ID and the two ratings for the selected target made by the two fresh actors. It never wipes unrelated actor history. Shared `tlp_rate_buckets` are intentionally preserved because they are network-abuse authority and may contain real traffic.
 9. After cleanup the harness re-reads the public comment feed and refuses PASS if the temporary certification comment remains visible.
 
 If D1 cleanup fails, the harness exits non-zero and leaves a mode-`0600` SQL file in the local temp directory. That file contains pseudonymous actor UUIDs but no bearer tokens. Do not publish it. Re-run the pinned Wrangler cleanup locally, verify the temporary content is gone, then delete the file.
