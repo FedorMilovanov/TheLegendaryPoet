@@ -389,7 +389,8 @@ if (renderer) {
 
     if (!firstFrameRecorded) {
       firstFrameRecorded = true;
-      proofState.metrics.firstFrameMs = Math.round((now - startedAt) * 100) / 100;
+      const firstFrameElapsed = performance.now() - startedAt;
+      proofState.metrics.firstFrameMs = Math.round(firstFrameElapsed * 100) / 100;
       proofState.ready = true;
       proofState.mode = 'webgl';
       proofState.reason = null;
