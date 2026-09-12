@@ -29,6 +29,7 @@ const packageJson = read('package.json');
 const setup = read('docs/COMMENTS_SETUP.md');
 const workerSetup = read('workers/community-api/README.md');
 const storageDoc = read('docs/COMMUNITY_FEEDBACK_STORAGE.md');
+const liveCertifier = read('scripts/operator/certify-community-live.mjs');
 const browserTopology = read('qa/community-request-topology.cases.mjs');
 const poetDetailTopology = read('qa/community-poet-detail-topology.cases.mjs');
 const readerCertification = read('qa/premium-reader-certification.spec.mjs');
@@ -141,6 +142,20 @@ expect(setup.includes('Cloudflare Worker') && setup.includes('D1') && setup.incl
 expect(workerSetup.includes('Workers Builds') && workerSetup.includes('npx --yes wrangler@4.120.0 deploy'), 'Worker deployment must be reproducible from the connected Git repository');
 expect(workerSetup.includes('secrets.required') || workerSetup.includes('required secret'), 'Worker operator documentation must explain deploy-time required-secret validation');
 expect(storageDoc.includes('browser → Cloudflare Worker → D1'), 'storage contract must name the real shared backend');
+
+expect(liveCertifier.includes("process.stdin.setRawMode(true)"), 'live certifier must accept actor sessions only through a hidden interactive TTY prompt');
+expect(liveCertifier.includes('piping/environment token injection is deliberately unsupported'), 'live certifier must reject non-interactive token injection');
+expect(!/--actor-token|ACTOR_TOKEN|COMMUNITY_SESSION_TOKEN/.test(liveCertifier), 'live certifier must not accept bearer actor sessions through command-line arguments or environment variables');
+expect(liveCertifier.includes("tokenA === tokenB || sessionA.actor === sessionB.actor"), 'live certifier must prove rotated signed actor identity before mutation checks');
+expect(liveCertifier.includes("Promise.all([") && liveCertifier.includes("postComment(options.apiUrl, tokenA, basePayload)"), 'live certifier must exercise concurrent identical comment delivery');
+expect(liveCertifier.includes("replay.body?.idempotent !== true"), 'live certifier must require an explicit idempotent stable replay');
+expect(liveCertifier.includes("'unknown_target'") && liveCertifier.includes("'comment_id_conflict'"), 'live certifier must prove target rejection and immutable comment-ID conflict outcomes');
+expect(liveCertifier.includes('visibleMatches !== 1'), 'live certifier must verify concurrent requests converge to one public row');
+expect(liveCertifier.includes("wrangler@${WRANGLER_VERSION}") && liveCertifier.includes("const WRANGLER_VERSION = '4.120.0'"), 'live certifier cleanup must use the pinned production Wrangler version');
+expect(liveCertifier.includes("const DATABASE_NAME = 'the-legendary-poet-community'"), 'live certifier cleanup must target the canonical production D1 database');
+expect(liveCertifier.includes('DELETE FROM tlp_comments WHERE actor_id IN') && liveCertifier.includes('DELETE FROM tlp_ratings WHERE actor_id IN'), 'live certifier must remove all rows created by the two fresh certification actors');
+expect(liveCertifier.includes('Deliberately do not delete tlp_rate_buckets'), 'live certifier must preserve shared network-abuse budgets during cleanup');
+expect(liveCertifier.includes('temporaryCommentAbsent: true'), 'live certifier must verify temporary public content disappears after cleanup');
 
 expect(browserTopology.includes("humanProof: 'turnstile-browser-qa-proof'"), 'browser request-topology QA must use the loopback-only human-proof boundary');
 expect(browserTopology.includes("url.pathname === '/v1/session'") && browserTopology.includes("url.pathname === '/v1/helpful'"), 'browser request-topology QA must exercise Worker session and mutation routes');
