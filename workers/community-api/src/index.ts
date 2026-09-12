@@ -5,6 +5,7 @@ import {
   COMMUNITY_COMMENT_MIN_LENGTH,
   communityTextLength,
   isCommunityCommentKind,
+  normalizeCommunityCommentText,
   truncateCommunityText,
 } from '../../../src/data/communityContract';
 import {
@@ -355,7 +356,7 @@ function normalizeComment(body: Record<string, unknown>) {
     || typeof body.author !== 'string'
     || typeof body.text !== 'string'
   ) throw new HttpError(400, 'invalid_comment');
-  const text = body.text.replace(/\r\n?/g, '\n').replace(/[\t ]+/g, ' ').trim();
+  const text = normalizeCommunityCommentText(body.text);
   const textLength = communityTextLength(text);
   if (textLength < COMMUNITY_COMMENT_MIN_LENGTH || textLength > COMMUNITY_COMMENT_MAX_LENGTH) {
     throw new HttpError(400, 'invalid_comment');
