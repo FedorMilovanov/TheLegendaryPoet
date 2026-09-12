@@ -599,6 +599,139 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await expectCleanRuntime(runtime);
 });
 
+
+test('reading-mode chrome leaves the accessibility tree and restores exact ownership', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+
+  const header = page.locator('.site-header');
+  const headerControl = header.locator('a[href], button:not([disabled])').first();
+  await expect(headerControl).toBeVisible();
+  await headerControl.focus();
+  await expect(headerControl).toBeFocused();
+
+  await page.evaluate(() => {
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({ top: Math.min(1100, Math.max(500, maxScroll)), behavior: 'auto' });
+  });
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'reading-mode chrome should hide after downward scroll' },
+  ).toBe(true);
+
+  await expect(header).toHaveAttribute('aria-hidden', 'true');
+  expect(await header.evaluate((element) => element.inert)).toBe(true);
+  await expect(page.locator('#main-content')).toBeFocused();
+
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'reading-mode chrome should restore on upward/top scroll' },
+  ).toBe(false);
+  expect(await header.evaluate((element) => element.inert)).toBe(false);
+  await expect(header).not.toHaveAttribute('aria-hidden', 'true');
+});
+
+test('hash destinations and archive removals keep deterministic focus ownership', async ({ page }) => {
+  await page.goto(`${BASE_URL}/articles/mayakovsky-before-revolution`, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+
+  const citation = page.locator('a[href^="#source-"]').first();
+  await expect(citation).toBeVisible();
+  await citation.click();
+  await expect.poll(
+    () => page.evaluate(() => {
+      const targetId = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      return Boolean(targetId) && document.activeElement instanceof HTMLElement && document.activeElement.id === targetId;
+    }),
+    { timeout: 8_000, message: 'settled citation target should own programmatic focus' },
+  ).toBe(true);
+
+  await page.goto(`${BASE_URL}/poets/sergei-yesenin`, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+  for (let index = 0; index < 2; index += 1) {
+    const add = page.getByRole('button', { name: /Добавить «.+» в архив/ }).first();
+    await expect(add).toBeVisible();
+    await add.click();
+  }
+
+  await page.goto(`${BASE_URL}/archive`, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+  let removeButtons = page.locator('[data-archive-remove-id]');
+  await expect(removeButtons).toHaveCount(2);
+  const nextId = await removeButtons.nth(1).getAttribute('data-archive-remove-id');
+  expect(nextId).toBeTruthy();
+
+  await removeButtons.first().focus();
+  await expect(removeButtons.first()).toBeFocused();
+  await removeButtons.first().click();
+  await expect.poll(
+    () => page.evaluate(() => document.activeElement?.getAttribute('data-archive-remove-id') ?? null),
+    { timeout: 5_000, message: 'archive removal should hand focus to the next stable remove control' },
+  ).toBe(nextId);
+
+  removeButtons = page.locator('[data-archive-remove-id]');
+  await expect(removeButtons).toHaveCount(1);
+  await removeButtons.first().click();
+  const status = page.getByRole('status');
+  await expect(status).toContainText('Стихотворение удалено из архива.');
+  await expect(status).toBeFocused();
+});
+
+test('seek focus is visible and nested overlays isolate only the topmost accessibility environment', async ({ page }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+
+  const play = page.getByRole('button', { name: /Воспроизвести трек|Поставить на паузу|Повторить загрузку аудио/i }).first();
+  await expect(play).toBeVisible();
+  await play.click();
+
+  const miniSeek = page.getByRole('slider', { name: 'Позиция текущего релиза' });
+  const miniIndicator = page.locator('[data-seek-focus-indicator="mini"]');
+  await expect(miniSeek).toBeVisible();
+  await miniSeek.focus();
+  await expect(miniSeek).toBeFocused();
+  await expect.poll(
+    () => miniIndicator.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
+    { timeout: 3_000, message: 'mini-player seek focus indicator should be visibly painted' },
+  ).toBeGreaterThan(0.5);
+
+  await page.getByRole('button', { name: 'Открыть режим погружения' }).click();
+  const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  const main = page.locator('#main-content');
+  await expect(immersive).toBeVisible();
+  await expect.poll(() => main.evaluate((element) => element.inert)).toBe(true);
+  await expect(main).toHaveAttribute('aria-hidden', 'true');
+
+  const immersiveSeek = immersive.getByRole('slider', { name: 'Позиция воспроизведения' });
+  const immersiveIndicator = immersive.locator('[data-seek-focus-indicator="immersive"]');
+  await immersiveSeek.focus();
+  await expect(immersiveSeek).toBeFocused();
+  await expect.poll(
+    () => immersiveIndicator.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
+    { timeout: 3_000, message: 'immersive seek focus indicator should be visibly painted' },
+  ).toBeGreaterThan(0.5);
+
+  await page.keyboard.press('Control+K');
+  const search = page.getByRole('dialog', { name: 'Поиск по сайту' });
+  await expect(search).toBeVisible();
+  await expect.poll(() => immersive.evaluate((element) => element.inert)).toBe(true);
+  await expect(immersive).toHaveAttribute('aria-hidden', 'true');
+  expect(await main.evaluate((element) => element.inert)).toBe(true);
+
+  await page.keyboard.press('Escape');
+  await expect(search).toBeHidden();
+  await expect.poll(() => immersive.evaluate((element) => element.inert)).toBe(false);
+  await expect(immersive).not.toHaveAttribute('aria-hidden', 'true');
+  expect(await main.evaluate((element) => element.inert)).toBe(true);
+  await expect(main).toHaveAttribute('aria-hidden', 'true');
+
+  await immersive.getByRole('button', { name: 'Выйти' }).click();
+  await expect(immersive).toBeHidden({ timeout: 8_000 });
+  await expect.poll(() => main.evaluate((element) => element.inert)).toBe(false);
+  await expect(main).not.toHaveAttribute('aria-hidden', 'true');
+});
+
 test('engine identity is honest for Android Chrome and iPhone Safari', async ({ page }, testInfo) => {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
