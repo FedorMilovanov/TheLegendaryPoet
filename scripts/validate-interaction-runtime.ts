@@ -159,6 +159,7 @@ const poetCardSource = read('src/components/PoetCard.tsx');
 const essayCoverSource = read('src/components/essay/EssayCover.tsx');
 const tiltSource = read('src/components/TiltCard.tsx');
 const smoothSource = read('src/utils/smoothScroll.ts');
+const routeScrollSource = read('src/components/SmoothScroll.tsx');
 const focusSource = read('src/utils/focusRuntime.ts');
 const autoHideSource = read('src/hooks/useAutoHideChrome.ts');
 const archivePageSource = read('src/pages/MyArchivePage.tsx');
@@ -214,8 +215,8 @@ expect(autoHideSource.includes('syncChromeAccessibility'), 'reading-mode chrome 
 expect(autoHideSource.includes('element.inert = true'), 'visually hidden chrome must leave sequential focus');
 expect(autoHideSource.includes("element.setAttribute('aria-hidden', 'true')"), 'visually hidden chrome must leave the accessibility tree');
 expect(autoHideSource.includes("document.getElementById('main-content')"), 'focus trapped in disappearing chrome must hand off to main content');
-expect(smoothSource.includes('scheduleProgrammaticFocus'), 'hash restoration must transfer focus after settled target insertion');
-expect(smoothSource.includes('target.isConnected ? target : null'), 'hash focus must fail closed when the target disappears');
+expect(routeScrollSource.includes('scheduleProgrammaticFocus'), 'hash restoration must transfer focus after settled target insertion');
+expect(routeScrollSource.includes('target.isConnected ? target : null'), 'hash focus must fail closed when the target disappears');
 expect(archivePageSource.includes('data-archive-remove-id'), 'archive mutation controls must expose stable focus-handoff identity');
 expect(archivePageSource.includes('archiveStatusRef'), 'archive removal must own a stable fallback focus target');
 expect(archivePageSource.includes('scheduleProgrammaticFocus'), 'archive removal must schedule post-mutation focus ownership');
