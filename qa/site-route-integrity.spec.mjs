@@ -218,7 +218,10 @@ for (const [source, target] of redirects) {
     const runtime = attachRuntimeDiagnostics(page);
     const response = await page.goto(`${BASE_URL}${source}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     expect(response?.status() ?? 0).toBeLessThan(400);
-    await expect.poll(() => page.evaluate(() => window.location.pathname), { timeout: 12_000 }).toBe(target);
+    await page.waitForURL(
+      (url) => url.origin === BASE_ORIGIN && url.pathname === target,
+      { timeout: 12_000, waitUntil: 'domcontentloaded' },
+    );
     await settleRoute(page);
     await waitForViewportImages(page);
     const snapshot = await inspectRenderedRoute(page, target, { requireCanonical: canonicalRoutes.includes(target) });
