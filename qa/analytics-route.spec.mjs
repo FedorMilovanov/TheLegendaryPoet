@@ -4,7 +4,14 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
 async function pageViews(page) {
   return page.evaluate(() => (window.dataLayer || [])
-    .filter((entry) => Array.isArray(entry) && entry[0] === 'event' && entry[1] === 'page_view')
+    .map((entry) => {
+      try {
+        return Array.from(entry);
+      } catch {
+        return [];
+      }
+    })
+    .filter((entry) => entry[0] === 'event' && entry[1] === 'page_view')
     .map((entry) => entry[2]));
 }
 
@@ -62,6 +69,18 @@ test.describe('semantic analytics route authority', () => {
 async function providerState(page) {
   return page.evaluate(() => {
     const dataLayer = Array.isArray(window.dataLayer) ? window.dataLayer : [];
+    const commands = dataLayer.map((entry) => {
+      let values = [];
+      try {
+        values = Array.from(entry);
+      } catch {
+        values = [];
+      }
+      return {
+        values,
+        isArguments: Object.prototype.toString.call(entry) === '[object Arguments]',
+      };
+    });
     const ymQueue = Array.isArray(window.ym?.a) ? window.ym.a : [];
     return {
       consent: localStorage.getItem('tlp:analytics-consent:v1'),
@@ -69,10 +88,16 @@ async function providerState(page) {
       yandexDisabled: window.disableYaCounter98765432,
       googleScripts: document.querySelectorAll('script[data-tlp-analytics-provider="google"]').length,
       yandexScripts: document.querySelectorAll('script[data-tlp-analytics-provider="yandex"]').length,
-      googleConfigCount: dataLayer.filter((entry) => Array.isArray(entry) && entry[0] === 'config' && entry[1] === 'G-TLPQA00001').length,
-      googleConsentUpdates: dataLayer
-        .filter((entry) => Array.isArray(entry) && entry[0] === 'consent' && entry[1] === 'update')
-        .map((entry) => entry[2]?.analytics_storage),
+      googleConfigCount: commands.filter((entry) => entry.values[0] === 'config' && entry.values[1] === 'G-TLPQA00001').length,
+      googleConfigUsesArguments: commands
+        .filter((entry) => entry.values[0] === 'config' && entry.values[1] === 'G-TLPQA00001')
+        .every((entry) => entry.isArguments),
+      googlePageViewsUseArguments: commands
+        .filter((entry) => entry.values[0] === 'event' && entry.values[1] === 'page_view')
+        .every((entry) => entry.isArguments),
+      googleConsentUpdates: commands
+        .filter((entry) => entry.values[0] === 'consent' && entry.values[1] === 'update')
+        .map((entry) => entry.values[2]?.analytics_storage),
       yandexInitCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'init').length,
       yandexDestructCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'destruct').length,
     };
@@ -112,6 +137,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
+      expect(state.googleConfigUsesArguments).toBe(true);
+      expect(state.googlePageViewsUseArguments).toBe(true);
       expect(state.googleConsentUpdates.at(-1)).toBe('granted');
       expect(state.yandexInitCount).toBe(1);
       expect(state.yandexDestructCount).toBe(0);
@@ -133,6 +160,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
+      expect(state.googleConfigUsesArguments).toBe(true);
+      expect(state.googlePageViewsUseArguments).toBe(true);
       expect(state.googleConsentUpdates.at(-1)).toBe('denied');
       expect(state.yandexDestructCount).toBe(1);
     }
@@ -169,6 +198,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
+      expect(state.googleConfigUsesArguments).toBe(true);
+      expect(state.googlePageViewsUseArguments).toBe(true);
       expect(state.googleConsentUpdates).toEqual(['denied', 'granted', 'denied', 'granted']);
       expect(state.yandexInitCount).toBe(2);
       expect(state.yandexDestructCount).toBe(1);
