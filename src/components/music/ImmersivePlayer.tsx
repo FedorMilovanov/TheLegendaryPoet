@@ -109,7 +109,7 @@ export default function ImmersivePlayer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45 }}
-            className="fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white outline-none"
+            className="theme-dark-island fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white outline-none"
             role="dialog"
             aria-modal="true"
             aria-labelledby="immersive-track-title"
