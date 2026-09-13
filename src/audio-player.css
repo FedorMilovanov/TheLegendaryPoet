@@ -105,3 +105,22 @@ html.global-audio-active footer {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+.seek-focus-indicator {
+  opacity: 0;
+  border-color: transparent;
+  transition: opacity 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seek-focus-shell:focus-within .seek-focus-indicator {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--track-accent, #67e8f9) 65%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seek-focus-indicator {
+    transition: none;
+  }
+}
