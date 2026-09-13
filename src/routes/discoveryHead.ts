@@ -1,6 +1,7 @@
 import routeContractData from './route-contract.json';
 import discoveryPolicyData from './discovery-policy.json';
 import { siteConfig } from '../config/site';
+import { canonicalRouteUrl } from './publicUrl';
 
 export type DiscoveryStateName = 'ready' | 'noindex' | 'not-found' | 'loading' | 'error' | 'redirect';
 
@@ -120,7 +121,7 @@ export function applyDiscoveryHead(options: ApplyDiscoveryHeadOptions) {
   const image = absUrl(options.image || '/og-image.jpg');
   const imageAlt = options.imageAlt || title;
   const robots = options.robots || policy.robots;
-  const selfUrl = `${siteConfig.url}${options.path}`;
+  const selfUrl = canonicalRouteUrl(siteConfig.url, options.path);
 
   document.title = title;
   ensureMeta('description', description);
@@ -132,7 +133,7 @@ export function applyDiscoveryHead(options: ApplyDiscoveryHeadOptions) {
     ensureLink('canonical', selfUrl);
   } else if (policy.canonical === 'target') {
     if (!options.canonicalPath) throw new Error('redirect discovery state requires canonicalPath');
-    ensureLink('canonical', absUrl(options.canonicalPath));
+    ensureLink('canonical', canonicalRouteUrl(siteConfig.url, options.canonicalPath));
   } else {
     removeLink('canonical');
   }
