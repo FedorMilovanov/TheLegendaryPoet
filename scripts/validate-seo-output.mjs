@@ -9,6 +9,11 @@ function expect(condition, message) {
   if (!condition) failures.push(message);
 }
 
+function canonicalPublicPath(pathname) {
+  if (pathname === '/') return '/';
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+}
+
 function read(relativePath) {
   const file = path.join(DIST, relativePath);
   expect(fs.existsSync(file), `missing dist/${relativePath}`);
@@ -37,6 +42,12 @@ expect(rootHtml.includes('rel="alternate" type="application/atom+xml"'), 'root H
 expect(rootHtml.includes('name="google-site-verification"'), 'production HTML must include Google ownership verification');
 expect(rootHtml.includes('name="yandex-verification"'), 'production HTML must include Yandex ownership verification');
 
+const feedEntryUrls = [...feed.matchAll(/<entry>[\s\S]*?<id>(https:\/\/thelegendarypoet\.ru\/(?:essays|music)\/[^<]+)<\/id>[\s\S]*?<\/entry>/g)]
+  .map((match) => match[1]);
+for (const urlString of feedEntryUrls) {
+  expect(new URL(urlString).pathname.endsWith('/'), `feed entry URL must already be terminal: ${urlString}`);
+}
+
 const urls = [...sitemap.matchAll(/<loc>(https:\/\/thelegendarypoet\.ru[^<]*)<\/loc>/g)]
   .map((match) => match[1])
   .filter((url) => !/\.(?:jpg|jpeg|png|webp|svg)$/i.test(new URL(url).pathname));
@@ -49,25 +60,44 @@ for (const urlString of uniqueUrls) {
   expect(url.origin === SITE_URL, `non-canonical sitemap origin: ${urlString}`);
   expect(!url.pathname.endsWith('.html'), `HTML duplicate leaked into sitemap: ${url.pathname}`);
   expect(!url.search && !url.hash, `sitemap URL must not contain query/hash: ${urlString}`);
+  expect(url.pathname === '/' || url.pathname.endsWith('/'), `sitemap URL must already be terminal: ${urlString}`);
 
   const html = htmlForPath(url.pathname);
   expect(html.includes(`<link rel="canonical" href="${urlString}" />`), `canonical mismatch for ${url.pathname}`);
+  expect(html.includes(`<meta property="og:url" content="${urlString}" />`), `og:url mismatch for ${url.pathname}`);
   expect(!/<meta name="robots" content="[^"]*noindex/i.test(html), `sitemap route is noindex: ${url.pathname}`);
-  expect(html.includes('type="application/ld+json"'), `structured data missing for ${url.pathname}`);
+  const jsonLdMatch = html.match(/<script id="route-jsonld" type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  if (url.pathname === '/') {
+    expect(html.includes('type="application/ld+json"'), 'root document must retain bootstrap structured data before hydration');
+  } else {
+    expect(Boolean(jsonLdMatch), `route structured data missing for ${url.pathname}`);
+  }
+  if (jsonLdMatch) {
+    try {
+      const jsonLd = JSON.parse(jsonLdMatch[1]);
+      const graph = Array.isArray(jsonLd?.['@graph']) ? jsonLd['@graph'] : [];
+      const webPage = graph.find((node) => node?.['@type'] === 'WebPage');
+      expect(webPage?.url === urlString, `JSON-LD WebPage.url mismatch for ${url.pathname}`);
+      expect(webPage?.['@id'] === `${urlString}#webpage`, `JSON-LD WebPage @id mismatch for ${url.pathname}`);
+    } catch (error) {
+      expect(false, `invalid route JSON-LD for ${url.pathname}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
 
 for (const { from, to } of routeContract.redirects) {
   const aliasHtml = htmlForPath(from);
-  const canonicalTarget = `${SITE_URL}${to}`;
+  const publicTarget = canonicalPublicPath(to);
+  const canonicalTarget = `${SITE_URL}${publicTarget}`;
   expect(!uniqueUrls.has(`${SITE_URL}${from}`), `legacy alias leaked into sitemap: ${from}`);
   expect(aliasHtml.includes(`data-legacy-alias="${from}"`), `legacy alias marker missing for ${from}`);
   expect(aliasHtml.includes('<meta name="robots" content="noindex,follow" />'), `legacy alias must be noindex,follow: ${from}`);
   expect(aliasHtml.includes('<meta name="googlebot" content="noindex,follow" />'), `legacy alias googlebot policy mismatch: ${from}`);
-  expect(aliasHtml.includes(`<meta name="tlp-legacy-alias-target" content="${to}" />`), `legacy alias target marker mismatch: ${from}`);
+  expect(aliasHtml.includes(`<meta name="tlp-legacy-alias-target" content="${publicTarget}" />`), `legacy alias target marker mismatch: ${from}`);
   expect(aliasHtml.includes(`<link rel="canonical" href="${canonicalTarget}" />`), `legacy alias canonical target mismatch: ${from}`);
-  expect(aliasHtml.includes(`<meta http-equiv="refresh" content="0;url=${to}" />`), `legacy alias refresh target mismatch: ${from}`);
-  expect(aliasHtml.includes(`window.location.replace(${JSON.stringify(to)})`), `legacy alias script target mismatch: ${from}`);
-  expect(aliasHtml.includes(`<a href="${to}">Перейти к актуальной странице</a>`), `legacy alias fallback link missing: ${from}`);
+  expect(aliasHtml.includes(`<meta http-equiv="refresh" content="0;url=${publicTarget}" />`), `legacy alias refresh target mismatch: ${from}`);
+  expect(aliasHtml.includes(`window.location.replace(${JSON.stringify(publicTarget)})`), `legacy alias script target mismatch: ${from}`);
+  expect(aliasHtml.includes(`<a href="${publicTarget}">Перейти к актуальной странице</a>`), `legacy alias fallback link missing: ${from}`);
 }
 
 function collectHtmlFiles(dir, relative = '') {

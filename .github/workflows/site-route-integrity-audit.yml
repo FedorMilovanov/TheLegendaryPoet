@@ -81,5 +81,7 @@ jobs:
             test-results/site-route-integrity
             route-audit-preview.log
             public/sitemap.xml
+            public/discovery-manifest.json
+            public/feed.xml
           if-no-files-found: warn
           retention-days: 7

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks } from '../src/data/poets.ts';
+import { canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const OUTPUT = path.resolve('public/feed.xml');
@@ -57,11 +58,11 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?>
   <link href="${BASE}/" />
   <link rel="self" type="application/atom+xml" href="${BASE}/feed.xml" />
   <updated>${feedUpdated}</updated>
-  <author><name>THE LEGENDARY POET</name><uri>${BASE}/about</uri></author>
+  <author><name>THE LEGENDARY POET</name><uri>${canonicalRouteUrl(BASE, '/about')}</uri></author>
 ${entries.map((entry) => `  <entry>
-    <id>${BASE}${entry.path}</id>
+    <id>${canonicalRouteUrl(BASE, entry.path)}</id>
     <title>${escapeXml(entry.title)}</title>
-    <link href="${BASE}${entry.path}" />
+    <link href="${canonicalRouteUrl(BASE, entry.path)}" />
     <published>${entry.published || entry.updated}</published>
     <updated>${entry.updated}</updated>
     <author><name>${escapeXml(entry.author)}</name></author>

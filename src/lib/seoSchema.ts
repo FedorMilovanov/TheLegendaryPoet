@@ -1,4 +1,5 @@
 import { siteConfig } from '../config/site';
+import { canonicalRouteUrl } from '../routes/publicUrl';
 
 export type JsonLdNode = Record<string, unknown>;
 
@@ -14,6 +15,15 @@ export function absoluteUrl(pathOrUrl?: string): string | undefined {
   if (!pathOrUrl) return undefined;
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
   return `${siteConfig.url}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+}
+
+export function absoluteRouteUrl(pathOrUrl?: string): string | undefined {
+  if (!pathOrUrl) return undefined;
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    const url = new URL(pathOrUrl);
+    return canonicalRouteUrl(url.origin, url.pathname);
+  }
+  return canonicalRouteUrl(siteConfig.url, pathOrUrl);
 }
 
 export function secondsToIsoDuration(seconds?: number): string | undefined {
@@ -59,12 +69,12 @@ export function breadcrumbSchema(items: SeoBreadcrumb[]): JsonLdNode | undefined
   if (items.length < 2) return undefined;
   return {
     '@type': 'BreadcrumbList',
-    '@id': `${absoluteUrl(items.at(-1)?.path)}#breadcrumb`,
+    '@id': `${absoluteRouteUrl(items.at(-1)?.path)}#breadcrumb`,
     itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
-      item: absoluteUrl(item.path),
+      item: absoluteRouteUrl(item.path),
     })),
   };
 }
@@ -97,7 +107,7 @@ export function buildWebPageSchema({
   datePublished,
   dateModified,
 }: WebPageSchemaInput): JsonLdNode {
-  const url = absoluteUrl(path)!;
+  const url = absoluteRouteUrl(path)!;
   const pageId = `${url}#webpage`;
   return schemaGraph([
     {
@@ -138,14 +148,14 @@ export function buildArticlePageSchema({
   datePublished,
   dateModified,
 }: ArticleSchemaInput): JsonLdNode {
-  const url = absoluteUrl(path)!;
+  const url = absoluteRouteUrl(path)!;
   const articleId = `${url}#article`;
   const imageUrl = absoluteUrl(image);
   const authorNode = /legendary poet|редакц/i.test(author)
-    ? { '@type': 'Organization', '@id': ORGANIZATION_ID, name: author, url: `${siteConfig.url}/about` }
-    : { '@type': 'Person', name: author, url: `${siteConfig.url}/about` };
+    ? { '@type': 'Organization', '@id': ORGANIZATION_ID, name: author, url: absoluteRouteUrl('/about') }
+    : { '@type': 'Person', name: author, url: absoluteRouteUrl('/about') };
   const about = poet
-    ? { '@type': 'Person', '@id': `${siteConfig.url}/poets/${poet.id}#person`, name: poet.name }
+    ? { '@type': 'Person', '@id': `${absoluteRouteUrl(`/poets/${poet.id}`)}#person`, name: poet.name }
     : undefined;
 
   return schemaGraph([
@@ -200,7 +210,7 @@ interface PoetPageSchemaInput extends WebPageSchemaInput {
 }
 
 export function buildPoetPageSchema({ title, description, path, breadcrumbs = [], poet }: PoetPageSchemaInput): JsonLdNode {
-  const url = absoluteUrl(path)!;
+  const url = absoluteRouteUrl(path)!;
   const personId = `${url}#person`;
   return schemaGraph([
     {
@@ -250,12 +260,12 @@ interface MusicPageSchemaInput extends WebPageSchemaInput {
 }
 
 export function buildMusicPageSchema({ title, description, path, breadcrumbs = [], track }: MusicPageSchemaInput): JsonLdNode {
-  const url = absoluteUrl(path)!;
+  const url = absoluteRouteUrl(path)!;
   const workId = `${url}#recording`;
   const image = absoluteUrl(track.wideCoverUrl || track.coverUrl);
   const poetNode = {
     '@type': 'Person',
-    '@id': track.poetId ? `${siteConfig.url}/poets/${track.poetId}#person` : undefined,
+    '@id': track.poetId ? `${absoluteRouteUrl(`/poets/${track.poetId}`)}#person` : undefined,
     name: track.poet,
   };
 
