@@ -12,9 +12,9 @@ function PoemQuickRow({ poem }: { poem: Poem }) {
   };
 
   return (
-    <a href={`#poem-${poem.id}`} onClick={handleClick} className="block rounded-2xl border border-cyan-400/10 bg-black/20 p-3 transition hover:border-cyan-400/25 hover:bg-cyan-400/5">
-      <div className="mb-1 text-sm font-semibold text-white">{poem.title}</div>
-      <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em] text-cyan-100/40">
+    <a href={`#poem-${poem.id}`} onClick={handleClick} className="theme-elevated-surface block rounded-2xl border p-3 transition hover:border-cyan-400/25">
+      <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
+      <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
         <span>{poem.year || 'год не указан'}</span>
         {feedback.ratingCount > 0 && (
           <span className="inline-flex items-center gap-1 text-cyan-300">
@@ -37,7 +37,7 @@ interface PoemQuickNavProps {
 
 export default function PoemQuickNav({ poems }: PoemQuickNavProps) {
   return (
-    <div className="luxury-card p-6 rounded-3xl border border-cyan-400/10 bg-[#061018]/65">
+    <div className="luxury-card rounded-3xl border border-cyan-400/10 p-6">
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Навигация по лирике</h3>
       <div className="space-y-3">
         {poems.map((poem) => (
