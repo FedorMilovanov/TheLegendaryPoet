@@ -57,8 +57,11 @@ function ensureGoogleCommandQueue() {
   if (typeof window === 'undefined') return;
   (window as any).dataLayer = (window as any).dataLayer || [];
   if (typeof (window as any).gtag !== 'function') {
-    (window as any).gtag = (...args: unknown[]) => {
-      (window as any).dataLayer.push(args);
+    // Match Google's canonical gtag bootstrap exactly: gtag.js consumes the
+    // Arguments object pushed by this function. Plain arrays can look correct
+    // in dataLayer while never being executed into measurement requests.
+    (window as any).gtag = function () {
+      (window as any).dataLayer.push(arguments);
     };
   }
 }
