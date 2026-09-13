@@ -24,7 +24,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
   );
   const primaryTag = poet.tags[0];
   return (
-    <div className="relative w-full h-[90vh] md:h-[56vw] md:max-h-[1100px] md:min-h-[620px] overflow-hidden bg-[#050505] flex flex-col justify-end pb-12">
+    <div className="theme-dark-island relative flex h-[90vh] w-full flex-col justify-end overflow-hidden pb-12 md:h-[56vw] md:max-h-[1100px] md:min-h-[620px]">
       {/* Height is width-driven (not vh) from md up: on short/wide desktop
           windows a pure vh height crops the portrait down to hairline —
           keying off vw holds the crop ratio steady regardless of window
@@ -42,7 +42,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
           style={vtShared(`poet-portrait-${poet.id}`)}
           className="w-full h-full object-cover object-[center_18%] contrast-[1.03] opacity-90"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+        <div className="poet-hero-shade absolute inset-0" />
       </motion.div>
       
       {/* Floating Particles Effect */}
@@ -73,14 +73,14 @@ export default function HeroSection({ poet }: HeroSectionProps) {
         >
           <Link
             to="/poets"
-            className="inline-flex items-center gap-2 text-cyan-300/80 hover:text-cyan-300 mb-6 transition-colors text-[10px] font-bold tracking-[0.2em] uppercase backdrop-blur-md px-5 py-2.5 rounded-full border border-cyan-400/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]"
+            className="theme-dark-island-accent mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 px-5 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-md transition-colors hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,212,255,0.3)]"
           >
             <ArrowLeft size={14} /> Все поэты
           </Link>
           
           {primaryTag && (
             <div className="mb-4">
-              <span className="inline-block text-[10px] font-bold tracking-[0.3em] text-cyan-300 bg-cyan-950/30 px-4 py-1.5 rounded-full border border-cyan-400/30 uppercase neon-cyan-glow">
+              <span className="theme-dark-island-accent inline-block rounded-full border border-cyan-400/30 bg-cyan-950/30 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] neon-cyan-glow">
                 {primaryTag}
               </span>
             </div>
@@ -89,7 +89,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
           <h1 className="text-5xl md:text-8xl lg:text-[8rem] font-serif font-bold leading-[0.9] tracking-tighter editorial-title drop-shadow-[0_0_30px_rgba(212,175,55,0.3)]">
             <span className="gold-gradient gold-glow-text">{poet.name}</span>
           </h1>
-          <p className="text-xl md:text-3xl text-luxury-gray-light font-serif italic mt-6 max-w-2xl drop-shadow-lg">
+          <p className="theme-dark-island-muted mt-6 max-w-2xl font-serif text-xl italic drop-shadow-lg md:text-3xl">
             {poet.fullName}
           </p>
         </motion.div>
