@@ -67,7 +67,11 @@ for (const urlString of uniqueUrls) {
   expect(html.includes(`<meta property="og:url" content="${urlString}" />`), `og:url mismatch for ${url.pathname}`);
   expect(!/<meta name="robots" content="[^"]*noindex/i.test(html), `sitemap route is noindex: ${url.pathname}`);
   const jsonLdMatch = html.match(/<script id="route-jsonld" type="application\/ld\+json">([\s\S]*?)<\/script>/);
-  expect(Boolean(jsonLdMatch), `structured data missing for ${url.pathname}`);
+  if (url.pathname === '/') {
+    expect(html.includes('type="application/ld+json"'), 'root document must retain bootstrap structured data before hydration');
+  } else {
+    expect(Boolean(jsonLdMatch), `route structured data missing for ${url.pathname}`);
+  }
   if (jsonLdMatch) {
     try {
       const jsonLd = JSON.parse(jsonLdMatch[1]);
