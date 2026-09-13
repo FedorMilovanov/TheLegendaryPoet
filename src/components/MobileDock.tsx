@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Trophy } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { motion } from 'framer-motion';
@@ -46,6 +47,36 @@ function DockLink({ link, active }: { link: (typeof dockLinks)[number]; active: 
 
 export default function MobileDock() {
   const location = useLocation();
+  const dockRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const root = document.documentElement;
+
+    const publishVisualHeight = () => {
+      const dockRect = dock.getBoundingClientRect();
+      const fab = dock.querySelector<HTMLElement>('.dock-fab');
+      const fabRect = fab?.getBoundingClientRect();
+      const top = fabRect ? Math.min(dockRect.top, fabRect.top) : dockRect.top;
+      const bottom = fabRect ? Math.max(dockRect.bottom, fabRect.bottom) : dockRect.bottom;
+      const visualHeight = bottom - top;
+      if (visualHeight > 1) root.style.setProperty('--tlp-mobile-dock-clearance', `${Math.ceil(visualHeight)}px`);
+    };
+
+    publishVisualHeight();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publishVisualHeight);
+    observer?.observe(dock);
+    const fab = dock.querySelector<HTMLElement>('.dock-fab');
+    if (fab) observer?.observe(fab);
+    window.addEventListener('resize', publishVisualHeight, { passive: true });
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', publishVisualHeight);
+      root.style.removeProperty('--tlp-mobile-dock-clearance');
+    };
+  }, []);
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -55,7 +86,7 @@ export default function MobileDock() {
   };
 
   return (
-    <nav className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
+    <nav ref={dockRef} className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
       <motion.div
         className="dock-rail"
         initial={{ y: 90, opacity: 0 }}
