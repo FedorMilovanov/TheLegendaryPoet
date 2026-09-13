@@ -51,6 +51,7 @@ const notFoundRoutes = routeContract.notFoundProbes;
 const renderedRoutes = [...new Set([...canonicalRoutes, ...utilityRoutes])];
 const knownInternalPaths = new Set([
   ...renderedRoutes,
+  ...canonicalRoutes.map((route) => route === '/' ? route : route.replace(/\/$/, '')),
   ...routeContract.routes.map((route) => route.path).filter((routePath) => routePath !== '*'),
   ...redirects.flatMap(([source, target]) => [source, target, canonicalPublicPath(target)]),
 ]);
@@ -332,7 +333,7 @@ test('lazy loading owns a neutral machine head before the destination settles', 
 
   const ready = await machineHeadSnapshot(page);
   expect(new URL(ready.canonical, page.url()).pathname).toBe('/privacy/');
-  expect(ready.ogUrl).toContain('/privacy');
+  expect(new URL(ready.ogUrl, page.url()).pathname).toBe('/privacy/');
   expect(ready.routeJsonLd).toBe(true);
 });
 
@@ -355,7 +356,7 @@ test('lazy route error clears stale head and reload recovery restores canonical 
   await settleRoute(page);
   const recovered = await machineHeadSnapshot(page);
   expect(new URL(recovered.canonical).pathname).toBe('/ratings/');
-  expect(recovered.ogUrl).toContain('/ratings');
+  expect(new URL(recovered.ogUrl, page.url()).pathname).toBe('/ratings/');
   expect(recovered.routeJsonLd).toBe(true);
   expect(recovered.title).not.toMatch(/Ошибка загрузки страницы/i);
 });
