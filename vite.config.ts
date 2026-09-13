@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
+import { canonicalRoutePath, canonicalRouteUrl } from './src/routes/publicUrl';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,11 +70,12 @@ function legacyAliasDocumentsPlugin(): Plugin {
       for (const { from, to } of redirects) {
         if (sources.has(to)) throw new Error(`legacy alias chains are forbidden: ${from} -> ${to}`);
 
-        const canonicalUrl = `${PRODUCTION_ORIGIN}${to}`;
+        const publicTarget = canonicalRoutePath(to);
+        const canonicalUrl = canonicalRouteUrl(PRODUCTION_ORIGIN, to);
         const sourceAttr = escapeAliasHtml(from);
-        const targetAttr = escapeAliasHtml(to);
+        const targetAttr = escapeAliasHtml(publicTarget);
         const canonicalAttr = escapeAliasHtml(canonicalUrl);
-        const targetJson = JSON.stringify(to).replace(/</g, '\\u003c');
+        const targetJson = JSON.stringify(publicTarget).replace(/</g, '\\u003c');
         const html = `<!doctype html>
 <html lang="ru" data-legacy-alias="${sourceAttr}">
   <head>

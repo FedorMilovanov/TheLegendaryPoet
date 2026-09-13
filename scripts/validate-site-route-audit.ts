@@ -44,6 +44,9 @@ assert.match(spec, /routeContract\.routes/);
 assert.match(spec, /routeContract\.redirects/);
 assert.match(spec, /routeContract\.notFoundProbes/);
 assert.match(spec, /knownInternalPaths/);
+assert.match(spec, /canonicalPublicPath/);
+assert.match(spec, /canonical sitemap route must already be terminal/);
+assert.match(spec, /const publicTarget = canonicalPublicPath\(target\)/);
 assert.match(spec, /unknown internal route links rendered on/);
 assert.match(spec, /page\.on\('pageerror'/);
 assert.match(spec, /response\.status\(\) >= 400/);
@@ -88,6 +91,9 @@ assert.match(workflow, /playwright install --with-deps chromium/);
 assert.match(workflow, /qa\/site-route-integrity\.spec\.mjs/);
 assert.match(workflow, /playwright\.route-audit\.config\.mjs/);
 assert.match(workflow, /site-route-integrity-evidence/);
+assert.match(workflow, /public\/sitemap\.xml/);
+assert.match(workflow, /public\/discovery-manifest\.json/);
+assert.match(workflow, /public\/feed\.xml/);
 assert.doesNotMatch(workflow, /--retries=0/);
 assert.doesNotMatch(workflow, /webkit|firefox/i);
 
@@ -106,5 +112,8 @@ assert.match(seoOutput, /routeContract\.redirects/);
 assert.match(seoOutput, /legacy alias leaked into sitemap/);
 assert.match(seoOutput, /legacy alias canonical target mismatch/);
 assert.match(seoOutput, /legacy alias refresh target mismatch/);
+assert.match(seoOutput, /sitemap URL must already be terminal/);
+assert.match(seoOutput, /JSON-LD WebPage\.url mismatch/);
+assert.match(seoOutput, /feed entry URL must already be terminal/);
 
 console.log('site route audit: route-contract inventory, materialized GitHub Pages aliases, strict initial/final URL evidence, primary-CI lock and isolated Chromium execution locked');
