@@ -15,13 +15,13 @@ export default function PoetCommunitySummary({ poetId }: PoetCommunitySummaryPro
   const weakest = [...sorted].reverse().find((item) => item.value > 0);
 
   return (
-    <div className="luxury-card p-6 rounded-3xl border border-cyan-400/10 bg-[#061018]/65">
+    <div className="luxury-card rounded-3xl border border-cyan-400/10 p-6">
       <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-300">
         <ShieldCheck size={12} /> Сводка сообщества
       </div>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <div className="text-3xl font-bold text-white">
+          <div className="theme-text text-3xl font-bold">
             {feedback.ratingCount ? feedback.summary.overall.toFixed(1) : '—'}
           </div>
           <div className="text-xs text-cyan-100/38">{feedback.ratingCount} оценок · {feedback.trust}</div>
@@ -35,13 +35,13 @@ export default function PoetCommunitySummary({ poetId }: PoetCommunitySummaryPro
       {(strongest || weakest) && (
         <div className="mb-4 grid gap-2">
           {strongest && (
-            <div className="rounded-2xl border border-cyan-400/10 bg-black/20 px-3 py-2 text-[11px] text-cyan-100/58">
+            <div className="theme-elevated-surface theme-functional-muted rounded-2xl border px-3 py-2 text-[11px]">
               <span className="mr-2 uppercase tracking-[0.12em] text-cyan-300">Сильная сторона</span>
               {strongest.label}
             </div>
           )}
           {weakest && (
-            <div className="rounded-2xl border border-cyan-400/10 bg-black/20 px-3 py-2 text-[11px] text-cyan-100/58">
+            <div className="theme-elevated-surface theme-functional-muted rounded-2xl border px-3 py-2 text-[11px]">
               <span className="mr-2 uppercase tracking-[0.12em] text-cyan-300">Слабее всего</span>
               {weakest.label}
             </div>
@@ -53,7 +53,7 @@ export default function PoetCommunitySummary({ poetId }: PoetCommunitySummaryPro
           const value = feedback.summary.dimensions[dimension.key] || 0;
           return (
             <div key={dimension.key}>
-              <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-cyan-100/45">
+              <div className="theme-functional-muted mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.14em]">
                 <span>{dimension.label}</span>
                 <span>{value ? value.toFixed(1) : '—'}</span>
               </div>
