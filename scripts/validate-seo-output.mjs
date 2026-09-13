@@ -42,7 +42,7 @@ expect(rootHtml.includes('rel="alternate" type="application/atom+xml"'), 'root H
 expect(rootHtml.includes('name="google-site-verification"'), 'production HTML must include Google ownership verification');
 expect(rootHtml.includes('name="yandex-verification"'), 'production HTML must include Yandex ownership verification');
 
-const feedEntryUrls = [...feed.matchAll(/<(?:id|link href)="?(https:\/\/thelegendarypoet\.ru\/(?:essays|music)\/[^"<]+)"?\s*\/?>(?:<\/id>)?/g)]
+const feedEntryUrls = [...feed.matchAll(/<entry>[\s\S]*?<id>(https:\/\/thelegendarypoet\.ru\/(?:essays|music)\/[^<]+)<\/id>[\s\S]*?<\/entry>/g)]
   .map((match) => match[1]);
 for (const urlString of feedEntryUrls) {
   expect(new URL(urlString).pathname.endsWith('/'), `feed entry URL must already be terminal: ${urlString}`);
@@ -64,8 +64,21 @@ for (const urlString of uniqueUrls) {
 
   const html = htmlForPath(url.pathname);
   expect(html.includes(`<link rel="canonical" href="${urlString}" />`), `canonical mismatch for ${url.pathname}`);
+  expect(html.includes(`<meta property="og:url" content="${urlString}" />`), `og:url mismatch for ${url.pathname}`);
   expect(!/<meta name="robots" content="[^"]*noindex/i.test(html), `sitemap route is noindex: ${url.pathname}`);
-  expect(html.includes('type="application/ld+json"'), `structured data missing for ${url.pathname}`);
+  const jsonLdMatch = html.match(/<script id="route-jsonld" type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  expect(Boolean(jsonLdMatch), `structured data missing for ${url.pathname}`);
+  if (jsonLdMatch) {
+    try {
+      const jsonLd = JSON.parse(jsonLdMatch[1]);
+      const graph = Array.isArray(jsonLd?.['@graph']) ? jsonLd['@graph'] : [];
+      const webPage = graph.find((node) => node?.['@type'] === 'WebPage');
+      expect(webPage?.url === urlString, `JSON-LD WebPage.url mismatch for ${url.pathname}`);
+      expect(webPage?.['@id'] === `${urlString}#webpage`, `JSON-LD WebPage @id mismatch for ${url.pathname}`);
+    } catch (error) {
+      expect(false, `invalid route JSON-LD for ${url.pathname}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
 
 for (const { from, to } of routeContract.redirects) {
