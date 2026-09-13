@@ -31,6 +31,8 @@
   --tlp-modal-result: rgba(0, 0, 0, 0.2);
   --tlp-modal-result-active: rgba(34, 211, 238, 0.11);
   --tlp-modal-shadow: 0 0 80px rgba(0, 212, 255, 0.16);
+  --tlp-spiritual-bg: linear-gradient(145deg, #0e0c07 0%, #050505 100%);
+  --tlp-moral-bg: linear-gradient(145deg, #100808 0%, #0a0606 52%, #050505 100%);
 }
 
 html.theme-light {
@@ -67,6 +69,8 @@ html.theme-light {
   --tlp-modal-result: rgba(13, 120, 150, 0.035);
   --tlp-modal-result-active: rgba(13, 120, 150, 0.11);
   --tlp-modal-shadow: 0 28px 90px rgba(77, 59, 38, 0.22);
+  --tlp-spiritual-bg: linear-gradient(145deg, #fffaf0 0%, #f3e8cc 100%);
+  --tlp-moral-bg: linear-gradient(145deg, #fffaf7 0%, #f7e9e5 52%, #efe1d8 100%);
 }
 
 .theme-page-surface {
@@ -234,4 +238,14 @@ html.theme-light body {
 }
 .poet-hero-shade {
   background: linear-gradient(to top, #050505 0%, rgba(5, 5, 5, 0.62) 52%, transparent 100%) !important;
+}
+
+.theme-spiritual-surface {
+  background: var(--tlp-spiritual-bg) !important;
+  color: var(--tlp-text);
+}
+
+.theme-moral-surface {
+  background: var(--tlp-moral-bg) !important;
+  color: var(--tlp-text);
 }
