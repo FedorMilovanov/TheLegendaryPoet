@@ -52,11 +52,16 @@ export default function MobileDock() {
   const publishVisualHeight = useCallback(() => {
     const dock = dockRef.current;
     if (!dock) return;
-    const dockRect = dock.getBoundingClientRect();
-    const fab = dock.querySelector<HTMLElement>('.dock-fab');
+    const rail = dock.querySelector<HTMLElement>('.dock-rail');
+    if (!rail) return;
+    const railRect = rail.getBoundingClientRect();
+    const fab = rail.querySelector<HTMLElement>('.dock-fab');
     const fabRect = fab?.getBoundingClientRect();
-    const top = fabRect ? Math.min(dockRect.top, fabRect.top) : dockRect.top;
-    const bottom = fabRect ? Math.max(dockRect.bottom, fabRect.bottom) : dockRect.bottom;
+    // Measure elements that share the same animated transform coordinate space.
+    // Mixing the fixed nav rect with the translating rail rect over-reports the
+    // clearance during entrance motion (notably in WebKit).
+    const top = fabRect ? Math.min(railRect.top, fabRect.top) : railRect.top;
+    const bottom = fabRect ? Math.max(railRect.bottom, fabRect.bottom) : railRect.bottom;
     const visualHeight = bottom - top;
     if (visualHeight > 1) {
       document.documentElement.style.setProperty('--tlp-mobile-dock-clearance', `${Math.ceil(visualHeight)}px`);
