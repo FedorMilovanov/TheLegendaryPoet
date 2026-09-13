@@ -4,7 +4,8 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
 async function pageViews(page) {
   return page.evaluate(() => (window.dataLayer || [])
-    .filter((entry) => Array.isArray(entry) && entry[0] === 'event' && entry[1] === 'page_view')
+    .map((entry) => Array.from(entry ?? []))
+    .filter((entry) => entry[0] === 'event' && entry[1] === 'page_view')
     .map((entry) => entry[2]));
 }
 
@@ -62,6 +63,7 @@ test.describe('semantic analytics route authority', () => {
 async function providerState(page) {
   return page.evaluate(() => {
     const dataLayer = Array.isArray(window.dataLayer) ? window.dataLayer : [];
+    const googleCommands = dataLayer.map((entry) => Array.from(entry ?? []));
     const ymQueue = Array.isArray(window.ym?.a) ? window.ym.a : [];
     return {
       consent: localStorage.getItem('tlp:analytics-consent:v1'),
@@ -69,10 +71,13 @@ async function providerState(page) {
       yandexDisabled: window.disableYaCounter98765432,
       googleScripts: document.querySelectorAll('script[data-tlp-analytics-provider="google"]').length,
       yandexScripts: document.querySelectorAll('script[data-tlp-analytics-provider="yandex"]').length,
-      googleConfigCount: dataLayer.filter((entry) => Array.isArray(entry) && entry[0] === 'config' && entry[1] === 'G-TLPQA00001').length,
-      googleConsentUpdates: dataLayer
-        .filter((entry) => Array.isArray(entry) && entry[0] === 'consent' && entry[1] === 'update')
+      googleConfigCount: googleCommands.filter((entry) => entry[0] === 'config' && entry[1] === 'G-TLPQA00001').length,
+      googleConsentUpdates: googleCommands
+        .filter((entry) => entry[0] === 'consent' && entry[1] === 'update')
         .map((entry) => entry[2]?.analytics_storage),
+      googleCommandsUseOfficialArgumentsShape: dataLayer
+        .filter((entry) => Array.from(entry ?? []).length > 0)
+        .every((entry) => !Array.isArray(entry) && Object.prototype.toString.call(entry) === '[object Arguments]'),
       yandexInitCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'init').length,
       yandexDestructCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'destruct').length,
     };
@@ -112,6 +117,7 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
+      expect(state.googleCommandsUseOfficialArgumentsShape).toBe(true);
       expect(state.googleConsentUpdates.at(-1)).toBe('granted');
       expect(state.yandexInitCount).toBe(1);
       expect(state.yandexDestructCount).toBe(0);
@@ -169,6 +175,7 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleScripts).toBe(1);
       expect(state.yandexScripts).toBe(1);
       expect(state.googleConfigCount).toBe(1);
+      expect(state.googleCommandsUseOfficialArgumentsShape).toBe(true);
       expect(state.googleConsentUpdates).toEqual(['denied', 'granted', 'denied', 'granted']);
       expect(state.yandexInitCount).toBe(2);
       expect(state.yandexDestructCount).toBe(1);
