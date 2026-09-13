@@ -782,3 +782,59 @@ test('engine identity is honest for Android Chrome and iPhone Safari', async ({ 
   expect(identity.coarsePointer).toBe(true);
   expect(identity.maxTouchPoints > 0 || identity.touchEventSurface).toBe(true);
 });
+
+test('route changes cannot inherit hidden reading chrome', async ({ page }) => {
+  const runtime = attachRuntimeDiagnostics(page);
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+
+  await page.evaluate(() => {
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({ top: Math.min(1200, Math.max(520, maxScroll)), behavior: 'auto' });
+  });
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'downward scrolling should hide reading chrome before route transition' },
+  ).toBe(true);
+
+  const navigated = await page.evaluate(() => {
+    const link = document.querySelector('#main-content a[href="/poets"]');
+    if (!(link instanceof HTMLAnchorElement)) return false;
+    link.click();
+    return true;
+  });
+  expect(navigated, 'homepage should expose a real poets route link').toBe(true);
+  await expect(page).toHaveURL(/\/poets$/);
+  await settle(page);
+
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'new route must begin with visible chrome ownership' },
+  ).toBe(false);
+  await expectDockInsideViewport(page);
+  await expect(page.locator('.site-header')).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.mobile-dock')).not.toHaveAttribute('aria-hidden', 'true');
+  await expectCleanRuntime(runtime);
+});
+
+test('mobile dock publishes live clearance for persistent audio geometry', async ({ page }) => {
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+  await expectDockInsideViewport(page);
+
+  const measurement = await page.evaluate(() => {
+    const dock = document.querySelector('.mobile-dock');
+    const fab = dock?.querySelector('.dock-fab');
+    if (!(dock instanceof HTMLElement)) return null;
+    const dockRect = dock.getBoundingClientRect();
+    const fabRect = fab instanceof HTMLElement ? fab.getBoundingClientRect() : null;
+    const visualHeight = Math.max(dockRect.bottom, fabRect?.bottom ?? dockRect.bottom)
+      - Math.min(dockRect.top, fabRect?.top ?? dockRect.top);
+    const published = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tlp-mobile-dock-clearance'));
+    return { visualHeight, published };
+  });
+
+  expect(measurement).not.toBeNull();
+  expect(measurement.published).toBeGreaterThanOrEqual(measurement.visualHeight - 1);
+  expect(measurement.published).toBeLessThanOrEqual(measurement.visualHeight + 2);
+});
