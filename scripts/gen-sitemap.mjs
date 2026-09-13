@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
+import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const OUTPUT = path.resolve('public/sitemap.xml');
@@ -36,7 +37,7 @@ function validDate(value) {
 }
 
 function renderUrl({ loc, lastmod, image }) {
-  const lines = ['  <url>', `    <loc>${escapeXml(`${BASE}${loc}`)}</loc>`];
+  const lines = ['  <url>', `    <loc>${escapeXml(canonicalRouteUrl(BASE, loc))}</loc>`];
   if (lastmod) lines.push(`    <lastmod>${escapeXml(lastmod)}</lastmod>`);
   if (image?.loc) {
     lines.push('    <image:image>');
@@ -136,7 +137,7 @@ const urls = [
       caption: poet.shortBio,
     },
   })),
-];
+].map((item) => ({ ...item, loc: canonicalRoutePath(item.loc) }));
 
 const seen = new Set();
 for (const item of urls) {
@@ -159,6 +160,7 @@ const globalAuthority = {
   useSeo: fileHash('src/hooks/useSeo.ts'),
   discoveryHead: fileHash('src/routes/discoveryHead.ts'),
   seoSchema: fileHash('src/lib/seoSchema.ts'),
+  publicUrl: fileHash('src/routes/publicUrl.ts'),
   siteConfig: fileHash('src/config/site.ts'),
   prerender: fileHash('scripts/prerender-og.mjs'),
   appShell: fileHash('src/App.tsx'),
@@ -176,9 +178,9 @@ const dataDependencies = {
 };
 
 const dynamicContentByPath = new Map([
-  ...essays.map((essay) => [`/essays/${essay.slug}`, essay]),
-  ...publishedTracks.map((track) => [`/music/${track.id}`, track]),
-  ...poets.map((poet) => [`/poets/${poet.id}`, poet]),
+  ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), essay]),
+  ...publishedTracks.map((track) => [canonicalRoutePath(`/music/${track.id}`), track]),
+  ...poets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),
 ]);
 
 const manifestRoutes = urls.map((item) => {
@@ -186,7 +188,7 @@ const manifestRoutes = urls.map((item) => {
   const moduleHash = fileHash(route.module);
   const content = dynamicContentByPath.get(item.loc) ?? dataDependencies[route.id] ?? null;
   return {
-    url: `${BASE}${item.loc}`,
+    url: canonicalRouteUrl(BASE, item.loc),
     path: item.loc,
     routeId: route.id,
     state: route.discoveryState,
