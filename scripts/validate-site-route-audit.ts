@@ -91,6 +91,9 @@ assert.match(workflow, /playwright install --with-deps chromium/);
 assert.match(workflow, /qa\/site-route-integrity\.spec\.mjs/);
 assert.match(workflow, /playwright\.route-audit\.config\.mjs/);
 assert.match(workflow, /site-route-integrity-evidence/);
+assert.match(workflow, /public\/sitemap\.xml/);
+assert.match(workflow, /public\/discovery-manifest\.json/);
+assert.match(workflow, /public\/feed\.xml/);
 assert.doesNotMatch(workflow, /--retries=0/);
 assert.doesNotMatch(workflow, /webkit|firefox/i);
 
