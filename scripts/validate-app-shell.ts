@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { inspectSource } from './lib/source-contract-ast';
+import { validateThemeContract } from './validate-theme-contract';
 
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -8,6 +9,10 @@ const failures: string[] = [];
 const expect = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
+
+for (const failure of validateThemeContract(root)) {
+  failures.push(`theme contract: ${failure}`);
+}
 
 const app = read('src/App.tsx');
 const routes = read('src/routes/routeModules.ts');

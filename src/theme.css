@@ -214,7 +214,8 @@ html.theme-light body {
 /* Explicit dark islands preserve immersive media without leaking dark-theme
    assumptions into the surrounding page. Descendants should use the semantic
    island text classes below, not generic theme-aware text utilities. */
-.theme-dark-island {
+.theme-dark-island,
+[data-hall-production-mode] {
   color-scheme: dark;
   --tlp-island-text: #f5f1e8;
   --tlp-island-muted: #a9c6d1;
