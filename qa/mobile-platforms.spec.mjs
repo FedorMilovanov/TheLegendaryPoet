@@ -59,6 +59,11 @@ function attachRuntimeDiagnostics(page) {
 
 async function settle(page) {
   await page.locator('#main-content').waitFor({ state: 'visible', timeout: 20_000 });
+  const analyticsConsent = page.locator('aside[aria-label="Настройки аналитики"]');
+  if (await analyticsConsent.isVisible().catch(() => false)) {
+    await analyticsConsent.getByRole('button', { name: 'Без аналитики' }).click();
+    await expect(analyticsConsent).toBeHidden();
+  }
   await page.waitForTimeout(700);
 }
 
@@ -551,7 +556,7 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
   await restoreChromeAtTop(page, { nativeWebKit });
   await expectDockInsideViewport(page);
   await page.locator('.mobile-dock').getByRole('link', { name: 'Рейтинг' }).tap();
-  await expect(page).toHaveURL(/\/ratings$/);
+  await expect(page).toHaveURL(/\/ratings\/?$/);
   await expect(audio).toHaveCount(1);
 
   const geometry = await page.evaluate(() => {
@@ -604,7 +609,7 @@ test('portrait, landscape and back navigation stay stable', async ({ page }, tes
   await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'domcontentloaded' });
   await settle(page);
   await page.goBack({ waitUntil: 'domcontentloaded' });
-  await expect(page).toHaveURL(/\/articles$/);
+  await expect(page).toHaveURL(/\/articles\/?$/);
   await settle(page);
 
   if (original) await page.setViewportSize(original);
@@ -804,7 +809,7 @@ test('route changes cannot inherit hidden reading chrome', async ({ page }) => {
     return true;
   });
   expect(navigated, 'homepage should expose a real poets route link').toBe(true);
-  await expect(page).toHaveURL(/\/poets$/);
+  await expect(page).toHaveURL(/\/poets\/?$/);
   await settle(page);
 
   await expect.poll(

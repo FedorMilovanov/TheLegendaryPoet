@@ -73,7 +73,7 @@ export default function AnalyticsConsentBanner() {
   return (
     <aside
       aria-label="Настройки аналитики"
-      className="fixed inset-x-3 bottom-20 z-[140] mx-auto max-w-3xl rounded-3xl border border-cyan-300/18 bg-[#071018]/96 p-5 shadow-[0_28px_100px_rgba(0,0,0,0.7)] backdrop-blur-2xl md:bottom-5 md:p-6"
+      className="analytics-consent-banner theme-dark-island fixed inset-x-3 z-[105] mx-auto max-w-3xl rounded-3xl border border-cyan-300/18 bg-[#071018]/96 p-5 shadow-[0_28px_100px_rgba(0,0,0,0.7)] backdrop-blur-2xl md:p-6"
     >
       <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
         <div>
