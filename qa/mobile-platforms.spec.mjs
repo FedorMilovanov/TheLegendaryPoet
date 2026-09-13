@@ -50,7 +50,13 @@ function attachRuntimeDiagnostics(page) {
     if (!url.startsWith(BASE_URL)) return;
     const failure = request.failure()?.errorText || 'unknown failure';
     if (/ERR_ABORTED/i.test(failure)) return;
-    if ((request.resourceType() === 'media' || /\.mp3(?:$|\?)/i.test(url)) && /cancelled/i.test(failure)) return;
+
+    const resourceType = request.resourceType();
+    const expectedNavigationCancellation = /load request cancelled/i.test(failure)
+      && ['image', 'font', 'stylesheet', 'script'].includes(resourceType);
+    if (expectedNavigationCancellation) return;
+    if ((resourceType === 'media' || /\.mp3(?:$|\?)/i.test(url)) && /cancelled/i.test(failure)) return;
+
     result.localRequestFailures.push(`${request.method()} ${url}: ${failure}`);
   });
 
