@@ -57,8 +57,11 @@ function ensureGoogleCommandQueue() {
   if (typeof window === 'undefined') return;
   (window as any).dataLayer = (window as any).dataLayer || [];
   if (typeof (window as any).gtag !== 'function') {
-    (window as any).gtag = (...args: unknown[]) => {
-      (window as any).dataLayer.push(args);
+    // Preserve Google's official command shape. gtag.js recognizes the
+    // Arguments object queued by the canonical snippet; plain arrays can
+    // remain visible in dataLayer without ever reaching /g/collect.
+    (window as any).gtag = function () {
+      (window as any).dataLayer.push(arguments);
     };
   }
 }
