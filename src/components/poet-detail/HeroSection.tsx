@@ -24,7 +24,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
   );
   const primaryTag = poet.tags[0];
   return (
-    <div className="theme-dark-island relative flex h-[90vh] w-full flex-col justify-end overflow-hidden pb-12 md:h-[56vw] md:max-h-[1100px] md:min-h-[620px]">
+    <div className="theme-dark-island poet-hero-surface relative flex h-[90vh] w-full flex-col justify-end overflow-hidden pb-12 md:h-[56vw] md:max-h-[1100px] md:min-h-[620px]">
       {/* Height is width-driven (not vh) from md up: on short/wide desktop
           windows a pure vh height crops the portrait down to hairline —
           keying off vw holds the crop ratio steady regardless of window
