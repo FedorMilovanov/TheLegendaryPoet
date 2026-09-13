@@ -113,7 +113,7 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-[120] overflow-y-auto overscroll-contain bg-black/70 px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
+      className="theme-modal-backdrop fixed inset-0 z-[120] overflow-y-auto overscroll-contain px-4 pb-[calc(2rem_+_env(safe-area-inset-bottom))] pt-[calc(5rem_+_env(safe-area-inset-top))] backdrop-blur-xl"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
@@ -124,10 +124,10 @@ export default function CommandPalette() {
         aria-modal="true"
         aria-label="Поиск по сайту"
         tabIndex={-1}
-        className="mx-auto flex max-h-[min(78dvh,46rem)] max-w-2xl flex-col overflow-hidden rounded-[2rem] border border-cyan-400/18 bg-[#050b12]/95 shadow-[0_0_80px_rgba(0,212,255,0.16)] outline-none"
+        className="theme-modal-surface mx-auto flex max-h-[min(78dvh,46rem)] max-w-2xl flex-col overflow-hidden rounded-[2rem] border outline-none"
       >
         <div className="flex flex-none items-center gap-3 border-b border-cyan-400/10 px-5 py-4">
-          <Search size={20} className="text-cyan-300" />
+          <Search size={20} className="theme-control-action" />
           <input
             ref={inputRef}
             value={query}
@@ -141,9 +141,9 @@ export default function CommandPalette() {
             role="combobox"
             autoComplete="off"
             maxLength={120}
-            className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-cyan-100/40"
+            className="theme-text theme-placeholder min-w-0 flex-1 bg-transparent text-base outline-none"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-cyan-100/50 transition hover:bg-white/[0.05] hover:text-cyan-200 focus-visible:text-cyan-200">
+          <button type="button" onClick={close} aria-label="Закрыть поиск" className="theme-functional-muted inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition hover:bg-cyan-400/[0.06] hover:text-cyan-300 focus-visible:text-cyan-300">
             <X size={20} />
           </button>
         </div>
@@ -151,7 +151,7 @@ export default function CommandPalette() {
           {results.map((item, index) => (
             <CommandResult key={item.id} item={item} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
-          {!results.length && <div className="p-8 text-center text-cyan-100/50">Ничего не найдено.</div>}
+          {!results.length && <div className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
         </div>
       </div>
     </div>
