@@ -15,6 +15,7 @@
   --tlp-rating-star-active: #67e8f9;
   --tlp-warning: #fcd34d;
   --tlp-focus-offset: #061018;
+  --tlp-focus-ring: rgba(0, 212, 255, 0.68);
   --tlp-theme-color: #050810;
 }
 
@@ -35,6 +36,7 @@ html.theme-light {
   --tlp-rating-star-active: #075f75;
   --tlp-warning: #7a4d00;
   --tlp-focus-offset: #fffaf0;
+  --tlp-focus-ring: #075f75;
   --tlp-theme-color: #fffaf0;
 }
 
