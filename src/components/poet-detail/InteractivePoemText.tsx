@@ -55,7 +55,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
   return (
     <div
       data-poem-text
-      className="poetry-text relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 bg-[#050505] px-8 py-8 text-2xl leading-[2] tracking-wide text-white shadow-inner md:px-12"
+      className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-8 py-8 text-2xl leading-[2] tracking-wide shadow-inner md:px-12"
       onPointerLeave={stopDwell}
     >
       <span

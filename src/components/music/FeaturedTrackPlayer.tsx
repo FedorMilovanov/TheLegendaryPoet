@@ -216,7 +216,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
         backgroundColor: 'var(--track-surface)',
         backgroundImage: 'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--track-accent) 19%, transparent), transparent 34%), radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--track-secondary) 15%, transparent), transparent 35%), linear-gradient(145deg, rgba(3,10,15,.78), rgba(5,5,5,.94))',
       }}
-      className={`group/player relative isolate overflow-hidden border border-white/[0.09] shadow-[0_34px_120px_rgba(0,0,0,0.52)] ${compact ? 'rounded-[2rem] p-4 sm:p-6 lg:p-7' : 'rounded-[2.6rem] p-5 sm:p-8 lg:p-11'}`}
+      className={`theme-dark-island group/player relative isolate overflow-hidden border border-white/[0.09] shadow-[0_34px_120px_rgba(0,0,0,0.52)] ${compact ? 'rounded-[2rem] p-4 sm:p-6 lg:p-7' : 'rounded-[2.6rem] p-5 sm:p-8 lg:p-11'}`}
     >
       {track.wideCoverUrl && (
         <img
@@ -286,7 +286,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
           <h2 className={`font-serif font-bold leading-[0.98] text-white drop-shadow-[0_8px_35px_rgba(0,0,0,0.55)] ${compact ? 'text-3xl sm:text-4xl lg:text-[2.8rem]' : 'text-4xl sm:text-5xl lg:text-6xl'}`}>{track.title}</h2>
           <p className="mt-3 text-base sm:text-lg" style={{ color: 'color-mix(in srgb, var(--track-accent) 82%, white)' }}>{track.poet} <span className="text-white/22">·</span> The Legendary Poet</p>
-          {track.description && <p className={`mt-5 max-w-2xl leading-relaxed text-white/52 ${compact ? 'line-clamp-3 text-sm sm:text-base' : 'text-sm sm:text-base'}`}>{track.description}</p>}
+          {track.description && <p className={`mt-5 max-w-2xl leading-relaxed text-white/52 ${compact ? 'text-sm sm:text-base' : 'text-sm sm:text-base'}`}>{track.description}</p>}
 
           {restoredPosition !== null && restoredPosition > 0 && (
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-xs text-white/58">

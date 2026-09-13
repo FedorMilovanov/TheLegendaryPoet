@@ -221,10 +221,11 @@ expect(routeScrollSource.includes('target.isConnected ? target : null'), 'hash f
 expect(archivePageSource.includes('data-archive-remove-id'), 'archive mutation controls must expose stable focus-handoff identity');
 expect(archivePageSource.includes('archiveStatusRef'), 'archive removal must own a stable fallback focus target');
 expect(archivePageSource.includes('scheduleProgrammaticFocus'), 'archive removal must schedule post-mutation focus ownership');
-expect(miniPlayerSource.includes('peer-focus:border-cyan'), 'mini-player seek must expose a visible focus owner');
+expect(miniPlayerSource.includes('seek-focus-shell') && miniPlayerSource.includes('seek-focus-indicator'), 'mini-player seek must expose the shared visible focus owner');
 expect(audioPlayerStyleSource.includes('max-width: 760px'), 'mini-player must retain a bounded responsive width without motion-owned transform centering');
 expect(!audioPlayerStyleSource.includes('transform: translateX(-50%)'), 'mini-player centering must not compete with Framer Motion transform ownership');
-expect(immersiveSource.includes('peer-focus:border-white'), 'immersive seek must expose a visible focus owner');
+expect(immersiveSource.includes('seek-focus-shell') && immersiveSource.includes('seek-focus-indicator'), 'immersive seek must expose the shared visible focus owner');
+expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator'), 'seek focus visibility must be owned by the cross-browser focus-within contract');
 
 if (failures.length) {
   console.error('\nInteraction runtime validation failed:');

@@ -47,7 +47,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         backgroundColor: 'var(--track-surface)',
         backgroundImage: 'linear-gradient(145deg, color-mix(in srgb, var(--track-surface) 92%, black), rgba(5,5,5,.93))',
       }}
-      className="group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition-[transform,border-color,box-shadow] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
+      className="theme-dark-island group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition-[transform,border-color,box-shadow] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
     >
       <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[232px]">
         <Link to={`/music/${track.id}`} className="block h-full w-full" aria-label={`Открыть публикацию «${track.title}»`}>

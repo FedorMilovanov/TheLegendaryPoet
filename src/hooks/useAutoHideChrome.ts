@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 import { focusProgrammatically } from '../utils/focusRuntime';
 
 /**
@@ -18,6 +19,8 @@ const HIDE_AFTER = 240; // never hide until scrolled at least this far
 const DELTA = 8; // ignore sub-pixel/jitter scrolls
 
 export function useAutoHideChrome() {
+  const { pathname } = useLocation();
+
   useEffect(() => {
     const root = document.documentElement;
     let lastY = window.scrollY;
@@ -88,5 +91,5 @@ export function useAutoHideChrome() {
       root.classList.remove('chrome-hidden');
       syncChromeAccessibility(false);
     };
-  }, []);
+  }, [pathname]);
 }

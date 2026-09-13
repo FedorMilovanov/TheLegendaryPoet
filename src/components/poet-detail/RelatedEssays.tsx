@@ -27,7 +27,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
           <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/60">
             Большие материалы
           </div>
-          <h2 id="poet-longreads-title" className="font-serif text-3xl font-bold text-white md:text-4xl">
+          <h2 id="poet-longreads-title" className="theme-text font-serif text-3xl font-bold md:text-4xl">
             {titleCase('Биография и исследования')}
           </h2>
         </div>
@@ -44,7 +44,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
           <TiltCard key={essay.id} intensity={5}>
             <Link
               to={`/essays/${essay.slug}`}
-              className="group block h-full overflow-hidden rounded-[2rem] border border-white/8 bg-[#090909] shadow-[0_22px_65px_rgba(0,0,0,0.34)] transition hover:border-luxury-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
+              className="theme-elevated-surface group block h-full overflow-hidden rounded-[2rem] border shadow-[0_22px_65px_rgba(0,0,0,0.18)] transition hover:border-luxury-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
             >
               <EssayCover
                 src={essay.cardCover || essay.cover}
@@ -62,13 +62,13 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
                     <Layers3 size={11} /> {essay.series.label}
                   </div>
                 )}
-                <h3 className="font-serif text-2xl font-bold leading-tight text-white/92 transition group-hover:text-luxury-gold">
+                <h3 className="theme-text font-serif text-2xl font-bold leading-tight transition group-hover:text-luxury-gold">
                   {titleCase(essay.title)}
                 </h3>
-                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-luxury-gray-light/65">
+                <p className="theme-functional-muted mt-3 line-clamp-3 text-sm leading-relaxed">
                   {essay.excerpt}
                 </p>
-                <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/6 pt-4 text-[10px] uppercase tracking-[0.14em] text-luxury-gray-light/40">
+                <div className="theme-functional-subtle mt-5 flex items-center justify-between gap-3 border-t border-luxury-gold/10 pt-4 text-[10px] uppercase tracking-[0.14em]">
                   <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {essay.readTime}&nbsp;мин</span>
                   <span className="inline-flex items-center gap-1 text-cyan-300/60 transition group-hover:text-cyan-200">
                     Читать <ArrowUpRight size={12} />

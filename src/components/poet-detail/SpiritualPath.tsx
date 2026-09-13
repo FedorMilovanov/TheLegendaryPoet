@@ -7,7 +7,7 @@ interface SpiritualPathProps {
 
 export default function SpiritualPath({ content }: SpiritualPathProps) {
   return (
-    <div className="luxury-card glow-hover p-10 md:p-12 rounded-[2.5rem] border border-luxury-gold/30 bg-gradient-to-br from-[#0e0c07] to-[#050505] relative shadow-2xl overflow-hidden">
+    <div className="theme-spiritual-surface luxury-card glow-hover relative overflow-hidden rounded-[2.5rem] border border-luxury-gold/30 p-10 shadow-2xl md:p-12">
       <div className="absolute -top-10 -right-10 text-luxury-gold/5 pointer-events-none">
         <Shield size={250} />
       </div>
