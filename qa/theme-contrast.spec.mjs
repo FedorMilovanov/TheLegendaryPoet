@@ -248,3 +248,55 @@ test.describe('theme authority and contrast', () => {
     }
   });
 });
+
+
+test.describe('light theme semantic surfaces', () => {
+  test('poem feature, command palette and poet body use explicit semantic contracts', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((key) => localStorage.setItem(key, 'light'), STORAGE_KEY);
+    await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+
+    const poemFeature = page.getByText('Стихотворение дня').locator('xpath=ancestor::section[1]');
+    await expect(poemFeature).toHaveClass(/theme-poem-feature/);
+    const verse = poemFeature.locator('.theme-poem-text');
+    await expect(verse).toBeVisible();
+    expect(await contrastRatio(verse), 'light poem preview contrast').toBeGreaterThanOrEqual(4.5);
+
+    await page.getByRole('button', { name: 'Открыть поиск', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
+    await expect(dialog).toHaveClass(/theme-modal-surface/);
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    expect(await contrastRatio(input), 'light command input contrast').toBeGreaterThanOrEqual(4.5);
+    await page.getByRole('button', { name: 'Закрыть поиск' }).click();
+
+    await page.goto(`${BASE_URL}/poets/fyodor-tyutchev`, { waitUntil: 'networkidle' });
+    const themedPage = page.locator('#main-content .theme-page-surface').first();
+    await expect(themedPage).toBeVisible();
+    const hero = page.locator('#main-content .theme-dark-island').first();
+    await expect(hero).toBeVisible();
+
+    const surface = await themedPage.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { backgroundColor: style.backgroundColor, color: style.color };
+    });
+    expect(surface.backgroundColor).toMatch(/rgb\(255, 250, 240\)/);
+    expect(surface.color).toMatch(/rgb\(19, 32, 42\)/);
+  });
+
+  test('persistent audio chrome remains a deliberate readable dark island in light theme', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((key) => localStorage.setItem(key, 'light'), STORAGE_KEY);
+    await page.goto(`${BASE_URL}/music`, { waitUntil: 'networkidle' });
+
+    const play = page.getByRole('button', { name: /воспроизвести трек|поставить на паузу/i }).first();
+    await play.click();
+    await page.getByRole('link', { name: 'Рейтинг' }).click();
+    await expect(page).toHaveURL(/\/ratings$/);
+
+    const player = page.locator('.global-audio-mini');
+    await expect(player).toHaveClass(/theme-dark-island/);
+    const title = player.locator('.audio-title');
+    await expect(title).toBeVisible();
+    expect(await contrastRatio(title), 'light-theme persistent audio title contrast').toBeGreaterThanOrEqual(4.5);
+  });
+});
