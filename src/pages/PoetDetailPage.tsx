@@ -62,10 +62,10 @@ export default function PoetDetailPage() {
 
   if (!poet) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050505] pb-20 pt-32">
+      <div className="theme-page-surface flex min-h-screen items-center justify-center pb-20 pt-32">
         <div className="mx-auto w-full max-w-4xl px-4 text-center">
           <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
-          <h1 className="mb-4 font-serif text-4xl text-white">{titleCase('Поэт не найден')}</h1>
+          <h1 className="theme-text mb-4 font-serif text-4xl">{titleCase('Поэт не найден')}</h1>
           <Link to="/poets" className="font-medium text-luxury-gold transition-colors hover:text-luxury-gold-light">
             ← Вернуться к списку поэтов
           </Link>
@@ -75,7 +75,7 @@ export default function PoetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-luxury-gold/30">
+    <div className="theme-page-surface min-h-screen selection:bg-luxury-gold/30">
       <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} />
       </div>
@@ -93,7 +93,7 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
-            <p className="border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] text-white md:text-3xl">
+            <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
               "{poet.shortBio}"
             </p>
 
@@ -137,7 +137,7 @@ export default function PoetDetailPage() {
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
             <div className="pt-16">
-              <h2 className="editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none text-white sm:mb-12 sm:text-5xl">
+              <h2 className="theme-text editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none sm:mb-12 sm:text-5xl">
                 {titleCase('Избранная')} <span className="gold-gradient gold-glow-text italic">{titleCase('Лирика')}</span>
               </h2>
 
