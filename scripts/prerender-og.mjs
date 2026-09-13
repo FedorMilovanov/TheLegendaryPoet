@@ -5,6 +5,7 @@ import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, musicTracks, poets } from '../src/data/poets.ts';
 import { siteConfig } from '../src/config/site.ts';
+import { canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 import {
   buildArticlePageSchema,
   buildMusicPageSchema,
@@ -90,7 +91,7 @@ function renderPage({
 }) {
   const policy = policyFor(discoveryState);
   const robotsValue = robots || policy.robots;
-  const url = `${SITE_URL}${routePath}`;
+  const url = canonicalRouteUrl(SITE_URL, routePath);
   const img = absUrl(image);
   const resolvedImageAlt = imageAlt || title;
   let html = template;
