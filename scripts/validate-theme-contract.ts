@@ -81,6 +81,8 @@ requireContains('src/components/music/GlobalMiniPlayer.tsx', [
   'audio-mini-surface',
   'audio-title',
   'audio-control',
+  'seek-focus-shell',
+  'seek-focus-indicator',
 ]);
 requireExcludes('src/components/music/GlobalMiniPlayer.tsx', [
   'bg-[#071018]/95',
@@ -103,6 +105,7 @@ requireContains('src/audio-player.css', [
   '--tlp-audio-mobile-bottom',
   '--tlp-mobile-dock-clearance',
   'html.global-audio-active .scroll-top-btn',
+  '.seek-focus-shell:focus-within .seek-focus-indicator',
 ]);
 
 if (failures.length) {
@@ -111,4 +114,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('Theme contract validation passed: semantic light surfaces, explicit dark islands, route-aware chrome and measured mobile geometry are locked.');
+console.log('Theme contract validation passed: semantic light surfaces, explicit dark islands, route-aware chrome, measured mobile geometry and focus-visible audio controls are locked.');
