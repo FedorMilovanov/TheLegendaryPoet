@@ -311,7 +311,7 @@ export function HallProductionRuntime() {
   const move = (delta: number) => applyStopRef.current(stopIndexRef.current + delta);
 
   return (
-    <section className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[#090909]" data-hall-production-mode={mode}>
+    <section className="theme-dark-island relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[#090909]" data-hall-production-mode={mode}>
       <div ref={hostRef} className="absolute inset-0" aria-hidden={mode !== 'webgl'} />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_24%,rgba(212,175,55,0.11),transparent_34%),linear-gradient(to_bottom,rgba(0,0,0,0.05),rgba(0,0,0,0.72))]" aria-hidden="true" />
 
