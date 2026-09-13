@@ -35,7 +35,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
   if (!links.length && !epochLabel) return null;
 
   return (
-    <div className="rounded-3xl border border-cyan-400/10 bg-[#061018]/65 p-6">
+    <div className="theme-soft-surface rounded-3xl border p-6">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Родственные души</h3>
         {epochLabel && (
@@ -56,10 +56,10 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
               <Link
                 key={`${conn.source}-${conn.target}-${conn.label}`}
                 to={`/poets/${other.id}`}
-                className="block rounded-2xl border border-white/5 bg-black/20 px-4 py-3 transition hover:border-cyan-400/25 hover:bg-cyan-400/5"
+                className="theme-elevated-surface block rounded-2xl border px-4 py-3 transition hover:border-cyan-400/25"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-bold text-white">{other.name}</span>
+                  <span className="theme-text truncate text-sm font-bold">{other.name}</span>
                   <span
                     className="shrink-0 rounded-full px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-[0.08em]"
                     style={{ color: style.color, backgroundColor: `${style.color}18` }}
@@ -67,13 +67,13 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
                     {style.label}
                   </span>
                 </div>
-                <p className="line-clamp-2 text-[11px] leading-relaxed text-cyan-100/45">{conn.note}</p>
+                <p className="theme-functional-muted line-clamp-2 text-[11px] leading-relaxed">{conn.note}</p>
               </Link>
             );
           })}
         </div>
       ) : (
-        <p className="text-[11px] leading-relaxed text-cyan-100/40">
+        <p className="theme-functional-muted text-[11px] leading-relaxed">
           Отдельная поэтическая судьба — прямых связей в нашей карте пока нет.
         </p>
       )}
