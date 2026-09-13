@@ -17,6 +17,20 @@
   --tlp-focus-offset: #061018;
   --tlp-focus-ring: rgba(0, 212, 255, 0.68);
   --tlp-theme-color: #050810;
+  --tlp-border-subtle: rgba(103, 232, 249, 0.14);
+  --tlp-surface-soft: rgba(6, 16, 24, 0.72);
+  --tlp-surface-glass: rgba(6, 16, 24, 0.84);
+  --tlp-poem-feature-bg:
+    radial-gradient(circle at 50% 20%, rgba(0, 212, 255, 0.075), transparent 52%),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 52%, #050505 100%);
+  --tlp-poem-card-bg: rgba(6, 16, 24, 0.54);
+  --tlp-poem-divider-bg: #050505;
+  --tlp-poem-text: rgba(236, 254, 255, 0.84);
+  --tlp-modal-backdrop: rgba(0, 0, 0, 0.72);
+  --tlp-modal-surface: rgba(5, 11, 18, 0.97);
+  --tlp-modal-result: rgba(0, 0, 0, 0.2);
+  --tlp-modal-result-active: rgba(34, 211, 238, 0.11);
+  --tlp-modal-shadow: 0 0 80px rgba(0, 212, 255, 0.16);
 }
 
 html.theme-light {
@@ -38,6 +52,21 @@ html.theme-light {
   --tlp-focus-offset: #fffaf0;
   --tlp-focus-ring: #075f75;
   --tlp-theme-color: #fffaf0;
+  --tlp-border-subtle: rgba(13, 120, 150, 0.18);
+  --tlp-surface-soft: rgba(255, 252, 246, 0.72);
+  --tlp-surface-glass: rgba(255, 250, 240, 0.9);
+  --tlp-poem-feature-bg:
+    radial-gradient(circle at 50% 16%, rgba(13, 120, 150, 0.11), transparent 46%),
+    radial-gradient(circle at 78% 24%, rgba(184, 148, 30, 0.09), transparent 32%),
+    linear-gradient(180deg, #fffaf0 0%, #f6efe2 52%, #efe5d5 100%);
+  --tlp-poem-card-bg: rgba(255, 252, 246, 0.78);
+  --tlp-poem-divider-bg: rgba(255, 250, 240, 0.94);
+  --tlp-poem-text: #243947;
+  --tlp-modal-backdrop: rgba(24, 31, 35, 0.34);
+  --tlp-modal-surface: rgba(255, 252, 246, 0.98);
+  --tlp-modal-result: rgba(13, 120, 150, 0.035);
+  --tlp-modal-result-active: rgba(13, 120, 150, 0.11);
+  --tlp-modal-shadow: 0 28px 90px rgba(77, 59, 38, 0.22);
 }
 
 .theme-page-surface {
@@ -121,3 +150,75 @@ html[data-theme='light'] body,
 html.theme-light body {
   color: var(--tlp-text);
 }
+
+
+/* Semantic theme surfaces. New theme-aware UI should consume these contracts
+   instead of relying on Tailwind class-name inspection in index.css. */
+.theme-elevated-surface {
+  background-color: var(--tlp-surface-elevated) !important;
+  color: var(--tlp-text);
+  border-color: var(--tlp-border-subtle) !important;
+}
+
+.theme-soft-surface {
+  background-color: var(--tlp-surface-soft) !important;
+  color: var(--tlp-text);
+  border-color: var(--tlp-border-subtle) !important;
+}
+
+.theme-poem-feature {
+  background: var(--tlp-poem-feature-bg);
+  color: var(--tlp-text);
+}
+
+.theme-poem-card {
+  background: var(--tlp-poem-card-bg);
+  border-color: var(--tlp-border-subtle) !important;
+  color: var(--tlp-text);
+}
+
+.theme-poem-divider {
+  background-color: var(--tlp-poem-divider-bg) !important;
+}
+
+.theme-poem-text {
+  color: var(--tlp-poem-text) !important;
+}
+
+.theme-modal-backdrop {
+  background: var(--tlp-modal-backdrop) !important;
+}
+
+.theme-modal-surface {
+  background: var(--tlp-modal-surface) !important;
+  color: var(--tlp-text);
+  border-color: var(--tlp-border-subtle) !important;
+  box-shadow: var(--tlp-modal-shadow) !important;
+}
+
+.theme-modal-result {
+  background: var(--tlp-modal-result) !important;
+  color: var(--tlp-text);
+  border-color: var(--tlp-border-subtle) !important;
+}
+
+.theme-modal-result[data-active='true'] {
+  background: var(--tlp-modal-result-active) !important;
+  border-color: color-mix(in srgb, var(--tlp-control-border) 58%, transparent) !important;
+}
+
+/* Explicit dark islands preserve immersive media without leaking dark-theme
+   assumptions into the surrounding page. Descendants should use the semantic
+   island text classes below, not generic theme-aware text utilities. */
+.theme-dark-island {
+  color-scheme: dark;
+  --tlp-island-text: #f5f1e8;
+  --tlp-island-muted: #a9c6d1;
+  --tlp-island-subtle: #91b5c2;
+  --tlp-island-accent: #67e8f9;
+}
+
+.theme-dark-island-text { color: var(--tlp-island-text) !important; }
+.theme-dark-island-muted { color: var(--tlp-island-muted) !important; }
+.theme-dark-island-subtle { color: var(--tlp-island-subtle) !important; }
+.theme-dark-island-accent { color: var(--tlp-island-accent) !important; }
