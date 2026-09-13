@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import { Trophy } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { motion } from 'framer-motion';
@@ -49,20 +49,24 @@ export default function MobileDock() {
   const location = useLocation();
   const dockRef = useRef<HTMLElement | null>(null);
 
+  const publishVisualHeight = useCallback(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const dockRect = dock.getBoundingClientRect();
+    const fab = dock.querySelector<HTMLElement>('.dock-fab');
+    const fabRect = fab?.getBoundingClientRect();
+    const top = fabRect ? Math.min(dockRect.top, fabRect.top) : dockRect.top;
+    const bottom = fabRect ? Math.max(dockRect.bottom, fabRect.bottom) : dockRect.bottom;
+    const visualHeight = bottom - top;
+    if (visualHeight > 1) {
+      document.documentElement.style.setProperty('--tlp-mobile-dock-clearance', `${Math.ceil(visualHeight)}px`);
+    }
+  }, []);
+
   useLayoutEffect(() => {
     const dock = dockRef.current;
     if (!dock) return;
     const root = document.documentElement;
-
-    const publishVisualHeight = () => {
-      const dockRect = dock.getBoundingClientRect();
-      const fab = dock.querySelector<HTMLElement>('.dock-fab');
-      const fabRect = fab?.getBoundingClientRect();
-      const top = fabRect ? Math.min(dockRect.top, fabRect.top) : dockRect.top;
-      const bottom = fabRect ? Math.max(dockRect.bottom, fabRect.bottom) : dockRect.bottom;
-      const visualHeight = bottom - top;
-      if (visualHeight > 1) root.style.setProperty('--tlp-mobile-dock-clearance', `${Math.ceil(visualHeight)}px`);
-    };
 
     publishVisualHeight();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(publishVisualHeight);
@@ -76,7 +80,8 @@ export default function MobileDock() {
       window.removeEventListener('resize', publishVisualHeight);
       root.style.removeProperty('--tlp-mobile-dock-clearance');
     };
-  }, []);
+  }, [publishVisualHeight]);
+
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -92,6 +97,7 @@ export default function MobileDock() {
         initial={{ y: 90, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 30, delay: 0.15 }}
+        onAnimationComplete={publishVisualHeight}
       >
         {dockLinks.slice(0, 2).map((link) => <DockLink key={link.path} link={link} active={isActive(link.path)} />)}
 
