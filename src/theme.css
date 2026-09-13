@@ -233,8 +233,12 @@ html.theme-light body {
   opacity: 1;
 }
 
-.theme-dark-island {
+.poet-hero-surface {
   background-color: #050505 !important;
+}
+.poem-reader-surface {
+  background-color: #050505 !important;
+  color: #ffffff;
 }
 .poet-hero-shade {
   background: linear-gradient(to top, #050505 0%, rgba(5, 5, 5, 0.62) 52%, transparent 100%) !important;
