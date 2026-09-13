@@ -6,7 +6,7 @@ interface FamousWorksProps {
 
 export default function FamousWorks({ works }: FamousWorksProps) {
   return (
-    <div className="luxury-card glow-hover p-8 rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a]/80 backdrop-blur-md shadow-black/50">
+    <div className="luxury-card glow-hover rounded-3xl border border-luxury-gold/10 p-8 backdrop-blur-md">
       <h3 className="text-xs font-bold tracking-widest uppercase text-luxury-gold gold-glow-text mb-6 flex items-center gap-2 border-b border-luxury-gold/10 pb-4">
         Известные сочинения
       </h3>
@@ -14,7 +14,7 @@ export default function FamousWorks({ works }: FamousWorksProps) {
         {works.map((work) => (
           <span 
             key={work} 
-            className="px-4 py-3 bg-luxury-dark-200/60 border border-luxury-gold/5 rounded-xl text-sm font-medium text-luxury-gray-light hover:text-luxury-gold hover:border-luxury-gold/40 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] transition-all cursor-default"
+            className="theme-elevated-surface theme-functional-muted cursor-default rounded-xl border border-luxury-gold/5 px-4 py-3 text-sm font-medium transition-all hover:border-luxury-gold/40 hover:text-luxury-gold hover:shadow-[0_0_15px_rgba(212,175,55,0.15)]"
           >
             {work}
           </span>
