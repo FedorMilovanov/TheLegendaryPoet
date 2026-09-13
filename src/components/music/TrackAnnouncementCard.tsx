@@ -22,7 +22,7 @@ export default function TrackAnnouncementCard({ track }: { track: MusicTrack }) 
 
   return (
     <article
-      className="group relative isolate overflow-hidden rounded-[2rem] border border-white/[0.09] bg-[#080b10] shadow-[0_24px_80px_rgba(0,0,0,0.34)] transition-[transform,border-color,box-shadow] duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_34px_110px_rgba(0,0,0,0.48)]"
+      className="theme-dark-island group relative isolate overflow-hidden rounded-[2rem] border border-white/[0.09] bg-[#080b10] shadow-[0_24px_80px_rgba(0,0,0,0.34)] transition-[transform,border-color,box-shadow] duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_34px_110px_rgba(0,0,0,0.48)]"
       style={{
         ...getTrackThemeStyle(track),
         backgroundImage: 'linear-gradient(135deg, color-mix(in srgb, var(--track-surface) 94%, black), rgba(5,5,5,.96))',
