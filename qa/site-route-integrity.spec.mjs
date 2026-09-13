@@ -21,6 +21,11 @@ function decodeXml(value) {
     .replace(/&apos;/g, "'");
 }
 
+function canonicalPublicPath(pathname) {
+  if (pathname === '/') return '/';
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+}
+
 function readCanonicalRoutes() {
   if (!fs.existsSync(SITEMAP_PATH)) {
     throw new Error('public/sitemap.xml is missing; run npm run sitemap before the route audit');
@@ -46,7 +51,8 @@ const notFoundRoutes = routeContract.notFoundProbes;
 const renderedRoutes = [...new Set([...canonicalRoutes, ...utilityRoutes])];
 const knownInternalPaths = new Set([
   ...renderedRoutes,
-  ...redirects.flatMap(([source, target]) => [source, target]),
+  ...routeContract.routes.map((route) => route.path).filter((routePath) => routePath !== '*'),
+  ...redirects.flatMap(([source, target]) => [source, target, canonicalPublicPath(target)]),
 ]);
 const auditedRouteCount = renderedRoutes.length + redirects.length + notFoundRoutes.length;
 
@@ -188,6 +194,9 @@ test('route inventory is generated from production sitemap and covers at least 3
   expect(renderedRoutes).toContain('/');
   expect(renderedRoutes).toContain('/hall');
   expect(renderedRoutes).toContain('/archive');
+  for (const route of canonicalRoutes) {
+    expect(route === '/' || route.endsWith('/'), `canonical sitemap route must already be terminal: ${route}`).toBe(true);
+  }
 });
 
 for (const route of renderedRoutes) {
@@ -206,26 +215,27 @@ for (const route of renderedRoutes) {
 
 for (const [source, target] of redirects) {
   test(`legacy redirect: ${source} -> ${target}`, async ({ page }) => {
+    const publicTarget = canonicalPublicPath(target);
     const staticResponse = await page.request.get(`${BASE_URL}${source}`, { maxRedirects: 0 });
     expect(staticResponse.status()).toBe(200);
     const aliasHtml = await staticResponse.text();
     expect(aliasHtml).toContain(`data-legacy-alias="${source}"`);
     expect(aliasHtml).toContain('<meta name="robots" content="noindex,follow" />');
-    expect(aliasHtml).toContain(`<meta name="tlp-legacy-alias-target" content="${target}" />`);
-    expect(aliasHtml).toContain(`<link rel="canonical" href="https://thelegendarypoet.ru${target}" />`);
-    expect(aliasHtml).toContain(`<meta http-equiv="refresh" content="0;url=${target}" />`);
+    expect(aliasHtml).toContain(`<meta name="tlp-legacy-alias-target" content="${publicTarget}" />`);
+    expect(aliasHtml).toContain(`<link rel="canonical" href="https://thelegendarypoet.ru${publicTarget}" />`);
+    expect(aliasHtml).toContain(`<meta http-equiv="refresh" content="0;url=${publicTarget}" />`);
 
     const runtime = attachRuntimeDiagnostics(page);
     const response = await page.goto(`${BASE_URL}${source}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     expect(response?.status() ?? 0).toBeLessThan(400);
     await page.waitForURL(
-      (url) => url.origin === BASE_ORIGIN && url.pathname === target,
+      (url) => url.origin === BASE_ORIGIN && url.pathname === publicTarget,
       { timeout: 12_000, waitUntil: 'domcontentloaded' },
     );
     await settleRoute(page);
     await waitForViewportImages(page);
-    const snapshot = await inspectRenderedRoute(page, target, { requireCanonical: canonicalRoutes.includes(target) });
-    await writeEvidence(source, { kind: 'redirect', source, target, snapshot, runtime });
+    const snapshot = await inspectRenderedRoute(page, publicTarget, { requireCanonical: canonicalRoutes.includes(publicTarget) });
+    await writeEvidence(source, { kind: 'redirect', source, target: publicTarget, snapshot, runtime });
     expect(runtime.pageErrors).toEqual([]);
     expect(runtime.failedResponses).toEqual([]);
   });
@@ -275,7 +285,7 @@ test('SPA navigation to not-found removes previous canonical, og:url and route s
   await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await settleRoute(page);
   const before = await machineHeadSnapshot(page);
-  expect(new URL(before.canonical).pathname).toBe('/about');
+  expect(new URL(before.canonical).pathname).toBe('/about/');
   expect(before.routeJsonLd).toBe(true);
 
   const missing = '/discovery-spa-missing-route';
@@ -317,11 +327,11 @@ test('lazy loading owns a neutral machine head before the destination settles', 
     return canonical ? new URL(canonical, page.url()).pathname : null;
   }, {
     timeout: 5_000,
-    message: 'ready discovery metadata should restore the /privacy canonical after lazy loading',
-  }).toBe('/privacy');
+    message: 'ready discovery metadata should restore the terminal /privacy/ canonical after lazy loading',
+  }).toBe('/privacy/');
 
   const ready = await machineHeadSnapshot(page);
-  expect(new URL(ready.canonical, page.url()).pathname).toBe('/privacy');
+  expect(new URL(ready.canonical, page.url()).pathname).toBe('/privacy/');
   expect(ready.ogUrl).toContain('/privacy');
   expect(ready.routeJsonLd).toBe(true);
 });
@@ -330,7 +340,7 @@ test('lazy route error clears stale head and reload recovery restores canonical 
   await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await settleRoute(page);
   const before = await machineHeadSnapshot(page);
-  expect(new URL(before.canonical).pathname).toBe('/about');
+  expect(new URL(before.canonical).pathname).toBe('/about/');
 
   await context.setOffline(true);
   await page.evaluate(() => {
@@ -344,7 +354,7 @@ test('lazy route error clears stale head and reload recovery restores canonical 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
   await settleRoute(page);
   const recovered = await machineHeadSnapshot(page);
-  expect(new URL(recovered.canonical).pathname).toBe('/ratings');
+  expect(new URL(recovered.canonical).pathname).toBe('/ratings/');
   expect(recovered.ogUrl).toContain('/ratings');
   expect(recovered.routeJsonLd).toBe(true);
   expect(recovered.title).not.toMatch(/Ошибка загрузки страницы/i);
