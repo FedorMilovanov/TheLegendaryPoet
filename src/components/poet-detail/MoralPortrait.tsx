@@ -9,7 +9,7 @@ export default function MoralPortrait({ content }: MoralPortraitProps) {
   return (
     <section
       aria-label="Характер и поступки"
-      className="luxury-card relative overflow-hidden rounded-[2.5rem] border border-red-900/30 bg-gradient-to-br from-[#100808] via-[#0a0606] to-[#050505] p-10 shadow-xl md:p-12"
+      className="theme-moral-surface luxury-card relative overflow-hidden rounded-[2.5rem] border border-red-900/30 p-10 shadow-xl md:p-12"
     >
       <div className="pointer-events-none absolute -right-12 -top-12 text-red-900/10">
         <Scale size={240} />
@@ -19,7 +19,7 @@ export default function MoralPortrait({ content }: MoralPortraitProps) {
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-red-700/40 bg-red-950/40 text-red-300/80">
             <Scale size={18} aria-hidden="true" />
           </span>
-          <h2 className="font-serif text-2xl font-bold text-white md:text-3xl">
+          <h2 className="theme-text font-serif text-2xl font-bold md:text-3xl">
             {titleCase('Характер и поступки')}
           </h2>
         </div>
