@@ -299,4 +299,29 @@ test.describe('light theme semantic surfaces', () => {
     await expect(title).toBeVisible();
     expect(await contrastRatio(title), 'light-theme persistent audio title contrast').toBeGreaterThanOrEqual(4.5);
   });
+
+  test('Hall remains an intentional dark island without changing Hall source scope', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((key) => localStorage.setItem(key, 'light'), STORAGE_KEY);
+    await page.goto(`${BASE_URL}/hall`, { waitUntil: 'networkidle' });
+
+    const hall = page.locator('[data-hall-production-mode]').first();
+    await expect(hall).toBeVisible();
+    const heading = hall.getByRole('heading', { name: 'Зал Поэтов' });
+    await expect(heading).toBeVisible();
+
+    const visual = await hall.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const headingStyle = getComputedStyle(element.querySelector('h1'));
+      return {
+        backgroundColor: style.backgroundColor,
+        colorScheme: style.colorScheme,
+        headingColor: headingStyle.color,
+      };
+    });
+
+    expect(visual.backgroundColor).toMatch(/rgb\(9, 9, 9\)/);
+    expect(visual.colorScheme).toContain('dark');
+    expect(visual.headingColor).toMatch(/rgb\(255, 255, 255\)/);
+  });
 });
