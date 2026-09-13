@@ -29,7 +29,9 @@ export function validateThemeContract(root = process.cwd()): string[] {
     '.theme-dark-island-text',
   ]);
   requireContains('src/index.css', [
-    ':not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))',
+    ':not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))',
+    '.luxury-card [class*="text-cyan-100"]:not([class*="theme-"])',
+    '.luxury-card [class*="text-cyan-200"]:not([class*="theme-"])',
   ]);
 
   requireContains('src/components/hall-v3/HallProductionRuntime.tsx', [
