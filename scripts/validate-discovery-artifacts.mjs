@@ -120,6 +120,9 @@ try {
   for (const record of manifest.canonicalUrls || []) {
     expect(record.state === 'ready', `manifest URL is not ready: ${record.url}`);
     expect(/^[a-f0-9]{64}$/.test(record.fingerprint || ''), `manifest fingerprint invalid: ${record.url}`);
+    const pathname = new URL(record.url).pathname;
+    expect(pathname === '/' || pathname.endsWith('/'), `manifest canonical URL must already be terminal: ${record.url}`);
+    expect(record.path === pathname, `manifest path/url terminal-form mismatch: ${record.path} != ${pathname}`);
   }
 
   const sitemap = generatedSnapshots.get('public/sitemap.xml')?.toString('utf8') || '';
@@ -130,6 +133,10 @@ try {
     JSON.stringify([...sitemapUrls].sort()) === JSON.stringify(manifest.canonicalUrls.map((record) => record.url).sort()),
     'sitemap URL inventory must equal discovery manifest canonical URL inventory',
   );
+  for (const url of sitemapUrls) {
+    const pathname = new URL(url).pathname;
+    expect(pathname === '/' || pathname.endsWith('/'), `sitemap canonical URL must already be terminal: ${url}`);
+  }
 
   const lastmodPaths = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)]
     .map((match) => match[1])
@@ -172,7 +179,11 @@ try {
   expect(forced.mode === 'forced-full' && forced.urls.length === current.canonicalUrls.length, 'full-site IndexNow submission must require explicit force');
 
   const useSeo = readText('src/hooks/useSeo.ts');
+  const publicUrl = readText('src/routes/publicUrl.ts');
   const discoveryHead = readText('src/routes/discoveryHead.ts');
+  const seoSchema = readText('src/lib/seoSchema.ts');
+  const genSitemap = readText('scripts/gen-sitemap.mjs');
+  const feed = readText('scripts/gen-feed.mjs');
   const routeModules = readText('src/routes/routeModules.ts');
   const errorBoundary = readText('src/components/ErrorBoundary.tsx');
   const notFound = readText('src/pages/NotFoundPage.tsx');
@@ -182,6 +193,11 @@ try {
   const indexNowWorkflow = readText('.github/workflows/indexnow.yml');
 
   expect(useSeo.includes('discoveryStateForPath') && useSeo.includes('applyDiscoveryHead'), 'useSeo must derive runtime head from shared discovery state');
+  expect(publicUrl.includes("normalized === '/'") && publicUrl.includes("normalized.endsWith('/')"), 'public route URL authority must preserve root and terminalize deep routes');
+  expect(discoveryHead.includes('canonicalRouteUrl(siteConfig.url, options.path)'), 'runtime self canonical must use terminal public route authority');
+  expect(seoSchema.includes('absoluteRouteUrl') && seoSchema.includes('canonicalRouteUrl'), 'JSON-LD route URLs must use terminal public route authority');
+  expect(genSitemap.includes('canonicalRoutePath(item.loc)') && genSitemap.includes('canonicalRouteUrl(BASE, item.loc)'), 'sitemap/manifest must use terminal public route authority');
+  expect(feed.includes('canonicalRouteUrl(BASE, entry.path)'), 'Atom entries must use terminal public route authority');
   expect(discoveryHead.includes("document.getElementById('route-jsonld')?.remove()"), 'non-schema states must remove stale route JSON-LD');
   expect(discoveryHead.includes("removeLink('canonical')"), 'non-canonical states must remove stale canonical');
   expect(discoveryHead.includes("removeMeta('og:url', 'property')"), 'non-canonical states must remove stale og:url');
@@ -191,7 +207,9 @@ try {
   expect(notFound.includes("state: 'not-found'"), 'hydrated not-found page must use explicit not-found state');
   expect(prerender.includes("policyFor('not-found')"), 'static 404 must derive from shared not-found policy');
   expect(prerender.includes('stateForStaticPath(page.routePath)'), 'static prerender pages must derive route discovery state');
+  expect(prerender.includes('canonicalRouteUrl(SITE_URL, routePath)'), 'prerender canonical/og:url must use terminal public route authority');
   expect(vite.includes('DISCOVERY_POLICY_PATH') && vite.includes('redirectPolicy'), 'legacy alias materialization must derive redirect state from shared policy');
+  expect(vite.includes('canonicalRoutePath(to)') && vite.includes('canonicalRouteUrl(PRODUCTION_ORIGIN, to)'), 'legacy aliases must target terminal public routes');
   expect(!submitIndexNow.includes('<loc>'), 'IndexNow submitter must not treat the sitemap inventory as its change set');
   expect(submitIndexNow.includes('computeIndexNowDelta'), 'IndexNow submitter must use deterministic manifest delta');
   expect(indexNowWorkflow.includes('fetch-depth: 2'), 'IndexNow workflow must fetch the previous main snapshot');
