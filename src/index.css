@@ -83,7 +83,7 @@ h1, h2, h3, .editorial-title {
 
 .mobile-dock {
   position: fixed;
-  bottom: calc(0.8rem + env(safe-area-inset-bottom));
+  bottom: var(--tlp-mobile-dock-bottom, calc(0.8rem + env(safe-area-inset-bottom)));
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
@@ -305,7 +305,7 @@ html.chrome-hidden .reading-progress { top: 0; }
 
 /* Scroll-top button sits above the dock on phones; when the dock hides it
    settles into the freed corner. Desktop keeps its fixed corner. */
-.scroll-top-btn { bottom: 7rem; transition: bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, color 0.3s ease; }
+.scroll-top-btn { bottom: calc(var(--tlp-mobile-dock-bottom, 0.8rem) + var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-fixed-chrome-gap, 0.75rem)); transition: bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, color 0.3s ease; }
 @media (min-width: 768px) { .scroll-top-btn { bottom: 2rem; } }
 @media (max-width: 767px) {
   html.chrome-hidden .scroll-top-btn { bottom: calc(1.15rem + env(safe-area-inset-bottom)); }
