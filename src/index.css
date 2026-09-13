@@ -809,7 +809,7 @@ select option { background-color: #03070d !important; color: #fff !important; pa
 
 .cursor-trail { position: fixed; border-radius: 50%; background: rgba(0, 212, 255, 0.72); pointer-events: none; z-index: 9997; box-shadow: 0 0 8px rgba(0,212,255,0.55); transform: translate(-50%, -50%); transition: opacity 0.35s ease; }
 
-:focus-visible { outline: 2px solid rgba(0, 212, 255, 0.68); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--tlp-focus-ring); outline-offset: 3px; border-radius: 4px; }
 
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
