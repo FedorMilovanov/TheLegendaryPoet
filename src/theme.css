@@ -222,3 +222,9 @@ html.theme-light body {
 .theme-dark-island-muted { color: var(--tlp-island-muted) !important; }
 .theme-dark-island-subtle { color: var(--tlp-island-subtle) !important; }
 .theme-dark-island-accent { color: var(--tlp-island-accent) !important; }
+
+.theme-text { color: var(--tlp-text) !important; }
+.theme-placeholder::placeholder {
+  color: var(--tlp-text-subtle) !important;
+  opacity: 1;
+}
