@@ -824,12 +824,16 @@ test('mobile dock publishes live clearance for persistent audio geometry', async
 
   const measurement = await page.evaluate(() => {
     const dock = document.querySelector('.mobile-dock');
-    const fab = dock?.querySelector('.dock-fab');
-    if (!(dock instanceof HTMLElement)) return null;
-    const dockRect = dock.getBoundingClientRect();
+    const rail = dock?.querySelector('.dock-rail');
+    const fab = rail?.querySelector('.dock-fab');
+    if (!(rail instanceof HTMLElement)) return null;
+    // Rail and FAB share the same Framer Motion transform. Measuring both in
+    // that coordinate space keeps the assertion invariant while the entrance
+    // spring is still settling, especially in WebKit.
+    const railRect = rail.getBoundingClientRect();
     const fabRect = fab instanceof HTMLElement ? fab.getBoundingClientRect() : null;
-    const visualHeight = Math.max(dockRect.bottom, fabRect?.bottom ?? dockRect.bottom)
-      - Math.min(dockRect.top, fabRect?.top ?? dockRect.top);
+    const visualHeight = Math.max(railRect.bottom, fabRect?.bottom ?? railRect.bottom)
+      - Math.min(railRect.top, fabRect?.top ?? railRect.top);
     const published = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tlp-mobile-dock-clearance'));
     return { visualHeight, published };
   });
