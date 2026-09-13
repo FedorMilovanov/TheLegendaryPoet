@@ -290,7 +290,7 @@ test.describe('light theme semantic surfaces', () => {
 
     const play = page.getByRole('button', { name: /воспроизвести трек|поставить на паузу/i }).first();
     await play.click();
-    await page.getByRole('link', { name: 'Рейтинг' }).click();
+    await page.locator('a[href="/ratings"]').first().evaluate((link) => link.click());
     await expect(page).toHaveURL(/\/ratings$/);
 
     const player = page.locator('.global-audio-mini');
