@@ -7,6 +7,28 @@
   --tlp-audio-mini-height-budget: 5.25rem;
 }
 
+.analytics-consent-banner {
+  --tlp-consent-bottom: calc(var(--tlp-mobile-dock-bottom) + var(--tlp-mobile-dock-clearance) + var(--tlp-fixed-chrome-gap));
+  bottom: var(--tlp-consent-bottom);
+  max-height: calc(100svh - var(--tlp-consent-bottom) - 1rem);
+  overflow-y: auto;
+  transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.global-audio-active .analytics-consent-banner {
+  --tlp-consent-bottom: calc(var(--tlp-audio-mobile-bottom) + var(--tlp-audio-mini-height-budget) + var(--tlp-fixed-chrome-gap));
+}
+
+@media (min-width: 768px) {
+  .analytics-consent-banner {
+    --tlp-consent-bottom: 1.25rem;
+  }
+
+  html.global-audio-active .analytics-consent-banner {
+    --tlp-consent-bottom: calc(1.25rem + var(--tlp-audio-mini-height-budget) + var(--tlp-fixed-chrome-gap));
+  }
+}
+
 .global-audio-mini {
   position: fixed;
   z-index: 58;

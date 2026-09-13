@@ -208,3 +208,75 @@ test.describe('analytics consent lifecycle authority', () => {
     await peer.close();
   });
 });
+
+test.describe('analytics consent fixed-chrome geometry', () => {
+  test('unset consent clears persistent audio controls and yields to immersive playback', async ({ page }) => {
+    await page.route('https://www.googletagmanager.com/**', (route) => route.abort());
+    await page.route('https://mc.yandex.ru/**', (route) => route.abort());
+
+    await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+
+    const banner = page.getByRole('complementary', { name: 'Настройки аналитики' });
+    await expect(banner).toBeVisible();
+    await expect(banner).toHaveClass(/analytics-consent-banner/);
+    await expect(banner).toHaveClass(/theme-dark-island/);
+
+    const play = page.getByRole('button', { name: /воспроизвести трек|поставить на паузу|повторить загрузку аудио/i }).first();
+    await expect(play).toBeVisible();
+    await play.click();
+
+    const mini = page.locator('.global-audio-mini');
+    await expect(mini).toBeVisible();
+
+    await expect.poll(async () => page.evaluate(() => {
+      const readRect = (selector) => {
+        const element = document.querySelector(selector);
+        if (!(element instanceof HTMLElement)) return null;
+        const rect = element.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
+      };
+      const overlaps = (a, b) => Boolean(
+        a && b
+        && a.left < b.right
+        && a.right > b.left
+        && a.top < b.bottom
+        && a.bottom > b.top
+      );
+      const consent = readRect('.analytics-consent-banner');
+      const player = readRect('.global-audio-mini');
+      return {
+        consent,
+        player,
+        overlap: overlaps(consent, player),
+        consentInsideViewport: Boolean(
+          consent
+          && consent.left >= -1
+          && consent.right <= window.innerWidth + 1
+          && consent.top >= -1
+          && consent.bottom <= window.innerHeight + 1
+        ),
+      };
+    }), { timeout: 8_000 }).toMatchObject({
+      overlap: false,
+      consentInsideViewport: true,
+    });
+
+    const openImmersive = mini.getByRole('button', { name: 'Открыть режим погружения' });
+    await expect(openImmersive).toBeVisible();
+    await openImmersive.click();
+
+    const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    await expect(immersive).toBeVisible();
+    await expect.poll(() => page.evaluate(() => {
+      const consent = document.querySelector('.analytics-consent-banner');
+      const dialog = document.querySelector('[role="dialog"][aria-labelledby="immersive-track-title"]');
+      if (!(consent instanceof HTMLElement) || !(dialog instanceof HTMLElement)) return false;
+      return Number.parseInt(getComputedStyle(dialog).zIndex || '0', 10)
+        > Number.parseInt(getComputedStyle(consent).zIndex || '0', 10);
+    })).toBe(true);
+
+    await immersive.getByRole('button', { name: 'Выйти' }).click();
+    await expect(immersive).toBeHidden({ timeout: 8_000 });
+    await expect(banner).toBeVisible();
+  });
+});

@@ -164,6 +164,7 @@ const focusSource = read('src/utils/focusRuntime.ts');
 const autoHideSource = read('src/hooks/useAutoHideChrome.ts');
 const archivePageSource = read('src/pages/MyArchivePage.tsx');
 const miniPlayerSource = read('src/components/music/GlobalMiniPlayer.tsx');
+const analyticsConsentSource = read('src/components/AnalyticsConsent.tsx');
 const audioPlayerStyleSource = read('src/audio-player.css');
 
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
@@ -226,6 +227,11 @@ expect(audioPlayerStyleSource.includes('max-width: 760px'), 'mini-player must re
 expect(!audioPlayerStyleSource.includes('transform: translateX(-50%)'), 'mini-player centering must not compete with Framer Motion transform ownership');
 expect(immersiveSource.includes('seek-focus-shell') && immersiveSource.includes('seek-focus-indicator'), 'immersive seek must expose the shared visible focus owner');
 expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator'), 'seek focus visibility must be owned by the cross-browser focus-within contract');
+expect(analyticsConsentSource.includes('analytics-consent-banner theme-dark-island'), 'analytics consent must be an explicit dark fixed-chrome surface');
+expect(analyticsConsentSource.includes('z-[105]'), 'analytics consent must remain below true modal surfaces');
+expect(audioPlayerStyleSource.includes('html.global-audio-active .analytics-consent-banner'), 'analytics consent must move clear of persistent audio chrome');
+expect(audioPlayerStyleSource.includes('--tlp-consent-bottom'), 'analytics consent placement must use the shared fixed-chrome geometry contract');
+expect(audioPlayerStyleSource.includes('max-height: calc(100svh'), 'analytics consent must remain bounded by the mobile visual viewport');
 
 if (failures.length) {
   console.error('\nInteraction runtime validation failed:');
