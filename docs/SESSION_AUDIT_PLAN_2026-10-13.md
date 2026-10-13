@@ -302,3 +302,19 @@ Hall documentary rights, offline visual approval, fullMuseumScaleOut остаю�
 - По шагу 2 получено независимое свидетельство: GitHub route audit `38470242670`
   на `8caa3e0` завершился SUCCESS. Локальный lazy-canonical FAIL пока остаётся
   engine/environment-sensitive наблюдением, а не доказанным production-дефектом.
+
+## Выполнение — 2026-10-14: шаг 2, QA-синхронизация
+
+- Доказана конкретная причина ложной готовности: helper принимал ещё видимый h1
+  `/about` за завершённую `/privacy`. Исправлен общий QA-helper и вызов lazy-теста,
+  а не runtime SEO. История исходного FAIL выше остаётся evidence at anchor.
+- Таймаут canonical 5000 ms, loading/og:url/JSON-LD assertions сохранены.
+  Намеренно отсутствующий canonical по-прежнему отклоняется тем же гейтом.
+- Lazy-canonical после изменения: 9/9 PASS (desktop reduce/no-preference и mobile).
+  Вся локальная расширенная выборка: 20/21; один offline-alert FAIL не закрыт.
+- Contracts/check/build/budgets/prerender/SEO PASS; 55 build-output rows идентичны
+  чистому baseline `bd897f9`. Runtime, зависимости и `.github` не менялись.
+- Root cause, границы доказательства, оставшийся FAIL и воспроизведение:
+  [`QA_CANONICAL_INVESTIGATION_2026-10-14.md`](QA_CANONICAL_INVESTIGATION_2026-10-14.md).
+- Исправление ограниченной QA-причины выполнено; полная сертификация browser suite
+  и остальные product/UI исправления этим шагом не объявляются завершёнными.

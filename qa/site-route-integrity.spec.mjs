@@ -80,11 +80,16 @@ function attachRuntimeDiagnostics(page) {
   return { pageErrors, failedResponses };
 }
 
-async function settleRoute(page) {
+// A transition may retain the previous route's visible heading while lazy work
+// is pending. SPA callers must identify the destination, not just any h1.
+async function settleRoute(page, { heading } = {}) {
   const main = page.locator('#main-content');
   await main.waitFor({ state: 'visible', timeout: 20_000 });
   await expect(main.locator('[aria-busy="true"]:visible')).toHaveCount(0);
-  await expect(main.locator('h1, [role="heading"][aria-level="1"]').first()).toBeVisible();
+  const destinationHeading = heading
+    ? main.getByRole('heading', { level: 1, name: heading, exact: true })
+    : main.locator('h1, [role="heading"][aria-level="1"]').first();
+  await expect(destinationHeading).toBeVisible();
   await page.evaluate(async () => {
     if (document.fonts?.ready) await document.fonts.ready;
   });
@@ -322,7 +327,7 @@ test('lazy loading owns a neutral machine head before the destination settles', 
   await expect.poll(async () => (await machineHeadSnapshot(page)).title, { timeout: 1_000 }).toMatch(/Загрузка страницы/i);
   expectNonCanonicalMachineState(await machineHeadSnapshot(page), /Загрузка страницы/i);
 
-  await settleRoute(page);
+  await settleRoute(page, { heading: 'Политика конфиденциальности' });
   await expect.poll(async () => {
     const canonical = (await machineHeadSnapshot(page)).canonical;
     return canonical ? new URL(canonical, page.url()).pathname : null;
