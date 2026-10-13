@@ -2,12 +2,13 @@
 
 ## Статус и границы
 
-**Результат: baseline исследован, план подготовлен; исправления НЕ выполнены.**
+**Исходный результат 2026-10-13: baseline исследован, план подготовлен; исправления ещё не выполнялись.**
+Последующее выполнение фиксируется в конце документа; baseline observations сохраняются как evidence at anchor.
 Это датированный план сессии по запросу владельца, не новая MASTER-матрица,
 не разрешение публикации исследовательских материалов и не production certification.
 Текущая engineering-матрица остаётся в `AuditRepo/projects/the-legendary-poet/verified/MASTER_BUG_MATRIX.md`.
 
-В этой транзакции изменяется только этот документ. Runtime, зависимости, контент,
+В исходной audit-транзакции изменялся только этот документ. Runtime, зависимости, контент,
 `.github`, права, production и чужие ветки не изменяются. Новые architecture IDs не вводятся.
 
 ### Зафиксированные anchors
@@ -283,3 +284,21 @@ Hall documentary rights, offline visual approval, fullMuseumScaleOut остаю�
 Для закрытия #497 — отдельный безопасный human-backed operator run.
 Для публикации новых источников/медиа — конкретный editorial/rights scope.
 Слияние/закрытие PR этой сессии агентом **не выполняется**.
+
+
+## Выполнение — 2026-10-14: шаг 1
+
+- Исправлены актуальные Hall/scroll инструкции; `PROJECT_RESTORE_MASTER.md` явно
+  зарегистрирован как historical/superseded, его старое содержимое не переписано.
+- Таблицы текущих фактов сверяются с существующими JSON owners через project-contract
+  gate. Native-scroll guard также проверяет зарегистрированный режим. Это проверка
+  структурированных фактов, не автоматическая экспертиза произвольной прозы.
+- 20 regression tests PASS; полная команда project-contracts отклоняет 3 отдельные
+  мутации в изолированной копии: placeholder Hall, Lenis mode, documentary-rights promotion.
+- Clean baseline `8caa3e0`: npm ci/contracts/check/build PASS; исходные 5 advisories сохранены.
+  После изменений contracts/check/build/budgets/prerender/SEO PASS; 55 build-output rows
+  совпадают с baseline. Runtime, package/lock и `.github` не менялись.
+- Шаг 1 реализован в ветке, не смержен. Остальные исправления не выполнены.
+- По шагу 2 получено независимое свидетельство: GitHub route audit `38470242670`
+  на `8caa3e0` завершился SUCCESS. Локальный lazy-canonical FAIL пока остаётся
+  engine/environment-sensitive наблюдением, а не доказанным production-дефектом.

@@ -13,7 +13,12 @@
     "brandComponent": "src/components/SpectralBrandMark.tsx",
     "brandMaterializer": "scripts/materialize-brand-art.mjs",
     "brandApprovedSourceDirectory": "qa/reference/approved-brand",
-    "communitySchema": "workers/community-api/schema.sql"
+    "communitySchema": "workers/community-api/schema.sql",
+    "hallContract": "docs/hall-v3/hall-v3-contract.json",
+    "scrollMode": "native",
+    "scrollCoordinator": "src/components/SmoothScroll.tsx",
+    "scrollUtilities": "src/utils/smoothScroll.ts",
+    "scrollValidator": "scripts/validate-scroll-runtime.ts"
   },
   "governance": {
     "packageName": "the-legendary-poet",
@@ -60,7 +65,8 @@
       "TRANSFER.md",
       "docs/INTEGRATION_STATUS.md",
       "docs/HALL_RESEARCH.md",
-      "docs/UPGRADE_NOTES.md"
+      "docs/UPGRADE_NOTES.md",
+      "PROJECT_RESTORE_MASTER.md"
     ],
     "editorialAuthority": [
       "PROJECT_CHARTER.md",
@@ -75,7 +81,8 @@
       "TRANSFER.md",
       "docs/INTEGRATION_STATUS.md",
       "docs/HALL_RESEARCH.md",
-      "docs/UPGRADE_NOTES.md"
+      "docs/UPGRADE_NOTES.md",
+      "PROJECT_RESTORE_MASTER.md"
     ]
   },
   "workflowPathExceptions": []

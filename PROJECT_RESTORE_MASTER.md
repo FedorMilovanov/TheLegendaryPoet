@@ -1,5 +1,11 @@
 # PROJECT_RESTORE_MASTER.md
 
+> **Historical snapshot — not current implementation instructions.**
+> Retained for forensic restoration only; the obsolete technical claims below are not authority.
+> Start with [AGENTS.md](AGENTS.md), [current state](docs/CURRENT_STATE.md) and
+> [project contract](docs/project-contract.json). In particular, do not restore the SVG-era
+> brand or local-only community architecture from this snapshot.
+
 ## Restore Goal
 
 Restore THE LEGENDARY POET as a premium dark luxury editorial site, not as a generic dashboard or gimmick-heavy landing page.
