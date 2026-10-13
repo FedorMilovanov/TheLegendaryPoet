@@ -46,3 +46,27 @@ test('poem text has an exact selectable canonical layer separate from animated v
   expect(selected).toBe(snapshot.text);
   expect(selected).toContain('\n');
 });
+
+test('kinetic headings expose one readable text layer without naming generic spans', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+  const roots = page.locator(':is(span, p, h1, h2, h3):has(> .kinetic-word)');
+  await expect(roots).toHaveCount(2);
+  const phrases = [
+    { text: 'Эпохи', heading: 'Лица Эпохи' },
+    { text: 'Трезвая Оценка', heading: 'Вера, Культура и Трезвая Оценка' },
+  ];
+  for (const [index, phrase] of phrases.entries()) {
+    const root = roots.nth(index);
+    expect(await root.getAttribute('aria-label')).toBeNull();
+    await expect(root.locator(':scope > .sr-only')).toHaveText(phrase.text);
+    const words = root.locator(':scope > .kinetic-word');
+    expect(await words.count()).toBeGreaterThan(0);
+    for (const word of await words.all()) await expect(word).toHaveAttribute('aria-hidden', 'true');
+    const heading = page.getByRole('heading', { level: 2, name: phrase.heading, exact: true });
+    await heading.scrollIntoViewIfNeeded();
+    await expect(heading).toHaveAccessibleName(phrase.heading);
+    // The visual layer must not become a second accessible copy or gain focus.
+    await expect(root.locator('button, a, [tabindex]')).toHaveCount(0);
+  }
+});

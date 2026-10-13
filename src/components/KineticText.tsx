@@ -73,7 +73,9 @@ export default function KineticText({
   let globalCounter = 0;
 
   return (
-    <Tag className={`inline-flex flex-wrap ${className}`} aria-label={text} onPointerLeave={cancelDwell}>
+    <Tag className={`inline-flex flex-wrap ${className}`} onPointerLeave={cancelDwell}>
+      {/* Read the phrase once for every tag; visual letters stay decorative. */}
+      <span className="sr-only">{text}</span>
       {words.map((word, wi) => (
         <span key={wi} className="kinetic-word mr-[0.28em] inline-flex last:mr-0" aria-hidden>
           {Array.from(word).map((char, ci) => {

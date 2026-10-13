@@ -23,7 +23,18 @@ async function contrastRatio(locator) {
   return locator.evaluate((node) => {
     const parse = (value) => {
       const match = value.match(/rgba?\(([^)]+)\)/i);
-      if (!match) throw new Error(`Unsupported computed color: ${value}`);
+      if (!match) {
+        // Tailwind may serialize computed colors as oklch()/color(). Let the
+        // browser convert those to sRGB instead of silently treating them as black.
+        if (!CSS.supports('color', value)) throw new Error(`Unsupported computed color: ${value}`);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext('2d');
+        context.fillStyle = value;
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+        return { r, g, b, a: a / 255 };
+      }
       const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
       return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
     };
@@ -325,3 +336,40 @@ test.describe('light theme semantic surfaces', () => {
     expect(visual.headingColor).toMatch(/rgb\(255, 255, 255\)/);
   });
 });
+
+
+for (const theme of ['dark', 'light']) {
+  test(`shared footer text and navigation meet contrast in ${theme} theme`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+    await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+    const footer = page.locator('footer');
+    await expect(footer).toHaveCount(1);
+    await footer.scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    const nodes = footer.locator('*');
+    const textIndexes = await nodes.evaluateAll((elements) => elements.flatMap((node, index) => (
+      node instanceof HTMLElement
+      && [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim())
+      // The unchanged gradient logotype is exempt; its descriptive tagline is not.
+      && !node.matches('a[href="/"] .neon-blue-gradient') ? [index] : []
+    )));
+    expect(textIndexes.length).toBeGreaterThanOrEqual(20);
+    for (const index of textIndexes) {
+      const node = nodes.nth(index);
+      expect(await contrastRatio(node), `${theme}: ${await node.textContent()}`).toBeGreaterThanOrEqual(4.5);
+    }
+    const firstLink = footer.locator('a[href="/poets"]');
+    const nextLink = footer.locator('a[href="/hall"]');
+    await firstLink.focus();
+    await page.keyboard.press('Tab');
+    await expect(nextLink).toBeFocused();
+    await expect.poll(() => nextLink.evaluate((node) => node.getAnimations().length)).toBe(0);
+    expect(await contrastRatio(nextLink), `${theme} focused navigation text`).toBeGreaterThanOrEqual(4.5);
+    expect(await nonTextContrast(nextLink, 'focus'), `${theme} keyboard focus indicator`).toBeGreaterThanOrEqual(3);
+    await nextLink.evaluate((node) => node.blur());
+    await nextLink.hover();
+    await expect.poll(() => nextLink.evaluate((node) => node.getAnimations().length)).toBe(0);
+    expect(await contrastRatio(nextLink), `${theme} hovered navigation text`).toBeGreaterThanOrEqual(4.5);
+  });
+}

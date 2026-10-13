@@ -318,3 +318,56 @@ Hall documentary rights, offline visual approval, fullMuseumScaleOut остаю�
   [`QA_CANONICAL_INVESTIGATION_2026-10-14.md`](QA_CANONICAL_INVESTIGATION_2026-10-14.md).
 - Исправление ограниченной QA-причины выполнено; полная сертификация browser suite
   и остальные product/UI исправления этим шагом не объявляются завершёнными.
+
+## Выполнение — 2026-10-14: шаг 3, доступность общего текста
+
+**Baseline:** clean `93d504e`; main по-прежнему `090ea18`. На baseline основной CI,
+route audit и все запущенные Browser QA SUCCESS. npm ci/contracts/check/build PASS;
+5 исходных dependency advisories сохранены.
+
+**Две ограниченные причины и владельцы:**
+- `KineticText`: aria-label на generic span/p недопустим, а анимированные буквы
+  скрыты от AT. Компонент теперь даёт один `sr-only` текстовый слой для всех пяти
+  поддерживаемых тегов; visual words остаются aria-hidden. Текст, буквы и motion
+  не переавторены. Production usages — два h2 главной; SSR→AX-проба всех пяти
+  тегов подтверждает единственный доступный текст и сохранение heading levels.
+- `Footer`: локальные полупрозрачные цвета текста обходили существующие theme
+  contracts. Общий footer переведён на текущие semantic surface/text/control
+  классы; keyboard focus использует общий focus ring вместо локального cyan-ring.
+  Новых палитр, CSS-движков и исправлений отдельных страниц нет.
+
+**Регрессии:** три новых browser tests добавлены в уже запускаемые CI файлы
+`qa/reader-text.spec.mjs` и `qa/theme-contrast.spec.mjs`. Все три падали до repair
+(ARIA / dark contrast / light contrast). Тест footer проверяет ≥20 текстовых узлов
+с порогом 4.5:1, focus indicator ≥3:1, keyboard Tab и settled hover/focus colors.
+Исключён только неизменённый gradient logotype, не его описательная подпись.
+Существующий contrast helper научен преобразовывать современные computed CSS colors
+через canvas; пороги не ослаблены. Desktop theme/reader suite: 11/11 PASS; новые
+mobile tests: 3/3 PASS; усиленная проверка завершившихся focus/hover transitions
+дополнительно повторена отдельно.
+
+**Axe 4.14 / Chromium 153 (диагностический NSS-shim), dark-first:**
+- Desktop 1440×1000/no-preference, mobile 390×844/DPR2/touch/reduce; обе темы.
+- `aria-prohibited-attr`: 2 → 0 в каждой из четырёх проверок.
+- Footer contrast violations: desktop dark 13 → 0, mobile dark 15 → 0,
+  desktop light 0 → 0, mobile light 1 → 0. Независимый computed test также
+  обнаруживал light tagline 4.13:1, даже когда axe его не включал в violations.
+- Минимальный измеренный axe text contrast после: dark 9.3:1, light 5.18:1.
+- Скриншоты после reveal проверены; 0 page/console errors и failed requests;
+  6 self-hosted font faces loaded, 8 viewport images decoded в каждой пробе.
+- Unthrottled LCP before→after: desktop dark 576→672 ms, light 272→264 ms;
+  mobile dark 208→316 ms, light 216→228 ms. Это не field/performance certification.
+  Initial CLS session window неизменён: desktop 0.220508 dark / 0.214028 light,
+  mobile 0. Loading-shell/footer shift около 0.219 **не исправлен**.
+
+Contracts/check/build/budgets/prerender/SEO PASS. Единственный generated source
+артефакт — обновлённые 31 fingerprints в `public/discovery-manifest.json`, полученные
+штатной генерацией; URL/state/lastmod не менялись. Бюджеты: entry 635244→635142 B,
+JS 1731821→1731754 B, CSS 263435→263004 B. Dependencies и `.github` не менялись.
+
+**Границы:** только эти shared text defects исправлены в ветке, не смержены.
+Прочие mobile/page-level contrast findings, Hall geometry, loading CLS и ранее
+отмеченный offline-alert остаются открытыми. Ручной NVDA/VoiceOver не выполнялся;
+AX tree/axe не заменяют такую проверку. Миграции данных нет; rollback — компоненты,
+их guards и повторная штатная генерация fingerprints. Логи/снимки/AX-пробы —
+ignored `qa-artifacts/a11y-step/`; закрытие в AuditRepo до merge не производится.
