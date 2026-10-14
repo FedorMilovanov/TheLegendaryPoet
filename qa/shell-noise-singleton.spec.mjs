@@ -117,8 +117,13 @@ for (const [name, width, height, colorScheme, reducedMotion] of viewportCases) {
         await expectReservedViewport(page);
         expect(homeRequests, 'warm navigation must reuse the loaded module').toBe(1);
         await expect(page.locator('footer')).toHaveAttribute('data-shell-viewport-witness', 'retained');
-        await page.locator('footer').scrollIntoViewIfNeeded();
-        await expect(page.locator('footer a[href="/about"]')).toBeInViewport();
+        // Scrolling the whole footer does not guarantee a particular child is
+        // in a short viewport. Exercise the actual destination, then use it.
+        const aboutLink = page.locator('footer a[href="/about"]');
+        await aboutLink.scrollIntoViewIfNeeded();
+        await expect(aboutLink).toBeInViewport();
+        await aboutLink.click();
+        await expect(page.locator('main h1')).toContainText('О Проекте');
       } finally { releaseHome(); releaseAbout(); }
     });
   });

@@ -569,3 +569,28 @@ Contracts/check/build/prerender/budgets PASS; entry 635218→635218 B, JS
 1731696→1731731 B, CSS 263747→263543 B. Sitemap/feed byte-stable. Runtime rollback —
 три semantic classes и regression guard; migration нет. Dependencies, CI и
 историческое содержание не менялись. Артефакты ignored `qa-artifacts/recheck-step/`.
+
+## Выполнение — 2026-10-15: редакционные задания и QA scroll correction
+
+`18030b8` добавил только `docs/research/EDITORIAL_NEXT_STEPS_2026-10-15.md`:
+проверяемый доступ к документам Бениславской/Есенина, происхождение электронной
+передачи дневника Симонова, briefs «два Пророка» / «Silentium!». Это предложения
+на основании текущего каталога, не внешняя верификация и не новые публикации.
+
+На `18030b8` финальный параллельный запуск CPU/SwiftShader дал 83/84 и 11/12:
+short-dark footer assertion воспроизвёлся второй раз; WebGL desktop не вышел из
+loading за прежние 20 s. Логи не удалены. После анализа изменено только действие
+shell QA: прокручивать конкретную ссылку, а не её большой footer ancestor.
+Сохранились reservation/CLS/DOM identity assertions и viewport assertion ссылки;
+добавлен реальный click и проверка destination heading. Это коррекция harness,
+не новый runtime fix. Увеличения timeout, retry, skip или ослабления порогов нет.
+
+После коррекции: полный CPU suite **84/84 PASS 1.9m**, изолированный actual-GL
+Hall **12/12 PASS 1.4m** без source/timeout изменений; short-dark **10/10 PASS 29s**.
+Итого 96 различных cases + 10 repeats. Параллельную нагрузку браузеров не считаем
+производительным эталоном; transient WebGL loading timeout не скрыт.
+`npm run check` повторён PASS. Последние изменения только QA/docs, production
+bundle идентичен `868ba47`. Source/build evidence шагов 6–7 остаётся применимым.
+Среда проверена снова: Node 22.22.3, npm 10.9.8, Chromium 153.0.8010.0; CPU для
+CSS и SwiftShader для actual WebGL, Pages-like preview на 0.0.0.0:4173.
+Exact-head CI после push отражается в PR, не выводится из локального PASS.
