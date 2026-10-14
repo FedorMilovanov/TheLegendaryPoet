@@ -59,7 +59,9 @@ A successful page load clears its recovery marker.
 
 ## Loading and page failure states
 
-`RouteLoadingShell` is rendered inside the persistent site shell. It reserves a loading area and uses reduced-motion-safe animation. Reservation alone is not a CLS guarantee; cold-route layout stability requires browser measurement.
+`SiteLayout`'s persistent `main` reserves at least one full viewport (`min-h-screen`, 100vh) in loading, ready and page-error states. The header is fixed, so its height is not subtracted from this in-flow reservation. Footer stays in normal flow below that first viewport and remains accessible by scrolling; it is never conditionally hidden to suppress layout shifts. This also covers short pages without per-route spacer rules.
+
+`RouteLoadingShell` controls only its skeleton's internal layout and reduced-motion-safe animation, not the page's viewport reservation. Cold, delayed SPA and warm routes, short content and page errors are guarded in `qa/shell-noise-singleton.spec.mjs`. Reservation prevents the observed loading-to-content footer shift; it is not a guarantee against unrelated font, media or page-level CLS.
 
 The page-scoped `ErrorBoundary` distinguishes:
 

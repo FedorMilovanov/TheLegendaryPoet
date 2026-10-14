@@ -134,7 +134,7 @@ function SiteLayout() {
         <CustomCursor />
         <Header />
         <CommandPalette />
-        <main id="main-content" tabIndex={-1} className="relative z-10 pb-32 outline-none md:pb-0">
+        <main id="main-content" tabIndex={-1} className="relative z-10 min-h-screen pb-32 outline-none md:pb-0">
           <RouteContent />
         </main>
         <MobileDock />

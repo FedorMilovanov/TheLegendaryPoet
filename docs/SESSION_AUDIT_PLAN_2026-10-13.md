@@ -435,3 +435,61 @@ JS 1731754→1731628 B, CSS 263004→263027 B. Discovery manifest после ш�
 Ремонт выполнен в session branch; merge/production/AuditRepo closure не выполнены.
 Manual AT, весь сайт WCAG, оставшиеся page-level contrast, Hall geometry и offline
 recovery не сертифицированы этим шагом. Exact-head CI отражается отдельно в PR.
+
+## Выполнение — 2026-10-15: шаг 5, reservation первого viewport
+
+**Baseline:** clean `d57d18f`, main `090ea18`. Все запущенные exact-head CI шага 4,
+включая Manual Browser QA, SUCCESS. До изменений npm ci/contracts/check/build/
+prerender/budgets PASS. Из-за восстановления sandbox Git metadata сначала сверены
+с remote по байтам; предыдущие изменения не переписаны и чужие ветки не использованы.
+
+**Причина и один owner:** `SiteLayout` не задавал минимальную высоту `main`.
+Внутренняя reservation loading skeleton (68vh плюс intrinsic content) впускала
+footer в первый viewport: например, y≈787 при H=1000. После lazy mount длинной
+страницы footer уходил за экран с layout-shift contribution 0.219.
+`main` теперь использует существующий `min-h-screen` (100vh), одинаково для loading,
+ready и page error. Header fixed, его высота не вычитается. Footer остаётся в потоке,
+в accessibility tree и доступен прокруткой; page spacers/opacity hacks не добавлены.
+Runtime diff — один class token. Hall inset, recovery, контент и brand не изменены.
+
+**Регрессии:** 10 новых cases в уже запускаемом `qa/shell-noise-singleton.spec.mjs`.
+До repair: 7 FAIL на reservation, 3 PASS (короткий desktop и mobile). После: вместе
+с существующим singleton guard **11/11 PASS**. Покрыты dark/light, desktop H=600/
+1000/1200, mobile 390×844, reduce/no-preference; cold gate, delayed SPA, warm reuse,
+short-content fixture и настоящий ErrorBoundary. Проверяются footer DOM identity,
+прокрутка к ссылке, сумма cold shifts <0.1 и footer-attributed shifts <0.01.
+Сумма без session-window отсечения строже CLS; другие shift sources не исключаются.
+Дополнительно theme/reader **25/25**, route metadata/lazy/recovery **3/3**, loading
+brand **1/1** — итого **40/40 PASS**. Прежний локальный offline-alert сейчас не
+воспроизвёлся; это не доказательство исправления recovery этим CSS-изменением.
+
+**Шесть одинаково настроенных cold probes с задержанным route chunk:**
+| Условие | CLS before | CLS after | Footer y after |
+| --- | ---: | ---: | ---: |
+| Desktop dark 1440×1000 | 0.220508 | 0.001508 | 1080 |
+| Desktop light 1440×1000 | 0.213000 | 0.001028 | 1080 |
+| Short dark 1280×600 | 0.003121 | 0.003121 | 787.22 |
+| Tall light 1280×1200 | 0.253333 | 0.001054 | 1280 |
+| Mobile dark 390×844 | 0 | 0 | 924 |
+| Mobile light 390×844 | 0 | 0 | 924 |
+
+Footer attribution after — **0 во всех шести случаях**; оставшиеся небольшие shifts
+относятся к header/font layout. Это bounded repair, не гарантия CLS всего сайта.
+Снимки loading/ready просмотрены; в каждой пробе 6 font faces loaded, все 2–8
+viewport images decoded, 0 page/console errors и failed requests. Axe main/footer:
+0 violations; contrast incomplete nodes 34/34/25/43/67/46 сохранены как ограничения,
+не названы WCAG-сертификацией. Observed LCP after 368/312/256/320/236/240 ms;
+искусственный chunk gate и screenshot protocol не дают performance certification.
+
+Среда перепроверена после перезапуска: Node 22.22.3/npm 10.9.8, Chromium 153.0.8010.0,
+NSS shim и CPU rendering; production/CI browser flags не менялись. Исходные ignored
+before/red артефакты не пережили перезапуск; их результаты выше записаны из реально
+выполненных проверок. После восстановления повторены все after/browser/build gates;
+свежие JSON/PNG/logs лежат в ignored `qa-artifacts/shell-step/`.
+
+Contracts/check/build/budgets/prerender/SEO PASS. Entry 635177→635190 B, JS
+1731628→1731641 B, CSS 263027→263083 B. Штатно обновлены 31 source fingerprints
+в discovery manifest; URL/state/lastmod не менялись. Dependencies и `.github`
+не менялись. Data migration отсутствует; rollback — main class, guard, документация
+и повторная штатная генерация fingerprints. PR остаётся draft/open; merge,
+production/AuditRepo closure и отдельный Hall geometry substep не выполнялись.
