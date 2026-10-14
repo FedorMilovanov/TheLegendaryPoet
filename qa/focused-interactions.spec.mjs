@@ -278,7 +278,7 @@ test.describe('premium home poet windows', () => {
     const surface = first.locator('[data-hero-poet-window-surface]');
     const glow = first.locator('[data-hero-poet-window-glow]');
     const before = await surface.evaluate((node) => ({ transform: getComputedStyle(node).transform, glowOpacity: getComputedStyle(node.querySelector('[data-hero-poet-window-glow]')).opacity }));
-    await first.hover({ position: { x: 12, y: 18 } });
+    await first.hover();
     await expect.poll(() => surface.evaluate((node) => getComputedStyle(node).transform), { timeout: 2_500 }).not.toBe(before.transform);
     await expect.poll(() => glow.evaluate((node) => getComputedStyle(node).opacity), { timeout: 2_500 }).not.toBe(before.glowOpacity);
     await first.focus();

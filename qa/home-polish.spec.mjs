@@ -185,7 +185,7 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
     await expect.poll(() => effectiveOpacity(label), { timeout: 2_500 }).toBeGreaterThan(0.85);
   } else {
     const before = await effectiveOpacity(label);
-    await first.hover({ position: { x: 12, y: 18 } });
+    await first.hover();
     await expect.poll(() => effectiveOpacity(label), { timeout: 2_500 }).toBeGreaterThan(before + 0.5);
   }
 

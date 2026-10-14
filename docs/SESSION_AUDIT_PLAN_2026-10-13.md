@@ -594,3 +594,44 @@ bundle идентичен `868ba47`. Source/build evidence шагов 6–7 ос
 Среда проверена снова: Node 22.22.3, npm 10.9.8, Chromium 153.0.8010.0; CPU для
 CSS и SwiftShader для actual WebGL, Pages-like preview на 0.0.0.0:4173.
 Exact-head CI после push отражается в PR, не выводится из локального PASS.
+
+## Выполнение — 2026-10-15: относительный размер подписей и reflow галереи
+
+**Baseline:** clean `851ca94`, main по-прежнему `090ea18`. Contracts/check/build/
+prerender/budgets PASS; браузер Chromium 153 и Pages-like preview перепроверены.
+Все 10 запущенных exact-head workflows `851ca94` завершились SUCCESS, включая
+Manual Browser QA 38653742711; Pages skipped. PR514 открыт/BEHIND с прежним
+lockfile-only scope; #497 OPEN и по-прежнему требует настоящих human sessions.
+
+**Причина / один owner:** HeroPoetWindow использовал 7–11px text и mobile
+clamp(8px,2.25vw,9px); при root font 32px текст не увеличивался, а rem padding рос.
+Галерея имела только viewport-based 3/6 columns. Новый caption contract — имя
+0.75rem, даты 0.625rem, единый относительный padding; gallery container выбирает
+1/2/3/6 колонок по доступной rem-ширине. Это CSS, без измерителей/ResizeObserver/
+JS font fitting. 12/10px — локальное design floor, не «минимальный шрифт WCAG».
+Обновлён responsive sizes hint; портреты, приоритет двух первых изображений,
+post-load release остальных, dark-island colours и motion authority сохранены.
+
+**Red→green:** 8 новых cases (320/390/768/1440 × 100/200% root text) FAIL→PASS.
+Проверяются все имена/даты, scaling, line bounds, overflow и реальный переход по
+ссылке. Это text-only resize fixture, НЕ native browser/pinch zoom certification.
+Вместе с existing labels/media tests 11/11 PASS; actual-GL first-viewport polish
+1/1 и focused hover/link/depth 1/1 PASS. Route/shell/theme/reader 84/84 PASS.
+
+При расширении coverage старый hover в точку (12,18) попал вне округлой арки.
+Ошибка отдельно воспроизведена на восстановленных **неизменённых product files
+851ca94**, затем текущие edits безопасно восстановлены и rebuild выполнен.
+Все три affected QA используют реальный центр hover; force/timeout/threshold
+не добавлены. Успех opacity/depth/link assertions сохранён, hitbox не расширялся.
+
+Before/after PNG просмотрены. 4 probes: desktop dark, mobile dark/light и mobile
+200% text. Fonts=6, hero images=6 decoded; console/page/request errors=0.
+Axe violations=0, contrast incompletes=2/12/12/12 (не WCAG closure). CLS sums
+0.001508/0/0/0 не изменились; after LCP 348/248/264/288ms — наблюдения, не benchmark.
+В 200% fixture обнаружена отдельная теснота MobileDock; она **не исправлена**
+этим bounded gallery change. Whole-site text-resize/manual AT остаются открытыми.
+
+Fresh budgets: entry 635218→635218 B; JS 1731731→1731817 B; CSS 263706→263833 B.
+Все caps соблюдены. Один Home discovery fingerprint regenerated; feed стабилен.
+Rollback — gallery/typography/sizes и QA diff, затем штатная генерация; данных
+и новых изображений нет. Артефакты ignored `qa-artifacts/resize-step/`.

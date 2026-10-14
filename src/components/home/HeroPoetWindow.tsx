@@ -18,7 +18,7 @@ interface HeroPoetWindowProps {
 }
 
 const pointerSpring = { stiffness: 205, damping: 27, mass: 0.7 };
-const HERO_PORTRAIT_SIZES = '(min-width: 1088px) 164px, (min-width: 1024px) calc((100vw - 204px) / 6 + 16px), (min-width: 640px) calc((100vw - 148px) / 6 + 16px), calc((100vw - 64px) / 3 + 16px)';
+const HERO_PORTRAIT_SIZES = '(min-width: 1088px) 164px, (min-width: 1024px) calc((100vw - 204px) / 6 + 16px), (min-width: 912px) calc((100vw - 148px) / 6 + 16px), (min-width: 640px) calc((100vw - 88px) / 3 + 16px), (min-width: 368px) calc((100vw - 64px) / 3 + 16px), calc((100vw - 48px) / 2 + 16px)';
 
 function buildHeroPortraitPrimary(photo: string | undefined) {
   return photo?.replace(/\.jpg$/i, '-320.jpg');
@@ -196,16 +196,16 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
 
             <div
               data-hero-poet-window-label
-              className="hero-poet-window-label pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-2 pb-2 opacity-0 sm:px-3 sm:pb-3"
+              className="hero-poet-window-label pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-2 pb-2 opacity-0"
             >
-              <div className="hero-poet-window-label-panel theme-dark-island rounded-xl border border-cyan-200/15 px-2 py-1.5 text-center sm:px-3 sm:py-2">
+              <div className="hero-poet-window-label-panel theme-dark-island rounded-xl border border-cyan-200/15 px-2 py-1.5 text-center">
                 <div
                   data-hero-poet-window-name
-                  className="hero-poet-window-name font-serif text-[9px] font-semibold tracking-[0.04em] theme-dark-island-text sm:text-[11px]"
+                  className="hero-poet-window-name font-serif font-semibold tracking-[0.04em] theme-dark-island-text"
                 >
                   {poet.name}
                 </div>
-                <div className="mt-0.5 text-[7px] font-semibold uppercase tracking-[0.18em] theme-dark-island-muted sm:text-[8px]">{poet.birthYear}—{poet.deathYear ?? 'н. в.'}</div>
+                <div className="hero-poet-window-dates mt-0.5 font-semibold uppercase tracking-[0.18em] theme-dark-island-muted">{poet.birthYear}—{poet.deathYear ?? 'н. в.'}</div>
               </div>
             </div>
           </div>
