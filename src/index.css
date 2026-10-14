@@ -768,7 +768,7 @@ select option { background-color: #03070d !important; color: #fff !important; pa
 
 .hero-gradient { background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.1) 0%, transparent 70%); }
 .section-divider { height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.38) 50%, transparent 100%); }
-.section-label { display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(46, 216, 255, 0.52); margin-bottom: 0.75rem; }
+.section-label { display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tlp-island-accent, var(--tlp-section-label)); margin-bottom: 0.75rem; }
 
 .poetry-text { font-family: var(--font-serif); line-height: 1.82; letter-spacing: 0.02em; word-break: break-word; hyphens: auto; }
 @media (max-width: 768px) { .poetry-text { font-size: 1.08rem; line-height: 1.76; } }

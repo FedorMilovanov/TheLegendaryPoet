@@ -19,8 +19,8 @@ async function themeSnapshot(page) {
   }));
 }
 
-async function contrastRatio(locator) {
-  return locator.evaluate((node) => {
+async function contrastMeasurements(locator, directTextOnly = false) {
+  return locator.evaluateAll((nodes, directTextOnly) => {
     const parse = (value) => {
       const match = value.match(/rgba?\(([^)]+)\)/i);
       if (!match) {
@@ -56,19 +56,29 @@ async function contrastRatio(locator) {
       return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
     };
 
-    let background = { r: 255, g: 255, b: 255, a: 1 };
-    const chain = [];
-    for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
-    for (const current of chain.reverse()) {
-      const bg = parse(getComputedStyle(current).backgroundColor);
-      if (bg.a > 0) background = composite(bg, background);
-    }
+    return nodes.filter((node) => !directTextOnly || (node instanceof HTMLElement
+      && [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim()))).map((node) => {
+      let background = { r: 255, g: 255, b: 255, a: 1 };
+      const chain = [];
+      for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
+      for (const current of chain.reverse()) {
+        const bg = parse(getComputedStyle(current).backgroundColor);
+        if (bg.a > 0) background = composite(bg, background);
+      }
 
-    const foreground = composite(parse(getComputedStyle(node).color), background);
-    const l1 = luminance(foreground);
-    const l2 = luminance(background);
-    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-  });
+      const foreground = composite(parse(getComputedStyle(node).color), background);
+      const l1 = luminance(foreground);
+      const l2 = luminance(background);
+      return { text: node.textContent, ratio: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) };
+    });
+  }, directTextOnly);
+}
+
+async function contrastRatio(locator) {
+  await locator.waitFor({ state: 'attached' });
+  const measurements = await contrastMeasurements(locator);
+  expect(measurements).toHaveLength(1);
+  return measurements[0].ratio;
 }
 
 
@@ -371,5 +381,97 @@ for (const theme of ['dark', 'light']) {
     await nextLink.hover();
     await expect.poll(() => nextLink.evaluate((node) => node.getAnimations().length)).toBe(0);
     expect(await contrastRatio(nextLink), `${theme} hovered navigation text`).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+async function seedContrastState(page, theme) {
+  await page.addInitScript((theme) => {
+    localStorage.setItem('tlp-theme-mode', theme);
+    const targets = [
+      { targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 4, depth: 4, legacy: 4, truth: 4 } },
+      { targetType: 'track', targetId: 'pushkin-tucha', scores: { voice: 4, music: 4, text: 4 } },
+    ];
+    localStorage.setItem('tlp-my-archive:v4', JSON.stringify({ version: 4, updatedAt: Date.now(), operations: [
+      { id: 'pushkin-1', favorite: true, addedAt: Date.now(), generation: '1', writerId: 'contrast-fixture' },
+    ] }));
+    const createdAt = new Date().toISOString();
+    localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+      version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+      updatedAt: createdAt, lastSyncedAt: null,
+      localSnapshot: {
+        ratings: targets.map((entry, i) => ({ ...entry, id: `rating-contrast-fixture-${i}`, createdAt })),
+        comments: targets.map(({ targetType, targetId }, i) => ({ targetType, targetId,
+          id: `comment-contrast-fixture-${i}`, author: 'QA', text: 'Локальная запись для проверки отображения счётчика.',
+          kind: 'literary', helpful: 0, createdAt })),
+      },
+    }));
+  }, theme);
+}
+
+async function expectReadableCardText(root, state) {
+  // One browser task: do not spend a protocol round trip on every glyph parent.
+  const measurements = await contrastMeasurements(root.locator('*'), true);
+  expect(measurements.length).toBeGreaterThan(10);
+  for (const { text, ratio } of measurements) {
+    expect(ratio, `${state}: ${text}`).toBeGreaterThanOrEqual(4.5);
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const route of ['/', '/poets']) {
+    test(`poet card contrast on ${route} in ${theme}, including populated feedback`, async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedContrastState(page, theme);
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      const card = page.locator('a[href="/poets/alexander-pushkin"]:has(h3)');
+      await card.scrollIntoViewIfNeeded();
+      await expect(card.getByText('1 мнений', { exact: true })).toBeVisible();
+      await expectReadableCardText(card, `${theme} idle`);
+      await card.focus();
+      await page.keyboard.press('Shift');
+      await expect(card).toBeFocused();
+      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expectReadableCardText(card, `${theme} keyboard focus`);
+      expect(await nonTextContrast(card, 'focus')).toBeGreaterThanOrEqual(3);
+      await card.evaluate((node) => node.blur());
+      await card.hover();
+      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expectReadableCardText(card, `${theme} hover`);
+    });
+  }
+  for (const route of ['/', '/music', '/archive', '/contrast-missing-route']) {
+    test(`section label contrast on ${route} in ${theme}`, async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedContrastState(page, theme);
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      const label = page.locator('.section-label').first();
+      await label.scrollIntoViewIfNeeded();
+      expect(await contrastRatio(label)).toBeGreaterThanOrEqual(4.5);
+      if (route === '/music') {
+        if (theme === 'light') {
+          // Backdrop images/gradients are outside this calculator. Certify the
+          // translucent header against its darkest possible backing as well.
+          await page.locator('main').evaluate((node) => { node.style.backgroundColor = '#050505'; });
+          expect(await contrastRatio(label)).toBeGreaterThanOrEqual(4.5);
+          await page.locator('main').evaluate((node) => { node.style.removeProperty('background-color'); });
+        }
+        const summary = page.getByText('1 мнений', { exact: true });
+        await expect(summary).toBeVisible();
+        expect(await contrastRatio(summary)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+  }
+  test(`section label contrast in render-error panel in ${theme}`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await seedContrastState(page, theme);
+    // Fail the initial route locally: certify the real boundary's colors,
+    // independently of the separate offline/SPA recovery tests.
+    await page.route('**/assets/RatingsPage-*.js', (route) => route.fulfill({
+      contentType: 'text/javascript', body: 'export default function ContrastFixture(){throw new Error("contrast-fixture")}',
+    }));
+    await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'networkidle' });
+    const alert = page.getByRole('alert');
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    expect(await contrastRatio(alert.locator('.section-label'))).toBeGreaterThanOrEqual(4.5);
   });
 }

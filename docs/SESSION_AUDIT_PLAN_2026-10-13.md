@@ -371,3 +371,67 @@ JS 1731821→1731754 B, CSS 263435→263004 B. Dependencies и `.github` не м
 AX tree/axe не заменяют такую проверку. Миграции данных нет; rollback — компоненты,
 их guards и повторная штатная генерация fingerprints. Логи/снимки/AX-пробы —
 ignored `qa-artifacts/a11y-step/`; закрытие в AuditRepo до merge не производится.
+
+## Выполнение — 2026-10-14: шаг 4, карточки и общие подписи
+
+**Baseline:** clean `66e630d`, main `090ea18`; npm ci/contracts/check/build/prerender
+PASS, все запущенные exact-head CI предыдущего шага SUCCESS. Четыре новых проверки
+карточки/подписи главной сначала FAIL в обеих темах: light text 2.02:1 / label 1.33:1.
+
+**Причина / общий владелец / границы:**
+- `PoetCard` обходил theme contracts полупрозрачными локальными цветами. Теперь тело
+  имеет непрозрачную theme surface, semantic text и читаемое золото в обеих темах;
+  portrait badges — явные непрозрачные dark islands. Tilt, геометрия, данные и links
+  не менялись. Hover/focus заголовка сохраняют золотой акцент.
+- `FeedbackMiniSummary` наследует island/page text token; заполненные счётчики
+  проверены в PoetCard и TrackReleaseCard. Фикстуры — только browser localStorage,
+  пустой outbox, без backend writes; архив содержит настоящий `pushkin-1`.
+- `.section-label` использует общий role token: cyan в dark, существующий primary
+  ink в light, island accent внутри dark islands. Все владельцы покрыты: Home,
+  Music, MyArchive, NotFound, ErrorBoundary. Light Music требует более тёмного ink:
+  image/gradient backdrop дал около 4.02:1 на снимке при ложном успехе ancestor-only
+  расчёта. Новый worst-backing guard падал 2.30:1 и проходит после исправления.
+- ErrorBoundary сохраняет тёмную панель: прежний составной `bg-[gradient,color]`
+  компилировался в недопустимый background-color. Solid background и gradient
+  разделены, inherited text явно island-aware. Recovery/navigation не менялись.
+
+**Проверено:** final desktop theme/reader suite **25/25 PASS**, новые mobile
+**14/14 PASS**; text ≥4.5:1, keyboard focus ≥3:1, idle/settled hover/focus,
+заполненные отзывы и архив. Measurement helper считает тот же contrast одним
+browser task вместо десятков CDP round trips; thresholds/timeouts не увеличены.
+Render-error fixture ломает только локальный route module при initial navigation;
+это проверка реального ErrorBoundary, не закрытие прежнего offline-alert FAIL.
+
+Axe 4.14, `/` и `/poets`, desktop/mobile, dark/light — восемь проб:
+- Dark card: по одному violation (fullname 3.94:1) → **0**; incomplete nodes 2 → **0**.
+- Light card: 0 violations, но 12 incomplete → **0 violations / 0 incomplete**.
+  Поэтому исходное «0 violations» не считалось успехом; computed red выявил 2.02:1.
+- Минимальный измеренный card contrast после: **8.26:1 dark / 5.62:1 light**.
+- Home label: по одному violation → **0**, без incomplete, во всех четырёх режимах.
+- Дополнительные Music/error-panel axe пробы: 0 violations, но 1/4 incomplete nodes
+  соответственно; они не объявлены axe-clean. Дополнительно проверены computed
+  contrast, darkest-backing contract и изображения обеих тем.
+- Во всех восьми обычных пробах: 0 page/console errors и failed requests,
+  6 loaded font faces, portrait naturalWidth 1000. Card и label screenshots просмотрены.
+
+**Среда / ограничения измерений:** Node 22.22.3, npm 10.9.8, Chromium 153.0.8010.0
+с прежним NSS shim. Desktop 1440×1000/no-preference; mobile 390×844/DPR2/touch/reduce.
+SwiftShader в sandbox зависал на capture. Element/page/clip capture и CSS animation
+freeze не устранили сбой; `--disable-gpu` с удалением use-gl/use-angle/in-process-gpu/
+enable-unsafe-swiftshader позволил получить реальные снимки. Только capture выключает
+CSS animations; functional desktop tests сохраняют no-preference. Browser/QA configs
+локальные, ignored; production/CI flags не менялись. LCP after (Home/Poets): desktop
+ dark 384/372 ms, light 1092/408 ms; mobile dark 300/268 ms, light 276/300 ms.
+Это не performance certification и не сопоставимый LCP delta: compositor отличается
+от baseline. Initial CLS: desktop dark Home/Poets 0.220508/0.220405 без изменений;
+light 0.214028/0.213999 → 0.213/0.213067; mobile 0 → 0. Большой loading shift
+0.213–0.219 **не исправлен**, улучшение CLS не заявляется.
+
+Contracts/check/build/budgets/prerender/SEO PASS; entry 635142→635177 B,
+JS 1731754→1731628 B, CSS 263004→263027 B. Discovery manifest после штатной генерации
+байт-стабилен. Dependencies, `.github`, бренд, контент и другие repos не менялись.
+Логи, scripts, before/after JSON и PNG: ignored `qa-artifacts/card-step/`.
+Миграции данных нет; rollback — этот shared UI diff и его regression guards.
+Ремонт выполнен в session branch; merge/production/AuditRepo closure не выполнены.
+Manual AT, весь сайт WCAG, оставшиеся page-level contrast, Hall geometry и offline
+recovery не сертифицированы этим шагом. Exact-head CI отражается отдельно в PR.
