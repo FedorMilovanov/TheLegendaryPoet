@@ -475,3 +475,61 @@ for (const theme of ['dark', 'light']) {
     expect(await contrastRatio(alert.locator('.section-label'))).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+// Bound the portrait's translucent gradient over black AND white image pixels.
+// Unlike the ordinary surface helper, include gradient alpha and label opacity.
+async function heroCaptionContrasts(panel) {
+  return panel.evaluate((panel) => {
+    const context = document.createElement('canvas').getContext('2d');
+    const rgba = (css) => {
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = css;
+      context.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+      return [r, g, b, a / 255];
+    };
+    const mix = (front, back, alpha = front[3]) => front.slice(0, 3).map((c, i) => c * alpha + back[i] * (1 - alpha));
+    const luminance = (rgb) => rgb.map((c) => c / 255).map((c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+    const gradient = getComputedStyle(panel).backgroundImage;
+    const stops = gradient.match(/rgba?\([^)]+\)/g);
+    if (!stops || stops.length !== 2) throw new Error(`Update the caption paint model for ${gradient}`);
+    const opacity = Number(getComputedStyle(panel.parentElement).opacity);
+    return [...panel.children].map((node) => {
+      const color = rgba(getComputedStyle(node).color);
+      const ratios = stops.flatMap((stop) => [0, 255].map((channel) => {
+        const image = [channel, channel, channel];
+        const surface = mix(rgba(stop), image);
+        const background = mix(surface, image, opacity);
+        const foreground = mix(mix(color, surface), image, opacity);
+        const a = luminance(foreground), b = luminance(background);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      }));
+      return { text: node.textContent, ratio: Math.min(...ratios) };
+    });
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`hero caption ${theme}, ${mobile ? 'touch' : 'keyboard'}`, () => {
+    test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, reducedMotion: 'reduce' });
+    test('names and dates remain readable over the portrait', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+      await page.goto(BASE_URL);
+      const shells = page.locator('[data-hero-poet-window-shell]');
+      await expect(shells).toHaveCount(6);
+      await page.evaluate(() => document.fonts.ready);
+      if (!mobile) await page.keyboard.press('Tab');
+      for (const shell of await shells.all()) {
+        if (!mobile) await shell.locator('a').focus();
+        const panel = shell.locator('.hero-poet-window-label-panel');
+        await expect(shell.locator('[data-hero-poet-window-label]')).toHaveCSS('opacity', mobile ? '0.96' : '1');
+        for (const { text, ratio } of await heroCaptionContrasts(panel)) {
+          expect.soft(ratio, `${theme} ${text}: worst-case portrait backdrop`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    });
+  });
+}

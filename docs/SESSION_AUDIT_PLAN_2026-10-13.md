@@ -532,3 +532,40 @@ Contracts/check/build/prerender/build-output PASS. Нативный Safari/manua
 Active-audio inset использует имеющийся height budget, не новое измерение.
 Dependencies/CI/content не менялись; 31 discovery fingerprints regenerated.
 PR остаётся draft/open. Production/AuditRepo closure не заявляется.
+
+## Выполнение — 2026-10-15: шаг 7, подписи HeroPoetWindow
+
+**Baseline:** clean `a677a1c`; source/build/prerender/budgets и contracts PASS на
+том же product tree. Hall step budgets: entry 635190→635218 B, JS 1731641→1731696 B,
+CSS 263083→263747 B. К моменту следующего commit 9 workflows Hall SUCCESS,
+Manual Browser QA ещё in progress; Pages skipped. Это не преждевременный all-green.
+
+**Подтверждение:** 4 browser probes (desktop/mobile × dark/light), snapshots и
+computed paint показали, что generic `text-cyan-200/46` становится rgba(31,61,71,.66)
+в light поверх неизменно тёмного gradient. Новые 4 QA cases учитывают оба gradient
+stops, alpha текста/подложки, mobile opacity .96 и крайние чёрный/белый backdrop.
+До исправления все 4 FAIL: dates contrast dark desktop/mobile 3.549/3.356, light
+1.105/1.103. Это conservative backdrop tests, не измерение каждого пикселя фотографии.
+
+**Один owner:** caption panel теперь использует существующий `theme-dark-island`,
+имя — island-text, даты — island-muted. Новые цвета/override engine не добавлены.
+Размеры, портреты, layout, gradient, hover/focus/motion и ссылки не изменены.
+Все 6 подписей проверяются для клавиатуры и touch; 4 новых cases PASS ≥4.5.
+В combined theme/reader/shell run: 39 PASS / 1 FAIL. Отдельно short-dark footer
+scroll assertion упал после warm navigation; без source/test изменений 5 повторов
+PASS. Этот непостоянный scroll failure **не исправлен** и не выдан за 40/40 PASS;
+в failing run прокрутка целого footer не довела целевую ссылку до viewport.
+Контракт reservation/CLS не падал. Логи сохранены для последующего исследования.
+
+**Визуальная проверка:** before/after PNG, desktop keyboard focus и mobile dark/
+light просмотрены. 6 hero images decoded, 6 font faces loaded, 0 page/console
+errors и failed requests во всех четырёх пробах. Offscreen lazy images с
+naturalWidth=0 не считаются broken viewport images. Axe: 0 violations, contrast
+incompletes 2/2/12/12; отдельный paint test нужен именно потому, что axe не оценивает
+эти gradients. After CLS sums 0.001508/0/0/0, LCP 384/668/264/260 ms; не speed score.
+Размеры caption текста и 200% zoom/manual AT этим шагом не сертифицированы.
+
+Contracts/check/build/prerender/budgets PASS; entry 635218→635218 B, JS
+1731696→1731731 B, CSS 263747→263543 B. Sitemap/feed byte-stable. Runtime rollback —
+три semantic classes и regression guard; migration нет. Dependencies, CI и
+историческое содержание не менялись. Артефакты ignored `qa-artifacts/recheck-step/`.
