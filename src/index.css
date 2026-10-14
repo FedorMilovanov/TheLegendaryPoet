@@ -48,6 +48,11 @@ h1, h2, h3, .editorial-title {
   color: #ffffff;
 }
 
+:root {
+  --tlp-header-row-height: 5rem;
+  --tlp-header-height: calc(var(--tlp-header-row-height) + 1px);
+}
+
 /* Header responsive helpers (pure CSS - no Tailwind display conflicts) */
 .header-wordmark { display: none; flex-direction: column; line-height: 1.2; }
 .header-nav { display: none; }
@@ -300,7 +305,7 @@ html.chrome-hidden .mobile-dock {
 
 /* Progress bar rides just under the header; when the header tucks away it
    glides up to the very top edge — reading progress stays visible always. */
-.reading-progress { top: 5rem; transition: top 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.reading-progress { top: var(--tlp-header-height); transition: top 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
 html.chrome-hidden .reading-progress { top: 0; }
 
 /* Scroll-top button sits above the dock on phones; when the dock hides it

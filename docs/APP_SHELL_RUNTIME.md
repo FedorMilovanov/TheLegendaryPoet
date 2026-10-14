@@ -143,3 +143,12 @@ npm run validate:build-output
 ```
 
 The complete CI additionally runs all content, music, audio-session, archive, community, literary-style, sitemap, prerender, and generated-output checks.
+
+## Fixed chrome geometry
+
+`index.css` owns `--tlp-header-row-height` and border-inclusive
+`--tlp-header-height`; Header and reading progress consume these tokens.
+The Hall viewport reserves that header height and consumes the existing dock/audio
+clearance from `audio-player.css` (dock measurement still belongs to MobileDock).
+Its scene uses minimum rather than fixed height: short screens retain normal
+scroll access to readable content and controls instead of clipping them.

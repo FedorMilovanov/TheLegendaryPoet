@@ -493,3 +493,42 @@ Contracts/check/build/budgets/prerender/SEO PASS. Entry 635177→635190 B, JS
 не менялись. Data migration отсутствует; rollback — main class, guard, документация
 и повторная штатная генерация fingerprints. PR остаётся draft/open; merge,
 production/AuditRepo closure и отдельный Hall geometry substep не выполнялись.
+
+## Выполнение — 2026-10-15: шаг 6, Hall и fixed chrome
+
+**Baseline:** clean `3bd67f1`, все 9 запущенных exact-head workflows SUCCESS.
+После восстановления окружения source/build/prerender/budgets PASS. 80 route/shell/
+theme/reader cases прошли: 78 сразу, два 404 — после замены ошибочного ad-hoc SPA
+server на canonical Pages-like server (только host изменён на 0.0.0.0). Это ошибка
+первого harness, не ремонт приложения. Существующие 4 Hall WebGL tests PASS.
+
+**Новый воспроизводимый дефект:** title panel начинался на y=32 desktop / y=20
+mobile при header bottom=81. Mobile h1 y=64 попадал под header. Новые 8 geometry
+cases дали 8 FAIL на panel inset до product edits. Root cause — Hall вычитал
+условные 5rem из высоты, но не резервировал реальное место над сценой.
+
+**Owner/boundary:** shared CSS tokens задают row=5rem и header=row+1px; Header и
+reading-progress потребляют их. Hall wrapper резервирует верх и существующие
+mobile dock/audio budgets; один MobileDock ResizeObserver остаётся владельцем
+измерения dock. Общая min-height сцены наследуется внутренним flex layout;
+короткие экраны прокручиваются без сжатия текста. H3/R1/L0/UV0, camera, context-loss,
+fallback, rights и медиа не изменены. Data migration нет. Rollback — этот CSS/UI/
+QA diff с обычной регенерацией discovery fingerprints; нового engine нет.
+
+**After:** 12/12 Hall tests PASS (8 geometry + прежние 4): actual SwiftShader WebGL,
+forced fallback, настоящий context loss, camera controls, 1440×1000 / 390×844 /
+320×568 / 768×1024, dark/light, reduced motion. Compact case проверяет доступность
+кнопки после нормальной прокрутки; остальные — без неё. CPU regression suite
+80/80 PASS. Визуальные WebGL PNG просмотрены desktop dark/mobile light: panel
+теперь y=113/101, mobile h1 y=145, header hit-test исправлен, dock не закрывает
+кнопки. Hall axe: 0 violations; incomplete aria-prohibited-attr=1 и contrast=6
+в каждой пробе, не WCAG closure. 6 font faces loaded, 6/6 viewport images decoded,
+0 console/page errors и failed requests. Observed CLS sum desktop 0.000933→0,
+mobile 0→0; LCP 512→676 / 356→460 ms — одиночные software-rendered наблюдения,
+не performance benchmark. Артефакты ignored `qa-artifacts/recheck-step/`.
+
+Contracts/check/build/prerender/build-output PASS. Нативный Safari/manual AT,
+реальная аудиосессия поверх Hall и production не сертифицированы локально.
+Active-audio inset использует имеющийся height budget, не новое измерение.
+Dependencies/CI/content не менялись; 31 discovery fingerprints regenerated.
+PR остаётся draft/open. Production/AuditRepo closure не заявляется.

@@ -311,11 +311,11 @@ export function HallProductionRuntime() {
   const move = (delta: number) => applyStopRef.current(stopIndexRef.current + delta);
 
   return (
-    <section className="relative min-h-[calc(100svh-5rem)] overflow-hidden bg-[#090909]" data-hall-production-mode={mode}>
+    <section className="hall-stage relative overflow-hidden bg-[#090909]" data-hall-production-mode={mode}>
       <div ref={hostRef} className="absolute inset-0" aria-hidden={mode !== 'webgl'} />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_24%,rgba(212,175,55,0.11),transparent_34%),linear-gradient(to_bottom,rgba(0,0,0,0.05),rgba(0,0,0,0.72))]" aria-hidden="true" />
 
-      <div className="relative z-10 flex min-h-[calc(100svh-5rem)] flex-col justify-between p-5 md:p-8">
+      <div className="relative z-10 flex min-h-[inherit] flex-col justify-between gap-6 p-5 md:p-8">
         <div className="max-w-xl rounded-2xl border border-white/10 bg-black/55 p-5 backdrop-blur-md md:p-6">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.32em] text-luxury-gold">Hall v3 · H3 / R1 / L0 / UV0</p>
           <h1 className="font-serif text-3xl font-bold text-white md:text-5xl">Зал Поэтов</h1>
