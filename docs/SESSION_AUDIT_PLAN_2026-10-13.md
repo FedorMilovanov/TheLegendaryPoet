@@ -818,3 +818,50 @@ research-only шага повторяются те же validators и diff check
 прошлый browser/build прогон за новый. Библиографические warnings не удаляются.
 Remote RED сохраняется как отдельный незакрытый gate; новый docs commit не является
 исправлением музейного endpoint или заменой запрещённого rerun.
+
+## Продолжение — 2026-10-16: точная публикация расписки Аронсона
+
+На `6bf5aaa` remote CI завершился: 15 SUCCESS, Pages SKIPPED, включая Manual
+Browser QA. Старый музейный network-failure не повторился на этом HEAD;
+сетевая стабильность этим не доказана, правила link gate не менялись.
+
+В исследовательской копии Летописи т. 5, кн. 1 (2013) найден и визуально
+сверен текст расписки: с. 580 / PDF 583; ГЛМ, ф. 4, оп. 1, ед. хр. 339
+(Рнв 243/4, л. 1). SHA-256 совпал с existing ledger. Подробнее:
+`research/ARONSON_RECEIPT_PUBLICATION_REVIEW_2026-10-16.md`.
+Canonical source получил точную библиографию и границу печатная публикация ≠
+факсимиле оригинала. Body/citations/URL/rights не менялись. На с. 595 гипотеза
+о возвращении денег не превращена в факт. Две no-URL позиции остаются открытыми.
+
+После возобновления sandbox HEAD оказался на исходном `090ea18`, а весь ранее
+сохранённый diff — в working tree. Remote session branch оставалась `6bf5aaa`.
+До записи проверено полное совпадение рабочего дерева с fetched tree через
+temporary index. Локальный указатель/index восстановлены без hard reset,
+перезаписи файлов, смены ветки или force push. Node22.22.3/npm10.9.8;
+`npm ci`, clean baseline contracts/check/build/publication/citations PASS.
+
+After contracts/check/essays/citations/Part II publication PASS:
+10 essays, 0 errors/0 essay warnings, 11 citation warnings — без изменения.
+Первый after check потребовал обновить discovery fingerprints после source note;
+штатные sitemap/feed generators изменили ровно 3 fingerprint (Home, Articles,
+Есенин II), URL/state/lastmod и feed/sitemap остались прежними. Gate не ослаблен.
+
+Fresh browser before/after: Chromium153/NSS shim/CPU, desktop1440×1000 dark и
+mobile390×844 dark/light, explicit isMobile/reduced-motion. Source-card 3/3 PASS:
+новые библиографические поля видны, фиктивной ссылки нет, overflow=0, fonts=6;
+after PNG всех трёх режимов и mobile dark before реально просмотрены.
+Axe card: 0 violations, 1 color-contrast incomplete в каждом случае; не WCAG
+certificate. LCP 392/292/276→384/320/296 ms; CLS 0.001158/0/0→без изменений.
+Это локальные unthrottled probes на hash-route, не полная performance acceptance.
+
+В каждой before/after пробе один failed request/console resource error и один
+broken portrait: Wikimedia Special:Redirect/file/Сергей_Есенин_(1921).jpg,
+ERR_CONNECTION_CLOSED. `skipped: sandbox egress`; не исправление сайта и не
+all-images PASS. Других console/page/request errors и broken images в пробах нет.
+Портрет не подменялся mock/локальным ассетом. Browser tools/shim/PNG — ignored,
+project dependencies/CI неизменны. Vite preview accepts точный sandbox hostname
+через environment, bind0.0.0.0; production config не редактировался.
+
+Открыто: прямой публичный свидетель расписки, архивный оригинал, медицинский
+документ ед.37, дневниковый лист1123; native Safari/manual AT/production и #497
+этим шагом не закрываются. Новый HEAD требует собственного CI после push.
