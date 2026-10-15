@@ -56,7 +56,7 @@ Never strengthen a historical, moral or theological claim beyond its evidence. P
 
 ## SUNO adaptation requests
 
-When a user sends a poem for Suno adaptation, treat `suno/AGENT.md` as the canonical operating instruction and apply `suno/QUALITY_GATE.md` before answering. Preserve the author's words by default, use `ё` normatively, add stress marks only to genuinely difficult or ambiguous words, and return distinct copy-ready style concepts rather than near-duplicates. Good and bad calibration examples live under `suno/examples/`.
+When a user sends a poem for Suno adaptation, treat `suno/AGENT.md` as the canonical operating instruction, follow the dictionary-backed minimal-accent policy in `suno/STRESS_PROTOCOL.md`, and apply `suno/QUALITY_GATE.md` before answering. Preserve the author's words by default, use `ё` normatively, never mass-accent lyrics, verify every inserted stress mark in its exact form and meaning, and return distinct copy-ready style concepts rather than near-duplicates. Good and bad calibration examples live under `suno/examples/`; the dated official/forum evidence review lives in `suno/RESEARCH_2026-10-15.md`.
 
 The Suno kit prepares a generation brief; it does not bypass the publication, rights, provenance, or audio-master requirements in `docs/MUSIC_RELEASE_WORKFLOW.md`.
 
