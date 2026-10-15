@@ -92,23 +92,23 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
   return (
     <section
       id="sources"
-      className="scroll-mt-28 mt-16 overflow-hidden rounded-[2.25rem] border border-luxury-gold/12 bg-[linear-gradient(145deg,rgba(15,14,11,0.94),rgba(7,7,7,0.96))] p-5 sm:p-7 md:p-9"
+      className="scroll-mt-28 mt-16 overflow-hidden rounded-[2.25rem] border border-luxury-gold/12 theme-elevated-surface p-5 sm:p-7 md:p-9"
     >
       <div className="flex flex-col gap-5 border-b border-white/[0.06] pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-luxury-gold/65">
+          <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] theme-poet-accent">
             <LibraryBig size={14} aria-hidden="true" /> Источниковая база
           </div>
-          <h2 className="font-serif text-3xl text-white">Документы, тексты и исследования</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-luxury-gray-light/55">
+          <h2 className="font-serif text-3xl theme-text">Документы, тексты и исследования</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed theme-functional-muted">
             Сначала показаны первичные тексты и архивы; интерпретации отделены от документов.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.14em] text-luxury-gray-light/55">
+        <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.14em] theme-functional-muted">
           <span className="rounded-full border border-white/8 bg-white/[0.025] px-3 py-1.5">
             {sources.length} всего
           </span>
-          <span className="rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-3 py-1.5 text-luxury-gold/70">
+          <span className="rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-3 py-1.5 theme-control-action">
             {counts.primary} первичных
           </span>
         </div>
@@ -124,7 +124,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
               key={item}
               type="button"
               onClick={() => changeFilter(item)}
-              className="relative isolate inline-flex min-h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border border-white/8 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-luxury-gray-light/55 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+              className="theme-control-border relative isolate inline-flex min-h-10 shrink-0 items-center gap-2 overflow-hidden rounded-full border border-white/8 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] theme-functional-muted transition-colors hover:text-white"
               aria-pressed={active}
             >
               {active && (
@@ -134,8 +134,8 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
                   transition={{ type: 'spring', stiffness: 360, damping: 30 }}
                 />
               )}
-              <span className={active ? 'text-luxury-gold' : undefined}>{label}</span>
-              <span className="tabular-nums text-luxury-gray-light/35">{count}</span>
+              <span className={active ? 'theme-control-selected' : undefined}>{label}</span>
+              <span className="tabular-nums theme-functional-subtle">{count}</span>
             </button>
           );
         })}
@@ -149,18 +149,18 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
             const Icon = meta.icon;
             const content = (
               <>
-                <span className="mt-0.5 font-serif text-sm tabular-nums text-luxury-gold/45">
+                <span className="mt-0.5 font-serif text-sm tabular-nums theme-functional-subtle">
                   {String(index).padStart(2, '0')}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm leading-relaxed text-white/82">{source.title}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.13em] text-luxury-gray-light/45">
+                    <span className="text-sm leading-relaxed theme-text">{source.title}</span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.13em] theme-functional-subtle">
                       <Icon size={9} aria-hidden="true" /> {meta.label}
                     </span>
                   </span>
                   {(source.institution || source.year || source.note) && (
-                    <span className="mt-1 block text-xs leading-relaxed text-luxury-gray-light/42">
+                    <span className="mt-1 block text-xs leading-relaxed theme-functional-muted">
                       {[source.institution, source.year].filter(Boolean).join(' · ')}
                       {source.note ? `${source.institution || source.year ? ' — ' : ''}${source.note}` : ''}
                     </span>
@@ -185,19 +185,19 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-luxury-gold/65 target:ring-offset-4 target:ring-offset-[#090806]"
+                className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-[var(--tlp-control-active)] target:ring-offset-4 target:ring-offset-[var(--tlp-focus-offset)]"
               >
                 {source.url ? (
                   <a
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] bg-white/[0.018] px-3.5 py-3 transition-[background-color,border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/20 hover:bg-luxury-gold/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
+                    className="group flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3 transition-[background-color,border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/20 hover:bg-luxury-gold/[0.025]"
                   >
                     {content}
                   </a>
                 ) : (
-                  <div className="flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] bg-white/[0.018] px-3.5 py-3">
+                  <div className="flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3">
                     {content}
                   </div>
                 )}
@@ -214,7 +214,7 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
             onClick={() => setExpanded((value) => !value)}
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-5 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/70 transition hover:border-luxury-gold/30 hover:bg-luxury-gold/[0.07] hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+            className="theme-control-border group inline-flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-5 py-2 text-[10px] font-bold uppercase tracking-[0.16em] theme-control-action transition hover:border-luxury-gold/30 hover:bg-luxury-gold/[0.07] hover:text-luxury-gold"
             aria-expanded={expanded}
           >
             {expanded ? 'Свернуть список' : `Показать ещё ${hiddenCount}`}

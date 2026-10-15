@@ -533,3 +533,38 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
     });
   });
 }
+
+for (const theme of ['dark', 'light']) for (const slug of [
+  'simonov-syn-artillerista-realnaya-istoriya',
+  'galina-benislavskaya-yesenin-manuscripts-publishing-archive',
+]) test.describe(`source library ${theme} ${slug}`, () => {
+  test.use({ viewport: theme === 'light' ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', reducedMotion: 'reduce' });
+  test('bibliography text and controls remain readable through expansion and filtering', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+    await page.goto(`${BASE_URL}/essays/${slug}`);
+    const sources = page.locator('#sources');
+    await expect(sources).toBeVisible();
+    // This surface is ordinary themed reading UI, not an immersive dark island.
+    // An unmodelled gradient would invalidate the computed contrast helper.
+    expect(await sources.evaluate((node) => getComputedStyle(node).backgroundImage)).toBe('none');
+    await expectReadableCardText(sources, `${theme} collapsed bibliography`);
+    await sources.getByRole('button', { name: /Показать ещё/ }).click();
+    await expect(sources.locator('li[id^="source-"]')).toHaveCount(slug.startsWith('simonov') ? 21 : 13);
+    await expectReadableCardText(sources, `${theme} expanded, including sources without URLs`);
+    const primary = sources.getByRole('button', { name: /^Первичные/ });
+    const count = Number((await primary.textContent()).match(/\d+/)[0]);
+    await primary.click();
+    await expect(primary).toHaveAttribute('aria-pressed', 'true');
+    await expect(sources.locator('li[id^="source-"]')).toHaveCount(Math.min(count, 16));
+    await expectReadableCardText(sources, `${theme} primary filter`);
+    await page.keyboard.press('Tab');
+    await primary.focus();
+    expect(await nonTextContrast(primary, 'focus')).toBeGreaterThanOrEqual(3);
+    await expectReadableCardText(sources, `${theme} keyboard focus`);
+    await primary.blur();
+    await primary.hover();
+    expect(await contrastRatio(primary.locator('span').filter({ hasText: 'Первичные' }).last())).toBeGreaterThanOrEqual(4.5);
+  });
+});

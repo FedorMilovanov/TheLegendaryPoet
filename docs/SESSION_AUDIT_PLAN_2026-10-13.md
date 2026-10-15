@@ -667,3 +667,37 @@ Latest braces=3.0.3; предложенный npm downgrade singlefile→0.9.0 �
 Это dev-tool chains, что само по себе не доказывает отсутствие риска.
 Предыдущее обобщение «все 5 принадлежат PR514» неверно; lockfile не менялся.
 Отдельный dependency change требует согласования по установленному протоколу.
+
+## Выполнение — 2026-10-15: тематическая поверхность SourceLibrary
+
+Причина: общий SourceLibrary сохранял фиксированный тёмный gradient, а light
+палитра переводила текст в тёмные цвета. Один owner исправлен существующими
+`theme-elevated-surface` / `theme-soft-surface`, functional text/control tokens
+и общим keyboard outline; hash-target ring также использует theme variables.
+Это все essay bibliography surfaces, не отдельный override для Симонова.
+Контент, URLs, фильтрация, раскрытие и motion logic не изменены. Нового CSS,
+зависимостей и CI-настроек нет. Rollback — component classes и новые guards.
+
+4 новых browser cases RED→GREEN: Симонов (21 источник), Бениславская (13),
+desktop dark 1440 и mobile light 390. Проверены текст ≥4.5:1, раскрытие/фильтр,
+aria-pressed, keyboard outline ≥3:1 и hover. Fresh route/shell/theme/reader:
+**88/88 PASS**, не сумма со старыми прогонами. Check/build/prerender/budgets PASS;
+штатная discovery/feed/sitemap генерация не добавила diff. Entry 635218 B;
+JS 1731817→1731594 B (−223), CSS 263833→263075 B (−758), caps соблюдены.
+
+Оба after PNG действительно просмотрены: light bibliography читается на бумажной
+поверхности, dark — на тёмной matte surface. Fonts=6, overflow=0, console/page/
+request errors=0. Source-scoped axe violations=0; contrast incomplete 4→1,
+дополнено computed-contrast guards, но НЕ whole-site AA/manual AT certification.
+Артефакты ignored `qa-artifacts/sources-contrast-step/`. MobileDock 200% остаётся
+отдельным открытым пунктом.
+
+**Remote baseline RED не скрыт:** на `b693871abd789bb7a02b716d7cf647df325829fd`
+run https://github.com/FedorMilovanov/TheLegendaryPoet/actions/runs/38657762835
+прошёл publication boundary, затем 64-link audit дал один hard failure:
+`ye1-yesenin-letter-to-blok-1915-museum`, `ERR network-failure`, URL с `www`.
+Log прочитан через signed plain-text job resource после EOF прямой загрузки gh.
+Тот же museum path без `www` отдельно открыт: заголовок «Блоку А.А., 9 марта
+1915», полный текст письма на месте. WWW-fetch отдельно неуспешен (HTTP 500
+fetch tool); это не доказывает конкретную DNS/TLS причину runner failure.
+Исправление locator будет отдельным шагом с неизменённым 64-link gate.
