@@ -6,6 +6,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const requiredFiles = [
   'suno/README.md',
   'suno/AGENT.md',
+  'suno/CREATIVE_DIRECTION.md',
   'suno/STRESS_PROTOCOL.md',
   'suno/QUALITY_GATE.md',
   'suno/RESEARCH_2026-10-15.md',
@@ -48,11 +49,22 @@ const expectText = (relativePath, needles) => {
 
 expectText('AGENTS.md', []);
 expectText('suno/AGENT.md', [
+  'CREATIVE_DIRECTION.md',
   'STRESS_PROTOCOL.md',
+  'не менее восьми концептуальных семян',
+  'По умолчанию дай **3–5** сильных карточек',
   'Никогда не размечай все многосложные слова',
   'реестр **каждого** поставленного ударения',
   '`Variety = 0`',
   'single-lyric/section edit',
+]);
+expectText('suno/CREATIVE_DIRECTION.md', [
+  'Свобода внутри твёрдых границ',
+  'минимум две несовпадающие интерпретации',
+  'не менее **8 коротких концептуальных семян**',
+  'Это **не жанровые ячейки**',
+  'Не переопределять всё',
+  'Мог бы этот Style без изменений подойти ещё к ста случайным стихотворениям?',
 ]);
 expectText('suno/STRESS_PROTOCOL.md', [
   'нулевая разметка, пока не доказана необходимость',
@@ -63,14 +75,23 @@ expectText('suno/STRESS_PROTOCOL.md', [
 expectText('suno/QUALITY_GATE.md', [
   'Каждое поставленное ударение проверено',
   'Авторское/историческое ударение',
+  'минимум две несовпадающие интерпретации',
+  'Ни один Style не подошёл бы без изменений к сотне случайных стихотворений',
   'Remaster не предлагается для изменения Lyrics',
 ]);
 expectText('suno/examples/GOOD.md', ['| Форма в Lyrics | Значение | Статус | Проверка | Почему знак нужен |']);
-expectText('suno/examples/BAD.md', ['## 14. Форумный workaround выдан за норму']);
+expectText('suno/examples/BAD.md', [
+  '## 14. Форумный workaround выдан за норму',
+  '## 15. Каждый стих получает одну и ту же сетку вариантов',
+]);
 
 const agents = readFileSync(resolve(root, 'AGENTS.md'), 'utf8');
-if (!agents.includes('suno/STRESS_PROTOCOL.md') || !agents.includes('suno/RESEARCH_2026-10-15.md')) {
-  fail('AGENTS.md must route Suno work through the stress protocol and evidence review');
+if (
+  !agents.includes('suno/CREATIVE_DIRECTION.md') ||
+  !agents.includes('suno/STRESS_PROTOCOL.md') ||
+  !agents.includes('suno/RESEARCH_2026-10-15.md')
+) {
+  fail('AGENTS.md must route Suno work through creative direction, stress and evidence protocols');
 }
 
 const research = texts.get('suno/RESEARCH_2026-10-15.md') ?? '';

@@ -20,11 +20,20 @@
 
 ### Хороший ответ агента
 
-#### 1. Творческая концепция
+#### 1. Карта прочтения
+
+- Явно это отказ отвечать на зов; скрыто — признание, что связь уже действует внутри говорящего.
+- Первое прочтение: память возвращается через акустику места, независимо от воли человека.
+- Второе прочтение: «не зови» — не граница, а заклинание против собственного желания вернуться.
+- Перелом происходит не на громком образе, а на короткой фразе «Не зови меня».
+- Длинные текучие строки первой строфы сменяются более жёсткой артикуляцией второй; музыка может перейти от волны к редкому пульсу.
+- Главный звук — не буквальная вода, а поздний ответ пространства. Опасное клише — сразу превратить северный пейзаж в оркестровый трейлер.
+
+#### 2. Творческая концепция
 
 Это песня о памяти, которая возвращается не через волевое решение, а через акустику места. Лучший ход — начать почти документально близким голосом и водой вместо ритм-секции, затем раскрыть пространство на строке «И так возвращается». Первым рекомендую камерно-северный вариант.
 
-#### 2. Редакторские решения
+#### 3. Редакторские решения
 
 - Восстановлены `шёпот`, `всё`, `плывёт` по Русскому орфографическому словарю.
 - Единственный кандидат на диакритику — омограф `замком`; контекст означает строение.
@@ -37,7 +46,7 @@
 - В аутро возвращён исходный фрагмент «эхом ко мне»; новых авторских строк не добавлено.
 - Перед публикацией следует подтвердить права на текст.
 
-#### 3. Lyrics — основной мастер
+#### 4. Lyrics — основной мастер
 
 ```text
 [Intro, water ambience]
@@ -61,9 +70,11 @@
 (ко мне…)
 ```
 
-#### 4. Style-варианты
+#### 5. Style-варианты
 
-**1. «Северная камера» — основной**
+После широкого поиска здесь остались четыре сильных решения — не потому, что четыре обязательно, а потому, что каждое раскрывает отдельное прочтение.
+
+**1. «Северная камера» — память как акустика места**
 
 ```text
 Nordic chamber folk, low intimate baritone with precise Russian diction, free 6/8 pulse around 68 BPM, felt piano as the harmonic anchor, bass clarinet answering line endings, sparse cello harmonics and quiet water-like field texture. Begin nearly dry and close-mic, widen the room only in verse two, one restrained crest on “возвращается”, then leave the whisper alone in cold air. No showy melisma.
@@ -73,9 +84,9 @@ Nordic chamber folk, low intimate baritone with precise Russian diction, free 6/
 cheerful pop, arena drums, EDM drop, glossy vocal tuning, constant vibrato, sentimental string swells
 ```
 
-Работает благодаря низкому регистру и «водяному» дыханию бас-кларнета; рост пространства буквально исполняет возвращающееся эхо.
+Работает благодаря низкому регистру и «водяному» дыханию бас-кларнета; рост пространства буквально исполняет возвращающееся эхо. Открытой оставлена точная гармоническая окраска фортепиано. Риск — излишняя сентиментальность; слушать, остаётся ли кульминация сдержанной.
 
-**2. «Тёмный горизонт» — кинематографический**
+**2. «Тёмный горизонт» — запрет, который пространство не слушает**
 
 ```text
 Slow cinematic art song, dark contralto lead, 64 BPM in spacious 4/4 with occasional suspended bar, solo piano and low strings at first, distant mixed choir entering only on the final two lines, deep frame drum hits marking the turning point. Move from narrow mono intimacy to a vast stone hall, climax once without shouting, cut the ensemble abruptly before the whispered outro.
@@ -85,9 +96,9 @@ Slow cinematic art song, dark contralto lead, 64 BPM in spacious 4/4 with occasi
 trailer braams, heroic major-key lift, nonstop percussion, operatic belting, blockbuster bombast, pop chorus
 ```
 
-Масштаб появляется поздно и поэтому не превращает тихий текст в трейлер. Хор — отражение голоса, а не декоративный фон.
+Масштаб появляется поздно и поэтому не превращает тихий текст в трейлер. Хор — отражение голоса, а не декоративный фон. Открыта конкретная фактура низких струн. Риск — ранний пафос; слушать первые 30 секунд и момент входа хора.
 
-**3. «Лёд поёт» — необычные инструменты**
+**3. «Лёд поёт» — хрупкая физика воспоминания**
 
 ```text
 Experimental acoustic nocturne, androgynous low voice with clear consonants, rubato verses over a glass harmonica spectral halo; bowed vibraphone supplies slow wave-like swells, bass harmonica gives a breathing drone, and a single frame drum pulse appears only before the last line. Close vocal, very long dark instrumental tails, fragile dynamics, silence between stanzas, no conventional drum kit.
@@ -97,9 +108,9 @@ Experimental acoustic nocturne, androgynous low voice with clear consonants, rub
 bright new age, whimsical fantasy, busy mallets, jazz soloing, lush pop strings, heavy drums
 ```
 
-Стеклянная гармоника отвечает за хрупкий «лёд», bowed vibraphone — за волну, басовая гармоника — за ветер и человеческое дыхание. У каждого необычного тембра одна функция.
+Стеклянная гармоника отвечает за хрупкий «лёд», bowed vibraphone — за волну, басовая гармоника — за ветер и человеческое дыхание. У каждого необычного тембра одна функция; открыта плотность их ответов между строками. Риск — декоративный new age; слушать, сохраняются ли холод и пустота.
 
-**4. «Радиосигнал через воду» — радикальный**
+**4. «Радиосигнал через воду» — сообщение, которое возвращается искажённым**
 
 ```text
 Minimal electroacoustic spoken-song, close half-spoken Russian vocal, irregular breath-led phrasing with no fixed beat in verse one; shortwave-radio dust and processed hydrophone clicks form the pulse, then a muted sub-bass heartbeat emerges in verse two. Keep the words foregrounded and intelligible. The final phrase fractures into one distant natural echo, followed by five seconds of near-silence.
@@ -109,13 +120,13 @@ Minimal electroacoustic spoken-song, close half-spoken Russian vocal, irregular 
 club beat, synthwave nostalgia, glitch overload, robotic lead vocal, harsh noise wall, catchy pop hook
 ```
 
-Здесь ритм рождается из дыхания и воды, а не из ударной установки. Это самый рискованный, но действительно иной вариант; смысл текста остаётся впереди саунд-дизайна.
+Здесь ритм рождается из дыхания и воды, а не из ударной установки. Открыта точная гранулярность hydrophone-пульса. Это самый рискованный вариант: слушать, остаются ли слова разборчивыми и не становится ли glitch главным героем вместо текста.
 
-#### 5. Параметры запуска
+#### 6. Параметры запуска
 
 Сначала запустить «Северную камеру» во флагманском v6 с `Variety = 0`, без дополнительных изменений, и сравнить два дубля по произношению `за́мком`, сохранности строк, естественности паузы между строфами и единственной кульминации. Max Mode для этого короткого примера не нужен. Если оба дубля плоские, менять только дугу: добавить в Style `verse two grows from pp to mf, then sudden silence`, не добавляя новых инструментов. Если ошибочно прочитано только одно слово, использовать v6 single-lyric/section edit, а не перегенерировать весь текст с новыми ударениями.
 
-#### 6. Финальная отметка
+#### 7. Финальная отметка
 
 `QUALITY GATE: пройден`
 
