@@ -635,3 +635,35 @@ Fresh budgets: entry 635218→635218 B; JS 1731731→1731817 B; CSS 263706→263
 Все caps соблюдены. Один Home discovery fingerprint regenerated; feed стабилен.
 Rollback — gallery/typography/sizes и QA diff, затем штатная генерация; данных
 и новых изображений нет. Артефакты ignored `qa-artifacts/resize-step/`.
+
+## Выполнение — 2026-10-15: Симонов, происхождение электронной передачи
+
+На clean `430f4c4` essay validator: 10 essays, 0 errors, 1 warning — источник 6
+без institution. Открыты выходные данные
+https://militera.lib.ru/db/simonov_km/index.html и начало связанной главы 19.
+Страница явно называет сайт «Военная литература», печатное издание М.:
+Художественная литература, 1982 и OCR/HTML подготовку. Это проверенное основание
+для metadata, не присвоение электронной библиотеке архивного статуса РГБ.
+
+В canonical authoring source добавлены host/1982 и оговорка «OCR-передача,
+не факсимиле»; год относится к печатной основе. Источник 1978 года НЭБ/РГБ
+сохранён отдельно. IDs/URL/цитаты/исторический рассказ не менялись. Published
+adapter обновляет dateModified на 2026-10-15; sitemap/feed/discovery пересобраны
+штатно. Единственный owner остаётся canonical Essay publication boundary.
+
+Новый browser guard RED→GREEN; вместе с catalog acceptance 2/2 PASS.
+Check/contracts/build/prerender/budgets PASS. Essay validator 1→0 warnings;
+прочие редакционные warnings не закрыты. Desktop dark/mobile light: metadata
+есть в DOM и viewport, 6 fonts loaded, overflow=0, console/page/request errors=0.
+PNG показали **отдельный старый contrast defect SourceLibrary**, особенно light
+на тёмном gradient. Axe дал incomplete, а не сертификат читаемости; defect не
+маскируется этим content change. JS/CSS budget не изменился от gallery step.
+Rollback — source metadata/dateModified и штатная генерация. Rights не расширены.
+
+**Уточнение security scope:** свежий npm audit всё ещё 5 affected package entries
+(4 high, 1 moderate), но PR514 покрывает только fflate. Остальные: source-map-js
+1.2.1 (доступен 1.2.2), braces 3.0.3 и его dependants micromatch/singlefile.
+Latest braces=3.0.3; предложенный npm downgrade singlefile→0.9.0 не применён.
+Это dev-tool chains, что само по себе не доказывает отсутствие риска.
+Предыдущее обобщение «все 5 принадлежат PR514» неверно; lockfile не менялся.
+Отдельный dependency change требует согласования по установленному протоколу.

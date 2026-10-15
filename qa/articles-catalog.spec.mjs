@@ -338,3 +338,14 @@ test('known legacy article URLs redirect while unknown ids remain real NotFound 
   await expectLegacyRedirect(context, '/articles/article-main-2', /\/music$/);
   await expectUnknownLegacyNotFound(context, '/articles/unknown-old-id');
 });
+test('Simonov diary source distinguishes the electronic host from the print edition', async ({ page }) => {
+  await page.goto(`${BASE_URL}/essays/simonov-syn-artillerista-realnaya-istoriya`);
+  const source = page.locator('#source-simonov-diary-militera');
+  await expect(source).toContainText('Сайт «Военная литература» (Militera)');
+  await expect(source).toContainText('1982');
+  await expect(source).toContainText('OCR-передача, не факсимиле');
+  await expect(source).toContainText('Художественная литература');
+  await expect(source.locator('a')).toHaveAttribute('href', 'https://militera.lib.ru/db/simonov_km/1_19.html');
+  await source.scrollIntoViewIfNeeded();
+  await expect(source).toBeInViewport();
+});

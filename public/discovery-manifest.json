@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6d8086a633775da834749cd199a3ec319cb127529dd51d1c2a6678f80b765aaa"
+      "fingerprint": "e487e53d2d8a7b71281d38ec6813b8e68d24654da0615b32094fe244d755294e"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1ad8a545dd7895c9ff48eaaac8ddaf46f1147c21fba846227952f43c1c6fc39f"
+      "fingerprint": "7cd99fd2393bc4199eff931a83e27d807f85f1909d81464b63df23041d66f30d"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -185,8 +185,8 @@
       "path": "/essays/simonov-syn-artillerista-realnaya-istoriya/",
       "routeId": "essay",
       "state": "ready",
-      "lastmod": "2026-08-20",
-      "fingerprint": "67d6cb7e0d62880e04ebbcda4a18d80b856dc4b33b33676d6beefca01bdbc20c"
+      "lastmod": "2026-10-15",
+      "fingerprint": "9cc68c23f2ed9ee948c0b1d76046732e4ccd49d037fd206448a7b98ca9de43d0"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive/",
