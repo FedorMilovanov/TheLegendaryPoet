@@ -568,3 +568,52 @@ for (const theme of ['dark', 'light']) for (const slug of [
     expect(await contrastRatio(primary.locator('span').filter({ hasText: 'Первичные' }).last())).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// The dock can overlay arbitrary page images. Bound both ends of its glass
+// gradient over black/white, and include the active pill painted under text.
+async function dockTextContrasts(dock) {
+  return dock.evaluate((dock) => {
+    const context = document.createElement('canvas').getContext('2d');
+    const rgba = css => {
+      if (!CSS.supports('color', css)) throw new Error(`Unsupported dock color: ${css}`);
+      context.clearRect(0, 0, 1, 1); context.fillStyle = css; context.fillRect(0, 0, 1, 1);
+      const [r,g,b,a] = context.getImageData(0, 0, 1, 1).data;
+      return [r,g,b,a/255];
+    };
+    const stops = node => {
+      const gradient = getComputedStyle(node).backgroundImage;
+      const colors = gradient.match(/rgba?\([^)]+\)/g);
+      if (!colors || colors.length !== 2) throw new Error(`Update dock paint model: ${gradient}`);
+      return colors.map(rgba);
+    };
+    const mix = (front, back) => front.slice(0,3).map((c,i) => c * front[3] + back[i] * (1-front[3]));
+    const lum = rgb => rgb.map(c => c/255).map(c => c<=0.04045 ? c/12.92 : ((c+0.055)/1.055)**2.4)
+      .reduce((v,c,i) => v+c*[0.2126,0.7152,0.0722][i],0);
+    const backgrounds = stops(dock.querySelector('.dock-rail')).flatMap(stop => [0,255].map(c => mix(stop,[c,c,c])));
+    return [...dock.querySelectorAll('.dock-label')].map(label => {
+      const pill = label.parentElement.querySelector('.dock-pill');
+      const surfaces = pill ? backgrounds.flatMap(bg => stops(pill).map(stop => mix(stop,bg))) : backgrounds;
+      const color = rgba(getComputedStyle(label).color);
+      return {text:label.textContent,ratio:Math.min(...surfaces.map(bg => {
+        const a=lum(mix(color,bg)), b=lum(bg);return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+      }))};
+    });
+  });
+}
+
+for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${theme}`, () => {
+  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  test('all four labels contrast with the glass rail and active pill at 100/200%', async ({page},testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript(t => localStorage.setItem('tlp-theme-mode',t),theme);
+    await page.goto(BASE_URL,{waitUntil:'networkidle'});
+    const dock = page.locator('.mobile-dock');
+    await expect.poll(() => dock.locator('.dock-rail').evaluate(n => getComputedStyle(n).opacity)).toBe('1');
+    for (const font of [16,32]) {
+      await page.evaluate(f => {document.documentElement.style.fontSize=`${f}px`;},font);
+      const values = await dockTextContrasts(dock);
+      expect(values).toHaveLength(4);
+      for (const value of values) expect(value.ratio,`${theme} ${font}px ${value.text}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

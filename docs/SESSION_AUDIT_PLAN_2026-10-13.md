@@ -730,3 +730,57 @@ Rollback — один locator, publication date, guard и regenerated artifacts.
 доступность должна быть подтверждена новым exact-head CI; local browser href
 assertion не подменяет HTTP GET музея. Evidence: ignored
 `qa-artifacts/museum-locator-step/`, remote run IDs — в дополнении PR517.
+
+## Выполнение — 2026-10-15: MobileDock, увеличение текста и читаемость
+
+Baseline `02e8de16ffcbfe31ce4e37d56ff0d2205604ada0`: remote CI теперь 15 SUCCESS,
+Pages SKIPPED, включая завершившийся Manual Browser QA. После восстановления
+sandbox Git был на исходном commit, а session diff лежал в working tree. Все
+734 пути побайтово сверены с remote HEAD; mixed reset восстановил только ref/index,
+не содержимое файлов. Получен clean HEAD без повторных коммитов/потерь.
+Fresh npm ci/check/build/prerender/budgets PASS до изменений.
+
+**Причина / owner:** MobileDock flex row сохранял четыре min-content подписи,
+но icon-only FAB тоже рос с rem. На root 32px край «Статьи» доходил до x≈471
+при viewport 320/390, хотя root scrollWidth не показывал overflow. Shared dock
+CSS теперь использует inline-size container и два ряда при недостатке rem-ширины;
+FAB ограничен 44–54px, подписи остаются 0.6rem (9.6→19.2px), ни один пункт не
+скрыт/не сокращён. При 100% сохраняется однорядный dock. Existing ResizeObserver
+публикует фактическую высоту: нового JS/font fitting/измерителя не добавлено.
+
+В том же owner обнаружен независимый contrast defect: translucent inactive text
+давал worst-case 4.428 dark / 2.879 light. Применён существующий --tlp-text-muted,
+удалён старый light override; glass surface, active pill и focus styles сохранены.
+Новый paint-aware guard учитывает оба gradient stops, black/white backing и pill.
+
+**RED→GREEN:** 4 geometry cases + 2 contrast cases. Geometry: 320/390 × dark/light,
+100→200→100%, text bounds, все пять targets ≥44px, hit-testing, overlap, live
+clearance, все четыре перехода/aria-current, Tab order, keyboard search и focus
+return. Contrast: ≥4.5 для всех четырёх подписей при 100/200%.
+Final route/shell/theme/reader/Part I **95/95 PASS**; existing mobile search/audio/
+clearance **3/3 PASS** (Chromium Android emulation). Две дополнительные 320px/200%
+audio probes после настоящего upward scroll: visible dock 180.25px, published
+clearance 181px, mini-player gap 24.75px в обеих темах. Первый diagnostic tap
+при auto-hidden/inert dock закономерно не прошёл; это не обходилось force/DOM class
+removal — probe исправлен на реальный scroll и ожидание видимого dock/clearance.
+
+Первый общий прогон был 88 PASS / 7 FAIL: использован Vite вместо штатного
+`serve-pages-static.mjs` для initial alias/404 documents. Все 7 FAIL повторены с
+неизменённым baseline CSS, затем 7 PASS на том же baseline с Pages server. После
+возврата product CSS и rebuild полный прогон 95 PASS. Tests/CI/route contract не
+ослаблялись. Preview использует ignored копию штатного server с единственной
+заменой bind 127.0.0.1→0.0.0.0, не новый production engine.
+
+До/после PNG реально просмотрены (обе темы, 320/390; также normal-size samples).
+Fonts=6, broken images=0, overflow=0, console/page/request errors=0. Dock-only axe:
+after violations=0, contrast incompletes=4 per 200% probe; supplemented gradient
+contrast guard, НЕ whole-site WCAG. Loading CLS=0 во всех четырёх before/after
+probes; LCP 312/280/316/296→280/280/284/312ms, локальные unthrottled наблюдения.
+Check/contracts/build/prerender/budgets PASS; entry/JS прежние 635218/1731594 B,
+CSS 263075→263403 B (+328), caps соблюдены. Discovery/feed/sitemap byte-stable.
+
+Среда: Node22.22.3/npm10.9.8, Chromium153.0.8010.0; npm-distributed Chromium/NSS
+и прежний sandbox-only NSS compatibility shim, CPU render. Бинарь/PNG/обвязка —
+только ignored `qa-artifacts/dock-resize-step/`. Dependencies/CI/brand/rights не
+менялись. Rollback — ограниченный dock CSS и новые QA cases. Native zoom, реальный
+Safari/manual AT, whole-site 200% и остальные fixed chrome не сертифицированы.

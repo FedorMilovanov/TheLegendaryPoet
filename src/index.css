@@ -95,6 +95,7 @@ h1, h2, h3, .editorial-title {
   display: none;
   width: calc(100% - 1.25rem);
   max-width: 440px;
+  container-type: inline-size;
 }
 /* The visible glass rail (kept separate from the fixed positioner so the
    raised centre button can overflow without clipping). */
@@ -219,7 +220,7 @@ h1, h2, h3, .editorial-title {
   gap: 0.18rem;
   min-height: 46px;
   padding: 0.3rem 0;
-  color: rgba(233, 240, 255, 0.5);
+  color: var(--tlp-text-muted);
   font-weight: 600;
   transition: color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   -webkit-tap-highlight-color: transparent;
@@ -259,14 +260,27 @@ h1, h2, h3, .editorial-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 3.35rem;
-  width: 3.35rem;
+  height: clamp(44px, 3.35rem, 54px);
+  width: clamp(44px, 3.35rem, 54px);
   border-radius: 9999px;
   color: #eaf6ff;
   background: radial-gradient(120% 120% at 50% 0%, rgba(20, 26, 36, 0.98), rgba(7, 9, 13, 0.98));
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.62), 0 0 26px rgba(0, 212, 255, 0.16);
   transition: transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+}
+/* Text scales with rem; the icon-only search target need not grow with it.
+   Reflow by available text space, not by a device/viewport breakpoint. The
+   existing MobileDock observer publishes the resulting two-row clearance. */
+@container (max-width: 18rem) {
+  .dock-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .dock-item { grid-column: 1; min-width: 0; }
+  .dock-item:nth-of-type(even) { grid-column: 3; }
+  .dock-label { max-width: 100%; overflow-wrap: anywhere; text-align: center; }
+  .dock-fab { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
 }
 .dock-fab svg { filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5)); }
 .dock-fab:active { transform: scale(0.9); }
@@ -1013,10 +1027,6 @@ html.theme-light .neon-blue-gradient {
 
 html.theme-light .gold-glow-text {
   text-shadow: 0 0 8px rgba(184, 148, 30, 0.3), 0 0 16px rgba(184, 148, 30, 0.15);
-}
-
-html.theme-light .dock-item {
-  color: rgba(31, 61, 71, 0.55);
 }
 
 html.theme-light .dock-item.active {
