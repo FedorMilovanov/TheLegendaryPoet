@@ -10,6 +10,7 @@ const requiredFiles = [
   'suno/STRESS_PROTOCOL.md',
   'suno/QUALITY_GATE.md',
   'suno/RESEARCH_2026-10-15.md',
+  'suno/AUDIT_2026-10-15.md',
   'suno/REQUEST_TEMPLATE.md',
   'suno/examples/GOOD.md',
   'suno/examples/BAD.md',
@@ -51,8 +52,8 @@ expectText('AGENTS.md', []);
 expectText('suno/AGENT.md', [
   'CREATIVE_DIRECTION.md',
   'STRESS_PROTOCOL.md',
-  'не менее восьми концептуальных семян',
-  'По умолчанию дай **3–5** сильных карточек',
+  'останавливайся по смысловому насыщению, а не по квоте',
+  'допустимы 2–6',
   'Никогда не размечай все многосложные слова',
   'реестр **каждого** поставленного ударения',
   '`Variety = 0`',
@@ -61,7 +62,8 @@ expectText('suno/AGENT.md', [
 expectText('suno/CREATIVE_DIRECTION.md', [
   'Свобода внутри твёрдых границ',
   'минимум две несовпадающие интерпретации',
-  'не менее **8 коротких концептуальных семян**',
+  'Обычно достаточно **6–12 коротких концептуальных семян**',
+  'Останавливайся не по числу, а после смыслового насыщения',
   'Это **не жанровые ячейки**',
   'Не переопределять всё',
   'Мог бы этот Style без изменений подойти ещё к ста случайным стихотворениям?',
@@ -79,6 +81,15 @@ expectText('suno/QUALITY_GATE.md', [
   'Ни один Style не подошёл бы без изменений к сотне случайных стихотворений',
   'Remaster не предлагается для изменения Lyrics',
 ]);
+expectText('suno/AUDIT_2026-10-15.md', [
+  'повторный полный проход выполнен',
+  'Матрица «правило → доказательства»',
+  '**A: 30**',
+  '**B: 29**',
+  '**C: 5**',
+  'остановка происходит по **смысловому насыщению**',
+  '64 источника дают проверяемую основу',
+]);
 expectText('suno/examples/GOOD.md', ['| Форма в Lyrics | Значение | Статус | Проверка | Почему знак нужен |']);
 expectText('suno/examples/BAD.md', [
   '## 14. Форумный workaround выдан за норму',
@@ -95,9 +106,44 @@ if (
 }
 
 const research = texts.get('suno/RESEARCH_2026-10-15.md') ?? '';
-const urls = [...research.matchAll(/\]\((https?:\/\/[^)]+)\)/g)].map((match) => match[1]);
+const references = research
+  .split('\n')
+  .map((line) => line.match(/^(\d+)\. \*\*\[([ABC])\] \[[^\]]+\]\((https:\/\/[^)]+)\)\*\*/))
+  .filter(Boolean)
+  .map((match) => ({ number: Number(match[1]), grade: match[2], url: match[3] }));
+
+references.forEach((reference, index) => {
+  if (reference.number !== index + 1) {
+    fail(`research reference numbering must be continuous: expected ${index + 1}, found ${reference.number}`);
+  }
+});
+
+const urls = references.map(({ url }) => url);
 const uniqueUrls = new Set(urls);
+if (uniqueUrls.size !== urls.length) fail(`research contains ${urls.length - uniqueUrls.size} duplicate URL(s)`);
 if (uniqueUrls.size < 50) fail(`research must retain at least 50 unique links; found ${uniqueUrls.size}`);
+
+const declaredCountMatch = research.match(/Всего ниже: \*\*(\d+) ссылки\*\*/);
+const declaredCount = Number(declaredCountMatch?.[1]);
+if (declaredCount !== references.length) {
+  fail(`research declares ${declaredCount || 'no'} links but contains ${references.length} numbered references`);
+}
+
+const gradeCounts = references.reduce((counts, { grade }) => {
+  counts[grade] += 1;
+  return counts;
+}, { A: 0, B: 0, C: 0 });
+if (gradeCounts.A !== 30 || gradeCounts.B !== 29 || gradeCounts.C !== 5) {
+  fail(`research evidence census drifted: ${JSON.stringify(gradeCounts)}; expected A=30, B=29, C=5`);
+}
+
+const officialHosts = new Set(['suno.com', 'help.suno.com', 'gramota.ru']);
+for (const { number, grade, url } of references) {
+  const host = new URL(url).hostname;
+  if (grade === 'A' && !officialHosts.has(host)) {
+    fail(`A-grade reference ${number} uses non-primary host ${host}`);
+  }
+}
 
 const countHost = (fragment) => [...uniqueUrls].filter((url) => url.includes(fragment)).length;
 if (countHost('suno.com') < 15) fail('research must retain at least 15 official Suno links');
@@ -105,4 +151,7 @@ if (countHost('reddit.com') < 15) fail('research must retain at least 15 forum t
 if (countHost('gramota.ru') < 5) fail('research must retain at least 5 authoritative Russian dictionary links');
 
 if (process.exitCode) process.exit(process.exitCode);
-console.log(`SUNO kit: OK (${requiredFiles.length} files, ${uniqueUrls.size} unique research links)`);
+console.log(
+  `SUNO kit: OK (${requiredFiles.length} files, ${uniqueUrls.size} unique research links; ` +
+  `evidence A/B/C=${gradeCounts.A}/${gradeCounts.B}/${gradeCounts.C})`,
+);
