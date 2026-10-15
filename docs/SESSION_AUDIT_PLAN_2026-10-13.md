@@ -897,3 +897,18 @@ resource error/request failure честно сохранены (`skipped: sandbo
 не коммитится; источник остаётся в подключённом Drive. PR517 draft/open;
 на 75b0d58 CI при последней проверке 7 SUCCESS, 4 IN_PROGRESS, 4 QUEUED,
 Pages SKIPPED, не объявляется завершённым. Новый commit требует собственного CI.
+
+## Продолжение — 2026-10-16: редакторский проход двух «Пророков»
+
+После commit48a4b02 на clean HEAD повторены contracts/check/citations (PASS).
+Заново открыты тексты Пушкина/Лермонтова РВБ, комментарий Лермонтова, iLibrary
+и Ис.6 (оба fetch chunks). В черновике убраны недоказанное «возвращение в город»
+и утверждение об отсутствии нового спора: текст даёт прохождение через город,
+а ответ героя старцам не приводит. Библейский параллелизм уточнён без
+приравнивания Ис.6 к сцене личного изгнания; убрана тавтология. В source review
+добавлены контроль цитат, точная формулировка датировки и оставшиеся gates.
+Это самопроверка, не independent editorial approval. Ни новых исторических
+публикаций, ни library punctuation repair, ни runtime source registry.
+Docs-only delta: browser/build предыдущего шага не выдаются за проверку новой
+статьи; её нет в Essay/catalog/search/feed/sitemap. After contracts/essays/
+citations и diff check повторяются; publication authority остаётся открытой.
