@@ -912,3 +912,28 @@ Pages SKIPPED, не объявляется завершённым. Новый co
 Docs-only delta: browser/build предыдущего шага не выдаются за проверку новой
 статьи; её нет в Essay/catalog/search/feed/sitemap. After contracts/essays/
 citations и diff check повторяются; publication authority остаётся открытой.
+
+## Продолжение — 2026-10-16: восстановление HEAD и полная сверка стихотворения
+
+После восстановления среды локальный HEAD оказался 090ea18, а все изменения
+сессии — в рабочем дереве. Fetch показал remote c45f8a8; staged snapshot
+побайтово совпал с remote (git diff --cached --exit-code). Сохранён safety stash,
+выполнен обычный fast-forward той же ветки на c45f8a8, без hard reset/force.
+Clean baseline затем проверен заново; AGENTS/current state/contract/charter и
+актуальная входная README AuditRepo прочитаны. npm ci восстановил зависимости;
+Node22.22.3. CI c45f8a8 завершён: 15 SUCCESS, Pages SKIPPED, failures0.
+
+Заново открыты полный текст РВБ, полный текст iLibrary и его библиографическая
+карточка. Сверены все 28 стиховых строк canonical lermontov-2: 27 совпадают
+с iLibrary, 24 с РВБ. Четыре позиции и точные знаки сохранены в
+research/PROROK_LIBRARY_COLLATION_2026-10-16.md. Локальный программный подсчёт
+использует ручную передачу прочитанных строк, не выдаётся за independent scrape.
+Рекомендован отдельный минимальный patch нами; → нами: по iLibrary; runtime
+в этом шаге не тронут. Номер печатной страницы не выдуман. Новое исследование
+не обозначается независимой рецензией или разрешением на публикацию.
+
+Clean baseline: contracts/check/library/citations PASS. After docs-only:
+contracts/library/citations/diff-check PASS. Baseline warnings не удалены.
+Browser/build заново не запускались: runtime/src/public/QA/scripts/package/CI
+не изменены; предыдущие screenshots не выдаются за новый exact-head browser
+proof. Внедрение библиотечной правки требует собственного браузерного шага.
