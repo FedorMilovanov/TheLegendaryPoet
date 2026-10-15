@@ -784,3 +784,37 @@ CSS 263075→263403 B (+328), caps соблюдены. Discovery/feed/sitemap by
 только ignored `qa-artifacts/dock-resize-step/`. Dependencies/CI/brand/rights не
 менялись. Rollback — ограниченный dock CSS и новые QA cases. Native zoom, реальный
 Safari/manual AT, whole-site 200% и остальные fixed chrome не сертифицированы.
+
+## Продолжение — 2026-10-15: внешний CI RED и дневниковая запись РГАЛИ
+
+На clean `6c21a7ee9b6bcc94615c341be94491df476c87ca` повторно проверен remote CI.
+`Yesenin Part I safe publication`, run 38704490863, job 116320398877: publication
+boundary SUCCESS, затем 64-link audit FAILURE. Plain-text job log прочитан через
+fetch после EOF загрузки gh: один `ERR network-failure` у
+`https://museum-esenin.ru/esenin/pisma/1915/bloku-a.a.-9-marta-1915`; остальные
+63 URL приняты существующей политикой (200 либо restricted 403 у НЭБ).
+Конкретная DNS/TLS/timeout причина по этому логу не установлена.
+
+Точное письмо заново открыто внешним fetch, тело/дата/адресат на месте. Успех
+предыдущего run на 02e8de1 и нынешний внешний fetch НЕ гарантируют доступность
+с GitHub runner; прежняя замена www→bare не объявляется окончательным решением
+сетевой стабильности. URL обратно не переключался, retries/timeouts/gates не
+менялись. Попытка `gh run rerun --failed` не состоялась; прямой REST rerun-failed-jobs
+вернул 403 `Resource not accessible by integration`, run_attempt остался 1.
+Это запрет операции текущей интеграции, не доказательство поломанного workflow
+(так сформулировал старый CLI). Пользователю сообщено: manual Re-run либо
+переподключение GitHub с нужными правами. Rerun не заявляется выполненным.
+
+Исследовательский шаг изолирован от runtime repair: открыта официальная строка
+РГАЛИ ф.1604, оп.1, ед.хр.1123, «Г. А. Бениславская. Дневник», 35 листов,
+28 августа [1919]–25 июля 1926. Путь через фонд Зелинского/опись/раздел сохранён
+в `docs/research/BENISLAVSKAYA_DIARY_CATALOGUE_REVIEW_2026-10-15.md` вместе с
+отсеянными похожими результатами и границами доказательства. Отдельный item URL
+и изображения листов не получены; список не выдан за факсимиле. Canonical source,
+исторические утверждения и права не менялись. Медицинские документы не закрыты.
+
+Fresh clean baseline contracts PASS; essays 10/0/0, citations 10/0/11. Для этого
+research-only шага повторяются те же validators и diff check, а не выдаётся
+прошлый browser/build прогон за новый. Библиографические warnings не удаляются.
+Remote RED сохраняется как отдельный незакрытый gate; новый docs commit не является
+исправлением музейного endpoint или заменой запрещённого rerun.
