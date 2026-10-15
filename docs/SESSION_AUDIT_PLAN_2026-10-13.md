@@ -865,3 +865,35 @@ project dependencies/CI неизменны. Vite preview accepts точный sa
 Открыто: прямой публичный свидетель расписки, архивный оригинал, медицинский
 документ ед.37, дневниковый лист1123; native Safari/manual AT/production и #497
 этим шагом не закрываются. Новый HEAD требует собственного CI после push.
+
+## Продолжение — 2026-10-16: опубликованное медицинское факсимиле
+
+Clean baseline `75b0d58`: contracts/check/citations PASS; working tree clean.
+В копии сборника ИМЛИ 2003 года повторно проверены SHA-256/416 страниц,
+найдены и визуально просмотрены с.368 (описание ед.37: 5 декабря 1925, 2 листа)
+и с.372–374 (три страницы факсимиле). Протокол:
+`research/MEDICAL_DOCUMENT_PUBLICATION_REVIEW_2026-10-16.md`.
+Архивный оригинал не изучен; две страницы публичного каталога ОР ИМЛИ не дали
+item URL. Ед.47 (акт вскрытия) не подменяет ед.37. Медицинская интерпретация,
+reader body, citations, права и обе no-URL позиции не менялись.
+Canonical source note теперь содержит точные страницы и границу копия/оригинал.
+
+Fresh after: contracts/check/build/prerender/SEO/budgets/Part II publication PASS;
+essays10/0/0, citations10/0/11 (без изменения). Штатная генерация: 3 fingerprints,
+feed/sitemap/URL/state/lastmod прежние. Никаких dependency/CI/validator изменений.
+Browser before/after: 3/3 source-card probes, Chromium153/NSS shim, CPU,
+desktop1440×1000 dark, mobile390×844 dark/light, reduce. Проверены новый текст,
+отсутствие фиктивной ссылки, fonts6, overflow0; after PNG трёх режимов просмотрены.
+Axe0 violations, 1 contrast incomplete/case. Final after LCP320/280/256ms,
+CLS0.001158/0/0.000455; baseline488/296/260ms и CLS0.095087/0/0.
+Это наблюдения, не доказательство performance improvement: загрузка внешнего
+портрета непостоянна. Baseline Wikimedia ERR_CONNECTION_CLOSED в 2/3 проб,
+final after в 2/3, промежуточный after в 3/3. Для этих проб broken image/console
+resource error/request failure честно сохранены (`skipped: sandbox egress`);
+других ошибок не найдено. Никакого mock изображения или all-images certificate.
+
+Среда сохранена: Node22.22.3/npm10.9.8, browser и preview работают; PyMuPDF
+установлен отдельно для исследования, package/lock не менялись. Полный PDF
+не коммитится; источник остаётся в подключённом Drive. PR517 draft/open;
+на 75b0d58 CI при последней проверке 7 SUCCESS, 4 IN_PROGRESS, 4 QUEUED,
+Pages SKIPPED, не объявляется завершённым. Новый commit требует собственного CI.
