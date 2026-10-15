@@ -8,6 +8,7 @@ const requiredFiles = [
   'suno/AGENT.md',
   'suno/CREATIVE_DIRECTION.md',
   'suno/STRESS_PROTOCOL.md',
+  'suno/STYLE_PROTOCOL.md',
   'suno/QUALITY_GATE.md',
   'suno/RESEARCH_2026-10-15.md',
   'suno/AUDIT_2026-10-15.md',
@@ -55,6 +56,9 @@ expectText('suno/README.md', [
 expectText('suno/AGENT.md', [
   'CREATIVE_DIRECTION.md',
   'STRESS_PROTOCOL.md',
+  'STYLE_PROTOCOL.md',
+  'Style: N/1000',
+  'Не добавляй `Russian` только из-за кириллического текста',
   'останавливайся по смысловому насыщению, а не по квоте',
   'допустимы 2–6',
   'Никогда не размечай все многосложные слова',
@@ -86,10 +90,23 @@ expectText('suno/STRESS_PROTOCOL.md', [
   '`все способности` нельзя превращать во `всё способности`',
   'каждого поставленного знака',
 ]);
+expectText('suno/STYLE_PROTOCOL.md', [
+  'не более **1000 счётных единиц поля**',
+  'рабочий потолок отдела — **900 символов**',
+  'Style: N/1000',
+  'Три поля — три роли',
+  'Маркер `Russian` не является нейтральным переключателем произношения',
+  '`A`: исходный Style без национального/языкового слова',
+  '`B`: тот же Style',
+  'Не писать в Style конструкции `no X`, `without X`, `avoid X`',
+]);
 expectText('suno/QUALITY_GATE.md', [
   'Каждая замена `е → ё` проверена как лексико-грамматическое решение',
   'построчный diff с каноническим мастером',
   'Проверены смыслоразличительные формы `все/всё`',
+  'Полностью выполнен `STYLE_PROTOCOL.md`',
+  'не превышает 1000 символов',
+  '`Russian`, `Slavic`',
   'Каждое поставленное ударение проверено',
   'Авторское/историческое ударение',
   'минимум две несовпадающие интерпретации',
@@ -102,10 +119,12 @@ expectText('suno/AUDIT_2026-10-15.md', [
   'повторный полный проход выполнен',
   'Матрица «правило → доказательства»',
   '**A: 30**',
-  '**B: 29**',
-  '**C: 5**',
+  '**B: 30**',
+  '**C: 7**',
+  'Style ограничен 1000 символами',
+  'слово `Russian` ошибочно считалось настройкой языка',
   'остановка происходит по **смысловому насыщению**',
-  '64 источника дают проверяемую основу',
+  '67 источников дают проверяемую основу',
 ]);
 expectText('suno/examples/GOOD.md', ['| Форма в Lyrics | Значение | Статус | Проверка | Почему знак нужен |']);
 expectText('suno/examples/BAD.md', [
@@ -114,12 +133,34 @@ expectText('suno/examples/BAD.md', [
   'Ты, все душевные способности губя',
   'Ты, всё душевные способности губя',
   '## 16. Каждый стих получает одну и ту же сетку вариантов',
+  '## 17. Style превышает поле и маскирует это красивой прозой',
+  '## 18. `Russian` использован как безвредная подпись языка',
 ]);
+
+const goodExamples = texts.get('suno/examples/GOOD.md') ?? '';
+const countedStyleBlocks = [...goodExamples.matchAll(/```text\n([^`]+?)\n```\n\n`Style: (\d+)\/1000`/g)];
+if (countedStyleBlocks.length < 4) {
+  fail(`GOOD.md must retain at least 4 machine-counted Style examples; found ${countedStyleBlocks.length}`);
+}
+for (const [, style, declaredRaw] of countedStyleBlocks) {
+  const actual = style.length;
+  const declared = Number(declaredRaw);
+  if (actual !== declared) fail(`GOOD.md Style counter drifted: declared ${declared}, actual ${actual}`);
+  if (actual > 1000) fail(`GOOD.md contains Style over 1000 characters: ${actual}`);
+}
+
+const styleCheckerPath = resolve(root, 'scripts/check-suno-style.mjs');
+if (!existsSync(styleCheckerPath)) fail('missing scripts/check-suno-style.mjs');
+const packageJson = readFileSync(resolve(root, 'package.json'), 'utf8');
+if (!packageJson.includes('"check:suno-style": "node scripts/check-suno-style.mjs"')) {
+  fail('package.json must expose check:suno-style');
+}
 
 const agents = readFileSync(resolve(root, 'AGENTS.md'), 'utf8');
 if (
   !agents.includes('suno/CREATIVE_DIRECTION.md') ||
   !agents.includes('suno/STRESS_PROTOCOL.md') ||
+  !agents.includes('suno/STYLE_PROTOCOL.md') ||
   !agents.includes('suno/RESEARCH_2026-10-15.md')
 ) {
   fail('AGENTS.md must route Suno work through creative direction, stress and evidence protocols');
@@ -143,7 +184,7 @@ const uniqueUrls = new Set(urls);
 if (uniqueUrls.size !== urls.length) fail(`research contains ${urls.length - uniqueUrls.size} duplicate URL(s)`);
 if (uniqueUrls.size < 50) fail(`research must retain at least 50 unique links; found ${uniqueUrls.size}`);
 
-const declaredCountMatch = research.match(/Всего ниже: \*\*(\d+) ссылки\*\*/);
+const declaredCountMatch = research.match(/Всего ниже: \*\*(\d+) ссыл(?:ки|ок)\*\*/);
 const declaredCount = Number(declaredCountMatch?.[1]);
 if (declaredCount !== references.length) {
   fail(`research declares ${declaredCount || 'no'} links but contains ${references.length} numbered references`);
@@ -153,8 +194,8 @@ const gradeCounts = references.reduce((counts, { grade }) => {
   counts[grade] += 1;
   return counts;
 }, { A: 0, B: 0, C: 0 });
-if (gradeCounts.A !== 30 || gradeCounts.B !== 29 || gradeCounts.C !== 5) {
-  fail(`research evidence census drifted: ${JSON.stringify(gradeCounts)}; expected A=30, B=29, C=5`);
+if (gradeCounts.A !== 30 || gradeCounts.B !== 30 || gradeCounts.C !== 7) {
+  fail(`research evidence census drifted: ${JSON.stringify(gradeCounts)}; expected A=30, B=30, C=7`);
 }
 
 const officialHosts = new Set(['suno.com', 'help.suno.com', 'gramota.ru']);

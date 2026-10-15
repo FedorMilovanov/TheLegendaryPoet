@@ -115,7 +115,7 @@ Epic emotional beautiful cinematic masterpiece, very powerful, magical, unforget
 ### Лучше
 
 ```text
-Dark chamber ballad, intimate low contralto with clear Russian diction, slow 6/8, felt piano and solo cello, nearly dry first verse, widening stone-room reverb after the turning line, one restrained climax, unaccompanied final phrase.
+Dark chamber ballad, intimate low contralto with clear text-forward diction, slow 6/8, felt piano and solo cello, nearly dry first verse, widening stone-room reverb after the turning line, one restrained climax, unaccompanied final phrase.
 ```
 
 ---
@@ -215,7 +215,7 @@ Low weathered baritone, restrained consonant-led phrasing, sparse post-folk arra
 
 ### Лучше
 
-> Разметка снижает риск неправильного чтения, но два первых дубля нужно сравнить по дикции. Для контрольной пары v6 установите `Variety = 0`; если отдельного Exclude-поля нет, перенесите ограничения в конец Style.
+> Разметка снижает риск неправильного чтения, но два первых дубля нужно сравнить по дикции. Для контрольной пары v6 установите `Variety = 0`. Ограничения держите в отдельном Exclude; если поля нет, не переносите отрицания в Style автоматически — выразите критичное требование положительно.
 
 ---
 
@@ -338,3 +338,33 @@ Low weathered baritone, restrained consonant-led phrasing, sparse post-folk arra
 ### Лучше
 
 Сначала сформулировать несколько конкурирующих прочтений текста и вести внутренний поиск до смыслового насыщения, а не до квоты. Затем оставить только идеи, отличающиеся формой времени, ролью голоса, отношением музыки к словам или драматургией. Если стих не требует эпоса, редких инструментов либо glitch, их не должно быть.
+
+---
+
+## 17. Style превышает поле и маскирует это красивой прозой
+
+### Плохо
+
+Агент пишет режиссёрский абзац на 1400 символов, не считает его и называет «готовым для вставки». Хвост либо не помещается, либо пользователь вынужден сокращать его сам; самые важные команды смешаны с пояснениями и повторами.
+
+### Лучше
+
+Оставить положительное звуковое ядро, 2–4 проверяемых свойства, голос, ключевые силы и дугу; вынести запреты в Exclude, объяснение — за пределы поля. После последней правки запустить `npm run check:suno-style`, вывести `Style: N/1000`; при `>1000` не отдавать блок, при `>900` сжать без специального основания.
+
+---
+
+## 18. `Russian` использован как безвредная подпись языка
+
+### Плохо
+
+```text
+Russian epic orchestral post-folk, Russian baritone, Russian atmosphere, native Russian soul
+```
+
+### Почему плохо
+
+Национальный маркер — активный стилевой токен. Он способен потянуть не только произношение, но и мелодику, тембр, инструменты и усреднённое культурное клише. Повтор слова усиливает неоднозначность, но не задаёт проверяемый звук.
+
+### Лучше
+
+Сначала оставить кириллический текст без национальной подписи и описать слышимое: `dark orchestral post-folk requiem, low weathered baritone, text-forward phrasing, low strings, restrained war drums`. Если фактически возникает языковой дрейф, сравнить A без маркера и B с единственным добавлением `lyrics sung in Russian, clear native pronunciation` при `Variety = 0`; оценить и дикцию, и изменение музыки.

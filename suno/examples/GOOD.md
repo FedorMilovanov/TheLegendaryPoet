@@ -77,8 +77,10 @@
 **1. «Северная камера» — память как акустика места**
 
 ```text
-Nordic chamber folk, low intimate baritone with precise Russian diction, free 6/8 pulse around 68 BPM, felt piano as the harmonic anchor, bass clarinet answering line endings, sparse cello harmonics and quiet water-like field texture. Begin nearly dry and close-mic, widen the room only in verse two, one restrained crest on “возвращается”, then leave the whisper alone in cold air. No showy melisma.
+Nordic chamber folk, low intimate baritone with precise text-forward diction, free 6/8 pulse around 68 BPM, felt piano as the harmonic anchor, bass clarinet answering line endings, sparse cello harmonics and quiet water-like field texture. Begin nearly dry and close-mic, widen the room only in verse two, one restrained crest on “возвращается”, then leave the whisper alone in cold air. Restrained syllabic singing throughout.
 ```
+
+`Style: 427/1000`
 
 ```text
 cheerful pop, arena drums, EDM drop, glossy vocal tuning, constant vibrato, sentimental string swells
@@ -89,8 +91,10 @@ cheerful pop, arena drums, EDM drop, glossy vocal tuning, constant vibrato, sent
 **2. «Тёмный горизонт» — запрет, который пространство не слушает**
 
 ```text
-Slow cinematic art song, dark contralto lead, 64 BPM in spacious 4/4 with occasional suspended bar, solo piano and low strings at first, distant mixed choir entering only on the final two lines, deep frame drum hits marking the turning point. Move from narrow mono intimacy to a vast stone hall, climax once without shouting, cut the ensemble abruptly before the whispered outro.
+Slow cinematic art song, dark contralto lead, 64 BPM in spacious 4/4 with occasional suspended bar, solo piano and low strings at first, distant mixed choir entering only on the final two lines, deep frame drum hits marking the turning point. Move from narrow mono intimacy to a vast stone hall, reach one restrained mf climax, cut the ensemble abruptly before the whispered outro.
 ```
+
+`Style: 381/1000`
 
 ```text
 trailer braams, heroic major-key lift, nonstop percussion, operatic belting, blockbuster bombast, pop chorus
@@ -101,8 +105,10 @@ trailer braams, heroic major-key lift, nonstop percussion, operatic belting, blo
 **3. «Лёд поёт» — хрупкая физика воспоминания**
 
 ```text
-Experimental acoustic nocturne, androgynous low voice with clear consonants, rubato verses over a glass harmonica spectral halo; bowed vibraphone supplies slow wave-like swells, bass harmonica gives a breathing drone, and a single frame drum pulse appears only before the last line. Close vocal, very long dark instrumental tails, fragile dynamics, silence between stanzas, no conventional drum kit.
+Experimental acoustic nocturne, androgynous low voice with clear consonants, rubato verses over a glass harmonica spectral halo; bowed vibraphone supplies slow wave-like swells, bass harmonica gives a breathing drone, and a single frame drum pulse appears only before the last line. Close vocal, very long dark instrumental tails, fragile dynamics, silence between stanzas, percussion limited to one frame drum.
 ```
+
+`Style: 411/1000`
 
 ```text
 bright new age, whimsical fantasy, busy mallets, jazz soloing, lush pop strings, heavy drums
@@ -113,8 +119,10 @@ bright new age, whimsical fantasy, busy mallets, jazz soloing, lush pop strings,
 **4. «Радиосигнал через воду» — сообщение, которое возвращается искажённым**
 
 ```text
-Minimal electroacoustic spoken-song, close half-spoken Russian vocal, irregular breath-led phrasing with no fixed beat in verse one; shortwave-radio dust and processed hydrophone clicks form the pulse, then a muted sub-bass heartbeat emerges in verse two. Keep the words foregrounded and intelligible. The final phrase fractures into one distant natural echo, followed by five seconds of near-silence.
+Minimal electroacoustic spoken-song, close half-spoken vocal with clear natural consonants, irregular breath-led phrasing with no fixed beat in verse one; shortwave-radio dust and processed hydrophone clicks form the pulse, then a muted sub-bass heartbeat emerges in verse two. Keep the words foregrounded and intelligible. The final phrase fractures into one distant natural echo, followed by five seconds of near-silence.
 ```
+
+`Style: 423/1000`
 
 ```text
 club beat, synthwave nostalgia, glitch overload, robotic lead vocal, harsh noise wall, catchy pop hook

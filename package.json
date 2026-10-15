@@ -40,6 +40,7 @@
     "validate:music": "tsx scripts/validate-music-catalog.ts",
     "validate:music-runtime": "tsx scripts/validate-music-runtime.ts",
     "validate:suno": "node scripts/validate-suno-kit.mjs",
+    "check:suno-style": "node scripts/check-suno-style.mjs",
     "validate:audio-session": "tsx scripts/validate-audio-session-store.ts",
     "validate:audio-coordination": "tsx scripts/validate-audio-coordination.ts",
     "validate:archive-store": "tsx scripts/validate-personal-archive-store.ts",
