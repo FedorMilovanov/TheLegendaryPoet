@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "e487e53d2d8a7b71281d38ec6813b8e68d24654da0615b32094fe244d755294e"
+      "fingerprint": "3720bb9537f810b8306b2af359eee06cc7d93f82ab657b64d5f83514511053e9"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7cd99fd2393bc4199eff931a83e27d807f85f1909d81464b63df23041d66f30d"
+      "fingerprint": "c1d0773fdf3acc8ab32d8e4460bdbb2c3e4ebb1682a03ebb76a71d3e88f9b6a9"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -217,8 +217,8 @@
       "path": "/essays/sergei-yesenin-1895-1921/",
       "routeId": "essay",
       "state": "ready",
-      "lastmod": "2026-08-05",
-      "fingerprint": "1e00527d4affec440a95b4a3b4e0dc1f9f01181856c11e93fa7561e328aeb9a4"
+      "lastmod": "2026-10-15",
+      "fingerprint": "4f494663285ca744b273c2bf47bb7c44a6988ff01a92838108461b882baf9c79"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925/",

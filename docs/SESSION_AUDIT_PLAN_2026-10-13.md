@@ -701,3 +701,32 @@ Log прочитан через signed plain-text job resource после EOF п
 1915», полный текст письма на месте. WWW-fetch отдельно неуспешен (HTTP 500
 fetch tool); это не доказывает конкретную DNS/TLS причину runner failure.
 Исправление locator будет отдельным шагом с неизменённым 64-link gate.
+
+## Выполнение — 2026-10-15: точный locator письма Есенина Блоку
+
+Clean `755d72887f5d4e4d83423251997ed8431032cbe6`: полный `npm run check` и Part I
+publication validator PASS. Remote RED предыдущего HEAD описан выше; не
+замаскирован baseline PASS локальных content gates. Прямой shell egress не
+используется как доказательство доступности 64 внешних сайтов.
+
+Один canonical source URL исправлен с `www.museum-esenin.ru` на проверенный
+`museum-esenin.ru`, path письма неизменён. Точное письмо открыто целиком: дата,
+адресат, просьба о встрече «часа в 4» и подпись совпадают с locator/title.
+ID, citation topology, kind=context, institution и оговорка «не второй отдельный
+первичный документ» сохранены. Других музейных ссылок с этим host в src нет.
+DateModified обновлён у существующего publishEssay adapter, не во втором owner;
+sitemap/feed/discovery regenerated штатно. Рассказ, изображения и права не менялись.
+
+В existing Part I browser guard добавлены exact href/title/source-hierarchy
+assertions: намеренный RED на старом href → GREEN на исправленном. Полный case
+сохранил 64 citation targets / 64 expanded cards / 64 external links, zero overflow
+и broken images. Check/contracts/build/prerender/budgets/publication PASS.
+Desktop dark 1440 и mobile light 390 screenshots просмотрены; музейная карточка
+в viewport, fonts=6, overflow=0, console/page/request errors=0. Source-scoped axe
+violations=0, contrast incomplete=1, не whole-site WCAG closure.
+
+Rollback — один locator, publication date, guard и regenerated artifacts.
+64-link verifier, retries, timeouts и CI не редактировались. Окончательная внешняя
+доступность должна быть подтверждена новым exact-head CI; local browser href
+assertion не подменяет HTTP GET музея. Evidence: ignored
+`qa-artifacts/museum-locator-step/`, remote run IDs — в дополнении PR517.

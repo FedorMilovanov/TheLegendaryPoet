@@ -25,6 +25,20 @@
     <category term="документальное исследование" />
   </entry>
   <entry>
+    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921/</id>
+    <title>Сергей Есенин. Часть I: 1895–1921</title>
+    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921/" />
+    <published>2026-07-26T00:00:00Z</published>
+    <updated>2026-10-15T00:00:00Z</updated>
+    <author><name>Редакция THE LEGENDARY POET</name></author>
+    <summary type="text">Документальная биография Сергея Есенина от Константинова и Спас-Клепиков до Москвы, Блока, Клюева, революционных поэм, имажинизма и рубежа 1921 года.</summary>
+    <category term="Сергей Есенин" />
+    <category term="Биография" />
+    <category term="Серебряный век" />
+    <category term="Часть I" />
+    <category term="Источники" />
+  </entry>
+  <entry>
     <id>https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive/</id>
     <title>Галина Бениславская: рукописи, издательские дела и архив Есенина</title>
     <link href="https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive/" />
@@ -52,20 +66,6 @@
     <category term="1921–1925" />
     <category term="Источники" />
     <category term="Часть II" />
-  </entry>
-  <entry>
-    <id>https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921/</id>
-    <title>Сергей Есенин. Часть I: 1895–1921</title>
-    <link href="https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921/" />
-    <published>2026-07-26T00:00:00Z</published>
-    <updated>2026-08-05T00:00:00Z</updated>
-    <author><name>Редакция THE LEGENDARY POET</name></author>
-    <summary type="text">Документальная биография Сергея Есенина от Константинова и Спас-Клепиков до Москвы, Блока, Клюева, революционных поэм, имажинизма и рубежа 1921 года.</summary>
-    <category term="Сергей Есенин" />
-    <category term="Биография" />
-    <category term="Серебряный век" />
-    <category term="Часть I" />
-    <category term="Источники" />
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents/</id>
