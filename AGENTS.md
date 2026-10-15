@@ -54,6 +54,12 @@ Brand changes require source-integrity validation, materialization, static brand
 
 Never strengthen a historical, moral or theological claim beyond its evidence. Preserve source hierarchy, uncertainty and conflicts of interest. Follow the charter and editorial standards referenced by `README.md`.
 
+## SUNO adaptation requests
+
+When a user sends a poem for Suno adaptation, treat `suno/AGENT.md` as the canonical operating instruction and apply `suno/QUALITY_GATE.md` before answering. Preserve the author's words by default, use `ё` normatively, add stress marks only to genuinely difficult or ambiguous words, and return distinct copy-ready style concepts rather than near-duplicates. Good and bad calibration examples live under `suno/examples/`.
+
+The Suno kit prepares a generation brief; it does not bypass the publication, rights, provenance, or audio-master requirements in `docs/MUSIC_RELEASE_WORKFLOW.md`.
+
 ## Hard stops
 
 Stop and re-scope instead of pushing when:

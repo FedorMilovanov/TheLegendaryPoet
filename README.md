@@ -31,6 +31,7 @@ Workflow `Project contracts` использует общий Node/dependency set
 - `src/components/SpectralBrandMark.tsx` + `scripts/materialize-brand-art.mjs` — production-бренд.
 - `src/assets/fonts/` — локальные WOFF2; внешние Google Fonts не используются.
 - `workers/community-api/` — доверенная Cloudflare Worker + D1 + Turnstile граница общей системы оценок и комментариев; D1 schema authority — `workers/community-api/schema.sql`.
+- `suno/` — редакторский отдел подготовки стихотворений к генерации в Suno: каноническая инструкция агенту, quality gate и хорошие/плохие примеры.
 
 ## Публикация
 
