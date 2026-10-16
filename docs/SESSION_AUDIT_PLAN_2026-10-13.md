@@ -1019,3 +1019,38 @@ desktop PNG просмотрен до последней mobile-only margin пр
 и прежний transparent-selection overlay этим шагом не считаются исправленными.
 NativeSafari/AT/systemclipboard/все10poets/zoom200% не проверены этим шагом.
 Статья двух «Пророков» остаётся research; публикационные/правовые gates прежние.
+
+## Продолжение — 2026-10-17: обязательная библейская оценка
+
+Прямое уточнение владельца: статьи не нейтральные, библейские принципы должны
+быть в repo. Они уже изложены в PROJECT_CHARTER, theological guidelines и
+editorial/source policy; новый конфликтующий doctrinal SSOT не создаётся.
+Root: входные инструкции недостаточно явно запрещали нейтрализацию, а финал
+исследовательского «Пророка» ограничивал применение ответственностью за речь.
+AGENTS/README получили прямое требование библейской оценки и ссылки на
+существующих владельцев принципов. В theological guidelines добавлен §0:
+различать факт, текст Писания, обоснованную оценку и жанровую границу. Запрет
+механических вставок не означает необязательность оценки. Новая доктрина,
+лишние публикационные поля или keyword validator не вводились.
+
+Черновик получил содержательный финал по Ис.6:3–8, Иак.3:9–10,1Кор.15:3–4,
+Мк.1:15: святость/вина/очищение, грех презрения к образу Божьему, смерть и
+воскресение Христа и покаяние/вера. Ни веры/обращения двух поэтов, ни их
+последнего часа из лирического героя не выводим. Прочитаны реальные тексты:
+Ис.6 оба chunks, Иак.3 первый с3:1–18,1Кор.15 chunks0/1 с1–58, Мк.1 оба chunks.
+Толкования хоста не заимствованы. Матрица применения добавлена в review;
+это self-review, не независимое богословское одобрение.
+
+Environment restoration: snapshot побайтово сверен с remote9bf62ff, safety
+stash/fast-forward той же ветки, без hard reset/force. npm ci, Node22.22.3.
+AGENTS/current-state/contract/charter/AuditRepo entry/authoring guide и текущие
+editorial/theological standards прочитаны. Clean9bf62ff contracts/check PASS;
+after contracts/check/essays/citations/diff PASS. Essays10/0errors/0warnings,
+citations10/0errors/11warnings без изменения. Автоматические гейты проверяют
+опубликованный корпус/контракты, не удостоверяют богословие research Markdown.
+
+Runtime/src data/public/QA/workflows/dependencies не менялись, доктринальная
+позиция не ослаблена. Browser/build не запускались в этом docs-only шаге;
+черновик не публиковался в Essay/catalog/feed/sitemap. Rollback: новые абзацы
+в правилах и research docs, без действия на reader routes. Открыты окончательная
+редакционная рецензия и отдельные publication/browser gates будущей статьи.
