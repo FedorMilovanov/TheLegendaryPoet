@@ -169,3 +169,32 @@ test('Lermontov Prophet keeps the verified colon in its selectable text', async 
   });
   expect(selected).toBe(text);
 });
+
+// Measure the actual reading column, not only document overflow: two nested
+// 32px paddings previously left just 156px for poetry on a 320px viewport.
+test('shared poem cards retain usable mobile reading width', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const poet of ['mikhail-lermontov', 'sergei-yesenin']) {
+      await page.goto(`${BASE_URL}/poets/${poet}`, { waitUntil: 'networkidle' });
+      const surfaces = page.locator('[data-poem-text]');
+      await expect(surfaces.first()).toBeVisible();
+      const columns = await surfaces.evaluateAll((nodes) => nodes.map((node) => {
+        const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
+        const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();
+        const lastWords = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+        const visualBottom = Math.max(...lastWords.map((word) => word.getBoundingClientRect().bottom));
+        return { canonicalWidth: canonical.width, visualWidth: visual.width, delta: Math.abs(canonical.left - visual.left), clippedBottom: visualBottom - node.getBoundingClientRect().bottom };
+      }));
+      expect(columns.length).toBeGreaterThan(0);
+      for (const column of columns) {
+        expect(column.canonicalWidth).toBeGreaterThanOrEqual(width - 104);
+        expect(column.visualWidth).toBeGreaterThanOrEqual(width - 104);
+        expect(column.delta).toBeLessThanOrEqual(1);
+        expect(column.clippedBottom).toBeLessThanOrEqual(0);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+    }
+  }
+});

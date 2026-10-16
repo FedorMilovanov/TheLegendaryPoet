@@ -970,3 +970,52 @@ performance improvement не заявляется. Final after JSON сохран
 замаскированы как исправленные. Scope — пунктуация, не shared renderer repair;
 подробности в collation review. NativeSafari/AT/systemclipboard не проверены.
 Статья research, не в catalog/sitemap; права и medical residuals прежние.
+
+## Продолжение — 2026-10-17: shared mobile poem reading width
+
+Clean baseline c90f0b7 восстановлен из snapshot: staged tree побайтово совпал
+с remote, safety stash и fast-forward той же ветки, без hard reset/force.
+Прочитаны AGENTS/current-state/contract/charter/current AuditRepo entry.
+Baseline contracts/check/build PASS; c90f0b7 CI завершён:15success/PagesSkipped.
+Node22.22.3/npm ci, browser153/NSS version+hash shim восстановлены в ignored QA;
+preview0.0.0.0:4173 разрешает e2b host. Project dependencies/CI не изменялись.
+
+Root: shared PoemCard и InteractivePoemText оба расходовали по32px с каждой
+стороны. В 390px viewport visual column226px, в320px156px. Дополнительный
+mobile margin0.3em на каждом visual word поверх flex gap увеличивал переносы;
+на320px screenshot обнаружил обрезанный финал. Не страничный Lermontov patch:
+владельцы — два shared компонента, все `/poets/:id` poem cards. До sm:
+card padding16 вместо32, reader padding/inset16 вместо32, margin слова0 вместо
+0.3em (gap сохранён). От sm desktop/tablet прежние значения; canonical text,
+ID, sources, dates, толкования, pointer dwell и presentation aria-hidden прежние.
+Нет второго renderer/registry. Rollback ограничен этими responsive classes,
+новым QA и этой записью. Shared renderer overlay/selection redesign не заявлен.
+
+After contracts/check/build/prerender/build-output/SEO/diffcheck PASS.
+Permanent browser QA: новый тест all mounted poems Lermontov/Yesenin при320/390,
+minimum canonical+visual width, совпадение левого края и отсутствие обрезки
+последних слов. Старые canonical selection и Prophet punctuation тесты вместе
+с новым:3/3 PASS. Canonical text всех19 sampled before/after poem instances
+побуквенно неизменен. Это 7 разных стихов, не все34 стихотворения каталога.
+
+Before/after probes5/5: Lermontov desktop1440×1000dark,390×844dark/light,
+320×740dark; Yesenin390×844dark; mobile/reduced-motion явно заданы. Visual widths
+226→290px (390),156→220px (320),625.34375→625.34375px desktop. Fonts7, overflow0,
+pageerrors0, consoleerrors0, failedrequests0. Scoped axe0violations,
+color-contrast incomplete1/case — не WCAG certificate. Before LCP860/692/656/
+668/692ms; after828/700/688/620/556ms; CLS after0.001366/0/0/0/0. Unthrottled
+локальные измерения, не performance improvement. Final visual words внутри
+карточек: max bottom delta отрицательная во всех5 пробах.
+
+Наивный image probe отмечал not-complete/naturalWidth0 у1 lazy image на320
+и4 на Yesenin (одинаково before/after). Отдельно проверены все8/12 изображений
+обоих маршрутов: loading=eager + await decode,20/20 PASS, failures0. Поэтому
+это deferred lazy loading, не доказанный broken asset или sandbox egress.
+В основных JSON исходные наблюдения сохранены, не удалены ради зелёного.
+
+Before mobile/320 и final after mobile/320/light PNG действительно просмотрены;
+desktop PNG просмотрен до последней mobile-only margin правки. Переносы на
+узком экране остаются допустимыми; fixed-header artefact element screenshot
+и прежний transparent-selection overlay этим шагом не считаются исправленными.
+NativeSafari/AT/systemclipboard/все10poets/zoom200% не проверены этим шагом.
+Статья двух «Пророков» остаётся research; публикационные/правовые gates прежние.
