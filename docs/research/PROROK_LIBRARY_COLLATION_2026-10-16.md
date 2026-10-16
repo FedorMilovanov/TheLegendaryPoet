@@ -75,3 +75,31 @@
 Эта заметка не является постоянным вторым каталогом: она фиксирует разовую
 сверку и не управляет runtime. Rollback — удалить заметку и ссылки на неё;
 читательские маршруты при этом не изменятся.
+
+## Внедрение отдельным шагом — 2026-10-16
+
+После clean baseline13c3da2 в canonical `lermontov-2` применена ровно одна
+замена `нами;` → `нами:`. ID, год, остальные 27 строк, строфы, analysis и
+biblicalPerspective не менялись. Отдельный browser regression в
+`qa/reader-text.spec.mjs` проверяет 28 строк, все четыре редакционно значимые
+позиции и точное выделение/копирование канонического текста. Локальный запуск
+именно этого теста: 1 passed. Статья остаётся неопубликованной.
+
+Проверки: contracts/check/build/prerender/build-output/SEO PASS. Discovery
+перегенерирован штатно: четыре fingerprints (home/poets/ratings/Lermontov);
+feed/sitemap не изменились. Browser before и after: 3/3, desktop1440×1000 dark,
+mobile390×844 dark/light, reduce; Chromium153 с sandbox NSS shim. Текст DOM и
+выделение побуквенно равны текущему canonical source, 28 строк, новый знак
+проверен. Во всех пробах pageerror/console errors/failed requests/broken images
+и горизонтальный overflow — 0. Axe в выбранном контейнере: violations0,
+color-contrast incomplete1; это не полный аудит всех стихотворений/страницы.
+
+After screenshots без выделения действительно просмотрены. Первоначальный
+скриншот выделенного прозрачного слоя давал наложение на визуальный слой;
+для проверки обычного чтения выделение снято и screenshots пересняты.
+На mobile сама существующая колонка узкая, строки переносятся; desktop
+элементный screenshot также захватывает fixed header при прокрутке длинного
+стихотворения. Эти особенности не объявлены исправленными пунктуационным
+коммитом. В этом шаге нет redesign или заявления об идеальной вёрстке.
+Нативный Safari, реальный clipboard API и assistive technology не проверены;
+проверялся Selection.toString(), не системный буфер обмена.

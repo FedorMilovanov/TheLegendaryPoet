@@ -144,3 +144,28 @@ for (const theme of ['dark', 'light']) for (const width of [320, 390]) {
     });
   });
 }
+
+// Preserve the single-edition punctuation verified in
+// docs/research/PROROK_LIBRARY_COLLATION_2026-10-16.md (iLibrary witness).
+test('Lermontov Prophet keeps the verified colon in its selectable text', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  await page.goto(`${BASE_URL}/poets/mikhail-lermontov`, { waitUntil: 'networkidle' });
+  const canonical = page.locator('[data-poem-canonical]').filter({ hasText: 'С тех пор как вечный судия' });
+  await expect(canonical).toBeVisible();
+  const text = await canonical.textContent();
+  const lines = text.split('\n').filter(Boolean);
+  expect(lines).toHaveLength(28);
+  expect(lines[5]).toBe('И правды чистые ученья:');
+  expect(lines[21]).toBe('Он горд был, не ужился с нами:');
+  expect(lines[23]).toBe('Что бог гласит его устами!');
+  expect(lines[25]).toBe('Как он угрюм, и худ, и бледен!');
+  const selected = await canonical.evaluate((node) => {
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    selection.addRange(range);
+    return selection.toString();
+  });
+  expect(selected).toBe(text);
+});

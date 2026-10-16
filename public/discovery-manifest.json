@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "98f9ff3b28969ece272e975f22fe5a682bd647cde4ef5894d876b3213e35bcfa"
+      "fingerprint": "2bf49f3933024759e813412a38c39423636dcf20cbadc2347d6f96ee674f9830"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "44e151c521db2b678c9fb56aaa480a05f7de7bb9682997c38b58a1fe97b1495f"
+      "fingerprint": "38e7c0773ed933afa9b8278c615eb3171ade48a68a8902b70cd8618f19aaf679"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "565d54b099aa4627914a340add211673674a9cc310e5144e7fcac6860143d045"
+      "fingerprint": "9e1be02bb62a7a1ff0f02cd9c2f7aea0c66be51311747222f53002307a30f16e"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -314,7 +314,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "9dd031687783faf289e2838497ed1d4a778ba0a0c5915abf931735db09c8c90c"
+      "fingerprint": "e98fe56f142c494e3e837830e77ce65c2c41747bddfeed30c58eda6ba89073d2"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/boris-pasternak/",

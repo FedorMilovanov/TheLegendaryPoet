@@ -937,3 +937,36 @@ contracts/library/citations/diff-check PASS. Baseline warnings не удален
 Browser/build заново не запускались: runtime/src/public/QA/scripts/package/CI
 не изменены; предыдущие screenshots не выдаются за новый exact-head browser
 proof. Внедрение библиотечной правки требует собственного браузерного шага.
+
+## Продолжение — 2026-10-16: библиотечный знак и browser regression
+
+Restored sandbox снова имел HEAD090ea18 и snapshot изменений. Staged snapshot
+побайтово сверен с remote13c3da2, сохранён stash; та же ветка fast-forward,
+без hard reset/force. Clean13c3da2: contracts/check/library/build PASS.
+Прочитаны AGENTS/current state/contract/charter и current AuditRepo README.
+npm ci, Node22.22.3; browser заново установлен только в ignored artifacts:
+Chromium153.0.8010.0, NSS3.22 вместо required3.30 (version hash/string patch),
+PK11_HasAttributeSet shim. Убран --single-process после context-close crash;
+исходные неудачные browser attempts не считаются успешными пробами.
+
+Root: canonical строка22 не совпадала ни с одной из двух проверенных передач.
+Owner: src/data/library/mikhailLermontov.ts lermontov-2. Единственная runtime
+замена нами; → нами: по iLibrary; остальные строки/ID/year/толкования прежние.
+Существующий reader-text QA расширен тестом четырёх edition-sensitive строк,
+числа28 и Selection equality. Rollback: этот знак, новый тест и четыре штатных
+discovery fingerprints; никакого CI/dependency/validator weakening.
+
+After: contracts/check/build/prerender/build-output/SEO PASS, новый Playwright
+regression 1/1 PASS. Library0errors/1warning, citations0errors/11warnings, baseline
+не менялся. Before/after probe3/3: 1440×1000dark,390×844dark/light, reduce.
+Fonts7, overflow0, pageerrors0, consoleerrors0, failedrequests0, brokenimages0;
+DOM и Selection равны canonical. Scoped axe0 violations/1contrast incomplete.
+Baseline LCP1192/700/764ms, CLS0.001405/0/0; локальные unthrottled метрики,
+performance improvement не заявляется. Final after JSON сохраняет свои метрики.
+
+После просмотра первых selected-layer PNG выделение снято, after PNG всех
+трёх режимов пересняты и действительно просмотрены. Наложение selected слоя,
+узкая mobile колонка и fixed header в элементном desktop screenshot не
+замаскированы как исправленные. Scope — пунктуация, не shared renderer repair;
+подробности в collation review. NativeSafari/AT/systemclipboard не проверены.
+Статья research, не в catalog/sitemap; права и medical residuals прежние.
