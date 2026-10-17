@@ -1054,3 +1054,35 @@ Runtime/src data/public/QA/workflows/dependencies не менялись, док�
 черновик не публиковался в Essay/catalog/feed/sitemap. Rollback: новые абзацы
 в правилах и research docs, без действия на reader routes. Открыты окончательная
 редакционная рецензия и отдельные publication/browser gates будущей статьи.
+
+## Продолжение — 2026-10-17: два «Пророка» в структуре Essay
+
+Clean af14361 восстановлен через staged byte-match remote/safety stash/ff той
+же ветки. AGENTS/current-state/contract/charter/theological/editorial/history
+standards и AuditRepo entry прочитаны. Node22.22.3/npm ci. Baseline contracts/
+check PASS. Отдельно CI af14361:14success/1failure/PagesSkipped. Failure — Manual
+Browser QA run38982215282, browser-qa step12 «Run base iPhone Safari QA in fresh
+browser processes». Check annotations дают лишь exit1; gh run log download
+завершился EOF на results-receiver.actions.githubusercontent.com. Причина
+конкретного iPhone assertion неизвестна, не объявлена network flake/pass;
+workflows/tests существующего CI не ослаблялись и rerun не выдавался за ремонт.
+
+Root/task: research prose ещё не имела typed Essay blocks и sourceIds.
+Новый prorokDraft.ts использует существующий Essay с намеренно отсутствующими
+publication date/cover (Omit), без новых моделей/registry/renderer. Перенос
+6sections/22paragraphs/9sources, anchors уникальны, все sourceIds разрешаются,
+readTime7 штатно вычислен. Библейский финал не заменён нейтральным пересказом.
+Markdown объявлен frozen pre-transfer snapshot, дальнейший text owner — TS.
+Четыре tsx/node tests проверяют изоляцию от каталога, источники, точный перенос
+всех абзацев/ссылок и сохранение проверенного финала; не сертификат богословия.
+
+After contracts/check/typecheck/build/prerender/build-output/SEO PASS; draft
+suite4/4 PASS. Published essays10/0errors/0warnings, citations0errors/11warnings
+baseline unchanged. Slug draft отсутствует во105 built text assets и public
+essay payload; src/data/essays/index.ts,public/generated и routes без diff.
+Browser не запускался: новой публичной статьи нет, её render/citations/mobile
+не считаются проверенными. Источники заново в этом шаге не открывались; edition
+и biblical review из предыдущих шагов не выданы за новую проверку.
+Rollback — удалить draft+test и transfer annotations. Не добавлены обложка,
+license/date/права/зависимости/CI. Окончательная editorial/publication/browser
+проверка остаётся открытой; исходный CI failure также не закрыт этим переносом.
