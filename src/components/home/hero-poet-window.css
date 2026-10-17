@@ -1,3 +1,18 @@
+/* Caption typography and column count share a root-relative width budget.
+   Container queries also reflow on text-only resize, not just viewport changes. */
+.hero-poet-gallery { container-type: inline-size; container-name: hero-poets; }
+.hero-poet-grid { grid-template-columns: minmax(0, 1fr); }
+@container hero-poets (min-width: 16rem) {
+  .hero-poet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container hero-poets (min-width: 21rem) {
+  .hero-poet-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container hero-poets (min-width: 54rem) {
+  .hero-poet-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+.hero-poet-window-dates { font-size: 0.625rem; }
+
 .hero-poet-window-surface {
   isolation: isolate;
   contain: layout style;
@@ -62,11 +77,13 @@
 }
 
 .hero-poet-window-label-panel {
+  padding-inline: 0.35rem;
   background: linear-gradient(180deg, rgba(3, 13, 24, 0.86), rgba(1, 6, 13, 0.92));
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 22px rgba(0, 183, 255, 0.11), inset 0 1px 0 rgba(211, 249, 255, 0.06);
 }
 
 .hero-poet-window-name {
+  font-size: 0.75rem;
   display: flex;
   min-height: 2.1em;
   max-width: 100%;
@@ -186,12 +203,7 @@
 }
 
 @media (max-width: 520px) {
-  .hero-poet-window-label-panel {
-    padding-inline: 0.35rem;
-  }
-
   .hero-poet-window-name {
-    font-size: clamp(8px, 2.25vw, 9px);
     letter-spacing: 0.015em;
   }
 }

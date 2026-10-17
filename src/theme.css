@@ -11,9 +11,11 @@
   --tlp-control-border: #3a879a;
   --tlp-control-selected: #a5f3fc;
   --tlp-control-action: #67e8f9;
+  --tlp-section-label: var(--tlp-control-action);
   --tlp-rating-star-idle: #22d3ee;
   --tlp-rating-star-active: #67e8f9;
   --tlp-warning: #fcd34d;
+  --tlp-poet-accent: var(--color-luxury-gold);
   --tlp-focus-offset: #061018;
   --tlp-focus-ring: rgba(0, 212, 255, 0.68);
   --tlp-theme-color: #050810;
@@ -48,9 +50,11 @@ html.theme-light {
   --tlp-control-border: #347d8d;
   --tlp-control-selected: #075f75;
   --tlp-control-action: #075f75;
+  --tlp-section-label: var(--tlp-text);
   --tlp-rating-star-idle: #0d748c;
   --tlp-rating-star-active: #075f75;
   --tlp-warning: #7a4d00;
+  --tlp-poet-accent: #7a4d00;
   --tlp-focus-offset: #fffaf0;
   --tlp-focus-ring: #075f75;
   --tlp-theme-color: #fffaf0;
@@ -254,3 +258,13 @@ html.theme-light body {
   background: var(--tlp-moral-bg) !important;
   color: var(--tlp-text);
 }
+
+
+/* Poet-card editorial gold changes ink with the surface, not with opacity. */
+.theme-poet-accent { color: var(--tlp-poet-accent) !important; }
+.theme-poet-title { color: var(--tlp-text) !important; }
+.group:hover .theme-poet-title,
+.group:focus-visible .theme-poet-title { color: var(--tlp-poet-accent) !important; }
+
+/* Shared by theme-aware poet cards and deliberately dark music cards. */
+.theme-feedback-summary { color: var(--tlp-island-muted, var(--tlp-text-muted)) !important; }

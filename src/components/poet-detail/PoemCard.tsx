@@ -38,7 +38,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
   };
 
   return (
-    <div id={`poem-${poem.id}`} className="luxury-card relative rounded-[3rem] border border-luxury-gold/10 bg-[#080808] p-8 shadow-2xl scroll-mt-28 transition-all duration-500 hover:border-luxury-gold/30 md:p-12">
+    <div id={`poem-${poem.id}`} className="luxury-card relative rounded-[3rem] border border-luxury-gold/10 bg-[#080808] p-4 shadow-2xl sm:p-8 scroll-mt-28 transition-all duration-500 hover:border-luxury-gold/30 md:p-12">
       <AnimatePresence>
         {toast && (
           <motion.div

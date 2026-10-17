@@ -46,3 +46,155 @@ test('poem text has an exact selectable canonical layer separate from animated v
   expect(selected).toBe(snapshot.text);
   expect(selected).toContain('\n');
 });
+
+test('kinetic headings expose one readable text layer without naming generic spans', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+  const roots = page.locator(':is(span, p, h1, h2, h3):has(> .kinetic-word)');
+  await expect(roots).toHaveCount(2);
+  const phrases = [
+    { text: 'Эпохи', heading: 'Лица Эпохи' },
+    { text: 'Трезвая Оценка', heading: 'Вера, Культура и Трезвая Оценка' },
+  ];
+  for (const [index, phrase] of phrases.entries()) {
+    const root = roots.nth(index);
+    expect(await root.getAttribute('aria-label')).toBeNull();
+    await expect(root.locator(':scope > .sr-only')).toHaveText(phrase.text);
+    const words = root.locator(':scope > .kinetic-word');
+    expect(await words.count()).toBeGreaterThan(0);
+    for (const word of await words.all()) await expect(word).toHaveAttribute('aria-hidden', 'true');
+    const heading = page.getByRole('heading', { level: 2, name: phrase.heading, exact: true });
+    await heading.scrollIntoViewIfNeeded();
+    await expect(heading).toHaveAccessibleName(phrase.heading);
+    // The visual layer must not become a second accessible copy or gain focus.
+    await expect(root.locator('button, a, [tabindex]')).toHaveCount(0);
+  }
+});
+
+// Text-only resize, not native zoom. Keep every destination and the search
+// action available; root overflow alone misses clipped fixed-position chrome.
+async function dockGeometry(page) {
+  return page.locator('.mobile-dock').evaluate((dock) => {
+    const rail = dock.querySelector('.dock-rail').getBoundingClientRect();
+    const targets = [...dock.querySelectorAll('a, button')];
+    const rects = targets.map((node) => node.getBoundingClientRect());
+    const failures = [];
+    for (const [i, node] of targets.entries()) {
+      const rect = rects[i], name = node.getAttribute('aria-label');
+      if (rect.width < 44 || rect.height < 44) failures.push(`${name}: small target`);
+      if (rect.left < rail.left || rect.right > rail.right || rect.top < 0 || rect.bottom > innerHeight) failures.push(`${name}: outside rail/viewport`);
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      if (!hit || !node.contains(hit)) failures.push(`${name}: obscured target`);
+      for (const other of rects.slice(i + 1)) {
+        if (rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top) failures.push(`${name}: overlapping target`);
+      }
+      const label = node.querySelector('.dock-label');
+      if (label) {
+        const range = document.createRange(); range.selectNodeContents(label);
+        for (const line of range.getClientRects()) {
+          if (line.left < rect.left - 1 || line.right > rect.right + 1 || line.top < rect.top || line.bottom > rect.bottom) failures.push(`${name}: clipped text`);
+        }
+      }
+    }
+    const height = Math.max(rail.bottom, ...rects.map(r => r.bottom)) - Math.min(rail.top, ...rects.map(r => r.top));
+    const published = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tlp-mobile-dock-clearance'));
+    if (!Number.isFinite(published) || published < height - 1 || published > height + 2) failures.push('stale dock clearance');
+    return failures;
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const width of [320, 390]) {
+  test.describe(`mobile dock text resize ${theme} ${width}`, () => {
+    test.use({ viewport: { width, height: 844 }, colorScheme: theme, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+    test('all destinations survive 100→200→100% text with live clearance and keyboard search', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(t => localStorage.setItem('tlp-theme-mode', t), theme);
+      await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+      const dock = page.getByRole('navigation', { name: 'Мобильная навигация' });
+      await expect(dock).toBeVisible();
+      for (const font of [16, 32, 16]) {
+        await page.evaluate(f => { document.documentElement.style.fontSize = `${f}px`; }, font);
+        await expect.poll(() => dockGeometry(page), { message: `${font}px root: complete reachable dock` }).toEqual([]);
+        const sizes = await dock.locator('.dock-label').evaluateAll(nodes => nodes.map(n => parseFloat(getComputedStyle(n).fontSize)));
+        expect(sizes).toHaveLength(4);
+        for (const size of sizes) expect(size).toBeCloseTo(font * 0.6, 1);
+      }
+      // Exercise the compact layout, rather than returning to 100% for actions.
+      await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+      await expect.poll(() => dockGeometry(page)).toEqual([]);
+      for (const [name, pathname] of [['Поэты','/poets'],['Рейтинг','/ratings'],['Статьи','/articles'],['Главная','/']]) {
+        await dock.getByRole('link', { name, exact: true }).tap();
+        await expect.poll(() => new URL(page.url()).pathname).toBe(pathname);
+        await expect(dock.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'page');
+      }
+      await dock.getByRole('link', { name: 'Главная', exact: true }).focus();
+      for (const name of ['Поэты', 'Открыть поиск и все разделы', 'Рейтинг', 'Статьи']) {
+        await page.keyboard.press('Tab');
+        await expect(dock.getByRole(name.startsWith('Открыть') ? 'button' : 'link', { name, exact: true })).toBeFocused();
+      }
+      const search = dock.getByRole('button', { name: 'Открыть поиск и все разделы' });
+      await search.focus(); await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
+      await expect(dialog).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Поисковый запрос' })).toBeFocused();
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(search).toBeFocused();
+      await expect.poll(() => dockGeometry(page)).toEqual([]);
+    });
+  });
+}
+
+// Preserve the single-edition punctuation verified in
+// docs/research/PROROK_LIBRARY_COLLATION_2026-10-16.md (iLibrary witness).
+test('Lermontov Prophet keeps the verified colon in its selectable text', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  await page.goto(`${BASE_URL}/poets/mikhail-lermontov`, { waitUntil: 'networkidle' });
+  const canonical = page.locator('[data-poem-canonical]').filter({ hasText: 'С тех пор как вечный судия' });
+  await expect(canonical).toBeVisible();
+  const text = await canonical.textContent();
+  const lines = text.split('\n').filter(Boolean);
+  expect(lines).toHaveLength(28);
+  expect(lines[5]).toBe('И правды чистые ученья:');
+  expect(lines[21]).toBe('Он горд был, не ужился с нами:');
+  expect(lines[23]).toBe('Что бог гласит его устами!');
+  expect(lines[25]).toBe('Как он угрюм, и худ, и бледен!');
+  const selected = await canonical.evaluate((node) => {
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    selection.addRange(range);
+    return selection.toString();
+  });
+  expect(selected).toBe(text);
+});
+
+// Measure the actual reading column, not only document overflow: two nested
+// 32px paddings previously left just 156px for poetry on a 320px viewport.
+test('shared poem cards retain usable mobile reading width', async ({ page }, testInfo) => {
+  useChromiumCore(testInfo);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const poet of ['mikhail-lermontov', 'sergei-yesenin']) {
+      await page.goto(`${BASE_URL}/poets/${poet}`, { waitUntil: 'networkidle' });
+      const surfaces = page.locator('[data-poem-text]');
+      await expect(surfaces.first()).toBeVisible();
+      const columns = await surfaces.evaluateAll((nodes) => nodes.map((node) => {
+        const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
+        const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();
+        const lastWords = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+        const visualBottom = Math.max(...lastWords.map((word) => word.getBoundingClientRect().bottom));
+        return { canonicalWidth: canonical.width, visualWidth: visual.width, delta: Math.abs(canonical.left - visual.left), clippedBottom: visualBottom - node.getBoundingClientRect().bottom };
+      }));
+      expect(columns.length).toBeGreaterThan(0);
+      for (const column of columns) {
+        expect(column.canonicalWidth).toBeGreaterThanOrEqual(width - 104);
+        expect(column.visualWidth).toBeGreaterThanOrEqual(width - 104);
+        expect(column.delta).toBeLessThanOrEqual(1);
+        expect(column.clippedBottom).toBeLessThanOrEqual(0);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+    }
+  }
+});

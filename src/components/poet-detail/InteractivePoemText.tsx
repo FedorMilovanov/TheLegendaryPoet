@@ -55,7 +55,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
   return (
     <div
       data-poem-text
-      className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-8 py-8 text-2xl leading-[2] tracking-wide shadow-inner md:px-12"
+      className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-4 py-8 text-2xl leading-[2] tracking-wide shadow-inner sm:px-8 md:px-12"
       onPointerLeave={stopDwell}
     >
       <span
@@ -92,7 +92,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
       <div
         data-poem-visual
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-8 top-8 bottom-8 z-10"
+        className="pointer-events-none absolute inset-x-4 top-8 bottom-8 z-10 sm:inset-x-8"
       >
         {lines.map((line, lineIdx) => (
           <div key={lineIdx} className="relative z-10 flex min-h-[1.5rem] flex-wrap gap-x-[0.34em]">
@@ -115,7 +115,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                     <motion.span
                       key={key}
                       layout
-                      className="relative mr-[0.3em] inline-block cursor-default"
+                      className="relative inline-block cursor-default sm:mr-[0.3em]"
                       animate={
                         isFocused
                           ? { scale: 1.42, y: -7, color: '#f5e6a3', filter: 'blur(0px)', opacity: 1, textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease: [0.16, 1, 0.3, 1] } }

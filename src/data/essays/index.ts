@@ -77,7 +77,7 @@ const yeseninKutezhiPublished = publishEssay(yeseninKutezhiVisual, {
 });
 
 const yeseninPartOnePublished = publishEssay(yeseninPartOnePublic, {
-  dateModified: '2026-08-05',
+  dateModified: '2026-10-15',
 });
 
 const yeseninDuncanPublished = publishEssay(yeseninDuncanFirstMeetingPublished, {

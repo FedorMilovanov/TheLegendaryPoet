@@ -58,7 +58,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
           role="alert"
           aria-live="assertive"
         >
-          <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-amber-300/15 bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.09),transparent_40%),rgba(6,16,24,0.82)] p-7 shadow-[0_28px_100px_rgba(0,0,0,0.42)] sm:p-10">
+          <div className="theme-dark-island theme-dark-island-text relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-amber-300/15 bg-[#061018] bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.09),transparent_40%)] p-7 shadow-[0_28px_100px_rgba(0,0,0,0.42)] sm:p-10">
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/15 bg-amber-300/[0.055] text-amber-200">
               {offline ? <WifiOff size={24} /> : <RotateCw size={24} />}
             </div>

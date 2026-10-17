@@ -146,3 +146,24 @@ html.global-audio-active footer {
     transition: none;
   }
 }
+
+/* Hall owns its viewport layout, but consumes the shell's existing geometry.
+   Use min-height (not height) so short screens/large text can scroll naturally. */
+.hall-page {
+  --hall-fixed-bottom: 1.25rem;
+  --hall-reserved-bottom: 0px;
+  padding-top: var(--tlp-header-height);
+  padding-bottom: var(--hall-reserved-bottom);
+}
+.hall-stage {
+  min-height: calc(100svh - var(--tlp-header-height) - var(--hall-reserved-bottom));
+}
+@media (max-width: 767px) {
+  .hall-page {
+    --hall-fixed-bottom: var(--tlp-audio-mobile-bottom);
+    --hall-reserved-bottom: var(--hall-fixed-bottom);
+  }
+}
+html.global-audio-active .hall-page {
+  --hall-reserved-bottom: calc(var(--hall-fixed-bottom) + var(--tlp-audio-mini-height-budget) + var(--tlp-fixed-chrome-gap));
+}

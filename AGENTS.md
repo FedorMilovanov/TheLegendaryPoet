@@ -52,7 +52,20 @@ Brand changes require source-integrity validation, materialization, static brand
 
 ## Editorial and source discipline
 
-Never strengthen a historical, moral or theological claim beyond its evidence. Preserve source hierarchy, uncertainty and conflicts of interest. Follow the charter and editorial standards referenced by `README.md`.
+THE LEGENDARY POET is an explicitly evangelical Christian editorial project,
+not a religiously neutral literary encyclopedia. Read `PROJECT_CHARTER.md`,
+`docs/EDITORIAL_JUDGMENT_AND_SOURCE_POLICY.md` and
+`src/docs/THEOLOGICAL_GUIDELINES.md` before writing or revising articles.
+Biblical evaluation is part of the editorial task, not an optional disclaimer.
+Do not remove it in the name of neutrality, source caution or literary analysis.
+
+Establish historical facts from evidence, explain Scripture in context, then
+state the warranted moral/spiritual evaluation plainly. Do not substitute
+Bible references for research, infer an author's faith from a lyrical speaker,
+or invent conversion, motives or divine punishment. The scope of the judgment
+must fit the genre: a poem comparison is not a complete spiritual biography.
+Preserve source hierarchy, uncertainty and conflicts of interest. A green
+content validator does not certify theological accuracy or editorial approval.
 
 ## Hard stops
 

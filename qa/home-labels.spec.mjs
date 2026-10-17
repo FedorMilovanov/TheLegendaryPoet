@@ -51,7 +51,7 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     // every card through that real interaction instead of demanding six hover
     // states simultaneously, which the product never promises.
     for (let index = 0; index < EXPECTED_NAMES.length; index += 1) {
-      await windows.nth(index).hover({ position: { x: 12, y: 18 } });
+      await windows.nth(index).hover();
       await expect.poll(
         () => effectiveOpacity(names.nth(index)),
         { timeout: 4_000, message: `${EXPECTED_NAMES[index]} should become readable on desktop hover` },
@@ -111,3 +111,47 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     fullPage: false,
   });
 });
+
+for (const [width, colorScheme] of [[320, 'dark'], [390, 'light'], [768, 'dark'], [1440, 'light']]) {
+  for (const textScale of [1, 2]) test.describe(`caption reflow ${width}px, ${textScale * 100}% text`, () => {
+    test.use({ viewport: { width, height: 1000 }, colorScheme, reducedMotion: 'reduce', isMobile: width < 500, hasTouch: width < 500 });
+    test('all names and dates scale without losing text or links', async ({ page }) => {
+      await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), colorScheme);
+      await page.goto(BASE_URL);
+      const windows = page.locator('[data-hero-poet-window]');
+      await expect(windows).toHaveCount(6);
+      await page.evaluate(() => document.fonts.ready);
+      // Text-only resize fixture, NOT pinch zoom or a browser-zoom certificate.
+      const before = await page.locator('[data-hero-poet-window-name]').first().evaluate((node) => parseFloat(getComputedStyle(node).fontSize));
+      await page.evaluate((scale) => { document.documentElement.style.fontSize = `${16 * scale}px`; }, textScale);
+      await page.keyboard.press('Tab');
+      const facts = [];
+      for (const window of await windows.all()) {
+        await window.scrollIntoViewIfNeeded();
+        await window.focus();
+        await expect.poll(() => effectiveOpacity(window.locator('[data-hero-poet-window-name]'))).toBeGreaterThan(0.85);
+        const text = await window.locator('.hero-poet-window-label-panel > div').evaluateAll((nodes) => nodes.map((node) => {
+          const viewport = node.closest('.hero-poet-window-viewport').getBoundingClientRect();
+          const range = document.createRange(); range.selectNodeContents(node);
+          const lines = [...range.getClientRects()].filter((rect) => rect.width > 0);
+          return { text: node.textContent, fontSize: parseFloat(getComputedStyle(node).fontSize),
+            overflowX: node.scrollWidth - node.clientWidth,
+            clipped: lines.some((line) => line.left < viewport.left - 1 || line.right > viewport.right + 1 || line.top < viewport.top - 1 || line.bottom > viewport.bottom + 1) };
+        }));
+        facts.push(text);
+        expect.soft(text[0].fontSize, 'name respects the requested text scale').toBeCloseTo(before * textScale, 1);
+        expect.soft(text[0].fontSize, 'local design floor, not a WCAG font-size rule').toBeGreaterThanOrEqual(12 * textScale);
+        expect.soft(text[1].fontSize).toBeGreaterThanOrEqual(10 * textScale);
+        for (const fact of text) {
+          expect.soft(fact.overflowX, fact.text).toBeLessThanOrEqual(1);
+          expect.soft(fact.clipped, fact.text).toBe(false);
+        }
+      }
+      expect(facts.map(([name]) => name.text)).toEqual(EXPECTED_NAMES);
+      const last = windows.last();
+      await last.click();
+      await expect(page).toHaveURL(/\/poets\/afanasy-fet\/?$/);
+      await expect(page.locator('main h1')).toContainText('Афанасий Фет');
+    });
+  });
+}

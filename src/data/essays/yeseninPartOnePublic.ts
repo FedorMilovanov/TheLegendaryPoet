@@ -1260,7 +1260,7 @@ export const yeseninPartOnePublic: Essay = {
     {
       "id": "ye1-yesenin-letter-to-blok-1915-museum",
       "title": "Блоку А. А., 9 марта 1915",
-      "url": "https://www.museum-esenin.ru/esenin/pisma/1915/bloku-a.a.-9-marta-1915",
+      "url": "https://museum-esenin.ru/esenin/pisma/1915/bloku-a.a.-9-marta-1915",
       "kind": "context",
       "institution": "Государственный музей-заповедник С. А. Есенина",
       "year": 1915,

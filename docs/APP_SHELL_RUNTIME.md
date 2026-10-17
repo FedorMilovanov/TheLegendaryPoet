@@ -11,7 +11,7 @@ This document defines the integration boundary for navigation, lazy pages, persi
 - Mobile Dock;
 - Footer;
 - visual backdrop and custom cursor;
-- smooth-scroll enhancement;
+- native route/hash scroll restoration;
 - scroll-to-top control.
 
 Page modules render through the nested route outlet. Adding a page must not duplicate `SiteLayout` around the new route. Recreating the shell on every pathname resets listeners, animation state, command UI, and scroll infrastructure and makes future integrations increasingly fragile.
@@ -59,7 +59,9 @@ A successful page load clears its recovery marker.
 
 ## Loading and page failure states
 
-`RouteLoadingShell` is rendered inside the persistent site shell. It reserves a stable content area and uses reduced-motion-safe animation.
+`SiteLayout`'s persistent `main` reserves at least one full viewport (`min-h-screen`, 100vh) in loading, ready and page-error states. The header is fixed, so its height is not subtracted from this in-flow reservation. Footer stays in normal flow below that first viewport and remains accessible by scrolling; it is never conditionally hidden to suppress layout shifts. This also covers short pages without per-route spacer rules.
+
+`RouteLoadingShell` controls only its skeleton's internal layout and reduced-motion-safe animation, not the page's viewport reservation. Cold, delayed SPA and warm routes, short content and page errors are guarded in `qa/shell-noise-singleton.spec.mjs`. Reservation prevents the observed loading-to-content footer shift; it is not a guarantee against unrelated font, media or page-level CLS.
 
 The page-scoped `ErrorBoundary` distinguishes:
 
@@ -81,9 +83,19 @@ Query-only filter changes do not steal focus.
 
 ## Scroll behavior
 
-Touch devices, high-contrast mode users, and visitors who prefer reduced motion retain native scrolling.
+Ordinary wheel, trackpad and touch movement belongs to the browser on every pointer class.
+The component name `SmoothScroll` is retained for route restoration, not a global interpolation engine.
+The checked ownership projection below comes from `docs/project-contract.json`;
+its validator enforces the actual native-scroll behavior and rejects wheel interception.
 
-Lenis is a lazy enhancement for fine-pointer devices. It has one lifetime for the mounted application shell and is not recreated on every route.
+<!-- runtime-facts:scroll:start -->
+| Contract field | Value |
+| --- | --- |
+| `runtime.scrollMode` | `native` |
+| `runtime.scrollCoordinator` | `src/components/SmoothScroll.tsx` |
+| `runtime.scrollUtilities` | `src/utils/smoothScroll.ts` |
+| `runtime.scrollValidator` | `scripts/validate-scroll-runtime.ts` |
+<!-- runtime-facts:scroll:end -->
 
 The scroll runtime owns browser history restoration:
 
@@ -92,7 +104,8 @@ The scroll runtime owns browser history restoration:
 - stored positions are bounded to 80 entries;
 - hash targets are retried while lazy page content mounts;
 - malformed percent-encoded hashes cannot throw;
-- both native and Lenis hash navigation compensate for the fixed header.
+- hash navigation compensates for the fixed header and focuses the resolved target without a second scroll;
+- explicit anchor/scroll-to-top commands use native browser scrolling, with animation disabled under reduced motion.
 
 ## Custom cursor
 
@@ -130,3 +143,12 @@ npm run validate:build-output
 ```
 
 The complete CI additionally runs all content, music, audio-session, archive, community, literary-style, sitemap, prerender, and generated-output checks.
+
+## Fixed chrome geometry
+
+`index.css` owns `--tlp-header-row-height` and border-inclusive
+`--tlp-header-height`; Header and reading progress consume these tokens.
+The Hall viewport reserves that header height and consumes the existing dock/audio
+clearance from `audio-player.css` (dock measurement still belongs to MobileDock).
+Its scene uses minimum rather than fixed height: short screens retain normal
+scroll access to readable content and controls instead of clipping them.
