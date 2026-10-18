@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { prorokDraft } from '../../src/data/essays/prorokDraft';
 import { essays } from '../../src/data/essays/index';
@@ -32,26 +31,26 @@ test('Prorok citations resolve locally to unique, used source IDs', () => {
   }
 });
 
-test('one-time transfer preserves every research paragraph and its citations', () => {
-  // The Markdown file is the frozen pre-transfer snapshot, not a generator.
-  const snapshot = readFileSync('docs/research/PROROK_DRAFT_2026-10-15.md', 'utf8');
-  const body = snapshot.slice(snapshot.indexOf('## Там, где'));
-  const sourceByNumber: Record<string, string> = {
-    1: 'prorok-pushkin-rvb', 2: 'prorok-lermontov-rvb',
-    3: 'prorok-lermontov-commentary', 4: 'prorok-isaiah-6',
-    5: 'prorok-lermontov-ilibrary', 6: 'prorok-pushkin-feb-commentary',
-    7: 'prorok-james-3', 8: 'prorok-1cor-15', 9: 'prorok-mark-1',
-  };
-  const paragraphs = body.trim().split('\n\n').filter((part) => !part.startsWith('## '));
-  const actual = prorokDraft.blocks.filter((block) => block.type === 'paragraph');
-  assert.equal(actual.length, 22);
-  assert.equal(actual.length, paragraphs.length);
-  paragraphs.forEach((paragraph, index) => {
-    const expectedText = paragraph.replace(/\[\d+\]\([^\n]+\)/g, '').trim().split('\n').join(' ');
-    const expectedIds = [...new Set([...paragraph.matchAll(/\[(\d+)\]\([^\n]+\)/g)].map((match) => sourceByNumber[match[1]]))];
-    assert.equal(actual[index].text, expectedText);
-    assert.deepEqual(actual[index].sourceIds ?? [], expectedIds);
-  });
+// Full one-time Markdown parity passed at 2cbc1a2. The frozen snapshot is
+// deliberately not rewritten to follow subsequent editorial revisions.
+test('biblical evaluation retains its contextual source mappings after editing', () => {
+  const start = prorokDraft.blocks.findIndex((block) => block.type === 'section' && block.anchor === 'biblical-evaluation');
+  assert.ok(start >= 0);
+  const conclusion = prorokDraft.blocks.slice(start).filter((block) => block.type === 'paragraph');
+  for (const [reference, source] of [
+    ['Ис. 6:3–8', 'prorok-isaiah-6'],
+    ['Иак. 3:9–10', 'prorok-james-3'],
+    ['1 Кор. 15:3–4', 'prorok-1cor-15'],
+    ['Мк. 1:15', 'prorok-mark-1'],
+  ]) {
+    const paragraph = conclusion.find((block) => block.text.includes(reference));
+    assert.ok(paragraph, `missing contextual evaluation: ${reference}`);
+    assert.ok(paragraph.sourceIds?.includes(source), `lost biblical source: ${source}`);
+  }
+  assert.ok(conclusion.some((block) => block.text.includes('противоречит уважению к человеку')));
+  assert.ok(conclusion.some((block) => block.text.includes('покаянию и вере')));
+  const allText = prorokDraft.blocks.filter((block) => block.type === 'paragraph').map((block) => block.text).join('\n');
+  assert.equal(allText.includes('якобы прочитанных нами'), false);
 });
 
 test('section anchors are unique and the reviewed biblical conclusion survives transfer', () => {

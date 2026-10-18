@@ -1086,3 +1086,41 @@ Browser не запускался: новой публичной статьи н
 Rollback — удалить draft+test и transfer annotations. Не добавлены обложка,
 license/date/права/зависимости/CI. Окончательная editorial/publication/browser
 проверка остаётся открытой; исходный CI failure также не закрыт этим переносом.
+
+## Продолжение — 2026-10-18: редактура и настоящий renderer без публикации
+
+Clean2cbc1a2 baseline contracts/check/draft tests4/4 PASS; restore snapshot
+побайтово совпал с remote, stash+ff той же ветки. Прочитаны AGENTS/current
+state/contract/charter/theological/editorial/history rules и AuditRepo entry.
+CI2cbc1a2 теперь15success/PagesSkipped; это не устанавливает причину прежнего
+красного Manual QA наaf14361 и не отменяет сохранённую историю failure.
+
+Root: reader prose содержала служебные research promises и неподкреплённую
+формулу воображаемого оппонента. TS owner отредактирован: удалены2абзаца,
+остаётся20,6sections/9sources. Ис.6 изложена прямо; изгнание→бегство; даты
+сочинения/публикации различены. Библейский финал сохранён полностью; авторы
+не объявлены ни обратившимися, ни осуждёнными по lyrical speaker. Границы
+остались в source notes/review. Одноразовая Markdown parity выполнена на2cbc,
+теперь заменена обязательной проверкой4biblical references→sourceIds; frozen
+snapshot не менялся. Suite4/4; это не theological certification.
+
+After contracts/check/build/prerender/build-output/SEO/diff PASS. Catalog10,
+essays0errors/0warnings,citations0errors/11warnings прежние. Slug отсутствует
+во105built text assets. index/public/routes/shared renderer/CI/deps без diff.
+
+Browser153/NSS shim заново в ignored artifacts; отдельный Vite HTML использует
+настоящие ArticleRenderer/SourceLibrary, no release date/cover/publication.
+Baseline2cbc vs after в3контекстах1440×1000dark/390×844dark+light, reduce:
+25citations/9existingtargets, клик Иак.3→card hash PASS; fonts7,overflow0,
+pageerrors0/consoleerrors0/failedrequests0/images0. Сначала починены ошибки
+самого harness (relative import, ожидание React DOM, whitespace typography,
+light theme class); прежние failed attempts не считаются PASS.
+
+Axe dark0violations/1incomplete, light1contrast violation: baseline22nodes,
+after20nodes,4.14:1<4.5. Finding сохранён, не обозначен sandbox egress. Dev
+LCP baseline380/360/400ms vs after484/288/364ms; CLS0.165454/0/0 vs0.251565/0/0,
+не improvement/production budgets proof. Финальные3PNG финала просмотрены;
+earlier sourcecard PNG просмотрен. Подробные boundaries в source review.
+Rollback ограничен draft/test/docs. Нет нового runtime engine или theme patch.
+Открыто: отдельно воспроизвести contrast/CLS на полном production EssayPage,
+редакционное одобрение, cover/date/rights, release/browser/AT/Safari gates.

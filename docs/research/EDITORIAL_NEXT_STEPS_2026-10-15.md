@@ -154,3 +154,10 @@ src/docs/THEOLOGICAL_GUIDELINES; README/AGENTS теперь прямо напр�
 Markdown теперь исторический снимок. Перед выпуском: окончательная редактура,
 решение об обложке с проверенными правами и настоящей дате публикации,
 publication boundary и browser proof. Явная библейская оценка сохранена.
+
+Редакторский проход 2026-10-18: TS draft двух «Пророков» очищен от служебного
+исследовательского повествования, библейская оценка сохранена. Изолированный
+render с реальными ArticleRenderer/SourceLibrary проверил25citations/9targets
+в desktop/mobile. Выявлено baseline light contrast4.14:1 и высокий desktop
+CLS dev harness; перед выпуском проверить shared renderer на реальном EssayPage,
+не маскировать находку локальным стилем одного текста. Статья не опубликована.
