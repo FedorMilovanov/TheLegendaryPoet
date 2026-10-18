@@ -641,3 +641,46 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`inline citation contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('source numbers and focused tooltip remain readable and resolve to a card', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        await expect(citations.first()).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const measurements = await contrastMeasurements(citations, true);
+        expect(measurements.length).toBeGreaterThan(100);
+        for (const item of measurements) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+        const first = citations.first();
+        await first.scrollIntoViewIfNeeded();
+        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await first.hover();
+        await expect.poll(() => first.evaluate((node) => getComputedStyle(node).color))
+          .toBe(theme === 'dark' ? 'rgb(212, 175, 55)' : 'rgb(122, 77, 0)');
+        expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
+        await page.mouse.move(0, 0);
+        await first.focus();
+        await expect(first).toBeFocused();
+        await expect(first).toHaveCSS('outline-style', 'solid');
+        await expect(first).toHaveCSS('outline-width', '2px');
+        const tooltip = first.getByRole('tooltip');
+        await expect.poll(() => tooltip.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(1);
+        expect(await contrastRatio(tooltip)).toBeGreaterThanOrEqual(4.5);
+        expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
+        const href = await first.getAttribute('href');
+        expect(await first.getAttribute('aria-label')).toMatch(/^Источник \d+:/);
+        await first.press('Enter');
+        await expect.poll(() => new URL(page.url()).hash).toBe(href);
+        await expect(page.locator(href)).toBeVisible();
+        await expect.poll(() => citations.evaluateAll((nodes) => nodes.every((node) =>
+          document.getElementById(node.getAttribute('href').slice(1)),
+        ))).toBe(true);
+      });
+    });
+  }
+}

@@ -6,6 +6,8 @@
   --tlp-text: #f5f1e8;
   --tlp-text-muted: #a9c6d1;
   --tlp-essay-prose: #aaaaaa;
+  --tlp-citation-ink: rgb(212 175 55 / 70%);
+  --tlp-citation-active: #d4af37;
   --tlp-text-subtle: #91b5c2;
   --tlp-control-idle: #67e8f9;
   --tlp-control-active: #a5f3fc;
@@ -46,6 +48,8 @@ html.theme-light {
   --tlp-text: #13202a;
   --tlp-text-muted: #465c67;
   --tlp-essay-prose: var(--tlp-text-muted);
+  --tlp-citation-ink: #7a4d00;
+  --tlp-citation-active: #7a4d00;
   --tlp-text-subtle: #526873;
   --tlp-control-idle: #0d748c;
   --tlp-control-active: #075f75;
@@ -194,6 +198,26 @@ html.theme-light body {
 /* Ordinary Essay paragraphs keep their dark ink and use opaque light ink. */
 .theme-essay-prose {
   color: var(--tlp-essay-prose);
+}
+
+/* Citation numbers are normal-sized text for contrast purposes, not decoration. */
+.theme-essay-citation {
+  color: var(--tlp-citation-ink);
+}
+
+.theme-essay-citation:hover {
+  color: var(--tlp-citation-active);
+}
+
+.theme-essay-citation:focus-visible {
+  outline: 2px solid var(--tlp-citation-active);
+  outline-offset: 2px;
+}
+
+/* The floating source label remains a dark surface in either reader theme. */
+.theme-essay-citation-tooltip {
+  background-color: #12100c;
+  color: rgb(170 170 170 / 85%);
 }
 
 .theme-poem-text {

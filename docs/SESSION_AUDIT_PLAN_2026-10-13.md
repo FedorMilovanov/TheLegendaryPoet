@@ -1170,3 +1170,53 @@ performance improvement/certificate. Высокий dev-previewCLS прошло�
 NativeSafari/AT/all10essays/remainingblockcontrast не проверены этим шагом.
 Rollback: semantic prose class+token+new QA/docs. CI/deps/validators не ослаблены,
 workflows/index/srcdata/public без diff; статья Prorok остаётся draft.
+
+## 2026-10-18 — shared inline citation contrast (bounded follow-up)
+
+Baseline: clean pushed89b070d, contracts/check/build PASS. Root cause: shared
+InlineCitations used translucent gold plus light-theme classname remapping;
+its dark tooltip inherited light-remapped gray ink. Owner: InlineCitations +
+existing theme.css, all Essay renderer consumers; no article/source/Bible edits.
+Added semantic citation ink/active tokens, explicit dark tooltip surface/ink,
+and a two-pixel theme-aware focus outline. Dark appearance retained closely,
+not byte-identical alpha serialization. No dependency/CI/index/data changes.
+Rollback: these component/theme rules and new QA cases only.
+
+Production-build Chromium153 probe, YeseninII full EssayPage, 1440×1000 and
+390×844, explicit dark/light/mobile/reduce:342 links/context,1368 measurements.
+Before min light1.597874, dark4.938948; after light6.761030, dark4.961885.
+Focused tooltip before light1.338548/dark6.142969; after both6.178841.
+All342 href/aria-label pairs identical before/after; Enter activates first
+source hash/card and reveals the library, after which all linked targets exist.
+New regression4/4 PASS covers all numbers, settled hover ink/contrast,
+focus outline/contrast, tooltip visibility/contrast, and hash/card resolution.
+Baseline light-mobile test failed at actual1.597874 vs required4.5.
+Initial hover tests2/4 failed because scrolling left the pointer off target;
+explicit center/instant scroll stabilized the interaction; no forced hover or
+weakened contrast threshold. Screenshots desktoplight/mobilelight/desktopdark
+actually inspected. Browser artifacts remain ignored under
+qa-artifacts/citation-contrast, not committed.
+
+Same-probe fullbody axe color-contrast (not a complete accessibility audit):
+light desktop319→110 nodes, mobile274→67; dark desktop89→89/mobile71→71;
+incomplete1/context. These are same-probe before/after counts, not directly
+comparable to the prior prose probe's different timing/counts. Remaining
+captions/credits/other blocks are NOT fixed. Mobile screenshot also confirms
+pre-existing right-edge clipping of the long tooltip; positioning/touch-target
+size/AT/nativeSafari/all article routes remain outside this contrast closure.
+
+Both phases fonts7/overflow0/pageerrors0. In each context Wikimedia portrait
+fails ERR_CONNECTION_CLOSED with one resource console error; image completes
+with naturalWidth0, same baseline, sandbox external egress, not an image PASS.
+Other offscreen lazy images are not claimed decoded. Browser installed from
+npm with NSS version/hash patch + PK11 preload; production preview binds
+0.0.0.0:4173 and accepts .e2b.app. No mocks or production workarounds added.
+Before LCP512/296/728/228ms, CLS.001158/.000455/.001158/.000455;
+after872/428/1048/436ms, CLS.000225/.000455/.000225/.000455 (darkdesktop,
+darkmobile,lightdesktop,lightmobile). Unthrottled local runs; after overlapped
+QA/check CPU load, not a performance improvement claim. Prior devCLS unresolved.
+
+After contracts/check/build/build-output/SEO/diff-check PASS, Prorok tests4/4
+PASS: draft remains unpublished, biblical evaluation/conclusion unchanged.
+89b070d GitHub check-runs refreshed:21success/3skipped. PR517 remains draft/open;
+no merge/close. This step does not certify remaining fullbody axe violations.
