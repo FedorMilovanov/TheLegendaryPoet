@@ -216,6 +216,10 @@ html.theme-light body {
 
 /* The floating source label remains a dark surface in either reader theme. */
 .theme-essay-citation-tooltip {
+  left: 50%;
+  max-width: min(16rem, calc(var(--tlp-citation-viewport-width, 100vw) - 16px));
+  transform: translateX(calc(-50% + var(--tlp-citation-shift, 0px)));
+  overflow-wrap: anywhere;
   background-color: #12100c;
   color: rgb(170 170 170 / 85%);
 }

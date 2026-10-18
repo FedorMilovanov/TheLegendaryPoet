@@ -1220,3 +1220,53 @@ After contracts/check/build/build-output/SEO/diff-check PASS, Prorok tests4/4
 PASS: draft remains unpublished, biblical evaluation/conclusion unchanged.
 89b070d GitHub check-runs refreshed:21success/3skipped. PR517 remains draft/open;
 no merge/close. This step does not certify remaining fullbody axe violations.
+
+## 2026-10-18 — horizontally contained source tooltips
+
+Baseline: verified recovery to pushedc463e94, clean HEAD; contracts/check/build
+PASS before edits. Current authority/AuditRepo entry re-read. Owner remains
+shared InlineCitations + theme.css, not article data or a second tooltip engine.
+Root: absolute label centered on each source number can escape either viewport
+edge (390px first label right406; 320px left−98). New bounded positioning clamps
+only the active label to the visual viewport with8px margins. Resize/captured
+scroll/visualViewport events recalculate while hovered or focused; listeners
+are removed on deactivation/unmount. CSS caps width to the visible window and
+wraps unbroken strings. No portal/dependency/CI/content/source/Bible changes.
+Rollback boundary: CitationLink positioning/hooks, four tooltip CSS declarations,
+and the new positioning QA; previous semantic contrast fix is retained.
+
+Production-build Chromium153 before/after, themes dark/light ×320/390/1440px,
+height844, explicit mobile/hasTouch/reduce:6contexts each. First label horizontal
+bounds320: [−98,158]→[8,264];390:[150,406]→[126,382]; desktop1440:
+[455.125,711.125] unchanged. Desktoplight/mobile320light/mobile390dark
+screenshots actually inspected. All six Essay body text hashes and2052citation
+contrast measurements identical before/after; tooltip ratio6.178841 unchanged.
+First source Enter/hash/card resolution PASS. fonts7/overflow0/pageerrors0.
+
+New QA6cases checks12source labels/case on focus (both edges represented),
+desktop hover, live resize320/390→844 and1440→320, source Enter/card, and page
+horizontal overflow. Baseline light390 failed exactly406 vs<=383, not a
+missing selector. First full positioning run5/6: a resize-event timing failure;
+new test waits for real bounds to settle, without dispatching synthetic resize
+or mutating styles. Targeted desktoplight retry PASS; final combined suite
+14/14 PASS (6positioning+4citation contrast+4ordinary prose,4.1m).
+
+Same-probe body axe contrast counts before=after, ordered dark320/390/1440,
+light320/390/1440:71/71/89/66/67/110, incomplete1/context. Not fullaxe PASS.
+LCPbefore540/288/276/296/228/244ms, after492/240/696/256/236/664ms;
+CLSbefore=after .000455/.000455/.001372/.000455/.000455/.001372.
+Local unthrottled samples, not performance certification or an improvement claim.
+Wikimedia portrait still ERR_CONNECTION_CLOSED in6/6 before/after, with one
+resource console error/context; completed image naturalWidth0. External egress
+failure is not fixed or called an image PASS. Other offscreen lazy images not
+claimed decoded. npm-installed Chromium/NSS hash patch + PK11 preload used;
+all artifacts ignored in qa-artifacts/citation-position, no binaries committed.
+
+After check/build/prerender(32routes+404)/build-output/SEO/contracts/diff-check
+PASS; Prorok guards4/4 PASS, unpublished/biblical conclusion unchanged.
+NativeSafari/AT/pinch zoom/vertical screen-edge collision/all essays/touch-target
+size/other-block contrast and old devCLS remain unverified or unresolved here.
+Previous commit c463e94 CI refreshed:20success/1failure/3skipped; failed browser
+job117632643942 step11 Chromium/Android. Log retrieval EOF from results host;
+annotations only report exit1, so root cause unknown, not attributed to this
+horizontal-clipping bug and not silently fixed. PR517 stays draft/open.
