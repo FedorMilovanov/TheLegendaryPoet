@@ -1124,3 +1124,49 @@ earlier sourcecard PNG просмотрен. Подробные boundaries в so
 Rollback ограничен draft/test/docs. Нет нового runtime engine или theme patch.
 Открыто: отдельно воспроизвести contrast/CLS на полном production EssayPage,
 редакционное одобрение, cover/date/rights, release/browser/AT/Safari gates.
+
+## Продолжение — 2026-10-18: shared ordinary Essay prose contrast
+
+Clean292e6e0 восстановлен через staged byte-match remote, safety stash иff
+той же ветки (без hard reset/force). AGENTS/current state/contract/charter/
+theological/editorial rules/AuditRepo entry прочитаны. Node22.22.3/npm ci;
+browser153/NSS version+hash/PK11 shim вignored QA; preview0.0.0.0:4173/e2b allow.
+Baseline contracts/check/build PASS. Не перенесён прежний dev-only finding
+на production без проверки: полные build EssayPage двух опубликованных статей
+реально дали light4.129477 вместо4.5. Новый permanent QA на baseline упал
+именно с Received4.129477 (не missing-class assertion).
+
+Root: index.css legacy classname override назначал полупрозрачный text-luxury-
+gray light ink; обычная проза не имела semantic theme owner. Repair owner —
+существующие ParagraphBlock и theme.css: theme-essay-prose, --tlp-essay-prose
+(dark#aaaaaa точно прежний; light существующий --tlp-text-muted/#465c67).
+Все Essay paragraph blocks, не только Prorok. Никакого общего перекрашивания
+остальных классов/нового theme engine/локального draft patch. Содержание,
+sourceIds/права/библейская оценка/публичный каталог не менялись.
+
+After contracts/check/build/prerender/build-output/SEO PASS. New QA4/4 PASS:
+2темы×2viewport (1440×1000/390×844), reduce/isMobile явно; в каждом тесте
+оба EssayPage (ЕсенинII146 и Лермонтов19 ordinary p),660 text measurements.
+Light min6.757151, dark8.773263 (точно baseline), threshold4.5. Browser before/
+after4/4 контекста: Yesenin mobile+desktop light/desktopdark,Lermontov mobilelight;
+canonical DOM text всех457 sampled paragraph instances неизменен, dark computed
+colors неизменны, fonts7/overflow0/pageerrors0. After screenshots desktoplight,
+mobilelight,dark действительно просмотрены; финальная probe только повторяет
+тот же код. Полный новый тест был прерван composite timeout после начала;
+после проверки отсутствия оставшегося процесса выполнен отдельно и4PASS.
+
+Не полный axe PASS: before light body color-contrast nodes412/412/25,
+after268/268/8; dark64→64. Остались ссылки citations, подписи/credits/images,
+voice/note/другие блоки; incompletecolor-contrast1/case. Это baseline residual,
+не скрытый и не объявленный исправленным. В трёх Yesenin пробах before/after
+Wikimedia portrait ERR_CONNECTION_CLOSED, по1failedrequest/console resource
+error; локализован sandbox egress, no mock. Также offscreen lazy images ещё
+не декодированы: не выдаются за missing assets. Lermontovfailed/console0.
+
+Latest after LCP536/308/232/264ms, CLS0.000455/0.001158/0.000455/0.001158;
+baseline632/820/260/860ms, CLS те же. Unthrottled localCPU/NSS sandbox, не
+performance improvement/certificate. Высокий dev-previewCLS прошлого шага
+не воспроизведён на этих полных build pages, но его причина не установлена.
+NativeSafari/AT/all10essays/remainingblockcontrast не проверены этим шагом.
+Rollback: semantic prose class+token+new QA/docs. CI/deps/validators не ослаблены,
+workflows/index/srcdata/public без diff; статья Prorok остаётся draft.

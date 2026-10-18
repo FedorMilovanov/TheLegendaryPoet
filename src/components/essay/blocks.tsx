@@ -75,7 +75,7 @@ function ParagraphBlock({ block, citations }: { block: Block<'paragraph'>; citat
   return (
     <>
       {paragraphs.map((paragraph, index) => (
-        <p key={index} className="mb-6 text-lg md:text-xl leading-[1.9] text-luxury-gray-light font-light text-pretty">
+        <p key={index} className="theme-essay-prose mb-6 text-lg md:text-xl leading-[1.9] font-light text-pretty">
           {withGold(paragraph)}
           {index === paragraphs.length - 1 ? citations : null}
         </p>

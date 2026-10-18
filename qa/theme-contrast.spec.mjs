@@ -617,3 +617,27 @@ for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${them
     }
   });
 });
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`ordinary essay prose ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('every ordinary essay paragraph meets normal-text contrast', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        for (const slug of ['sergei-yesenin-1921-1925', 'vykhozhu-odin-ya-na-dorogu-lermontov']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const paragraphs = page.locator('.essay-body p.mb-6.text-lg');
+          await expect(paragraphs.first()).toBeVisible();
+          await page.evaluate(() => document.fonts.ready);
+          expect((await themeSnapshot(page)).dataset).toBe(theme);
+          const measurements = await contrastMeasurements(paragraphs);
+          expect(measurements.length).toBeGreaterThan(10);
+          for (const measurement of measurements) {
+            expect(measurement.ratio, `${slug}: ${measurement.text.slice(0, 100)}`).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+      });
+    });
+  }
+}

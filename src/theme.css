@@ -5,6 +5,7 @@
   --tlp-input-bg: #07131b;
   --tlp-text: #f5f1e8;
   --tlp-text-muted: #a9c6d1;
+  --tlp-essay-prose: #aaaaaa;
   --tlp-text-subtle: #91b5c2;
   --tlp-control-idle: #67e8f9;
   --tlp-control-active: #a5f3fc;
@@ -44,6 +45,7 @@ html.theme-light {
   --tlp-input-bg: #ffffff;
   --tlp-text: #13202a;
   --tlp-text-muted: #465c67;
+  --tlp-essay-prose: var(--tlp-text-muted);
   --tlp-text-subtle: #526873;
   --tlp-control-idle: #0d748c;
   --tlp-control-active: #075f75;
@@ -187,6 +189,11 @@ html.theme-light body {
 
 .theme-poem-divider {
   background-color: var(--tlp-poem-divider-bg) !important;
+}
+
+/* Ordinary Essay paragraphs keep their dark ink and use opaque light ink. */
+.theme-essay-prose {
+  color: var(--tlp-essay-prose);
 }
 
 .theme-poem-text {

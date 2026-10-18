@@ -196,3 +196,22 @@ EssayPage. Не исправлялось локальной раскраской
 контроля, production performance improvement/acceptance не заявляется.
 Предпросмотр не включает весь shell, cover/SEO/production publication boundary,
 не заменяет native Safari/AT. Эти gates остаются перед выпуском.
+
+## Общий цвет обычных абзацев — 2026-10-18
+
+Контраст4.14 из isolated preview воспроизведён на полных опубликованных
+EssayPage Есенина II и Лермонтова:4.1295:1. Root — legacy light override
+`text-luxury-gray*` задавал rgba(31,61,71,0.66). Shared ParagraphBlock теперь
+использует `theme-essay-prose` и токен в существующем theme.css: dark#aaaaaa
+сохранён, light использует существующий непрозрачный muted ink#465c67.
+На двух production-build маршрутах light ratio6.7572, dark8.7733 прежний;
+новый regression воспроизвёл baseline failure4.1295 и после patch4/4 PASS
+(2темы×2viewport, каждый тест оба маршрута). Сам TS draft/его библейский финал
+не менялись; эта правка применяется к нему через общий ParagraphBlock.
+
+Это закрывает конкретный цвет обычной прозы, не все publication/a11y gates.
+На полном essay body остаются axe contrast findings у citations/captions/других
+блоков. В preview высокий desktop dev CLS не воспроизведён как аналогичный
+скачок в этих full-page пробах (CLS≤0.001159), но первопричина dev observation
+этим цветовым patch не установлена. Обложка/date/публикация/AT/Safari и итоговая
+редакционная санкция по-прежнему отдельны; проект остаётся с библейской оценкой.
