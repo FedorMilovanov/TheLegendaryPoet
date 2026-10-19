@@ -1270,3 +1270,58 @@ Previous commit c463e94 CI refreshed:20success/1failure/3skipped; failed browser
 job117632643942 step11 Chromium/Android. Log retrieval EOF from results host;
 annotations only report exit1, so root cause unknown, not attributed to this
 horizontal-clipping bug and not silently fixed. PR517 stays draft/open.
+
+## 2026-10-19 — citation hover QA and actual CI coverage
+
+Baseline clean37dbb02: contracts/check/build PASS; GitHub20success/1failure/
+3skipped. Failed job117697518393 in run39134970431, step11. gh run logs and
+REST job-log delivery both EOF from sandbox; authenticated API supplied a
+short-lived download URL, which fetch_page successfully read (chunks22–24).
+No access token/expiring URL committed. Actual core summary:215passed/14skipped/
+2failed, both our new dark citation hover tests (desktop/mobile), including
+retry. Expected rgb(212,175,55), received rgba(212,175,55,.7). Other failures
+must not be inferred from the browser job's generic exit1. Prior c463e94 log
+is not separately decoded here; latest37dbb02 evidence is authoritative here.
+
+Local Chromium149.0.7827.0 (CI locked149.0.7827.55, same major NOT exact build),
+root locked Playwright1.61.1, minimal --no-sandbox/--disable-dev-shm-usage:
+unchanged dark tests reproduced2/2 failures. Sparticuz default launch flags
+had passed and were not representative enough. Diagnostic instrumentation
+itself changed timing and passed; do not assert an exact Blink/compositor
+internal cause from that. Repair is QA input sequencing: center scroll, wait
+two rendered frames (not a fixed sleep), require full viewport visibility,
+real pointer hover and explicit :hover, then the SAME exact color/4.5 contrast,
+outline/tooltip/card assertions. No forced pseudo-state, weakened assertions,
+increased timeout or CI retry added. Actual remote CI closure still pending.
+
+Coverage correction: separate qa/citation-tooltip.spec.mjs was NOT selected by
+the workflow's explicit file list. Moved all6cases into already-selected
+qa/theme-contrast.spec.mjs, deleted duplicate file, reused hover helper.
+Workflow/config/production code/dependencies/article/Bible content untouched.
+Owner: existing theme QA; rollback only helper/test-file consolidation.
+Repeated citation subset12/12 PASS, retries0; full theme spec47/47 PASS,
+retries0 (2.2m). Check/prerender32+404/build-output/SEO/contracts PASS;
+Prorok guards4/4 PASS, draft/publication/biblical conclusion unchanged.
+
+Production render on149, dark1440×1000/light390×844 explicit mobile/hasTouch/
+reduce: screenshots inspected, fonts7/overflow0/pageerrors0. Body axe contrast
+still has violations/incomplete1, not a full WCAG PASS. Wikimedia portrait
+ERR_CONNECTION_CLOSED/resource console error/completed naturalWidth0 in both
+contexts, external egress not repaired. LCP328/228ms, CLS.001194/.000455,
+local unthrottled samples, no runtime or performance-improvement claim.
+Browser/NSS hash patch/PK11 preload/artifacts remain ignored under
+qa-artifacts/ci-reader. NativeSafari/AT/high devCLS/other block contrast remain
+outside this QA correction; green prior special-purpose browser jobs do not
+certify all citations on every engine.
+
+### Progress denominator for the owner's percentage question
+
+Rough effort estimate: about50% of the CURRENT reader/QA tail remains, not50%
+of the entire product/editorial work. This is not a measured completion KPI,
+not derived from215/231 tests or remaining axe-node counts. Closed contours:
+ordinary prose contrast, citation ink/tooltip contrast, horizontal containment.
+Open contours: remaining shared block contrast; remote exact-head CI acceptance
+of this QA repair; unexplained high dev-harness CLS; broader browser/AT/viewport
+and small-target coverage. They are unequal in effort; no invented weighting.
+Articles/source witnesses/rights/publication gates are a separate larger scope
+with external decisions; no defensible whole-project percentage is asserted.

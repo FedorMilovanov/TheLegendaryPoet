@@ -8,6 +8,16 @@ function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'theme/contrast certification runs once in Chromium core');
 }
 
+// Layout can still settle after scrolling a long, content-visibility essay.
+// Deliver the pointer only after two rendered frames, then prove real CSS hover.
+async function hoverCitation(page, link) {
+  await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(link).toBeInViewport({ ratio: 1 });
+  await link.hover();
+  await expect.poll(() => link.evaluate((node) => node.matches(':hover'))).toBe(true);
+}
+
 async function themeSnapshot(page) {
   return page.evaluate(() => ({
     dataset: document.documentElement.dataset.theme,
@@ -657,9 +667,7 @@ for (const theme of ['dark', 'light']) {
         expect(measurements.length).toBeGreaterThan(100);
         for (const item of measurements) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
         const first = citations.first();
-        await first.scrollIntoViewIfNeeded();
-        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
-        await first.hover();
+        await hoverCitation(page, first);
         await expect.poll(() => first.evaluate((node) => getComputedStyle(node).color))
           .toBe(theme === 'dark' ? 'rgb(212, 175, 55)' : 'rgb(122, 77, 0)');
         expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
@@ -680,6 +688,62 @@ for (const theme of ['dark', 'light']) {
         await expect.poll(() => citations.evaluateAll((nodes) => nodes.every((node) =>
           document.getElementById(node.getAttribute('href').slice(1)),
         ))).toBe(true);
+      });
+    });
+  }
+}
+
+async function expectCitationTooltipContained(page, tooltip) {
+  await expect.poll(() => tooltip.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(1);
+  // Resize/visualViewport events are asynchronous; wait for the real layout to settle.
+  await expect.poll(async () => {
+    const rect = await tooltip.boundingBox();
+    return rect && rect.x >= 7 && rect.x + rect.width <= page.viewportSize().width - 7;
+  }).toBe(true);
+  const bounds = await tooltip.boundingBox();
+  expect(bounds).not.toBeNull();
+  const viewport = page.viewportSize();
+  expect(bounds.x).toBeGreaterThanOrEqual(7);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width - 7);
+  expect(await tooltip.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const width of [320, 390, 1440]) {
+    test.describe(`citation tooltip ${theme} ${width}px`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
+      test('source labels fit the viewport during focus, hover and resize', async ({ page }, testInfo) => {
+        test.skip(testInfo.project.name !== 'chromium-core', 'bounded Chromium positioning regression');
+        await page.addInitScript((mode) => localStorage.setItem('tlp-theme-mode', mode), theme);
+        await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
+        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        await expect(citations.first()).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        for (let i = 0; i < 12; i++) {
+          const link = citations.nth(i);
+          await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          await link.focus();
+          await expectCitationTooltipContained(page, link.getByRole('tooltip'));
+        }
+        const first = citations.first();
+        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await first.focus();
+        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        if (width >= 600) {
+          await first.evaluate((node) => node.blur());
+          await hoverCitation(page, first);
+          await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+          await page.mouse.move(0, 0);
+          await first.focus();
+        }
+        await page.setViewportSize({ width: width < 600 ? 844 : 320, height: 600 });
+        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        const href = await first.getAttribute('href');
+        await first.press('Enter');
+        await expect.poll(() => new URL(page.url()).hash).toBe(href);
+        await expect(page.locator(href)).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
       });
     });
   }
