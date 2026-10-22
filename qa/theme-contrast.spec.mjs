@@ -293,7 +293,7 @@ test.describe('light theme semantic surfaces', () => {
     await expect(verse).toBeVisible();
     expect(await contrastRatio(verse), 'light poem preview contrast').toBeGreaterThanOrEqual(4.5);
 
-    await page.getByRole('button', { name: 'Открыть поиск', exact: true }).click();
+    await page.getByRole('button', { name: 'Открыть поиск — Ctrl K', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
     await expect(dialog).toHaveClass(/theme-modal-surface/);
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
@@ -777,4 +777,23 @@ for (const theme of ['dark', 'light']) {
       });
     });
   }
+}
+
+for (const theme of ['dark', 'light']) {
+  test(`header landmark and visible search label have accessible names in ${theme}`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+    await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+    await expect(page.locator('.header-nav')).toHaveAccessibleName('Основная навигация');
+    const search = page.getByRole('button', { name: /^Открыть поиск/ }).filter({ visible: true }).first();
+    await expect(search.locator('.header-search-label')).toHaveText('Ctrl K');
+    await expect(search).toHaveAccessibleName('Открыть поиск — Ctrl K');
+    await search.click();
+    const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('combobox', { name: 'Поисковый запрос' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(search).toBeFocused();
+  });
 }

@@ -59,14 +59,52 @@ These are noisy individual local samples, not field CWV or causal performance
 claims. Wikimedia requests fail in the restricted sandbox; console network
 errors are not silently classified as application exceptions or production bugs.
 
-Other contrast nodes, search visible-name mismatch, duplicate unnamed navigation
-and conditional image-error-button name mismatch remain unresolved here.
+At this breadcrumb-only checkpoint, other contrast nodes, search visible-name
+mismatch, duplicate unnamed navigation and conditional image-error-button name
+mismatch remained unresolved. Header signals are addressed in the next section.
 Ordinary prose/citation targeted tests passing does not close these signals.
 
 Environment: Node 22.22.3; Chromium 149 with NSS compatibility shim, not the
 exact native CI browser/platform. Native WebKit, assistive technology and field
 performance were not re-certified. Ignored raw evidence/harness/logs/screenshots:
 `qa-artifacts/revalidation/` (not committed).
+
+## Shared Header follow-up
+
+Root: the desktop navigation had no landmark name, and the visible search label
+`Ctrl K` was absent from the button's accessible name. Repaired only in shared
+`src/components/Header.tsx`: `Основная навигация` and `Открыть поиск — Ctrl K`.
+Desktop instances across all routes inherit this; mobile dock naming is unchanged.
+
+A new regression first failed on the unnamed navigation. Two theme scenarios
+now assert navigation/search names, visible shortcut text, opening search,
+combobox autofocus, Escape close and focus return. Existing strict search
+selectors and the app-shell validator now require the new exact name; no
+counts, thresholds, layout checks or shortcut guarantees were removed.
+
+An intermediate parenthesized name passed the DOM-name test but still failed
+axe (its label matching excludes parenthetical text); the final dash-separated
+name clears the actual full-body rule. This illustrates why name-string tests
+alone do not certify label-in-name compliance.
+
+The first check exposed a stale discovery manifest because Header is a hashed
+global discovery authority. Regenerated using the existing sitemap/feed scripts;
+only `public/discovery-manifest.json` changed. The second check exposed the old
+exact search-name contract; updated that exact expectation, not the guard logic.
+Final contracts/check/build/prerender/build-output/SEO pass; Prorok 4/4 pass.
+Final reader/theme/floating-chrome suite: **62/62, retries 0**, 2.7 minutes
+(61 reader/theme + one floating-chrome test). The earlier in-flight run is not
+the final evidence; final run used the stable rebuilt source.
+
+Final full-body axe: contrast nodes 87/69/110/67 remain; label mismatch is now
+one per context (conditional external-image failure state), landmark-unique is
+absent in all four contexts. Page exceptions and overflow remain zero.
+Latest local LCP 508/480/644/492 ms, CLS 0/0/0.000968806/0; same caveats above.
+Screenshots re-captured; dark desktop/light mobile re-inspected after Header
+changes, with no visual search-label/layout changes. Remaining broad contrast,
+conditional image-error name and incomplete results are not closed.
+Rollback: Header attributes, strengthened exact-name tests/validator, generated
+discovery fingerprints; no schema migration, new engine or architecture lane.
 
 ## Dependencies and owner decisions
 

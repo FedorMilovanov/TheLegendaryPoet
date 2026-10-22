@@ -198,7 +198,7 @@ expect(
 );
 expect(commandPalette.includes('event.metaKey || event.ctrlKey'), 'Ctrl/Cmd+K must continue to toggle search');
 expect(
-  header.includes("new Event('tlp-open-command-palette')") && header.includes('aria-label="Открыть поиск"'),
+  header.includes("new Event('tlp-open-command-palette')") && header.includes('aria-label="Открыть поиск — Ctrl K"'),
   'desktop search must remain available exactly through the persistent header trigger',
 );
 expect(
