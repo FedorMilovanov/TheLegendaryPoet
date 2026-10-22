@@ -301,3 +301,22 @@ explicitly open. Raw ignored evidence: `qa-artifacts/continuation/`.
   the earlier FFmpeg infrastructure timeout does not describe this new HEAD.
   Damaged original media (#519), broader contrast findings and existing external
   dependencies remain open. No merge, artwork substitution or editorial change.
+
+## Follow-up 2026-10-23 — native CI image-load diagnosis (not closure)
+
+At `3c97320`, browser job `120117484363` failed all four new iPhone
+viewer cases at the unchanged `naturalWidth > 0` precondition, not at the
+viewport assertion. Check annotations repeat the zero-width failure; signed
+job logs and the core evidence artifact download both failed with EOF here.
+Analytics job `120117484174` hit its 30-minute limit during locked browser
+installation; home-reveal `120117484177` hit its 45-minute limit. These are
+not equivalent to a proved runtime regression. Other principal gates passed.
+
+Restored snapshot was byte-identical to the pushed source (including four
+untracked text files); preserved in a safety stash and fast-forwarded to clean
+`3c97320`. Fresh contracts/check/build PASS. Fixture still independently decodes
+with ImageMagick at 1280×720, 81494 bytes; that does not prove WebKit decoding.
+Added failure-only diagnostics for intercepted/failed requests, actual image
+source/state/visibility, and independent data-URL decoding of the same bytes.
+The original assertion, timeout, native device profiles and retry policy remain
+unchanged. No production change or root-cause/repair claim at this stage.

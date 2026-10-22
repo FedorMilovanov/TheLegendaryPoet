@@ -293,13 +293,51 @@ for (const theme of ['dark', 'light']) {
         // A known decodable local fixture isolates geometry from Wikimedia
         // egress. This is not verification/replacement of production image bytes.
         const fixture = fs.readFileSync(path.resolve('public/images/essays/yesenin/yesenin-part-1-editorial.webp'));
-        await page.route(/^https:\/\/[^/]+\.wikimedia\.org\//, (route) => route.fulfill({ contentType: 'image/webp', body: fixture }));
+        const fixtureRequests = [];
+        const failedImageRequests = [];
+        page.on('requestfailed', (request) => {
+          if (/wikimedia\.org/.test(request.url())) {
+            failedImageRequests.push({ url: request.url(), error: request.failure()?.errorText });
+          }
+        });
+        await page.route(/^https:\/\/[^/]+\.wikimedia\.org\//, async (route) => {
+          fixtureRequests.push(route.request().url());
+          await route.fulfill({ contentType: 'image/webp', body: fixture });
+        });
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
         await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'domcontentloaded' });
         await waitForRoute(page);
         const opener = page.locator('.essay-body figure button[aria-haspopup="dialog"]').first();
         await opener.scrollIntoViewIfNeeded();
-        await expect.poll(() => opener.locator('img').evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
+        try {
+          await expect.poll(() => opener.locator('img').evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
+        } catch (error) {
+          // Preserve the assertion/timeout. Native CI annotations must expose
+          // whether this is routing, decoding, or lazy-image visibility; signed
+          // artifact/log delivery is not always reachable from the repair lane.
+          const image = await opener.locator('img').evaluate((node) => ({
+            src: node.src, currentSrc: node.currentSrc, complete: node.complete,
+            naturalWidth: node.naturalWidth, loading: node.loading,
+            state: node.dataset.imageState,
+            rect: node.getBoundingClientRect().toJSON(),
+            ancestors: [node, node.parentElement, node.closest('figure')].map((element) => {
+              const css = getComputedStyle(element);
+              return { tag: element.tagName, contentVisibility: css.contentVisibility,
+                visibility: css.visibility, opacity: css.opacity, transform: css.transform };
+            }),
+          }));
+          const independentDecode = await page.evaluate(async (base64) => {
+            const probe = new Image();
+            probe.src = `data:image/webp;base64,${base64}`;
+            return Promise.race([
+              probe.decode().then(() => ({ width: probe.naturalWidth }), (error) => ({ error: String(error) })),
+              new Promise((resolve) => setTimeout(() => resolve({ error: 'diagnostic decode pending after 2s' }), 2_000)),
+            ]);
+          }, fixture.toString('base64'));
+          throw new Error(`${error.message}\nImage fixture diagnostics: ${JSON.stringify({
+            fixtureBytes: fixture.length, fixtureRequests, failedImageRequests, image, independentDecode,
+          })}`, { cause: error });
+        }
         await opener.focus();
         await opener.press('Enter');
         const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
