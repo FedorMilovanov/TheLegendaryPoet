@@ -94,20 +94,20 @@ const kindLabels = {
 function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit' | 'sourceUrl' | 'kind'> }) {
   const kind = block.kind ?? 'archive';
   return (
-    <figcaption className="mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed text-luxury-gray-light/55">
+    <figcaption className="theme-functional-muted mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed">
       <span className="min-w-0 flex-1">
-        <span className="mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-luxury-gray-light/60">
+        <span className="theme-functional-muted mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]">
           {kindLabels[kind]}
         </span>
         {block.caption}
-        {block.credit ? <span className="text-luxury-gray-light/35"> · {block.credit}</span> : null}
+        {block.credit ? <span className="theme-functional-subtle"> · {block.credit}</span> : null}
       </span>
       {block.sourceUrl && (
         <a
           href={block.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+          className="theme-control-action inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
         >
           Источник <ExternalLink size={11} aria-hidden="true" />
         </a>
@@ -217,7 +217,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
             animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
             transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
+            className="theme-dark-island fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
             onPointerDown={(event) => {
               if (event.currentTarget === event.target) closeLightbox();
             }}
@@ -244,9 +244,9 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
               </div>
 
               <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
-                <p id={captionId} className="min-w-0 flex-1 text-xs leading-relaxed text-white/58">
+                <p id={captionId} className="theme-dark-island-muted min-w-0 flex-1 text-xs leading-relaxed">
                   {block.caption}
-                  {block.credit ? <span className="text-white/32"> · {block.credit}</span> : null}
+                  {block.credit ? <span className="theme-dark-island-subtle"> · {block.credit}</span> : null}
                 </p>
                 <div className="flex items-center gap-2">
                   {block.sourceUrl && (
@@ -254,7 +254,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
                       href={block.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                      className="theme-dark-island-accent inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] transition hover:border-luxury-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-island-accent)]"
                     >
                       Источник <ExternalLink size={11} />
                     </a>

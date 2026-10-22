@@ -96,7 +96,18 @@ async function nonTextContrast(locator, mode = 'border') {
   return locator.evaluate((node, mode) => {
     const parse = (value) => {
       const match = value.match(/rgba?\(([^)]+)\)/i);
-      if (!match) throw new Error(`Unsupported computed color: ${value}`);
+      if (!match) {
+        // Tailwind's dark modal backgrounds can serialize as OKLab. Use the
+        // same real browser conversion as text checks; never skip the ratio.
+        if (!CSS.supports('color', value)) throw new Error(`Unsupported computed color: ${value}`);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext('2d');
+        context.fillStyle = value;
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+        return { r, g, b, a: a / 255 };
+      }
       const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
       return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
     };
@@ -823,6 +834,55 @@ for (const theme of ['dark', 'light']) {
         await page.keyboard.press('Escape');
         await expect(dialog).toBeHidden();
         await expect(opener).toBeFocused();
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`essay image metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test('captions, credits and source links stay readable inline and in the dark lightbox', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const slug of ['sergei-yesenin-1921-1925', 'brik-case']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const figures = page.locator('.essay-body figure').filter({ has: page.locator('button[aria-haspopup="dialog"]') });
+          const captions = figures.locator('figcaption');
+          expect(await captions.count()).toBeGreaterThan(2);
+          const text = await contrastMeasurements(captions.locator('span, a'), true);
+          expect(text.length).toBeGreaterThan(8);
+          for (const item of text) expect(item.ratio, `${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const source = captions.getByRole('link', { name: 'Источник', exact: true }).first();
+          await expect(source).toHaveAttribute('href', /^https:\/\//);
+          await expect(source).toHaveAttribute('target', '_blank');
+          await source.hover();
+          expect(await contrastRatio(source)).toBeGreaterThanOrEqual(4.5);
+          await page.mouse.move(0, 0);
+          await source.focus();
+          await expect(source).toBeFocused();
+          expect(await contrastRatio(source)).toBeGreaterThanOrEqual(4.5);
+          expect(await nonTextContrast(source, 'focus')).toBeGreaterThanOrEqual(3);
+
+          const opener = figures.getByRole('button', { name: /^Увеличить изображение:/ }).first();
+          await opener.focus();
+          await opener.press('Enter');
+          const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+          await expect(dialog).toBeVisible();
+          const caption = dialog.locator('p[id]');
+          await expect(caption).toBeVisible();
+          const modalText = await contrastMeasurements(caption.locator('xpath=.|.//*'), true);
+          expect(modalText.length).toBeGreaterThanOrEqual(2);
+          for (const item of modalText) expect(item.ratio, `lightbox: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const modalSource = dialog.getByRole('link', { name: 'Источник', exact: true });
+          expect(await contrastRatio(modalSource)).toBeGreaterThanOrEqual(4.5);
+          await modalSource.focus();
+          expect(await nonTextContrast(modalSource, 'focus')).toBeGreaterThanOrEqual(3);
+          await page.keyboard.press('Escape');
+          await expect(dialog).toBeHidden();
+          await expect(opener).toBeFocused();
+        }
       });
     });
   }

@@ -221,3 +221,40 @@ No padding, guessed tail bytes, regenerated lookalike or silent hash/approval
 replacement was performed. Artwork/provenance authority remains unchanged.
 Native CI for the scroll repair must also finish; local passing checks do not
 close either the Safari verification boundary or this image-integrity blocker.
+
+## Shared image metadata contrast follow-up
+
+Fresh clean baseline `e487564`: install/contracts/check/build pass. Exact-head
+CI now confirms browser-qa (including base Safari), premium iPhone, WebKit home,
+analytics and reader checks pass. Brand-raster remains **not certified**: its job
+hit the 24-minute timeout during FFmpeg installation, before project dependencies
+or image/browser checks ran. It is not a failed brand pixel assertion. A failed-job
+rerun request was rejected; no rerun success, workflow change or timeout increase
+is claimed.
+
+Root: shared ImageMeta and image-lightbox captions/credits/source controls used
+low-alpha fixed gray/gold/white colors. New regression first failed at 3.194:1.
+Use existing semantic page tokens inline and existing fixed-dark island tokens
+in the lightbox. Source focus rings use the matching existing tokens. No image,
+caption, credit, source URL, rights or publication data changed.
+
+Four contexts (dark/light × desktop/mobile) on Yesenin II and Brik essays assert
+all image metadata text ≥4.5:1, source hover/focus text ≥4.5:1, focus ring ≥3:1,
+external-link attributes, lightbox caption/credit text, Escape and focus return.
+The non-text test color parser now converts valid OKLab colors through canvas,
+like the existing text parser; unsupported values still fail, ratios are not
+skipped. Final reader/theme/overlay/journeys suite: **76/76, retries 0**. Check,
+build, prerender, output/SEO, contracts, Node 28/28 and Prorok 4/4 pass.
+
+Same-harness Yesenin II full-body axe contrast nodes before→after:
+dark desktop 87→23, dark mobile 69→5, light desktop 110→46, light mobile 67→3.
+Lightbox-scoped violation counts 3/2/2/0→0/0/0/0; incomplete checks are not PASS.
+Eight inline/lightbox screenshots inspected; page exceptions/overflow zero.
+Images remain unavailable in these lightbox samples: text/controls verification
+is not image-decoding proof. Screenshots also expose a separate clipped overlay
+geometry problem; stack/focus tests alone did not certify full-viewport coverage.
+Local unthrottled LCP before 704/276/740/268 ms, after 356/272/760/244 ms;
+CLS unchanged 0.000968806/0/0.000968806/0. These are samples, not field CWV claims.
+Rollback: shared image metadata classes and their four regressions; no new token
+system or architecture lane. Remaining contrast, overlay geometry and #519 stay
+explicitly open. Raw ignored evidence: `qa-artifacts/continuation/`.
