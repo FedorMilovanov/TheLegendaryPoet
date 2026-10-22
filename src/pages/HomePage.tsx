@@ -108,10 +108,12 @@ function HeroSection() {
       </div>
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-6rem)] max-w-7xl flex-col items-center justify-center px-4 py-20 text-center sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }} className="w-full">
-          <div className="mx-auto mb-16 grid max-w-5xl grid-cols-3 items-end gap-4 sm:grid-cols-6 sm:gap-5 lg:gap-7">
-            {heroPoets.map((poet, index) => (
-              <HeroPoetWindow key={poet.id} poet={poet} index={index} />
-            ))}
+          <div className="hero-poet-gallery mx-auto mb-16 max-w-5xl">
+            <div className="hero-poet-grid grid items-end gap-4 sm:gap-5 lg:gap-7">
+              {heroPoets.map((poet, index) => (
+                <HeroPoetWindow key={poet.id} poet={poet} index={index} />
+              ))}
+            </div>
           </div>
           <HeroTitle />
           <p className="mx-auto mb-10 max-w-3xl font-serif text-xl italic tracking-wide text-cyan-100/70 md:text-2xl">

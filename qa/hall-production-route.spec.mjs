@@ -77,3 +77,49 @@ test('production Hall falls back after a real WebGL context loss when extension 
   await expect(root).toHaveAttribute('data-hall-production-mode', 'fallback', { timeout: 10_000 });
   await expect(page.getByText('3D недоступен: webgl-context-lost', { exact: true })).toBeAttached();
 });
+
+for (const [name, width, height, isMobile, colorScheme] of [
+  ['desktop', 1440, 1000, false, 'dark'],
+  ['phone', 390, 844, true, 'light'],
+  ['compact phone', 320, 568, true, 'dark'],
+  ['tablet', 768, 1024, true, 'light'],
+]) for (const fallback of [false, true]) {
+  test.describe(`Hall shell geometry — ${name}, ${fallback ? 'fallback' : 'WebGL'}`, () => {
+    test.use({ viewport: { width, height }, isMobile, hasTouch: isMobile, colorScheme, reducedMotion: 'reduce' });
+    test('title panel and route controls are not covered by persistent chrome', async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'chromium-core', 'explicit viewport matrix; existing Hall tests still certify mobile engines');
+      await page.addInitScript(({ colorScheme, fallback }) => {
+        localStorage.setItem('tlp-theme-mode', colorScheme);
+        if (fallback) {
+          Object.defineProperty(window, 'WebGLRenderingContext', { configurable: true, value: undefined });
+          Object.defineProperty(window, 'WebGL2RenderingContext', { configurable: true, value: undefined });
+        }
+      }, { colorScheme, fallback });
+      const root = await openHall(page);
+      await expect(root).toHaveAttribute('data-hall-production-mode', fallback ? 'fallback' : 'webgl');
+      await page.evaluate(() => document.fonts.ready);
+      const geometry = await root.evaluate((element) => {
+        const heading = element.querySelector('h1');
+        const panel = heading.parentElement.getBoundingClientRect();
+        const rect = heading.getBoundingClientRect();
+        const header = document.querySelector('.site-header').getBoundingClientRect();
+        return { panelTop: panel.top, headerBottom: header.bottom,
+          hit: heading.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)) };
+      });
+      expect(geometry.panelTop, 'the whole title panel must start below the fixed header').toBeGreaterThanOrEqual(geometry.headerBottom);
+      expect(geometry.hit, 'heading hit-test must not land in the header').toBe(true);
+      if (!fallback) {
+        const next = page.getByRole('button', { name: 'Дальше', exact: true });
+        // Short screens keep readable intrinsic content and allow normal scrolling.
+        if (height < 650) await next.evaluate((button) => button.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await expect(next).toBeInViewport();
+        expect(await next.evaluate((button) => {
+          const rect = button.getBoundingClientRect();
+          return button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+        }), 'route control must not sit under the mobile dock').toBe(true);
+        await next.click();
+        await expect(page.getByText(/Точка маршрута: orientation/)).toBeVisible();
+      }
+    });
+  });
+}

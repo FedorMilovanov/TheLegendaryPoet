@@ -14,7 +14,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
   return (
     <Link to={`/poets/${poet.id}`} className="group block h-full">
       <TiltCard intensity={6}>
-        <div className="overflow-hidden h-full flex flex-col border border-cyan-400/15 bg-[#050505]/70 breath-hover relative z-10 rounded-2xl">
+        <div className="theme-page-surface overflow-hidden h-full flex flex-col border border-cyan-400/15 breath-hover relative z-10 rounded-2xl">
           {/* Glowing Background Accent on hover */}
           <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none" />
 
@@ -37,25 +37,25 @@ const PoetCard = ({ poet }: PoetCardProps) => {
             />
 
             {/* Top Badges */}
-            <div className="absolute top-4 right-4 z-20 bg-[#050505]/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+            <div className="absolute top-4 right-4 z-20 theme-dark-island bg-[#050505] px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
               <Star size={14} className="text-luxury-gold fill-luxury-gold animate-pulse" />
               <span className="text-sm font-bold text-luxury-gold gold-glow-text">{poet.rating}</span>
             </div>
 
-            <div className="absolute top-4 left-4 z-20 bg-[#050505]/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/10">
-              <MapPin size={12} className="text-luxury-gray-light" />
-              <span className="text-xs text-luxury-gray-light font-medium tracking-wide">{poet.nationality}</span>
+            <div className="absolute top-4 left-4 z-20 theme-dark-island bg-[#050505] px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-luxury-gold/10">
+              <MapPin size={12} className="theme-dark-island-muted" />
+              <span className="text-xs theme-dark-island-muted font-medium tracking-wide">{poet.nationality}</span>
             </div>
           </div>
 
           {/* Content */}
           <div className="p-8 flex flex-col flex-grow relative z-20">
             <div className="mb-4 flex-grow">
-              <h3 className="text-2xl font-serif font-bold text-white group-hover:text-luxury-gold transition-colors duration-300 mb-1 leading-tight">
+              <h3 className="text-2xl font-serif font-bold theme-poet-title transition-colors duration-300 mb-1 leading-tight">
                 {poet.name}
               </h3>
-              <p className="text-xs tracking-wider uppercase text-luxury-gold/60 font-semibold mb-3">{poet.fullName}</p>
-              <p className="text-sm text-luxury-gray-light leading-relaxed font-light line-clamp-3">
+              <p className="text-xs tracking-wider uppercase theme-poet-accent font-semibold mb-3">{poet.fullName}</p>
+              <p className="text-sm theme-functional-muted leading-relaxed font-light line-clamp-3">
                 {poet.shortBio}
               </p>
               <FeedbackMiniSummary targetType="poet" targetId={poet.id} />
@@ -67,7 +67,7 @@ const PoetCard = ({ poet }: PoetCardProps) => {
                 {poet.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 text-xs bg-luxury-gold/5 text-luxury-gold/80 rounded border border-luxury-gold/20 font-medium tracking-wide"
+                    className="px-2.5 py-1 text-xs bg-luxury-gold/5 theme-poet-accent rounded border border-luxury-gold/20 font-medium tracking-wide"
                   >
                     {tag}
                   </span>
@@ -75,12 +75,12 @@ const PoetCard = ({ poet }: PoetCardProps) => {
               </div>
 
               {/* Dates / Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-cyan-400/10 text-cyan-100/50">
+              <div className="flex items-center justify-between pt-4 border-t border-cyan-400/10 theme-functional-subtle">
                 <div className="flex items-center gap-1.5 text-xs font-medium">
-                  <Calendar size={14} className="text-cyan-400/50" />
+                  <Calendar size={14} />
                   <span>{poet.birthYear}&nbsp;— {poet.deathYear || 'н. в.'}</span>
                 </div>
-                <div className="flex items-center gap-1 text-cyan-400 text-sm font-semibold group-hover:text-cyan-300 transition-colors duration-300">
+                <div className="flex items-center gap-1 theme-control-action text-sm font-semibold transition-colors duration-300">
                   <span>Подробнее</span>
                   <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform duration-300" />
                 </div>

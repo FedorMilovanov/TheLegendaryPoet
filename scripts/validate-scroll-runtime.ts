@@ -1,10 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { inspectSource } from './lib/source-contract-ast';
+import projectContract from '../docs/project-contract.json';
 
 const failures: string[] = [];
 const assertContract = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
+
+assertContract(projectContract.runtime.scrollMode === 'native', 'the project scroll mode must agree with the native behavior enforced here');
 
 type CapturedScroll = ScrollToOptions & { top?: number };
 const nativeScrolls: CapturedScroll[] = [];

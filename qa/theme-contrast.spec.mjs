@@ -8,6 +8,16 @@ function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'theme/contrast certification runs once in Chromium core');
 }
 
+// Layout can still settle after scrolling a long, content-visibility essay.
+// Deliver the pointer only after two rendered frames, then prove real CSS hover.
+async function hoverCitation(page, link) {
+  await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(link).toBeInViewport({ ratio: 1 });
+  await link.hover();
+  await expect.poll(() => link.evaluate((node) => node.matches(':hover'))).toBe(true);
+}
+
 async function themeSnapshot(page) {
   return page.evaluate(() => ({
     dataset: document.documentElement.dataset.theme,
@@ -19,11 +29,22 @@ async function themeSnapshot(page) {
   }));
 }
 
-async function contrastRatio(locator) {
-  return locator.evaluate((node) => {
+async function contrastMeasurements(locator, directTextOnly = false) {
+  return locator.evaluateAll((nodes, directTextOnly) => {
     const parse = (value) => {
       const match = value.match(/rgba?\(([^)]+)\)/i);
-      if (!match) throw new Error(`Unsupported computed color: ${value}`);
+      if (!match) {
+        // Tailwind may serialize computed colors as oklch()/color(). Let the
+        // browser convert those to sRGB instead of silently treating them as black.
+        if (!CSS.supports('color', value)) throw new Error(`Unsupported computed color: ${value}`);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext('2d');
+        context.fillStyle = value;
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+        return { r, g, b, a: a / 255 };
+      }
       const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
       return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
     };
@@ -45,19 +66,29 @@ async function contrastRatio(locator) {
       return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
     };
 
-    let background = { r: 255, g: 255, b: 255, a: 1 };
-    const chain = [];
-    for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
-    for (const current of chain.reverse()) {
-      const bg = parse(getComputedStyle(current).backgroundColor);
-      if (bg.a > 0) background = composite(bg, background);
-    }
+    return nodes.filter((node) => !directTextOnly || (node instanceof HTMLElement
+      && [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim()))).map((node) => {
+      let background = { r: 255, g: 255, b: 255, a: 1 };
+      const chain = [];
+      for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
+      for (const current of chain.reverse()) {
+        const bg = parse(getComputedStyle(current).backgroundColor);
+        if (bg.a > 0) background = composite(bg, background);
+      }
 
-    const foreground = composite(parse(getComputedStyle(node).color), background);
-    const l1 = luminance(foreground);
-    const l2 = luminance(background);
-    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-  });
+      const foreground = composite(parse(getComputedStyle(node).color), background);
+      const l1 = luminance(foreground);
+      const l2 = luminance(background);
+      return { text: node.textContent, ratio: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) };
+    });
+  }, directTextOnly);
+}
+
+async function contrastRatio(locator) {
+  await locator.waitFor({ state: 'attached' });
+  const measurements = await contrastMeasurements(locator);
+  expect(measurements).toHaveLength(1);
+  return measurements[0].ratio;
 }
 
 
@@ -325,3 +356,395 @@ test.describe('light theme semantic surfaces', () => {
     expect(visual.headingColor).toMatch(/rgb\(255, 255, 255\)/);
   });
 });
+
+
+for (const theme of ['dark', 'light']) {
+  test(`shared footer text and navigation meet contrast in ${theme} theme`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+    await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+    const footer = page.locator('footer');
+    await expect(footer).toHaveCount(1);
+    await footer.scrollIntoViewIfNeeded();
+    await page.evaluate(() => document.fonts.ready);
+    const nodes = footer.locator('*');
+    const textIndexes = await nodes.evaluateAll((elements) => elements.flatMap((node, index) => (
+      node instanceof HTMLElement
+      && [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim())
+      // The unchanged gradient logotype is exempt; its descriptive tagline is not.
+      && !node.matches('a[href="/"] .neon-blue-gradient') ? [index] : []
+    )));
+    expect(textIndexes.length).toBeGreaterThanOrEqual(20);
+    for (const index of textIndexes) {
+      const node = nodes.nth(index);
+      expect(await contrastRatio(node), `${theme}: ${await node.textContent()}`).toBeGreaterThanOrEqual(4.5);
+    }
+    const firstLink = footer.locator('a[href="/poets"]');
+    const nextLink = footer.locator('a[href="/hall"]');
+    await firstLink.focus();
+    await page.keyboard.press('Tab');
+    await expect(nextLink).toBeFocused();
+    await expect.poll(() => nextLink.evaluate((node) => node.getAnimations().length)).toBe(0);
+    expect(await contrastRatio(nextLink), `${theme} focused navigation text`).toBeGreaterThanOrEqual(4.5);
+    expect(await nonTextContrast(nextLink, 'focus'), `${theme} keyboard focus indicator`).toBeGreaterThanOrEqual(3);
+    await nextLink.evaluate((node) => node.blur());
+    await nextLink.hover();
+    await expect.poll(() => nextLink.evaluate((node) => node.getAnimations().length)).toBe(0);
+    expect(await contrastRatio(nextLink), `${theme} hovered navigation text`).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+async function seedContrastState(page, theme) {
+  await page.addInitScript((theme) => {
+    localStorage.setItem('tlp-theme-mode', theme);
+    const targets = [
+      { targetType: 'poet', targetId: 'alexander-pushkin', scores: { language: 4, depth: 4, legacy: 4, truth: 4 } },
+      { targetType: 'track', targetId: 'pushkin-tucha', scores: { voice: 4, music: 4, text: 4 } },
+    ];
+    localStorage.setItem('tlp-my-archive:v4', JSON.stringify({ version: 4, updatedAt: Date.now(), operations: [
+      { id: 'pushkin-1', favorite: true, addedAt: Date.now(), generation: '1', writerId: 'contrast-fixture' },
+    ] }));
+    const createdAt = new Date().toISOString();
+    localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+      version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+      updatedAt: createdAt, lastSyncedAt: null,
+      localSnapshot: {
+        ratings: targets.map((entry, i) => ({ ...entry, id: `rating-contrast-fixture-${i}`, createdAt })),
+        comments: targets.map(({ targetType, targetId }, i) => ({ targetType, targetId,
+          id: `comment-contrast-fixture-${i}`, author: 'QA', text: 'Локальная запись для проверки отображения счётчика.',
+          kind: 'literary', helpful: 0, createdAt })),
+      },
+    }));
+  }, theme);
+}
+
+async function expectReadableCardText(root, state) {
+  // One browser task: do not spend a protocol round trip on every glyph parent.
+  const measurements = await contrastMeasurements(root.locator('*'), true);
+  expect(measurements.length).toBeGreaterThan(10);
+  for (const { text, ratio } of measurements) {
+    expect(ratio, `${state}: ${text}`).toBeGreaterThanOrEqual(4.5);
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const route of ['/', '/poets']) {
+    test(`poet card contrast on ${route} in ${theme}, including populated feedback`, async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedContrastState(page, theme);
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      const card = page.locator('a[href="/poets/alexander-pushkin"]:has(h3)');
+      await card.scrollIntoViewIfNeeded();
+      await expect(card.getByText('1 мнений', { exact: true })).toBeVisible();
+      await expectReadableCardText(card, `${theme} idle`);
+      await card.focus();
+      await page.keyboard.press('Shift');
+      await expect(card).toBeFocused();
+      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expectReadableCardText(card, `${theme} keyboard focus`);
+      expect(await nonTextContrast(card, 'focus')).toBeGreaterThanOrEqual(3);
+      await card.evaluate((node) => node.blur());
+      await card.hover();
+      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expectReadableCardText(card, `${theme} hover`);
+    });
+  }
+  for (const route of ['/', '/music', '/archive', '/contrast-missing-route']) {
+    test(`section label contrast on ${route} in ${theme}`, async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedContrastState(page, theme);
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+      const label = page.locator('.section-label').first();
+      await label.scrollIntoViewIfNeeded();
+      expect(await contrastRatio(label)).toBeGreaterThanOrEqual(4.5);
+      if (route === '/music') {
+        if (theme === 'light') {
+          // Backdrop images/gradients are outside this calculator. Certify the
+          // translucent header against its darkest possible backing as well.
+          await page.locator('main').evaluate((node) => { node.style.backgroundColor = '#050505'; });
+          expect(await contrastRatio(label)).toBeGreaterThanOrEqual(4.5);
+          await page.locator('main').evaluate((node) => { node.style.removeProperty('background-color'); });
+        }
+        const summary = page.getByText('1 мнений', { exact: true });
+        await expect(summary).toBeVisible();
+        expect(await contrastRatio(summary)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+  }
+  test(`section label contrast in render-error panel in ${theme}`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await seedContrastState(page, theme);
+    // Fail the initial route locally: certify the real boundary's colors,
+    // independently of the separate offline/SPA recovery tests.
+    await page.route('**/assets/RatingsPage-*.js', (route) => route.fulfill({
+      contentType: 'text/javascript', body: 'export default function ContrastFixture(){throw new Error("contrast-fixture")}',
+    }));
+    await page.goto(`${BASE_URL}/ratings`, { waitUntil: 'networkidle' });
+    const alert = page.getByRole('alert');
+    await expect(alert).toBeVisible({ timeout: 10_000 });
+    expect(await contrastRatio(alert.locator('.section-label'))).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+// Bound the portrait's translucent gradient over black AND white image pixels.
+// Unlike the ordinary surface helper, include gradient alpha and label opacity.
+async function heroCaptionContrasts(panel) {
+  return panel.evaluate((panel) => {
+    const context = document.createElement('canvas').getContext('2d');
+    const rgba = (css) => {
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = css;
+      context.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+      return [r, g, b, a / 255];
+    };
+    const mix = (front, back, alpha = front[3]) => front.slice(0, 3).map((c, i) => c * alpha + back[i] * (1 - alpha));
+    const luminance = (rgb) => rgb.map((c) => c / 255).map((c) => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+    const gradient = getComputedStyle(panel).backgroundImage;
+    const stops = gradient.match(/rgba?\([^)]+\)/g);
+    if (!stops || stops.length !== 2) throw new Error(`Update the caption paint model for ${gradient}`);
+    const opacity = Number(getComputedStyle(panel.parentElement).opacity);
+    return [...panel.children].map((node) => {
+      const color = rgba(getComputedStyle(node).color);
+      const ratios = stops.flatMap((stop) => [0, 255].map((channel) => {
+        const image = [channel, channel, channel];
+        const surface = mix(rgba(stop), image);
+        const background = mix(surface, image, opacity);
+        const foreground = mix(mix(color, surface), image, opacity);
+        const a = luminance(foreground), b = luminance(background);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      }));
+      return { text: node.textContent, ratio: Math.min(...ratios) };
+    });
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`hero caption ${theme}, ${mobile ? 'touch' : 'keyboard'}`, () => {
+    test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, reducedMotion: 'reduce' });
+    test('names and dates remain readable over the portrait', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+      await page.goto(BASE_URL);
+      const shells = page.locator('[data-hero-poet-window-shell]');
+      await expect(shells).toHaveCount(6);
+      await page.evaluate(() => document.fonts.ready);
+      if (!mobile) await page.keyboard.press('Tab');
+      for (const shell of await shells.all()) {
+        if (!mobile) await shell.locator('a').focus();
+        const panel = shell.locator('.hero-poet-window-label-panel');
+        await expect(shell.locator('[data-hero-poet-window-label]')).toHaveCSS('opacity', mobile ? '0.96' : '1');
+        for (const { text, ratio } of await heroCaptionContrasts(panel)) {
+          expect.soft(ratio, `${theme} ${text}: worst-case portrait backdrop`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    });
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const slug of [
+  'simonov-syn-artillerista-realnaya-istoriya',
+  'galina-benislavskaya-yesenin-manuscripts-publishing-archive',
+]) test.describe(`source library ${theme} ${slug}`, () => {
+  test.use({ viewport: theme === 'light' ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', reducedMotion: 'reduce' });
+  test('bibliography text and controls remain readable through expansion and filtering', async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+    await page.goto(`${BASE_URL}/essays/${slug}`);
+    const sources = page.locator('#sources');
+    await expect(sources).toBeVisible();
+    // This surface is ordinary themed reading UI, not an immersive dark island.
+    // An unmodelled gradient would invalidate the computed contrast helper.
+    expect(await sources.evaluate((node) => getComputedStyle(node).backgroundImage)).toBe('none');
+    await expectReadableCardText(sources, `${theme} collapsed bibliography`);
+    await sources.getByRole('button', { name: /Показать ещё/ }).click();
+    await expect(sources.locator('li[id^="source-"]')).toHaveCount(slug.startsWith('simonov') ? 21 : 13);
+    await expectReadableCardText(sources, `${theme} expanded, including sources without URLs`);
+    const primary = sources.getByRole('button', { name: /^Первичные/ });
+    const count = Number((await primary.textContent()).match(/\d+/)[0]);
+    await primary.click();
+    await expect(primary).toHaveAttribute('aria-pressed', 'true');
+    await expect(sources.locator('li[id^="source-"]')).toHaveCount(Math.min(count, 16));
+    await expectReadableCardText(sources, `${theme} primary filter`);
+    await page.keyboard.press('Tab');
+    await primary.focus();
+    expect(await nonTextContrast(primary, 'focus')).toBeGreaterThanOrEqual(3);
+    await expectReadableCardText(sources, `${theme} keyboard focus`);
+    await primary.blur();
+    await primary.hover();
+    expect(await contrastRatio(primary.locator('span').filter({ hasText: 'Первичные' }).last())).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// The dock can overlay arbitrary page images. Bound both ends of its glass
+// gradient over black/white, and include the active pill painted under text.
+async function dockTextContrasts(dock) {
+  return dock.evaluate((dock) => {
+    const context = document.createElement('canvas').getContext('2d');
+    const rgba = css => {
+      if (!CSS.supports('color', css)) throw new Error(`Unsupported dock color: ${css}`);
+      context.clearRect(0, 0, 1, 1); context.fillStyle = css; context.fillRect(0, 0, 1, 1);
+      const [r,g,b,a] = context.getImageData(0, 0, 1, 1).data;
+      return [r,g,b,a/255];
+    };
+    const stops = node => {
+      const gradient = getComputedStyle(node).backgroundImage;
+      const colors = gradient.match(/rgba?\([^)]+\)/g);
+      if (!colors || colors.length !== 2) throw new Error(`Update dock paint model: ${gradient}`);
+      return colors.map(rgba);
+    };
+    const mix = (front, back) => front.slice(0,3).map((c,i) => c * front[3] + back[i] * (1-front[3]));
+    const lum = rgb => rgb.map(c => c/255).map(c => c<=0.04045 ? c/12.92 : ((c+0.055)/1.055)**2.4)
+      .reduce((v,c,i) => v+c*[0.2126,0.7152,0.0722][i],0);
+    const backgrounds = stops(dock.querySelector('.dock-rail')).flatMap(stop => [0,255].map(c => mix(stop,[c,c,c])));
+    return [...dock.querySelectorAll('.dock-label')].map(label => {
+      const pill = label.parentElement.querySelector('.dock-pill');
+      const surfaces = pill ? backgrounds.flatMap(bg => stops(pill).map(stop => mix(stop,bg))) : backgrounds;
+      const color = rgba(getComputedStyle(label).color);
+      return {text:label.textContent,ratio:Math.min(...surfaces.map(bg => {
+        const a=lum(mix(color,bg)), b=lum(bg);return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+      }))};
+    });
+  });
+}
+
+for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${theme}`, () => {
+  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  test('all four labels contrast with the glass rail and active pill at 100/200%', async ({page},testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript(t => localStorage.setItem('tlp-theme-mode',t),theme);
+    await page.goto(BASE_URL,{waitUntil:'networkidle'});
+    const dock = page.locator('.mobile-dock');
+    await expect.poll(() => dock.locator('.dock-rail').evaluate(n => getComputedStyle(n).opacity)).toBe('1');
+    for (const font of [16,32]) {
+      await page.evaluate(f => {document.documentElement.style.fontSize=`${f}px`;},font);
+      const values = await dockTextContrasts(dock);
+      expect(values).toHaveLength(4);
+      for (const value of values) expect(value.ratio,`${theme} ${font}px ${value.text}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`ordinary essay prose ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('every ordinary essay paragraph meets normal-text contrast', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        for (const slug of ['sergei-yesenin-1921-1925', 'vykhozhu-odin-ya-na-dorogu-lermontov']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const paragraphs = page.locator('.essay-body p.mb-6.text-lg');
+          await expect(paragraphs.first()).toBeVisible();
+          await page.evaluate(() => document.fonts.ready);
+          expect((await themeSnapshot(page)).dataset).toBe(theme);
+          const measurements = await contrastMeasurements(paragraphs);
+          expect(measurements.length).toBeGreaterThan(10);
+          for (const measurement of measurements) {
+            expect(measurement.ratio, `${slug}: ${measurement.text.slice(0, 100)}`).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`inline citation contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('source numbers and focused tooltip remain readable and resolve to a card', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        await expect(citations.first()).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const measurements = await contrastMeasurements(citations, true);
+        expect(measurements.length).toBeGreaterThan(100);
+        for (const item of measurements) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+        const first = citations.first();
+        await hoverCitation(page, first);
+        await expect.poll(() => first.evaluate((node) => getComputedStyle(node).color))
+          .toBe(theme === 'dark' ? 'rgb(212, 175, 55)' : 'rgb(122, 77, 0)');
+        expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
+        await page.mouse.move(0, 0);
+        await first.focus();
+        await expect(first).toBeFocused();
+        await expect(first).toHaveCSS('outline-style', 'solid');
+        await expect(first).toHaveCSS('outline-width', '2px');
+        const tooltip = first.getByRole('tooltip');
+        await expect.poll(() => tooltip.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(1);
+        expect(await contrastRatio(tooltip)).toBeGreaterThanOrEqual(4.5);
+        expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
+        const href = await first.getAttribute('href');
+        expect(await first.getAttribute('aria-label')).toMatch(/^Источник \d+:/);
+        await first.press('Enter');
+        await expect.poll(() => new URL(page.url()).hash).toBe(href);
+        await expect(page.locator(href)).toBeVisible();
+        await expect.poll(() => citations.evaluateAll((nodes) => nodes.every((node) =>
+          document.getElementById(node.getAttribute('href').slice(1)),
+        ))).toBe(true);
+      });
+    });
+  }
+}
+
+async function expectCitationTooltipContained(page, tooltip) {
+  await expect.poll(() => tooltip.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(1);
+  // Resize/visualViewport events are asynchronous; wait for the real layout to settle.
+  await expect.poll(async () => {
+    const rect = await tooltip.boundingBox();
+    return rect && rect.x >= 7 && rect.x + rect.width <= page.viewportSize().width - 7;
+  }).toBe(true);
+  const bounds = await tooltip.boundingBox();
+  expect(bounds).not.toBeNull();
+  const viewport = page.viewportSize();
+  expect(bounds.x).toBeGreaterThanOrEqual(7);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width - 7);
+  expect(await tooltip.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const width of [320, 390, 1440]) {
+    test.describe(`citation tooltip ${theme} ${width}px`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
+      test('source labels fit the viewport during focus, hover and resize', async ({ page }, testInfo) => {
+        test.skip(testInfo.project.name !== 'chromium-core', 'bounded Chromium positioning regression');
+        await page.addInitScript((mode) => localStorage.setItem('tlp-theme-mode', mode), theme);
+        await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
+        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        await expect(citations.first()).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        for (let i = 0; i < 12; i++) {
+          const link = citations.nth(i);
+          await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          await link.focus();
+          await expectCitationTooltipContained(page, link.getByRole('tooltip'));
+        }
+        const first = citations.first();
+        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await first.focus();
+        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        if (width >= 600) {
+          await first.evaluate((node) => node.blur());
+          await hoverCitation(page, first);
+          await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+          await page.mouse.move(0, 0);
+          await first.focus();
+        }
+        await page.setViewportSize({ width: width < 600 ? 844 : 320, height: 600 });
+        await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        const href = await first.getAttribute('href');
+        await first.press('Enter');
+        await expect.poll(() => new URL(page.url()).hash).toBe(href);
+        await expect(page.locator(href)).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
+      });
+    });
+  }
+}

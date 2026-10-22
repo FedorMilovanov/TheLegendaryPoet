@@ -79,6 +79,13 @@ test('Yesenin Part I renders the complete source-bounded biography', async ({ pa
   await expect(sourceItems).toHaveCount(64);
   await expect(sourceSection.locator('a[href^="https://"]')).toHaveCount(64);
 
+  const museumLetter = sourceSection.locator('#source-ye1-yesenin-letter-to-blok-1915-museum');
+  await expect(museumLetter.locator('a')).toHaveAttribute(
+    'href', 'https://museum-esenin.ru/esenin/pisma/1915/bloku-a.a.-9-marta-1915',
+  );
+  await expect(museumLetter).toContainText('Блоку А. А., 9 марта 1915');
+  await expect(museumLetter).toContainText('не как второй отдельный первичный документ');
+
   const state = await page.evaluate(() => ({
     pathname: location.pathname,
     title: document.title,

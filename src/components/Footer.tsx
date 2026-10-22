@@ -40,7 +40,7 @@ export default function Footer() {
   const wordOfDay = getWordOfDay();
 
   return (
-    <footer className="relative mt-20 border-t border-cyan-400/8 bg-[#050505]">
+    <footer className="theme-page-surface relative mt-20 border-t border-cyan-400/8">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
@@ -48,17 +48,17 @@ export default function Footer() {
               <SpectralBrandMark size="md" variant="primary" className="scale-[1.06]" />
               <span className="flex flex-col leading-tight">
                 <span className="neon-blue-gradient neon-glow-text font-serif text-lg font-semibold">THE LEGENDARY POET</span>
-                <span className="text-[10px] tracking-[0.16em] text-cyan-200/45">ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ</span>
+                <span className="text-[10px] tracking-[0.16em] theme-functional-subtle">ПОЭЗИЯ • АНАЛИЗ • ИСТОРИЯ</span>
               </span>
             </Link>
-            <p className="mb-5 max-w-lg text-sm leading-relaxed text-cyan-100/50">
+            <p className="mb-5 max-w-lg text-sm leading-relaxed theme-functional-muted">
               Проект о великих поэтах, их биографиях, текстах и историческом контексте. Отдельные материалы затрагивают веру, культуру и нравственную оценку.
             </p>
 
             <div className="mb-6 max-w-sm border-l-2 border-cyan-400/15 pl-4">
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/60">Слово дня</div>
-              <div className="font-serif text-xl italic text-white">«{wordOfDay.word}»</div>
-              <div className="mt-1 text-xs text-cyan-100/35">{wordOfDay.poet.name}, «{wordOfDay.poem.title}»</div>
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] theme-functional-muted">Слово дня</div>
+              <div className="font-serif text-xl italic theme-text">«{wordOfDay.word}»</div>
+              <div className="mt-1 text-xs theme-functional-subtle">{wordOfDay.poet.name}, «{wordOfDay.poem.title}»</div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -79,19 +79,19 @@ export default function Footer() {
                 aria-label={`Email: ${siteConfig.contactEmail}`}
                 className="group/social flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-300 hover:bg-luxury-gold/10"
               >
-                <Mail size={18} className="text-cyan-200/50 transition-transform duration-300 group-hover/social:scale-110 group-hover/social:text-luxury-gold" />
+                <Mail size={18} className="theme-control-idle transition-transform duration-300 group-hover/social:scale-110" />
               </a>
             </div>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">Разделы</h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Разделы</h4>
             <ul className="space-y-1">
               {footerLinks.map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className="group/link inline-flex min-h-11 items-center gap-1.5 text-sm text-cyan-200/50 transition-colors hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+                    className="group/link inline-flex min-h-11 items-center gap-1.5 text-sm theme-control-idle transition-colors"
                   >
                     <span className="h-px w-0 bg-cyan-400 transition-all duration-300 group-hover/link:w-3" />
                     {titleCase(item.label)}
@@ -102,32 +102,32 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100/70">Информация</h4>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Информация</h4>
             <ul className="space-y-1">
               {trustLinks.map((item) => (
                 <li key={item.path || item.href}>
                   {'path' in item ? (
-                    <Link to={item.path!} className="inline-flex min-h-11 items-center text-sm text-cyan-200/50 transition hover:text-cyan-300">
+                    <Link to={item.path!} className="inline-flex min-h-11 items-center text-sm theme-control-idle transition">
                       {item.label}
                     </Link>
                   ) : (
-                    <a href={item.href} className="inline-flex min-h-11 items-center text-sm text-cyan-200/50 transition hover:text-cyan-300">
+                    <a href={item.href} className="inline-flex min-h-11 items-center text-sm theme-control-idle transition">
                       {item.label}
                     </a>
                   )}
                 </li>
               ))}
             </ul>
-            <ul className="mt-5 space-y-2 text-sm text-cyan-200/40">
+            <ul className="mt-5 space-y-2 text-sm theme-functional-subtle">
               <li>© {year} THE LEGENDARY POET</li>
               <li>Все права защищены</li>
-              <li className="italic text-cyan-200/30">Независимая редакция</li>
+              <li className="italic theme-functional-subtle">Независимая редакция</li>
             </ul>
           </div>
         </div>
 
         <div className="my-8 h-px bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent" />
-        <p className="text-center text-[11px] tracking-wide text-cyan-200/25">
+        <p className="text-center text-[11px] tracking-wide theme-functional-subtle">
           THE LEGENDARY POET — независимый редакторский проект о поэзии, истории и культурном контексте.
         </p>
       </div>

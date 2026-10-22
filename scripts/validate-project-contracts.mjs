@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { runtimeDocumentationFacts, validateFactTable } from './lib/runtime-documentation.mjs';
 
 const root = process.cwd();
 const failures = [];
@@ -246,6 +248,18 @@ for (const [relativePath, tokens] of Object.entries(forbiddenByFile)) {
     assert(!text.includes(token), `${relativePath} contains retired contract text: ${token}`);
   }
 }
+
+// Facts are compared to their owning contracts, not frozen prose fragments.
+const hallContract = JSON.parse(read(contract.runtime.hallContract));
+for (const fact of runtimeDocumentationFacts(contract, hallContract)) {
+  for (const failure of validateFactTable(read(fact.path), fact)) fail(`${fact.path}: ${failure}`);
+}
+const restorePath = 'PROJECT_RESTORE_MASTER.md';
+assert(historical.includes(restorePath) && supersededTechnical.includes(restorePath), 'restore snapshot must be registered as historical and technically superseded');
+const restoreNotice = read(restorePath).split('## Restore Goal')[0];
+assert(restoreNotice.includes('Historical snapshot') && restoreNotice.includes('docs/project-contract.json'), 'restore snapshot must direct readers to current authority before historical instructions');
+const fixtureResult = spawnSync(process.execPath, ['--test', 'scripts/tests/runtime-documentation.test.mjs'], { encoding: 'utf8' });
+assert(fixtureResult.status === 0, `runtime documentation regression fixtures failed: ${fixtureResult.error ?? ''}\n${fixtureResult.stdout ?? ''}\n${fixtureResult.stderr ?? ''}`);
 
 if (failures.length) {
   console.error('project contracts: FAILED');

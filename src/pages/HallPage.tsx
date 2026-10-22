@@ -8,5 +8,5 @@ export default function HallPage() {
     path: '/hall',
   });
 
-  return <HallProductionRuntime />;
+  return <div className="hall-page"><HallProductionRuntime /></div>;
 }
