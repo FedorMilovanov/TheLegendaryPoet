@@ -159,3 +159,29 @@ mismatch or landmark-unique. These forced-error counts are not comparable to the
 previous natural-loading samples; broad contrast/incomplete results remain open.
 Rollback boundary: shared image-button name/error text styling and its regression
 block only. Successful-load names and enlargement behavior stay unchanged.
+
+## Confirmed initial-scroll race
+
+Supplemental annotations on `cbf27d4` exposed the Safari failure:
+`qa/reader-journeys.spec.mjs:166`, article-bounded progress, final **flaky** outcome.
+First attempt expected physical scroll 957px but observed 0 after five seconds;
+retry passed and strict fail-on-flaky correctly kept the job red. Chromium/Android
+passed. This is not a reason to raise timeouts or accept the retry as green.
+
+Shared `SmoothScroll` scheduled initial POP restoration on an animation frame;
+its empty position map fell back to zero even if the reader had already moved.
+A deterministic harness executes the actual transpiled component with persistent
+refs/effect cleanup and a held frame: before repair, scroll 957→0 fails; after
+repair, 957 is preserved. Initial non-hash POP now performs no redundant restore.
+Later PUSH reset, saved POP restoration and initial hash/header-offset behavior
+remain covered and pass (3/3); the existing scroll validator runs this harness
+as part of `npm run check`. No changes to progress geometry, native-scroll/event
+assertions, timing thresholds, retries or fail-on-flaky policy.
+
+Post-repair local reader/theme/floating-chrome/lightbox/journeys suite: **72/72**,
+retries 0, 3.6 minutes. Problematic progress scenario: desktop/mobile Chromium ×
+five repeats, **10/10**, retries 0. Node unit regressions 3/3, reporter tests 5/5;
+check/build/prerender/output/SEO/contracts and Prorok 4/4 pass. Native WebKit on
+the new source SHA still requires CI confirmation; these are not Safari results.
+Rollback boundary: the initial-frame guard and coordinator regression harness/
+validator integration; no replacement scroller, observer or navigation engine.

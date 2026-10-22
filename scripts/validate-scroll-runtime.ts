@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { inspectSource } from './lib/source-contract-ast';
 import projectContract from '../docs/project-contract.json';
 
@@ -181,6 +183,12 @@ const scrollerFixture = inspectSource(`
   async function boot() { await import(SCROLLER_MODULE); }
 `);
 assertContract(scrollerFixture.hasModuleImport('lenis'), 'semantic import inspection must detect a global scroller loaded through a const module binding');
+
+const coordinatorRegression = spawnSync(process.execPath, [
+  '--test', fileURLToPath(new URL('./tests/scroll-coordinator.test.mjs', import.meta.url)),
+], { encoding: 'utf8' });
+assertContract(coordinatorRegression.status === 0,
+  `actual coordinator initial-frame/history/hash regressions failed:\n${coordinatorRegression.stdout}\n${coordinatorRegression.stderr}`);
 
 if (failures.length > 0) {
   throw new Error(`Scroll runtime validation failed:\n${failures.map((failure) => `- ${failure}`).join('\n')}`);
