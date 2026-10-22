@@ -797,3 +797,33 @@ for (const theme of ['dark', 'light']) {
     await expect(search).toBeFocused();
   });
 }
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`failed essay image ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('visible error label is readable and named, with working keyboard lightbox', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        await page.route('**/*', (route) => route.request().resourceType() === 'image' ? route.abort('failed') : route.continue());
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        const opener = page.locator('.essay-body figure button[aria-haspopup="dialog"]').first();
+        await opener.scrollIntoViewIfNeeded();
+        await expect(opener.locator('img')).toHaveAttribute('data-image-state', 'error');
+        const fallback = opener.getByText('Изображение временно недоступно', { exact: true });
+        await expect(fallback).toBeVisible();
+        await expect(opener).toHaveAccessibleName(/Изображение временно недоступно/);
+        await expect(opener).toHaveAccessibleName(/^Увеличить изображение:/);
+        expect(await contrastRatio(fallback)).toBeGreaterThanOrEqual(4.5);
+        await opener.focus();
+        await opener.press('Enter');
+        const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+        await expect(dialog).toBeVisible();
+        await expect(dialog.getByRole('button', { name: 'Закрыть изображение' })).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(dialog).toBeHidden();
+        await expect(opener).toBeFocused();
+      });
+    });
+  }
+}

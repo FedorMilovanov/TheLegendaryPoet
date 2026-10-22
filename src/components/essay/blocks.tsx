@@ -157,8 +157,8 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
       whileTap={reduceMotion ? undefined : { scale: 0.992 }}
       transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
-      className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
-      aria-label={`Увеличить изображение: ${block.alt}`}
+      className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
+      aria-label={`Увеличить изображение: ${block.alt}${imageState === 'error' ? '. Изображение временно недоступно' : ''}`}
       aria-haspopup="dialog"
     >
       <motion.span
@@ -169,7 +169,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         {!imageReady && (
           <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#0d0d0d]">
             {imageState === 'error' ? (
-              <span className="px-6 text-center text-[11px] uppercase tracking-[0.16em] text-luxury-gray-light/45">
+              <span className="theme-dark-island-muted px-6 text-center text-[11px] uppercase tracking-[0.16em]">
                 Изображение временно недоступно
               </span>
             ) : (

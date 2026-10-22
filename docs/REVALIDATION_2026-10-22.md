@@ -137,3 +137,25 @@ No workflow file changes. Unit tests 5/5; real Playwright smoke intentionally
 failed at 4.08<4.5 and returned exit 1 plus the expected annotation. Full `check`
 and project contracts passed. This is diagnostic coverage, **not a Safari fix**;
 merge remains blocked until the actual failure is understood and reverified.
+
+## Deterministic image-error repair
+
+Forced image requests to fail on Yesenin II, independent of sandbox Wikimedia
+availability. The new regression first failed because the image button's name
+omitted the visible `Изображение временно недоступно` label. Shared owner:
+`src/components/essay/blocks.tsx`, all essay image blocks. Append that label only
+in error state, retaining the enlarge action and alt description. Use existing
+dark-island muted tokens on the fixed-dark fallback surface instead of 45% gray.
+No image/source/rights replacement, retry policy or dialog ownership changes.
+
+Four regressions (dark/light × desktop/mobile) verify error state, visible-label
+name inclusion, text ≥4.5:1, Enter/lightbox focus, Escape/focus return. All four
+pass. Final reader/theme/floating-chrome/lightbox suite: **67/67, retries 0**,
+3.4 minutes. Check/build/prerender/output/SEO/contracts and Prorok 4/4 pass.
+Four forced-error screenshots inspected; page exceptions and overflow zero.
+Fallback colors #a9c6d1 on #0d0d0d give 10.81:1. Full-body axe in this forced-error
+scenario reports only color-contrast (86/69/83/73 affected nodes), no label-name
+mismatch or landmark-unique. These forced-error counts are not comparable to the
+previous natural-loading samples; broad contrast/incomplete results remain open.
+Rollback boundary: shared image-button name/error text styling and its regression
+block only. Successful-load names and enlargement behavior stay unchanged.
