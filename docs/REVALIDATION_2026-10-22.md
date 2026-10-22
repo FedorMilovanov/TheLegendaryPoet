@@ -117,3 +117,23 @@ Prorok remains unpublished. Passing draft/source checks are not independent
 biblical/theological approval. Human Turnstile/community evidence (#497), rights
 and editorial publication authority remain owner decisions. No project-completion
 percentage or blanket WCAG conclusion is warranted.
+
+## Merge-readiness follow-up
+
+Final CI for `83ab238` is **not green**: `browser-qa` failed in
+`Run base iPhone Safari QA in fresh browser processes`; its Chromium/Android
+step passed. The other 11 checks succeeded, four were expected skips. This
+supersedes the earlier pending status, not the passing local Chromium evidence.
+
+GitHub annotations initially exposed only exit 1. Both job/run log delivery
+redirected to an unavailable results-receiver host; artifact delivery redirected
+to unavailable Azure blob storage. The public job page requires sign-in for logs.
+No failed test identity or root cause can honestly be inferred from that alone.
+
+Add a supplemental Safari failure reporter: final unexpected/flaky outcomes
+become escaped, size-bounded GitHub annotations, retaining the existing line
+reporter, tests, process isolation, retries, fail-on-flaky policy and exit code.
+No workflow file changes. Unit tests 5/5; real Playwright smoke intentionally
+failed at 4.08<4.5 and returned exit 1 plus the expected annotation. Full `check`
+and project contracts passed. This is diagnostic coverage, **not a Safari fix**;
+merge remains blocked until the actual failure is understood and reverified.
