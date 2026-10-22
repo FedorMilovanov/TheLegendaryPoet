@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
@@ -204,60 +205,67 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         <ImageMeta block={block} />
       </motion.figure>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={block.alt}
-            aria-describedby={captionId}
-            tabIndex={-1}
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
-            className="theme-dark-island fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
-            onPointerDown={(event) => {
-              if (event.currentTarget === event.target) closeLightbox();
-            }}
-          >
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && (
             <motion.div
-              layoutId={layoutId}
-              transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
-              className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+              ref={dialogRef}
+              layoutRoot
+              role="dialog"
+              aria-modal="true"
+              aria-label={block.alt}
+              aria-describedby={captionId}
+              tabIndex={-1}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+              animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+              transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
+              className="theme-dark-island theme-dark-island-text fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
+              onPointerDown={(event) => {
+                if (event.currentTarget === event.target) {
+                  // Do not let the backdrop's compatibility mouse event steal
+                  // focus after the shared dialog lifecycle restores the opener.
+                  event.preventDefault();
+                  closeLightbox();
+                }
+              }}
             >
-              <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
-                <motion.img
-                  src={imageSrc}
-                  alt={block.alt}
-                  decoding="async"
-                  drag={zoomed}
-                  dragMomentum={false}
-                  dragElastic={0.08}
-                  animate={{ scale: zoomed ? 1.65 : 1 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                  onDoubleClick={() => setZoomed((value) => !value)}
-                  className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                />
-                <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
-              </div>
+              <motion.div
+                layoutId={layoutId}
+                transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
+                className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+              >
+                <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
+                  <motion.img
+                    src={imageSrc}
+                    alt={block.alt}
+                    decoding="async"
+                    drag={zoomed}
+                    dragMomentum={false}
+                    dragElastic={0.08}
+                    animate={{ scale: zoomed ? 1.65 : 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                    onDoubleClick={() => setZoomed((value) => !value)}
+                    className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                  />
+                  <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
+                </div>
 
-              <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
-                <p id={captionId} className="theme-dark-island-muted min-w-0 flex-1 text-xs leading-relaxed">
-                  {block.caption}
-                  {block.credit ? <span className="theme-dark-island-subtle"> · {block.credit}</span> : null}
-                </p>
-                <div className="flex items-center gap-2">
-                  {block.sourceUrl && (
-                    <a
-                      href={block.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="theme-dark-island-accent inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] transition hover:border-luxury-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-island-accent)]"
-                    >
-                      Источник <ExternalLink size={11} />
-                    </a>
+                <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
+                  <p id={captionId} className="theme-dark-island-muted min-w-0 flex-1 text-xs leading-relaxed">
+                    {block.caption}
+                    {block.credit ? <span className="theme-dark-island-subtle"> · {block.credit}</span> : null}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {block.sourceUrl && (
+                      <a
+                        href={block.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="theme-dark-island-accent inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] transition hover:border-luxury-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-island-accent)]"
+                      >
+                        Источник <ExternalLink size={11} />
+                      </a>
                   )}
                   <motion.button
                     type="button"
@@ -286,7 +294,9 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
             </motion.button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </>
   );
 }

@@ -258,3 +258,46 @@ CLS unchanged 0.000968806/0/0.000968806/0. These are samples, not field CWV clai
 Rollback: shared image metadata classes and their four regressions; no new token
 system or architecture lane. Remaining contrast, overlay geometry and #519 stay
 explicitly open. Raw ignored evidence: `qa-artifacts/continuation/`.
+
+## Follow-up 2026-10-23 — shared image viewer viewport containment
+
+- **Root / owner:** `ImageBlock` rendered its fixed lightbox inside a transformed
+  `Reveal` and the article stacking context. A new real-browser geometry test
+  failed before repair: viewport-edge offsets `[324,86,-188,-71]`, not zeros.
+  All shared essay image blocks use this owner; no article-specific overrides.
+- **Repair:** portal the existing `AnimatePresence` to `document.body`, mark the
+  fixed motion root `layoutRoot`, retain the fixed-dark text island, and use
+  layer 110 below the existing command palette's 120. `useDialogSurface` remains
+  the sole lifecycle/stack/focus owner. No workflow or overlay-runtime changes.
+  Rollback is confined to the shared image viewer and its regression coverage.
+- **Touch finding:** the first desktop/mobile run passed 5/8; three mobile
+  backdrop taps closed the viewer but lost restored opener focus. Preventing
+  the backdrop pointer-down default prevents its compatibility mouse event
+  from stealing focus; no delayed-focus workaround or weaker assertion added.
+  A diagnostic locator was also corrected to read the viewer layer before
+  nested search makes that inactive dialog inaccessible, as intended.
+- **Final browser verification:** 8/8 explicit desktop/mobile × dark/light ×
+  reduced/full-motion cases, retries 0; then 80/80 theme, reader text, floating
+  chrome, lightbox stack and reader journeys, retries 0. Tests check decoded
+  fixture media, actual viewport bounds, nested search layer and hit testing,
+  Escape back to viewer, real corner backdrop click/tap, restored focus/scroll,
+  empty overlay stack, and zero page/console errors. The four new test cases
+  inherit native CI project device settings rather than forcing desktop.
+- **Visual / diagnostics:** inspected four settled modal screenshots (1440×1000
+  and 390×844, both themes). Controlled Wikimedia interception uses an existing
+  decodable local image solely as a geometry fixture; it is **not** recovered
+  production artwork or publication/source evidence. Four-context probe: no
+  overflow, page errors or console errors; modal axe violations 0 in each,
+  but color-contrast incomplete nodes 3 in each are **not PASS**. Strict caption
+  contrast regressions remain passing. Local unthrottled LCP 748/272/448/276 ms
+  and CLS 0.000968806/0/0.000968806/0 (dark desktop/mobile, light desktop/mobile)
+  are controlled-fixture diagnostics, not field metrics or comparable to the
+  earlier network-failing image sample.
+- **Source/build:** check, build, prerender, build-output, SEO-output and project
+  contracts PASS; Node tests 28/28 and Prorok draft isolation 4/4 PASS.
+- **Readiness:** this closes the locally confirmed viewport containment defect,
+  not whole-site visual/accessibility completion. Exact pushed-head CI/native
+  Safari evidence is still required. Prior `ced39bd` brand-raster now passed;
+  the earlier FFmpeg infrastructure timeout does not describe this new HEAD.
+  Damaged original media (#519), broader contrast findings and existing external
+  dependencies remain open. No merge, artwork substitution or editorial change.
