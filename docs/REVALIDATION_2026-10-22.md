@@ -50,8 +50,9 @@ Counts are not independent root causes. Broad axe is **not green**. Before-fix
 contrast incomplete-node counts were 126/132/141/144; incomplete is not PASS.
 Screenshots of breadcrumb/article top inspected in all four contexts: text
 readable, mobile wrapping intact. No horizontal overflow or page exceptions
-in any context before or after. The unloaded external artwork remains visible
-as a blank hero in this sandbox; this does not certify image integrity.
+in any context before or after. The blank hero was initially misattributed to external artwork delivery. The
+later byte/decoder audit below confirms a truncated **local** cover; sandbox
+egress is not its cause. This supersedes that earlier interpretation.
 
 After-repair unthrottled local LCP: 816/372/656/268 ms in the table order;
 CLS: 0.000968806/0/0.000968806/0. Baseline LCP was 332/272/344/268 ms.
@@ -185,3 +186,38 @@ check/build/prerender/output/SEO/contracts and Prorok 4/4 pass. Native WebKit on
 the new source SHA still requires CI confirmation; these are not Safari results.
 Rollback boundary: the initial-frame guard and coordinator regression harness/
 validator integration; no replacement scroller, observer or navigation engine.
+
+
+## Newly verified baseline image-integrity blocker (#519)
+
+**Full visual readiness is not established**, even if the scoped CI turns green.
+A byte audit of 18 local public WebPs found four RIFF length mismatches;
+ImageMagick independently fails to decode all four with insufficient image data:
+
+| File under public/images/essays | Actual bytes | Declared RIFF total | Use |
+| --- | ---: | ---: | --- |
+| yesenin/yesenin-part-2-editorial.webp | 15008 | 46000 | Live hero/card |
+| briks/lilya-brik-1914.webp | 15008 | 62320 | Live body portrait |
+| briks/osip-brik-1928.webp | 15008 | 39200 | Live body portrait |
+| briks/brik-archive-hero.webp | 14627 | 92216 | No current source reference found |
+
+These are existing baseline files, not introduced by this PR. The remaining
+14 matching container lengths are not a complete decode certificate. The Yesenin
+cover is local, so its blank rendering must not be blamed on Wikimedia egress.
+Its current approved SHA-256 matches the truncated file: hash identity alone did
+not certify usable image bytes. Existing check/build guards did not detect this.
+
+GitHub blob 3078009a82279de01f1d27d8b031137e71852002 independently yields the same
+15008 bytes/hash. All seven #415 commit states and its merge have that blob;
+no complete version was recovered there. Targeted Drive image-name searches
+found research images but not the approved mature-Yesenin desk-portrait source.
+No unrelated private image was downloaded or published.
+
+Durable recovery/closure conditions are in Product #519. Needed: the complete
+owner-approved original/backup or its exact file location; then verified encode,
+deliberate integrity-pin updates and a shared decode/container guard. The Brik
+portraits require recovery from their existing attributed source identities.
+No padding, guessed tail bytes, regenerated lookalike or silent hash/approval
+replacement was performed. Artwork/provenance authority remains unchanged.
+Native CI for the scroll repair must also finish; local passing checks do not
+close either the Safari verification boundary or this image-integrity blocker.
