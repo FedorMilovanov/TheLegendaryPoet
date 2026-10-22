@@ -226,4 +226,3 @@ export const prorokDraft: Omit<Essay, 'date' | 'cover'> = {
     },
   ],
 };
-
