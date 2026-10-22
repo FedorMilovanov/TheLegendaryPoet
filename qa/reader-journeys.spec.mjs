@@ -309,13 +309,16 @@ for (const theme of ['dark', 'light']) {
         await waitForRoute(page);
         const opener = page.locator('.essay-body figure button[aria-haspopup="dialog"]').first();
         await opener.scrollIntoViewIfNeeded();
+        await opener.focus();
         try {
+          await expect(opener).toBeInViewport();
           await expect.poll(() => opener.locator('img').evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
         } catch (error) {
           // Preserve the assertion/timeout. Native CI annotations must expose
           // whether this is routing, decoding, or lazy-image visibility; signed
           // artifact/log delivery is not always reachable from the repair lane.
           const image = await opener.locator('img').evaluate((node) => ({
+            scrollY: window.scrollY, viewportHeight: innerHeight,
             src: node.src, currentSrc: node.currentSrc, complete: node.complete,
             naturalWidth: node.naturalWidth, loading: node.loading,
             state: node.dataset.imageState,
@@ -338,7 +341,6 @@ for (const theme of ['dark', 'light']) {
             fixtureBytes: fixture.length, fixtureRequests, failedImageRequests, image, independentDecode,
           })}`, { cause: error });
         }
-        await opener.focus();
         await opener.press('Enter');
         const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
         await expect(dialog).toBeVisible();

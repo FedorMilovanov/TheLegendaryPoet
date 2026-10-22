@@ -320,3 +320,23 @@ Added failure-only diagnostics for intercepted/failed requests, actual image
 source/state/visibility, and independent data-URL decoding of the same bytes.
 The original assertion, timeout, native device profiles and retry policy remain
 unchanged. No production change or root-cause/repair claim at this stage.
+
+### Native diagnosis result and bounded scenario correction
+
+Native job `120137365864` on `b028569` reproduced all four failures on both
+attempts with identical evidence: **zero intercepted image requests**, no failed
+image requests, `complete: false`, lazy/loading state, image rect top
+`3167.578125`, and independent data-URL decode width **1280**. This rules out the
+controlled fixture decoder and an actual attempted Wikimedia download as the
+cause of these failures. The supposedly scrolled-to opener was still offscreen;
+Chromium's earlier lazy prefetch had concealed that scenario precondition.
+
+Move opener focus before waiting for its lazy image and assert actual viewport
+intersection before decoding. Focus is already the keyboard journey's intended
+input, not a source/loading mutation. Keep the decode threshold, full-viewport
+bounds, nested hit testing and focus/scroll restoration unchanged. No image
+`loading` override, CSS override, synthetic load event, timeout/retry increase or
+production scroll/loader change. Retain failure diagnostics with scroll/viewport
+coordinates for native revalidation. Local four-case Chromium run: **4/4**,
+retries 0. This is a candidate scenario repair pending native proof, not a claim
+that the original Safari red was environment noise or that full CI is green.
