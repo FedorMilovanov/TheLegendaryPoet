@@ -748,3 +748,33 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`breadcrumb contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('shared navigation text, hover and keyboard focus remain readable', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const route of ['/privacy', '/essays/sergei-yesenin-1921-1925']) {
+          await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+          const nav = page.getByRole('navigation', { name: 'Хлебные крошки' });
+          await expect(nav).toBeVisible();
+          const text = await contrastMeasurements(nav.locator('a, [aria-current="page"]'));
+          expect(text.length).toBeGreaterThanOrEqual(2);
+          for (const item of text) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+          const link = nav.getByRole('link').first();
+          await link.hover();
+          expect(await contrastRatio(link)).toBeGreaterThanOrEqual(4.5);
+          await page.mouse.move(0, 0);
+          await link.focus();
+          await expect(link).toBeFocused();
+          expect(await contrastRatio(link)).toBeGreaterThanOrEqual(4.5);
+          expect(await nonTextContrast(link, 'focus')).toBeGreaterThanOrEqual(3);
+          await link.press('Enter');
+          await expect.poll(() => new URL(page.url()).pathname).toBe('/');
+        }
+      });
+    });
+  }
+}
