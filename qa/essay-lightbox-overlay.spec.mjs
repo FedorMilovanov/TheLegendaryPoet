@@ -111,6 +111,28 @@ for (const mobile of [false, true]) {
         expect(failedPortraits).toEqual([]);
         expect(pageErrors).toEqual([]);
       });
+      test('owner-selected Yesenin replacement is painted in hero and catalog card', async ({ page }, testInfo) => {
+        await page.addInitScript(mode => localStorage.setItem('tlp-theme-mode', mode), theme);
+        for (const route of ['essays/sergei-yesenin-1921-1925', 'articles']) {
+          await page.goto(`${BASE_URL}/${route}`, { waitUntil: 'domcontentloaded' });
+          const image = page.locator('main img[src$="yesenin-part-2-editorial.webp"]').first();
+          await image.scrollIntoViewIfNeeded();
+          await expect(image).toBeVisible();
+          expect(await image.evaluate(img => img.decode().then(() => [img.naturalWidth, img.naturalHeight]))).toEqual([1920, 1080]);
+          await expect(image.locator('xpath=ancestor::*[@data-cover-state][1]')).toHaveAttribute('data-cover-state', 'loaded');
+          await expect.poll(() => image.evaluate(img => {
+            let opacity = 1;
+            for (let node = img; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+            return opacity;
+          })).toBeGreaterThanOrEqual(0.99);
+          if (mobile && route !== 'articles') {
+            const imageBox = await image.boundingBox();
+            const creditsBox = await page.locator('[data-cover-credits]').boundingBox();
+            expect(creditsBox.y).toBeGreaterThanOrEqual(imageBox.y + imageBox.height);
+          }
+          await page.screenshot({ path: testInfo.outputPath(`yesenin-${route === 'articles' ? 'card' : 'hero'}.png`) });
+        }
+      });
     });
   }
 }

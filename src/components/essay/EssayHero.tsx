@@ -42,7 +42,7 @@ export default function EssayHero({ essay }: { essay: Essay }) {
               sharedName={`essay-cover-${essay.id}`}
             />
             {essay.coverKind && (
-              <div className="theme-dark-island absolute bottom-4 left-4 right-4 flex flex-wrap items-end justify-between gap-2">
+              <div data-cover-credits className="theme-dark-island relative mt-3 flex flex-wrap items-end justify-between gap-2 sm:absolute sm:bottom-4 sm:left-4 sm:right-4 sm:mt-0">
                 <span className="rounded-full border border-white/15 bg-black/90 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] theme-dark-island-text backdrop-blur-md">
                   {coverKindLabels[essay.coverKind]}
                 </span>
