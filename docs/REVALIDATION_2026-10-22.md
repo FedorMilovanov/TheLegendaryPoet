@@ -421,3 +421,11 @@ YAML files parse. No application code, brand source, media, dependencies or
 editorial text changed in this CI transaction. Rollback is the shared installer,
 its wiring/filter projection and tests. New source CI remains required; #519 and
 whole-site visual/accessibility/rights completion remain open. No merge.
+
+Installer diagnostic follow-up: APT failures additionally expose the final12
+output lines through check annotations because signed log/artifact delivery is
+unavailable here. Preserve exit status, escape workflow-command characters, redact
+URL userinfo/query values, and remove temporary logs on exit. Add a negative
+redaction/escaping regression: installer9/9, full Node37/37, Prorok4/4 and
+check/contracts PASS. No installer decision, job budget or test policy changed.
+This instrumentation is not a claim of native runner/cache success.

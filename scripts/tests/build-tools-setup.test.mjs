@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 const script = path.resolve('.github/actions/install-build-tools/install.sh');
-function run({ installed = [], cached = true, updateExit = 0, installExit = 0, broken = false, omitInstall = false, packages = ['ffmpeg'] } = {}) {
+function run({ installed = [], cached = true, updateExit = 0, installExit = 0, broken = false, omitInstall = false, detail = '', packages = ['ffmpeg'] } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'build-tools-'));
   try {
     const state = path.join(dir, 'state'), log = path.join(dir, 'log');
@@ -17,7 +17,7 @@ if [[ "$*" == *Status* ]]; then printf 'install ok installed'; else echo "$p=fix
     mock('sudo', 'exec "$@"\n');
     mock('apt-get', `echo "$*" >> "$LOG"
 if [[ "$*" == *' update'* ]]; then exit "$UPDATE_EXIT"; fi
-if [[ "$INSTALL_EXIT" != 0 ]]; then exit "$INSTALL_EXIT"; fi
+if [[ "$INSTALL_EXIT" != 0 ]]; then printf '%s\n' "$DETAIL" >&2; exit "$INSTALL_EXIT"; fi
 if [[ "$OMIT" != yes ]]; then
   found=no; for arg in "$@"; do
     if [[ "$found" == yes && "$arg" != -* ]]; then echo "$arg" >> "$STATE"; fi
@@ -28,7 +28,7 @@ fi\n`);
     const result = spawnSync('bash', [script, ...packages], { encoding: 'utf8', env: {
       ...process.env, PATH: `${dir}:${process.env.PATH}`, STATE: state, LOG: log,
       CACHED: cached ? 'yes' : 'no', UPDATE_EXIT: String(updateExit), INSTALL_EXIT: String(installExit),
-      BROKEN: broken ? 'yes' : 'no', OMIT: omitInstall ? 'yes' : 'no',
+      DETAIL: detail, BROKEN: broken ? 'yes' : 'no', OMIT: omitInstall ? 'yes' : 'no',
     } });
     return { ...result, apt: fs.existsSync(log) ? fs.readFileSync(log, 'utf8') : '' };
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
@@ -68,4 +68,12 @@ test('only missing packages are installed; invalid option-like names fail before
   assert.equal(r.status, 0); assert.match(r.apt, /--no-install-recommends poppler-utils/);
   const invalid = run({ packages: ['--allow-unauthenticated'] });
   assert.equal(invalid.status, 2); assert.equal(invalid.apt, '');
+});
+
+test('APT failure annotations retain diagnostics, escape commands and redact URL credentials', () => {
+  const r = run({ installExit: 43, detail: 'Failed 100%\nhttps://user:fixture@example.invalid/pkg?key=fixture' });
+  assert.equal(r.status, 43);
+  assert.match(r.stderr, /APT failure detail::Failed 100%25%0A/);
+  assert.match(r.stderr, /https:\/\/\[redacted\]@example.invalid\/pkg\?key=\[redacted\]/);
+  assert.doesNotMatch(r.stderr, /user:fixture|key=fixture/);
 });

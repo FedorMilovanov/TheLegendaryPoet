@@ -3,7 +3,23 @@
 set -Eeuo pipefail
 export LC_ALL=C
 phase=inventory
-trap 'status=$?; echo "::error title=Build tool setup::phase=$phase elapsed=${SECONDS}s exit=$status" >&2; exit "$status"' ERR
+apt_log=$(mktemp)
+trap 'rm -f -- "$apt_log"' EXIT
+report_failure() {
+  local status=$1 detail
+  trap - ERR
+  echo "::error title=Build tool setup::phase=$phase elapsed=${SECONDS}s exit=$status" >&2
+  if [[ -s "$apt_log" ]]; then
+    detail=$(tail -n 12 "$apt_log" | sed -E 's#(https?://)[^/ @]+@#\1[redacted]@#g; s/([?&][^= ]+=)[^& ]+/\1[redacted]/g')
+    detail=${detail//%/%25}
+    detail=${detail//$'\r'/%0D}
+    detail=${detail//$'\n'/%0A}
+    echo "::error title=APT failure detail::$detail" >&2
+  fi
+  exit "$status"
+}
+trap 'report_failure "$?"' ERR
+run_apt() { sudo apt-get "$@" 2>&1 | tee "$apt_log"; }
 if (( $# == 0 )); then set -- ffmpeg; fi
 for package in "$@"; do
   if [[ ! "$package" =~ ^[a-z0-9][a-z0-9+.-]*(:[a-z0-9]+)?$ ]]; then
@@ -34,11 +50,11 @@ if (( ${#missing[@]} )); then
   if $refresh; then
     phase=apt-update
     echo "::notice title=Build tool setup::phase=$phase elapsed=${SECONDS}s"
-    sudo apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
+    run_apt "${apt_options[@]}" -o APT::Update::Error-Mode=any update
   fi
   phase=apt-install
   echo "::notice title=Build tool setup::phase=$phase packages=${missing[*]} elapsed=${SECONDS}s"
-  sudo apt-get "${apt_options[@]}" install -y --no-install-recommends "${missing[@]}"
+  run_apt "${apt_options[@]}" install -y --no-install-recommends "${missing[@]}"
 fi
 phase=verify
 for package in "$@"; do
