@@ -120,8 +120,11 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      // Initial POP has no saved in-memory position. A delayed fallback to zero
+      // must not erase native reader movement made before this frame executes.
+      if (firstRoute) return;
       if (navigationType === 'POP') scrollToNumber(positionsRef.current.get(location.key) ?? 0);
-      else if (!firstRoute) scrollToNumber(0);
+      else scrollToNumber(0);
     };
 
     const frame = requestAnimationFrame(restore);

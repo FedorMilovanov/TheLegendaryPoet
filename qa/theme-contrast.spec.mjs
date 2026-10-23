@@ -96,7 +96,18 @@ async function nonTextContrast(locator, mode = 'border') {
   return locator.evaluate((node, mode) => {
     const parse = (value) => {
       const match = value.match(/rgba?\(([^)]+)\)/i);
-      if (!match) throw new Error(`Unsupported computed color: ${value}`);
+      if (!match) {
+        // Tailwind's dark modal backgrounds can serialize as OKLab. Use the
+        // same real browser conversion as text checks; never skip the ratio.
+        if (!CSS.supports('color', value)) throw new Error(`Unsupported computed color: ${value}`);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext('2d');
+        context.fillStyle = value;
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+        return { r, g, b, a: a / 255 };
+      }
       const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
       return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
     };
@@ -293,7 +304,7 @@ test.describe('light theme semantic surfaces', () => {
     await expect(verse).toBeVisible();
     expect(await contrastRatio(verse), 'light poem preview contrast').toBeGreaterThanOrEqual(4.5);
 
-    await page.getByRole('button', { name: 'Открыть поиск', exact: true }).click();
+    await page.getByRole('button', { name: 'Открыть поиск — Ctrl K', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
     await expect(dialog).toHaveClass(/theme-modal-surface/);
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
@@ -744,6 +755,185 @@ for (const theme of ['dark', 'light']) {
         await expect.poll(() => new URL(page.url()).hash).toBe(href);
         await expect(page.locator(href)).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0);
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`breadcrumb contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('shared navigation text, hover and keyboard focus remain readable', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const route of ['/privacy', '/essays/sergei-yesenin-1921-1925']) {
+          await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+          const nav = page.getByRole('navigation', { name: 'Хлебные крошки' });
+          await expect(nav).toBeVisible();
+          const text = await contrastMeasurements(nav.locator('a, [aria-current="page"]'));
+          expect(text.length).toBeGreaterThanOrEqual(2);
+          for (const item of text) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+          const link = nav.getByRole('link').first();
+          await link.hover();
+          expect(await contrastRatio(link)).toBeGreaterThanOrEqual(4.5);
+          await page.mouse.move(0, 0);
+          await link.focus();
+          await expect(link).toBeFocused();
+          expect(await contrastRatio(link)).toBeGreaterThanOrEqual(4.5);
+          expect(await nonTextContrast(link, 'focus')).toBeGreaterThanOrEqual(3);
+          await link.press('Enter');
+          await expect.poll(() => new URL(page.url()).pathname).toBe('/');
+        }
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  test(`header landmark and visible search label have accessible names in ${theme}`, async ({ page }, testInfo) => {
+    useChromiumCore(testInfo);
+    await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+    await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+    await expect(page.locator('.header-nav')).toHaveAccessibleName('Основная навигация');
+    const search = page.getByRole('button', { name: /^Открыть поиск/ }).filter({ visible: true }).first();
+    await expect(search.locator('.header-search-label')).toHaveText('Ctrl K');
+    await expect(search).toHaveAccessibleName('Открыть поиск — Ctrl K');
+    await search.click();
+    const dialog = page.getByRole('dialog', { name: 'Поиск по сайту' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('combobox', { name: 'Поисковый запрос' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(search).toBeFocused();
+  });
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`failed essay image ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test('visible error label is readable and named, with working keyboard lightbox', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        await page.route('**/*', (route) => route.request().resourceType() === 'image' ? route.abort('failed') : route.continue());
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        const opener = page.locator('.essay-body figure button[aria-haspopup="dialog"]').first();
+        await opener.scrollIntoViewIfNeeded();
+        await expect(opener.locator('img')).toHaveAttribute('data-image-state', 'error');
+        const fallback = opener.getByText('Изображение временно недоступно', { exact: true });
+        await expect(fallback).toBeVisible();
+        await expect(opener).toHaveAccessibleName(/Изображение временно недоступно/);
+        await expect(opener).toHaveAccessibleName(/^Увеличить изображение:/);
+        expect(await contrastRatio(fallback)).toBeGreaterThanOrEqual(4.5);
+        await opener.focus();
+        await opener.press('Enter');
+        const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+        await expect(dialog).toBeVisible();
+        await expect(dialog.getByRole('button', { name: 'Закрыть изображение' })).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(dialog).toBeHidden();
+        await expect(opener).toBeFocused();
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`essay image metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test('captions, credits and source links stay readable inline and in the dark lightbox', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const slug of ['sergei-yesenin-1921-1925', 'brik-case']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const figures = page.locator('.essay-body figure').filter({ has: page.locator('button[aria-haspopup="dialog"]') });
+          const captions = figures.locator('figcaption');
+          expect(await captions.count()).toBeGreaterThan(2);
+          const text = await contrastMeasurements(captions.locator('span, a'), true);
+          expect(text.length).toBeGreaterThan(8);
+          for (const item of text) expect(item.ratio, `${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const source = captions.getByRole('link', { name: 'Источник', exact: true }).first();
+          await expect(source).toHaveAttribute('href', /^https:\/\//);
+          await expect(source).toHaveAttribute('target', '_blank');
+          await source.hover();
+          expect(await contrastRatio(source)).toBeGreaterThanOrEqual(4.5);
+          await page.mouse.move(0, 0);
+          await source.focus();
+          await expect(source).toBeFocused();
+          expect(await contrastRatio(source)).toBeGreaterThanOrEqual(4.5);
+          expect(await nonTextContrast(source, 'focus')).toBeGreaterThanOrEqual(3);
+
+          const opener = figures.getByRole('button', { name: /^Увеличить изображение:/ }).first();
+          await opener.focus();
+          await opener.press('Enter');
+          const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+          await expect(dialog).toBeVisible();
+          const caption = dialog.locator('p[id]');
+          await expect(caption).toBeVisible();
+          const modalText = await contrastMeasurements(caption.locator('xpath=.|.//*'), true);
+          expect(modalText.length).toBeGreaterThanOrEqual(2);
+          for (const item of modalText) expect(item.ratio, `lightbox: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const modalSource = dialog.getByRole('link', { name: 'Источник', exact: true });
+          expect(await contrastRatio(modalSource)).toBeGreaterThanOrEqual(4.5);
+          await modalSource.focus();
+          expect(await nonTextContrast(modalSource, 'focus')).toBeGreaterThanOrEqual(3);
+          await page.keyboard.press('Escape');
+          await expect(dialog).toBeHidden();
+          await expect(opener).toBeFocused();
+        }
+      });
+    });
+  }
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`essay shell metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test('hero metadata, table of contents and series navigation keep readable text and working anchors', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const slug of ['sergei-yesenin-1921-1925', 'sergei-yesenin-1895-1921']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const hero = page.locator('main header');
+          await expect(hero.locator('h1')).toBeVisible();
+          const metadata = await contrastMeasurements(hero.locator('h1, p, .mb-5, .mt-7 > span, .mt-6 > span, .bottom-4 span, .bottom-4 a'), true);
+          expect(metadata.length).toBeGreaterThan(5);
+          for (const item of metadata) expect(item.ratio, `hero ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const series = page.getByRole('navigation', { name: 'Навигация по серии' });
+          await expect(series).toBeVisible();
+          const seriesText = await contrastMeasurements(series.locator('div, span'), true);
+          expect(seriesText.length).toBeGreaterThanOrEqual(3);
+          for (const item of seriesText) expect(item.ratio, `series ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const seriesLink = series.getByRole('link').first();
+          await seriesLink.focus();
+          await expect(seriesLink).toBeFocused();
+          await expect(seriesLink).toHaveAttribute('href', /^\/essays\//);
+          await expect.poll(() => nonTextContrast(seriesLink, 'focus')).toBeGreaterThanOrEqual(3);
+          if (!mobile) {
+            const toc = page.locator('aside nav');
+            const tocText = await contrastMeasurements(toc.locator('div, a, span'), true);
+            expect(tocText.length).toBeGreaterThan(5);
+            for (const item of tocText) expect(item.ratio, `toc ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+            const source = page.locator('aside a[href="#sources"]');
+            for (const item of await contrastMeasurements(source.locator('span'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+            for (const link of [toc.getByRole('link').first(), source, page.locator('aside a[href^="/poets/"]')]) {
+              await link.focus();
+              await expect(link).toBeFocused();
+              await expect.poll(() => nonTextContrast(link, 'focus')).toBeGreaterThanOrEqual(3);
+              for (const item of await contrastMeasurements(link.locator('xpath=.|.//*'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+              await link.hover();
+              for (const item of await contrastMeasurements(link.locator('xpath=.|.//*'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+            }
+            const first = toc.getByRole('link').first();
+            const target = await first.getAttribute('href');
+            await first.click();
+            await expect(page.locator(target)).toBeInViewport();
+          }
+          expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        }
       });
     });
   }

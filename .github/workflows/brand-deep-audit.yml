@@ -36,9 +36,7 @@ jobs:
       - name: Validate locked browser runtime
         run: npm run validate:browser-runtime
       - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
+        uses: ./.github/actions/install-build-tools
       - name: Validate approved transparent RGBA declarations
         run: npm run validate:brand
       - name: Typecheck motion normalization

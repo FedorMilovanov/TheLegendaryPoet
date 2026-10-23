@@ -118,10 +118,7 @@ jobs:
       - run: npm ci
 
       - name: Install FFmpeg for deterministic generated assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
+        uses: ./.github/actions/install-build-tools
 
       - name: Validate content, literary style, brand assets, and types
         run: npm run check

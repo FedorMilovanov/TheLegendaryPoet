@@ -47,7 +47,7 @@ const Header = () => {
             </div>
           </Link>
 
-          <nav className="header-nav flex-1 items-center justify-center gap-4 lg:gap-7 xl:gap-8">
+          <nav aria-label="Основная навигация" className="header-nav flex-1 items-center justify-center gap-4 lg:gap-7 xl:gap-8">
             {navigation.map((item) => (
               <Link
                 key={item.path}
@@ -80,7 +80,7 @@ const Header = () => {
               type="button"
               onClick={() => window.dispatchEvent(new Event('tlp-open-command-palette'))}
               className="theme-control-idle inline-flex min-h-11 items-center gap-1.5 rounded-full border border-cyan-400/20 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition hover:border-cyan-400/35"
-              aria-label="Открыть поиск"
+              aria-label="Открыть поиск — Ctrl K"
             >
               <Search size={13} />
               <span className="header-search-label">Ctrl K</span>

@@ -88,7 +88,7 @@ test('one desktop search trigger and scroll-top stay clear of persistent audio c
   await waitForScrollSettled(page, 'upward smooth scrolling should settle before floating geometry is measured');
 
   const player = page.locator('.global-audio-mini');
-  const headerSearch = page.getByRole('button', { name: 'Открыть поиск', exact: true });
+  const headerSearch = page.getByRole('button', { name: 'Открыть поиск — Ctrl K', exact: true });
   const scrollTop = page.locator('.scroll-top-btn');
   await expect(player).toBeVisible();
   await expect(headerSearch).toHaveCount(1);
@@ -116,7 +116,7 @@ test('one desktop search trigger and scroll-top stay clear of persistent audio c
       scrollY: window.scrollY,
       chromeHidden: document.documentElement.classList.contains('chrome-hidden'),
       player: read('.global-audio-mini'),
-      headerSearch: read('button[aria-label="Открыть поиск"]'),
+      headerSearch: read('button[aria-label="Открыть поиск — Ctrl K"]'),
       scrollTop: read('.scroll-top-btn'),
       duplicatePaletteCount: document.querySelectorAll('.palette-fab').length,
     };

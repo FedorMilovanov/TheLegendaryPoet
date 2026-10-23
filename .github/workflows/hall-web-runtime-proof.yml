@@ -27,7 +27,7 @@ on:
       - 'package-lock.json'
       - 'vite.config.ts'
       - '.github/actions/setup-node-deps/action.yml'
-      - '.github/actions/install-build-tools/action.yml'
+      - '.github/actions/install-build-tools/**'
       - '.github/actions/install-playwright/action.yml'
   push:
     branches: [main]
@@ -56,7 +56,7 @@ on:
       - 'package-lock.json'
       - 'vite.config.ts'
       - '.github/actions/setup-node-deps/action.yml'
-      - '.github/actions/install-build-tools/action.yml'
+      - '.github/actions/install-build-tools/**'
       - '.github/actions/install-playwright/action.yml'
   workflow_dispatch:
 

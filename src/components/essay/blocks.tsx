@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
@@ -94,20 +95,20 @@ const kindLabels = {
 function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit' | 'sourceUrl' | 'kind'> }) {
   const kind = block.kind ?? 'archive';
   return (
-    <figcaption className="mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed text-luxury-gray-light/55">
+    <figcaption className="theme-functional-muted mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed">
       <span className="min-w-0 flex-1">
-        <span className="mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-luxury-gray-light/60">
+        <span className="theme-functional-muted mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]">
           {kindLabels[kind]}
         </span>
         {block.caption}
-        {block.credit ? <span className="text-luxury-gray-light/35"> · {block.credit}</span> : null}
+        {block.credit ? <span className="theme-functional-subtle"> · {block.credit}</span> : null}
       </span>
       {block.sourceUrl && (
         <a
           href={block.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] text-luxury-gold/55 transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/60"
+          className="theme-control-action inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
         >
           Источник <ExternalLink size={11} aria-hidden="true" />
         </a>
@@ -157,8 +158,8 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
       whileTap={reduceMotion ? undefined : { scale: 0.992 }}
       transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
-      className={`group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
-      aria-label={`Увеличить изображение: ${block.alt}`}
+      className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
+      aria-label={`Увеличить изображение: ${block.alt}${imageState === 'error' ? '. Изображение временно недоступно' : ''}`}
       aria-haspopup="dialog"
     >
       <motion.span
@@ -169,7 +170,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         {!imageReady && (
           <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#0d0d0d]">
             {imageState === 'error' ? (
-              <span className="px-6 text-center text-[11px] uppercase tracking-[0.16em] text-luxury-gray-light/45">
+              <span className="theme-dark-island-muted px-6 text-center text-[11px] uppercase tracking-[0.16em]">
                 Изображение временно недоступно
               </span>
             ) : (
@@ -204,60 +205,67 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
         <ImageMeta block={block} />
       </motion.figure>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={block.alt}
-            aria-describedby={captionId}
-            tabIndex={-1}
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-            transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
-            className="fixed inset-0 z-[160] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
-            onPointerDown={(event) => {
-              if (event.currentTarget === event.target) closeLightbox();
-            }}
-          >
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && (
             <motion.div
-              layoutId={layoutId}
-              transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
-              className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+              ref={dialogRef}
+              layoutRoot
+              role="dialog"
+              aria-modal="true"
+              aria-label={block.alt}
+              aria-describedby={captionId}
+              tabIndex={-1}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+              animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+              transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
+              className="theme-dark-island theme-dark-island-text fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
+              onPointerDown={(event) => {
+                if (event.currentTarget === event.target) {
+                  // Do not let the backdrop's compatibility mouse event steal
+                  // focus after the shared dialog lifecycle restores the opener.
+                  event.preventDefault();
+                  closeLightbox();
+                }
+              }}
             >
-              <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
-                <motion.img
-                  src={imageSrc}
-                  alt={block.alt}
-                  decoding="async"
-                  drag={zoomed}
-                  dragMomentum={false}
-                  dragElastic={0.08}
-                  animate={{ scale: zoomed ? 1.65 : 1 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                  onDoubleClick={() => setZoomed((value) => !value)}
-                  className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                />
-                <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
-              </div>
+              <motion.div
+                layoutId={layoutId}
+                transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
+                className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+              >
+                <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
+                  <motion.img
+                    src={imageSrc}
+                    alt={block.alt}
+                    decoding="async"
+                    drag={zoomed}
+                    dragMomentum={false}
+                    dragElastic={0.08}
+                    animate={{ scale: zoomed ? 1.65 : 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                    onDoubleClick={() => setZoomed((value) => !value)}
+                    className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+                  />
+                  <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
+                </div>
 
-              <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
-                <p id={captionId} className="min-w-0 flex-1 text-xs leading-relaxed text-white/58">
-                  {block.caption}
-                  {block.credit ? <span className="text-white/32"> · {block.credit}</span> : null}
-                </p>
-                <div className="flex items-center gap-2">
-                  {block.sourceUrl && (
-                    <a
-                      href={block.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-white/55 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-                    >
-                      Источник <ExternalLink size={11} />
-                    </a>
+                <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
+                  <p id={captionId} className="theme-dark-island-muted min-w-0 flex-1 text-xs leading-relaxed">
+                    {block.caption}
+                    {block.credit ? <span className="theme-dark-island-subtle"> · {block.credit}</span> : null}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {block.sourceUrl && (
+                      <a
+                        href={block.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="theme-dark-island-accent inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] transition hover:border-luxury-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-island-accent)]"
+                      >
+                        Источник <ExternalLink size={11} />
+                      </a>
                   )}
                   <motion.button
                     type="button"
@@ -286,7 +294,9 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
             </motion.button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </>
   );
 }

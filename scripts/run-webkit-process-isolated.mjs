@@ -5,7 +5,7 @@ const common = [
   '--config=playwright.config.mjs',
   '--project=iphone-safari',
   '--workers=1',
-  '--reporter=line',
+  '--reporter=line,./scripts/qa-github-failure-reporter.mjs',
 ];
 
 const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];

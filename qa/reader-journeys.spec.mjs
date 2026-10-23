@@ -283,3 +283,106 @@ test.describe('reduced-motion longform reader journey', () => {
     expect(runtime.consoleErrors).toEqual([]);
   });
 });
+
+for (const theme of ['dark', 'light']) {
+  for (const reducedMotion of ['reduce', 'no-preference']) {
+    test.describe(`image viewer viewport ${theme} ${reducedMotion}`, () => {
+      test.use({ colorScheme: theme, reducedMotion });
+      test('viewer escapes article containment while nested search remains above it', async ({ page }) => {
+        const runtime = attachRuntimeDiagnostics(page);
+        // A known decodable local fixture isolates geometry from Wikimedia
+        // egress. This is not verification/replacement of production image bytes.
+        const fixture = fs.readFileSync(path.resolve('public/images/essays/yesenin/yesenin-part-1-editorial.webp'));
+        const fixtureRequests = [];
+        const failedImageRequests = [];
+        page.on('requestfailed', (request) => {
+          if (/wikimedia\.org/.test(request.url())) {
+            failedImageRequests.push({ url: request.url(), error: request.failure()?.errorText });
+          }
+        });
+        await page.route(/^https:\/\/[^/]+\.wikimedia\.org\//, async (route) => {
+          fixtureRequests.push(route.request().url());
+          await route.fulfill({ contentType: 'image/webp', body: fixture });
+        });
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'domcontentloaded' });
+        await waitForRoute(page);
+        const opener = page.locator('.essay-body figure button[aria-haspopup="dialog"]').first();
+        await opener.scrollIntoViewIfNeeded();
+        await opener.focus();
+        try {
+          await expect(opener).toBeInViewport();
+          await expect.poll(() => opener.locator('img').evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
+        } catch (error) {
+          // Preserve the assertion/timeout. Native CI annotations must expose
+          // whether this is routing, decoding, or lazy-image visibility; signed
+          // artifact/log delivery is not always reachable from the repair lane.
+          const image = await opener.locator('img').evaluate((node) => ({
+            scrollY: window.scrollY, viewportHeight: innerHeight,
+            src: node.src, currentSrc: node.currentSrc, complete: node.complete,
+            naturalWidth: node.naturalWidth, loading: node.loading,
+            state: node.dataset.imageState,
+            rect: node.getBoundingClientRect().toJSON(),
+            ancestors: [node, node.parentElement, node.closest('figure')].map((element) => {
+              const css = getComputedStyle(element);
+              return { tag: element.tagName, contentVisibility: css.contentVisibility,
+                visibility: css.visibility, opacity: css.opacity, transform: css.transform };
+            }),
+          }));
+          const independentDecode = await page.evaluate(async (base64) => {
+            const probe = new Image();
+            probe.src = `data:image/webp;base64,${base64}`;
+            return Promise.race([
+              probe.decode().then(() => ({ width: probe.naturalWidth }), (error) => ({ error: String(error) })),
+              new Promise((resolve) => setTimeout(() => resolve({ error: 'diagnostic decode pending after 2s' }), 2_000)),
+            ]);
+          }, fixture.toString('base64'));
+          throw new Error(`${error.message}\nImage fixture diagnostics: ${JSON.stringify({
+            fixtureBytes: fixture.length, fixtureRequests, failedImageRequests, image, independentDecode,
+          })}`, { cause: error });
+        }
+        await opener.press('Enter');
+        const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+        await expect(dialog).toBeVisible();
+        await expect(dialog.getByRole('button', { name: 'Закрыть изображение' })).toBeFocused();
+        await expect.poll(() => dialog.evaluate((node) => {
+          const rect = node.getBoundingClientRect();
+          return [rect.left, rect.top, rect.right - innerWidth, rect.bottom - innerHeight].map(Math.round);
+        }), { timeout: 5_000, message: 'image dialog must cover the actual viewport, not its transformed article block' }).toEqual([0, 0, 0, 0]);
+        const scrollY = await page.evaluate(() => Math.abs(Number.parseFloat(document.body.style.top || '0')));
+
+        const viewerLayer = await dialog.evaluate((node) => Number(getComputedStyle(node).zIndex));
+        await page.keyboard.press('Control+K');
+        const search = page.getByRole('dialog', { name: 'Поиск по сайту' });
+        await expect(search).toBeVisible();
+        const input = search.getByRole('combobox', { name: 'Поисковый запрос' });
+        await expect(input).toBeFocused();
+        const searchLayer = await search.evaluate((node) => {
+          for (let current = node; current; current = current.parentElement) {
+            const z = getComputedStyle(current).zIndex;
+            if (z !== 'auto') return Number(z);
+          }
+          return 0;
+        });
+        expect(searchLayer, 'nested search must paint above the body-level image dialog').toBeGreaterThan(viewerLayer);
+        await expect.poll(() => input.evaluate((node) => {
+          const r = node.getBoundingClientRect();
+          return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === node;
+        })).toBe(true);
+        await page.keyboard.press('Escape');
+        await expect(search).toBeHidden();
+        await expect(dialog.getByRole('button', { name: 'Закрыть изображение' })).toBeFocused();
+        // A true viewport backdrop must also receive clicks/taps outside the
+        // article, rather than letting those reach header/dock controls.
+        if (await page.evaluate(() => matchMedia('(pointer: coarse)').matches)) await page.touchscreen.tap(4, 4);
+        else await page.mouse.click(4, 4);
+        await expect(dialog).toBeHidden();
+        await expect(opener).toBeFocused();
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scrollY, 0);
+        await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+        expect(runtime.pageErrors).toEqual([]);
+        expect(runtime.consoleErrors).toEqual([]);
+      });
+    });
+  }
+}
