@@ -34,10 +34,7 @@ jobs:
         run: npm run validate:browser-runtime
 
       - name: Install FFmpeg for deterministic brand assets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          ffmpeg -version | head -1
+        uses: ./.github/actions/install-build-tools
 
       - name: Generate canonical route inventory and build production site
         env:

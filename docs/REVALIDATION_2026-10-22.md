@@ -387,3 +387,37 @@ that the original Safari red was environment noise or that full CI is green.
 - **Readiness:** this step requires its own pushed-head CI. Earlier green
   `1a93fa3` does not certify this patch; no whole-site accessibility, media,
   editorial/rights or merge completion claimed.
+
+## Follow-up 2026-10-23 — owner-authorized bounded CI setup repair
+
+Owner explicitly authorized limited `.github` repair after catalog job
+120360893767 on `027e384` exhausted30m in FFmpeg installation, before any
+build/browser/acceptance test. Premium home/iPhone later exhausted45m during
+Playwright installation; core Chromium/Android/Safari did PASS on that source
+(1h8m41s). This is not evidence that the cancelled acceptance tests passed.
+
+The build-tool action unconditionally refreshed every configured APT repository,
+including when tools were already installed or resolvable in retained indexes.
+A behavior regression executed the actual old action body: expected no APT for
+an installed runnable tool, observed update/install, genuine failure. New shared
+installer verifies installed packages and runnable FFmpeg, installs only missing
+packages from available indexes, and refreshes strictly only when no candidate
+exists. Download/refresh errors fail with phase/elapsed diagnostics; bounded
+APT network timeouts are30s with one transport retry, not test/job budget changes.
+A successful apt exit without an installed package and broken FFmpeg both fail.
+No stale-download fallback loop, test rerun, job timeout increase, version-pinning
+claim or materialization/brand-test bypass. Native package/cache availability
+and actual latency reduction still require exact-head runner evidence.
+
+Nine FFmpeg-only workflows now share this owner. Mixed Hall toolchains remain
+separately governed. Shared-action dependency filters include the installer
+script; Hall web-proof filters and their merge-certification SSOT were expanded
+together, not relaxed or removed. Existing exact-head gates remain mandatory.
+
+Local: clean027e384 contracts/check/build PASS before edits; installer8/8,
+Node36/36 (including those8), Prorok4/4; check/build/prerender/output/SEO/contracts
+PASS. Workflow contract executes behavioral installer tests; all27 workflow/action
+YAML files parse. No application code, brand source, media, dependencies or
+editorial text changed in this CI transaction. Rollback is the shared installer,
+its wiring/filter projection and tests. New source CI remains required; #519 and
+whole-site visual/accessibility/rights completion remain open. No merge.

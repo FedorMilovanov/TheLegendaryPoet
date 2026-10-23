@@ -12,9 +12,8 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        sudo apt-get update -qq
-        read -r -a packages <<< "${{ inputs.packages }}"
-        sudo apt-get install -y -qq --no-install-recommends "${packages[@]}"
-        for package in "${packages[@]}"; do
-          dpkg-query -W -f='${Package}=${Version}\n' "$package"
-        done
+        read -r -a packages <<< "$BUILD_TOOL_PACKAGES"
+        bash "$BUILD_TOOL_ACTION_PATH/install.sh" "${packages[@]}"
+      env:
+        BUILD_TOOL_PACKAGES: ${{ inputs.packages }}
+        BUILD_TOOL_ACTION_PATH: ${{ github.action_path }}

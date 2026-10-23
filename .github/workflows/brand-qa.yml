@@ -26,6 +26,7 @@ on:
       - 'public/browserconfig.xml'
       - 'public/brand-release.txt'
       - '.github/workflows/brand-qa.yml'
+      - '.github/actions/install-build-tools/**'
       - '.github/workflows/brand-deep-audit.yml'
       - '.github/workflows/manual-browser-qa.yml'
   push:
@@ -56,9 +57,7 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install FFmpeg materializer dependency
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes ffmpeg
+        uses: ./.github/actions/install-build-tools
       - name: Install project dependencies
         run: npm ci
       - name: Validate locked browser runtime

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const failures = [];
@@ -190,6 +191,16 @@ const inventory = {
   playwrightInstalls: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/npx playwright install/g) ?? []).length, 0),
   localActionUses: workflowTexts.reduce((sum, [, text]) => sum + (text.match(/uses: \.\/\.github\/actions\//g) ?? []).length, 0),
 };
+
+// FFmpeg-only setup has one owner; mixed Hall toolchains retain their
+// separately governed setup and are not silently migrated by this transaction.
+for (const workflow of ['articles-catalog.yml', 'brand-deep-audit.yml', 'brand-qa.yml', 'deploy.yml', 'site-route-integrity-audit.yml', 'yesenin-part-one-browser.yml', 'yesenin-part-one-safe-publication.yml', 'yesenin-part-two-safe-publication.yml', 'yesenin-duncan-safe-publication.yml']) {
+  const text = read(`.github/workflows/${workflow}`);
+  expect(text.includes('./.github/actions/install-build-tools'), `${workflow}: missing shared build-tool setup`);
+  expect(!/apt-get install[^\n]*ffmpeg/.test(text), `${workflow}: duplicated FFmpeg installer`);
+}
+const buildToolsTests = spawnSync(process.execPath, ['--test', 'scripts/tests/build-tools-setup.test.mjs'], { stdio: 'inherit' });
+expect(buildToolsTests.status === 0, 'shared build-tools behavior regressions must pass (including failure paths)');
 
 if (failures.length) {
   console.error('workflow consolidation contract: FAILED');
