@@ -1,5 +1,5 @@
 name: Install deterministic build tools
-description: Install the exact system packages required by deterministic asset materialization.
+description: Install and verify required system packages; reuse archives without caching installed state.
 inputs:
   packages:
     description: Space-separated apt packages.
@@ -8,7 +8,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install system build tools
+    - name: Scope package archive cache to runner image and candidates
+      id: prepare
       shell: bash
       run: |
         set -euo pipefail
@@ -17,3 +18,33 @@ runs:
       env:
         BUILD_TOOL_PACKAGES: ${{ inputs.packages }}
         BUILD_TOOL_ACTION_PATH: ${{ github.action_path }}
+        BUILD_TOOL_PREPARE_CACHE: '1'
+    - name: Restore package archives
+      id: archives
+      if: steps.prepare.outputs.needed == 'true'
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      env:
+        SEGMENT_DOWNLOAD_TIMEOUT_MINS: '2'
+      with:
+        path: ${{ runner.temp }}/tlp-build-tool-archives/*.deb
+        key: ${{ steps.prepare.outputs.key }}
+    - name: Install system build tools
+      id: install
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "::notice title=Build tool archive cache::hit=$ARCHIVE_CACHE_HIT"
+        read -r -a packages <<< "$BUILD_TOOL_PACKAGES"
+        bash "$BUILD_TOOL_ACTION_PATH/install.sh" "${packages[@]}"
+      env:
+        BUILD_TOOL_PACKAGES: ${{ inputs.packages }}
+        BUILD_TOOL_ACTION_PATH: ${{ github.action_path }}
+        BUILD_TOOL_PREPARE_CACHE: '0'
+        BUILD_TOOL_ARCHIVE_DIR: ${{ steps.prepare.outputs.needed == 'true' && format('{0}/tlp-build-tool-archives', runner.temp) || '' }}
+        ARCHIVE_CACHE_HIT: ${{ steps.archives.outputs.cache-hit || 'false' }}
+    - name: Save verified package archives before later acceptance steps
+      if: steps.prepare.outputs.needed == 'true' && steps.archives.outputs.cache-hit != 'true' && steps.install.outcome == 'success'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ${{ runner.temp }}/tlp-build-tool-archives/*.deb
+        key: ${{ steps.prepare.outputs.key }}
