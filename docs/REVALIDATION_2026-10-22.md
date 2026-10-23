@@ -340,3 +340,50 @@ production scroll/loader change. Retain failure diagnostics with scroll/viewport
 coordinates for native revalidation. Local four-case Chromium run: **4/4**,
 retries 0. This is a candidate scenario repair pending native proof, not a claim
 that the original Safari red was environment noise or that full CI is green.
+
+## Follow-up 2026-10-23 — shared essay shell metadata and navigation
+
+- **Baseline:** preserved the restored snapshot after proving tracked/untracked
+  text identical to pushed `1a93fa3`, then fast-forwarded to that clean source.
+  Fresh contracts/check/build PASS; its existing exact-head CI was 13 PASS and
+  four explicit scope/deploy skips. No merge performed.
+- **Root / scope / owners:** `EssayHero` and the essay shell/series navigation
+  in `EssayPage` used translucent fixed-palette text over both theme surfaces.
+  Strict new light-desktop regression failed at **1.594879598152581:1** against
+  the unchanged 4.5 threshold. Existing semantic action/muted/text tokens now own
+  hero subtitle/metadata/tags, TOC labels/numbers/links, source/poet shortcuts and
+  previous/next labels. Sidebar shortcuts use the existing soft-surface token;
+  a translucent dark poet shortcut had otherwise produced a middle-gray light
+  surface with only 1.39:1 focus contrast. Theme focus tokens replace gold-alpha
+  rings. Cover labels retain fixed-dark islands with black/90 backing and opaque
+  island text; no art, credit wording, rights or publication data changed.
+- **Coverage:** four added theme/device cases visit both Yesenin series parts,
+  covering previous/next paths, hero and cover metadata, all TOC numbers/text,
+  source/poet shortcuts, hover/focus and real anchor navigation. Require 4.5:1
+  text and 3:1 focus, no horizontal overflow. Await the asynchronously mounted
+  series before measurements, and poll the actual focus paint through existing
+  CSS transitions; no thresholds, retries or helper assertions were weakened.
+- **Browser:** final local suite **84/84**, retries 0 (4.2m); ten after screenshots
+  inspected: four heroes, four series controls, two desktop sidebars. Paired
+  same-harness, fully painted, full-body color-contrast probe on Part II:
+  dark desktop/mobile **23/5 → 0/0**, light desktop/mobile **46/3 → 0/0**.
+  Incomplete nodes remain **126/132/141/144**, explicitly **not PASS**; offscreen
+  content and image availability are not thereby certified. Zero page errors,
+  non-network console errors or horizontal overflow. Primary self-hosted font
+  faces loaded; the optional local `Inter Fallback` alias reports error in this
+  sandbox in both samples. Missing/lazy image observations remain unclosed.
+- **Metrics:** unthrottled local LCP 440/312/412/288 → 412/308/400/312 ms;
+  CLS unchanged 0.000968806/0/0.000968806/0 (dark desktop/mobile then light).
+  Diagnostic samples, not field CWV or production-image proof.
+- **Source gates:** check/build/prerender/build-output/SEO/contracts PASS;
+  Node 28/28, Prorok draft 4/4 PASS. Canonical discovery fingerprints for ten
+  essays regenerated via sitemap/feed; routes, timestamps and content unchanged.
+  Rollback is limited to these shared view owners and their theme regressions.
+- **Media recovery:** exact filename searches for the damaged Yesenin/Brik
+  assets returned no Drive matches. Full-text approved-cover description search
+  returned research PDFs/manifests, not the approved source; no unrelated image
+  downloaded. Rechecked #269 approval and #415: metadata/claims do not recover
+  the original bytes. #519 remains open; no replacement or hash repinning.
+- **Readiness:** this step requires its own pushed-head CI. Earlier green
+  `1a93fa3` does not certify this patch; no whole-site accessibility, media,
+  editorial/rights or merge completion claimed.

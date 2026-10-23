@@ -42,8 +42,8 @@ export default function EssayHero({ essay }: { essay: Essay }) {
               sharedName={`essay-cover-${essay.id}`}
             />
             {essay.coverKind && (
-              <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-end justify-between gap-2">
-                <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white/72 backdrop-blur-md">
+              <div className="theme-dark-island absolute bottom-4 left-4 right-4 flex flex-wrap items-end justify-between gap-2">
+                <span className="rounded-full border border-white/15 bg-black/90 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] theme-dark-island-text backdrop-blur-md">
                   {coverKindLabels[essay.coverKind]}
                 </span>
                 {essay.coverCredit && (
@@ -52,12 +52,12 @@ export default function EssayHero({ essay }: { essay: Essay }) {
                       href={essay.coverSourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-8 items-center gap-1 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/55 backdrop-blur-md transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                      className="inline-flex min-h-8 items-center gap-1 rounded-full border border-white/10 bg-black/90 px-3 py-1 text-[9px] uppercase tracking-[0.14em] theme-dark-island-muted backdrop-blur-md transition hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200"
                     >
                       {essay.coverCredit} <ExternalLink size={10} />
                     </a>
                   ) : (
-                    <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/55 backdrop-blur-md">
+                    <span className="rounded-full border border-white/10 bg-black/90 px-3 py-1 text-[9px] uppercase tracking-[0.14em] theme-dark-island-muted backdrop-blur-md">
                       {essay.coverCredit}
                     </span>
                   )
@@ -75,7 +75,7 @@ export default function EssayHero({ essay }: { essay: Essay }) {
         className="mx-auto mt-10 max-w-3xl text-center"
       >
         {essay.series && (
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-luxury-gold/15 bg-luxury-gold/[0.04] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] theme-control-action">
             <Layers3 size={12} /> {essay.series.label} · часть {essay.series.part} из {essay.series.total}
           </div>
         )}
@@ -83,19 +83,19 @@ export default function EssayHero({ essay }: { essay: Essay }) {
           {titleCase(essay.title)}
         </h1>
         {essay.subtitle && (
-          <p className="mx-auto mt-5 max-w-2xl font-serif text-xl md:text-2xl italic text-luxury-gray-light text-pretty">
+          <p className="mx-auto mt-5 max-w-2xl font-serif text-xl md:text-2xl italic theme-functional-muted text-pretty">
             {essay.subtitle}
           </p>
         )}
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.16em] text-luxury-gray-light/60">
-          <span className="inline-flex items-center gap-1.5"><PenLine size={13} className="text-luxury-gold/60" /> {essay.author}</span>
-          <span className="inline-flex items-center gap-1.5"><Calendar size={13} className="text-luxury-gold/60" /> {essay.date}</span>
-          <span className="inline-flex items-center gap-1.5"><Clock size={13} className="text-luxury-gold/60" /> {essay.readTime}&nbsp;мин чтения</span>
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.16em] theme-functional-muted">
+          <span className="inline-flex items-center gap-1.5"><PenLine size={13} className="theme-control-action" /> {essay.author}</span>
+          <span className="inline-flex items-center gap-1.5"><Calendar size={13} className="theme-control-action" /> {essay.date}</span>
+          <span className="inline-flex items-center gap-1.5"><Clock size={13} className="theme-control-action" /> {essay.readTime}&nbsp;мин чтения</span>
         </div>
         {essay.tags.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {essay.tags.map((tag) => (
-              <span key={tag} className="rounded-full border border-luxury-gold/15 bg-luxury-gold/5 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-luxury-gold/70">
+              <span key={tag} className="rounded-full border border-luxury-gold/15 bg-luxury-gold/5 px-3 py-1 text-[10px] uppercase tracking-[0.14em] theme-control-action">
                 {tag}
               </span>
             ))}

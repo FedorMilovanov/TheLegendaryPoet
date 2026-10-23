@@ -887,3 +887,54 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+
+for (const theme of ['dark', 'light']) {
+  for (const mobile of [false, true]) {
+    test.describe(`essay shell metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test('hero metadata, table of contents and series navigation keep readable text and working anchors', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+        for (const slug of ['sergei-yesenin-1921-1925', 'sergei-yesenin-1895-1921']) {
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          const hero = page.locator('main header');
+          await expect(hero.locator('h1')).toBeVisible();
+          const metadata = await contrastMeasurements(hero.locator('h1, p, .mb-5, .mt-7 > span, .mt-6 > span, .bottom-4 span, .bottom-4 a'), true);
+          expect(metadata.length).toBeGreaterThan(5);
+          for (const item of metadata) expect(item.ratio, `hero ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const series = page.getByRole('navigation', { name: 'Навигация по серии' });
+          await expect(series).toBeVisible();
+          const seriesText = await contrastMeasurements(series.locator('div, span'), true);
+          expect(seriesText.length).toBeGreaterThanOrEqual(3);
+          for (const item of seriesText) expect(item.ratio, `series ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+          const seriesLink = series.getByRole('link').first();
+          await seriesLink.focus();
+          await expect(seriesLink).toBeFocused();
+          await expect(seriesLink).toHaveAttribute('href', /^\/essays\//);
+          await expect.poll(() => nonTextContrast(seriesLink, 'focus')).toBeGreaterThanOrEqual(3);
+          if (!mobile) {
+            const toc = page.locator('aside nav');
+            const tocText = await contrastMeasurements(toc.locator('div, a, span'), true);
+            expect(tocText.length).toBeGreaterThan(5);
+            for (const item of tocText) expect(item.ratio, `toc ${slug}: ${item.text}`).toBeGreaterThanOrEqual(4.5);
+            const source = page.locator('aside a[href="#sources"]');
+            for (const item of await contrastMeasurements(source.locator('span'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+            for (const link of [toc.getByRole('link').first(), source, page.locator('aside a[href^="/poets/"]')]) {
+              await link.focus();
+              await expect(link).toBeFocused();
+              await expect.poll(() => nonTextContrast(link, 'focus')).toBeGreaterThanOrEqual(3);
+              for (const item of await contrastMeasurements(link.locator('xpath=.|.//*'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+              await link.hover();
+              for (const item of await contrastMeasurements(link.locator('xpath=.|.//*'), true)) expect(item.ratio, item.text).toBeGreaterThanOrEqual(4.5);
+            }
+            const first = toc.getByRole('link').first();
+            const target = await first.getAttribute('href');
+            await first.click();
+            await expect(page.locator(target)).toBeInViewport();
+          }
+          expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        }
+      });
+    });
+  }
+}
