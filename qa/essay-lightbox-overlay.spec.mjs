@@ -60,3 +60,79 @@ test.describe('essay image lightbox overlay ownership', () => {
     expect(pageErrors).toEqual([]);
   });
 });
+
+// Permanent regression coverage for the exact-source archive recovery (#519).
+const portraits = [
+  { name: 'Лиля', file: 'lilya-brik-1914.webp', width: 300, height: 423 },
+  { name: 'Осип', file: 'osip-brik-1928.webp', width: 300, height: 436 },
+];
+
+for (const mobile of [false, true]) {
+  for (const theme of ['dark', 'light']) {
+    test.describe(`restored Brik portraits ${mobile ? 'mobile' : 'desktop'} ${theme}`, () => {
+      test.use({
+        viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+        isMobile: mobile,
+        hasTouch: mobile,
+        colorScheme: theme,
+        reducedMotion: 'reduce',
+      });
+      test('exact archive portraits decode inline and in the shared lightbox', async ({ page }, testInfo) => {
+        const pageErrors = [];
+        const failedPortraits = [];
+        page.on('pageerror', error => pageErrors.push(String(error)));
+        page.on('requestfailed', request => {
+          if (portraits.some(p => request.url().includes(p.file))) failedPortraits.push(request.url());
+        });
+        await page.addInitScript(mode => localStorage.setItem('tlp-theme-mode', mode), theme);
+        await page.goto(`${BASE_URL}/essays/brik-case`, { waitUntil: 'domcontentloaded' });
+        for (const portrait of portraits) {
+          const image = page.locator(`main img[src$="${portrait.file}"]`).first();
+          await image.scrollIntoViewIfNeeded();
+          await expect(image).toBeVisible();
+          const decode = img => img.decode().then(() => ({ width: img.naturalWidth, height: img.naturalHeight }));
+          expect(await image.evaluate(decode)).toEqual({ width: portrait.width, height: portrait.height });
+          const opener = image.locator('xpath=ancestor::button[1]');
+          await opener.click();
+          const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Закрыть изображение' }) });
+          await expect(dialog).toBeVisible();
+          expect(await dialog.locator('img').evaluate(decode)).toEqual({ width: portrait.width, height: portrait.height });
+          await expect.poll(() => dialog.locator('img').evaluate(img => {
+            let opacity = 1;
+            for (let node = img; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+            return opacity;
+          })).toBeGreaterThanOrEqual(0.99);
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          await page.screenshot({ path: testInfo.outputPath(`${portrait.file}-${theme}.png`) });
+          await page.keyboard.press('Escape');
+          await expect(dialog).toBeHidden();
+          await expect(opener).toBeFocused();
+        }
+        expect(failedPortraits).toEqual([]);
+        expect(pageErrors).toEqual([]);
+      });
+      test('owner-selected Yesenin replacement is painted in hero and catalog card', async ({ page }, testInfo) => {
+        await page.addInitScript(mode => localStorage.setItem('tlp-theme-mode', mode), theme);
+        for (const route of ['essays/sergei-yesenin-1921-1925', 'articles']) {
+          await page.goto(`${BASE_URL}/${route}`, { waitUntil: 'domcontentloaded' });
+          const image = page.locator('main img[src$="yesenin-part-2-editorial.webp"]').first();
+          await image.scrollIntoViewIfNeeded();
+          await expect(image).toBeVisible();
+          expect(await image.evaluate(img => img.decode().then(() => [img.naturalWidth, img.naturalHeight]))).toEqual([1920, 1080]);
+          await expect(image.locator('xpath=ancestor::*[@data-cover-state][1]')).toHaveAttribute('data-cover-state', 'loaded');
+          await expect.poll(() => image.evaluate(img => {
+            let opacity = 1;
+            for (let node = img; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+            return opacity;
+          })).toBeGreaterThanOrEqual(0.99);
+          if (mobile && route !== 'articles') {
+            const imageBox = await image.boundingBox();
+            const creditsBox = await page.locator('[data-cover-credits]').boundingBox();
+            expect(creditsBox.y).toBeGreaterThanOrEqual(imageBox.y + imageBox.height);
+          }
+          await page.screenshot({ path: testInfo.outputPath(`yesenin-${route === 'articles' ? 'card' : 'hero'}.png`) });
+        }
+      });
+    });
+  }
+}

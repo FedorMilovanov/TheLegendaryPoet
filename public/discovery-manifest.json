@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4ee19450472a100c8ac52cb145a30b916a20c230da926b3c0ccbb736e13d1307"
+      "fingerprint": "ea17872b619209931109194bd231f391b48e7e235c4453037c87731f9fd78112"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5793f0ec4c8675ff7c81cd462e699d65d38893583c27473b2846b66f1490ea79"
+      "fingerprint": "8fb9bd433efc6c2791eb99f0a14876c2e233bebf8f1758b8d221cbd447d136cb"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -225,8 +225,8 @@
       "path": "/essays/sergei-yesenin-1921-1925/",
       "routeId": "essay",
       "state": "ready",
-      "lastmod": "2026-08-11",
-      "fingerprint": "70a044084808422b46ae810a61563f28641033aca93f68d4924a2aa58f6f357d"
+      "lastmod": "2026-10-24",
+      "fingerprint": "24ff8501eede76173d328b6dc6987622e438c8f7efb2d8745a7ce19ca3e6f0e2"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents/",

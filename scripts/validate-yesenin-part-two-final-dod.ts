@@ -123,7 +123,7 @@ for (const [index, image] of images.entries()) {
 }
 
 const expectedCover = '/images/essays/yesenin/yesenin-part-2-editorial.webp';
-const expectedCoverSha256 = '7ebff24ce2a4432a0df0e40991c2c32e37f4f055c63e6b05dbe358e0907dd784';
+const expectedCoverSha256 = '27b4a98829cd76fa101a68f39b2c836de330940ef795a093ad9d071366e21ddb';
 if (essay.cover !== expectedCover) throw new Error('unexpected final cover file');
 if (essay.cardCover !== expectedCover) throw new Error('card cover diverges from the approved Part II cover');
 if (essay.coverKind !== 'reconstruction') throw new Error('final Part II cover must remain labelled as a reconstruction');
