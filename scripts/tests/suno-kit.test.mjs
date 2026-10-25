@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { measureStyle } from '../check-suno-style.mjs';
-import { documents, validateKit } from '../validate-suno-kit.mjs';
+import { documents, readFences, validateKit } from '../validate-suno-kit.mjs';
 
 for (const [label, text, valid, warning] of [
   ['empty', '', false, false],
@@ -74,4 +74,34 @@ test('removing the check hook is a failure', () => fixture(directory => {
   pkg.scripts.check = pkg.scripts.check.replace('npm run validate:suno && ', '');
   fs.writeFileSync(file, JSON.stringify(pkg));
   assert.throws(() => validateKit(directory), /Suno gate missing/);
+}));
+
+for (const [label, example, expected] of [
+  ['info string is not a closer', '\n```text\n```style', /unclosed fence/],
+  ['tilde is not a backtick closer', '\n~~~text\n```', /unclosed fence/],
+  ['shorter backticks cannot close', '\n````text\n```', /unclosed fence/],
+  ['tilde Style budget', '\n~~~style\n' + 'a'.repeat(1001) + '\n~~~', /invalid example Style/],
+  ['CRLF Style budget', '\n```style\r\n' + 'a'.repeat(1001) + '\r\n```', /invalid example Style/],
+  ['indented Style budget', '\n  ```style\n' + 'a'.repeat(1001) + '\n  ```', /invalid example Style/],
+]) {
+  test(`fence regression: ${label}`, () => fixture(directory => {
+    fs.appendFileSync(path.join(directory, 'suno/CASES.md'), example);
+    assert.throws(() => validateKit(directory), expected);
+  }));
+}
+
+test('longer matching fence closes; nested-looking fence stays content', () => {
+  assert.deepEqual(readFences('~~~text\n```style\n~~~'), {
+    blocks: [{ language: 'text', text: '```style' }], unclosed: false,
+  });
+  assert.deepEqual(readFences('  ```style\r\nsolo piano\r\n  ````'), {
+    blocks: [{ language: 'style', text: 'solo piano' }], unclosed: false,
+  });
+});
+test('literal Lyrics CLI wiring cannot disappear silently', () => fixture(directory => {
+  const file = path.join(directory, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+  delete pkg.scripts['check:suno-lyrics'];
+  fs.writeFileSync(file, JSON.stringify(pkg));
+  assert.throws(() => validateKit(directory), /missing literal Lyrics CLI wiring/);
 }));
