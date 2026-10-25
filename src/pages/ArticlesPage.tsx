@@ -101,7 +101,7 @@ export default function ArticlesPage() {
                   className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all ${
                     active
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
-                      : 'border border-cyan-400/15 text-cyan-100/45 hover:border-cyan-400/35 hover:text-cyan-200'
+                      : 'border border-cyan-400/15 theme-functional-muted hover:border-cyan-400/35 hover:text-cyan-200'
                   }`}
                 >
                   {category.label}
@@ -112,7 +112,7 @@ export default function ArticlesPage() {
         </motion.div>
 
         <Reveal direction="up">
-          <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+          <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] theme-poet-accent">
             <span className="h-px w-8 bg-luxury-gold/50" /> Проверенные публикации · {filteredEssays.length}
           </div>
           <div className="space-y-6">
@@ -124,7 +124,7 @@ export default function ArticlesPage() {
 
         {filteredEssays.length === 0 && (
           <div className="py-20 text-center">
-            <p className="text-lg text-cyan-100/45">В этом разделе пока нет материалов.</p>
+            <p className="text-lg theme-functional-muted">В этом разделе пока нет материалов.</p>
           </div>
         )}
       </div>

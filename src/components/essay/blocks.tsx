@@ -35,11 +35,11 @@ type Block<T extends EssayBlock['type']> = Extract<EssayBlock, { type: T }>;
 
 function EpigraphBlock({ block }: { block: Block<'epigraph'> }) {
   return (
-    <div className="my-10 ml-auto max-w-md text-right">
+    <div data-essay-block="epigraph" className="my-10 ml-auto max-w-md text-right">
       <Quote size={18} className="ml-auto mb-2 text-luxury-gold/40" aria-hidden="true" />
-      <p className="font-serif text-lg italic leading-relaxed text-luxury-gold/80 text-pretty">{withTypography(block.text)}</p>
+      <p className="font-serif text-lg italic leading-relaxed theme-poet-accent text-pretty">{withTypography(block.text)}</p>
       {block.cite && (
-        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-luxury-gray-light/50">{withTypography(block.cite)}</p>
+        <p className="mt-2 text-xs uppercase tracking-[0.18em] theme-functional-muted">{withTypography(block.cite)}</p>
       )}
     </div>
   );
@@ -303,12 +303,12 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
 
 function PullquoteBlock({ block }: { block: Block<'pullquote'> }) {
   return (
-    <blockquote className="my-12 border-l-4 border-luxury-gold pl-8 md:pl-10">
+    <blockquote data-essay-block="pullquote" className="my-12 border-l-4 border-luxury-gold pl-8 md:pl-10">
       <p className="font-serif text-2xl md:text-3xl italic leading-[1.5] text-white gold-glow-text text-pretty">
         «{withGold(block.text)}»
       </p>
       {block.cite && (
-        <cite className="mt-4 block text-sm not-italic uppercase tracking-[0.18em] text-luxury-gold/70">
+        <cite className="mt-4 block text-sm not-italic uppercase tracking-[0.18em] theme-poet-accent">
           {block.cite}
         </cite>
       )}
@@ -320,13 +320,13 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
   const v = poemVariant[block.variant === 'blood' ? 'blood' : 'default'];
   const blood = block.variant === 'blood';
   return (
-    <figure className={`group/poem relative my-12 overflow-hidden rounded-[2rem] border px-8 py-10 md:px-12 shadow-inner ${v.frame}`}>
+    <figure data-essay-block="poem" className={`group/poem relative my-12 overflow-hidden rounded-[2rem] border px-8 py-10 md:px-12 shadow-inner ${v.frame}`}>
       <span className={`absolute left-0 top-8 bottom-8 w-[3px] rounded-full ${v.rule}`} />
       {block.title && (
         <figcaption className="mb-5 flex flex-wrap items-baseline gap-3">
           <span className={`font-serif text-xl font-semibold ${v.title}`}>«{block.title}»</span>
           {block.year && (
-            <span className="text-[11px] uppercase tracking-[0.18em] text-luxury-gray-light/50">{block.year}</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] theme-functional-muted">{block.year}</span>
           )}
           {blood && (
             <span className="inline-flex items-center gap-1 rounded-full border border-red-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-red-300/80">
@@ -348,8 +348,8 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
 function VoiceBlock({ block }: { block: Block<'voice'> }) {
   const cfg = voiceConfig[block.kind ?? DEFAULT_VOICE_KIND];
   return (
-    <div className={`my-8 rounded-3xl border ${cfg.border} bg-[#0a0a0a] p-6 md:p-8`}>
-      <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gray-light/50">
+    <div data-essay-block="voice" className={`my-8 rounded-3xl border ${cfg.border} bg-[#0a0a0a] p-6 md:p-8`}>
+      <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] theme-functional-muted">
         <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} aria-hidden="true" />
         {cfg.label}
       </div>
@@ -357,19 +357,19 @@ function VoiceBlock({ block }: { block: Block<'voice'> }) {
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-white/5 pt-4">
         <div>
           <span className="text-sm font-bold text-white">{block.author}</span>
-          <span className="text-xs text-luxury-gray-light/60"> — {block.role}</span>
+          <span className="text-xs theme-functional-muted"> — {block.role}</span>
         </div>
         {block.sourceUrl ? (
           <a
             href={block.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] uppercase tracking-wider text-luxury-gold/60 transition-colors hover:text-luxury-gold"
+            className="text-[11px] uppercase tracking-wider theme-poet-accent transition-colors hover:underline"
           >
             {block.source}
           </a>
         ) : (
-          <span className="text-[11px] uppercase tracking-wider text-luxury-gray-light/40">{block.source}</span>
+          <span className="text-[11px] uppercase tracking-wider theme-functional-muted">{block.source}</span>
         )}
       </div>
     </div>
@@ -458,8 +458,8 @@ function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: Rea
   }
 
   return (
-    <aside className="my-10 rounded-[2rem] border-l-[6px] border-l-cyan-400/60 bg-[#061018]/60 p-6 md:p-8">
-      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+    <aside data-essay-block="note" className="my-10 rounded-[2rem] border-l-[6px] border-l-cyan-400/60 bg-[#061018]/60 p-6 md:p-8">
+      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] theme-functional-subtle">
         THE LEGENDARY POET — ремарка
       </div>
       <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
