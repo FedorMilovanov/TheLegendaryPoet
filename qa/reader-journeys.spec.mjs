@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerMediaContract } from './media-contract.mjs';
+import { contrastRatio } from './contrast-helpers.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -389,3 +390,101 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+
+// This contract is deliberately local-only. It does not certify Worker/D1 or
+// human Turnstile; the default QA build must expose its real local-mode status.
+for (const theme of ['dark', 'light']) test.describe(`local community durability ${theme}`, () => {
+  test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' } });
+  const text = 'Unicode QA 👨‍👩‍👧‍👦 е́  два пробела.\nВторая строка\tс табом и <b>не HTML</b>.';
+  const storageKey = 'tlp-community-feedback:v3';
+  const target = '[data-community-target="poet:alexander-pushkin"]';
+
+  async function openLocalPanel(page) {
+    await page.addInitScript(t => localStorage.setItem('tlp-theme-mode', t), theme);
+    await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const panel = page.locator(target);
+    await expect(panel.getByText('Локальный режим: ответы сохраняются только в этом браузере.', { exact: true })).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    return panel;
+  }
+
+  test('local Unicode comment survives reload without a duplicate or interpreted markup', async ({ page }, testInfo) => {
+    const runtime = attachRuntimeDiagnostics(page);
+    const writes = [];
+    page.on('request', request => {
+      if (request.method() === 'POST' && /\/v1\/(?:session|comments|ratings|helpful)(?:[/?]|$)/.test(request.url())) writes.push(request.url());
+    });
+    const panel = await openLocalPanel(page);
+    await panel.getByPlaceholder('Ваше имя или псевдоним — необязательно').fill('Локальный QA');
+    const editor = panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
+    await editor.fill(text);
+    await editor.press('Control+Enter');
+    await expect(editor).toHaveValue('');
+    const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
+    expect(saved.outbox).toEqual([]);
+    expect(saved.localSnapshot.comments).toHaveLength(1);
+    const entry = saved.localSnapshot.comments[0];
+    expect(entry).toMatchObject({ text, author: 'Локальный QA', targetType: 'poet', targetId: 'alexander-pushkin' });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const cards = page.locator(target).locator('[data-community-comment-id]');
+    await expect(cards).toHaveCount(1);
+    await expect(cards.first()).toHaveAttribute('data-community-comment-id', entry.id);
+    const paint = await cards.locator('p').evaluate(node => ({ text: node.textContent, whiteSpace: getComputedStyle(node).whiteSpace, htmlElements: node.children.length }));
+    expect(paint).toEqual({ text, whiteSpace: 'pre-wrap', htmlElements: 0 });
+    const ink = await cards.locator('p').evaluate(node => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--tlp-island-muted, var(--tlp-text-muted))';
+      node.append(probe);
+      const expected = getComputedStyle(probe).color;
+      probe.remove();
+      const style = getComputedStyle(node);
+      return { color: style.color, fill: style.webkitTextFillColor, expected };
+    });
+    expect(ink.color, 'comment prose must own opaque theme-aware ink').toBe(ink.expected);
+    expect(ink.fill, 'actual text fill must follow comment ink').toBe(ink.expected);
+    expect(await contrastRatio(cards.locator('p')), 'rendered comment body contrast').toBeGreaterThanOrEqual(4.5);
+    const reloaded = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
+    expect(reloaded.localSnapshot.comments).toEqual([entry]);
+    expect(reloaded.outbox).toEqual([]);
+    expect(writes).toEqual([]);
+    expect(runtime.pageErrors).toEqual([]);
+    expect(runtime.consoleErrors).toEqual([]);
+    await cards.first().screenshot({ path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-${theme}-local-comment.png`) });
+  });
+
+  test('failed local persistence keeps the draft and never reports a saved comment', async ({ page }) => {
+    const runtime = attachRuntimeDiagnostics(page);
+    await page.addInitScript(key => {
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (name, value) {
+        if (this === localStorage && name === key) throw new DOMException('QA storage quota', 'QuotaExceededError');
+        return original.call(this, name, value);
+      };
+    }, storageKey);
+    const panel = await openLocalPanel(page);
+    const editor = panel.getByPlaceholder('Что особенно точно, спорно, сильно или слабо?');
+    await editor.fill(text);
+    await expect(panel.getByRole('button', { name: 'Добавить комментарий', exact: true })).toBeEnabled();
+    // The toast lasts 2.6s. Observe its real accessible DOM message before the
+    // action, so a delayed browser round-trip cannot miss an already-gone alert.
+    await panel.evaluate(node => {
+      window.__qaLocalMessages = [];
+      new MutationObserver(() => {
+        for (const message of node.querySelectorAll('[role=alert], [role=status]')) {
+          window.__qaLocalMessages.push(message.textContent);
+        }
+      }).observe(node, { childList: true, subtree: true, characterData: true });
+    });
+    await editor.press('Control+Enter');
+    await expect.poll(() => page.evaluate(() => window.__qaLocalMessages)).toContain('Не удалось сохранить: локальное хранилище или очередь недоступны');
+    expect(await page.evaluate(() => window.__qaLocalMessages)).not.toContain('Комментарий добавлен');
+    await expect(editor).toHaveValue(text);
+    await expect(panel.locator('[data-community-comment-id]')).toHaveCount(0);
+    expect(await page.evaluate(key => localStorage.getItem(key), storageKey)).toBeNull();
+    expect(runtime.pageErrors).toEqual([]);
+    expect(runtime.consoleErrors).toEqual([]);
+  });
+});

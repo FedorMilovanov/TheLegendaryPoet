@@ -326,8 +326,9 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
 .group:hover .theme-poet-title,
 .group:focus-visible .theme-poet-title { color: var(--tlp-poet-accent) !important; }
 
-/* Shared by theme-aware poet cards and deliberately dark music cards. */
-.theme-feedback-summary { color: var(--tlp-island-muted, var(--tlp-text-muted)) !important; }
+/* Theme-aware community prose and summaries also respect deliberate dark islands. */
+.theme-feedback-summary,
+.theme-community-prose { color: var(--tlp-island-muted, var(--tlp-text-muted)) !important; }
 
 /* Pointer paint follows theme without resetting motion values or capability gates.
    The light outline keeps dark day-mode ink visible over intentional dark islands. */
