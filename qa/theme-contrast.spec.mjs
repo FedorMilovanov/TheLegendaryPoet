@@ -700,6 +700,25 @@ for (const theme of ['dark', 'light']) {
           document.getElementById(node.getAttribute('href').slice(1)),
         ))).toBe(true);
       });
+      test('dark-surface source number owns hover and keyboard focus ink', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        // A dark editorial surface owns citation ink even on a light page.
+        // Exercise its active/focus paint too, not only offscreen idle colors.
+        const islandCitation = page.locator('.essay-body .theme-dark-island sup > a[href^="#source-"]').first();
+        await expect(islandCitation).toBeAttached();
+        await hoverCitation(page, islandCitation);
+        await expect(islandCitation).toHaveCSS('color', 'rgb(212, 175, 55)');
+        expect(await contrastRatio(islandCitation)).toBeGreaterThanOrEqual(4.5);
+        await page.mouse.move(0, 0);
+        await islandCitation.focus();
+        await expect(islandCitation).toBeFocused();
+        await expect(islandCitation).toHaveCSS('outline-color', 'rgb(212, 175, 55)');
+        await expect(islandCitation.getByRole('tooltip')).toHaveCSS('opacity', '1');
+        expect(await contrastRatio(islandCitation.getByRole('tooltip'))).toBeGreaterThanOrEqual(4.5);
+      });
     });
   }
 }

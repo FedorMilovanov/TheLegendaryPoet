@@ -221,3 +221,64 @@ Chromium/Android QA; the base iPhone step succeeded. Core artifact
 12607190916 is now uploaded, but `gh run download` also redirects to the
 restricted Azure host and returned EOF. This confirms the red remote gate,
 not its root cause. Do not hide it behind local green or rerun it as a repair.
+
+## Follow-up: citation tokens belong to dark reader surfaces
+
+Base: `ad3280af9c5b34b15a97faaecdfb6e666d9a42fe` (clean working tree;
+previous final check/build/24-case evidence above). On base 2ff18ac, remote
+Manual Browser QA 40211045326 failed exactly two inline-citation contrast cases
+(light desktop/mobile): **2.642002:1** against required 4.5. Summary: 275 passed,
+14 skipped, 2 failed. The reader-frame/palette cases themselves passed there.
+The earlier delivery barrier was overcome: capture the job-log redirect with
+GitHub REST HEAD, then read the signed text via the web fetch tool (outside
+sandbox bash egress). Relevant log chunks 25/26/28 were read, not a claim to
+have inspected all 32 chunks. No signed URL/token is stored in this report.
+
+Root cause: `theme-dark-island` owned background/text but did not reset
+`--tlp-citation-ink` / `--tlp-citation-active`; they inherited dark light-page
+ink. InlineCitations already consumes those semantic variables. The single
+shared theme rule now scopes the existing dark citation values to explicit
+dark islands. Outside-light citations retain their previous gold-brown ink.
+This covers myth citations and any inline source inside another explicit
+reader island, without route selectors, new palette, renderer duplication,
+article/media/dependency/workflow edits or Hall source changes. Rollback is a
+bounded revert of this token rule and its tests; no data migration.
+
+Before implementation, existing four citation cases were run on local base:
+**2 PASS / 2 FAIL**, exactly the same light ratio as remote. A first anchored
+grep selected no tests; corrected before recording RED. After repair, the
+unchanged four cases plus four new dark-island hover/focus cases: **8/8 PASS
+(2.8m)**. Separate tests keep individual scenario timeouts unchanged. An initial
+attempt bundled both journeys into one test and timed out locally; it was
+replaced by independent bounded tests, not an increased timeout or retry.
+New cases check active gold, contrast >=4.5, focus outline color, visible
+source tooltip and tooltip contrast. Existing tests still check >100 source
+numbers plus ordinary-page hover/focus, card resolution and all href targets.
+
+Focused first myth screenshot/probe on the published Yesenin Part II essay:
+both themes × desktop1440×1000/mobile390×844 isMobile, reduced motion. Idle
+citation helper ratio **4.962** on its composited base in all four contexts;
+not a gradient/blur per-pixel proof. Light desktop/mobile after screenshots
+inspected. Fonts loaded, zero pageerrors/overflow. Axe zero automatic contrast
+violations but **9 incomplete nodes per myth context** remain unresolved.
+Three resource console errors and an adjacent Wikimedia image with
+naturalWidth=0 remain under restricted sandbox egress; no media closure.
+Diagnostic unthrottled LCP 508–860ms / CLS .000455–.001159, not field metrics.
+Raw probes/screenshots remain ignored in `qa-artifacts/citation-island/`.
+
+Final local check/build/budgets/contracts and **92 Node + 4 TS tests PASS**.
+An extended 65-case audit was stopped after 28 tests started, to isolate the
+known citation regression. It had two existing hero-caption failures (dark
+keyboard opacity 0 vs 1; light keyboard evaluation timeout). Neither is hidden,
+repaired or claimed to match the remote failure. This is NOT a 65-case PASS.
+The remote ad3280a browser job also completed FAILURE; its specific details
+are separate from the successful local repaired suite. No new-head CI,
+production or full accessibility certificate is inferred. PR stays draft.
+Base-head remote detail subsequently retrieved the same way: ad3280a run
+40215056132, log chunk 28, reports **279 PASS / 14 skipped / the same 2 light
+inline-citation FAIL**. Thus both recent remote red gates are localized to the
+same contrast regression; no claim that the entire job log was read.
+
+Final stable-build combined citation + prior reader regression suite:
+**32/32 PASS, no retries**. This is scoped reader evidence, not the incomplete
+65-case audit or a remote exact-head certificate. No merge was performed.
