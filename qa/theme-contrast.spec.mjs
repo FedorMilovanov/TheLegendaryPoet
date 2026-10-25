@@ -8,6 +8,23 @@ function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'theme/contrast certification runs once in Chromium core');
 }
 
+// Media is a BrowserContext option, not a standalone Playwright Test fixture.
+// Prove the requested mode is effective before interpreting a reduced-motion
+// or forced-colors scenario; an ignored declaration must never look certified.
+test.beforeEach(async ({ page, contextOptions }) => {
+  if (contextOptions.reducedMotion === undefined && contextOptions.forcedColors === undefined) return;
+  const media = await page.evaluate(() => ({
+    reduce: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    forced: matchMedia('(forced-colors: active)').matches,
+  }));
+  if (contextOptions.reducedMotion !== undefined) {
+    expect(media.reduce, 'requested reduced-motion mode must reach the browser').toBe(contextOptions.reducedMotion === 'reduce');
+  }
+  if (contextOptions.forcedColors !== undefined) {
+    expect(media.forced, 'requested forced-colors mode must reach the browser').toBe(contextOptions.forcedColors === 'active');
+  }
+});
+
 // Layout can still settle after scrolling a long, content-visibility essay.
 // Deliver the pointer only after two rendered frames, then prove real CSS hover.
 async function hoverCitation(page, link) {
@@ -534,7 +551,7 @@ async function heroCaptionContrasts(panel) {
 for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
   test.describe(`hero caption ${theme}, ${mobile ? 'touch' : 'keyboard'}`, () => {
     test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-      isMobile: mobile, hasTouch: mobile, colorScheme: theme, reducedMotion: 'reduce' });
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, contextOptions: { reducedMotion: 'reduce' } });
     test('names and dates remain readable over the portrait', async ({ page }, testInfo) => {
       useChromiumCore(testInfo);
       await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -560,7 +577,7 @@ for (const theme of ['dark', 'light']) for (const slug of [
   'galina-benislavskaya-yesenin-manuscripts-publishing-archive',
 ]) test.describe(`source library ${theme} ${slug}`, () => {
   test.use({ viewport: theme === 'light' ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', reducedMotion: 'reduce' });
+    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', contextOptions: { reducedMotion: 'reduce' } });
   test('bibliography text and controls remain readable through expansion and filtering', async ({ page }, testInfo) => {
     useChromiumCore(testInfo);
     await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -623,7 +640,7 @@ async function dockTextContrasts(dock) {
 }
 
 for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${theme}`, () => {
-  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,contextOptions: { reducedMotion: 'reduce' }});
   test('all four labels contrast with the glass rail and active pill at 100/200%', async ({page},testInfo) => {
     useChromiumCore(testInfo);
     await page.addInitScript(t => localStorage.setItem('tlp-theme-mode',t),theme);
@@ -642,7 +659,7 @@ for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${them
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`ordinary essay prose ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('every ordinary essay paragraph meets normal-text contrast', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
@@ -666,7 +683,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`inline citation contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('source numbers and focused tooltip remain readable and resolve to a card', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
@@ -741,7 +758,7 @@ async function expectCitationTooltipContained(page, tooltip) {
 for (const theme of ['dark', 'light']) {
   for (const width of [320, 390, 1440]) {
     test.describe(`citation tooltip ${theme} ${width}px`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
       test('source labels fit the viewport during focus, hover and resize', async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== 'chromium-core', 'bounded Chromium positioning regression');
         await page.addInitScript((mode) => localStorage.setItem('tlp-theme-mode', mode), theme);
@@ -782,7 +799,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`breadcrumb contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('shared navigation text, hover and keyboard focus remain readable', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -861,7 +878,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`essay image metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, contextOptions: { reducedMotion: 'reduce' } });
       test('captions, credits and source links stay readable inline and in the dark lightbox', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -910,7 +927,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`essay shell metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, contextOptions: { reducedMotion: 'reduce' } });
       test('hero metadata, table of contents and series navigation keep readable text and working anchors', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -965,7 +982,7 @@ for (const mobile of [false, true]) {
     test.use({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
       isMobile: mobile,
-      reducedMotion: 'reduce',
+      contextOptions: { reducedMotion: 'reduce' },
     });
     for (const theme of ['dark', 'light']) {
       for (const route of ['/essays/brik-case', '/articles']) {
@@ -1021,7 +1038,7 @@ for (const mobile of [false, true]) {
   test.describe(`poem palette ${mobile ? 'mobile' : 'desktop'}`, () => {
     test.use({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-      isMobile: mobile, reducedMotion: 'reduce',
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
     });
     for (const theme of ['dark', 'light']) {
       test(`${theme} preserves poem ink and metadata on their own surfaces`, async ({ page }, testInfo) => {
@@ -1087,7 +1104,7 @@ for (const mobile of [false, true]) {
   test.describe(`editorial surfaces ${mobile ? 'mobile' : 'desktop'}`, () => {
     test.use({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-      isMobile: mobile, reducedMotion: 'reduce',
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
     });
     for (const theme of ['dark', 'light']) {
       for (const kind of ['reflection', 'myth']) {
@@ -1128,7 +1145,7 @@ for (const mobile of [false, true]) {
   test.describe(`ordinary note body ${mobile ? 'mobile' : 'desktop'}`, () => {
     test.use({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-      isMobile: mobile, reducedMotion: 'reduce',
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
     });
     for (const theme of ['dark', 'light']) {
       test(`${theme} retains readable ink through theme switching`, async ({ page }, testInfo) => {
