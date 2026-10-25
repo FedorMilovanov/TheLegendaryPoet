@@ -1161,3 +1161,50 @@ for (const mobile of [false, true]) {
     }
   });
 }
+
+for (const theme of ['dark', 'light']) {
+  for (const { width, enlarged } of [{ width: 390 }, { width: 1024 }, { width: 1024, enlarged: true }]) {
+    test.describe(`comment kind layout ${theme} ${width}px ${enlarged ? 'enlarged' : 'normal'}`, () => {
+      test.use({ viewport: { width, height: 1000 }, isMobile: width === 390, contextOptions: { reducedMotion: 'reduce' } });
+      test('full labels fit their controls and selection stays operable', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(`${BASE_URL}/essays/brik-case`, { waitUntil: 'networkidle' });
+        if (enlarged) await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+        await page.evaluate(() => document.fonts.ready);
+        const group = page.getByRole('group', { name: 'Тип комментария' }).first();
+        await group.scrollIntoViewIfNeeded();
+        const buttons = group.getByRole('button');
+        await expect(buttons).toHaveCount(4);
+        for (const button of await buttons.all()) {
+          await expect(button).toBeVisible();
+          const geometry = await button.evaluate(node => {
+            const box = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return {
+              text: node.textContent,
+              width: box.width, height: box.height,
+              overflow: node.scrollWidth - node.clientWidth,
+              clipped: ['hidden', 'clip'].includes(style.overflowX),
+              fits: [...range.getClientRects()].every(rect =>
+                rect.left >= box.left + parseFloat(style.paddingLeft) - 1
+                && rect.right <= box.right - parseFloat(style.paddingRight) + 1
+                && rect.top >= box.top && rect.bottom <= box.bottom),
+            };
+          });
+          expect(geometry.fits, JSON.stringify(geometry)).toBe(true);
+          expect(geometry.overflow, geometry.text).toBeLessThanOrEqual(1);
+          expect(geometry.clipped, geometry.text).toBe(false);
+          expect(geometry.height).toBeGreaterThanOrEqual(44);
+        }
+        await buttons.nth(2).focus();
+        await buttons.nth(2).press('Space');
+        await expect(buttons.nth(2)).toHaveAttribute('aria-pressed', 'true');
+        await expect(group.locator('[aria-pressed="true"]')).toHaveCount(1);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      });
+    });
+  }
+}
