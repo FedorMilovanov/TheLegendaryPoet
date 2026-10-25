@@ -46,9 +46,9 @@ export const poemVariant = {
   default: {
     frame: 'border-luxury-gold/10 bg-[#050505]',
     rule: 'bg-gradient-to-b from-luxury-gold/60 to-luxury-gold/5',
-    title: 'text-luxury-gold-light',
+    title: 'theme-poet-accent',
     body: 'text-white/90',
-    noteRule: 'border-luxury-gold/10 text-luxury-gray-light/70',
+    noteRule: 'border-luxury-gold/10 theme-functional-muted',
   },
   blood: {
     frame: 'border-red-500/20 bg-[#0a0505]',

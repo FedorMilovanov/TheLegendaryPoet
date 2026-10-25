@@ -938,3 +938,60 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+
+// Residual reader metadata and catalog controls: test actual rendered colors,
+// not class names, on both themes and explicit desktop/mobile viewports.
+for (const mobile of [false, true]) {
+  test.describe(`residual metadata ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile,
+      reducedMotion: 'reduce',
+    });
+    for (const theme of ['dark', 'light']) {
+      for (const route of ['/essays/brik-case', '/articles']) {
+        test(`${theme} ${route} metadata retains AA contrast`, async ({ page }, testInfo) => {
+          useChromiumCore(testInfo);
+          await page.addInitScript(({ key, theme }) => {
+            localStorage.setItem(key, theme);
+            localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+          }, { key: STORAGE_KEY, theme });
+          const errors = [];
+          page.on('pageerror', error => errors.push(error.message));
+          const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
+          expect(response.status()).toBeLessThan(400);
+          await page.evaluate(() => document.fonts.ready);
+          await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+          const selectors = route === '/articles'
+            ? ['main button[aria-pressed="false"]', 'main .theme-poet-accent']
+            : [
+              '[data-essay-block="epigraph"] p',
+              '[data-essay-block="voice"] > div:first-child',
+              '[data-essay-block="voice"] .border-t span',
+              '[data-essay-block="voice"] a',
+              '[data-essay-block="pullquote"] cite',
+              '[data-essay-block="poem"] figcaption > span',
+              '[data-essay-block="poem"] > p',
+              '[data-essay-block="note"] > div:first-child',
+            ];
+          for (const selector of selectors) {
+            const targets = page.locator(selector);
+            expect(await targets.count(), selector).toBeGreaterThan(0);
+            // Reveal content-visibility ancestors and wait for reveal painting
+            // before measuring: offscreen styles alone are not visual evidence.
+            for (const target of await targets.all()) {
+              await target.scrollIntoViewIfNeeded();
+              await expect(target).toBeVisible();
+              await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+              for (const measurement of await contrastMeasurements(target)) {
+                expect(measurement.ratio, measurement.text).toBeGreaterThanOrEqual(4.5);
+              }
+            }
+          }
+          expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+          expect(errors).toEqual([]);
+        });
+      }
+    }
+  });
+}
