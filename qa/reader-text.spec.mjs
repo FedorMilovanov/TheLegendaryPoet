@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const POET_PATH = '/poets/sergei-yesenin';
@@ -105,7 +108,7 @@ async function dockGeometry(page) {
 
 for (const theme of ['dark', 'light']) for (const width of [320, 390]) {
   test.describe(`mobile dock text resize ${theme} ${width}`, () => {
-    test.use({ viewport: { width, height: 844 }, colorScheme: theme, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+    test.use({ viewport: { width, height: 844 }, colorScheme: theme, isMobile: true, hasTouch: true, contextOptions: { reducedMotion: 'reduce' } });
     test('all destinations survive 100→200→100% text with live clearance and keyboard search', async ({ page }, testInfo) => {
       useChromiumCore(testInfo);
       await page.addInitScript(t => localStorage.setItem('tlp-theme-mode', t), theme);

@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARCHIVE_STORAGE_KEY = 'tlp-my-archive:v4';
@@ -161,7 +164,7 @@ test.describe('reader outcome journeys', () => {
 });
 
 test.describe('reduced-motion longform reader journey', () => {
-  test.use({ locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark', reducedMotion: 'reduce' });
+  test.use({ locale: 'ru-RU', timezoneId: 'Europe/Paris', colorScheme: 'dark', contextOptions: { reducedMotion: 'reduce' } });
 
   test('reading progress is bounded to the article instead of the post-article tail', async ({ page }, testInfo) => {
     const runtime = attachRuntimeDiagnostics(page);
@@ -287,7 +290,7 @@ test.describe('reduced-motion longform reader journey', () => {
 for (const theme of ['dark', 'light']) {
   for (const reducedMotion of ['reduce', 'no-preference']) {
     test.describe(`image viewer viewport ${theme} ${reducedMotion}`, () => {
-      test.use({ colorScheme: theme, reducedMotion });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion } });
       test('viewer escapes article containment while nested search remains above it', async ({ page }) => {
         const runtime = attachRuntimeDiagnostics(page);
         // A known decodable local fixture isolates geometry from Wikimedia

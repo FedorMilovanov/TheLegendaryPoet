@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTICLE_URL = `${BASE_URL}/essays/sergei-yesenin-1921-1925`;
@@ -7,23 +10,6 @@ const STORAGE_KEY = 'tlp-theme-mode';
 function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'theme/contrast certification runs once in Chromium core');
 }
-
-// Media is a BrowserContext option, not a standalone Playwright Test fixture.
-// Prove the requested mode is effective before interpreting a reduced-motion
-// or forced-colors scenario; an ignored declaration must never look certified.
-test.beforeEach(async ({ page, contextOptions }) => {
-  if (contextOptions.reducedMotion === undefined && contextOptions.forcedColors === undefined) return;
-  const media = await page.evaluate(() => ({
-    reduce: matchMedia('(prefers-reduced-motion: reduce)').matches,
-    forced: matchMedia('(forced-colors: active)').matches,
-  }));
-  if (contextOptions.reducedMotion !== undefined) {
-    expect(media.reduce, 'requested reduced-motion mode must reach the browser').toBe(contextOptions.reducedMotion === 'reduce');
-  }
-  if (contextOptions.forcedColors !== undefined) {
-    expect(media.forced, 'requested forced-colors mode must reach the browser').toBe(contextOptions.forcedColors === 'active');
-  }
-});
 
 // Layout can still settle after scrolling a long, content-visibility essay.
 // Deliver the pointer only after two rendered frames, then prove real CSS hover.

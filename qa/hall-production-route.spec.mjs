@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DOCUMENTARY_REQUEST = /(?:pushkin|kiprensky|onegin|manuscript|autograph).*(?:\.jpe?g|\.png|\.webp|\.avif|\.pdf|\.glb|\.gltf)(?:$|[?#])/i;
@@ -85,7 +88,7 @@ for (const [name, width, height, isMobile, colorScheme] of [
   ['tablet', 768, 1024, true, 'light'],
 ]) for (const fallback of [false, true]) {
   test.describe(`Hall shell geometry — ${name}, ${fallback ? 'fallback' : 'WebGL'}`, () => {
-    test.use({ viewport: { width, height }, isMobile, hasTouch: isMobile, colorScheme, reducedMotion: 'reduce' });
+    test.use({ viewport: { width, height }, isMobile, hasTouch: isMobile, colorScheme, contextOptions: { reducedMotion: 'reduce' } });
     test('title panel and route controls are not covered by persistent chrome', async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== 'chromium-core', 'explicit viewport matrix; existing Hall tests still certify mobile engines');
       await page.addInitScript(({ colorScheme, fallback }) => {
