@@ -105,3 +105,52 @@ Raw before/after probes remain ignored under `qa-artifacts/emphasis/`.
 Local final check/build/budget/contracts and 92 Node + 4 TS tests PASS.
 Rollback of this follow-up is a separate bounded revert from the palette repair.
 The combined 12-case result and exact remote CI status are reported in the PR.
+
+## Follow-up: editorial gradient surfaces and section-heading paint
+
+Base: `a993aec7121db512e8a54d783e20fda20320f4f4` (previous local
+check/build/contracts green). Shared ReflectionBlock and MythNoteBlock had no
+explicit surface owner. In light mode the legacy `to-[#050505]` adapter made
+the last gradient stop transparent, exposing the light page beneath pale text.
+The `/essays/brik-case` reflection screenshot visibly reproduced the defect;
+`/essays/sergei-yesenin-1921-1925` supplied the published myth witness. This
+is not eight separate reproduced contrast failures: the eight RED cases fail
+the shared dark-surface/opaque-backing contract across two themes/viewports.
+
+Both renderers now consume existing `theme-dark-island` and explicit #050505
+backing. Myth origin/document labels use existing muted island ink. SectionBlock
+headings consume existing `theme-essay-emphasis`, making their light glyph paint
+opaque instead of only measuring inherited color. All essays using these shared
+renderers receive the fix; no route override, prose/media edit, dependency,
+workflow change or new color role. No published reflection/myth text currently
+has bold markup; no hypothetical bold failure is claimed as baseline evidence.
+Rollback is a bounded revert of this follow-up; no data migration.
+
+Eight permanent editorial tests: **8 FAIL before / 8 PASS after**. They enforce
+explicit opaque backing, dark color scheme and solid text's >=4.5 ratio against
+the composited base. That helper does not sample gradient pixels or decorative
+blur layers; these assertions are not a per-pixel WCAG certificate. Four poem
+cases additionally cover actual light section-heading fill and real UI theme
+transitions, retaining dark-island gradients.
+
+Desktop light after screenshots of reflection/myth were visually inspected.
+The pale page no longer leaks through the reflection; myth claim/origin/body
+remain visible on a dark frame. Focused axe remains zero automatic violations,
+with **unchanged incomplete nodes**: headings 2 each, reflection 4, myth 9.
+No axe closure is claimed. The guessed second-route reflection heading was
+absent and is explicitly NOT a checked witness. Raw baseline/after evidence is
+ignored under `qa-artifacts/reader-surfaces/`.
+
+First combined run: **19 PASS / 1 timeout** (desktop dark articles metadata,
+45s) while a separate browser probe also ran. Cause is not conclusively proven;
+isolated desktop+mobile dark articles recheck: **2 PASS** without changed
+thresholds/timeouts. A fresh serial combined run is recorded separately in PR.
+Local final check/build/build-output budgets/contracts and **92 Node + 4 TS**
+tests PASS. Native Safari, exact-head remote checks, production deployment and
+whole-page console/media/performance certification are not inferred from these
+focused local results. PR #525 remains draft and unmerged.
+
+Fresh serial combined run: **20/20 PASS, no retries (5.6m)**. Explicit 390×844
+isMobile light reflection/myth screenshots also inspected: text wraps within
+both dark frames. Focused mobile axe returns zero automatic violations; its
+incomplete results remain unresolved, not relabeled as accessibility success.

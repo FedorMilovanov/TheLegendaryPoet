@@ -1040,7 +1040,7 @@ for (const mobile of [false, true]) {
           }
           if (readingTheme === 'light') {
             await ordinary.scrollIntoViewIfNeeded();
-            const emphasis = ordinary.locator('.gold-gradient');
+            const emphasis = ordinary.locator('.gold-gradient').or(page.locator('main h2[id] > .gold-gradient').first());
             expect(await emphasis.count()).toBeGreaterThan(0);
             for (const target of await emphasis.all()) {
               // A transparent gradient is not covered by its inherited `color`.
@@ -1058,6 +1058,48 @@ for (const mobile of [false, true]) {
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
         expect(errors).toEqual([]);
       });
+    }
+  });
+}
+
+// Gradient-backed editorial blocks are intentionally dark reader surfaces,
+// not partly transparent fragments of the surrounding page theme.
+for (const mobile of [false, true]) {
+  test.describe(`editorial surfaces ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, reducedMotion: 'reduce',
+    });
+    for (const theme of ['dark', 'light']) {
+      for (const kind of ['reflection', 'myth']) {
+        test(`${theme} ${kind} retains its own opaque dark surface`, async ({ page }, testInfo) => {
+          useChromiumCore(testInfo);
+          await page.addInitScript(({ key, theme }) => {
+            localStorage.setItem(key, theme);
+            localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+          }, { key: STORAGE_KEY, theme });
+          const slug = kind === 'reflection' ? 'brik-case' : 'sergei-yesenin-1921-1925';
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          await page.evaluate(() => document.fonts.ready);
+          const surface = page.locator('aside').filter({
+            hasText: kind === 'reflection' ? 'Свобода без верности' : 'Проверка мифа',
+          }).first();
+          await surface.scrollIntoViewIfNeeded();
+          await expect(surface).toBeVisible();
+          const paint = await surface.evaluate(node => {
+            const style = getComputedStyle(node);
+            return { scheme: style.colorScheme, base: style.backgroundColor };
+          });
+          expect(paint.scheme).toBe('dark');
+          // Explicit opaque backing is required even at translucent gradient stops.
+          expect(paint.base).toBe('rgb(5, 5, 5)');
+          const text = surface.locator('p, span, div.font-bold').filter({ visible: true });
+          expect(await text.count()).toBeGreaterThan(0);
+          for (const measurement of await contrastMeasurements(text, true)) {
+            expect(measurement.ratio, measurement.text).toBeGreaterThanOrEqual(4.5);
+          }
+        });
+      }
     }
   });
 }
