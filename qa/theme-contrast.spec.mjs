@@ -1226,3 +1226,63 @@ for (const fallback of ['touch', 'reduced motion', 'forced colors']) {
     });
   });
 }
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`comment metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+    test('card and highlighted-review metadata stay readable with keyboard helpful selection', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(theme => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        const createdAt = new Date().toISOString();
+        localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+          version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+          updatedAt: createdAt, lastSyncedAt: null,
+          localSnapshot: { ratings: [], comments: [
+            { id: 'comment-metadata-fixture-positive', targetType: 'poet', targetId: 'alexander-pushkin',
+              author: 'Автор положительного отзыва', text: 'Сильный и точный образ для внимательного читателя.', kind: 'literary', helpful: 1, createdAt },
+            { id: 'comment-metadata-fixture-critical', targetType: 'poet', targetId: 'alexander-pushkin',
+              author: 'Автор критического отзыва', text: 'Спорно: проверим источники и контекст.', kind: 'history', helpful: 2, createdAt },
+          ] },
+        }));
+      }, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      await expect(panel.getByText('Локальный режим: ответы сохраняются только в этом браузере.', { exact: true })).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+      await page.evaluate(() => document.fonts.ready);
+      const cards = panel.locator('[data-community-comment-id]');
+      const reviews = panel.locator('div.rounded-3xl').filter({ has: page.locator('.theme-community-prose') });
+      await expect(cards).toHaveCount(2);
+      await expect(reviews).toHaveCount(2);
+      async function readableMetadata() {
+        const cardText = await contrastMeasurements(cards.locator('div[title], time, span, button, p'), true);
+        const reviewText = await contrastMeasurements(reviews.locator('div, span, p'), true);
+        expect(cardText.length).toBeGreaterThanOrEqual(10);
+        expect(reviewText.length).toBeGreaterThanOrEqual(8);
+        for (const { text, ratio } of [...cardText, ...reviewText]) {
+          expect(ratio, `${theme} comment text: ${text}`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+      await readableMetadata();
+      const helpful = cards.first().getByRole('button', { name: /комментарий полезным/ });
+      await helpful.focus();
+      await expect(helpful).toBeFocused();
+      await page.keyboard.press('Space');
+      await expect(helpful).toHaveAttribute('aria-pressed', 'true');
+      await expect(helpful).toBeDisabled();
+      await helpful.evaluate(async node => {
+        await Promise.all(node.getAnimations().map(animation => animation.finished.catch(() => {})));
+      });
+      await readableMetadata();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      expect(errors).toEqual([]);
+      await cards.first().screenshot({ path: `qa-artifacts/comment-metadata-${theme}-${mobile ? 'mobile' : 'desktop'}.png` });
+    });
+  });
+}

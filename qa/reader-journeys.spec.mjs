@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerMediaContract } from './media-contract.mjs';
-import { contrastRatio } from './contrast-helpers.mjs';
+import { contrastMeasurements, contrastRatio } from './contrast-helpers.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -446,6 +446,11 @@ for (const theme of ['dark', 'light']) test.describe(`local community durability
     expect(ink.color, 'comment prose must own opaque theme-aware ink').toBe(ink.expected);
     expect(ink.fill, 'actual text fill must follow comment ink').toBe(ink.expected);
     expect(await contrastRatio(cards.locator('p')), 'rendered comment body contrast').toBeGreaterThanOrEqual(4.5);
+    const cardText = await contrastMeasurements(cards.locator('div[title], time, span, button, p'), true);
+    expect(cardText.length).toBeGreaterThanOrEqual(5);
+    for (const { text: label, ratio } of cardText) {
+      expect(ratio, `persisted comment metadata: ${label}`).toBeGreaterThanOrEqual(4.5);
+    }
     const reloaded = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
     expect(reloaded.localSnapshot.comments).toEqual([entry]);
     expect(reloaded.outbox).toEqual([]);

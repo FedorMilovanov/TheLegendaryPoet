@@ -329,6 +329,7 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
 /* Theme-aware community prose and summaries also respect deliberate dark islands. */
 .theme-feedback-summary,
 .theme-community-prose { color: var(--tlp-island-muted, var(--tlp-text-muted)) !important; }
+.theme-community-meta { color: var(--tlp-island-subtle, var(--tlp-text-subtle)) !important; }
 
 /* Pointer paint follows theme without resetting motion values or capability gates.
    The light outline keeps dark day-mode ink visible over intentional dark islands. */

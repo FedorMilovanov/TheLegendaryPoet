@@ -35,12 +35,12 @@ function Item({
           {tone === 'positive' ? <Sparkles size={12} aria-hidden="true" /> : <AlertTriangle size={12} aria-hidden="true" />}
           {title}
         </div>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-cyan-100/35">
+        <span className="text-[10px] uppercase tracking-[0.14em] theme-community-meta">
           {commentKindLabels[comment.kind] || 'Комментарий'}
         </span>
       </div>
       <ExpandableText text={comment.text} collapsedChars={180} />
-      <div className="mt-3 text-xs text-cyan-100/34">{comment.author}</div>
+      <div className="mt-3 text-xs theme-community-meta">{comment.author}</div>
     </div>
   );
 }
