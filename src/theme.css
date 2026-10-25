@@ -200,6 +200,17 @@ html.theme-light body {
   color: var(--tlp-essay-prose);
 }
 
+/* Emphasis is reader text, not decorative gold. Ordinary light surfaces need
+   opaque ink; explicit dark islands retain their existing gradient treatment. */
+html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: var(--tlp-poet-accent);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+  text-shadow: none;
+  animation: none;
+}
+
 /* Citation numbers are normal-sized text for contrast purposes, not decoration. */
 .theme-essay-citation {
   color: var(--tlp-citation-ink);

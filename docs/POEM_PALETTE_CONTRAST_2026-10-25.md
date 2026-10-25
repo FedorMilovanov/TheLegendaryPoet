@@ -69,3 +69,39 @@ by selecting the intended spec; no production code was changed to accommodate it
 
 Do not merge automatically. #497 human Turnstile proof, #519 issue disposition,
 branch deletions and AuditRepo closure remain untouched.
+
+## Follow-up: opaque emphasis on ordinary light reader surfaces
+
+Base for this follow-up: `e75cb0c5a595547791b10575364be8928c1b1ec4`.
+The inherited `color` ratio does not describe a gradient-clipped text span with
+transparent `-webkit-text-fill-color`. Inspecting the first ordinary poem on
+`/essays/yesenin-kutezhi` showed pale gradient text on the light background;
+computed fill was transparent and the legacy brightness/contrast filter remained.
+Before/after desktop screenshots were inspected. No exact baseline WCAG ratio
+for every gradient pixel or animation phase is claimed.
+
+The shared `withGold` renderer now marks semantic reader emphasis with
+`theme-essay-emphasis`; the existing theme stylesheet owns its light appearance.
+Ordinary light surfaces use opaque `--tlp-poet-accent` ink with no gradient,
+filter, text shadow or animation. Dark page surfaces and explicit dark islands
+retain the existing gradient. This is deliberately not a global `.gold-gradient`
+replacement: decorative site branding and unrelated controls are untouched.
+Every paragraph/quote/poem using `withGold` receives the same semantic role.
+No article prose, new palette, dependencies or workflow edits.
+
+The four existing palette tests were strengthened before the fix: **4/4 FAIL**
+when they reach light mode, including initial dark → light UI transitions.
+After repair: **4/4 PASS**. They now check the actual text fill, absence of the
+ordinary light gradient, rendered contrast >=4.5:1, and retention of the dark
+island gradient after both theme transitions. This closes the inherited-color
+false-assurance gap without inventing a general gradient contrast algorithm.
+
+A focused axe probe still reports zero automatic violations but retains its
+incomplete results: 5 nodes per dark context, 6 per light context. Those counts
+are not relabeled PASS or presented as reduced by this fix. The solid-light ink
+is independently checked by rendered-color browser assertions. Computed light
+fill is `rgb(122, 77, 0)`, background-image/filter are `none`.
+Raw before/after probes remain ignored under `qa-artifacts/emphasis/`.
+Local final check/build/budget/contracts and 92 Node + 4 TS tests PASS.
+Rollback of this follow-up is a separate bounded revert from the palette repair.
+The combined 12-case result and exact remote CI status are reported in the PR.

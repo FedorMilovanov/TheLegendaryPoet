@@ -1032,6 +1032,28 @@ for (const mobile of [false, true]) {
               }
             }
           }
+          // Preserve the special dark treatment through both theme changes.
+          const darkEmphasis = blood.locator('.gold-gradient');
+          expect(await darkEmphasis.count()).toBeGreaterThan(0);
+          for (const target of await darkEmphasis.all()) {
+            expect(await target.evaluate(node => getComputedStyle(node).backgroundImage)).toContain('gradient(');
+          }
+          if (readingTheme === 'light') {
+            await ordinary.scrollIntoViewIfNeeded();
+            const emphasis = ordinary.locator('.gold-gradient');
+            expect(await emphasis.count()).toBeGreaterThan(0);
+            for (const target of await emphasis.all()) {
+              // A transparent gradient is not covered by its inherited `color`.
+              // Ordinary light-page emphasis uses opaque semantic ink instead.
+              const paint = await target.evaluate(node => {
+                const style = getComputedStyle(node);
+                return { fill: style.webkitTextFillColor, color: style.color, background: style.backgroundImage };
+              });
+              expect(paint.background).toBe('none');
+              expect(paint.fill).toBe(paint.color);
+              expect(await contrastRatio(target)).toBeGreaterThanOrEqual(4.5);
+            }
+          }
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
         expect(errors).toEqual([]);
