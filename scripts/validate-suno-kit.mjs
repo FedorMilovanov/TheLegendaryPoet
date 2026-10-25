@@ -4,7 +4,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { measureStyle } from './check-suno-style.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md'];
+export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md',
+  'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md'];
 
 // Structural checks only. This cannot certify a model response or a song.
 export function validateKit(directory = root) {
