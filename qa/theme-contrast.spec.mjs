@@ -1208,3 +1208,80 @@ for (const theme of ['dark', 'light']) {
     });
   }
 }
+for (const initialTheme of ['dark', 'light']) {
+  test.describe(`custom cursor theme ${initialTheme}`, () => {
+    test.use({ viewport: { width: 1440, height: 1000 }, isMobile: false, hasTouch: false, contextOptions: { reducedMotion: 'no-preference', forcedColors: 'none' } });
+    test('paint follows initial preference and live switches without remounting', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme: initialTheme });
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+      const dot = page.locator('[data-custom-cursor-dot]');
+      const ring = page.locator('[data-custom-cursor-ring]');
+      await expect(dot).toBeAttached();
+      await page.mouse.move(500, 300);
+      await expect(dot).toHaveCSS('opacity', '1');
+      // Keep a node identity witness: theme changes must not rebuild pointer tracking.
+      await dot.evaluate(node => { window.__cursorWitness = node; });
+      for (const theme of [initialTheme, initialTheme === 'dark' ? 'light' : 'dark', initialTheme]) {
+        await setThemeFromUi(page, theme);
+        await page.mouse.move(500, 300);
+        const paint = await dot.evaluate(node => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext('2d');
+          const rgb = color => {
+            ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1);
+            return [...ctx.getImageData(0, 0, 1, 1).data];
+          };
+          const lum = rgba => {
+            const c = rgba.slice(0, 3).map(n => n / 255).map(n => n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4);
+            return c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722;
+          };
+          const ratio = (front, back) => {
+            const a = front[3] / 255;
+            const painted = front.slice(0, 3).map((c, i) => c * a + back[i] * (1 - a));
+            const [l1, l2] = [lum(painted), lum(back)].sort((a, b) => b - a);
+            return (l1 + 0.05) / (l2 + 0.05);
+          };
+          const bg = rgb(getComputedStyle(document.documentElement).getPropertyValue('--tlp-page-bg'));
+          const style = getComputedStyle(node);
+          const ring = document.querySelector('[data-custom-cursor-ring]');
+          const fill = rgb(style.backgroundColor);
+          return { color: style.backgroundColor, luminance: lum(fill), dotContrast: ratio(fill, bg),
+            ringContrast: ratio(rgb(getComputedStyle(ring).borderTopColor), bg), dotShadow: style.boxShadow, ringShadow: getComputedStyle(ring).boxShadow, sameNode: window.__cursorWitness === node };
+        });
+        expect(paint.sameNode).toBe(true);
+        expect(paint.dotContrast).toBeGreaterThanOrEqual(3);
+        if (theme === 'light') {
+          expect(paint.luminance).toBeLessThan(0.2);
+          expect(paint.ringContrast).toBeGreaterThanOrEqual(3);
+          expect(paint.dotShadow).toContain('rgb(255, 250, 240)');
+          expect(paint.ringShadow).toContain('rgb(255, 250, 240)');
+        }
+        await expect(dot).toHaveCSS('pointer-events', 'none');
+        await expect(ring).toHaveCSS('pointer-events', 'none');
+      }
+    });
+  });
+}
+
+for (const fallback of ['touch', 'reduced motion', 'forced colors']) {
+  test.describe(`custom cursor fallback ${fallback}`, () => {
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: fallback === 'touch', hasTouch: fallback === 'touch',
+      contextOptions: { reducedMotion: fallback === 'reduced motion' ? 'reduce' : 'no-preference', forcedColors: fallback === 'forced colors' ? 'active' : 'none' } });
+    test('retains native pointer feedback', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+      const media = await page.evaluate(() => ({
+        reduce: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        forced: matchMedia('(forced-colors: active)').matches,
+        coarse: matchMedia('(pointer: coarse)').matches,
+      }));
+      expect(media).toEqual({ reduce: fallback === 'reduced motion', forced: fallback === 'forced colors', coarse: fallback === 'touch' });
+      await page.mouse.move(150, 150);
+      await expect(page.locator('[data-custom-cursor-dot]')).toHaveCount(0);
+      await expect(page.locator('body')).not.toHaveClass(/custom-cursor-ready|has-custom-cursor/);
+      expect(await page.locator('body').evaluate(node => getComputedStyle(node).cursor)).not.toBe('none');
+    });
+  });
+}

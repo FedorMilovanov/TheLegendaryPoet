@@ -1,5 +1,9 @@
 :root {
   --tlp-page-bg: #050505;
+  --tlp-cursor-ink: var(--color-cyan-50);
+  --tlp-cursor-ring: color-mix(in oklab, var(--color-cyan-200) 35%, transparent);
+  --tlp-cursor-dot-shadow: 0 0 9px rgba(216,246,255,0.85), 0 0 20px rgba(46,216,255,0.42);
+  --tlp-cursor-ring-shadow: 0 0 16px rgba(46,216,255,0.1), inset 0 0 12px rgba(212,175,55,0.04);
   --tlp-surface: #061018;
   --tlp-surface-elevated: #0b1822;
   --tlp-input-bg: #07131b;
@@ -42,6 +46,10 @@
 
 html.theme-light {
   --tlp-page-bg: #fffaf0;
+  --tlp-cursor-ink: var(--tlp-text);
+  --tlp-cursor-ring: var(--tlp-text-muted);
+  --tlp-cursor-dot-shadow: 0 0 0 1px var(--tlp-page-bg), 0 0 8px color-mix(in srgb, var(--tlp-text) 30%, transparent);
+  --tlp-cursor-ring-shadow: 0 0 0 1px var(--tlp-page-bg);
   --tlp-surface: #fffaf0;
   --tlp-surface-elevated: #f4ecdb;
   --tlp-input-bg: #ffffff;
@@ -320,3 +328,15 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
 
 /* Shared by theme-aware poet cards and deliberately dark music cards. */
 .theme-feedback-summary { color: var(--tlp-island-muted, var(--tlp-text-muted)) !important; }
+
+/* Pointer paint follows theme without resetting motion values or capability gates.
+   The light outline keeps dark day-mode ink visible over intentional dark islands. */
+.theme-custom-cursor-dot {
+  background-color: var(--tlp-cursor-ink);
+  box-shadow: var(--tlp-cursor-dot-shadow);
+}
+
+.theme-custom-cursor-ring {
+  border-color: var(--tlp-cursor-ring);
+  box-shadow: var(--tlp-cursor-ring-shadow);
+}

@@ -167,7 +167,7 @@ const CustomCursor = () => {
       <motion.div
         data-custom-cursor-dot
         aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[9999] h-2.5 w-2.5 rounded-full bg-cyan-50 shadow-[0_0_9px_rgba(216,246,255,0.85),0_0_20px_rgba(46,216,255,0.42)]"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] h-2.5 w-2.5 rounded-full theme-custom-cursor-dot"
         style={{ x: rawX, y: rawY, marginLeft: -5, marginTop: -5, willChange: 'transform' }}
         animate={{ opacity, scale: isHovering ? 1.65 : 1 }}
         transition={{ opacity: { duration: 0.1 }, scale: { type: 'spring', stiffness: 460, damping: 30 } }}
@@ -175,7 +175,7 @@ const CustomCursor = () => {
       <motion.div
         data-custom-cursor-ring
         aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[9998] h-10 w-10 rounded-full border border-cyan-200/35 shadow-[0_0_16px_rgba(46,216,255,0.1),inset_0_0_12px_rgba(212,175,55,0.04)]"
+        className="pointer-events-none fixed left-0 top-0 z-[9998] h-10 w-10 rounded-full border theme-custom-cursor-ring"
         style={{ x: ringX, y: ringY, marginLeft: -20, marginTop: -20, willChange: 'transform' }}
         animate={{ opacity: opacity * 0.92, scale: isHovering ? 1.34 : 1 }}
         transition={{ opacity: { duration: 0.16 }, scale: { type: 'spring', stiffness: 310, damping: 27 } }}
