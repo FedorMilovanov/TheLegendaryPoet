@@ -326,7 +326,7 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
         <figcaption className="mb-5 flex flex-wrap items-baseline gap-3">
           <span className={`font-serif text-xl font-semibold ${v.title}`}>«{block.title}»</span>
           {block.year && (
-            <span className="text-[11px] uppercase tracking-[0.18em] theme-functional-muted">{block.year}</span>
+            <span className={`text-[11px] uppercase tracking-[0.18em] ${v.year}`}>{block.year}</span>
           )}
           {blood && (
             <span className="inline-flex items-center gap-1 rounded-full border border-red-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-red-300/80">

@@ -995,3 +995,47 @@ for (const mobile of [false, true]) {
     }
   });
 }
+
+// A dark poem palette stays dark even when the surrounding reader is light.
+// Measure the actual published variant and a default poem on the same route.
+for (const mobile of [false, true]) {
+  test.describe(`poem palette ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, reducedMotion: 'reduce',
+    });
+    for (const theme of ['dark', 'light']) {
+      test(`${theme} preserves poem ink and metadata on their own surfaces`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => {
+          localStorage.setItem(key, theme);
+          localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+        }, { key: STORAGE_KEY, theme });
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto(`${BASE_URL}/essays/yesenin-kutezhi`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        const blood = page.locator('[data-essay-block="poem"]').filter({ hasText: 'написано кровью' });
+        await expect(blood).toHaveCount(1);
+        const ordinary = page.locator('[data-essay-block="poem"]').filter({ hasNotText: 'написано кровью' }).first();
+        await expect(ordinary).toBeAttached();
+        for (const readingTheme of [theme, theme === 'dark' ? 'light' : 'dark']) {
+          await setThemeFromUi(page, readingTheme);
+          for (const poem of [blood, ordinary]) {
+            await poem.scrollIntoViewIfNeeded();
+            await expect(poem).toBeVisible();
+            for (const selector of ['figcaption > span', '.poetry-text', ':scope > p']) {
+              const parts = poem.locator(selector);
+              expect(await parts.count()).toBeGreaterThan(0);
+              for (const measurement of await contrastMeasurements(parts)) {
+                expect(measurement.ratio, `${readingTheme}: ${measurement.text}`).toBeGreaterThanOrEqual(4.5);
+              }
+            }
+          }
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        expect(errors).toEqual([]);
+      });
+    }
+  });
+}

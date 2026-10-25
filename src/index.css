@@ -1045,7 +1045,7 @@ html.theme-light .dock-pill {
   box-shadow: 0 0 16px rgba(13, 120, 150, 0.1);
 }
 
-html.theme-light .poetry-text {
+html.theme-light .poetry-text:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   color: #1a2a35 !important;
 }
 
