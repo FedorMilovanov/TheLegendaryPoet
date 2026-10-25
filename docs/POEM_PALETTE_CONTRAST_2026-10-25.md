@@ -154,3 +154,70 @@ Fresh serial combined run: **20/20 PASS, no retries (5.6m)**. Explicit 390×844
 isMobile light reflection/myth screenshots also inspected: text wraps within
 both dark frames. Focused mobile axe returns zero automatic violations; its
 incomplete results remain unresolved, not relabeled as accessibility success.
+
+## Follow-up: ordinary note body, not just its eyebrow
+
+Base: `2ff18ac61a9027f41d2a9f0117ca971512a0ec3e`; fresh clean-HEAD
+npm ci/check/build/contracts PASS. Restored sandbox initially retained exactly
+the pushed files but only base Git history. Fetched the session ref, verified
+tracked source/test diff and byte-identical report, then restored local
+history/index without overwriting working files. No prior work was lost.
+
+The ordinary NoteBlock is a different renderer from MythNoteBlock. Its
+`bg-[#061018]/60` is adapted to a light background, but `text-cyan-50/85`
+is not adapted. Existing metadata tests measured its eyebrow only. The first
+published `/essays/brik-case` note reproduced nearly invisible pale text on
+cream (before screenshot inspected; helper ratio **1.00165:1** in light mode).
+Four new cases fail on light mode, including dark-to-light real UI transitions:
+**4 FAIL before → 4 PASS after**. No inherited-gradient claim here: tests also
+assert actual text fill matches color, background-image none, visible body and
+no horizontal overflow.
+
+The owning shared NoteBlock now consumes existing `theme-essay-prose`, the
+same semantic body role already used by ordinary essay paragraphs. No new
+palette, global class-substring adapter or route-specific rule. This also
+makes dark note body consistent with existing essay prose. Published source
+inventory: **18 ordinary notes on 8 of 10 essays**; all use this renderer.
+The permanent regression uses both ordinary notes on Brik, not a claim that
+all eight routes were visually inspected. Myth notes remain independently
+owned dark surfaces. No article prose/media, dependencies or CI changes.
+Rollback is a one-renderer revert with its bounded test/report additions.
+
+Focused Chromium 149 probes, 1440×1000 desktop and explicit 390×844 isMobile,
+reduced motion, both themes: first note body helper ratios **8.483 dark /
+6.757 light**. Light desktop/mobile after screenshots inspected. Fonts loaded,
+0 pageerrors and 0 horizontal overflow in four contexts. Axe: 0 automatic
+contrast violations, but **1 incomplete node dark / 2 light** remain per
+viewport; these are not reclassified PASS. Seven resource
+ERR_CONNECTION_CLOSED console messages per probe remain, so no clean whole-page
+network/media certificate. Local unthrottled LCP samples **488–520ms**, CLS
+**0.000455–0.002219** are diagnostics, not field statistics or threshold changes.
+Raw evidence is ignored under `qa-artifacts/note-contrast/`.
+
+Final local check/build/build-output budgets/contracts and **92 Node + 4 TS**
+tests PASS. The combined reader suite result is recorded after its serial run.
+Exact-head remote CI/Safari and production deployment remain separate gates.
+PR #525 stays draft and unmerged; no issue/branch disposition or AuditRepo
+closure is authorized by this repair.
+The adjacent visible Wikimedia image had `complete=true` but `naturalWidth=0`
+in all four focused contexts. Sandbox egress to Wikimedia is restricted; this
+is an observed decode failure, not a successful image check or permission to
+replace approved media. The note itself contains no image.
+
+Verification discipline: the first attempted combined 24-case run was stopped
+without treating its failures as product evidence because the final build had
+been launched concurrently and replaced preview assets mid-run (including
+empty theme initialization). The replacement combined run uses the already
+built, stable dist without any concurrent build/probe. No test timeout or
+threshold was changed. On base 2ff18ac the remote browser-qa job is still in
+progress but its Chromium/Android step has failed; other named checks,
+including premium iPhone-critical and WebKit-home, passed. Detailed core logs
+currently redirect to an egress-blocked Azure host, and the core evidence
+artifact is not uploaded yet. No all-green or Safari-reader closure is claimed.
+
+Stable-build serial combined run completed **24/24 PASS, no retries**.
+Remote base-head update: run 40211045326 is now completed FAILURE, specifically
+Chromium/Android QA; the base iPhone step succeeded. Core artifact
+12607190916 is now uploaded, but `gh run download` also redirects to the
+restricted Azure host and returned EOF. This confirms the red remote gate,
+not its root cause. Do not hide it behind local green or rerun it as a repair.

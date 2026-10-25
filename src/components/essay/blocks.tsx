@@ -462,7 +462,7 @@ function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: Rea
       <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] theme-functional-subtle">
         THE LEGENDARY POET — ремарка
       </div>
-      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
+      <p className="theme-essay-prose text-lg leading-relaxed font-light italic text-pretty">
         {withTypography(block.text)}{citations}
       </p>
     </aside>

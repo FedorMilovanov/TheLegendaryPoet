@@ -1103,3 +1103,42 @@ for (const mobile of [false, true]) {
     }
   });
 }
+
+// Ordinary note body ink must adapt with its surface, not only its eyebrow.
+for (const mobile of [false, true]) {
+  test.describe(`ordinary note body ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, reducedMotion: 'reduce',
+    });
+    for (const theme of ['dark', 'light']) {
+      test(`${theme} retains readable ink through theme switching`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => {
+          localStorage.setItem(key, theme);
+          localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+        }, { key: STORAGE_KEY, theme });
+        await page.goto(`${BASE_URL}/essays/brik-case`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        const notes = page.locator('[data-essay-block="note"]');
+        expect(await notes.count()).toBeGreaterThan(0);
+        for (const readingTheme of [theme, theme === 'dark' ? 'light' : 'dark']) {
+          await setThemeFromUi(page, readingTheme);
+          for (const note of await notes.all()) {
+            await note.scrollIntoViewIfNeeded();
+            await expect(note).toBeVisible();
+            const body = note.locator(':scope > p');
+            const paint = await body.evaluate(node => {
+              const style = getComputedStyle(node);
+              return { fill: style.webkitTextFillColor, color: style.color, background: style.backgroundImage };
+            });
+            expect(paint.fill).toBe(paint.color);
+            expect(paint.background).toBe('none');
+            expect(await contrastRatio(body)).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      });
+    }
+  });
+}
