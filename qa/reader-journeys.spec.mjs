@@ -413,7 +413,7 @@ for (const theme of ['dark', 'light']) test.describe(`local community durability
     const runtime = attachRuntimeDiagnostics(page);
     const writes = [];
     page.on('request', request => {
-      if (request.method() === 'POST' && /\/v1\/(?:session|comments|ratings|helpful)(?:[/?]|$)/.test(request.url())) writes.push(request.url());
+      if (request.method() === 'POST' && /\/v1\/(?:session|comments?|ratings?|helpful)(?:[/?]|$)/.test(request.url())) writes.push(request.url());
     });
     const panel = await openLocalPanel(page);
     await panel.getByPlaceholder('Ваше имя или псевдоним — необязательно').fill('Локальный QA');
