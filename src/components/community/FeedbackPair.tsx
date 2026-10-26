@@ -20,7 +20,7 @@ function Item({
 }) {
   if (!comment) {
     return (
-      <div className="rounded-3xl border border-cyan-400/10 bg-black/20 p-5 text-sm text-cyan-100/35">
+      <div className="rounded-3xl border border-cyan-400/10 bg-black/20 p-5 text-sm theme-community-prose">
         {tone === 'positive'
           ? 'Пока нет выделенного положительного отзыва.'
           : 'Пока нет выделенного критического отзыва.'}

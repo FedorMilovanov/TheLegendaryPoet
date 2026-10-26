@@ -159,7 +159,7 @@ export default function CommunityPanel({
           {hasRatings ? (
             <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
           ) : (
-            <div className="text-xs text-cyan-100/35" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
+            <div className="text-xs theme-community-meta" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
           )}
           {hasRatings && <div className="mt-1 text-xs text-cyan-100/40">{ratingStateLabel}</div>}
         </div>

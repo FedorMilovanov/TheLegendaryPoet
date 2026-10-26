@@ -76,7 +76,7 @@ export default function CommentList({
     return (
       <div className="rounded-2xl border border-dashed border-cyan-400/10 px-5 py-8 text-center">
         <MessageSquareText className="mx-auto text-cyan-100/20" size={24} aria-hidden="true" />
-        <p className="mt-3 text-sm text-cyan-100/38">Комментариев пока нет. Можно стать первым внимательным читателем.</p>
+        <p className="mt-3 text-sm theme-community-prose">Комментариев пока нет. Можно стать первым внимательным читателем.</p>
       </div>
     );
   }

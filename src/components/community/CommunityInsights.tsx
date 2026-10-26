@@ -23,7 +23,7 @@ export default function CommunityInsights({
 
   if (!rated.length) {
     return (
-      <div className="rounded-3xl border border-cyan-400/10 bg-black/20 p-4 text-sm text-cyan-100/35">
+      <div className="rounded-3xl border border-cyan-400/10 bg-black/20 p-4 text-sm theme-community-prose">
         Когда появятся первые оценки, здесь автоматически соберутся самые заметные сигналы сообщества.
       </div>
     );

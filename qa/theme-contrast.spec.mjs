@@ -1305,3 +1305,64 @@ for (const theme of ['dark', 'light']) for (const { mobile, enlarged } of [
     });
   });
 }
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community empty copy ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+    for (const state of ['empty', 'positive-only', 'critical-only']) {
+      test(`missing feedback stays readable with ${state}`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ theme, state }) => {
+          localStorage.setItem('tlp-theme-mode', theme);
+          const createdAt = new Date().toISOString();
+          const comments = state === 'empty' ? [] : [{
+            id: `comment-empty-state-fixture-${state}`, targetType: 'poet', targetId: 'alexander-pushkin',
+            author: 'Читатель', kind: 'literary', helpful: 1, createdAt,
+            text: state === 'positive-only' ? 'Сильный и точный образ.' : 'Спорно: уточните источники.',
+          }];
+          localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+            version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+            updatedAt: createdAt, lastSyncedAt: null, localSnapshot: { ratings: [], comments },
+          }));
+        }, { theme, state });
+        const errors = [];
+        page.on('pageerror', error => errors.push(String(error)));
+        await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+        const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+        await expect(panel.getByText('Локальный режим: ответы сохраняются только в этом браузере.', { exact: true })).toBeVisible();
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+        expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+        await page.evaluate(() => document.fonts.ready);
+        const labels = [
+          'Оценок пока нет',
+          'Когда появятся первые оценки, здесь автоматически соберутся самые заметные сигналы сообщества.',
+        ];
+        const positiveEmpty = 'Пока нет выделенного положительного отзыва.';
+        const criticalEmpty = 'Пока нет выделенного критического отзыва.';
+        if (state !== 'positive-only') labels.push(positiveEmpty);
+        else await expect(panel.getByText(positiveEmpty, { exact: true })).toHaveCount(0);
+        if (state !== 'critical-only') labels.push(criticalEmpty);
+        else await expect(panel.getByText(criticalEmpty, { exact: true })).toHaveCount(0);
+        const emptyList = 'Комментариев пока нет. Можно стать первым внимательным читателем.';
+        if (state === 'empty') labels.push(emptyList);
+        else await expect(panel.getByText(emptyList, { exact: true })).toHaveCount(0);
+        await expect(panel.locator('[data-community-comment-id]')).toHaveCount(state === 'empty' ? 0 : 1);
+        const measurements = [];
+        for (const label of labels) {
+          const node = panel.getByText(label, { exact: true });
+          await expect(node).toBeVisible();
+          measurements.push({ text: label, ratio: await contrastRatio(node) });
+        }
+        await testInfo.attach('empty-state-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+        for (const { text, ratio } of measurements) {
+          expect.soft(ratio, `${theme} ${state}: ${text}`).toBeGreaterThanOrEqual(4.5);
+        }
+        await panel.screenshot({ path: testInfo.outputPath('community-empty-state.png') });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        expect(errors).toEqual([]);
+      });
+    }
+  });
+}
