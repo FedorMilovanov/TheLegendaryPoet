@@ -36,10 +36,10 @@ export default function CommunityPanel({
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
-  const shell = compact ? 'rounded-[1.5rem] p-5' : 'rounded-[2rem] p-8 md:p-10';
+  const shell = compact ? 'rounded-[1.5rem] p-5' : 'rounded-[2rem] p-4 sm:p-8 md:p-10';
   const topGrid = compact ? 'mb-5 flex flex-col gap-3' : 'mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between';
-  const analyticsGrid = compact ? 'mb-5 space-y-5' : 'mb-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]';
-  const actionGrid = compact ? 'space-y-5' : 'grid gap-6 lg:grid-cols-[0.9fr_1.1fr]';
+  const analyticsGrid = compact ? 'mb-5 space-y-5' : 'mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]';
+  const actionGrid = compact ? 'space-y-5' : 'grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]';
 
   useEffect(() => {
     setRemoteActivated(!deferRemote);

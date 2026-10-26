@@ -1227,8 +1227,10 @@ for (const fallback of ['touch', 'reduced motion', 'forced colors']) {
   });
 }
 
-for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
-  test.describe(`comment metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+for (const theme of ['dark', 'light']) for (const { mobile, enlarged } of [
+  { mobile: false, enlarged: false }, { mobile: true, enlarged: false }, { mobile: true, enlarged: true },
+]) {
+  test.describe(`comment metadata ${theme} ${mobile ? 'mobile' : 'desktop'}${enlarged ? ' enlarged' : ''}`, () => {
     test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
       isMobile: mobile, hasTouch: mobile });
@@ -1256,10 +1258,27 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
       await page.evaluate(() => document.fonts.ready);
+      if (enlarged) await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
       const cards = panel.locator('[data-community-comment-id]');
       const reviews = panel.locator('div.rounded-3xl').filter({ has: page.locator('.theme-community-prose') });
       await expect(cards).toHaveCount(2);
       await expect(reviews).toHaveCount(2);
+      const headerLayout = await cards.evaluateAll(cards => cards.map(card => {
+        const author = card.querySelector('div[title]');
+        const date = card.querySelector('time');
+        const range = document.createRange();
+        range.selectNodeContents(date);
+        const bounds = card.getBoundingClientRect();
+        return { left: bounds.left, right: bounds.right, author: author.textContent, clipped: author.scrollWidth > author.clientWidth + 1,
+          ellipsis: getComputedStyle(author).textOverflow === 'ellipsis', dateLines: range.getClientRects().length };
+      }));
+      for (const header of headerLayout) {
+        expect(header.clipped, `full author: ${header.author}`).toBe(false);
+        expect(header.ellipsis, `no hidden author: ${header.author}`).toBe(false);
+        expect(header.left, 'card stays inside viewport').toBeGreaterThanOrEqual(0);
+        expect(header.right, 'clipped ancestors must not hide card overflow').toBeLessThanOrEqual(mobile ? 391 : 1441);
+        expect(header.dateLines, 'date wraps naturally only at enlarged narrow widths').toBeLessThanOrEqual(enlarged ? 2 : 1);
+      }
       async function readableMetadata() {
         const cardText = await contrastMeasurements(cards.locator('div[title], time, span, button, p'), true);
         const reviewText = await contrastMeasurements(reviews.locator('div, span, p'), true);
@@ -1282,7 +1301,7 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
       await readableMetadata();
       expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
       expect(errors).toEqual([]);
-      await cards.first().screenshot({ path: `qa-artifacts/comment-metadata-${theme}-${mobile ? 'mobile' : 'desktop'}.png` });
+      await cards.first().screenshot({ path: `qa-artifacts/comment-metadata-${theme}-${mobile ? 'mobile' : 'desktop'}${enlarged ? '-enlarged' : ''}.png` });
     });
   });
 }
