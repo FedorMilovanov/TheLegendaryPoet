@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const DIR = path.resolve('qa-artifacts');
+const EVIDENCE_URL = new URL('/__qa__/brand-evidence-document', BASE_URL).href;
 const RELEASE = 'approved-single-reference-20260804-1';
 fs.mkdirSync(DIR, { recursive: true });
 
@@ -34,8 +35,11 @@ async function decodeAll(page) {
 }
 
 async function prepareEvidenceDocument(page, viewport) {
-  // setContent alone preserves the application realm and its active RAF loops.
-  await page.goto('about:blank');
+  // Reset the live realm without giving local asset requests an opaque origin.
+  await page.route(EVIDENCE_URL, route => route.fulfill({
+    status: 200, contentType: 'text/html', body: '<!doctype html><title>Brand evidence</title>',
+  }), { times: 1 });
+  await page.goto(EVIDENCE_URL);
   await page.setViewportSize(viewport);
 }
 
@@ -50,7 +54,8 @@ test.describe('one approved source live-site review', () => {
     await page.setContent('<main>Static evidence document</main>');
     expect(await page.evaluate(() => window.__brandEvidenceLiveWitness),
       'replacing HTML alone must not retain the captured application context').toBeUndefined();
-    await expect(page).toHaveURL('about:blank');
+    expect(await page.evaluate(() => location.origin), 'evidence must retain the preview origin').toBe(new URL(BASE_URL).origin);
+    await expect(page).toHaveURL(EVIDENCE_URL);
   });
 
   test('desktop, footer and mobile all show the same exact emblem', async ({ page }) => {

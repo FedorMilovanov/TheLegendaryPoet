@@ -4,6 +4,11 @@ Clean baseline: `77fe36ac9b74327b5f83680d1d771c0351201666`, session branch
 `arena/f3e23b45-thelegendarypoet`. Restored working files matched the remote
 tree byte-for-byte before fast-forwarding the local branch. PR stays draft.
 
+**Final implementation correction:** the initial about:blank document below
+was superseded by a one-shot **same-origin** HTML fixture after CI exposed
+opaque-origin asset blocking. See the correction section; initial green local
+results are not certification of that intermediate version.
+
 ## Confirmed cause and ownership
 
 The two synthetic evidence sheets in `qa/brand-reference-comparison.spec.mjs`
@@ -77,3 +82,32 @@ Not certified here: exhaustive accessibility/gradient pixels, physical Safari,
 field performance, live human-backed Turnstile #497, the excluded old comment
 journey or delivery of all external artwork URLs. No artwork replacement,
 production visual approval, deployment, merge, issue closure or branch deletion.
+
+
+## Same-origin correction after exact-head CI
+
+Intermediate commit `08c47ca` introduced a real regression: Brand raster run
+40292377765 had **15 PASS / 1 FAIL, 27.5s**, and Brand deep run40292377585 had
+**15 PASS / 1 FAIL, 20.8s**. Both failed the actual icon-sheet image decode,
+including the unchanged built-in retry. Relevant raw log chunks13–14 were read,
+not every log/artifact. These red runs are preserved, not manually rerun away.
+
+The local launcher inherited Sparticuz's `--disable-web-security`, masking the
+new about:blank document's opaque origin. Removing that flag and
+`--allow-running-insecure-content` reproduced the icon failure without changing
+tracked config: **1 FAIL**. An independent console/network probe reported
+origin `null`, naturalWidth0, and Chromium's CORS block for a non-secure client
+requesting the loopback address space. The new origin assertion separately
+failed **1 case**, expecting the actual preview origin but receiving null.
+
+The shared helper now fulfills one reserved QA-only same-origin navigation with
+an empty HTML document, then composes the sheets there. The one-shot route
+mocks **only this fixture HTML**, not images, requests to the actual app, source
+captures or asset assertions. No production route/file or CORS/security policy
+is added/relaxed. The execution-context witness must still disappear, and the
+permanent regression additionally requires the preview origin and fixture URL.
+
+With ordinary browser security enabled locally, the complete suite now passes
+**16/16, 2.2m**, retries0. Post-push exact-head confirmation belongs in PR #525.
+The earlier timing table remains the initial fresh-document diagnostic, not a
+new same-origin benchmark or a claim that every timeout/CDP error is solved.
