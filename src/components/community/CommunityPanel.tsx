@@ -161,7 +161,7 @@ export default function CommunityPanel({
           ) : (
             <div className="text-xs theme-community-meta" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
           )}
-          {hasRatings && <div className="mt-1 text-xs text-cyan-100/40">{ratingStateLabel}</div>}
+          {hasRatings && <div className="mt-1 text-xs theme-community-meta">{ratingStateLabel}</div>}
         </div>
       </div>
 

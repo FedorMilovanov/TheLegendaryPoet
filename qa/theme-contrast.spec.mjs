@@ -1366,3 +1366,126 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
     }
   });
 }
+
+const SERVICE_PANEL_URL = `${BASE_URL}/poets/alexander-pushkin`;
+
+function seedServiceFeedback(theme) {
+  localStorage.setItem('tlp-theme-mode', theme);
+  const createdAt = new Date().toISOString();
+  const kinds = ['literary', 'history', 'moral'];
+  const comments = Array.from({ length: 8 }, (_, index) => ({
+    id: `comment-service-fixture-${index}`, targetType: 'poet', targetId: 'alexander-pushkin',
+    author: 'Читатель', kind: kinds[index % kinds.length], helpful: index % 3, createdAt,
+    text: index % 2
+      ? 'Точная и спокойная деталь, которая удерживает внимание до конца чтения.'
+      : 'Спорно: источник следовало указать яснее, но само наблюдение ценное.',
+  }));
+  const ratings = [0, 1].map((index) => ({
+    id: `rating-service-fixture-${index}`, targetType: 'poet', targetId: 'alexander-pushkin',
+    scores: { language: 4 + index, depth: 4, legacy: 4, truth: 4 }, createdAt,
+  }));
+  localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+    version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+    updatedAt: createdAt, lastSyncedAt: null, localSnapshot: { ratings, comments },
+  }));
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community service copy ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('pagination, filter and result copy remain readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(seedServiceFeedback, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      await expect(panel.locator('[data-community-comment-id]')).toHaveCount(5);
+      await page.evaluate(() => document.fonts.ready);
+      const targets = [
+        { label: 'счётчик показанных', locator: panel.getByText(/^Показано \d+ из \d+$/, { exact: false }).first() },
+        { label: 'пояснение сортировки и фильтра', locator: panel.getByText(/^Все доступные комментарии загружены;/).first() },
+        { label: 'кнопка догрузки', locator: panel.locator('button', { hasText: /^Показать ещё \d+$/ }).first() },
+        { label: 'неактивный фильтр по типу', locator: panel.locator('[aria-label="Фильтр загруженных комментариев по типу"] button[aria-pressed="false"]').first() },
+        { label: 'сводка оценок', locator: panel.getByText(/^\d+ оценок · /).first() },
+        { label: 'строка синхронизации: локальный режим', locator: panel.locator('p[role="status"] span').first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('loading copy remains readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        window.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+      }, theme);
+      let release = () => {};
+      const stalled = new Promise((resolve) => { release = resolve; });
+      await page.route('https://community.test.invalid/**', () => stalled);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const targets = [
+        { label: 'строка синхронизации: загрузка комментариев', locator: panel.locator('p[role="status"] span', { hasText: 'Загружаем комментарии…' }).first() },
+        { label: 'сводка: загрузка оценок', locator: panel.getByText('Загружаем оценки…', { exact: true }).first() },
+        { label: 'заполнитель списка: загрузка комментариев', locator: panel.locator('p', { hasText: 'Загружаем комментарии…' }).first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      release();
+      expect(errors).toEqual([]);
+    });
+
+    test('failure copy remains readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        window.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+      }, theme);
+      await page.route('https://community.test.invalid/**', route => route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const targets = [
+        { label: 'заполнитель списка: недоступность комментариев', locator: panel.getByText('Комментарии сейчас недоступны. Это не означает, что их нет.', { exact: true }).first() },
+        { label: 'сводка: недоступность оценок', locator: panel.getByText('Данные оценок сейчас недоступны', { exact: true }).first() },
+        { label: 'кнопка повтора', locator: panel.locator('button', { hasText: 'Повторить' }).first() },
+        { label: 'строка синхронизации: ошибка', locator: panel.locator('p[role="status"] span').first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(errors).toEqual([]);
+    });
+  });
+}

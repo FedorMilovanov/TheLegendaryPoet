@@ -98,7 +98,7 @@ export default function CommentList({
     <div className="space-y-3">
       <div className="flex flex-col gap-3 rounded-2xl border border-cyan-400/[0.08] bg-black/15 p-3">
         <CommentSortBar value={sortMode} onChange={setSortMode} />
-        <p className="text-[10px] leading-relaxed text-cyan-100/32">
+        <p className="text-[10px] leading-relaxed theme-community-meta">
           {hasMore
             ? 'Сортировка и фильтр применяются к уже загруженным комментариям; кнопка ниже расширяет выборку следующей страницей общей ленты.'
             : 'Все доступные комментарии загружены; сортировка и фильтр охватывают весь полученный корпус.'}
@@ -109,7 +109,7 @@ export default function CommentList({
               type="button"
               onClick={() => setKindFilter('all')}
               aria-pressed={kindFilter === 'all'}
-              className={`min-h-9 flex-none rounded-full border px-3 text-[9px] font-bold uppercase tracking-[0.12em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${kindFilter === 'all' ? 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' : 'border-white/[0.07] text-white/35 hover:text-white/70'}`}
+              className={`min-h-9 flex-none rounded-full border px-3 text-[9px] font-bold uppercase tracking-[0.12em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${kindFilter === 'all' ? 'border-cyan-300/35 bg-cyan-300/10 text-cyan-100' : 'border-white/[0.07] theme-community-meta hover:text-white/70'}`}
             >
               {allLabel}
             </button>
@@ -124,7 +124,7 @@ export default function CommentList({
                   className={`min-h-9 flex-none rounded-full border px-3 text-[9px] font-bold uppercase tracking-[0.1em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
                     kindFilter === option.value
                       ? 'border-luxury-gold/35 bg-luxury-gold/10 text-luxury-gold'
-                      : 'border-white/[0.07] text-white/35 hover:text-white/70'
+                      : 'border-white/[0.07] theme-community-meta hover:text-white/70'
                   }`}
                 >
                   {option.label} · {count}{hasMore ? '+' : ''}
@@ -135,7 +135,7 @@ export default function CommentList({
         )}
       </div>
 
-      <div className="text-[10px] uppercase tracking-[0.13em] text-cyan-100/30" role="status" aria-live="polite" aria-atomic="true">
+      <div className="text-[10px] uppercase tracking-[0.13em] theme-community-meta" role="status" aria-live="polite" aria-atomic="true">
         {resultLabel}
       </div>
 
