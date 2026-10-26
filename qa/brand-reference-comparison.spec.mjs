@@ -15,7 +15,15 @@ async function expectSingle(mark) {
   await expect(mark).toHaveAttribute('data-brand-renderer', 'single-approved-rgba-subtle-depth');
   await expect(mark).toHaveAttribute('data-brand-reference-source', 'single-user-selected-transparent-reference');
   await expect(mark).toHaveAttribute('data-brand-raster-variant', 'single');
-  await expect(mark.locator('[data-brand-raster-base] img')).toHaveAttribute('src', /brand-emblem\.png/);
+  const image = mark.locator('[data-brand-raster-base] img');
+  await expect(image).toHaveAttribute('src', /brand-emblem\.png/);
+  const decoded = await image.evaluate(async node => {
+    await node.decode();
+    return { width: node.naturalWidth, height: node.naturalHeight };
+  });
+  expect(decoded.width, 'approved emblem must decode before capture').toBeGreaterThan(0);
+  expect(decoded.height, 'approved emblem must decode before capture').toBeGreaterThan(0);
+  await expect(image).toBeVisible();
 }
 
 async function decodeAll(page) {
@@ -92,20 +100,45 @@ test.describe('loading and browser icon visual evidence', () => {
       await route.continue();
     });
 
-    const navigation = page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded' });
     const shell = page.getByRole('status', { name: 'Загрузка страницы' });
-    await expect(shell).toBeVisible({ timeout: 10_000 });
-    expect(delayed).toBe(true);
-    const mark = shell.locator('[data-brand-mark]').first();
-    await expectSingle(mark);
-    await expect(mark.locator('[data-brand-raster-base] img')).toHaveAttribute('src', /brand-emblem\.png/);
-    await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
-    await page.screenshot({ path: path.join(DIR, 'brand-route-loading-shell.png'), fullPage: true });
-
-    releaseChunk();
-    await navigation;
+    try {
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded' });
+      await expect(shell).toBeVisible({ timeout: 10_000 });
+      expect(delayed).toBe(true);
+      const mark = shell.locator('[data-brand-mark]').first();
+      await expectSingle(mark);
+      await expect.poll(() => page.locator('.page-wipe').evaluateAll(nodes =>
+        nodes.every(node => node.getBoundingClientRect().height <= 1)),
+      { message: 'route shell evidence must not be covered by the real transition wipe' }).toBe(true);
+      await page.addStyleTag({ content: '[data-custom-cursor-dot],[data-custom-cursor-ring]{display:none!important}' });
+      await page.screenshot({ path: path.join(DIR, 'brand-route-loading-shell.png'), fullPage: true });
+    } finally {
+      releaseChunk();
+    }
     await expect(page).toHaveURL(/\/about$/);
     await expect(shell).toBeHidden({ timeout: 10_000 });
+  });
+
+  test('loading evidence rejects an undecodable emblem instead of accepting its URL', async ({ page }) => {
+    let releaseChunk;
+    const chunkGate = new Promise(resolve => { releaseChunk = resolve; });
+    await page.route('**/assets/AboutPage-*.js', async route => {
+      await chunkGate;
+      await route.continue();
+    });
+    await page.route('**/brand-emblem.png', route => route.fulfill({
+      status: 200, contentType: 'image/png', body: Buffer.from('not a decodable PNG'),
+    }));
+    try {
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded' });
+      const shell = page.getByRole('status', { name: 'Загрузка страницы' });
+      await expect(shell).toBeVisible();
+      const mark = shell.locator('[data-brand-mark]').first();
+      await expect(mark.locator('[data-brand-raster-base] img')).toHaveAttribute('src', /brand-emblem\.png/);
+      await expect(expectSingle(mark)).rejects.toThrow(/EncodingError|cannot be decoded|Decoding failed/);
+    } finally {
+      releaseChunk();
+    }
   });
 
   test('favicon and platform icon files decode and are captured at actual browser sizes', async ({ page, request }) => {
