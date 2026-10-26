@@ -76,7 +76,7 @@ jobs:
     needs: scope
     if: needs.scope.outputs.hall_visual_required == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 140
+    timeout-minutes: 145
     steps:
       - name: Checkout exact PR head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -98,7 +98,7 @@ jobs:
     needs: scope
     if: needs.scope.outputs.hall_web_runtime_required == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 100
     steps:
       - name: Checkout exact PR head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

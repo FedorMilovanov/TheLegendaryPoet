@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { classifyChangedFiles, globToRegExp } from './classify-merge-certification.mjs';
+import { laneTimeoutFailures } from './merge-certification-timeouts.mjs';
 
 const root = process.cwd();
 const failures = [];
@@ -38,12 +39,12 @@ function pullRequestPaths(workflowText) {
   return found;
 }
 
+const mergeCertificationWorkflow = read('.github/workflows/merge-certification.yml');
+
 const laneSpecs = [
   {
     id: 'hall-pushkin-offline-exhibit',
     workflowFile: '.github/workflows/hall-pushkin-offline-exhibit.yml',
-    timeoutMin: 6600,
-    timeoutMax: 7500,
     requiredPaths: [
       '.github/workflows/hall-pushkin-offline-exhibit.yml',
       'scripts/hall-pushkin/**',
@@ -55,8 +56,6 @@ const laneSpecs = [
   {
     id: 'hall-pushkin-visual-remediation',
     workflowFile: '.github/workflows/hall-pushkin-visual-remediation.yml',
-    timeoutMin: 7200,
-    timeoutMax: 8400,
     requiredPaths: [
       '.github/workflows/hall-pushkin-visual-remediation.yml',
       'docs/hall-v3/pushkin-visual-remediation.json',
@@ -67,8 +66,6 @@ const laneSpecs = [
   {
     id: 'hall-web-runtime-proof',
     workflowFile: '.github/workflows/hall-web-runtime-proof.yml',
-    timeoutMin: 1800,
-    timeoutMax: 3000,
     requiredPaths: [
       '.github/workflows/hall-web-runtime-proof.yml',
       'docs/hall-v3/web-runtime-proof.json',
@@ -89,7 +86,10 @@ for (const spec of laneSpecs) {
   expect(Boolean(lane), `${spec.id} conditional lane is missing`);
   expect(lane?.workflowFile === spec.workflowFile, `${spec.id} workflow file drifted`);
   expect(lane?.event === 'pull_request', `${spec.id} must observe pull_request evidence`);
-  expect(lane?.pollTimeoutSeconds >= spec.timeoutMin && lane?.pollTimeoutSeconds <= spec.timeoutMax, `${spec.id} poll timeout is outside bounded execution/queue headroom`);
+  // Timeout margin is derived from one ordered contract, not hand-tuned per lane.
+  for (const failure of laneTimeoutFailures(lane, read(spec.workflowFile), mergeCertificationWorkflow)) {
+    expect(false, failure);
+  }
   expect(lane?.pollIntervalSeconds >= 10 && lane?.pollIntervalSeconds <= 60, `${spec.id} poll interval must remain bounded`);
 
   const paths = lane?.paths ?? [];
