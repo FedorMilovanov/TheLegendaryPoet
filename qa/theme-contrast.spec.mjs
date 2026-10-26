@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { registerMediaContract } from './media-contract.mjs';
 import { contrastMeasurements, contrastRatio } from './contrast-helpers.mjs';
@@ -1486,6 +1487,129 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
         expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
       }
       expect(errors).toEqual([]);
+    });
+  });
+}
+
+const STATUS_PALETTE_URL = `${BASE_URL}/poets/alexander-pushkin`;
+const AUDIO_FAILURE_URL = `${BASE_URL}/music/pushkin-tucha`;
+
+function seedOwnRating(theme) {
+  localStorage.setItem('tlp-theme-mode', theme);
+  const createdAt = new Date().toISOString();
+  const id = 'rating-status-palette-fixture';
+  const scores = { language: 4, depth: 4, legacy: 4, truth: 4 };
+  localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+    version: 3, outbox: [], settledOperations: {}, cooldowns: {}, helpfulVotes: {},
+    ownRatings: { 'rating:poet:alexander-pushkin': { id, scores, updatedAt: createdAt } },
+    updatedAt: createdAt, lastSyncedAt: null,
+    localSnapshot: {
+      ratings: [{ id, targetType: 'poet', targetId: 'alexander-pushkin', scores, createdAt }],
+      comments: [],
+    },
+  }));
+}
+
+// The shared light-theme remap table paints amber/emerald status ink on light
+// surfaces. Status copy that already sits on its own dark surface must keep its
+// pale ink, so this block walks both families: page-surface status copy, the
+// player failure alert on a dark island, and the audio chrome boundary panel,
+// which owns a hard-coded dark background.
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`status palette ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('saved rating keeps its own emerald ink', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(seedOwnRating, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const note = panel.getByText('Ваш голос уже учтён', { exact: false }).first();
+      await expect(note).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const targets = [
+        { label: 'заметка об учтённой оценке', min: 4.5, locator: note },
+        { label: 'иконка подтверждения', min: 3, locator: panel.locator('svg.text-emerald-300').first() },
+        { label: 'счётчик заполненных измерений', min: 4.5, locator: panel.getByText('4 / 4', { exact: true }).first() },
+      ];
+      const measurements = [];
+      for (const { label, min, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, min, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('player failure alert keeps amber ink on its own dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((value) => localStorage.setItem('tlp-theme-mode', value), theme);
+      await page.route(/\/audio\/.*\.mp3(\?.*)?$/i, route => route.abort('failed'));
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(AUDIO_FAILURE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.getByRole('button', { name: 'Воспроизвести трек' }).first().click();
+      const alert = page.locator('[role="alert"]', { hasText: 'Аудиофайл не загрузился' }).first()
+        .or(page.locator('[role="alert"]', { hasText: 'Формат или источник аудио' }).first());
+      await expect(alert).toBeVisible({ timeout: 20000 });
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст сбоя загрузки аудио', min: 4.5, ratio: await contrastRatio(alert) },
+      ];
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    // Contract guard, not a user journey: AudioChromeBoundary only renders after
+    // a runtime error inside the player panel, which the production build cannot
+    // be made to throw on demand. The probe reproduces the panel from the class
+    // string read out of the component, so removing its dark-island marker here
+    // turns this test red instead of silently changing only a copy.
+    test('audio chrome boundary keeps its own dark island ink', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      const source = readFileSync(new URL('../src/components/music/AudioChromeBoundary.tsx', import.meta.url), 'utf8');
+      const classMatch = source.match(/className="([^"]*bg-\[#11100d\][^"]*)"/);
+      expect(classMatch, 'audio chrome boundary panel keeps a dark panel class string').not.toBeNull();
+      const panelClass = classMatch[1];
+      expect(panelClass, 'audio chrome boundary panel is marked as a dark island').toContain('theme-dark-island');
+      await page.addInitScript((value) => localStorage.setItem('tlp-theme-mode', value), theme);
+      await page.goto(AUDIO_FAILURE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.evaluate((className) => {
+        const panel = document.createElement('div');
+        panel.className = className;
+        panel.setAttribute('data-status-surface-probe', 'audio-chrome-boundary');
+        const heading = document.createElement('div');
+        heading.className = 'font-serif text-lg font-bold';
+        heading.textContent = 'Панель плеера временно недоступна';
+        const glyph = document.createElement('span');
+        glyph.className = 'text-amber-300';
+        glyph.textContent = '!';
+        panel.append(heading, glyph);
+        document.body.append(panel);
+      }, panelClass);
+      const panel = page.locator('[data-status-surface-probe="audio-chrome-boundary"]');
+      await expect(panel).toBeVisible();
+      const measurements = [
+        { text: 'заголовок панели', min: 4.5, ratio: await contrastRatio(panel.locator('div').first()) },
+        { text: 'предупреждающий символ', min: 3, ratio: await contrastRatio(panel.locator('span.text-amber-300')) },
+      ];
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
     });
   });
 }
