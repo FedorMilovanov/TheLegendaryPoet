@@ -178,7 +178,10 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
   await waitForHeroReveal(page);
 
   const coarsePointer = await page.evaluate(() => matchMedia('(hover: none) and (pointer: coarse)').matches);
-  const touchProfile = testInfo.project.name !== 'home-desktop';
+  // The `home-desktop` project this profile once keyed off no longer exists, so
+  // every project was treated as touch and demanded labels visible at rest. Ask
+  // the device what it can do, exactly as the hero stylesheet does.
+  const touchProfile = !(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches));
   const first = windows.first();
   const label = first.locator('[data-hero-poet-window-label]');
   if (touchProfile || coarsePointer) {
@@ -227,7 +230,8 @@ test('first viewport keeps six decoded portraits, crisp title and usable labels'
 });
 
 test('desktop pointer pipeline remains responsive over premium poet depth', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'home-desktop', 'desktop fine-pointer performance contract');
+  test.skip(!(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)),
+    'desktop fine-pointer performance contract');
 
   await page.addInitScript(() => {
     window.__tlpLongTasks = [];
@@ -400,7 +404,8 @@ test('reduced motion removes title, hero-root, window and decorative movement', 
 });
 
 test('desktop keyboard activation opens the exact poet route', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'home-desktop', 'desktop keyboard contract');
+  test.skip(!(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)),
+    'desktop keyboard contract');
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
 

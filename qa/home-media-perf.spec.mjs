@@ -163,8 +163,15 @@ test('home hero media releases deferred portraits only after the browser load bo
   const boundedFallbacks = imageState.map((image) => portraitIdentity(image.src || ''));
   expect(boundedFallbacks.every((candidate) => candidate?.width === 320)).toBe(true);
 
-  const expectedWidth = testInfo.project.name === 'home-desktop' ? 320 : 480;
-  expect(derivativeRequests.every((request) => request.identity.width === expectedWidth)).toBe(true);
+  // Which derivative the browser should fetch is decided by the `sizes` width
+  // times the device pixel ratio — not by a project name: `home-desktop` no
+  // longer exists in playwright.config.mjs, so its 320 branch was dead and every
+  // run demanded 480. 164px slots on a DPR-1 desktop pick 320w; the same slots
+  // on DPR 2, and the 125px mobile slots on DPR 3, need more than 320 and pick
+  // 480w. Anything wider falls through to the 1000w original.
+  const neededWidth = await images.first().evaluate((image) => image.getBoundingClientRect().width * devicePixelRatio);
+  const expectedWidth = neededWidth <= 320 ? 320 : neededWidth <= 480 ? 480 : 1000;
+  expect(derivativeRequests.every((request) => request.identity.width === expectedWidth), `slots need ${neededWidth}px`).toBe(true);
 
   const currentCandidates = imageState.map((image) => portraitIdentity(image.currentSrc));
   expect(currentCandidates.every(Boolean)).toBe(true);

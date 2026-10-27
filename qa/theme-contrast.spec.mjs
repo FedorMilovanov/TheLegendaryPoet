@@ -497,6 +497,65 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
   });
 }
 
+// The case above only proves the reduced-motion path, where the reveal is
+// instant. Real motion is what most visitors get: on pointer-fine devices the
+// caption is `opacity: 0` at rest and is revealed by `.group:hover` /
+// `.group:focus-visible` with a 0.38s fade (hero-poet-window.css). Certify that
+// the fade settles instead of hanging half-visible, that the settled text is
+// still readable, and that hiding the caption stays cosmetic for assistive tech.
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`hero caption reveal ${theme}, ${mobile ? 'touch' : 'desktop'}`, () => {
+    test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, contextOptions: { reducedMotion: 'no-preference' } });
+    test('the caption is hidden only until it settles, then stays readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+      await page.goto(BASE_URL);
+      const shells = page.locator('[data-hero-poet-window-shell]');
+      await expect(shells).toHaveCount(6);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).resolves.toBe(false);
+
+      const settled = mobile ? 0.96 : 1;
+      const labels = shells.locator('[data-hero-poet-window-label]');
+      // At rest the caption is hidden on pointer-fine devices and shown on touch.
+      for (const label of await labels.all()) await expect(label).toHaveCSS('opacity', mobile ? '0.96' : '0');
+      // Hiding it is cosmetic: the poet is still named for assistive technology.
+      await expect(shells.first().locator('a')).toHaveAccessibleName(/Открыть страницу поэта/);
+
+      const reveal = async (shell) => {
+        const label = shell.locator('[data-hero-poet-window-label]');
+        await expect.poll(() => label.evaluate((node) => Number(getComputedStyle(node).opacity)),
+          { timeout: 2_000, intervals: [50] }).toBe(settled);
+        for (const { text, ratio } of await heroCaptionContrasts(shell.locator('.hero-poet-window-label-panel'))) {
+          expect.soft(ratio, `${theme} ${text}: settled worst-case portrait backdrop`).toBeGreaterThanOrEqual(4.5);
+        }
+      };
+
+      const all = await shells.all();
+      for (const shell of all) {
+        if (mobile) {
+          await shell.scrollIntoViewIfNeeded();
+        } else {
+          await shell.hover();
+        }
+        await reveal(shell);
+      }
+      // Keyboard focus is the second reveal path; a pointer-fine device must
+      // answer it too, and the focused card keeps a visible focus ring.
+      if (!mobile) {
+        for (const shell of all) {
+          const anchor = shell.locator('a').first();
+          await anchor.focus();
+          expect(await anchor.evaluate((node) => node.matches(':focus-visible')), 'focus must stay visible').toBe(true);
+          await page.mouse.move(0, 0);
+          await reveal(shell);
+        }
+      }
+    });
+  });
+}
+
 for (const theme of ['dark', 'light']) for (const slug of [
   'simonov-syn-artillerista-realnaya-istoriya',
   'galina-benislavskaya-yesenin-manuscripts-publishing-archive',
