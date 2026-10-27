@@ -96,11 +96,33 @@ confirms the causal link rather than a coincidence.
   `success-toast-{dark,light}.png`, `warning-toast-{dark,light}.png`,
   `queue-line-{dark,light}.png`.
 
+## Follow-up: the rejected-upload copy, measured
+
+«Не удалось сохранить: локальное хранилище или очередь недоступны» was the only
+status string left unmeasured, because it needs a failing local store. That
+caution was excessive: the store wraps every write, so disabling persistence
+**for the community key only** (`tlp-community-feedback*`) turns the failure
+into the warning toast instead of a crash. The page stayed healthy — **0** page
+errors in all four contexts, with the theme, the queue line and the rest of the
+panel still rendering.
+
+| Element | Dark | Light |
+| --- | ---: | ---: |
+| Rejected-upload toast text | 14.4508 | 8.7781 |
+| Rejected-upload toast glyph | 11.1263 | 6.7587 |
+
+The comment path produces the same copy (measured 14.4508 dark / 8.7781 light),
+and the helpful path shares the same toast.
+
+**The new guard is red-capable, and that was checked rather than assumed.**
+Removing `theme-community-toast` from the component and rebuilding turned the
+new test red: light desktop and mobile failed with text **1.3337** and glyph
+**1.0056**, dark still passed. The marker was restored, the build re-run, and the
+block returned to **28/28 PASS** (12 status palette + 12 queue/toast + 4 rejected
+upload). A guard that cannot fail would be worthless.
+
 ## Limits
 
-- Not measured: the rejected-upload copy («Не удалось сохранить: локальное
-  хранилище или очередь недоступны») — it needs a failing local store, which
-  risks destabilising the whole application rather than one surface.
 - Not reached deterministically: the connected-with-queue line («Общая база
   подключена. В очереди на отправку: N.»). Delaying writes produced the syncing
   message instead, which was measured in its place. The connected-queue string

@@ -1753,5 +1753,48 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
       }
       expect(errors).toEqual([]);
     });
+
+    // The last status string that had never been produced by a real run: the
+    // rejected-upload copy only appears when the community store cannot persist.
+    // Storage is disabled for that key alone, which the store turns into a
+    // warning toast instead of a crash.
+    test('rejected upload copy stays readable when the store cannot persist', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((value) => {
+        localStorage.setItem('tlp-theme-mode', value);
+        const original = Storage.prototype.setItem;
+        Storage.prototype.setItem = function setItem(key, next) {
+          if (String(key).startsWith('tlp-community-feedback')) {
+            throw new DOMException('community storage disabled', 'QuotaExceededError');
+          }
+          return original.call(this, key, next);
+        };
+      }, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const groups = panel.locator('[role="radiogroup"]');
+      await expect(groups.first()).toBeVisible();
+      const count = await groups.count();
+      expect(count, 'rating dimensions are rendered before submitting').toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        await groups.nth(index).locator('button[aria-label="4 из 5"]').first().click();
+      }
+      await panel.getByRole('button', { name: /Зафиксировать оценку|Обновить оценку/ }).first().click();
+      const toast = panel.locator('[role="alert"]').filter({ hasText: 'Не удалось сохранить' }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст отклонённой записи', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка отклонённой записи', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('rejected-upload-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
   });
 }
