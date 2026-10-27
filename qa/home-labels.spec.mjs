@@ -49,12 +49,7 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     { timeout: 12_000, message: 'all premium portraits should decode before label geometry is measured' },
   ).toBe(true);
 
-  // The `home-desktop` project this branch once keyed off no longer exists in
-  // playwright.config.mjs, so it always fell through to the touch expectations
-  // — including on fine-pointer projects, where the hero reveals one label at a
-  // time. Follow the device capability the stylesheet keys on instead.
-  const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
-  if (finePointer) {
+  if (testInfo.project.name === 'home-desktop') {
     // Desktop intentionally reveals one label at a time on hover/focus. Exercise
     // every card through that real interaction instead of demanding six hover
     // states simultaneously, which the product never promises.

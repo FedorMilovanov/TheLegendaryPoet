@@ -157,76 +157,78 @@ the caption's own gradient and colours, not from these files.
   is *not reproducible on this head*, plus new coverage that fails loudly if a
   reveal ever stalls again.
 
-## Pre-existing red found in the same family (hero poet labels)
+## A wrong call, corrected in the same step
 
-Running the home/hero regression set surfaced two failures that are **not**
-caused by this step — both specs are untouched on `main` (`033299b`) — but they
-sit inside the audited area, so they are repaired here and reported, not hidden:
+While running the home/hero regression set I reported three failures
+(`home-labels.spec.mjs:33`, `home-polish.spec.mjs:160`,
+`home-media-perf.spec.mjs:167`) as pre-existing red and "repaired" them by
+replacing the `testInfo.project.name === 'home-desktop'` branches with a
+`matchMedia('(hover: hover) and (pointer: fine)')` capability check. **That
+diagnosis was wrong**, and the edits are reverted in the same step:
 
-| spec | failure |
-| --- | --- |
-| `qa/home-labels.spec.mjs:33` | poll timeout: «all six touch label panels should finish their entrance state» (4 s) |
-| `qa/home-polish.spec.mjs:160` | `expect(received).toBeGreaterThan(expected)` — effective label opacity `0` vs `> 0.85` |
-| `qa/home-media-perf.spec.mjs:167` | derived portrait width `320` vs expected `480` |
+- The `home-desktop` project **does** exist — in `playwright.home-polish.config.mjs`,
+  the dedicated config that `scripts/run-home-polish-process-isolated.mjs` uses
+  for exactly these four specs (`home-desktop` 1440×1000 Chromium,
+  `home-pixel7`, `home-iphone-safari`). It is absent only from the default
+  `playwright.config.mjs`, which is what I had run them with. Under the default
+  config the specs take their touch branch on a fine-pointer project and fail —
+  an artefact of using the wrong config, not a defect in the specs.
+- The `home-media-perf` edit additionally broke a real gate: `scripts/validate-home-media-perf.mjs`
+  forbids `getBoundingClientRect` in that spec («must measure layout boxes, not
+  compositor-transformed client rects»). The contract validator runs first in the
+  premium-home runner, which is why remote CI for `51f391b` came back with
+  **`premium-home-qa` FAILURE** — caused by me, not by the step's real change.
 
-Root cause: both specs branch on `testInfo.project.name === 'home-desktop'`, and
-**no such project exists** in `playwright.config.mjs` (the projects are
-`chromium-core`, `android-pixel7`, `iphone-safari`, `webkit-reader-desktop`).
-Every run therefore took the *touch* branch and demanded all six hero labels
-visible at rest — which the fine-pointer design never promises. The hero label
-reveal measured above is exactly the behaviour those branches contradict.
+Verified after reverting (unmodified specs, dedicated config, local Chromium 149):
 
-Repair: both gates now ask the device instead of the project name —
-`matchMedia('(hover: hover) and (pointer: fine)')` — the same query the hero
-stylesheet keys on. Fine-pointer projects exercise the per-card hover reveal;
-coarse-pointer projects keep the at-rest expectation.
+- `--config=playwright.home-polish.config.mjs --project=home-desktop`:
+  **17 PASSED (39.4 s)** — the four home specs, including
+  `home-polish:229` (desktop pointer pipeline) and `:402` (desktop keyboard
+  activation), which do execute there.
+- `--project=home-pixel7`: **15 PASSED / 2 deliberate skips (34.1 s)**.
+- `node scripts/validate-home-media-perf.mjs`: PASS (`critical320=18987B`,
+  `critical480=37962B`).
 
-Consequence worth recording: `qa/home-polish.spec.mjs:232` («desktop pointer
-pipeline remains responsive over premium poet depth») and `:406` («desktop
-keyboard activation opens the exact poet route») were `test.skip`-ed by the same
-dead project name, so **they had not executed in any project for an unknown
-number of runs**. With the capability gate they now execute under `chromium-core`
-and both pass.
-
-The third spec, `qa/home-media-perf.spec.mjs:166`, had the same dead branch:
-`testInfo.project.name === 'home-desktop' ? 320 : 480`. Its expectation is now
-derived from what the slots actually need — measured slot width ×
-`devicePixelRatio`, picking the smallest `srcset` candidate that covers it:
-
-| context | slot width | DPR | needed | derivative requested |
-| --- | --- | --- | --- | --- |
-| desktop 1280×720 | 167.8 px | 1 | 167.8 | **320w** |
-| desktop 1280×720 | 167.8 px | 2 | 335.6 | **480w** |
-| mobile 390×844 | 135.9 px | 3 | 407.6 | **480w** |
-
-So the old unconditional `480` was wrong for the only project that runs this
-spec, and the dead `320` branch was the value a DPR-1 desktop actually needs.
-
-None of these three specs appear in the browser-QA spec list
-(`.github/workflows/manual-browser-qa.yml`), so they are unrelated to the red
-`82bb9f4` CI job.
-
+`home-iphone-safari` (WebKit) was not run locally — no WebKit binary in this
+sandbox — so the iPhone lane is left to remote CI.
 ## Verification
 
 - `hero caption` grep (`--project=chromium-core`, no retries): **8 PASSED**
   (4 committed reduced-motion + 4 new real-motion), 23–24 s.
 - Red control as above (2 failed / 6 passed), then restored: 8/8.
+- New block under `--repeat-each=3`: **24 PASSED (1.1 m)**.
 - `qa/theme-contrast.spec.mjs` full, chromium-core, no retries: **166 PASSED**
   (5.1 m) with the new block; the essay image-metadata/lightbox journeys — the
   other two historical desktop timeouts — are inside that run and pass.
-- Home/hero regression set (`home-labels`, `home-polish`, `home-media-perf`,
-  `home-ambient`, `focused-interactions`, `essay-lightbox-overlay`,
-  `hover-stability` minus the external-artwork case, plus the full
-  `theme-contrast`): **199 PASSED (6.6 m)**, 0 failed.
-- Changed specs under `--repeat-each=3`: `home-labels` + `home-polish` +
-  `home-media-perf` **48 PASSED (1.7 m)**; new hero-caption block **24 PASSED**
-  (1.1 m).
+- Neighbouring specs, default config, chromium-core, no retries
+  (`home-ambient`, `focused-interactions`, `essay-lightbox-overlay`,
+  `hover-stability` minus the external-artwork case): **17 PASSED (49.2 s)**.
+- The four home specs belong to `playwright.home-polish.config.mjs`, verified
+  there after the revert (see the correction above): **17 PASSED** on
+  `home-desktop`, **15 PASSED / 2 deliberate skips** on `home-pixel7`, and
+  `node scripts/validate-home-media-perf.mjs` PASS.
 - `npm run check`: PASS. `node --test scripts/tests/*.test.mjs`: **108 PASS**;
   `npx tsx --test scripts/tests/*.test.ts`: **4 PASS**. `npm run build` +
   `validate:build-output`: PASS. `git diff --check`: clean.
-- No `src/` change in this step: `git diff --stat` is `qa/*.spec.mjs` + the new
-  doc only.
+- **No `src/` change in this step.** After the revert the diff is
+  `qa/theme-contrast.spec.mjs` (+59, the new block) and this report only.
 
+## Limits
+
+- One local browser engine (Chromium 149 headless, `@sparticuz/chromium`
+  149.0.0). No WebKit/Safari or Firefox reveal timing, no real touch device; the
+  `home-iphone-safari` lane was not run at all locally.
+- Contrast is computed from the caption's own gradient and colours composited
+  against synthetic black/white backdrops; it is not a per-pixel screenshot
+  measurement over the real portraits. The 16 screenshots were captured as
+  evidence and checked programmatically (fonts, broken images, overflow, console,
+  LCP/CLS) — they were not read pixel by pixel.
+- No axe run in this step: the surface under test is the reveal timing and the
+  settled colour of an already certified caption.
+- The historical 45-second timeouts remain unexplained (see above).
+- Remote CI for `82bb9f4` is RED with the failing test name still unknown, and
+  `51f391b` came back with `premium-home-qa` FAILURE caused by the reverted edit
+  above — the head that carries only the step's real change is the one after it.
 ## Limits
 
 - One local browser engine (Chromium 149 headless, `@sparticuz/chromium`
