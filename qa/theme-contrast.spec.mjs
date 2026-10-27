@@ -1613,3 +1613,145 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
     });
   });
 }
+
+const COMMUNITY_ORIGIN = 'https://community.test.invalid';
+
+function communityCorsHeaders() {
+  return {
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'content-type': 'application/json',
+  };
+}
+
+// Reads succeed so the panel reaches a connected phase; writes are rejected so
+// the pending queue, the offline status line and the warning toast are exercised
+// through the real store instead of seeded markup.
+async function routeCommunityWithRejectedWrites(page) {
+  await page.route(`${COMMUNITY_ORIGIN}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: communityCorsHeaders() });
+      return;
+    }
+    const url = new URL(request.url());
+    if (url.pathname === '/v1/session') {
+      await route.fulfill({ status: 200, headers: communityCorsHeaders(), body: JSON.stringify({ actorToken: 'a'.repeat(40), expiresAt: Date.now() + 3600_000 }) });
+      return;
+    }
+    if (url.pathname === '/v1/summary') {
+      await route.fulfill({
+        status: 200,
+        headers: communityCorsHeaders(),
+        body: JSON.stringify({
+          targetType: 'poet', targetId: 'alexander-pushkin', ratingCount: 4, commentCount: 2,
+          overall: 4.4, dimensions: { language: 4.4, depth: 4.2, legacy: 4.1, truth: 4.0 },
+          distribution: { 4: 2, 5: 2 }, deviation: 0.3,
+        }),
+      });
+      return;
+    }
+    if (url.pathname === '/v1/comments') {
+      await route.fulfill({ status: 200, headers: communityCorsHeaders(), body: JSON.stringify({ comments: [], nextCursor: null }) });
+      return;
+    }
+    await route.fulfill({ status: 500, headers: communityCorsHeaders(), body: '{}' });
+  });
+}
+
+function seedCommunityTestConfig(page, theme) {
+  return page.addInitScript((value) => {
+    localStorage.setItem('tlp-theme-mode', value);
+    globalThis.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+  }, theme);
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community queue and toasts ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('queue status line stays readable when writes are rejected', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const queueLine = panel.locator('p[role="status"] span').first();
+      await panel.locator('textarea').first().fill('Точная и спокойная деталь, удерживающая внимание.');
+      await panel.getByRole('button', { name: 'Добавить комментарий' }).click();
+      await expect(queueLine).toHaveText(/^Сервер недоступен\. В очереди: \d+; ничего не потеряно\.$/, { timeout: 20000 });
+      await page.evaluate(() => document.fonts.ready);
+      const ratio = await contrastRatio(queueLine);
+      await testInfo.attach('queue-line-contrast', { body: JSON.stringify({ text: await queueLine.textContent(), ratio }, null, 2), contentType: 'application/json' });
+      expect(ratio, `${theme}: очередь на отправку`).toBeGreaterThanOrEqual(4.5);
+      expect(errors).toEqual([]);
+    });
+
+    test('success toast keeps its own ink on its dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const groups = panel.locator('[role="radiogroup"]');
+      await expect(groups.first()).toBeVisible();
+      const count = await groups.count();
+      expect(count, 'rating dimensions are rendered before submitting').toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        await groups.nth(index).locator('button[aria-label="4 из 5"]').first().click();
+      }
+      await panel.getByRole('button', { name: /Зафиксировать оценку|Обновить оценку/ }).first().click();
+      const toast = panel.locator('[role="status"][aria-live="polite"]').filter({ hasText: 'Оценка сохранена' }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст тоста успеха', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка тоста успеха', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('toast-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('warning toast keeps its own ink on its dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const textarea = panel.locator('textarea').first();
+      const send = panel.getByRole('button', { name: 'Добавить комментарий' });
+      await textarea.fill('Точная и спокойная деталь, удерживающая внимание.');
+      await send.click();
+      await expect(panel.locator('p[role="status"] span').first()).toHaveText(/^Сервер недоступен\. В очереди: \d+;/, { timeout: 20000 });
+      await textarea.fill('Вторая отправка подряд попадает в кулдаун комментариев.');
+      await send.click();
+      const toast = panel.locator('[role="alert"]').filter({ hasText: /^Подождите \d+ сек\.$/ }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст предупреждающего тоста', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка предупреждающего тоста', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('toast-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+  });
+}
