@@ -12,10 +12,10 @@
 
 | Роль | Путь от корня репозитория | Назначение |
 |---|---|---|
-| Identity master | `suno/clips/references/yesenin-epic/identity-master.jpg` | Единственный definitive облик киношного AU-Есенина |
+| Identity master | `suno/clips/references/yesenin-epic/identity-master.jpg` | Единственные definitive лицо и причёска киношного AU-Есенина |
 | Face close-up | `suno/clips/references/yesenin-epic/identity-face-close.jpg` | Производный референс лица; не новый актёр |
 | Root monster master | `suno/clips/references/yesenin-epic/creature-root-giant.jpg` | Анатомия и материалы корневого существа |
-| Two-gun master | `suno/clips/references/yesenin-epic/action-two-guns.jpg` | Конфигурация двух ружей для night-action |
+| Two-gun master | `suno/clips/references/yesenin-epic/action-two-guns.jpg` | Только для отдельно согласованной двухружейной линии |
 | Original transforming tree | `suno/clips/references/yesenin-epic/tree-origin.jpg` | Обычная ель, из которой формируется существо и в которую оно возвращается |
 
 ### Удачные выражения лица
@@ -35,18 +35,22 @@ Expression reference задаёт мимику, но не заменяет ident
 - Premium photorealistic live action: физическая кора, корни, мох, смола, кожа, металл,
   ткань и снег; не plastic CGI, не cartoon, не generic video-game fantasy.
 - Без других людей, обычных животных, лыж, палок и лыжни, если их не запросили.
-- Без горя, текста и водяных знаков.
+- Без крови и натуралистичного насилия, текста и водяных знаков.
 - Менять оптику, дистанцию, ракурс и эмоцию, но не личность и конструкцию мира.
 
-## 3. Герой и оружие
+## 3. Герой, костюм и оружие
 
-- Внешность и современный охотничий костюм — только по identity master.
-- Для **night root-monster action**: ровно два ружья — scoped bolt-action rifle в правой
-  руке и dark wooden-stock pump-action shotgun в левой, как в two-gun master.
-- Правило одной винтовки относится только к исходным single-rifle сценам и не отменяет
-  двухружейную night-action линию.
-- Не добавлять третье оружие и не менять стороны без явной постановки.
-- Для face-only правок сохранять позу, взгляд, костюм, руки, оружие, монстра, свет и кадр.
+- Лицо и причёска — только по identity master. Костюм определяется отдельно проектом;
+  identity master не делает свой костюм обязательным для каждой сцены.
+- В текущей серии [«Что это такое?»](./projects/yesenin-chto-eto-takoe.md) — новый длинный
+  тёмный плащ с высоким воротом и **одна винтовка с оптикой**, включая тёмные сцены с существом.
+  Лицо из изображений плаща не заменяет исходное лицо.
+- Отдельная двухружейная линия сохраняется: scoped bolt-action rifle в правой руке и
+  dark wooden-stock pump-action shotgun в левой, как в two-gun master, но только для шотов,
+  где эта конфигурация явно согласована.
+- Ночь и присутствие монстра сами по себе не означают два ружья. Число и стороны оружия
+  фиксируются конкретным проектом/шотом; третье оружие не добавлять.
+- Для face-only правок сохранять позу, взгляд, выбранный костюм, руки, оружие, монстра, свет и кадр.
 - Крик делать эмоциональным, но анатомически сдержанным: без растянутого рта, щёк,
   деформированных глаз и потери сходства.
 
@@ -86,6 +90,11 @@ Expression reference задаёт мимику, но не заменяет ident
 `image-search/esenin-hunter/organs12/12-long-bare-trunk-09.jpg`.
 
 ## 6. Полезные принятые серии
+
+Следующие `image-search/...` пути — **неверсированная рабочая область, а не файлы Git-дерева**.
+Перед использованием проверяй наличие; в чистом checkout запрашивай исходник, не выдумывай
+замену и не копируй медиа в Git без разрешения. Версированные мастера находятся в
+[`references/yesenin-epic/`](./references/yesenin-epic/README.md).
 
 - `image-search/esenin-hunter/awakening-emergence/` — формирование и выход из ствола,
   полный рост и финальное становление.

@@ -90,6 +90,9 @@ This task produces a generation brief, not a published music release.
 
 For requests to create or animate a video clip for a Suno song, read
 `suno/clips/AGENT.md` and `suno/clips/README.md`, then the relevant project or case.
-Use the established visual canon and exactly three two-candidate battles per
-standard generation round. Only user-selected saved frames become canonical or
-enter animation. Keep draft media storage separate from the music release workflow.
+Use the established visual canon. For three different shots, run three independent
+two-candidate battles, one per shot. For one image or edit, use one options call and
+do not duplicate it to simulate three battles; repository rules never override tool
+limits. Only explicitly approved saved frames become canonical or enter animation.
+A skipped/no-selection result is not proof of rejection. Keep draft media storage
+separate from the music release workflow.
