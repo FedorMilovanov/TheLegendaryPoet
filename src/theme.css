@@ -57,6 +57,25 @@
   --conn-thematic: #a78bfa;
   --conn-rivalry: #ef4444;
 
+  /* Hero bands that carry a cover photograph under the copy. The ink above them
+     is remapped per theme, so the scrim has to be remapped with it: a dark-only
+     scrim painted 166,166,165 under light-theme ink and dropped those labels to
+     1.27-3.25. `.hero-scrim*` owns the band, `.hero-cover*` owns the photo. */
+  --tlp-hero-scrim-fade: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 0.32),
+    rgba(5, 5, 5, 0.78) 58%,
+    #050505 100%
+  );
+  --tlp-hero-scrim-frame: linear-gradient(
+    to bottom,
+    #050505 0%,
+    rgba(5, 5, 5, 0.6) 50%,
+    #050505 100%
+  );
+  --tlp-hero-cover-opacity: 0.16;
+  --tlp-hero-cover-opacity-strong: 0.3;
+
 }
 
 html.theme-light {
@@ -117,6 +136,24 @@ html.theme-light {
   --conn-epoch: #3f4a57;
   --conn-thematic: #5b3fa8;
   --conn-rivalry: #a51226;
+
+  /* Light-theme hero bands keep the photograph visible but must still paint a
+     light surface: at 0.92-0.96 over a 10% photo the sweep measures 5.0+ for the
+     light-theme ink, where the dark scrim measured 1.27. */
+  --tlp-hero-scrim-fade: linear-gradient(
+    to bottom,
+    rgba(255, 250, 240, 0.32),
+    rgba(255, 250, 240, 0.92) 58%,
+    rgb(255, 250, 240) 100%
+  );
+  --tlp-hero-scrim-frame: linear-gradient(
+    to bottom,
+    rgba(255, 250, 240, 0.94) 0%,
+    rgba(250, 243, 230, 0.9) 50%,
+    rgba(239, 229, 213, 0.94) 100%
+  );
+  --tlp-hero-cover-opacity: 0.08;
+  --tlp-hero-cover-opacity-strong: 0.1;
 }
 
 .theme-page-surface {

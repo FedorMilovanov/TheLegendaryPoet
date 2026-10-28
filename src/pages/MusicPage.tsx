@@ -29,10 +29,10 @@ export default function MusicPage() {
           src={asset(featured.wideCoverUrl)}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 -z-30 h-[760px] w-full scale-105 object-cover object-center opacity-[0.16] blur-[1px] saturate-125"
+          className="hero-cover pointer-events-none absolute inset-x-0 top-0 -z-30 h-[760px] w-full scale-105 object-cover object-center blur-[1px] saturate-125"
         />
       )}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-20 h-[820px] bg-[linear-gradient(to_bottom,rgba(5,5,5,0.32),rgba(5,5,5,0.78)_58%,#050505_100%)]" />
+      <div className="hero-scrim pointer-events-none absolute inset-x-0 top-0 -z-20 h-[820px]" />
       <div className="pointer-events-none absolute left-[-16rem] top-40 -z-10 h-[34rem] w-[34rem] rounded-full bg-luxury-gold/[0.055] blur-[130px]" />
       <div className="pointer-events-none absolute right-[-12rem] top-56 -z-10 h-[30rem] w-[30rem] rounded-full bg-cyan-400/[0.055] blur-[120px]" />
 
