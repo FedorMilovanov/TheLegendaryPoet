@@ -39,6 +39,38 @@ const COLLECT_NODES = () => {
       tag: el.tagName,
     });
   }
+  // Gradient-clipped ink (`text-transparent` + `bg-clip-text` + a gradient
+  // background) carries no colour to composite: its visible ink is the gradient
+  // itself. Keep the stops and the light-theme brightness filter so the sweep
+  // can score the ink that actually reaches the eye.
+  const gradient = [];
+  for (const el of document.querySelectorAll('*')) {
+    const style = getComputedStyle(el);
+    // Chromium reports the prefixed property; the unprefixed one stays border-box.
+    const clip = `${style.webkitBackgroundClip || ''} ${style.backgroundClip || ''}`;
+    if (!/\btext\b/.test(clip)) continue;
+    if (!style.backgroundImage.includes('gradient')) continue;
+    const text = el.textContent.trim();
+    if (!text) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) continue;
+    const brightness = Number((style.filter.match(/brightness\(([\d.]+)\)/) ?? [])[1] ?? 1);
+    // `color: transparent` cannot hide gradient-clipped glyphs: they are painted
+    // by background-image. Tag the node so the sweep can strip that background
+    // in a second pass and sample what really sits behind the word.
+    el.setAttribute('data-sweep-gradient', '');
+    gradient.push({
+      text: text.slice(0, 70),
+      color: style.color,
+      stops: [...style.backgroundImage.matchAll(/rgba?\([^)]+\)/g)].map((m) => m[0]),
+      brightness,
+      fontSize: parseFloat(style.fontSize),
+      fontWeight: Number(style.fontWeight),
+      rect: { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+      className: (el.className ?? '').toString().slice(0, 140),
+      tag: el.tagName,
+    });
+  }
   const icons = [];
   for (const svg of document.querySelectorAll('svg')) {
     const style = getComputedStyle(svg);
@@ -54,12 +86,16 @@ const COLLECT_NODES = () => {
       tag: 'svg',
     });
   }
-  return { text, icons };
+  return { text, gradient, icons };
 };
 
 const HIDE_INK = `*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important;
   text-shadow: none !important; }
   svg { visibility: hidden !important; }`;
+
+// Second pass for gradient-clipped ink: drop the gradient itself so the box
+// shows the surface behind the word, not the word's own fill.
+const HIDE_GRADIENT_INK = `[data-sweep-gradient] { background-image: none !important; }`;
 
 const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
   const img = new Image();
@@ -117,14 +153,33 @@ const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
     return best.split(',').map(Number);
   };
 
+  const scoreGradient = (node, background) => {
+    const large = node.fontSize >= 24 || (node.fontSize >= 18.66 && node.fontWeight >= 700);
+    const threshold = large ? minimumLarge : minimum;
+    // `filter: brightness(b)` scales sRGB channels; `contrast()` only pushes
+    // dark stops further from mid grey, so ignoring it stays conservative.
+    const ratios = node.stops.map((stop) => {
+      const [r, g, b, a = 1] = parse(stop);
+      const scaled = [r, g, b].map((channel) => Math.min(255, channel * node.brightness));
+      const foreground = [0, 1, 2].map((i) => scaled[i] * a + background[i] * (1 - a));
+      return ratioOf(foreground, background);
+    });
+    return { ratios, ratio: Math.min(...ratios), minimum: threshold, large };
+  };
+
   const rows = [];
   const gradientInk = [];
   for (const node of nodes) {
     const background = sample(node.rect);
     if (!background) continue;
+    if (node.stops) {
+      const scored = scoreGradient(node, background);
+      gradientInk.push({ ...node, background, ...scored });
+      continue;
+    }
     const ink = parse(node.color);
     if (ink[3] === 0) {
-      gradientInk.push({ ...node, background });
+      gradientInk.push({ ...node, background, ratios: [], ratio: null, minimum: 0 });
       continue;
     }
     const foreground = [0, 1, 2].map((i) => ink[i] * ink[3] + background[i] * (1 - ink[3]));
@@ -140,25 +195,66 @@ const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
   return { rows, gradientInk };
 };
 
+const BAND_HEIGHT = 2000;
+
+// Long pages (the poet page paints 16 845 px) cannot be decoded as one image:
+// Chromium refuses the second full-page bitmap. Measure in horizontal bands so
+// the sweep works on any document height, with both ink passes sharing the code.
 export async function paintedSweep(page, options = {}) {
   const { minimum = 4.5, minimumLarge = 3, minimumIcon = 3 } = options;
   const nodes = await page.evaluate(COLLECT_NODES);
-  const style = await page.addStyleTag({ content: HIDE_INK });
-  await page.waitForTimeout(250);
-  const shot = (await page.screenshot({ fullPage: true })).toString('base64');
-  await style.evaluate((node) => node.remove());
-  const { rows, gradientInk } = await page.evaluate(MEASURE, {
-    shot,
-    nodes: [...nodes.text, ...nodes.icons],
-    minimum,
-    minimumLarge,
-    minimumIcon,
-  });
-  return {
-    measured: rows,
-    offenders: rows.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
-    gradientInk,
+  const { width, height } = await page.evaluate(() => ({
+    width: document.documentElement.clientWidth,
+    height: document.documentElement.scrollHeight,
+  }));
+  const bands = [];
+  for (let y = 0; y < height; y += BAND_HEIGHT) {
+    bands.push({ y, height: Math.min(BAND_HEIGHT, height - y) });
+  }
+
+  const measureBands = async (list, styleContent) => {
+    const rows = [];
+    const gradientInk = [];
+    if (!list.length) return { rows, gradientInk };
+    const style = await page.addStyleTag({ content: styleContent });
+    await page.waitForTimeout(250);
+    try {
+      for (const band of bands) {
+        const inBand = list.filter((node) => node.rect.y < band.y + band.height && node.rect.y + node.rect.height > band.y);
+        if (!inBand.length) continue;
+        const shot = (await page.screenshot({
+          fullPage: true,
+          clip: { x: 0, y: band.y, width, height: band.height },
+        })).toString('base64');
+        const shifted = inBand.map((node) => ({ ...node, rect: { ...node.rect, y: node.rect.y - band.y } }));
+        const result = await page.evaluate(MEASURE, { shot, nodes: shifted, minimum, minimumLarge, minimumIcon });
+        rows.push(...result.rows);
+        gradientInk.push(...result.gradientInk);
+      }
+    } finally {
+      await style.evaluate((node) => node.remove());
+    }
+    return { rows, gradientInk };
   };
+
+  const plain = await measureBands([...nodes.text, ...nodes.icons], HIDE_INK);
+  const gradients = await measureBands(nodes.gradient, `${HIDE_INK}\n${HIDE_GRADIENT_INK}`);
+
+  const measured = plain.rows;
+  const gradientInk = [...gradients.rows, ...gradients.gradientInk];
+  return {
+    measured,
+    offenders: measured.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
+    gradientInk,
+    gradientOffenders: gradientInk.filter((row) => row.ratio !== null && row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
+  };
+}
+
+export function describeGradientOffenders(offenders) {
+  return offenders
+    .slice(0, 12)
+    .map((row) => `${row.ratio} < ${row.minimum} — "${row.text.slice(0, 32)}" gradient stops [${row.ratios.join(', ')}]${row.brightness !== 1 ? ` @ brightness ${row.brightness}` : ''} on painted [${row.background.join(', ')}] :: ${row.className.slice(0, 60)}`)
+    .join('\n');
 }
 
 export function describeOffenders(offenders) {

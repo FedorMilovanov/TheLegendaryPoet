@@ -87,7 +87,7 @@ export default function HeroSection({ poet }: HeroSectionProps) {
           )}
           
           <h1 className="text-5xl md:text-8xl lg:text-[8rem] font-serif font-bold leading-[0.9] tracking-tighter editorial-title drop-shadow-[0_0_30px_rgba(212,175,55,0.3)]">
-            <span className="gold-gradient gold-glow-text">{poet.name}</span>
+            <span className="gold-gradient gold-glow-text theme-dark-island">{poet.name}</span>
           </h1>
           <p className="theme-dark-island-muted mt-6 max-w-2xl font-serif text-xl italic drop-shadow-lg md:text-3xl">
             {poet.fullName}

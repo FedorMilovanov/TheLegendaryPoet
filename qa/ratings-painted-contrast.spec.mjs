@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { paintedSweep, describeOffenders } from './painted-contrast.mjs';
+import { paintedSweep, describeOffenders, describeGradientOffenders } from './painted-contrast.mjs';
 
 // The ratings table was the one page whose ink survived the light-theme remap
 // while its hard-coded `bg-[#071018]` panels did not: measured contrast fell to
@@ -30,13 +30,19 @@ test.describe('ratings painted contrast', () => {
         await expect(page.locator('h1')).toContainText('читателей');
         await page.waitForTimeout(600);
 
-        const { measured, offenders, gradientInk } = await paintedSweep(page);
+        const { measured, offenders, gradientInk, gradientOffenders } = await paintedSweep(page);
 
         // Guard against certifying a page that never rendered its rows.
         expect(measured.length, 'ratings must render enough nodes to be worth sweeping').toBeGreaterThan(60);
         expect(
           offenders.map((row) => row.ratio),
           `${theme}/${viewport.label}: ${offenders.length} of ${measured.length} nodes below their painted minimum\n${describeOffenders(offenders)}`,
+        ).toEqual([]);
+        // Gradient-clipped ink is scored against its own stops: the sweep proved
+        // the light-theme gold was painted 1.52 on cream before this repair.
+        expect(
+          gradientOffenders.map((row) => row.ratio),
+          `${theme}/${viewport.label}: ${gradientOffenders.length} gradient-clipped nodes below their minimum\n${describeGradientOffenders(gradientOffenders)}`,
         ).toEqual([]);
         // Gradient-clipped ink (the brand wordmark) has no colour to composite;
         // keep it visible in the log instead of silently dropping it.
