@@ -979,12 +979,17 @@ html.theme-light .bg-luxury-gold.text-white {
    2.98 on the rating submit button, the article filter pill and the home
    "Изучить статьи" button, in BOTH themes. The brand already pairs bright fills
    with dark ink (`bg-luxury-gold` uses `text-black`), so these labels own the
-   same deep ink instead. */
+   same deep ink instead.
+
+   The ink is #02151c rather than the first-pass #04222b: the ramp interpolates
+   in oklab, so its brightest painted stop is the middle (0,127,241, L 0.215),
+   where #04222b measured 4.18 on the article filter pill. #02151c clears the
+   whole ramp at 4.71 and the rating CTA stays far above its minimum. */
 .bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 .bg-gradient-to-r.from-cyan-500.text-white:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 [class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
 [class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"][class*="text-white"] {
-  color: #04222b !important;
+  color: #02151c !important;
 }
 
 /* The light-theme `text-white` remap is one attribute selector wider than the
@@ -995,7 +1000,7 @@ html.theme-light .bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not([clas
 html.theme-light .bg-gradient-to-r.from-cyan-500.text-white:not([class*="theme-"]),
 html.theme-light [class*="from-cyan-500"][class*="to-blue-600"] [class*="text-white"]:not([class*="theme-"]),
 html.theme-light [class*="from-cyan-500"][class*="to-blue-600"][class*="text-white"]:not([class*="theme-"]) {
-  color: #04222b !important;
+  color: #02151c !important;
 }
 
 html.theme-light .luxury-card [class*="text-cyan-100"]:not([class*="theme-"]) {
