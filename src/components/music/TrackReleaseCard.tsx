@@ -97,7 +97,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         <div className="pointer-events-none absolute right-[-3rem] top-[-4rem] h-40 w-40 rounded-full blur-3xl" style={{ background: 'color-mix(in srgb, var(--track-secondary) 8%, transparent)' }} />
         <div className="relative mb-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em]">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.09] px-2.5 py-1" style={{ color: 'var(--track-accent)' }}><Disc3 size={12} /> Релиз&nbsp;{track.releaseYear}</span>
-          <span className="inline-flex items-center gap-1.5 text-white/38"><Clock3 size={12} /> {track.duration}</span>
+          <span className="inline-flex items-center gap-1.5 text-white/52"><Clock3 size={12} /> {track.duration}</span>
         </div>
 
         <Link to={`/music/${track.id}`} className="relative block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
@@ -125,7 +125,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         )}
 
         <FeedbackMiniSummary targetType="track" targetId={track.id} />
-        <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/45 transition-colors duration-300 hover:text-white">
+        <Link to={`/music/${track.id}`} className="relative mt-auto flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs font-bold uppercase tracking-[0.14em] text-white/52 transition-colors duration-300 hover:text-white">
           <span>{trackError ? 'Открыть и повторить' : position > 1 && !completed ? 'Продолжить публикацию' : 'Открыть публикацию'}</span>
           <ArrowRight size={17} className="transition-transform duration-300 group-hover:translate-x-1" style={{ color: 'var(--track-secondary)' }} />
         </Link>

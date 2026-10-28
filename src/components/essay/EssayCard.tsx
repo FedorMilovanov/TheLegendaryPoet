@@ -46,7 +46,7 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
               {essay.excerpt}
             </p>
             <div className="mt-5 flex items-center justify-between border-t border-luxury-gold/10 pt-4">
-              <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-luxury-gray-light/50">
+              <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-luxury-gray-light/72">
                 <Clock size={12} className="text-luxury-gold/50" /> {essay.readTime}&nbsp;мин
               </span>
               <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-luxury-gold transition-colors duration-300 group-hover:text-luxury-gold-light">
