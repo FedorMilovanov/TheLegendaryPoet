@@ -19,6 +19,51 @@ const COLLECT_NODES = () => {
   const seen = new Set();
   const text = [];
   const inactive = [];
+  const occluded = [];
+  // Floating chrome (the fixed mobile dock and the site header) is painted once
+  // in a full-page capture, at its viewport offset, and covers whatever sits
+  // under it at that scroll position. A node behind it is not low-contrast copy:
+  // it is temporarily hidden and scrolls clear, so it is reported, not scored —
+  // the same contract as decorative icons and disabled controls. Decorative
+  // fixed layers are skipped: `.noise-bg` is pointer-transparent and paints a
+  // 2% grain, and the ambient fields carry no surface of their own.
+  const hasSurface = (style) => {
+    if (style.backgroundImage !== 'none') return true;
+    if (style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent') return false;
+    const alpha = Number((style.backgroundColor.match(/rgba?\([^)]*,\s*([\d.]+)\)/) ?? [])[1] ?? 1);
+    return alpha >= 0.5;
+  };
+  const overlays = [];
+  const pushOverlay = (el, clip) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return;
+    const box = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    if (clip && !(box.x < clip.x + clip.width && box.x + box.width > clip.x && box.y < clip.y + clip.height && box.y + box.height > clip.y)) return;
+    overlays.push({ el, ...box, tag: el.tagName, cls: (el.className ?? '').toString().slice(0, 48) });
+  };
+  for (const el of document.querySelectorAll('body *')) {
+    const style = getComputedStyle(el);
+    if (style.position !== 'fixed' || style.pointerEvents === 'none') continue;
+    if (style.visibility === 'hidden' || Number(style.opacity) < 0.05) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) continue;
+    const clip = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    // The fixed layer itself may only be a frame: the mobile dock paints its
+    // surface on an inner rail, so descendants that paint one count too.
+    if (hasSurface(style)) pushOverlay(el, null);
+    for (const child of el.querySelectorAll('*')) {
+      if (getComputedStyle(child).visibility === 'hidden') continue;
+      if (hasSurface(getComputedStyle(child))) pushOverlay(child, clip);
+    }
+  }
+  // The chrome's own labels sit *inside* the overlay and are painted on top of
+  // it: they are readable and stay in the scored set.
+  const occludedBy = (rect, el) => overlays.find((overlay) => rect.x < overlay.x + overlay.width
+    && rect.x + rect.width > overlay.x
+    && rect.y < overlay.y + overlay.height
+    && rect.y + rect.height > overlay.y
+    && !overlay.el.contains(el)
+    && !el.contains(overlay.el));
   // WCAG 1.4.3 exempts inactive user interface components. A disabled submit
   // button is not a contrast defect; report it, do not fail the page on it.
   const isInactive = (el) => el.closest('[disabled], [aria-disabled="true"], fieldset[disabled]') !== null;
@@ -42,12 +87,18 @@ const COLLECT_NODES = () => {
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) continue;
     seen.add(el);
+    const box = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    const cover = occludedBy(box, el);
+    if (cover) {
+      occluded.push({ text: value.slice(0, 50), by: `${cover.tag}.${cover.cls}` });
+      continue;
+    }
     text.push({
       text: value.slice(0, 70),
       color: style.color,
       fontSize: parseFloat(style.fontSize),
       fontWeight: Number(style.fontWeight),
-      rect: { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+      rect: box,
       className: (el.className ?? '').toString().slice(0, 140),
       tag: el.tagName,
     });
@@ -67,6 +118,8 @@ const COLLECT_NODES = () => {
     if (!text) continue;
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) continue;
+    const gradientBox = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    if (occludedBy(gradientBox, el)) continue;
     const brightness = Number((style.filter.match(/brightness\(([\d.]+)\)/) ?? [])[1] ?? 1);
     // `color: transparent` cannot hide gradient-clipped glyphs: they are painted
     // by background-image. Tag the node so the sweep can strip that background
@@ -79,7 +132,7 @@ const COLLECT_NODES = () => {
       brightness,
       fontSize: parseFloat(style.fontSize),
       fontWeight: Number(style.fontWeight),
-      rect: { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+      rect: gradientBox,
       className: (el.className ?? '').toString().slice(0, 140),
       tag: el.tagName,
     });
@@ -93,6 +146,8 @@ const COLLECT_NODES = () => {
     const style = getComputedStyle(svg);
     const rect = svg.getBoundingClientRect();
     if (style.visibility === 'hidden' || Number(style.opacity) < 0.05 || rect.width < 6 || rect.height < 6) continue;
+    const iconBox = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    if (occludedBy(iconBox, svg)) continue;
     const decorative = svg.getAttribute('aria-hidden') === 'true' || svg.closest('[aria-hidden="true"]') !== null;
     const label = decorative ? 'decorative' : (svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || 'labelled');
     const entry = {
@@ -100,14 +155,22 @@ const COLLECT_NODES = () => {
       color: style.color,
       fontSize: rect.height,
       fontWeight: 400,
-      rect: { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
+      rect: iconBox,
       className: (svg.getAttribute('class') ?? '').slice(0, 90),
       tag: 'svg',
       decorative,
     };
     if (decorative) decorativeIcons.push(entry); else icons.push(entry);
   }
-  return { text, gradient, icons, decorativeIcons, inactive: [...new Set(inactive)].map((el) => el.textContent.trim().slice(0, 60)) };
+  return {
+    text,
+    gradient,
+    icons,
+    decorativeIcons,
+    inactive: [...new Set(inactive)].map((el) => el.textContent.trim().slice(0, 60)),
+    occluded,
+    overlays: overlays.map(({ el, ...rest }) => rest),
+  };
 };
 
 const HIDE_INK = `*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important;
@@ -271,6 +334,10 @@ export async function paintedSweep(page, options = {}) {
     gradientOffenders: gradientInk.filter((row) => row.ratio !== null && row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
     decorativeIcons: decorative.rows,
     faintDecorativeIcons: decorative.rows.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
+    // Reported, never failed: copy the floating chrome covers at this scroll
+    // position. It is hidden by an overlay, not painted with low-contrast ink.
+    occluded: nodes.occluded,
+    overlays: nodes.overlays,
   };
 }
 
