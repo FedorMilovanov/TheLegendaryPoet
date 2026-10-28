@@ -874,6 +874,8 @@ html.theme-light [class*="bg-[#03070d]"]:not([class*="theme-"]):not(:where(.them
 html.theme-light [class*="bg-[#07111a]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#08131d]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#0b1822]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="bg-[#071018]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="bg-[#050b12]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#111]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   background-color: rgba(255, 250, 240, 0.86) !important;
 }
@@ -963,6 +965,13 @@ html.theme-light .luxury-card .text-luxury-gray-light:not([class*="theme-"]) {
   color: #5a6a7a !important;
 }
 
+/* Gold ink belongs to the same remap table as the cyan ink. The brand gold
+   #d4af37 measured 2.03 on the cream surface (and 1.58 at /65), so light theme
+   owns a deep antique gold instead. Deliberate dark islands keep the brand gold. */
+html.theme-light [class*="text-luxury-gold"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #6b4e0a !important;
+}
+
 html.theme-light .bg-luxury-dark-200,
 html.theme-light .bg-luxury-dark-300 {
   background-color: rgba(0, 0, 0, 0.05) !important;
@@ -986,12 +995,13 @@ html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.the
 html.theme-light [class*="text-cyan-100"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-cyan-200"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-luxury-gray"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
-  color: rgba(31, 61, 71, 0.66) !important;
+  color: rgba(31, 61, 71, 0.74) !important;
 }
 
 html.theme-light [class*="text-cyan-300"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-cyan-400"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
-  color: #087f9f !important;
+  /* #087f9f measured 4.40 on the cream surface (header nav accent "Рейтинг"). */
+  color: #07748f !important;
 }
 
 /* Status utilities belong to the same light-theme remap table as the cyan ink.
@@ -1108,7 +1118,7 @@ html.theme-light select {
 
 html.theme-light input::placeholder,
 html.theme-light textarea::placeholder {
-  color: rgba(31, 61, 71, 0.42);
+  color: rgba(31, 61, 71, 0.72);
 }
 
 html.theme-light [aria-hidden="true"] path[fill="#FFF"],
