@@ -59,9 +59,9 @@ export default function ArticlesPage() {
           aria-hidden="true"
           priority
           sizes="100vw"
-          className="absolute inset-0 h-full w-full object-cover opacity-30"
+          className="hero-cover-strong absolute inset-0 h-full w-full object-cover"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-[#050505]" />
+        <div className="hero-scrim-frame pointer-events-none absolute inset-0" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

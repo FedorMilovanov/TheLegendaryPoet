@@ -29,10 +29,10 @@ export default function MusicPage() {
           src={asset(featured.wideCoverUrl)}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 -z-30 h-[760px] w-full scale-105 object-cover object-center opacity-[0.16] blur-[1px] saturate-125"
+          className="hero-cover pointer-events-none absolute inset-x-0 top-0 -z-30 h-[760px] w-full scale-105 object-cover object-center blur-[1px] saturate-125"
         />
       )}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-20 h-[820px] bg-[linear-gradient(to_bottom,rgba(5,5,5,0.32),rgba(5,5,5,0.78)_58%,#050505_100%)]" />
+      <div className="hero-scrim pointer-events-none absolute inset-x-0 top-0 -z-20 h-[820px]" />
       <div className="pointer-events-none absolute left-[-16rem] top-40 -z-10 h-[34rem] w-[34rem] rounded-full bg-luxury-gold/[0.055] blur-[130px]" />
       <div className="pointer-events-none absolute right-[-12rem] top-56 -z-10 h-[30rem] w-[30rem] rounded-full bg-cyan-400/[0.055] blur-[120px]" />
 
@@ -56,15 +56,15 @@ export default function MusicPage() {
             <div className="grid min-w-[250px] grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1">
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
                 <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{stats.publishedCount}</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">релизов</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/52 sm:text-[9px] lg:mt-0">релизов</div>
               </div>
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
                 <div className="font-serif text-2xl font-bold text-white sm:text-3xl">{stats.poetCount}</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">поэтов</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/52 sm:text-[9px] lg:mt-0">поэтов</div>
               </div>
               <div className="rounded-2xl border border-white/[0.07] bg-black/22 px-3 py-3 text-center backdrop-blur sm:px-4 lg:flex lg:items-center lg:justify-between lg:gap-8 lg:text-left">
                 <div className="font-serif text-xl font-bold text-luxury-gold sm:text-2xl">{archiveMinutes}</div>
-                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/35 sm:text-[9px] lg:mt-0">минут</div>
+                <div className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-cyan-100/52 sm:text-[9px] lg:mt-0">минут</div>
               </div>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function MusicPage() {
                 <span className="h-px w-10 bg-luxury-gold/45" />
                 <h2 id="featured-release-title" className="text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold">Главная публикация</h2>
               </div>
-              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/28"><SparklesIcon size={13} /> Рекомендуем начать отсюда</span>
+              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/52"><SparklesIcon size={13} /> Рекомендуем начать отсюда</span>
             </div>
             <FeaturedTrackPlayer track={featured} compact />
           </section>
@@ -98,7 +98,7 @@ export default function MusicPage() {
                 <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold/70"><Hourglass size={14} /> В производстве</div>
                 <h2 id="upcoming-releases-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Следующие публикации</h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Анонс не попадает в очередь воспроизведения, пока мастер, метаданные и контрольная сумма не проверены.</p>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/52">Анонс не попадает в очередь воспроизведения, пока мастер, метаданные и контрольная сумма не проверены.</p>
             </div>
             <div className="grid gap-6 xl:grid-cols-2">
               {upcoming.map((track) => <TrackAnnouncementCard key={track.id} track={track} />)}
@@ -113,7 +113,7 @@ export default function MusicPage() {
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300/55">Аудиоархив</div>
                 <h2 id="release-archive-title" className="font-serif text-3xl font-bold text-white sm:text-4xl">Другие релизы</h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-cyan-100/42">Поиск, фильтры, постепенная отрисовка и стабильная сортировка готовы к десяткам и сотням новых публикаций.</p>
+              <p className="max-w-md text-sm leading-relaxed text-cyan-100/52">Поиск, фильтры, постепенная отрисовка и стабильная сортировка готовы к десяткам и сотням новых публикаций.</p>
             </div>
             <MusicArchiveBrowser tracks={musicTracks} featuredTrackId={featured?.id} />
           </section>

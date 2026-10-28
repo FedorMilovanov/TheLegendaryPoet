@@ -124,35 +124,35 @@ function HeroSection() {
               <Link to="/poets" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-cyan-400/12 bg-gradient-to-br from-cyan-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:shadow-[0_0_40px_rgba(0,212,255,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <BookMonogramIcon className="h-14 w-14 text-cyan-300 drop-shadow-[0_0_20px_rgba(0,212,255,0.42)] transition-transform duration-500 group-hover:scale-[1.1] group-hover:-rotate-2" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-cyan-100 transition-colors group-hover:text-white">Каталог</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Исследовать поэтов</span>
+                <span className="text-[9px] font-medium text-cyan-100/52 transition-colors group-hover:text-cyan-100/58">Исследовать поэтов</span>
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
               <Link to="/hall" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-luxury-gold/12 bg-gradient-to-br from-luxury-gold/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-luxury-gold/30 hover:shadow-[0_0_40px_rgba(212,175,55,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <Sparkles className="h-14 w-14 text-luxury-gold drop-shadow-[0_0_20px_rgba(212,175,55,0.42)] transition-transform duration-500 group-hover:scale-[1.1] group-hover:rotate-12" size={56} />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-luxury-gold-light/90 transition-colors group-hover:text-luxury-gold-light">Зал Поэтов</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">В разработке</span>
+                <span className="text-[9px] font-medium text-cyan-100/52 transition-colors group-hover:text-cyan-100/58">В разработке</span>
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
               <a href="https://youtube.com/@TheLegendaryPoet" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-red-500/12 bg-gradient-to-br from-red-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-red-400/30 hover:shadow-[0_0_40px_rgba(255,0,51,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <YouTubeIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(255,0,51,0.42)] transition-transform duration-500 group-hover:scale-[1.1]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-red-200/90 transition-colors group-hover:text-red-100">YouTube</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Смотреть видео</span>
+                <span className="text-[9px] font-medium text-cyan-100/52 transition-colors group-hover:text-cyan-100/58">Смотреть видео</span>
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
               <a href="https://rutube.ru/channel/74579453" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-sky-400/12 bg-gradient-to-br from-sky-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-sky-300/30 hover:shadow-[0_0_40px_rgba(18,204,237,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <RutubeIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(18,204,237,0.42)] transition-transform duration-500 group-hover:scale-[1.08]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-sky-200/90 transition-colors group-hover:text-sky-100">Rutube</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Канал проекта</span>
+                <span className="text-[9px] font-medium text-cyan-100/52 transition-colors group-hover:text-cyan-100/58">Канал проекта</span>
               </a>
             </motion.div>
             <motion.div whileHover={{ scale: 1.055, y: -6 }} whileTap={{ scale: 0.965 }} transition={{ type: 'spring', stiffness: 420, damping: 22 }}>
               <a href="https://vk.com/thelegendarypoet" target="_blank" rel="noopener noreferrer" className="group relative flex min-h-[132px] flex-col items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-blue-500/12 bg-gradient-to-br from-blue-500/8 via-transparent to-transparent px-4 py-5 text-center backdrop-blur-md transition-all duration-300 hover:border-blue-400/30 hover:shadow-[0_0_40px_rgba(7,119,255,0.15)] sm:min-h-[160px] sm:gap-3 sm:px-5 sm:py-7">
                 <VKIcon className="h-14 w-14 drop-shadow-[0_0_20px_rgba(7,119,255,0.42)] transition-transform duration-500 group-hover:scale-[1.1]" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-200/90 transition-colors group-hover:text-blue-100">ВКонтакте</span>
-                <span className="text-[9px] font-medium text-cyan-100/34 transition-colors group-hover:text-cyan-100/58">Сообщество</span>
+                <span className="text-[9px] font-medium text-cyan-100/52 transition-colors group-hover:text-cyan-100/58">Сообщество</span>
               </a>
             </motion.div>
           </div>
@@ -228,7 +228,7 @@ function StatsSection({ visitKey }: { visitKey: string }) {
                     <AnimatedCounter value={value} />
                   )}
                 </div>
-                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-100/45">{stat.label}</div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-cyan-100/52">{stat.label}</div>
               </Reveal>
             );
           })}

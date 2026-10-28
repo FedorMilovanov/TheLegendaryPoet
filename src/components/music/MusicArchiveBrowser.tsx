@@ -122,7 +122,7 @@ export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicAr
               type="button"
               onClick={() => updateParam('poet', '')}
               aria-pressed={!poetId}
-              className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${!poetId ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100' : 'border-white/[0.08] text-white/38 hover:border-white/[0.18] hover:text-white/72'}`}
+              className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${!poetId ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-100' : 'border-white/[0.08] text-white/52 hover:border-white/[0.18] hover:text-white/72'}`}
             >
               <ListMusic size={14} /> Все
             </button>
@@ -132,7 +132,7 @@ export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicAr
                 type="button"
                 onClick={() => updateParam('poet', poetId === poet.id ? '' : poet.id)}
                 aria-pressed={poetId === poet.id}
-                className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${poetId === poet.id ? 'border-luxury-gold/35 bg-luxury-gold/10 text-luxury-gold' : 'border-white/[0.08] text-white/38 hover:border-white/[0.18] hover:text-white/72'}`}
+                className={`inline-flex min-h-10 flex-none items-center gap-2 rounded-full border px-4 text-[10px] font-bold uppercase tracking-[0.12em] transition ${poetId === poet.id ? 'border-luxury-gold/35 bg-luxury-gold/10 text-luxury-gold' : 'border-white/[0.08] text-white/52 hover:border-white/[0.18] hover:text-white/72'}`}
               >
                 <UserRound size={14} /> {poet.name}
               </button>
@@ -140,7 +140,7 @@ export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicAr
           </div>
         )}
 
-        <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-xs text-cyan-100/34">
+        <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4 text-xs text-cyan-100/52">
           <div aria-live="polite">
             {searchPending ? 'Обновляем результаты…' : (
               <>
@@ -150,7 +150,7 @@ export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicAr
             )}
           </div>
           {filtersActive && (
-            <button type="button" onClick={reset} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.08] px-3 font-bold text-white/42 transition hover:border-white/[0.2] hover:text-white">
+            <button type="button" onClick={reset} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.08] px-3 font-bold text-white/52 transition hover:border-white/[0.2] hover:text-white">
               <X size={14} /> Сбросить фильтры
             </button>
           )}

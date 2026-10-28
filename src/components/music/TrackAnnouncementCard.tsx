@@ -44,7 +44,7 @@ export default function TrackAnnouncementCard({ track }: { track: MusicTrack }) 
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/35 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--track-accent)' }}><Hourglass size={13} /> Скоро</span>
-            <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/38">
+            <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white/52">
               <CalendarDays size={13} />
               {scheduledDate ? <time dateTime={track.scheduledFor}>{scheduledDate}</time> : 'Дата уточняется'}
             </span>
