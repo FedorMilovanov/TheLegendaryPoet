@@ -18,12 +18,25 @@
 const COLLECT_NODES = () => {
   const seen = new Set();
   const text = [];
+  const inactive = [];
+  // WCAG 1.4.3 exempts inactive user interface components. A disabled submit
+  // button is not a contrast defect; report it, do not fail the page on it.
+  const isInactive = (el) => el.closest('[disabled], [aria-disabled="true"], fieldset[disabled]') !== null;
   const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  // Gradient-clipped elements paint their ink from background-image, so their
+  // `color` is only a fallback. Score them once, in the gradient pass.
+  const gradientBoxes = new Set();
+  for (const el of document.querySelectorAll('*')) {
+    const style = getComputedStyle(el);
+    const clip = `${style.webkitBackgroundClip || ''} ${style.backgroundClip || ''}`;
+    if (/\btext\b/.test(clip) && style.backgroundImage.includes('gradient')) gradientBoxes.add(el);
+  }
   for (let node = walk.nextNode(); node; node = walk.nextNode()) {
     const value = node.textContent.trim();
     if (!value) continue;
     const el = node.parentElement;
-    if (!el || seen.has(el)) continue;
+    if (!el || seen.has(el) || gradientBoxes.has(el)) continue;
+    if (isInactive(el)) { inactive.push(el); continue; }
     const style = getComputedStyle(el);
     if (style.visibility === 'hidden' || Number(style.opacity) < 0.05) continue;
     const rect = el.getBoundingClientRect();
@@ -71,22 +84,30 @@ const COLLECT_NODES = () => {
       tag: el.tagName,
     });
   }
+  // WCAG 1.4.11 covers graphics required to understand the content. An icon the
+  // page hides from assistive tech, next to copy that already says the same
+  // thing, is decorative: report it, do not fail the page on it.
   const icons = [];
+  const decorativeIcons = [];
   for (const svg of document.querySelectorAll('svg')) {
     const style = getComputedStyle(svg);
     const rect = svg.getBoundingClientRect();
     if (style.visibility === 'hidden' || Number(style.opacity) < 0.05 || rect.width < 6 || rect.height < 6) continue;
-    icons.push({
-      text: `<svg ${svg.getAttribute('aria-hidden') === 'true' ? 'decorative' : 'labelled'}>`,
+    const decorative = svg.getAttribute('aria-hidden') === 'true' || svg.closest('[aria-hidden="true"]') !== null;
+    const label = decorative ? 'decorative' : (svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || 'labelled');
+    const entry = {
+      text: `<svg ${label}>`,
       color: style.color,
       fontSize: rect.height,
       fontWeight: 400,
       rect: { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height },
       className: (svg.getAttribute('class') ?? '').slice(0, 90),
       tag: 'svg',
-    });
+      decorative,
+    };
+    if (decorative) decorativeIcons.push(entry); else icons.push(entry);
   }
-  return { text, gradient, icons };
+  return { text, gradient, icons, decorativeIcons, inactive: [...new Set(inactive)].map((el) => el.textContent.trim().slice(0, 60)) };
 };
 
 const HIDE_INK = `*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important;
@@ -239,6 +260,7 @@ export async function paintedSweep(page, options = {}) {
 
   const plain = await measureBands([...nodes.text, ...nodes.icons], HIDE_INK);
   const gradients = await measureBands(nodes.gradient, `${HIDE_INK}\n${HIDE_GRADIENT_INK}`);
+  const decorative = await measureBands(nodes.decorativeIcons, HIDE_INK);
 
   const measured = plain.rows;
   const gradientInk = [...gradients.rows, ...gradients.gradientInk];
@@ -247,6 +269,8 @@ export async function paintedSweep(page, options = {}) {
     offenders: measured.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
     gradientInk,
     gradientOffenders: gradientInk.filter((row) => row.ratio !== null && row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
+    decorativeIcons: decorative.rows,
+    faintDecorativeIcons: decorative.rows.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
   };
 }
 

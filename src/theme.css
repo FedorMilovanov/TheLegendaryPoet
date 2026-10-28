@@ -42,6 +42,21 @@
   --tlp-modal-shadow: 0 0 80px rgba(0, 212, 255, 0.16);
   --tlp-spiritual-bg: linear-gradient(145deg, #0e0c07 0%, #050505 100%);
   --tlp-moral-bg: linear-gradient(145deg, #100808 0%, #0a0606 52%, #050505 100%);
+  /* Epoch and "родственные души" connection palettes. The dark values are the
+     brand neon set; light theme swaps the whole palette below, because those
+     neons painted 1.04-1.95 on the cream surface on the poet page. */
+  --epoch-golden: #d4af37;
+  --epoch-philosophy: #2ed8ff;
+  --epoch-symbolism: #9a13ed;
+  --epoch-acmeism: #12cced;
+  --epoch-futurism: #ed143b;
+  --epoch-post-symbolism: #7dd3fc;
+  --conn-influence: #63d8ff;
+  --conn-personal: #d4af37;
+  --conn-epoch: #e2e8f0;
+  --conn-thematic: #a78bfa;
+  --conn-rivalry: #ef4444;
+
 }
 
 html.theme-light {
@@ -89,6 +104,19 @@ html.theme-light {
   --tlp-modal-shadow: 0 28px 90px rgba(77, 59, 38, 0.22);
   --tlp-spiritual-bg: linear-gradient(145deg, #fffaf0 0%, #f3e8cc 100%);
   --tlp-moral-bg: linear-gradient(145deg, #fffaf7 0%, #f7e9e5 52%, #efe1d8 100%);
+  /* Deep counterparts for the epoch/connection palette: every one of them
+     clears 4.5 on the cream surface and on the tinted card surfaces it sits on. */
+  --epoch-golden: #6b4e0a;
+  --epoch-philosophy: #0a5c78;
+  --epoch-symbolism: #6b1fa8;
+  --epoch-acmeism: #0a6d80;
+  --epoch-futurism: #b3102c;
+  --epoch-post-symbolism: #0a5f8f;
+  --conn-influence: #0a6a86;
+  --conn-personal: #6b4e0a;
+  --conn-epoch: #3f4a57;
+  --conn-thematic: #5b3fa8;
+  --conn-rivalry: #a51226;
 }
 
 .theme-page-surface {

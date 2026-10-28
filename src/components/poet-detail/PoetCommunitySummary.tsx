@@ -24,12 +24,12 @@ export default function PoetCommunitySummary({ poetId }: PoetCommunitySummaryPro
           <div className="theme-text text-3xl font-bold">
             {feedback.ratingCount ? feedback.summary.overall.toFixed(1) : '—'}
           </div>
-          <div className="text-xs text-cyan-100/38">{feedback.ratingCount} оценок · {feedback.trust}</div>
+          <div className="text-xs text-cyan-100/55">{feedback.ratingCount} оценок · {feedback.trust}</div>
         </div>
         <div className="inline-flex items-center gap-1 rounded-full border border-cyan-400/15 px-3 py-1 text-cyan-300">
           <Star size={14} className="fill-cyan-300" />
           <span className="text-sm font-bold">{feedback.commentCount}</span>
-          <span className="text-[10px] uppercase tracking-[0.12em] text-cyan-100/35">мнений</span>
+          <span className="text-[10px] uppercase tracking-[0.12em] text-cyan-100/55">мнений</span>
         </div>
       </div>
       {(strongest || weakest) && (

@@ -959,15 +959,23 @@ html.theme-light [class*="text-white"]:not([class*="theme-"]):not(:where(.theme-
   color: #1a2a35 !important;
 }
 
-html.theme-light .bg-gradient-to-r.from-cyan-500 [class*="text-white"],
-html.theme-light .bg-gradient-to-r.from-cyan-500.text-white,
 html.theme-light .bg-red-600 [class*="text-white"],
 html.theme-light .bg-red-600.text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"].text-white,
 html.theme-light .bg-luxury-gold [class*="text-white"],
 html.theme-light .bg-luxury-gold.text-white {
   color: #ffffff !important;
+}
+
+/* A bright cyan->blue fill cannot carry white ink: the painted mix measured
+   2.98 on the rating submit button, the article filter pill and the home
+   "Изучить статьи" button, in BOTH themes. The brand already pairs bright fills
+   with dark ink (`bg-luxury-gold` uses `text-black`), so these labels own the
+   same deep ink instead. */
+.bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+.bg-gradient-to-r.from-cyan-500.text-white:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
+[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"][class*="text-white"] {
+  color: #04222b !important;
 }
 
 html.theme-light .luxury-card [class*="text-cyan-100"]:not([class*="theme-"]) {
@@ -1003,9 +1011,7 @@ html.theme-light .border-luxury-gold\/10 {
 }
 
 html.theme-light .bg-red-600.text-white,
-html.theme-light .bg-red-600 .text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"].text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] .text-white {
+html.theme-light .bg-red-600 .text-white {
   color: #ffffff !important;
 }
 
