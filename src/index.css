@@ -650,8 +650,11 @@ html.theme-light .section-chip-row.is-current { color: #8a6d1d; }
 .gold-glow-text { text-shadow: 0 0 12px rgba(212, 175, 55, 0.65), 0 0 28px rgba(212, 175, 55, 0.3), 0 0 50px rgba(212, 175, 55, 0.12); }
 .gold-border-glow { box-shadow: 0 0 12px rgba(212, 175, 55, 0.28), 0 0 24px rgba(212, 175, 55, 0.1); }
 
+/* The deep stops carried the gradient: #2f4dd8 measured 3.08 and #1a7eff 4.17
+   against the tinted hero panel, below the 4.5 floor for body-size wordmarks.
+   Lifting only the deep stops keeps the bright cyan-to-blue flow. */
 .neon-blue-gradient {
-  background: linear-gradient(115deg, #d8f6ff 0%, #7cd8ff 14%, #38b6ff 30%, #1a7eff 46%, #2f4dd8 56%, #1a7eff 70%, #7cd8ff 84%, #d8f6ff 100%);
+  background: linear-gradient(115deg, #d8f6ff 0%, #7cd8ff 14%, #38b6ff 30%, #4a8cf5 46%, #6b82f0 56%, #4a8cf5 70%, #7cd8ff 84%, #d8f6ff 100%);
   background-size: 320% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -660,6 +663,20 @@ html.theme-light .section-chip-row.is-current { color: #8a6d1d; }
 }
 
 .kinetic-word, .kinetic-letter { background: inherit; background-size: inherit; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* Mobile header wordmark. Its own cyan-to-periwinkle flow, with a light-theme
+   palette: the original stops measured 1.65 painted on the cream header. */
+.brand-wordmark-gradient {
+  background: linear-gradient(90deg, #e7fcff 0%, #8eeeff 34%, #2ed8ff 68%, #89a7ff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.theme-light .brand-wordmark-gradient:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  background-image: linear-gradient(90deg, #0b3a4a 0%, #07415a 34%, #123f8f 68%, #1a2f74 100%);
+}
 
 @keyframes neon-flow { 0% { background-position: 0% center; } 100% { background-position: 300% center; } }
 
@@ -874,6 +891,8 @@ html.theme-light [class*="bg-[#03070d]"]:not([class*="theme-"]):not(:where(.them
 html.theme-light [class*="bg-[#07111a]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#08131d]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#0b1822]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="bg-[#071018]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="bg-[#050b12]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="bg-[#111]"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   background-color: rgba(255, 250, 240, 0.86) !important;
 }
@@ -940,15 +959,23 @@ html.theme-light [class*="text-white"]:not([class*="theme-"]):not(:where(.theme-
   color: #1a2a35 !important;
 }
 
-html.theme-light .bg-gradient-to-r.from-cyan-500 [class*="text-white"],
-html.theme-light .bg-gradient-to-r.from-cyan-500.text-white,
 html.theme-light .bg-red-600 [class*="text-white"],
 html.theme-light .bg-red-600.text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"].text-white,
 html.theme-light .bg-luxury-gold [class*="text-white"],
 html.theme-light .bg-luxury-gold.text-white {
   color: #ffffff !important;
+}
+
+/* A bright cyan->blue fill cannot carry white ink: the painted mix measured
+   2.98 on the rating submit button, the article filter pill and the home
+   "Изучить статьи" button, in BOTH themes. The brand already pairs bright fills
+   with dark ink (`bg-luxury-gold` uses `text-black`), so these labels own the
+   same deep ink instead. */
+.bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+.bg-gradient-to-r.from-cyan-500.text-white:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
+[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"][class*="text-white"] {
+  color: #04222b !important;
 }
 
 html.theme-light .luxury-card [class*="text-cyan-100"]:not([class*="theme-"]) {
@@ -961,6 +988,13 @@ html.theme-light .luxury-card [class*="text-cyan-200"]:not([class*="theme-"]) {
 
 html.theme-light .luxury-card .text-luxury-gray-light:not([class*="theme-"]) {
   color: #5a6a7a !important;
+}
+
+/* Gold ink belongs to the same remap table as the cyan ink. The brand gold
+   #d4af37 measured 2.03 on the cream surface (and 1.58 at /65), so light theme
+   owns a deep antique gold instead. Deliberate dark islands keep the brand gold. */
+html.theme-light [class*="text-luxury-gold"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #6b4e0a !important;
 }
 
 html.theme-light .bg-luxury-dark-200,
@@ -977,21 +1011,20 @@ html.theme-light .border-luxury-gold\/10 {
 }
 
 html.theme-light .bg-red-600.text-white,
-html.theme-light .bg-red-600 .text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"].text-white,
-html.theme-light [class*="from-cyan-500"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] .text-white {
+html.theme-light .bg-red-600 .text-white {
   color: #ffffff !important;
 }
 
 html.theme-light [class*="text-cyan-100"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-cyan-200"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-luxury-gray"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
-  color: rgba(31, 61, 71, 0.66) !important;
+  color: rgba(31, 61, 71, 0.74) !important;
 }
 
 html.theme-light [class*="text-cyan-300"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="text-cyan-400"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
-  color: #087f9f !important;
+  /* #087f9f measured 4.40 on the cream surface (header nav accent "Рейтинг"). */
+  color: #07748f !important;
 }
 
 /* Status utilities belong to the same light-theme remap table as the cyan ink.
@@ -1043,12 +1076,23 @@ html.theme-light .theme-toggle {
   color: #0d748c;
 }
 
-html.theme-light .gold-gradient {
-  filter: brightness(0.85) contrast(1.1);
+/* Same story for the brand gold: #d4af37 reached 1.52 painted on cream. Light
+   theme owns an antique bronze flow whose every stop clears 4.5. */
+html.theme-light .gold-gradient:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  background-image: linear-gradient(115deg, #4a3608 0%, #57400a 18%, #503c0a 36%, #3f2e07 52%, #382906 68%, #57400a 84%, #4a3608 100%);
+  filter: none;
 }
 
-html.theme-light .neon-blue-gradient {
-  filter: brightness(0.9) contrast(1.1);
+/* Gradient ink is painted by the gradient, not by `color`, so a brightness
+   filter that darkens a palette designed for near-black only reached 1.0-1.5 on
+   the cream surface. Light theme owns its own deep ocean-to-indigo flow: every
+   stop clears 4.5 even on the darkest light surface measured (184,183,176). */
+html.theme-light .neon-blue-gradient:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  /* `background-image`, never the `background` shorthand: the shorthand resets
+     background-clip, and an unclipped gradient paints a box behind its own text
+     (measured 1.0 for the kinetic headings on the home page). */
+  background-image: linear-gradient(115deg, #0b3a4a 0%, #07415a 14%, #10417e 30%, #123f8f 46%, #1a2f74 56%, #123f8f 70%, #07415a 84%, #0b3a4a 100%);
+  filter: none;
 }
 
 html.theme-light .gold-glow-text {
@@ -1108,7 +1152,7 @@ html.theme-light select {
 
 html.theme-light input::placeholder,
 html.theme-light textarea::placeholder {
-  color: rgba(31, 61, 71, 0.42);
+  color: rgba(31, 61, 71, 0.72);
 }
 
 html.theme-light [aria-hidden="true"] path[fill="#FFF"],

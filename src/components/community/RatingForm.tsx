@@ -77,9 +77,9 @@ export default function RatingForm({ dimensions, initialScores, onSubmit, onStat
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/34" aria-live="polite">
+      <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/55" aria-live="polite">
         <span>Заполнено измерений</span>
-        <span className={canSubmit ? 'text-emerald-200/70' : 'text-cyan-100/48'}>{completedCount} / {dimensions.length}</span>
+        <span className={canSubmit ? 'text-emerald-200/70' : 'text-cyan-100/55'}>{completedCount} / {dimensions.length}</span>
       </div>
 
       {dimensions.map((dimension) => (
@@ -87,7 +87,7 @@ export default function RatingForm({ dimensions, initialScores, onSubmit, onStat
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <div className="text-sm font-bold text-white">{dimension.label}</div>
-              <div className="text-xs leading-relaxed text-cyan-100/42">{dimension.hint}</div>
+              <div className="text-xs leading-relaxed text-cyan-100/55">{dimension.hint}</div>
             </div>
             <RatingStars
               value={scores[dimension.key] ?? 0}

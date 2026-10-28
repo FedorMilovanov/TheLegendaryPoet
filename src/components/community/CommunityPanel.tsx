@@ -81,7 +81,7 @@ export default function CommunityPanel({
     };
     if (feedback.sync.phase === 'idle') return {
       Icon: Clock3,
-      className: 'text-cyan-100/48',
+      className: 'text-cyan-100/55',
       text: 'Общая база подключена; ожидаем первую синхронизацию.',
       spin: false,
     };
@@ -110,7 +110,7 @@ export default function CommunityPanel({
               <ShieldCheck size={13} aria-hidden="true" /> Оценка сообщества
             </div>
             <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
-            <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/45">
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/55">
               Оценки и комментарии загружаются только после открытия этого блока.
             </p>
           </div>

@@ -12,19 +12,19 @@ function TestimonyCard({ item }: { item: Testimony }) {
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-luxury-gold/10 pt-4">
         <div>
           <span className="theme-text text-sm font-bold">{item.author}</span>
-          <span className="text-xs text-luxury-gray-light/70"> — {ruTypography(item.role)}</span>
+          <span className="text-xs text-luxury-gray-light/80"> — {ruTypography(item.role)}</span>
         </div>
         {item.sourceUrl ? (
           <a
             href={item.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] uppercase tracking-wider text-luxury-gold/60 hover:text-luxury-gold transition-colors"
+            className="text-[11px] uppercase tracking-wider text-luxury-gold/75 hover:text-luxury-gold transition-colors"
           >
             {item.source}
           </a>
         ) : (
-          <span className="text-[11px] uppercase tracking-wider text-luxury-gray-light/40">{item.source}</span>
+          <span className="text-[11px] uppercase tracking-wider text-luxury-gray-light/80">{item.source}</span>
         )}
       </div>
     </div>

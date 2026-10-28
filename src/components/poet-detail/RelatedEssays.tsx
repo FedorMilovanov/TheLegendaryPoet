@@ -24,7 +24,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
     <section aria-labelledby="poet-longreads-title" className="space-y-7">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-luxury-gold/10 pb-4">
         <div>
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/60">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold/75">
             Большие материалы
           </div>
           <h2 id="poet-longreads-title" className="theme-text font-serif text-3xl font-bold md:text-4xl">

@@ -58,7 +58,7 @@ export default function CommentList({
     return (
       <div className="rounded-2xl border border-dashed border-cyan-400/10 px-5 py-8 text-center" role="status" aria-live="polite">
         <LoaderCircle className="mx-auto animate-spin text-cyan-100/25" size={24} aria-hidden="true" />
-        <p className="mt-3 text-sm text-cyan-100/42">Загружаем комментарии…</p>
+        <p className="mt-3 text-sm text-cyan-100/55">Загружаем комментарии…</p>
       </div>
     );
   }
