@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'essay-lightbox-overlay');
@@ -75,7 +78,7 @@ for (const mobile of [false, true]) {
         isMobile: mobile,
         hasTouch: mobile,
         colorScheme: theme,
-        reducedMotion: 'reduce',
+        contextOptions: { reducedMotion: 'reduce' },
       });
       test('exact archive portraits decode inline and in the shared lightbox', async ({ page }, testInfo) => {
         const pageErrors = [];

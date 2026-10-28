@@ -70,7 +70,7 @@ concurrency:
 jobs:
   browser-runtime-proof:
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 75
     env:
       TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       HALL_WEB_PROOF_URL: http://127.0.0.1:4174

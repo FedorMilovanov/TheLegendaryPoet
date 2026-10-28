@@ -66,7 +66,7 @@ function SectionBlock({ block, number }: { block: Block<'section'>; number?: num
         </span>
       )}
       <span className="h-px w-8 self-center bg-luxury-gold/50" />
-      <span className="gold-gradient gold-glow-text">{titleCase(block.heading)}</span>
+      <span className="theme-essay-emphasis gold-gradient gold-glow-text">{titleCase(block.heading)}</span>
     </h2>
   );
 }
@@ -326,7 +326,7 @@ function PoemBlock({ block }: { block: Block<'poem'> }) {
         <figcaption className="mb-5 flex flex-wrap items-baseline gap-3">
           <span className={`font-serif text-xl font-semibold ${v.title}`}>«{block.title}»</span>
           {block.year && (
-            <span className="text-[11px] uppercase tracking-[0.18em] theme-functional-muted">{block.year}</span>
+            <span className={`text-[11px] uppercase tracking-[0.18em] ${v.year}`}>{block.year}</span>
           )}
           {blood && (
             <span className="inline-flex items-center gap-1 rounded-full border border-red-500/25 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-red-300/80">
@@ -412,7 +412,7 @@ function MythNoteBlock({ block, citations }: { block: Extract<Block<'note'>, { v
   const paragraphs = splitParagraphs(block.text);
 
   return (
-    <aside className={`relative my-12 overflow-hidden rounded-[2.25rem] border p-7 md:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.28)] ${cfg.frame}`}>
+    <aside className={`theme-dark-island bg-[#050505] relative my-12 overflow-hidden rounded-[2.25rem] border p-7 md:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.28)] ${cfg.frame}`}>
       <span className={`absolute bottom-0 left-0 top-0 w-1 ${cfg.rule}`} aria-hidden="true" />
       <div className="relative z-10">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -430,14 +430,14 @@ function MythNoteBlock({ block, citations }: { block: Extract<Block<'note'>, { v
         </p>
 
         {block.origin ? (
-          <p className="mt-4 text-xs leading-relaxed text-luxury-gray-light/48">
-            <span className="font-bold uppercase tracking-[0.14em] text-luxury-gray-light/60">Откуда формула:</span>{' '}
+          <p className="theme-dark-island-muted mt-4 text-xs leading-relaxed">
+            <span className="theme-dark-island-muted font-bold uppercase tracking-[0.14em]">Откуда формула:</span>{' '}
             {block.origin}
           </p>
         ) : null}
 
         <div className="mt-7 border-t border-white/10 pt-6">
-          <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/55">
+          <div className="theme-dark-island-muted mb-3 text-[10px] font-bold uppercase tracking-[0.2em]">
             Что показывают документы
           </div>
           {paragraphs.map((paragraph, index) => (
@@ -462,7 +462,7 @@ function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: Rea
       <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] theme-functional-subtle">
         THE LEGENDARY POET — ремарка
       </div>
-      <p className="text-lg leading-relaxed text-cyan-50/85 font-light italic text-pretty">
+      <p className="theme-essay-prose text-lg leading-relaxed font-light italic text-pretty">
         {withTypography(block.text)}{citations}
       </p>
     </aside>
@@ -471,7 +471,7 @@ function NoteBlock({ block, citations }: { block: Block<'note'>; citations?: Rea
 
 function ReflectionBlock({ block }: { block: Block<'reflection'> }) {
   return (
-    <aside className="relative my-14 overflow-hidden rounded-[2.5rem] border border-luxury-gold/25 bg-gradient-to-br from-[#12100a] via-[#0b0a07] to-[#050505] p-8 md:p-12 shadow-[0_0_60px_rgba(212,175,55,0.06)]">
+    <aside className="theme-dark-island bg-[#050505] relative my-14 overflow-hidden rounded-[2.5rem] border border-luxury-gold/25 bg-gradient-to-br from-[#12100a] via-[#0b0a07] to-[#050505] p-8 md:p-12 shadow-[0_0_60px_rgba(212,175,55,0.06)]">
       <div className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-luxury-gold/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-10 -bottom-10 text-luxury-gold/5">
         <Feather size={200} />

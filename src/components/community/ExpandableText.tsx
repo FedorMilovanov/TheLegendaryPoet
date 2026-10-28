@@ -35,7 +35,7 @@ export default function ExpandableText({ text, collapsedChars = 220 }: Expandabl
 
   return (
     <div>
-      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-cyan-50/68">{visibleText}</p>
+      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed theme-community-prose">{visibleText}</p>
       {shouldCollapse && (
         <button
           type="button"

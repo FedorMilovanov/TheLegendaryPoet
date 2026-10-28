@@ -994,6 +994,32 @@ html.theme-light [class*="text-cyan-400"]:not([class*="theme-"]):not(:where(.the
   color: #087f9f !important;
 }
 
+/* Status utilities belong to the same light-theme remap table as the cyan ink.
+   Without them amber/emerald copy stays near-white on light surfaces: measured
+   1.03-1.14 in the community panel, the ratings sync badge and the synced sync
+   line. Elements that own a dark amber/emerald surface opt out with a `theme-`
+   class, exactly like the dark islands. */
+html.theme-light [class*="text-amber-50"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="text-amber-100"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="text-amber-200"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #7a4d00 !important;
+}
+
+html.theme-light [class*="text-amber-300"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="text-amber-400"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #5f3d00 !important;
+}
+
+html.theme-light [class*="text-emerald-100"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="text-emerald-200"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #0f6b45 !important;
+}
+
+html.theme-light [class*="text-emerald-300"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light [class*="text-emerald-400"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
+  color: #0b5637 !important;
+}
+
 html.theme-light [class*="border-cyan-400"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
 html.theme-light [class*="border-luxury-gold"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   border-color: rgba(13, 120, 150, 0.18) !important;
@@ -1045,7 +1071,7 @@ html.theme-light .dock-pill {
   box-shadow: 0 0 16px rgba(13, 120, 150, 0.1);
 }
 
-html.theme-light .poetry-text {
+html.theme-light .poetry-text:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   color: #1a2a35 !important;
 }
 

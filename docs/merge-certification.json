@@ -3,6 +3,8 @@
   "lanes": {
     "hall-pushkin-offline-exhibit": {
       "workflowFile": ".github/workflows/hall-pushkin-offline-exhibit.yml",
+      "canonicalJob": "offline-exhibit",
+      "canonicalJobTimeoutMinutes": 90,
       "event": "pull_request",
       "pollTimeoutSeconds": 7200,
       "pollIntervalSeconds": 20,
@@ -40,12 +42,16 @@
         "package.json",
         "package-lock.json",
         ".github/actions/setup-node-deps/**"
-      ]
+      ],
+      "waiterJob": "hall-pushkin-offline",
+      "waiterJobTimeoutMinutes": 125
     },
     "hall-pushkin-visual-remediation": {
       "workflowFile": ".github/workflows/hall-pushkin-visual-remediation.yml",
+      "canonicalJob": "lookdev-candidate",
+      "canonicalJobTimeoutMinutes": 130,
       "event": "pull_request",
-      "pollTimeoutSeconds": 7800,
+      "pollTimeoutSeconds": 8400,
       "pollIntervalSeconds": 20,
       "paths": [
         ".github/workflows/hall-pushkin-visual-remediation.yml",
@@ -61,12 +67,16 @@
         "scripts/hall-material/generate-material-spike.py",
         "scripts/hall-material/prepare-material-visual-evidence.py",
         "scripts/hall-pushkin/**"
-      ]
+      ],
+      "waiterJob": "hall-pushkin-visual",
+      "waiterJobTimeoutMinutes": 145
     },
     "hall-web-runtime-proof": {
       "workflowFile": ".github/workflows/hall-web-runtime-proof.yml",
+      "canonicalJob": "browser-runtime-proof",
+      "canonicalJobTimeoutMinutes": 75,
       "event": "pull_request",
-      "pollTimeoutSeconds": 2400,
+      "pollTimeoutSeconds": 5400,
       "pollIntervalSeconds": 15,
       "paths": [
         ".github/workflows/hall-web-runtime-proof.yml",
@@ -95,7 +105,9 @@
         ".github/actions/setup-node-deps/action.yml",
         ".github/actions/install-build-tools/**",
         ".github/actions/install-playwright/action.yml"
-      ]
+      ],
+      "waiterJob": "hall-web-runtime",
+      "waiterJobTimeoutMinutes": 100
     }
   }
 }

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const root = process.cwd();
 const errors: string[] = [];
@@ -295,6 +296,11 @@ if (fs.existsSync(path.join(root, webkitRouteHelperPath))) {
     fail(`${webkitRouteHelperPath}: Safari route diagnostics must fail closed when loading/wipe surfaces remain visible`);
   }
 }
+
+// Keep media wiring executable in the existing browser-runtime gate, not just
+// in an optional local unit command. No browser installation is needed here.
+const mediaContract = spawnSync(process.execPath, ['--test', 'scripts/tests/qa-media-contract.test.mjs'], { cwd: root, stdio: 'inherit' });
+if (mediaContract.status !== 0) fail('QA media fixture contract tests failed');
 
 if (errors.length > 0) {
   for (const error of errors) console.error(`ERROR ${error}`);

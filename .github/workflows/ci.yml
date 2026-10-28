@@ -29,6 +29,8 @@ jobs:
         run: npm run validate:reader-certification
       - name: Validate locked browser runtime contract
         run: npm run validate:browser-runtime
+      - name: Validate browser install timeout floor
+        run: npm run validate:browser-install-timeouts
       - name: Validate conditional exact-head merge certification contract
         run: npm run validate:merge-certification
       - name: Validate content, stores, and literary style

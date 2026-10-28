@@ -118,7 +118,7 @@ jobs:
 
   analytics-route-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout exact analytics tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -177,7 +177,7 @@ jobs:
 
   webkit-home-reveal-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact Safari home tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -225,7 +225,7 @@ jobs:
 
   premium-home-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact premium tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -276,7 +276,7 @@ jobs:
 
   premium-iphone-critical-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact critical iPhone tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
