@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
@@ -114,7 +117,7 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
 
 for (const [width, colorScheme] of [[320, 'dark'], [390, 'light'], [768, 'dark'], [1440, 'light']]) {
   for (const textScale of [1, 2]) test.describe(`caption reflow ${width}px, ${textScale * 100}% text`, () => {
-    test.use({ viewport: { width, height: 1000 }, colorScheme, reducedMotion: 'reduce', isMobile: width < 500, hasTouch: width < 500 });
+    test.use({ viewport: { width, height: 1000 }, colorScheme, contextOptions: { reducedMotion: 'reduce' }, isMobile: width < 500, hasTouch: width < 500 });
     test('all names and dates scale without losing text or links', async ({ page }) => {
       await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), colorScheme);
       await page.goto(BASE_URL);

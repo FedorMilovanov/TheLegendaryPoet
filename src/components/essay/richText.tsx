@@ -24,7 +24,7 @@ export function withGold(text: string, options: { verse?: boolean } = {}): React
   const parts = ruTypography(text, { ellipsis: !options.verse }).split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) =>
     part.startsWith('**') && part.endsWith('**') ? (
-      <span key={i} className="gold-gradient gold-glow-text font-medium">
+      <span key={i} className="theme-essay-emphasis gold-gradient gold-glow-text font-medium">
         {part.slice(2, -2)}
       </span>
     ) : (

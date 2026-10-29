@@ -280,12 +280,12 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--track-accent)' }}><Music2 size={13} /> Официальный релиз</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/42"><Headphones size={13} /> MP3 · 44.1 kHz</span>
-            <span className="inline-flex items-center gap-1.5 px-1 text-xs text-white/40"><Clock3 size={13} /> {track.duration}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/52"><Headphones size={13} /> MP3 · 44.1 kHz</span>
+            <span className="inline-flex items-center gap-1.5 px-1 text-xs text-white/52"><Clock3 size={13} /> {track.duration}</span>
           </div>
 
           <h2 className={`font-serif font-bold leading-[0.98] text-white drop-shadow-[0_8px_35px_rgba(0,0,0,0.55)] ${compact ? 'text-3xl sm:text-4xl lg:text-[2.8rem]' : 'text-4xl sm:text-5xl lg:text-6xl'}`}>{track.title}</h2>
-          <p className="mt-3 text-base sm:text-lg" style={{ color: 'color-mix(in srgb, var(--track-accent) 82%, white)' }}>{track.poet} <span className="text-white/22">·</span> The Legendary Poet</p>
+          <p className="mt-3 text-base sm:text-lg" style={{ color: 'color-mix(in srgb, var(--track-accent) 82%, white)' }}>{track.poet} <span className="text-white/52">·</span> The Legendary Poet</p>
           {track.description && <p className={`mt-5 max-w-2xl leading-relaxed text-white/52 ${compact ? 'text-sm sm:text-base' : 'text-sm sm:text-base'}`}>{track.description}</p>}
 
           {restoredPosition !== null && restoredPosition > 0 && (
@@ -347,7 +347,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
               />
             </div>
-            <div className="mt-2.5 flex items-center justify-between text-xs tabular-nums text-white/40">
+            <div className="mt-2.5 flex items-center justify-between text-xs tabular-nums text-white/52">
               <span className="font-medium text-white/58">{formatAudioTime(position)}</span>
               <span>{playerStatus === 'buffering' ? 'буферизация…' : formatAudioTime(totalDuration)}</span>
             </div>
@@ -379,7 +379,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
             <div ref={volumeControlRef} className="relative flex items-center">
               <button type="button" onClick={() => { toggleMute(); setVolumeOpen(true); }} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><VolumeIcon size={18} /></button>
-              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/35 transition hover:text-white sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
+              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/52 transition hover:text-white sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
               {volumeOpen && (
                 <div className="absolute bottom-14 left-0 z-30 flex w-48 items-center gap-3 rounded-2xl border border-white/12 bg-[#071018]/98 p-3 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:left-auto sm:right-0">
                   <Volume1 size={15} className="text-white/35" />
@@ -394,7 +394,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
             {compact && <Link to={`/music/${track.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" style={{ color: 'var(--track-accent)' }}>Страница релиза <ExternalLink size={15} /></Link>}
           </div>
 
-          {!compact && track.rightsNotice && <p className="mt-6 max-w-2xl border-t border-white/[0.07] pt-4 text-[10px] leading-relaxed text-white/28">{track.rightsNotice}</p>}
+          {!compact && track.rightsNotice && <p className="mt-6 max-w-2xl border-t border-white/[0.07] pt-4 text-[10px] leading-relaxed text-white/52">{track.rightsNotice}</p>}
         </div>
       </div>
     </article>

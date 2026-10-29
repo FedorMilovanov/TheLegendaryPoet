@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
@@ -73,7 +76,7 @@ const viewportCases = [
 
 for (const [name, width, height, colorScheme, reducedMotion] of viewportCases) {
   test.describe(`route viewport — ${name}`, () => {
-    test.use({ viewport: { width, height }, colorScheme, reducedMotion, isMobile: width < 500, hasTouch: width < 500 });
+    test.use({ viewport: { width, height }, colorScheme, contextOptions: { reducedMotion }, isMobile: width < 500, hasTouch: width < 500 });
     test('cold, slow SPA and warm routes keep the footer outside the first viewport', async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== 'chromium-core', 'viewport/motion matrix is explicit in this suite');
       await page.addInitScript((theme) => {

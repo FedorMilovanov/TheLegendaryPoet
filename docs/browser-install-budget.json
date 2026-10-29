@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "installAction": ".github/actions/install-playwright/action.yml",
+  "observedInstallMinutesMax": 44,
+  "minimumJobTimeoutMinutes": 60,
+  "maximumJobTimeoutMinutes": 120,
+  "evidence": [
+    "2026-10-26 PR #525 run 40337808740: Install locked Chromium and WebKit took about 44 minutes and the canonical job finished in 45m29s.",
+    "2026-10-26 PR #525 run 40364991449: the same step ran again inside a 51m04s canonical job.",
+    "2026-10-26 PR #525 run 40364991519: analytics-route-qa was cancelled at its own 30 minute job timeout while that step was still running."
+  ],
+  "notes": [
+    "Any job that installs locked Playwright browsers must keep enough timeout to survive the observed install variance; the timeout is patience, not a quality gate.",
+    "The durable fix for the install duration itself (caching the locked browsers) is a separate owner decision and is not expressed by this budget."
+  ]
+}

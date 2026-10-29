@@ -147,7 +147,7 @@ export default function MyArchivePage() {
           <Reveal direction="up">
             <BookOpen size={64} className="mx-auto mb-6 text-cyan-400/20" />
             <h1 className="mb-4 font-serif text-4xl font-bold text-white">{titleCase('Архив')} <span className="neon-blue-gradient neon-glow-text">{titleCase('пуст')}</span></h1>
-            <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-cyan-100/45">
+            <p className="mx-auto mb-8 max-w-lg text-base leading-relaxed text-cyan-100/52">
               Сохраняйте стихотворения и продолжайте музыкальные публикации с того места, где остановились. Всё остаётся только в вашем браузере.
             </p>
             {archiveMessage && <p ref={archiveStatusRef} tabIndex={-1} className="mx-auto mb-5 max-w-lg rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-4 py-3 text-sm text-cyan-100/72 outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60" role="status" aria-live="polite" aria-atomic="true">{archiveMessage}</p>}

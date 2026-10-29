@@ -66,7 +66,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
         <span className={normalizedLength >= COMMUNITY_COMMENT_MAX_LENGTH * 0.9 ? 'theme-functional-warning' : ''}>{normalizedLength} / {COMMUNITY_COMMENT_MAX_LENGTH}</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Тип комментария">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2" role="group" aria-label="Тип комментария">
         {commentKindOptions.map((option) => {
           const selected = kind === option.value;
           return (
@@ -75,7 +75,7 @@ export default function CommentComposer({ onSubmit, onStatus }: CommentComposerP
               type="button"
               onClick={() => setKind(option.value)}
               aria-pressed={selected}
-              className={`min-h-11 rounded-full border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.11em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
+              className={`min-h-11 min-w-0 whitespace-normal rounded-full border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.11em] [overflow-wrap:anywhere] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
                 selected
                   ? 'theme-control-selected bg-cyan-400/10'
                   : 'theme-functional-muted theme-control-border hover:text-cyan-200'

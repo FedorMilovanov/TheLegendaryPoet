@@ -191,7 +191,7 @@ export default function RatingsPage() {
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-32 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <section className="relative mb-12 overflow-hidden rounded-[2.5rem] border border-luxury-gold/15 bg-[radial-gradient(circle_at_15%_20%,rgba(212,175,55,0.16),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.12),transparent_32%),#071018] p-7 sm:p-10 lg:p-14">
+        <section className="relative mb-12 overflow-hidden rounded-[2.5rem] border border-luxury-gold/15 bg-[image:radial-gradient(circle_at_15%_20%,rgba(212,175,55,0.16),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(0,212,255,0.12),transparent_32%)] p-7 sm:p-10 lg:p-14">
           <div className="relative z-10 max-w-4xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-luxury-gold/25 bg-luxury-gold/7 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-luxury-gold"><Trophy size={14} /> Живой читательский рейтинг</div>
             <h1 className="editorial-title mb-5 font-serif text-5xl font-bold leading-[0.95] sm:text-6xl lg:text-8xl">Поэты <span className="gold-gradient italic">в оценке читателей</span></h1>
@@ -206,7 +206,7 @@ export default function RatingsPage() {
             { icon: Star, label: 'Голосов читателей', value: totalVotes },
             { icon: MessageSquare, label: 'Комментариев', value: totalComments },
             { icon: BarChart3, label: 'Поэтов с оценкой', value: ratedRows.length },
-          ].map(({ icon: Icon, label, value }) => <div key={label} className="rounded-3xl border border-cyan-400/10 bg-[#07111a]/70 p-5"><Icon size={18} className="mb-5 text-cyan-300" /><div className="text-3xl font-bold">{value}</div><div className="mt-1 text-xs uppercase tracking-[0.16em] text-cyan-100/40">{label}</div></div>)}
+          ].map(({ icon: Icon, label, value }) => <div key={label} className="rounded-3xl border border-cyan-400/10 bg-[#07111a]/70 p-5"><Icon size={18} className="mb-5 text-cyan-300" /><div className="text-3xl font-bold">{value}</div><div className="mt-1 text-xs uppercase tracking-[0.16em] text-cyan-100/60">{label}</div></div>)}
         </section>
 
         <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -221,11 +221,11 @@ export default function RatingsPage() {
           <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto]">
             <label className="group relative block">
               <span className="sr-only">Найти поэта в рейтинге</span>
-              <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-100/28 transition group-focus-within:text-cyan-300" />
-              <input type="search" value={query} onChange={(event) => setQuery(event.target.value.slice(0, 100))} placeholder="Имя поэта, направление или эпоха" autoComplete="off" spellCheck="false" className="min-h-11 w-full rounded-full border border-cyan-400/15 bg-[#050b12] pl-11 pr-10 text-sm text-cyan-100 outline-none transition placeholder:text-cyan-100/25 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/10" />
+              <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-cyan-100/55 transition group-focus-within:text-cyan-300" />
+              <input type="search" value={query} onChange={(event) => setQuery(event.target.value.slice(0, 100))} placeholder="Имя поэта, направление или эпоха" autoComplete="off" spellCheck="false" className="min-h-11 w-full rounded-full border border-cyan-400/15 bg-[#050b12] pl-11 pr-10 text-sm text-cyan-100 outline-none transition placeholder:text-cyan-100/55 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/10" />
               {query && <button type="button" onClick={() => setQuery('')} aria-label="Очистить поиск" className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-white/30 transition hover:bg-white/[0.06] hover:text-white"><X size={14} /></button>}
             </label>
-            <div className="text-xs text-cyan-100/35 lg:self-center" aria-live="polite">Найдено: <strong className="text-white/65">{filtered.length}</strong> из {rows.length}</div>
+            <div className="text-xs text-cyan-100/60 lg:self-center" aria-live="polite">Найдено: <strong className="text-white/65">{filtered.length}</strong> из {rows.length}</div>
           </div>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -248,18 +248,18 @@ export default function RatingsPage() {
         <section className="hidden overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[#061018]/65 md:block">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] border-collapse">
-              <thead className="sticky top-20 z-10 bg-[#071018]/95 backdrop-blur-xl"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/40"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
+              <thead className="sticky top-20 z-10 bg-[#071018]/95 backdrop-blur-xl"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/60"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
               <tbody>{filtered.map((row, index) => {
                 const readerPlace = sortBy === 'reader' && row.readerScore === null ? null : index + 1;
                 return <tr key={row.poet.id} data-reader-status={row.votes === 0 ? 'unrated' : row.readerScore === null ? 'sample-pending' : 'qualified'} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
-                <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${readerPlace !== null && readerPlace <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/30 text-cyan-100/50'}`}>{readerPlace ?? '—'}</span></td>
-                <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div className="max-w-[260px] truncate text-xs text-cyan-100/35">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
-                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/30">{row.readerScore === null ? (row.votes === 0 ? 'нет читательских голосов' : `нужно ${READER_RANKING_MIN_VOTES}+ голоса для места`) : 'консервативный индекс выборки'}</div></td>
+                <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${readerPlace !== null && readerPlace <= 3 ? 'bg-luxury-gold text-black' : 'bg-luxury-dark-200 text-cyan-100/60'}`}>{readerPlace ?? '—'}</span></td>
+                <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div className="max-w-[260px] truncate text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
+                <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/55">{row.readerScore === null ? (row.votes === 0 ? 'нет читательских голосов' : `нужно ${READER_RANKING_MIN_VOTES}+ голоса для места`) : 'консервативный индекс выборки'}</div></td>
                 <td className="px-5 py-4 text-cyan-100/70">{row.rawScore === null ? '—' : `${fmt(row.rawScore)} / 5`}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.votes}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.comments}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.poet.rating.toFixed(1)} / 10</td>
-                <td className="px-5 py-4 text-cyan-100/45">{row.deviation === null ? '—' : fmt(row.deviation)}</td>
+                <td className="px-5 py-4 text-cyan-100/60">{row.deviation === null ? '—' : fmt(row.deviation)}</td>
               </tr>})}</tbody>
             </table>
           </div>
@@ -270,7 +270,7 @@ export default function RatingsPage() {
           <div className="rounded-[2rem] border border-luxury-gold/12 bg-luxury-gold/[0.035] p-6 sm:p-8">
             <div className="mb-4 flex items-center gap-2 text-luxury-gold"><Award size={19} /><h2 className="font-serif text-2xl font-bold">Лидеры по отдельным качествам</h2></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {dimensionLeaders.map((item) => <div key={item.key} className="rounded-2xl border border-luxury-gold/10 bg-black/20 p-4"><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/65">{item.label}</div><div className="mt-2 font-serif text-lg text-white">{item.leader?.poet.name ?? 'Пока нет данных'}</div><div className="text-xs text-cyan-100/35">{item.leader ? `${(item.leader.dimensionIndexes[item.key] ?? 0).toFixed(2)} / 5 · ${item.leader.votes} голосов` : `Нужно ${READER_RANKING_MIN_VOTES}+ голоса`}</div></div>)}
+              {dimensionLeaders.map((item) => <div key={item.key} className="rounded-2xl border border-luxury-gold/10 bg-black/20 p-4"><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold/75">{item.label}</div><div className="mt-2 font-serif text-lg text-white">{item.leader?.poet.name ?? 'Пока нет данных'}</div><div className="text-xs text-cyan-100/60">{item.leader ? `${(item.leader.dimensionIndexes[item.key] ?? 0).toFixed(2)} / 5 · ${item.leader.votes} голосов` : `Нужно ${READER_RANKING_MIN_VOTES}+ голоса`}</div></div>)}
             </div>
           </div>
           <div className="rounded-[2rem] border border-cyan-400/12 bg-[#071018]/70 p-6 sm:p-8">
@@ -285,18 +285,18 @@ export default function RatingsPage() {
 }
 
 function EmptyRatingResults({ onReset }: { onReset: () => void }) {
-  return <div className="p-12 text-center text-cyan-100/40"><Search className="mx-auto text-cyan-100/20" size={28} /><div className="mt-4 font-serif text-2xl font-bold text-white/72">Поэты не найдены</div><p className="mt-2 text-sm">Измените поиск или очистите фильтры.</p><button type="button" onClick={onReset} className="mt-5 inline-flex min-h-10 items-center rounded-full bg-cyan-300 px-4 text-xs font-bold text-black">Показать весь рейтинг</button></div>;
+  return <div className="p-12 text-center text-cyan-100/60"><Search className="mx-auto text-cyan-100/50" size={28} /><div className="mt-4 font-serif text-2xl font-bold text-white/72">Поэты не найдены</div><p className="mt-2 text-sm">Измените поиск или очистите фильтры.</p><button type="button" onClick={onReset} className="mt-5 inline-flex min-h-10 items-center rounded-full bg-cyan-300 px-4 text-xs font-bold text-black">Показать весь рейтинг</button></div>;
 }
 
 function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number | null }) {
   return (
     <Link to={`/poets/${row.poet.id}`} data-reader-status={row.readerScore === null ? 'unrated' : 'rated'} className="group block rounded-[1.75rem] border border-cyan-400/10 bg-[#071018]/72 p-5 transition hover:border-luxury-gold/25">
       <div className="flex items-start gap-4">
-        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank !== null && rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-cyan-950/35 text-cyan-100/55'}`}>{rank ?? '—'}</span>
+        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank !== null && rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-luxury-dark-200 text-cyan-100/60'}`}>{rank ?? '—'}</span>
         <img src={asset(row.poet.photo)} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h3>
-          <p className="truncate text-xs text-cyan-100/35">{row.poet.tags.slice(0, 2).join(' · ')}</p>
+          <p className="truncate text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</p>
         </div>
         <ArrowRight size={17} className="mt-2 shrink-0 text-cyan-300 transition group-hover:translate-x-1" />
       </div>
@@ -311,9 +311,9 @@ function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number | null })
 }
 
 function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return <div className="rounded-2xl border border-white/7 bg-black/20 p-3"><div className="text-[9px] font-bold uppercase tracking-[0.13em] text-cyan-100/30">{label}</div><div className={`mt-1 text-lg font-bold ${accent ? 'text-luxury-gold' : 'text-white/75'}`}>{value}</div></div>;
+  return <div className="rounded-2xl border border-white/7 bg-black/20 p-3"><div className="text-[9px] font-bold uppercase tracking-[0.13em] text-cyan-100/55">{label}</div><div className={`mt-1 text-lg font-bold ${accent ? 'text-luxury-gold' : 'text-white/75'}`}>{value}</div></div>;
 }
 
 function Highlight({ icon: Icon, label, row, value }: { icon: typeof Trophy; label: string; row?: RankedPoet; value: string }) {
-  return <div className="rounded-3xl border border-luxury-gold/12 bg-[linear-gradient(145deg,rgba(212,175,55,0.07),rgba(0,212,255,0.035))] p-5"><Icon size={18} className="mb-5 text-luxury-gold" /><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/35">{label}</div><div className="mt-2 font-serif text-xl font-bold text-white">{row?.poet.name ?? 'Пока нет данных'}</div><div className="mt-1 text-xs text-luxury-gold/70">{value}</div></div>;
+  return <div className="rounded-3xl border border-luxury-gold/12 bg-[linear-gradient(145deg,rgba(212,175,55,0.07),rgba(0,212,255,0.035))] p-5"><Icon size={18} className="mb-5 text-luxury-gold" /><div className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/60">{label}</div><div className="mt-2 font-serif text-xl font-bold text-white">{row?.poet.name ?? 'Пока нет данных'}</div><div className="mt-1 text-xs text-luxury-gold/70">{value}</div></div>;
 }

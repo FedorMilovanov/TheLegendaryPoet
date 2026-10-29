@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { registerCommunityRequestTopologyTests } from './community-request-topology.cases.mjs';
 import { registerCommunityPoetDetailTopologyTests } from './community-poet-detail-topology.cases.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
@@ -118,7 +121,7 @@ for (const profile of profiles) {
       hasTouch: profile.hasTouch,
       locale: 'ru-RU',
       timezoneId: 'Europe/Paris',
-      reducedMotion: 'no-preference',
+      contextOptions: { reducedMotion: 'no-preference' },
       colorScheme: 'dark',
     });
 
@@ -342,7 +345,7 @@ test.describe('mobile touch and keyboard pass', () => {
 });
 
 test.describe('reduced motion and forced-colors resilience', () => {
-  test.use({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce', colorScheme: 'dark' });
+  test.use({ viewport: { width: 1280, height: 900 }, contextOptions: { reducedMotion: 'reduce' }, colorScheme: 'dark' });
 
   test('reduced motion keeps content immediately readable and overlays operable', async ({ page }) => {
     const runtime = attachRuntimeDiagnostics(page);

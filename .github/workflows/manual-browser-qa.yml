@@ -79,6 +79,7 @@ jobs:
           qa/audio-cross-tab.spec.mjs
           qa/focused-interactions.spec.mjs
           qa/theme-contrast.spec.mjs
+          qa/painted-contrast.spec.mjs
           qa/reader-text.spec.mjs
           qa/deep-routes.spec.mjs
           qa/floating-chrome.spec.mjs
@@ -118,7 +119,7 @@ jobs:
 
   analytics-route-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout exact analytics tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -150,11 +151,18 @@ jobs:
         uses: ./.github/actions/start-preview
         with:
           log-file: analytics-preview.log
-      - name: Prove settled semantic page-view authority
+      - name: Prove settled semantic page-view authority and painted contrast with consent chrome
         if: ${{ always() && steps.analytics_build.outcome == 'success' }}
+        # This job is the only one that builds with VITE_GA_ID / VITE_YANDEX_METRIKA_ID,
+        # so it is the only place the analytics consent banner exists. The banner is a
+        # fixed dark island; its shadow used to paint 151,151,143 over the page in light
+        # theme and drop the section labels it crossed from 5.16 to 2.71. The painted
+        # sweep therefore has to run in this build configuration too, not only in the
+        # browser-qa job where no provider is configured and the banner never renders.
         run: >-
           npx playwright test
           qa/analytics-route.spec.mjs
+          qa/painted-contrast.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=iphone-safari
@@ -177,7 +185,7 @@ jobs:
 
   webkit-home-reveal-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact Safari home tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -225,7 +233,7 @@ jobs:
 
   premium-home-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact premium tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -276,7 +284,7 @@ jobs:
 
   premium-iphone-critical-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout exact critical iPhone tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

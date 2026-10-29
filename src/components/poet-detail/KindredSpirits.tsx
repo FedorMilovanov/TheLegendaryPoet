@@ -1,16 +1,17 @@
 import { Link } from '../ui/Link';
 import { poets } from '../../data/poets';
 import { poetConnections, type PoetConnection } from '../../data/poetConnections';
-import { EPOCH_COLORS, EPOCH_LABELS } from '../../data/epochColors';
+import { EPOCH_COLORS, EPOCH_LABELS, epochTint } from '../../data/epochColors';
 import { getPoetEpoch } from '../../utils/poetMeta';
 import { Poet } from '../../types/poet';
 
+// Theme tokens, never literals: see the note in src/data/epochColors.ts.
 const CONN_STYLE: Record<PoetConnection['type'], { label: string; color: string }> = {
-  influence: { label: 'Влияние', color: '#63d8ff' },
-  personal: { label: 'Личная связь', color: '#d4af37' },
-  epoch: { label: 'Одна эпоха', color: '#e2e8f0' },
-  thematic: { label: 'Тема', color: '#a78bfa' },
-  rivalry: { label: 'Полемика', color: '#ef4444' },
+  influence: { label: 'Влияние', color: 'var(--conn-influence)' },
+  personal: { label: 'Личная связь', color: 'var(--conn-personal)' },
+  epoch: { label: 'Одна эпоха', color: 'var(--conn-epoch)' },
+  thematic: { label: 'Тема', color: 'var(--conn-thematic)' },
+  rivalry: { label: 'Полемика', color: 'var(--conn-rivalry)' },
 };
 
 /**
@@ -20,7 +21,7 @@ const CONN_STYLE: Record<PoetConnection['type'], { label: string; color: string 
  */
 export default function KindredSpirits({ poet }: { poet: Poet }) {
   const epoch = getPoetEpoch(poet);
-  const epochColor = EPOCH_COLORS[epoch] || '#d4af37';
+  const epochColor = EPOCH_COLORS[epoch] || 'var(--epoch-golden)';
   const epochLabel = poet.epochLabel || EPOCH_LABELS[epoch] || '';
 
   const links = poetConnections
@@ -41,7 +42,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
         {epochLabel && (
           <span
             className="rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
-            style={{ color: epochColor, borderColor: `${epochColor}40`, backgroundColor: `${epochColor}12` }}
+            style={{ color: epochColor, borderColor: epochTint(epochColor, 25), backgroundColor: epochTint(epochColor, 7) }}
           >
             {epochLabel}
           </span>
@@ -62,7 +63,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
                   <span className="theme-text truncate text-sm font-bold">{other.name}</span>
                   <span
                     className="shrink-0 rounded-full px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-[0.08em]"
-                    style={{ color: style.color, backgroundColor: `${style.color}18` }}
+                    style={{ color: style.color, backgroundColor: epochTint(style.color, 9) }}
                   >
                     {style.label}
                   </span>

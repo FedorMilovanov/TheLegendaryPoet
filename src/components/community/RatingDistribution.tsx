@@ -18,7 +18,7 @@ export default function RatingDistribution({ distribution, total }: RatingDistri
                 style={{ width: `${width}%` }}
               />
             </div>
-            <span className="text-right text-[11px] text-cyan-100/40">{count}</span>
+            <span className="text-right text-[11px] text-cyan-100/55">{count}</span>
           </div>
         );
       })}

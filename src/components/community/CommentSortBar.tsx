@@ -23,7 +23,7 @@ export default function CommentSortBar({
           className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 ${
             value === option.value
               ? 'border-cyan-300 bg-cyan-400/10 text-cyan-200'
-              : 'border-cyan-400/10 text-cyan-100/38 hover:text-cyan-200'
+              : 'border-cyan-400/10 text-cyan-100/55 hover:text-cyan-200'
           }`}
         >
           {option.label}

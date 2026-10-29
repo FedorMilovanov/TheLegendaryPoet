@@ -31,7 +31,7 @@ const Header = () => {
             <SpectralBrandMark size="sm" variant="header" priority className="scale-[1.08]" />
 
             <div aria-hidden="true" className="relative flex min-w-0 flex-1 items-center pb-[7px] md:hidden">
-              <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap bg-[linear-gradient(90deg,#e7fcff_0%,#8eeeff_34%,#2ed8ff_68%,#89a7ff_100%)] bg-clip-text font-serif text-[clamp(10.4px,3.08vw,13.4px)] font-semibold uppercase leading-none tracking-[clamp(0.055em,0.62vw,0.11em)] text-transparent [filter:drop-shadow(0_0_6px_rgba(46,216,255,0.24))_drop-shadow(0_0_16px_rgba(66,110,255,0.10))]">
+              <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap brand-wordmark-gradient bg-clip-text font-serif text-[clamp(10.4px,3.08vw,13.4px)] font-semibold uppercase leading-none tracking-[clamp(0.055em,0.62vw,0.11em)] text-transparent [filter:drop-shadow(0_0_6px_rgba(46,216,255,0.24))_drop-shadow(0_0_16px_rgba(66,110,255,0.10))]">
                 THE LEGENDARY POET
               </span>
               <span className="pointer-events-none absolute bottom-0 left-0 h-px w-[58%] bg-[linear-gradient(90deg,rgba(212,175,55,0.72),rgba(46,216,255,0.42),transparent)] shadow-[0_0_7px_rgba(212,175,55,0.10)]" />

@@ -36,10 +36,10 @@ export default function CommunityPanel({
   const positiveComment = getPositiveComment(feedback.comments);
   const criticalComment = getCriticalComment(feedback.comments);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'warning' } | null>(null);
-  const shell = compact ? 'rounded-[1.5rem] p-5' : 'rounded-[2rem] p-8 md:p-10';
+  const shell = compact ? 'rounded-[1.5rem] p-5' : 'rounded-[2rem] p-4 sm:p-8 md:p-10';
   const topGrid = compact ? 'mb-5 flex flex-col gap-3' : 'mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between';
-  const analyticsGrid = compact ? 'mb-5 space-y-5' : 'mb-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]';
-  const actionGrid = compact ? 'space-y-5' : 'grid gap-6 lg:grid-cols-[0.9fr_1.1fr]';
+  const analyticsGrid = compact ? 'mb-5 space-y-5' : 'mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]';
+  const actionGrid = compact ? 'space-y-5' : 'grid grid-cols-1 gap-6 lg:grid-cols-[0.9fr_1.1fr]';
 
   useEffect(() => {
     setRemoteActivated(!deferRemote);
@@ -81,7 +81,7 @@ export default function CommunityPanel({
     };
     if (feedback.sync.phase === 'idle') return {
       Icon: Clock3,
-      className: 'text-cyan-100/48',
+      className: 'text-cyan-100/55',
       text: 'Общая база подключена; ожидаем первую синхронизацию.',
       spin: false,
     };
@@ -110,7 +110,7 @@ export default function CommunityPanel({
               <ShieldCheck size={13} aria-hidden="true" /> Оценка сообщества
             </div>
             <h3 className={`break-words font-serif font-bold leading-tight text-white ${compact ? 'text-xl' : 'text-2xl'}`}>{title}</h3>
-            <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/45">
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-cyan-100/55">
               Оценки и комментарии загружаются только после открытия этого блока.
             </p>
           </div>
@@ -159,9 +159,9 @@ export default function CommunityPanel({
           {hasRatings ? (
             <RatingStars value={Math.round(feedback.summary.overall)} size={compact ? 15 : 18} />
           ) : (
-            <div className="text-xs text-cyan-100/35" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
+            <div className="text-xs theme-community-meta" role="status" aria-live="polite" aria-atomic="true">{ratingStateLabel}</div>
           )}
-          {hasRatings && <div className="mt-1 text-xs text-cyan-100/40">{ratingStateLabel}</div>}
+          {hasRatings && <div className="mt-1 text-xs theme-community-meta">{ratingStateLabel}</div>}
         </div>
       </div>
 

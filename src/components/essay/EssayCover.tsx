@@ -92,7 +92,16 @@ export default function EssayCover({
       {kicker && (
         <span
           className="absolute left-5 top-5 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] backdrop-blur-md"
-          style={{ color: accent, borderColor: `${accent}55`, backgroundColor: `${accent}18` }}
+          style={{
+            color: accent,
+            borderColor: `${accent}55`,
+            // The badge sits on the cover artwork, whose pixels are not a stable
+            // surface: an accent wash alone measured 1.80 (the sweep samples the
+            // dominant pixel under the glyphs, here a 96,110,130 patch of the
+            // front-poem cover). Mixing the tint over an almost opaque base gives
+            // the label a surface the ink is actually scored against.
+            backgroundColor: `color-mix(in srgb, ${accent} 16%, rgba(5, 10, 16, 0.94))`,
+          }}
         >
           {kicker}
         </span>

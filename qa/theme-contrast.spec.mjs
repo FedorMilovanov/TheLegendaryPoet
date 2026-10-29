@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
+import { contrastMeasurements, contrastRatio } from './contrast-helpers.mjs';
+
+registerMediaContract(test);
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTICLE_URL = `${BASE_URL}/essays/sergei-yesenin-1921-1925`;
@@ -28,69 +33,6 @@ async function themeSnapshot(page) {
     toggles: [...document.querySelectorAll('[data-theme-mode]')].map((node) => node.getAttribute('data-theme-mode')),
   }));
 }
-
-async function contrastMeasurements(locator, directTextOnly = false) {
-  return locator.evaluateAll((nodes, directTextOnly) => {
-    const parse = (value) => {
-      const match = value.match(/rgba?\(([^)]+)\)/i);
-      if (!match) {
-        // Tailwind may serialize computed colors as oklch()/color(). Let the
-        // browser convert those to sRGB instead of silently treating them as black.
-        if (!CSS.supports('color', value)) throw new Error(`Unsupported computed color: ${value}`);
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
-        const context = canvas.getContext('2d');
-        context.fillStyle = value;
-        context.fillRect(0, 0, 1, 1);
-        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
-        return { r, g, b, a: a / 255 };
-      }
-      const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
-      return { r: parts[0], g: parts[1], b: parts[2], a: Number.isFinite(parts[3]) ? parts[3] : 1 };
-    };
-    const composite = (front, back) => {
-      const alpha = front.a + back.a * (1 - front.a);
-      if (alpha <= 0) return { r: 255, g: 255, b: 255, a: 1 };
-      return {
-        r: (front.r * front.a + back.r * back.a * (1 - front.a)) / alpha,
-        g: (front.g * front.a + back.g * back.a * (1 - front.a)) / alpha,
-        b: (front.b * front.a + back.b * back.a * (1 - front.a)) / alpha,
-        a: alpha,
-      };
-    };
-    const luminance = ({ r, g, b }) => {
-      const channel = (raw) => {
-        const c = raw / 255;
-        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-      };
-      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-    };
-
-    return nodes.filter((node) => !directTextOnly || (node instanceof HTMLElement
-      && [...node.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent.trim()))).map((node) => {
-      let background = { r: 255, g: 255, b: 255, a: 1 };
-      const chain = [];
-      for (let current = node; current instanceof Element; current = current.parentElement) chain.push(current);
-      for (const current of chain.reverse()) {
-        const bg = parse(getComputedStyle(current).backgroundColor);
-        if (bg.a > 0) background = composite(bg, background);
-      }
-
-      const foreground = composite(parse(getComputedStyle(node).color), background);
-      const l1 = luminance(foreground);
-      const l2 = luminance(background);
-      return { text: node.textContent, ratio: (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) };
-    });
-  }, directTextOnly);
-}
-
-async function contrastRatio(locator) {
-  await locator.waitFor({ state: 'attached' });
-  const measurements = await contrastMeasurements(locator);
-  expect(measurements).toHaveLength(1);
-  return measurements[0].ratio;
-}
-
 
 async function nonTextContrast(locator, mode = 'border') {
   return locator.evaluate((node, mode) => {
@@ -534,7 +476,7 @@ async function heroCaptionContrasts(panel) {
 for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
   test.describe(`hero caption ${theme}, ${mobile ? 'touch' : 'keyboard'}`, () => {
     test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-      isMobile: mobile, hasTouch: mobile, colorScheme: theme, reducedMotion: 'reduce' });
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, contextOptions: { reducedMotion: 'reduce' } });
     test('names and dates remain readable over the portrait', async ({ page }, testInfo) => {
       useChromiumCore(testInfo);
       await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -555,12 +497,71 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
   });
 }
 
+// The case above only proves the reduced-motion path, where the reveal is
+// instant. Real motion is what most visitors get: on pointer-fine devices the
+// caption is `opacity: 0` at rest and is revealed by `.group:hover` /
+// `.group:focus-visible` with a 0.38s fade (hero-poet-window.css). Certify that
+// the fade settles instead of hanging half-visible, that the settled text is
+// still readable, and that hiding the caption stays cosmetic for assistive tech.
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`hero caption reveal ${theme}, ${mobile ? 'touch' : 'desktop'}`, () => {
+    test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile, colorScheme: theme, contextOptions: { reducedMotion: 'no-preference' } });
+    test('the caption is hidden only until it settles, then stays readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
+      await page.goto(BASE_URL);
+      const shells = page.locator('[data-hero-poet-window-shell]');
+      await expect(shells).toHaveCount(6);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).resolves.toBe(false);
+
+      const settled = mobile ? 0.96 : 1;
+      const labels = shells.locator('[data-hero-poet-window-label]');
+      // At rest the caption is hidden on pointer-fine devices and shown on touch.
+      for (const label of await labels.all()) await expect(label).toHaveCSS('opacity', mobile ? '0.96' : '0');
+      // Hiding it is cosmetic: the poet is still named for assistive technology.
+      await expect(shells.first().locator('a')).toHaveAccessibleName(/Открыть страницу поэта/);
+
+      const reveal = async (shell) => {
+        const label = shell.locator('[data-hero-poet-window-label]');
+        await expect.poll(() => label.evaluate((node) => Number(getComputedStyle(node).opacity)),
+          { timeout: 2_000, intervals: [50] }).toBe(settled);
+        for (const { text, ratio } of await heroCaptionContrasts(shell.locator('.hero-poet-window-label-panel'))) {
+          expect.soft(ratio, `${theme} ${text}: settled worst-case portrait backdrop`).toBeGreaterThanOrEqual(4.5);
+        }
+      };
+
+      const all = await shells.all();
+      for (const shell of all) {
+        if (mobile) {
+          await shell.scrollIntoViewIfNeeded();
+        } else {
+          await shell.hover();
+        }
+        await reveal(shell);
+      }
+      // Keyboard focus is the second reveal path; a pointer-fine device must
+      // answer it too, and the focused card keeps a visible focus ring.
+      if (!mobile) {
+        for (const shell of all) {
+          const anchor = shell.locator('a').first();
+          await anchor.focus();
+          expect(await anchor.evaluate((node) => node.matches(':focus-visible')), 'focus must stay visible').toBe(true);
+          await page.mouse.move(0, 0);
+          await reveal(shell);
+        }
+      }
+    });
+  });
+}
+
 for (const theme of ['dark', 'light']) for (const slug of [
   'simonov-syn-artillerista-realnaya-istoriya',
   'galina-benislavskaya-yesenin-manuscripts-publishing-archive',
 ]) test.describe(`source library ${theme} ${slug}`, () => {
   test.use({ viewport: theme === 'light' ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
-    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', reducedMotion: 'reduce' });
+    colorScheme: theme, isMobile: theme === 'light', hasTouch: theme === 'light', contextOptions: { reducedMotion: 'reduce' } });
   test('bibliography text and controls remain readable through expansion and filtering', async ({ page }, testInfo) => {
     useChromiumCore(testInfo);
     await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -623,7 +624,7 @@ async function dockTextContrasts(dock) {
 }
 
 for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${theme}`, () => {
-  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+  test.use({viewport:{width:320,height:844},colorScheme:theme,isMobile:true,hasTouch:true,contextOptions: { reducedMotion: 'reduce' }});
   test('all four labels contrast with the glass rail and active pill at 100/200%', async ({page},testInfo) => {
     useChromiumCore(testInfo);
     await page.addInitScript(t => localStorage.setItem('tlp-theme-mode',t),theme);
@@ -642,7 +643,7 @@ for (const theme of ['dark','light']) test.describe(`mobile dock contrast ${them
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`ordinary essay prose ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('every ordinary essay paragraph meets normal-text contrast', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
@@ -666,7 +667,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`inline citation contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('source numbers and focused tooltip remain readable and resolve to a card', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
@@ -700,6 +701,25 @@ for (const theme of ['dark', 'light']) {
           document.getElementById(node.getAttribute('href').slice(1)),
         ))).toBe(true);
       });
+      test('dark-surface source number owns hover and keyboard focus ink', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        // A dark editorial surface owns citation ink even on a light page.
+        // Exercise its active/focus paint too, not only offscreen idle colors.
+        const islandCitation = page.locator('.essay-body .theme-dark-island sup > a[href^="#source-"]').first();
+        await expect(islandCitation).toBeAttached();
+        await hoverCitation(page, islandCitation);
+        await expect(islandCitation).toHaveCSS('color', 'rgb(212, 175, 55)');
+        expect(await contrastRatio(islandCitation)).toBeGreaterThanOrEqual(4.5);
+        await page.mouse.move(0, 0);
+        await islandCitation.focus();
+        await expect(islandCitation).toBeFocused();
+        await expect(islandCitation).toHaveCSS('outline-color', 'rgb(212, 175, 55)');
+        await expect(islandCitation.getByRole('tooltip')).toHaveCSS('opacity', '1');
+        expect(await contrastRatio(islandCitation.getByRole('tooltip'))).toBeGreaterThanOrEqual(4.5);
+      });
     });
   }
 }
@@ -722,7 +742,7 @@ async function expectCitationTooltipContained(page, tooltip) {
 for (const theme of ['dark', 'light']) {
   for (const width of [320, 390, 1440]) {
     test.describe(`citation tooltip ${theme} ${width}px`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: { width, height: 844 }, isMobile: width < 600, hasTouch: width < 600 });
       test('source labels fit the viewport during focus, hover and resize', async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== 'chromium-core', 'bounded Chromium positioning regression');
         await page.addInitScript((mode) => localStorage.setItem('tlp-theme-mode', mode), theme);
@@ -763,7 +783,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`breadcrumb contrast ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ colorScheme: theme, reducedMotion: 'reduce', viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
+      test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' }, viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile });
       test('shared navigation text, hover and keyboard focus remain readable', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -842,7 +862,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`essay image metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, contextOptions: { reducedMotion: 'reduce' } });
       test('captions, credits and source links stay readable inline and in the dark lightbox', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -891,7 +911,7 @@ for (const theme of ['dark', 'light']) {
 for (const theme of ['dark', 'light']) {
   for (const mobile of [false, true]) {
     test.describe(`essay shell metadata ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
-      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, reducedMotion: 'reduce' });
+      test.use({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, isMobile: mobile, contextOptions: { reducedMotion: 'reduce' } });
       test('hero metadata, table of contents and series navigation keep readable text and working anchors', async ({ page }, testInfo) => {
         useChromiumCore(testInfo);
         await page.addInitScript((theme) => localStorage.setItem('tlp-theme-mode', theme), theme);
@@ -946,7 +966,7 @@ for (const mobile of [false, true]) {
     test.use({
       viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
       isMobile: mobile,
-      reducedMotion: 'reduce',
+      contextOptions: { reducedMotion: 'reduce' },
     });
     for (const theme of ['dark', 'light']) {
       for (const route of ['/essays/brik-case', '/articles']) {
@@ -993,5 +1013,847 @@ for (const mobile of [false, true]) {
         });
       }
     }
+  });
+}
+
+// A dark poem palette stays dark even when the surrounding reader is light.
+// Measure the actual published variant and a default poem on the same route.
+for (const mobile of [false, true]) {
+  test.describe(`poem palette ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
+    });
+    for (const theme of ['dark', 'light']) {
+      test(`${theme} preserves poem ink and metadata on their own surfaces`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => {
+          localStorage.setItem(key, theme);
+          localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+        }, { key: STORAGE_KEY, theme });
+        const errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await page.goto(`${BASE_URL}/essays/yesenin-kutezhi`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        const blood = page.locator('[data-essay-block="poem"]').filter({ hasText: 'написано кровью' });
+        await expect(blood).toHaveCount(1);
+        const ordinary = page.locator('[data-essay-block="poem"]').filter({ hasNotText: 'написано кровью' }).first();
+        await expect(ordinary).toBeAttached();
+        for (const readingTheme of [theme, theme === 'dark' ? 'light' : 'dark']) {
+          await setThemeFromUi(page, readingTheme);
+          for (const poem of [blood, ordinary]) {
+            await poem.scrollIntoViewIfNeeded();
+            await expect(poem).toBeVisible();
+            for (const selector of ['figcaption > span', '.poetry-text', ':scope > p']) {
+              const parts = poem.locator(selector);
+              expect(await parts.count()).toBeGreaterThan(0);
+              for (const measurement of await contrastMeasurements(parts)) {
+                expect(measurement.ratio, `${readingTheme}: ${measurement.text}`).toBeGreaterThanOrEqual(4.5);
+              }
+            }
+          }
+          // Preserve the special dark treatment through both theme changes.
+          const darkEmphasis = blood.locator('.gold-gradient');
+          expect(await darkEmphasis.count()).toBeGreaterThan(0);
+          for (const target of await darkEmphasis.all()) {
+            expect(await target.evaluate(node => getComputedStyle(node).backgroundImage)).toContain('gradient(');
+          }
+          if (readingTheme === 'light') {
+            await ordinary.scrollIntoViewIfNeeded();
+            const emphasis = ordinary.locator('.gold-gradient').or(page.locator('main h2[id] > .gold-gradient').first());
+            expect(await emphasis.count()).toBeGreaterThan(0);
+            for (const target of await emphasis.all()) {
+              // A transparent gradient is not covered by its inherited `color`.
+              // Ordinary light-page emphasis uses opaque semantic ink instead.
+              const paint = await target.evaluate(node => {
+                const style = getComputedStyle(node);
+                return { fill: style.webkitTextFillColor, color: style.color, background: style.backgroundImage };
+              });
+              expect(paint.background).toBe('none');
+              expect(paint.fill).toBe(paint.color);
+              expect(await contrastRatio(target)).toBeGreaterThanOrEqual(4.5);
+            }
+          }
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        expect(errors).toEqual([]);
+      });
+    }
+  });
+}
+
+// Gradient-backed editorial blocks are intentionally dark reader surfaces,
+// not partly transparent fragments of the surrounding page theme.
+for (const mobile of [false, true]) {
+  test.describe(`editorial surfaces ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
+    });
+    for (const theme of ['dark', 'light']) {
+      for (const kind of ['reflection', 'myth']) {
+        test(`${theme} ${kind} retains its own opaque dark surface`, async ({ page }, testInfo) => {
+          useChromiumCore(testInfo);
+          await page.addInitScript(({ key, theme }) => {
+            localStorage.setItem(key, theme);
+            localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+          }, { key: STORAGE_KEY, theme });
+          const slug = kind === 'reflection' ? 'brik-case' : 'sergei-yesenin-1921-1925';
+          await page.goto(`${BASE_URL}/essays/${slug}`, { waitUntil: 'networkidle' });
+          await page.evaluate(() => document.fonts.ready);
+          const surface = page.locator('aside').filter({
+            hasText: kind === 'reflection' ? 'Свобода без верности' : 'Проверка мифа',
+          }).first();
+          await surface.scrollIntoViewIfNeeded();
+          await expect(surface).toBeVisible();
+          const paint = await surface.evaluate(node => {
+            const style = getComputedStyle(node);
+            return { scheme: style.colorScheme, base: style.backgroundColor };
+          });
+          expect(paint.scheme).toBe('dark');
+          // Explicit opaque backing is required even at translucent gradient stops.
+          expect(paint.base).toBe('rgb(5, 5, 5)');
+          const text = surface.locator('p, span, div.font-bold').filter({ visible: true });
+          expect(await text.count()).toBeGreaterThan(0);
+          for (const measurement of await contrastMeasurements(text, true)) {
+            expect(measurement.ratio, measurement.text).toBeGreaterThanOrEqual(4.5);
+          }
+        });
+      }
+    }
+  });
+}
+
+// Ordinary note body ink must adapt with its surface, not only its eyebrow.
+for (const mobile of [false, true]) {
+  test.describe(`ordinary note body ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, contextOptions: { reducedMotion: 'reduce' },
+    });
+    for (const theme of ['dark', 'light']) {
+      test(`${theme} retains readable ink through theme switching`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => {
+          localStorage.setItem(key, theme);
+          localStorage.setItem('tlp:analytics-consent:v1', 'denied');
+        }, { key: STORAGE_KEY, theme });
+        await page.goto(`${BASE_URL}/essays/brik-case`, { waitUntil: 'networkidle' });
+        await page.evaluate(() => document.fonts.ready);
+        const notes = page.locator('[data-essay-block="note"]');
+        expect(await notes.count()).toBeGreaterThan(0);
+        for (const readingTheme of [theme, theme === 'dark' ? 'light' : 'dark']) {
+          await setThemeFromUi(page, readingTheme);
+          for (const note of await notes.all()) {
+            await note.scrollIntoViewIfNeeded();
+            await expect(note).toBeVisible();
+            const body = note.locator(':scope > p');
+            const paint = await body.evaluate(node => {
+              const style = getComputedStyle(node);
+              return { fill: style.webkitTextFillColor, color: style.color, background: style.backgroundImage };
+            });
+            expect(paint.fill).toBe(paint.color);
+            expect(paint.background).toBe('none');
+            expect(await contrastRatio(body)).toBeGreaterThanOrEqual(4.5);
+          }
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      });
+    }
+  });
+}
+
+for (const theme of ['dark', 'light']) {
+  for (const { width, enlarged } of [{ width: 390 }, { width: 1024 }, { width: 1024, enlarged: true }]) {
+    test.describe(`comment kind layout ${theme} ${width}px ${enlarged ? 'enlarged' : 'normal'}`, () => {
+      test.use({ viewport: { width, height: 1000 }, isMobile: width === 390, contextOptions: { reducedMotion: 'reduce' } });
+      test('full labels fit their controls and selection stays operable', async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
+        await page.goto(`${BASE_URL}/essays/brik-case`, { waitUntil: 'networkidle' });
+        if (enlarged) await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+        await page.evaluate(() => document.fonts.ready);
+        const group = page.getByRole('group', { name: 'Тип комментария' }).first();
+        await group.scrollIntoViewIfNeeded();
+        const buttons = group.getByRole('button');
+        await expect(buttons).toHaveCount(4);
+        for (const button of await buttons.all()) {
+          await expect(button).toBeVisible();
+          const geometry = await button.evaluate(node => {
+            const box = node.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return {
+              text: node.textContent,
+              width: box.width, height: box.height,
+              overflow: node.scrollWidth - node.clientWidth,
+              clipped: ['hidden', 'clip'].includes(style.overflowX),
+              fits: [...range.getClientRects()].every(rect =>
+                rect.left >= box.left + parseFloat(style.paddingLeft) - 1
+                && rect.right <= box.right - parseFloat(style.paddingRight) + 1
+                && rect.top >= box.top && rect.bottom <= box.bottom),
+            };
+          });
+          expect(geometry.fits, JSON.stringify(geometry)).toBe(true);
+          expect(geometry.overflow, geometry.text).toBeLessThanOrEqual(1);
+          expect(geometry.clipped, geometry.text).toBe(false);
+          expect(geometry.height).toBeGreaterThanOrEqual(44);
+        }
+        await buttons.nth(2).focus();
+        await buttons.nth(2).press('Space');
+        await expect(buttons.nth(2)).toHaveAttribute('aria-pressed', 'true');
+        await expect(group.locator('[aria-pressed="true"]')).toHaveCount(1);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      });
+    });
+  }
+}
+for (const initialTheme of ['dark', 'light']) {
+  test.describe(`custom cursor theme ${initialTheme}`, () => {
+    test.use({ viewport: { width: 1440, height: 1000 }, isMobile: false, hasTouch: false, contextOptions: { reducedMotion: 'no-preference', forcedColors: 'none' } });
+    test('paint follows initial preference and live switches without remounting', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme: initialTheme });
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+      const dot = page.locator('[data-custom-cursor-dot]');
+      const ring = page.locator('[data-custom-cursor-ring]');
+      await expect(dot).toBeAttached();
+      await page.mouse.move(500, 300);
+      await expect(dot).toHaveCSS('opacity', '1');
+      // Keep a node identity witness: theme changes must not rebuild pointer tracking.
+      await dot.evaluate(node => { window.__cursorWitness = node; });
+      for (const theme of [initialTheme, initialTheme === 'dark' ? 'light' : 'dark', initialTheme]) {
+        await setThemeFromUi(page, theme);
+        await page.mouse.move(500, 300);
+        const paint = await dot.evaluate(node => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext('2d');
+          const rgb = color => {
+            ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1);
+            return [...ctx.getImageData(0, 0, 1, 1).data];
+          };
+          const lum = rgba => {
+            const c = rgba.slice(0, 3).map(n => n / 255).map(n => n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4);
+            return c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722;
+          };
+          const ratio = (front, back) => {
+            const a = front[3] / 255;
+            const painted = front.slice(0, 3).map((c, i) => c * a + back[i] * (1 - a));
+            const [l1, l2] = [lum(painted), lum(back)].sort((a, b) => b - a);
+            return (l1 + 0.05) / (l2 + 0.05);
+          };
+          const bg = rgb(getComputedStyle(document.documentElement).getPropertyValue('--tlp-page-bg'));
+          const style = getComputedStyle(node);
+          const ring = document.querySelector('[data-custom-cursor-ring]');
+          const fill = rgb(style.backgroundColor);
+          return { color: style.backgroundColor, luminance: lum(fill), dotContrast: ratio(fill, bg),
+            ringContrast: ratio(rgb(getComputedStyle(ring).borderTopColor), bg), dotShadow: style.boxShadow, ringShadow: getComputedStyle(ring).boxShadow, sameNode: window.__cursorWitness === node };
+        });
+        expect(paint.sameNode).toBe(true);
+        expect(paint.dotContrast).toBeGreaterThanOrEqual(3);
+        if (theme === 'light') {
+          expect(paint.luminance).toBeLessThan(0.2);
+          expect(paint.ringContrast).toBeGreaterThanOrEqual(3);
+          expect(paint.dotShadow).toContain('rgb(255, 250, 240)');
+          expect(paint.ringShadow).toContain('rgb(255, 250, 240)');
+        }
+        await expect(dot).toHaveCSS('pointer-events', 'none');
+        await expect(ring).toHaveCSS('pointer-events', 'none');
+      }
+    });
+  });
+}
+
+for (const fallback of ['touch', 'reduced motion', 'forced colors']) {
+  test.describe(`custom cursor fallback ${fallback}`, () => {
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: fallback === 'touch', hasTouch: fallback === 'touch',
+      contextOptions: { reducedMotion: fallback === 'reduced motion' ? 'reduce' : 'no-preference', forcedColors: fallback === 'forced colors' ? 'active' : 'none' } });
+    test('retains native pointer feedback', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.goto(`${BASE_URL}/about`, { waitUntil: 'networkidle' });
+      const media = await page.evaluate(() => ({
+        reduce: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        forced: matchMedia('(forced-colors: active)').matches,
+        coarse: matchMedia('(pointer: coarse)').matches,
+      }));
+      expect(media).toEqual({ reduce: fallback === 'reduced motion', forced: fallback === 'forced colors', coarse: fallback === 'touch' });
+      await page.mouse.move(150, 150);
+      await expect(page.locator('[data-custom-cursor-dot]')).toHaveCount(0);
+      await expect(page.locator('body')).not.toHaveClass(/custom-cursor-ready|has-custom-cursor/);
+      expect(await page.locator('body').evaluate(node => getComputedStyle(node).cursor)).not.toBe('none');
+    });
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const { mobile, enlarged } of [
+  { mobile: false, enlarged: false }, { mobile: true, enlarged: false }, { mobile: true, enlarged: true },
+]) {
+  test.describe(`comment metadata ${theme} ${mobile ? 'mobile' : 'desktop'}${enlarged ? ' enlarged' : ''}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+    test('card and highlighted-review metadata stay readable with keyboard helpful selection', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(theme => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        const createdAt = new Date().toISOString();
+        localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+          version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+          updatedAt: createdAt, lastSyncedAt: null,
+          localSnapshot: { ratings: [], comments: [
+            { id: 'comment-metadata-fixture-positive', targetType: 'poet', targetId: 'alexander-pushkin',
+              author: 'Автор положительного отзыва', text: 'Сильный и точный образ для внимательного читателя.', kind: 'literary', helpful: 1, createdAt },
+            { id: 'comment-metadata-fixture-critical', targetType: 'poet', targetId: 'alexander-pushkin',
+              author: 'Автор критического отзыва', text: 'Спорно: проверим источники и контекст.', kind: 'history', helpful: 2, createdAt },
+          ] },
+        }));
+      }, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      await expect(panel.getByText('Локальный режим: ответы сохраняются только в этом браузере.', { exact: true })).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+      await page.evaluate(() => document.fonts.ready);
+      if (enlarged) await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+      const cards = panel.locator('[data-community-comment-id]');
+      const reviews = panel.locator('div.rounded-3xl').filter({ has: page.locator('.theme-community-prose') });
+      await expect(cards).toHaveCount(2);
+      await expect(reviews).toHaveCount(2);
+      const headerLayout = await cards.evaluateAll(cards => cards.map(card => {
+        const author = card.querySelector('div[title]');
+        const date = card.querySelector('time');
+        const range = document.createRange();
+        range.selectNodeContents(date);
+        const bounds = card.getBoundingClientRect();
+        return { left: bounds.left, right: bounds.right, author: author.textContent, clipped: author.scrollWidth > author.clientWidth + 1,
+          ellipsis: getComputedStyle(author).textOverflow === 'ellipsis', dateLines: range.getClientRects().length };
+      }));
+      for (const header of headerLayout) {
+        expect(header.clipped, `full author: ${header.author}`).toBe(false);
+        expect(header.ellipsis, `no hidden author: ${header.author}`).toBe(false);
+        expect(header.left, 'card stays inside viewport').toBeGreaterThanOrEqual(0);
+        expect(header.right, 'clipped ancestors must not hide card overflow').toBeLessThanOrEqual(mobile ? 391 : 1441);
+        expect(header.dateLines, 'date wraps naturally only at enlarged narrow widths').toBeLessThanOrEqual(enlarged ? 2 : 1);
+      }
+      async function readableMetadata() {
+        const cardText = await contrastMeasurements(cards.locator('div[title], time, span, button, p'), true);
+        const reviewText = await contrastMeasurements(reviews.locator('div, span, p'), true);
+        expect(cardText.length).toBeGreaterThanOrEqual(10);
+        expect(reviewText.length).toBeGreaterThanOrEqual(8);
+        for (const { text, ratio } of [...cardText, ...reviewText]) {
+          expect(ratio, `${theme} comment text: ${text}`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+      await readableMetadata();
+      const helpful = cards.first().getByRole('button', { name: /комментарий полезным/ });
+      await helpful.focus();
+      await expect(helpful).toBeFocused();
+      await page.keyboard.press('Space');
+      await expect(helpful).toHaveAttribute('aria-pressed', 'true');
+      await expect(helpful).toBeDisabled();
+      await helpful.evaluate(async node => {
+        await Promise.all(node.getAnimations().map(animation => animation.finished.catch(() => {})));
+      });
+      await readableMetadata();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      expect(errors).toEqual([]);
+      await cards.first().screenshot({ path: `qa-artifacts/comment-metadata-${theme}-${mobile ? 'mobile' : 'desktop'}${enlarged ? '-enlarged' : ''}.png` });
+    });
+  });
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community empty copy ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+    for (const state of ['empty', 'positive-only', 'critical-only']) {
+      test(`missing feedback stays readable with ${state}`, async ({ page }, testInfo) => {
+        useChromiumCore(testInfo);
+        await page.addInitScript(({ theme, state }) => {
+          localStorage.setItem('tlp-theme-mode', theme);
+          const createdAt = new Date().toISOString();
+          const comments = state === 'empty' ? [] : [{
+            id: `comment-empty-state-fixture-${state}`, targetType: 'poet', targetId: 'alexander-pushkin',
+            author: 'Читатель', kind: 'literary', helpful: 1, createdAt,
+            text: state === 'positive-only' ? 'Сильный и точный образ.' : 'Спорно: уточните источники.',
+          }];
+          localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+            version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+            updatedAt: createdAt, lastSyncedAt: null, localSnapshot: { ratings: [], comments },
+          }));
+        }, { theme, state });
+        const errors = [];
+        page.on('pageerror', error => errors.push(String(error)));
+        await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+        const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+        await expect(panel.getByText('Локальный режим: ответы сохраняются только в этом браузере.', { exact: true })).toBeVisible();
+        await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+        expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+        await page.evaluate(() => document.fonts.ready);
+        const labels = [
+          'Оценок пока нет',
+          'Когда появятся первые оценки, здесь автоматически соберутся самые заметные сигналы сообщества.',
+        ];
+        const positiveEmpty = 'Пока нет выделенного положительного отзыва.';
+        const criticalEmpty = 'Пока нет выделенного критического отзыва.';
+        if (state !== 'positive-only') labels.push(positiveEmpty);
+        else await expect(panel.getByText(positiveEmpty, { exact: true })).toHaveCount(0);
+        if (state !== 'critical-only') labels.push(criticalEmpty);
+        else await expect(panel.getByText(criticalEmpty, { exact: true })).toHaveCount(0);
+        const emptyList = 'Комментариев пока нет. Можно стать первым внимательным читателем.';
+        if (state === 'empty') labels.push(emptyList);
+        else await expect(panel.getByText(emptyList, { exact: true })).toHaveCount(0);
+        await expect(panel.locator('[data-community-comment-id]')).toHaveCount(state === 'empty' ? 0 : 1);
+        const measurements = [];
+        for (const label of labels) {
+          const node = panel.getByText(label, { exact: true });
+          await expect(node).toBeVisible();
+          measurements.push({ text: label, ratio: await contrastRatio(node) });
+        }
+        await testInfo.attach('empty-state-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+        for (const { text, ratio } of measurements) {
+          expect.soft(ratio, `${theme} ${state}: ${text}`).toBeGreaterThanOrEqual(4.5);
+        }
+        await panel.screenshot({ path: testInfo.outputPath('community-empty-state.png') });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+        expect(errors).toEqual([]);
+      });
+    }
+  });
+}
+
+const SERVICE_PANEL_URL = `${BASE_URL}/poets/alexander-pushkin`;
+
+function seedServiceFeedback(theme) {
+  localStorage.setItem('tlp-theme-mode', theme);
+  const createdAt = new Date().toISOString();
+  const kinds = ['literary', 'history', 'moral'];
+  const comments = Array.from({ length: 8 }, (_, index) => ({
+    id: `comment-service-fixture-${index}`, targetType: 'poet', targetId: 'alexander-pushkin',
+    author: 'Читатель', kind: kinds[index % kinds.length], helpful: index % 3, createdAt,
+    text: index % 2
+      ? 'Точная и спокойная деталь, которая удерживает внимание до конца чтения.'
+      : 'Спорно: источник следовало указать яснее, но само наблюдение ценное.',
+  }));
+  const ratings = [0, 1].map((index) => ({
+    id: `rating-service-fixture-${index}`, targetType: 'poet', targetId: 'alexander-pushkin',
+    scores: { language: 4 + index, depth: 4, legacy: 4, truth: 4 }, createdAt,
+  }));
+  localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+    version: 3, outbox: [], settledOperations: {}, ownRatings: {}, cooldowns: {}, helpfulVotes: {},
+    updatedAt: createdAt, lastSyncedAt: null, localSnapshot: { ratings, comments },
+  }));
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community service copy ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('pagination, filter and result copy remain readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(seedServiceFeedback, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      await expect(panel.locator('[data-community-comment-id]')).toHaveCount(5);
+      await page.evaluate(() => document.fonts.ready);
+      const targets = [
+        { label: 'счётчик показанных', locator: panel.getByText(/^Показано \d+ из \d+$/, { exact: false }).first() },
+        { label: 'пояснение сортировки и фильтра', locator: panel.getByText(/^Все доступные комментарии загружены;/).first() },
+        { label: 'кнопка догрузки', locator: panel.locator('button', { hasText: /^Показать ещё \d+$/ }).first() },
+        { label: 'неактивный фильтр по типу', locator: panel.locator('[aria-label="Фильтр загруженных комментариев по типу"] button[aria-pressed="false"]').first() },
+        { label: 'сводка оценок', locator: panel.getByText(/^\d+ оценок · /).first() },
+        { label: 'строка синхронизации: локальный режим', locator: panel.locator('p[role="status"] span').first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('loading copy remains readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        window.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+      }, theme);
+      let release = () => {};
+      const stalled = new Promise((resolve) => { release = resolve; });
+      await page.route('https://community.test.invalid/**', () => stalled);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const targets = [
+        { label: 'строка синхронизации: загрузка комментариев', locator: panel.locator('p[role="status"] span', { hasText: 'Загружаем комментарии…' }).first() },
+        { label: 'сводка: загрузка оценок', locator: panel.getByText('Загружаем оценки…', { exact: true }).first() },
+        { label: 'заполнитель списка: загрузка комментариев', locator: panel.locator('p', { hasText: 'Загружаем комментарии…' }).first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      release();
+      expect(errors).toEqual([]);
+    });
+
+    test('failure copy remains readable', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((theme) => {
+        localStorage.setItem('tlp-theme-mode', theme);
+        window.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+      }, theme);
+      await page.route('https://community.test.invalid/**', route => route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }));
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(SERVICE_PANEL_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const targets = [
+        { label: 'заполнитель списка: недоступность комментариев', locator: panel.getByText('Комментарии сейчас недоступны. Это не означает, что их нет.', { exact: true }).first() },
+        { label: 'сводка: недоступность оценок', locator: panel.getByText('Данные оценок сейчас недоступны', { exact: true }).first() },
+        { label: 'кнопка повтора', locator: panel.locator('button', { hasText: 'Повторить' }).first() },
+        { label: 'строка синхронизации: ошибка', locator: panel.locator('p[role="status"] span').first() },
+      ];
+      const measurements = [];
+      for (const { label, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('service-copy-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(errors).toEqual([]);
+    });
+  });
+}
+
+const STATUS_PALETTE_URL = `${BASE_URL}/poets/alexander-pushkin`;
+const AUDIO_FAILURE_URL = `${BASE_URL}/music/pushkin-tucha`;
+
+function seedOwnRating(theme) {
+  localStorage.setItem('tlp-theme-mode', theme);
+  const createdAt = new Date().toISOString();
+  const id = 'rating-status-palette-fixture';
+  const scores = { language: 4, depth: 4, legacy: 4, truth: 4 };
+  localStorage.setItem('tlp-community-feedback:v3', JSON.stringify({
+    version: 3, outbox: [], settledOperations: {}, cooldowns: {}, helpfulVotes: {},
+    ownRatings: { 'rating:poet:alexander-pushkin': { id, scores, updatedAt: createdAt } },
+    updatedAt: createdAt, lastSyncedAt: null,
+    localSnapshot: {
+      ratings: [{ id, targetType: 'poet', targetId: 'alexander-pushkin', scores, createdAt }],
+      comments: [],
+    },
+  }));
+}
+
+// The shared light-theme remap table paints amber/emerald status ink on light
+// surfaces. Status copy that already sits on its own dark surface must keep its
+// pale ink, so this block walks both families: page-surface status copy, the
+// player failure alert on a dark island, and the audio chrome boundary panel,
+// which owns a hard-coded dark background.
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`status palette ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('saved rating keeps its own emerald ink', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript(seedOwnRating, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const note = panel.getByText('Ваш голос уже учтён', { exact: false }).first();
+      await expect(note).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const targets = [
+        { label: 'заметка об учтённой оценке', min: 4.5, locator: note },
+        { label: 'иконка подтверждения', min: 3, locator: panel.locator('svg.text-emerald-300').first() },
+        { label: 'счётчик заполненных измерений', min: 4.5, locator: panel.getByText('4 / 4', { exact: true }).first() },
+      ];
+      const measurements = [];
+      for (const { label, min, locator } of targets) {
+        await expect(locator).toBeVisible();
+        measurements.push({ text: label, min, ratio: await contrastRatio(locator) });
+      }
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('player failure alert keeps amber ink on its own dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((value) => localStorage.setItem('tlp-theme-mode', value), theme);
+      await page.route(/\/audio\/.*\.mp3(\?.*)?$/i, route => route.abort('failed'));
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(AUDIO_FAILURE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.getByRole('button', { name: 'Воспроизвести трек' }).first().click();
+      const alert = page.locator('[role="alert"]', { hasText: 'Аудиофайл не загрузился' }).first()
+        .or(page.locator('[role="alert"]', { hasText: 'Формат или источник аудио' }).first());
+      await expect(alert).toBeVisible({ timeout: 20000 });
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст сбоя загрузки аудио', min: 4.5, ratio: await contrastRatio(alert) },
+      ];
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    // Contract guard, not a user journey: AudioChromeBoundary only renders after
+    // a runtime error inside the player panel, which the production build cannot
+    // be made to throw on demand. The probe reproduces the panel from the class
+    // string read out of the component, so removing its dark-island marker here
+    // turns this test red instead of silently changing only a copy.
+    test('audio chrome boundary keeps its own dark island ink', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      const source = readFileSync(new URL('../src/components/music/AudioChromeBoundary.tsx', import.meta.url), 'utf8');
+      const classMatch = source.match(/className="([^"]*bg-\[#11100d\][^"]*)"/);
+      expect(classMatch, 'audio chrome boundary panel keeps a dark panel class string').not.toBeNull();
+      const panelClass = classMatch[1];
+      expect(panelClass, 'audio chrome boundary panel is marked as a dark island').toContain('theme-dark-island');
+      await page.addInitScript((value) => localStorage.setItem('tlp-theme-mode', value), theme);
+      await page.goto(AUDIO_FAILURE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.evaluate((className) => {
+        const panel = document.createElement('div');
+        panel.className = className;
+        panel.setAttribute('data-status-surface-probe', 'audio-chrome-boundary');
+        const heading = document.createElement('div');
+        heading.className = 'font-serif text-lg font-bold';
+        heading.textContent = 'Панель плеера временно недоступна';
+        const glyph = document.createElement('span');
+        glyph.className = 'text-amber-300';
+        glyph.textContent = '!';
+        panel.append(heading, glyph);
+        document.body.append(panel);
+      }, panelClass);
+      const panel = page.locator('[data-status-surface-probe="audio-chrome-boundary"]');
+      await expect(panel).toBeVisible();
+      const measurements = [
+        { text: 'заголовок панели', min: 4.5, ratio: await contrastRatio(panel.locator('div').first()) },
+        { text: 'предупреждающий символ', min: 3, ratio: await contrastRatio(panel.locator('span.text-amber-300')) },
+      ];
+      await testInfo.attach('status-palette-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+    });
+  });
+}
+
+const COMMUNITY_ORIGIN = 'https://community.test.invalid';
+
+function communityCorsHeaders() {
+  return {
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'content-type': 'application/json',
+  };
+}
+
+// Reads succeed so the panel reaches a connected phase; writes are rejected so
+// the pending queue, the offline status line and the warning toast are exercised
+// through the real store instead of seeded markup.
+async function routeCommunityWithRejectedWrites(page) {
+  await page.route(`${COMMUNITY_ORIGIN}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: communityCorsHeaders() });
+      return;
+    }
+    const url = new URL(request.url());
+    if (url.pathname === '/v1/session') {
+      await route.fulfill({ status: 200, headers: communityCorsHeaders(), body: JSON.stringify({ actorToken: 'a'.repeat(40), expiresAt: Date.now() + 3600_000 }) });
+      return;
+    }
+    if (url.pathname === '/v1/summary') {
+      await route.fulfill({
+        status: 200,
+        headers: communityCorsHeaders(),
+        body: JSON.stringify({
+          targetType: 'poet', targetId: 'alexander-pushkin', ratingCount: 4, commentCount: 2,
+          overall: 4.4, dimensions: { language: 4.4, depth: 4.2, legacy: 4.1, truth: 4.0 },
+          distribution: { 4: 2, 5: 2 }, deviation: 0.3,
+        }),
+      });
+      return;
+    }
+    if (url.pathname === '/v1/comments') {
+      await route.fulfill({ status: 200, headers: communityCorsHeaders(), body: JSON.stringify({ comments: [], nextCursor: null }) });
+      return;
+    }
+    await route.fulfill({ status: 500, headers: communityCorsHeaders(), body: '{}' });
+  });
+}
+
+function seedCommunityTestConfig(page, theme) {
+  return page.addInitScript((value) => {
+    localStorage.setItem('tlp-theme-mode', value);
+    globalThis.__TLP_COMMUNITY_TEST_CONFIG__ = { url: 'https://community.test.invalid', humanProof: 'qa-local-proof' };
+  }, theme);
+}
+
+for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
+  test.describe(`community queue and toasts ${theme} ${mobile ? 'mobile' : 'desktop'}`, () => {
+    test.use({ colorScheme: theme, contextOptions: { reducedMotion: 'reduce' },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      isMobile: mobile, hasTouch: mobile });
+
+    test('queue status line stays readable when writes are rejected', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const queueLine = panel.locator('p[role="status"] span').first();
+      await panel.locator('textarea').first().fill('Точная и спокойная деталь, удерживающая внимание.');
+      await panel.getByRole('button', { name: 'Добавить комментарий' }).click();
+      await expect(queueLine).toHaveText(/^Сервер недоступен\. В очереди: \d+; ничего не потеряно\.$/, { timeout: 20000 });
+      await page.evaluate(() => document.fonts.ready);
+      const ratio = await contrastRatio(queueLine);
+      await testInfo.attach('queue-line-contrast', { body: JSON.stringify({ text: await queueLine.textContent(), ratio }, null, 2), contentType: 'application/json' });
+      expect(ratio, `${theme}: очередь на отправку`).toBeGreaterThanOrEqual(4.5);
+      expect(errors).toEqual([]);
+    });
+
+    test('success toast keeps its own ink on its dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const groups = panel.locator('[role="radiogroup"]');
+      await expect(groups.first()).toBeVisible();
+      const count = await groups.count();
+      expect(count, 'rating dimensions are rendered before submitting').toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        await groups.nth(index).locator('button[aria-label="4 из 5"]').first().click();
+      }
+      await panel.getByRole('button', { name: /Зафиксировать оценку|Обновить оценку/ }).first().click();
+      const toast = panel.locator('[role="status"][aria-live="polite"]').filter({ hasText: 'Оценка сохранена' }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст тоста успеха', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка тоста успеха', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('toast-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    test('warning toast keeps its own ink on its dark surface', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await seedCommunityTestConfig(page, theme);
+      await routeCommunityWithRejectedWrites(page);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const textarea = panel.locator('textarea').first();
+      const send = panel.getByRole('button', { name: 'Добавить комментарий' });
+      await textarea.fill('Точная и спокойная деталь, удерживающая внимание.');
+      await send.click();
+      await expect(panel.locator('p[role="status"] span').first()).toHaveText(/^Сервер недоступен\. В очереди: \d+;/, { timeout: 20000 });
+      await textarea.fill('Вторая отправка подряд попадает в кулдаун комментариев.');
+      await send.click();
+      const toast = panel.locator('[role="alert"]').filter({ hasText: /^Подождите \d+ сек\.$/ }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст предупреждающего тоста', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка предупреждающего тоста', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('toast-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
+
+    // The last status string that had never been produced by a real run: the
+    // rejected-upload copy only appears when the community store cannot persist.
+    // Storage is disabled for that key alone, which the store turns into a
+    // warning toast instead of a crash.
+    test('rejected upload copy stays readable when the store cannot persist', async ({ page }, testInfo) => {
+      useChromiumCore(testInfo);
+      await page.addInitScript((value) => {
+        localStorage.setItem('tlp-theme-mode', value);
+        const original = Storage.prototype.setItem;
+        Storage.prototype.setItem = function setItem(key, next) {
+          if (String(key).startsWith('tlp-community-feedback')) {
+            throw new DOMException('community storage disabled', 'QuotaExceededError');
+          }
+          return original.call(this, key, next);
+        };
+      }, theme);
+      const errors = [];
+      page.on('pageerror', error => errors.push(String(error)));
+      await page.goto(STATUS_PALETTE_URL, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      const panel = page.locator('[data-community-target="poet:alexander-pushkin"]');
+      const groups = panel.locator('[role="radiogroup"]');
+      await expect(groups.first()).toBeVisible();
+      const count = await groups.count();
+      expect(count, 'rating dimensions are rendered before submitting').toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        await groups.nth(index).locator('button[aria-label="4 из 5"]').first().click();
+      }
+      await panel.getByRole('button', { name: /Зафиксировать оценку|Обновить оценку/ }).first().click();
+      const toast = panel.locator('[role="alert"]').filter({ hasText: 'Не удалось сохранить' }).first();
+      await expect(toast).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const measurements = [
+        { text: 'текст отклонённой записи', min: 4.5, ratio: await contrastRatio(toast.locator('span').first()) },
+        { text: 'иконка отклонённой записи', min: 3, ratio: await contrastRatio(toast.locator('svg').first()) },
+      ];
+      await testInfo.attach('rejected-upload-contrast', { body: JSON.stringify(measurements, null, 2), contentType: 'application/json' });
+      for (const { text, min, ratio } of measurements) {
+        expect.soft(ratio, `${theme}: ${text}`).toBeGreaterThanOrEqual(min);
+      }
+      expect(errors).toEqual([]);
+    });
   });
 }
