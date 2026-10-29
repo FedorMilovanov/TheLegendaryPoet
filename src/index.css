@@ -539,6 +539,19 @@ html.theme-light .tlp-media-shadow-soft {
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.09);
 }
 
+/* The analytics consent banner is a fixed dark island whose dark-theme lift is a
+   70%-black, 100px-blur shadow. In light theme that shadow spreads ~100px above
+   the banner and paints 151,151,143 over the page, which drops the section
+   labels it crosses from 5.16 to 2.71. Light mode keeps the lift with a falloff
+   the page underneath survives (235,235,223 under the same labels -> 4.76). */
+.tlp-consent-shadow {
+  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.7);
+}
+
+html.theme-light .tlp-consent-shadow {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+}
+
 /* ===== Mobile long-read companion: current-chapter chip + TOC popover =====
    Appears only while the chrome is hidden (reading mode) — it borrows the
    space the header vacated instead of adding UI. Hidden ≥1024px (desktop
