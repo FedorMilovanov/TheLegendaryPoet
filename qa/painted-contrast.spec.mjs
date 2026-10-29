@@ -80,10 +80,10 @@ function useChromiumCore(testInfo) {
 }
 
 test.describe('painted contrast', () => {
-  // The sweep walks the document in 2000px bands and decodes a bitmap per band,
-  // three times (plain ink, gradient ink, decorative icons). The shortest route
-  // finishes in 4s; the 20 000px essay needs 60s, which is over the shared 45s
-  // per-test timeout.
+  // The sweep walks the document in viewport-height bands, scrolling to each
+  // one and decoding a bitmap per band, three times (plain ink, gradient ink,
+  // decorative icons). The shortest route finishes in 4s; the 20 000px essay
+  // needs 60s, which is over the shared 45s per-test timeout.
   test.slow();
 
   for (const route of ROUTES) {
