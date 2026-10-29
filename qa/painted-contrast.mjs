@@ -108,16 +108,42 @@ const COLLECT_NODES = () => {
   // paints that span's gradient inside its own box, and sampling the element
   // rectangle scores the heading against a neighbour's ink. Measure the run of
   // glyphs itself, and remember which run it was so it can be found again.
-  const runRect = (node) => {
+  // Consecutive lines of the same width are one block: a paragraph is then a
+  // single box, while a paragraph wrapping a floated figure becomes the narrow
+  // lines beside it plus the full-width lines below it, so each block is scored
+  // against the surface its own glyphs rest on.
+  const mergeRuns = (runs) => {
+    const blocks = [];
+    for (const run of runs) {
+      const last = blocks[blocks.length - 1];
+      if (last
+        && Math.abs(last.x - run.x) <= 1
+        && Math.abs(last.width - run.width) <= 1
+        && run.y - (last.y + last.height) <= 2) {
+        last.height = run.y + run.height - last.y;
+        continue;
+      }
+      blocks.push({ x: run.x, y: run.y, width: run.width, height: run.height });
+    }
+    return blocks;
+  };
+  const runRects = (node, floor = 2) => {
     const range = document.createRange();
     range.selectNodeContents(node);
-    const runs = [...range.getClientRects()].filter((run) => run.width >= 2 && run.height >= 2);
-    if (!runs.length) return null;
-    const left = Math.min(...runs.map((run) => run.x));
-    const top = Math.min(...runs.map((run) => run.y));
-    const right = Math.max(...runs.map((run) => run.x + run.width));
-    const bottom = Math.max(...runs.map((run) => run.y + run.height));
-    const rect = { x: left, y: top, width: right - left, height: bottom - top };
+    const runs = [...range.getClientRects()].filter((run) => run.width >= floor && run.height >= floor);
+    return mergeRuns(runs);
+  };
+  const union = (blocks) => {
+    const left = Math.min(...blocks.map((run) => run.x));
+    const top = Math.min(...blocks.map((run) => run.y));
+    const right = Math.max(...blocks.map((run) => run.x + run.width));
+    const bottom = Math.max(...blocks.map((run) => run.y + run.height));
+    return { x: left, y: top, width: right - left, height: bottom - top };
+  };
+  const runRect = (node) => {
+    const blocks = runRects(node);
+    if (!blocks.length) return null;
+    const rect = union(blocks);
     return rect.width < 2 || rect.height < 2 ? null : rect;
   };
   const textRuns = (el) => [...el.childNodes].filter((child) => child.nodeType === 3 && child.textContent.trim());
@@ -138,6 +164,11 @@ const COLLECT_NODES = () => {
     if (!rect) continue;
     seen.add(el);
     const box = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    // One box cannot describe a run that wraps a float: the essay that put a
+    // media card beside its prose scored the paragraph against the card.
+    const blocks = runRects(node).map((run) => ({
+      x: run.x + window.scrollX, y: run.y + window.scrollY, width: run.width, height: run.height,
+    }));
     const run = textRuns(el).indexOf(node);
     const cover = occludedBy(box, el);
     if (cover) {
@@ -150,6 +181,7 @@ const COLLECT_NODES = () => {
       fontSize: parseFloat(style.fontSize),
       fontWeight: Number(style.fontWeight),
       rect: box,
+      blocks,
       id: tag(el),
       run,
       overlay: overlayOf(el),
@@ -308,6 +340,8 @@ const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
       }
     }
     const total = (x1 - x0) * (y1 - y0);
+    // The inset can swallow a hairline block (a 2px-tall line box) completely.
+    if (total <= 0) return null;
     let best = null;
     let bestCount = 0;
     const bands = new Map();
@@ -320,6 +354,7 @@ const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
       if (count > slot.colourCount) { slot.colourCount = count; slot.colour = rgb; }
       bands.set(band, slot);
     }
+    if (best === null) return null;
     const dominant = best.split(',').map(Number);
     const surfaces = [...bands.values()]
       .filter((slot) => slot.count / total >= SURFACE_SHARE)
@@ -341,10 +376,32 @@ const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
     return { ratios, ratio: Math.min(...ratios), minimum: threshold, large };
   };
 
+  // A run can occupy several blocks — prose that wraps a floated figure has
+  // narrow lines beside it and full-width lines below it. Every block holds
+  // glyphs, so every block is a surface the ink has to clear, and none of them
+  // is the figure it wraps around.
+  const surfacesOf = (node) => {
+    const rects = node.blocks?.length ? node.blocks : [node.rect];
+    const seen = new Set();
+    const surfaces = [];
+    let dominant = null;
+    for (const rect of rects) {
+      const sampled = sample(rect);
+      if (!sampled) continue;
+      dominant = dominant ?? sampled.dominant;
+      for (const surface of sampled.surfaces) {
+        const key = surface.join(',');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        surfaces.push(surface);
+      }
+    }
+    return surfaces.length ? { surfaces, dominant } : null;
+  };
   const rows = [];
   const gradientInk = [];
   for (const node of nodes) {
-    const sampled = sample(node.rect);
+    const sampled = surfacesOf(node);
     if (!sampled) continue;
     const large = node.fontSize >= 24 || (node.fontSize >= 18.66 && node.fontWeight >= 700);
     const minimumForNode = node.tag === 'svg' ? minimumIcon : large ? minimumLarge : minimum;
@@ -380,6 +437,26 @@ export async function paintedSweep(page, options = {}) {
   // Chrome is collected at a known scroll offset, so its boxes are viewport
   // boxes, which is exactly what fixed chrome keeps while the page scrolls.
   await page.evaluate(() => window.scrollTo(0, 0));
+  // Collect once, but not before there is something to collect. An essay body
+  // that has not laid its own prose out yet reports every paragraph at the top
+  // of the document, so bands get cut from a page that is a fraction of its
+  // real height and copy is scored against the hero it happens to be stacked
+  // on. Wait for the height — and the type — to stop moving instead.
+  await page.evaluate(() => Promise.race([
+    (async () => {
+      await document.fonts.ready;
+      let previous = -1;
+      let stable = 0;
+      while (stable < 5) {
+        const height = document.documentElement.scrollHeight;
+        stable = height === previous ? stable + 1 : 0;
+        previous = height;
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => { setTimeout(resolve, 120); });
+      }
+    })(),
+    new Promise((resolve) => { setTimeout(resolve, 8000); }),
+  ]));
   const nodes = await page.evaluate(COLLECT_NODES);
   const { height, viewport } = await page.evaluate(() => ({
     height: document.documentElement.scrollHeight,
@@ -402,31 +479,81 @@ export async function paintedSweep(page, options = {}) {
   // reported as hidden forever. Chrome has to cover a real share of the box
   // before the copy counts as concealed rather than merely grazed.
   const COVERED_SHARE = 0.2;
-  const coverAt = (node, rect) => overlays.find((overlay, index) => {
+  // A line the chrome merely grazes is still sampled partly on the chrome's own
+  // paint, and that share is big enough to be scored as a surface. A block is
+  // dropped as soon as chrome reaches the sampler's own surface share: a line
+  // has to stand entirely in the open before it testifies about the ink.
+  const GRAZE_SHARE = 0.05;
+  const coverAt = (node, rect, share = COVERED_SHARE) => overlays.find((overlay, index) => {
     if (index === node.overlay) return false;
     const width = Math.min(rect.x + rect.width, overlay.x + overlay.width) - Math.max(rect.x, overlay.x);
     const height = Math.min(rect.y + rect.height, overlay.y + overlay.height) - Math.max(rect.y, overlay.y);
     if (width <= 0 || height <= 0) return false;
-    return (width * height) / (rect.width * rect.height) >= COVERED_SHARE;
+    return (width * height) / (rect.width * rect.height) >= share;
   });
   // The scroll offset that puts a node in the middle of the viewport, where no
   // chrome can reach it: the re-sample offset for copy its own band covered.
-  const centerOn = (node) => {
-    const centred = Math.round(node.rect.y + node.rect.height / 2 - viewport / 2);
+  // `seen` is where the node really was when a band last looked at it — the
+  // document position gathered before the page finished loading its media can
+  // be a thousand pixels away from where the copy ended up.
+  const centerOn = (node, seen = null) => {
+    const top = seen ? seen.offset + seen.y : node.rect.y;
+    const height = seen ? seen.height : node.rect.height;
+    const centred = Math.round(top + height / 2 - viewport / 2);
     return Math.max(0, Math.min(maxScroll, centred));
   };
   const settle = () => page.evaluate(() => new Promise((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)));
   }));
+  // A capture has to show the page a reader is left with. Photographs that are
+  // still arriving reflow the copy around them, so a band photographed before
+  // its own images land measures a layout that never settles — and blames the
+  // ink for sitting on a picture it is not on. Decode what the band shows
+  // first, with a ceiling so one stalled asset cannot hang the sweep.
+  const settleBand = () => page.evaluate(() => Promise.race([
+    (async () => {
+      await document.fonts.ready;
+      const shown = [...document.images].filter((image) => {
+        const box = image.getBoundingClientRect();
+        return box.top < window.innerHeight + 200 && box.bottom > -200 && !image.complete;
+      });
+      await Promise.all(shown.map((image) => image.decode().catch(() => null)));
+    })(),
+    new Promise((resolve) => { setTimeout(resolve, 6000); }),
+  ]));
   // Re-read the boxes at the offset that is about to be captured. Sticky rows,
   // fixed controls and anything that reflows between collection and capture are
   // measured where they actually are, never where the document said they were.
   const liveBoxes = (ids) => page.evaluate((list) => {
+    const merge = (runs) => {
+      const blocks = [];
+      for (const run of runs) {
+        const last = blocks[blocks.length - 1];
+        if (last && Math.abs(last.x - run.x) <= 1 && Math.abs(last.width - run.width) <= 1 && run.y - (last.y + last.height) <= 2) {
+          last.height = run.y + run.height - last.y;
+          continue;
+        }
+        blocks.push({ x: run.x, y: run.y, width: run.width, height: run.height });
+      }
+      return blocks;
+    };
+    const bounds = (blocks) => ({
+      x: Math.min(...blocks.map((run) => run.x)),
+      y: Math.min(...blocks.map((run) => run.y)),
+      width: Math.max(...blocks.map((run) => run.x + run.width)) - Math.min(...blocks.map((run) => run.x)),
+      height: Math.max(...blocks.map((run) => run.y + run.height)) - Math.min(...blocks.map((run) => run.y)),
+    });
+    // One pass over the tagged nodes instead of one query per node: an
+    // attribute lookup per node re-scans the document, and a long page carries
+    // hundreds of them per band.
+    const tagged = new Map();
+    for (const el of document.querySelectorAll('[data-sweep-node]')) tagged.set(el.getAttribute('data-sweep-node'), el);
     const boxes = {};
     for (const { id, run } of list) {
-      const el = document.querySelector(`[data-sweep-node="${id}"]`);
+      const el = tagged.get(String(id));
       if (!el) continue;
       let rect;
+      let blocks = null;
       if (run === undefined || run < 0) {
         rect = el.getBoundingClientRect();
       } else {
@@ -438,14 +565,11 @@ export async function paintedSweep(page, options = {}) {
         range.selectNodeContents(node);
         const runs = [...range.getClientRects()].filter((each) => each.width >= 1 && each.height >= 1);
         if (!runs.length) continue;
-        const left = Math.min(...runs.map((each) => each.x));
-        const top = Math.min(...runs.map((each) => each.y));
-        const right = Math.max(...runs.map((each) => each.x + each.width));
-        const bottom = Math.max(...runs.map((each) => each.y + each.height));
-        rect = { x: left, y: top, width: right - left, height: bottom - top };
+        blocks = merge(runs);
+        rect = bounds(blocks);
       }
       if (rect.width < 1 || rect.height < 1) continue;
-      boxes[id] = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      boxes[id] = { rect, blocks };
     }
     return boxes;
   }, ids);
@@ -462,6 +586,7 @@ export async function paintedSweep(page, options = {}) {
     await page.waitForTimeout(250);
     const shoot = async (requested, group) => {
       await page.evaluate((y) => window.scrollTo(0, y), requested);
+      await settleBand();
       await settle();
       // `animations: 'disabled'` fast-forwards finite animations to their final
       // frame. Two things follow from that. A reveal caught mid-fade would
@@ -475,17 +600,48 @@ export async function paintedSweep(page, options = {}) {
       const boxes = await liveBoxes(group.map((node) => ({ id: node.id, run: node.run })));
       const visible = [];
       for (const node of group) {
-        const rect = boxes[node.id];
-        if (!rect || rect.y >= viewport || rect.y + rect.height <= 0) {
-          missed.push(node);
+        const box = boxes[node.id];
+        // A band is chosen from the position the node had when the sweep began.
+        // Photographs that land afterwards move the copy, so the band that was
+        // supposed to hold it can hold only its top or bottom edge — and a
+        // capture is one viewport tall: pixels outside it are not in the shot.
+        // Score the pieces the shot contains and re-centre the rest, instead of
+        // sampling a neighbouring picture and blaming the ink for it.
+        const pieces = box ? ((box.blocks?.length ? box.blocks : [box.rect])
+          .filter((piece) => piece.y >= 0 && piece.y + piece.height <= viewport)) : [];
+        if (!pieces.length) {
+          missed.push({ node, seen: box ? { offset: requested, y: box.rect.y, height: box.rect.height } : null });
           continue;
         }
-        const cover = coverAt(node, rect);
-        if (cover) {
-          covered.push({ node, by: `${cover.tag}.${cover.cls}` });
+        // Chrome covers a line, not a paragraph. A paragraph that begins under
+        // the header has one line painted on the header's own parchment and the
+        // rest on the page, and scoring the box as a whole blames the ink for
+        // the header it merely starts behind. Score the lines that stand in the
+        // open; a line under chrome is not legible here and is not evidence.
+        const open = pieces.filter((piece) => !coverAt(node, piece, GRAZE_SHARE));
+        if (!open.length) {
+          const whole = pieces.reduce((bounds, piece) => ({
+            x: Math.min(bounds.x, piece.x),
+            y: Math.min(bounds.y, piece.y),
+            right: Math.max(bounds.right, piece.x + piece.width),
+            bottom: Math.max(bounds.bottom, piece.y + piece.height),
+          }), { x: Infinity, y: Infinity, right: -Infinity, bottom: -Infinity });
+          const cover = coverAt(node, { x: whole.x, y: whole.y, width: whole.right - whole.x, height: whole.bottom - whole.y });
+          covered.push({
+            node,
+            by: cover ? `${cover.tag}.${cover.cls}` : 'chrome',
+            seen: { offset: requested, y: whole.y, height: whole.bottom - whole.y },
+          });
           continue;
         }
-        visible.push({ ...node, rect });
+        const rect = open.reduce((bounds, piece) => ({
+          x: Math.min(bounds.x, piece.x),
+          y: Math.min(bounds.y, piece.y),
+          right: Math.max(bounds.right, piece.x + piece.width),
+          bottom: Math.max(bounds.bottom, piece.y + piece.height),
+        }), { x: Infinity, y: Infinity, right: -Infinity, bottom: -Infinity });
+        const clipped = { x: rect.x, y: rect.y, width: rect.right - rect.x, height: rect.bottom - rect.y };
+        visible.push({ ...node, rect: clipped, blocks: open });
       }
       if (!visible.length) return { rows: [], gradientInk: [] };
       return page.evaluate(MEASURE, { shot, nodes: visible, minimum, minimumLarge, minimumIcon });
@@ -513,10 +669,10 @@ export async function paintedSweep(page, options = {}) {
       // next. Re-sample those nodes once, centred in the viewport, so nothing is
       // dropped from the score just because of where the bands fell.
       const retry = new Map();
-      for (const node of [...covered.map((entry) => entry.node), ...missed]) {
-        const target = centerOn(node);
+      for (const entry of [...covered, ...missed]) {
+        const target = centerOn(entry.node, entry.seen ?? null);
         const bucket = retry.get(target) ?? [];
-        bucket.push(node);
+        bucket.push(entry.node);
         retry.set(target, bucket);
       }
       for (const [target, group] of retry) {
