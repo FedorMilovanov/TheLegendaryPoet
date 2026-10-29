@@ -51,28 +51,29 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const STORAGE_KEY = 'tlp-theme-mode';
 
 // `minimumNodes` is the render guard: a page that never painted its content must
-// not be certified as clean. Counts are the smallest the sweep measured on any
-// theme/viewport pair, rounded down.
+// not be certified as clean. Counts are nine tenths of the smallest number of
+// nodes the sweep measured on any theme/viewport pair, rounded down — a page
+// that paints nothing measures a handful, not nine tenths of its own copy.
 const ROUTES = [
-  { path: '/ratings', heading: 'читателей', minimumNodes: 60 },
-  { path: '/poets/alexander-pushkin', heading: 'Пушкин', minimumNodes: 200 },
-  { path: '/music', heading: 'Музыкой', minimumNodes: 60 },
-  { path: '/articles', heading: 'Исследования', minimumNodes: 80 },
+  { path: '/ratings', heading: 'читателей', minimumNodes: 159 },
+  { path: '/poets/alexander-pushkin', heading: 'Пушкин', minimumNodes: 441 },
+  { path: '/music', heading: 'Музыкой', minimumNodes: 66 },
+  { path: '/articles', heading: 'Исследования', minimumNodes: 81 },
   { path: '/', heading: 'LEGENDARY', minimumNodes: 90 },
-  { path: '/archive', heading: 'Архив', minimumNodes: 20 },
-  { path: '/poets', heading: 'Лица', minimumNodes: 120 },
-  { path: '/about', heading: 'О Проекте', minimumNodes: 45 },
-  { path: '/editorial-policy', heading: 'Редакционная политика', minimumNodes: 42 },
-  { path: '/privacy', heading: 'Политика конфиденциальности', minimumNodes: 44 },
-  { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 28 },
-  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 110 },
-  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 110 },
-  { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 600 },
-  { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 470 },
-  { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 240 },
-  { path: '/essays/sergei-yesenin-1921-1925', heading: 'Часть II', minimumNodes: 740 },
-  { path: '/essays/vykhozhu-odin-ya-na-dorogu-lermontov', heading: 'Выхожу Один Я', minimumNodes: 180 },
-  { path: '/route-audit-page-that-must-not-exist', heading: 'Страница Не Найдена', minimumNodes: 25 },
+  { path: '/archive', heading: 'Архив', minimumNodes: 24 },
+  { path: '/poets', heading: 'Лица', minimumNodes: 134 },
+  { path: '/about', heading: 'О Проекте', minimumNodes: 44 },
+  { path: '/editorial-policy', heading: 'Редакционная политика', minimumNodes: 39 },
+  { path: '/privacy', heading: 'Политика конфиденциальности', minimumNodes: 41 },
+  { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 27 },
+  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 105 },
+  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 105 },
+  { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 527 },
+  { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 412 },
+  { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 226 },
+  { path: '/essays/sergei-yesenin-1921-1925', heading: 'Часть II', minimumNodes: 654 },
+  { path: '/essays/vykhozhu-odin-ya-na-dorogu-lermontov', heading: 'Выхожу Один Я', minimumNodes: 166 },
+  { path: '/route-audit-page-that-must-not-exist', heading: 'Страница Не Найдена', minimumNodes: 26 },
 ];
 
 function useChromiumCore(testInfo) {
@@ -80,11 +81,10 @@ function useChromiumCore(testInfo) {
 }
 
 test.describe('painted contrast', () => {
-  // The sweep walks the document in viewport-height bands, scrolling to each
-  // one and decoding a bitmap per band, three times (plain ink, gradient ink,
-  // decorative icons). The shortest route finishes in 4s; the 20 000px essay
-  // needs 60s, which is over the shared 45s per-test timeout.
-  test.slow();
+  // One band is one screenshot of one viewport, and a 63 000px essay is 127 of
+  // them at half a viewport each: the slowest cell measures about two minutes,
+  // four times the shared budget and twice what `test.slow()` allows.
+  test.setTimeout(240_000);
 
   for (const route of ROUTES) {
     for (const theme of ['dark', 'light']) {

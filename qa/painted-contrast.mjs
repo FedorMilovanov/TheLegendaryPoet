@@ -467,9 +467,16 @@ export async function paintedSweep(page, options = {}) {
   // why these are offsets to visit and not slices of the document.
   const bandHeight = Math.max(1, Math.min(2000, viewport));
   const maxScroll = Math.max(0, height - viewport);
+  // Bands sit half a viewport apart rather than a whole one. Fixed chrome owns
+  // the top and the bottom strip of every capture, so a node that lands in
+  // those strips — about one node in ten — cannot be scored in the band that
+  // shows it, while the grid half a viewport along puts the same node in open
+  // water. Interleaving the grids costs one capture per band and saves one
+  // capture per stranded node, which on a long page is most of a pass.
+  const step = Math.max(1, Math.round(bandHeight / 2));
   const offsets = [...new Set(Array.from(
-    { length: Math.ceil(height / bandHeight) },
-    (_, index) => Math.min(index * bandHeight, maxScroll),
+    { length: Math.ceil(height / step) + 1 },
+    (_, index) => Math.min(index * step, maxScroll),
   ))];
 
   // Floating chrome is fixed to the viewport, so its box is the same in every
@@ -584,10 +591,12 @@ export async function paintedSweep(page, options = {}) {
     if (!list.length) return { rows, gradientInk, covered, missed };
     const style = await page.addStyleTag({ content: styleContent });
     await page.waitForTimeout(250);
-    const shoot = async (requested, group) => {
-      await page.evaluate((y) => window.scrollTo(0, y), requested);
+    const goTo = async (offset) => {
+      await page.evaluate((y) => window.scrollTo(0, y), offset);
       await settleBand();
       await settle();
+    };
+    const score = async (shot, requested, group) => {
       // `animations: 'disabled'` fast-forwards finite animations to their final
       // frame. Two things follow from that. A reveal caught mid-fade would
       // sample the composite of half the ink over half the surface, which is
@@ -596,7 +605,6 @@ export async function paintedSweep(page, options = {}) {
       // these reveals slide tens of pixels — the capture has to happen before
       // the boxes are read, or every fast-forwarded node is sampled where it
       // used to be instead of where it landed.
-      const shot = (await page.screenshot({ animations: 'disabled' })).toString('base64');
       const boxes = await liveBoxes(group.map((node) => ({ id: node.id, run: node.run })));
       const visible = [];
       for (const node of group) {
@@ -649,18 +657,39 @@ export async function paintedSweep(page, options = {}) {
     // The last offset is clamped to the final scrollable one, so its window
     // reaches back into the window before it. Score each node once, at the
     // first offset that visits it, or the overlap measures it twice.
+    //
+    // "Visits it" is decided from where the node is when the band is reached,
+    // not from where the document said it was. Copy moves while a page lands —
+    // photographs reserving their space, a list filling in — and a band chosen
+    // from a stale position photographs a page the node has already left, which
+    // costs a capture here and a re-centring later for every node it misses.
+    // Candidates are the unscored nodes near this band; the ones the viewport
+    // actually holds are the group.
+    // A node is one run of glyphs in one element, so the run is part of its
+    // identity: marking the element alone would leave its other runs unscored,
+    // and marking the object would let the next band score it again under a
+    // fresh copy.
+    const keyOf = (node) => `${node.id}:${node.run ?? ''}`;
     const scored = new Set();
     try {
       for (const offset of offsets) {
-        const group = list.filter((node) => {
-          if (scored.has(node)) return false;
+        const candidates = list.filter((node) => {
+          if (scored.has(keyOf(node))) return false;
           const centre = node.rect.y + node.rect.height / 2;
-          if (centre < offset || centre >= offset + viewport) return false;
-          scored.add(node);
-          return true;
+          return Math.abs(centre - (offset + viewport / 2)) <= viewport;
+        });
+        if (!candidates.length) continue;
+        await goTo(offset);
+        const placed = await liveBoxes(candidates.map((node) => ({ id: node.id, run: node.run })));
+        const group = candidates.filter((node) => {
+          const box = placed[node.id];
+          if (!box) return false;
+          return box.rect.y < viewport && box.rect.y + box.rect.height > 0;
         });
         if (!group.length) continue;
-        const result = await shoot(offset, group);
+        const shot = (await page.screenshot({ animations: 'disabled' })).toString('base64');
+        const result = await score(shot, offset, group);
+        for (const row of [...result.rows, ...result.gradientInk]) scored.add(keyOf(row));
         rows.push(...result.rows);
         gradientInk.push(...result.gradientInk);
       }
@@ -670,13 +699,17 @@ export async function paintedSweep(page, options = {}) {
       // dropped from the score just because of where the bands fell.
       const retry = new Map();
       for (const entry of [...covered, ...missed]) {
+        // The interleaved grid may already have caught it half a viewport on.
+        if (scored.has(keyOf(entry.node))) continue;
         const target = centerOn(entry.node, entry.seen ?? null);
         const bucket = retry.get(target) ?? [];
         bucket.push(entry.node);
         retry.set(target, bucket);
       }
       for (const [target, group] of retry) {
-        const result = await shoot(target, group);
+        await goTo(target);
+        const shot = (await page.screenshot({ animations: 'disabled' })).toString('base64');
+        const result = await score(shot, target, group);
         rows.push(...result.rows);
         gradientInk.push(...result.gradientInk);
       }
@@ -687,28 +720,32 @@ export async function paintedSweep(page, options = {}) {
     return { rows, gradientInk, covered, missed };
   };
 
-  // One pass hides the ink and scores ordinary copy, labelled icons and
-  // decorative icons together: `HIDE_INK` blanks every glyph and every `svg`
-  // alike, so all three read the same surface behind their box and there is no
-  // second capture to pay for. Splitting the rows afterwards keeps the two
-  // contracts apart — decorative icons are reported, ordinary ink is scored.
-  const plain = await measureBands([...nodes.text, ...nodes.icons, ...nodes.decorativeIcons], HIDE_INK);
-  // Gradient-clipped ink needs its own pass: the gradient itself has to be
-  // dropped so the box shows the surface behind the word, not the word's fill.
-  const gradients = await measureBands(nodes.gradient, `${HIDE_INK}\n${HIDE_GRADIENT_INK}`);
+  // One pass scores every kind of ink. `HIDE_INK` blanks every glyph and every
+  // `svg` alike, so ordinary copy, labelled icons and decorative icons all read
+  // the same surface behind their box. Gradient-clipped ink rides along: it is
+  // scored from its own gradient stops, so it only needs its fill out of the
+  // sample, and `HIDE_GRADIENT_INK` drops the background of the tagged gradient
+  // elements and nothing else — no other node's surface is touched, so there is
+  // no second walk of the page to pay for. Splitting the rows afterwards keeps
+  // the two contracts apart: decorative icons are reported, ordinary ink and
+  // gradient ink are scored.
+  const swept = await measureBands(
+    [...nodes.text, ...nodes.icons, ...nodes.decorativeIcons, ...nodes.gradient],
+    `${HIDE_INK}\n${HIDE_GRADIENT_INK}`,
+  );
   // Reported, never failed: copy that stayed behind floating chrome or out of
   // the viewport at every offset the sweep visited. It is hidden, not painted
   // with low-contrast ink, and scrolling clears it.
   // A node the retry pass rescued at a clear offset is not hidden: it was only
   // hidden at the one offset its band happened to use.
-  const scoredIds = new Set([...plain.rows, ...gradients.rows, ...gradients.gradientInk].map((row) => row.id));
-  const unresolved = [...plain.covered, ...gradients.covered]
+  const scoredIds = new Set([...swept.rows, ...swept.gradientInk].map((row) => row.id));
+  const unresolved = swept.covered
     .filter(({ node }) => !scoredIds.has(node.id))
     .map(({ node, by }) => ({ text: node.text.slice(0, 50), by }));
 
-  const measured = plain.rows.filter((row) => !row.decorative);
-  const decorativeIcons = plain.rows.filter((row) => row.decorative);
-  const gradientInk = [...gradients.rows, ...gradients.gradientInk];
+  const measured = swept.rows.filter((row) => !row.decorative && !row.stops);
+  const decorativeIcons = swept.rows.filter((row) => row.decorative);
+  const gradientInk = [...swept.gradientInk, ...swept.rows.filter((row) => row.stops)];
   return {
     measured,
     offenders: measured.filter((row) => row.ratio < row.minimum).sort((a, b) => a.ratio - b.ratio),
