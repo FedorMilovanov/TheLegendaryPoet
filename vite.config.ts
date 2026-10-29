@@ -156,6 +156,12 @@ export default defineConfig({
       { find: '@', replacement: path.resolve(__dirname, 'src') },
     ],
   },
+  preview: {
+    // Sandboxed reviews are served through a generated host. Vite answers 403
+    // to a host it does not know, which leaves the built site impossible to
+    // look at; this only widens `vite preview`, never the build or the deploy.
+    allowedHosts: ['.e2b.app'],
+  },
   build: {
     target: 'esnext',
     manifest: true,
