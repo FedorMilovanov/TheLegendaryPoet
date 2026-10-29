@@ -833,6 +833,16 @@ select option { background-color: #03070d !important; color: #fff !important; pa
 .hero-scrim-frame { background-image: var(--tlp-hero-scrim-frame); }
 .hero-cover { opacity: var(--tlp-hero-cover-opacity); }
 .hero-cover-strong { opacity: var(--tlp-hero-cover-opacity-strong); }
+.hero-band-veil { background-image: var(--tlp-hero-scrim-band); }
+.hero-band-fade { background-image: var(--tlp-hero-scrim-band-fade); }
+.hero-band-base { background-image: var(--tlp-hero-scrim-band-base); }
+.hero-band-cover { opacity: var(--tlp-hero-cover-opacity-band); }
+/* The cover caption bar sits on the artwork itself: at the light-theme remap of
+   `bg-black/46` (56% white) the painted mix is 141,140,140 and the caption ink
+   measures 4.39. Light mode needs a more opaque bar to carry it. */
+.track-cover-bar { background-color: rgba(0, 0, 0, 0.46); }
+
+html.theme-light .track-cover-bar { background-color: rgba(255, 250, 240, 0.82); }
 .section-divider { height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.38) 50%, transparent 100%); }
 .section-label { display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tlp-island-accent, var(--tlp-section-label)); margin-bottom: 0.75rem; }
 

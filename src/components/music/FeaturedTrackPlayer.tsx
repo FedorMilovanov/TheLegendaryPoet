@@ -394,7 +394,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
             {compact && <Link to={`/music/${track.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" style={{ color: 'var(--track-accent)' }}>Страница релиза <ExternalLink size={15} /></Link>}
           </div>
 
-          {!compact && track.rightsNotice && <p className="mt-6 max-w-2xl border-t border-white/[0.07] pt-4 text-[10px] leading-relaxed text-white/28">{track.rightsNotice}</p>}
+          {!compact && track.rightsNotice && <p className="mt-6 max-w-2xl border-t border-white/[0.07] pt-4 text-[10px] leading-relaxed text-white/52">{track.rightsNotice}</p>}
         </div>
       </div>
     </article>
