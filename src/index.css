@@ -971,8 +971,14 @@ html.theme-light [class*="bg-luxury-dark"]:not([class*="theme-"]):not(:where(.th
   background-color: rgba(255, 255, 255, 0.56) !important;
 }
 
-html.theme-light .luxury-card,
-html.theme-light .glass-card {
+/* An explicit dark island is authored dark, surface included. Repainting the
+   panel left the home feature card cream underneath its own dark cover veil,
+   so the light theme handed it a muddy (75,74,71) surface that neither the
+   page ink nor the island ink could clear: the copy measured 3.64 and the
+   gradient heading 2.88. Cards that opt out keep the surface they were drawn
+   with, the same way their ink already does. */
+html.theme-light .luxury-card:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
+html.theme-light .glass-card:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   background: linear-gradient(145deg, rgba(255, 252, 246, 0.74) 0%, rgba(244, 235, 219, 0.82) 100%) !important;
   border-color: rgba(13, 120, 150, 0.16) !important;
   box-shadow:
@@ -980,7 +986,7 @@ html.theme-light .glass-card {
     inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
 }
 
-html.theme-light .luxury-card:hover {
+html.theme-light .luxury-card:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)):hover {
   border-color: rgba(13, 120, 150, 0.28) !important;
   box-shadow:
     0 30px 70px rgba(77, 59, 38, 0.18),
