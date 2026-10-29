@@ -126,10 +126,14 @@ html.theme-light {
   --tlp-citation-active: #7a4d00;
   --tlp-text-subtle: #526873;
   --tlp-control-idle: #0d748c;
-  --tlp-control-active: #075f75;
+  /* Light mode paints this ink on cream (6.89 at #075f75) and on the washes
+     the ambient fields leave over a hero, where the essay series chip was
+     scored against (205,201,189) and measured 4.37. One step deeper carries
+     the same teal onto the wash: 4.70 there, 7.41 on the page itself. */
+  --tlp-control-active: #065a6f;
   --tlp-control-border: #347d8d;
   --tlp-control-selected: #075f75;
-  --tlp-control-action: #075f75;
+  --tlp-control-action: #065a6f;
   --tlp-section-label: var(--tlp-text);
   --tlp-rating-star-idle: #0d748c;
   --tlp-rating-star-active: #075f75;
