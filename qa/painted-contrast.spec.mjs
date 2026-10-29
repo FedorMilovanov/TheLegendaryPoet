@@ -68,6 +68,12 @@ const ROUTES = [
   { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 27 },
   { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 105 },
   { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 105 },
+  // Certified with the immersive player open. The player repaints the viewport,
+  // so nothing of it was scored until the sweep understood dialogs — and it
+  // carries the faintest ink in the music library. `open` is the accessible name
+  // of the control that opens it; the guard is the dialog's own copy alone.
+  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 7, open: 'Погружение', dialog: true },
+  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 7, open: 'Погружение', dialog: true },
   { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 527 },
   { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 412 },
   { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 226 },
@@ -92,7 +98,7 @@ test.describe('painted contrast', () => {
         { label: 'desktop', width: 1440, height: 1000 },
         { label: 'mobile', width: 390, height: 844 },
       ]) {
-        test(`every node on ${route.path} clears its painted background in ${theme} ${viewport.label}`, async ({ page }, testInfo) => {
+        test(`every node on ${route.path} clears its painted background in ${theme} ${viewport.label}${route.open ? ` with ${route.open} open` : ''}`, async ({ page }, testInfo) => {
           useChromiumCore(testInfo);
           await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [STORAGE_KEY, theme]);
           await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -101,7 +107,16 @@ test.describe('painted contrast', () => {
           await expect(page.locator('h1').first()).toContainText(route.heading);
           await page.waitForTimeout(600);
 
-          const { measured, offenders, gradientOffenders, occluded } = await paintedSweep(page);
+          if (route.open) {
+            await page.getByRole('button', { name: route.open }).first().click();
+            await expect(page.locator('[role="dialog"]').first()).toBeVisible();
+            await page.waitForTimeout(1200);
+          }
+
+          const { measured, offenders, gradientOffenders, occluded, modal } = await paintedSweep(page);
+          // A state that fails to open would otherwise be certified as the page
+          // behind it, which is already covered by the same route's own cells.
+          if (route.dialog) expect(modal, `${route.path}: the dialog must own the viewport for its copy to be scored`).toBeTruthy();
 
           // Guard against certifying a page that never rendered its content.
           // `occluded` is reported, not failed: those nodes sit under the fixed
