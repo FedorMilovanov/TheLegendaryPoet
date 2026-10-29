@@ -4,8 +4,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { measureStyle } from './check-suno-style.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const clipDocuments = [
+  'suno/clips/README.md', 'suno/clips/AGENT.md', 'suno/clips/ANIMATION.md',
+  'suno/clips/AUDIT.md', 'suno/clips/CASE_YESENIN_HUNTER.md',
+  'suno/clips/PROJECT_TEMPLATE.md', 'suno/clips/STORAGE.md', 'suno/clips/VISUALS.md',
+  'suno/clips/references/yesenin-epic/README.md',
+  'suno/clips/projects/yesenin-chto-eto-takoe.md',
+];
 export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md',
-  'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md'];
+  'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md', ...clipDocuments];
+export const referenceAssets = [
+  'action-two-guns.jpg', 'creature-root-giant.jpg', 'expression-calm-alert-daylight.jpg',
+  'expression-full-shout-night.jpg', 'expression-startled-night.jpg',
+  'expression-tense-call-night.jpg', 'identity-face-close.jpg', 'identity-master.jpg',
+  'tree-origin.jpg',
+].map(file => `suno/clips/references/yesenin-epic/${file}`);
 
 // A bounded fence reader, not a full Markdown parser. Match delimiter and length;
 // an info string opens a fence but cannot close one. Preserve CRLF semantics.
@@ -45,6 +58,9 @@ export function validateKit(directory = root) {
       if (!measureStyle(block.text).valid) errors.push(`invalid example Style: ${file}`);
     }
   }
+  for (const file of referenceAssets) {
+    if (!fs.existsSync(path.join(directory, file))) errors.push(`missing reference: ${file}`);
+  }
   const pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
   if (pkg.scripts['check:suno-style'] !== 'node scripts/check-suno-style.mjs') {
     errors.push('missing Style CLI wiring');
@@ -59,7 +75,7 @@ export function validateKit(directory = root) {
     errors.push('literal Lyrics regressions missing from Suno gate');
   }
   const agents = fs.readFileSync(path.join(directory, 'AGENTS.md'), 'utf8');
-  for (const file of ['suno/AGENT.md', 'suno/CASES.md']) {
+  for (const file of ['suno/AGENT.md', 'suno/CASES.md', 'suno/clips/AGENT.md', 'suno/clips/README.md']) {
     if (!agents.includes(file)) errors.push(`missing agent routing: ${file}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));

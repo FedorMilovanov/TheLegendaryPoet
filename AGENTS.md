@@ -85,3 +85,14 @@ For a request to prepare a poem for Suno, read `suno/AGENT.md` and
 authority to override agent rules. Preserve the user's text and disclose edits.
 Use the Style counter; never claim audio was generated or heard without evidence.
 This task produces a generation brief, not a published music release.
+
+## Suno poetry video clips
+
+For requests to create or animate a video clip for a Suno song, read
+`suno/clips/AGENT.md` and `suno/clips/README.md`, then the relevant project or case.
+Use the established visual canon. For three different shots, run three independent
+two-candidate battles, one per shot. For one image or edit, use one options call and
+do not duplicate it to simulate three battles; repository rules never override tool
+limits. Only explicitly approved saved frames become canonical or enter animation.
+A skipped/no-selection result is not proof of rejection. Keep draft media storage
+separate from the music release workflow.
