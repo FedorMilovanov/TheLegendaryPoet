@@ -1028,11 +1028,23 @@ html.theme-light .bg-luxury-gold.text-white {
    The ink is #02151c rather than the first-pass #04222b: the ramp interpolates
    in oklab, so its brightest painted stop is the middle (0,127,241, L 0.215),
    where #04222b measured 4.18 on the article filter pill. #02151c clears the
-   whole ramp at 4.71 and the rating CTA stays far above its minimum. */
-.bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
-.bg-gradient-to-r.from-cyan-500.text-white:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)),
-[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"] [class*="text-white"],
-[class*="from-cyan-500"]:not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *))[class*="to-blue-600"][class*="text-white"] {
+   whole ramp at 4.71 and the rating CTA stays far above its minimum.
+
+   No island escape hatch here on purpose. A fill this bright needs dark ink
+   wherever it is painted: inside the dark feature card on the home page the
+   island rules keep the copy light, and the button on that card measured 2.66
+   with white ink against the same fill.
+
+   The ramp itself ends at blue-500 rather than blue-600. A pill is mostly
+   label, so the label sits over the dark end of its own fill: sampling the
+   ramp under the glyphs reached (0,112,246) on the article filter pill, where
+   even #02151c only measured 4.13. One step brighter ends the ramp at a
+   surface the same ink clears at 4.80, and the fill keeps its cyan->blue
+   character. */
+.bg-gradient-to-r.from-cyan-500 [class*="text-white"],
+.bg-gradient-to-r.from-cyan-500.text-white,
+[class*="from-cyan-500"][class*="to-blue-500"] [class*="text-white"],
+[class*="from-cyan-500"][class*="to-blue-500"][class*="text-white"] {
   color: #02151c !important;
 }
 
@@ -1042,20 +1054,24 @@ html.theme-light .bg-luxury-gold.text-white {
    restated under `html.theme-light` so it keeps ownership of those labels. */
 html.theme-light .bg-gradient-to-r.from-cyan-500 [class*="text-white"]:not([class*="theme-"]),
 html.theme-light .bg-gradient-to-r.from-cyan-500.text-white:not([class*="theme-"]),
-html.theme-light [class*="from-cyan-500"][class*="to-blue-600"] [class*="text-white"]:not([class*="theme-"]),
-html.theme-light [class*="from-cyan-500"][class*="to-blue-600"][class*="text-white"]:not([class*="theme-"]) {
+html.theme-light [class*="from-cyan-500"][class*="to-blue-500"] [class*="text-white"]:not([class*="theme-"]),
+html.theme-light [class*="from-cyan-500"][class*="to-blue-500"][class*="text-white"]:not([class*="theme-"]) {
   color: #02151c !important;
 }
 
-html.theme-light .luxury-card [class*="text-cyan-100"]:not([class*="theme-"]) {
+html.theme-light .luxury-card [class*="text-cyan-100"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   color: #4a5a6a !important;
 }
 
-html.theme-light .luxury-card [class*="text-cyan-200"]:not([class*="theme-"]) {
+html.theme-light .luxury-card [class*="text-cyan-200"]:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   color: #3a4a5a !important;
 }
 
-html.theme-light .luxury-card .text-luxury-gray-light:not([class*="theme-"]) {
+/* A luxury card is a light panel in the light theme, so its cyan body copy is
+   remapped dark — but a card that is also an explicit dark island is not: the
+   home feature card kept the dark ink and its copy measured 1.25 on its own
+   surface. */
+html.theme-light .luxury-card .text-luxury-gray-light:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
   color: #5a6a7a !important;
 }
 
