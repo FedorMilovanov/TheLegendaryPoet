@@ -36,6 +36,21 @@ const COLLECT_NODES = () => {
   // the same contract as decorative icons and disabled controls. Decorative
   // fixed layers are skipped: `.noise-bg` is pointer-transparent and paints a
   // 2% grain, and the ambient fields carry no surface of their own.
+  // A modal dialog repaints the whole viewport: the immersive player, the search
+  // sheet, the lightbox. Its backdrop is a sibling layer painted *underneath* it,
+  // but an intersecting overlay is all `occludedBy` can see, so every line of the
+  // dialog read as copy hiding behind chrome and a state the reader spends real
+  // time in was certified as nothing at all. The dialog is on top by definition:
+  // page chrome cannot hide its copy, and the page behind it is not on screen.
+  const modal = [...document.querySelectorAll('[role="dialog"]')]
+    .filter((el) => {
+      const style = getComputedStyle(el);
+      if (style.visibility === 'hidden' || Number(style.opacity) < 0.05) return false;
+      const box = el.getBoundingClientRect();
+      return box.width >= window.innerWidth * 0.6 && box.height >= window.innerHeight * 0.6;
+    })
+    .shift() ?? null;
+
   const hasSurface = (style) => {
     if (style.backgroundImage !== 'none') return true;
     if (style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent') return false;
@@ -46,9 +61,22 @@ const COLLECT_NODES = () => {
   const pushOverlay = (el, clip) => {
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return;
+    const style = getComputedStyle(el);
     const box = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
     if (clip && !(box.x < clip.x + clip.width && box.x + box.width > clip.x && box.y < clip.y + clip.height && box.y + box.height > clip.y)) return;
-    overlays.push({ el, ...box, tag: el.tagName, cls: (el.className ?? '').toString().slice(0, 48) });
+    overlays.push({
+      el,
+      ...box,
+      // A layer behind the content of its own stacking context cannot hide
+      // that content, however much of the viewport it covers: the immersive
+      // player paints three full-screen fixed scrims at `-z-20` and `-z-10`
+      // underneath its copy, and reading them as chrome left the player with
+      // every line of it reported as hidden.
+      z: Number(style.zIndex) || 0,
+      inModal: Boolean(modal) && modal.contains(el),
+      tag: el.tagName,
+      cls: (el.className ?? '').toString().slice(0, 48),
+    });
   };
   for (const el of document.querySelectorAll('body *')) {
     const style = getComputedStyle(el);
@@ -59,20 +87,31 @@ const COLLECT_NODES = () => {
     const clip = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
     // The fixed layer itself may only be a frame: the mobile dock paints its
     // surface on an inner rail, so descendants that paint one count too.
-    if (hasSurface(style)) pushOverlay(el, null);
+    //
+    // Only when the frame is transparent, though. A layer that paints its own
+    // surface — the header, the consent banner, a full-screen dialog — carries
+    // content inside it, and calling every panel within the immersive player
+    // chrome left the player with 136 nodes "behind" itself and nothing scored.
+    if (hasSurface(style)) {
+      pushOverlay(el, null);
+      continue;
+    }
     for (const child of el.querySelectorAll('*')) {
       if (getComputedStyle(child).visibility === 'hidden') continue;
       if (hasSurface(getComputedStyle(child))) pushOverlay(child, clip);
     }
   }
+  const behindModal = (el) => Boolean(modal) && !modal.contains(el) && !el.contains(modal);
   // The chrome's own labels sit *inside* the overlay and are painted on top of
   // it: they are readable and stay in the scored set.
-  const occludedBy = (rect, el) => overlays.find((overlay) => rect.x < overlay.x + overlay.width
+  const occludedBy = (rect, el) => overlays.find((overlay) => overlay.z >= 0
+    && rect.x < overlay.x + overlay.width
     && rect.x + rect.width > overlay.x
     && rect.y < overlay.y + overlay.height
     && rect.y + rect.height > overlay.y
     && !overlay.el.contains(el)
-    && !el.contains(overlay.el));
+    && !el.contains(overlay.el)
+    && !(modal && modal.contains(el) && !modal.contains(overlay.el)));
   // Index of the floating layer this node is painted inside, or -1 for ordinary
   // document copy. Bands are sampled at several scroll offsets, so a node can
   // be covered by chrome in one offset and clear in another; the sweep needs to
@@ -170,6 +209,10 @@ const COLLECT_NODES = () => {
       x: run.x + window.scrollX, y: run.y + window.scrollY, width: run.width, height: run.height,
     }));
     const run = textRuns(el).indexOf(node);
+    if (behindModal(el)) {
+      occluded.push({ text: value.slice(0, 50), by: 'the open dialog' });
+      continue;
+    }
     const cover = occludedBy(box, el);
     if (cover) {
       occluded.push({ text: value.slice(0, 50), by: `${cover.tag}.${cover.cls}` });
@@ -185,6 +228,7 @@ const COLLECT_NODES = () => {
       id: tag(el),
       run,
       overlay: overlayOf(el),
+      inModal: Boolean(modal) && modal.contains(el),
       className: (el.className ?? '').toString().slice(0, 140),
       tag: el.tagName,
     });
@@ -205,7 +249,7 @@ const COLLECT_NODES = () => {
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) continue;
     const gradientBox = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
-    if (occludedBy(gradientBox, el)) continue;
+    if (behindModal(el) || occludedBy(gradientBox, el)) continue;
     const brightness = Number((style.filter.match(/brightness\(([\d.]+)\)/) ?? [])[1] ?? 1);
     // `color: transparent` cannot hide gradient-clipped glyphs: they are painted
     // by background-image. Tag the node so the sweep can strip that background
@@ -215,6 +259,7 @@ const COLLECT_NODES = () => {
       text: text.slice(0, 70),
       color: style.color,
       overlay: overlayOf(el),
+      inModal: Boolean(modal) && modal.contains(el),
       stops: [...style.backgroundImage.matchAll(/rgba?\([^)]+\)/g)].map((m) => m[0]),
       id: tag(el),
       brightness,
@@ -235,7 +280,7 @@ const COLLECT_NODES = () => {
     const rect = svg.getBoundingClientRect();
     if (style.visibility === 'hidden' || Number(style.opacity) < 0.05 || rect.width < 6 || rect.height < 6) continue;
     const iconBox = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
-    if (occludedBy(iconBox, svg)) continue;
+    if (behindModal(svg) || occludedBy(iconBox, svg)) continue;
     const decorative = svg.getAttribute('aria-hidden') === 'true' || svg.closest('[aria-hidden="true"]') !== null;
     const label = decorative ? 'decorative' : (svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || 'labelled');
     const entry = {
@@ -260,6 +305,7 @@ const COLLECT_NODES = () => {
     inactive: [...new Set(inactive)].map((el) => el.textContent.trim().slice(0, 60)),
     occluded,
     overlays: overlays.map(({ el, ...rest }) => rest),
+    modal: modal ? `${modal.tagName.toLowerCase()}.${(modal.className ?? '').toString().slice(0, 60)}` : null,
   };
 };
 
@@ -493,6 +539,10 @@ export async function paintedSweep(page, options = {}) {
   const GRAZE_SHARE = 0.05;
   const coverAt = (node, rect, share = COVERED_SHARE) => overlays.find((overlay, index) => {
     if (index === node.overlay) return false;
+    if (overlay.z < 0) return false;
+    // A dialog is painted above the page: the header cannot reach the copy the
+    // immersive player puts where the header would otherwise be.
+    if (node.inModal && !overlay.inModal) return false;
     const width = Math.min(rect.x + rect.width, overlay.x + overlay.width) - Math.max(rect.x, overlay.x);
     const height = Math.min(rect.y + rect.height, overlay.y + overlay.height) - Math.max(rect.y, overlay.y);
     if (width <= 0 || height <= 0) return false;
@@ -756,6 +806,7 @@ export async function paintedSweep(page, options = {}) {
     // Reported, never failed.
     occluded: [...nodes.occluded, ...unresolved],
     overlays: nodes.overlays,
+    modal: nodes.modal ?? null,
   };
 }
 
