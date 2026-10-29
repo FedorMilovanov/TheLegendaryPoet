@@ -165,10 +165,14 @@ export default function ImmersivePlayer() {
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="min-w-0">
-                <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: 'var(--track-accent)' }}>The Legendary Poet · Режим погружения</div>
+                {/* The eyebrow is the accent at its own hue, on the player's
+                    tinted dark surface: at its authored depth it measured 3.91
+                    against (42,56,63). A fifth of white keeps the hue and
+                    carries it to 5.2 on the same surface. */}
+                <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: 'color-mix(in srgb, var(--track-accent) 78%, white)' }}>The Legendary Poet · Режим погружения</div>
                 <h1 id="immersive-track-title" className="max-w-4xl font-serif text-4xl font-bold leading-[0.92] drop-shadow-[0_8px_45px_rgba(0,0,0,.75)] sm:text-6xl lg:text-[5.8rem]">{currentTrack.title}</h1>
                 <p className="mt-5 text-lg text-white/64 sm:text-xl">{currentTrack.poet}</p>
-                {currentTrack.description && <p id="immersive-track-description" className="mt-6 max-w-2xl text-sm leading-relaxed text-white/52 sm:text-base">{currentTrack.description}</p>}
+                {currentTrack.description && <p id="immersive-track-description" className="mt-6 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">{currentTrack.description}</p>}
 
                 <div className="mt-8 sm:mt-10">
                   <div className="seek-focus-shell relative flex h-24 items-center gap-[2px] overflow-hidden rounded-[1.4rem] border border-white/10 bg-black/30 px-4 shadow-inner shadow-black/50 sm:h-28">
@@ -210,7 +214,7 @@ export default function ImmersivePlayer() {
                   <button type="button" onClick={toggleMute} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/22 text-white/58 transition hover:border-white/25 hover:text-white"><VolumeIcon size={19} /></button>
                   <div className="hidden min-w-32 items-center gap-2 sm:flex">
                     <input type="range" min="0" max="1" step="0.02" value={muted ? 0 : volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label="Громкость" className="w-28 accent-[var(--track-secondary)]" />
-                    <span className="w-8 text-right text-[10px] tabular-nums text-white/38">{Math.round((muted ? 0 : volume) * 100)}%</span>
+                    <span className="w-8 text-right text-[10px] tabular-nums text-white/52">{Math.round((muted ? 0 : volume) * 100)}%</span>
                   </div>
                   <Link to={`/music/${currentTrack.id}`} onClick={closeImmersive} className="inline-flex min-h-12 items-center rounded-full border border-white/10 px-5 text-xs font-bold text-white/52 transition hover:border-white/25 hover:text-white sm:ml-2">Страница релиза</Link>
                 </div>
