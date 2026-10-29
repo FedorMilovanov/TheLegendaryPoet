@@ -158,7 +158,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
       whileTap={reduceMotion ? undefined : { scale: 0.992 }}
       transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
-      className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left shadow-[0_24px_70px_rgba(0,0,0,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
+      className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left tlp-media-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}${imageState === 'error' ? '. Изображение временно недоступно' : ''}`}
       aria-haspopup="dialog"
     >
@@ -412,7 +412,7 @@ function MythNoteBlock({ block, citations }: { block: Extract<Block<'note'>, { v
   const paragraphs = splitParagraphs(block.text);
 
   return (
-    <aside className={`theme-dark-island bg-[#050505] relative my-12 overflow-hidden rounded-[2.25rem] border p-7 md:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.28)] ${cfg.frame}`}>
+    <aside className={`theme-dark-island bg-[#050505] relative my-12 overflow-hidden rounded-[2.25rem] border p-7 md:p-10 tlp-media-shadow-soft ${cfg.frame}`}>
       <span className={`absolute bottom-0 left-0 top-0 w-1 ${cfg.rule}`} aria-hidden="true" />
       <div className="relative z-10">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
