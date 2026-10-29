@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                 </button>
               </div>
             ) : (
-              <p className="mt-4 text-sm leading-relaxed text-cyan-100/45">
+              <p className="mt-4 text-sm leading-relaxed text-cyan-100/52">
                 В этой сборке внешние аналитические счётчики не настроены, поэтому данные аналитики не отправляются.
               </p>
             )}
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
           </a>
         </section>
 
-        <p className="mt-10 text-sm text-cyan-100/35">
+        <p className="mt-10 text-sm text-cyan-100/52">
           Обновлено: 12 сентября 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
         </p>
       </main>

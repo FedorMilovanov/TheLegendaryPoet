@@ -77,7 +77,7 @@ export default function EditorialPolicyPage() {
           </a>
         </section>
 
-        <p className="mt-10 text-sm text-cyan-100/35">
+        <p className="mt-10 text-sm text-cyan-100/52">
           Дата публикации политики: 28 июля 2026 года. См. также <Link to="/privacy" className="text-cyan-300/75 hover:text-cyan-200">политику конфиденциальности</Link>.
         </p>
       </main>

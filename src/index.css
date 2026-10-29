@@ -507,15 +507,49 @@ p { text-wrap: pretty; }
   font-variant-numeric: tabular-nums;
   line-height: 1;
   color: transparent;
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.75), rgba(212, 175, 55, 0.28));
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.95), rgba(212, 175, 55, 0.62));
   -webkit-background-clip: text;
   background-clip: text;
   letter-spacing: 0.04em;
 }
 html.theme-light .essay-section-number {
-  background: linear-gradient(180deg, rgba(146, 107, 10, 0.85), rgba(146, 107, 10, 0.4));
+  background: linear-gradient(180deg, rgba(104, 74, 6, 0.97), rgba(110, 78, 6, 0.9));
   -webkit-background-clip: text;
   background-clip: text;
+}
+
+/* Essay media keeps a dark island under the photograph in both themes, and the
+   dark-theme lift is a 45%-black shadow. Under light theme that shadow paints
+   185,182,174 across the caption strip 12px below the card, which drops the
+   caption's functional tokens to 2.89. Light mode keeps the lift but with a
+   falloff the caption strip survives. */
+.tlp-media-shadow {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+html.theme-light .tlp-media-shadow {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.13);
+}
+
+.tlp-media-shadow-soft {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+html.theme-light .tlp-media-shadow-soft {
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.09);
+}
+
+/* The analytics consent banner is a fixed dark island whose dark-theme lift is a
+   70%-black, 100px-blur shadow. In light theme that shadow spreads ~100px above
+   the banner and paints 151,151,143 over the page, which drops the section
+   labels it crosses from 5.16 to 2.71. Light mode keeps the lift with a falloff
+   the page underneath survives (235,235,223 under the same labels -> 4.76). */
+.tlp-consent-shadow {
+  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.7);
+}
+
+html.theme-light .tlp-consent-shadow {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
 }
 
 /* ===== Mobile long-read companion: current-chapter chip + TOC popover =====
@@ -812,6 +846,16 @@ select option { background-color: #03070d !important; color: #fff !important; pa
 .hero-scrim-frame { background-image: var(--tlp-hero-scrim-frame); }
 .hero-cover { opacity: var(--tlp-hero-cover-opacity); }
 .hero-cover-strong { opacity: var(--tlp-hero-cover-opacity-strong); }
+.hero-band-veil { background-image: var(--tlp-hero-scrim-band); }
+.hero-band-fade { background-image: var(--tlp-hero-scrim-band-fade); }
+.hero-band-base { background-image: var(--tlp-hero-scrim-band-base); }
+.hero-band-cover { opacity: var(--tlp-hero-cover-opacity-band); }
+/* The cover caption bar sits on the artwork itself: at the light-theme remap of
+   `bg-black/46` (56% white) the painted mix is 141,140,140 and the caption ink
+   measures 4.39. Light mode needs a more opaque bar to carry it. */
+.track-cover-bar { background-color: rgba(0, 0, 0, 0.46); }
+
+html.theme-light .track-cover-bar { background-color: rgba(255, 250, 240, 0.82); }
 .section-divider { height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(0, 212, 255, 0.38) 50%, transparent 100%); }
 .section-label { display: inline-block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--tlp-island-accent, var(--tlp-section-label)); margin-bottom: 0.75rem; }
 

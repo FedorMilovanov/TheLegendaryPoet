@@ -47,15 +47,15 @@
      neons painted 1.04-1.95 on the cream surface on the poet page. */
   --epoch-golden: #d4af37;
   --epoch-philosophy: #2ed8ff;
-  --epoch-symbolism: #9a13ed;
+  --epoch-symbolism: #b44cf5;
   --epoch-acmeism: #12cced;
-  --epoch-futurism: #ed143b;
+  --epoch-futurism: #f2304d;
   --epoch-post-symbolism: #7dd3fc;
   --conn-influence: #63d8ff;
   --conn-personal: #d4af37;
   --conn-epoch: #e2e8f0;
   --conn-thematic: #a78bfa;
-  --conn-rivalry: #ef4444;
+  --conn-rivalry: #f25656;
 
   /* Hero bands that carry a cover photograph under the copy. The ink above them
      is remapped per theme, so the scrim has to be remapped with it: a dark-only
@@ -75,6 +75,38 @@
   );
   --tlp-hero-cover-opacity: 0.16;
   --tlp-hero-cover-opacity-strong: 0.3;
+
+  /* Track detail hero: a wide cover photograph under the copy, veiled by a
+     horizontal scrim with a fade at the top and a solid base at the bottom.
+     Same contract as `.hero-scrim*` — the ink above it is remapped per theme,
+     so the veil has to be remapped with it. */
+  --tlp-hero-scrim-band: linear-gradient(
+    90deg,
+    rgba(5, 5, 5, 0.92) 0%,
+    rgba(5, 5, 5, 0.52) 48%,
+    rgba(5, 5, 5, 0.38) 74%,
+    rgba(5, 5, 5, 0.72) 100%
+  );
+  --tlp-hero-scrim-band-fade: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 0.18) 0%,
+    rgba(5, 5, 5, 0) 52%,
+    #050505 100%
+  );
+  --tlp-hero-scrim-band-base: linear-gradient(to top, #050505 0%, rgba(5, 5, 5, 0) 100%);
+  --tlp-hero-cover-opacity-band: 0.65;
+
+  /* Release panels and per-track ink. `--track-*` are set inline per release, so
+     these only carry the theme's side of the mix: the panel base the track hue is
+     mixed into, and how far the hue has to move to read as ink. The raw accents
+     measured 3.95 (secondary numerals) on #050505 and 2.05 (release pill) on the
+     light surface, so both themes remap them. */
+  --tlp-track-panel-surface: color-mix(in srgb, var(--track-surface) 94%, black);
+  --tlp-track-panel-fallback: rgba(5, 5, 5, 0.92);
+  --tlp-track-panel-a: color-mix(in srgb, var(--track-accent) 6%, rgba(5, 5, 5, 0.96));
+  --tlp-track-panel-b: color-mix(in srgb, var(--track-secondary) 3%, rgba(5, 5, 5, 0.96));
+  --tlp-track-accent-ink: color-mix(in srgb, var(--track-accent) 82%, white);
+  --tlp-track-secondary-ink: color-mix(in srgb, var(--track-secondary) 84%, white);
 
 }
 
@@ -154,6 +186,30 @@ html.theme-light {
   );
   --tlp-hero-cover-opacity: 0.08;
   --tlp-hero-cover-opacity-strong: 0.1;
+  /* Light-theme track hero: the veil has to paint a light surface, or the
+     dark-theme ink remap lands on 18-52 and measures 1.06-1.29. At 0.9-0.96 over
+     a 12% photo the sweep measures 5.0+ for the remapped ink. */
+  --tlp-hero-scrim-band: linear-gradient(
+    90deg,
+    rgba(255, 250, 240, 0.94) 0%,
+    rgba(255, 250, 240, 0.84) 48%,
+    rgba(255, 250, 240, 0.74) 74%,
+    rgba(255, 250, 240, 0.9) 100%
+  );
+  --tlp-hero-scrim-band-fade: linear-gradient(
+    to bottom,
+    rgba(255, 250, 240, 0.14) 0%,
+    rgba(255, 250, 240, 0) 52%,
+    rgb(255, 250, 240) 100%
+  );
+  --tlp-hero-scrim-band-base: linear-gradient(to top, rgb(255, 250, 240) 0%, rgba(255, 250, 240, 0) 100%);
+  --tlp-hero-cover-opacity-band: 0.12;
+  --tlp-track-panel-surface: color-mix(in srgb, var(--track-surface) 18%, rgb(255, 250, 240));
+  --tlp-track-panel-fallback: rgba(255, 250, 240, 0.96);
+  --tlp-track-panel-a: color-mix(in srgb, var(--track-accent) 5%, rgb(255, 250, 240));
+  --tlp-track-panel-b: color-mix(in srgb, var(--track-secondary) 3%, rgb(255, 250, 240));
+  --tlp-track-accent-ink: color-mix(in srgb, var(--track-accent) 42%, #0b2b33);
+  --tlp-track-secondary-ink: color-mix(in srgb, var(--track-secondary) 44%, #12303a);
 }
 
 .theme-page-surface {
