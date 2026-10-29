@@ -98,6 +98,13 @@ async function providerState(page) {
       googleConsentUpdates: commands
         .filter((entry) => entry.values[0] === 'consent' && entry.values[1] === 'update')
         .map((entry) => entry.values[2]?.analytics_storage),
+      // The two named classes catch a regression with a readable name; this one
+      // covers every command the app queues (js, consent, config, event) so an
+      // inert array cannot slip in through a class nobody named.
+      googleCommandCount: commands.filter((entry) => entry.values.length > 0).length,
+      googleAllCommandsUseArguments: commands
+        .filter((entry) => entry.values.length > 0)
+        .every((entry) => entry.isArguments),
       yandexInitCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'init').length,
       yandexDestructCount: ymQueue.filter((entry) => entry?.[0] === 98765432 && entry?.[1] === 'destruct').length,
     };
@@ -139,6 +146,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleConfigCount).toBe(1);
       expect(state.googleConfigUsesArguments).toBe(true);
       expect(state.googlePageViewsUseArguments).toBe(true);
+      expect(state.googleCommandCount).toBeGreaterThan(0);
+      expect(state.googleAllCommandsUseArguments).toBe(true);
       expect(state.googleConsentUpdates.at(-1)).toBe('granted');
       expect(state.yandexInitCount).toBe(1);
       expect(state.yandexDestructCount).toBe(0);
@@ -162,6 +171,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleConfigCount).toBe(1);
       expect(state.googleConfigUsesArguments).toBe(true);
       expect(state.googlePageViewsUseArguments).toBe(true);
+      expect(state.googleCommandCount).toBeGreaterThan(0);
+      expect(state.googleAllCommandsUseArguments).toBe(true);
       expect(state.googleConsentUpdates.at(-1)).toBe('denied');
       expect(state.yandexDestructCount).toBe(1);
     }
@@ -200,6 +211,8 @@ test.describe('analytics consent lifecycle authority', () => {
       expect(state.googleConfigCount).toBe(1);
       expect(state.googleConfigUsesArguments).toBe(true);
       expect(state.googlePageViewsUseArguments).toBe(true);
+      expect(state.googleCommandCount).toBeGreaterThan(0);
+      expect(state.googleAllCommandsUseArguments).toBe(true);
       expect(state.googleConsentUpdates).toEqual(['denied', 'granted', 'denied', 'granted']);
       expect(state.yandexInitCount).toBe(2);
       expect(state.yandexDestructCount).toBe(1);
