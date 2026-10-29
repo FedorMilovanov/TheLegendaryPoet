@@ -496,7 +496,7 @@ function DividerBlock() {
   return (
     <div className="my-14 flex items-center justify-center gap-4" aria-hidden="true">
       <span className="h-px w-16 bg-gradient-to-r from-transparent to-luxury-gold/40" />
-      <span className="text-luxury-gold/50">✦</span>
+      <span className="text-luxury-gold/72">✦</span>
       <span className="h-px w-16 bg-gradient-to-l from-transparent to-luxury-gold/40" />
     </div>
   );

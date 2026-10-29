@@ -47,15 +47,15 @@
      neons painted 1.04-1.95 on the cream surface on the poet page. */
   --epoch-golden: #d4af37;
   --epoch-philosophy: #2ed8ff;
-  --epoch-symbolism: #9a13ed;
+  --epoch-symbolism: #b44cf5;
   --epoch-acmeism: #12cced;
-  --epoch-futurism: #ed143b;
+  --epoch-futurism: #f2304d;
   --epoch-post-symbolism: #7dd3fc;
   --conn-influence: #63d8ff;
   --conn-personal: #d4af37;
   --conn-epoch: #e2e8f0;
   --conn-thematic: #a78bfa;
-  --conn-rivalry: #ef4444;
+  --conn-rivalry: #f25656;
 
   /* Hero bands that carry a cover photograph under the copy. The ink above them
      is remapped per theme, so the scrim has to be remapped with it: a dark-only

@@ -58,7 +58,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
               />
               <div className="p-6">
                 {essay.series && (
-                  <div className="mb-3 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-luxury-gold/55">
+                  <div className="mb-3 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-luxury-gold/72">
                     <Layers3 size={11} /> {essay.series.label}
                   </div>
                 )}
