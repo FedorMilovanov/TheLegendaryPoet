@@ -100,7 +100,7 @@ export default function ArticlesPage() {
                   onClick={() => setSelectedCategory(category.value)}
                   className={`rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition-all ${
                     active
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-[0_0_20px_rgba(0,212,255,0.28)]'
                       : 'border border-cyan-400/15 theme-functional-muted hover:border-cyan-400/35 hover:text-cyan-200'
                   }`}
                 >

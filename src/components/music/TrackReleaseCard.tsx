@@ -104,7 +104,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
           <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition-colors duration-300 group-hover:text-[var(--track-accent)]">{track.title}</h3>
           <p className="mt-2 text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--track-accent) 70%, white)' }}>{track.poet}</p>
         </Link>
-        {track.description && <p className="relative mt-4 line-clamp-3 text-sm leading-relaxed text-white/46">{track.description}</p>}
+        {track.description && <p className="relative mt-4 line-clamp-3 text-sm leading-relaxed text-white/52">{track.description}</p>}
 
         {waveform.length > 0 && (
           <div className="relative mt-5 flex h-8 items-center gap-[2px] overflow-hidden rounded-xl border border-white/[0.06] bg-black/20 px-2" aria-hidden="true">

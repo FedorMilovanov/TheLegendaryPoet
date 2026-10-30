@@ -113,7 +113,7 @@ export default function RatingForm({ dimensions, initialScores, onSubmit, onStat
           }
           onStatus?.(result.message, result.ok ? 'success' : 'warning');
         }}
-        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_24px_rgba(0,212,255,0.28)] transition hover:shadow-[0_0_34px_rgba(0,212,255,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-35"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_24px_rgba(0,212,255,0.28)] transition hover:shadow-[0_0_34px_rgba(0,212,255,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-35"
       >
         {isUpdate && <RefreshCw size={16} />}
         {isUpdate ? 'Обновить оценку' : 'Зафиксировать оценку'}

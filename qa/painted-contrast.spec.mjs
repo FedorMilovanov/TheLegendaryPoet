@@ -51,28 +51,35 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const STORAGE_KEY = 'tlp-theme-mode';
 
 // `minimumNodes` is the render guard: a page that never painted its content must
-// not be certified as clean. Counts are the smallest the sweep measured on any
-// theme/viewport pair, rounded down.
+// not be certified as clean. Counts are nine tenths of the smallest number of
+// nodes the sweep measured on any theme/viewport pair, rounded down — a page
+// that paints nothing measures a handful, not nine tenths of its own copy.
 const ROUTES = [
-  { path: '/ratings', heading: 'читателей', minimumNodes: 60 },
-  { path: '/poets/alexander-pushkin', heading: 'Пушкин', minimumNodes: 200 },
-  { path: '/music', heading: 'Музыкой', minimumNodes: 60 },
-  { path: '/articles', heading: 'Исследования', minimumNodes: 80 },
+  { path: '/ratings', heading: 'читателей', minimumNodes: 159 },
+  { path: '/poets/alexander-pushkin', heading: 'Пушкин', minimumNodes: 441 },
+  { path: '/music', heading: 'Музыкой', minimumNodes: 66 },
+  { path: '/articles', heading: 'Исследования', minimumNodes: 81 },
   { path: '/', heading: 'LEGENDARY', minimumNodes: 90 },
-  { path: '/archive', heading: 'Архив', minimumNodes: 20 },
-  { path: '/poets', heading: 'Лица', minimumNodes: 120 },
-  { path: '/about', heading: 'О Проекте', minimumNodes: 45 },
-  { path: '/editorial-policy', heading: 'Редакционная политика', minimumNodes: 42 },
-  { path: '/privacy', heading: 'Политика конфиденциальности', minimumNodes: 44 },
-  { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 28 },
-  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 110 },
-  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 110 },
-  { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 600 },
-  { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 470 },
-  { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 240 },
-  { path: '/essays/sergei-yesenin-1921-1925', heading: 'Часть II', minimumNodes: 740 },
-  { path: '/essays/vykhozhu-odin-ya-na-dorogu-lermontov', heading: 'Выхожу Один Я', minimumNodes: 180 },
-  { path: '/route-audit-page-that-must-not-exist', heading: 'Страница Не Найдена', minimumNodes: 25 },
+  { path: '/archive', heading: 'Архив', minimumNodes: 24 },
+  { path: '/poets', heading: 'Лица', minimumNodes: 134 },
+  { path: '/about', heading: 'О Проекте', minimumNodes: 44 },
+  { path: '/editorial-policy', heading: 'Редакционная политика', minimumNodes: 39 },
+  { path: '/privacy', heading: 'Политика конфиденциальности', minimumNodes: 41 },
+  { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 27 },
+  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 105 },
+  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 105 },
+  // Certified with the immersive player open. The player repaints the viewport,
+  // so nothing of it was scored until the sweep understood dialogs — and it
+  // carries the faintest ink in the music library. `open` is the accessible name
+  // of the control that opens it; the guard is the dialog's own copy alone.
+  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 7, open: 'Погружение', dialog: true },
+  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 7, open: 'Погружение', dialog: true },
+  { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 527 },
+  { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 412 },
+  { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 226 },
+  { path: '/essays/sergei-yesenin-1921-1925', heading: 'Часть II', minimumNodes: 654 },
+  { path: '/essays/vykhozhu-odin-ya-na-dorogu-lermontov', heading: 'Выхожу Один Я', minimumNodes: 166 },
+  { path: '/route-audit-page-that-must-not-exist', heading: 'Страница Не Найдена', minimumNodes: 26 },
 ];
 
 function useChromiumCore(testInfo) {
@@ -80,11 +87,10 @@ function useChromiumCore(testInfo) {
 }
 
 test.describe('painted contrast', () => {
-  // The sweep walks the document in 2000px bands and decodes a bitmap per band,
-  // three times (plain ink, gradient ink, decorative icons). The shortest route
-  // finishes in 4s; the 20 000px essay needs 60s, which is over the shared 45s
-  // per-test timeout.
-  test.slow();
+  // One band is one screenshot of one viewport, and a 63 000px essay is 127 of
+  // them at half a viewport each: the slowest cell measures about two minutes,
+  // four times the shared budget and twice what `test.slow()` allows.
+  test.setTimeout(240_000);
 
   for (const route of ROUTES) {
     for (const theme of ['dark', 'light']) {
@@ -92,7 +98,7 @@ test.describe('painted contrast', () => {
         { label: 'desktop', width: 1440, height: 1000 },
         { label: 'mobile', width: 390, height: 844 },
       ]) {
-        test(`every node on ${route.path} clears its painted background in ${theme} ${viewport.label}`, async ({ page }, testInfo) => {
+        test(`every node on ${route.path} clears its painted background in ${theme} ${viewport.label}${route.open ? ` with ${route.open} open` : ''}`, async ({ page }, testInfo) => {
           useChromiumCore(testInfo);
           await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [STORAGE_KEY, theme]);
           await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -101,7 +107,16 @@ test.describe('painted contrast', () => {
           await expect(page.locator('h1').first()).toContainText(route.heading);
           await page.waitForTimeout(600);
 
-          const { measured, offenders, gradientOffenders, occluded } = await paintedSweep(page);
+          if (route.open) {
+            await page.getByRole('button', { name: route.open }).first().click();
+            await expect(page.locator('[role="dialog"]').first()).toBeVisible();
+            await page.waitForTimeout(1200);
+          }
+
+          const { measured, offenders, gradientOffenders, occluded, modal } = await paintedSweep(page);
+          // A state that fails to open would otherwise be certified as the page
+          // behind it, which is already covered by the same route's own cells.
+          if (route.dialog) expect(modal, `${route.path}: the dialog must own the viewport for its copy to be scored`).toBeTruthy();
 
           // Guard against certifying a page that never rendered its content.
           // `occluded` is reported, not failed: those nodes sit under the fixed

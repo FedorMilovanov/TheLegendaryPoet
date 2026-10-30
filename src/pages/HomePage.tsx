@@ -275,7 +275,11 @@ export default function HomePage() {
         </div>
       </section>
       <section className="py-24 relative overflow-hidden bg-[#0a0a0a]">
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center luxury-card overflow-hidden p-12 md:p-16 rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-[#061018] to-[#050505] shadow-2xl">
+        {/* Hard-coded dark panel, both themes: in the light theme the page ink
+            is remapped dark, which left the heading at 1.46 and the copy at
+            3.09 on this card's own surface. Marking it an explicit dark island
+            keeps its ink light, the way the essay hero and the poet badges do. */}
+        <div className="theme-dark-island relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center luxury-card overflow-hidden p-12 md:p-16 rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-[#061018] to-[#050505] shadow-2xl">
           <img
             src={asset('/images/sections/articles-cover.jpg')}
             alt=""
@@ -288,7 +292,7 @@ export default function HomePage() {
           <div className="relative z-10">
             <h2 className="text-4xl font-serif font-bold text-white mb-6">{titleCase('Вера, культура и')} <KineticText text={titleCase('трезвая оценка')} variant="wave" focusMode stagger={0.025} className="neon-blue-gradient neon-glow-text" /></h2>
             <p className="text-xl text-cyan-100/55 mb-10 leading-relaxed font-light">Отдельные материалы рассматривают жизнь и тексты поэтов с христианской позиции трезво и ответственно: без натяжек и ложных сенсаций, без объявления поэтов верующими там, где нет оснований. Там же, где есть прямое богоборчество или очевидные библейские мотивы — даём ясный, аргументированный комментарий.</p>
-            <div className="flex justify-center gap-6"><MagneticButton to="/articles" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_26px_rgba(0,212,255,0.35)]">Изучить статьи</MagneticButton></div>
+            <div className="flex justify-center gap-6"><MagneticButton to="/articles" className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold shadow-[0_0_26px_rgba(0,212,255,0.35)]">Изучить статьи</MagneticButton></div>
           </div>
         </div>
       </section>
