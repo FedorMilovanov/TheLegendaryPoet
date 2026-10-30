@@ -24,7 +24,10 @@
 // gradient wordmarks) have no ink colour to composite. They are reported
 // separately in `gradientInk` instead of being scored as a fake 1.0 ratio.
 
-const COLLECT_NODES = () => {
+// `overlaysOnly` asks for the chrome alone. The sweep needs it again at every
+// band — the scroll-top button is not on screen until the reader has scrolled —
+// and collecting the copy each time would cost a full pass per band.
+const COLLECT_NODES = ({ overlaysOnly = false } = {}) => {
   const seen = new Set();
   const text = [];
   const inactive = [];
@@ -58,13 +61,31 @@ const COLLECT_NODES = () => {
     return alpha >= 0.5;
   };
   const overlays = [];
+  // Chrome is collected again at every band, so an overlay is identified by a
+  // number the element carries rather than by its place in a list: the scroll-
+  // top button is not on screen until the reader has scrolled, and a list built
+  // at the top of the page never contains it.
+  const overlayId = (el) => {
+    const existing = el.getAttribute('data-sweep-overlay');
+    if (existing !== null) return Number(existing);
+    window.__sweepOverlaySeq = (window.__sweepOverlaySeq ?? 0) + 1;
+    el.setAttribute('data-sweep-overlay', String(window.__sweepOverlaySeq));
+    return window.__sweepOverlaySeq;
+  };
   const pushOverlay = (el, clip) => {
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return;
     const style = getComputedStyle(el);
-    const box = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    // The band pass compares chrome against the copy's live box, which is a
+    // viewport box, so the chrome it asks for is measured in the same
+    // coordinates. The first pass compares against document boxes and gets
+    // document boxes.
+    const box = overlaysOnly
+      ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+      : { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
     if (clip && !(box.x < clip.x + clip.width && box.x + box.width > clip.x && box.y < clip.y + clip.height && box.y + box.height > clip.y)) return;
     overlays.push({
+      id: overlayId(el),
       el,
       ...box,
       // A layer behind the content of its own stacking context cannot hide
@@ -77,7 +98,6 @@ const COLLECT_NODES = () => {
       tag: el.tagName,
       cls: (el.className ?? '').toString().slice(0, 48),
     });
-    el.setAttribute('data-sweep-overlay', String(overlays.length - 1));
   };
   for (const el of document.querySelectorAll('body *')) {
     const style = getComputedStyle(el);
@@ -85,7 +105,9 @@ const COLLECT_NODES = () => {
     if (style.visibility === 'hidden' || Number(style.opacity) < 0.05) continue;
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) continue;
-    const clip = { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
+    const clip = overlaysOnly
+      ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+      : { x: rect.x + window.scrollX, y: rect.y + window.scrollY, width: rect.width, height: rect.height };
     // The fixed layer itself may only be a frame: the mobile dock paints its
     // surface on an inner rail, so descendants that paint one count too.
     //
@@ -103,6 +125,9 @@ const COLLECT_NODES = () => {
     }
   }
   const behindModal = (el) => Boolean(modal) && !modal.contains(el) && !el.contains(modal);
+  if (overlaysOnly) {
+    return { text: [], gradient: [], icons: [], decorativeIcons: [], inactive: [], occluded: [], overlays: overlays.map(({ el, ...rest }) => rest), modal: modal ? `${modal.tagName.toLowerCase()}.${(modal.className ?? '').toString().slice(0, 60)}` : null };
+  }
   // The chrome's own labels sit *inside* the overlay and are painted on top of
   // it: they are readable and stay in the scored set.
   const occludedBy = (rect, el) => overlays.find((overlay) => overlay.z >= 0
@@ -117,7 +142,10 @@ const COLLECT_NODES = () => {
   // document copy. Bands are sampled at several scroll offsets, so a node can
   // be covered by chrome in one offset and clear in another; the sweep needs to
   // tell "hidden behind chrome" apart from "painted on chrome".
-  const overlayOf = (el) => overlays.findIndex((overlay) => overlay.el.contains(el));
+  const overlayOf = (el) => {
+    const owner = el.closest('[data-sweep-overlay]');
+    return owner ? Number(owner.getAttribute('data-sweep-overlay')) : -1;
+  };
   // Every scored node gets an id so the sweep can ask for its live box at the
   // moment of each capture. Document coordinates plus a scroll offset are not
   // enough: the box a reader sees is the one the browser lays out now, and
@@ -538,8 +566,8 @@ export async function paintedSweep(page, options = {}) {
   // dropped as soon as chrome reaches the sampler's own surface share: a line
   // has to stand entirely in the open before it testifies about the ink.
   const GRAZE_SHARE = 0.05;
-  const coverAt = (node, rect, share = COVERED_SHARE) => overlays.find((overlay, index) => {
-    if (index === node.overlay) return false;
+  const coverAt = (node, rect, share = COVERED_SHARE) => overlays.find((overlay) => {
+    if (overlay.id === node.overlay) return false;
     if (overlay.z < 0) return false;
     // A dialog is painted above the page: the header cannot reach the copy the
     // immersive player puts where the header would otherwise be.
@@ -571,11 +599,31 @@ export async function paintedSweep(page, options = {}) {
   const settleBand = () => page.evaluate(() => Promise.race([
     (async () => {
       await document.fonts.ready;
+      // Every photograph that can still push the copy down, not only the ones
+      // the viewport happens to hold: a portrait two screens above landing late
+      // moves a card's description a hundred pixels after the frame that was
+      // captured for it, and the ink was scored against the photograph that slid
+      // under the box in the meantime (3.69 where it stands at 7.4).
       const shown = [...document.images].filter((image) => {
         const box = image.getBoundingClientRect();
-        return box.top < window.innerHeight + 200 && box.bottom > -200 && !image.complete;
+        return box.top < window.innerHeight + 200 && !image.complete;
       });
       await Promise.all(shown.map((image) => image.decode().catch(() => null)));
+      // A transition is not an animation, and `animations: 'disabled'` fast-
+      // forwards only the latter: a reveal driven by a CSS transition is caught
+      // mid-flight, where the composited paint is neither what the reader saw
+      // nor what they are about to see. A poet card's rating badge, 13% of the
+      // way through its fade over cream, put its gold numeral on 222,218,208
+      // and measured 1.51 where it stands at 8.4 on the badge's own black.
+      // Wait for the page to finish moving — but only for what can finish: an
+      // ambient drift that never ends would otherwise cost the ceiling on
+      // every band of the page.
+      const finite = document.getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming?.().iterations !== Infinity);
+      await Promise.race([
+        Promise.all(finite.map((animation) => animation.finished.catch(() => null))),
+        new Promise((resolve) => { setTimeout(resolve, 1500); }),
+      ]);
     })(),
     new Promise((resolve) => { setTimeout(resolve, 6000); }),
   ]));
@@ -633,8 +681,8 @@ export async function paintedSweep(page, options = {}) {
   }, ids);
 
   const measureBands = async (list, styleContent) => {
-    const rows = [];
-    const gradientInk = [];
+    let rows = [];
+    let gradientInk = [];
     // `covered`: chrome was painted over it. `missed`: it was not in the
     // viewport at the offset that was asked for. Both get a second chance.
     const covered = [];
@@ -642,34 +690,27 @@ export async function paintedSweep(page, options = {}) {
     if (!list.length) return { rows, gradientInk, covered, missed };
     const style = await page.addStyleTag({ content: styleContent });
     await page.waitForTimeout(250);
-    // Chrome is re-measured where it is painted now, not where the document
-    // said it was when the sweep began. The header, the dock and the consent
-    // banner are fixed: the document box they were collected with describes
-    // them at the one offset they were collected at and nowhere else. Every
-    // other offset compared copy against a box the chrome had already left —
-    // a line under the banner read as open water and was sampled through the
-    // banner's shadow (the essay's series chip measured 4.47 on 201,196,184
-    // where it stands on cream), while a line in open water read as covered.
-    const refreshOverlays = () => page.evaluate(() => {
-      const boxes = {};
-      for (const el of document.querySelectorAll('[data-sweep-overlay]')) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width < 2 || rect.height < 2) continue;
-        boxes[el.getAttribute('data-sweep-overlay')] = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-      }
-      return boxes;
-    });
+    // Chrome is collected again where it is painted now, not where it was when
+    // the sweep began — and, just as often, re-collected because it was not
+    // there at all. The scroll-top button appears once the reader has scrolled;
+    // a list built at the top of the page never contained it, and a card's
+    // rating badge scrolled under it was measured on the button's cream instead
+    // of the badge's own black: 1.51 for gold that stands at 8.4. Fixed chrome
+    // also moves under the document: the header, the dock and the consent banner
+    // keep their place in the viewport, so the document box they were collected
+    // with describes them at one offset only. Every other offset compared copy
+    // against a box the chrome had already left — a line under the banner read
+    // as open water and was sampled through its shadow, and a line in open water
+    // read as covered.
     const goTo = async (offset) => {
       await page.evaluate((y) => window.scrollTo(0, y), offset);
       await settleBand();
       await settle();
-      const boxes = await refreshOverlays();
-      for (const [index, box] of Object.entries(boxes)) {
-        const overlay = overlays[Number(index)];
-        if (overlay) Object.assign(overlay, box);
-      }
+      const fresh = await page.evaluate(COLLECT_NODES, { overlaysOnly: true });
+      overlays.length = 0;
+      overlays.push(...fresh.overlays);
     };
-    const score = async (shot, requested, group) => {
+    const score = async (shot, requested, group, before) => {
       // `animations: 'disabled'` fast-forwards finite animations to their final
       // frame. Two things follow from that. A reveal caught mid-fade would
       // sample the composite of half the ink over half the surface, which is
@@ -682,6 +723,18 @@ export async function paintedSweep(page, options = {}) {
       const visible = [];
       for (const node of group) {
         const box = boxes[node.id];
+        // The box is read before the capture to choose the group and after it to
+        // sample the paint. A page still receiving its photographs moves between
+        // the two, and the paint under the box that was read last is not the
+        // paint under the box that was photographed: a card's description was
+        // measured on the photograph next door, 3.69 where it stands at 7.4 on
+        // its own card. A node is scored only where the two readings agree; a
+        // node that moved is one this band never saw, and is re-centred.
+        const placed = before?.[node.id];
+        if (box && placed && (Math.abs(box.rect.y - placed.rect.y) > 1.5 || Math.abs(box.rect.x - placed.rect.x) > 1.5 || Math.abs(box.rect.height - placed.rect.height) > 1.5)) {
+          missed.push({ node, seen: { offset: requested, y: box.rect.y, height: box.rect.height } });
+          continue;
+        }
         // A band is chosen from the position the node had when the sweep began.
         // Photographs that land afterwards move the copy, so the band that was
         // supposed to hold it can hold only its top or bottom edge — and a
@@ -722,7 +775,7 @@ export async function paintedSweep(page, options = {}) {
           bottom: Math.max(bounds.bottom, piece.y + piece.height),
         }), { x: Infinity, y: Infinity, right: -Infinity, bottom: -Infinity });
         const clipped = { x: rect.x, y: rect.y, width: rect.right - rect.x, height: rect.bottom - rect.y };
-        visible.push({ ...node, rect: clipped, blocks: open });
+        visible.push({ ...node, rect: clipped, blocks: open, offset: requested });
       }
       if (!visible.length) return { rows: [], gradientInk: [] };
       return page.evaluate(MEASURE, { shot, nodes: visible, minimum, minimumLarge, minimumIcon });
@@ -761,7 +814,7 @@ export async function paintedSweep(page, options = {}) {
         });
         if (!group.length) continue;
         const shot = (await page.screenshot({ animations: 'disabled' })).toString('base64');
-        const result = await score(shot, offset, group);
+        const result = await score(shot, offset, group, placed);
         for (const row of [...result.rows, ...result.gradientInk]) scored.add(keyOf(row));
         rows.push(...result.rows);
         gradientInk.push(...result.gradientInk);
@@ -779,12 +832,31 @@ export async function paintedSweep(page, options = {}) {
         bucket.push(entry.node);
         retry.set(target, bucket);
       }
+      // A row that came up short is a claim that the reader is being asked to
+      // read ink that does not clear its surface, so it has to survive being
+      // taken again where the sweep can see it best: the node centred in the
+      // viewport, nothing across it, the page settled. Bands fall where they
+      // fall, and a card whose photographs were still arriving was scored on the
+      // portrait next door — 3.69 for copy that measures 10.0 on its own card.
+      // Centred, the same node tells the truth about itself; if it is short
+      // there too, it is short.
+      for (const row of [...rows, ...gradientInk]) {
+        if (row.ratio === null || row.ratio >= row.minimum) continue;
+        const target = centerOn(row, { offset: row.offset ?? 0, y: row.rect.y, height: row.rect.height });
+        const bucket = retry.get(target) ?? [];
+        bucket.push(row);
+        retry.set(target, bucket);
+      }
       for (const [target, group] of retry) {
         await goTo(target);
         const shot = (await page.screenshot({ animations: 'disabled' })).toString('base64');
-        const result = await score(shot, target, group);
-        rows.push(...result.rows);
-        gradientInk.push(...result.gradientInk);
+        const result = await score(shot, target, group, null);
+        // A node that was re-measured is reported once, from the position the
+        // sweep could vouch for.
+        const correctedRows = new Map(result.rows.map((row) => [keyOf(row), row]));
+        const correctedInk = new Map(result.gradientInk.map((row) => [keyOf(row), row]));
+        rows = rows.filter((row) => !correctedRows.has(keyOf(row))).concat([...correctedRows.values()]);
+        gradientInk = gradientInk.filter((row) => !correctedInk.has(keyOf(row))).concat([...correctedInk.values()]);
       }
     } finally {
       await style.evaluate((node) => node.remove());
