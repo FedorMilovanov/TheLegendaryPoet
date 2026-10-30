@@ -125,7 +125,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1921,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-duncan-irma-1922",
@@ -134,7 +134,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1922,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-berlin-map-1922",
@@ -143,7 +143,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1922,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-mark-1922",
@@ -152,7 +152,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1922,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-stikhi-skandalista-1923",
@@ -161,7 +161,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1923,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-moskva-kabatskaya-1924",
@@ -170,7 +170,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1924,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-benislavskaya",
@@ -179,7 +179,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1924,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-persian-motifs-1925",
@@ -188,7 +188,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1925,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-boldovkin-baku-1925",
@@ -197,7 +197,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1925,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-baku-street-1920s",
@@ -206,7 +206,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1925,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-sofia-tolstaya-1925",
@@ -215,7 +215,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1925,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-esenin-moscow-1922",
@@ -224,7 +224,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1922,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-visual-esenin-portrait-1923",
@@ -233,7 +233,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1923,
-    note: 'Reader-facing provenance entry for a rights-cleared documentary visual; publication uses the Commons file page as the rights witness.',
+    note: 'Открытая для читателя запись о происхождении документального изображения с подтверждённым объёмом прав; в публикации свидетельством о правах служит страница файла на Commons.',
   },
   {
     id: "yes2-cover-esenin-1923",
@@ -242,7 +242,7 @@ export const yeseninPartTwoExpansionSources: readonly EssaySource[] = [
     kind: 'archive',
     institution: 'Wikimedia Commons',
     year: 1923,
-    note: 'Distinct archive cover provenance for Part II; the portrait is not reused as an inline body image and carries Public Domain status on Commons.',
+    note: 'Отдельная архивная обложка для второй части: портрет не используется повторно как иллюстрация в теле статьи и имеет на Commons статус общественного достояния.',
   },
 ] as const;
 
@@ -383,7 +383,7 @@ const visualBlocks: Record<string, Extract<EssayBlock, { type: 'image' }>> = {
     type: 'image',
     src: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Esenin_Moscow_1922.jpg",
     alt: "Сергей Есенин в Москве, около 1922 года",
-    caption: "Сергей Есенин около 1922 года. Публикационная provenance ведёт к книге Екатерины Есениной 1928 года в Президентской библиотеке.",
+    caption: "Сергей Есенин около 1922 года. Публикационная цепочка происхождения ведёт к книге Екатерины Есениной 1928 года в Президентской библиотеке.",
     credit: "Неизвестный фотограф · Президентская библиотека / Wikimedia Commons · общественное достояние",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Esenin_Moscow_1922.jpg",
     kind: 'archive',

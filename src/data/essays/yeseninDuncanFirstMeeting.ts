@@ -389,7 +389,7 @@ export const yeseninDuncanFirstMeeting: Essay = {
       url: 'https://www.loc.gov/pictures/item/2014685647/',
       kind: 'archive',
       institution: 'Library of Congress, Prints and Photographs Division',
-      note: 'Обложка статьи; item record указывает No known restrictions on publication.',
+      note: 'Обложка статьи; в записи об объекте указано: известных ограничений на публикацию нет.',
     },
   ],
 };
