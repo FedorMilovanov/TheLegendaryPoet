@@ -38,7 +38,7 @@ export default function EssayHero({ essay }: { essay: Essay }) {
               focusY="20%"
               loading="eager"
               ornamentClass="text-[9rem]"
-              className="aspect-[16/9] w-full rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+              className="essay-cover-frame aspect-[16/9] w-full rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
               sharedName={`essay-cover-${essay.id}`}
             />
             {essay.coverKind && (
