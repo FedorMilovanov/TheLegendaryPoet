@@ -17,12 +17,27 @@ const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts', 'image-integrity');
 fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
+// The published surface, not a sample: issue #519 was invisible for as long as
+// it was because nothing looked at the whole site.
 const ROUTES = [
   '/',
+  '/ratings',
+  '/poets',
+  '/poets/alexander-pushkin',
+  '/poets/sergei-yesenin',
+  '/poets/vladimir-mayakovsky',
+  '/music',
+  '/music/pushkin-tucha',
+  '/music/blok-rossiya',
   '/articles',
+  '/archive',
   '/essays/brik-case',
   '/essays/sergei-yesenin-1921-1925',
-  '/poets/sergei-yesenin',
+  '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
+  '/hall',
+  '/about',
+  '/editorial-policy',
+  '/privacy',
 ];
 
 const CELLS = [
@@ -206,7 +221,7 @@ test.describe('published local images decode and figures stay inside their own p
             }))
             .sort((a, b) => (b.deviceFactor ?? 0) - (a.deviceFactor ?? 0));
 
-          const debt = evidence.filter((row) => (row.deviceFactor ?? 0) > 1.5);
+          const debt = evidence.filter((row) => (row.deviceFactor ?? 0) > 1.25);
           if (debt.length) {
             // Said out loud on every run: a source that cannot hold the screen
             // it is painted on is a sourcing decision, and it should be visible
