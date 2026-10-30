@@ -41,6 +41,7 @@ export const brikCaseVisual: Essay = {
       {
         type: 'image',
         src: '/images/essays/briks/lilya-brik-1914.webp',
+        sourceWidth: 300,
         alt: 'Портрет Лили Брик, 1914 год',
         caption: 'Лиля Брик. 1914.',
         credit: 'Wikimedia Commons, общественное достояние',
@@ -67,6 +68,7 @@ export const brikCaseVisual: Essay = {
       {
         type: 'image',
         src: '/images/essays/briks/osip-brik-1928.webp',
+        sourceWidth: 300,
         alt: 'Портрет Осипа Брика, 1928 год',
         caption: 'Осип Брик. 1928.',
         credit: 'Wikimedia Commons, общественное достояние',

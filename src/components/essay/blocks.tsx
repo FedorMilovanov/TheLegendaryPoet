@@ -134,9 +134,18 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       : layout === 'cinematic'
         ? 'aspect-[16/9]'
         : 'aspect-[3/2]';
+  // A figure is never painted wider than the pixels its source carries. The cap
+  // is declared, not measured, so the frame keeps its place while the image
+  // loads: an archive scan that survived at 300px is shown at 300px, centred,
+  // instead of stretched to the column and blurred.
+  const layoutWidth = layout === 'portrait' ? 576 : 768;
+  const sourceWidth = block.sourceWidth && block.sourceWidth > 0
+    ? Math.min(layoutWidth, block.sourceWidth)
+    : layoutWidth;
+  const capped = sourceWidth < layoutWidth;
   const sizes = layout === 'portrait'
-    ? '(max-width: 768px) 92vw, 576px'
-    : '(max-width: 1024px) 92vw, 768px';
+    ? `(max-width: 768px) min(92vw, ${sourceWidth}px), ${sourceWidth}px`
+    : `(max-width: 1024px) min(92vw, ${sourceWidth}px), ${sourceWidth}px`;
 
   const closeLightbox = useCallback(() => {
     setZoomed(false);
@@ -158,6 +167,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
       whileTap={reduceMotion ? undefined : { scale: 0.992 }}
       transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
+      style={capped ? { maxWidth: `${sourceWidth}px` } : undefined}
       className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left tlp-media-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}${imageState === 'error' ? '. Изображение временно недоступно' : ''}`}
       aria-haspopup="dialog"
