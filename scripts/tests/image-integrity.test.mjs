@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { assertWebPContainer, validateImage, selectDecoder, imageFiles } from '../validate-image-integrity.mjs';
+import { readIntrinsicSize, figureLayoutWidth } from '../lib/image-metrics.mjs';
 
 const good = fs.readFileSync('public/images/essays/briks/lilya-brik-1914.webp');
 
@@ -42,4 +43,40 @@ test('full decoder rejects corrupt pixels even with consistent container lengths
 });
 test('unavailable decoder fails closed rather than accepting a header-only check', () => {
   assert.throws(() => validateImage('public/images/essays/briks/lilya-brik-1914.webp', 'tlp-no-such-decoder'), /full decode failed/);
+});
+
+const png = fs.readFileSync('public/brand-emblem.png');
+const jpeg = fs.readFileSync('public/images/pushkin.jpg');
+
+test('intrinsic size is read from the headers of every shipped container', () => {
+  assert.deepEqual(readIntrinsicSize(good), { width: 300, height: 423 });
+  assert.deepEqual(readIntrinsicSize(fs.readFileSync('public/images/essays/yesenin/yesenin-part-2-editorial.webp')), { width: 1920, height: 1080 });
+  assert.deepEqual(readIntrinsicSize(png), { width: 320, height: 320 });
+  assert.deepEqual(readIntrinsicSize(jpeg), { width: 1000, height: 1250 });
+});
+
+test('a truncated file has no readable frame size', () => {
+  assert.throws(() => readIntrinsicSize(good.subarray(0, 100)), /RIFF length/);
+});
+
+test('a file that is not a raster has no readable frame size', () => {
+  assert.throws(() => readIntrinsicSize(Buffer.from('just prose, not pixels')), /unrecognised raster container/);
+});
+
+test('a zeroed frame header is reported as an unreadable size, not as 0x0', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tlp-image-size-'));
+  try {
+    const bytes = Buffer.from(good);
+    bytes.fill(0, 20);
+    const file = path.join(dir, 'zeroed.webp');
+    fs.writeFileSync(file, bytes);
+    assertWebPContainer(bytes); // container lengths are still self-consistent
+    assert.throws(() => validateImage(file, selectDecoder()), /full decode failed/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the figure layout widths are the ones the renderer paints', () => {
+  assert.equal(figureLayoutWidth('portrait'), 576);
+  assert.equal(figureLayoutWidth('wide'), 768);
+  assert.equal(figureLayoutWidth('cinematic'), 768);
 });
