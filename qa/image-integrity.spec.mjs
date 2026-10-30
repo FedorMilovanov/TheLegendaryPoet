@@ -221,6 +221,11 @@ test.describe('published local images decode and figures stay inside their own p
             }))
             .sort((a, b) => (b.deviceFactor ?? 0) - (a.deviceFactor ?? 0));
 
+          // 1.25 is where an image starts visibly borrowing pixels. Still not a
+          // failure, because only a better source can close it, but named on
+          // every run: today it is the three 1000px canonical portraits on a
+          // 1440px stage at 1.44x, and the two 300px archive scans on a 2x
+          // screen at 1.99x.
           const debt = evidence.filter((row) => (row.deviceFactor ?? 0) > 1.25);
           if (debt.length) {
             // Said out loud on every run: a source that cannot hold the screen
