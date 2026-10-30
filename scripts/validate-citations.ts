@@ -37,7 +37,15 @@ for (const essay of essays) {
         continue;
       }
       if (!source.url) {
-        warnings.push(`${essay.slug}: cited source ${sourceId} has no URL`);
+        // An archival sheet in a named fund has no public item URL, and a
+        // printed facsimile has none either: what the reader needs is where the
+        // document can be consulted, which the note or the institution gives.
+        // The gap worth reporting is a citation that offers none of the three.
+        if (!source.note && !source.institution) {
+          warnings.push(
+            `${essay.slug}: cited source ${sourceId} has neither a URL nor a note saying where the document can be consulted`,
+          );
+        }
       }
     }
   }
