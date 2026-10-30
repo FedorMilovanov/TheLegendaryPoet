@@ -128,6 +128,7 @@ async function localImageReport(page) {
         // Decorative covers are allowed a designed treatment: this home-panel
         // cover is laid under a scrim at 25%. Content images are not.
         decorative: img.getAttribute('alt') === '' || img.getAttribute('aria-hidden') === 'true',
+        alt: img.getAttribute('alt') ?? null,
         objectFit: style.objectFit,
         opacity: Number(style.opacity),
       });
@@ -201,6 +202,20 @@ test.describe('published local images decode and figures stay inside their own p
           // pixels than the raster has. Device pixels are a different question —
           // on a 2x screen a 300px archive scan is short no matter how the page
           // behaves — so that gap is recorded as debt, not failed here.
+          // Every image either says nothing because it is decoration, or says
+          // what it is. A file name, a bare extension or "photo" reads as a
+          // missing description, which is what a screen reader would announce.
+          const undescribed = shown
+            .filter((row) => !row.decorative)
+            .filter((row) => {
+              const alt = (row.alt ?? '').trim();
+              return alt.length < 3
+                || /^(?:image|photo|picture|img|фото|изображение|картинка)$/i.test(alt)
+                || /^[^\s]*\.(?:jpg|jpeg|png|webp|avif|gif)$/i.test(alt);
+            })
+            .map((row) => `${row.src} alt=${JSON.stringify(row.alt)}`);
+          expect(undescribed, `${route}: images without a usable description`).toEqual([]);
+
           const stretched = shown
             .filter((row) => row.figure && row.renderedWidth > row.sourceWidth * 1.02)
             .map((row) => `${row.src} painted ${row.renderedWidth}px from ${row.sourceWidth}px`);
