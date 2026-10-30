@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { registerMediaContract } from './media-contract.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+
+// The same guard the other browser suites carry: a declared reduced-motion run
+// has to actually be running reduced motion.
+registerMediaContract(test);
 
 // What the byte-level guard cannot see: whether the page decodes the bytes it
 // was given, and whether it asks a raster for more pixels than the raster has.
@@ -125,7 +130,7 @@ test.describe('published local images decode and figures stay inside their own p
         isMobile: cell.isMobile ? true : undefined,
         hasTouch: cell.isMobile ? true : undefined,
         colorScheme: cell.theme === 'dark' ? 'dark' : 'light',
-        reducedMotion: 'reduce',
+        contextOptions: { reducedMotion: 'reduce' },
         locale: 'ru-RU',
         timezoneId: 'Europe/Paris',
       });
