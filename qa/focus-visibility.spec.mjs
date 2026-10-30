@@ -44,6 +44,48 @@ test.describe('every keyboard-focusable control shows the reader where focus is'
         timezoneId: 'Europe/Paris',
       });
 
+      test('a rating group is one Tab stop and arrows move inside it', async ({ page }) => {
+        await page.goto(`${BASE_URL}/poets/sergei-yesenin`, { waitUntil: 'domcontentloaded' });
+        await page.locator('#main-content, main, body').first().waitFor({ state: 'visible', timeout: 20_000 });
+
+        const group = page.locator('[role="radiogroup"]').filter({ has: page.locator('.rating-star-button') }).first();
+        await expect(group).toBeVisible();
+        await group.scrollIntoViewIfNeeded();
+
+        // Roving tabindex: the group costs the reader one Tab stop, not five.
+        const stars = group.locator('.rating-star-button');
+        await expect(stars).toHaveCount(5);
+        const stops = await group.evaluate((element) => [...element.querySelectorAll('.rating-star-button')]
+          .filter((star) => star.tabIndex >= 0).length);
+        expect(stops, 'a rating group exposes exactly one Tab stop').toBe(1);
+
+        const readState = () => group.evaluate((element) => {
+          const starsInGroup = [...element.querySelectorAll('.rating-star-button')];
+          const focused = starsInGroup.indexOf(document.activeElement);
+          return {
+            focused,
+            focusedChecked: focused >= 0 ? starsInGroup[focused].getAttribute('aria-checked') === 'true' : false,
+            stops: starsInGroup.filter((star) => star.tabIndex >= 0).length,
+            inside: element.contains(document.activeElement),
+          };
+        });
+
+        await stars.first().focus();
+        await page.keyboard.press('ArrowRight');
+        await page.waitForTimeout(200);
+        const first = await readState();
+        expect(first.focused, 'ArrowRight moves focus one star to the right').toBe(1);
+        expect(first.focusedChecked, 'an arrow key selects the star it lands on').toBe(true);
+        expect(first.inside, 'focus stays in the group after an arrow key').toBe(true);
+        expect(first.stops, 'the group is still one Tab stop after moving').toBe(1);
+
+        await page.keyboard.press('ArrowRight');
+        await page.waitForTimeout(200);
+        const second = await readState();
+        expect(second.focused, 'arrows keep moving through the group').toBe(2);
+        expect(second.stops, 'roving tabindex is maintained').toBe(1);
+      });
+
       for (const route of ROUTES) {
         test(`${route} leaves no focused control unmarked`, async ({ page }, testInfo) => {
           await page.addInitScript((value) => {
