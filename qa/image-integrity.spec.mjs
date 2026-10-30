@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { registerMediaContract } from './media-contract.mjs';
-import fs from 'node:fs';
-import path from 'node:path';
 
 // The same guard the other browser suites carry: a declared reduced-motion run
 // has to actually be running reduced motion.
@@ -14,9 +12,6 @@ registerMediaContract(test);
 // successful naturalWidth can stand in for this.
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
-const ARTIFACT_DIR = path.resolve('qa-artifacts', 'image-integrity');
-fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-
 // The published surface, not a sample: issue #519 was invisible for as long as
 // it was because nothing looked at the whole site.
 const ROUTES = [
