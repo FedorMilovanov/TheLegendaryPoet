@@ -49,7 +49,14 @@ test('premium poet labels preserve every full name without ellipsis or clipping'
     { timeout: 12_000, message: 'all premium portraits should decode before label geometry is measured' },
   ).toBe(true);
 
-  if (testInfo.project.name === 'home-desktop') {
+  // The product reveals one label at a time on hover wherever there is a fine
+  // pointer and room for it — the same condition its own stylesheet keys on —
+  // and stands all six readable at once on touch and in compact layouts. Asking
+  // the desktop layout for six simultaneous labels, which it never promises,
+  // timed out on every project that was not named `home-desktop`.
+  const revealOnHover = await page.evaluate(() => window.innerWidth > 1024
+    && !window.matchMedia('(hover: none) and (pointer: coarse)').matches);
+  if (revealOnHover) {
     // Desktop intentionally reveals one label at a time on hover/focus. Exercise
     // every card through that real interaction instead of demanding six hover
     // states simultaneously, which the product never promises.
