@@ -178,6 +178,69 @@ assets:
     source_use: not_primary_evidence
     notes: Owner-approved editorial reconstruction; not a documentary photograph of Ivan Loskutov, the exact height, or the July 1941 battle.
 
+  - path: public/images/essays/benislavskaya/benislavskaya-editorial-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/research/BENISLAVSKAYA_PUBLICATION_GATE_2026-08.md
+    production_recipe: "Pillow WebP quality 88, method 6, from the owner-approved 1672x941 source frame"
+    intrinsic: 1672x941
+    bytes: 132172
+    sha256: 0b1f1146f77ce154479042fc9a1afbe00133528eee14f220b4fa74990bd57e48
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Owner-approved reconstruction hero for the staged Benislavskaya longform. Editorial reconstruction: never an archival photograph, facsimile or documentary witness.
+
+  - path: public/images/essays/yesenin/yesenin-part-2-editorial.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/MEDIA_RECOVERY_2026-10-24.md
+    selected_at: 2026-10-24
+    owner_selection: "reference-based cinematic candidate 2 of 2, chosen by the owner in the image tool"
+    face_reference: https://commons.wikimedia.org/wiki/File:Esenin1925.jpg (public-domain metadata; archived witness public/images/essays/archive/yesenin-1925.webp, git blob ed93eb747a723f9b3732069bfac6aaf5f1518b2d)
+    master_file: qa/reference/approved-essay-art/yesenin-part-two-20261024.webp
+    master_sha256: f8b68841e699eff950e9c52cb93728c204d701e01306785ca453457772e87040
+    production_recipe: "2048x1152 lossless master scaled to 1920x1080, quality 88"
+    intrinsic: 1920x1080
+    bytes: 98830
+    sha256: 27b4a98829cd76fa101a68f39b2c836de330940ef795a093ad9d071366e21ddb
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    notes: Owner-selected NEW artwork standing in for the lost approved desk-portrait original, not a recovery of it. The desk setting is imagined; the face reference is the archival Esenin 1925 photograph.
+
+  - path: public/images/essays/briks/lilya-brik-1914.webp
+    role: essay_figure
+    origin_class: archival_public_domain_scan
+    evidence: docs/MEDIA_RECOVERY_2026-10-24.md
+    source_url: https://commons.wikimedia.org/wiki/File:Lilya_Brik_in_1914.jpg
+    rights: "Wikimedia Commons, public domain; attribution and public-domain disposition preserved from the essay record, not newly granted"
+    credit: Wikimedia Commons, общественное достояние
+    accessed_at: unrecorded in the repository; the bytes were recovered on 2026-10-24 from the preserved archive branch commit 909df9f73b8d9be6faa58cbee767603954e3fb17
+    recovered_git_blob: 9f283bdc589f85662ae4b54a5e9a66bd052d5093
+    intrinsic: 300x423
+    bytes: 12758
+    sha256: 520bc42aa0e8b5a0b02320fca4e80b3fceaaf33d630fa3ebababf4385d819a19
+    review_status: RECOVERED-SCAN-PENDING-FULL-SIZE-SOURCE
+    source_use: primary_evidence
+    required_follow_up: recover the full-size Commons source object; the surviving scan is 300px wide, so the figure is painted at 300px and must never be upscaled
+    notes: The only complete bytes of this portrait preserved anywhere in the project. Identity, caption, credit and public-domain disposition are unchanged from the truncated file it replaced.
+
+  - path: public/images/essays/briks/osip-brik-1928.webp
+    role: essay_figure
+    origin_class: archival_public_domain_scan
+    evidence: docs/MEDIA_RECOVERY_2026-10-24.md
+    source_url: https://commons.wikimedia.org/wiki/File:Osip_Brik.jpg
+    rights: "Wikimedia Commons, public domain; attribution and public-domain disposition preserved from the essay record, not newly granted"
+    credit: Wikimedia Commons, общественное достояние
+    accessed_at: unrecorded in the repository; the bytes were recovered on 2026-10-24 from the preserved archive branch commit 909df9f73b8d9be6faa58cbee767603954e3fb17
+    recovered_git_blob: 406a045facca8f224cf17fb0806f1a88800ae3ac
+    intrinsic: 300x436
+    bytes: 6848
+    sha256: 5f802b2831ec99f01c036d662c8dee148b9f4a3b20e312187c9325db1dae4469
+    review_status: RECOVERED-SCAN-PENDING-FULL-SIZE-SOURCE
+    source_use: primary_evidence
+    required_follow_up: recover the full-size Commons source object; the surviving scan is 300px wide, so the figure is painted at 300px and must never be upscaled
+    notes: The only complete bytes of this portrait preserved anywhere in the project. Identity, caption, credit and public-domain disposition are unchanged from the truncated file it replaced.
+
   - path: public/images/tyutchev.jpg
     role: poet_portrait
     poet_id: fyodor-tyutchev

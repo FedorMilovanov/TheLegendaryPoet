@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -134,6 +135,51 @@ if (!fs.existsSync(manifestPath)) {
     console.log(`- ${label}: ${formatKiB(item.actualBytes)} / ${formatKiB(item.budgetBytes)} ${item.passed ? 'OK' : 'FAIL'}`);
   }
   console.log(`Build audit: ${uniqueRouteFiles.size} named route chunks, ${formatKiB(totalJs)} JS, ${formatKiB(totalCss)} CSS.`);
+
+  // The bytes you ship are the bytes you audited. `prebuild` decodes every
+  // raster in public/ and `validate:essay-figures` pins each published one by
+  // SHA-256; both are meaningless if the build hands the reader something else.
+  // Nothing is imported through the bundler today, so this holds the copy to
+  // byte identity rather than to a second, weaker decode.
+  const sourceRoot = path.join(root, 'public');
+  const sourceRasters = rastersUnder(sourceRoot).sort();
+  const shippedRasters = rastersUnder(dist).sort();
+  expect(sourceRasters.length > 0, 'public carries no raster images; refusing an empty comparison');
+  expect(
+    shippedRasters.length === sourceRasters.length,
+    `dist carries ${shippedRasters.length} rasters against ${sourceRasters.length} in public`,
+  );
+
+  let matched = 0;
+  for (const file of sourceRasters) {
+    const relative = path.relative(root, file);
+    const shipped = path.join(dist, path.relative(sourceRoot, file));
+    if (!fs.existsSync(shipped)) {
+      failures.push(`audited raster is not shipped: ${relative}`);
+      continue;
+    }
+    const audited = sha256(fs.readFileSync(file));
+    const delivered = sha256(fs.readFileSync(shipped));
+    if (audited !== delivered) {
+      failures.push(`shipped raster differs from the audited bytes: ${relative}`);
+      continue;
+    }
+    matched += 1;
+  }
+  console.log(`Raster delivery: ${matched}/${sourceRasters.length} shipped byte-identical to the audited source.`);
+}
+
+function rastersUnder(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return rastersUnder(full);
+    return entry.isFile() && /\.(?:avif|gif|jpe?g|png|webp)$/i.test(entry.name) ? [full] : [];
+  });
+}
+
+function sha256(bytes: Buffer): string {
+  return createHash('sha256').update(bytes).digest('hex');
 }
 
 fs.mkdirSync(dist, { recursive: true });

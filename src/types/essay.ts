@@ -24,6 +24,14 @@ export interface EssayImageData {
   /** On wide screens, selected portrait images can sit inside the prose column. */
   placement?: EssayImagePlacement;
   objectPosition?: string;
+  /**
+   * The width in pixels the source file actually holds. An archive portrait that
+   * survived only as a 300px scan is painted at 300px rather than stretched to
+   * the column: upscaling a raster buys no detail and costs the face. Declared
+   * here rather than measured on load so the frame never reflows under the text.
+   * `validate:image-assets` holds the declaration to the file's true size.
+   */
+  sourceWidth?: number;
   /** Disable pointer tilt for fragile documents or already perspective-heavy art. */
   tilt?: boolean;
   /**
