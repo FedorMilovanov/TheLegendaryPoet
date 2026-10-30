@@ -77,6 +77,7 @@ const COLLECT_NODES = () => {
       tag: el.tagName,
       cls: (el.className ?? '').toString().slice(0, 48),
     });
+    el.setAttribute('data-sweep-overlay', String(overlays.length - 1));
   };
   for (const el of document.querySelectorAll('body *')) {
     const style = getComputedStyle(el);
@@ -213,11 +214,11 @@ const COLLECT_NODES = () => {
       occluded.push({ text: value.slice(0, 50), by: 'the open dialog' });
       continue;
     }
-    const cover = occludedBy(box, el);
-    if (cover) {
-      occluded.push({ text: value.slice(0, 50), by: `${cover.tag}.${cover.cls}` });
-      continue;
-    }
+    // Coverage is decided per band, where a node can be re-centred away from
+    // the chrome that crosses it. A node declared occluded here would never be
+    // measured at all: on a page one viewport tall — the Hall — the consent
+    // banner crosses half the copy and hid it for good, so the page that
+    // renders least was certified as half a page.
     text.push({
       text: value.slice(0, 70),
       color: style.color,
@@ -525,8 +526,8 @@ export async function paintedSweep(page, options = {}) {
     (_, index) => Math.min(index * step, maxScroll),
   ))];
 
-  // Floating chrome is fixed to the viewport, so its box is the same in every
-  // band; only the copy scrolling underneath changes what it covers.
+  // Floating chrome is collected once, in document coordinates, and re-read at
+  // every band in the coordinates it is painted in — see `refreshOverlays`.
   const overlays = nodes.overlays;
   // A sticky table head parks one pixel under the site header and would be
   // reported as hidden forever. Chrome has to cover a real share of the box
@@ -641,10 +642,32 @@ export async function paintedSweep(page, options = {}) {
     if (!list.length) return { rows, gradientInk, covered, missed };
     const style = await page.addStyleTag({ content: styleContent });
     await page.waitForTimeout(250);
+    // Chrome is re-measured where it is painted now, not where the document
+    // said it was when the sweep began. The header, the dock and the consent
+    // banner are fixed: the document box they were collected with describes
+    // them at the one offset they were collected at and nowhere else. Every
+    // other offset compared copy against a box the chrome had already left —
+    // a line under the banner read as open water and was sampled through the
+    // banner's shadow (the essay's series chip measured 4.47 on 201,196,184
+    // where it stands on cream), while a line in open water read as covered.
+    const refreshOverlays = () => page.evaluate(() => {
+      const boxes = {};
+      for (const el of document.querySelectorAll('[data-sweep-overlay]')) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 2 || rect.height < 2) continue;
+        boxes[el.getAttribute('data-sweep-overlay')] = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      }
+      return boxes;
+    });
     const goTo = async (offset) => {
       await page.evaluate((y) => window.scrollTo(0, y), offset);
       await settleBand();
       await settle();
+      const boxes = await refreshOverlays();
+      for (const [index, box] of Object.entries(boxes)) {
+        const overlay = overlays[Number(index)];
+        if (overlay) Object.assign(overlay, box);
+      }
     };
     const score = async (shot, requested, group) => {
       // `animations: 'disabled'` fast-forwards finite animations to their final
