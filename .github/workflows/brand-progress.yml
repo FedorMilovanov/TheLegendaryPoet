@@ -34,30 +34,42 @@ jobs:
               fs.readFileSync('qa/brand-reference-evaluation.json', 'utf8'),
             );
 
-            const accepted = evaluation.reviewerDecision === 'reference-accepted';
-            const percent = Math.round(evaluation.overallScore * 100);
-
-            let marker = '⚪';
-            let label = 'EARLY DRAFT';
-            if (accepted) {
-              marker = '🟢';
-              label = 'REFERENCE ACCEPTED';
-            } else if (percent >= 82) {
-              marker = '🟡';
-              label = 'AWAITING APPROVAL';
-            } else if (percent >= 70) {
-              marker = '🟠';
-              label = 'ADVANCED CANDIDATE';
-            } else if (percent >= 50) {
-              marker = '🔵';
-              label = 'IN PROGRESS';
+            // The evaluation record states which source family is authoritative and
+            // what evidence is still owed; it is not a score sheet. Publishing a
+            // percentage from a field that does not exist would be a number nobody
+            // can defend, so this check reports the decision, the stage and the
+            // outstanding evidence instead. If the record ever loses a field this
+            // step needs, say so and fail: the alternative is a check that reports
+            // nothing while still looking green.
+            const requiredFields = [
+              'referenceId',
+              'status',
+              'reviewerDecision',
+              'currentImplementation',
+              'requiredEvidence',
+              'approvalGate',
+            ];
+            const absent = requiredFields.filter((field) => evaluation[field] === undefined);
+            if (absent.length > 0) {
+              core.setFailed(
+                `qa/brand-reference-evaluation.json is missing ${absent.join(', ')}. `
+                + 'The brand visual approval check cannot be published from an incomplete record.',
+              );
+              return;
             }
+
+            const accepted = evaluation.reviewerDecision === 'reference-accepted';
+            const pending = evaluation.requiredEvidence.length;
+            const marker = accepted ? '🟢' : '🟡';
+            const label = accepted ? 'REFERENCE ACCEPTED' : 'VISUAL APPROVAL PENDING';
 
             const { owner, repo } = context.repo;
             const head_sha = context.sha;
-            const progressTitle = `${marker} ${percent}% — ${label}`;
-            const deviations = evaluation.blockingDeviations.length
-              ? evaluation.blockingDeviations.map((item) => `- ${item}`).join('\n')
+            const progressTitle = accepted
+              ? `${marker} ${label}`
+              : `${marker} ${pending} evidence item${pending === 1 ? '' : 's'} outstanding — ${label}`;
+            const evidence = pending
+              ? evaluation.requiredEvidence.map((item) => `- ${item}`).join('\n')
               : '- none';
 
             await github.rest.checks.create({
@@ -70,12 +82,16 @@ jobs:
               output: {
                 title: progressTitle,
                 summary: [
-                  `**Main revision:** ${evaluation.candidateRevision}`,
+                  `**Reference:** ${evaluation.referenceId}`,
+                  `**Status:** ${evaluation.status}`,
                   `**Decision:** ${evaluation.reviewerDecision}`,
-                  `**Next action:** ${evaluation.nextRequiredAction}`,
+                  `**Renderer:** ${evaluation.currentImplementation.renderer}`,
+                  `**Release:** ${evaluation.currentImplementation.release}`,
                   '',
-                  '### Current visual deviations',
-                  deviations,
+                  '### Evidence still required',
+                  evidence,
+                  '',
+                  evaluation.approvalGate,
                   '',
                   accepted
                     ? 'The final visual candidate is accepted.'
