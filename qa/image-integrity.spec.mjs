@@ -177,17 +177,49 @@ test.describe('published local images decode and figures stay inside their own p
           const shown = rows.filter((row) => row.laidOut);
           expect(shown.length, `${route}: expected laid-out local images`).toBeGreaterThan(0);
 
-          const undecoded = shown.filter((row) => !row.decoded);
-          expect(undecoded.map((row) => row.src), `${route}: local images that failed to decode`).toEqual([]);
+          // Same reasoning as the painted check below: on a loaded runner the
+          // page is still mounting images after the settle walk returns, so a
+          // single sample reports "not decoded yet" for a hero that is in fact
+          // on its way. Poll, and an image that never decodes still fails.
+          await expect
+            .poll(
+              async () => (await localImageReport(page))
+                .filter((row) => row.laidOut && !row.decoded)
+                .map((row) => row.src),
+              { message: `${route}: local images that failed to decode`, timeout: 15_000 },
+            )
+            .toEqual([]);
 
-          const unsourced = shown.filter((row) => !(row.sourceWidth > 0));
+          // Re-read the page once the decode wait has passed: rows captured
+          // before it are stale by definition.
+          const settled = (await localImageReport(page)).filter((row) => row.laidOut);
+
+          const unsourced = settled.filter((row) => !(row.sourceWidth > 0));
           expect(unsourced.map((row) => row.src), `${route}: local images whose file could not be decoded`).toEqual([]);
 
           // Some portraits are painted at 0.9 by design, so the floor is not
           // "fully opaque" but "actually painted": an image left at 0 behind a
           // reveal that never fired decodes fine and shows nothing at all.
-          const unpainted = shown.filter((row) => !row.decorative && (row.opacity <= 0.5 || row.renderedWidth <= 0));
-          expect(unpainted.map((row) => `${row.src} opacity ${row.opacity}`), `${route}: local images left unpainted`).toEqual([]);
+          //
+          // Decoding is not painting. The reveal is a transition, and on a loaded
+          // machine it is still running when the decode wait above returns: an
+          // image caught mid-fade at 0.00006 is on its way to being painted, not
+          // abandoned. Sampling once therefore measured the runner's speed, not
+          // the page — on a two-core runner under load this failed four times out
+          // of five while the page was in fact fine. So the same predicate is
+          // polled instead: an image whose reveal never fires stays at 0 for the
+          // whole window and still fails, which is the only case worth failing.
+          await expect
+            .poll(
+              async () => {
+                const current = (await localImageReport(page)).filter((row) => row.laidOut);
+                return current
+                  .filter((row) => !row.decorative && (row.opacity <= 0.5 || row.renderedWidth <= 0))
+                  .map((row) => `${row.src} opacity ${row.opacity}`);
+              },
+              { message: `${route}: local images left unpainted`, timeout: 15_000 },
+            )
+            .toEqual([]);
 
           // Editorial figures are the images whose source resolution is a known,
           // pinned quantity, so they are held to it. Full-bleed heroes are not:
