@@ -92,10 +92,11 @@ jobs:
           qa/brand-reference-comparison.spec.mjs
           qa/hover-stability.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
+          qa/focus-visibility.spec.mjs
+          qa/image-integrity.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=android-pixel7
-          --grep-invert "poet rating keyboard flow, durable comment and helpful state"
           --workers=1
           --reporter=line
       - name: Run base iPhone Safari QA in fresh browser processes
