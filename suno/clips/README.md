@@ -45,6 +45,7 @@
   осмысленные повторы, исправление текста и дальний blur.
 - [VISUALS.md](./VISUALS.md) — референсы, промты, редактирование и визуальный QA.
 - [ANIMATION.md](./ANIMATION.md) — промты оживления выбранных кадров.
+- [RECITATION.md](./RECITATION.md) — точный текст «Что это такое?» и настройки Suno Speech.
 - [STORAGE.md](./STORAGE.md) — MP3, изображения, видео, Git и рабочие файлы.
 - [AUDIT.md](./AUDIT.md) — ошибки прошлых серий и постоянные меры против них.
 - [PROJECT_TEMPLATE.md](./PROJECT_TEMPLATE.md) — шаблон манифеста нового клипа.
