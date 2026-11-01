@@ -556,8 +556,17 @@ test('music shell, immersive dialog and mobile dock do not collide', async ({ pa
   await expect(immersive).toBeVisible();
   await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(true);
   await immersive.getByRole('button', { name: 'Выйти' }).tap();
-  await expect(immersive).toBeHidden({ timeout: 8_000 });
-  await expect.poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN))).toBe(false);
+  // The dialog lives inside AnimatePresence, so its DOM node outlives the tap by
+  // as long as the exit animation takes: the flag flips with the state change,
+  // the node only goes once the animation finishes and the child unmounts.
+  // Asserting the flag first separates the two ways closing can fail — a tap
+  // that never landed leaves the flag true, an exit that never completes leaves
+  // it false while the node stays on screen. A single toBeHidden() cannot tell
+  // them apart, and on a loaded runner it reports the wrong one.
+  await expect
+    .poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN)), { timeout: 10_000 })
+    .toBe(false);
+  await expect(immersive).toBeHidden({ timeout: 15_000 });
 
   await restoreChromeAtTop(page, { nativeWebKit });
   await expectDockInsideViewport(page);
@@ -763,7 +772,12 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(true);
 
   await immersive.getByRole('button', { name: 'Выйти' }).click();
-  await expect(immersive).toBeHidden({ timeout: 8_000 });
+  // Same split as above: the application's own close state first, then the DOM
+  // node once the exit animation has had a realistic window to finish.
+  await expect
+    .poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN)), { timeout: 10_000 })
+    .toBe(false);
+  await expect(immersive).toBeHidden({ timeout: 15_000 });
   await expect.poll(async () => (await readEffectiveA11yIsolation(main)).inert).toBe(false);
   expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(false);
 });
