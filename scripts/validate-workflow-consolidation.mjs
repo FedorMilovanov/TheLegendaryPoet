@@ -174,8 +174,21 @@ for (const { sourcePath, use } of unsupportedExternalActionUses) {
 for (const { sourcePath, use } of mutableExternalActionUses) {
   failures.push(`${sourcePath}: external action must be pinned to a full 40-hex commit SHA: ${use}`);
 }
-expect(workflowPaths.length === 23, `workflow inventory drifted: expected 23 workflow YAML files, found ${workflowPaths.length}`);
+expect(workflowPaths.length === 24, `workflow inventory drifted: expected 24 workflow YAML files, found ${workflowPaths.length}`);
 expect(compositeActionPaths.length === 4, `composite action inventory drifted: expected 4 action YAML files, found ${compositeActionPaths.length}`);
+
+const secretScanPath = '.github/workflows/secret-scan.yml';
+const secretScan = read(secretScanPath);
+expect(secretScan.includes('fetch-depth: 0'), 'secret scanning must fetch the full Git history');
+expect(secretScan.includes('persist-credentials: false'), 'secret scanning checkout must not persist its token');
+expect(secretScan.includes('GITLEAKS_ENABLE_COMMENTS: "false"'), 'secret scanning must not request PR-comment write permissions');
+expect(secretScan.includes('GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"'), 'secret scanning must not create an unnecessary SARIF artifact');
+expect(secretScan.includes('pull-requests: read'), 'secret scanning must use read-only pull request metadata permission');
+expect(exists('.github/dependabot.yml'), 'Dependabot configuration is required');
+const dependabot = read('.github/dependabot.yml');
+expect(dependabot.includes('package-ecosystem: "npm"'), 'Dependabot must monitor npm dependencies');
+expect(dependabot.includes('package-ecosystem: "github-actions"'), 'Dependabot must monitor GitHub Actions');
+expect(exists('SECURITY.md'), 'repository security reporting policy is required');
 expect(externalActionUses.length > 0, 'external action inventory unexpectedly empty');
 
 const workflowTexts = workflowPaths.map((relativePath) => [path.basename(relativePath), read(relativePath)]);
