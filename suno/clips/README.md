@@ -41,16 +41,22 @@
 ## Документы отдела
 
 - [AGENT.md](./AGENT.md) — обязательный протокол, баттл-режимы и статусы отбора.
+- [ARENA_BATTLES.md](./ARENA_BATTLES.md) — одиночные/тройные баттлы, общий reference,
+  осмысленные повторы, исправление текста и дальний blur.
 - [VISUALS.md](./VISUALS.md) — референсы, промты, редактирование и визуальный QA.
 - [ANIMATION.md](./ANIMATION.md) — промты оживления выбранных кадров.
 - [STORAGE.md](./STORAGE.md) — MP3, изображения, видео, Git и рабочие файлы.
 - [AUDIT.md](./AUDIT.md) — ошибки прошлых серий и постоянные меры против них.
 - [PROJECT_TEMPLATE.md](./PROJECT_TEMPLATE.md) — шаблон манифеста нового клипа.
 - [CASE_YESENIN_HUNTER.md](./CASE_YESENIN_HUNTER.md) — текущий канон Yesenin hunter.
+- [CASE_LEGENDARY_POET.md](./CASE_LEGENDARY_POET.md) — отдельный канон капюшонного Поэта,
+  эпичной мантии, ауры, ворона и исчезновения.
 - [projects/yesenin-chto-eto-takoe.md](./projects/yesenin-chto-eto-takoe.md) — отдельный
   манифест плаща, одной винтовки, атмосферы и сюжета текущей серии.
 - [references/yesenin-epic/](./references/yesenin-epic/README.md) — версированный набор
   киношного AU-Есенина и удачных выражений; только для подходящих эпичных клипов.
+- [references/legendary-poet/](./references/legendary-poet/README.md) — три компактных
+  мастера костюма/силуэта отдельного Легендарного Поэта, не identity Есенина.
 
 ## Где лежат проекты и медиа
 
