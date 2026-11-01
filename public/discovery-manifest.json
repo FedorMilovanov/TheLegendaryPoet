@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "b8ff03b42d216e4c864a976cdbee6f6d661f4fd0ffce9117cc2ec84658a0e645"
+      "fingerprint": "9e6a27b805916cabef9e1d9b7389c6f94e4bef3238ed6c64a1cb521263fd2b0f"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "752a624fc7ebd1786748c4d430ce6c5d7a8c172d7320ca039a8086e01735640c"
+      "fingerprint": "11261296a57432d217fa1b050b5d552cca41fd3058d23d6ecc3b2c43bed138d0"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "0213b5f09ccc85dd77eb9fa4e43ae6301eaaf778d90a7c19a58e76bf2836d886"
+      "fingerprint": "510f1a94f89cf77f474b8d92c8d1a464faeb621a6b063af2b509c53bd249333b"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -298,7 +298,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "51fbb581e9e588bc9c249423a1ac91f1c1ad5d420cf7ad315739b5bb51f10da2"
+      "fingerprint": "9de180a78fdb3a3aa154283657bb7364c547982b3b03a49e419b3134da28a33a"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-pushkin/",
