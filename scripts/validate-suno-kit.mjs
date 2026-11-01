@@ -6,19 +6,27 @@ import { measureStyle } from './check-suno-style.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const clipDocuments = [
   'suno/clips/README.md', 'suno/clips/AGENT.md', 'suno/clips/ANIMATION.md',
-  'suno/clips/AUDIT.md', 'suno/clips/CASE_YESENIN_HUNTER.md',
-  'suno/clips/PROJECT_TEMPLATE.md', 'suno/clips/STORAGE.md', 'suno/clips/VISUALS.md',
+  'suno/clips/ARENA_BATTLES.md', 'suno/clips/AUDIT.md',
+  'suno/clips/CASE_LEGENDARY_POET.md', 'suno/clips/CASE_YESENIN_HUNTER.md',
+  'suno/clips/PROJECT_TEMPLATE.md', 'suno/clips/RECITATION.md',
+  'suno/clips/STORAGE.md', 'suno/clips/VISUALS.md',
+  'suno/clips/references/legendary-poet/README.md',
   'suno/clips/references/yesenin-epic/README.md',
   'suno/clips/projects/yesenin-chto-eto-takoe.md',
 ];
 export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md',
   'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md', ...clipDocuments];
 export const referenceAssets = [
-  'action-two-guns.jpg', 'creature-root-giant.jpg', 'expression-calm-alert-daylight.jpg',
-  'expression-full-shout-night.jpg', 'expression-startled-night.jpg',
-  'expression-tense-call-night.jpg', 'identity-face-close.jpg', 'identity-master.jpg',
-  'tree-origin.jpg',
-].map(file => `suno/clips/references/yesenin-epic/${file}`);
+  ...[
+    'action-two-guns.jpg', 'creature-root-giant.jpg', 'expression-calm-alert-daylight.jpg',
+    'expression-full-shout-night.jpg', 'expression-startled-night.jpg',
+    'expression-tense-call-night.jpg', 'identity-face-close.jpg', 'identity-master.jpg',
+    'tree-origin.jpg',
+  ].map(file => `suno/clips/references/yesenin-epic/${file}`),
+  'suno/clips/references/legendary-poet/mantle-aura-raven.jpg',
+  'suno/clips/references/legendary-poet/mantle-back-raven.jpg',
+  'suno/clips/references/legendary-poet/mantle-full-body.jpg',
+];
 
 // A bounded fence reader, not a full Markdown parser. Match delimiter and length;
 // an info string opens a fence but cannot close one. Preserve CRLF semantics.
