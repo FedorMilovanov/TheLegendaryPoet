@@ -5,6 +5,8 @@
 **Production:** `https://thelegendarypoet.ru`  
 **Stack:** React 19 · TypeScript · direct React Router · Vite 7 · Tailwind CSS 4 · Framer Motion
 
+**Проверяемые материалы для портфолио:** [инженерный кейс проекта](CASE_STUDY.md) · [авторство, источники и права](OWNER.md). Действующая политика лицензирования — [RELEASE_POLICY](docs/RELEASE_POLICY.md) (`UNLICENSED`); исторические документы и ИИ-изображения не становятся свободными для перепубликации автоматически.
+
 ## Быстрый старт
 
 Используйте Node 24 из `.nvmrc`, совпадающий с CI. React Router 8 требует Node не ниже 22.22.0; Node 24 является единым рекомендуемым baseline проекта.
