@@ -183,11 +183,20 @@ test.describe('W5 premium reader certification', () => {
     await expect(back).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/articles$/);
-    await waitForMain(page);
+    // The persistent #main-content is already visible while the previous Essay
+    // route is still painted during a view transition. Await the real catalog
+    // heading before choosing its essay link; otherwise Enter can target an
+    // outgoing article link that is unmounted before navigation is dispatched.
+    await expect(page.getByRole('heading', { level: 1, name: /Исследования и большие статьи/i })).toBeVisible();
+    // App.RouteContent intentionally focuses the shared main on the route's
+    // settled callback. Handing focus to a card before that callback races
+    // its focus restoration; await that actual ownership event first.
+    await expect(page.locator('#main-content')).toBeFocused();
 
-    const nextEssay = page.locator('a[href^="/essays/"]').filter({ visible: true }).first();
+    const nextEssay = page.locator('#main-content a[href^="/essays/"]').filter({ visible: true }).first();
     await expect(nextEssay).toBeVisible();
     await nextEssay.focus();
+    await expect(nextEssay).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/essays\//);
     await waitForMain(page);
