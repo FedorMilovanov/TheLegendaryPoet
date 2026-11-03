@@ -4,13 +4,18 @@ import { CommandItem } from './commandItems';
 interface CommandResultProps {
   item: CommandItem;
   active: boolean;
+  optionId: string;
   onSelect: () => void;
 }
 
-export default function CommandResult({ item, active, onSelect }: CommandResultProps) {
+export default function CommandResult({ item, active, optionId, onSelect }: CommandResultProps) {
   return (
     <button
       type="button"
+      id={optionId}
+      role="option"
+      aria-selected={active}
+      tabIndex={-1}
       onClick={onSelect}
       data-active={active ? 'true' : 'false'}
       className="theme-modal-result w-full rounded-2xl border p-4 text-left transition hover:border-cyan-400/25"

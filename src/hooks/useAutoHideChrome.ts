@@ -29,7 +29,7 @@ export function useAutoHideChrome() {
     const a11ySnapshots = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
 
     const chromeElements = () => [
-      ...document.querySelectorAll<HTMLElement>('.site-header, .mobile-dock, .palette-fab, .section-chip'),
+      ...document.querySelectorAll<HTMLElement>('.site-header, .mobile-dock, .palette-fab'),
     ];
 
     const syncChromeAccessibility = (nextHidden: boolean) => {

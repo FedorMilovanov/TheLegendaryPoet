@@ -78,7 +78,6 @@ function CitationLink({ id, reference }: { id: string; reference: EssaySourceRef
       onBlur={() => setFocused(false)}
       href={`#source-${id}`}
       title={reference.source.title}
-      aria-label={`Источник ${reference.number}: ${reference.source.title}`}
       className="theme-essay-citation group/citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11]"
     >
       {reference.number}

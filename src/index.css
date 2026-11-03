@@ -563,11 +563,13 @@ html.theme-light .tlp-consent-shadow {
   transform: translate(-50%, -10px);
   z-index: 55;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   max-width: min(86vw, 340px);
 }
 html.chrome-hidden .section-chip {
+  visibility: visible;
   opacity: 1;
   transform: translate(-50%, 0);
   pointer-events: auto;
