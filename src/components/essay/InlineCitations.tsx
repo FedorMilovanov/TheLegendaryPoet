@@ -43,7 +43,7 @@ function CitationLink({ id, reference }: { id: string; reference: EssaySourceRef
   useLayoutEffect(() => {
     if (!active) return;
     const link = linkRef.current;
-    const tooltip = link?.querySelector<HTMLElement>('[role="tooltip"]');
+    const tooltip = link?.parentElement?.querySelector<HTMLElement>('[role="tooltip"]');
     if (!link || !tooltip) return;
     const viewport = window.visualViewport;
     const position = () => {
@@ -70,23 +70,26 @@ function CitationLink({ id, reference }: { id: string; reference: EssaySourceRef
   }, [active]);
 
   return (
-    <a
-      ref={linkRef}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      href={`#source-${id}`}
-      title={reference.source.title}
-      className="theme-essay-citation group/citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11]"
-    >
-      {reference.number}
+    <span className="group/citation relative inline-flex">
+      <a
+        ref={linkRef}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        href={`#source-${id}`}
+        title={reference.source.title}
+        aria-label={`Источник ${reference.number}: ${reference.source.title}`}
+        className="theme-essay-citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11]"
+      >
+        {reference.number}
+      </a>
       <span
         role="tooltip"
-        className="theme-essay-citation-tooltip pointer-events-none absolute bottom-[calc(100%+0.45rem)] z-30 w-max whitespace-normal rounded-lg border border-luxury-gold/20 px-2.5 py-1.5 text-left text-[10px] font-normal leading-snug normal-case tracking-normal opacity-0 shadow-xl transition-opacity duration-150 group-hover/citation:opacity-100 group-focus-visible/citation:opacity-100"
+        className="theme-essay-citation-tooltip pointer-events-none absolute bottom-[calc(100%+0.45rem)] z-30 w-max whitespace-normal rounded-lg border border-luxury-gold/20 px-2.5 py-1.5 text-left text-[10px] font-normal leading-snug normal-case tracking-normal opacity-0 shadow-xl transition-opacity duration-150 group-hover/citation:opacity-100 group-focus-within/citation:opacity-100"
       >
         {reference.source.title}
       </span>
-    </a>
+    </span>
   );
 }

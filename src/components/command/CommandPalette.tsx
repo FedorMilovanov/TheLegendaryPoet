@@ -137,7 +137,7 @@ export default function CommandPalette() {
             placeholder="Найти поэта, стихотворение, статью, трек или раздел..."
             aria-label="Поисковый запрос"
             aria-controls={listId}
-            aria-expanded={results.length > 0}
+            aria-expanded={true}
             aria-autocomplete="list"
             aria-activedescendant={results[activeIndex] ? optionId(results[activeIndex].id) : undefined}
             role="combobox"
@@ -149,11 +149,11 @@ export default function CommandPalette() {
             <X size={20} />
           </button>
         </div>
-        <div id={listId} role={results.length ? 'listbox' : undefined} aria-label={results.length ? 'Результаты поиска' : undefined} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
+        <div id={listId} role="listbox" aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
           {results.map((item, index) => (
             <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
-          {!results.length && <div role="status" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
+          {!results.length && <div role="option" aria-selected="false" aria-disabled="true" aria-live="polite" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
         </div>
       </div>
     </div>

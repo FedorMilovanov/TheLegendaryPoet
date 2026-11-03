@@ -672,7 +672,7 @@ for (const theme of ['dark', 'light']) {
         useChromiumCore(testInfo);
         await page.addInitScript(({ key, theme }) => localStorage.setItem(key, theme), { key: STORAGE_KEY, theme });
         await page.goto(ARTICLE_URL, { waitUntil: 'networkidle' });
-        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        const citations = page.locator('.essay-body sup > span > a[href^="#source-"]');
         await expect(citations.first()).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         const measurements = await contrastMeasurements(citations, true);
@@ -688,7 +688,7 @@ for (const theme of ['dark', 'light']) {
         await expect(first).toBeFocused();
         await expect(first).toHaveCSS('outline-style', 'solid');
         await expect(first).toHaveCSS('outline-width', '2px');
-        const tooltip = first.getByRole('tooltip');
+        const tooltip = first.locator('xpath=..').getByRole('tooltip');
         await expect.poll(() => tooltip.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(1);
         expect(await contrastRatio(tooltip)).toBeGreaterThanOrEqual(4.5);
         expect(await contrastRatio(first)).toBeGreaterThanOrEqual(4.5);
@@ -708,7 +708,7 @@ for (const theme of ['dark', 'light']) {
         await page.evaluate(() => document.fonts.ready);
         // A dark editorial surface owns citation ink even on a light page.
         // Exercise its active/focus paint too, not only offscreen idle colors.
-        const islandCitation = page.locator('.essay-body .theme-dark-island sup > a[href^="#source-"]').first();
+        const islandCitation = page.locator('.essay-body .theme-dark-island sup > span > a[href^="#source-"]').first();
         await expect(islandCitation).toBeAttached();
         await hoverCitation(page, islandCitation);
         await expect(islandCitation).toHaveCSS('color', 'rgb(212, 175, 55)');
@@ -717,8 +717,8 @@ for (const theme of ['dark', 'light']) {
         await islandCitation.focus();
         await expect(islandCitation).toBeFocused();
         await expect(islandCitation).toHaveCSS('outline-color', 'rgb(212, 175, 55)');
-        await expect(islandCitation.getByRole('tooltip')).toHaveCSS('opacity', '1');
-        expect(await contrastRatio(islandCitation.getByRole('tooltip'))).toBeGreaterThanOrEqual(4.5);
+        await expect(islandCitation.locator('xpath=..').getByRole('tooltip')).toHaveCSS('opacity', '1');
+        expect(await contrastRatio(islandCitation.locator('xpath=..').getByRole('tooltip'))).toBeGreaterThanOrEqual(4.5);
       });
     });
   }
@@ -747,29 +747,29 @@ for (const theme of ['dark', 'light']) {
         test.skip(testInfo.project.name !== 'chromium-core', 'bounded Chromium positioning regression');
         await page.addInitScript((mode) => localStorage.setItem('tlp-theme-mode', mode), theme);
         await page.goto(`${BASE_URL}/essays/sergei-yesenin-1921-1925`, { waitUntil: 'networkidle' });
-        const citations = page.locator('.essay-body sup > a[href^="#source-"]');
+        const citations = page.locator('.essay-body sup > span > a[href^="#source-"]');
         await expect(citations.first()).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         for (let i = 0; i < 12; i++) {
           const link = citations.nth(i);
           await link.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
           await link.focus();
-          await expectCitationTooltipContained(page, link.getByRole('tooltip'));
+          await expectCitationTooltipContained(page, link.locator('xpath=..').getByRole('tooltip'));
         }
         const first = citations.first();
         await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
         await first.focus();
-        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        await expectCitationTooltipContained(page, first.locator('xpath=..').getByRole('tooltip'));
         if (width >= 600) {
           await first.evaluate((node) => node.blur());
           await hoverCitation(page, first);
-          await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+          await expectCitationTooltipContained(page, first.locator('xpath=..').getByRole('tooltip'));
           await page.mouse.move(0, 0);
           await first.focus();
         }
         await page.setViewportSize({ width: width < 600 ? 844 : 320, height: 600 });
         await first.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
-        await expectCitationTooltipContained(page, first.getByRole('tooltip'));
+        await expectCitationTooltipContained(page, first.locator('xpath=..').getByRole('tooltip'));
         const href = await first.getAttribute('href');
         await first.press('Enter');
         await expect.poll(() => new URL(page.url()).hash).toBe(href);

@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
@@ -102,9 +102,9 @@ test.describe('reader interaction ownership', () => {
     const dialog = page.locator('[role="dialog"][aria-modal="true"]');
     const input = dialog.getByRole('combobox');
     await input.fill('zzzz-no-results-20261103');
-    await expect(dialog.getByRole('listbox')).toHaveCount(0);
-    await expect(dialog.getByRole('status')).toBeVisible();
-    await expect(input).toHaveAttribute('aria-expanded', 'false');
+    await expect(dialog.getByRole('listbox')).toBeVisible();
+    await expect(dialog.getByRole('option', { name: 'Ничего не найдено.' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(input).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('inline documentary citations expose source titles as accessible names', async ({ page }) => {
@@ -113,8 +113,8 @@ test.describe('reader interaction ownership', () => {
     expect(await citations.count()).toBeGreaterThan(10);
     for (let index = 0; index < 8; index++) {
       const citation = citations.nth(index);
-      const title = await citation.locator('[role="tooltip"]').innerText();
-      expect(await citation.getAttribute('aria-label')).toBeNull();
+      const title = await citation.locator('xpath=..').locator('[role="tooltip"]').innerText();
+      expect(await citation.getAttribute('aria-label')).toMatch(/^Источник \d+:/);
       expect(title.length).toBeGreaterThan(6);
       await expect(citation).toHaveAccessibleName(new RegExp(title.slice(0, 5)));
     }
