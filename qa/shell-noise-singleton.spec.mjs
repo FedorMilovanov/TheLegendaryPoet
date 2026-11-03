@@ -116,6 +116,12 @@ for (const [name, width, height, colorScheme, reducedMotion] of viewportCases) {
         await expect(page.locator('main h1')).toContainText('О Проекте');
         await expectReservedViewport(page);
         await page.locator('header a[href="/"]:has([data-brand-mark])').click();
+        await expect(page).toHaveURL(/\/$/);
+        // The About heading also contains "LEGENDARY". During the SPA handoff,
+        // that previous route can remain painted before Home has actually mounted.
+        // Require the destination's six real hero windows before exercising
+        // footer geometry; otherwise the assertion races the route transition.
+        await expect(page.locator('#main-content [data-hero-poet-window]')).toHaveCount(6);
         await expect(page.locator('main h1')).toContainText('LEGENDARY');
         await expectReservedViewport(page);
         expect(homeRequests, 'warm navigation must reuse the loaded module').toBe(1);
