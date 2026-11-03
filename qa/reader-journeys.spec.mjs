@@ -268,7 +268,7 @@ test.describe('reduced-motion longform reader journey', () => {
     await expect(citation).toBeVisible();
     await citation.focus();
     await expect(citation).toBeFocused();
-    await expect(citation.getByRole('tooltip')).toBeVisible();
+    await expect(citation.locator('xpath=..').getByRole('tooltip')).toBeVisible();
 
     await citation.press('Enter');
     await expect(page).toHaveURL(new RegExp(`${escapeRegExp(href)}$`));

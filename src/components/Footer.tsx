@@ -85,7 +85,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Разделы</h4>
+            <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Разделы</h2>
             <ul className="space-y-1">
               {footerLinks.map((item) => (
                 <li key={item.path}>
@@ -102,7 +102,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Информация</h4>
+            <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] theme-functional-muted">Информация</h2>
             <ul className="space-y-1">
               {trustLinks.map((item) => (
                 <li key={item.path || item.href}>

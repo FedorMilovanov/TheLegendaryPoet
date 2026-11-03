@@ -50,7 +50,7 @@ export default function EditorialPolicyPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} className="mb-10" />
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300/65">Принципы проекта</p>
         <h1 className="mt-4 font-serif text-4xl font-bold leading-tight sm:text-6xl">Редакционная политика</h1>
@@ -80,7 +80,7 @@ export default function EditorialPolicyPage() {
         <p className="mt-10 text-sm text-cyan-100/52">
           Дата публикации политики: 28 июля 2026 года. См. также <Link to="/privacy" className="text-cyan-300/75 hover:text-cyan-200">политику конфиденциальности</Link>.
         </p>
-      </main>
+      </div>
     </div>
   );
 }

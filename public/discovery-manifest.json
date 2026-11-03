@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "9e6a27b805916cabef9e1d9b7389c6f94e4bef3238ed6c64a1cb521263fd2b0f"
+      "fingerprint": "44df3e700f92168a65421f410714ac0a40d79ec384d4ecf1b00c18b487e9c5d3"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "11261296a57432d217fa1b050b5d552cca41fd3058d23d6ecc3b2c43bed138d0"
+      "fingerprint": "834096fbf42afdca0dc4cabd77821283b03b185724231ffa95a84eb57aa43a45"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "510f1a94f89cf77f474b8d92c8d1a464faeb621a6b063af2b509c53bd249333b"
+      "fingerprint": "0fe52d001b83b391d0eaf4cdad32351bce9e82a1f2559a3db2880424ad0bf674"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5f636e2bf0b6cb724309b2b898c2465c84cfa2ee549154f2c94a191b37b0c70a"
+      "fingerprint": "21b284627cdc39ffd965bf0fc11d8c8bef5aef8876004738de059eb951f8ceee"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -154,7 +154,7 @@
       "routeId": "music",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "3f95427e117ae0b7da0f44384e76d6808e828c877c6758f540688ad76a85f472"
+      "fingerprint": "39f2d2cdd652e5de2172a04e851466e3860f9aa3645c1b5c87bdd880a9e9ea13"
     },
     {
       "url": "https://thelegendarypoet.ru/about/",
@@ -162,7 +162,7 @@
       "routeId": "about",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "df28ae3b8e7a781c794e981b463e38a225abad41b7628897027bc001e2acb4f4"
+      "fingerprint": "4dc262868672453b83b93ec83eb904d17c52516b6e4f354e3a57a0b836d5b7e2"
     },
     {
       "url": "https://thelegendarypoet.ru/editorial-policy/",
@@ -170,7 +170,7 @@
       "routeId": "editorial-policy",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1b3a79029b35548f63986f082b65c7592b4697304ac85dd6534fb00117a3aad6"
+      "fingerprint": "5d6ea6b47980874a5f775206474d497588c33fd1f573e3dc7d0e65e028d2e63f"
     },
     {
       "url": "https://thelegendarypoet.ru/privacy/",
@@ -178,7 +178,7 @@
       "routeId": "privacy",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "f5768abfad8a48aba65d7d29d3c6d0a7d121fc3822a9529380dda779262f4438"
+      "fingerprint": "97ced068b4bc31296c8a6d55e4d5765635921f3f7f6d4a5edc3d7cfcb741c0ed"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/simonov-syn-artillerista-realnaya-istoriya/",
@@ -186,7 +186,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-10-15",
-      "fingerprint": "d14731a765298fc39ce230de4022fb1bb312fdb4a7db9f18cf4bee4099b5a300"
+      "fingerprint": "8b7d5c3c7e4d424bab65ae380f70f56807b89550b854a490ef503425b536f6db"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive/",
@@ -194,7 +194,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-09-06",
-      "fingerprint": "1f8ae4a5ebe1d6897b1d5fb2f7ef28ef8f2989c9fa846c2f5eeeb47cc11471e2"
+      "fingerprint": "2df9cf66a24214f50b7354d869733ec048415455b00f1cb30b6b5c50bed60fe2"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/vykhozhu-odin-ya-na-dorogu-lermontov/",
@@ -202,7 +202,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-08-04",
-      "fingerprint": "3aa25c7c741bc8ec90fc08f4d2738311389c1b7b53a2fea67bfef01cb9831ff6"
+      "fingerprint": "0574d082c6de951e990990a2e1a969a67ea21d61ae401744857c75013eb4ebe1"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/yesenin-kutezhi/",
@@ -210,7 +210,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-07-12",
-      "fingerprint": "45f69d911c8e164d03dc912ca53c6a7f04c682cc2436e7982d6f1878b3d66b19"
+      "fingerprint": "dc735b6d33759302ba76e938359ddf4660de61cce5d42ff526206051d53cea7c"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/sergei-yesenin-1895-1921/",
@@ -218,7 +218,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-10-15",
-      "fingerprint": "4e4fe8b55d764aba4272f286460951cade5708edce01ee08579cb2354fb9a3f5"
+      "fingerprint": "a9e4f077f035dfd242125b1a9b32680b85925a3319f373a7dd46defb24127e6d"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/sergei-yesenin-1921-1925/",
@@ -226,7 +226,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-10-24",
-      "fingerprint": "35ac17ebb2bad44d28bc3ad278b160893a5d8a31165fa396e565684df80b6f2c"
+      "fingerprint": "201328adf7ce445faabd5dc03c6d9862f8b0a4372a6fd9ebd8923abc161fccd6"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/yesenin-duncan-first-meeting-documents/",
@@ -234,7 +234,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-08-05",
-      "fingerprint": "95673e0377e5ad818e6847e991ab4512229d628a53e5d2b582f52fe317a5d478"
+      "fingerprint": "996e453c9703971cc01e59350936f06786d8d256e5bb815e99b28a5dcfdd8b9c"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/mayakovsky-before-revolution/",
@@ -242,7 +242,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-08-04",
-      "fingerprint": "07417d6cc57398821582f3a70c2391ef02d89078553b06e385c605d7da5a7169"
+      "fingerprint": "cb27a7759face79569b571ba6e52a615d47c2cb21965b6d9b54c856cb9475aae"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/mayakovsky-gromovoy/",
@@ -250,7 +250,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-08-04",
-      "fingerprint": "ace903086ef3df2fa8cfc95efd15b7c67882172c95acf6b29d8d5ddcf31ccd64"
+      "fingerprint": "ace73193cfed7dfd19a50128d13056cb9d6589bbb38de9b3377d897b9bfa5207"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/brik-case/",
@@ -258,7 +258,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-08-04",
-      "fingerprint": "a5e7e110c93ef8d3521dc15a4f59c00e65f8fb947c4ec6dff7beadcba6959be3"
+      "fingerprint": "283cb677a4edccf9786d597e14a92ac5e4b156c46767de826f0df4db7dee2bf3"
     },
     {
       "url": "https://thelegendarypoet.ru/music/yesenin-ya-ustalym-takim-eshche-ne-byl/",
@@ -266,7 +266,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "b3e88c6bdc90c333d972870681cf070c1603ae37802a036f3f7f4744bde36490"
+      "fingerprint": "9d859fe5b932276873bac1a81ed01571d56b8c83ac64f3b104a9b0282582f854"
     },
     {
       "url": "https://thelegendarypoet.ru/music/pushkin-tucha/",
@@ -274,7 +274,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4e5cda3c2d47ec4402f1aa319ef1a1c163a8202c4480e1c46716fa2018f759ff"
+      "fingerprint": "7aebba8b88e0d14446d37247dee658898201f6cc2ea720552056552ddf958b4d"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-rossiya/",
@@ -282,7 +282,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7dafe6b6a22ac99e4fd531261f8ff4c90372e50b6d7d0818d6e3eeeaa289e3a7"
+      "fingerprint": "2343d5f1cdd5e07a0d31a2c50568402958b4ff2e100f246b7740aae21bab2d89"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/fyodor-tyutchev/",
@@ -290,7 +290,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5f1da72b4bb499ab08792d5649e6a6d8d6fcb6d270d72742eb7a8371c01379e0"
+      "fingerprint": "fbae54e3976b2b415cfa727a19df70315414613b9a093b6d89f382f38f556068"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/vladimir-mayakovsky/",
@@ -298,7 +298,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "9de180a78fdb3a3aa154283657bb7364c547982b3b03a49e419b3134da28a33a"
+      "fingerprint": "7a39cd14209bfc447182bb8218049af1766577ad8949a130e368b1e24b03a43b"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-pushkin/",
@@ -306,7 +306,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6d0478f86c9da2fae9f1208c567c835900bc891e22e2fd4ea7962265635e349d"
+      "fingerprint": "3756982dd8a6db967e7968fa852389f2e270b2b859fd58d394169ac46948b179"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/mikhail-lermontov/",
@@ -314,7 +314,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "bdd83ab2046b89a475f37802b03cbd53d39471ad215505a117c8a6bad4e084d9"
+      "fingerprint": "cc3c961965176c85f6b21abf8a2b228b57bb4b76527f63b20238a4fb15b54725"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/boris-pasternak/",
@@ -322,7 +322,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "e2f3ace7089f3d4d86fabeb06df5a01ac3aef97e109ee4bed6c7b99ca6f36a42"
+      "fingerprint": "4dcb1fa81e86d1ea13a07cfecbcdfc20608fdce6d0ca0bc7fd3ad0ca79a017cd"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/afanasy-fet/",
@@ -330,7 +330,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "21aceb3db8d79edbe4e85cb80932d41bb7663e463b45b62c24243a0f6404ae3f"
+      "fingerprint": "ab9c60993b202f1d682e9706419ec82d176a41cf10267ee898dd09e4333684c0"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-gumilev/",
@@ -338,7 +338,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "fe79f6ef50eb40bef02ba83d3cc04bd9987c1289a4b802e9e24320a981ef44c6"
+      "fingerprint": "2dd660507fd4c8678e340fe40a4ec5e86a06b09565bd2af4ff372a383291142f"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/sergei-yesenin/",
@@ -346,7 +346,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "3df28a1775c24c6e930ae03f4159c4f215516fd94e052493be79e3102d04e28d"
+      "fingerprint": "f47f997d58ae3f349f2400cd603d360bb6640f4d68cf4bc981bd9541e1e28209"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/anna-akhmatova/",
@@ -354,7 +354,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5ffaaf7048dfa43f22a77b7d6844b867bade7a7e5b54354dc636ca0ba20ac1b3"
+      "fingerprint": "bded739552081efa22e8c6a056ec1796323eacc971b4bc8cd0489d2151347448"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-blok/",
@@ -362,7 +362,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "a15cd1a82d0d6321f049ed907d1b17b4b6e1d11aa8dcdf20e7d18ef669fffbbc"
+      "fingerprint": "afaa86f84cce48290b93513268843b47d2491b619aa418531a97d5d93d3401b6"
     }
   ]
 }

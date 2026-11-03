@@ -19,6 +19,7 @@ export default function CommandPalette() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const restoreFocusRef = useRef(true);
   const listId = 'command-palette-results';
+  const optionId = (itemId: string) => 'command-option-' + itemId;
 
   const items = useMemo(() => getCommandItems(), []);
   const results = useMemo(() => {
@@ -136,8 +137,9 @@ export default function CommandPalette() {
             placeholder="Найти поэта, стихотворение, статью, трек или раздел..."
             aria-label="Поисковый запрос"
             aria-controls={listId}
-            aria-expanded={results.length > 0}
+            aria-expanded={true}
             aria-autocomplete="list"
+            aria-activedescendant={results[activeIndex] ? optionId(results[activeIndex].id) : undefined}
             role="combobox"
             autoComplete="off"
             maxLength={120}
@@ -149,9 +151,9 @@ export default function CommandPalette() {
         </div>
         <div id={listId} role="listbox" aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
           {results.map((item, index) => (
-            <CommandResult key={item.id} item={item} active={index === activeIndex} onSelect={() => select(item.path)} />
+            <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
-          {!results.length && <div className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
+          {!results.length && <div role="option" aria-selected="false" aria-disabled="true" aria-live="polite" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
         </div>
       </div>
     </div>

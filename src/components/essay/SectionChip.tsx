@@ -51,7 +51,12 @@ export default function SectionChip({ toc }: { toc: TocEntry[] }) {
 
   const go = (anchor: string) => {
     popRef.current?.hidePopover?.();
-    scrollToId(anchor);
+    const hash = "#" + encodeURIComponent(anchor);
+    if (window.location.hash !== hash) {
+      window.location.hash = hash;
+    } else {
+      scrollToId(anchor);
+    }
   };
 
   return (

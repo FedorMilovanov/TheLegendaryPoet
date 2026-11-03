@@ -133,7 +133,7 @@ for (const profile of [
       await expect(results).toContainText('Николай Гумилёв');
 
       await input.fill('Гой ты, Русь');
-      const poemResult = page.getByRole('button', { name: /Гой ты, Русь, моя родная/i });
+      const poemResult = page.getByRole('option', { name: /Гой ты, Русь, моя родная/i });
       await expect(poemResult).toBeVisible();
       await poemResult.click();
       await expect(page).toHaveURL(/\/poets\/sergei-yesenin#poem-yesenin-3$/);
@@ -154,7 +154,7 @@ for (const profile of [
       await expect(dialog).toBeVisible();
       await expect(input).toBeFocused();
       await input.fill('Когда и где появилось стихотворение');
-      const essaySectionResult = page.getByRole('button', { name: /Когда и где появилось стихотворение/i });
+      const essaySectionResult = page.getByRole('option', { name: /Когда и где появилось стихотворение/i });
       await expect(essaySectionResult).toBeVisible();
       await essaySectionResult.click();
       await expect(page).toHaveURL(/\/essays\/vykhozhu-odin-ya-na-dorogu-lermontov#history$/);

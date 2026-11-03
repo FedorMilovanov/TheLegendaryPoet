@@ -34,13 +34,13 @@ function buildSourceReferences(sources: EssaySource[]): EssaySourceReferenceMap 
 function blockLayout(block: EssayBlock): { className: string; direction: 'up' | 'left' | 'right' } {
   if (block.type === 'image' && block.placement === 'left') {
     return {
-      className: 'lg:float-left lg:mr-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
+      className: 'relative z-10 lg:float-left lg:mr-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
       direction: 'right',
     };
   }
   if (block.type === 'image' && block.placement === 'right') {
     return {
-      className: 'lg:float-right lg:ml-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
+      className: 'relative z-10 lg:float-right lg:ml-9 lg:mb-5 lg:w-[46%] lg:[&_figure]:my-2',
       direction: 'left',
     };
   }

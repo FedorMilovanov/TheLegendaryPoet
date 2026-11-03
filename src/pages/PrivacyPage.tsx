@@ -53,7 +53,7 @@ export default function PrivacyPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} className="mb-10" />
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300/65">Данные посетителей</p>
         <h1 className="mt-4 font-serif text-4xl font-bold leading-tight sm:text-6xl">Политика конфиденциальности</h1>
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
         <p className="mt-10 text-sm text-cyan-100/52">
           Обновлено: 12 сентября 2026 года. Редакционные принципы описаны в <Link to="/editorial-policy" className="text-cyan-300/75 hover:text-cyan-200">редакционной политике</Link>.
         </p>
-      </main>
+      </div>
     </div>
   );
 }
