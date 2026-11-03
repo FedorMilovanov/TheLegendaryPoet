@@ -38,7 +38,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
   return (
     <div className="theme-soft-surface rounded-3xl border p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Родственные души</h3>
+        <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Родственные души</h2>
         {epochLabel && (
           <span
             className="rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"

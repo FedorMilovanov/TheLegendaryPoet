@@ -8,9 +8,12 @@ import FeedbackMiniSummary from './community/FeedbackMiniSummary';
 
 interface PoetCardProps {
   poet: Poet;
+  /** Card headings follow the parent page's actual outline. */
+  headingLevel?: 2 | 3;
 }
 
-const PoetCard = ({ poet }: PoetCardProps) => {
+const PoetCard = ({ poet, headingLevel = 3 }: PoetCardProps) => {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <Link to={`/poets/${poet.id}`} className="group block h-full">
       <TiltCard intensity={6}>
@@ -51,9 +54,9 @@ const PoetCard = ({ poet }: PoetCardProps) => {
           {/* Content */}
           <div className="p-8 flex flex-col flex-grow relative z-20">
             <div className="mb-4 flex-grow">
-              <h3 className="text-2xl font-serif font-bold theme-poet-title transition-colors duration-300 mb-1 leading-tight">
+              <Heading className="text-2xl font-serif font-bold theme-poet-title transition-colors duration-300 mb-1 leading-tight">
                 {poet.name}
-              </h3>
+              </Heading>
               <p className="text-xs tracking-wider uppercase theme-poet-accent font-semibold mb-3">{poet.fullName}</p>
               <p className="text-sm theme-functional-muted leading-relaxed font-light line-clamp-3">
                 {poet.shortBio}
