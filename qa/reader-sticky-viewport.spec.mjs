@@ -5,6 +5,7 @@ const poets = ['sergei-yesenin', 'alexander-pushkin', 'vladimir-mayakovsky', 'an
 const essays = ['brik-case', 'yesenin-kutezhi', 'sergei-yesenin-1921-1925', 'mayakovsky-before-revolution', 'sergei-yesenin-1895-1921', 'mayakovsky-gromovoy', 'yesenin-duncan-first-meeting-documents', 'vykhozhu-odin-ya-na-dorogu-lermontov', 'galina-benislavskaya-yesenin-manuscripts-publishing-archive', 'simonov-syn-artillerista-realnaya-istoriya'];
 
 async function openPage(page, route) {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const response = await page.goto(BASE_URL + route, { waitUntil: 'domcontentloaded', timeout: 30000 });
   expect(response?.status()).toBeLessThan(400);
   await page.waitForFunction(() => {
@@ -44,7 +45,7 @@ async function assertSidebar(page, locator, minLinks) {
 }
 
 test.describe('Reader sticky viewport containment', () => {
-  test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  test.use({ viewport: { width: 1440, height: 900 } });
 
   for (const id of poets) {
     test('poet sidebar links remain reachable: ' + id, async ({ page }) => {
