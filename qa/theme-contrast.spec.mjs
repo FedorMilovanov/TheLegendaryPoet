@@ -520,8 +520,12 @@ for (const theme of ['dark', 'light']) for (const mobile of [false, true]) {
       const labels = shells.locator('[data-hero-poet-window-label]');
       // At rest the caption is hidden on pointer-fine devices and shown on touch.
       for (const label of await labels.all()) await expect(label).toHaveCSS('opacity', mobile ? '0.96' : '0');
-      // Hiding it is cosmetic: the poet is still named for assistive technology.
-      await expect(shells.first().locator('a')).toHaveAccessibleName(/Открыть страницу поэта/);
+      // Hiding the caption is cosmetic: the entire visible name and life dates
+      // must stay in the link's accessible name, including the action.
+      const firstPoet = shells.first();
+      const poetName = (await firstPoet.locator('[data-hero-poet-window-name]').innerText()).trim();
+      const lifeDates = (await firstPoet.locator('.hero-poet-window-dates').innerText()).trim();
+      await expect(firstPoet.locator('a')).toHaveAccessibleName(`${poetName} ${lifeDates} — открыть страницу поэта`);
 
       const reveal = async (shell) => {
         const label = shell.locator('[data-hero-poet-window-label]');

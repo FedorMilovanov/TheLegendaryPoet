@@ -201,6 +201,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
             ? 'Готово к воспроизведению'
             : 'Мастер публикации';
 
+  const volumePercent = Math.round((muted ? 0 : volume) * 100);
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
   const themeStyle = getTrackThemeStyle(track);
   const coverTransition = compact
@@ -379,7 +380,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
             <div ref={volumeControlRef} className="relative flex items-center">
               <button type="button" onClick={() => { toggleMute(); setVolumeOpen(true); }} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><VolumeIcon size={18} /></button>
-              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label="Настроить громкость" className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/52 transition hover:text-white sm:inline-flex">{Math.round((muted ? 0 : volume) * 100)}%</button>
+              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label={`${volumePercent}% — настроить громкость`} className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/52 transition hover:text-white sm:inline-flex">{volumePercent}%</button>
               {volumeOpen && (
                 <div className="absolute bottom-14 left-0 z-30 flex w-48 items-center gap-3 rounded-2xl border border-white/12 bg-[#071018]/98 p-3 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:left-auto sm:right-0">
                   <Volume1 size={15} className="text-white/35" />
