@@ -6,7 +6,11 @@ const expect = (condition: unknown, message: string) => {
   if (!condition) failures.push(message);
 };
 
-expect(source.includes("import { useDialogSurface } from '../../hooks/useDialogSurface';"), 'essay lightbox must import the shared dialog lifecycle');
+expect(source.includes("import { useDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';"), 'essay lightbox must import the shared presence-aware dialog lifecycle');
+expect(source.includes('useDialogExitLifetime(open)'), 'essay lightbox must retain its modal lease during exit animation');
+expect(source.includes('open: lifetime.lockOpen'), 'essay lightbox must bind the shared lock to painted presence');
+expect(source.includes('deferReleaseUntilUnmount: true'), 'essay lightbox must not release the stack on Escape before exit completion');
+expect(source.includes('onExitComplete={lifetime.onExitComplete}'), 'essay lightbox must release the lock after AnimatePresence exit completion');
 expect(source.includes('useDialogSurface({'), 'essay lightbox must register with the shared overlay stack');
 expect(source.includes("label: 'essay-image-lightbox'"), 'essay lightbox must expose a stable overlay label for QA');
 expect(source.includes('initialFocusRef: closeRef'), 'essay lightbox must move initial focus to its close control');

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   acquireOverlayLock,
   canRestoreOverlayFocus,
@@ -34,6 +34,8 @@ interface DialogSurfaceOptions {
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
   restoreFocusRef?: RefObject<boolean | null>;
+  /** Animated dialogs retain their overlay lease until AnimatePresence exit completion. */
+  deferReleaseUntilUnmount?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export function useDialogSurface({
   closeOnEscape = true,
   restoreFocus = true,
   restoreFocusRef,
+  deferReleaseUntilUnmount = false,
 }: DialogSurfaceOptions) {
   const handleRef = useRef<OverlayLockHandle | null>(null);
 
@@ -68,14 +71,13 @@ export function useDialogSurface({
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
-      // Current modal surfaces provide stable callbacks. Calling the concrete
-      // callback directly avoids a separate passive-effect ref handoff while
-      // audio state is re-rendering rapidly, and finally still guarantees the
-      // runtime stack is released synchronously for the next Escape.
+      // Non-animated surfaces may release on Escape. Animated surfaces must
+      // preserve focus, inertness and scroll ownership while their exiting
+      // dialog is still mounted and pointer-active.
       try {
         onClose();
       } finally {
-        handle.release();
+        if (!deferReleaseUntilUnmount) handle.release();
       }
     } : null);
 
@@ -127,9 +129,33 @@ export function useDialogSurface({
         });
       }
     };
-  }, [closeOnEscape, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
   };
+}
+
+/**
+ * Match overlay ownership to the lifetime of the painted modal, not merely
+ * the logical open flag. Framer Motion keeps exiting nodes mounted until its
+ * onExitComplete callback, including reduced-motion exits.
+ *
+ * Reopening during exit is safe: the completion callback checks the latest
+ * logical state before relinquishing the shared overlay lock.
+ */
+export function useDialogExitLifetime(logicalOpen: boolean) {
+  const [retained, setRetained] = useState(logicalOpen);
+  const latestOpen = useRef(logicalOpen);
+  latestOpen.current = logicalOpen;
+
+  useEffect(() => {
+    if (logicalOpen) setRetained(true);
+  }, [logicalOpen]);
+
+  const onExitComplete = useCallback(() => {
+    if (!latestOpen.current) setRetained(false);
+  }, []);
+
+  return { lockOpen: logicalOpen || retained, onExitComplete };
 }

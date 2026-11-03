@@ -14,7 +14,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { useDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';
 import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
@@ -47,8 +47,10 @@ export default function ImmersivePlayer() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const lifetime = useDialogExitLifetime(immersiveOpen && Boolean(currentTrack));
   const { isTopmost } = useDialogSurface({
-    open: immersiveOpen && Boolean(currentTrack),
+    open: lifetime.lockOpen,
+    deferReleaseUntilUnmount: true,
     dialogRef,
     initialFocusRef: closeButtonRef,
     onClose: closeImmersive,
@@ -92,7 +94,7 @@ export default function ImmersivePlayer() {
   if (typeof document === 'undefined') return null;
 
   const content = (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={lifetime.onExitComplete}>
       {immersiveOpen && currentTrack && (() => {
         const theme = getTrackTheme(currentTrack);
         const totalDuration = duration || currentTrack.durationSeconds || 0;
