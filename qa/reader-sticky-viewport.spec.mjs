@@ -44,7 +44,7 @@ async function assertSidebar(page, locator, minLinks) {
 }
 
 test.describe('Reader sticky viewport containment', () => {
-  test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  test.use({ viewport: { width: 1440, height: 900 }, contextOptions: { reducedMotion: 'reduce' } });
 
   for (const id of poets) {
     test('poet sidebar links remain reachable: ' + id, async ({ page }) => {
