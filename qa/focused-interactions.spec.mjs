@@ -287,3 +287,56 @@ test.describe('premium home poet windows', () => {
     expect(pageErrors).toEqual([]);
   });
 });
+
+test.describe('visible-label accessibility authority', () => {
+  test('every home portrait link names its visible poet and life dates at desktop and touch widths', async ({ page }) => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+      await waitForRoute(page);
+
+      const portraits = page.locator('[data-hero-poet-window]');
+      await expect(portraits).toHaveCount(6);
+      for (const portrait of await portraits.all()) {
+        const poetName = (await portrait.locator('[data-hero-poet-window-name]').innerText()).trim();
+        const lifeDates = (await portrait.locator('.hero-poet-window-dates').innerText()).trim();
+        await expect(portrait).toHaveAccessibleName(
+          `${poetName} ${lifeDates} — открыть страницу поэта`,
+        );
+        expect((await portrait.getAttribute('href')) ?? '').toContain('/poets/');
+      }
+    }
+  });
+
+  test('every published player exposes its visible and live volume percentage to accessibility APIs', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const routes = [
+      '/music',
+      '/music/yesenin-ya-ustalym-takim-eshche-ne-byl',
+      '/music/pushkin-tucha',
+      '/music/blok-rossiya',
+    ];
+    for (const route of routes) {
+      await page.goto(`${BASE_URL}${route}`, { waitUntil: 'domcontentloaded' });
+      await waitForRoute(page);
+      const volumeButton = page.locator('button[aria-expanded][aria-label$="настроить громкость"]');
+      await expect(volumeButton, route).toHaveCount(1);
+
+      const visiblePercentage = (await volumeButton.innerText()).trim();
+      expect(visiblePercentage, route).toMatch(/^[0-9]{1,3}%$/);
+      await expect(volumeButton).toHaveAccessibleName(`${visiblePercentage} — настроить громкость`);
+
+      await volumeButton.click();
+      await expect(volumeButton).toHaveAttribute('aria-expanded', 'true');
+      const volumeSlider = volumeButton.locator('..').getByRole('slider', { name: 'Громкость' });
+      await expect(volumeSlider).toBeVisible();
+      await volumeSlider.focus();
+      await volumeSlider.press('End');
+      await expect(volumeButton).toHaveText('100%');
+      await expect(volumeButton).toHaveAccessibleName('100% — настроить громкость');
+      await volumeSlider.press('Home');
+      await expect(volumeButton).toHaveText('0%');
+      await expect(volumeButton).toHaveAccessibleName('0% — настроить громкость');
+    }
+  });
+});

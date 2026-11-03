@@ -867,3 +867,21 @@ test('mobile dock publishes live clearance for persistent audio geometry', async
   expect(measurement.published).toBeGreaterThanOrEqual(measurement.visualHeight - 1);
   expect(measurement.published).toBeLessThanOrEqual(measurement.visualHeight + 2);
 });
+
+test('mobile poet-window names include visible life dates and still open the intended poet', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'chromium-core', 'Real touch and WebKit are certified by the mobile projects.');
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await settle(page);
+
+  const portraits = page.locator('[data-hero-poet-window]');
+  await expect(portraits).toHaveCount(6);
+  for (const portrait of await portraits.all()) {
+    const name = (await portrait.locator('[data-hero-poet-window-name]').innerText()).trim();
+    const years = (await portrait.locator('.hero-poet-window-dates').innerText()).trim();
+    await expect(portrait).toHaveAccessibleName(`${name} ${years} — открыть страницу поэта`);
+  }
+
+  await portraits.first().tap();
+  await expect(page).toHaveURL(/\/poets\/sergei-yesenin\/?$/);
+  await expect(page.locator('main h1')).toContainText('Сергей Есенин');
+});

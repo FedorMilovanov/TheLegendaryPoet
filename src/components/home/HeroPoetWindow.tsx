@@ -135,7 +135,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
       <Link
         to={`/poets/${poet.id}`}
         data-hero-poet-window={poet.id}
-        aria-label={`Открыть страницу поэта ${poet.name}`}
+        aria-label={`${poet.name} ${poet.birthYear}—${poet.deathYear ?? 'н. в.'} — открыть страницу поэта`}
         onBlur={resetPointer}
         className="group block rounded-t-[999px] outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-4 focus-visible:ring-offset-[#020811]"
       >
