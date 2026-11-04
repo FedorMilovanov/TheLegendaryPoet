@@ -13,6 +13,7 @@ import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
+import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -96,6 +97,8 @@ export default function PoetDetailPage() {
             <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
               "{poet.shortBio}"
             </p>
+
+            {poet.id === 'anna-akhmatova' && <AkhmatovaReadingGuide />}
 
             <Suspense fallback={null}>
               <RelatedEssays poetId={poet.id} />
