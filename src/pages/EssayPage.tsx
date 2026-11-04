@@ -140,8 +140,8 @@ export default function EssayPage() {
         <EssayHero essay={essay} />
 
         <div className="mx-auto mt-14 grid max-w-6xl gap-10 lg:grid-cols-[220px_1fr]">
-          <aside className="hidden lg:block">
-            <div className="sticky top-28">
+          <aside aria-label="Оглавление и источники статьи" className="hidden lg:block">
+            <div className="reader-sticky-panel sticky top-28 [--reader-sticky-top:7rem]">
               {toc.length > 0 && (
                 <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl">
                   <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] theme-control-action">Оглавление</div>

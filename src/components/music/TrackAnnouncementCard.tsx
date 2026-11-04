@@ -50,9 +50,9 @@ export default function TrackAnnouncementCard({ track }: { track: MusicTrack }) 
             </span>
           </div>
 
-          <h3 className="font-serif text-3xl font-bold leading-[1.02] text-white transition-colors duration-300 group-hover:text-[var(--track-accent)] sm:text-4xl">{track.title}</h3>
+          <h3 data-text-spacing-owner="announcement-title" className="font-serif text-3xl font-bold leading-[1.02] text-white transition-colors duration-300 group-hover:text-[var(--track-accent)] sm:text-4xl">{track.title}</h3>
           <p className="mt-2 text-sm font-medium" style={{ color: 'color-mix(in srgb, var(--track-accent) 72%, white)' }}>{track.poet}</p>
-          {track.description && <p className="mt-5 max-w-2xl break-words text-sm leading-relaxed text-white/48">{track.description}</p>}
+          {track.description && <p data-text-spacing-owner="announcement-description" className="mt-5 max-w-2xl break-words text-sm leading-relaxed text-white/48">{track.description}</p>}
 
           <Link to={`/music/${track.id}`} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-4 text-xs font-bold text-white/58 transition-[border-color,background-color,color] duration-300 hover:border-white/25 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
             Открыть анонс <ArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />

@@ -10,6 +10,38 @@ const utility = contract.routes.filter((route) => route.audit === 'utility')
   .map((route) => route.path);
 const routes = [...new Set([...canonical, ...utility])];
 
+// Explicit text-owner identity is stable across the repair, unlike CSS
+// `truncate` or `line-clamp` markers which the fix deliberately removes.
+const OWNER_SOURCES = {
+  "essay-title": "src/components/essay/EssayCard.tsx",
+  "essay-subtitle": "src/components/essay/EssayCard.tsx",
+  "essay-excerpt": "src/components/essay/EssayCard.tsx",
+  "announcement-title": "src/components/music/TrackAnnouncementCard.tsx",
+  "announcement-description": "src/components/music/TrackAnnouncementCard.tsx",
+  "release-title": "src/components/music/TrackReleaseCard.tsx",
+  "release-description": "src/components/music/TrackReleaseCard.tsx",
+  "kindred-name": "src/components/poet-detail/KindredSpirits.tsx",
+  "kindred-note": "src/components/poet-detail/KindredSpirits.tsx",
+  "breadcrumb-current": "src/components/seo/Breadcrumbs.tsx",
+  "rating-desktop-name": "src/pages/RatingsPage.tsx",
+  "rating-desktop-tags": "src/pages/RatingsPage.tsx",
+  "rating-mobile-name": "src/pages/RatingsPage.tsx",
+  "rating-mobile-tags": "src/pages/RatingsPage.tsx"
+};
+const LIVE_OWNERS = new Set([
+  'essay-title', 'essay-excerpt', 'kindred-name',
+  'breadcrumb-current', 'rating-desktop-name', 'rating-desktop-tags',
+  'rating-mobile-name', 'rating-mobile-tags',
+]);
+
+test('every corrected text owner stays registered in the permanent census', () => {
+  for (const [owner, file] of Object.entries(OWNER_SOURCES)) {
+    const content = readFileSync(file, 'utf8');
+    expect(content.includes(`data-text-spacing-owner="${owner}"`),
+      `${owner} disappeared from ${file}; the visual census may no longer test this repair`).toBe(true);
+  }
+});
+
 const spacingOverride = `
   *, *::before, *::after {
     line-height: 1.5 !important;
@@ -28,7 +60,8 @@ const capture = () => {
     if (!text || text.length < 3) continue;
     const style = getComputedStyle(node);
     const className = node.className?.toString?.() || '';
-    if (!(style.textOverflow === 'ellipsis'
+    const owner = node.getAttribute('data-text-spacing-owner');
+    if (!(owner || style.textOverflow === 'ellipsis'
       || Number.parseInt(style.webkitLineClamp, 10) > 0
       || /(?:^|\s)(?:truncate|line-clamp-[\w-]+)(?:\s|$)/.test(className))) continue;
     const bounds = node.getBoundingClientRect();
@@ -37,6 +70,7 @@ const capture = () => {
       || node.closest('[aria-hidden="true"]')) continue;
     elements[index] = {
       tag: node.tagName,
+      owner,
       className: className.slice(0, 130),
       text: text.slice(0, 90),
       clipped: node.scrollWidth > node.clientWidth + 1.3
@@ -54,6 +88,8 @@ test('WCAG text spacing retains visible text on all published routes at desktop/
   const failures = [];
   let loads = 0;
   let inspected = 0;
+  const auditedOwners = new Set();
+  const ownerClips = [];
   for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -75,12 +111,23 @@ test('WCAG text spacing retains visible text on all published routes at desktop/
         route, viewport: viewport.width,
         newlyClipped, beforeOverflow: before.overflow, afterOverflow: after.overflow,
       });
+      for (const owner of Object.values(after.elements)) {
+        if (!owner.owner) continue;
+        auditedOwners.add(owner.owner);
+        if (owner.clipped) {
+          ownerClips.push({ route, viewport: viewport.width, owner: owner.owner,
+            text: owner.text, className: owner.className });
+        }
+      }
       inspected += Object.keys(after.elements).length;
       loads += 1;
     }
   }
   expect(routes.length, 'sitemap and utility routes must be audited').toBeGreaterThanOrEqual(33);
   expect(loads).toBe(routes.length * 2);
-  expect(inspected, 'visible ellipsis and line-clamp owner census must not be empty').toBeGreaterThan(10);
+  expect(inspected, 'live text-owner and legacy clip census must not be empty').toBeGreaterThan(10);
+  const missing = [...LIVE_OWNERS].filter((owner) => !auditedOwners.has(owner));
+  expect(missing, 'previously repaired owners must actually be visible on canonical routes').toEqual([]);
+  expect(ownerClips, 'no registered repaired text owner may still be clipped under WCAG overrides').toEqual([]);
   expect(failures, 'no newly clipped visible text or new horizontal overflow under WCAG 1.4.12 overrides').toEqual([]);
 });

@@ -885,3 +885,30 @@ test('mobile poet-window names include visible life dates and still open the int
   await expect(page).toHaveURL(/\/poets\/sergei-yesenin\/?$/);
   await expect(page.locator('main h1')).toContainText('Сергей Есенин');
 });
+for (const slug of ['sergei-yesenin', 'alexander-pushkin']) {
+  test(`mobile poet sidebar stays in document scroll flow: ${slug}`, async ({ page }) => {
+    await page.goto(`${BASE_URL}/poets/${slug}`, { waitUntil: 'domcontentloaded' });
+    await settle(page);
+    const sidebar = page.locator('aside.reader-sticky-panel');
+    await expect(sidebar).toBeVisible();
+
+    const values = await sidebar.evaluate(node => {
+      const style = getComputedStyle(node);
+      return { position: style.position, overflow: style.overflowY, scrollWidth: node.scrollWidth, clientWidth: node.clientWidth };
+    });
+    expect(values.position, 'mobile sidebar must not be sticky').toBe('static');
+    expect(values.overflow, 'mobile sidebar must never create nested vertical scrolling').not.toBe('auto');
+    expect(values.scrollWidth - values.clientWidth, 'sidebar must not create horizontal overflow').toBeLessThanOrEqual(2);
+
+    const links = sidebar.locator('a[href]');
+    expect(await links.count()).toBeGreaterThan(1);
+    const last = links.last();
+    await last.scrollIntoViewIfNeeded();
+    await expect(last).toBeInViewport({ ratio: 0.5 });
+    await expect.poll(() => last.evaluate(node => {
+      const r = node.getBoundingClientRect();
+      const target = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return target === node || node.contains(target);
+    })).toBe(true);
+  });
+}

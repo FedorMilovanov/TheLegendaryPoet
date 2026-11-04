@@ -248,12 +248,12 @@ export default function RatingsPage() {
         <section className="hidden overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[#061018]/65 md:block">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] border-collapse">
-              <thead className="sticky top-20 z-10 bg-[#071018]/95 backdrop-blur-xl"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/60"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
+              <thead className="bg-[#071018]/95"><tr className="border-b border-cyan-400/10 text-left text-[10px] uppercase tracking-[0.16em] text-cyan-100/60"><th className="px-5 py-4">Место</th><th className="px-5 py-4">Поэт</th><th className="px-5 py-4">Индекс читателей</th><th className="px-5 py-4">Средний балл</th><th className="px-5 py-4">Голоса</th><th className="px-5 py-4">Комментарии</th><th className="px-5 py-4">Редакция</th><th className="px-5 py-4" title="Стандартное отклонение: чем меньше, тем ближе мнения читателей">Разброс</th></tr></thead>
               <tbody>{filtered.map((row, index) => {
                 const readerPlace = sortBy === 'reader' && row.readerScore === null ? null : index + 1;
                 return <tr key={row.poet.id} data-reader-status={row.votes === 0 ? 'unrated' : row.readerScore === null ? 'sample-pending' : 'qualified'} className="border-b border-cyan-400/7 transition hover:bg-cyan-400/[0.035]">
                 <td className="px-5 py-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${readerPlace !== null && readerPlace <= 3 ? 'bg-luxury-gold text-black' : 'bg-luxury-dark-200 text-cyan-100/60'}`}>{readerPlace ?? '—'}</span></td>
-                <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div className="max-w-[260px] break-words whitespace-normal text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
+                <td className="px-5 py-4"><Link to={`/poets/${row.poet.id}`} className="group flex items-center gap-3"><img src={asset(row.poet.photo)} alt="" className="h-12 w-12 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" /><div><div data-text-spacing-owner="rating-desktop-name" className="font-serif text-lg font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</div><div data-text-spacing-owner="rating-desktop-tags" className="max-w-[260px] break-words whitespace-normal text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</div></div></Link></td>
                 <td className="px-5 py-4"><div className="font-bold text-luxury-gold">{row.readerScore === null ? '—' : `${fmt(row.readerScore)} / 5`}</div><div className="text-[10px] text-cyan-100/55">{row.readerScore === null ? (row.votes === 0 ? 'нет читательских голосов' : `нужно ${READER_RANKING_MIN_VOTES}+ голоса для места`) : 'консервативный индекс выборки'}</div></td>
                 <td className="px-5 py-4 text-cyan-100/70">{row.rawScore === null ? '—' : `${fmt(row.rawScore)} / 5`}</td>
                 <td className="px-5 py-4 text-cyan-100/60">{row.votes}</td>
@@ -295,8 +295,8 @@ function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number | null })
         <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank !== null && rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-luxury-dark-200 text-cyan-100/60'}`}>{rank ?? '—'}</span>
         <img src={asset(row.poet.photo)} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" />
         <div className="min-w-0 flex-1">
-          <h2 className="break-words font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h2>
-          <p className="break-words text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</p>
+          <h2 data-text-spacing-owner="rating-mobile-name" className="break-words font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h2>
+          <p data-text-spacing-owner="rating-mobile-tags" className="break-words text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</p>
         </div>
         <ArrowRight size={17} className="mt-2 shrink-0 text-cyan-300 transition group-hover:translate-x-1" />
       </div>
