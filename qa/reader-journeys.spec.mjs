@@ -523,25 +523,38 @@ test.describe('animated modal exit lifetime', () => {
         await page.evaluate(() => {
           window.__tlpExitProof = [];
           window.__tlpExitDone = false;
-          let connectedSeen = false;
-          let count = 0;
-          const record = () => {
-            const dialogNode = document.querySelector('[role="dialog"][aria-modal="true"]');
-            if (dialogNode) {
-              connectedSeen = true;
-              const root = document.getElementById('root');
-              window.__tlpExitProof.push({
-                depth:window.__TLP_OVERLAY_DEBUG?.depth,
-                inert:root?.inert,
-                hidden:root?.getAttribute('aria-hidden'),
-                position:document.body.style.position,
-                focusInside:dialogNode.contains(document.activeElement),
-              });
-            } else if (connectedSeen) {
+          // The sampler must survive a delayed keyboard round-trip on WebKit.
+          // Its old 180-frame cap expired before Escape on a busy CI runner,
+          // even though the actual modal later closed correctly. Observe the
+          // concrete portal node until unmount; keep the original five-second
+          // close gate and every focus/inert/scroll assertion unchanged.
+          const dialogNode = document.querySelector('[role="dialog"][aria-modal="true"]');
+          if (!dialogNode?.isConnected || !dialogNode.parentNode) {
+            throw new Error('Cannot certify exit: modal detached before observer registration');
+          }
+          const observer = new MutationObserver(() => {
+            if (!dialogNode.isConnected) {
               window.__tlpExitDone = true;
+              observer.disconnect();
+            }
+          });
+          observer.observe(dialogNode.parentNode, { childList: true });
+          const record = () => {
+            if (window.__tlpExitDone) return;
+            if (!dialogNode.isConnected) {
+              window.__tlpExitDone = true;
+              observer.disconnect();
               return;
             }
-            if (++count < 180) requestAnimationFrame(record);
+            const root = document.getElementById('root');
+            window.__tlpExitProof.push({
+              depth:window.__TLP_OVERLAY_DEBUG?.depth,
+              inert:root?.inert,
+              hidden:root?.getAttribute('aria-hidden'),
+              position:document.body.style.position,
+              focusInside:dialogNode.contains(document.activeElement),
+            });
+            requestAnimationFrame(record);
           };
           record();
         });
