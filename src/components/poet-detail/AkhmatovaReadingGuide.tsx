@@ -12,7 +12,7 @@ const works = [
   ['«Мне голос был…»', '1917', 'Спор о судьбе страны передан голосом соблазняющего призыва и сдержанной реакцией. Существуют текстовые варианты.', 'https://www.culture.ru/poems/8910/mne-golos-byl', ''],
   ['«Не с теми я, кто бросил землю…»', '1922', 'Решение остаться не исключает сочувствия к изгнаннику: обе интонации необходимо читать вместе.', 'https://www.culture.ru/poems/10183/ne-s-temi-ya-kto-brosil-zemlyu', ''],
   ['«Реквием»', '1935–1940', 'Поэма материнской скорби и исторической памяти; предисловие (1957) и эпиграф (из стихотворения 1961 года) созданы позднее.', 'https://www.culture.ru/poems/10174/rekviem', 'akhmatova-1'],
-  ['«Поэма без героя»', '1940–1965', 'Многолетняя работа над исторической памятью и временем. Архивный автограф относится лишь к первому варианту.', 'https://rgali.ru/storage-unit/2396254', ''],
+  ['«Поэма без героя»', '1940–1965', 'Работа начата в 1940 году и продолжалась десятилетиями. В РГАЛИ хранится ранний авторский вариант (ф. 13, оп. 1, ед. хр. 68, 1940–1943); ссылка открывает архивную карточку, а не цифровую копию поэмы.', 'https://rgali.ru/storage-unit/2396254', ''],
   ['«Мужество»', '1942', 'Написанное в Ташкенте военное стихотворение о сохранении русской речи как культурного наследия.', 'https://www.culture.ru/poems/8905/muzhestvo', 'akhmatova-3'],
   ['«Родная земля»', '1961', 'Родина осмыслена не как отвлечённый идеал, а как реальная земля, с которой соединены жизнь и смерть.', 'https://www.culture.ru/poems/8914/rodnaya-zemlya', ''],
   [EPIGRAPH_TITLE, '1961', 'Самостоятельные три строфы: последние четыре строки позднее стали эпиграфом «Реквиема».', 'https://www.culture.ru/poems/10114/tak-ne-zrya-my-vmeste-bedovali', ''],
@@ -65,7 +65,7 @@ export default function AkhmatovaReadingGuide() {
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <a href={url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex min-h-11 items-center gap-1 text-sm text-luxury-gold-light underline-offset-4 hover:underline">
-                {name === '«Поэма без героя»' ? 'Архивный автограф в РГАЛИ' : 'Читать полный текст'} <ArrowUpRight size={16} aria-hidden="true" />
+                {name === '«Поэма без героя»' ? 'Описание автографа в каталоге РГАЛИ' : 'Читать полный текст'} <ArrowUpRight size={16} aria-hidden="true" />
               </a>
               {local && (
                 <a href={'#poem-' + local} className="inline-flex min-h-11 items-center text-sm text-luxury-gray-light underline-offset-4 hover:text-white hover:underline">
