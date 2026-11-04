@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "01907998c0d4052cb8dbac8eafe2be3074b7c41dac5cab5f4919d8519d9cde45"
+      "fingerprint": "98883b49fa88bccb7e219e8e9cedc9b07cb746d5289306e32b1ef3e91ab77a17"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "a2efb9a2d1e1fbda367711f1688f0e86a135bb06d7ab1a935805123f54e56497"
+      "fingerprint": "b630c19154b8f4ecc50ac1f87ee101e4a899f9c0dbb3fa184e9cbb9d268afbac"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7e517f0197d1df86a025d40881f87c81e9ce9300aa27a7822ad6dfc0437ef5c7"
+      "fingerprint": "a6f0f1ff263cc1221c7a4f4849225283beea6775c2493c1c8d4fc1d3b9da9dcb"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -298,7 +298,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "f4f3287db17204a5857578c239241297f134691160aaf3ca61ef37017f99136f"
+      "fingerprint": "e183bba8f87df95bb346834e00d2325bf417710e335bcec9b1ce7c9c7ae81df3"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-pushkin/",
@@ -330,7 +330,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "c0b2a3bdfed80f909e6b432f01b9abd36c3e5e60da7d5676512054d9d6a238e8"
+      "fingerprint": "5ba2d78c98fbb19603635f72b7cb64498ccddb3f0106c4bf5b6428b2ab9123b7"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-gumilev/",
@@ -338,7 +338,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "67375a360bca91bf5aaa3664422217060598543cde53a0b8f5ed42aa1a715418"
+      "fingerprint": "3345bb2a5912bfcf85f55a1f382925223e73b898bf27660bbdc79a0ead98444e"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/sergei-yesenin/",
