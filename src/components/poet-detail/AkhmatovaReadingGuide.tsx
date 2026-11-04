@@ -96,6 +96,11 @@ const documentarySources = [
     url: 'https://ahmatova.niv.ru/ahmatova/vospominaniya/vilenkin-v-sto-pervom-zerkale/vstrechi-poslednih-let.htm',
   },
   {
+    title: 'РГБ: первое отдельное издание «Реквиема»',
+    detail: 'Библиографическое описание: Мюнхен, Товарищество зарубежных писателей, 1963, 23 страницы',
+    url: 'https://search.rsl.ru/ru/record/01000358432',
+  },
+  {
     title: 'Российская государственная библиотека',
     detail: 'Библиографическая запись комментированного собрания сочинений под редакцией Н. В. Королёвой',
     url: 'https://search.rsl.ru/ru/record/01000841012',
