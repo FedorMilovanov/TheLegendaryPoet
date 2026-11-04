@@ -1348,3 +1348,18 @@ html.theme-light ::selection {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
+
+/* Keep desktop reader sidebars within the visible viewport.
+   The list itself is a native scroll container: wheel, touchpad, PageDown,
+   focus navigation and scrollIntoView all reach controls past the fold.
+   The top inset remains owned by each surface's sticky positioning. */
+@media (min-width: 1024px) {
+  .reader-sticky-panel {
+    max-height: calc(100dvh - var(--reader-sticky-top, 7rem) - 1rem);
+    overflow-y: auto;
+    /* Preserve native scroll chaining back to the document at either end. */
+    scrollbar-gutter: stable;
+    scroll-padding-block: 0.75rem;
+    padding-inline-end: 0.5rem;
+  }
+}

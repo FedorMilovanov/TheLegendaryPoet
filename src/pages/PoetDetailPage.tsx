@@ -83,13 +83,13 @@ export default function PoetDetailPage() {
 
       <div className="relative z-20 mx-auto max-w-7xl border-t border-luxury-gold/10 px-4 pb-32 pt-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-12">
-          <div className="space-y-10 lg:sticky lg:top-32 lg:col-span-4">
+          <aside aria-label="Навигация и сведения о поэте" className="reader-sticky-panel space-y-10 lg:sticky lg:top-32 lg:col-span-4 [--reader-sticky-top:8rem]">
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
             <PoetCommunitySummary poetId={poet.id} />
             <PoemQuickNav poems={poet.poems} />
             <FamousWorks works={poet.famousWorks} />
-          </div>
+          </aside>
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
