@@ -136,6 +136,34 @@
       ],
       "waiterJob": "brand-painted-contrast",
       "waiterJobTimeoutMinutes": 100
+    },
+    "site-browser-release": {
+      "workflowFile": ".github/workflows/manual-browser-qa.yml",
+      "canonicalJob": "browser-qa",
+      "canonicalJobTimeoutMinutes": 90,
+      "event": "pull_request",
+      "pollTimeoutSeconds": 6600,
+      "pollIntervalSeconds": 20,
+      "paths": [
+        ".github/workflows/manual-browser-qa.yml",
+        ".github/workflows/merge-certification.yml",
+        "docs/merge-certification.json",
+        "scripts/classify-merge-certification.mjs",
+        "scripts/validate-merge-certification.mjs",
+        "scripts/tests/merge-certification-timeouts.test.mjs",
+        "src/**",
+        "qa/**",
+        "public/sitemap.xml",
+        "public/discovery-manifest.json",
+        "playwright.config.mjs",
+        "package.json",
+        "package-lock.json",
+        "vite.config.ts",
+        ".github/actions/**",
+        "scripts/run-webkit-process-isolated.mjs"
+      ],
+      "waiterJob": "site-browser-qa",
+      "waiterJobTimeoutMinutes": 120
     }
   }
 }

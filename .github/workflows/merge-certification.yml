@@ -23,6 +23,7 @@ jobs:
       hall_visual_required: ${{ steps.classify.outputs.hall_visual_required }}
       hall_web_runtime_required: ${{ steps.classify.outputs.hall_web_runtime_required }}
       brand_contrast_required: ${{ steps.classify.outputs.brand_contrast_required }}
+      browser_qa_required: ${{ steps.classify.outputs.browser_qa_required }}
     steps:
       - name: Checkout exact PR head with base history
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -138,9 +139,31 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/wait-for-workflow-certification.mjs --lane brand-painted-contrast --head "${{ needs.scope.outputs.tested_sha }}"
 
+  site-browser-qa:
+    name: wait for full exact-head Manual Browser QA certification
+    needs: scope
+    if: needs.scope.outputs.browser_qa_required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.scope.outputs.tested_sha }}
+
+      - name: Verify exact checkout identity
+        env:
+          EXPECTED_HEAD_SHA: ${{ needs.scope.outputs.tested_sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD_SHA"
+
+      - name: Observe all five existing browser QA jobs, without launching more
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/wait-for-workflow-certification.mjs --lane site-browser-release --head "${{ needs.scope.outputs.tested_sha }}"
+
   merge-certification:
     name: merge-certification
-    needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime, brand-painted-contrast]
+    needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime, brand-painted-contrast, site-browser-qa]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -155,6 +178,8 @@ jobs:
           WEB_RUNTIME_RESULT: ${{ needs.hall-web-runtime.result }}
           BRAND_CONTRAST_REQUIRED: ${{ needs.scope.outputs.brand_contrast_required }}
           BRAND_CONTRAST_RESULT: ${{ needs.brand-painted-contrast.result }}
+          BROWSER_QA_REQUIRED: ${{ needs.scope.outputs.browser_qa_required }}
+          BROWSER_QA_RESULT: ${{ needs.site-browser-qa.result }}
           TESTED_SHA: ${{ needs.scope.outputs.tested_sha }}
         run: |
           set -euo pipefail
@@ -197,6 +222,15 @@ jobs:
             contrast_state="not applicable"
           fi
 
+          if [ "$BROWSER_QA_REQUIRED" = "true" ]; then
+            test "$BROWSER_QA_RESULT" = "success"
+            browser_qa_state="required / success"
+          else
+            test "$BROWSER_QA_REQUIRED" = "false"
+            test "$BROWSER_QA_RESULT" = "skipped"
+            browser_qa_state="not applicable"
+          fi
+
           {
             echo '### Exact-head merge certification'
             echo
@@ -205,4 +239,5 @@ jobs:
             echo "- Hall Pushkin visual remediation: $visual_state"
             echo "- Hall web runtime proof: $web_runtime_state"
             echo "- Canonical painted contrast: $contrast_state"
+            echo "- Full Manual Browser QA (all five jobs): $browser_qa_state"
           } >> "$GITHUB_STEP_SUMMARY"
