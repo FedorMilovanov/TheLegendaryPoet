@@ -83,7 +83,17 @@ const documentarySources = [
   {
     title: 'Русский музей: хронология и портреты',
     detail: 'Книги, аресты близких, эвакуация, постановление 1946 года и поздние издания',
-    url: 'https://rusmuseumvrm.ru/reference/classifier/keyword/kto_izobrazh._anna_ahmatova/index.php?lang=ru&p=807&page=1&ps=20&show=asc',
+    url: 'https://rusmuseumvrm.ru/reference/classifier/keyword/kto_izobrazh._anna_ahmatova/index.php?lang=ru',
+  },
+  {
+    title: 'Музей Анны Ахматовой в Фонтанном доме',
+    detail: 'История квартиры Пунина и документированный переезд поэтессы в 1926 году',
+    url: 'https://www.akhmatova.spb.ru/akhmatova/flat/punin',
+  },
+  {
+    title: 'Олег Лекманов: двойная адресация поэзии Ахматовой',
+    detail: '«Новый мир», № 2, 2021: научный разбор скрытых и публичных адресатов четырёх фрагментов «Реквиема»',
+    url: 'https://nm1925.ru/articles/2021/02-2021/o-dvukhadresnoy-ustanovke-poezii-anny-akhmatovoy/',
   },
   {
     title: 'Музей «Анна Ахматова. Серебряный век»',
@@ -147,6 +157,12 @@ export default function AkhmatovaReadingGuide() {
         </div>
       </header>
 
+      <nav aria-label="Разделы исследования" className="mb-8 flex flex-wrap gap-2 text-sm">
+        <a href="#akhmatova-requiem-analysis" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">Поэма и композиция</a>
+        <a href="#akhmatova-requiem-works" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">9 произведений</a>
+        <a href="#akhmatova-requiem-sources" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">Источники</a>
+      </nav>
+
       <div className="space-y-5 text-base font-light leading-[1.85] text-luxury-gray-light">
         <p>
           В ролике звучат две заключительные строки эпиграфа к «Реквиему».
@@ -175,7 +191,7 @@ export default function AkhmatovaReadingGuide() {
         </p>
       </div>
 
-      <div className="mt-10 rounded-3xl border border-luxury-gold/15 bg-[#111] p-5 sm:p-7">
+      <div id="akhmatova-requiem-analysis" className="mt-10 scroll-mt-28 rounded-3xl border border-luxury-gold/15 bg-[#111] p-5 sm:p-7">
         <h3 className="mb-5 font-serif text-2xl font-semibold text-white">Как устроен «Реквием»</h3>
         <div className="space-y-5 text-sm leading-[1.85] text-luxury-gray-light">
           <p>
@@ -194,6 +210,16 @@ export default function AkhmatovaReadingGuide() {
             определённому биографическому эпизоду.
           </p>
           <p>
+            <strong className="text-white">Два круга адресатов.</strong> Литературовед
+            Олег Лекманов в статье для «Нового мира» (2021) показывает, что
+            некоторые фрагменты поэмы обращены одновременно к будущему широкому
+            читателю и к узкому кругу людей, знавших личные обстоятельства
+            Ахматовой. Исследователь сопоставляет «Вместо предисловия» с повестью
+            Лидии Чуковской «Софья Петровна», а отдельные главы — с более ранней
+            лирикой. Это аргументированная научная интерпретация, а не прямое
+            свидетельство Ахматовой об исчерпывающем замысле каждого образа.
+          </p>
+          <p>
             <strong className="text-white">«Распятие» и «Эпилог».</strong> Глава о
             евангельской Голгофе соединяет страдание матери с христианским
             сюжетом, не утверждая, будто исторические события тождественны
@@ -208,7 +234,7 @@ export default function AkhmatovaReadingGuide() {
         </p>
       </div>
 
-      <div className="mt-10">
+      <div id="akhmatova-requiem-works" className="mt-10 scroll-mt-28">
         <h3 className="mb-3 font-serif text-2xl font-semibold text-white">Произведения: проверенный маршрут чтения</h3>
         <p className="mb-6 text-sm leading-[1.85] text-luxury-gray-light">
           Двигаться от ранней психологической лирики к стихам военного времени
@@ -269,7 +295,7 @@ export default function AkhmatovaReadingGuide() {
         </div>
       </div>
 
-      <div className="mt-10">
+      <div id="akhmatova-requiem-sources" className="mt-10 scroll-mt-28">
         <h3 className="mb-5 font-serif text-2xl font-semibold text-white">Источники и границы доказанного</h3>
         <ol className="space-y-4">
           {documentarySources.map((source, index) => (
