@@ -21,6 +21,46 @@ test('all published and utility routes have exact painted-contrast coverage', ()
     'canonical and utility routes without pixel-backed contrast regression').toEqual([]);
 });
 
+// The visual poem layer is decorative but it is real reader-visible ink.
+// Its intrinsic height must contribute to the dark surface instead of
+// spilling out of an absolutely-positioned layer onto the light page.
+test('Gumilev verse ink remains inside its own painted reading surface', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [STORAGE_KEY, 'light']);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const response = await page.goto(BASE_URL + '/poets/nikolay-gumilev', { waitUntil: 'networkidle' });
+    expect(response?.status()).toBeLessThan(400);
+    const cards = page.locator('[data-poem-text]');
+    await expect(cards.first()).toBeAttached();
+    await page.evaluate(() => document.fonts.ready);
+    const count = await cards.count();
+    expect(count, 'all poem cards must remain rendered').toBeGreaterThan(0);
+    for (let index = 0; index < count; index += 1) {
+      const card = cards.nth(index);
+      await card.scrollIntoViewIfNeeded();
+      const detail = await card.evaluate((surface) => {
+        const box = surface.getBoundingClientRect();
+        const words = [...surface.querySelectorAll('[data-poem-visual] > div > span')];
+        const outside = words.flatMap((word) => {
+          const rect = word.getBoundingClientRect();
+          return rect.top < box.top - 1 || rect.bottom > box.bottom + 1 ||
+            rect.left < box.left - 1 || rect.right > box.right + 1
+            ? [{ word: word.textContent?.trim(), top: rect.top, bottom: rect.bottom,
+              surfaceTop: box.top, surfaceBottom: box.bottom }] : [];
+        });
+        return { visibleWordCount: words.length, outside };
+      });
+      expect(detail.visibleWordCount, 'the presentation layer must not disappear').toBeGreaterThan(4);
+      expect(detail.outside, 'every visible word must be contained by the dark reading surface').toEqual([]);
+    }
+  }
+});
+
 test.describe('canonical owner extension: real painted pixels', () => {
   test.setTimeout(240_000);
   for (const route of EXTENDED_PAINTED_ROUTES) {
