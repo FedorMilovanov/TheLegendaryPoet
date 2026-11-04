@@ -834,12 +834,9 @@ test('route changes cannot inherit hidden reading chrome', async ({ page }) => {
     { timeout: 5_000, message: 'document must actually scroll down before reading chrome can hide' },
   ).toBeGreaterThan(300);
   await expect.poll(
-    () => page.evaluate(() => ({
-      hidden: document.documentElement.classList.contains('chrome-hidden'),
-      scrollY: window.scrollY,
-    })),
-    { timeout: 5_000, message: 'downward scrolling should hide reading chrome before route transition' },
-  ).toMatchObject({ hidden: true, scrollY: expect.any(Number) });
+    () => page.evaluate(() => window.scrollY > 300 && document.documentElement.classList.contains('chrome-hidden')),
+    { timeout: 5_000, message: 'actual downward scroll should hide reading chrome before route transition' },
+  ).toBe(true);
 
   const navigated = await page.evaluate(() => {
     const link = document.querySelector('#main-content a[href="/poets"]');
