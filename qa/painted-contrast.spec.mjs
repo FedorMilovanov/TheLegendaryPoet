@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { paintedSweep, describeOffenders, describeGradientOffenders } from './painted-contrast.mjs';
+import { BASELINE_PAINTED_ROUTES } from './painted-contrast-routes.mjs';
 
 // Painted-background contrast certification for the routes where the audit
 // found real defects. `qa/contrast-helpers.mjs` composites the *computed*
@@ -54,33 +55,7 @@ const STORAGE_KEY = 'tlp-theme-mode';
 // not be certified as clean. Counts are nine tenths of the smallest number of
 // nodes the sweep measured on any theme/viewport pair, rounded down — a page
 // that paints nothing measures a handful, not nine tenths of its own copy.
-const ROUTES = [
-  { path: '/ratings', heading: 'читателей', minimumNodes: 159 },
-  { path: '/poets/alexander-pushkin', heading: 'Пушкин', minimumNodes: 441 },
-  { path: '/music', heading: 'Музыкой', minimumNodes: 66 },
-  { path: '/articles', heading: 'Исследования', minimumNodes: 81 },
-  { path: '/', heading: 'LEGENDARY', minimumNodes: 90 },
-  { path: '/archive', heading: 'Архив', minimumNodes: 24 },
-  { path: '/poets', heading: 'Лица', minimumNodes: 134 },
-  { path: '/about', heading: 'О Проекте', minimumNodes: 44 },
-  { path: '/editorial-policy', heading: 'Редакционная политика', minimumNodes: 39 },
-  { path: '/privacy', heading: 'Политика конфиденциальности', minimumNodes: 41 },
-  { path: '/hall', heading: 'Зал Поэтов', minimumNodes: 27 },
-  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 105 },
-  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 105 },
-  // Certified with the immersive player open. The player repaints the viewport,
-  // so nothing of it was scored until the sweep understood dialogs — and it
-  // carries the faintest ink in the music library. `open` is the accessible name
-  // of the control that opens it; the guard is the dialog's own copy alone.
-  { path: '/music/pushkin-tucha', heading: 'Туча', minimumNodes: 7, open: 'Погружение', dialog: true },
-  { path: '/music/blok-rossiya', heading: 'Россия', minimumNodes: 7, open: 'Погружение', dialog: true },
-  { path: '/poets/sergei-yesenin', heading: 'Сергей Есенин', minimumNodes: 527 },
-  { path: '/poets/vladimir-mayakovsky', heading: 'Владимир Маяковский', minimumNodes: 412 },
-  { path: '/essays/brik-case', heading: 'Маяковский и Брики', minimumNodes: 226 },
-  { path: '/essays/sergei-yesenin-1921-1925', heading: 'Часть II', minimumNodes: 654 },
-  { path: '/essays/vykhozhu-odin-ya-na-dorogu-lermontov', heading: 'Выхожу Один Я', minimumNodes: 166 },
-  { path: '/route-audit-page-that-must-not-exist', heading: 'Страница Не Найдена', minimumNodes: 26 },
-];
+const ROUTES = BASELINE_PAINTED_ROUTES;
 
 function useChromiumCore(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-core', 'the painted sweep runs once, in the Chromium core project');
