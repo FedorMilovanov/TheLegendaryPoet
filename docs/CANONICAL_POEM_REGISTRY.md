@@ -26,16 +26,16 @@
 |---|---|---|
 | Silentium! | конец 1820-х — начало 1830-х | [РВБ, текст по «Библиотеке поэта» (1987)](https://rvb.ru/19vek/tyutchev/bp/poems/073.html) — A+; [iLibrary](https://ilibrary.ru/text/1281/p.1/index.html) — дополнительная электронная передача; независимость печатной основы ещё сверить |
 | Наш век | 1851 | [Библиотека Поэта (автограф ИРЛИ ф.466 №34, публ. «Москвитянин» 1851)](https://biblioteka-poeta.ru/nash-vek/tyutchev-f-i) — **A+**; [rupoem.ru](https://rupoem.ru/poets/tyutchev/ne-plot-a) — A; [stihpro.com](https://stihpro.com/nash-vek/) — A |
-| Умом Россию не понять | 1866 | [ruthenia.ru (Тютчевиана)](https://ruthenia.ru/tiutcheviana/stihi/bp/281.html) — A; [culture.ru](https://culture.ru/poems/46430) — A; [ilibrary.ru](https://ilibrary.ru/text/1276) — A |
-| Я встретил вас — и всё былое | 1870 | [ruthenia.ru (Тютчевиана)](https://ruthenia.ru/tiutcheviana/stihi/bp/324.html) — A; [culture.ru](https://culture.ru/poems/45542) — A; [ilibrary.ru](https://ilibrary.ru/text/1286) — A |
+| Умом Россию не понять | 1866 | [ruthenia.ru (Тютчевиана)](https://ruthenia.ru/tiutcheviana/stihi/bp/281.html) — A; [culture.ru](https://culture.ru/poems/46430) — A; [ilibrary.ru](https://ilibrary.ru/text/1276/p.1/index.html) — A |
+| Я встретил вас — и всё былое | 1870 | [ruthenia.ru (Тютчевиана)](https://ruthenia.ru/tiutcheviana/stihi/bp/324.html) — A; [culture.ru](https://culture.ru/poems/45542) — A; [ilibrary.ru](https://ilibrary.ru/text/1286/p.1/index.html) — A |
 
 ## Александр Пушкин
 
 | Стих | Год | Источники сверки |
 |---|---|---|
 | Пророк | 1826 | [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1826/0420.htm) — **A+**; ФЭБ — **A+** (см. RESEARCH_SOURCES) |
-| Я вас любил: любовь ещё, быть может | 1829 | [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1829/0505.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/685) — A; [culture.ru](https://culture.ru/poems/5695) — A |
-| Я памятник себе воздвиг нерукотворный | 1836 | [ФЭБ (ПСС в 16 т., АН СССР)](http://feb-web.ru/feb/pushkin/texts/push17/vol03/y03-424-.htm) — **A+**; [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1836/0617.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/797) — A |
+| Я вас любил: любовь ещё, быть может | 1829 | [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1829/0505.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/685/p.1/index.html) — A; [culture.ru](https://culture.ru/poems/5695) — A |
+| Я памятник себе воздвиг нерукотворный | 1836 | [ФЭБ (ПСС в 16 т., АН СССР)](http://feb-web.ru/feb/pushkin/texts/push17/vol03/y03-424-.htm) — **A+**; [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1836/0617.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/797/p.1/index.html) — A |
 
 ## Михаил Лермонтов
 
@@ -43,7 +43,7 @@
 |---|---|---|
 | Молитва («В минуту жизни трудную…») | 1839 | [РВБ, академический текст № 378](https://rvb.ru/19vek/lermontov/ss4/vol1/poems/378.html) — A+; второй независимый текст для коллации — открыто |
 | Пророк | 1841 | [РВБ, академический текст № 413](https://rvb.ru/19vek/lermontov/ss4/vol1/poems/413.html) — A+; [текстологический комментарий РВБ](https://rvb.ru/19vek/lermontov/ss4/vol1/notes/413.html) — датировка и первая публикация; независимый второй свидетель остаётся открытым |
-| Парус | 1832 | [ilibrary.ru](https://ilibrary.ru/text/998) — A; [culture.ru](https://culture.ru/poems/36610) — A; rustih — A |
+| Парус | 1832 | [ilibrary.ru](https://ilibrary.ru/text/998/p.1/index.html) — A; [culture.ru](https://culture.ru/poems/36610) — A; rustih — A |
 
 ## Афанасий Фет
 
@@ -72,14 +72,14 @@
 | Стих | Год | Источники сверки |
 |---|---|---|
 | Реквием (Посвящение и X. Распятие) | 1940 | [slova.org.ru](https://slova.org.ru/ahmatova/rekviem/) — A; [imwerden.de (изд. 1969)](https://imwerden.de/pdf/akhmatova_requiem_1969__txt.pdf) — A |
-| Сжала руки под тёмной вуалью | 1911 | [slova.org.ru](https://slova.org.ru/ahmatova/szhalaruki/) — A; [culture.ru](https://culture.ru/poems/10037) — A; [ilibrary.ru](https://ilibrary.ru/text/5337) — A |
+| Сжала руки под тёмной вуалью | 1911 | [slova.org.ru](https://slova.org.ru/ahmatova/szhalaruki/) — A; [culture.ru](https://culture.ru/poems/10037) — A; [ilibrary.ru](https://ilibrary.ru/text/5337/p.1/index.html) — A |
 
 ## Сергей Есенин
 
 | Стих | Год | Источники сверки |
 |---|---|---|
-| Не жалею, не зову, не плачу… | 1921 | [РВБ (ПСС в 7 т., т. 2)](https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html) — **A+**; [culture.ru](https://culture.ru/poems/44393) — A |
-| Письмо матери | 1924 | [ilibrary.ru](https://ilibrary.ru/text/1298/p.1/index.html) — A; [culture.ru](https://www.culture.ru/poems/44047/pismo-materi) — A |
+| Не жалею, не зову, не плачу… | 1921 | [РВБ (ПСС в 7 т., т. 2)](https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html) — **A+**; [Культура.РФ — именно «Не жалею…»](https://www.culture.ru/poems/44266/ne-zhaleyu-ne-zovu-ne-plachu) — A |
+| Письмо матери | 1924 | [РВБ, ПСС в 7 т., т. 1, № 104](https://rvb.ru/20vek/esenin/pss7/vol1/poems/104.html) — **A+**; [iLibrary — «Письмо матери»](https://ilibrary.ru/text/1288/p.1/index.html) — A; [Культура.РФ](https://www.culture.ru/poems/44047/pismo-materi) — A |
 | Гой ты, Русь, моя родная | 1914 | [РВБ](https://rvb.ru/20vek/esenin/pss7/vol1/poems/028.html) — **A+**; [culture.ru](https://culture.ru/poems/44393) — A; Викитека — A |
 
 ## Владимир Маяковский
@@ -93,7 +93,7 @@
 
 | Стих | Год | Источники сверки |
 |---|---|---|
-| Февраль. Достать чернил и плакать! | 1912 | [ilibrary.ru](https://ilibrary.ru/text/1245) — A; [culture.ru](https://culture.ru/poems/14047) — A; slova.org.ru — A (ред. 1928) |
+| Февраль. Достать чернил и плакать! | 1912 | [Культура.РФ — «Февраль. Достать чернил и плакать!»](https://www.culture.ru/poems/14047/fevral-dostat-chernil-i-plakat) — A; slova.org.ru — A (ред. 1928); прежняя iLibrary-ссылка ошибочно вела на «Послушайте!» Маяковского; независимый академический свидетель ещё установить |
 | Гамлет | 1946 | [slova.org.ru](https://slova.org.ru/pasternak/) — A; [culture.ru](https://culture.ru/poems/13847) — A |
 
 ---
@@ -106,11 +106,11 @@
 |---|---|---|---|
 | Ф. Тютчев | «О, как убийственно мы любим» (`tyutchev-5`) | [РВБ, «Библиотека поэта», №187](https://rvb.ru/19vek/tyutchev/bp/poems/187.html) | Вторая независимая редакция; анализ датировки |
 | М. Лермонтов | «Выхожу один я на дорогу» (`lermontov-4`) | [РВБ, текст №422](https://rvb.ru/19vek/lermontov/ss4/vol1/poems/422.html); [комментарий](https://rvb.ru/19vek/lermontov/ss4/vol1/notes/422.html) | Независимый свидетель; купюры/пунктуация |
-| А. Фет | «Сияла ночь. Луной был полон сад…» (`fet-3`) | [iLibrary по «Библиотеке поэта», 1959](https://ilibrary.ru/text/1318/p.1/index.html) | Второй текст; точная редакция |
+| А. Фет | «Сияла ночь. Луной был полон сад…» (`fet-3`) | [iLibrary по «Библиотеке поэта» (1959)](https://ilibrary.ru/text/1318/p.1/index.html); [исследование «Полки»](https://www.polka.academy/materials/840) | Исправлены «в тишине» → «в тиши» и «песнею» → «песнию» по изданию 1959 года, восстановлена пунктуация перед последним четверостишием; стороннюю редакцию не смешивать; автограф ещё сверить |
 | Н. Гумилёв | «Слово» (`gumilev-3`) | [Электронное собрание](https://gumilev.ru/verses/24); [варианты автографов](https://gumilev.ru/verses/1017) | Авторский текст создан не позднее августа 1919; 1921 — дата книги, **не дата создания**; независимый свидетель |
-| Н. Гумилёв | «Шестое чувство» (`gumilev-4`) | [Электронное собрание](https://gumilev.ru/verses/349) | В карточке указан 1921; источник датирует создание летом 1920; сверить первопечатный текст |
+| Н. Гумилёв | «Шестое чувство» (`gumilev-4`) | [Электронное собрание, датировка лета 1920](https://gumilev.ru/verses/349); [Культура.РФ, полный текст](https://www.culture.ru/poems/38495/shestoe-chuvstvo); [РВБ, иная текстологическая датировка](https://rvb.ru/20vek/silver-age/1910-e/08/074-nikolai-gumilev.html) | Восстановлена ранее пропущенная пятая строфа о ещё не появившихся крыльях; дата карточки 1920 соответствует датировке В. К. Лукницкой (другие издания расходятся), 1921 — год «Огненного столпа». Текущая пунктуация выбрана по электронной редакции; сверка автографа и первой печати ещё открыта |
 | А. Ахматова | «Мужество» (`akhmatova-3`) | [Культура.РФ](https://www.culture.ru/poems/8905/muzhestvo) | Академическое издание и второй независимый текст |
-| В. Маяковский | «Лиличка! (Вместо письма)» (`mayak-3`) | Пункт проверенной item-level академической публикации пока **не установлен** | Найти ФЭБ/академическое собрание и сверить текст; не выдавать чужой сайт за источник |
+| В. Маяковский | «Лиличка! (Вместо письма)» (`mayak-3`) | [ФЭБ, академическое ПСС в 13 т., т. 1 (1955), с. 107–108](https://feb-web.ru/feb/mayakovsky/texts/ms0/ms1/ms1-107-.htm?cmd=p) — **A+**; [Культура.РФ](https://www.culture.ru/poems/21310/lilichka) — A | Точная item-level академическая публикация установлена, включая 26 мая 1916, Петроград; строгую построчную коллацию локального текста (с купюрами) и второго независимого издания ещё провести |
 | Б. Пастернак | «Зимняя ночь» (`pasternak-4`) | [Культура.РФ: «Мело, мело…», 1946](https://www.culture.ru/poems/14024/zimnyaya-noch) | Не путать с одноимённым стихотворением 1913 года; сверить ПСС и издание «Доктора Живаго» |
 
 ---
