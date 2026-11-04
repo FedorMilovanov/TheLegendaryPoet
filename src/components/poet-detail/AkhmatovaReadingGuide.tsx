@@ -48,7 +48,7 @@ export default function AkhmatovaReadingGuide() {
         только фрагментами (начало «Посвящения» и глава X «Распятие»).
         Остальные ссылки ведут на публикации Культура.РФ или на архивную опись РГАЛИ.
       </p>
-      <ol className="space-y-3">
+      <ol className="list-none space-y-3">
         {works.map(([name, year, note, url, local], index) => (
           <li key={name} className="rounded-2xl border border-luxury-gold/10 bg-[#101010] p-4 sm:p-5">
             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-luxury-gold">
