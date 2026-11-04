@@ -60,7 +60,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
                 className="theme-elevated-surface block rounded-2xl border px-4 py-3 transition hover:border-cyan-400/25"
               >
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="theme-text truncate text-sm font-bold">{other.name}</span>
+                  <span data-text-spacing-owner="kindred-name" className="theme-text min-w-0 break-words text-sm font-bold">{other.name}</span>
                   <span
                     className="shrink-0 rounded-full px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-[0.08em]"
                     style={{ color: style.color, backgroundColor: epochTint(style.color, 9) }}
@@ -68,7 +68,7 @@ export default function KindredSpirits({ poet }: { poet: Poet }) {
                     {style.label}
                   </span>
                 </div>
-                <p className="theme-functional-muted line-clamp-2 text-[11px] leading-relaxed">{conn.note}</p>
+                <p data-text-spacing-owner="kindred-note" className="theme-functional-muted break-words text-[11px] leading-relaxed">{conn.note}</p>
               </Link>
             );
           })}

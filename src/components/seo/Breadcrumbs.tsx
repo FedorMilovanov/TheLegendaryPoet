@@ -19,7 +19,7 @@ export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps)
             <li key={`${item.path}-${item.name}`} className="flex min-w-0 items-center gap-1.5">
               {index > 0 && <ChevronRight size={13} aria-hidden="true" className="shrink-0 text-cyan-300/25" />}
               {isCurrent ? (
-                <span aria-current="page" className="max-w-[min(70vw,32rem)] truncate theme-functional-muted">
+                <span aria-current="page" data-text-spacing-owner="breadcrumb-current" className="max-w-[min(70vw,32rem)] min-w-0 break-words whitespace-normal theme-functional-muted">
                   {item.name}
                 </span>
               ) : (

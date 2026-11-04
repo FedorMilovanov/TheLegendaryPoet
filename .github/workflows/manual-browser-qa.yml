@@ -100,6 +100,14 @@ jobs:
           --project=android-pixel7
           --workers=1
           --reporter=line,github
+      - name: Certify WCAG 1.4.12 registered text owners at desktop and mobile widths
+        run: >-
+          npx playwright test
+          qa/text-spacing-robustness.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --workers=1
+          --reporter=line,github
       - name: Run base iPhone Safari QA in fresh browser processes
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs
