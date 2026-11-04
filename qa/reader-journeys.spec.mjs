@@ -493,3 +493,72 @@ for (const theme of ['dark', 'light']) test.describe(`local community durability
     expect(runtime.consoleErrors).toEqual([]);
   });
 });
+
+test.describe('animated modal exit lifetime', () => {
+  for (const surface of ['immersive-player', 'essay-image-lightbox']) {
+    for (const reduced of [false, true]) {
+      test(`${surface} retains focus and background ownership until exit ends; reduced=${reduced}`, async ({ page }, testInfo) => {
+        await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+        const runtime = attachRuntimeDiagnostics(page);
+        const touch = testInfo.project.name === 'android-pixel7' || testInfo.project.name === 'iphone-safari';
+        let opener;
+        if (surface === 'immersive-player') {
+          await page.goto(`${BASE_URL}/music`, {waitUntil:'domcontentloaded'});
+          await waitForRoute(page);
+          opener = page.getByRole('button',{name:'Погружение'}).first();
+        } else {
+          await page.goto(`${BASE_URL}/essays/yesenin-duncan-first-meeting-documents`, {waitUntil:'domcontentloaded'});
+          await waitForRoute(page);
+          opener = page.getByRole('button',{name:/^Увеличить изображение:/}).first();
+        }
+        await opener.scrollIntoViewIfNeeded();
+        await opener.focus();
+        if (touch) await opener.tap(); else await opener.click();
+
+        const dialog = page.locator('[role="dialog"][aria-modal="true"]').first();
+        await expect(dialog).toBeVisible();
+        await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe(surface);
+        await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+
+        await page.evaluate(() => {
+          window.__tlpExitProof = [];
+          window.__tlpExitDone = false;
+          let connectedSeen = false;
+          let count = 0;
+          const record = () => {
+            const dialogNode = document.querySelector('[role="dialog"][aria-modal="true"]');
+            if (dialogNode) {
+              connectedSeen = true;
+              const root = document.getElementById('root');
+              window.__tlpExitProof.push({
+                depth:window.__TLP_OVERLAY_DEBUG?.depth,
+                inert:root?.inert,
+                hidden:root?.getAttribute('aria-hidden'),
+                position:document.body.style.position,
+                focusInside:dialogNode.contains(document.activeElement),
+              });
+            } else if (connectedSeen) {
+              window.__tlpExitDone = true;
+              return;
+            }
+            if (++count < 180) requestAnimationFrame(record);
+          };
+          record();
+        });
+        await page.keyboard.press('Escape');
+        await expect.poll(() => page.evaluate(() => window.__tlpExitDone), {timeout:5000}).toBe(true);
+        const frames = await page.evaluate(() => window.__tlpExitProof);
+        expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2);
+        expect(frames.filter(f => f.depth !== 1 || f.inert !== true || f.hidden !== 'true' || f.position !== 'fixed' || !f.focusInside),
+          'no frame may expose focus or unlock a still-painted modal').toEqual([]);
+        await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth), {timeout:2000}).toBe(0);
+        await expect.poll(() => page.evaluate(() => document.getElementById('root')?.inert)).toBe(false);
+        // Tap does not guarantee keyboard focus on a button (notably WebKit).
+        // The frame-by-frame isolation assertion above remains unconditional.
+        if (touch) await expect(opener).toBeVisible();
+        else await expect(opener).toBeFocused();
+        expect(runtime.pageErrors).toEqual([]);
+      });
+    }
+  }
+});

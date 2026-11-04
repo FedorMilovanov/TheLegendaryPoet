@@ -18,7 +18,7 @@ import { voiceConfig, DEFAULT_VOICE_KIND, poemVariant } from './theme';
 import { titleCase } from '../../utils/titleCase';
 import { asset } from '../../utils/asset';
 import { useNativeImageState } from '../../hooks/useNativeImageState';
-import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { useDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';
 import TiltCard from '../TiltCard';
 
 /**
@@ -152,8 +152,10 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
     setOpen(false);
   }, []);
 
+  const lifetime = useDialogExitLifetime(open);
   useDialogSurface({
-    open,
+    open: lifetime.lockOpen,
+    deferReleaseUntilUnmount: true,
     dialogRef,
     initialFocusRef: closeRef,
     onClose: closeLightbox,
@@ -216,7 +218,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       </motion.figure>
 
       {typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={lifetime.onExitComplete}>
           {open && (
             <motion.div
               ref={dialogRef}

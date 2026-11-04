@@ -194,6 +194,11 @@ expect(commandSource.includes('const onInputKeyDown = (event: React.KeyboardEven
 expect(commandSource.includes('onKeyDown={onInputKeyDown}'), 'the command combobox must bind its keyboard navigation directly');
 expect(!commandSource.includes('onKeyDown={onDialogKeyDown}'), 'the command dialog must not intercept Enter from focused close/result buttons');
 expect(immersiveSource.includes('useDialogSurface'), 'immersive playback must use the shared dialog lifecycle');
+expect(dialogSource.includes('useDialogExitLifetime'), 'animated dialogs must share a presence-aware lock lifetime');
+expect(dialogSource.includes('if (!deferReleaseUntilUnmount) handle.release()'), 'Escape must retain animated dialog ownership until exit completion');
+expect(immersiveSource.includes('useDialogExitLifetime(immersiveOpen && Boolean(currentTrack))'), 'immersive playback must retain focus isolation throughout visual exit');
+expect(immersiveSource.includes('open: lifetime.lockOpen') && immersiveSource.includes('deferReleaseUntilUnmount: true'), 'immersive overlay lock must follow painted presence, not logical open');
+expect(immersiveSource.includes('onExitComplete={lifetime.onExitComplete}'), 'immersive overlay must release after AnimatePresence exit completion');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');
 expect(ratingFormSource.includes('dirtyRef.current'), 'late community hydration must not erase an in-progress rating draft');
