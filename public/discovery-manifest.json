@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "2ad32cfc1ff2d125051163a6ab76e46caea29c4d714f65b43ea3e98b5e47f6cb"
+      "fingerprint": "a0ae795b8fb8572ab7f695738d46e944cb69fb8100ef55c935538452bf66bc83"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6cfb57b966e3d5bd9b5112f0d83fc7cf76ba74d1acad01d2fa15157719359937"
+      "fingerprint": "30a84113d27006dd22e58bb110e6c87724728268772116d3f9002491f978a13b"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6501e149cc87d617cd8318aee33320fe60437d4a3266d91165f9be6051659ed1"
+      "fingerprint": "476a6c788fbf23291fa97eaea149981f72b0268df74d62b4e170dc67e7dedd73"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -354,7 +354,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "c8ae0f429e56e0ac0b0fea4c5176e272bd269b26e1321d52edd1df7ef1c03287"
+      "fingerprint": "121094d9eaa6d328ccf3c8967207663ae453ac3604632cc9bc7a14bffd779370"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-blok/",
