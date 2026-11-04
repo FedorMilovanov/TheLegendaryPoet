@@ -37,13 +37,13 @@ export default function EssayCard({ essay, variant = 'default', headingLevel = 3
           />
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
-            <Heading className={`font-serif font-bold text-white transition-colors duration-300 group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
+            <Heading className={`font-serif font-bold text-white transition-colors duration-300 group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug'}`}>
               {titleCase(essay.title)}
             </Heading>
             {essay.subtitle && feature && (
               <p className="mt-3 font-serif text-lg italic text-luxury-gray-light text-pretty">{essay.subtitle}</p>
             )}
-            <p className={`mt-3 flex-grow text-sm leading-relaxed text-luxury-gray-light/80 font-light text-pretty ${feature ? 'line-clamp-4 md:text-base' : 'line-clamp-3'}`}>
+            <p className={`mt-3 flex-grow text-sm leading-relaxed text-luxury-gray-light/80 font-light text-pretty break-words ${feature ? 'md:text-base' : ''}`}>
               {essay.excerpt}
             </p>
             <div className="mt-5 flex items-center justify-between border-t border-luxury-gold/10 pt-4">
