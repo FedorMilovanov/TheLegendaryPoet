@@ -41,6 +41,40 @@ test.describe('canonical owner extension: real painted pixels', () => {
           expect(measured.length,
             `${route.path}: ${occluded.length} nodes under fixed chrome; route did not render enough ink`)
             .toBeGreaterThan(route.minimumNodes);
+          // On a genuine painted-pixel failure retain the live CSS surface
+          // and a reader-visible screenshot, without changing any thresholds.
+          if (offenders.length || gradientOffenders.length) {
+            const ids = offenders.slice(0, 5).map((item) => String(item.id));
+            const detail = await page.evaluate((keys) => {
+              const ancestry = (element) => {
+                const entries = [];
+                for (let node = element, depth = 0; node && depth < 5; node = node.parentElement, depth += 1) {
+                  const style = getComputedStyle(node);
+                  const rect = node.getBoundingClientRect();
+                  entries.push({ tag: node.tagName, className: String(node.className).slice(0, 120),
+                    bg: style.backgroundColor, color: style.color,
+                    rect: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) } });
+                }
+                return entries;
+              };
+              const host = document.querySelector('[data-poem-text]');
+              return { viewport: { width: innerWidth, height: innerHeight, scrollY },
+                bodyTheme: document.documentElement.className,
+                surface: host ? ancestry(host).slice(0, 2) : [],
+                offending: keys.map((key) => {
+                  const node = document.querySelector('[data-sweep-node="' + key + '"]');
+                  return { key, parents: node ? ancestry(node) : [] };
+                }) };
+            }, ids);
+            console.log('[painted-contrast-failure-context] ' + JSON.stringify(detail));
+            if (await page.locator('[data-poem-text]').count()) {
+              fs.mkdirSync('qa-artifacts', { recursive: true });
+              await page.locator('[data-poem-text]').first().screenshot({
+                path: 'qa-artifacts/painted-contrast-failure-' + theme + '-' + viewport.label + '.png',
+                animations: 'disabled',
+              });
+            }
+          }
           expect(offenders.map((item) => item.ratio),
             `${route.path} ${theme}/${viewport.label}: ${describeOffenders(offenders)}`).toEqual([]);
           expect(gradientOffenders.map((item) => item.ratio),

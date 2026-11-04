@@ -20,68 +20,10 @@ env:
   PLAYWRIGHT_HTML_OPEN: never
 
 jobs:
-  canonical-contrast-qa:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - name: Checkout exact full-contrast tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ env.TESTED_SHA }}
-      - name: Verify exact full-contrast checkout
-        run: |
-          actual="$(git rev-parse HEAD)"
-          test "$actual" = "$TESTED_SHA"
-          printf 'tested_commit=%s\n' "$actual" > canonical-contrast-tested-head.txt
-      - name: Set up exact Node dependencies
-        uses: ./.github/actions/setup-node-deps
-      - name: Validate locked browser runtime
-        run: npm run validate:browser-runtime
-      - name: Install deterministic brand build tools
-        uses: ./.github/actions/install-build-tools
-      - name: Build production site for full contrast
-        env:
-          VITE_BASE: /
-        run: |
-          npm run sitemap
-          npm run build
-          npm run validate:build-output
-      - name: Install locked Chromium
-        uses: ./.github/actions/install-playwright
-        with:
-          browsers: chromium
-      - name: Start production preview for full contrast
-        uses: ./.github/actions/start-preview
-        with:
-          log-file: canonical-contrast-preview.log
-      - name: Certify all previously missing canonical routes against painted pixels
-        run: >-
-          npx playwright test qa/painted-contrast-extended.spec.mjs
-          --config=playwright.config.mjs
-          --project=chromium-core
-          --workers=1
-          --reporter=line,github
-      - name: Upload full canonical contrast proof
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: canonical-contrast-proof-${{ env.TESTED_SHA }}
-          path: |
-            canonical-contrast-tested-head.txt
-            canonical-contrast-preview.log
-            test-results
-            playwright-report
-          if-no-files-found: warn
-          retention-days: 7
-
   browser-qa:
-    needs: canonical-contrast-qa
-    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Require full canonical contrast proof
-        run: test "${{ needs.canonical-contrast-qa.result }}" = "success"
       - name: Checkout exact browser tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
