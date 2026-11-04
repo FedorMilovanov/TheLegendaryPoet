@@ -35,7 +35,7 @@
 |---|---|---|
 | Пророк | 1826 | [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1826/0420.htm) — **A+**; ФЭБ — **A+** (см. RESEARCH_SOURCES) |
 | Я вас любил: любовь ещё, быть может | 1829 | [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1829/0505.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/685/p.1/index.html) — A; [culture.ru](https://culture.ru/poems/5695) — A |
-| Я памятник себе воздвиг нерукотворный | 1836 | [ФЭБ (ПСС в 16 т., АН СССР)](http://feb-web.ru/feb/pushkin/texts/push17/vol03/y03-424-.htm) — **A+**; [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1836/0617.htm) — **A+**; [ilibrary.ru](https://ilibrary.ru/text/797/p.1/index.html) — A |
+| Я памятник себе воздвиг нерукотворный | 1836 | [ФЭБ (ПСС в 16 т., АН СССР)](http://feb-web.ru/feb/pushkin/texts/push17/vol03/y03-424-.htm) — **A+**; [РВБ](https://rvb.ru/pushkin/01text/01versus/0423_36/1836/0617.htm) — **A+**; [РВБ: комментарий Цявловской к традиции Горация и Александровской колонне](https://rvb.ru/pushkin/02comm/0617.htm) — научный аппарат (не независимый текстовый свидетель); [ilibrary.ru](https://ilibrary.ru/text/797/p.1/index.html) — A |
 
 ## Михаил Лермонтов
 
@@ -57,7 +57,7 @@
 | Стих | Год | Источники сверки |
 |---|---|---|
 | Ночь, улица, фонарь, аптека | 1912 | [culture.ru](https://www.culture.ru/poems/2160/noch-ulica-fonar-apteka-otryvok-iz-cikla-plyaski-smerti) — A; [Викитека](https://ru.wikisource.org/wiki/Ночь,_улица,_фонарь,_аптека_(Блок)) — A |
-| Незнакомка | 1906 | [culture.ru](https://www.culture.ru/poems/284/neznakomka) — A; [slova.org.ru](https://slova.org.ru/blok/neznakomka/) — A; [ilibrary.ru (ПСС в 20 т., «Наука», т. II)](https://ilibrary.ru/text/1737/p.1/index.html) — **A+** |
+| Незнакомка | 1906 | [culture.ru](https://www.culture.ru/poems/284/neznakomka) — A; [slova.org.ru](https://slova.org.ru/blok/neznakomka/) — A; [ilibrary.ru (ПСС в 20 т., «Наука», т. II)](https://ilibrary.ru/text/1737/p.1/index.html) — **A+**; [РВБ (ПСС в 20 т., т. II, прямой текст «Незнакомки»)](https://rvb.ru/20vek/blok/pss20/vol2/text/0443.html) — **A+** |
 | О доблестях, о подвигах, о славе | 1908 | [culture.ru](https://www.culture.ru/poems/2565/o-doblestyakh-o-podvigakh-o-slave) — A; [Викитека](https://ru.wikisource.org/wiki/О_доблестях,_о_подвигах,_о_славе_(Блок)) — A; [ilibrary.ru](https://ilibrary.ru/text/4235/p.1/index.html) — **A+** |
 
 ## Николай Гумилёв
