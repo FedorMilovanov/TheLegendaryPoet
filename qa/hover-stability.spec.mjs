@@ -208,7 +208,7 @@ test('TiltCard follows live pointer input without a transition backlog', async (
 test('article title remains painted throughout live 3D pointer tracking', async ({ page }) => {
   await page.goto(`${BASE_URL}/articles`, { waitUntil: 'domcontentloaded' });
   const card = page.locator('.tilt-card-inner').first();
-  const title = card.locator('h3').first();
+  const title = card.locator('h2').first();
   await expect(card).toBeVisible();
   await expect(title).toBeVisible();
   await card.scrollIntoViewIfNeeded();

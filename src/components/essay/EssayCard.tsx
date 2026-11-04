@@ -14,7 +14,8 @@ import { titleCase } from '../../utils/titleCase';
  * The card consumes only published summary metadata so the articles listing
  * never needs to import or download every longform body and bibliography.
  */
-export default function EssayCard({ essay, variant = 'default' }: { essay: EssaySummary; variant?: 'default' | 'feature' }) {
+export default function EssayCard({ essay, variant = 'default', headingLevel = 3 }: { essay: EssaySummary; variant?: 'default' | 'feature'; headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const accent = essay.accent || DEFAULT_ACCENT;
   const feature = variant === 'feature';
 
@@ -36,9 +37,9 @@ export default function EssayCard({ essay, variant = 'default' }: { essay: Essay
           />
 
           <div className={`flex flex-1 flex-col p-6 ${feature ? 'md:p-10 md:justify-center' : ''}`}>
-            <h3 className={`font-serif font-bold text-white transition-colors duration-300 group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
+            <Heading className={`font-serif font-bold text-white transition-colors duration-300 group-hover:text-luxury-gold text-balance ${feature ? 'text-3xl md:text-4xl leading-tight' : 'text-xl leading-snug line-clamp-2'}`}>
               {titleCase(essay.title)}
-            </h3>
+            </Heading>
             {essay.subtitle && feature && (
               <p className="mt-3 font-serif text-lg italic text-luxury-gray-light text-pretty">{essay.subtitle}</p>
             )}

@@ -386,19 +386,20 @@ for (const theme of ['dark', 'light']) {
       useChromiumCore(testInfo);
       await seedContrastState(page, theme);
       await page.goto(`${BASE_URL}${route}`, { waitUntil: 'networkidle' });
-      const card = page.locator('a[href="/poets/alexander-pushkin"]:has(h3)');
+      const headingTag = route === '/poets' ? 'h2' : 'h3';
+      const card = page.locator(`a[href="/poets/alexander-pushkin"]:has(${headingTag})`);
       await card.scrollIntoViewIfNeeded();
       await expect(card.getByText('1 мнений', { exact: true })).toBeVisible();
       await expectReadableCardText(card, `${theme} idle`);
       await card.focus();
       await page.keyboard.press('Shift');
       await expect(card).toBeFocused();
-      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expect.poll(() => card.locator(headingTag).evaluate((node) => node.getAnimations().length)).toBe(0);
       await expectReadableCardText(card, `${theme} keyboard focus`);
       expect(await nonTextContrast(card, 'focus')).toBeGreaterThanOrEqual(3);
       await card.evaluate((node) => node.blur());
       await card.hover();
-      await expect.poll(() => card.locator('h3').evaluate((node) => node.getAnimations().length)).toBe(0);
+      await expect.poll(() => card.locator(headingTag).evaluate((node) => node.getAnimations().length)).toBe(0);
       await expectReadableCardText(card, `${theme} hover`);
     });
   }

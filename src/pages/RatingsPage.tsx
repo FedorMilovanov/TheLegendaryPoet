@@ -295,7 +295,7 @@ function MobileRankCard({ row, rank }: { row: RankedPoet; rank: number | null })
         <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${rank !== null && rank <= 3 ? 'bg-luxury-gold text-black' : 'bg-luxury-dark-200 text-cyan-100/60'}`}>{rank ?? '—'}</span>
         <img src={asset(row.poet.photo)} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover object-[center_18%] ring-1 ring-luxury-gold/20" />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h3>
+          <h2 className="truncate font-serif text-xl font-bold text-white transition group-hover:text-luxury-gold">{row.poet.name}</h2>
           <p className="truncate text-xs text-cyan-100/60">{row.poet.tags.slice(0, 2).join(' · ')}</p>
         </div>
         <ArrowRight size={17} className="mt-2 shrink-0 text-cyan-300 transition group-hover:translate-x-1" />

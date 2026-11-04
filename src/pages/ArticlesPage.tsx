@@ -117,7 +117,7 @@ export default function ArticlesPage() {
           </div>
           <div className="space-y-6">
             {filteredEssays.map((essay) => (
-              <EssayCard key={essay.id} essay={essay} variant="feature" />
+              <EssayCard key={essay.id} essay={essay} variant="feature" headingLevel={2} />
             ))}
           </div>
         </Reveal>

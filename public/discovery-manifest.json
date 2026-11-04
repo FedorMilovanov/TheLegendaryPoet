@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "834096fbf42afdca0dc4cabd77821283b03b185724231ffa95a84eb57aa43a45"
+      "fingerprint": "84b6393ce929289221a5f8a724c9d08f189b0537b8bf49ee860b03974295f864"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "0fe52d001b83b391d0eaf4cdad32351bce9e82a1f2559a3db2880424ad0bf674"
+      "fingerprint": "4d8cd5b8f80b1767441d624450a54ec4197ec526aabede4862f9db8f519db95e"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "21b284627cdc39ffd965bf0fc11d8c8bef5aef8876004738de059eb951f8ceee"
+      "fingerprint": "be187db9a522c91ea5d3c754950c63cf829900616bcf345707c1b346ed379d73"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
