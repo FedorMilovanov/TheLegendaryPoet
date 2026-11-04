@@ -78,8 +78,8 @@
 
 | Стих | Год | Источники сверки |
 |---|---|---|
-| Не жалею, не зову, не плачу… | 1921 | [РВБ (ПСС в 7 т., т. 2)](https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html) — **A+**; [culture.ru](https://culture.ru/poems/44393) — A |
-| Письмо матери | 1924 | [ilibrary.ru](https://ilibrary.ru/text/1298/p.1/index.html) — A; [culture.ru](https://www.culture.ru/poems/44047/pismo-materi) — A |
+| Не жалею, не зову, не плачу… | 1921 | [РВБ (ПСС в 7 т., т. 2)](https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html) — **A+**; [Культура.РФ — именно «Не жалею…»](https://www.culture.ru/poems/44266/ne-zhaleyu-ne-zovu-ne-plachu) — A |
+| Письмо матери | 1924 | [РВБ, ПСС в 7 т., т. 1, № 104](https://rvb.ru/20vek/esenin/pss7/vol1/poems/104.html) — **A+**; [iLibrary — «Письмо матери»](https://ilibrary.ru/text/1288/p.1/index.html) — A; [Культура.РФ](https://www.culture.ru/poems/44047/pismo-materi) — A |
 | Гой ты, Русь, моя родная | 1914 | [РВБ](https://rvb.ru/20vek/esenin/pss7/vol1/poems/028.html) — **A+**; [culture.ru](https://culture.ru/poems/44393) — A; Викитека — A |
 
 ## Владимир Маяковский
@@ -93,7 +93,7 @@
 
 | Стих | Год | Источники сверки |
 |---|---|---|
-| Февраль. Достать чернил и плакать! | 1912 | [ilibrary.ru](https://ilibrary.ru/text/1245) — A; [culture.ru](https://culture.ru/poems/14047) — A; slova.org.ru — A (ред. 1928) |
+| Февраль. Достать чернил и плакать! | 1912 | [Культура.РФ — «Февраль. Достать чернил и плакать!»](https://www.culture.ru/poems/14047/fevral-dostat-chernil-i-plakat) — A; slova.org.ru — A (ред. 1928); прежняя iLibrary-ссылка ошибочно вела на «Послушайте!» Маяковского; независимый академический свидетель ещё установить |
 | Гамлет | 1946 | [slova.org.ru](https://slova.org.ru/pasternak/) — A; [culture.ru](https://culture.ru/poems/13847) — A |
 
 ---
