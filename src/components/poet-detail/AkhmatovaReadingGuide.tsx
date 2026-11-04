@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { ArrowUpRight, BookOpen } from 'lucide-react';
 
 interface ReadingEntry {
@@ -78,7 +78,7 @@ const documentarySources = [
   },
 ];
 
-function ExternalSourceLink({ href, children }: { href: string; children: React.ReactNode }) {
+function ExternalSourceLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a
       href={href}
