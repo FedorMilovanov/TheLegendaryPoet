@@ -346,6 +346,24 @@ const HIDE_INK = `*, *::before, *::after { color: transparent !important; -webki
 // shows the surface behind the word, not the word's own fill.
 const HIDE_GRADIENT_INK = `[data-sweep-gradient] { background-image: none !important; }`;
 
+// Screenshot({ animations: 'disabled' }) fast-forwards finite transforms for
+// the *capture* only, then restores the CSS transition. A fixed header moving
+// into or out of view can therefore be in one place in the screenshot and
+// another when the geometric chrome mask is read. On the 16k-pixel Gumilev
+// page this misidentified cream header pixels as the dark poem's background.
+//
+// The painted contrast census tests settled UI states, not the intermediate
+// movement of fixed controls. Keep those controls in their CSS end positions
+// for the entire masked capture and overlay/rect verification. Preserve their
+// actual position, opacity, visibility, z-index, and occlusion. Do not change
+// colours or WCAG thresholds.
+const STABILIZE_FIXED_CHROME = `
+  .site-header, .mobile-dock, .palette-fab {
+    transition-property: none !important;
+  }
+`;
+
+
 const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
   const img = new Image();
   img.src = `data:image/png;base64,${shot}`;
@@ -688,7 +706,7 @@ export async function paintedSweep(page, options = {}) {
     const covered = [];
     const missed = [];
     if (!list.length) return { rows, gradientInk, covered, missed };
-    const style = await page.addStyleTag({ content: styleContent });
+    const style = await page.addStyleTag({ content: `${styleContent}\n${STABILIZE_FIXED_CHROME}` });
     await page.waitForTimeout(250);
     // Chrome is collected again where it is painted now, not where it was when
     // the sweep began — and, just as often, re-collected because it was not
