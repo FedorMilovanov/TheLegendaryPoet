@@ -813,14 +813,33 @@ test('route changes cannot inherit hidden reading chrome', async ({ page }) => {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
   await settle(page);
 
-  await page.evaluate(() => {
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    window.scrollTo({ top: Math.min(1200, Math.max(520, maxScroll)), behavior: 'auto' });
-  });
+  // A single early scrollTo is not evidence of a real downward scroll:
+  // initial WebKit layout may still be growing, or route restoration may
+  // reset the position. Prove sufficient live scroll range and a settled
+  // visible top first, then assert that the browser actually moved before
+  // testing the auto-hide class and its route-change reset.
   await expect.poll(
-    () => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden')),
+    () => page.evaluate(() => {
+      const scrolling = document.scrollingElement ?? document.documentElement;
+      return Math.max(0, scrolling.scrollHeight - window.innerHeight);
+    }),
+    { timeout: 10_000, message: 'home route must have enough real document range to test reading chrome' },
+  ).toBeGreaterThan(520);
+  await scrollDocumentTo(page, 0, 160);
+  await expectStableChromeAtTop(page);
+
+  await scrollDocumentTo(page, 900, 160);
+  await expect.poll(
+    () => page.evaluate(() => window.scrollY),
+    { timeout: 5_000, message: 'document must actually scroll down before reading chrome can hide' },
+  ).toBeGreaterThan(300);
+  await expect.poll(
+    () => page.evaluate(() => ({
+      hidden: document.documentElement.classList.contains('chrome-hidden'),
+      scrollY: window.scrollY,
+    })),
     { timeout: 5_000, message: 'downward scrolling should hide reading chrome before route transition' },
-  ).toBe(true);
+  ).toMatchObject({ hidden: true, scrollY: expect.any(Number) });
 
   const navigated = await page.evaluate(() => {
     const link = document.querySelector('#main-content a[href="/poets"]');
