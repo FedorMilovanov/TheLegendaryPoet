@@ -84,9 +84,22 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
       });
     };
 
+    // New fragment URLs use native links/history. A repeated citation click
+    // emits no hashchange, so reveal its filtered target without overriding
+    // the browser's normal URL and focus behavior.
+    const revealRepeatedSource = (event: MouseEvent) => {
+      if (event.defaultPrevented || !(event.target instanceof Element)) return;
+      const link = event.target.closest<HTMLAnchorElement>('a[href^="#source-"]');
+      if (link?.hash === window.location.hash) revealLinkedSource();
+    };
+
     revealLinkedSource();
     window.addEventListener('hashchange', revealLinkedSource);
-    return () => window.removeEventListener('hashchange', revealLinkedSource);
+    document.addEventListener('click', revealRepeatedSource);
+    return () => {
+      window.removeEventListener('hashchange', revealLinkedSource);
+      document.removeEventListener('click', revealRepeatedSource);
+    };
   }, [reduceMotion, sources]);
 
   return (

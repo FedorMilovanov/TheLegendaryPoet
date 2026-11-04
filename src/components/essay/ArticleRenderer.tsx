@@ -84,7 +84,7 @@ export default function ArticleRenderer({
         return (
           <Reveal
             key={`${block.type}-${i}`}
-            direction={layout.direction}
+            direction={block.type === 'section' ? 'none' : layout.direction}
             distance={18}
             once
             /*

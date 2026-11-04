@@ -108,6 +108,34 @@
       ],
       "waiterJob": "hall-web-runtime",
       "waiterJobTimeoutMinutes": 100
+    },
+    "brand-painted-contrast": {
+      "workflowFile": ".github/workflows/brand-deep-audit.yml",
+      "canonicalJob": "brand-deep-audit",
+      "canonicalJobTimeoutMinutes": 75,
+      "event": "pull_request",
+      "pollTimeoutSeconds": 5400,
+      "pollIntervalSeconds": 20,
+      "paths": [
+        ".github/workflows/brand-deep-audit.yml",
+        ".github/workflows/merge-certification.yml",
+        "docs/merge-certification.json",
+        "scripts/classify-merge-certification.mjs",
+        "scripts/validate-merge-certification.mjs",
+        "scripts/tests/merge-certification-timeouts.test.mjs",
+        "qa/painted-contrast*.mjs",
+        "src/**",
+        "public/sitemap.xml",
+        "playwright.config.mjs",
+        "package.json",
+        "package-lock.json",
+        "vite.config.ts",
+        ".github/actions/setup-node-deps/**",
+        ".github/actions/install-build-tools/**",
+        ".github/actions/install-playwright/**"
+      ],
+      "waiterJob": "brand-painted-contrast",
+      "waiterJobTimeoutMinutes": 100
     }
   }
 }

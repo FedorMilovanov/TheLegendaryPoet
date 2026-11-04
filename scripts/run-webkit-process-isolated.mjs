@@ -17,6 +17,7 @@ const suites = [
   { id: 'audio-completion', file: 'qa/audio-completion.spec.mjs' },
   { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },
   { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs' },
+  { id: 'fragment-navigation', file: 'qa/fragment-navigation.spec.mjs' },
   { id: 'premium-reader-certification', file: 'qa/premium-reader-certification.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
   { id: 'brand-reference-raster', file: 'qa/brand-emblem.spec.mjs' },
