@@ -1,4 +1,4 @@
-import { Suspense, lazy, useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
@@ -13,6 +13,7 @@ import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
+import AkhmatovaReadingGuideLoader from '../components/poet-detail/AkhmatovaReadingGuideLoader';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -21,8 +22,6 @@ import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { titleCase } from '../utils/titleCase';
-
-const AkhmatovaReadingGuide = lazy(() => import('../components/poet-detail/AkhmatovaReadingGuide'));
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -138,11 +137,7 @@ export default function PoetDetailPage() {
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
-            {poet.id === 'anna-akhmatova' && (
-              <Suspense fallback={<p role="status" className="text-sm text-luxury-gray-light">Загрузка литературного путеводителя…</p>}>
-                <AkhmatovaReadingGuide />
-              </Suspense>
-            )}
+            {poet.id === 'anna-akhmatova' && <AkhmatovaReadingGuideLoader />}
 
 
             <div className="pt-16">
