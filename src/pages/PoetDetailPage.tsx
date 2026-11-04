@@ -13,6 +13,7 @@ import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
+import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -135,6 +136,9 @@ export default function PoetDetailPage() {
             {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
+
+            {poet.id === 'anna-akhmatova' && <AkhmatovaReadingGuide />}
+
 
             <div className="pt-16">
               <h2 className="theme-text editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none sm:mb-12 sm:text-5xl">
