@@ -83,7 +83,7 @@ export default function MusicPage() {
                 <span className="h-px w-10 bg-luxury-gold/45" />
                 <h2 id="featured-release-title" className="text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold">Главная публикация</h2>
               </div>
-              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/52"><SparklesIcon size={13} /> Рекомендуем начать отсюда</span>
+              <span data-contrast-owner="music-featured-recommendation" className="theme-text inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em]"><SparklesIcon size={13} /> Рекомендуем начать отсюда</span>
             </div>
             <FeaturedTrackPlayer track={featured} compact />
           </section>

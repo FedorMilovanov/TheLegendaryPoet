@@ -17,7 +17,7 @@ permissions:
 jobs:
   brand-deep-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 75
     env:
       QA_BASE_URL: http://127.0.0.1:4173
       PLAYWRIGHT_HTML_OPEN: never
@@ -62,6 +62,14 @@ jobs:
           --project=chromium-core
           --workers=1
           --reporter=line
+      - name: Certify all canonical routes against real painted-pixel contrast
+        run: >-
+          npx playwright test
+          qa/painted-contrast-extended.spec.mjs
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --workers=1
+          --reporter=line
       - name: Upload real-site brand evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -73,6 +81,7 @@ jobs:
             qa-artifacts/brand-live-footer-primary.png
             qa-artifacts/brand-live-mobile-first-viewport.png
             qa-artifacts/brand-live-site-control-sheet.png
+            qa-artifacts/painted-contrast-failure-*.png
             test-results
             brand-deep-preview.log
           if-no-files-found: warn
