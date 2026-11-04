@@ -6,6 +6,7 @@ interface ReadingEntry {
   year: string;
   context: string;
   sourceUrl: string;
+  sourceLabel?: string;
   existingExcerptId?: string;
 }
 
@@ -54,6 +55,13 @@ const readings: ReadingEntry[] = [
     context: 'Военное стихотворение из цикла «Ветер войны». Две строфы обращены к смертельной опасности и утратам, а последняя делает русскую речь предметом общей клятвы. Отдельно вынесенное финальное слово фиксирует интонацию обета. Полный текст уже представлен ниже.',
     sourceUrl: 'https://www.culture.ru/poems/8905/muzhestvo',
     existingExcerptId: 'akhmatova-3',
+  },
+  {
+    title: '«Поэма без героя»',
+    year: '1940–1965 · история редакций',
+    context: 'Многолетняя работа над поэмой соединяет воспоминания о предвоенном петербургском мире 1910-х годов с памятью о катастрофах XX столетия. Это произведение со сложной историей вариантов: по одному раннему автографу нельзя устанавливать единственный окончательный текст. РГАЛИ хранит первый вариант 1940–1943 годов; в прижизненном «Беге времени» (1965) публиковалась только часть поэмы.',
+    sourceUrl: 'https://rgali.ru/storage-unit/2396254',
+    sourceLabel: 'Автограф первого варианта в РГАЛИ',
   },
   {
     title: '«Родная земля»',
@@ -159,7 +167,7 @@ export default function AkhmatovaReadingGuide() {
 
       <nav aria-label="Разделы исследования" className="mb-8 flex flex-wrap gap-2 text-sm">
         <a href="#akhmatova-requiem-analysis" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">Поэма и композиция</a>
-        <a href="#akhmatova-requiem-works" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">9 произведений</a>
+        <a href="#akhmatova-requiem-works" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">10 произведений</a>
         <a href="#akhmatova-requiem-sources" className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/20 px-4 text-luxury-gold-light hover:border-luxury-gold/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-luxury-gold">Источники</a>
       </nav>
 
@@ -254,7 +262,7 @@ export default function AkhmatovaReadingGuide() {
               </h4>
               <p className="mb-4 text-sm leading-[1.85] text-luxury-gray-light">{reading.context}</p>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <ExternalSourceLink href={reading.sourceUrl}>Полный текст на Культура.РФ</ExternalSourceLink>
+                <ExternalSourceLink href={reading.sourceUrl}>{reading.sourceLabel ?? 'Полный текст на Культура.РФ'}</ExternalSourceLink>
                 {reading.existingExcerptId && (
                   <a
                     href={'#poem-' + reading.existingExcerptId}
