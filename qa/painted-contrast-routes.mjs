@@ -31,6 +31,11 @@ export const BASELINE_PAINTED_ROUTES = [
 // Each minimumNodes is 90% of the smallest completed four-mode pixel census
 // on exact Product main 63492c2 (2026-11-04), never a guessed fallback.
 export const EXTENDED_PAINTED_ROUTES = [
+  // Two-Prophets exact-head pixel census at 2f71771 (2026-11-05):
+  // dark desktop 221, dark mobile 195, light desktop 228, light mobile 202.
+  // 175 is floor(0.9 * 195), preserving the same measured render guard as all
+  // other routes. All four cells had zero text and gradient contrast offenders.
+  { path: "/essays/pushkin-lermontov-dva-proroka", heading: "Пушкин и Лермонтов", minimumNodes: 175 },
   { path: "/essays/simonov-syn-artillerista-realnaya-istoriya", heading: "\u041e\u0433\u043e\u043d\u044c", minimumNodes: 231 },
   { path: "/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive", heading: "\u0411\u0435\u043d\u0438\u0441\u043b\u0430\u0432\u0441\u043a\u0430\u044f", minimumNodes: 241 },
   { path: "/essays/yesenin-kutezhi", heading: "\u0415\u0441\u0435\u043d\u0438\u043d", minimumNodes: 306 },
