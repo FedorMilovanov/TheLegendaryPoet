@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "c56e394bb76dc417e7ece39b9bb3bf9f054af92242ba22f6d9f57569b1bfb3ae"
+      "fingerprint": "9fcc974387652069a544fc4aa003741a79fa9f0a8fb8b17cc48d7548c4a98429"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "90536d91da324c07886142003700cae5983795fbbf99534631bf940cb023eb70"
+      "fingerprint": "a45c17435cb2b24a1e6d098f42340a0c2ba4b5f185196354bc2ff8f318b04daf"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d400cc05178942b236ffaa125019cef8b6ce8892414ef3c14f6079da9f07b3d6"
+      "fingerprint": "5f1ca927c8ea02002d2846a2129ae3679a17be30b6270156cdc85630b3714681"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -314,7 +314,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "dc60455cae28fce9a138b0916a0aa15f987087d74414284667d098295a78e4b8"
+      "fingerprint": "beeaa1491ba284af3cac2cba118d8030919ff9b888ff97ee771179fed1c12954"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/mikhail-lermontov/",
@@ -322,7 +322,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "11b7d61bec3b84d043302ab974114a075ad1f84d4838d3372dc8f22f4b29c22c"
+      "fingerprint": "860438285f14dc1e38d8b01db79cc26a84ea9a4c672668e1753c1d000b5b8c30"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/boris-pasternak/",
@@ -330,7 +330,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "f2e687b1c0f04997f3146dd27a44acca61a3f6410936a1dd4fd5d31416e14104"
+      "fingerprint": "53120b1ae4bbaa2ad8550feee6b918e0de84350ba2f0fff83f51ba660b7e1feb"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/afanasy-fet/",
