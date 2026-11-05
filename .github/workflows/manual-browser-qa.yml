@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout exact browser tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact browser checkout identity
@@ -132,7 +132,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout exact analytics tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact analytics checkout identity
@@ -198,7 +198,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout exact Safari home tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact Safari home checkout identity
@@ -246,7 +246,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout exact premium tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact premium checkout identity
@@ -297,7 +297,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout exact critical iPhone tested head
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.TESTED_SHA }}
       - name: Verify exact critical iPhone checkout identity
