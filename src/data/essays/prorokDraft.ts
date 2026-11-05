@@ -2,11 +2,10 @@ import type { Essay } from '../../types/essay';
 import { estimateReadTime } from '../../utils/readTime';
 
 /**
- * STAGED EDITORIAL DRAFT — NOT imported by the public catalog.
- * Existing Essay blocks/sources only; date and cover deliberately absent.
- * No publication date, rights grant or illustration is invented to fill fields.
- * Body owner after the one-time Markdown transfer; research records remain in
- * docs/research/PROROK_SOURCE_REVIEW_2026-10-15.md.
+ * Canonical editorial input for the published comparison of two "Prophet" poems.
+ * The user-approved image is an illustrative AI reconstruction, not a photograph
+ * of an actual meeting between Pushkin and Lermontov. The literary text and
+ * source-review record remain independent of that visual interpretation.
  */
 const blocks: Essay['blocks'] = [
   {
@@ -180,7 +179,7 @@ const blocks: Essay['blocks'] = [
   },
 ];
 
-export const prorokDraft: Omit<Essay, 'date' | 'cover'> = {
+export const prorokDraft: Essay = {
   id: 'pushkin-lermontov-two-prophets',
   slug: 'pushkin-lermontov-dva-proroka',
   kicker: 'Поэтическое призвание · библейская оценка',
@@ -188,7 +187,13 @@ export const prorokDraft: Omit<Essay, 'date' | 'cover'> = {
   subtitle: "Преображение говорящего, отвержение слушателями и ответственность слова перед Богом",
   excerpt: "Два «Пророка» по-разному показывают призвание и судьбу слова. Сопоставляем проверенные редакции стихотворений с шестой главой Исаии и оцениваем гордость, презрение к ближнему и надежду на силу собственного дара в свете Писания.",
   author: 'Редакция THE LEGENDARY POET',
+  date: '2026-11-05',
   readTime: estimateReadTime(blocks),
+  cover: '/images/essays/pushkin-lermontov/two-prophets-hero.webp',
+  cardCover: '/images/essays/pushkin-lermontov/two-prophets-hero.webp',
+  coverAlt: 'Пушкин и Лермонтов у Невы — художественная реконструкция воображаемой совместной сцены, не историческая фотография',
+  coverKind: 'reconstruction',
+  coverCredit: 'THE LEGENDARY POET · утверждённая ИИ-реконструкция; вымышленная совместная сцена, не историческое свидетельство',
   tags: ['Александр Пушкин', 'Михаил Лермонтов', 'Пророк', 'библейская оценка'],
   blocks,
   sources: [
