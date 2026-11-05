@@ -176,6 +176,30 @@ function resolveNpxLauncher() {
   return { command: process.execPath, prefix: [npxCli] };
 }
 
+function runPinnedWrangler(npxLauncher, repoRoot, args) {
+  return spawnSync(
+    npxLauncher.command,
+    [...npxLauncher.prefix, '--yes', `wrangler@${WRANGLER_VERSION}`, ...args],
+    {
+      cwd: join(repoRoot, 'workers/community-api'),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    },
+  );
+}
+
+function assertRemoteCleanupReady(npxLauncher, repoRoot) {
+  // Read-only authority probe must pass BEFORE human token input or any live row.
+  // This catches missing Cloudflare authentication, inaccessible D1 and CLI errors.
+  const check = runPinnedWrangler(npxLauncher, repoRoot, [
+    'd1', 'execute', DATABASE_NAME, '--remote', '--command=SELECT 1 AS cleanup_preflight',
+  ]);
+  if (check.status !== 0) {
+    fail('Cloudflare remote D1 cleanup preflight failed; authenticate Wrangler and verify production D1 access before proceeding. No live certification rows were written.');
+  }
+}
+
 async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targetId, commentId, repoRoot, npxLauncher }) {
   const temp = await mkdtemp(join(tmpdir(), 'tlp-community-live-cleanup-'));
   const sqlPath = join(temp, 'cleanup.sql');
@@ -191,16 +215,9 @@ async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targe
   ].join('\n');
   await writeFile(sqlPath, sql, { encoding: 'utf8', mode: 0o600 });
 
-  const result = spawnSync(
-    npxLauncher.command,
-    [...npxLauncher.prefix, '--yes', `wrangler@${WRANGLER_VERSION}`, 'd1', 'execute', DATABASE_NAME, '--remote', `--file=${sqlPath}`],
-    {
-      cwd: join(repoRoot, 'workers/community-api'),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    },
-  );
+  const result = runPinnedWrangler(npxLauncher, repoRoot, [
+    'd1', 'execute', DATABASE_NAME, '--remote', `--file=${sqlPath}`,
+  ]);
 
   if (result.status !== 0) {
     process.stderr.write('ERROR: live proof completed, but D1 cleanup failed.\n');
@@ -236,6 +253,8 @@ async function main() {
   if (!Array.isArray(ids) || !ids.includes(options.targetId)) {
     fail(`Target ${options.targetType}:${options.targetId} is not present in the current production manifest`);
   }
+
+  assertRemoteCleanupReady(npxLauncher, repoRoot);
 
   process.stdout.write([
     '',
