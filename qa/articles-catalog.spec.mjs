@@ -8,6 +8,9 @@ const EXPECTED_PUBLISHED_ESSAY_HREFS = [
   '/essays/simonov-syn-artillerista-realnaya-istoriya',
   '/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive',
   '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
+  // Separate source-led acceptance list: every approved public release is explicit,
+  // so a missing catalog card cannot pass by comparing data to itself.
+  '/essays/pushkin-lermontov-dva-proroka',
   '/essays/yesenin-kutezhi',
   '/essays/sergei-yesenin-1895-1921',
   '/essays/sergei-yesenin-1921-1925',
