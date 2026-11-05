@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { estimateReadTime } from '../src/utils/readTime';
+import { sectionAnchor } from '../src/components/essay/anchor';
 import type { Essay } from '../src/types/essay';
 
 interface RawEssayModule {
@@ -36,6 +37,80 @@ for (const entry of rawModules) {
 
 const { getAllEssays, getEssayBySlug } = await import('../src/data/essays/index');
 const catalog = getAllEssays();
+
+/**
+ * Editorial drafts are deliberately not part of the public catalog. Validate
+ * them at the existing publication boundary rather than adding a second
+ * manifest or a parallel CI pipeline. When an essay is ready for publication,
+ * remove it from this list and register its reviewed input in rawModules.
+ */
+const stagedDraftModules: RawEssayModule[] = [
+  { path: '../src/data/essays/prorokDraft', exportName: 'prorokDraft' },
+];
+
+for (const entry of stagedDraftModules) {
+  const module = await import(entry.path);
+  const draft = module[entry.exportName] as Omit<Essay, 'date' | 'cover'> | undefined;
+  if (!draft) throw new Error(`missing staged editorial export ${entry.exportName}`);
+  const slug = draft.slug;
+  const assert = (ok: unknown, reason: string) => {
+    if (!ok) throw new Error(`staged essay ${slug}: ${reason}`);
+  };
+
+  assert(/^[a-z0-9-]+$/.test(slug), 'invalid slug');
+  assert(draft.id?.trim() && draft.title?.trim() && draft.excerpt?.trim(), 'missing identity or title');
+  assert(draft.blocks.length && draft.sources?.length, 'empty content or bibliography');
+  assert(!('date' in draft) && !('cover' in draft) && !('cardCover' in draft),
+    'raw draft must not invent a publication date or cover');
+  assert(draft.readTime === estimateReadTime(draft.blocks), 'readTime drift');
+  assert(!catalog.some((item) => item.id === draft.id || item.slug === slug),
+    'staged draft leaked into the public catalog before publication approval');
+
+  const ids = new Set<string>();
+  const urls = new Set<string>();
+  for (const source of draft.sources ?? []) {
+    assert(source.id && /^[a-z0-9-]+$/.test(source.id) && !ids.has(source.id),
+      `missing or duplicate source ID: ${source.id ?? '(none)'}`);
+    ids.add(source.id!);
+    assert(source.title.trim() && source.note?.trim(), `missing source title/note: ${source.id}`);
+    assert(source.url, `missing source URL: ${source.id}`);
+    let url: URL;
+    try {
+      url = new URL(source.url!);
+    } catch {
+      throw new Error(`staged essay ${slug}: invalid source URL: ${source.id}`);
+    }
+    assert(url.protocol === 'https:', `source URL must be HTTPS: ${source.id}`);
+    const normalized = `${url.origin}${url.pathname.replace(/\/$/, '')}${url.search}`;
+    assert(!urls.has(normalized), `duplicate source URL: ${source.id}`);
+    urls.add(normalized);
+  }
+
+  const anchors = new Set<string>();
+  const cited = new Set<string>();
+  for (const [index, block] of draft.blocks.entries()) {
+    if (block.type === 'section') {
+      assert(block.heading.trim(), `empty heading at block ${index + 1}`);
+      const id = sectionAnchor(block.heading, block.anchor);
+      assert(id.trim() && !anchors.has(id), `duplicate or empty section anchor: ${id}`);
+      anchors.add(id);
+    }
+    if ('text' in block && typeof block.text === 'string') {
+      assert(block.text.trim(), `empty text at block ${index + 1}`);
+    }
+    if ('sourceIds' in block && block.sourceIds) {
+      for (const id of block.sourceIds) {
+        assert(ids.has(id), `block ${index + 1} cites missing source: ${id}`);
+        cited.add(id);
+      }
+    }
+  }
+  for (const id of ids) assert(cited.has(id), `unused source: ${id}`);
+
+  console.log(
+    `Staged essay ${slug}: ${draft.blocks.length} blocks, ${anchors.size} sections, ${ids.size} cited sources; not published.`,
+  );
+}
 
 function assertDeepFrozen(value: unknown, path: string, seen = new Set<object>()): void {
   if (!value || typeof value !== 'object') return;
