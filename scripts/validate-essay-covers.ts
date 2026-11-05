@@ -31,6 +31,13 @@ const approvedCovers: Record<string, ApprovedCover> = {
     alt: 'Михаил Лермонтов на одинокой ночной дороге — редакционная кинематографическая реконструкция образного мира стихотворения',
     credit: 'THE LEGENDARY POET · редакционная реконструкция на основе портретного референса',
   },
+  'pushkin-lermontov-dva-proroka': {
+    cover: '/images/essays/pushkin-lermontov/two-prophets-hero.webp',
+    bytes: 96_618,
+    sha256: '02c0b48c42128dbbbdd7c34208286ba972b5e957f9ddf7b06e690deded5194a6',
+    alt: 'Пушкин и Лермонтов у Невы — художественная реконструкция воображаемой совместной сцены, не историческая фотография',
+    credit: 'THE LEGENDARY POET · утверждённая ИИ-реконструкция; вымышленная совместная сцена, не историческое свидетельство',
+  },
   'sergei-yesenin-1895-1921': {
     cover: '/images/essays/yesenin/yesenin-part-1-editorial.webp',
     bytes: 81_494,
