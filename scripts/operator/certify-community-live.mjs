@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -41,6 +42,13 @@ function parseArgs(argv) {
   return { targetType, targetId };
 }
 
+function normalizeHiddenPaste(value) {
+  // Windows terminal bracketed-paste sequences can reach raw-mode stdin as
+  // printable "[200~" and "[201~" after the ESC byte was discarded.
+  // Strip only complete boundary markers; never print the secret input.
+  return value.trim().replace(/^(?:\[200~)+/, '').replace(/(?:\[201~)+$/, '').trim();
+}
+
 function readHidden(label) {
   if (!process.stdin.isTTY || !process.stdout.isTTY || typeof process.stdin.setRawMode !== 'function') {
     fail('Actor tokens must be entered from an interactive local TTY; piping/environment token injection is deliberately unsupported.');
@@ -61,7 +69,7 @@ function readHidden(label) {
 
     const finish = () => {
       restore();
-      const trimmed = value.trim();
+      const trimmed = normalizeHiddenPaste(value);
       if (!trimmed) reject(new Error('Actor token cannot be empty'));
       else resolveValue(trimmed);
     };
@@ -155,7 +163,51 @@ function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
-async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targetId, commentId, repoRoot }) {
+function resolveNpxLauncher() {
+  if (process.platform !== 'win32') {
+    return { command: 'npx', prefix: [] };
+  }
+
+  // Node 22 on Windows cannot spawn npx.cmd directly without a shell (EINVAL).
+  // Invoke the npm-bundled JavaScript entrypoint through Node instead; avoid
+  // shell quoting of the temporary SQL path and other CLI arguments.
+  const npmCli = process.env.npm_execpath;
+  const candidates = [
+    npmCli ? join(dirname(npmCli), 'npx-cli.js') : null,
+    join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js'),
+  ];
+  const npxCli = candidates.find((candidate) => candidate && existsSync(candidate));
+  if (!npxCli) {
+    fail('Windows npx-cli.js was not found. Run through npm run with a complete Node.js/npm installation.');
+  }
+  return { command: process.execPath, prefix: [npxCli] };
+}
+
+function runPinnedWrangler(npxLauncher, repoRoot, args) {
+  return spawnSync(
+    npxLauncher.command,
+    [...npxLauncher.prefix, '--yes', `wrangler@${WRANGLER_VERSION}`, ...args],
+    {
+      cwd: join(repoRoot, 'workers/community-api'),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    },
+  );
+}
+
+function assertRemoteCleanupReady(npxLauncher, repoRoot) {
+  // Read-only authority probe must pass BEFORE human token input or any live row.
+  // This catches missing Cloudflare authentication, inaccessible D1 and CLI errors.
+  const check = runPinnedWrangler(npxLauncher, repoRoot, [
+    'd1', 'execute', DATABASE_NAME, '--remote', '--command=SELECT 1 AS cleanup_preflight',
+  ]);
+  if (check.status !== 0) {
+    fail('Cloudflare remote D1 cleanup preflight failed; authenticate Wrangler and verify production D1 access before proceeding. No live certification rows were written.');
+  }
+}
+
+async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targetId, commentId, repoRoot, npxLauncher }) {
   const temp = await mkdtemp(join(tmpdir(), 'tlp-community-live-cleanup-'));
   const sqlPath = join(temp, 'cleanup.sql');
   const actors = `${sqlLiteral(actorA)}, ${sqlLiteral(actorB)}`;
@@ -170,23 +222,15 @@ async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targe
   ].join('\n');
   await writeFile(sqlPath, sql, { encoding: 'utf8', mode: 0o600 });
 
-  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-  const result = spawnSync(
-    npx,
-    ['--yes', `wrangler@${WRANGLER_VERSION}`, 'd1', 'execute', DATABASE_NAME, '--remote', `--file=${sqlPath}`],
-    {
-      cwd: join(repoRoot, 'workers/community-api'),
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    },
-  );
+  const result = runPinnedWrangler(npxLauncher, repoRoot, [
+    'd1', 'execute', DATABASE_NAME, '--remote', `--file=${sqlPath}`,
+  ]);
 
   if (result.status !== 0) {
     process.stderr.write('ERROR: live proof completed, but D1 cleanup failed.\n');
     process.stderr.write(`Cleanup SQL retained locally at: ${sqlPath}\n`);
     process.stderr.write('Do not publish that file; it contains pseudonymous actor UUIDs. Re-run the pinned Wrangler cleanup locally.\n');
-    const message = String(result.stderr || result.stdout || '').split(/\r?\n/).filter(Boolean).slice(-4).join(' | ');
+    const message = String(result.error?.message || result.stderr || result.stdout || '').split(/\r?\n/).filter(Boolean).slice(-4).join(' | ');
     if (message) process.stderr.write(`Wrangler: ${message}\n`);
     return { ok: false, temp, sqlPath };
   }
@@ -198,6 +242,8 @@ async function cleanupCertificationArtifacts({ actorA, actorB, targetType, targe
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+  // Validate the cleanup launcher before any human token is requested or live row written.
+  const npxLauncher = resolveNpxLauncher();
 
   const health = await fetchJson(`${PRODUCTION_API_URL}/health`);
   expectResponse(health, 200);
@@ -215,6 +261,8 @@ async function main() {
     fail(`Target ${options.targetType}:${options.targetId} is not present in the current production manifest`);
   }
 
+  assertRemoteCleanupReady(npxLauncher, repoRoot);
+
   process.stdout.write([
     '',
     'Human boundary:',
@@ -225,10 +273,22 @@ async function main() {
     '',
   ].join('\n'));
 
-  const tokenA = await readHidden('Fresh profile A actorToken (hidden): ');
-  const tokenB = await readHidden('Fresh profile B actorToken (hidden): ');
-  const sessionA = decodeActorSession(tokenA);
-  const sessionB = decodeActorSession(tokenB);
+  // Validate each local hidden entry before moving on to the next browser
+  // profile. Failed format is retried without printing or storing token bytes.
+  async function acquireProfile(profile) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const token = await readHidden(`Fresh profile ${profile} actorToken (hidden): `);
+      try {
+        return { token, session: decodeActorSession(token) };
+      } catch {
+        process.stderr.write(`Profile ${profile}: invalid/expired signed actorToken (attempt ${attempt}/3). Copy ONLY the actorToken field from the fresh browser profile. No token bytes were printed.\\n`);
+      }
+    }
+    fail(`Profile ${profile}: no valid signed session after three attempts; restart after refreshing the site's human-backed session`);
+  }
+
+  const { token: tokenA, session: sessionA } = await acquireProfile('A');
+  const { token: tokenB, session: sessionB } = await acquireProfile('B');
   if (tokenA === tokenB || sessionA.actor === sessionB.actor) {
     fail('Rotated identity proof requires two distinct signed actor sessions from two fresh human-backed profiles');
   }
@@ -300,6 +360,7 @@ async function main() {
         targetId: options.targetId,
         commentId,
         repoRoot,
+        npxLauncher,
       });
     }
   }
