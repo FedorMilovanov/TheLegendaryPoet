@@ -244,7 +244,7 @@ export const prorokDraft: Omit<Essay, 'date' | 'cover'> = {
     {
       id: "prorok-pushkin-feb-commentary",
       title: "А. С. Пушкин. ПСС в 16 т. Т. 3, кн. 2. 1949. С. 1130: примечание к «Пророку»",
-      url: "http://feb-web.ru/feb/pushkin/texts/push17/vol03/y32-b23-.htm?cmd=p#1826.ПРОРОК",
+      url: "https://feb-web.ru/feb/pushkin/texts/push17/vol03/y32-b23-.htm?cmd=p#1826.ПРОРОК",
       kind: "research",
       institution: "Фундаментальная электронная библиотека",
       note: "Академический аппарат: первая публикация, датировка 1826 года и более позднее оформление заглавия/первой строки; скан «Московского вестника» и автографы не просмотрены.",
