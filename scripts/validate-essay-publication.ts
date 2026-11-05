@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { estimateReadTime } from '../src/utils/readTime';
+import { sectionAnchor } from '../src/components/essay/anchor';
 import type { Essay } from '../src/types/essay';
 
 interface RawEssayModule {
@@ -11,6 +12,7 @@ const rawModules: RawEssayModule[] = [
   { path: '../src/data/essays/simonovSonArtilleristaDraft', exportName: 'simonovSonArtilleristaDraft' },
   { path: '../src/data/essays/benislavskayaDraft', exportName: 'benislavskayaDraft' },
   { path: '../src/data/essays/lermontovRoadEssay', exportName: 'lermontovRoadEssay' },
+  { path: '../src/data/essays/prorokDraft', exportName: 'prorokDraft' },
   { path: '../src/data/essays/yeseninVisual', exportName: 'yeseninKutezhiVisual' },
   { path: '../src/data/essays/yeseninPartOnePublic', exportName: 'yeseninPartOnePublic' },
   { path: '../src/data/essays/yeseninPartTwoPublic', exportName: 'yeseninPartTwoPublic' },
@@ -36,6 +38,79 @@ for (const entry of rawModules) {
 
 const { getAllEssays, getEssayBySlug } = await import('../src/data/essays/index');
 const catalog = getAllEssays();
+
+/**
+ * Recent independently reviewed editorial essays must retain their verified
+ * bibliography and section identities after registration in the public catalog.
+ * This check runs in the canonical publication pipeline, not a parallel CI job.
+ */
+const reviewedEditorialModules: RawEssayModule[] = [
+  { path: '../src/data/essays/prorokDraft', exportName: 'prorokDraft' },
+];
+
+for (const entry of reviewedEditorialModules) {
+  const module = await import(entry.path);
+  const draft = module[entry.exportName] as Essay | undefined;
+  if (!draft) throw new Error(`missing reviewed editorial export ${entry.exportName}`);
+  const slug = draft.slug;
+  const assert = (ok: unknown, reason: string) => {
+    if (!ok) throw new Error(`reviewed essay ${slug}: ${reason}`);
+  };
+
+  assert(/^[a-z0-9-]+$/.test(slug), 'invalid slug');
+  assert(draft.id?.trim() && draft.title?.trim() && draft.excerpt?.trim(), 'missing identity or title');
+  assert(draft.blocks.length && draft.sources?.length, 'empty content or bibliography');
+  assert(/^\d{4}-\d{2}-\d{2}$/.test(draft.date) && draft.cover.startsWith('/images/'),
+    'published essay requires reviewed date and local cover');
+  assert(draft.readTime === estimateReadTime(draft.blocks), 'readTime drift');
+  assert(catalog.some((item) => item.id === draft.id && item.slug === slug && item.cover === draft.cover),
+    'reviewed essay must be registered in the canonical published catalog with its approved cover');
+
+  const ids = new Set<string>();
+  const urls = new Set<string>();
+  for (const source of draft.sources ?? []) {
+    assert(source.id && /^[a-z0-9-]+$/.test(source.id) && !ids.has(source.id),
+      `missing or duplicate source ID: ${source.id ?? '(none)'}`);
+    ids.add(source.id!);
+    assert(source.title.trim() && source.note?.trim(), `missing source title/note: ${source.id}`);
+    assert(source.url, `missing source URL: ${source.id}`);
+    let url: URL;
+    try {
+      url = new URL(source.url!);
+    } catch {
+      throw new Error(`staged essay ${slug}: invalid source URL: ${source.id}`);
+    }
+    assert(url.protocol === 'https:', `source URL must be HTTPS: ${source.id}`);
+    const normalized = `${url.origin}${url.pathname.replace(/\/$/, '')}${url.search}`;
+    assert(!urls.has(normalized), `duplicate source URL: ${source.id}`);
+    urls.add(normalized);
+  }
+
+  const anchors = new Set<string>();
+  const cited = new Set<string>();
+  for (const [index, block] of draft.blocks.entries()) {
+    if (block.type === 'section') {
+      assert(block.heading.trim(), `empty heading at block ${index + 1}`);
+      const id = sectionAnchor(block.heading, block.anchor);
+      assert(id.trim() && !anchors.has(id), `duplicate or empty section anchor: ${id}`);
+      anchors.add(id);
+    }
+    if ('text' in block && typeof block.text === 'string') {
+      assert(block.text.trim(), `empty text at block ${index + 1}`);
+    }
+    if ('sourceIds' in block && block.sourceIds) {
+      for (const id of block.sourceIds) {
+        assert(ids.has(id), `block ${index + 1} cites missing source: ${id}`);
+        cited.add(id);
+      }
+    }
+  }
+  for (const id of ids) assert(cited.has(id), `unused source: ${id}`);
+
+  console.log(
+    `Reviewed published essay ${slug}: ${draft.blocks.length} blocks, ${anchors.size} sections, ${ids.size} cited sources.`,
+  );
+}
 
 function assertDeepFrozen(value: unknown, path: string, seen = new Set<object>()): void {
   if (!value || typeof value !== 'object') return;

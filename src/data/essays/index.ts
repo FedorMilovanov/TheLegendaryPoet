@@ -16,6 +16,7 @@ import { mayakovskyPartOne } from './mayakovskyPartOne';
 import { mayakovskyPartTwo } from './mayakovskyPartTwoVisual';
 import { brikCaseVisual } from './brikCaseVisual';
 import { lermontovRoadEssay } from './lermontovRoadEssay';
+import { prorokDraft } from './prorokDraft';
 import {
   brikDocumentSources,
   mayakovskyEarlySources,
@@ -66,6 +67,8 @@ const lermontovRoadPublished = publishEssay(lermontovRoadEssay, {
   coverCredit:
     'THE LEGENDARY POET · редакционная реконструкция на основе портретного референса',
 });
+
+const prorokPublished = publishEssay(prorokDraft);
 
 const yeseninKutezhiPublished = publishEssay(yeseninKutezhiVisual, {
   coverKind: 'reconstruction',
@@ -558,6 +561,7 @@ export const essays: readonly Essay[] = publishEssayCatalog([
   simonovSonArtilleristaPublished,
   benislavskayaPublished,
   lermontovRoadPublished,
+  prorokPublished,
   yeseninKutezhiPublished,
   yeseninPartOnePublished,
   yeseninPartTwoPublished,

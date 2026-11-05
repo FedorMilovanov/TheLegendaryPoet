@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5ffcf8cf6622802fd97affa6b7db8785be6b3476e0d5d3539a61b995d473388a"
+      "fingerprint": "c56e394bb76dc417e7ece39b9bb3bf9f054af92242ba22f6d9f57569b1bfb3ae"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "be187db9a522c91ea5d3c754950c63cf829900616bcf345707c1b346ed379d73"
+      "fingerprint": "78efe5e1816602bd4941406cdb4fd10c2bc0b8f938de745988e56f0a60839bcc"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -203,6 +203,14 @@
       "state": "ready",
       "lastmod": "2026-08-04",
       "fingerprint": "5d01703d0f3d06e33f81fcea3b3a3c62005a3810f5cefd98a04e7cab9c308c92"
+    },
+    {
+      "url": "https://thelegendarypoet.ru/essays/pushkin-lermontov-dva-proroka/",
+      "path": "/essays/pushkin-lermontov-dva-proroka/",
+      "routeId": "essay",
+      "state": "ready",
+      "lastmod": "2026-11-05",
+      "fingerprint": "38ad8beebce43b454a745c24ffb9632a582384ae585b9de59047460d4c433409"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/yesenin-kutezhi/",
