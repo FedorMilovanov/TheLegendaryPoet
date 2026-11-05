@@ -104,6 +104,27 @@ assets:
     source_use: not_primary_evidence
     notes: Interpretive scene inspired by the poem; not a photograph of a documented route or event.
 
+  - path: public/images/essays/pushkin-lermontov/two-prophets-hero.webp
+    role: essay_hero_and_card
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/research/TWO_PROPHETS_COVER_RELEASE_2026-11-05.md
+    creator_tool: OpenAI image_gen
+    master_file_id: file_000000009f1c820a806fa502ee3b5f62
+    master_generation_id: 2fde56ba-865b-4159-9837-38b43f368562
+    master_name: "пушкин_и_лермонтов_у_невы.png"
+    master_dimensions: 1672x941
+    master_bytes: 2088089
+    master_sha256: 6aa49b6551d2f07aabdebe68befdc5e02e4dcb5d04dacd05278fbc806d666ae3
+    production_recipe: "ImageOps.fit 1280x720 LANCZOS center(0.5,0.5); Pillow WebP quality 90, method 6, exact True"
+    intrinsic: 1280x720
+    bytes: 96618
+    sha256: 02c0b48c42128dbbbdd7c34208286ba972b5e957f9ddf7b06e690deded5194a6
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    approved_at: "2026-11-05"
+    source_use: not_primary_evidence
+    depiction_disclosure: "Imagined shared moment with Pushkin and Lermontov on the Neva; not a historical photograph or evidence they met."
+    notes: "User-approved final image. Neither unverified legacy portrait at public/images/pushkin.jpg or public/images/lermontov.jpg was reused as a new source."
+
   - path: public/images/essays/yesenin/yesenin-part-1-editorial.webp
     role: essay_hero_and_card
     origin_class: local_cinematic_editorial_reconstruction
