@@ -64,6 +64,19 @@ const laneSpecs = [
     ],
   },
   {
+    id: 'site-browser-release',
+    workflowFile: '.github/workflows/manual-browser-qa.yml',
+    unrestrictedPullRequestTrigger: true,
+    requiredPaths: ['.github/workflows/manual-browser-qa.yml', 'qa/**', 'src/**',
+      'public/discovery-manifest.json', 'playwright.config.mjs'],
+  },
+  {
+    id: 'brand-painted-contrast',
+    workflowFile: '.github/workflows/brand-deep-audit.yml',
+    unrestrictedPullRequestTrigger: true,
+    requiredPaths: ['.github/workflows/brand-deep-audit.yml', 'qa/painted-contrast*.mjs', 'src/**', 'public/sitemap.xml'],
+  },
+  {
     id: 'hall-web-runtime-proof',
     workflowFile: '.github/workflows/hall-web-runtime-proof.yml',
     requiredPaths: [
@@ -96,8 +109,15 @@ for (const spec of laneSpecs) {
   expect(paths.length > 0, `${spec.id} path contract is empty`);
   expect(new Set(paths).size === paths.length, `${spec.id} path contract contains duplicates`);
   const workflowPaths = pullRequestPaths(read(spec.workflowFile));
-  expect(workflowPaths.length > 0, `${spec.id} pull_request path filter could not be parsed`);
-  expect(JSON.stringify(workflowPaths) === JSON.stringify(paths), `${spec.id} pull_request paths drifted from docs/merge-certification.json; update the SSOT and workflow together`);
+  if (spec.unrestrictedPullRequestTrigger) {
+    // The canonical brand workflow already runs on every PR. Its required
+    // merge-certification waiter is scoped to affected owners, not a second run.
+    expect(workflowPaths.length === 0, `${spec.id} must not restrict the canonical brand-audit PR trigger`);
+    expect(read(spec.workflowFile).includes('  pull_request:\n    branches: [main]'), `${spec.id} must run for every main-targeted PR`);
+  } else {
+    expect(workflowPaths.length > 0, `${spec.id} pull_request path filter could not be parsed`);
+    expect(JSON.stringify(workflowPaths) === JSON.stringify(paths), `${spec.id} pull_request paths drifted from docs/merge-certification.json; update the SSOT and workflow together`);
+  }
 
   for (const requiredPath of spec.requiredPaths) {
     expect(paths.includes(requiredPath), `${spec.id} mapping lost required path: ${requiredPath}`);
@@ -112,11 +132,15 @@ const outside = classifyChangedFiles(['README.md', 'docs/research/example.md'], 
 expect(outside.lanes['hall-pushkin-offline-exhibit']?.required === false, 'unrelated docs must not require offline Hall');
 expect(outside.lanes['hall-pushkin-visual-remediation']?.required === false, 'unrelated docs must not require visual-remediation Hall');
 expect(outside.lanes['hall-web-runtime-proof']?.required === false, 'unrelated docs must not require Hall web runtime proof');
+expect(outside.lanes['brand-painted-contrast']?.required === false, 'unrelated docs must not require painted contrast waiter');
+expect(outside.lanes['site-browser-release']?.required === false, 'unrelated docs must not require full browser QA waiter');
 
 const packageScope = classifyChangedFiles(['package.json'], contract);
 expect(packageScope.lanes['hall-pushkin-offline-exhibit']?.required === true, 'package.json must require offline Hall');
 expect(packageScope.lanes['hall-pushkin-visual-remediation']?.required === false, 'package.json must not require visual-remediation Hall unless its workflow trigger changes');
 expect(packageScope.lanes['hall-web-runtime-proof']?.required === true, 'package.json must require Hall web runtime proof');
+expect(packageScope.lanes['brand-painted-contrast']?.required === true, 'package.json must require painted contrast waiter');
+expect(packageScope.lanes['site-browser-release']?.required === true, 'package.json must require full browser QA waiter');
 
 const lookdevScope = classifyChangedFiles(['scripts/hall-lookdev/example.mjs'], contract);
 expect(lookdevScope.lanes['hall-pushkin-offline-exhibit']?.required === false, 'lookdev-only change must not require offline Hall');
@@ -138,6 +162,18 @@ expect(sharedAuthorityScope.lanes['hall-pushkin-offline-exhibit']?.required === 
 expect(sharedAuthorityScope.lanes['hall-pushkin-visual-remediation']?.required === true, 'H3 layout authority must require visual remediation');
 expect(sharedAuthorityScope.lanes['hall-web-runtime-proof']?.required === true, 'H3 layout authority must require web runtime proof');
 
+const paintedScope = classifyChangedFiles(['qa/painted-contrast-extended.spec.mjs'], contract);
+expect(paintedScope.lanes['brand-painted-contrast']?.required === true, 'painted contrast test modifications must require exact-head painted audit');
+const renderScope = classifyChangedFiles(['src/components/poet-detail/PoemCard.tsx'], contract);
+expect(renderScope.lanes['brand-painted-contrast']?.required === true, 'visual owner modifications must require exact-head painted audit');
+
+const fullBrowserScope = classifyChangedFiles(['qa/painted-contrast.spec.mjs'], contract);
+expect(fullBrowserScope.lanes['site-browser-release']?.required === true, 'all canonical browser QA test changes must require full exact-head browser workflow');
+const musicScope = classifyChangedFiles(['src/pages/MusicPage.tsx'], contract);
+expect(musicScope.lanes['site-browser-release']?.required === true, 'visual app owner modifications must require full exact-head browser workflow');
+const discoveryScope = classifyChangedFiles(['public/discovery-manifest.json'], contract);
+expect(discoveryScope.lanes['site-browser-release']?.required === true, 'canonical route discovery changes must require full exact-head browser workflow');
+
 const mergeWorkflow = read('.github/workflows/merge-certification.yml');
 for (const token of [
   'name: Merge certification',
@@ -151,13 +187,23 @@ for (const token of [
   'hall_offline_required:',
   'hall_visual_required:',
   'hall_web_runtime_required:',
+  'brand_contrast_required:',
+  'browser_qa_required:',
+  "if: needs.scope.outputs.browser_qa_required == 'true'",
+  '--lane site-browser-release',
+  'needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime, brand-painted-contrast, site-browser-qa]',
+  'test "$BROWSER_QA_RESULT" = "success"',
+  'test "$BROWSER_QA_RESULT" = "skipped"',
+  "if: needs.scope.outputs.brand_contrast_required == 'true'",
+  '--lane brand-painted-contrast',
+  'test "$BRAND_CONTRAST_RESULT" = "success"',
+  'test "$BRAND_CONTRAST_RESULT" = "skipped"',
   "if: needs.scope.outputs.hall_offline_required == 'true'",
   "if: needs.scope.outputs.hall_visual_required == 'true'",
   "if: needs.scope.outputs.hall_web_runtime_required == 'true'",
   '--lane hall-pushkin-offline-exhibit',
   '--lane hall-pushkin-visual-remediation',
   '--lane hall-web-runtime-proof',
-  'needs: [scope, hall-pushkin-offline, hall-pushkin-visual, hall-web-runtime]',
   'name: merge-certification',
   'test "$OFFLINE_RESULT" = "success"',
   'test "$OFFLINE_RESULT" = "skipped"',
@@ -172,6 +218,8 @@ expect(!mergeWorkflow.includes('if: always()'), 'final aggregate job must not us
 expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-pushkin-offline-exhibit.yml'), 'aggregate certification must observe offline Hall rather than start a duplicate render');
 expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-pushkin-visual-remediation.yml'), 'aggregate certification must observe visual-remediation Hall rather than start a duplicate render');
 expect(!mergeWorkflow.includes('uses: ./.github/workflows/hall-web-runtime-proof.yml'), 'aggregate certification must observe web runtime proof rather than start duplicate browser work');
+expect(!mergeWorkflow.includes('uses: ./.github/workflows/brand-deep-audit.yml'), 'aggregate certification must observe painted audit rather than start duplicate browser work');
+expect(!mergeWorkflow.includes('uses: ./.github/workflows/manual-browser-qa.yml'), 'aggregate certification must observe existing Manual Browser QA rather than start duplicate browsers');
 
 const waiter = read('scripts/wait-for-workflow-certification.mjs');
 for (const token of [

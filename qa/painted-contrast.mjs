@@ -346,6 +346,24 @@ const HIDE_INK = `*, *::before, *::after { color: transparent !important; -webki
 // shows the surface behind the word, not the word's own fill.
 const HIDE_GRADIENT_INK = `[data-sweep-gradient] { background-image: none !important; }`;
 
+// Screenshot({ animations: 'disabled' }) fast-forwards finite transforms for
+// the *capture* only, then restores the CSS transition. A fixed header moving
+// into or out of view can therefore be in one place in the screenshot and
+// another when the geometric chrome mask is read. On the 16k-pixel Gumilev
+// page this misidentified cream header pixels as the dark poem's background.
+//
+// The painted contrast census tests settled UI states, not the intermediate
+// movement of fixed controls. Keep those controls in their CSS end positions
+// for the entire masked capture and overlay/rect verification. Preserve their
+// actual position, opacity, visibility, z-index, and occlusion. Do not change
+// colours or WCAG thresholds.
+const STABILIZE_FIXED_CHROME = `
+  .site-header, .mobile-dock, .palette-fab {
+    transition-property: none !important;
+  }
+`;
+
+
 const MEASURE = async ({ shot, nodes, minimum, minimumLarge, minimumIcon }) => {
   const img = new Image();
   img.src = `data:image/png;base64,${shot}`;
@@ -688,7 +706,7 @@ export async function paintedSweep(page, options = {}) {
     const covered = [];
     const missed = [];
     if (!list.length) return { rows, gradientInk, covered, missed };
-    const style = await page.addStyleTag({ content: styleContent });
+    const style = await page.addStyleTag({ content: `${styleContent}\n${STABILIZE_FIXED_CHROME}` });
     await page.waitForTimeout(250);
     // Chrome is collected again where it is painted now, not where it was when
     // the sweep began — and, just as often, re-collected because it was not
@@ -778,7 +796,46 @@ export async function paintedSweep(page, options = {}) {
         visible.push({ ...node, rect: clipped, blocks: open, offset: requested });
       }
       if (!visible.length) return { rows: [], gradientInk: [] };
-      return page.evaluate(MEASURE, { shot, nodes: visible, minimum, minimumLarge, minimumIcon });
+      const result = await page.evaluate(MEASURE, { shot, nodes: visible, minimum, minimumLarge, minimumIcon });
+      // Observe the exact sampled band rather than a post-test element screenshot,
+      // which auto-scrolls to a different offset and can mislead investigation.
+      // This captures evidence only; no WCAG threshold, route or verdict changes.
+      const bad = [...result.rows, ...result.gradientInk]
+        .filter((row) => row.ratio !== null && row.ratio < row.minimum)
+        .slice(0, 5);
+      if (bad.length) {
+        const geometry = await page.evaluate((ids) => {
+          const box = (el) => {
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            return { x: +r.x.toFixed(1), y: +r.y.toFixed(1),
+              width: +r.width.toFixed(1), height: +r.height.toFixed(1) };
+          };
+          const header = document.querySelector('.site-header');
+          const style = header && getComputedStyle(header);
+          return {
+            actualScrollY: scrollY,
+            chromeHidden: document.documentElement.classList.contains('chrome-hidden'),
+            header: { rect: box(header), transform: style?.transform ?? null, opacity: style?.opacity ?? null },
+            nodes: ids.map((id) => {
+              const el = document.querySelector('[data-sweep-node="' + id + '"]');
+              const r = el?.getBoundingClientRect();
+              const x = r ? Math.max(0, Math.min(innerWidth - 1, r.left + r.width / 2)) : 0;
+              const y = r ? Math.max(0, Math.min(innerHeight - 1, r.top + r.height / 2)) : 0;
+              const hit = r && document.elementFromPoint(x, y);
+              const owner = el?.closest('.theme-dark-island, .poem-reader-surface');
+              return { id, rect: box(el),
+                hit: hit ? { tag: hit.tagName, cls: String(hit.className).slice(0, 100) } : null,
+                darkOwner: owner ? { rect: box(owner), bg: getComputedStyle(owner).backgroundColor } : null };
+            }),
+          };
+        }, bad.map((row) => String(row.id)));
+        console.log('[painted-contrast-band-evidence] ' + JSON.stringify({ requested, geometry,
+          chromeAtCapture: overlays.map(({ id, x, y, width, height, cls }) => ({ id, x, y, width, height, cls })),
+          offenders: bad.map(({ id, text, ratio, minimum, background, rect }) => ({
+            id, text, ratio, minimum, background, rect })) }));
+      }
+      return result;
     };
     // The last offset is clamped to the final scrollable one, so its window
     // reaches back into the window before it. Score each node once, at the

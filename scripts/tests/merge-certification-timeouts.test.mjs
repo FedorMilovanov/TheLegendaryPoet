@@ -16,7 +16,7 @@ const lanes = Object.entries(contract.lanes).map(([id, lane]) => ({
 }));
 
 test('every conditional lane keeps canonical, poll and waiter timeouts ordered', () => {
-  assert.equal(lanes.length, 3);
+  assert.equal(lanes.length, 5);
   for (const { id, lane, canonical } of lanes) {
     assert.deepEqual(laneTimeoutFailures(lane, canonical, waiterWorkflow), [], `${id} timeout margin drifted`);
   }
@@ -43,4 +43,19 @@ test('a missing canonical job block is rejected instead of silently passing', ()
   const { lane } = lanes.find((entry) => entry.id === 'hall-web-runtime-proof');
   const failures = laneTimeoutFailures(lane, 'jobs:\n  some-other-job:\n    timeout-minutes: 75\n', waiterWorkflow);
   assert.deepEqual(failures, [`${lane.workflowFile} canonical job ${lane.canonicalJob} timeout drifted: workflow=null contract=${lane.canonicalJobTimeoutMinutes}`]);
+});
+
+test('painted contrast exact-head waiter inherits the canonical timeout margin', () => {
+  const entry = lanes.find(({ id }) => id === 'brand-painted-contrast');
+  assert.ok(entry, 'painted contrast lane must exist');
+  assert.deepEqual(laneTimeoutFailures(entry.lane, entry.canonical, waiterWorkflow), []);
+});
+
+test('full Manual Browser QA is one exact-head workflow gate over five existing jobs', () => {
+  const entry = lanes.find(({ id }) => id === 'site-browser-release');
+  assert.ok(entry, 'the full browser release gate must exist');
+  assert.deepEqual(laneTimeoutFailures(entry.lane, entry.canonical, waiterWorkflow), []);
+  for (const job of ['browser-qa', 'analytics-route-qa', 'webkit-home-reveal-qa', 'premium-home-qa', 'premium-iphone-critical-qa']) {
+    assert.ok(entry.canonical.includes(`  ${job}:\n`), `existing ${job} job must remain in the canonical workflow`);
+  }
 });

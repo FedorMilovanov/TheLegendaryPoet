@@ -32,7 +32,7 @@ export default function AkhmatovaReadingGuide() {
     <section
       id="akhmatova-requiem"
       aria-labelledby="akhmatova-guide-title"
-      className="luxury-card relative isolate scroll-mt-28 overflow-hidden rounded-[2rem] border border-luxury-gold/25 bg-gradient-to-b from-[#15120d] via-[#0b0a09] to-[#080808] p-5 shadow-[0_22px_80px_rgba(0,0,0,0.25)] sm:rounded-[2.5rem] sm:p-9"
+      className="theme-dark-island luxury-card relative isolate scroll-mt-28 overflow-hidden rounded-[2rem] border border-luxury-gold/25 bg-gradient-to-b from-[#15120d] via-[#0b0a09] to-[#080808] p-5 shadow-[0_22px_80px_rgba(0,0,0,0.25)] sm:rounded-[2.5rem] sm:p-9"
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-luxury-gold/10 to-transparent" />
       <div className="relative">

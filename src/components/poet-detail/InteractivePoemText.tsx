@@ -58,9 +58,13 @@ export default function InteractivePoemText({ text }: { text: string }) {
       className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-4 py-8 text-2xl leading-[2] tracking-wide shadow-inner sm:px-8 md:px-12"
       onPointerLeave={stopDwell}
     >
-      <span
+      {/* Both layers share one grid track: the longest wrapped visual line
+          participates in intrinsic height instead of escaping an absolute
+          overlay whose height was sized only by transparent canonical ink. */}
+      <div className="grid">
+        <span
         data-poem-canonical
-        className="pointer-events-auto relative z-0 block whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
+        className="pointer-events-auto relative z-0 col-start-1 row-start-1 block min-w-0 whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
         style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
       >
         {lines.map((line, lineIdx) => {
@@ -92,7 +96,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
       <div
         data-poem-visual
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-4 top-8 bottom-8 z-10 sm:inset-x-8"
+        className="pointer-events-none relative z-10 col-start-1 row-start-1 min-w-0"
       >
         {lines.map((line, lineIdx) => (
           <div key={lineIdx} className="relative z-10 flex min-h-[1.5rem] flex-wrap gap-x-[0.34em]">
@@ -142,6 +146,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                 })}
           </div>
         ))}
+      </div>
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.03),transparent_70%)]" />
