@@ -42,6 +42,13 @@ function parseArgs(argv) {
   return { targetType, targetId };
 }
 
+function normalizeHiddenPaste(value) {
+  // Windows terminal bracketed-paste sequences can reach raw-mode stdin as
+  // printable "[200~" and "[201~" after the ESC byte was discarded.
+  // Strip only complete boundary markers; never print the secret input.
+  return value.trim().replace(/^(?:\\[200~)+/, '').replace(/(?:\\[201~)+$/, '').trim();
+}
+
 function readHidden(label) {
   if (!process.stdin.isTTY || !process.stdout.isTTY || typeof process.stdin.setRawMode !== 'function') {
     fail('Actor tokens must be entered from an interactive local TTY; piping/environment token injection is deliberately unsupported.');
@@ -62,7 +69,7 @@ function readHidden(label) {
 
     const finish = () => {
       restore();
-      const trimmed = value.trim();
+      const trimmed = normalizeHiddenPaste(value);
       if (!trimmed) reject(new Error('Actor token cannot be empty'));
       else resolveValue(trimmed);
     };
@@ -266,10 +273,22 @@ async function main() {
     '',
   ].join('\n'));
 
-  const tokenA = await readHidden('Fresh profile A actorToken (hidden): ');
-  const tokenB = await readHidden('Fresh profile B actorToken (hidden): ');
-  const sessionA = decodeActorSession(tokenA);
-  const sessionB = decodeActorSession(tokenB);
+  // Validate each local hidden entry before moving on to the next browser
+  // profile. Failed format is retried without printing or storing token bytes.
+  async function acquireProfile(profile) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      const token = await readHidden(`Fresh profile ${profile} actorToken (hidden): `);
+      try {
+        return { token, session: decodeActorSession(token) };
+      } catch {
+        process.stderr.write(`Profile ${profile}: invalid/expired signed actorToken (attempt ${attempt}/3). Copy ONLY the actorToken field from the fresh browser profile. No token bytes were printed.\\n`);
+      }
+    }
+    fail(`Profile ${profile}: no valid signed session after three attempts; restart after refreshing the site's human-backed session`);
+  }
+
+  const { token: tokenA, session: sessionA } = await acquireProfile('A');
+  const { token: tokenB, session: sessionB } = await acquireProfile('B');
   if (tokenA === tokenB || sessionA.actor === sessionB.actor) {
     fail('Rotated identity proof requires two distinct signed actor sessions from two fresh human-backed profiles');
   }
