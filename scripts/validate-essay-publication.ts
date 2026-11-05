@@ -12,6 +12,7 @@ const rawModules: RawEssayModule[] = [
   { path: '../src/data/essays/simonovSonArtilleristaDraft', exportName: 'simonovSonArtilleristaDraft' },
   { path: '../src/data/essays/benislavskayaDraft', exportName: 'benislavskayaDraft' },
   { path: '../src/data/essays/lermontovRoadEssay', exportName: 'lermontovRoadEssay' },
+  { path: '../src/data/essays/prorokDraft', exportName: 'prorokDraft' },
   { path: '../src/data/essays/yeseninVisual', exportName: 'yeseninKutezhiVisual' },
   { path: '../src/data/essays/yeseninPartOnePublic', exportName: 'yeseninPartOnePublic' },
   { path: '../src/data/essays/yeseninPartTwoPublic', exportName: 'yeseninPartTwoPublic' },
@@ -39,32 +40,31 @@ const { getAllEssays, getEssayBySlug } = await import('../src/data/essays/index'
 const catalog = getAllEssays();
 
 /**
- * Editorial drafts are deliberately not part of the public catalog. Validate
- * them at the existing publication boundary rather than adding a second
- * manifest or a parallel CI pipeline. When an essay is ready for publication,
- * remove it from this list and register its reviewed input in rawModules.
+ * Recent independently reviewed editorial essays must retain their verified
+ * bibliography and section identities after registration in the public catalog.
+ * This check runs in the canonical publication pipeline, not a parallel CI job.
  */
-const stagedDraftModules: RawEssayModule[] = [
+const reviewedEditorialModules: RawEssayModule[] = [
   { path: '../src/data/essays/prorokDraft', exportName: 'prorokDraft' },
 ];
 
-for (const entry of stagedDraftModules) {
+for (const entry of reviewedEditorialModules) {
   const module = await import(entry.path);
-  const draft = module[entry.exportName] as Omit<Essay, 'date' | 'cover'> | undefined;
-  if (!draft) throw new Error(`missing staged editorial export ${entry.exportName}`);
+  const draft = module[entry.exportName] as Essay | undefined;
+  if (!draft) throw new Error(`missing reviewed editorial export ${entry.exportName}`);
   const slug = draft.slug;
   const assert = (ok: unknown, reason: string) => {
-    if (!ok) throw new Error(`staged essay ${slug}: ${reason}`);
+    if (!ok) throw new Error(`reviewed essay ${slug}: ${reason}`);
   };
 
   assert(/^[a-z0-9-]+$/.test(slug), 'invalid slug');
   assert(draft.id?.trim() && draft.title?.trim() && draft.excerpt?.trim(), 'missing identity or title');
   assert(draft.blocks.length && draft.sources?.length, 'empty content or bibliography');
-  assert(!('date' in draft) && !('cover' in draft) && !('cardCover' in draft),
-    'raw draft must not invent a publication date or cover');
+  assert(/^\d{4}-\d{2}-\d{2}$/.test(draft.date) && draft.cover.startsWith('/images/'),
+    'published essay requires reviewed date and local cover');
   assert(draft.readTime === estimateReadTime(draft.blocks), 'readTime drift');
-  assert(!catalog.some((item) => item.id === draft.id || item.slug === slug),
-    'staged draft leaked into the public catalog before publication approval');
+  assert(catalog.some((item) => item.id === draft.id && item.slug === slug && item.cover === draft.cover),
+    'reviewed essay must be registered in the canonical published catalog with its approved cover');
 
   const ids = new Set<string>();
   const urls = new Set<string>();
@@ -108,7 +108,7 @@ for (const entry of stagedDraftModules) {
   for (const id of ids) assert(cited.has(id), `unused source: ${id}`);
 
   console.log(
-    `Staged essay ${slug}: ${draft.blocks.length} blocks, ${anchors.size} sections, ${ids.size} cited sources; not published.`,
+    `Reviewed published essay ${slug}: ${draft.blocks.length} blocks, ${anchors.size} sections, ${ids.size} cited sources.`,
   );
 }
 
