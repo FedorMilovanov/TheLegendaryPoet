@@ -46,7 +46,7 @@ function normalizeHiddenPaste(value) {
   // Windows terminal bracketed-paste sequences can reach raw-mode stdin as
   // printable "[200~" and "[201~" after the ESC byte was discarded.
   // Strip only complete boundary markers; never print the secret input.
-  return value.trim().replace(/^(?:\\[200~)+/, '').replace(/(?:\\[201~)+$/, '').trim();
+  return value.trim().replace(/^(?:\[200~)+/, '').replace(/(?:\[201~)+$/, '').trim();
 }
 
 function readHidden(label) {
