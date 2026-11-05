@@ -1,4 +1,4 @@
-import type { Essay, EssayBlock } from '../src/types/essay';
+import type { Essay } from '../src/types/essay';
 import { sectionAnchor } from '../src/components/essay/anchor';
 import { getAllEssays } from '../src/data/essays/index';
 import { prorokDraft } from '../src/data/essays/prorokDraft';
