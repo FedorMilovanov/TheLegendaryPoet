@@ -36,15 +36,24 @@ if (/scan(?:-text)?\s+(?:directly\s+)?verified/iu.test(declaredStatus(award))) {
 
 const pravda1966 = requireFile('docs/research/SIMONOV_LOSKUTOV_1966_PRESS_WITNESS_2026-08.md', '1966 Pravda witness');
 requireMarkers('1966 Pravda witness', pravda1966, [
-  'exact issue/article locator recovered / scan inspection pending',
+  'DIRECT PAGE VERIFIED / RNL holder PDF received / printed byline Е. Манько / facsimile rights HOLD',
   'Человек из поэмы', '22 марта 1966', '№ 81 (17398)', 'страница 4',
   'pravda-1966-no.-81-17398-22-mar-1966',
-  'Пока недопустимо:',
-  '- пересказывать содержание статьи как будто оно прочитано;',
-  'страница 4 ещё не визуально просмотрена редакцией',
+  '## 7. Direct RNL page inspection — 2026-11-06 (SUPERSEDING GATE)',
+  '1788763734379.pdf',
+  '1,026,611 байт',
+  'a27efcd9b72f706a7c3b0afe5d54668dd52edc958b5f2fbfde2a3eaacb711a89',
+  '«Е. МАНЬКО.»',
+  'NARRATOR_IDENTITY_CONFLICT',
+  'Д. И. Ерёмин',
+  'Е. С. Рыклис',
+  'RIGHTS_HOLD',
 ]);
-if (/^Статус:.*(?:page|scan).*(?:verified|inspected|closed)/imu.test(pravda1966)) {
-  throw new Error('1966 Pravda witness falsely declares page inspection');
+if (!declaredStatus(pravda1966).startsWith('DIRECT PAGE VERIFIED / RNL holder PDF received')) {
+  throw new Error('1966 Pravda direct-page closure is missing');
+}
+if (!pravda1966.includes('**Е. Манько. `Человек из поэмы`')) {
+  throw new Error('1966 Pravda byline regressed to old О. Манько or an unverified author');
 }
 
 const sakhalin = requireFile('docs/research/SIMONOV_LOSKUTOV_SAKHALIN_ARCHIVE_GATE_2026-08.md', 'Sakhalin archive gate');

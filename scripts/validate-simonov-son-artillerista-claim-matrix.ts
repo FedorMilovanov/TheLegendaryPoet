@@ -23,6 +23,7 @@ const required = [
   '`Красная звезда` №288 p.3 теперь direct-inspected',
   'institutional scan comparison и reuse rights остаются отдельными вопросами',
   'C41', 'письмо ... в опубликованной Симоновым передаче',
+  'C42', '**Е. Манько**', '**A2 direct 1966 press object**', 'NARRATOR_IDENTITY_CONFLICT', 'Д. И. Ерёмин', 'Е. С. Рыклис', 'RIGHTS_HOLD facsimile',
   'C45', 'research-only',
   'C46', 'редакционная реконструкция; не документальная фотография',
   'Direct object supersedes delivery copy',

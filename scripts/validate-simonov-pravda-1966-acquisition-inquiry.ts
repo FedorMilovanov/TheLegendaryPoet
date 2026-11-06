@@ -1,36 +1,41 @@
 import { existsSync, readFileSync } from 'node:fs';
 
 const path = 'docs/research/SIMONOV_PRAVDA_1966_ACQUISITION_INQUIRY_2026-08.md';
-if (!existsSync(path)) throw new Error(`Simonov Pravda 1966 acquisition inquiry missing: ${path}`);
+if (!existsSync(path)) throw new Error(`Simonov Pravda 1966 acquisition source missing: ${path}`);
 const text = readFileSync(path, 'utf8');
 const status = text.match(/^Статус:\s*\*\*(.+?)\*\*/mu)?.[1] ?? '';
-const statusParts = status.split('/').map((part) => part.trim());
+const requiredStatus = 'DIRECT PAGE VERIFIED / RNL reply received 2026-09-07 / byline Е. Манько / publication rights HOLD / no paid work';
+if (status !== requiredStatus) throw new Error(`Unexpected Pravda 1966 evidence status: ${status}`);
 
 for (const marker of [
-  'exact bibliographic locator + official digital-corpus route / RNL reference inquiry sent / reply and direct page pending / no paid work authorized',
+  '**Е. Манько. `Человек из поэмы` // `Правда`. 1966. 22 марта. № 81 (17398). С. 4.**',
+  '## 2. Исторический отправленный запрос (2026-08-19; as sent)',
+  'Исторический отправленный запрос',
   'О. Манько',
-  '`Человек из поэмы`',
-  '№ 81 (17398)',
-  'С. 4',
-  '**`ref.service@nlr.ru`**',
-  '`1a0172cc3033b82a`',
-  'exact locator / institutional digital corpus exists / direct p.4 uninspected',
+  '## 5. Superseding holder-supplied primary-object readback — 2026-11-06',
+  '2026-09-07',
+  '1788763734379.pdf',
+  '1,026,611 bytes',
+  'a27efcd9b72f706a7c3b0afe5d54668dd52edc958b5f2fbfde2a3eaacb711a89',
+  '«Е. МАНЬКО.»',
+  'PAGE_TITLE_BYLINE_VISUALLY_VERIFIED',
+  'RIGHTS_HOLD_FOR_FACSIMILE',
+  'RESEARCH_ONLY_UNTIL_SEPARATE_CLAIM_HANDOFF',
   '**не начинать платные работы без отдельного подтверждения после сообщения стоимости**',
-  '**не оплачивать/не подтверждать автоматически**',
-  'До ответа и visual page inspection статус остаётся fail-closed',
 ]) {
-  if (!text.includes(marker)) throw new Error(`Simonov Pravda 1966 acquisition boundary disappeared: ${marker}`);
-}
-const forbiddenPositiveParts = [
-  'reply received',
-  'p.4 verified',
-  'p.4 inspected',
-  'direct-object verified',
-  'paid work authorized',
-  'reuse rights granted',
-];
-if (statusParts.some((part) => forbiddenPositiveParts.includes(part))) {
-  throw new Error(`Simonov Pravda 1966 status falsely closes an open gate: ${status}`);
+  if (!text.includes(marker)) throw new Error(`Simonov Pravda 1966 evidence marker missing: ${marker}`);
 }
 
-console.log('Simonov Pravda 1966: exact locator + official corpus route; RNL inquiry sent; reply/p.4 inspection pending; no paid work authorized.');
+// Historical correspondence with the wrong initial must remain clearly superseded;
+// the current canonical citation must not regress to the unverified old byline.
+const currentCitation = text.match(/^\*\*[^\n]*Человек из поэмы[^\n]*\*\*$/mu)?.[0] ?? '';
+if (!currentCitation.startsWith('**Е. Манько.')) {
+  throw new Error(`Current canonical Pravda citation is not Е. Манько: ${currentCitation}`);
+}
+if (!text.includes('earlier `О. Манько`')) {
+  throw new Error('Superseded attribution must remain explained');
+}
+if (!text.includes('not a license to reproduce')) {
+  throw new Error('Research copy must not be silently promoted to reuse permission');
+}
+console.log('Simonov Pravda 1966: NLR actual p.4 read, Е. Манько byline verified, historical О. superseded, facsimile rights hold.');
