@@ -32,7 +32,7 @@ const currentCitation = text.match(/^\*\*[^\n]*Человек из поэмы[^\
 if (!currentCitation.startsWith('**Е. Манько.')) {
   throw new Error(`Current canonical Pravda citation is not Е. Манько: ${currentCitation}`);
 }
-if (!text.includes('earlier `О. Манько`') && !text.includes('earlier `О. Манько`')) {
+if (!text.includes('earlier `О. Манько`')) {
   throw new Error('Superseded attribution must remain explained');
 }
 if (!text.includes('not a license to reproduce')) {
