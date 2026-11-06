@@ -1,0 +1,126 @@
+{
+  "scope": "Six newly registered author portraits (no homepage hero changes)",
+  "rendering_note": "Visual treatment is not presented as an archival original; academic facts and quotations remain distinct from decorative artwork.",
+  "sources": [
+    {
+      "slug": "marina-tsvetaeva",
+      "commons_file": "File:Tsvetaeva.jpg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Tsvetaeva.jpg",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "9063dc689d577aa98945f1b339fe8377f9f619a996e26ea1fef77e45de29ade7",
+      "output_sha256": "c5004076f46e21e2020843c90204d38bbb4ca56431c3d8052f13d0d19ae443cf",
+      "source_size": [
+        1280,
+        1806
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/marina-tsvetaeva.webp",
+      "output_bytes": 193740
+    },
+    {
+      "slug": "osip-mandelstam",
+      "commons_file": "File:Osip Mandelstam in 1935.png",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Osip_Mandelstam_in_1935.png",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "0fe391f15bf1b95bffd653879b8c2ae2cc0f13bc36502239a5d27fc32c66e3e6",
+      "output_sha256": "803810093400c53a95831ebcf8aaa53551540fc31ec03429918a6768e3ea6017",
+      "source_size": [
+        700,
+        1121
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/osip-mandelstam.webp",
+      "output_bytes": 106234
+    },
+    {
+      "slug": "valery-bryusov",
+      "commons_file": "File:Valery Bryusov photo 1899.jpg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Valery_Bryusov_photo_1899.jpg",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "60d3e8c53a0e53655b6cc475188bd73e0edc1b44c5dd8e2842999679a87a4528",
+      "output_sha256": "71baf109da9b4c819a21d18f1fcf1fa900ec42db97297d76ac63e7baab7b9da7",
+      "source_size": [
+        857,
+        1197
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/valery-bryusov.webp",
+      "output_bytes": 113936
+    },
+    {
+      "slug": "nikolay-nekrasov",
+      "commons_file": "File:Nikolay Nekrasov.jpg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Nikolay_Nekrasov.jpg",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "f76f42195039850d577724182a42bb969c46a8047b89426fe845428cd042dbf5",
+      "output_sha256": "6e274043706fe2eb53e2c0ec6d946a81153ee20d1384eee8663057aac2829a7b",
+      "source_size": [
+        1280,
+        1725
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/nikolay-nekrasov.webp",
+      "output_bytes": 218752
+    },
+    {
+      "slug": "konstantin-simonov",
+      "commons_file": "File:Константин Михайлович Симонов.jpg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Константин_Михайлович_Симонов.jpg",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "e208e8743b8134b6da2efd9ddb1dd1534c27540199515659f3dbc179e7a65917",
+      "output_sha256": "da2d3f45c7e2a4f3b6a3abfcd5d68e8e343de11fcb62703463e96dd5839d0d00",
+      "source_size": [
+        504,
+        787
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/konstantin-simonov.webp",
+      "output_bytes": 84270
+    },
+    {
+      "slug": "aleksey-tolstoy",
+      "commons_file": "File:Brullov AKTolstoy.jpg",
+      "commons_url": "https://commons.wikimedia.org/wiki/File:Brullov_AKTolstoy.jpg",
+      "license": "Public domain (verified via Commons API on 2026-11-07)",
+      "origin_type": "historic photograph or historic painting, published art reproduction",
+      "editorial_treatment": "non-generative crop, luminance and color grade, vignette; original face not redrawn",
+      "source_sha256": "6b9586b20715cedd7df0a0edbd6eef85b44b846c2d2d6da2c119aeb88639d672",
+      "output_sha256": "f9740975fc5b29ebfe3baea4186563fd3eccd136e2553759ac6d78be73acca2f",
+      "source_size": [
+        1280,
+        1661
+      ],
+      "output_size": [
+        1020,
+        1360
+      ],
+      "output_path": "public/images/poets/aleksey-tolstoy.webp",
+      "output_bytes": 270488
+    }
+  ]
+}
