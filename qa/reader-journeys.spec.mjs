@@ -532,18 +532,27 @@ test.describe('animated modal exit lifetime', () => {
           if (!dialogNode?.isConnected || !dialogNode.parentNode) {
             throw new Error('Cannot certify exit: modal detached before observer registration');
           }
+          // The detector and the assertion share one DOM-unmount event. A
+          // repeated Node->WebKit RPC poll can race WebKit's animation/event
+          // delivery under CI load even when the modal is still correct.
+          let resolveUnmount;
+          window.__tlpExitCompletion = new Promise((resolve) => {
+            resolveUnmount = resolve;
+          });
+          const finishUnmount = () => {
+            if (window.__tlpExitDone) return;
+            window.__tlpExitDone = true;
+            observer.disconnect();
+            resolveUnmount();
+          };
           const observer = new MutationObserver(() => {
-            if (!dialogNode.isConnected) {
-              window.__tlpExitDone = true;
-              observer.disconnect();
-            }
+            if (!dialogNode.isConnected) finishUnmount();
           });
           observer.observe(dialogNode.parentNode, { childList: true });
           const record = () => {
             if (window.__tlpExitDone) return;
             if (!dialogNode.isConnected) {
-              window.__tlpExitDone = true;
-              observer.disconnect();
+              finishUnmount();
               return;
             }
             const root = document.getElementById('root');
@@ -558,8 +567,35 @@ test.describe('animated modal exit lifetime', () => {
           };
           record();
         });
+        const escapeCountBefore = await page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.escapeCount);
         await page.keyboard.press('Escape');
-        await expect.poll(() => page.evaluate(() => window.__tlpExitDone), {timeout:5000}).toBe(true);
+        await page.evaluate(async () => {
+          // Use a browser-local event promise, not repeated protocol polling.
+          // The same five-second bound remains and a failure includes the
+          // actual overlay stack, Escape reception and animation state.
+          let timeout;
+          try {
+            await Promise.race([
+              window.__tlpExitCompletion,
+              new Promise((_, reject) => {
+                timeout = window.setTimeout(() => {
+                  const node = document.querySelector('[role="dialog"][aria-modal="true"]');
+                  reject(new Error('Modal failed to unmount after Escape: ' + JSON.stringify({
+                    overlay: window.__TLP_OVERLAY_DEBUG,
+                    connected: node?.isConnected,
+                    focusTag: document.activeElement?.tagName,
+                    samples: window.__tlpExitProof?.length,
+                    frames: window.__tlpExitProof?.slice(-2),
+                  })));
+                }, 5000);
+              }),
+            ]);
+          } finally {
+            window.clearTimeout(timeout);
+          }
+        });
+        const escapeCountAfter = await page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.escapeCount);
+        expect(escapeCountAfter, 'Escape must be received by the topmost dialog').toBeGreaterThan(escapeCountBefore);
         const frames = await page.evaluate(() => window.__tlpExitProof);
         expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2);
         expect(frames.filter(f => f.depth !== 1 || f.inert !== true || f.hidden !== 'true' || f.position !== 'fixed' || !f.focusInside),
