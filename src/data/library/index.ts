@@ -10,6 +10,13 @@ import { sergeiYesenin } from './sergeiYesenin';
 import { annaAkhmatova } from './annaAkhmatova';
 import { alexanderBlok } from './alexanderBlok';
 
+import { marinaTsvetaeva } from './marinaTsvetaeva';
+import { osipMandelstam } from './osipMandelstam';
+import { valeryBryusov } from './valeryBryusov';
+import { nikolayNekrasov } from './nikolayNekrasov';
+import { konstantinSimonov } from './konstantinSimonov';
+import { alekseyKonstantinovichTolstoy } from './alekseyKonstantinovichTolstoy';
+
 export const poets: Poet[] = [
   fyodorTyutchev,
   vladimirMayakovsky,
@@ -21,6 +28,12 @@ export const poets: Poet[] = [
   sergeiYesenin,
   annaAkhmatova,
   alexanderBlok,
+  marinaTsvetaeva,
+  osipMandelstam,
+  valeryBryusov,
+  nikolayNekrasov,
+  konstantinSimonov,
+  alekseyKonstantinovichTolstoy,
 ];
 
 export { allMusicTracks, musicTracks } from './musicTracks';

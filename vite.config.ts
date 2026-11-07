@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import { canonicalRoutePath, canonicalRouteUrl } from './src/routes/publicUrl';
+import { materializeSupplementaryPoets } from './scripts/supplementary-poet-artifacts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -140,6 +141,22 @@ function searchVerificationPlugin(): Plugin {
   };
 }
 
+/** Exact-author-data verification belongs to site runtime, not Hall 3D tooling.
+ * In particular, do not mutate or silently re-generate committed artifacts
+ * while building; stale author metadata must be an actionable hard failure.
+ */
+function poetArtifactIntegrityPlugin(): Plugin {
+  return {
+    name: 'poet-artifact-integrity',
+    buildStart() {
+      materializeSupplementaryPoets(true);
+    },
+    configureServer() {
+      materializeSupplementaryPoets(true);
+    },
+  };
+}
+
 // https://vite.dev/config/
 // The production site is served from the root of the custom domain.
 // VITE_BASE remains overridable for previews on another path.
@@ -147,7 +164,7 @@ function searchVerificationPlugin(): Plugin {
 // route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
-  plugins: [legacyAliasDocumentsPlugin(), searchVerificationPlugin(), react(), tailwindcss()],
+  plugins: [poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: [
       // Keep Three route-isolated, but expose only the Hall runtime surface to
@@ -174,6 +191,8 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router'],
           motion: ['framer-motion'],
+          // A shared cached author inventory must not inflate the app shell.
+          'poet-library': [path.resolve(__dirname, 'src/data/runtime/poetRuntimeIndex.generated.ts')],
         },
       },
     },

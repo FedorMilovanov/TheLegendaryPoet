@@ -51,4 +51,13 @@ export const EXTENDED_PAINTED_ROUTES = [
   { path: "/poets/nikolay-gumilev", heading: "\u0413\u0443\u043c\u0438\u043b\u0451\u0432", minimumNodes: 555 },
   { path: "/poets/anna-akhmatova", heading: "\u0410\u0445\u043c\u0430\u0442\u043e\u0432\u0430", minimumNodes: 330 },
   { path: "/poets/alexander-blok", heading: "\u0411\u043b\u043e\u043a", minimumNodes: 530 },
+  // New canonical author pixel census 2026-11-07: four independent theme x viewport
+  // cells per route (1440x1000 and 390x844, dark and light), min90=floor(0.9*min).
+  { path: "/poets/marina-tsvetaeva", heading: "\u041c\u0430\u0440\u0438\u043d\u0430 \u0426\u0432\u0435\u0442\u0430\u0435\u0432\u0430", minimumNodes: 169 },
+  { path: "/poets/osip-mandelstam", heading: "\u041e\u0441\u0438\u043f \u041c\u0430\u043d\u0434\u0435\u043b\u044c\u0448\u0442\u0430\u043c", minimumNodes: 162 },
+  { path: "/poets/valery-bryusov", heading: "\u0412\u0430\u043b\u0435\u0440\u0438\u0439 \u0411\u0440\u044e\u0441\u043e\u0432", minimumNodes: 160 },
+  { path: "/poets/nikolay-nekrasov", heading: "\u041d\u0438\u043a\u043e\u043b\u0430\u0439 \u041d\u0435\u043a\u0440\u0430\u0441\u043e\u0432", minimumNodes: 158 },
+  { path: "/poets/konstantin-simonov", heading: "\u041a\u043e\u043d\u0441\u0442\u0430\u043d\u0442\u0438\u043d \u0421\u0438\u043c\u043e\u043d\u043e\u0432", minimumNodes: 164 },
+  { path: "/poets/aleksey-konstantinovich-tolstoy", heading: "\u0410\u043b\u0435\u043a\u0441\u0435\u0439 \u041a. \u0422\u043e\u043b\u0441\u0442\u043e\u0439", minimumNodes: 153 },
+
 ];

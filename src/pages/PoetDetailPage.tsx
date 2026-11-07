@@ -1,9 +1,11 @@
-import { Suspense, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
+import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
+import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
@@ -12,8 +14,8 @@ import SpiritualPath from '../components/poet-detail/SpiritualPath';
 import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
-import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
+import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -23,9 +25,29 @@ import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { titleCase } from '../utils/titleCase';
 
+
+const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
+const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
+
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const poet = poets.find((candidate) => candidate.id === id);
+  const basePoet = poets.find((candidate) => candidate.id === id);
+  const [loadedPoet, setLoadedPoet] = useState<{ id: string; value: Poet } | null>(null);
+  const [biographyError, setBiographyError] = useState(false);
+  useEffect(() => {
+    if (!id || !supplementaryPoetIds.includes(id)) return;
+    const controller = new AbortController();
+    setBiographyError(false);
+    loadSupplementaryPoet(id, controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setLoadedPoet({ id, value });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setBiographyError(true);
+      });
+    return () => controller.abort();
+  }, [id]);
+  const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = poet
@@ -94,12 +116,20 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
+            {biographyError && supplementaryPoetIds.includes(poet.id) && (
+              <p role="status" className="text-sm text-luxury-gold">
+                Не удалось загрузить полную биографию.
+              </p>
+            )}
             <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
               "{poet.shortBio}"
             </p>
 
             <Suspense fallback={null}>
               <RelatedEssays poetId={poet.id} />
+
+            <PoetVideos poet={poet} />
+
             </Suspense>
 
             <div className="space-y-8">
@@ -132,6 +162,8 @@ export default function PoetDetailPage() {
                 </p>
               </div>
             )}
+
+            <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 
             {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}

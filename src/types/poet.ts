@@ -27,6 +27,10 @@ export interface Poet {
   /** Sourced quotes from people who knew the poet + named literary historians. */
   testimonies?: Testimony[];
   famousWorks: string[];
+  /** Exact owner-channel YouTube videos; availability gate for scheduled Shorts. */
+  videos?: Array<{ youtubeId: string; title: string; availableFrom?: string }>;
+  /** Per-author public bibliography used for checking biography and text edition. */
+  sources?: Array<{ title: string; url: string }>;
   links?: {
     youtube?: string;
     vk?: string;

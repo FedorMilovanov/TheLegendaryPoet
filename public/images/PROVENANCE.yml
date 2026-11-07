@@ -361,3 +361,101 @@ assets:
     git_blob_sha: ea6a341101134a5d061b3dea0247b54debc6f20b
     legacy_boundary: Product main@49337c0ab502b056ee503995ae0fa0051c693962
     required_follow_up: recover exact item source, rights, credit, access date and SHA-256 before provenance promotion
+
+# 2026-11-07: 6 verified Wikimedia Commons public-domain archival sources, local non-generative editorial toning.
+  - path: public/images/poets/marina-tsvetaeva.webp
+    role: poet_portrait
+    poet_id: marina-tsvetaeva
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Tsvetaeva.jpg"
+    source_sha256: 9063dc689d577aa98945f1b339fe8377f9f619a996e26ea1fef77e45de29ade7
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 193740
+    sha256: c5004076f46e21e2020843c90204d38bbb4ca56431c3d8052f13d0d19ae443cf
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Wikimedia Commons archival portrait; photographer attribution in original media file"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+  - path: public/images/poets/osip-mandelstam.webp
+    role: poet_portrait
+    poet_id: osip-mandelstam
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Osip_Mandelstam_in_1935.png"
+    source_sha256: 0fe391f15bf1b95bffd653879b8c2ae2cc0f13bc36502239a5d27fc32c66e3e6
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 106234
+    sha256: 803810093400c53a95831ebcf8aaa53551540fc31ec03429918a6768e3ea6017
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Wikimedia Commons archival portrait; photographer attribution in original media file"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+  - path: public/images/poets/valery-bryusov.webp
+    role: poet_portrait
+    poet_id: valery-bryusov
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Valery_Bryusov_photo_1899.jpg"
+    source_sha256: 60d3e8c53a0e53655b6cc475188bd73e0edc1b44c5dd8e2842999679a87a4528
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 113936
+    sha256: 71baf109da9b4c819a21d18f1fcf1fa900ec42db97297d76ac63e7baab7b9da7
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Wikimedia Commons archival portrait; photographer attribution in original media file"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+  - path: public/images/poets/nikolay-nekrasov.webp
+    role: poet_portrait
+    poet_id: nikolay-nekrasov
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Nikolay_Nekrasov.jpg"
+    source_sha256: f76f42195039850d577724182a42bb969c46a8047b89426fe845428cd042dbf5
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 218752
+    sha256: 6e274043706fe2eb53e2c0ec6d946a81153ee20d1384eee8663057aac2829a7b
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Wikimedia Commons archival portrait; photographer attribution in original media file"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+  - path: public/images/poets/konstantin-simonov.webp
+    role: poet_portrait
+    poet_id: konstantin-simonov
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Константин_Михайлович_Симонов.jpg"
+    source_sha256: e208e8743b8134b6da2efd9ddb1dd1534c27540199515659f3dbc179e7a65917
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 84270
+    sha256: da2d3f45c7e2a4f3b6a3abfcd5d68e8e343de11fcb62703463e96dd5839d0d00
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Wikimedia Commons archival portrait; photographer attribution in original media file"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+  - path: public/images/poets/aleksey-tolstoy.webp
+    role: poet_portrait
+    poet_id: aleksey-konstantinovich-tolstoy
+    origin_class: derivative_crop_of_public_domain_archival_portrait
+    source_url: "https://commons.wikimedia.org/wiki/File:Brullov_AKTolstoy.jpg"
+    source_sha256: 6b9586b20715cedd7df0a0edbd6eef85b44b846c2d2d6da2c119aeb88639d672
+    license: "Public domain (Wikimedia Commons license review, 2026-11-07)"
+    production_recipe: "Pillow LANCZOS 1020x1360; grayscale, minimal tint and vignette; no facial regeneration"
+    bytes: 270488
+    sha256: f9740975fc5b29ebfe3baea4186563fd3eccd136e2553759ac6d78be73acca2f
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    rights_statement: "Public domain according to Wikimedia Commons source item (verified 2026-11-07)"
+    credit: "Karl Bryullov, historic portrait; Wikimedia Commons"
+    accessed_at: 2026-11-07
+    source_use: not_primary_evidence
+    notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
