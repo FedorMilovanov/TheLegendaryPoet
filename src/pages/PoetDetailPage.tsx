@@ -1,9 +1,11 @@
-import { Suspense, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
+import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
+import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
@@ -12,8 +14,8 @@ import SpiritualPath from '../components/poet-detail/SpiritualPath';
 import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
-import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
+import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -23,9 +25,29 @@ import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 import { titleCase } from '../utils/titleCase';
 
+
+const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
+const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
+
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const poet = poets.find((candidate) => candidate.id === id);
+  const basePoet = poets.find((candidate) => candidate.id === id);
+  const [loadedPoet, setLoadedPoet] = useState<{ id: string; value: Poet } | null>(null);
+  const [biographyError, setBiographyError] = useState(false);
+  useEffect(() => {
+    if (!id || !supplementaryPoetIds.includes(id)) return;
+    const controller = new AbortController();
+    setBiographyError(false);
+    loadSupplementaryPoet(id, controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setLoadedPoet({ id, value });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setBiographyError(true);
+      });
+    return () => controller.abort();
+  }, [id]);
+  const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = poet
@@ -94,6 +116,11 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
+            {biographyError && supplementaryPoetIds.includes(poet.id) && (
+              <p role="status" className="text-sm text-luxury-gold">
+                Не удалось загрузить полную биографию.
+              </p>
+            )}
             <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
               "{poet.shortBio}"
             </p>
@@ -101,31 +128,7 @@ export default function PoetDetailPage() {
             <Suspense fallback={null}>
               <RelatedEssays poetId={poet.id} />
 
-            {poet.videos && poet.videos.length > 0 && (
-              <section aria-labelledby="poet-videos-heading" className="rounded-[2rem] border border-cyan-400/15 bg-gradient-to-br from-[#07121b] to-[#090908] p-6 shadow-[0_12px_40px_rgba(0,0,0,.18)] md:p-9">
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <h2 id="poet-videos-heading" className="font-serif text-3xl text-white">Видео — <span className="text-cyan-300">The Legendary Poet</span></h2>
-                  {poet.links?.youtube && (
-                    <a href={poet.links.youtube} target="_blank" rel="noopener noreferrer" className="rounded-full border border-luxury-gold/30 px-4 py-2 text-xs font-semibold text-luxury-gold transition hover:border-luxury-gold/70">
-                      Открыть подборку на YouTube ↗
-                    </a>
-                  )}
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {poet.videos.map((video) => {
-                    const scheduled = Boolean(video.availableFrom && new Date(video.availableFrom).getTime() > Date.now());
-                    return (
-                      <a key={video.youtubeId} href={"https://www.youtube.com/watch?v=" + video.youtubeId} target="_blank" rel="noopener noreferrer" className="group rounded-xl border border-white/10 bg-black/30 p-5 transition hover:border-cyan-400/35 hover:bg-cyan-900/10">
-                        <span className="mb-3 block text-[10px] font-bold uppercase tracking-widest text-cyan-400/70">YouTube · {scheduled ? 'Ожидает выхода' : 'Смотреть видео'}</span>
-                        <span className="font-serif text-lg text-white transition group-hover:text-cyan-200">{video.title}</span>
-                        <span className="mt-2 block text-xs text-cyan-200/50">Канал The Legendary Poet ↗</span>
-                      </a>
-                    );
-                  })}
-                </div>
-                <p className="mt-5 text-xs leading-relaxed text-cyan-100/50">Оживление архивных изображений — современная художественная реконструкция, не историческая видеозапись.</p>
-              </section>
-            )}
+            <PoetVideos poet={poet} />
 
             </Suspense>
 
@@ -160,20 +163,7 @@ export default function PoetDetailPage() {
               </div>
             )}
 
-            {poet.sources && poet.sources.length > 0 && (
-              <section aria-labelledby="poet-sources-heading" className="rounded-2xl border border-luxury-gold/10 bg-[#080b0d] p-6 md:p-8">
-                <h2 id="poet-sources-heading" className="mb-4 font-serif text-2xl text-luxury-gold">Источники и редакции текстов</h2>
-                <ul className="space-y-3">
-                  {poet.sources.map((source) => (
-                    <li key={source.url}>
-                      <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-sm leading-relaxed text-cyan-200/75 underline decoration-cyan-200/25 underline-offset-4 transition hover:text-cyan-100">
-                        {source.title} ↗
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 
             {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}

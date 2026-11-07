@@ -174,6 +174,8 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router'],
           motion: ['framer-motion'],
+          // A shared cached author inventory must not inflate the app shell.
+          'poet-library': [path.resolve(__dirname, 'src/data/runtime/poetRuntimeIndex.generated.ts')],
         },
       },
     },
