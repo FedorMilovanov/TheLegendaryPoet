@@ -3,11 +3,16 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Poet } from '../src/types/poet';
 import { poets } from '../src/data/library/index';
+import { materializeSupplementaryPoets } from './supplementary-poet-artifacts';
 import {
   runPoetAuthoringAdversarialFixtures,
   validatePoetRegistrySource,
   validatePoetReleaseCandidate,
 } from './poet-authoring-contract';
+
+// A canonical poet edit must never ship stale cards or a mismatched biography
+// without an explicit, reproducible materialization step.
+materializeSupplementaryPoets(true);
 
 const failures: string[] = [];
 const fail = (message: string) => failures.push(message);

@@ -310,6 +310,6 @@ export const <nameVar>: Poet = {
 
 Шесть дополнительных авторов доставляются в браузер в двух формах, автоматически получаемых из одного реестра: компактные карточки из `src/data/runtime/*.generated.ts` и полные биографии в `public/data/poets/*.json` для загрузки непосредственно на странице автора. Файлы генерации не редактировать вручную.
 
-После правки канонического модуля запустить `npm run poets:materialize`, затем `npm run validate:poet-runtime-data`, `npm run validate:poet-authority`, `npm run sitemap`, `npm run validate:discovery-artifacts` и сборку с бюджетами. Проверка `--check` блокирует выпуск, если хоть одна проекция устарела. При расширении набора дополнительных авторов обновить массив `ids` в `scripts/materialize-supplementary-poets.ts`, не плодя второй независимый реестр.
+После правки канонического модуля запустить `npx tsx scripts/materialize-supplementary-poets.ts --write`, затем `npx tsx scripts/materialize-supplementary-poets.ts --check`, `npm run validate:poet-authority`, `npm run sitemap`, `npm run validate:discovery-artifacts` и сборку с бюджетами. Проверка `--check` блокирует выпуск, если хоть одна проекция устарела. При расширении набора дополнительных авторов обновить массив `ids` в `scripts/supplementary-poet-artifacts.ts`, не плодя второй независимый реестр.
 
 Для отложенных приватных видео ссылка в публичном каталоге появляется только после указанного времени выхода; до публикации карточка не должна вести на приватный ролик. Права на стихи проверять отдельно от прав на архивные портреты.
