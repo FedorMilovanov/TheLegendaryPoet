@@ -56,7 +56,8 @@
 
 | Стих | Год | Источники сверки |
 |---|---|---|
-| Ночь, улица, фонарь, аптека | 1912 | [culture.ru](https://www.culture.ru/poems/2160/noch-ulica-fonar-apteka-otryvok-iz-cikla-plyaski-smerti) — A; [Викитека](https://ru.wikisource.org/wiki/Ночь,_улица,_фонарь,_аптека_(Блок)) — A |
+| Ночь, улица, фонарь, аптека | 1912 | [РВБ / ПСС, т. 3](https://rvb.ru/20vek/blok/pss20/vol3/text/0548.html) — **A+**; [Музей-квартира Блока](https://spbmuseum.ru/exhibits_and_exhibitions/temporary_exhibitions/53904/) — A; [culture.ru](https://www.culture.ru/poems/2160/noch-ulica-fonar-apteka-otryvok-iz-cikla-plyaski-smerti) — A |
+| О, я хочу безумно жить | 1914 | [РВБ / ПСС, т. 3, «Ямбы»](https://rvb.ru/20vek/blok/pss20/vol3/text/0593.html) — **A+**; [оглавление т. 3](https://rvb.ru/20vek/blok/pss20/tocvol03.html) — издательский контекст |
 | Незнакомка | 1906 | [culture.ru](https://www.culture.ru/poems/284/neznakomka) — A; [slova.org.ru](https://slova.org.ru/blok/neznakomka/) — A; [ilibrary.ru (ПСС в 20 т., «Наука», т. II)](https://ilibrary.ru/text/1737/p.1/index.html) — **A+**; [РВБ (ПСС в 20 т., т. II, прямой текст «Незнакомки»)](https://rvb.ru/20vek/blok/pss20/vol2/text/0443.html) — **A+** |
 | О доблестях, о подвигах, о славе | 1908 | [culture.ru](https://www.culture.ru/poems/2565/o-doblestyakh-o-podvigakh-o-slave) — A; [Викитека](https://ru.wikisource.org/wiki/О_доблестях,_о_подвигах,_о_славе_(Блок)) — A; [ilibrary.ru](https://ilibrary.ru/text/4235/p.1/index.html) — **A+** |
 
