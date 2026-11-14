@@ -2,6 +2,40 @@
 
 This document defines the minimum safe path for adding, announcing, publishing, archiving, or replacing a music release.
 
+## Audio origin: originals first, never assume video soundtrack is the master
+
+**Site playback format remains MP3** under `/public/audio/`, because the existing player, manifest, validator and production release gate use this established format. The source/master archive can retain WAV or lossless FLAC separately; WAV files are **not** automatically added to the site, which would significantly increase download size, nor mislabeled as playable MP3. Do not change the player or music catalogue just to admit a new file extension.
+
+Candidate search precedence:
+
+1. Original Suno generation / downloaded owner export or an explicitly approved studio mix in WAV, FLAC or high-quality MP3.
+2. Project-owned finished audio-only export with verifiable provenance; compare duration, lyrics and arrangement with source.
+3. Editor export from the clean music timeline, with no video outro, bumper or end-screen sound.
+4. Only when the version really has unique desired audio: sound extracted from a project-owned video, **explicitly labeled as a video-derived candidate**. Never claim a YouTube/VK stream download is the clean master or that a 128 kbps extraction improves by re-encoding to 320 kbps.
+
+Do not use MP3 from `sermon_MP3_bot` as an audio-release source merely because the bot can extract 128 kbps from a YouTube URL: that is a conversion service, not the music master archive. Use the exact master chosen for the release; a second arrangement must have its own stable release ID and editorial credits.
+
+Before publication, audition the first and last **30 seconds** at minimum **and the full track at least once**. Review musical endings, nonmusical video cards, unexpected spoken words, jingles, appended songs, fade-outs, silence, clipping/distortion and edits that introduce a second composition. Deliberate pauses may be valid; a detected quiet span is not automatic evidence of a defect. Record a human editorial decision; no automated silence threshold is allowed to trim, pad or approve a song.
+
+### Read-only local candidate audit
+
+Requires `ffprobe` and `ffmpeg` installed; **neither writes or edits audio**:
+
+```bash
+node scripts/audit-audio-candidate.mjs "/path/to/original-suno.wav" --origin suno-export
+node scripts/audit-audio-candidate.mjs "/path/to/mix.mp3" --origin editor-export
+node scripts/audit-audio-candidate.mjs "/path/to/clip.mp4" --origin video-extraction
+npm run validate:audio-intake
+```
+
+The JSON report records actual codec, bitrate, duration, channels, file SHA-256 and possible leading/trailing silence. It flags weak bitrate and video soundtrack provenance; it **cannot** detect intelligibility, spliced music, sounds beneath a closing video graphic, musical quality or rights, so the result is always `manual_listening_and_source_verification_required`. Never use this tool's output as an unconditional publication approval.
+
+Record for each candidate: source location and date, exact SHA-256, owner/project, original format/codec, associated poem and generation variant, preferred master decision, human listening notes, edit operations if any, rights/AI disclosures and final release checksum. Do not place local personal paths in public site metadata.
+
+If trimming or remastering is warranted, edit a **new derivative**, preserve the original file and both checksums and re-audit the actual final bytes. Loudness and peak review should be done on final audio, never assumed from the container format; avoid automatic normalization across a whole catalogue without listening. A visually interesting clip may contain a superior musical variant, but keep it separate from the original rather than silently replacing one arrangement with another.
+
+**Only after that** use the existing published-release acceptance below: 320 kbps MP3 is a preferred web delivery target **when supported by a higher-quality original**, never a proof of fidelity; keep the original WAV/FLAC as archival source outside the site's required web assets. Check embedded metadata, separate square/wide artwork, actual duration, waveform, rights, manifest and production URL. `coming-soon` must not be counted as playable.
+
 ## Registry first
 
 Every entry lives in `src/data/library/musicTracks.ts` inside `allMusicTracks`.
