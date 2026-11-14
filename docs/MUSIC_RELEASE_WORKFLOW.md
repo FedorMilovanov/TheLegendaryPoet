@@ -25,7 +25,7 @@ Requires `ffprobe` and `ffmpeg` installed; **neither writes or edits audio**:
 node scripts/audit-audio-candidate.mjs "/path/to/original-suno.wav" --origin suno-export
 node scripts/audit-audio-candidate.mjs "/path/to/mix.mp3" --origin editor-export
 node scripts/audit-audio-candidate.mjs "/path/to/clip.mp4" --origin video-extraction
-npm run validate:audio-intake
+node --test scripts/tests/audio-candidate-audit.test.mjs
 ```
 
 The JSON report records actual codec, bitrate, duration, channels, file SHA-256 and possible leading/trailing silence. It flags weak bitrate and video soundtrack provenance; it **cannot** detect intelligibility, spliced music, sounds beneath a closing video graphic, musical quality or rights, so the result is always `manual_listening_and_source_verification_required`. Never use this tool's output as an unconditional publication approval.
