@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "97a2595c1df3ccae60216749249f61598e7dfcb16bedca45f441021d777c287d"
+      "fingerprint": "95aa2fec366c7bacc4d58e5ba7f9ee48dee174e6365d51d04db994d7101deec8"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "51b3e40c17edb7ebadefd36c41793b9d5148f92f8c44d0cc1c887b9be3a64dbd"
+      "fingerprint": "d3d903cc35d97d94829d917629f3b70d839e85d5af773f8e789bc75008b77288"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d14da480fea51a1b2d362b5bc36e073255df9ad5d71177f2870bf548c0d8b0fb"
+      "fingerprint": "6ae372c0fd1437e28322f4de89457fd63e70590389ceecd475fe66c111dfe2d0"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -370,7 +370,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "295bedd12f327408d128e43c306790d3bba00c456c0d74419938e37b726642b4"
+      "fingerprint": "027e66f6a811b52563d7a3c5eb24c47ee87722333d76e80c07fbe7db7c9381c2"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/marina-tsvetaeva/",
