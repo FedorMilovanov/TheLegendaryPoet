@@ -15,6 +15,7 @@ const TRAILING_REVIEW_SECONDS = 2.5;
 const SUPPORTED_ORIGINS = new Set(['suno-export', 'original-master', 'editor-export', 'video-extraction', 'unknown']);
 
 function numberOrNull(value) {
+  if (value === undefined || value === null || String(value).trim() === '') return null;
   const result = Number(value);
   return Number.isFinite(result) && result >= 0 ? result : null;
 }
