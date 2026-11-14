@@ -66,3 +66,35 @@ test('undocumented provenance and separate audio tracks are visible', () => {
   assert.ok(result.warnings.includes('multiple_audio_streams_choose_exact_track'));
   assert.ok(result.warnings.includes('source_provenance_unknown'));
 });
+
+test('embedded ID3 cover art is not mistaken for a video soundtrack', () => {
+  const result = classifyCandidate({
+    streams: [
+      { codec_type: 'audio', codec_name: 'mp3', disposition: { attached_pic: 0 } },
+      { codec_type: 'video', codec_name: 'mjpeg', disposition: { attached_pic: 1 } },
+    ],
+    durationSeconds: 261.6,
+    bitrateKbps: 193,
+    origin: 'original-master',
+    silenceIntervals: [],
+  });
+  assert.equal(result.warnings.includes('contains_video_stream_not_site_audio'), false);
+  assert.equal(result.warnings.includes('video_audio_requires_separate_listening_and_rights'), false);
+  assert.equal(result.decision, 'manual_listening_and_source_verification_required');
+});
+
+test('real non-attached video remains flagged, even alongside embedded artwork', () => {
+  const result = classifyCandidate({
+    streams: [
+      { codec_type: 'audio', codec_name: 'aac' },
+      { codec_type: 'video', codec_name: 'h264', disposition: { attached_pic: 0 } },
+      { codec_type: 'video', codec_name: 'mjpeg', disposition: { attached_pic: 1 } },
+    ],
+    durationSeconds: 180,
+    bitrateKbps: 256,
+    origin: 'video-extraction',
+    silenceIntervals: [],
+  });
+  assert.ok(result.warnings.includes('contains_video_stream_not_site_audio'));
+  assert.ok(result.warnings.includes('video_audio_requires_separate_listening_and_rights'));
+});
