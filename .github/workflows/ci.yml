@@ -39,6 +39,8 @@ jobs:
         run: npx tsx scripts/validate-command-search.ts
       - name: Validate published audio release fail-closed behavior
         run: node scripts/validate-audio-release-gate.mjs
+      - name: Test source-first audio intake and silence classifier
+        run: node --test scripts/tests/audio-candidate-audit.test.mjs
       - name: Validate persistent app shell invariants
         run: npm run validate:app-shell
       - name: Validate canonical reader text contract
