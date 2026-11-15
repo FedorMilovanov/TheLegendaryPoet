@@ -95,7 +95,7 @@ export const allMusicTracks: readonly MusicTrack[] = [
       surface: '#0b1115',
       heroPosition: '50% center',
     },
-  },,
+  },
   {
     id: 'blok-night-pharmacy-night-loop',
     title: 'Ночь, улица, фонарь, аптека… — Night Loop',
