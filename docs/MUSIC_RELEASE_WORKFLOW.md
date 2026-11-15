@@ -34,7 +34,7 @@ Record for each candidate: source location and date, exact SHA-256, owner/projec
 
 If trimming or remastering is warranted, edit a **new derivative**, preserve the original file and both checksums and re-audit the actual final bytes. Loudness and peak review should be done on final audio, never assumed from the container format; avoid automatic normalization across a whole catalogue without listening. A visually interesting clip may contain a superior musical variant, but keep it separate from the original rather than silently replacing one arrangement with another.
 
-**Only after that** use the existing published-release acceptance below: 320 kbps MP3 is a preferred web delivery target **when supported by a higher-quality original**, never a proof of fidelity; keep the original WAV/FLAC as archival source outside the site's required web assets. Check embedded metadata, separate square/wide artwork, actual duration, waveform, rights, manifest and production URL. `coming-soon` must not be counted as playable.
+**Only after that** use the existing published-release acceptance below: 320 kbps MP3 is a preferred web delivery target **when supported by a higher-quality original**, never a proof of fidelity; keep the original WAV/FLAC as archival source outside the site's required web assets. Check embedded metadata, the required square artwork (and separate wide artwork when approved), actual duration, waveform, rights, manifest and production URL. `coming-soon` must not be counted as playable.
 
 ## Registry first
 
@@ -79,7 +79,7 @@ Before changing `availability` to `published`, provide and verify:
 
 1. MP3 master under `/public/audio/`;
 2. square WebP cover under `/public/images/music/`;
-3. wide WebP artwork under `/public/images/music/`;
+3. optional independent wide WebP artwork under `/public/images/music/` (when not approved, omit it rather than enlarging/cropping the square art or inventing a banner);
 4. exact duration in seconds and display duration in `m:ss`;
 5. SHA-256 of the final immutable MP3;
 6. at least 64 real waveform peaks in the `0..1` range;

@@ -161,7 +161,7 @@ for (const track of allMusicTracks) {
   else if (track.durationSeconds && Number.isFinite(displayedDuration) && Math.abs(displayedDuration - track.durationSeconds) > 1.5) warnings.push(`${prefix}: displayed duration differs from master by more than 1.5 seconds`);
 
   if (track.availability === 'published') {
-    if (!track.audioUrl || !track.coverUrl || !track.wideCoverUrl) errors.push(`${prefix}: published releases require audio, square cover, and wide cover`);
+    if (!track.audioUrl || !track.coverUrl) errors.push(`${prefix}: published releases require audio and square cover`);
     if (!track.audioSha256 || !SHA256.test(track.audioSha256)) errors.push(`${prefix}: published releases require a valid SHA-256`);
     if (!track.duration || !Number.isFinite(displayedDuration)) errors.push(`${prefix}: published releases require a verified m:ss duration`);
     if (!track.durationSeconds || track.durationSeconds <= 0) errors.push(`${prefix}: published releases require a positive durationSeconds`);

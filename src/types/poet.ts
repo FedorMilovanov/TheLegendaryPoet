@@ -103,7 +103,7 @@ export interface MusicTrack {
   audioUrl?: string;
   /** Square release artwork. Required for published releases. */
   coverUrl?: string;
-  /** Wide artwork for a dedicated publication page. Required for published releases. */
+  /** Optional wide artwork for a dedicated release hero; the square cover remains required. */
   wideCoverUrl?: string;
   externalUrl?: string;
   videoUrl?: string;

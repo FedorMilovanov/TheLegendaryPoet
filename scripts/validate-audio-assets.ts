@@ -103,15 +103,15 @@ for (const track of publishedTracks) {
     else errors.push(`${track.id}: audio unreadable (${String(error)})`);
   }
 
-  if (!track.coverUrl || !track.wideCoverUrl) {
-    errors.push(`${track.id}: published release is missing square or wide artwork URL`);
+  if (!track.coverUrl) {
+    errors.push(`${track.id}: published release is missing the required square artwork URL`);
     continue;
   }
   if (manifestTrack.cover !== track.coverUrl) errors.push(`${track.id}: manifest cover differs from release registry`);
-  if (track.coverUrl === track.wideCoverUrl) errors.push(`${track.id}: square and wide artwork must be separate files`);
+  if (track.wideCoverUrl && track.coverUrl === track.wideCoverUrl) errors.push(`${track.id}: square and wide artwork must be separate files`);
 
   await validateWebp(track.id, 'square cover', track.coverUrl, audioExists);
-  await validateWebp(track.id, 'wide cover', track.wideCoverUrl, audioExists);
+  if (track.wideCoverUrl) await validateWebp(track.id, 'wide cover', track.wideCoverUrl, audioExists);
 }
 
 for (const manifestTrack of manifest.tracks) {
