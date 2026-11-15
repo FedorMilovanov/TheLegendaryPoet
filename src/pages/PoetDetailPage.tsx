@@ -23,7 +23,6 @@ import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
-import { titleCase } from '../utils/titleCase';
 
 
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
@@ -50,17 +49,11 @@ export default function PoetDetailPage() {
   const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
-  const breadcrumbs: SeoBreadcrumb[] = poet
-    ? [
-        { name: 'Главная', path: '/' },
-        { name: 'Поэты', path: '/poets' },
-        { name: poet.name, path: routePath },
-      ]
-    : [
-        { name: 'Главная', path: '/' },
-        { name: 'Поэты', path: '/poets' },
-        { name: 'Поэт не найден', path: routePath },
-      ];
+  const breadcrumbs: SeoBreadcrumb[] = [
+    { name: 'Главная', path: '/' },
+    { name: 'Поэты', path: '/poets' },
+    { name: poet?.name ?? 'Поэт не найден', path: routePath },
+  ];
 
   useSeo({
     title: poet ? `${poet.name} — биография, стихи и анализ — THE LEGENDARY POET` : 'Поэт не найден — THE LEGENDARY POET',
@@ -88,7 +81,7 @@ export default function PoetDetailPage() {
       <div className="theme-page-surface flex min-h-screen items-center justify-center pb-20 pt-32">
         <div className="mx-auto w-full max-w-4xl px-4 text-center">
           <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
-          <h1 className="theme-text mb-4 font-serif text-4xl">{titleCase('Поэт не найден')}</h1>
+          <h1 className="theme-text mb-4 font-serif text-4xl">{'Поэт Не Найден'}</h1>
           <Link to="/poets" className="font-medium text-luxury-gold transition-colors hover:text-luxury-gold-light">
             ← Вернуться к списку поэтов
           </Link>
@@ -174,7 +167,7 @@ export default function PoetDetailPage() {
 
             <div className="pt-16">
               <h2 className="theme-text editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none sm:mb-12 sm:text-5xl">
-                {titleCase('Избранная')} <span className="gold-gradient gold-glow-text italic">{titleCase('Лирика')}</span>
+                {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
               <div className="space-y-16">
