@@ -24,7 +24,7 @@ const expectThrows = (fn: () => unknown, message: string) => {
   }
 };
 
-const items = getCommandItems();
+const items = getCommandItems(essaySearchIndex);
 const ids = items.map((item) => item.id);
 expect(new Set(ids).size === ids.length, 'command item ids must remain unique');
 
@@ -182,12 +182,17 @@ expect(
 
 const commandItemsSource = fs.readFileSync(path.resolve('src/components/command/commandItems.ts'), 'utf8');
 const generatorSource = fs.readFileSync(path.resolve('scripts/gen-essay-search-index.ts'), 'utf8');
+const paletteSource = fs.readFileSync(path.resolve('src/components/command/CommandPalette.tsx'), 'utf8');
+expect(
+  paletteSource.includes('data/essay-search-index.json') && paletteSource.includes('fetch(url,'),
+  'command palette must request the validated essay index when opened',
+);
 expect(
   commandItemsSource.includes("route-contract.json"),
   'command section inventory must consume route-contract.json instead of owning a parallel path list',
 );
 expect(
-  !commandItemsSource.includes("data/essays/index"),
+  !commandItemsSource.includes("data/essays/index") && !commandItemsSource.includes("essaySearchIndex.generated"),
   'persistent command inventory must not import the full canonical longform essay registry',
 );
 expect(

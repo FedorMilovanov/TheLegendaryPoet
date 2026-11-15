@@ -1,4 +1,3 @@
-import { essaySearchIndex } from '../../data/essaySearchIndex.generated';
 import { musicTracks, poets } from '../../data/poets';
 import routeContract from '../../routes/route-contract.json';
 
@@ -160,6 +159,6 @@ export function buildCommandItems({
   return [...sectionItems, ...poetItems, ...poemItems, ...essayItems, ...essaySectionItems, ...trackItems];
 }
 
-export function getCommandItems(): CommandItem[] {
-  return buildCommandItems({ poets, essays: essaySearchIndex, tracks: musicTracks });
+export function getCommandItems(essays: readonly CommandEssaySource[]): CommandItem[] {
+  return buildCommandItems({ poets, essays, tracks: musicTracks });
 }

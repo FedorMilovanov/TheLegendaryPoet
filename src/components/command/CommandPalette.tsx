@@ -5,6 +5,7 @@ import { useDialogSurface } from '../../hooks/useDialogSurface';
 import { matchesRussianSearch } from '../../utils/searchText';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
+import type { EssaySearchEntry } from '../../data/essaySearchIndex.generated';
 import CommandResult from './CommandResult';
 import './commandPaletteChrome.css';
 
@@ -12,6 +13,8 @@ export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [essayIndex, setEssayIndex] = useState<readonly EssaySearchEntry[] | null>(null);
+  const [essayLoadError, setEssayLoadError] = useState(false);
   const navigate = useAppNavigate();
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
@@ -21,7 +24,38 @@ export default function CommandPalette() {
   const listId = 'command-palette-results';
   const optionId = (itemId: string) => 'command-option-' + itemId;
 
-  const items = useMemo(() => getCommandItems(), []);
+  // Keep the canonical article search index out of the persistent app shell.
+  // Fetch it once per mounted session when the search dialog is opened.
+  useEffect(() => {
+    if (!open || essayIndex) return;
+    const controller = new AbortController();
+    const url = (import.meta.env.BASE_URL || '/') + 'data/essay-search-index.json';
+    setEssayLoadError(false);
+    void fetch(url, { credentials: 'same-origin', cache: 'no-cache', signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error('Essay search index HTTP ' + response.status);
+        return response.json() as Promise<unknown>;
+      })
+      .then((entries) => {
+        if (!Array.isArray(entries) || !entries.every((entry) => (
+          entry && typeof entry === 'object'
+          && typeof entry.id === 'string' && typeof entry.title === 'string'
+          && typeof entry.excerpt === 'string' && typeof entry.slug === 'string'
+          && Array.isArray(entry.sections)
+          && entry.sections.every((section: unknown) => (
+            Array.isArray(section) && section.length === 2
+            && section.every((value: unknown) => typeof value === 'string')
+          ))
+        ))) throw new Error('Malformed essay search index');
+        if (!controller.signal.aborted) setEssayIndex(entries as EssaySearchEntry[]);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setEssayLoadError(true);
+      });
+    return () => controller.abort();
+  }, [open, essayIndex]);
+
+  const items = useMemo(() => getCommandItems(essayIndex ?? []), [essayIndex]);
   const results = useMemo(() => {
     if (!query.trim()) return items.slice(0, 8);
     return items
@@ -153,7 +187,9 @@ export default function CommandPalette() {
           {results.map((item, index) => (
             <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
-          {!results.length && <div role="option" aria-selected="false" aria-disabled="true" aria-live="polite" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
+          {!essayIndex && !essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted px-4 py-2 text-sm">Загрузка поиска по статьям…</div>}
+          {essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted px-4 py-2 text-sm">Поиск по статьям временно недоступен. Закройте и откройте поиск, чтобы повторить загрузку.</div>}
+          {!results.length && essayIndex && <div role="option" aria-selected="false" aria-disabled="true" aria-live="polite" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
         </div>
       </div>
     </div>
