@@ -79,7 +79,7 @@ Before changing `availability` to `published`, provide and verify:
 
 1. MP3 master under `/public/audio/`;
 2. square WebP cover under `/public/images/music/`;
-3. wide WebP artwork under `/public/images/music/`;
+3. optional independent wide WebP artwork under `/public/images/music/` (when not approved, omit it rather than enlarging/cropping the square art or inventing a banner);
 4. exact duration in seconds and display duration in `m:ss`;
 5. SHA-256 of the final immutable MP3;
 6. at least 64 real waveform peaks in the `0..1` range;
