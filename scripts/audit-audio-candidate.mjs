@@ -42,7 +42,8 @@ export function parseSilences(log, durationSeconds) {
 export function classifyCandidate({ streams, durationSeconds, bitrateKbps, origin, silenceIntervals }) {
   const warnings = [];
   const audioStreams = streams.filter((stream) => stream.codec_type === 'audio');
-  const videoStreams = streams.filter((stream) => stream.codec_type === 'video');
+  // ID3 cover art appears as an mjpeg "video" stream, but is not motion video.
+  const videoStreams = streams.filter((stream) => stream.codec_type === 'video' && Number(stream.disposition?.attached_pic ?? 0) !== 1);
   const codec = audioStreams[0]?.codec_name ?? null;
   const leading = silenceIntervals.find((segment) => segment.start <= 0.5 && segment.end - segment.start >= LEADING_REVIEW_SECONDS);
   const trailing = silenceIntervals.find((segment) => segment.end >= durationSeconds - 0.5 && segment.end - segment.start >= TRAILING_REVIEW_SECONDS);
@@ -87,7 +88,7 @@ export async function auditCandidate(filePath, origin = 'unknown') {
   if (!info.isFile() || !info.size) throw new Error('Candidate is not a nonempty file');
   const probe = runTool('ffprobe', [
     '-v', 'error', '-show_entries',
-    'format=duration,format_name,bit_rate:stream=index,codec_type,codec_name,channels,sample_rate,bit_rate',
+    'format=duration,format_name,bit_rate:stream=index,codec_type,codec_name,channels,sample_rate,bit_rate:stream_disposition=attached_pic',
     '-of', 'json', fullPath,
   ]);
   const metadata = JSON.parse(probe.stdout);

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { readMp3StreamInfo } from './mp3-frame-header.mjs';
 import { allMusicTracks } from '../src/data/library/musicTracks';
 import { getPlaybackQueue } from '../src/data/musicCatalog';
 
@@ -40,32 +41,6 @@ function hasMp3Signature(buffer: Buffer) {
   return buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0;
 }
 
-
-/** Inspect the first actual MPEG-1 Layer III frame, skipping optional ID3v2 tags.
- * This prevents a string-only manifest from advertising a false sample rate.
- */
-function mp3SampleRateHz(buffer: Buffer): number | null {
-  if (buffer.length < 4) return null;
-  let start = 0;
-  if (buffer.subarray(0, 3).toString('ascii') === 'ID3' && buffer.length >= 10) {
-    const id3size = ((buffer[6] & 0x7f) << 21)
-      | ((buffer[7] & 0x7f) << 14)
-      | ((buffer[8] & 0x7f) << 7)
-      | (buffer[9] & 0x7f);
-    start = 10 + id3size + ((buffer[5] & 0x10) ? 10 : 0);
-  }
-  const end = Math.min(buffer.length - 4, start + 65536);
-  for (let at = start; at <= end; at += 1) {
-    if (buffer[at] !== 0xff || (buffer[at + 1] & 0xe0) !== 0xe0) continue;
-    const version = (buffer[at + 1] >> 3) & 3;
-    const layer = (buffer[at + 1] >> 1) & 3;
-    const bitrateIndex = (buffer[at + 2] >> 4) & 15;
-    const sampleIndex = (buffer[at + 2] >> 2) & 3;
-    if (version !== 3 || layer !== 1 || bitrateIndex === 0 || bitrateIndex === 15 || sampleIndex === 3) continue;
-    return [44100, 48000, 32000][sampleIndex];
-  }
-  return null;
-}
 
 function hasWebpSignature(buffer: Buffer) {
   return buffer.length >= 12
@@ -109,12 +84,16 @@ for (const track of publishedTracks) {
       || !declaredSampleRate) {
       errors.push(`${track.id}: codec description must identify MP3, 44.1 or 48 kHz, and stereo`);
     } else {
-      const actualSampleRateHz = mp3SampleRateHz(audio);
+      const streamInfo = readMp3StreamInfo(audio);
+      const actualSampleRateHz = streamInfo?.sampleRateHz ?? null;
       const declaredSampleRateHz = Math.round(Number(declaredSampleRate[1]) * 1000);
       if (!actualSampleRateHz || actualSampleRateHz !== declaredSampleRateHz) {
         errors.push(
           `${track.id}: MP3 frame sample rate ${actualSampleRateHz ?? 'unknown'} Hz differs from manifest ${declaredSampleRateHz} Hz`,
         );
+      }
+      if (streamInfo && streamInfo.channels !== 2) {
+        errors.push(`${track.id}: MP3 frame has ${streamInfo.channels} channel(s), but manifest declares stereo`);
       }
     }
     validated += 1;
