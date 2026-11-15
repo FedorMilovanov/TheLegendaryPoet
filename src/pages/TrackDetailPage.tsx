@@ -122,7 +122,7 @@ export default function TrackDetailPage() {
             <Link to="/music" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-black/28 px-4 text-xs font-bold text-white/72 shadow-lg backdrop-blur-xl transition hover:border-white/32 hover:bg-black/42 hover:text-white"><ArrowLeft size={15} /> Все музыкальные публикации</Link>
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-black/34 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] backdrop-blur-xl" style={{ color: 'var(--tlp-track-accent-ink)' }}><Disc3 size={14} /> {releaseLabel} · {track.releaseYear}</span>
-              {playable && <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/28 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/55 backdrop-blur-xl"><Headphones size={14} /> {track.duration} · 44.1 kHz</span>}
+              {playable && <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/28 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-white/55 backdrop-blur-xl"><Headphones size={14} /> {track.duration} · MP3</span>}
             </div>
             <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.91] drop-shadow-[0_6px_38px_rgba(0,0,0,0.88)] sm:text-7xl lg:text-[5.7rem]">{track.title}</h1>
             <p className="mt-5 text-lg text-white/68 sm:text-xl">{track.poet} <span className="text-white/52">·</span> музыкальная версия The Legendary Poet</p>
