@@ -2,6 +2,8 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath, type To } from 'react-router';
 import routeContractData from './route-contract.json';
 import { applyTransientDiscoveryHead, type DiscoveryStateName } from './discoveryHead';
+import { canonicalRouteUrl } from './publicUrl';
+import { siteConfig } from '../config/site';
 
 type PageModule = { default: ComponentType };
 type PageImporter = () => Promise<PageModule>;
@@ -89,8 +91,23 @@ function clearRecoveryMarker(routeId: string) {
   try { window.sessionStorage.removeItem(`${CHUNK_RECOVERY_PREFIX}${routeId}`); } catch { /* session storage unavailable */ }
 }
 
-async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load'>) {
-  if (typeof window !== 'undefined') applyTransientDiscoveryHead('loading', window.location.pathname);
+// Direct entry to a prerendered canonical page already has correct indexable SEO
+// metadata. Do not replace it with transient noindex while its lazy module or
+// content payload loads: a crawler may snapshot that intermediate document.
+// SPA navigation keeps the neutral loading head because its old canonical
+// belongs to a different URL. Genuine errors still switch to noindex.
+function hasMatchingPrerenderedReadyHead(record: Pick<RouteModuleRecord, 'discoveryState'>) {
+  if (typeof window === 'undefined' || record.discoveryState !== 'ready') return false;
+  const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+  const robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content;
+  const expected = canonicalRouteUrl(siteConfig.url, window.location.pathname);
+  return canonical === expected && robots?.startsWith('index,') === true;
+}
+
+async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load' | 'discoveryState'>) {
+  if (typeof window !== 'undefined' && !hasMatchingPrerenderedReadyHead(record)) {
+    applyTransientDiscoveryHead('loading', window.location.pathname);
+  }
 
   try {
     const module = await record.load();

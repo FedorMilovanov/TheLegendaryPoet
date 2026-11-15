@@ -305,6 +305,39 @@ test('SPA navigation to not-found removes previous canonical, og:url and route s
   expectNonCanonicalMachineState(after, /Страница не найдена/i);
 });
 
+test('direct canonical entry preserves prerendered indexable head while its module is pending', async ({ page }) => {
+  // Loading a canonical sitemap URL must not turn its already-correct static
+  // index/follow + canonical into noindex. A different SPA destination still
+  // gets the neutral loading head in the adjacent test.
+  let releaseChunk;
+  const pendingChunk = new Promise((resolve) => { releaseChunk = resolve; });
+  let interceptedArticlesModule = false;
+  await page.route(/\/assets\/ArticlesPage-[^/]+\.js(?:\?.*)?$/, async (route) => {
+    interceptedArticlesModule = true;
+    await pendingChunk;
+    await route.continue();
+  });
+
+  try {
+    const response = await page.goto(`${BASE_URL}/articles/`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    expect(response?.status()).toBe(200);
+    await expect.poll(() => interceptedArticlesModule, { timeout: 10_000 }).toBe(true);
+
+    const duringLazyLoad = await machineHeadSnapshot(page);
+    expect(duringLazyLoad.robots).toMatch(/^index,follow/);
+    await expect(page.locator('meta[name="googlebot"]')).toHaveAttribute('content', /^index,follow/);
+    expect(duringLazyLoad.canonical).toBe('https://thelegendarypoet.ru/articles/');
+    expect(duringLazyLoad.title).toMatch(/Исследования.*большие статьи/i);
+  } finally {
+    releaseChunk();
+  }
+
+  await settleRoute(page, { heading: /Исследования.*Большие Статьи/i });
+  const settled = await machineHeadSnapshot(page);
+  expect(settled.robots).toMatch(/^index,follow/);
+  expect(settled.canonical).toBe('https://thelegendarypoet.ru/articles/');
+});
+
 test('lazy loading owns a neutral machine head before the destination settles', async ({ page }) => {
   await page.goto(`${BASE_URL}/about`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await settleRoute(page);
