@@ -60,4 +60,14 @@ export const EXTENDED_PAINTED_ROUTES = [
   { path: "/poets/konstantin-simonov", heading: "\u041a\u043e\u043d\u0441\u0442\u0430\u043d\u0442\u0438\u043d \u0421\u0438\u043c\u043e\u043d\u043e\u0432", minimumNodes: 164 },
   { path: "/poets/aleksey-konstantinovich-tolstoy", heading: "\u0410\u043b\u0435\u043a\u0441\u0435\u0439 \u041a. \u0422\u043e\u043b\u0441\u0442\u043e\u0439", minimumNodes: 153 },
 
+  // Exact-head owner Blok audio release pixel census (2026-11-15): all six
+  // have desktop 125 / mobile 118 measurable nodes in both themes; zero text
+  // or gradient contrast offenders. Floor 90% * 118 = 106, without exceptions.
+  { path: "/music/blok-night-pharmacy-night-loop", heading: "Ночь, улица", minimumNodes: 106 },
+  { path: "/music/blok-kulikovo-part-1", heading: "На поле Куликовом", minimumNodes: 106 },
+  { path: "/music/blok-kulikovo-part-2", heading: "На поле Куликовом", minimumNodes: 106 },
+  { path: "/music/blok-scythians-version-1", heading: "Скифы", minimumNodes: 106 },
+  { path: "/music/blok-scythians-version-2", heading: "Скифы", minimumNodes: 106 },
+  { path: "/music/blok-oh-i-want-to-live", heading: "О, я хочу безумно жить", minimumNodes: 106 },
+
 ];
