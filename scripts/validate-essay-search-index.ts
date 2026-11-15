@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { sectionAnchor } from '../src/components/essay/anchor';
 import { essays } from '../src/data/essays/index';
 import { essaySearchIndex } from '../src/data/essaySearchIndex.generated';
@@ -33,6 +35,14 @@ const actual = essaySearchIndex.map((entry) => ({
     ? (entry as { sections: readonly (readonly [string, string])[] }).sections.map(([heading, anchor]) => [heading, anchor] as const)
     : null,
 }));
+
+const publishedJsonPath = path.resolve('public/data/essay-search-index.json');
+const publishedJson = fs.existsSync(publishedJsonPath)
+  ? JSON.parse(fs.readFileSync(publishedJsonPath, 'utf8')) as unknown
+  : null;
+if (JSON.stringify(publishedJson) !== JSON.stringify(canonical)) {
+  failures.push('deployed essay search JSON is absent, stale, or differs from the canonical index');
+}
 
 if (JSON.stringify(actual) !== JSON.stringify(canonical)) {
   failures.push('essay search index is stale or does not contain exact canonical section metadata');
