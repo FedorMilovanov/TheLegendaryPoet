@@ -13,6 +13,18 @@
 - Do not use weak placeholder 3D sections. Remove unfinished gimmicks rather than shipping them.
 - Always run `build_project` before final response.
 
+## Arena Sandbox browser fallback (optional)
+
+For browser QA in a restricted **Arena Sandbox** (not standard local development or GitHub Actions), Chromium 153.0.8010.0 was verified on Debian 12/x86_64 using `@sparticuz/chromium@153.0.0` and Playwright:
+
+```bash
+npm install --prefix /tmp/arena-browser --no-audit --no-fund @sparticuz/chromium@153.0.0 playwright@1.64.1
+```
+
+Call `Chromium.executablePath()`. If the sandbox lacks NSS libraries, Brotli-decompress `@sparticuz/chromium/bin/al2023.tar.br`, extract the tar into `/tmp/arena-browser/libs`, and prepend `/tmp/arena-browser/libs/lib` to `LD_LIBRARY_PATH` without discarding its prior value. Launch Playwright using the returned `executablePath`, `headless: true`, and `args: ['--no-sandbox', '--disable-dev-shm-usage']`. Do not pass all of `Chromium.args`: it contains `--disable-web-security`. NSS patches and `LD_PRELOAD` were not needed in the verified setup.
+
+Treat `/tmp` as ephemeral; run a launch-and-page smoke test. A blocked Playwright CDN is not evidence that browser QA is impossible. Log narrowly scoped network stubs; never silently stub all external requests. Chromium does not replace WebKit, Firefox or physical-device testing. Other working methods are welcome.
+
 ## Design Rules
 
 - Dark luxury first.
