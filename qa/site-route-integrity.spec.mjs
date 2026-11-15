@@ -325,6 +325,7 @@ test('direct canonical entry preserves prerendered indexable head while its modu
 
     const duringLazyLoad = await machineHeadSnapshot(page);
     expect(duringLazyLoad.robots).toMatch(/^index,follow/);
+    await expect(page.locator('meta[name="googlebot"]')).toHaveAttribute('content', /^index,follow/);
     expect(duringLazyLoad.canonical).toBe('https://thelegendarypoet.ru/articles/');
     expect(duringLazyLoad.title).toMatch(/Исследования.*большие статьи/i);
   } finally {
