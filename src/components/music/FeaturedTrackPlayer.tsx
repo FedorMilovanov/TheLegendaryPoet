@@ -281,7 +281,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--track-accent)' }}><Music2 size={13} /> Официальный релиз</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/52"><Headphones size={13} /> MP3 · 44.1 kHz</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/52"><Headphones size={13} /> MP3</span>
             <span className="inline-flex items-center gap-1.5 px-1 text-xs text-white/52"><Clock3 size={13} /> {track.duration}</span>
           </div>
 
