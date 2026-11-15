@@ -34,6 +34,72 @@
       "cover": "/images/music/blok-rossiya-cover.webp",
       "rightsHolder": "The Legendary Poet",
       "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-night-pharmacy-night-loop",
+      "path": "/audio/blok-night-pharmacy-night-loop.tlp-2026.mp3",
+      "sha256": "caea98a7e10ad866e79911350f5668b3b1bcb2462081c62a1e6f8661d8470ea8",
+      "bytes": 6655457,
+      "durationSeconds": 261.6,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-night-loop-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-kulikovo-part-1",
+      "path": "/audio/blok-kulikovo-part-1.tlp-2026.mp3",
+      "sha256": "ecef6d8922de26f1dc66b439083b66fd3758ef73ff2ca94980d07e2c5184215b",
+      "bytes": 6882092,
+      "durationSeconds": 284.0,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-kulikovo-part-1-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-kulikovo-part-2",
+      "path": "/audio/blok-kulikovo-part-2.tlp-2026.mp3",
+      "sha256": "91c4794054f6fa4d54d7d9b47309542459dee44a3b6bca94cdbbafcb07d60c02",
+      "bytes": 6393925,
+      "durationSeconds": 278.4,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-kulikovo-part-2-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-scythians-version-1",
+      "path": "/audio/blok-scythians-version-1.tlp-2026.mp3",
+      "sha256": "2bf4c3161e68ace12a6132d8d52ef93347a1a81193f33c3ea9cc083d9f62c841",
+      "bytes": 10148412,
+      "durationSeconds": 445.5,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-scythians-version-1-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-scythians-version-2",
+      "path": "/audio/blok-scythians-version-2.tlp-2026.mp3",
+      "sha256": "e40d728837c6693c6c5dd9c0c4120e602b1ac4d94bacf2d71a416d66d336990f",
+      "bytes": 8260357,
+      "durationSeconds": 347.521,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-scythians-version-2-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-oh-i-want-to-live",
+      "path": "/audio/blok-oh-i-want-to-live.tlp-2026.mp3",
+      "sha256": "e405f8767a3707b5c6d29ff394c17e661d2dee65f990a19f3bf82f5888f4ff83",
+      "bytes": 6138860,
+      "durationSeconds": 204.568,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/blok-oh-i-want-to-live-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
     }
   ]
 }
