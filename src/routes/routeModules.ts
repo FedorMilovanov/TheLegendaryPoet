@@ -100,11 +100,8 @@ function hasMatchingPrerenderedReadyHead(record: Pick<RouteModuleRecord, 'discov
   if (typeof window === 'undefined' || record.discoveryState !== 'ready') return false;
   const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
   const robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content;
-  const googlebot = document.head.querySelector<HTMLMetaElement>('meta[name="googlebot"]')?.content;
   const expected = canonicalRouteUrl(siteConfig.url, window.location.pathname);
-  return canonical === expected
-    && robots?.startsWith('index,') === true
-    && googlebot?.startsWith('index,') === true;
+  return canonical === expected && robots?.startsWith('index,') === true;
 }
 
 async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load' | 'discoveryState'>) {
