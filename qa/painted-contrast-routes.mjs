@@ -63,6 +63,10 @@ export const EXTENDED_PAINTED_ROUTES = [
   // Exact-head owner Blok audio release pixel census (2026-11-15): all six
   // have desktop 125 / mobile 118 measurable nodes in both themes; zero text
   // or gradient contrast offenders. Floor 90% * 118 = 106, without exceptions.
+  // New Blok route four-mode painted-pixel census 2026-11-16 (Windows Chrome):
+  // dark desktop 127, dark mobile 120, light desktop 127, light mobile 120.
+  // Zero text or gradient contrast offenders; min90=floor(0.9*120)=108.
+  { path: "/music/blok-night-pharmacy-version-1", heading: "Ночь, улица", minimumNodes: 108 },
   { path: "/music/blok-night-pharmacy-night-loop", heading: "Ночь, улица", minimumNodes: 106 },
   { path: "/music/blok-kulikovo-part-1", heading: "На поле Куликовом", minimumNodes: 106 },
   { path: "/music/blok-kulikovo-part-2", heading: "На поле Куликовом", minimumNodes: 106 },

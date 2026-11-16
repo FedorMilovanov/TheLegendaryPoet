@@ -1,6 +1,6 @@
 import type { MusicTrack } from '../../types/poet';
 import { getPublishedMusicTracks } from '../musicCatalog';
-import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform } from '../musicWaveforms';
+import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightVersion1Waveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform } from '../musicWaveforms';
 
 const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
 
@@ -97,8 +97,33 @@ export const allMusicTracks: readonly MusicTrack[] = [
     },
   },
   {
+    id: 'blok-night-pharmacy-version-1',
+    title: 'Ночь, улица, фонарь, аптека… — ВЕРСИЯ 1',
+    poet: 'Александр Блок',
+    poetId: 'alexander-blok',
+    availability: 'published',
+    releaseOrder: 35,
+    publishedAt: '2026-11-16',
+    releaseYear: 2026,
+    duration: '4:51',
+    durationSeconds: 290.976,
+    audioUrl: '/audio/blok-night-pharmacy-version-1.tlp-2026.mp3',
+    coverUrl: '/images/music/blok-night-version-1-cover.webp',
+    description: 'Первая самостоятельная музыкальная версия стихотворения «Ночь, улица, фонарь, аптека…»: тревожный ночной Петербург и замкнутый круг судьбы. Звучание «Пульса Мёртвого Города», отличное от более поздней версии Night Loop.',
+    credits: [
+      'Слова — Александр Блок, «Ночь, улица, фонарь, аптека…» (1912)',
+      'Музыкальная интерпретация и видеоисточник — The Legendary Poet',
+      'Публикационная MP3-дорожка подготовлена из авторского видео xqRJU9DS2cc',
+      'Создано с использованием генеративных музыкальных технологий',
+    ],
+    rightsNotice: standardRights,
+    audioSha256: 'cced1b67c8963e9f0e911674ef7dba4d690fd60b103be69652b0244e19377e52',
+    waveform: blokNightVersion1Waveform,
+    theme: { accent: '#ebbd7c', secondary: '#8ca7b9', surface: '#0b111a', heroPosition: '52% center' },
+  },
+  {
     id: 'blok-night-pharmacy-night-loop',
-    title: 'Ночь, улица, фонарь, аптека… — Night Loop',
+    title: 'Ночь, улица, фонарь, аптека… — ВЕРСИЯ 2 (Night Loop)',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
     availability: 'published',
@@ -118,7 +143,7 @@ export const allMusicTracks: readonly MusicTrack[] = [
   },
   {
     id: 'blok-kulikovo-part-1',
-    title: 'На поле Куликовом — часть I. Река раскинулась…',
+    title: 'На поле Куликовом — ЧАСТЬ 1. Река раскинулась…',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
     availability: 'published',
@@ -138,7 +163,7 @@ export const allMusicTracks: readonly MusicTrack[] = [
   },
   {
     id: 'blok-kulikovo-part-2',
-    title: 'На поле Куликовом — часть II. За Непрядвой…',
+    title: 'На поле Куликовом — ЧАСТЬ 2. За Непрядвой…',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
     availability: 'published',
@@ -158,7 +183,7 @@ export const allMusicTracks: readonly MusicTrack[] = [
   },
   {
     id: 'blok-scythians-version-1',
-    title: 'Скифы — музыкальная версия 1',
+    title: 'Скифы — ВЕРСИЯ 1',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
     availability: 'published',
@@ -178,7 +203,7 @@ export const allMusicTracks: readonly MusicTrack[] = [
   },
   {
     id: 'blok-scythians-version-2',
-    title: 'Скифы — музыкальная версия 2',
+    title: 'Скифы — ВЕРСИЯ 2',
     poet: 'Александр Блок',
     poetId: 'alexander-blok',
     availability: 'published',
@@ -205,14 +230,14 @@ export const allMusicTracks: readonly MusicTrack[] = [
     releaseOrder: 90,
     publishedAt: '2026-11-15',
     releaseYear: 2026,
-    duration: '3:25',
-    durationSeconds: 204.568,
+    duration: '2:46',
+    durationSeconds: 165.96,
     audioUrl: '/audio/blok-oh-i-want-to-live.tlp-2026.mp3',
     coverUrl: '/images/music/blok-oh-i-want-to-live-cover.webp',
     description: 'Музыкальная интерпретация стихотворения Александра Блока о жажде жизни, творчестве и надежде оставить после себя свет и добро.',
     credits: ['Слова — Александр Блок, «О, я хочу безумно жить…» (1914)', 'Музыкальная интерпретация и мастер — The Legendary Poet', 'Создано с использованием генеративных музыкальных технологий'],
     rightsNotice: standardRights,
-    audioSha256: 'e405f8767a3707b5c6d29ff394c17e661d2dee65f990a19f3bf82f5888f4ff83',
+    audioSha256: 'b5df5c42ad5377c6a8b2da00b10dff860c1337a3d23c5099978d48ce57fbf3e8',
     waveform: blokIWantToLiveWaveform,
     theme: { accent: '#f0c98d', secondary: '#98b6c8', surface: '#141518', heroPosition: '50% center' },
   }

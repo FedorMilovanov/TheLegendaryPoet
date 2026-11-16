@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "0336ec56f5dd4c7ed1093a900aced7b0e62a223558db979c09b06973345eeff8"
+      "fingerprint": "5f7fc0b60f1cb8f94a211fd83ac3a55927559597e4b3a13e595113e2385779cf"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -154,7 +154,7 @@
       "routeId": "music",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "96bfd0df8f4b651175c2853345ac964b29e13406f32fa434390a1e93e5da4ebc"
+      "fingerprint": "6ae063fa23e46b9564d21443fd9e0e258c398f5a9e764524afa424e9b847557f"
     },
     {
       "url": "https://thelegendarypoet.ru/about/",
@@ -293,12 +293,20 @@
       "fingerprint": "71bcfa6096c2cbce5d2bdc85c634db9c4db00ed5fc646e044b76ef27cbc8a342"
     },
     {
+      "url": "https://thelegendarypoet.ru/music/blok-night-pharmacy-version-1/",
+      "path": "/music/blok-night-pharmacy-version-1/",
+      "routeId": "track-detail",
+      "state": "ready",
+      "lastmod": null,
+      "fingerprint": "1cf80b225b278a2174ef38a4b2321b5cb172a50ca8e0b255d5ad0773b96f2227"
+    },
+    {
       "url": "https://thelegendarypoet.ru/music/blok-night-pharmacy-night-loop/",
       "path": "/music/blok-night-pharmacy-night-loop/",
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "30a166ad67c2a375ef86ffe90e14574ca546a9c92e7931e3a8667546e6515740"
+      "fingerprint": "0acc29c1dcb6bfd7925c0ddf614359d11b30103e6911038481edbcf6958f8843"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-kulikovo-part-1/",
@@ -306,7 +314,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "622431563255fcc5c1caba939a8bd9ebe0f5ea84a6f633619a748f01f97feca7"
+      "fingerprint": "96a1f96d3a09894add3e11fd60a8b1dd0338157ade851509cb5a2635bb486f08"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-kulikovo-part-2/",
@@ -314,7 +322,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "2fd55ad50f96a3bd4145908e957f1dc0a336cf54c0cbfccb1550338ee619a164"
+      "fingerprint": "be80f1c2670981a0c6e805c8c0452c19bda62b5eb62be6644159fb36e399e459"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-scythians-version-1/",
@@ -322,7 +330,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "169662814e57439b58476807818bcd4d134acfe874038dadc17a65b8fe36075b"
+      "fingerprint": "a963dab97431f19bc89f2b75b74ecec40c11aa8ac0be80e0ba1570a83f912c64"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-scythians-version-2/",
@@ -330,7 +338,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5834eaba197c450a938320914569a1be91967e4d9aa84a4874e11918eadc6705"
+      "fingerprint": "ed7e386ae52096ccea03bd7318916712e3b9b950ee22a6a88e078456789e05d8"
     },
     {
       "url": "https://thelegendarypoet.ru/music/blok-oh-i-want-to-live/",
@@ -338,7 +346,7 @@
       "routeId": "track-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "fc9697c1aba411b8f047a16e970ff9971da2801c7f0aed31010a47a752c81d63"
+      "fingerprint": "64076c325b9742967c3008bdd18198dac486e11f0c4858783710f10bfd2efc25"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/fyodor-tyutchev/",
