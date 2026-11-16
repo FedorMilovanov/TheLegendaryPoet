@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14",
+  "generatedAt": "2026-11-16",
   "tracks": [
     {
       "id": "yesenin-ya-ustalym-takim-eshche-ne-byl",
@@ -32,6 +32,17 @@
       "durationSeconds": 257.664,
       "codec": "MP3, 48 kHz stereo",
       "cover": "/images/music/blok-rossiya-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "blok-night-pharmacy-version-1",
+      "path": "/audio/blok-night-pharmacy-version-1.tlp-2026.mp3",
+      "sha256": "cced1b67c8963e9f0e911674ef7dba4d690fd60b103be69652b0244e19377e52",
+      "bytes": 8718617,
+      "durationSeconds": 290.976,
+      "codec": "MP3, 48 kHz stereo (YouTube-derived music source)",
+      "cover": "/images/music/blok-night-version-1-cover.webp",
       "rightsHolder": "The Legendary Poet",
       "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
     },
