@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
-import { poets } from '../data/poets';
+import { poets, musicTracks } from '../data/poets';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
@@ -172,7 +172,7 @@ export default function PoetDetailPage() {
 
               <div className="space-y-16">
                 {poet.poems.map((poem) => (
-                  <PoemCard key={poem.id} poem={poem} />
+                  <PoemCard key={poem.id} poem={poem} relatedMusic={musicTracks.filter((track) => poem.relatedMusicTrackIds?.includes(track.id))} />
                 ))}
               </div>
             </div>

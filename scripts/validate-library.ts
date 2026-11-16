@@ -119,6 +119,19 @@ poets.forEach((poet: Poet, i) => {
     if (typeof poem.rating === 'number' && (poem.rating < 0 || poem.rating > 10))
       err(pwhere, `rating ${poem.rating} outside 0–10`);
 
+    // Explicit poem-to-music references must resolve to published tracks of the same poet.
+    // Do not derive links from titles: musical "parts" and "versions" have different meanings.
+    if (poem.relatedMusicTrackIds) {
+      const seenTracks = new Set<string>();
+      for (const trackId of poem.relatedMusicTrackIds) {
+        if (seenTracks.has(trackId)) err(pwhere, 'duplicate related music track: ' + trackId);
+        seenTracks.add(trackId);
+        const track = musicTracks.find((item) => item.id === trackId);
+        if (!track) err(pwhere, 'related music track is not published: ' + trackId);
+        else if (track.poetId !== poet.id) err(pwhere, 'related music track belongs to a different poet: ' + trackId);
+      }
+    }
+
     // Canonical-text hygiene: a poem is verse; collapse-only whitespace check.
     if (isNonEmptyString(poem.text) && poem.text.trim() === poem.text.replace(/\s+/g, ' ').trim())
       warn(pwhere, 'poem text has no line breaks — verify it is real verse, not flattened prose');
