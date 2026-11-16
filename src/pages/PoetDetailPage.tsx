@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
-import { poets, musicTracks } from '../data/poets';
+import { poets } from '../data/poets';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
@@ -11,7 +11,6 @@ import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
 import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
-import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
@@ -25,6 +24,7 @@ import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
+const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
 
@@ -158,7 +158,7 @@ export default function PoetDetailPage() {
 
             <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 
-            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
+            {poet.moralPortrait && <Suspense fallback={null}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
@@ -172,7 +172,7 @@ export default function PoetDetailPage() {
 
               <div className="space-y-16">
                 {poet.poems.map((poem) => (
-                  <PoemCard key={poem.id} poem={poem} relatedMusic={musicTracks.filter((track) => poem.relatedMusicTrackIds?.includes(track.id))} />
+                  <PoemCard key={poem.id} poem={poem} />
                 ))}
               </div>
             </div>

@@ -9,7 +9,6 @@ import { afanasyFet } from '../library/afanasyFet';
 import { nikolayGumilev } from '../library/nikolayGumilev';
 import { sergeiYesenin } from '../library/sergeiYesenin';
 import { annaAkhmatova } from '../library/annaAkhmatova';
-import { alexanderBlok } from '../library/alexanderBlok';
 import { supplementaryPoets } from './supplementaryPoets.generated';
 
 export const poets: Poet[] = [
@@ -22,7 +21,7 @@ export const poets: Poet[] = [
   nikolayGumilev,
   sergeiYesenin,
   annaAkhmatova,
-  alexanderBlok,
+  supplementaryPoets[6],
   supplementaryPoets[0],
   supplementaryPoets[1],
   supplementaryPoets[2],

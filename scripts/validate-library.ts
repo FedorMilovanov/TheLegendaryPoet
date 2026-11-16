@@ -16,7 +16,8 @@
  * not fail the build. Keep this list honest: every rule maps to a real bug we
  * have seen or could realistically introduce.
  */
-import { poets, musicTracks } from '../src/data/poets';
+import { poets } from '../src/data/library/index';
+import { musicTracks } from '../src/data/library/musicTracks';
 import { essays } from '../src/data/essays/index';
 import { poetConnections } from '../src/data/poetConnections';
 import type { Poet } from '../src/types/poet';

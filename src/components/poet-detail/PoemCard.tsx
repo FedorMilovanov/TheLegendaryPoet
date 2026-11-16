@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import { Star, Award, Heart, ExternalLink } from 'lucide-react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Star, Award, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { MusicTrack, Poem } from '../../types/poet';
-import { Link } from '../ui/Link';
+import type { Poem } from '../../types/poet';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
 import { useFavoritePoem } from '../../hooks/useFavoritePoems';
 import InteractivePoemText from './InteractivePoemText';
 import { toggleFavoritePoem } from '../../utils/myArchiveStore';
 
+const PoemResourceLinks = lazy(() => import('./PoemResourceLinks'));
+
 interface PoemCardProps {
   poem: Poem;
-  relatedMusic?: readonly MusicTrack[];
 }
 
-export default function PoemCard({ poem, relatedMusic = [] }: PoemCardProps) {
+export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
@@ -85,35 +85,11 @@ export default function PoemCard({ poem, relatedMusic = [] }: PoemCardProps) {
       </div>
 
       <InteractivePoemText text={poem.text} />
-      {relatedMusic.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-luxury-gold/15 bg-[#10100f] p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-luxury-gold">
-            Музыкальные интерпретации
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {relatedMusic.map((track) => (
-              <Link
-                key={track.id}
-                to={'/music/' + track.id + '/'}
-                className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/25 px-4 py-2 text-sm text-luxury-gray-light transition hover:border-luxury-gold/60 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-              >
-                {track.title}
-              </Link>
-            ))}
-          </div>
-        </div>
+      {(poem.sourceUrl || poem.relatedMusicTrackIds?.length) && (
+        <Suspense fallback={null}>
+          <PoemResourceLinks poem={poem} />
+        </Suspense>
       )}
-      {poem.sourceUrl && (
-        <a
-          href={poem.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm text-luxury-gold underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-        >
-          Источник текста <ExternalLink size={14} aria-hidden="true" />
-        </a>
-      )}
-
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {poem.analysis && (
           <div className="rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-8 transition-colors hover:border-luxury-gold/30">
