@@ -5,11 +5,22 @@
   <subtitle>Новые статьи, биографические исследования и музыкальные публикации проекта.</subtitle>
   <link href="https://thelegendarypoet.ru/" />
   <link rel="self" type="application/atom+xml" href="https://thelegendarypoet.ru/feed.xml" />
-  <updated>2026-11-15T00:00:00Z</updated>
+  <updated>2026-11-16T00:00:00Z</updated>
   <author><name>THE LEGENDARY POET</name><uri>https://thelegendarypoet.ru/about/</uri></author>
   <entry>
+    <id>https://thelegendarypoet.ru/music/blok-night-pharmacy-version-1/</id>
+    <title>Ночь, улица, фонарь, аптека… — ВЕРСИЯ 1 — Александр Блок</title>
+    <link href="https://thelegendarypoet.ru/music/blok-night-pharmacy-version-1/" />
+    <published>2026-11-16T00:00:00Z</published>
+    <updated>2026-11-16T00:00:00Z</updated>
+    <author><name>THE LEGENDARY POET</name></author>
+    <summary type="text">Первая самостоятельная музыкальная версия стихотворения «Ночь, улица, фонарь, аптека…»: тревожный ночной Петербург и замкнутый круг судьбы. Звучание «Пульса Мёртвого Города», отличное от более поздней версии Night Loop.</summary>
+    <category term="музыка" />
+    <category term="Александр Блок" />
+  </entry>
+  <entry>
     <id>https://thelegendarypoet.ru/music/blok-night-pharmacy-night-loop/</id>
-    <title>Ночь, улица, фонарь, аптека… — Night Loop — Александр Блок</title>
+    <title>Ночь, улица, фонарь, аптека… — ВЕРСИЯ 2 (Night Loop) — Александр Блок</title>
     <link href="https://thelegendarypoet.ru/music/blok-night-pharmacy-night-loop/" />
     <published>2026-11-15T00:00:00Z</published>
     <updated>2026-11-15T00:00:00Z</updated>
@@ -20,7 +31,7 @@
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/blok-kulikovo-part-1/</id>
-    <title>На поле Куликовом — часть I. Река раскинулась… — Александр Блок</title>
+    <title>На поле Куликовом — ЧАСТЬ 1. Река раскинулась… — Александр Блок</title>
     <link href="https://thelegendarypoet.ru/music/blok-kulikovo-part-1/" />
     <published>2026-11-15T00:00:00Z</published>
     <updated>2026-11-15T00:00:00Z</updated>
@@ -31,7 +42,7 @@
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/blok-kulikovo-part-2/</id>
-    <title>На поле Куликовом — часть II. За Непрядвой… — Александр Блок</title>
+    <title>На поле Куликовом — ЧАСТЬ 2. За Непрядвой… — Александр Блок</title>
     <link href="https://thelegendarypoet.ru/music/blok-kulikovo-part-2/" />
     <published>2026-11-15T00:00:00Z</published>
     <updated>2026-11-15T00:00:00Z</updated>
@@ -42,7 +53,7 @@
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/blok-scythians-version-1/</id>
-    <title>Скифы — музыкальная версия 1 — Александр Блок</title>
+    <title>Скифы — ВЕРСИЯ 1 — Александр Блок</title>
     <link href="https://thelegendarypoet.ru/music/blok-scythians-version-1/" />
     <published>2026-11-15T00:00:00Z</published>
     <updated>2026-11-15T00:00:00Z</updated>
@@ -53,7 +64,7 @@
   </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/blok-scythians-version-2/</id>
-    <title>Скифы — музыкальная версия 2 — Александр Блок</title>
+    <title>Скифы — ВЕРСИЯ 2 — Александр Блок</title>
     <link href="https://thelegendarypoet.ru/music/blok-scythians-version-2/" />
     <published>2026-11-15T00:00:00Z</published>
     <updated>2026-11-15T00:00:00Z</updated>
