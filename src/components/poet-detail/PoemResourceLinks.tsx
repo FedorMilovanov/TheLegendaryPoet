@@ -14,7 +14,7 @@ export default function PoemResourceLinks({ poem }: PoemResourceLinksProps) {
     <>
       {relatedMusic.length > 0 && (
         <div className="mt-6 rounded-2xl border border-luxury-gold/15 bg-[#10100f] p-5">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-luxury-gold">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#e7c873]">
             Музыкальные интерпретации
           </p>
           <div className="flex flex-wrap gap-3">
@@ -22,7 +22,7 @@ export default function PoemResourceLinks({ poem }: PoemResourceLinksProps) {
               <Link
                 key={track.id}
                 to={'/music/' + track.id + '/'}
-                className="inline-flex min-h-11 items-center rounded-xl border border-luxury-gold/25 px-4 py-2 text-sm text-luxury-gray-light transition hover:border-luxury-gold/60 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
+                className="inline-flex min-h-11 items-center rounded-xl border border-[#e7c873]/30 px-4 py-2 text-sm text-[#e5e7eb] transition hover:border-[#e7c873]/70 hover:text-[#f4da95] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e7c873]"
               >
                 {track.title}
               </Link>
