@@ -121,6 +121,11 @@ export default function PoemCard({ poem }: PoemCardProps) {
         <section data-poem-textual-note aria-label="История текста" className="mt-6 rounded-2xl border border-luxury-gold/15 bg-[#0a0a0a] p-5 theme-elevated-surface sm:p-8">
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-luxury-gold-light">История текста и редакции</h4>
           <p className="text-sm leading-7 text-luxury-gray-light">{poem.textualNote}</p>
+          {poem.textualSourceUrl && (
+            <a href={poem.textualSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-luxury-gold-light underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
+              Текстологический источник <span aria-hidden="true" className="ml-1">↗</span>
+            </a>
+          )}
         </section>
       )}
       <div className="mt-8">

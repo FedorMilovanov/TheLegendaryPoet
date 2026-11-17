@@ -203,6 +203,9 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Незрело знающий работу');
           await expect(page.locator('#poem-yesenin-9 [data-poem-year-note]')).toContainText('Мирка');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('12 из 16');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкина');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://smena-online.ru/node/29469/print');
+          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
           const storm = page.locator('#poem-tyutchev-6');

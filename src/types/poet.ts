@@ -67,6 +67,8 @@ export interface Poem {
   analysis?: string;
   /** Edition-specific manuscript/first-print provenance; separate from literary analysis. */
   textualNote?: string;
+  /** Publicly accessible edition or critical-apparatus record supporting textualNote. */
+  textualSourceUrl?: string;
   biblicalPerspective?: string;
   mood?: Array<'тоска' | 'тревога' | 'восторг' | 'покой' | 'гнев' | 'нежность' | 'пустота' | 'надежда'>;
   rating: number;
