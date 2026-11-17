@@ -132,7 +132,7 @@ test.describe('poets result status accessibility', () => {
         await page.goto(`${BASE_URL}/poets/${poetId}`, { waitUntil: 'domcontentloaded' });
         const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
         const entries = nav.locator('ol > li > a[href^="#poem-"]');
-        const cards = page.locator('[id^="poem-"]');
+        const cards = page.locator('div[id^="poem-"]');
         await expect(nav).toBeVisible();
         await expect(nav).toHaveClass(/poet-reading-index/);
         const count = await cards.count();
@@ -141,7 +141,7 @@ test.describe('poets result status accessibility', () => {
         await expect(nav).toHaveAttribute('id', 'poem-contents');
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
-        const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\\s+/u).filter(Boolean).length);
+        const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
         expect(columns).toBe(width >= 640 ? 2 : 1);
         expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
         await jump.click();
