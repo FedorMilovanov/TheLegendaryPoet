@@ -184,6 +184,7 @@ test.describe('poets result status accessibility', () => {
           await expect(entries.filter({ hasText: 'Весенняя гроза' })).toContainText('редакция 1854 г.');
         }
         if (poetId === 'sergei-yesenin') {
+          await expect(entries.filter({ hasText: 'Шаганэ' }).locator('[data-poem-cycle]')).toHaveText('Персидские мотивы');
           const letterText = page.locator('#poem-yesenin-10 [data-poem-canonical]');
           await expect.poll(() => letterText.evaluate((element) => element.textContent.includes('Что я в сплошном дыму,\nВ разворочённом бурей быте'))).toBe(true);
         }
