@@ -146,9 +146,15 @@ test.describe('poets result status accessibility', () => {
   });
 
 
-  test('Pushkin, Lermontov and Yesenin use the shared contents on both layouts', async ({ page }, testInfo) => {
+  test('Four expanded classics hydrate full canonical contents on both layouts', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
-    for (const poetId of ['alexander-pushkin', 'mikhail-lermontov', 'sergei-yesenin']) {
+    const expandedPoets = [
+      ['alexander-pushkin', 10],
+      ['mikhail-lermontov', 11],
+      ['sergei-yesenin', 10],
+      ['fyodor-tyutchev', 11],
+    ];
+    for (const [poetId, expectedCount] of expandedPoets) {
       for (const width of widths) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(`${BASE_URL}/poets/${poetId}`, { waitUntil: 'domcontentloaded' });
@@ -157,9 +163,10 @@ test.describe('poets result status accessibility', () => {
         const cards = page.locator('div[id^="poem-"]');
         await expect(nav).toBeVisible();
         await expect(nav).toHaveClass(/poet-reading-index/);
-        const count = await cards.count();
-        expect(count).toBeGreaterThan(1);
-        await expect(entries).toHaveCount(count);
+        // The small runtime fallback holds only legacy works. Require the
+        // full route-specific JSON to hydrate before testing navigation.
+        await expect(cards).toHaveCount(expectedCount);
+        await expect(entries).toHaveCount(expectedCount);
         await expect(nav).toHaveAttribute('id', 'poem-contents');
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
