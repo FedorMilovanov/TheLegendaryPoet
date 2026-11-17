@@ -146,6 +146,16 @@ test.describe('poets result status accessibility', () => {
   });
 
 
+  test('failed full-corpus request openly labels the legacy fallback', async ({ page }) => {
+    await page.route('**/data/poets/alexander-pushkin.json*', (route) => route.abort('failed'));
+    await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('status').filter({ hasText: 'Не удалось загрузить полный корпус стихов' })).toBeVisible();
+    const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+    await expect(nav.locator('ol > li > a[href^="#poem-"]')).toHaveCount(3);
+    await expect(page.locator('div[id^="poem-pushkin-"]')).toHaveCount(3);
+    await expect(page.getByText('Показана резервная подборка.')).toBeVisible();
+  });
+
   test('Four expanded classics hydrate full canonical contents on both layouts', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     const expandedPoets = [
