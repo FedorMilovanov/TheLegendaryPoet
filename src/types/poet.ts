@@ -52,6 +52,8 @@ export interface Poem {
   id: string;
   title: string;
   originalTitle?: string;
+  /** Verified authorial cycle; never inferred from an audio release title. */
+  cycle?: string;
   /** Citable edition of the poem text (not a claim about music provenance). */
   sourceUrl?: string;
   /** Explicit published music release IDs associated with this work; never infer from titles. */

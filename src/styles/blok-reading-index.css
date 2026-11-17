@@ -1,0 +1,61 @@
+/* Alexander Blok: bookish numbered contents, only on this author page.
+   No new JS animation, overlays, route splits, or scroll restoration. */
+.blok-reading-index {
+  counter-reset: blok-entry;
+  background-image: radial-gradient(ellipse at 92% 0%, rgba(212,175,55,.075), transparent 62%);
+}
+.blok-reading-index > h3 { color: #ead394; letter-spacing: .12em; }
+.blok-reading-index > ol > li { counter-increment: blok-entry; min-width: 0; }
+.blok-reading-index > ol > li > a {
+  min-height: 5.75rem;
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  align-content: center;
+  column-gap: .55rem;
+  border-color: rgba(212,175,55,.22);
+  padding: .85rem 1rem;
+}
+.blok-reading-index > ol > li > a::before {
+  content: counter(blok-entry, decimal-leading-zero);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: start;
+  padding-top: .08rem;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: #dec27c;
+}
+.blok-reading-index > ol > li > a > div { grid-column: 2; min-width: 0; }
+.blok-reading-index > ol > li > a > div:first-child {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+.blok-reading-index [data-poem-cycle] {
+  text-transform: none;
+  letter-spacing: .015em;
+  line-height: 1.4;
+}
+.blok-reading-index a:focus-visible {
+  outline: 2px solid #deb85f;
+  outline-offset: 3px;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .blok-reading-index > ol > li > a { transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .blok-reading-index > ol > li > a:hover {
+    transform: translateY(-2px);
+    border-color: rgba(212,175,55,.58);
+    box-shadow: 0 14px 28px rgba(0,0,0,.12);
+  }
+}
+html.theme-light .blok-reading-index > h3,
+html.theme-light .blok-reading-index > ol > li > a::before { color: #775617; }
+html.theme-light .blok-reading-index > ol > li > a { border-color: rgba(119,86,23,.3); }
+@media (max-width: 639px) {
+  .blok-reading-index { padding: 1.1rem; }
+  .blok-reading-index > ol > li > a { min-height: 4.75rem; }
+}
