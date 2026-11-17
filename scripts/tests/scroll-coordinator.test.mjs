@@ -90,7 +90,7 @@ test('initial hash still scrolls to its target with header clearance', () => {
 test('same-path hash transition requests the universal chrome reveal event', () => {
   const app = coordinator();
   app.render(); app.frame();
-  app.render({ key: 'poem', pathname: '/poets/alexander-pushkin', hash: '#poem-pushkin-1' }, 'PUSH');
+  app.render({ key: 'poem', pathname: '/essay', hash: '#target' }, 'PUSH');
   app.frame();
   assert.equal(app.events.at(-1), 'tlp-reveal-chrome');
 });
