@@ -18,7 +18,7 @@ export default function BlokReadingGuide({ poems }: { poems: Poem[] }) {
           <h3 className="theme-text font-serif text-2xl font-semibold leading-tight sm:text-3xl">Оглавление стихотворений</h3>
           <p className="theme-functional-muted mt-3 max-w-xl text-sm leading-relaxed">Перейдите к стихотворению, литературному разбору и музыкальным интерпретациям.</p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2 text-xs" aria-label="Состав подборки">
+        <div className="flex shrink-0 flex-wrap gap-2 text-xs">
           <span className="theme-text inline-flex items-center gap-2 rounded-full border border-luxury-gold/20 px-3 py-2">
             <BookOpenText aria-hidden="true" size={15} className="theme-poet-accent" /> {poems.length} текстов
           </span>
