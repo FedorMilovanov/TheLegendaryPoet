@@ -60,6 +60,8 @@ export interface Poem {
   relatedMusicTrackIds?: readonly string[];
   text: string;
   year?: number;
+  /** Note on a contested, traditional, or author-assigned composition date. */
+  yearNote?: string;
   /** Publication year of a verified later textual revision (distinct from year of composition). */
   editionYear?: number;
   analysis?: string;

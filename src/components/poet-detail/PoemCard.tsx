@@ -68,6 +68,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
               {poem.year}&nbsp;год{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}
             </span>
           )}
+          {poem.yearNote && <span data-poem-year-note className="ml-2 inline-block max-w-full text-xs font-medium normal-case tracking-normal text-luxury-gray-light">{poem.yearNote}</span>}
         </div>
         <div className="flex items-center gap-2">
           <button

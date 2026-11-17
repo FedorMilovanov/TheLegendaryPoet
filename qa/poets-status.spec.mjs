@@ -190,6 +190,13 @@ test.describe('poets result status accessibility', () => {
           const actualColumns = await panels.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
           expect(actualColumns, 'genuine biblical commentary still uses two panels').toBe(2);
         }
+        if (poetId === 'alexander-pushkin') {
+          await expect(page.locator('#poem-pushkin-7 [data-poem-year-note]')).toContainText('традиционная датировка');
+          await expect(entries.filter({ hasText: 'К Чаадаеву' }).locator('[data-poem-year-note]')).toContainText('обсуждается 1820');
+        }
+        if (poetId === 'sergei-yesenin') {
+          await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
+        }
         if (poetId === 'fyodor-tyutchev') {
           const storm = page.locator('#poem-tyutchev-6');
           await expect(storm).toContainText('1828');
