@@ -202,9 +202,10 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
           await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Незрело знающий работу');
           await expect(page.locator('#poem-yesenin-9 [data-poem-year-note]')).toContainText('Мирка');
-          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('12 из 16');
-          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкина');
-          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://smena-online.ru/node/29469/print');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('все 16 стиховых строк');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('без запятой');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкин');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://sytin-and-esenin.ru/images/blocks/2.23.24.jpg');
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
