@@ -43,4 +43,34 @@ test.describe('poets result status accessibility', () => {
     await expect(pulse).toBeVisible();
     await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
   });
+  test('Blok contents preserve eight linked works and responsive two-column navigation', async ({ page }, testInfo) => {
+    const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${BASE_URL}/poets/alexander-blok`, { waitUntil: 'domcontentloaded' });
+
+      const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
+      const cards = page.locator('[id^="poem-blok-"]');
+      await expect(cards).toHaveCount(8);
+      await expect(guide).toBeVisible();
+
+      const anchors = guide.locator('a[href^="#poem-blok-"]');
+      await expect(anchors).toHaveCount(8);
+      await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
+      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(8);
+      await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
+
+      const columnCount = await guide.locator('.grid').first().evaluate((element) =>
+        getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
+      );
+      expect(columnCount).toBe(width >= 640 ? 2 : 1);
+
+      const box = await guide.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box.width).toBeLessThanOrEqual(width);
+      await anchors.last().focus();
+      await expect(anchors.last()).toBeFocused();
+    }
+  });
+
 });
