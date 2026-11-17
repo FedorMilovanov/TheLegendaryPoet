@@ -90,7 +90,6 @@ export default function PoetDetailPage() {
     );
   }
 
-  const poetId = poet.id;
   return (
     <div className="theme-page-surface min-h-screen selection:bg-luxury-gold/30">
       <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
@@ -103,14 +102,14 @@ export default function PoetDetailPage() {
           <aside aria-label="Навигация и сведения о поэте" className="reader-sticky-panel space-y-10 lg:sticky lg:top-32 lg:col-span-4 [--reader-sticky-top:8rem]">
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
-            <PoetCommunitySummary poetId={poetId} />
-            {poetId !== 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
+            <PoetCommunitySummary poetId={poet.id} />
+            {poet.id !== 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
             <FamousWorks works={poet.famousWorks} />
           </aside>
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
-            {biographyError && supplementaryPoetIds.includes(poetId) && (
+            {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
                 Не удалось загрузить полную биографию.
               </p>
@@ -139,7 +138,7 @@ export default function PoetDetailPage() {
 
             <CommunityPanel
               targetType="poet"
-              targetId={poetId}
+              targetId={poet.id}
               title={`Оценка: ${poet.name}`}
               dimensions={poetRatingDimensions}
             />
@@ -163,15 +162,15 @@ export default function PoetDetailPage() {
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
-            {poetId === 'anna-akhmatova' && <AkhmatovaReadingGuide />}
+            {poet.id === 'anna-akhmatova' && <AkhmatovaReadingGuide />}
 
 
             <div className="pt-16">
-              <h2 className="theme-text editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none sm:mb-12 sm:text-5xl">
+              <h2 className="theme-text editorial-title poet-lyric-heading">
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              {poetId === 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
+              {poet.id === 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
               <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />

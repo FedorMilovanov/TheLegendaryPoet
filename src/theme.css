@@ -467,3 +467,20 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
   border-color: var(--tlp-cursor-ring);
   box-shadow: var(--tlp-cursor-ring-shadow);
 }
+
+/* Preserve the literary heading geometry without bloating the poet route JS. */
+.poet-lyric-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: .75rem;
+  row-gap: .25rem;
+  margin-bottom: 2.5rem;
+  font-family: var(--font-serif);
+  font-size: 2.55rem;
+  font-weight: 700;
+  line-height: 1;
+}
+@media (min-width: 640px) {
+  .poet-lyric-heading { margin-bottom: 3rem; font-size: 3rem; }
+}
