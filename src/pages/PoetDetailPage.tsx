@@ -113,7 +113,7 @@ export default function PoetDetailPage() {
             <ShareLine scopeRef={contentRef} />
             {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
-                Не удалось загрузить полную биографию.
+                Не удалось загрузить полный корпус стихов и биографию. Показана резервная подборка.
               </p>
             )}
             <p className="theme-text poet-bio-intro">
