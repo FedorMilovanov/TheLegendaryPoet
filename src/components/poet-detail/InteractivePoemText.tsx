@@ -74,7 +74,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
             <span key={lineIdx}>
               {lineIdx > 0 ? '\n' : ''}
               {tokens.map((token, tokenIdx) => {
-                if (/^\s+$/u.test(token)) return token;
+                if (token === '' || /^\s+$/u.test(token)) return token;
                 const key = `${lineIdx}-${wordIdx++}`;
                 return (
                   <span
