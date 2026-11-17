@@ -117,6 +117,12 @@ export default function PoemCard({ poem }: PoemCardProps) {
           </div>
         )}
       </div>
+      {poem.textualNote && (
+        <section data-poem-textual-note aria-label="История текста" className="mt-6 rounded-2xl border border-luxury-gold/15 bg-[#0a0a0a] p-5 theme-elevated-surface sm:p-8">
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-luxury-gold-light">История текста и редакции</h4>
+          <p className="text-sm leading-7 text-luxury-gray-light">{poem.textualNote}</p>
+        </section>
+      )}
       <div className="mt-8">
         <CommunityPanel
           compact

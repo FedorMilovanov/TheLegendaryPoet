@@ -198,6 +198,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
           await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
+          await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
+          await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Незрело знающий работу');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-year-note]')).toContainText('Мирка');
+          await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('12 из 16');
         }
         if (poetId === 'fyodor-tyutchev') {
           const storm = page.locator('#poem-tyutchev-6');
