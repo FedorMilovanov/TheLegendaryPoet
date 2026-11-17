@@ -3,6 +3,27 @@ import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
+// Clean component screenshots suppress only fixed chrome and animated cursor.
+// The real mobile dock is checked separately without screenshot masking.
+const READING_INDEX_CAPTURE_STYLE = `
+.mobile-dock, .scroll-top-btn,
+[data-custom-cursor-dot], [data-custom-cursor-ring], .cursor-trail { visibility: hidden !important; }
+`;
+
+async function assertReachableBeyondDock(entry) {
+  await entry.scrollIntoViewIfNeeded();
+  const state = await entry.evaluate((node) => {
+    const link = node.getBoundingClientRect();
+    const dock = document.querySelector('.mobile-dock');
+    const box = dock?.getBoundingClientRect();
+    const visible = dock && box && getComputedStyle(dock).display !== 'none'
+      && box.bottom > 0 && box.top < innerHeight;
+    return { linkTop: link.top, linkBottom: link.bottom, dockTop: visible ? box.top : null,
+      clear: !visible || link.bottom < box.top - 2 || link.top > box.bottom + 2 };
+  });
+  expect(state.clear, `Focused contents entry obscured by the mobile dock: ${JSON.stringify(state)}`).toBe(true);
+}
+
 test.describe('poets result status accessibility', () => {
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
@@ -67,10 +88,10 @@ test.describe('poets result status accessibility', () => {
       // interrupt the run. The same four screenshots remain in the core QA.
       if (testInfo.project.name === 'chromium-core') {
         mkdirSync('qa-artifacts', { recursive: true });
-        await page.mouse.move(0, 0);
-        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
+        await page.evaluate(() => document.fonts.ready);
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
-        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
       }
       await expect(guide).toHaveAttribute('id', 'blok-contents');
@@ -105,10 +126,11 @@ test.describe('poets result status accessibility', () => {
       expect(overflow).toBeLessThanOrEqual(1);
       await anchors.last().focus();
       await expect(anchors.last()).toBeFocused();
+      if (width < 768) await assertReachableBeyondDock(anchors.last());
 
       if (testInfo.project.name === 'chromium-core') {
         mkdirSync('qa-artifacts', { recursive: true });
-        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
         await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
         await expect(anchors.first()).toHaveCSS('border-color', 'rgba(119, 86, 23, 0.3)');
@@ -117,7 +139,7 @@ test.describe('poets result status accessibility', () => {
         await expect(analysisSurface).toHaveCSS('background-color', 'rgb(244, 236, 219)');
         const archiveButton = firstCard.getByRole('button', { name: /Добавить .* в архив/ });
         await expect(archiveButton).toHaveCSS('background-color', 'rgb(244, 236, 219)');
-        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
       }
     }
@@ -148,15 +170,44 @@ test.describe('poets result status accessibility', () => {
         await expect(page).toHaveURL(/#poem-contents$/);
         await entries.last().focus();
         await expect(entries.last()).toBeFocused();
+        if (width < 768) await assertReachableBeyondDock(entries.last());
         if (testInfo.project.name === 'chromium-core') {
+          mkdirSync('qa-artifacts', { recursive: true });
+          await page.evaluate(() => document.fonts.ready);
+          await nav.screenshot({
+            path: `qa-artifacts/poet-reading-index-${poetId}-${width}-dark.png`,
+            style: READING_INDEX_CAPTURE_STYLE,
+          });
           await page.evaluate(() => document.documentElement.classList.add('theme-light'));
           await expect(nav.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
+          await nav.screenshot({
+            path: `qa-artifacts/poet-reading-index-${poetId}-${width}-light.png`,
+            style: READING_INDEX_CAPTURE_STYLE,
+          });
           const analysis = cards.first().getByText('Литературный анализ');
           if (await analysis.count()) await expect(analysis.locator('xpath=..')).toHaveCSS('background-color', 'rgb(244, 236, 219)');
           await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
         }
       }
     }
+  });
+
+  test('shared chrome stays accessible after same-page poetry fragment navigation', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+    const dock = page.locator('.mobile-dock');
+    await expect(dock).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 700));
+    await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('chrome-hidden'))).toBe(true);
+    await expect(dock).toHaveAttribute('aria-hidden', 'true');
+    const last = page.getByRole('navigation', { name: 'Навигация по лирике' }).locator('a[href^="#poem-"]').last();
+    await last.click();
+    await expect(page).toHaveURL(/#poem-/);
+    await expect.poll(() => page.evaluate(() => {
+      const hidden = document.documentElement.classList.contains('chrome-hidden');
+      const mobileDock = document.querySelector('.mobile-dock');
+      return !!mobileDock && mobileDock.inert === hidden && (mobileDock.getAttribute('aria-hidden') === 'true') === hidden;
+    })).toBe(true);
   });
 
 });

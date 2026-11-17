@@ -66,9 +66,11 @@ export function useAutoHideChrome() {
       if (next !== hidden) {
         hidden = next;
         syncChromeAccessibility(hidden);
-        root.classList.toggle('chrome-hidden', hidden);
       }
+      root.classList.toggle('chrome-hidden', hidden);
     };
+
+    const revealOnNavigation = () => apply(false);
 
     const onScroll = () => {
       if (ticking) return;
@@ -92,12 +94,14 @@ export function useAutoHideChrome() {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('tlp-reveal-chrome', revealOnNavigation);
     return () => {
       // A frame queued before route unmount must not restore stale chrome state.
       if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
       pendingFrame = null;
       ticking = false;
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('tlp-reveal-chrome', revealOnNavigation);
       root.classList.remove('chrome-hidden');
       syncChromeAccessibility(false);
     };

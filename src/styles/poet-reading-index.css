@@ -19,6 +19,7 @@
   border-color: rgba(212,175,55,.22);
   background: linear-gradient(145deg, rgba(18,29,38,.93), rgba(8,16,24,.95));
   padding: .85rem 1rem;
+  scroll-margin-top: 7.5rem;
 }
 .poet-reading-index > ol > li > a::before {
   content: counter(poet-entry, decimal-leading-zero);
@@ -76,5 +77,8 @@ html.theme-light .poet-reading-index > ol > li > a {
 }
 @media (max-width: 639px) {
   .poet-reading-index { padding: 1.1rem; }
-  .poet-reading-index > ol > li > a { min-height: 4.75rem; }
+  .poet-reading-index > ol > li > a {
+    min-height: 4.75rem;
+    scroll-margin-bottom: calc(var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-mobile-dock-bottom, 1rem) + 1rem);
+  }
 }
