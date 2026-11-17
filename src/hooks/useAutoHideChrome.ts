@@ -26,6 +26,7 @@ export function useAutoHideChrome() {
     let lastY = window.scrollY;
     let hidden = false;
     let ticking = false;
+    let pendingFrame: number | null = null;
     const a11ySnapshots = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
 
     const chromeElements = () => [
@@ -72,12 +73,17 @@ export function useAutoHideChrome() {
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
+      pendingFrame = requestAnimationFrame(() => {
+        pendingFrame = null;
         const y = window.scrollY;
         const diff = y - lastY;
-        if (Math.abs(diff) >= DELTA) {
-          if (y <= SHOW_AT_TOP) apply(false);
-          else if (diff > 0 && y > HIDE_AFTER) apply(true);
+        // Returning to the top is an invariant, not a thresholded scroll gesture:
+        // WebKit may coalesce small final scroll events below DELTA.
+        if (y <= SHOW_AT_TOP) {
+          apply(false);
+          lastY = y;
+        } else if (Math.abs(diff) >= DELTA) {
+          if (diff > 0 && y > HIDE_AFTER) apply(true);
           else if (diff < 0) apply(false);
           lastY = y;
         }
@@ -87,6 +93,10 @@ export function useAutoHideChrome() {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
+      // A frame queued before route unmount must not restore stale chrome state.
+      if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
+      pendingFrame = null;
+      ticking = false;
       window.removeEventListener('scroll', onScroll);
       root.classList.remove('chrome-hidden');
       syncChromeAccessibility(false);
