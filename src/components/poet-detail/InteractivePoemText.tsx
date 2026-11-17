@@ -102,7 +102,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
           <div key={lineIdx} className="relative z-10 flex min-h-[1.5rem] flex-wrap gap-x-[0.34em]">
             {line.trim() === ''
               ? <div className="h-6 w-full" />
-              : line.split(' ').map((word, wordIdx) => {
+              : (line.match(/\S+/gu) ?? []).map((word, wordIdx) => {
                   const key = `${lineIdx}-${wordIdx}`;
                   const isFocused = focusedWord === key;
                   const isHovered = hoveredWord === key;

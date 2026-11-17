@@ -53,6 +53,14 @@ test.describe('poets result status accessibility', () => {
       const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
       const cards = page.locator('[id^="poem-blok-"]');
       await expect(cards).toHaveCount(8);
+      // Both layers must agree on word indices, including NBSP before the
+      // dash in «Скифы»; otherwise hover/focus affects the wrong visual word.
+      for (let i = 0; i < 8; i += 1) {
+        const card = cards.nth(i);
+        const canonicalWords = await card.locator('[data-poem-canonical-word]').count();
+        expect(canonicalWords, `canonical words in Blok poem ${i + 1}`).toBeGreaterThan(0);
+        await expect(card.locator('[data-poem-visual] > div > span')).toHaveCount(canonicalWords);
+      }
       await expect(guide).toBeVisible();
       await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(234, 211, 148)');
       // Capture evidence before later assertions or the full browser matrix can
