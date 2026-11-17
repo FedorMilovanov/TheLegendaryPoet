@@ -2,7 +2,11 @@
    No new JS animation, overlays, route splits, or scroll restoration. */
 .blok-reading-index {
   counter-reset: blok-entry;
-  background-image: radial-gradient(ellipse at 92% 0%, rgba(212,175,55,.075), transparent 62%);
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 92% 0%, rgba(212,175,55,.09), transparent 62%), linear-gradient(145deg, #09131d, #050a10);
+  border-color: rgba(212,175,55,.3);
+  box-shadow: 0 18px 46px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.04);
 }
 .blok-reading-index > h3 { color: #ead394; letter-spacing: .12em; }
 .blok-reading-index > ol > li { counter-increment: blok-entry; min-width: 0; }
@@ -51,6 +55,11 @@
     border-color: rgba(212,175,55,.58);
     box-shadow: 0 14px 28px rgba(0,0,0,.12);
   }
+}
+html.theme-light .blok-reading-index {
+  background: radial-gradient(ellipse at 92% 0%, rgba(169,124,49,.08), transparent 60%), linear-gradient(145deg, #fffdf7, #f5ebd8);
+  border-color: rgba(119,86,23,.3);
+  box-shadow: 0 16px 38px rgba(77,59,38,.12), inset 0 1px 0 rgba(255,255,255,.8);
 }
 html.theme-light .blok-reading-index > h3,
 html.theme-light .blok-reading-index > ol > li > a::before { color: #775617; }

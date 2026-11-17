@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
@@ -73,8 +74,18 @@ test.describe('poets result status accessibility', () => {
       const box = await guide.boundingBox();
       expect(box).not.toBeNull();
       expect(box.width).toBeLessThanOrEqual(width);
+      const overflow = await guide.evaluate((node) => node.scrollWidth - node.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(1);
       await anchors.last().focus();
       await expect(anchors.last()).toBeFocused();
+
+      if (testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
+        await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
     }
   });
 
