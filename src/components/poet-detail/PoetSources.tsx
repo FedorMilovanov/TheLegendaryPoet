@@ -7,9 +7,9 @@ export default function PoetSources({ poet }: { poet: Poet }) {
   // Keep Blok's scholarly apparatus available without a twenty-link text wall.
   // Native details retain all external destinations in the DOM.
   const isBlok = poet.id === 'alexander-blok' && items.length > 6;
-  const preferred = isBlok ? items.filter((item) => ["rvb.ru/20vek/blok/pss20/toc","ro.pushkinskijdom.ru/stocks","litexpress.goslitmuz.ru","pstgu.ru"].some((part) => item.url.includes(part))).slice(0, 4) : [];
-  const featured = isBlok ? preferred : items;
-  const additional = isBlok ? items.filter((item) => !preferred.some((pick) => pick.url === item.url)) : [];
+  // Source prominence is an explicit editorial property, not an accidental URL substring.
+  const featured = isBlok ? items.filter((item) => item.featured) : items;
+  const additional = isBlok ? items.filter((item) => !item.featured) : [];
 
   const sourceLink = ({ title, url }: { title: string; url: string }) => (
     <li key={url} className="min-w-0">

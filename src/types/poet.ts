@@ -30,7 +30,7 @@ export interface Poet {
   /** Exact owner-channel YouTube videos; availability gate for scheduled Shorts. */
   videos?: Array<{ youtubeId: string; title: string; availableFrom?: string }>;
   /** Per-author public bibliography used for checking biography and text edition. */
-  sources?: Array<{ title: string; url: string }>;
+  sources?: Array<{ title: string; url: string; featured?: boolean }>;
   links?: {
     youtube?: string;
     vk?: string;
