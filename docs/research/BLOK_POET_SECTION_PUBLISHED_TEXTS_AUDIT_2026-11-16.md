@@ -26,7 +26,7 @@
 | `blok-5` | «Россия» (1908) | 26 | РВБ, т. 3: https://rvb.ru/20vek/blok/pss20/vol3/text/0745.html |
 | `blok-6` | «На поле Куликовом», часть 1 (1908) | 28 | РВБ, т. 3: https://rvb.ru/20vek/blok/pss20/vol3/text/0740.html |
 | `blok-7` | «На поле Куликовом», часть 2 (1908) | 16 | РВБ, т. 3: https://rvb.ru/20vek/blok/pss20/vol3/text/0741.html |
-| `blok-8` | «Скифы» (1918) | 76 + эпиграф | ПСС, т. 5 (1999): https://ilibrary.ru/text/1233/index.html; прямой сверенный текст: https://24glo.com/ru/book/text/1233/p.1/index.html |
+| `blok-8` | «Скифы» (1918) | 76 + эпиграф | ПСС, т. 5 (1999): https://ilibrary.ru/text/1233/index.html; прямой сверенный текст: https://ilibrary.ru/text/1233/p.1/index.html |
 
 Для новых текстов сохранены строфы и все строки, удалены лишь *сервисные*
 номера строк HTML-представления. В `0740.html` в слове «Прогзил» обнаружена

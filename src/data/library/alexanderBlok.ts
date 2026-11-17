@@ -303,7 +303,7 @@ export const alexanderBlok: Poet = {
       title: "Скифы",
       year: 1918,
       relatedMusicTrackIds: ['blok-scythians-version-1', 'blok-scythians-version-2'],
-      sourceUrl: 'https://24glo.com/ru/book/text/1233/p.1/index.html',
+      sourceUrl: 'https://ilibrary.ru/text/1233/p.1/index.html',
       text: `Панмонголизм! Хоть имя дико,
 Но нам ласкает слух оно…
 — В. Соловьёв
@@ -497,7 +497,7 @@ export const alexanderBlok: Poet = {
     { title: "РВБ / Академическое ПСС, т. 3 — «Россия»", url: 'https://rvb.ru/20vek/blok/pss20/vol3/text/0745.html' },
     { title: "РВБ / Академическое ПСС, т. 3 — «На поле Куликовом», часть 1", url: 'https://rvb.ru/20vek/blok/pss20/vol3/text/0740.html' },
     { title: "РВБ / Академическое ПСС, т. 3 — «На поле Куликовом», часть 2", url: 'https://rvb.ru/20vek/blok/pss20/vol3/text/0741.html' },
-    { title: "А. А. Блок, ПСС, т. 5 (1999) — «Скифы», электронная публикация", url: 'https://24glo.com/ru/book/text/1233/p.1/index.html' },
+    { title: "А. А. Блок, ПСС, т. 5 (1999) — «Скифы», электронная публикация", url: 'https://ilibrary.ru/text/1233/p.1/index.html' },
     {
       title: 'А. А. Блок. Полное собрание сочинений и писем в 20 томах. Том 3 — «Ночь, улица, фонарь, аптека…» (РВБ)',
       url: 'https://rvb.ru/20vek/blok/pss20/vol3/text/0548.html',
