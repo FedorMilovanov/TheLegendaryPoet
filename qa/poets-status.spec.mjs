@@ -83,6 +83,11 @@ test.describe('poets result status accessibility', () => {
         mkdirSync('qa-artifacts', { recursive: true });
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        const firstCard = cards.first();
+        const analysisSurface = firstCard.getByText('Литературный анализ').locator('xpath=..');
+        await expect(analysisSurface).toHaveCSS('background-color', 'rgb(244, 236, 219)');
+        const archiveButton = firstCard.getByRole('button', { name: /Добавить .* в архив/ });
+        await expect(archiveButton).toHaveCSS('background-color', 'rgb(244, 236, 219)');
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
         await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
       }
