@@ -56,6 +56,11 @@ test.describe('poets result status accessibility', () => {
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
       await expect(anchors).toHaveCount(8);
+      await expect(guide).toHaveClass(/blok-reading-index/);
+      await expect(guide.locator('ol > li')).toHaveCount(8);
+      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
+      await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
+      await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
       await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(8);
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
