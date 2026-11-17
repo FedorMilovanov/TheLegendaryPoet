@@ -27,7 +27,6 @@ import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
-const BlokReadingGuide = lazy(() => import('../components/poet-detail/BlokReadingGuide'));
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -172,9 +171,13 @@ export default function PoetDetailPage() {
               </h2>
 
               {poet.id === 'alexander-blok' && (
-                <Suspense fallback={null}>
-                  <BlokReadingGuide poems={poet.poems} />
-                </Suspense>
+                <div id="blok-poems-navigation" className="scroll-mt-28">
+                  <PoemQuickNav poems={poet.poems} />
+                  <p className="theme-functional-muted mt-3 text-sm leading-relaxed">
+                    «На поле Куликовом» — цикл из пяти частей: здесь представлены I и II.
+                    «Скифы» — отдельное стихотворение с двумя музыкальными версиями.
+                  </p>
+                </div>
               )}
               <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (

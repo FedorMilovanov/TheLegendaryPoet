@@ -30,14 +30,15 @@ interface PoemQuickNavProps {
 }
 
 export default function PoemQuickNav({ poems }: PoemQuickNavProps) {
+  const isBlok = poems[0]?.id.startsWith("blok-") ?? false;
   return (
-    <div className="luxury-card rounded-3xl border border-cyan-400/10 p-6">
+    <nav aria-label="Навигация по лирике" className="luxury-card rounded-3xl border border-cyan-400/10 p-6">
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Навигация по лирике</h3>
-      <div className="space-y-3">
+      <div className={isBlok ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
         {poems.map((poem) => (
           <PoemQuickRow key={poem.id} poem={poem} />
         ))}
       </div>
-    </div>
+    </nav>
   );
 }
