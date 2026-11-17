@@ -129,7 +129,7 @@ export default function PoetDetailPage() {
             </Suspense>
 
             <div className="space-y-8">
-              <h2 className="border-b border-luxury-dark-300 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+              <h2 className="poet-detail-kicker">
                 Полная Биография
               </h2>
               <div className="poetry-text space-y-6 text-xl font-light leading-[1.8] text-luxury-gray-light">
@@ -150,7 +150,7 @@ export default function PoetDetailPage() {
 
             {poet.historicalNote && (
               <div className="luxury-card rounded-[2.5rem] border border-luxury-gold/10 bg-[#0a0a0a]/50 p-8 md:p-10">
-                <h2 className="mb-6 border-b border-luxury-gold/10 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+                <h2 className="poet-detail-kicker poet-detail-kicker--history">
                   Исторический контекст
                 </h2>
                 <p className="poetry-text text-lg font-light leading-[1.8] text-luxury-gray-light">
