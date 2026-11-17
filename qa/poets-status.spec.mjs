@@ -62,6 +62,8 @@ test.describe('poets result status accessibility', () => {
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(anchors.first()).toHaveCSS('display', 'grid');
+      await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
+      await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
       await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
       await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(8);
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
@@ -83,6 +85,7 @@ test.describe('poets result status accessibility', () => {
         mkdirSync('qa-artifacts', { recursive: true });
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await expect(anchors.first()).toHaveCSS('border-color', 'rgba(119, 86, 23, 0.3)');
         const firstCard = cards.first();
         const analysisSurface = firstCard.getByText('Литературный анализ').locator('xpath=..');
         await expect(analysisSurface).toHaveCSS('background-color', 'rgb(244, 236, 219)');

@@ -2,11 +2,11 @@ import { MessageSquare, Star } from 'lucide-react';
 import { Poem } from '../../types/poet';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 
-function PoemQuickRow({ poem }: { poem: Poem }) {
+function PoemQuickRow({ poem, isBlok }: { poem: Poem; isBlok: boolean }) {
   const feedback = useCommunityFeedback('poem', poem.id, { mode: 'passive' });
 
   return (
-    <a href={`#poem-${poem.id}`} className="theme-elevated-surface block rounded-2xl border p-3 transition hover:border-cyan-400/25">
+    <a href={`#poem-${poem.id}`} className={`block min-w-0 rounded-2xl border p-3 transition ${isBlok ? "blok-reading-link" : "theme-elevated-surface hover:border-cyan-400/25"}`}>
       <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
       <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
         <span>{poem.year || 'год не указан'}</span>
@@ -37,7 +37,7 @@ export default function PoemQuickNav({ poems }: PoemQuickNavProps) {
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Навигация по лирике</h3>
       <ol className={isBlok ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
         {poems.map((poem) => (
-          <li key={poem.id}><PoemQuickRow poem={poem} /></li>
+          <li key={poem.id}><PoemQuickRow poem={poem} isBlok={isBlok} /></li>
         ))}
       </ol>
     </nav>

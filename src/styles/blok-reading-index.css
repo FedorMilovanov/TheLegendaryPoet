@@ -17,6 +17,7 @@
   align-content: center;
   column-gap: .55rem;
   border-color: rgba(212,175,55,.22);
+  background: linear-gradient(145deg, rgba(18,29,38,.93), rgba(8,16,24,.95));
   padding: .85rem 1rem;
 }
 .blok-reading-index > ol > li > a::before {
@@ -63,7 +64,10 @@ html.theme-light .blok-reading-index {
 }
 html.theme-light .blok-reading-index > h3,
 html.theme-light .blok-reading-index > ol > li > a::before { color: #775617; }
-html.theme-light .blok-reading-index > ol > li > a { border-color: rgba(119,86,23,.3); }
+html.theme-light .blok-reading-index > ol > li > a {
+  border-color: rgba(119,86,23,.3);
+  background: linear-gradient(145deg, rgba(255,252,245,.92), rgba(246,237,220,.95));
+}
 @media (max-width: 639px) {
   .blok-reading-index { padding: 1.1rem; }
   .blok-reading-index > ol > li > a { min-height: 4.75rem; }
