@@ -82,8 +82,12 @@ export function useDialogSurface({
     } : null);
 
     const focusFrame = window.requestAnimationFrame(() => {
+      const root = dialogRef.current;
+      // An interaction may focus a control before this initial-focus frame runs.
+      // Never steal focus from an element already inside the active dialog.
+      if (root?.contains(document.activeElement)) return;
       const preferred = initialFocusRef?.current;
-      const fallback = getFocusableElements(dialogRef.current)[0] ?? dialogRef.current;
+      const fallback = getFocusableElements(root)[0] ?? root;
       (preferred ?? fallback)?.focus({ preventScroll: true });
     });
 
