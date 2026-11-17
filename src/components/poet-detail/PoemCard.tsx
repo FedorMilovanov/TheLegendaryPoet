@@ -93,7 +93,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
           <PoemResourceLinks poem={poem} />
         </Suspense>
       )}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div data-poem-analysis-grid className={`grid grid-cols-1 gap-6 ${poem.analysis && poem.biblicalPerspective ? 'md:grid-cols-2' : ''}`}>
         {poem.analysis && (
           <div className={`rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-8 transition-colors hover:border-luxury-gold/30 theme-elevated-surface`}>
             <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white opacity-70">

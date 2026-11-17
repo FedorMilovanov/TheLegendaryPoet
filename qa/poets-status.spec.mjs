@@ -177,6 +177,19 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        if (poetId === 'alexander-pushkin') {
+          const morning = page.locator('#poem-pushkin-4');
+          await expect(morning.getByText('Литературный анализ')).toBeVisible();
+          await expect(morning.getByText('Духовный подтекст')).toHaveCount(0);
+          const analysisGrid = morning.locator('[data-poem-analysis-grid]');
+          const actualColumns = await analysisGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
+          expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
+        }
+        if (poetId === 'mikhail-lermontov' && width >= 640) {
+          const panels = page.locator('#poem-lermontov-5 [data-poem-analysis-grid]');
+          const actualColumns = await panels.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
+          expect(actualColumns, 'genuine biblical commentary still uses two panels').toBe(2);
+        }
         if (poetId === 'fyodor-tyutchev') {
           const storm = page.locator('#poem-tyutchev-6');
           await expect(storm).toContainText('1828');
