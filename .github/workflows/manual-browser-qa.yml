@@ -68,6 +68,25 @@ jobs:
         uses: ./.github/actions/start-preview
         with:
           log-file: preview.log
+      - name: Capture universal reading-index visuals before full QA
+        run: >-
+          npx playwright test
+          qa/poets-status.spec.mjs
+          --grep "Blok contents preserve eight|Pushkin, Lermontov and Yesenin use"
+          --config=playwright.config.mjs
+          --project=chromium-core
+          --workers=1
+          --reporter=line,github
+      - name: Upload early universal index screenshots
+        if: ${{ always() && steps.production_build.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: poet-reading-index-evidence-${{ env.TESTED_SHA }}
+          path: |
+            qa-artifacts/blok-reading-index-*.png
+            qa-artifacts/poet-reading-index-*.png
+          if-no-files-found: error
+          retention-days: 7
       - name: Run Chromium and Android Chrome QA
         run: >-
           npx playwright test

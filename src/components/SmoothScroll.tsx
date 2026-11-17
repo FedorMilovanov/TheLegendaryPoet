@@ -62,7 +62,9 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     firstRouteRef.current = false;
     if (!firstRoute && previousRouteRef.current === routeIdentity) return;
     previousRouteRef.current = routeIdentity;
-    document.documentElement.classList.remove('chrome-hidden');
+    // The chrome hook owns visible and inert/aria-hidden state together.
+    // Directly removing this class left an inaccessible dock after hash jumps.
+    window.dispatchEvent(new Event('tlp-reveal-chrome'));
 
     let cancelled = false;
     let observer: MutationObserver | null = null;

@@ -30,7 +30,7 @@ export interface Poet {
   /** Exact owner-channel YouTube videos; availability gate for scheduled Shorts. */
   videos?: Array<{ youtubeId: string; title: string; availableFrom?: string }>;
   /** Per-author public bibliography used for checking biography and text edition. */
-  sources?: Array<{ title: string; url: string }>;
+  sources?: Array<{ title: string; url: string; featured?: boolean }>;
   links?: {
     youtube?: string;
     vk?: string;
@@ -52,6 +52,12 @@ export interface Poem {
   id: string;
   title: string;
   originalTitle?: string;
+  /** Verified authorial cycle; never inferred from an audio release title. */
+  cycle?: string;
+  /** Citable edition of the poem text (not a claim about music provenance). */
+  sourceUrl?: string;
+  /** Explicit published music release IDs associated with this work; never infer from titles. */
+  relatedMusicTrackIds?: readonly string[];
   text: string;
   year?: number;
   analysis?: string;

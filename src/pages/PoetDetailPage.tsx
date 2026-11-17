@@ -11,7 +11,6 @@ import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
 import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
-import MoralPortrait from '../components/poet-detail/MoralPortrait';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
@@ -25,6 +24,7 @@ import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
+const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
 
@@ -90,6 +90,9 @@ export default function PoetDetailPage() {
     );
   }
 
+  // Keep existing Blok fragment links stable while sharing the component.
+  const contentsId = poet.id === 'alexander-blok' ? 'blok-contents' : 'poem-contents';
+
   return (
     <div className="theme-page-surface min-h-screen selection:bg-luxury-gold/30">
       <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
@@ -103,7 +106,6 @@ export default function PoetDetailPage() {
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
             <PoetCommunitySummary poetId={poet.id} />
-            <PoemQuickNav poems={poet.poems} />
             <FamousWorks works={poet.famousWorks} />
           </aside>
 
@@ -114,9 +116,12 @@ export default function PoetDetailPage() {
                 Не удалось загрузить полную биографию.
               </p>
             )}
-            <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
+            <p className="theme-text poet-bio-intro">
               "{poet.shortBio}"
             </p>
+            {poet.poems.length > 1 && (
+              <a className="poet-contents-jump" href={`#${contentsId}`}>К оглавлению стихов <span aria-hidden="true">↓</span></a>
+            )}
 
             <Suspense fallback={null}>
               <RelatedEssays poetId={poet.id} />
@@ -126,7 +131,7 @@ export default function PoetDetailPage() {
             </Suspense>
 
             <div className="space-y-8">
-              <h2 className="border-b border-luxury-dark-300 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+              <h2 className="poet-detail-kicker">
                 Полная Биография
               </h2>
               <div className="poetry-text space-y-6 text-xl font-light leading-[1.8] text-luxury-gray-light">
@@ -147,7 +152,7 @@ export default function PoetDetailPage() {
 
             {poet.historicalNote && (
               <div className="luxury-card rounded-[2.5rem] border border-luxury-gold/10 bg-[#0a0a0a]/50 p-8 md:p-10">
-                <h2 className="mb-6 border-b border-luxury-gold/10 pb-4 text-xs font-bold uppercase tracking-[0.2em] text-luxury-gold">
+                <h2 className="poet-detail-kicker poet-detail-kicker--history">
                   Исторический контекст
                 </h2>
                 <p className="poetry-text text-lg font-light leading-[1.8] text-luxury-gray-light">
@@ -158,7 +163,7 @@ export default function PoetDetailPage() {
 
             <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 
-            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
+            {poet.moralPortrait && <Suspense fallback={null}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
@@ -166,11 +171,12 @@ export default function PoetDetailPage() {
 
 
             <div className="pt-16">
-              <h2 className="theme-text editorial-title mb-10 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-serif text-[2.55rem] font-bold leading-none sm:mb-12 sm:text-5xl">
+              <h2 className="theme-text editorial-title poet-lyric-heading">
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              <div className="space-y-16">
+              <PoemQuickNav id={contentsId} poems={poet.poems} />
+              <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />
                 ))}

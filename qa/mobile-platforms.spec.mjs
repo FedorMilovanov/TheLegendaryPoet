@@ -752,6 +752,9 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   const immersiveIndicator = immersive.locator('[data-seek-focus-indicator="immersive"]');
   await immersiveSeek.focus();
   await expect(immersiveSeek).toBeFocused();
+  // The dialog's queued initial-focus frame must not reclaim focus from seek.
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(immersiveSeek).toBeFocused();
   await expect.poll(
     () => immersiveIndicator.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
     { timeout: 3_000, message: 'immersive seek focus indicator should be visibly painted' },

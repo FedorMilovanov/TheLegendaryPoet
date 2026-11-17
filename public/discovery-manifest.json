@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5f7fc0b60f1cb8f94a211fd83ac3a55927559597e4b3a13e595113e2385779cf"
+      "fingerprint": "1438350d33a9ad45f5d623b8eb7f914543f7e03363667bee7dc447a1d8d6713f"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d3d903cc35d97d94829d917629f3b70d839e85d5af773f8e789bc75008b77288"
+      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6ae372c0fd1437e28322f4de89457fd63e70590389ceecd475fe66c111dfe2d0"
+      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -354,7 +354,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "159d16d351c1ba7691338f5609d56bbb473ffc9f0a96aec17a579f7f0eb1b98f"
+      "fingerprint": "0c7071ca1e0e8e4e5e2d7c639bccbdd9dc9cbaf4d11689c1808771ab48803952"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/vladimir-mayakovsky/",
@@ -362,7 +362,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "881964916473966c51bb678ce6291f276b2e0557f38ea0842331e26098d98d45"
+      "fingerprint": "dd6fc245d1c7df455a1d4de2aab82341c67df958026318c0abe9687eaa6f07f6"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-pushkin/",
@@ -370,7 +370,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "65710eb86b28210af56ca74d00be0e0d61f52f61f60f97756b40ca97022a2277"
+      "fingerprint": "ec3fe4b3cfb25056e1a325dcc8fd0111656c3111cc360f4ac132ae64357f0f57"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/mikhail-lermontov/",
@@ -378,7 +378,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "9afef8486ebca2d5f6ad431c9241b461f7e69e9286712dc8ef2367c12858f649"
+      "fingerprint": "2f0ff933815771069b985daaef5be7f4205abc422566e487012db02c06fc2fb9"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/boris-pasternak/",
@@ -386,7 +386,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4df0407488c56a2c19f7bae4c0d6eb8a8f038d484ea961e81c4964ca066071ac"
+      "fingerprint": "c443aae439c23ba4d845fa0e06eb474303bba2ee9ef1a911b5d69a2dda6f7755"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/afanasy-fet/",
@@ -394,7 +394,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "df19c4eb8aca11a40aae2c598d9fb383e39cd36d30f8667ec48380a77c84cfb4"
+      "fingerprint": "f307d4072c6151016c01db1049578bb5bf3f3563e96c9d01fc24c52e7d4f7008"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-gumilev/",
@@ -402,7 +402,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "13e20296f8e0053ede36632de34a9a7947f4e87501d54f0e357e130572f12232"
+      "fingerprint": "4a4249a72f10676b62d4f8f60540f834c50c9e85eb08b25899928973f47669e8"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/sergei-yesenin/",
@@ -410,7 +410,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6cb3aff624a4e4c4c9c5c1c0a024bed863aacf4d2ec0ef22732fc23dd605cfaf"
+      "fingerprint": "0c4e47af4ba5d3a3052df20d4c57a83dbc58275d12861e64371ede19e885e052"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/anna-akhmatova/",
@@ -418,7 +418,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "cb8158013a090cbd4d7c64bf07e168218230b00853c5b903a143c62719c0ecd0"
+      "fingerprint": "57cf09cca6db0136db5cb9affdf88bb2d895268f742e6e083547dfd738507337"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-blok/",
@@ -426,7 +426,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5eee138f7e4bab52ee6380861e7b00605a969fcfe8956851843365195b6199b9"
+      "fingerprint": "bd1aa6d7fa8cbbc466802023ff8595d6d29772b9301048c06f79c8690fb46326"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/marina-tsvetaeva/",
@@ -434,7 +434,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "c59aa70a5d8174144c086b5d02e2b2460d5aeb82f9fdfaecd5b4c34934b98964"
+      "fingerprint": "6b9275249de0b4ff20d40d6f8c5dbb73835f8464381300ee50802ad3b5f08373"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/osip-mandelstam/",
@@ -442,7 +442,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4592f8801b81bb70d592cd060ca0edae477470b9743cf2dee2b7c40e35f3951a"
+      "fingerprint": "767133e7429dddfb8a37fffec2ae5c854e8f3f706b9204f075d7a332305c5107"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/valery-bryusov/",
@@ -450,7 +450,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7403eaef8770be7ab78e58289aea7314d4b73172f4e210f65cf24c9ffbd3ed6b"
+      "fingerprint": "95fd1f91b419a22ca6b31bf593ac04ee61c161da9c02c7a8f3542b4a90047048"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-nekrasov/",
@@ -458,7 +458,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "37b893a06b3e5ea9e8af1463fe245f8a10512e080b9bce4ef803750977ad2e52"
+      "fingerprint": "2d51e865f5b45c300f5b732c380deac1827eb9c6581a99a41d3d87017add696c"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/konstantin-simonov/",
@@ -466,7 +466,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6caaae312833790ada4dc26bdf6c2c28f2589e6784ff62e8a61557fb9bffe97e"
+      "fingerprint": "3fffe3b69d27f692abccc1e3d3bfc94a5978b60593ca939f836c22e98f2aa7af"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/aleksey-konstantinovich-tolstoy/",
@@ -474,7 +474,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "ce799d51558bd95dc25969a218e2c8e02a5a1e586ece595007b4138ec92ddc88"
+      "fingerprint": "05d467513cbde0c8e834865b214ff408efeec91b62d97acaa02ea328a71988e4"
     }
   ]
 }

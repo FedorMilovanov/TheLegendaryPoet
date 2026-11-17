@@ -12,13 +12,14 @@ const compiled = ts.transpileModule(source, { compilerOptions: {
 // Execute the actual coordinator, retaining hook refs/effect cleanup and an
 // explicitly delayed animation frame. No browser timing or source-string check.
 function coordinator() {
-  const refs = [], effects = [], frames = new Map(), calls = [];
+  const refs = [], effects = [], frames = new Map(), calls = [], events = [];
   let refIndex = 0, effectIndex = 0, nextFrame = 0;
   let location = { key: 'first', pathname: '/essay', hash: '' }, navigation = 'POP';
   const window = {
     history: { scrollRestoration: 'auto' }, scrollY: 0,
     matchMedia: () => ({ matches: true }),
     addEventListener() {}, removeEventListener() {},
+    dispatchEvent(event) { events.push(event.type); return true; },
     scrollTo(options) { calls.push(options.top); this.scrollY = options.top; },
   };
   const document = {
@@ -28,6 +29,7 @@ function coordinator() {
   const exports = {};
   vm.runInNewContext(compiled, {
     exports, window, document,
+    Event: class { constructor(type) { this.type = type; } },
     requestAnimationFrame: (callback) => { frames.set(++nextFrame, callback); return nextFrame; },
     cancelAnimationFrame: (id) => frames.delete(id),
     require: (name) => {
@@ -47,7 +49,7 @@ function coordinator() {
     },
   });
   return {
-    window, calls,
+    window, calls, events,
     render(nextLocation = location, nextNavigation = navigation) {
       location = nextLocation; navigation = nextNavigation; refIndex = effectIndex = 0;
       exports.default({ children: null });
@@ -83,4 +85,12 @@ test('initial hash still scrolls to its target with header clearance', () => {
   const app = coordinator();
   app.render({ key: 'first', pathname: '/essay', hash: '#target' }, 'POP'); app.frame();
   assert.equal(app.window.scrollY, 204);
+});
+
+test('same-path hash transition requests the universal chrome reveal event', () => {
+  const app = coordinator();
+  app.render(); app.frame();
+  app.render({ key: 'poem', pathname: '/essay', hash: '#target' }, 'PUSH');
+  app.frame();
+  assert.equal(app.events.at(-1), 'tlp-reveal-chrome');
 });

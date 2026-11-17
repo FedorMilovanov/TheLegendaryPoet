@@ -110,6 +110,24 @@ A master replacement is not a silent file overwrite. Update together:
 
 Old checksums must stop matching. This is intentional provenance, not DRM.
 
+### Telegram: replace one audio within a published album
+
+For a corrected MP3, do not repost the entire album automatically.
+First read the live provider messages and assert exact channel/bot identity,
+`message_id`, album `grouped_id`, the other documents' IDs, the existing
+caption and its HTML entities/URLs. Preserve original IDs and title naming.
+If the publishing bot is authorised and the platform permits media edits,
+`editMessageMedia` with type `audio` can replace **only** the intended member;
+attach a verified square thumbnail, and explicitly pass unchanged caption
+text and entities if it is the album's caption-bearing last member.
+Persist a one-shot receipt **before** the mutating API call: an uncertain
+timeout must not cause another upload or duplicate. Afterwards read back the
+exact provider group and verify new file size, duration, thumbnail, original
+caption, links and other members' unchanged IDs. If the provider rejects
+editing, stop rather than inventing an edit or silently publishing duplicates.
+This procedure does **not** waive the master-source, rights or editorial
+listening requirements above.
+
 ## Archiving
 
 Set `availability: 'archived'` instead of deleting the record immediately. Archived entries retain their original `publishedAt`, lose any `scheduledFor`, leave the public archive and playback queue, while their stable ID can still resolve to an explanatory detail page. Persistent listening state is reconciled against the current public catalog and stale progress is pruned.
