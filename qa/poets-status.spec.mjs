@@ -177,6 +177,10 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        // Canonical titles may already include guillemets. Card headings must not double them.
+        for (const title of await cards.locator('h3').allTextContents()) {
+          expect(title).not.toMatch(/««|»»/u);
+        }
         await expect(nav).toHaveAttribute('id', 'poem-contents');
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
