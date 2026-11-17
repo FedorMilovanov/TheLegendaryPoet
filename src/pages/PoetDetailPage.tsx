@@ -170,15 +170,7 @@ export default function PoetDetailPage() {
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              {poet.id === 'alexander-blok' && (
-                <div id="blok-poems-navigation" className="scroll-mt-28">
-                  <PoemQuickNav poems={poet.poems} />
-                  <p className="theme-functional-muted mt-3 text-sm leading-relaxed">
-                    «На поле Куликовом» — цикл из пяти частей: здесь представлены I и II.
-                    «Скифы» — отдельное стихотворение с двумя музыкальными версиями.
-                  </p>
-                </div>
-              )}
+              {poet.id === 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
               <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />

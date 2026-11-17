@@ -114,11 +114,6 @@ export default function PoemCard({ poem }: PoemCardProps) {
           </div>
         )}
       </div>
-      {isBlok && (
-        <a href="#blok-poems-navigation" className="mt-7 inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.12em] text-luxury-gold underline decoration-luxury-gold/35 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
-          К оглавлению стихотворений
-        </a>
-      )}
       <div className="mt-8">
         <CommunityPanel
           compact
