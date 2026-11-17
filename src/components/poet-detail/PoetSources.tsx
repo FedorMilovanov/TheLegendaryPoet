@@ -4,12 +4,12 @@ export default function PoetSources({ poet }: { poet: Poet }) {
   const items = poet.sources ?? [];
   if (items.length === 0) return null;
 
-  // Keep Blok's scholarly apparatus available without a twenty-link text wall.
-  // Native details retain all external destinations in the DOM.
-  const isBlok = poet.id === 'alexander-blok' && items.length > 6;
-  // Source prominence is an explicit editorial property, not an accidental URL substring.
-  const featured = isBlok ? items.filter((item) => item.featured) : items;
-  const additional = isBlok ? items.filter((item) => !item.featured) : [];
+  // Shared treatment for long bibliographies: featured entries when curated,
+  // otherwise preserve editorial order. Native details retain all links.
+  const shouldCollapse = items.length > 6;
+  const hasFeatured = items.some((item) => item.featured);
+  const featured = !shouldCollapse ? items : hasFeatured ? items.filter((item) => item.featured) : items.slice(0, 6);
+  const additional = !shouldCollapse ? [] : hasFeatured ? items.filter((item) => !item.featured) : items.slice(6);
 
   const sourceLink = ({ title, url }: { title: string; url: string }) => (
     <li key={url} className="min-w-0">
@@ -29,10 +29,10 @@ export default function PoetSources({ poet }: { poet: Poet }) {
       <h2 id="poet-sources-heading" className="theme-poet-accent mb-4 font-serif text-2xl">
         Источники и редакции текстов
       </h2>
-      <ul className={isBlok ? 'grid gap-x-6 gap-y-2 sm:grid-cols-2' : 'space-y-3'}>
+      <ul className={shouldCollapse ? 'grid gap-x-6 gap-y-2 sm:grid-cols-2' : 'space-y-3'}>
         {featured.map(sourceLink)}
       </ul>
-      {isBlok && (
+      {additional.length > 0 && (
         <details className="group mt-5 border-t border-luxury-gold/15 pt-4">
           <summary className="theme-poet-accent flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold [&::-webkit-details-marker]:hidden">
             <span>Полная библиография · ещё {additional.length} источников</span>

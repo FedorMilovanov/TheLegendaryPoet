@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "./fonts.css";
-@import "./styles/blok-reading-index.css";
+@import "./styles/poet-reading-index.css";
 
 html { scroll-behavior: auto; height: -webkit-fill-available; }
 

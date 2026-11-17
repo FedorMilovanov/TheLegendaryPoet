@@ -90,6 +90,9 @@ export default function PoetDetailPage() {
     );
   }
 
+  // Keep existing Blok fragment links stable while sharing the component.
+  const contentsId = poet.id === 'alexander-blok' ? 'blok-contents' : 'poem-contents';
+
   return (
     <div className="theme-page-surface min-h-screen selection:bg-luxury-gold/30">
       <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
@@ -103,7 +106,6 @@ export default function PoetDetailPage() {
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
             <PoetCommunitySummary poetId={poet.id} />
-            {poet.id !== 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
             <FamousWorks works={poet.famousWorks} />
           </aside>
 
@@ -117,8 +119,8 @@ export default function PoetDetailPage() {
             <p className="theme-text poet-bio-intro">
               "{poet.shortBio}"
             </p>
-            {poet.id === 'alexander-blok' && (
-              <a className="poet-blok-jump" href="#blok-contents">К оглавлению стихов <span aria-hidden="true">↓</span></a>
+            {poet.poems.length > 1 && (
+              <a className="poet-contents-jump" href={`#${contentsId}`}>К оглавлению стихов <span aria-hidden="true">↓</span></a>
             )}
 
             <Suspense fallback={null}>
@@ -173,7 +175,7 @@ export default function PoetDetailPage() {
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              {poet.id === 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
+              <PoemQuickNav id={contentsId} poems={poet.poems} />
               <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />

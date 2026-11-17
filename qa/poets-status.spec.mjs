@@ -81,7 +81,7 @@ test.describe('poets result status accessibility', () => {
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
       await expect(anchors).toHaveCount(8);
-      await expect(guide).toHaveClass(/blok-reading-index/);
+      await expect(guide).toHaveClass(/poet-reading-index/);
       await expect(guide.locator('ol > li')).toHaveCount(8);
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
@@ -119,6 +119,42 @@ test.describe('poets result status accessibility', () => {
         await expect(archiveButton).toHaveCSS('background-color', 'rgb(244, 236, 219)');
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
         await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
+    }
+  });
+
+
+  test('Pushkin, Lermontov and Yesenin use the shared contents on both layouts', async ({ page }, testInfo) => {
+    const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
+    for (const poetId of ['alexander-pushkin', 'mikhail-lermontov', 'sergei-yesenin']) {
+      for (const width of widths) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(`${BASE_URL}/poets/${poetId}`, { waitUntil: 'domcontentloaded' });
+        const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+        const entries = nav.locator('ol > li > a[href^="#poem-"]');
+        const cards = page.locator('[id^="poem-"]');
+        await expect(nav).toBeVisible();
+        await expect(nav).toHaveClass(/poet-reading-index/);
+        const count = await cards.count();
+        expect(count).toBeGreaterThan(1);
+        await expect(entries).toHaveCount(count);
+        await expect(nav).toHaveAttribute('id', 'poem-contents');
+        const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
+        await expect(jump).toHaveAttribute('href', '#poem-contents');
+        const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\\s+/u).filter(Boolean).length);
+        expect(columns).toBe(width >= 640 ? 2 : 1);
+        expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+        await jump.click();
+        await expect(page).toHaveURL(/#poem-contents$/);
+        await entries.last().focus();
+        await expect(entries.last()).toBeFocused();
+        if (testInfo.project.name === 'chromium-core') {
+          await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+          await expect(nav.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
+          const analysis = cards.first().getByText('Литературный анализ');
+          if (await analysis.count()) await expect(analysis.locator('xpath=..')).toHaveCSS('background-color', 'rgb(244, 236, 219)');
+          await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+        }
       }
     }
   });

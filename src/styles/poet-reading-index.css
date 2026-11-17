@@ -1,17 +1,16 @@
-/* Alexander Blok: bookish numbered contents, only on this author page.
-   No new JS animation, overlays, route splits, or scroll restoration. */
-.blok-reading-index {
+/* Shared editorial reading contents across all poets. */
+.poet-reading-index {
   scroll-margin-top: 7.5rem;
-  counter-reset: blok-entry;
+  counter-reset: poet-entry;
   position: relative;
   overflow: hidden;
   background: radial-gradient(ellipse at 92% 0%, rgba(212,175,55,.09), transparent 62%), linear-gradient(145deg, #09131d, #050a10);
   border-color: rgba(212,175,55,.3);
   box-shadow: 0 18px 46px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.04);
 }
-.blok-reading-index > h3 { color: #ead394; letter-spacing: .12em; }
-.blok-reading-index > ol > li { counter-increment: blok-entry; min-width: 0; }
-.blok-reading-index > ol > li > a {
+.poet-reading-index > h3 { color: #ead394; letter-spacing: .12em; }
+.poet-reading-index > ol > li { counter-increment: poet-entry; min-width: 0; }
+.poet-reading-index > ol > li > a {
   min-height: 5.75rem;
   display: grid;
   grid-template-columns: 2.2rem minmax(0, 1fr);
@@ -21,8 +20,8 @@
   background: linear-gradient(145deg, rgba(18,29,38,.93), rgba(8,16,24,.95));
   padding: .85rem 1rem;
 }
-.blok-reading-index > ol > li > a::before {
-  content: counter(blok-entry, decimal-leading-zero);
+.poet-reading-index > ol > li > a::before {
+  content: counter(poet-entry, decimal-leading-zero);
   grid-column: 1;
   grid-row: 1 / span 2;
   align-self: start;
@@ -33,49 +32,49 @@
   line-height: 1.15;
   color: #dec27c;
 }
-.blok-reading-index > ol > li > a > div { grid-column: 2; min-width: 0; }
-.blok-reading-index > ol > li > a > div:first-child {
+.poet-reading-index > ol > li > a > div { grid-column: 2; min-width: 0; }
+.poet-reading-index > ol > li > a > div:first-child {
   font-family: var(--font-serif);
   font-size: 1.2rem;
   font-weight: 600;
   line-height: 1.24;
   overflow-wrap: anywhere;
 }
-.blok-reading-index > ol > li > a > div:last-child {
+.poet-reading-index > ol > li > a > div:last-child {
   font-size: .75rem;
   letter-spacing: .04em;
   column-gap: .65rem;
   row-gap: .3rem;
 }
-.blok-reading-index [data-poem-cycle] {
+.poet-reading-index [data-poem-cycle] {
   text-transform: none;
   letter-spacing: .015em;
   line-height: 1.4;
 }
-.blok-reading-index a:focus-visible {
+.poet-reading-index a:focus-visible {
   outline: 2px solid #deb85f;
   outline-offset: 3px;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .blok-reading-index > ol > li > a { transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
-  .blok-reading-index > ol > li > a:hover {
+  .poet-reading-index > ol > li > a { transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .poet-reading-index > ol > li > a:hover {
     transform: translateY(-2px);
     border-color: rgba(212,175,55,.58);
     box-shadow: 0 14px 28px rgba(0,0,0,.12);
   }
 }
-html.theme-light .blok-reading-index {
+html.theme-light .poet-reading-index {
   background: radial-gradient(ellipse at 92% 0%, rgba(169,124,49,.08), transparent 60%), linear-gradient(145deg, #fffdf7, #f5ebd8);
   border-color: rgba(119,86,23,.3);
   box-shadow: 0 16px 38px rgba(77,59,38,.12), inset 0 1px 0 rgba(255,255,255,.8);
 }
-html.theme-light .blok-reading-index > h3,
-html.theme-light .blok-reading-index > ol > li > a::before { color: #775617; }
-html.theme-light .blok-reading-index > ol > li > a {
+html.theme-light .poet-reading-index > h3,
+html.theme-light .poet-reading-index > ol > li > a::before { color: #775617; }
+html.theme-light .poet-reading-index > ol > li > a {
   border-color: rgba(119,86,23,.3);
   background: linear-gradient(145deg, rgba(255,252,245,.92), rgba(246,237,220,.95));
 }
 @media (max-width: 639px) {
-  .blok-reading-index { padding: 1.1rem; }
-  .blok-reading-index > ol > li > a { min-height: 4.75rem; }
+  .poet-reading-index { padding: 1.1rem; }
+  .poet-reading-index > ol > li > a { min-height: 4.75rem; }
 }

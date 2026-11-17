@@ -16,7 +16,6 @@ interface PoemCardProps {
 
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
-  const isBlok = poem.id.startsWith('blok-');
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
@@ -58,7 +57,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </AnimatePresence>
       <div className="mb-10 flex flex-col justify-between gap-4 border-b border-luxury-gold/20 pb-6 md:flex-row md:items-end">
         <div>
-          <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white ${isBlok ? 'text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]' : 'text-4xl'}`}>
+          <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]`}>
             «{poem.title}»
           </h3>
           {poem.year && (
@@ -73,12 +72,12 @@ export default function PoemCard({ poem }: PoemCardProps) {
             onClick={toggleFavorite}
             aria-label={favorite ? `Убрать «${poem.title}» из архива` : `Добавить «${poem.title}» в архив`}
             aria-pressed={favorite}
-            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'border border-luxury-gold/10 bg-[#111] text-luxury-gray-light hover:text-luxury-gold'} ${isBlok && !favorite ? 'theme-elevated-surface' : ''}`}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'border border-luxury-gold/10 bg-[#111] text-luxury-gray-light hover:text-luxury-gold'} ${!favorite ? 'theme-elevated-surface' : ''}`}
           >
             <Heart size={14} className={favorite ? 'fill-luxury-gold' : ''} />
             {favorite ? 'В архиве' : 'В архив'}
           </button>
-          <div className={`flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/30 bg-[#111] px-4 py-2 shadow-inner ${isBlok ? 'theme-elevated-surface' : ''}`}>
+          <div className={`flex min-h-11 items-center gap-2 rounded-full border border-luxury-gold/30 bg-[#111] px-4 py-2 shadow-inner theme-elevated-surface`}>
             <Star size={14} className="fill-luxury-gold text-luxury-gold" />
             <span className="gold-glow-text text-sm font-bold text-luxury-gold">{poem.rating}</span>
           </div>
@@ -93,7 +92,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       )}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {poem.analysis && (
-          <div className={`rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-8 transition-colors hover:border-luxury-gold/30 ${isBlok ? 'theme-elevated-surface' : ''}`}>
+          <div className={`rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-8 transition-colors hover:border-luxury-gold/30 theme-elevated-surface`}>
             <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white opacity-70">
               Литературный анализ
             </h4>
