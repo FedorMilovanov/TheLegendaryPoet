@@ -27,6 +27,7 @@ import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
+const BlokReadingGuide = lazy(() => import('../components/poet-detail/BlokReadingGuide'));
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -103,7 +104,7 @@ export default function PoetDetailPage() {
             <InfoCard poet={poet} />
             <KindredSpirits poet={poet} />
             <PoetCommunitySummary poetId={poet.id} />
-            <PoemQuickNav poems={poet.poems} />
+            {poet.id !== 'alexander-blok' && <PoemQuickNav poems={poet.poems} />}
             <FamousWorks works={poet.famousWorks} />
           </aside>
 
@@ -170,7 +171,12 @@ export default function PoetDetailPage() {
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              <div className="space-y-16">
+              {poet.id === 'alexander-blok' && (
+                <Suspense fallback={null}>
+                  <BlokReadingGuide poems={poet.poems} />
+                </Suspense>
+              )}
+              <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
                   <PoemCard key={poem.id} poem={poem} />
                 ))}

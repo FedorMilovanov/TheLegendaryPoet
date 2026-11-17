@@ -16,6 +16,7 @@ interface PoemCardProps {
 
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
+  const isBlok = poem.id.startsWith('blok-');
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
@@ -57,7 +58,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </AnimatePresence>
       <div className="mb-10 flex flex-col justify-between gap-4 border-b border-luxury-gold/20 pb-6 md:flex-row md:items-end">
         <div>
-          <h3 className="gold-glow-text mb-3 font-serif text-4xl font-semibold text-white">
+          <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white ${isBlok ? 'text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]' : 'text-4xl'}`}>
             «{poem.title}»
           </h3>
           {poem.year && (
@@ -113,6 +114,11 @@ export default function PoemCard({ poem }: PoemCardProps) {
           </div>
         )}
       </div>
+      {isBlok && (
+        <a href="#blok-poems-navigation" className="mt-7 inline-flex min-h-11 items-center text-xs font-semibold uppercase tracking-[0.12em] text-luxury-gold underline decoration-luxury-gold/35 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
+          К оглавлению стихотворений
+        </a>
+      )}
       <div className="mt-8">
         <CommunityPanel
           compact
