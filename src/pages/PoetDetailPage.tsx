@@ -120,7 +120,7 @@ export default function PoetDetailPage() {
             </p>
 
             <Suspense fallback={null}>
-              <RelatedEssays poetId={poetId} />
+              <RelatedEssays poetId={poet.id} />
 
             <PoetVideos poet={poet} />
 
