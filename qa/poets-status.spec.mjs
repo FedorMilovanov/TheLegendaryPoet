@@ -54,6 +54,15 @@ test.describe('poets result status accessibility', () => {
       const cards = page.locator('[id^="poem-blok-"]');
       await expect(cards).toHaveCount(8);
       await expect(guide).toBeVisible();
+      // Capture evidence before later assertions or the full browser matrix can
+      // interrupt the run. The same four screenshots remain in the core QA.
+      if (testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
+        await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
       await expect(guide).toHaveAttribute('id', 'blok-contents');
       const earlyLink = page.getByRole('link', { name: 'К оглавлению стихов' });
       await expect(earlyLink).toHaveAttribute('href', '#blok-contents');
