@@ -33,7 +33,7 @@ interface PoemQuickNavProps {
 export default function PoemQuickNav({ poems }: PoemQuickNavProps) {
   const isBlok = poems[0]?.id.startsWith("blok-") ?? false;
   return (
-    <nav aria-label="Навигация по лирике" className={`rounded-3xl border p-6 ${isBlok ? "blok-reading-index" : "luxury-card border-cyan-400/10"}`}>
+    <nav id={isBlok ? "blok-contents" : undefined} aria-label="Навигация по лирике" className={`rounded-3xl border p-6 ${isBlok ? "blok-reading-index" : "luxury-card border-cyan-400/10"}`}>
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-cyan-300">Навигация по лирике</h3>
       <ol className={isBlok ? "grid gap-3 sm:grid-cols-2" : "space-y-3"}>
         {poems.map((poem) => (

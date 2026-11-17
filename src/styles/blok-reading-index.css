@@ -1,6 +1,7 @@
 /* Alexander Blok: bookish numbered contents, only on this author page.
    No new JS animation, overlays, route splits, or scroll restoration. */
 .blok-reading-index {
+  scroll-margin-top: 7.5rem;
   counter-reset: blok-entry;
   position: relative;
   overflow: hidden;

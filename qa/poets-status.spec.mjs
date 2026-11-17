@@ -54,6 +54,11 @@ test.describe('poets result status accessibility', () => {
       const cards = page.locator('[id^="poem-blok-"]');
       await expect(cards).toHaveCount(8);
       await expect(guide).toBeVisible();
+      await expect(guide).toHaveAttribute('id', 'blok-contents');
+      const earlyLink = page.getByRole('link', { name: 'К оглавлению стихов' });
+      await expect(earlyLink).toHaveAttribute('href', '#blok-contents');
+      await earlyLink.click();
+      await expect(page).toHaveURL(/#blok-contents$/);
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
       await expect(anchors).toHaveCount(8);

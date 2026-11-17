@@ -114,9 +114,12 @@ export default function PoetDetailPage() {
                 Не удалось загрузить полную биографию.
               </p>
             )}
-            <p className="theme-text border-l-4 border-luxury-gold pl-8 font-serif text-2xl font-light italic leading-[1.6] md:text-3xl">
+            <p className="theme-text poet-bio-intro">
               "{poet.shortBio}"
             </p>
+            {poet.id === 'alexander-blok' && (
+              <a className="poet-blok-jump" href="#blok-contents">К оглавлению стихов <span aria-hidden="true">↓</span></a>
+            )}
 
             <Suspense fallback={null}>
               <RelatedEssays poetId={poet.id} />
