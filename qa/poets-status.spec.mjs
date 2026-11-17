@@ -177,6 +177,16 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        if (poetId === 'fyodor-tyutchev') {
+          const storm = page.locator('#poem-tyutchev-6');
+          await expect(storm).toContainText('1828');
+          await expect(storm).toContainText('редакция 1854 г.');
+          await expect(entries.filter({ hasText: 'Весенняя гроза' })).toContainText('редакция 1854 г.');
+        }
+        if (poetId === 'sergei-yesenin') {
+          const letterText = page.locator('#poem-yesenin-10 [data-poem-canonical]');
+          await expect.poll(() => letterText.evaluate((element) => element.textContent.includes('Что я в сплошном дыму,\nВ разворочённом бурей быте'))).toBe(true);
+        }
         // Canonical titles may already include guillemets. Card headings must not double them.
         for (const title of await cards.locator('h3').allTextContents()) {
           expect(title).not.toMatch(/««|»»/u);

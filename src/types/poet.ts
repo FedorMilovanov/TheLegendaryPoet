@@ -60,6 +60,8 @@ export interface Poem {
   relatedMusicTrackIds?: readonly string[];
   text: string;
   year?: number;
+  /** Publication year of a verified later textual revision (distinct from year of composition). */
+  editionYear?: number;
   analysis?: string;
   biblicalPerspective?: string;
   mood?: Array<'тоска' | 'тревога' | 'восторг' | 'покой' | 'гнев' | 'нежность' | 'пустота' | 'надежда'>;
