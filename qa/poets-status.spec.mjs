@@ -196,6 +196,8 @@ test.describe('poets result status accessibility', () => {
         }
         if (poetId === 'sergei-yesenin') {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
+          await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
+          await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
         }
         if (poetId === 'fyodor-tyutchev') {
           const storm = page.locator('#poem-tyutchev-6');
