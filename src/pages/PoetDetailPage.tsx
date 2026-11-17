@@ -9,7 +9,6 @@ import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
-import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
@@ -25,6 +24,7 @@ import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
 const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
+const PoemCard = lazy(() => import('../components/poet-detail/PoemCard'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
 
@@ -176,11 +176,13 @@ export default function PoetDetailPage() {
               </h2>
 
               <PoemQuickNav id={contentsId} poems={poet.poems} />
-              <div className="mt-10 space-y-16">
-                {poet.poems.map((poem) => (
-                  <PoemCard key={poem.id} poem={poem} />
-                ))}
-              </div>
+              <Suspense fallback={<p role="status" className="sr-only">Загрузка стихотворений</p>}>
+                <div className="mt-10 space-y-16">
+                  {poet.poems.map((poem) => (
+                    <PoemCard key={poem.id} poem={poem} />
+                  ))}
+                </div>
+              </Suspense>
             </div>
           </div>
         </div>
