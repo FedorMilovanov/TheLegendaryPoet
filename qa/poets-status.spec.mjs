@@ -54,10 +54,12 @@ test.describe('poets result status accessibility', () => {
       const cards = page.locator('[id^="poem-blok-"]');
       await expect(cards).toHaveCount(8);
       await expect(guide).toBeVisible();
+      await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(234, 211, 148)');
       // Capture evidence before later assertions or the full browser matrix can
       // interrupt the run. The same four screenshots remain in the core QA.
       if (testInfo.project.name === 'chromium-core') {
         mkdirSync('qa-artifacts', { recursive: true });
+        await page.mouse.move(0, 0);
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-light.png` });
@@ -75,6 +77,7 @@ test.describe('poets result status accessibility', () => {
       await expect(guide.locator('ol > li')).toHaveCount(8);
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
+      await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
@@ -99,6 +102,7 @@ test.describe('poets result status accessibility', () => {
         mkdirSync('qa-artifacts', { recursive: true });
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png` });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
         await expect(anchors.first()).toHaveCSS('border-color', 'rgba(119, 86, 23, 0.3)');
         const firstCard = cards.first();
         const analysisSurface = firstCard.getByText('Литературный анализ').locator('xpath=..');

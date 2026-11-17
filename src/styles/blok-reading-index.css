@@ -41,6 +41,12 @@
   line-height: 1.24;
   overflow-wrap: anywhere;
 }
+.blok-reading-index > ol > li > a > div:last-child {
+  font-size: .75rem;
+  letter-spacing: .04em;
+  column-gap: .65rem;
+  row-gap: .3rem;
+}
 .blok-reading-index [data-poem-cycle] {
   text-transform: none;
   letter-spacing: .015em;
