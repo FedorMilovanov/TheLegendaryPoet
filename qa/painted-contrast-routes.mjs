@@ -73,5 +73,9 @@ export const EXTENDED_PAINTED_ROUTES = [
   { path: "/music/blok-scythians-version-1", heading: "Скифы", minimumNodes: 106 },
   { path: "/music/blok-scythians-version-2", heading: "Скифы", minimumNodes: 106 },
   { path: "/music/blok-oh-i-want-to-live", heading: "О, я хочу безумно жить", minimumNodes: 106 },
+  // New Lermontov music release, exact four-mode painted census 2026-11-18:
+  // dark desktop 127, dark mobile 120, light desktop 127, light mobile 120.
+  // Zero text/gradient offenders; floor(0.90 * 120) = 108 verified nodes.
+  { path: "/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva", heading: "Когда волнуется желтеющая нива", minimumNodes: 108 },
 
 ];
