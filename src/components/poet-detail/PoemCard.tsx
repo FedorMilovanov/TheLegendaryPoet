@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Star, Award, Heart, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
+import { visiblePoemFacsimile } from '../../data/poemFacsimiles';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
 import { useFavoritePoem } from '../../hooks/useFavoritePoems';
@@ -9,6 +10,7 @@ import InteractivePoemText from './InteractivePoemText';
 import { toggleFavoritePoem } from '../../utils/myArchiveStore';
 
 const PoemResourceLinks = lazy(() => import('./PoemResourceLinks'));
+const PoemFacsimile = lazy(() => import('./PoemFacsimile'));
 
 interface PoemCardProps {
   poem: Poem;
@@ -16,6 +18,7 @@ interface PoemCardProps {
 
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
+  const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
   const displayTitle = poem.title.startsWith('«') && poem.title.endsWith('»')
     ? poem.title
     : `«${poem.title}»`;
@@ -89,6 +92,11 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </div>
 
       <InteractivePoemText text={poem.text} />
+      {facsimile && (
+        <Suspense fallback={null}>
+          <PoemFacsimile document={facsimile} />
+        </Suspense>
+      )}
       {(poem.sourceUrl || poem.relatedMusicTrackIds?.length) && (
         <Suspense fallback={null}>
           <PoemResourceLinks poem={poem} />
