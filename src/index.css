@@ -921,7 +921,9 @@ html.theme-light .track-cover-bar { background-color: rgba(255, 250, 240, 0.82);
 
 .cursor-trail { position: fixed; border-radius: 50%; background: rgba(0, 212, 255, 0.72); pointer-events: none; z-index: 9997; box-shadow: 0 0 8px rgba(0,212,255,0.55); transform: translate(-50%, -50%); transition: opacity 0.35s ease; }
 
-:focus-visible { outline: 2px solid var(--tlp-focus-ring); outline-offset: 3px; border-radius: 4px; }
+/* Keep keyboard focus crisp without replacing a button, dialog or pill's
+   actual geometry with a mismatched fixed 4px corner radius. */
+:focus-visible { outline: 2px solid var(--tlp-focus-ring); outline-offset: 3px; }
 
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
