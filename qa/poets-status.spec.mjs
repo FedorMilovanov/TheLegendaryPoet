@@ -178,6 +178,11 @@ test.describe('poets result status accessibility', () => {
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
         if (poetId === 'alexander-pushkin') {
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('32/32');
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('PDF-страницы 313–314');
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('запоздалой');
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note] a')).toHaveAttribute('href', "https://drive.google.com/file/d/1rwEAbwBxddnxehR3sbQ4_W9-2yPg6f9I/view?usp=drivesdk");
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('24/24');
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('PDF-страницы 368–369');
