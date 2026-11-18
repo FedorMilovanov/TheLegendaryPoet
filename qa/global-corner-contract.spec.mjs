@@ -65,7 +65,7 @@ for (const [name, route] of routes) {
 
 test('keyboard focus respects the genuine rounded archival button', async ({ page }) => {
   await page.goto(origin + '/poets/alexander-pushkin', { waitUntil: 'domcontentloaded' });
-  const button = page.locator('#poem-pushkin-4 [data-poem-facsimile] button').first();
+  const button = page.locator('#poem-pushkin-2 [data-poem-facsimile] button').first();
   await button.waitFor({ state: 'visible' });
   await button.scrollIntoViewIfNeeded();
   await page.keyboard.press('Tab');

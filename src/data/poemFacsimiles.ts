@@ -10,6 +10,8 @@ export interface PoemFacsimilePage {
   alt: string;
   width: number;
   height: number;
+  /** Exact SHA-256 of source image bytes; never hash a derived thumbnail. */
+  sha256: string;
   originalUrl: string;
 }
 
@@ -25,6 +27,22 @@ export interface PoemFacsimile {
 }
 
 export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
+  'pushkin-2': {
+    poemId: 'pushkin-2',
+    publication: '«Северные цветы» на 1830 год',
+    publicationYear: 1830,
+    credit: '«Северные цветы», 1830 · Викисклад (Public Domain Mark) · скан Google Books, знак сохранён',
+    rights: 'approved',
+    rightsEvidence: 'https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png',
+    pages: [{
+      src: '/images/facsimiles/pushkin-ya-vas-lyubil-1830.png',
+      printPage: '104',
+      alt: 'Первопечатная страница 104 «Северных цветов» за 1830 год: «Я вас любил…», восемь строк и подпись А. Пушкинъ',
+      width: 575, height: 835,
+      sha256: 'd8ce1c004be00dea5f40ebf4c00904f9382a8c37fc9a6857d4e1a9a3a84a350a',
+      originalUrl: 'https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png',
+    }],
+  },
   'pushkin-4': {
     poemId: 'pushkin-4',
     publication: '«Царское Село». Альманах на 1830 год',
@@ -37,6 +55,7 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
         printPage: '1',
         alt: 'Первопечатная страница 1 «Зимнего утра», заглавие и первые четырнадцать строк, альманах «Царское Село»',
         width: 575, height: 718,
+        sha256: '62e40751270125f60a3b3b2b1373f9a5a47cbb3152e8be837ac7e000ea6557d0',
         originalUrl: 'https://books.google.ru/books?id=t_XmCicRuMYC&pg=PA9',
       },
       {
@@ -44,6 +63,7 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
         printPage: '2',
         alt: 'Первопечатная страница 2 «Зимнего утра», окончание стихотворения и подпись А. Пушкина',
         width: 575, height: 696,
+        sha256: 'c52eecbc56fa4b216d5db991bad8e13f65cad3e3205a20452d0e567ae8fd2fe8',
         originalUrl: 'https://books.google.ru/books?id=t_XmCicRuMYC&pg=PA10',
       },
     ],
@@ -59,6 +79,7 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
       printPage: '37',
       alt: 'Страница 37 «Московского телеграфа», первая публикация «Стихи въ Альбомъ» с восемью строками и подписью А. Пушкина',
       width: 575, height: 1001,
+        sha256: 'ab5e9caa2ab520bd48b5c77cd7d8368cb14028ba0cda9243f90bdbef09ec5b28',
       originalUrl: 'https://books.google.ru/books?id=8aFoAAAAcAAJ&pg=PA37',
     }],
   },

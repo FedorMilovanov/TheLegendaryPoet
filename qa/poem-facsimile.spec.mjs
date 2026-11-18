@@ -3,27 +3,30 @@ import { test, expect } from '@playwright/test';
 const origin = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const isReview = process.env.POET_FACSIMILE_PREVIEW === '1';
 
-test('archival facsimile: rights gate, borderless preview, accessible complete original', async ({ page }) => {
+test('approved historical page is public; restricted scans remain hidden; original viewer is accessible', async ({ page }) => {
   await page.goto(origin + '/poets/alexander-pushkin', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#poem-pushkin-4')).toBeVisible();
+  await expect(page.locator('#poem-pushkin-2')).toBeVisible();
+  await expect(page.locator('#poem-pushkin-2 [data-poem-facsimile]')).toHaveAttribute('data-rights-status', 'approved');
 
-  // This assertion must pass in every production/CI run. Historical texts
-  // are verified; the redistribution rights of the scans are still gated.
   if (!isReview) {
-    await expect(page.locator('[data-poem-facsimile]')).toHaveCount(0);
-    return;
+    await expect(page.locator('#poem-pushkin-4 [data-poem-facsimile]')).toHaveCount(0);
+    await expect(page.locator('#poem-pushkin-9 [data-poem-facsimile]')).toHaveCount(0);
+    await expect(page.locator('[data-poem-facsimile]')).toHaveCount(1);
   }
+  const cases = isReview
+    ? [['pushkin-2', 1, 'approved'], ['pushkin-4', 2, 'review'], ['pushkin-9', 1, 'review']]
+    : [['pushkin-2', 1, 'approved']];
 
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const [id, expectedCount] of [['pushkin-4', 2], ['pushkin-9', 1]]) {
+    for (const [id, expectedCount, rights] of cases) {
       const band = page.locator('#poem-' + id + ' [data-poem-facsimile]');
       await band.scrollIntoViewIfNeeded();
-      await expect(band).toHaveAttribute('data-rights-status', 'review');
-      await expect(band.locator('img').first()).toHaveJSProperty('complete', true);
+      await expect(band).toHaveAttribute('data-rights-status', rights);
+      const preview = band.locator('img').first();
+      await expect(preview).toHaveJSProperty('complete', true);
       const dimensions = await band.evaluate((node) => ({
-        scroll: node.scrollWidth,
-        client: node.clientWidth,
+        scroll: node.scrollWidth, client: node.clientWidth,
         imageWidth: node.querySelector('img')?.naturalWidth,
       }));
       expect(dimensions.imageWidth).toBe(575);
@@ -36,8 +39,24 @@ test('archival facsimile: rights gate, borderless preview, accessible complete o
       const viewerRadius = await viewer.evaluate((node) => parseFloat(getComputedStyle(node).borderTopLeftRadius));
       expect(viewerRadius).toBeGreaterThanOrEqual(20);
       await expect(viewer.locator('img')).toHaveAttribute('alt', /Первопечатная|Страница 37/);
+      // Every unzoomed original must fit horizontally inside the viewer.
+      // Natural resolution does not imply a printable page is actually visible.
+      const fit = await viewer.locator('[data-facsimile-stage]').evaluate((stage) => {
+        const image = stage.querySelector('img');
+        const viewport = stage.getBoundingClientRect();
+        const pageBounds = image?.getBoundingClientRect();
+        return { scroll: stage.scrollWidth, client: stage.clientWidth,
+          left: pageBounds?.left, right: pageBounds?.right,
+          viewLeft: viewport.left, viewRight: viewport.right };
+      });
+      expect(fit.scroll - fit.client, 'Default full-sheet view cannot overflow sideways').toBeLessThanOrEqual(1);
+      expect(fit.left).toBeGreaterThanOrEqual(fit.viewLeft - 1);
+      expect(fit.right).toBeLessThanOrEqual(fit.viewRight + 1);
       await expect(viewer.getByText('1 / ' + expectedCount)).toBeVisible();
       await expect(viewer.getByRole('link', { name: /Источник/ })).toHaveAttribute('target', '_blank');
+      if (id === 'pushkin-2') {
+        await expect(viewer.getByRole('link', { name: /Источник/ })).toHaveAttribute('href', /commons\.wikimedia\.org/);
+      }
       await viewer.getByRole('button', { name: 'Увеличить оригинал' }).click();
       await expect(viewer.getByRole('button', { name: 'Уменьшить оригинал' })).toHaveAttribute('aria-pressed', 'true');
       const stage = viewer.locator('[data-facsimile-stage]');

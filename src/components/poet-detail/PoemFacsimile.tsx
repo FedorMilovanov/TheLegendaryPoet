@@ -127,7 +127,9 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
             <button type="button" onClick={closeViewer} aria-label="Закрыть оригинал" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"><X size={21} /></button>
           </header>
           <div data-facsimile-stage className="min-h-0 flex-1 overflow-auto overscroll-contain bg-[#0b0d10]">
-            <div className="flex min-h-full w-max min-w-full items-center justify-center p-3 sm:p-5">
+            <div className={zoomed
+                ? 'flex min-h-full w-max min-w-full items-center justify-center p-3 sm:p-5'
+                : 'flex min-h-full w-full min-w-0 items-center justify-center p-3 sm:p-5'}>
               <img
                 key={page.src}
                 src={page.src}
