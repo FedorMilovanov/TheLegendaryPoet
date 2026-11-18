@@ -271,6 +271,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('16/16');
+          await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('PDF-страница 333');
+          await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('Т—');
+          await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D0%B8%D0%BA_1839_14.pdf");
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('20/20');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('PDF-страницы 128–129');
