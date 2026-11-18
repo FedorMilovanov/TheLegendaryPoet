@@ -271,6 +271,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('20/20');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('PDF-страницы 128–129');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('Весна');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:039_tom_Russkiy_arhiv_1879_vip_5-8.pdf");
           await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('12/12');
           await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('PDF-страница 147');
