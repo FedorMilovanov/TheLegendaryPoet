@@ -1,6 +1,6 @@
 import type { MusicTrack } from '../../types/poet';
 import { getPublishedMusicTracks } from '../musicCatalog';
-import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightVersion1Waveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform } from '../musicWaveforms';
+import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightVersion1Waveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform, lermontovNivaWaveform } from '../musicWaveforms';
 
 const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
 
@@ -240,7 +240,46 @@ export const allMusicTracks: readonly MusicTrack[] = [
     audioSha256: 'b5df5c42ad5377c6a8b2da00b10dff860c1337a3d23c5099978d48ce57fbf3e8',
     waveform: blokIWantToLiveWaveform,
     theme: { accent: '#f0c98d', secondary: '#98b6c8', surface: '#141518', heroPosition: '50% center' },
-  }
+  },
+  {
+    id: 'lermontov-kogda-volnuetsya-zhelteyushchaya-niva',
+    title: 'Когда волнуется желтеющая нива…',
+    poet: 'Михаил Лермонтов',
+    poetId: 'mikhail-lermontov',
+    availability: 'published',
+    releaseOrder: 100,
+    publishedAt: '2026-11-18',
+    releaseYear: 2026,
+    duration: '3:08',
+    durationSeconds: 187.734792,
+    audioUrl: '/audio/lermontov-kogda-volnuetsya-zhelteyushchaya-niva.tlp-2026.mp3',
+    coverUrl: '/images/music/lermontov-niva-cover.webp',
+    wideCoverUrl: '/images/music/lermontov-niva-wide.webp',
+    videoUrl: 'https://www.youtube.com/watch?v=dhPngN2CWRw',
+    description: 'Кинематографическое музыкальное прочтение лермонтовского стихотворения 1837 года: золотая нива, лес, ландыш и студёный ключ ведут от душевной тревоги к покою и образу Бога.',
+    credits: [
+      'Слова — Михаил Юрьевич Лермонтов, «Когда волнуется желтеющая нива…» (1837)',
+      'Музыкальная интерпретация и мастер — The Legendary Poet',
+      'Кинематографическая обложка — ИИ-реконструкция молодого Лермонтова',
+      'Создано с использованием генеративных музыкальных технологий',
+    ],
+    rightsNotice: standardRights,
+    audioSha256: '10cc0f069970a75b49d33a95cf7bf514fc25be3f1069ddf2a5437e2ea090c3e8',
+    waveform: lermontovNivaWaveform,
+    theme: {
+      accent: '#e4bb80',
+      secondary: '#83a0ae',
+      surface: '#0b1821',
+      heroPosition: '47% center',
+    },
+    chapters: [
+      { start: 0, label: 'Пролог: и в небесах я вижу Бога…' },
+      { start: 18.92, label: 'Когда волнуется желтеющая нива' },
+      { start: 48.93, label: 'Росистый ландыш' },
+      { start: 93.92, label: 'Студёный ключ' },
+      { start: 122.20, label: 'Смиряется души моей тревога' },
+    ],
+  },
 ];
 
 /** Published entries only. This is the list passed into the persistent audio runtime. */

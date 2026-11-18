@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1438350d33a9ad45f5d623b8eb7f914543f7e03363667bee7dc447a1d8d6713f"
+      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -154,7 +154,7 @@
       "routeId": "music",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6ae063fa23e46b9564d21443fd9e0e258c398f5a9e764524afa424e9b847557f"
+      "fingerprint": "d235a2464ab2d0acd83a55565e6ae99a11d4e19834aa6d79a0983b73162c224b"
     },
     {
       "url": "https://thelegendarypoet.ru/about/",
@@ -347,6 +347,14 @@
       "state": "ready",
       "lastmod": null,
       "fingerprint": "64076c325b9742967c3008bdd18198dac486e11f0c4858783710f10bfd2efc25"
+    },
+    {
+      "url": "https://thelegendarypoet.ru/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/",
+      "path": "/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/",
+      "routeId": "track-detail",
+      "state": "ready",
+      "lastmod": null,
+      "fingerprint": "4bb895adae5eab24188186e88f84b01f06417e4436b5dd146741bfca5f556b22"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/fyodor-tyutchev/",

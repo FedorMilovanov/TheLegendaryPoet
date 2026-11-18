@@ -123,7 +123,6 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const captionId = useId();
-  const layoutId = `essay-image-${useId().replace(/:/g, '')}`;
   const reduceMotion = useReducedMotion();
   const layout = block.layout ?? 'wide';
   const imageSrc = asset(block.src);
@@ -175,8 +174,6 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
       aria-haspopup="dialog"
     >
       <motion.span
-        layoutId={layoutId}
-        transition={{ type: 'spring', stiffness: 250, damping: 30, mass: 0.8 }}
         className="absolute inset-0"
       >
         {!imageReady && (
@@ -222,16 +219,20 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
           {open && (
             <motion.div
               ref={dialogRef}
-              layoutRoot
               role="dialog"
               aria-modal="true"
               aria-label={block.alt}
               aria-describedby={captionId}
               tabIndex={-1}
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
-              animate={{ opacity: 1, backdropFilter: 'blur(16px)' }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, backdropFilter: 'blur(0px)' }}
+              // Avoid a full-screen blur tween during shared-layout projection:
+              // WebKit can stop painting the exit for seconds under CI load.
+              // A static backdrop plus opacity preserves the premium transition
+              // while keeping the dialog's focus/inert lease until unmount.
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
+              style={reduceMotion ? undefined : { backdropFilter: 'blur(12px)' }}
               className="theme-dark-island theme-dark-island-text fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
               onPointerDown={(event) => {
                 if (event.currentTarget === event.target) {
@@ -243,8 +244,12 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
               }}
             >
               <motion.div
-                layoutId={layoutId}
-                transition={{ type: 'spring', stiffness: 240, damping: 30, mass: 0.85 }}
+                // Transform-only zoom avoids a cross-portal shared-layout
+                // spring keeping the exit animation alive indefinitely in WebKit.
+                initial={reduceMotion ? false : { scale: 0.985 }}
+                animate={{ scale: 1 }}
+                exit={reduceMotion ? undefined : { scale: 0.985 }}
+                transition={{ duration: reduceMotion ? 0.12 : 0.28, ease: [0.22, 1, 0.36, 1] }}
                 className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
               >
                 <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
