@@ -186,7 +186,13 @@ test.describe('poets result status accessibility', () => {
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
         if (poetId === 'mikhail-lermontov') {
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(5);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('не межиздательское лексическое разночтение');
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('HOLD');
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D0%B8%D0%BA_1837_06.pdf');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('57–72');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('HOLD');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://rvb.ru/19vek/lermontov/ss4/vol1/notes/334.html');
           await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note]')).toContainText('26/26');
           await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/070.webp');
           await expect(page.locator('#poem-lermontov-7 [data-poem-textual-note]')).toContainText('44/44');
