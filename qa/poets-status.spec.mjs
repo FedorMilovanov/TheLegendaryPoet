@@ -217,10 +217,12 @@ test.describe('poets result status accessibility', () => {
         if (poetId === 'alexander-pushkin') {
           await expect(page.locator('#poem-pushkin-7 [data-poem-year-note]')).toContainText('традиционная датировка');
           await expect(entries.filter({ hasText: 'К Чаадаеву' }).locator('[data-poem-year-note]')).toContainText('обсуждается 1820');
-          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('HOLD');
-          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('милой/гордой славы');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('21/21');
-          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://imwerden.de/pdf/pushkin_pss_v_20-ti_tom2.1_1817-1820_2004_text.pdf');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('гордой');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('Напишет');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('PDF-страница 44');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D1%87%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F_%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_%D0%A2%D0%BE%D0%BC_2_1818-1820_1905.pdf');
         }
         if (poetId === 'sergei-yesenin') {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
