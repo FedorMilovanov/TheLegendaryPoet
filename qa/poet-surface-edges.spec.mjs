@@ -59,6 +59,10 @@ test('poet cards retain rounded edges on hover; facsimiles dissolve without a bo
             imageWidth: img?.naturalWidth,
           };
         });
+        const ctaBottomBorder = await facsimile
+          .getByRole('button', { name: 'Рассмотреть полный оригинальный лист' })
+          .evaluate((node) => getComputedStyle(node).borderBottomWidth);
+        expect(ctaBottomBorder, 'Archival CTA must not draw a long bottom stripe').toBe('0px');
         expect(visual.surface).toBe('rgba(0, 0, 0, 0)');
         expect(visual.clip).toBe('hidden');
         expect(visual.mask).toContain('linear-gradient(to right');

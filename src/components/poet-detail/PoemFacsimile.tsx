@@ -100,7 +100,7 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
             ref={openButtonRef}
             type="button"
             onClick={openViewer}
-            className="mt-5 inline-flex min-h-11 items-center gap-2 border-b border-luxury-gold/45 pb-1 text-sm font-semibold text-luxury-gold-light transition hover:border-luxury-gold hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold motion-reduce:transition-none"
+            className="mt-5 -ml-2 inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-luxury-gold-light transition-colors duration-200 hover:bg-luxury-gold/10 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold motion-reduce:transition-none"
             aria-label="Рассмотреть полный оригинальный лист"
           >
             <Expand size={16} aria-hidden="true" />
