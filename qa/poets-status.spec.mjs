@@ -212,6 +212,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note]')).toContainText('25/25');
           await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note]')).toContainText('Потому, что');
           await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg2/v/z/2/vz2dupX7YPiEG/231.webp');
+          await expect(page.locator('#poem-yesenin-7 [data-poem-textual-note]')).toContainText('14/14');
+          await expect(page.locator('#poem-yesenin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/M/i/m/MimaUmviIKL2g/247.webp');
+          await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('99/99');
+          await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Но зрело знающий работу');
+          await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/M/i/m/MimaUmviIKL2g/174.webp');
           await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Незрело знающий работу');
           await expect(page.locator('#poem-yesenin-9 [data-poem-year-note]')).toContainText('Мирка');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('все 16 стиховых строк');
