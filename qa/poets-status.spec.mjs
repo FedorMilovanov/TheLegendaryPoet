@@ -187,12 +187,15 @@ test.describe('poets result status accessibility', () => {
         }
         if (poetId === 'mikhail-lermontov') {
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
-          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('не межиздательское лексическое разночтение');
-          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('HOLD');
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('98/98');
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('бусурманы');
+          await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('две разные строки одного стихотворения');
           await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D0%B2%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D0%B8%D0%BA_1837_06.pdf');
-          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('57–72');
-          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('HOLD');
-          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://rvb.ru/19vek/lermontov/ss4/vol1/notes/334.html');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('72/72');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('так долго гнали');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('Земли чужой закон и нравы');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note]')).toContainText('56 и добавленные 16');
+          await expect(page.locator('#poem-lermontov-11 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B5%D1%80%D0%BC%D0%BE%D0%BD%D1%82%D0%BE%D0%B2_%D0%9C._%D0%AE._%D0%A1%D0%BE%D1%87%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F_(%D0%9F%D0%BE%D0%B4_%D1%80%D0%B5%D0%B4._%D0%9F._%D0%90._%D0%92%D0%B8%D1%81%D0%BA%D0%BE%D0%B2%D0%B0%D1%82%D0%BE%D0%B2%D0%B0_1889-1991)._%D0%A2%D0%BE%D0%BC_1.pdf');
           await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note]')).toContainText('26/26');
           await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/070.webp');
           await expect(page.locator('#poem-lermontov-7 [data-poem-textual-note]')).toContainText('44/44');
