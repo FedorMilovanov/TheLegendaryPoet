@@ -90,7 +90,7 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
         }} />
         <div className="relative z-10 max-w-[23rem]">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-luxury-gold-light/75">
-            Подлинная печать <span className="mx-2 text-white/25">/</span> {document.publicationYear}
+            Подлинная печать <span className="mx-2 text-white/65">/</span> {document.publicationYear}
           </p>
           <h4 className="max-w-[18rem] font-serif text-[clamp(1.5rem,4vw,2rem)] leading-[1.12] text-white">
             Стихи сквозь время
@@ -107,7 +107,7 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
             Рассмотреть оригинал
           </button>
         </div>
-        <p className="pointer-events-none absolute bottom-3 right-3 z-10 text-[10px] font-medium tracking-[0.16em] text-white/45 sm:right-8">
+        <p className="pointer-events-none absolute bottom-3 right-3 z-10 text-[10px] font-medium tracking-[0.16em] text-white/70 sm:right-8">
           {document.pages.length === 1 ? '1 ЛИСТ' : `${document.pages.length} ЛИСТА`}
         </p>
       </div>
