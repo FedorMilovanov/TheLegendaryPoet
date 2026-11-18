@@ -186,7 +186,12 @@ test.describe('poets result status accessibility', () => {
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
         if (poetId === 'mikhail-lermontov') {
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(3);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(5);
+          await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note]')).toContainText('26/26');
+          await expect(page.locator('#poem-lermontov-6 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/070.webp');
+          await expect(page.locator('#poem-lermontov-7 [data-poem-textual-note]')).toContainText('44/44');
+          await expect(page.locator('#poem-lermontov-7 [data-poem-textual-note]')).toContainText('угловых скобок');
+          await expect(page.locator('#poem-lermontov-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/033.webp');
           await expect(page.locator('#poem-lermontov-8 [data-poem-textual-note]')).toContainText('12/12');
           await expect(page.locator('#poem-lermontov-8 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/060.webp');
           await expect(page.locator('#poem-lermontov-9 [data-poem-textual-note]')).toContainText('8/8');
