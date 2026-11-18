@@ -188,6 +188,17 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('PA37');
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('Стихи въ Альбомъ');
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://books.google.ru/books?id=8aFoAAAAcAAJ&pg=PA37');
+          for (const poemId of ['pushkin-4', 'pushkin-9']) {
+            const note = page.locator('#poem-' + poemId + ' [data-poem-textual-note]');
+            const disclosure = note.locator('details');
+            await expect(disclosure).not.toHaveAttribute('open', '');
+            await note.locator('summary').click();
+            await expect(disclosure).toHaveAttribute('open', '');
+            const overflow = await note.evaluate((node) => node.scrollWidth - node.clientWidth);
+            expect(overflow, 'Textual note must wrap hashes and long URLs at width ' + width).toBeLessThanOrEqual(1);
+            await note.locator('summary').click();
+            await expect(disclosure).not.toHaveAttribute('open', '');
+          }
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('DJVU-страница 28');

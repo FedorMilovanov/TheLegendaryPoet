@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Star, Award, Heart } from 'lucide-react';
+import { Star, Award, Heart, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
 import CommunityPanel from '../community/CommunityPanel';
@@ -118,11 +118,17 @@ export default function PoemCard({ poem }: PoemCardProps) {
         )}
       </div>
       {poem.textualNote && (
-        <section data-poem-textual-note aria-label="История текста" className="mt-6 rounded-2xl border border-luxury-gold/15 bg-[#0a0a0a] p-5 theme-elevated-surface sm:p-8">
+        <section data-poem-textual-note aria-label="История текста" className="mt-6 min-w-0 rounded-2xl border border-luxury-gold/15 bg-[#0a0a0a] p-5 theme-elevated-surface sm:p-8">
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-luxury-gold-light">История текста и редакции</h4>
-          <p className="text-sm leading-7 text-luxury-gray-light">{poem.textualNote}</p>
+          <details className="group min-w-0">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-medium text-luxury-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold [&::-webkit-details-marker]:hidden">
+              <span>Читать текстологическую справку</span>
+              <ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+            <p className="mt-3 max-w-full whitespace-normal text-sm leading-7 text-luxury-gray-light [overflow-wrap:anywhere]">{poem.textualNote}</p>
+          </details>
           {poem.textualSourceUrl && (
-            <a href={poem.textualSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-luxury-gold-light underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
+            <a href={poem.textualSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 max-w-full items-center rounded-lg text-sm font-medium text-luxury-gold-light underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
               Текстологический источник <span aria-hidden="true" className="ml-1">↗</span>
             </a>
           )}
