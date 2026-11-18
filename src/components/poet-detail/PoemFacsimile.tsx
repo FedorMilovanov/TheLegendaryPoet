@@ -64,22 +64,30 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
 
   return (
     <section data-poem-facsimile data-rights-status={document.rights} aria-label="Первопечатное издание" className="relative mt-8 min-w-0">
-      <div className="relative isolate overflow-hidden bg-[#080808] px-2 py-10 sm:px-8 sm:py-12">
-        <img
-          src={firstPage.src}
-          alt=""
+      <div className="facsimile-bleed relative isolate overflow-hidden bg-transparent px-2 py-10 sm:px-8 sm:py-12">
+        <div
           aria-hidden="true"
-          loading="lazy"
-          decoding="async"
-          width={firstPage.width}
-          height={firstPage.height}
-          className="pointer-events-none absolute -right-[7%] -top-[28%] h-[164%] w-[88%] rotate-[-3deg] object-cover object-top opacity-40 grayscale saturate-0 sm:-right-[1%] sm:w-[59%] sm:opacity-50"
-          style={{
-            maskImage: 'linear-gradient(to bottom, transparent 0%, black 16%, black 73%, transparent 99%)',
-          }}
-        />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#080808] via-[#080808]/90 to-[#080808]/25" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#080808] to-transparent" />
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, #000 25%, #000 70%, transparent 100%)' }}
+        >
+          <img
+            src={firstPage.src}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            width={firstPage.width}
+            height={firstPage.height}
+            className="pointer-events-none absolute -right-[20%] -top-[28%] h-[164%] w-[85%] rotate-[-3deg] object-cover object-top opacity-[0.14] grayscale saturate-0 sm:-right-[1%] sm:w-[59%] sm:opacity-45"
+            style={{
+              maskImage: 'linear-gradient(to right, transparent 0%, #000 24%, #000 78%, transparent 100%)',
+            }}
+          />
+        </div>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{
+          background: 'radial-gradient(ellipse 62% 78% at 0% 50%, var(--tlp-facsimile-wash), transparent 95%)',
+          maskImage: 'linear-gradient(to bottom, transparent, #000 19%, #000 80%, transparent)',
+        }} />
         <div className="relative z-10 max-w-[23rem]">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-luxury-gold-light/75">
             Подлинная печать <span className="mx-2 text-white/25">/</span> {document.publicationYear}
@@ -108,7 +116,7 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
         ref={dialogRef}
         onClose={onClosed}
         aria-labelledby={titleId}
-        className="fixed inset-0 m-auto h-[min(96dvh,970px)] max-h-[96dvh] w-[min(96vw,1150px)] max-w-[96vw] overflow-hidden border-0 bg-[#080b10] p-0 text-white shadow-[0_24px_100px_rgba(0,0,0,.75)] backdrop:bg-black/90"
+        className="fixed inset-0 m-auto h-[min(96dvh,970px)] max-h-[96dvh] w-[min(96vw,1150px)] max-w-[96vw] overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border-0 bg-[#080b10] p-0 text-white shadow-[0_24px_100px_rgba(0,0,0,.75)] backdrop:bg-black/90"
       >
         <div className="flex h-full min-h-0 flex-col">
           <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">

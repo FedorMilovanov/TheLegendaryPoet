@@ -33,6 +33,8 @@ test('archival facsimile: rights gate, borderless preview, accessible complete o
       await open.click();
       const viewer = band.locator('dialog');
       await expect(viewer).toBeVisible();
+      const viewerRadius = await viewer.evaluate((node) => parseFloat(getComputedStyle(node).borderTopLeftRadius));
+      expect(viewerRadius).toBeGreaterThanOrEqual(20);
       await expect(viewer.locator('img')).toHaveAttribute('alt', /Первопечатная|Страница 37/);
       await expect(viewer.getByText('1 / ' + expectedCount)).toBeVisible();
       await expect(viewer.getByRole('link', { name: /Источник/ })).toHaveAttribute('target', '_blank');
