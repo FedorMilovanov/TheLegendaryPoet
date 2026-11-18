@@ -178,6 +178,11 @@ test.describe('poets result status accessibility', () => {
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
         if (poetId === 'alexander-pushkin') {
+          await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('24/24');
+          await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('PDF-страницы 368–369');
+          await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('Душе настало пробужденье');
+          await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%B5%D0%B2%D0%B5%D1%80%D0%BD%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B_%D0%BD%D0%B0_1827_%D0%B3%D0%BE%D0%B4_1827.pdf");
           const morning = page.locator('#poem-pushkin-4');
           await expect(morning.getByText('Литературный анализ')).toBeVisible();
           await expect(morning.getByText('Духовный подтекст')).toHaveCount(0);
