@@ -178,6 +178,16 @@ test.describe('poets result status accessibility', () => {
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
         if (poetId === 'alexander-pushkin') {
+          await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('30/30');
+          await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('PA9–PA10');
+          await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('Звѣздою Сѣверной');
+          await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://books.google.ru/books?id=t_XmCicRuMYC&pg=PA9');
+          await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('8/8');
+          await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('PA37');
+          await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('Стихи въ Альбомъ');
+          await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://books.google.ru/books?id=8aFoAAAAcAAJ&pg=PA37');
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('DJVU-страница 28');
