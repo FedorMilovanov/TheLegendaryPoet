@@ -185,6 +185,16 @@ test.describe('poets result status accessibility', () => {
           const actualColumns = await analysisGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
+        if (poetId === 'mikhail-lermontov') {
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(3);
+          await expect(page.locator('#poem-lermontov-8 [data-poem-textual-note]')).toContainText('12/12');
+          await expect(page.locator('#poem-lermontov-8 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/060.webp');
+          await expect(page.locator('#poem-lermontov-9 [data-poem-textual-note]')).toContainText('8/8');
+          await expect(page.locator('#poem-lermontov-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/077.webp');
+          await expect(page.locator('#poem-lermontov-10 [data-poem-textual-note]')).toContainText('16/16');
+          await expect(page.locator('#poem-lermontov-10 [data-poem-textual-note]')).toContainText('«бога»');
+          await expect(page.locator('#poem-lermontov-10 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg1/X/C/3/XC3Xv3h3tt4Ak/021.webp');
+        }
         if (poetId === 'mikhail-lermontov' && width >= 640) {
           const panels = page.locator('#poem-lermontov-5 [data-poem-analysis-grid]');
           const actualColumns = await panels.evaluate((element) => getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
