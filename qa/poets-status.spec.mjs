@@ -271,6 +271,12 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('4/4');
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('РГАЛИ');
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('1903');
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('НЕ был прочитан');
+          await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note] a')).toHaveAttribute('href', "https://godliteratury.ru/articles/2015/03/10/stroki-dnya-tyutchev-2");
           await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('PDF-страница 202');
