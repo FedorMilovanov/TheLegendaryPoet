@@ -271,6 +271,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('12/12');
+          await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('PDF-страница 147');
+          await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note]')).toContainText('Край ты Русского народа');
+          await expect(page.locator('#poem-tyutchev-10 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B0%D1%8F_%D0%B1%D0%B5%D1%81%D0%B5%D0%B4%D0%B0_1857_%D0%9A%D0%BD%D0%B8%D0%B3%D0%B0_%D1%85%D1%85.pdf");
           await expect(page.locator('#poem-tyutchev-7 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-7 [data-poem-textual-note]')).toContainText('12/12');
           await expect(page.locator('#poem-tyutchev-7 [data-poem-textual-note]')).toContainText('страница PDF 7');
