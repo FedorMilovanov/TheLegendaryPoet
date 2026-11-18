@@ -1,6 +1,6 @@
 # Лермонтов — «Когда волнуется желтеющая нива…»: публикационный пакет (черновик)
 
-**Состояние**: DRAFT, provider writes **NOT AUTHORIZED**, 18.11.2026.  
+**Текущее состояние**: **YouTube PUBLIC — VERIFIED**, 18.11.2026; сайт MP3 и Telegram ещё ожидают выпуска. Исходный нижеследующий пакет был подготовлен как DRAFT до публикации.  
 **project_key**: `legendary-poet`. **YouTube channel ID**: `UC-78ys2S3cQ3lpqgXfo-SvQ`.  
 **Основной литературный source**: https://rvb.ru/19vek/lermontov/ss4/vol1/poems/337.html  
 **Музыкальный source**: https://suno.com/song/24fab091-1baf-46f9-bed0-8ddbe0af5be7 (187.2 s).  
@@ -174,3 +174,40 @@ C:\Федор\The Legendary Poet\Лермонтов - Когда волнует�
 - YouTube/Telegram не публиковались, сайт MP3 не обновлён. Этот технический мастер не является разрешением на публикацию.
 
 **Устаревшая информация:** если выше в документе упоминается только V1 как окончательная версия, использовать более новую подтверждённую V2 для следующего preflight, не изменяя V1.
+
+
+## 11. YouTube PUBLIC — официальный release receipt (18.11.2026)
+
+Этот раздел **заменяет прежние отметки «YouTube не опубликован»** из исторического preflight выше; они отражали состояние **до** фактической отправки. Видео опубликовано сразу публично по прямому указанию владельца и прошло YouTube API readback.
+
+**Публичный ролик**: https://www.youtube.com/watch?v=dhPngN2CWRw  
+**Video ID**: `dhPngN2CWRw`.  
+**Канал**: `UC-78ys2S3cQ3lpqgXfo-SvQ`, The Legendary Poet, @TheLegendaryPoet (owner-identity readback).
+**Точный опубликованный title**: `Когда волнуется желтеющая нива ⚡ ВИЖУ БОГА ⚡ Михаил Лермонтов`.
+
+| Provider/API gate | Финальный результат |
+| --- | --- |
+| Переданные байты | **220 310 020** (точный V2 SHA `43fcc432ed472e78db62c8ed2f7c11dcb24f3533b3f409ae28bd72dbae60fb40`) |
+| Privacy | `public` — подтверждено `videos.list` |
+| Processing | `succeeded`; финальная длительность YouTube `PT3M8S` |
+| Title / Description / Tags | **Exact match** с отправленным metadata JSON по readback |
+| Description | 4058 символов; 7 литературных абзацев, 3 жирных и 3 курсивных литературных акцента; 6 глав; ссылки и хештеги v3.1 |
+| Авторский плейлист | `PLy9lLJfoq3ubOdGfY8orpQzGNAAvkqul5` — `playlistItems.list` подтвердил точное membership |
+| «Поющие Поэты» | `PLy9lLJfoq3uaxXMvilfZIYVXsf4fY18T8` — `playlistItems.list` подтвердил точное membership |
+| Thumbnail | JPEG из проверенной видеоподборки принят официальным `thumbnails.set` |
+| Synthetic media | `status.containsSyntheticMedia=true` **заявлен** при `videos.insert`, но readback Google может не возвращать этот флаг |
+| Авторский комментарий | `commentThreads.insert` принят: `UgxwyDQjV2t3N6Hwhm94AaABAg` |
+| Pin | **NOT PINNED** — YouTube Data API не предоставляет pin-команду; при необходимости владелец закрепляет вручную в Studio |
+| Платные credits | vidIQ, Suno и прочие платные сторонние API при публикации **не применялись** |
+
+Медиа идентичность защищена локальной journal-записью `99_КЛИП_МОНТАЖ/V2/YOUTUBE_PUBLIC_UPLOAD_JOURNAL.json`. `video_id` и целевой канал сохранены до действий с плейлистами; повторная загрузка этого MP4 запрещена без проверки этой записи.
+
+Локальные материалы для независимого повторения postflight:
+
+- `V2/YOUTUBE_PUBLIC_METADATA_V2.json` — **точные** опубликованные title, Description 4058, tags 20, pinned-comment draft, channel identity;
+- `V2/YOUTUBE_PUBLIC_UPLOAD_JOURNAL.json` — provider-returned ID, readback privacy/metadata;
+- `V2/YOUTUBE_PUBLIC_POSTFLIGHT.json` — playlist membership, авторский комментарий, thumbnail;
+- `V2/YOUTUBE_PROVIDER_FINAL_READBACK.json` — окончательный `public`, `succeeded`, `PT3M8S`, title/description/tags exact;
+- `V2/V2_ACCEPTANCE.json` — локальная audio/video SHA-256- и 25-scene-приёмка.
+
+**Отдельные невыполненные задачи:** Telegram @thelegendarypoet с MP3 и сайт TheLegendaryPoet; по ним не утверждать `published`. У фотографий Pexels, где исходный манифест содержит `See original source page`, авторство следует завершить отдельной редакционной сверкой. Первоначальный V1 без изменений.
