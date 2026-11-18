@@ -271,6 +271,11 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('16/16');
+          await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('PDF-страница 202');
+          await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note]')).toContainText('Галатее');
+          await expect(page.locator('#poem-tyutchev-6 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:Sovremennik_1854_03-04.pdf");
           await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-tyutchev-9 [data-poem-textual-note]')).toContainText('PDF-страница 333');
