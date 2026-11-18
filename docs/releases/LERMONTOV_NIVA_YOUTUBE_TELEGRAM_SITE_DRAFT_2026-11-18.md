@@ -211,3 +211,34 @@ C:\Федор\The Legendary Poet\Лермонтов - Когда волнует�
 - `V2/V2_ACCEPTANCE.json` — локальная audio/video SHA-256- и 25-scene-приёмка.
 
 **Отдельные невыполненные задачи:** Telegram @thelegendarypoet с MP3 и сайт TheLegendaryPoet; по ним не утверждать `published`. У фотографий Pexels, где исходный манифест содержит `See original source page`, авторство следует завершить отдельной редакционной сверкой. Первоначальный V1 без изменений.
+
+
+## 12. YouTube Shorts — scheduled upload receipt (18.11.2026)
+
+По прямому распоряжению владельца готовый вертикальный Shorts поставлен в **отложенную публикацию на 19 ноября 2026 года, 19:00 МСК**, что соответствует `2026-11-19T16:00:00Z`. Это **не немедленная публикация** и не отдельная задача Automations: расписание хранится непосредственно у YouTube.
+
+| Поле | Фактическое значение |
+| --- | --- |
+| Video ID | `VNRwP99Umjs` |
+| URL | https://www.youtube.com/watch?v=VNRwP99Umjs |
+| Название | `И В НЕБЕСАХ Я ВИЖУ БОГА ⚡ Михаил Лермонтов` |
+| Формат | 1080×1920, 24 fps, H.264/AAC, **59.500 сек** |
+| Размер | **83 484 922 байта** |
+| SHA-256 | `659d10135f73932639cb808d51a7e96de7be7ec4cdf2d697b3be1f9d71471361` |
+| Исходное аудио | Оригинальный WAV 01:31.5–02:31.0, строфы III–IV |
+| Ключевой кадр | `GPT IMAGE/536b6dc0-4e89-4fd4-a84f-c67fb402e004.png` |
+| Приватность на момент API-readback | `private` |
+| `status.publishAt` | `2026-11-19T16:00:00Z` — **exact match** |
+| Title / Description | **Exact match** на `videos.list` |
+| Канал | `UC-78ys2S3cQ3lpqgXfo-SvQ` — проверен owner-ID |
+| Плейлисты | Не добавлялись: правило проекта не включать Shorts в поэтические плейлисты |
+| Обработка YouTube | `processing` на первом readback; окончательное `succeeded` не утверждать без следующего контроля |
+
+В описании Shorts первым блоком стоит ссылка на полную песню `dhPngN2CWRw`; приведены контекст строф, два плейлиста и метка о синтетическом изображении. В запросе `videos.insert` также выставлено `containsSyntheticMedia=true`.
+
+**Локальные доказательства и защита от повтора:**
+- `99_КЛИП_МОНТАЖ/V2/SHORTS_9X16/SHORTS_YOUTUBE_SCHEDULE_20261119_JOURNAL.json` — API upload session / returned video ID / verified schedule.
+- `SHORTS_YOUTUBE_DRAFT.json` — ровно опубликованные название и описание.
+- `SHORTS_RENDER_QA.json` и `SHORTS_QA_ACTUAL_VIDEO_GRID.jpg` — техническая и визуальная приёмка до загрузки.
+
+Ни YouTube Shorts, ни полный ролик повторно не загружать. Операции vidIQ с платными кредитами не использовались. Финальная публикация ожидается автоматически на стороне YouTube **19.11.2026 19:00 МСК**.
