@@ -182,12 +182,12 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('36/36');
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('PDF-страницы 426–428');
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('день зноя');
-          await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note] a')).toHaveAttribute('href', "https://drive.google.com/file/d/1rwEAbwBxddnxehR3sbQ4_W9-2yPg6f9I/view?usp=drivesdk");
+          await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note] a')).toHaveAttribute('href', "https://www.shamardanov.ru/severnye-czvety-za-1825-1831-gg-skachat-pdf.html");
           await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('32/32');
           await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('PDF-страницы 313–314');
           await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note]')).toContainText('запоздалой');
-          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note] a')).toHaveAttribute('href', "https://drive.google.com/file/d/1rwEAbwBxddnxehR3sbQ4_W9-2yPg6f9I/view?usp=drivesdk");
+          await expect(page.locator('#poem-pushkin-8 [data-poem-textual-note] a')).toHaveAttribute('href', "https://www.shamardanov.ru/severnye-czvety-za-1825-1831-gg-skachat-pdf.html");
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('24/24');
           await expect(page.locator('#poem-pushkin-6 [data-poem-textual-note]')).toContainText('PDF-страницы 368–369');
