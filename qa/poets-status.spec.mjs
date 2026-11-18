@@ -217,6 +217,10 @@ test.describe('poets result status accessibility', () => {
         if (poetId === 'alexander-pushkin') {
           await expect(page.locator('#poem-pushkin-7 [data-poem-year-note]')).toContainText('традиционная датировка');
           await expect(entries.filter({ hasText: 'К Чаадаеву' }).locator('[data-poem-year-note]')).toContainText('обсуждается 1820');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('HOLD');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('милой/гордой славы');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note]')).toContainText('21/21');
+          await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://imwerden.de/pdf/pushkin_pss_v_20-ti_tom2.1_1817-1820_2004_text.pdf');
         }
         if (poetId === 'sergei-yesenin') {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
