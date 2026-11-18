@@ -177,6 +177,12 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        if (poetId === 'mikhail-lermontov') {
+          const musicLink = page.locator('#poem-lermontov-10 a[href="/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/"]');
+          await expect(musicLink).toHaveCount(1);
+          await expect(musicLink).toBeVisible();
+          await expect(musicLink).toContainText('Когда волнуется желтеющая нива');
+        }
         if (poetId === 'alexander-pushkin') {
           await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('30/30');
