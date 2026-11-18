@@ -178,6 +178,11 @@ test.describe('poets result status accessibility', () => {
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
         if (poetId === 'alexander-pushkin') {
+          await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('VERIFIED');
+          await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('16/16');
+          await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('DJVU-страница 28');
+          await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note]')).toContainText('ВЪ СИБИРЬ');
+          await expect(page.locator('#poem-pushkin-10 [data-poem-textual-note] a')).toHaveAttribute('href', "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%BE%D0%BB%D1%8F%D1%80%D0%BD%D0%B0%D1%8F_%D0%B7%D0%B2%D0%B5%D0%B7%D0%B4%D0%B0_%D0%BD%D0%B0_1856_%D0%9A%D0%BD%D0%B8%D0%B6%D0%BA%D0%B0_2_1856.djvu");
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('36/36');
           await expect(page.locator('#poem-pushkin-5 [data-poem-textual-note]')).toContainText('PDF-страницы 426–428');
