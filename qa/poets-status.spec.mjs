@@ -209,6 +209,9 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note]')).toContainText('24/24');
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note]')).toContainText('вновь покинет дом');
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://magzdb.ru/num/4105742');
+          await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note]')).toContainText('25/25');
+          await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note]')).toContainText('Потому, что');
+          await expect(page.locator('#poem-yesenin-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg2/v/z/2/vz2dupX7YPiEG/231.webp');
           await expect(page.locator('#poem-yesenin-10 [data-poem-textual-note]')).toContainText('Незрело знающий работу');
           await expect(page.locator('#poem-yesenin-9 [data-poem-year-note]')).toContainText('Мирка');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('все 16 стиховых строк');
