@@ -200,6 +200,12 @@ test.describe('poets result status accessibility', () => {
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
+          await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('16/16');
+          await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('вернусь!');
+          await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/jpg2/v/z/2/vz2dupX7YPiEG/138.webp');
+          await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('28/28');
+          await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('OCR');
+          await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://djvu.online/file/vz2dupX7YPiEG');
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note]')).toContainText('24/24');
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note]')).toContainText('вновь покинет дом');
           await expect(page.locator('#poem-yesenin-4 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://magzdb.ru/num/4105742');
