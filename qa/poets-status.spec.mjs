@@ -304,7 +304,7 @@ test.describe('poets result status accessibility', () => {
         }
         if (poetId === 'fyodor-tyutchev') {
           const fullTyutchevPoem = page.locator('#poem-tyutchev-5 [data-poem-canonical]');
-          await expect.poll(() => fullTyutchevPoem.evaluate((el) => (el.textContent || '').split('\\n').filter((line) => line.trim()).length)).toBe(40);
+          await expect.poll(() => fullTyutchevPoem.evaluate((el) => (el.textContent || '').split('\n').filter((line) => line.trim()).length)).toBe(40);
           await expect(fullTyutchevPoem).toContainText('Как в буйной слепоте страстей');
           await expect(fullTyutchevPoem).toContainText('Горючей влагою своей');
           await expect(fullTyutchevPoem).toContainText('Ее волшебный взор, и речи');
