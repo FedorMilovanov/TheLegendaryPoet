@@ -25,6 +25,9 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
   const deadline = Date.now() + HASH_OBSERVER_TIMEOUT_MS;
   let ownedFocus: HTMLElement | null = null;
   let cancelFocus: (() => void) | undefined;
+  // The placed line is defended once: an engine can finish a scroll it already
+  // started after the app arrived. This is not a second scroll loop.
+  let placedY = 0, guarding = false, released = false;
 
   const stopWaiting = () => {
     document.fonts?.removeEventListener('loadingdone', retryLayout);
@@ -33,17 +36,42 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
     window.clearTimeout(timer);
   };
   const stop = () => {
+    guarding = false;
+    released = true;
     controller.abort();
     stopWaiting();
     cancelAnimationFrame(frame);
     cancelFocus?.();
   };
+  // Was the control the reader owns where the app left it? A control below the
+  // placed line means a browser already scrolled to it: not the app's to undo.
+  const readableAt = (y: number) => {
+    const el = document.activeElement;
+    if (!(el instanceof HTMLElement)) return true;
+    const rect = el.getBoundingClientRect(), top = rect.top + window.scrollY - y;
+    return top >= 0 && top + rect.height <= window.innerHeight / 2;
+  };
+  const settle = () => {
+    if (!guarding) return;
+    const keep = Math.abs(window.scrollY - placedY) >= 2 && readableAt(placedY) && current() && !hasOpenOverlay();
+    const focused = ownedFocus?.isConnected;
+    stop();
+    if (!keep) return;
+    if (focused) apply(true);
+    else window.scrollTo({ top: placedY, behavior: 'instant' });
+  };
   const takeOver = (event: Event) => {
-    if (!event.isTrusted || !current() || hasOpenOverlay()) return;
-    // A browser can still be animating/maintaining its *own* text match.
-    // End that motion here, without consuming the reader's key, click or wheel.
-    if (nativeQuote && document.querySelector(':target')) window.scrollTo({ top: window.scrollY, behavior: 'instant' });
+    if (released || !event.isTrusted || !current() || hasOpenOverlay()) return;
+    if (!nativeQuote) { yieldToReader(); stop(); return; }
+    // A browser can still be animating or retrying its own text match. End
+    // that motion here without consuming the reader's key, click or wheel.
+    window.scrollTo({ top: window.scrollY, behavior: 'instant' });
     yieldToReader();
+    stopWaiting();
+    cancelAnimationFrame(frame);
+    cancelFocus?.();
+    cancelFocus = undefined;
+    ownedFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     stop();
   };
   // Observe intent, never cancel input or infer intent from scrollY: image
@@ -64,47 +92,41 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
         !(fragmentId && el.id === fragmentId)) takeOver(event);
   }, options);
 
-  function attempt(allowPartial: boolean) {
-    if (signal.aborted || !current()) { stop(); return true; }
+  const place = (allowPartial = false) => {
+    if (released || !current()) { stop(); return true; }
     if (hasOpenOverlay()) {
       window.addEventListener(OVERLAY_SCROLL_RESTORED, schedule, { once: true, signal });
       return true;
     }
     const target = apply(allowPartial);
     if (target === false) return false;
-    if (target) {
-      cancelFocus = scheduleProgrammaticFocus(() => {
-        const next = !signal.aborted && current() && !hasOpenOverlay() && target.isConnected ? target : null;
-        if (nativeQuote && next) {
-          ownedFocus = next;
-          // Some engines retry native text matching after the app paints,
-          // centre the range, and expose its ancestor as :target. Reconcile
-          // that one placement, not every scroll and never after reader input.
-          const finish = () => {
-            if (!current() || hasOpenOverlay() || !next.isConnected) { stop(); return; }
-            if (!document.querySelector(':target')) return;
-            stop(); apply(true);
-          };
-          document.addEventListener('scrollend', finish, { signal });
-          timer = window.setTimeout(stop, Math.max(0, deadline - Date.now()));
-          finish();
-        } else stop();
-        return next;
-      });
-    } else stop();
+    if (!target) { stop(); return true; }
+    cancelFocus = scheduleProgrammaticFocus(() => {
+      const next = !released && current() && !hasOpenOverlay() && target.isConnected ? target : null;
+      ownedFocus = next;
+      // Some engines retry a native text match after the app paints and centre
+      // the range; others scroll a block they just focused.
+      if (nativeQuote && next && readableAt(window.scrollY)) {
+        placedY = window.scrollY;
+        guarding = true;
+        document.addEventListener('scrollend', settle, { signal });
+        timer = window.setTimeout(stop, Math.max(0, deadline - Date.now()));
+      } else stop();
+      return next;
+    });
     return true;
-  }
-  function retryLayout() { if (attempt(false)) stopWaiting(); }
+  };
+  function retryLayout() { if (place()) stopWaiting(); }
   function schedule() {
     frame = requestAnimationFrame(() => {
-      if (attempt(false)) return;
+      if (place()) return;
       observer = new MutationObserver(retryLayout);
       document.fonts?.addEventListener('loadingdone', retryLayout);
       observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true });
       // Close the lookup/observe race without polling or waiting for an
       // unrelated mutation. On timeout, use the available layout once.
-      if (attempt(false)) stopWaiting();
-      else timer = window.setTimeout(() => { stopWaiting(); attempt(true); }, HASH_OBSERVER_TIMEOUT_MS);
+      if (place()) stopWaiting();
+      else timer = window.setTimeout(() => { stopWaiting(); place(true); }, HASH_OBSERVER_TIMEOUT_MS);
     });
   }
   schedule();

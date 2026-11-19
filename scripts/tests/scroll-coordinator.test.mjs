@@ -410,6 +410,52 @@ test('a stamped native traversal keeps the last settled outgoing passage only if
   }
 });
 
+test('a native quote keeps its placed line when the engine scrolls the focused block afterwards', () => {
+  const app = coordinator(); let applied = 0, yielded = 0;
+  app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.8.abc.0.1',
+    nativeQuote: true, apply() { applied++; app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+  app.frame(); app.frame(); app.frame();
+  assert.equal(applied, 1); assert.equal(yielded, 0);
+  app.window.scrollTo({ top: 222 }); // the engine re-scrolls the block it just focused
+  app.document.dispatchEvent(new Event('scrollend'));
+  assert.deepEqual(app.calls, [204, 222, 204]); assert.equal(applied, 2); assert.equal(yielded, 0);
+  assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
+});
+
+test('a takeover ends the arrival: the engine finishing its text match later is never corrected', () => {
+  const app = coordinator(); let applied = 0, yielded = 0;
+  app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.poem-blok-1.5.1.0.0',
+    nativeQuote: true, apply() { applied++; app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+  app.frame(); app.frame(); app.frame();
+  app.input('keydown', { key: 'Tab' }); app.target.focus(); // keyboard skips to its own control
+  assert.equal(yielded, 1); assert.equal(app.window.scrollY, 204);
+  app.window.scrollTo({ top: 1056 }); // UA centres its delayed native text match
+  app.document.dispatchEvent(new Event('scrollend'));
+  assert.equal(app.window.scrollY, 1056); assert.equal(applied, 1);
+  assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
+});
+
+test('the reader position is restored only while that control stays readable; reader scroll wins', () => {
+  const app = coordinator(); let yielded = 0;
+  app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.9.abc.0.1',
+    nativeQuote: true, apply() { app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+  app.frame(); app.frame(); app.frame();
+  app.input('keydown', { key: 'Tab' });
+  app.input('wheel', { deltaY: 120 }); app.window.scrollTo({ top: 320 });
+  app.document.dispatchEvent(new Event('scrollend'));
+  assert.equal(app.window.scrollY, 320); assert.equal(yielded, 1);
+
+  const focus = coordinator();
+  focus.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.10.abc.0.1',
+    nativeQuote: true, apply() { focus.window.scrollTo({ top: 204 }); return focus.target; }, yieldToReader() { yielded++; } });
+  focus.frame(); focus.frame(); focus.frame();
+  // The control the browser focused lives below the placed line: its own
+  // scroll into view is not the app's to undo.
+  focus.target.getBoundingClientRect = () => ({ top: 900 - focus.window.scrollY, height: 40 });
+  focus.window.scrollTo({ top: 1290 }); focus.document.dispatchEvent(new Event('scrollend'));
+  assert.equal(focus.window.scrollY, 1290);
+});
+
 test('a late native text match gets one correction; keyboard takeover can stop a maintained native scroll, never replay the jump', () => {
   for (const takeOver of [false, true]) {
     const app = coordinator(); let applied = 0, yielded = 0, native = false;

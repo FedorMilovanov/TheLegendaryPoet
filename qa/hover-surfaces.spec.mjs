@@ -259,7 +259,7 @@ test('wrapped poem ink matches its hit targets and copying the sheet includes th
   await open(page, '/poets/alexander-blok');
   const poem = page.locator('[data-poem-text]').first();
   await center(poem.locator('[data-poem-canonical-word]').first());
-  const sample = await poem.evaluate(n => {
+  const inBand = () => poem.evaluate(n => {
     const words = [...n.querySelectorAll('[data-poem-canonical-word]')];
     const ink = [...n.querySelectorAll('[data-poem-visual] > div > span')];
     return ink.flatMap((el, i) => {
@@ -267,7 +267,10 @@ test('wrapped poem ink matches its hit targets and copying the sheet includes th
       return y > 100 && y < innerHeight - 100 ? [[i, document.elementFromPoint(x, y) === words[i]]] : [];
     });
   });
-  expect(sample.length).toBeGreaterThan(5);
+  // A lazy route can still be mounting its verse: occupy the band first, then
+  // compare ink against hit targets.
+  await expect.poll(async () => (await inBand()).length, { message: 'wrapped verse ink inside the sampled band' }).toBeGreaterThan(5);
+  const sample = await inBand();
   expect(sample.filter(([, match]) => !match)).toEqual([]);
   const i = sample[1][0];
   await poem.locator('[data-poem-canonical-word]').nth(i).hover();

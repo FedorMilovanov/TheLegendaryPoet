@@ -945,6 +945,14 @@ html.theme-light .track-cover-bar { background-color: rgba(255, 250, 240, 0.82);
 
 :focus-visible { outline: 2px solid var(--tlp-focus-ring); outline-offset: 3px; border-radius: 4px; }
 
+/* The media lightbox is a dark island inside both themes. The unlayered rule
+   above outranks the layered essay declarations, so in the light theme its
+   controls would otherwise take the light-theme ring (#075f75, 2.67:1 on the
+   island surface). --tlp-island-accent is theme-independent (#67e8f9) and the
+   dark theme's ring already clears the island. Scoped to the lightbox: an
+   editorial dark island keeps its own amber citation ink and ring. */
+html.theme-light .essay-lightbox :is(a, button):focus-visible { outline-color: var(--tlp-island-accent); }
+
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
 .nav-link { position: relative; }

@@ -10,6 +10,20 @@ export async function readAt(block, fraction = 0.42) {
   // A reader must actually have seen this position. An immediate rect read
   // can precede both scrollend and the chrome's direction update by a paint.
   await block.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  const offset = () => block.evaluate((n, part) => {
+    const r = n.getBoundingClientRect();
+    return Math.abs(r.top + r.height * part - innerHeight * 0.34);
+  }, fraction);
+  // Content above can still settle (fonts, images, disclosures) and move the
+  // passage after the first scroll. Re-place the same point while that is
+  // visible; the assertion below still fails if the page keeps moving alone.
+  for (let attempt = 0; attempt < 3 && (await offset()) >= 2; attempt += 1) {
+    await block.evaluate((n, part) => {
+      const r = n.getBoundingClientRect();
+      scrollBy({ top: r.top + r.height * part - innerHeight * 0.34, behavior: 'instant' });
+    }, fraction);
+    await block.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+  }
   await expectReadingAt(block, fraction);
 }
 export const portion = block => block.evaluate(n => {
