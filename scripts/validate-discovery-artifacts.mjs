@@ -192,7 +192,7 @@ try {
   const submitIndexNow = readText('scripts/submit-indexnow.mjs');
   const indexNowWorkflow = readText('.github/workflows/indexnow.yml');
 
-  expect(useSeo.includes('discoveryStateForPath') && useSeo.includes('applyDiscoveryHead'), 'useSeo must derive runtime head from shared discovery state');
+  expect(useSeo.includes('discoveryStateForPath') && useSeo.includes('ownDiscoveryHead'), 'useSeo must derive runtime head from shared discovery state');
   expect(publicUrl.includes("normalized === '/'") && publicUrl.includes("normalized.endsWith('/')"), 'public route URL authority must preserve root and terminalize deep routes');
   expect(discoveryHead.includes('canonicalRouteUrl(siteConfig.url, options.path)'), 'runtime self canonical must use terminal public route authority');
   expect(seoSchema.includes('absoluteRouteUrl') && seoSchema.includes('canonicalRouteUrl'), 'JSON-LD route URLs must use terminal public route authority');
@@ -201,9 +201,9 @@ try {
   expect(discoveryHead.includes("document.getElementById('route-jsonld')?.remove()"), 'non-schema states must remove stale route JSON-LD');
   expect(discoveryHead.includes("removeLink('canonical')"), 'non-canonical states must remove stale canonical');
   expect(discoveryHead.includes("removeMeta('og:url', 'property')"), 'non-canonical states must remove stale og:url');
-  expect(routeModules.includes("applyTransientDiscoveryHead('loading'"), 'lazy route load must own loading machine state');
-  expect(routeModules.includes("applyTransientDiscoveryHead('error'"), 'lazy route failure must own error machine state');
-  expect(errorBoundary.includes("applyTransientDiscoveryHead('error'"), 'render errors must replace previous-route machine metadata');
+  expect(discoveryHead.includes("applyDiscoveryHead({ state: 'loading'") && discoveryHead.includes('syncDiscoveryAddress'), 'a pending address must lose previous-route metadata');
+  expect(!routeModules.includes('applyDiscoveryHead') && !routeModules.includes('applyTransientDiscoveryHead'), 'a cached or abandoned importer must not write document metadata');
+  expect(errorBoundary.includes("ownDiscoveryHead(href, { state: 'error'"), 'a committed render failure must own error metadata');
   expect(notFound.includes("state: 'not-found'"), 'hydrated not-found page must use explicit not-found state');
   expect(prerender.includes("policyFor('not-found')"), 'static 404 must derive from shared not-found policy');
   expect(prerender.includes('stateForStaticPath(page.routePath)'), 'static prerender pages must derive route discovery state');

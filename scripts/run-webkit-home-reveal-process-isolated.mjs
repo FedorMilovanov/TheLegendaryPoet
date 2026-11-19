@@ -47,6 +47,12 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
   })),
+  { id: 'desktop-hover-surfaces', project: 'webkit-reader-desktop', file: 'qa/hover-surfaces.spec.mjs' },
+  { id: 'desktop-dialog-return', project: 'webkit-reader-desktop', file: 'qa/reader-dialog-return.spec.mjs' },
+  { id: 'desktop-reader-history', project: 'webkit-reader-desktop', file: 'qa/reader-history.spec.mjs' },
+  { id: 'desktop-shared-passage', project: 'webkit-reader-desktop', file: 'qa/shared-passage.spec.mjs' },
+  { id: 'desktop-command-navigation', project: 'webkit-reader-desktop', file: 'qa/command-navigation.spec.mjs' },
+  { id: 'desktop-route-recovery', project: 'webkit-reader-desktop', file: 'qa/route-recovery.spec.mjs' },
   {
     id: 'desktop-reader-certification',
     file: 'qa/premium-reader-certification.spec.mjs',

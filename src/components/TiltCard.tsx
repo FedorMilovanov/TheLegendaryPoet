@@ -24,8 +24,7 @@ export default function TiltCard({
   const frameRef = useRef<number | null>(null);
   const settleTimerRef = useRef<number | null>(null);
   const flattenFrameRef = useRef<number | null>(null);
-  const rectRef = useRef<DOMRect | null>(null);
-  const pointerRef = useRef({ x: 0.5, y: 0.5 });
+  const pointerRef = useRef({ clientX: 0, clientY: 0 });
   const enabledRef = useRef(false);
   const visibleRef = useRef(true);
 
@@ -43,12 +42,10 @@ export default function TiltCard({
     }
   }, []);
 
-  const prepareLayer = useCallback(() => {
+  const prepareLayer = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const node = visualRef.current;
-    const hit = hitRef.current;
-    if (!node || !hit || !enabledRef.current || !visibleRef.current) return;
+    if (!node || !enabledRef.current || !visibleRef.current || event.pointerType === 'touch') return;
     cancelSettle();
-    rectRef.current ??= hit.getBoundingClientRect();
     node.style.willChange = 'transform';
     // Live tracking must not be eased, or every pointermove restarts the
     // transition and the card visibly trails the cursor.
@@ -58,8 +55,6 @@ export default function TiltCard({
   const reset = useCallback(() => {
     cancelPaint();
     cancelSettle();
-    rectRef.current = null;
-    pointerRef.current = { x: 0.5, y: 0.5 };
 
     const node = visualRef.current;
     if (!node) return;
@@ -79,10 +74,11 @@ export default function TiltCard({
   const flattenForActivation = useCallback(() => {
     cancelPaint();
     cancelSettle();
-    rectRef.current = null;
+
     const node = visualRef.current;
     if (!node) return;
     delete node.dataset.tiltTracking;
+    node.style.removeProperty('will-change');
     node.style.transition = 'none';
     node.style.setProperty('--tilt-x', '0deg');
     node.style.setProperty('--tilt-y', '0deg');
@@ -132,7 +128,13 @@ export default function TiltCard({
     const node = visualRef.current;
     if (!node || !enabledRef.current || !visibleRef.current || !node.dataset.tiltTracking) return;
 
-    const { x, y } = pointerRef.current;
+    // Read the stationary hit box once per painted frame. A rect cached on
+    // entry is already stale if the reader scrolls or resizes over the card.
+    const rect = hitRef.current?.getBoundingClientRect();
+    if (!rect?.width || !rect.height) return;
+    const { clientX, clientY } = pointerRef.current;
+    const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
     const rotateY = (x - 0.5) * intensity;
     const rotateX = (0.5 - y) * intensity;
 
@@ -145,15 +147,8 @@ export default function TiltCard({
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!enabledRef.current || !visibleRef.current) return;
     if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
-    prepareLayer();
-    const hit = hitRef.current;
-    const rect = rectRef.current ?? hit?.getBoundingClientRect();
-    if (!rect || rect.width <= 0 || rect.height <= 0) return;
-    rectRef.current = rect;
-    pointerRef.current = {
-      x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
-      y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
-    };
+    if (!visualRef.current?.dataset.tiltTracking) prepareLayer(event);
+    pointerRef.current = { clientX: event.clientX, clientY: event.clientY };
     if (frameRef.current == null) frameRef.current = requestAnimationFrame(paint);
   };
 
@@ -172,16 +167,11 @@ export default function TiltCard({
     >
       <div
         ref={visualRef}
+        data-tilt-sheen={sheen || undefined}
         className={`group tilt-card-inner relative isolate h-full w-full ${className}`}
       >
         <div className="tilt-card-content relative h-full w-full">
           {children}
-          {sheen && (
-            <span
-              aria-hidden="true"
-              className="tilt-card-sheen pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 [border-radius:inherit] [background:radial-gradient(circle_at_var(--tilt-sheen-x,50%)_var(--tilt-sheen-y,50%),rgba(255,255,255,0.09),transparent_40%)] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:hidden"
-            />
-          )}
         </div>
       </div>
     </div>

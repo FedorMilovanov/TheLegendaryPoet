@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import {
   Check,
   Clock3,
@@ -22,6 +22,8 @@ import { asset } from '../../utils/asset';
 import { Link } from '../ui/Link';
 import { useAudioPlayer, type AudioStatus } from './AudioPlayerProvider';
 import { buildTrackMomentPath, formatAudioTime } from './audioPresentation';
+import { dismissPopoverOnFocusExit, focusPopoverInvoker, supportsPopover } from '../../utils/popover';
+import { useAnchoredPanel } from '../../hooks/useAnchoredPanel';
 import { getTrackThemeStyle } from './trackTheme';
 
 const copyText = async (value: string) => {
@@ -70,7 +72,12 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
   } = useAudioPlayer();
   const [shareLabel, setShareLabel] = useState('Поделиться');
   const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumeId = useId();
+  const playerRef = useRef<HTMLElement>(null);
+  const volumePanelRef = useRef<HTMLDivElement>(null);
   const volumeControlRef = useRef<HTMLDivElement>(null);
+
+  useAnchoredPanel(volumeOpen, volumeControlRef, volumePanelRef, 6, playerRef);
 
   const isActive = currentTrack?.id === track.id;
   const savedPosition = getSavedPosition(track.id);
@@ -96,22 +103,6 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
     if (initialTime === undefined || !Number.isFinite(initialTime) || initialTime < 0) return;
     loadTrack(track, { startAt: initialTime, autoplay: false });
   }, [initialTime, loadTrack, track]);
-
-  useEffect(() => {
-    if (!volumeOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!volumeControlRef.current?.contains(event.target as Node)) setVolumeOpen(false);
-    };
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') setVolumeOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [volumeOpen]);
 
   const toggle = () => {
     if (recoverableError) retry();
@@ -158,10 +149,6 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
   const onPlayerKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
-    if (event.key === 'Escape') {
-      setVolumeOpen(false);
-      return;
-    }
     if (target.matches('input, button, a, select, textarea, [contenteditable="true"]')) return;
     if (event.code === 'Space') {
       event.preventDefault();
@@ -210,6 +197,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
   return (
     <article
+      ref={playerRef}
       onKeyDown={onPlayerKeyDown}
       aria-busy={busy}
       style={{
@@ -370,7 +358,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
               onClick={toggle}
               disabled={unavailable}
               style={{ backgroundColor: unavailable ? undefined : recoverableError ? '#fbbf24' : 'var(--track-accent)' }}
-              className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-sm font-bold text-black shadow-[0_10px_32px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:translate-y-0 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
+              className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 text-sm font-bold text-black shadow-[0_10px_32px_rgba(0,0,0,0.22)] transition-[filter,background-color] duration-300 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:brightness-100 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/40"
             >
               {busy && !trackPlaying ? <LoaderCircle size={18} className="animate-spin" /> : recoverableError ? <RotateCw size={18} /> : trackPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
               {mainButtonLabel}
@@ -378,16 +366,24 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
 
             <button type="button" onClick={() => seekTrackBy(10)} disabled={unavailable || recoverableError} aria-label="Вперёд на 10 секунд" title="Вперёд на 10 секунд" className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-30"><RotateCw size={19} /><span className="absolute text-[8px] font-black">10</span></button>
 
-            <div ref={volumeControlRef} className="relative flex items-center">
-              <button type="button" onClick={() => { toggleMute(); setVolumeOpen(true); }} aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><VolumeIcon size={18} /></button>
-              <button type="button" onClick={() => setVolumeOpen((value) => !value)} aria-expanded={volumeOpen} aria-label={`${volumePercent}% — настроить громкость`} className="ml-1 hidden h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/52 transition hover:text-white sm:inline-flex">{volumePercent}%</button>
-              {volumeOpen && (
-                <div className="absolute bottom-14 left-0 z-30 flex w-48 items-center gap-3 rounded-2xl border border-white/12 bg-[#071018]/98 p-3 shadow-[0_18px_55px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:left-auto sm:right-0">
-                  <Volume1 size={15} className="text-white/35" />
-                  <input type="range" min="0" max="1" step="0.02" value={muted ? 0 : volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label="Громкость" className="w-full accent-[var(--track-secondary)]" />
-                  <Volume2 size={15} className="text-white/60" />
-                </div>
+            <div ref={volumeControlRef} onBlur={dismissPopoverOnFocusExit} className="relative flex max-w-full items-center">
+              <button type="button" onClick={toggleMute} onClickCapture={supportsPopover ? focusPopoverInvoker : undefined} popoverTarget={supportsPopover ? volumeId : undefined} popoverTargetAction="show" aria-label={muted ? 'Включить звук' : 'Выключить звук'} className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/15 text-white/58 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><VolumeIcon size={18} /></button>
+              {supportsPopover && (
+                <button type="button" onClickCapture={focusPopoverInvoker} popoverTarget={volumeId} aria-expanded={volumeOpen} aria-label={`${volumePercent}% — настроить громкость`} className="ml-1 inline-flex h-12 items-center px-1 text-[10px] font-bold tabular-nums text-white/52 transition hover:text-white">{volumePercent}%</button>
               )}
+              <div
+                ref={volumePanelRef}
+                id={volumeId}
+                popover={supportsPopover ? 'auto' : undefined}
+                onToggle={(event) => setVolumeOpen(event.currentTarget.matches(':popover-open'))}
+                className={`${supportsPopover ? 'anchored-panel' : 'min-w-0'} w-48 rounded-2xl border border-white/12 bg-[#071018] p-3 text-white shadow-xl`}
+              >
+                <div className="flex items-center gap-3">
+                  <Volume1 size={15} aria-hidden="true" className="shrink-0 text-white/50" />
+                  <input type="range" min="0" max="1" step="0.02" value={muted ? 0 : volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label="Громкость" className="min-w-0 flex-1 accent-[var(--track-secondary)]" />
+                  <Volume2 size={15} aria-hidden="true" className="shrink-0 text-white/60" />
+                </div>
+              </div>
             </div>
 
             <button type="button" onClick={share} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold text-white/55 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><Share2 size={16} /> {shareLabel}</button>

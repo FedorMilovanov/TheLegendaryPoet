@@ -72,7 +72,7 @@ export default function ArticleRenderer({
   const references = buildSourceReferences(sources);
 
   return (
-    <div className="essay-body flow-root" lang="ru">
+    <div data-reading-flow="essay" className="essay-body relative flow-root" lang="ru">
       {blocks.map((block, i) => {
         const sectionNumber = block.type === 'section' ? ++sectionCount : undefined;
         const sourceIds = 'sourceIds' in block ? block.sourceIds : undefined;
@@ -86,6 +86,9 @@ export default function ArticleRenderer({
             key={`${block.type}-${i}`}
             direction={block.type === 'section' ? 'none' : layout.direction}
             distance={18}
+            // A direct quote can expose only the last line of a block several
+            // screens tall. Paint visible text, not a percentage of the block.
+            threshold={0}
             once
             /*
              * No permanent `will-change-transform` here. Reveal already sets

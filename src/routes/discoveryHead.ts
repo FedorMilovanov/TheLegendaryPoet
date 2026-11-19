@@ -1,7 +1,8 @@
+import { createContext } from 'react';
 import routeContractData from './route-contract.json';
 import discoveryPolicyData from './discovery-policy.json';
 import { siteConfig } from '../config/site';
-import { canonicalRouteUrl } from './publicUrl';
+import { canonicalRoutePath, canonicalRouteUrl } from './publicUrl';
 
 export type DiscoveryStateName = 'ready' | 'noindex' | 'not-found' | 'loading' | 'error' | 'redirect';
 
@@ -105,13 +106,7 @@ function removeLink(rel: string) {
   document.head.querySelector(`link[rel="${rel}"]`)?.remove();
 }
 
-function clearArticleMeta() {
-  removeMeta('article:published_time', 'property');
-  removeMeta('article:modified_time', 'property');
-  removeMeta('article:author', 'property');
-}
-
-export function applyDiscoveryHead(options: ApplyDiscoveryHeadOptions) {
+function applyDiscoveryHead(options: ApplyDiscoveryHeadOptions) {
   if (typeof document === 'undefined') return;
 
   const policy = getDiscoveryPolicy(options.state);
@@ -175,11 +170,49 @@ export function applyDiscoveryHead(options: ApplyDiscoveryHeadOptions) {
   else removeMeta('article:author', 'property');
 }
 
-export function applyTransientDiscoveryHead(state: Extract<DiscoveryStateName, 'loading' | 'error'>, path?: string) {
-  if (typeof window === 'undefined') return;
-  clearArticleMeta();
-  applyDiscoveryHead({
-    state,
-    path: path || window.location.pathname,
-  });
+// The selected outlet owns the original browser pathname, including basename
+// and percent escapes. Rebuilding it from decoded route params can turn a
+// perfectly readable /priv%61cy/ into a perpetual loading state.
+export const RouteHeadAddress = createContext<string | null>(null);
+export const PAGE_HEAD_AVAILABLE = 'tlp-page-head-available';
+
+// Keep only the mounted page's head, not a history of page snapshots. Back
+// can resume that exact tree; its useSeo effect need not run a second time.
+interface HeadOwner {
+  pathname: string;
+  options: ApplyDiscoveryHeadOptions;
+  visitKey?: string;
+}
+let painted: HeadOwner | undefined;
+let shown: HeadOwner | 'loading' | undefined;
+
+export function hasSettledPageHead(href: string) {
+  return window.location.pathname === href && !!painted && shown === painted &&
+    painted.pathname === canonicalRoutePath(href) && painted.options.state !== 'error';
+}
+
+export function syncDiscoveryAddress() {
+  const path = window.location.pathname;
+  if (painted && canonicalRoutePath(path) === painted.pathname &&
+      (!painted.visitKey || painted.visitKey === (window.history.state?.key ?? 'default'))) {
+    if (shown === painted) return;
+    const pending = shown === 'loading';
+    applyDiscoveryHead(painted.options);
+    shown = painted;
+    if (pending && painted.options.state !== 'error') window.dispatchEvent(new Event(PAGE_HEAD_AVAILABLE));
+    return;
+  }
+  if (shown === 'loading') return;
+  // Only the untouched matching prerender can speak before the first paint.
+  if (!shown && document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href === canonicalRouteUrl(siteConfig.url, path) &&
+      document.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content.startsWith('index,')) return;
+  applyDiscoveryHead({ state: 'loading', path });
+  shown = 'loading';
+}
+
+export function ownDiscoveryHead(href: string, options: ApplyDiscoveryHeadOptions, visitKey?: string) {
+  const owner = { pathname: canonicalRoutePath(new URL(href, window.location.href).pathname), options, visitKey };
+  painted = owner;
+  syncDiscoveryAddress();
+  return () => { if (painted === owner) painted = undefined; };
 }

@@ -15,6 +15,11 @@ async function expectVisibleFragment(page, hash) {
   expect(top).toBeLessThan(170);
 }
 
+async function expectSourceAtReadingEdge(source) {
+  await expect(source).toBeFocused();
+  await expect.poll(() => source.evaluate(n => Math.abs(n.getBoundingClientRect().top - 96))).toBeLessThan(2);
+}
+
 test.describe('native fragment navigation and stable geometry', () => {
   test('section anchors settle after real image layout and keep native history', async ({ page }) => {
     await openEssay(page, 'sergei-yesenin-1921-1925');
@@ -48,12 +53,14 @@ test.describe('native fragment navigation and stable geometry', () => {
     const source = page.locator('[id="' + hash.slice(1) + '"]');
     await citation.click();
     await expect(source).toBeVisible();
+    await expectSourceAtReadingEdge(source);
     const historyBefore = await page.evaluate(() => history.length);
     await page.locator('#sources button').filter({ hasText: 'Архивы' }).first().click();
     await expect(source).toBeHidden();
     await citation.focus();
     await page.keyboard.press('Enter');
     await expect(source).toBeVisible();
+    await expectSourceAtReadingEdge(source);
     expect(decodeURIComponent(new URL(page.url()).hash)).toBe(hash);
     expect(await page.evaluate(() => history.length)).toBe(historyBefore);
   });
@@ -66,7 +73,7 @@ test.describe('native fragment navigation and stable geometry', () => {
     await page.waitForTimeout(1000);
     await expectVisibleFragment(page, section);
     await openEssay(page, 'brik-case', citation);
-    await expect(page.locator('[id="' + citation.slice(1) + '"]')).toBeVisible();
+    await expectSourceAtReadingEdge(page.locator('[id="' + citation.slice(1) + '"]'));
     expect(decodeURIComponent(new URL(page.url()).hash)).toBe(citation);
   });
 });

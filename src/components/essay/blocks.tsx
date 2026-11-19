@@ -8,8 +8,6 @@ import {
   Maximize2,
   Quote,
   X,
-  ZoomIn,
-  ZoomOut,
 } from 'lucide-react';
 import type { EssayBlock } from '../../types/essay';
 import { withGold, splitParagraphs, withTypography } from './richText';
@@ -20,6 +18,7 @@ import { asset } from '../../utils/asset';
 import { useNativeImageState } from '../../hooks/useNativeImageState';
 import { useDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';
 import TiltCard from '../TiltCard';
+import LightboxFigure from './LightboxFigure';
 
 /**
  * The essay rendering "engine": one styled component per block type, dispatched
@@ -95,9 +94,9 @@ const kindLabels = {
 function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit' | 'sourceUrl' | 'kind'> }) {
   const kind = block.kind ?? 'archive';
   return (
-    <figcaption className="theme-functional-muted mt-3 flex flex-wrap items-start justify-between gap-x-5 gap-y-2 px-1 text-[11px] leading-relaxed">
+    <figcaption className="essay-image-caption theme-functional-muted">
       <span className="min-w-0 flex-1">
-        <span className="theme-functional-muted mr-2 inline-flex rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]">
+        <span className="essay-image-kind theme-functional-muted">
           {kindLabels[kind]}
         </span>
         {block.caption}
@@ -108,7 +107,7 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
           href={block.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="theme-control-action inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md py-1 uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
+          className="essay-image-source theme-control-action"
         >
           Источник <ExternalLink size={11} aria-hidden="true" />
         </a>
@@ -119,7 +118,6 @@ function ImageMeta({ block }: { block: Pick<Block<'image'>, 'caption' | 'credit'
 
 function ImageBlock({ block }: { block: Block<'image'> }) {
   const [open, setOpen] = useState(false);
-  const [zoomed, setZoomed] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const captionId = useId();
@@ -129,7 +127,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const { ref: imageRef, state: imageState, ready: imageReady } = useNativeImageState(imageSrc);
   const frameClass =
     layout === 'portrait'
-      ? 'mx-auto max-w-xl aspect-[4/5]'
+      ? 'aspect-[4/5]'
       : layout === 'cinematic'
         ? 'aspect-[16/9]'
         : 'aspect-[3/2]';
@@ -141,13 +139,11 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   const sourceWidth = block.sourceWidth && block.sourceWidth > 0
     ? Math.min(layoutWidth, block.sourceWidth)
     : layoutWidth;
-  const capped = sourceWidth < layoutWidth;
   const sizes = layout === 'portrait'
     ? `(max-width: 768px) min(92vw, ${sourceWidth}px), ${sourceWidth}px`
     : `(max-width: 1024px) min(92vw, ${sourceWidth}px), ${sourceWidth}px`;
 
   const closeLightbox = useCallback(() => {
-    setZoomed(false);
     setOpen(false);
   }, []);
 
@@ -165,25 +161,21 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
     <motion.button
       type="button"
       onClick={() => setOpen(true)}
-      whileHover={reduceMotion ? undefined : { y: -3, scale: 1.006 }}
       whileTap={reduceMotion ? undefined : { scale: 0.992 }}
       transition={{ type: 'spring', stiffness: 320, damping: 25, mass: 0.7 }}
-      style={capped ? { maxWidth: `${sourceWidth}px` } : undefined}
-      className={`theme-dark-island group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#080808] text-left tlp-media-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${frameClass}`}
+      className={`essay-image-button tilt-card-surface theme-dark-island group tlp-media-shadow ${frameClass}`}
       aria-label={`Увеличить изображение: ${block.alt}${imageState === 'error' ? '. Изображение временно недоступно' : ''}`}
       aria-haspopup="dialog"
     >
-      <motion.span
-        className="absolute inset-0"
-      >
+      <span className="absolute inset-0">
         {!imageReady && (
-          <span className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#0d0d0d]">
+          <span className="essay-image-placeholder">
             {imageState === 'error' ? (
               <span className="theme-dark-island-muted px-6 text-center text-[11px] uppercase tracking-[0.16em]">
                 Изображение временно недоступно
               </span>
             ) : (
-              <span className="absolute inset-y-0 -left-1/2 w-1/2 animate-[shimmer_1.7s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.055] to-transparent motion-reduce:animate-none" />
+              <span className="essay-image-shimmer" />
             )}
           </span>
         )}
@@ -195,13 +187,13 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
           decoding="async"
           sizes={sizes}
           data-image-state={imageState}
-          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,transform,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${imageReady ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full object-cover grayscale-[0.08] transition-[opacity,scale,filter] duration-700 ease-out group-hover:scale-[1.022] group-hover:contrast-[1.045] ${imageReady ? 'opacity-100' : 'opacity-0'}`}
           style={{ objectPosition: block.objectPosition || '50% 50%' }}
         />
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-white/[0.035]" />
-        <span className="pointer-events-none absolute -inset-12 opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100 [background:radial-gradient(circle_at_72%_18%,rgba(212,175,55,0.12),transparent_38%)]" />
-      </motion.span>
-      <span className="pointer-events-none absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/65 opacity-0 backdrop-blur-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:opacity-100">
+        <span className="essay-image-shade" />
+        <span className="essay-image-glow" />
+      </span>
+      <span className="essay-image-expand">
         <Maximize2 size={15} aria-hidden="true" />
       </span>
     </motion.button>
@@ -210,7 +202,9 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
   return (
     <>
       <motion.figure layout className="my-12">
-        {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
+        <div className="mx-auto" style={{ maxWidth: sourceWidth }}>
+          {block.tilt === false ? image : <TiltCard intensity={4}>{image}</TiltCard>}
+        </div>
         <ImageMeta block={block} />
       </motion.figure>
 
@@ -233,7 +227,7 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
               exit={{ opacity: 0 }}
               transition={{ duration: reduceMotion ? 0.12 : 0.28 }}
               style={reduceMotion ? undefined : { backdropFilter: 'blur(12px)' }}
-              className="theme-dark-island theme-dark-island-text fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-3 outline-none sm:p-5"
+              className="essay-lightbox theme-dark-island theme-dark-island-text"
               onPointerDown={(event) => {
                 if (event.currentTarget === event.target) {
                   // Do not let the backdrop's compatibility mouse event steal
@@ -250,69 +244,26 @@ function ImageBlock({ block }: { block: Block<'image'> }) {
                 animate={{ scale: 1 }}
                 exit={reduceMotion ? undefined : { scale: 0.985 }}
                 transition={{ duration: reduceMotion ? 0.12 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-                className="relative flex max-h-[94vh] max-w-[96vw] flex-col items-center"
+                className="essay-lightbox-sheet"
               >
-                <div className="relative flex max-h-[86vh] max-w-[94vw] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-[0_35px_120px_rgba(0,0,0,0.75)]">
-                  <motion.img
-                    src={imageSrc}
-                    alt={block.alt}
-                    decoding="async"
-                    drag={zoomed}
-                    dragMomentum={false}
-                    dragElastic={0.08}
-                    animate={{ scale: zoomed ? 1.65 : 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                    onDoubleClick={() => setZoomed((value) => !value)}
-                    className={`max-h-[84vh] max-w-[94vw] select-none object-contain ${zoomed ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                  />
-                  <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
-                </div>
+                <LightboxFigure block={block} imageSrc={imageSrc} captionId={captionId} reduceMotion={reduceMotion} />
+              </motion.div>
 
-                <div className="mt-3 flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-1">
-                  <p id={captionId} className="theme-dark-island-muted min-w-0 flex-1 text-xs leading-relaxed">
-                    {block.caption}
-                    {block.credit ? <span className="theme-dark-island-subtle"> · {block.credit}</span> : null}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {block.sourceUrl && (
-                      <a
-                        href={block.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="theme-dark-island-accent inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/45 px-3 text-[9px] font-bold uppercase tracking-[0.14em] transition hover:border-luxury-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-island-accent)]"
-                      >
-                        Источник <ExternalLink size={11} />
-                      </a>
-                  )}
-                  <motion.button
-                    type="button"
-                    onClick={() => setZoomed((value) => !value)}
-                    whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/60 transition hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70"
-                    aria-label={zoomed ? 'Уменьшить изображение' : 'Увеличить изображение'}
-                    aria-pressed={zoomed}
-                  >
-                    {zoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
-                  </motion.button>
-                </div>
-              </div>
+              <motion.button
+                ref={closeRef}
+                type="button"
+                onClick={closeLightbox}
+                whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+                className="essay-lightbox-close"
+                aria-label="Закрыть изображение"
+              >
+                <X size={20} aria-hidden="true" />
+              </motion.button>
             </motion.div>
-
-            <motion.button
-              ref={closeRef}
-              type="button"
-              onClick={closeLightbox}
-              whileHover={reduceMotion ? undefined : { rotate: 4, scale: 1.05 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/75 backdrop-blur-md transition hover:border-luxury-gold/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold sm:right-5 sm:top-5 sm:h-12 sm:w-12"
-              aria-label="Закрыть изображение"
-            >
-              <X size={20} aria-hidden="true" />
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>,
-      document.body,
+          )}
+        </AnimatePresence>,
+        document.body,
       )}
     </>
   );

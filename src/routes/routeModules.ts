@@ -1,9 +1,7 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { matchPath, type To } from 'react-router';
 import routeContractData from './route-contract.json';
-import { applyTransientDiscoveryHead, type DiscoveryStateName } from './discoveryHead';
-import { canonicalRouteUrl } from './publicUrl';
-import { siteConfig } from '../config/site';
+import type { DiscoveryStateName } from './discoveryHead';
 
 type PageModule = { default: ComponentType };
 type PageImporter = () => Promise<PageModule>;
@@ -68,7 +66,7 @@ function createCachedImporter(importer: PageImporter): PageImporter {
   };
 }
 
-function isChunkLoadFailure(error: unknown) {
+export function isChunkLoadFailure(error: unknown) {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
   return /ChunkLoadError|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i.test(message);
 }
@@ -91,48 +89,33 @@ function clearRecoveryMarker(routeId: string) {
   try { window.sessionStorage.removeItem(`${CHUNK_RECOVERY_PREFIX}${routeId}`); } catch { /* session storage unavailable */ }
 }
 
-// Direct entry to a prerendered canonical page already has correct indexable SEO
-// metadata. Do not replace it with transient noindex while its lazy module or
-// content payload loads: a crawler may snapshot that intermediate document.
-// SPA navigation keeps the neutral loading head because its old canonical
-// belongs to a different URL. Genuine errors still switch to noindex.
-function hasMatchingPrerenderedReadyHead(record: Pick<RouteModuleRecord, 'discoveryState'>) {
-  if (typeof window === 'undefined' || record.discoveryState !== 'ready') return false;
-  const canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
-  const robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content;
-  const expected = canonicalRouteUrl(siteConfig.url, window.location.pathname);
-  return canonical === expected && robots?.startsWith('index,') === true;
+/** A cached lazy rejection is data, not permission to navigate. Only a
+ * boundary actually committed at the failing address can spend its reload. */
+export class RouteChunkFailure extends Error {
+  constructor(readonly routeId: string, readonly cause: unknown) {
+    super('ChunkLoadError');
+  }
 }
 
-async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load' | 'discoveryState'>) {
-  if (typeof window !== 'undefined' && !hasMatchingPrerenderedReadyHead(record)) {
-    applyTransientDiscoveryHead('loading', window.location.pathname);
-  }
+export function recoverMountedChunk(error: unknown) {
+  if (error instanceof RouteChunkFailure && canAttemptRecovery(error.routeId)) window.location.reload();
+}
 
+async function loadForRender(record: Pick<RouteModuleRecord, 'id' | 'load'>) {
+  let module: PageModule;
   try {
-    const module = await record.load();
-    clearRecoveryMarker(record.id);
-    return module;
-  } catch (firstError) {
-    if (!isChunkLoadFailure(firstError)) {
-      if (typeof window !== 'undefined') applyTransientDiscoveryHead('error', window.location.pathname);
-      throw firstError;
-    }
-
+    module = await record.load();
+  } catch (error) {
+    if (!isChunkLoadFailure(error)) throw error;
     await new Promise((resolve) => globalThis.setTimeout(resolve, 240));
-    try {
-      const module = await record.load();
-      clearRecoveryMarker(record.id);
-      return module;
-    } catch (secondError) {
-      if (!isChunkLoadFailure(secondError) || !canAttemptRecovery(record.id) || typeof window === 'undefined') {
-        if (typeof window !== 'undefined') applyTransientDiscoveryHead('error', window.location.pathname);
-        throw secondError;
-      }
-      window.location.reload();
-      return new Promise<PageModule>(() => undefined);
+    try { module = await record.load(); }
+    catch (cause) {
+      if (!isChunkLoadFailure(cause)) throw cause;
+      throw new RouteChunkFailure(record.id, cause);
     }
   }
+  clearRecoveryMarker(record.id);
+  return module;
 }
 
 function defineRoute(contract: RouteContractRecord): RouteModuleRecord {

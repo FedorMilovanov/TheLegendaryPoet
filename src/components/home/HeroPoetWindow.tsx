@@ -17,6 +17,7 @@ interface HeroPoetWindowProps {
   index: number;
 }
 
+const MotionLink = motion.create(Link);
 const pointerSpring = { stiffness: 205, damping: 27, mass: 0.7 };
 const HERO_PORTRAIT_SIZES = '(min-width: 1088px) 164px, (min-width: 1024px) calc((100vw - 204px) / 6 + 16px), (min-width: 912px) calc((100vw - 148px) / 6 + 16px), (min-width: 640px) calc((100vw - 88px) / 3 + 16px), (min-width: 368px) calc((100vw - 64px) / 3 + 16px), calc((100vw - 48px) / 2 + 16px)';
 
@@ -39,8 +40,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
   const [mediaReleased, setMediaReleased] = useState(() => (
     isHighPriority || (typeof document !== 'undefined' && document.readyState === 'complete')
   ));
-  const cardRef = useRef<HTMLDivElement>(null);
-  const boundsRef = useRef<DOMRect | null>(null);
+  const hitRef = useRef<HTMLAnchorElement>(null);
   const pointerFrameRef = useRef<number | null>(null);
   const latestPointerRef = useRef({ x: 0, y: 0 });
   const prefersReducedMotion = useReducedMotion();
@@ -68,22 +68,16 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
     }
   };
 
-  const cacheBounds = () => {
-    boundsRef.current = cardRef.current?.getBoundingClientRect() ?? null;
-  };
-
   const resetPointer = () => {
     cancelPointerFrame();
-    boundsRef.current = null;
     pointerX.set(0);
     pointerY.set(0);
   };
 
   const flushPointer = () => {
     pointerFrameRef.current = null;
-    const bounds = boundsRef.current ?? cardRef.current?.getBoundingClientRect() ?? null;
+    const bounds = hitRef.current?.getBoundingClientRect();
     if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
-    boundsRef.current = bounds;
 
     const normalizedX = Math.max(-0.5, Math.min(0.5, (latestPointerRef.current.x - bounds.left) / bounds.width - 0.5));
     const normalizedY = Math.max(-0.5, Math.min(0.5, (latestPointerRef.current.y - bounds.top) / bounds.height - 0.5));
@@ -91,7 +85,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
     pointerY.set(normalizedY);
   };
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: ReactPointerEvent<HTMLAnchorElement>) => {
     if (prefersReducedMotion || event.pointerType === 'touch') return;
     latestPointerRef.current = { x: event.clientX, y: event.clientY };
     if (pointerFrameRef.current === null) pointerFrameRef.current = requestAnimationFrame(flushPointer);
@@ -125,14 +119,20 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
   return (
     <motion.div
       data-hero-poet-window-shell
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 18, scale: 0.975 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={prefersReducedMotion
         ? { duration: 0 }
         : { delay: 0.075 * index, duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
       className="relative min-w-0 [perspective:900px]"
     >
-      <Link
+      <MotionLink
+        ref={hitRef}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={resetPointer}
+        onPointerCancel={resetPointer}
+        whileHover={prefersReducedMotion ? undefined : "raised"}
+        whileTap={prefersReducedMotion ? undefined : "pressed"}
         to={`/poets/${poet.id}`}
         data-hero-poet-window={poet.id}
         aria-label={`${poet.name} ${poet.birthYear}—${poet.deathYear ?? 'н. в.'} — открыть страницу поэта`}
@@ -140,16 +140,11 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
         className="group block rounded-t-[999px] outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-4 focus-visible:ring-offset-[#020811]"
       >
         <motion.div
-          ref={cardRef}
           data-hero-poet-window-surface
-          onPointerEnter={cacheBounds}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={resetPointer}
-          whileHover={prefersReducedMotion ? undefined : { y: -7, scale: 1.028 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+          variants={{ raised: { y: -7, scale: 1.028 }, pressed: { scale: 0.98 } }}
           style={prefersReducedMotion ? undefined : { rotateX, rotateY, transformPerspective: 900 }}
           transition={{ type: 'spring', stiffness: 285, damping: 27, mass: 0.7 }}
-          className="hero-poet-window-surface relative aspect-[4/5] overflow-visible rounded-t-[999px] [transform-style:preserve-3d]"
+          className="hero-poet-window-surface pointer-events-none relative aspect-[4/5] overflow-visible rounded-t-[999px] [transform-style:preserve-3d]"
         >
           <div data-hero-poet-window-glow className="hero-poet-window-glow pointer-events-none absolute -inset-[7px] rounded-t-[999px]" />
           <div aria-hidden="true" className="hero-poet-window-frame pointer-events-none absolute -inset-px rounded-t-[999px]" />
@@ -170,7 +165,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
                 fetchPriority={isHighPriority ? 'high' : 'low'}
                 data-hero-portrait-critical={isHighPriority ? 'true' : 'false'}
                 data-hero-portrait-released={mediaReleased ? 'true' : 'false'}
-                className="hero-poet-window-image h-full w-full scale-[1.04] object-cover grayscale contrast-125 opacity-75 saturate-[0.68]"
+                className="hero-poet-window-image h-full w-full object-cover grayscale contrast-125 opacity-75 saturate-[0.68]"
               />
             </motion.div>
 
@@ -185,7 +180,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
 
             <div
               aria-hidden="true"
-              className="hero-poet-window-shine pointer-events-none absolute -left-1/2 top-[-18%] h-[140%] w-[42%] rotate-[18deg] bg-gradient-to-r from-transparent via-white/16 to-transparent opacity-0 blur-[0.75px]"
+              className="hero-poet-window-shine pointer-events-none absolute -left-1/2 top-[-18%] h-[140%] w-[42%] bg-gradient-to-r from-transparent via-white/16 to-transparent opacity-0 blur-[0.75px]"
             />
 
             <div
@@ -196,7 +191,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
 
             <div
               data-hero-poet-window-label
-              className="hero-poet-window-label pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-2 pb-2 opacity-0"
+              className="hero-poet-window-label pointer-events-none absolute inset-x-0 bottom-0 px-2 pb-2 opacity-0"
             >
               <div className="hero-poet-window-label-panel theme-dark-island rounded-xl border border-cyan-200/15 px-2 py-1.5 text-center">
                 <div
@@ -210,7 +205,7 @@ export default function HeroPoetWindow({ poet, index }: HeroPoetWindowProps) {
             </div>
           </div>
         </motion.div>
-      </Link>
+      </MotionLink>
     </motion.div>
   );
 }

@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { choose, expectFragment } from './reader-navigation.mjs';
+import { chapter, failOnce, payload, simonov, unavailable, withHeldRequest, yesenin } from './route-recovery.mjs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
@@ -292,4 +294,47 @@ test.describe('analytics consent fixed-chrome geometry', () => {
     await expect(immersive).toBeHidden({ timeout: 8_000 });
     await expect(banner).toBeVisible();
   });
+});
+
+for (const back of [false, true]) {
+  test(`grant during a pending chapter waits for ${back ? 'the restored article' : 'a successful explicit retry'}`, async ({ page, context }) => {
+    await context.route('https://www.googletagmanager.com/**', r => r.abort());
+    await context.route('https://mc.yandex.ru/**', r => r.abort());
+    await withHeldRequest(context, payload, failOnce(unavailable), async ({ release, attempts }) => {
+      await page.goto(BASE_URL + yesenin, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('main > [aria-live="polite"][aria-atomic="true"]')).toContainText('Сергей Есенин');
+      await choose(page, chapter); await expect.poll(attempts).toBe(1);
+      await expect(page).toHaveTitle(/Загрузка страницы/i);
+      await page.getByRole('button', { name: 'Разрешить', exact: true }).click();
+      await flushRouteEffects(page); expect(await pageViews(page)).toEqual([]);
+      expect(await page.locator('script[data-tlp-analytics-provider]').count()).toBe(0);
+      if (back) {
+        await page.goBack(); await expect(page).toHaveTitle(/Сергей Есенин/i); release();
+      } else {
+        release(); await expect(page).toHaveTitle(/Ошибка загрузки страницы/i);
+        expect(await pageViews(page)).toEqual([]);
+        await page.getByRole('button', { name: 'Повторить попытку' }).click(); await expectFragment(page, 'fire');
+      }
+      const path = back ? yesenin : simonov;
+      await expect.poll(async () => (await pageViews(page)).map(v => v.page_path)).toEqual([path]);
+      expect((await pageViews(page))[0].page_title).toBe(await page.title());
+      const hits = await page.evaluate(() => (window.ym?.a || []).filter(args => args[1] === 'hit').map(args => new URL(args[2]).pathname));
+      expect(hits).toEqual([path]);
+    });
+  });
+}
+
+test('consenting on a shared source reports the page, never the quote or its address', async ({ page, context }) => {
+  await context.route('https://www.googletagmanager.com/**', r => r.abort());
+  await context.route('https://mc.yandex.ru/**', r => r.abort());
+  const path = yesenin + '/', url = BASE_URL + path;
+  const source = 'source-yes2-pss-declarations-vol7k1';
+  await page.goto(url + '#' + source + ':~:text=' + encodeURIComponent('литературные декларации'), { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#' + source)).toBeFocused();
+  expect(await pageViews(page)).toEqual([]); await expect(page.locator('script[data-tlp-analytics-provider]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Разрешить', exact: true }).click();
+  await expect.poll(async () => (await pageViews(page)).length).toBe(1);
+  const [view] = await pageViews(page);
+  expect(view).toMatchObject({ page_path: path, page_location: url, page_title: await page.title() });
+  expect(await page.evaluate(() => window.ym.a.filter(args => args[1] === 'hit').map(args => args[2]))).toEqual([url]);
 });

@@ -47,15 +47,9 @@ The route importer caches its current promise. Repeated hover or focus cannot cr
 
 A visitor can keep an older HTML document open while a new deployment replaces hashed JavaScript assets. Navigation can then fail with a stale chunk URL.
 
-The render loader:
+The render loader retries a recognized dynamic-import or CSS-preload failure once after 240 ms. If it still fails, the rejection carries the route ID. An importer (including a cached late rejection) cannot change the document head, navigate, or spend the reload allowance. Only a recovery boundary **mounted at that address and Router visit** may reload automatically, once per route within the 45-second session-storage window, and only while online. A successful module load clears its marker. A blocked marker, inaccessible storage or an offline browser leaves manual recovery available.
 
-1. classifies only known dynamic-import and CSS-preload failures;
-2. retries the same route once after a short delay;
-3. when still online and still failing, performs one controlled document reload;
-4. records the recovery attempt in session storage for 45 seconds;
-5. falls through to the page error boundary instead of entering a reload loop.
-
-A successful page load clears its recovery marker.
+If Back cancels the request, its late success or failure must leave the restored article, audio session, and metadata alone. Forward to the genuinely failing destination can still use its own recovery.
 
 ## Loading and page failure states
 
@@ -69,17 +63,19 @@ The page-scoped `ErrorBoundary` distinguishes:
 - stale or unavailable route chunk;
 - a general page render error.
 
-Recovery offers a real reload and a route back to the home page. Stack traces and implementation details are not exposed publicly.
+A primary data/render failure offers **Повторить попытку**: replace the failed visit (same path, query and fragment), without reloading the document, resetting the audio session or adding a Back step. Explicit search re-selection also starts a fresh visit. Do not key healthy pages by visit or automatically retry a rejected body on re-render. A broken module retains the real **Обновить страницу** action. Both surfaces link home and expose no stack traces.
+
+`discoveryHead.ts` reconciles the live browser pathname with the mounted outlet, rather than letting whichever promise settles last publish metadata. Keep a matching direct prerender indexable. A different pending SPA address gets neutral loading metadata even if only its primary JSON is delayed. A committed error or missing item has no canonical, `og:url` or route schema. Missing essays, poets and tracks use the actual `not-found` policy, not just a robots override. An existing nonpublished track can still have a `noindex` self canonical. On canceled navigation restore the mounted page's own head, including article fields.
 
 ## Focus and announcements
 
 The main content element is programmatically focusable. After a pathname change:
 
 - the page title is announced in a polite live region;
-- focus moves to the main content without changing scroll position;
+- the settled scroll request focuses the main landmark without scrolling, unless the reader has already taken focus or started navigating the page;
 - the first document load is not interrupted.
 
-Query-only filter changes do not steal focus.
+The title/analytics notification does not move focus. Query-only filter changes do not steal focus or mint a new semantic view. Consent granted during a pending navigation cannot replay the previous page: wait for a committed page at the live address, including Back to a still-mounted article. Never report a loading or recovery title as a successful page view.
 
 ## Scroll behavior
 
@@ -97,15 +93,24 @@ its validator enforces the actual native-scroll behavior and rejects wheel inter
 | `runtime.scrollValidator` | `scripts/validate-scroll-runtime.ts` |
 <!-- runtime-facts:scroll:end -->
 
-The scroll runtime owns browser history restoration:
+`SmoothScroll` captures the leaving entry **before** a shorter destination can clamp the document. If search has fixed the body, use the outer lock’s unlocked position. `scrollHistory.ts` retains at most 80 entries in memory (not DOM nodes, local storage or a log of scroll events). A native history entry key, or a Router key / opaque `history.state` stamp on older engines, distinguishes even two visits to the same chapter URL. Never add entries just to store a bookmark.
 
-- PUSH navigation starts at the top;
-- POP navigation restores the saved position for that history entry;
-- stored positions are bounded to 80 entries;
-- hash targets are retried while lazy page content mounts;
-- malformed percent-encoded hashes cannot throw;
-- hash navigation compensates for the fixed header and focuses the resolved target without a second scroll;
-- explicit anchor/scroll-to-top commands use native browser scrolling, with animation disabled under reduced motion.
+`RouteSettled` applies the arriving entry inside the route’s Suspense boundary, not against the outgoing article or the loading shell:
+
+- A new path without a fragment starts at the top. First load without a fragment and query-only filter updates leave the reader alone.
+- A new or explicitly reselected fragment scrolls to the target with 96px clearance and focuses it without a second scroll. Selecting the current chapter in search does not add a duplicate Back step. Malformed percent escapes cannot throw.
+- A newly shared passage may carry a browser text directive after the ordinary fragment. Decode only the address before the literal `:~:`. If it is a reading address, measure the selected glyph after the owning content is ready, excluding an essay reveal’s temporary translation. Native highlighting is optional. Keep the native `:target` margin at the same 96px as programmatic placement: a browser can finish its element fallback after focus has settled. Reuse the same deadline, focus handoff, overlay/reader arbitration and POP bookmarks; do not start a second scroll loop.
+- A committed error or 404 marks its real heading with `data-route-unavailable`. On arrival expose that heading and its recovery controls instead of observing for an absent fragment. Wait for a covering dialog to unlock; do not take its input focus. An error card's saved coordinates are not a bookmark in a subsequently readable article.
+- On Back **and** Forward, the saved departure wins over an old fragment in the address bar. Unchanged layout restores exact coordinates; after reflow, a named reading flow plus child index and fraction restore the paragraph or verse line. An offscreen hash target does not take focus away from that passage.
+- A Back that cancels a still-loading destination can leave the original React page mounted. Resume that entry even without a new route commit. Its focus handoff belongs to the painted visit, not to a render attempt: Forward must still focus the newly painted destination. An explicit click on the current fragment is a jump, not such a traversal.
+- Optional content remains non-blocking. If a fragment is missing, or a `ReaderLayoutPending` marker precedes the passage (e.g. the full biography above a poem), a child-list observer waits for actual layout. It rechecks on registration, has a 15-second deadline and is cleaned up on exit. Later sections do not block earlier targets.
+- Until the jump **and its focus transfer** finish, `pendingRouteScroll.ts` yields to a reader’s scroll gesture, pointer press, non-modifier keystroke, or focus on another control. The listener is passive and scoped to that one request. Hover, viewport/layout changes, a modifier alone, and the normal focus on `main` or the fragment do not cancel a jump. Input within a covering overlay belongs to the overlay.
+- Yielding cancels the pending observer, deadline, unlock callback and focus frames. Keep the URL. Capture the reader’s actual position on departure, even when the original jump never ran. Explicitly selecting the same fragment is a new request, not a permanently disabled target.
+- If a reader opens a dialog **after the address changes but before its route paints**, the dialog claims that arrival, even when joining a lock held by an exiting viewer. Save X/Y, not a paragraph from the outgoing document. Closing the dialog must not replay the earlier jump. A subsequent navigation, including explicit re-selection, supersedes this claim. A dialog already open *before* navigation still releases the body before normal restoration. Ordinary scroll, explicit scroll-to-top and reduced-motion behavior remain native.
+
+`qa/reader-history.spec.mjs` measures a point inside the **same passage** through ordinary links, search, native fragments, interrupted navigation and viewport changes. The delayed-poem cases hold the supplementary response while the reader types, follows focus, scrolls or chooses the target again. A separate set holds the poet route module itself while a second search opens, dismisses or navigates. Both check the viewport and focus **after** the destination paints. URL equality or finding an `h1` alone is not evidence that the destination is painted correctly.
+
+`qa/route-recovery.spec.mjs` intercepts the actual primary payload and lazy module separately. It checks the next usable control, request and document counts, audio continuity, metadata and the original paragraph; compensating with a full document reload is not an in-place recovery. Direct prerender and HTTP status assertions belong to the Pages-like route audit, not ordinary SPA preview. Consent tests use the separate build with QA provider IDs.
 
 ## Custom cursor
 

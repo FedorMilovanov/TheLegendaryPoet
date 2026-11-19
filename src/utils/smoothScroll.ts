@@ -1,4 +1,13 @@
-const FIXED_HEADER_OFFSET = 96;
+import { focusProgrammatically } from './focusRuntime';
+
+export function decodeHash(hash: string) {
+  // Some engines expose the literal directive instead of hiding it. Do not
+  // decode or interpret the quote. An encoded delimiter is part of the ID.
+  const raw = hash.replace(/^#/, '').split(':~:', 1)[0];
+  try { return decodeURIComponent(raw); } catch { return raw; }
+}
+
+export const FIXED_HEADER_OFFSET = 96;
 const pauseTokens = new Set<symbol>();
 
 /**
@@ -34,4 +43,5 @@ export function scrollToId(id: string) {
     top: Math.max(0, top),
     behavior: prefersReduced ? 'auto' : 'smooth',
   });
+  focusProgrammatically(el);
 }

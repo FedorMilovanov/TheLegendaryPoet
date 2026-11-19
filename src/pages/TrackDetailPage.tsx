@@ -59,7 +59,7 @@ export default function TrackDetailPage() {
     image: track?.wideCoverUrl ?? track?.coverUrl,
     imageAlt: track ? `Обложка: ${track.title} — ${track.poet}` : undefined,
     breadcrumbs,
-    robots: track && track.availability === 'published' ? undefined : 'noindex,follow',
+    state: !track ? 'not-found' : track.availability === 'published' ? 'ready' : 'noindex',
     jsonLd: track
       ? buildMusicPageSchema({
           title,
@@ -77,7 +77,7 @@ export default function TrackDetailPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#050505] px-6 text-center">
         <div className="w-full max-w-4xl">
           <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
-          <h1 className="font-serif text-4xl text-white">Трек не найден</h1>
+          <h1 data-route-unavailable className="font-serif text-4xl text-white">Трек не найден</h1>
           <Link to="/music" className="mt-6 inline-flex text-luxury-gold">Вернуться в музыку</Link>
         </div>
       </div>

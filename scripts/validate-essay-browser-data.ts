@@ -116,8 +116,10 @@ if (relatedEssaysSource.includes('getBrowserEssayCatalog(')) {
 }
 
 const poetDetailSource = readFileSync(poetDetailPath, 'utf8');
-if (!/<Suspense\s+fallback=\{null\}>[\s\S]*?<RelatedEssays\s+poetId=\{poet\.id\}\s*\/>[\s\S]*?<\/Suspense>/.test(poetDetailSource)) {
-  throw new Error('PoetDetailPage must isolate RelatedEssays behind a local null-fallback Suspense boundary');
+const pendingMarkerSource = readFileSync('src/components/ReaderLayoutPending.tsx', 'utf8');
+if (!pendingMarkerSource.includes('return <span hidden data-reader-layout-pending="" />;') ||
+    !/<Suspense\s+fallback=\{<ReaderLayoutPending\s*\/>\}>\s*<RelatedEssays\s+poetId=\{poet\.id\}\s*\/>[\s\S]*?<\/Suspense>/.test(poetDetailSource)) {
+  throw new Error('PoetDetailPage must isolate RelatedEssays behind a local non-blocking, hidden-marker Suspense boundary');
 }
 
 const essayPageSource = readFileSync(essayPagePath, 'utf8');
@@ -127,8 +129,8 @@ if (essayPageSource.includes('use(getBrowserEssayCatalog(')) {
 if (!essayPageSource.includes('getOptionalBrowserEssayCatalog')) {
   throw new Error('EssayPage series enrichment must use the fail-soft optional catalog authority');
 }
-if (!/<Suspense\s+fallback=\{null\}>[\s\S]*?<EssaySeriesNavigation\s+essay=\{essay\}\s+visitKey=\{location\.key\}\s*\/>[\s\S]*?<\/Suspense>/.test(essayPageSource)) {
-  throw new Error('EssayPage must isolate series navigation behind a local null-fallback Suspense boundary');
+if (!/<Suspense\s+fallback=\{<ReaderLayoutPending\s*\/>\}>\s*<EssaySeriesNavigation\s+essay=\{essay\}\s+visitKey=\{location\.key\}\s*\/>[\s\S]*?<\/Suspense>/.test(essayPageSource)) {
+  throw new Error('EssayPage must isolate series navigation behind a local, non-blocking hidden layout marker');
 }
 
 console.log(

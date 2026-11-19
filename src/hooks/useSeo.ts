@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useContext, useLayoutEffect } from 'react';
 import { siteConfig } from '../config/site';
 import {
   buildArticlePageSchema,
@@ -7,7 +7,8 @@ import {
   type SeoBreadcrumb,
 } from '../lib/seoSchema';
 import {
-  applyDiscoveryHead,
+  ownDiscoveryHead,
+  RouteHeadAddress,
   discoveryStateForPath,
   getDiscoveryPolicy,
   type DiscoveryStateName,
@@ -51,11 +52,13 @@ export function useSeo({
   robots,
   jsonLd,
 }: SeoOptions) {
+  const href = useContext(RouteHeadAddress);
   const state = requestedState ?? discoveryStateForPath(path);
   const policy = getDiscoveryPolicy(state);
   const robotsValue = robots ?? (path === '/archive' ? 'noindex,nofollow' : policy.robots);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (href === null) return;
     const img = absUrl(image || '/og-image.jpg');
     const schema = policy.schema
       ? (jsonLd || (type === 'article'
@@ -73,7 +76,7 @@ export function useSeo({
         : buildWebPageSchema({ title, description, path, image: img, breadcrumbs })))
       : null;
 
-    applyDiscoveryHead({
+    return ownDiscoveryHead(href, {
       state,
       path,
       title,
@@ -88,6 +91,7 @@ export function useSeo({
       jsonLdText: schema ? JSON.stringify(schema) : null,
     });
   }, [
+    href,
     title,
     description,
     path,

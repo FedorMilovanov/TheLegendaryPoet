@@ -1,6 +1,7 @@
 import { Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
+import ReaderLayoutPending from '../components/ReaderLayoutPending';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
@@ -38,7 +39,7 @@ function EssaySeriesNavigation({ essay, visitKey }: { essay: Essay; visitKey: st
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {previous ? (
-          <Link to={`/essays/${previous.slug}`} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-left transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
+          <Link to={`/essays/${previous.slug}`} className="group flex min-h-24 items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-left transition-[border-color,background-color] duration-300 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
             <ArrowLeft size={16} className="shrink-0 theme-control-action transition group-hover:-translate-x-1" />
             <span>
               <span className="block text-[9px] uppercase tracking-[0.16em] theme-functional-muted">Предыдущая часть</span>
@@ -47,7 +48,7 @@ function EssaySeriesNavigation({ essay, visitKey }: { essay: Essay; visitKey: st
           </Link>
         ) : <span />}
         {next ? (
-          <Link to={`/essays/${next.slug}`} className="group flex min-h-24 items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-right transition-[transform,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
+          <Link to={`/essays/${next.slug}`} className="group flex min-h-24 items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-right transition-[border-color,background-color] duration-300 hover:border-luxury-gold/25 hover:bg-luxury-gold/[0.03]">
             <span>
               <span className="block text-[9px] uppercase tracking-[0.16em] theme-functional-muted">Следующая часть</span>
               <span className="mt-1 block font-serif text-lg theme-text">{next.title}</span>
@@ -66,6 +67,7 @@ export default function EssayPage() {
   const essay = use(slug ? getBrowserEssayBySlug(slug, location.key) : missingEssayPromise);
   const poet = essay?.poetId ? poets.find((candidate) => candidate.id === essay.poetId) : undefined;
   const articleRef = useRef<HTMLElement>(null);
+  const desktopTocRef = useRef<HTMLElement>(null);
   const routePath = `/essays/${slug ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = essay
     ? [
@@ -91,7 +93,7 @@ export default function EssayPage() {
     author: essay?.author,
     keywords: essay?.tags.join(','),
     breadcrumbs,
-    robots: essay ? undefined : 'noindex,follow',
+    state: essay ? undefined : 'not-found',
     jsonLd: essay
       ? buildArticlePageSchema({
           title: essay.title,
@@ -113,7 +115,7 @@ export default function EssayPage() {
       <div className="min-h-screen bg-[#050505] pb-24 pt-32 text-white">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
-          <h1 className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
+          <h1 data-route-unavailable className="mb-4 font-serif text-4xl">{titleCase('Статья не найдена')}</h1>
           <Link to="/articles" className="inline-flex min-h-11 items-center text-cyan-300 hover:text-cyan-200">Вернуться к статьям</Link>
         </div>
       </div>
@@ -127,7 +129,7 @@ export default function EssayPage() {
   return (
     <div className="min-h-screen bg-[#050505] pb-24 pt-28 text-white">
       <ReadingProgress articleRef={articleRef} />
-      <SectionChip toc={toc} />
+      <SectionChip toc={toc} articleRef={articleRef} desktopTocRef={desktopTocRef} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} className="mb-4" />
         <Link
@@ -143,7 +145,7 @@ export default function EssayPage() {
           <aside aria-label="Оглавление и источники статьи" className="hidden lg:block">
             <div className="reader-sticky-panel sticky top-28 [--reader-sticky-top:7rem]">
               {toc.length > 0 && (
-                <nav className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl">
+                <nav ref={desktopTocRef} className="rounded-2xl border border-luxury-gold/10 bg-[#0a0a0a]/70 p-5 backdrop-blur-xl">
                   <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] theme-control-action">Оглавление</div>
                   <ul className="space-y-1">
                     {toc.map((section) => (
@@ -160,7 +162,7 @@ export default function EssayPage() {
               {sourceCount > 0 && (
                 <a
                   href="#sources"
-                  className="theme-soft-surface mt-4 flex min-h-11 items-center gap-3 rounded-2xl border border-luxury-gold/12 bg-luxury-gold/[0.025] p-4 text-sm theme-control-action transition hover:-translate-y-0.5 hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
+                  className="theme-soft-surface mt-4 flex min-h-11 items-center gap-3 rounded-2xl border border-luxury-gold/12 bg-luxury-gold/[0.025] p-4 text-sm theme-control-action transition-colors hover:border-luxury-gold/30 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
                 >
                   <FileText size={15} className="shrink-0 theme-control-action" />
                   <span>
@@ -176,7 +178,7 @@ export default function EssayPage() {
               {poet && (
                 <Link
                   to={`/poets/${poet.id}`}
-                  className="theme-soft-surface mt-4 flex min-h-11 items-center gap-2 rounded-2xl border border-cyan-400/15 bg-[#061018]/60 p-4 text-sm theme-control-action transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
+                  className="theme-soft-surface mt-4 flex min-h-11 items-center gap-2 rounded-2xl border border-cyan-400/15 bg-[#061018]/60 p-4 text-sm theme-control-action transition-colors hover:border-cyan-400/35 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tlp-focus-ring)]"
                 >
                   <BookOpen size={15} /> Страница поэта: {poet.name}
                 </Link>
@@ -184,12 +186,12 @@ export default function EssayPage() {
             </div>
           </aside>
 
-          <article ref={articleRef} className="min-w-0 max-w-3xl">
-            <ShareLine scopeRef={articleRef} />
+          <article data-share-scope ref={articleRef} className="min-w-0 max-w-3xl">
+            <ShareLine scopeRef={articleRef} path={routePath} />
             <ArticleRenderer blocks={essay.blocks} sources={essay.sources} />
 
             {essay.series && (
-              <Suspense fallback={null}>
+              <Suspense fallback={<ReaderLayoutPending />}>
                 <EssaySeriesNavigation essay={essay} visitKey={location.key} />
               </Suspense>
             )}

@@ -105,12 +105,18 @@ jobs:
           qa/mobile-platforms.spec.mjs
           qa/community-request-topology.spec.mjs
           qa/reader-journeys.spec.mjs
+          qa/reader-dialog-return.spec.mjs
+          qa/reader-history.spec.mjs
+          qa/shared-passage.spec.mjs
+          qa/command-navigation.spec.mjs
+          qa/route-recovery.spec.mjs
           qa/fragment-navigation.spec.mjs
           qa/premium-reader-certification.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
           qa/hover-stability.spec.mjs
+          qa/hover-surfaces.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           qa/focus-visibility.spec.mjs
           qa/image-integrity.spec.mjs

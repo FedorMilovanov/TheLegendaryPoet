@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const mobileSpec = /(fragment-navigation|mobile-platforms|mobile-home-webkit|analytics-route|yesenin-part-one|articles-catalog|secondary-data-failure|hover-stability|brand-emblem|brand-reference-comparison|community-request-topology|reader-journeys|premium-reader-certification|poets-status|rating-urlstate|audio-completion|hall-production-route)\.spec\.mjs/;
-const finePointerOnly = /(?:TiltCard follows live pointer input without a transition backlog|article title remains painted throughout live 3D pointer tracking)/;
+const mobileSpec = /(fragment-navigation|mobile-platforms|mobile-home-webkit|analytics-route|yesenin-part-one|articles-catalog|secondary-data-failure|hover-stability|hover-surfaces|brand-emblem|brand-reference-comparison|community-request-topology|reader-journeys|reader-dialog-return|reader-history|shared-passage|route-recovery|command-navigation|premium-reader-certification|poets-status|rating-urlstate|audio-completion|hall-production-route)\.spec\.mjs/;
+const finePointerOnly = /(?:@fine-pointer|TiltCard follows live pointer input without a transition backlog|article title remains painted throughout live 3D pointer tracking)/;
 
 export default defineConfig({
   testDir: './qa',
@@ -42,6 +42,7 @@ export default defineConfig({
       testMatch: mobileSpec,
       grepInvert: [
         finePointerOnly,
+        /@chromium-only/,
         /mobile engine rendering, safe area, images and runtime/,
         /mobile dock, search sheet and tap targets remain usable/,
       ],
@@ -55,7 +56,8 @@ export default defineConfig({
     },
     {
       name: 'webkit-reader-desktop',
-      testMatch: /premium-reader-certification\.spec\.mjs/,
+      testMatch: /(premium-reader-certification|hover-surfaces|reader-dialog-return|reader-history|shared-passage|route-recovery|command-navigation)\.spec\.mjs/,
+      grepInvert: /@compact-touch|@chromium-only/,
       use: {
         browserName: 'webkit',
         viewport: { width: 1440, height: 1000 },

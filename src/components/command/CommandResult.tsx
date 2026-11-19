@@ -6,9 +6,10 @@ interface CommandResultProps {
   active: boolean;
   optionId: string;
   onSelect: () => void;
+  onPoint: () => void;
 }
 
-export default function CommandResult({ item, active, optionId, onSelect }: CommandResultProps) {
+export default function CommandResult({ item, active, optionId, onSelect, onPoint }: CommandResultProps) {
   return (
     <button
       type="button"
@@ -16,9 +17,10 @@ export default function CommandResult({ item, active, optionId, onSelect }: Comm
       role="option"
       aria-selected={active}
       tabIndex={-1}
+      onPointerMove={(event) => { if (!active && event.pointerType !== 'touch') onPoint(); }}
       onClick={onSelect}
       data-active={active ? 'true' : 'false'}
-      className="theme-modal-result w-full rounded-2xl border p-4 text-left transition hover:border-cyan-400/25"
+      className="theme-modal-result w-full rounded-2xl border p-4 text-left transition-colors"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">

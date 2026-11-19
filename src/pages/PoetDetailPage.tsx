@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
+import ReaderLayoutPending from '../components/ReaderLayoutPending';
 import { poets } from '../data/poets';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
@@ -31,22 +32,22 @@ const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const basePoet = poets.find((candidate) => candidate.id === id);
-  const [loadedPoet, setLoadedPoet] = useState<{ id: string; value: Poet } | null>(null);
-  const [biographyError, setBiographyError] = useState(false);
+  const [loadedPoet, setLoadedPoet] = useState<{ id: string; value?: Poet } | null>(null);
   useEffect(() => {
     if (!id || !supplementaryPoetIds.includes(id)) return;
     const controller = new AbortController();
-    setBiographyError(false);
     loadSupplementaryPoet(id, controller.signal)
       .then((value) => {
         if (!controller.signal.aborted) setLoadedPoet({ id, value });
       })
       .catch(() => {
-        if (!controller.signal.aborted) setBiographyError(true);
+        if (!controller.signal.aborted) setLoadedPoet({ id });
       });
     return () => controller.abort();
   }, [id]);
-  const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
+  const detail = loadedPoet?.id === id ? loadedPoet : null;
+  const poet = detail?.value ?? basePoet;
+  const pendingBiography = !detail && !!id && supplementaryPoetIds.includes(id);
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = [
@@ -63,7 +64,7 @@ export default function PoetDetailPage() {
     image: poet?.photo,
     imageAlt: poet ? `Портрет: ${poet.fullName || poet.name}` : undefined,
     breadcrumbs,
-    robots: poet ? undefined : 'noindex,follow',
+    state: poet ? undefined : 'not-found',
     jsonLd: poet
       ? buildPoetPageSchema({
           title: `${poet.name} — биография, стихи и анализ`,
@@ -81,7 +82,7 @@ export default function PoetDetailPage() {
       <div className="theme-page-surface flex min-h-screen items-center justify-center pb-20 pt-32">
         <div className="mx-auto w-full max-w-4xl px-4 text-center">
           <Breadcrumbs items={breadcrumbs} className="mb-8 text-left" />
-          <h1 className="theme-text mb-4 font-serif text-4xl">{'Поэт Не Найден'}</h1>
+          <h1 data-route-unavailable className="theme-text mb-4 font-serif text-4xl">{'Поэт Не Найден'}</h1>
           <Link to="/poets" className="font-medium text-luxury-gold transition-colors hover:text-luxury-gold-light">
             ← Вернуться к списку поэтов
           </Link>
@@ -109,32 +110,31 @@ export default function PoetDetailPage() {
             <FamousWorks works={poet.famousWorks} />
           </aside>
 
-          <div ref={contentRef} className="space-y-16 lg:col-span-8">
-            <ShareLine scopeRef={contentRef} />
-            {biographyError && supplementaryPoetIds.includes(poet.id) && (
+          <div data-share-scope ref={contentRef} className="space-y-16 lg:col-span-8">
+            <ShareLine scopeRef={contentRef} path={routePath} />
+            {pendingBiography && <ReaderLayoutPending />}
+            {detail && !detail.value && (
               <p role="status" className="text-sm text-luxury-gold">
                 Не удалось загрузить полную биографию.
               </p>
             )}
-            <p className="theme-text poet-bio-intro">
+            <p id="bio-intro" className="theme-text poet-bio-intro">
               "{poet.shortBio}"
             </p>
             {poet.poems.length > 1 && (
               <a className="poet-contents-jump" href={`#${contentsId}`}>К оглавлению стихов <span aria-hidden="true">↓</span></a>
             )}
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<ReaderLayoutPending />}>
               <RelatedEssays poetId={poet.id} />
-
-            <PoetVideos poet={poet} />
-
+              <PoetVideos poet={poet} />
             </Suspense>
 
             <div className="space-y-8">
               <h2 className="poet-detail-kicker">
                 Полная Биография
               </h2>
-              <div className="poetry-text space-y-6 text-xl font-light leading-[1.8] text-luxury-gray-light">
+              <div data-reading-flow="biography" data-share-id={poet.fullBio === poet.shortBio ? 'bio-intro' : undefined} className="poetry-text space-y-6 text-xl font-light leading-[1.8] text-luxury-gray-light">
                 {poet.fullBio.split('\n\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
@@ -161,9 +161,9 @@ export default function PoetDetailPage() {
               </div>
             )}
 
-            <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
+            <Suspense fallback={<ReaderLayoutPending />}><PoetSources poet={poet} /></Suspense>
 
-            {poet.moralPortrait && <Suspense fallback={null}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
+            {poet.moralPortrait && <Suspense fallback={<ReaderLayoutPending />}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 

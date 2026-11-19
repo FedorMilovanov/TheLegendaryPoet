@@ -31,14 +31,25 @@ const htmlClasses = new TokenList();
 const scrollCalls: Array<[number, number]> = [];
 const documentListeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
 
+const restoredEvents: string[] = [];
+const readingFlows: object[] = [];
 const fakeWindow = {
   scrollX: 7,
   scrollY: 321,
   innerWidth: 1200,
+  innerHeight: 600,
+  location: { href: 'https://example.test/essay' },
+  history: { state: { key: 'original' } },
+  dispatchEvent: (event: Event) => { restoredEvents.push(event.type); },
   getComputedStyle: () => ({ paddingRight: '4px' }),
-  scrollTo: (x: number, y: number) => scrollCalls.push([x, y]),
+  scrollTo: (x: number, y: number) => {
+    scrollCalls.push([x, y]);
+    fakeWindow.scrollX = x;
+    fakeWindow.scrollY = y;
+  },
 };
 const fakeDocument = {
+  querySelectorAll: (selector: string) => selector === '[data-reading-flow]' ? readingFlows : [],
   body: { style: bodyStyle, classList: bodyClasses },
   documentElement: { style: htmlStyle, classList: htmlClasses, clientWidth: 1180 },
   addEventListener: (type: string, listener: (event: KeyboardEvent) => void) => {
@@ -148,8 +159,76 @@ expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close th
 expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
 expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
 
+// A real reading block, halfway across the reading line before reflow. Only
+// the outermost lease may capture/reapply it; the body can report Y=0 while fixed.
+let reflow = false;
+const box = (docTop: number, height: number) => ({
+  top: docTop - fakeWindow.scrollY, bottom: docTop + height - fakeWindow.scrollY,
+  left: 0, right: reflow ? 360 : 768, width: reflow ? 360 : 768, height,
+});
+const flow = { dataset: { readingFlow: 'essay' }, children: [] as object[], getBoundingClientRect: () => box(210, reflow ? 2800 : 1600) };
+const block = { isConnected: true, parentElement: flow, getBoundingClientRect: () => box(reflow ? 875 : 475, reflow ? 240 : 100) };
+flow.children.push(block);
+readingFlows.push(flow);
+const outer = overlay.acquireOverlayLock('reader', connectedRoot());
+fakeWindow.scrollY = 0;
+const inner = overlay.acquireOverlayLock('nested-search', connectedRoot());
+reflow = true;
+fakeWindow.innerHeight = 500;
+inner.release();
+expect(fakeWindow.scrollY === 0 && scrollCalls.length === 4, 'a nested dismissal must not apply or replace the outer bookmark');
+outer.release();
+const restoredReadingY = fakeWindow.scrollY;
+expect(fakeWindow.scrollX === 7 && Math.abs(restoredReadingY - 825) < 0.001, 'reflow must restore the same point in the reading block at the new reading line');
+const unchanged = overlay.acquireOverlayLock('same-flow', connectedRoot());
+fakeWindow.scrollY = 0;
+fakeWindow.innerHeight = 560;
+const visit = { id: 'original', url: fakeWindow.location.href, pathname: '/essay', hash: '', search: '', applied: true, mainFocusPending: false };
+expect(Boolean(overlay.captureUnlockedPosition(visit).reading), 'the departure that supplied the lock keeps its passage');
+const unrelated = overlay.captureUnlockedPosition({ ...visit, id: 'another-entry' });
+expect(!unrelated.reading && unrelated.y === restoredReadingY, 'a second visit to the same URL may share pixels, never the old passage');
+unchanged.release();
+expect(fakeWindow.scrollY === restoredReadingY, 'a height change without flow movement must restore exact scroll coordinates');
+const navigated = overlay.acquireOverlayLock('reader-navigation', connectedRoot());
+fakeWindow.location.href += '#destination';
+reflow = false;
+navigated.release();
+expect(fakeWindow.scrollY === restoredReadingY, 'a stale reading bookmark must not be placed over a new fragment');
+expect(restoredEvents.filter(type => type === overlay.OVERLAY_SCROLL_RESTORED).length === scrollCalls.length,
+  'reading chrome must be rebased once per restored scroll, never on intermediate stack releases');
+
+// Dismiss from the initiating owner down. A newer overlay is not part of that
+// navigation; requesting closure must not release animated owners' leases.
+const retiring: string[] = [];
+const cover = (label: string) => overlay.acquireOverlayLock(label, connectedRoot(), () => retiring.push(label));
+const viewer = cover('viewer'), search = cover('search'), newer = cover('newer');
+const beforeDismiss = scrollCalls.length;
+expect(search.dismissForNavigation(), 'a live requester can retire its covered surfaces');
+expect(retiring.join() === 'search,viewer' && newer.isTopmost(), 'navigation closes through its owner in stack order only');
+expect(bodyStyle.position === 'fixed' && scrollCalls.length === beforeDismiss, 'logical navigation dismissal must not unlock early');
+search.release(); viewer.release(); newer.release();
+expect(!search.dismissForNavigation() && retiring.length === 2, 'a released requester cannot dismiss a later surface');
+expect(scrollCalls.length === beforeDismiss + 1, 'the actual final release must restore the page once');
+
+// Real shared isolation scope, two independent reasons and both release
+// orders. Preserve absent vs explicit aria-hidden and pre-existing inertness.
+const { createIsolationScope } = await import('../src/utils/accessibilityIsolation');
+for (const original of [null, 'false', 'true']) for (const reversed of [false, true]) {
+  let attr: string | null = original;
+  const node = { inert: original === 'true', getAttribute: () => attr,
+    setAttribute: (_: string, v: string) => { attr = v; }, removeAttribute: () => { attr = null; } } as unknown as HTMLElement;
+  const scopes = [createIsolationScope(), createIsolationScope()];
+  scopes[0].hide(node); scopes[0].hide(node); scopes[1].hide(node);
+  if (reversed) scopes.reverse();
+  scopes[0].clear(); scopes[0].clear();
+  expect(node.inert && attr === 'true', 'one remaining owner must keep the shared branch inaccessible');
+  scopes[1].clear();
+  expect(node.inert === (original === 'true') && attr === original, 'last owner must restore original attributes exactly');
+}
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
+const returnSource = read('src/utils/dialogFocusReturn.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
 const immersiveSource = read('src/components/music/ImmersivePlayer.tsx');
 const ratingFormSource = read('src/components/community/RatingForm.tsx');
@@ -160,6 +239,7 @@ const essayCoverSource = read('src/components/essay/EssayCover.tsx');
 const tiltSource = read('src/components/TiltCard.tsx');
 const smoothSource = read('src/utils/smoothScroll.ts');
 const routeScrollSource = read('src/components/SmoothScroll.tsx');
+const pendingRequestSource = read('src/utils/pendingRouteScroll.ts');
 const focusSource = read('src/utils/focusRuntime.ts');
 const autoHideSource = read('src/hooks/useAutoHideChrome.ts');
 const archivePageSource = read('src/pages/MyArchivePage.tsx');
@@ -169,24 +249,20 @@ const audioPlayerStyleSource = read('src/audio-player.css');
 
 expect(overlaySource.includes('overlayStack'), 'overlay locking must remain stack-based');
 expect(overlaySource.includes('pauseSmoothScroll'), 'modal locking must pause Lenis through the shared bridge');
-expect(overlaySource.includes('window.scrollTo(snapshot.scrollX, snapshot.scrollY)'), 'modal unlocking must restore the exact scroll position');
 expect(overlaySource.includes('canRestoreOverlayFocus'), 'stacked dialogs must guard focus restoration ownership');
 expect(overlaySource.includes('pruneDetachedOverlays'), 'keyboard ownership must recover from detached portal entries');
 expect(overlaySource.includes('onOverlayKeyDown'), 'Escape must be dispatched by one shared stack listener');
 expect(overlaySource.includes('setEscapeHandler'), 'overlay handles must register their close behavior with the runtime');
-expect(overlaySource.includes('accessibilitySnapshots'), 'overlay runtime must snapshot background accessibility state');
+expect(overlaySource.includes('createIsolationScope()') && overlaySource.includes('backgroundIsolation.hide(sibling)') && overlaySource.includes('backgroundIsolation.clear()'), 'the topmost dialog must isolate its background without undoing another owner');
 expect(overlaySource.includes('syncOverlayAccessibility'), 'overlay stack changes must resynchronise topmost accessibility ownership');
-expect(overlaySource.includes("element.inert = true"), 'topmost overlays must remove covered branches from sequential focus');
-expect(overlaySource.includes("element.setAttribute('aria-hidden', 'true')"), 'topmost overlays must hide covered branches from the accessibility tree');
-expect(overlaySource.includes('element.inert = snapshot.inert'), 'overlay teardown must restore exact prior inert state');
-expect(overlaySource.includes("snapshot.ariaHidden === null"), 'overlay teardown must restore exact prior aria-hidden state');
 expect(dialogSource.includes("document.addEventListener('keydown', onKeyDown, true)"), 'dialog focus containment must run in capture phase');
 expect(dialogSource.includes("event.key !== 'Tab'"), 'shared dialogs must trap keyboard focus without competing for Escape');
 expect(dialogSource.includes('handle.setEscapeHandler'), 'dialogs must delegate Escape to the shared runtime');
 expect(dialogSource.includes('handleRef.current?.setRoot(dialogRef.current)'), 'keyed dialog replacements must refresh the overlay root');
-expect(dialogSource.includes('canRestoreOverlayFocus(previouslyFocused)'), 'dialog close must not restore focus beneath another surface');
-expect(dialogSource.includes('restoreFocusRef?.current ?? restoreFocus'), 'navigation-triggered dialog closes must be able to preserve route focus');
-expect(commandSource.includes('restoreFocusRef.current = false'), 'command navigation must not refocus the old trigger over the new page');
+expect(dialogSource.includes('captureDialogFocusReturn()') && returnSource.includes('canRestoreOverlayFocus(target)') && returnSource.includes('isAvailableFocusTarget(target)'),
+  'the shared dialog return path must check stack ownership and availability before focusing a control');
+expect(dialogSource.includes('!leaving && restoreFocus'), 'navigation-triggered dialog closes must leave focus to the destination');
+expect(commandSource.includes('dismissForNavigation()'), 'command navigation must dismiss covered surfaces without refocusing old triggers');
 expect(commandSource.includes('useDialogSurface'), 'command search must use the shared dialog lifecycle');
 expect(!commandSource.includes('document.body.style.overflow'), 'command search must not own body locking independently');
 expect(commandSource.includes('onPointerDown'), 'the command backdrop must support pointer and touch input');
@@ -219,11 +295,10 @@ expect(focusSource.includes('focusProgrammatically'), 'route and mutation focus 
 expect(focusSource.includes("target.setAttribute('tabindex', '-1')"), 'non-interactive focus destinations must receive a temporary programmatic tabindex');
 expect(focusSource.includes('scheduleProgrammaticFocus'), 'settled focus handoffs must be schedulable without sleeps');
 expect(autoHideSource.includes('syncChromeAccessibility'), 'reading-mode chrome must have an accessibility-state owner');
-expect(autoHideSource.includes('element.inert = true'), 'visually hidden chrome must leave sequential focus');
-expect(autoHideSource.includes("element.setAttribute('aria-hidden', 'true')"), 'visually hidden chrome must leave the accessibility tree');
+expect(autoHideSource.includes('createIsolationScope()') && autoHideSource.includes('elements.forEach(hiddenChrome.hide)') && autoHideSource.includes('hiddenChrome.clear()'), 'hidden reading chrome must share inert and ARIA ownership with modal isolation');
 expect(autoHideSource.includes("document.getElementById('main-content')"), 'focus trapped in disappearing chrome must hand off to main content');
-expect(routeScrollSource.includes('scheduleProgrammaticFocus'), 'hash restoration must transfer focus after settled target insertion');
-expect(routeScrollSource.includes('target.isConnected ? target : null'), 'hash focus must fail closed when the target disappears');
+expect(routeScrollSource.includes('requestRouteScroll(') && pendingRequestSource.includes('scheduleProgrammaticFocus('), 'hash restoration must transfer focus after settled target insertion');
+expect(pendingRequestSource.includes('target.isConnected ? target : null'), 'hash focus must fail closed when the target disappears');
 expect(archivePageSource.includes('data-archive-remove-id'), 'archive mutation controls must expose stable focus-handoff identity');
 expect(archivePageSource.includes('archiveStatusRef'), 'archive removal must own a stable fallback focus target');
 expect(archivePageSource.includes('scheduleProgrammaticFocus'), 'archive removal must schedule post-mutation focus ownership');

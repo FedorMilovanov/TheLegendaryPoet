@@ -14,12 +14,10 @@ import {
 } from '../utils/analytics';
 
 export function AnalyticsRouteTracker() {
-  const settledRouteRef = useRef<AnalyticsRouteSettledDetail | null>(null);
   const lastTrackedNavigationRef = useRef<string | null>(null);
 
   useEffect(() => {
     const send = (detail: AnalyticsRouteSettledDetail) => {
-      settledRouteRef.current = detail;
       if (getAnalyticsConsent() !== 'granted') return;
       if (lastTrackedNavigationRef.current === detail.navigationToken) return;
 
@@ -33,12 +31,7 @@ export function AnalyticsRouteTracker() {
     };
     const handleConsent = (event: Event) => {
       const next = (event as CustomEvent<AnalyticsConsent | null>).detail;
-      if (next !== 'granted') {
-        lastTrackedNavigationRef.current = null;
-        return;
-      }
-      const settledRoute = settledRouteRef.current;
-      if (settledRoute) send(settledRoute);
+      if (next !== 'granted') lastTrackedNavigationRef.current = null;
     };
 
     window.addEventListener(ANALYTICS_ROUTE_SETTLED_EVENT, handleSettledRoute);

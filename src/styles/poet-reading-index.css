@@ -57,9 +57,8 @@
   outline-offset: 3px;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .poet-reading-index > ol > li > a { transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .poet-reading-index > ol > li > a { transition: border-color .2s ease, box-shadow .2s ease; }
   .poet-reading-index > ol > li > a:hover {
-    transform: translateY(-2px);
     border-color: rgba(212,175,55,.58);
     box-shadow: 0 14px 28px rgba(0,0,0,.12);
   }
