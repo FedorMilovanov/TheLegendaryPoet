@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "fcf7aa2105eec1c19a77d95ca72b4be72616d8f54279ed96c51699768939b3f0"
+      "fingerprint": "2101581f5226bda389e5c7cd96517429f2a6813a5db783c4747ba448d0bcc319"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "e70d0e622199c08344bee621350df431c8722aa807de635f676be7a418ad5d05"
+      "fingerprint": "3b388ba8622f47cecbb92c06b2b69b19d4f37bdd9d4e3d43a561be0031938311"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "c245d219b2bd51dc9923a4a2e497557e3d1f0146e09bfc16bc9767c8b9bbae00"
+      "fingerprint": "0d0cbf164cfa36e441f93f26a5b815f42aa775c37e2117ab079cec4581730e3f"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -378,7 +378,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "09212695f6ab2d32a825dc02a9ad7478fb78f9256e58e6e8b2cb5a37901e3ea2"
+      "fingerprint": "0691be156360d0199b830fc5bbb896b64c0e8d18b341d86445f2ecc2b2f7400d"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/mikhail-lermontov/",
