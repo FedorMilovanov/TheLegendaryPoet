@@ -66,12 +66,16 @@ const record = (line) => {
   console.log(stamped);
 };
 
+// Suites use fresh processes. Keep evidence for every independent contour
+// and return the first failing exit status; never certify a partial matrix.
+let failureStatus = 0;
 for (const [index, suite] of suites.entries()) {
   const args = [
     'playwright',
     'test',
     suite.file,
     ...common,
+    `--output=test-results/webkit-${suite.id}`,
     `--project=${suite.project ?? 'iphone-safari'}`,
   ];
   if (suite.grep) args.push('--grep', suite.grep);
@@ -98,10 +102,12 @@ for (const [index, suite] of suites.entries()) {
   }
   if (result.status !== 0) {
     record(`[webkit-home-process FAIL] ${label} elapsed_ms=${elapsedMs} status=${result.status ?? 'null'}`);
-    process.exit(result.status ?? 1);
+    failureStatus ||= result.status ?? 1;
+    continue;
   }
 
   record(`[webkit-home-process PASS] ${label} elapsed_ms=${elapsedMs}`);
 }
 
+if (failureStatus) process.exit(failureStatus);
 record(`[webkit-home-process COMPLETE] ${suites.length}/${suites.length} all contours passed`);

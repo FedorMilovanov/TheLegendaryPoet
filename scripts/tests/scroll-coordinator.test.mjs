@@ -352,3 +352,43 @@ test('mixed fragments use only the ordinary anchor; a text-only or stale quote d
     assert.equal(fresh.observing, false); assert.equal(fresh.readerListeners, 0);
   }
 });
+
+test('font settlement without a DOM mutation places the final glyph; a reader choice still cancels it', () => {
+  for (const interrupt of [false, true]) {
+    const app = coordinator();
+    const fonts = app.document.fonts = Object.assign(new EventTarget(), { status: 'loading' });
+    app.render(fragment); app.frame();
+    assert.deepEqual(app.calls, []);
+    if (interrupt) app.input('keydown', { key: 'Tab' });
+    app.target.getBoundingClientRect = () => ({ top: 480 - app.window.scrollY, height: 48 });
+    fonts.status = 'loaded'; fonts.dispatchEvent(new Event('loadingdone'));
+    app.frame(); app.frame();
+    assert.deepEqual(app.calls, interrupt ? [] : [384]);
+    assert.equal(app.document.activeElement === app.target, !interrupt);
+    assert.equal(getEventListeners(fonts, 'loadingdone').length, 0);
+  }
+});
+
+test('the popstate of a newly pushed native fragment cannot overwrite its pre-jump bookmark', () => {
+  const app = coordinator(); app.window.navigation = undefined;
+  const history = new (app.load('scrollHistory').ScrollHistory)();
+  const visit = history.current = { id: 'first', url: app.window.location.href, applied: true };
+  app.window.history.state = { tlpScrollEntry: 'first' }; app.window.scrollY = 840;
+  const stop = app.load('scrollHistory').observeDepartures(history, () => ({ x: 0, y: app.window.scrollY }));
+  app.load('browserNavigation').noteAppDeparture(); // TOC activation, before assigning location.hash
+  app.window.location.hash = '#target'; app.window.history.state = null;
+  app.window.scrollY = 2400; // UA placed the target *before* notifying listeners
+  app.window.dispatchEvent(new Event('popstate'));
+  assert.equal(history.position(visit).y, 840);
+  stop();
+});
+
+test('Back can expose the retained URL before the Navigation API updates its current entry', () => {
+  const app = coordinator(); app.render(); app.frame();
+  app.window.scrollY = 840; app.depart('/music'); app.address(other);
+  app.window.scrollY = 0; app.window.location.pathname = '/essay';
+  app.window.dispatchEvent(new Event('popstate')); app.frame();
+  assert.deepEqual(app.calls, []);
+  app.address(first); app.window.navigation.dispatchEvent(new Event('currententrychange')); app.frame();
+  assert.deepEqual(app.calls, [840]);
+});

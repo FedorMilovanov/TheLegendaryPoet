@@ -24,6 +24,7 @@ export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }
   let cancelFocus: (() => void) | undefined;
 
   const stopWaiting = () => {
+    document.fonts?.removeEventListener('loadingdone', retryLayout);
     observer?.disconnect();
     observer = undefined;
     window.clearTimeout(timer);
@@ -74,10 +75,12 @@ export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }
     } else stop();
     return true;
   }
+  function retryLayout() { if (attempt(false)) stopWaiting(); }
   function schedule() {
     frame = requestAnimationFrame(() => {
       if (attempt(false)) return;
-      observer = new MutationObserver(() => { if (attempt(false)) stopWaiting(); });
+      observer = new MutationObserver(retryLayout);
+      document.fonts?.addEventListener('loadingdone', retryLayout);
       observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true });
       // Close the lookup/observe race without polling or waiting for an
       // unrelated mutation. On timeout, use the available layout once.

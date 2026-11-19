@@ -35,8 +35,11 @@ const suites = [
   })),
 ];
 
+// Each bundle is independent. A failed test cannot pass the job, but must
+// not hide the diagnostics and screenshots of every later reader surface.
+let failureStatus = 0;
 for (const [index, suite] of suites.entries()) {
-  const args = ['playwright', 'test', suite.file, ...common];
+  const args = ['playwright', 'test', suite.file, ...common, `--output=test-results/webkit-${suite.id}`];
   if (suite.grep) args.push('--grep', suite.grep);
 
   console.log(`\n[webkit-base-process ${index + 1}/${suites.length}] ${suite.id}`);
@@ -55,8 +58,9 @@ for (const [index, suite] of suites.entries()) {
   }
   if (result.status !== 0) {
     console.error(`[webkit-base-process] ${suite.id} failed with status ${result.status}`);
-    process.exit(result.status ?? 1);
+    failureStatus ||= result.status ?? 1;
   }
 }
 
+if (failureStatus) process.exit(failureStatus);
 console.log(`\n[webkit-base-process] ${suites.length} fresh-process base Safari contours passed`);

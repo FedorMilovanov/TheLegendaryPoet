@@ -18,7 +18,10 @@ export async function expectFragment(page, id) {
   const target = page.locator(`[id="${id}"]`);
   await expect.poll(() => decodeURIComponent(new URL(page.url()).hash)).toBe('#' + id);
   await expect(target).toBeFocused();
-  await expect.poll(() => target.evaluate(n => Math.abs(n.getBoundingClientRect().top - 96))).toBeLessThan(2);
+  await expect.poll(() => target.evaluate(n => {
+    const top = n.getBoundingClientRect().top;
+    return Math.abs(top - 96) < 2 ? 'placed' : `top=${top}, scrollY=${scrollY}, fonts=${document.fonts.status}`;
+  }), { message: `focused fragment ${id} within two CSS pixels of the reading edge` }).toBe('placed');
 }
 export async function choose(page, query, activate) {
   await page.keyboard.press('Control+k');

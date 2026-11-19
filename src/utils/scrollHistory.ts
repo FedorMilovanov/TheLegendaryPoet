@@ -47,7 +47,11 @@ export function observeDepartures(history: ScrollHistory, capture: (visit: Scrol
   // page has even painted, don't write the old page over its own bookmark.
   const onPop = () => {
     history.clearArrivalClaim();
-    if (history.current?.id !== activeEntryId()) history.remember(capture, true);
+    const id = activeEntryId();
+    // A newly pushed native hash has no state until the reader stamps it.
+    // Its popstate may arrive *after* the UA scrolls. Keep the pre-click
+    // bookmark in that case; Back/Forward to a stamped entry still captures.
+    if (history.current?.id !== id && (id || !history.current?.departing)) history.remember(capture, true);
   };
   const stopPush = observeFallbackPush(beforePush);
   window.addEventListener('popstate', onPop, true);

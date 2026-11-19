@@ -17,7 +17,11 @@ export default class GithubFailureReporter {
       const outcome = test.outcome();
       if (outcome !== 'unexpected' && outcome !== 'flaky') continue;
       const errors = test.results.flatMap((result) => result.errors ?? []);
-      const detail = errors.map((error) => error.message ?? error.value ?? '').join('\n');
+      // The same helper can be asserted on arrival, Back and Forward. Keep
+      // its call site, not the full Playwright internals or traces.
+      const detail = errors.map(error => [error.message ?? error.value,
+        ...(error.stack ?? '').split('\n').filter(line => /^\s+at .*[/\\]qa[/\\]/.test(line)).slice(0, 3),
+      ].filter(Boolean).join('\n')).join('\n');
       const title = `${outcome}: ${test.titlePath().join(' › ')}`;
       const file = path.relative(process.cwd(), test.location.file).replaceAll('\\', '/');
       const message = (detail || `Final test outcome: ${outcome}`).slice(0, 8000);

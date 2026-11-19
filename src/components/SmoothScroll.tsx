@@ -5,6 +5,7 @@ import { captureUnlockedPosition, hasOpenOverlay, registerOverlayArrival } from 
 import { resolveSharedPassage } from '../utils/sharedPassage';
 import { resolvePagePosition } from '../utils/readingBookmark';
 import { activeEntryId, currentEntryId, observeDepartures, ScrollHistory, type ScrollVisit } from '../utils/scrollHistory';
+import { navigationApi } from '../utils/browserNavigation';
 import { decodeHash, FIXED_HEADER_OFFSET } from '../utils/smoothScroll';
 
 const HistoryContext = createContext<ScrollHistory | null>(null);
@@ -34,7 +35,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
 function pendingAbove(target?: HTMLElement | null) {
   // Later optional sections don't affect the top of an earlier destination.
-  return Array.from(document.querySelectorAll('[data-reader-layout-pending]')).some(marker =>
+  // Font swaps above a deep anchor can move it by paragraphs, especially
+  // in engines without native scroll anchoring. No DOM insertion is required.
+  return document.fonts?.status === 'loading' || Array.from(document.querySelectorAll('[data-reader-layout-pending]')).some(marker =>
     !target || Boolean(marker.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING));
 }
 
@@ -167,12 +170,17 @@ export function useRestoreRouteScroll(paintedPath: string) {
       schedule();
     };
     visit.yieldPlacement = () => { cancelRequest?.(); leaveWithReader(); };
+    const navigation = navigationApi();
+    // Both the address bar and the entry identity must be current. Don't
+    // depend on which of their notifications a traversal delivers first.
+    navigation?.addEventListener('currententrychange', resumeIfStillPainted);
     window.addEventListener('popstate', resumeIfStillPainted);
     if (!passive) schedule();
     if (hash) document.addEventListener('click', repeatFragment);
     return () => {
       visit.yieldPlacement = undefined;
       cancelRequest?.();
+      navigation?.removeEventListener('currententrychange', resumeIfStillPainted);
       window.removeEventListener('popstate', resumeIfStillPainted);
       document.removeEventListener('click', repeatFragment);
     };

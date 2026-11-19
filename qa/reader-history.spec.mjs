@@ -46,6 +46,24 @@ async function whileBiographyLoads(page, arrive, interact) {
 test.describe('entry-specific reader history', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
+  test('cold chapter placement survives a real font swap without native scroll anchoring', async ({ page }) => {
+    const gate = Promise.withResolvers();
+    let held = 0;
+    await page.route('**/*.woff2', async route => { held++; await gate.promise; await route.continue(); });
+    try {
+      // Some engines don't compensate for the paragraph rewrap. Exercise
+      // the shared placement owner; don't change the fonts or the document.
+      await page.goto(base + essay + '#' + berlin, { waitUntil: 'domcontentloaded' });
+      await page.addStyleTag({ content: 'html, body, * { overflow-anchor: none !important; }' });
+      await expect(page.locator(`[id="${berlin}"]`)).toBeAttached();
+      await expect.poll(() => held).toBeGreaterThan(0);
+      await expect.poll(() => page.evaluate(() => document.fonts.status)).toBe('loading');
+      await paints(page, 3);
+    } finally { gate.resolve(); }
+    await page.evaluate(() => document.fonts.ready);
+    await expectFragment(page, berlin);
+  });
+
   test('ordinary music link from a later paragraph restores the paragraph, not the old Berlin hash', async ({ page }) => {
     await open(page, essay + '#' + berlin);
     await expectFragment(page, berlin);
@@ -195,7 +213,9 @@ test.describe('reader takes over a pending destination', () => {
       await expect(page.locator('main')).toBeFocused();
       const top = await y(page);
       await page.mouse.move(920, 430); await page.mouse.wheel(0, 490);
-      await expect.poll(() => y(page)).toBeGreaterThan(top + 100);
+      // WebKit delivers this native wheel delta in multiple compositor frames.
+      // Release the payload at the actual destination, not halfway down.
+      await expect.poll(() => y(page)).toBe(top + 490);
       from = await y(page);
     });
     expect(await y(page)).toBe(from); await expect(page.locator('main')).toBeFocused();
