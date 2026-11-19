@@ -303,9 +303,16 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
-          await expect(page.locator('#poem-tyutchev-5 [data-poem-canonical]')).toContainText('<...>');
-          await expect(page.locator('#poem-tyutchev-5 [data-poem-excerpt-notice]')).toContainText('Это не полная редакция стихотворения');
-          await expect(page.locator('[data-poem-excerpt-notice]')).toHaveCount(1);
+          const fullTyutchevPoem = page.locator('#poem-tyutchev-5 [data-poem-canonical]');
+          await expect.poll(() => fullTyutchevPoem.evaluate((el) => (el.textContent || '').split('\\n').filter((line) => line.trim()).length)).toBe(40);
+          await expect(fullTyutchevPoem).toContainText('Как в буйной слепоте страстей');
+          await expect(fullTyutchevPoem).toContainText('Горючей влагою своей');
+          await expect(fullTyutchevPoem).toContainText('Ее волшебный взор, и речи');
+          await expect(fullTyutchevPoem).toContainText('Боль, злую боль ожесточенья');
+          await expect(fullTyutchevPoem).not.toContainText('<...>');
+          await expect(page.locator('#poem-tyutchev-5 [data-poem-excerpt-notice]')).toHaveCount(0);
+          await expect(page.locator('#poem-tyutchev-5 [data-poem-textual-note]')).toContainText('40/40');
+          await expect(page.locator('#poem-tyutchev-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-333-.htm?cmd=p');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('ЦГАЛИ (505/19, л. 5)');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('между 1834 годом и апрелем 1836');
