@@ -303,6 +303,9 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('ЦГАЛИ (505/19, л. 5)');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('между 1834 годом и апрелем 1836');
           await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('4/4');
           await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('РГАЛИ');
