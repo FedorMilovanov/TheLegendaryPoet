@@ -184,6 +184,20 @@ test.describe('poets result status accessibility', () => {
           await expect(musicLink).toContainText('Когда волнуется желтеющая нива');
         }
         if (poetId === 'alexander-pushkin') {
+          // The three legacy fallback poems must now carry an academic text witness and editorial history.
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(10);
+          for (const poemId of ['pushkin-1', 'pushkin-2', 'pushkin-3']) {
+            await expect(page.locator('#poem-' + poemId + ' [data-poem-textual-note]')).toBeVisible();
+            await expect(page.locator('#poem-' + poemId + ' [data-poem-textual-note] a'))
+              .toHaveAttribute('href', 'https://feb-web.ru/feb/pushkin/texts/push17/vol03/y32-b23-.htm?cmd=p');
+          }
+          await expect(page.locator('#poem-pushkin-1 [data-poem-textual-note]')).toContainText('30/30');
+          await expect(page.locator('#poem-pushkin-1 [data-poem-year-note]')).toContainText('1827');
+          await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('8/8');
+          await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('1832');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-textual-note]')).toContainText('20/20');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-textual-note]')).toContainText('Наполеонова столпа');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-year-note]')).toContainText('1841');
           await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('VERIFIED');
           await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('30/30');
           await expect(page.locator('#poem-pushkin-4 [data-poem-textual-note]')).toContainText('PA9–PA10');
