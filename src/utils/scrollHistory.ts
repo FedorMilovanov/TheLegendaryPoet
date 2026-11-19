@@ -1,4 +1,5 @@
 import { navigationApi, observeFallbackPush } from './browserNavigation';
+import { decodeHash, FIXED_HEADER_OFFSET, isSmoothScrollPaused } from './smoothScroll';
 import type { PagePosition } from './readingBookmark';
 
 /** Query parameters are controls on the same page; another fragment is a
@@ -43,6 +44,26 @@ export function observeDepartures(history: ScrollHistory, capture: (visit: Scrol
     const current = activeEntryId();
     if (!current || history.current?.id === current) history.remember(capture, leavesPage);
   };
+  // Legacy traversal has no before-navigate event. Some UAs position an
+  // arriving hash *before* popstate, even with manual scroll restoration.
+  // Keep one settled snapshot, not a listener/capture on every scroll frame.
+  let rest: { visit: ScrollVisit; position: PagePosition } | undefined;
+  const onRest = (event: Event) => {
+    const visit = history.current;
+    if (event.target === document && visit?.applied && !visit.departing && visit.url === window.location.href &&
+        visit.id === activeEntryId() && !isSmoothScrollPaused()) rest = { visit, position: capture(visit) };
+  };
+  const capturePop = (visit: ScrollVisit) => {
+    const live = window.location;
+    if (rest?.visit === visit && live.hash && !isSmoothScrollPaused() && visit.url.split('#')[0] === live.href.split('#')[0]) {
+      const anchor = document.getElementById(decodeHash(live.hash));
+      if (anchor) {
+        const top = anchor.getBoundingClientRect().top;
+        if ([0, FIXED_HEADER_OFFSET, parseFloat(getComputedStyle(anchor).scrollMarginTop)].some(edge => Math.abs(top - edge) < 2)) return rest.position;
+      }
+    }
+    return capture(visit); // still at the leaving position, including a locked or reflowed page
+  };
   // popstate exposes the arriving entry. During a quick Back before a lazy
   // page has even painted, don't write the old page over its own bookmark.
   const onPop = () => {
@@ -51,12 +72,14 @@ export function observeDepartures(history: ScrollHistory, capture: (visit: Scrol
     // A newly pushed native hash has no state until the reader stamps it.
     // Its popstate may arrive *after* the UA scrolls. Keep the pre-click
     // bookmark in that case; Back/Forward to a stamped entry still captures.
-    if (history.current?.id !== id && (id || !history.current?.departing)) history.remember(capture, true);
+    if (history.current?.id !== id && (id || !history.current?.departing)) history.remember(capturePop, true);
   };
   const stopPush = observeFallbackPush(beforePush);
+  document.addEventListener('scrollend', onRest);
   window.addEventListener('popstate', onPop, true);
   return () => {
     stopPush();
+    document.removeEventListener('scrollend', onRest);
     window.removeEventListener('popstate', onPop, true);
   };
 }

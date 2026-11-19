@@ -2,6 +2,8 @@
 @import "./fonts.css";
 @import "./styles/poet-reading-index.css";
 @import "./styles/essay-media.css";
+@import "./styles/route-recovery.css";
+@import "./components/command/commandPaletteChrome.css";
 
 html { scroll-behavior: auto; height: -webkit-fill-available; }
 

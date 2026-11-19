@@ -533,6 +533,7 @@ function portraitBox(locator) {
 }
 
 test('portrait pan reaches both edges without exposing the backdrop and resets on unzoom and reopen', { tag: '@fine-pointer' }, async ({ page }) => {
+  await page.clock.install();
   await page.setViewportSize({ width: 1200, height: 650 });
   await open(page, '/essays/brik-case');
   const opener = page.locator('button:has(img[src$="lilya-brik-1914.webp"])');
@@ -545,9 +546,14 @@ test('portrait pan reaches both edges without exposing the backdrop and resets o
   for (const [x, y, edge] of [[1198, 645, 'atLeft'], [2, 2, 'atRight']]) {
     const frame = await img.locator('..').boundingBox();
     await page.mouse.move(frame.x + frame.width / 2, frame.y + frame.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(x, y, { steps: 16 });
-    await page.mouse.up();
+    // The release is authoritative even when there is no JS paint between
+    // press and release. Keep real pointer input and the final edge check.
+    if (edge === 'atLeft') await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100));
+    try {
+      await page.mouse.down();
+      await page.mouse.move(x, y, { steps: 16 });
+      await page.mouse.up();
+    } finally { if (edge === 'atLeft') await page.clock.resume(); }
     await expect.poll(() => portraitBox(img)).toMatchObject({ magnified: true, covered: true, [edge]: true });
   }
   await page.setViewportSize({ width: 510, height: 370 });

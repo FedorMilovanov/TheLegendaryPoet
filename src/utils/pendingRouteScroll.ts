@@ -7,6 +7,7 @@ const modifierKeys = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'Ca
 interface ScrollRequest {
   current: () => boolean;
   fragmentId: string;
+  nativeQuote?: boolean;
   // false: not measurable yet. null: scrolled, no focus transfer needed.
   // A node: scrolled, transfer focus after the target has painted.
   apply: (allowPartial: boolean) => false | HTMLElement | null;
@@ -16,11 +17,13 @@ interface ScrollRequest {
 /** One arrival, explicit repeat or interrupted traversal. Nothing here runs
  * during ordinary reading. Stop on a newer intent, including in the two
  * frames between placing a fragment and giving it keyboard focus. */
-export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }: ScrollRequest) {
+export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yieldToReader }: ScrollRequest) {
   const controller = new AbortController();
   const { signal } = controller;
   let observer: MutationObserver | undefined;
   let timer = 0, frame = 0;
+  const deadline = Date.now() + HASH_OBSERVER_TIMEOUT_MS;
+  let ownedFocus: HTMLElement | null = null;
   let cancelFocus: (() => void) | undefined;
 
   const stopWaiting = () => {
@@ -37,6 +40,9 @@ export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }
   };
   const takeOver = (event: Event) => {
     if (!event.isTrusted || !current() || hasOpenOverlay()) return;
+    // A browser can still be animating/maintaining its *own* text match.
+    // End that motion here, without consuming the reader's key, click or wheel.
+    if (nativeQuote && document.querySelector(':target')) window.scrollTo({ top: window.scrollY, behavior: 'instant' });
     yieldToReader();
     stop();
   };
@@ -54,7 +60,7 @@ export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }
     const el = event.target;
     // Main is the route's normal focus handoff; the browser may also focus
     // the native fragment. Neither means the reader chose a different control.
-    if (el instanceof HTMLElement && el !== document.body && el.id !== 'main-content' &&
+    if (el instanceof HTMLElement && el !== ownedFocus && el !== document.body && el.id !== 'main-content' &&
         !(fragmentId && el.id === fragmentId)) takeOver(event);
   }, options);
 
@@ -69,7 +75,20 @@ export function requestRouteScroll({ current, fragmentId, apply, yieldToReader }
     if (target) {
       cancelFocus = scheduleProgrammaticFocus(() => {
         const next = !signal.aborted && current() && !hasOpenOverlay() && target.isConnected ? target : null;
-        stop();
+        if (nativeQuote && next) {
+          ownedFocus = next;
+          // Some engines retry native text matching after the app paints,
+          // centre the range, and expose its ancestor as :target. Reconcile
+          // that one placement, not every scroll and never after reader input.
+          const finish = () => {
+            if (!current() || hasOpenOverlay() || !next.isConnected) { stop(); return; }
+            if (!document.querySelector(':target')) return;
+            stop(); apply(true);
+          };
+          document.addEventListener('scrollend', finish, { signal });
+          timer = window.setTimeout(stop, Math.max(0, deadline - Date.now()));
+          finish();
+        } else stop();
         return next;
       });
     } else stop();

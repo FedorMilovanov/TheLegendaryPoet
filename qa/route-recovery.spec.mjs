@@ -139,11 +139,40 @@ test('an encoded address retains its ready public canonical, not a permanent loa
   await expectReady(page, '/privacy'); await expect(page).toHaveURL(base + '/priv%61cy/');
 });
 
-for (const mode of ['failure', 'blocked', 'success']) {
+// Observe the main document and route module across the actual navigations,
+// including a server fallback with the wrong MIME type. A Performance entry
+// in the final document alone cannot describe the abandoned request.
+function recoveryNetwork(page) {
+  const events = [];
+  const changed = (request, outcome) => {
+    const path = new URL(request.url()).pathname;
+    if (request.resourceType() === 'document' || /\/MusicPage-[^/]+\.js$/.test(path)) events.push([path, outcome]);
+  };
+  page.on('response', r => changed(r.request(), [r.status(), r.headers()['content-type']]));
+  page.on('requestfailed', r => changed(r, r.failure()?.errorText));
+  return events;
+}
+async function expectRecoveredMusic(page, docs, attempts, network) {
+  try { await expect(music(page)).toBeVisible(); }
+  catch (error) {
+    // Read diagnostics *after* the native locator wait. A reload can destroy
+    // an execution context; observing it must not become the failure itself.
+    const surface = await page.evaluate(() => ({ path: location.pathname, title: document.title,
+      alert: document.querySelector('main [role="alert"]')?.textContent?.slice(0, 320),
+      heading: document.querySelector('h1')?.textContent, state: document.readyState, online: navigator.onLine,
+    })).catch(() => ({ path: page.url() }));
+    throw new Error(`${error.message}\n${JSON.stringify({ ...surface, docs, moduleRequests: attempts(), network })}`, { cause: error });
+  }
+  await expectReady(page, '/music');
+}
+
+for (const mode of ['failure', 'http-503', 'blocked', 'success']) {
   test(`Back before the music import completes: late ${mode} cannot replace the article head or reload its document`, async ({ page, context, hasTouch }) => {
     if (mode === 'blocked') await withoutNavigationApi(page);
-    const docs = documents(page);
-    await withHeldRequest(context, chunk, r => mode === 'success' || docs.length > 1 ? r.continue() : r.abort('failed'), async ({ release, attempts }) => {
+    const docs = documents(page), network = recoveryNetwork(page);
+    let online = mode === 'success';
+    const outage = r => mode === 'http-503' ? r.fulfill({ status: 503, contentType: 'text/javascript', headers: { 'Cache-Control': 'no-store' }, body: '' }) : r.abort('failed');
+    await withHeldRequest(context, chunk, r => online ? r.continue() : outage(r), async ({ release, attempts }) => {
       const original = await startReading(page, hasTouch ? 390 : 1200), doc = await clock(page);
       if (mode === 'blocked') await page.evaluate(key => sessionStorage.setItem(key, String(Date.now())), marker);
       await choose(page, 'Музыка'); await expect.poll(attempts).toBe(1); await expectNeutral(page, pendingTitle);
@@ -155,25 +184,30 @@ for (const mode of ['failure', 'blocked', 'success']) {
       expect(await head(page)).toEqual(original); expect(await clock(page)).toBe(doc); expect(docs).toEqual([yesenin]);
       await expectReadingAt(paragraph(page), 0.46); await expect(paragraph(page)).toBeFocused();
       if (mode !== 'blocked') expect(await page.evaluate(key => sessionStorage.getItem(key), marker)).toBeNull();
+      // Restore the service explicitly. The document count is an independent
+      // assertion: a Playwright request notification cannot enable the origin.
+      online = true;
       await page.goForward();
       if (mode === 'blocked') {
         await recoveryVisible(page, refresh(page)); expect(docs).toEqual([yesenin]);
         await refresh(page).click();
       }
-      await expect(music(page)).toBeVisible(); await expectReady(page, '/music');
+      await expectRecoveredMusic(page, docs, attempts, network);
       expect(docs).toEqual(mode === 'success' ? [yesenin] : [yesenin, '/music']);
     });
   });
 }
 
 test('an active stale chunk gets one automatic reload, then a working manual recovery, not a reload loop', async ({ page, context }) => {
-  const docs = documents(page);
-  await withHeldRequest(context, chunk, r => docs.length < 3 ? r.abort('failed') : r.continue(), async ({ release, attempts }) => {
+  const docs = documents(page), network = recoveryNetwork(page);
+  let online = false;
+  await withHeldRequest(context, chunk, r => online ? r.continue() : r.abort('failed'), async ({ release, attempts }) => {
     await open(page, yesenin); await choose(page, 'Музыка'); await expect.poll(attempts).toBe(1); release();
     // This is now a new document's initial load. It need not autofocus.
     await expect(refresh(page)).toBeVisible(); await expectNeutral(page, errorTitle);
     await page.waitForTimeout(650); expect(docs).toEqual([yesenin, '/music']);
-    await refresh(page).click(); await expect(music(page)).toBeVisible(); await expectReady(page, '/music');
+    online = true;
+    await refresh(page).click(); await expectRecoveredMusic(page, docs, attempts, network);
     expect(docs).toEqual([yesenin, '/music', '/music']);
     expect(await page.evaluate(key => sessionStorage.getItem(key), marker)).toBeNull();
   });

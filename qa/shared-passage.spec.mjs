@@ -70,13 +70,33 @@ async function recipient(context, href) {
   expect(await page.evaluate(() => !!window.opener)).toBe(false);
   return page;
 }
+// A trace for the two order-sensitive arrivals only. Observe unmodified UA
+// events in the recipient; do not instrument scrollTo, timers or focus.
+async function observeArrival(context) {
+  await context.addInitScript(() => {
+    const events = window.__qaPassageEvents = [];
+    for (const type of ['load', 'scrollend', 'focusin', 'keydown']) {
+      window.addEventListener(type, e => {
+        if (events.length === 24) events.shift();
+        const el = e.target;
+        events.push([Math.round(performance.now()), type, el?.id || el?.nodeName, scrollY,
+          document.querySelector(':target')?.nodeName]);
+      }, { passive: true, capture: true });
+    }
+  });
+}
+// Both variants use the *same* copied public address. The plain fragment is
+// an independent control for the app's geometry; it must not replace the
+// normal incoming link with its browser-owned text directive.
+const arrivalHref = (url, native) => native ? url : url.split(':~:')[0];
 async function atGlyph(element, start = '') {
   await expect.poll(() => element.evaluate((el, start) => {
     const t = el.firstChild, i = start ? t.data.indexOf(start) : 0;
     const r = document.createRange(); r.setStart(t, i); r.setEnd(t, i + 1);
     const reveal = el.closest('[data-reveal-state]');
-    return (!reveal || getComputedStyle(reveal).opacity === '1') && Math.abs(r.getBoundingClientRect().top - 96) < 2;
-  }, start), { message: 'selected glyph painted at the fixed-header reading edge' }).toBe(true);
+    const top = r.getBoundingClientRect().top, opacity = reveal ? getComputedStyle(reveal).opacity : '1';
+    return opacity === '1' && Math.abs(top - 96) < 2 ? 'placed' : { top, opacity, y: scrollY, target: document.querySelector(':target')?.tagName, fonts: document.fonts.status, events: window.__qaPassageEvents };
+  }, start), { message: 'selected glyph painted at the fixed-header reading edge' }).toBe('placed');
 }
 
 for (const kind of ['essay', 'verse', 'biography']) {
@@ -87,6 +107,9 @@ for (const kind of ['essay', 'verse', 'biography']) {
     // Rewrap between sender and recipient. The verse fixture quotes the same
     // word twice on different lines; looking up its first occurrence fails.
     await open(page, path + '?from=private', hasTouch ? 1000 : 390);
+    // This sender is reading the full page. The intentionally short sender
+    // and the slow recipient have their own, independently held responses.
+    if (!isEssay) await expect(biography(page).nth(1)).toBeAttached();
     const url = await copy(page, target(page), path, start, isEssay);
     const arrive = async gate => {
       const dest = await recipient(context, url);
@@ -115,12 +138,16 @@ for (const kind of ['essay', 'verse', 'biography']) {
 
 test.describe('quote in the last visible line of a tall animated block', () => {
   test.use({ viewport: { width: 320, height: 540 }, contextOptions: { reducedMotion: 'no-preference' } });
-  test('arrival paints the line even when less than ten percent of the block is on screen', async ({ context, page }) => {
-    const path = '/essays/yesenin-kutezhi', start = '11:28';
-    const tail = p => p.locator('.essay-body aside p').filter({ hasText: 'Апостол Павел различает' });
-    await open(page, path, 320); const url = await copy(page, tail(page), path, start);
-    const dest = await recipient(context, url); await expect(tail(dest)).toBeFocused(); await atGlyph(tail(dest), start);
-  });
+  for (const native of [true, false]) {
+    test(`arrival paints the line even when less than ten percent of the block is on screen (${native ? 'copied link' : 'plain address'})`, async ({ context, page }) => {
+      const path = '/essays/yesenin-kutezhi', start = '11:28';
+      const tail = p => p.locator('.essay-body aside p').filter({ hasText: 'Апостол Павел различает' });
+      await open(page, path, 320); const url = await copy(page, tail(page), path, start);
+      await observeArrival(context);
+      const dest = await recipient(context, arrivalHref(url, native));
+      await expect(tail(dest)).toBeFocused(); await atGlyph(tail(dest), start);
+    });
+  }
 });
 
 test('a stale passage address does not silently jump to a different paragraph', async ({ page, context }) => {
@@ -195,17 +222,22 @@ test('a quote from the temporarily shortened biography remains addressable after
   expect((await intro.textContent()).length).toBeGreaterThan(40);
 });
 
-test('a reader choosing the skip link during delayed quote placement keeps focus and position', async ({ page, context }) => {
-  await open(page, blok); const url = await copy(page, repeatedWord(page), blok);
-  await withHeldRequest(context, poetData, pass, async gate => {
-    const dest = await recipient(context, url); await expect.poll(gate.attempts).toBe(1);
-    await expect(biography(dest)).toHaveCount(1); await dest.keyboard.press('Tab');
-    const skip = dest.getByRole('link', { name: 'Перейти к содержанию', exact: true });
-    await expect(skip).toBeFocused(); const from = await y(dest);
-    gate.release(); await expect(biography(dest).nth(1)).toBeAttached(); await paints(dest, 4);
-    await expect(skip).toBeFocused(); expect(await y(dest)).toBe(from);
+for (const native of [true, false]) {
+  test(`a reader choosing the skip link during delayed quote placement keeps focus and position (${native ? 'copied link' : 'plain address'})`, async ({ page, context }) => {
+    await open(page, blok); await expect(biography(page).nth(1)).toBeAttached();
+    const url = await copy(page, repeatedWord(page), blok); await observeArrival(context);
+    await withHeldRequest(context, poetData, pass, async gate => {
+      const dest = await recipient(context, arrivalHref(url, native)); await expect.poll(gate.attempts).toBe(1);
+      await expect(biography(dest)).toHaveCount(1); await dest.keyboard.press('Tab');
+      const skip = dest.getByRole('link', { name: 'Перейти к содержанию', exact: true });
+      await expect(skip).toBeFocused(); const from = await y(dest);
+      gate.release(); await expect(biography(dest).nth(1)).toBeAttached(); await paints(dest, 4);
+      await expect(skip).toBeFocused();
+      const after = await dest.evaluate(() => ({ y: scrollY, events: window.__qaPassageEvents }));
+      expect(after.y, `reader's position after enrichment; events=${JSON.stringify(after.events)}`).toBe(from);
+    });
   });
-});
+}
 
 test('editor and cross-community selections are not publishable even with public endpoints', async ({ page }) => {
   await open(page, blok);

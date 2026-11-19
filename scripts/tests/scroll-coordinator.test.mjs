@@ -84,7 +84,7 @@ function coordinator() {
     const exports = {};
     vm.runInNewContext(compiled.get(name), {
       exports, require: spec => load(spec.startsWith('.') ? spec.split('/').pop() : spec),
-      document, window, Event, URL, AbortController, Element, HTMLElement: Element, Node: { DOCUMENT_POSITION_FOLLOWING: 4 },
+      document, window, Event, URL, AbortController, Element, HTMLElement: Element, getComputedStyle: () => ({ scrollMarginTop: '112px' }), Node: { DOCUMENT_POSITION_FOLLOWING: 4 },
       requestAnimationFrame: window.requestAnimationFrame, cancelAnimationFrame: window.cancelAnimationFrame,
       MutationObserver: class {
         constructor(fn) { this.notify = fn; }
@@ -391,4 +391,37 @@ test('Back can expose the retained URL before the Navigation API updates its cur
   assert.deepEqual(app.calls, []);
   app.address(first); app.window.navigation.dispatchEvent(new Event('currententrychange')); app.frame();
   assert.deepEqual(app.calls, [840]);
+});
+
+test('a stamped native traversal keeps the last settled outgoing passage only if the UA already placed the arriving anchor', () => {
+  for (const jumped of [false, true]) {
+    const app = coordinator(); app.window.navigation = undefined;
+    const history = new (app.load('scrollHistory').ScrollHistory)();
+    app.window.location.hash = '#previous';
+    const visit = history.current = { id: 'first', url: app.window.location.href, applied: true };
+    app.window.history.state = { tlpScrollEntry: 'first' }; app.window.scrollY = 840;
+    const stop = app.load('scrollHistory').observeDepartures(history, () => ({ x: 0, y: app.window.scrollY }));
+    app.document.dispatchEvent(new Event('scrollend'));
+    app.window.location.hash = '#target'; app.window.history.state = { tlpScrollEntry: 'other' };
+    app.window.scrollY = jumped ? 204 : 861; // only 204 puts #target at the reading edge
+    app.window.dispatchEvent(new Event('popstate'));
+    assert.equal(history.position(visit).y, jumped ? 840 : 861);
+    stop(); assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
+  }
+});
+
+test('a late native text match gets one correction; keyboard takeover can stop a maintained native scroll, never replay the jump', () => {
+  for (const takeOver of [false, true]) {
+    const app = coordinator(); let applied = 0, yielded = 0, native = false;
+    app.document.querySelector = s => s === ':target' && native ? app.target : null;
+    app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.8.abc.0.1',
+      nativeQuote: true, apply() { applied++; app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+    app.frame(); app.frame(); app.frame(); assert.equal(app.document.activeElement, app.target);
+    native = true; app.window.scrollY = 290; // UA centred the range after focusing its paragraph
+    if (takeOver) app.input('keydown', {key: 'Tab'});
+    app.document.dispatchEvent(new Event('scrollend')); app.document.dispatchEvent(new Event('scrollend'));
+    assert.equal(applied, takeOver ? 1 : 2); assert.equal(yielded, takeOver ? 1 : 0);
+    assert.deepEqual(app.calls, takeOver ? [204, 290] : [204, 204]);
+    assert.equal(getEventListeners(app.document, 'scrollend').length, 0); assert.equal(app.readerListeners, 0);
+  }
 });

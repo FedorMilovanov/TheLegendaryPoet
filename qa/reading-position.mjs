@@ -7,6 +7,9 @@ export async function readAt(block, fraction = 0.42) {
     const r = n.getBoundingClientRect();
     scrollBy({ top: r.top + r.height * part - innerHeight * 0.34, behavior: 'instant' });
   }, fraction);
+  // A reader must actually have seen this position. An immediate rect read
+  // can precede both scrollend and the chrome's direction update by a paint.
+  await block.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
   await expectReadingAt(block, fraction);
 }
 export const portion = block => block.evaluate(n => {

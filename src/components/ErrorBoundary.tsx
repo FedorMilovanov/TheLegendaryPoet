@@ -37,28 +37,28 @@ function RecoveryPage({ error, location, pageMode }: { error: Error; location: L
 
   return (
     <section
-      className={`flex items-center justify-center px-4 text-center text-white ${pageMode ? 'min-h-[64vh] py-24' : 'min-h-screen bg-[#050505] py-20'}`}
+      className={`recovery-view ${pageMode ? 'min-h-[64vh] py-24' : 'min-h-screen bg-[#050505] py-20'}`}
       role="alert"
       aria-live="assertive"
     >
-      <div className="theme-dark-island theme-dark-island-text relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-amber-300/15 bg-[#061018] bg-[radial-gradient(circle_at_50%_0%,rgba(251,191,36,0.09),transparent_40%)] p-7 shadow-[0_28px_100px_rgba(0,0,0,0.42)] sm:p-10">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/15 bg-amber-300/[0.055] text-amber-200">
+      <div className="theme-dark-island theme-dark-island-text recovery-card">
+        <div className="recovery-icon">
           {offline ? <WifiOff size={24} /> : <RotateCw size={24} />}
         </div>
         <div className="section-label">{offline ? 'Нет соединения' : 'Страница остановлена безопасно'}</div>
-        <h1 data-route-unavailable className="mb-4 font-serif text-3xl font-bold sm:text-4xl">{titleCase(offline ? 'Загрузка не завершилась' : 'Попробуем восстановить страницу')}</h1>
-        <p className="mx-auto mb-8 max-w-md text-sm leading-relaxed text-cyan-100/55">{description}</p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        <h1 data-route-unavailable>{titleCase(offline ? 'Загрузка не завершилась' : 'Попробуем восстановить страницу')}</h1>
+        <p>{description}</p>
+        <div className="recovery-actions">
           <button
             type="button"
             onClick={() => reload ? window.location.reload() : navigate(location, { replace: true, state: location.state })}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-cyan-300 px-6 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100"
+            className="recovery-primary"
           >
             <RotateCw size={16} /> {reload ? 'Обновить страницу' : 'Повторить попытку'}
           </button>
           <Link
             to="/"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-cyan-400/15 px-6 text-xs font-bold uppercase tracking-[0.14em] text-cyan-200 transition hover:border-cyan-300/35 hover:bg-cyan-400/[0.055] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200"
+            className="recovery-secondary"
           >
             <Home size={16} /> На главную
           </Link>

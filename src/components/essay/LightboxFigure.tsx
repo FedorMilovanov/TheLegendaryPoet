@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
 import { useNativeImageState } from '../../hooks/useNativeImageState';
@@ -22,6 +22,7 @@ export default function LightboxFigure({ block, imageSrc, captionId, reduceMotio
   const originX = useMotionValue(0.5);
   const originY = useMotionValue(0.5);
   const panHint = useId();
+  const drag = useRef<{ id: number; x: number; y: number; ox: number; oy: number } | null>(null);
 
   useEffect(() => {
     const image = ref.current;
@@ -40,6 +41,14 @@ export default function LightboxFigure({ block, imageSrc, captionId, reduceMotio
   const moveOrigin = (dx: number, dy: number) => {
     originX.set(clampOrigin(originX.get() + dx));
     originY.set(clampOrigin(originY.get() + dy));
+  };
+  // Store the gesture endpoints, not frame-sampled deltas. WebKit can
+  // deliver the release before the animation frame scheduled by the move.
+  const pan = (event: PointerEvent<HTMLImageElement>) => {
+    const start = drag.current, image = event.currentTarget;
+    if (!start || start.id !== event.pointerId) return;
+    originX.set(clampOrigin(start.ox - (event.clientX - start.x) / (image.clientWidth * (magnification - 1))));
+    originY.set(clampOrigin(start.oy - (event.clientY - start.y) / (image.clientHeight * (magnification - 1))));
   };
   const toggleZoom = () => {
     if (!ready) return;
@@ -73,12 +82,14 @@ export default function LightboxFigure({ block, imageSrc, captionId, reduceMotio
           style={{ originX, originY }}
           animate={{ scale: zoomed ? magnification : 1 }}
           transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
-          onPan={zoomed ? (_, { delta }) => {
-            const image = ref.current;
-            if (image?.clientWidth && image.clientHeight) {
-              moveOrigin(-delta.x / (image.clientWidth * (magnification - 1)), -delta.y / (image.clientHeight * (magnification - 1)));
-            }
-          } : undefined}
+          onPointerDown={event => {
+            if (!zoomed || !event.isPrimary || event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, ox: originX.get(), oy: originY.get() };
+          }}
+          onPointerMove={pan}
+          onPointerUp={pan}
+          onLostPointerCapture={event => { if (drag.current?.id === event.pointerId) drag.current = null; }}
           onDoubleClick={toggleZoom}
           className={`h-full w-auto max-w-full select-none object-contain ${!ready ? 'hidden' : zoomed ? 'touch-none cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
         />

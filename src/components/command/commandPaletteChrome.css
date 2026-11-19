@@ -1,3 +1,17 @@
+@layer components {
+  .command-backdrop { @apply fixed inset-0 z-[120] flex flex-col items-center overflow-y-auto overscroll-contain backdrop-blur-xl; }
+  .command-sheet { @apply flex min-h-0 w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border outline-none; }
+  .command-input-row { @apply flex flex-none items-center border-b border-cyan-400/10; }
+  .command-input-row > input { @apply min-w-0 flex-1 bg-transparent text-base outline-none; }
+  .command-close { @apply inline-flex shrink-0 items-center justify-center rounded-full transition hover:bg-cyan-400/[0.06] hover:text-cyan-300 focus-visible:text-cyan-300; }
+  .command-sheet [role="listbox"] { @apply min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain [overflow-anchor:none] p-3; }
+  .command-sheet [role="status"] { @apply px-4 py-2 text-sm; }
+  .command-sheet .theme-modal-result { @apply w-full rounded-2xl border p-4 text-left transition-colors; }
+  .command-sheet .theme-modal-result .theme-text { @apply truncate font-serif text-lg font-bold; }
+  .command-sheet .theme-modal-result .theme-functional-muted { @apply line-clamp-1 text-xs; }
+  .command-sheet .theme-modal-result div.theme-control-action { @apply mt-2 text-[10px] font-bold uppercase tracking-[0.16em]; }
+}
+
 /* Keep one scrollport for results. The input and close action stay in view
    while the reader moves down the list, even at 200% text in landscape. */
 .command-backdrop {

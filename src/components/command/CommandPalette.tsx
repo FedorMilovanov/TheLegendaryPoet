@@ -9,7 +9,6 @@ import { useAppNavigate } from '../ui/Link';
 import { commandResults, getCommandItems, type CommandItem } from './commandItems';
 import type { EssaySearchEntry } from '../../data/essaySearchIndex.generated';
 import CommandResult from './CommandResult';
-import './commandPaletteChrome.css';
 
 // Search is part of the persistent shell. Its reader can already be at a
 // different browser address from the outlet React is still painting.
@@ -28,6 +27,7 @@ export default function CommandPalette() {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const point = useRef<{ x: number; y: number } | null>(null);
   const listId = 'command-palette-results';
   const optionId = (itemId: string) => 'command-option-' + itemId;
 
@@ -85,6 +85,7 @@ export default function CommandPalette() {
   });
 
   const openPalette = useCallback(() => {
+    point.current = null;
     setSession(dialogAddress());
   }, []);
 
@@ -179,7 +180,22 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="command-backdrop theme-modal-backdrop fixed inset-0 z-[120] flex flex-col items-center overflow-y-auto overscroll-contain backdrop-blur-xl"
+      className="command-backdrop theme-modal-backdrop"
+      onPointerMove={event => {
+        if (event.pointerType === 'touch') return;
+        const { clientX: x, clientY: y } = event, last = point.current;
+        if (last && last.x === x && last.y === y) return;
+        point.current = { x, y };
+        // A row moving under the cursor is not a reader changing the active
+        // option. Some engines also report zero movementX/Y on real entry:
+        // compare viewport coordinates once the open sheet has a reference.
+        if (!last && !event.movementX && !event.movementY) return;
+        const row = event.target instanceof Element && event.target.closest('[role="option"]');
+        if (row) {
+          const index = results.findIndex(item => optionId(item.id) === row.id);
+          if (index >= 0 && index !== activeIndex) setActiveIndex(index);
+        }
+      }}
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
@@ -190,9 +206,9 @@ export default function CommandPalette() {
         aria-modal="true"
         aria-label="Поиск по сайту"
         tabIndex={-1}
-        className="command-sheet theme-modal-surface flex min-h-0 w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border outline-none"
+        className="command-sheet theme-modal-surface"
       >
-        <div className="command-input-row flex flex-none items-center border-b border-cyan-400/10">
+        <div className="command-input-row">
           <Search size={20} className="theme-control-action shrink-0" />
           <input
             ref={inputRef}
@@ -208,18 +224,18 @@ export default function CommandPalette() {
             role="combobox"
             autoComplete="off"
             maxLength={120}
-            className="theme-text theme-placeholder min-w-0 flex-1 bg-transparent text-base outline-none"
+            className="theme-text theme-placeholder"
           />
-          <button type="button" onClick={close} aria-label="Закрыть поиск" className="command-close theme-functional-muted inline-flex shrink-0 items-center justify-center rounded-full transition hover:bg-cyan-400/[0.06] hover:text-cyan-300 focus-visible:text-cyan-300">
+          <button type="button" onClick={close} aria-label="Закрыть поиск" className="command-close theme-functional-muted">
             <X size={20} />
           </button>
         </div>
-        <div ref={listRef} id={listId} role="listbox" tabIndex={-1} aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain [overflow-anchor:none] p-3">
+        <div ref={listRef} id={listId} role="listbox" tabIndex={-1} aria-label="Результаты поиска">
           {results.map((item, index) => (
-            <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onPoint={() => setActiveIndex(index)} onSelect={() => select(item.path)} />
+            <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}
-          {!essayIndex && !essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted px-4 py-2 text-sm">Загрузка поиска по статьям…</div>}
-          {essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted px-4 py-2 text-sm">Поиск по статьям временно недоступен. Закройте и откройте поиск, чтобы повторить загрузку.</div>}
+          {!essayIndex && !essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted">Загрузка поиска по статьям…</div>}
+          {essayLoadError && <div role="status" aria-live="polite" className="theme-functional-muted">Поиск по статьям временно недоступен. Закройте и откройте поиск, чтобы повторить загрузку.</div>}
           {!results.length && essayIndex && <div role="option" aria-selected="false" aria-disabled="true" aria-live="polite" className="theme-functional-muted p-8 text-center">Ничего не найдено.</div>}
         </div>
       </div>

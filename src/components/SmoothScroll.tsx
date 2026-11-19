@@ -144,7 +144,7 @@ export function useRestoreRouteScroll(paintedPath: string) {
     function schedule() {
       cancelRequest?.();
       cancelRequest = requestRouteScroll({
-        current, fragmentId, apply,
+        current, fragmentId, apply, nativeQuote: !saved && fragmentId.startsWith('read.'),
         // The visible page is now the reader's departure, even if its delayed
         // jump never ran. A later Back/Forward must not replay the old intent.
         yieldToReader: leaveWithReader,

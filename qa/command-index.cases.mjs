@@ -41,6 +41,20 @@ export function registerCommandIndexCases() {
   test.describe('in-flight search index', () => {
     test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
+    test('a stationary pointer notification cannot replace the keyboard choice; a real move still explores', { tag: '@fine-pointer' }, async ({ page }) => {
+      await open(page, '/privacy'); await page.keyboard.press('Control+k');
+      const input = search(page); await input.fill('Музыка');
+      const choices = options(page); await expect(choices.nth(1)).toBeVisible();
+      await expect(input).toHaveAttribute('aria-activedescendant', await choices.first().getAttribute('id'));
+      // WebKit can notify a row under the stationary cursor when the list
+      // moves. This notification alone is not a reader pointing at a result.
+      await choices.nth(1).dispatchEvent('pointermove', { pointerType: 'mouse', movementX: 0, movementY: 0 });
+      await expect(choices.first()).toHaveAttribute('aria-selected', 'true');
+      await choices.nth(1).hover(); await expect(choices.nth(1)).toHaveAttribute('aria-selected', 'true');
+      await input.press('ArrowUp'); await input.press('Enter');
+      await expect(page).toHaveURL(base + '/music');
+    });
+
     test('Enter follows the explored release, not the chapter inserted at its former rank', async ({ page }) => {
       const track = 'yesenin-ya-ustalym-takim-eshche-ne-byl', id = 'command-option-track-' + track;
       await holdIndex(page, async complete => {
