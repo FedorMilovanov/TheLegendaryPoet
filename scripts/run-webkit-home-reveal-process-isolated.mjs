@@ -6,7 +6,7 @@ const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const common = [
   '--config=playwright.config.mjs',
   '--workers=1',
-  '--reporter=line',
+  '--reporter=line,./scripts/qa-github-failure-reporter.mjs',
 ];
 const artifactDir = path.resolve('qa-artifacts');
 const processLogPath = path.join(artifactDir, 'webkit-home-processes.log');
