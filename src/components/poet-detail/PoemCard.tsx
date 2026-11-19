@@ -68,9 +68,9 @@ export default function PoemCard({ poem }: PoemCardProps) {
           <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]`}>
             {displayTitle}
           </h3>
-          {poem.year && (
-            <span className="gold-border-glow rounded-full border border-luxury-gold/20 bg-luxury-gold/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold-light/80">
-              {poem.year}&nbsp;год{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}
+          {(poem.year || poem.yearLabel) && (
+            <span data-poem-year-label className="gold-border-glow rounded-full border border-luxury-gold/20 bg-luxury-gold/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold-light/80">
+              {poem.yearLabel ?? `${poem.year} год`}{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}
             </span>
           )}
           {poem.yearNote && <span data-poem-year-note className="ml-2 inline-block max-w-full text-xs font-medium normal-case tracking-normal text-luxury-gray-light">{poem.yearNote}</span>}

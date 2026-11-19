@@ -7,6 +7,8 @@ test('approved historical page is public; restricted scans remain hidden; origin
   await page.goto(origin + '/poets/alexander-pushkin', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#poem-pushkin-2')).toBeVisible();
   await expect(page.locator('#poem-pushkin-2 [data-poem-facsimile]')).toHaveAttribute('data-rights-status', 'approved');
+  await expect(page.locator('#poem-pushkin-2 [data-poem-facsimile]'))
+    .toContainText('Подлинная печать');
 
   if (!isReview) {
     await expect(page.locator('#poem-pushkin-4 [data-poem-facsimile]')).toHaveCount(0);
@@ -36,6 +38,11 @@ test('approved historical page is public; restricted scans remain hidden; origin
       await open.click();
       const viewer = band.locator('dialog');
       await expect(viewer).toBeVisible();
+      if (id === 'pushkin-2') {
+        await expect(viewer).toContainText('Альманах на 1830 год · издан в 1829');
+        await expect(band.locator('p').filter({ hasText: 'Подлинная печать' }))
+          .toContainText('1829');
+      }
       const viewerRadius = await viewer.evaluate((node) => parseFloat(getComputedStyle(node).borderTopLeftRadius));
       expect(viewerRadius).toBeGreaterThanOrEqual(20);
       await expect(viewer.locator('img')).toHaveAttribute('alt', /Первопечатная|Страница 37/);

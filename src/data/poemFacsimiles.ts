@@ -19,6 +19,8 @@ export interface PoemFacsimile {
   poemId: string;
   publication: string;
   publicationYear: number;
+  /** Annual/almanac title year, distinct from actual bibliographic publication date. */
+  imprintYear?: number;
   credit: string;
   rights: 'review' | 'approved';
   /** A rights evidence record is mandatory before allowing production media. */
@@ -30,14 +32,15 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
   'pushkin-2': {
     poemId: 'pushkin-2',
     publication: '«Северные цветы» на 1830 год',
-    publicationYear: 1830,
-    credit: '«Северные цветы», 1830 · Викисклад (Public Domain Mark) · скан Google Books, знак сохранён',
+    publicationYear: 1829,
+    imprintYear: 1830,
+    credit: '«Северные цветы» на 1830 год · СПб., 1829 · Викисклад (Public Domain Mark) · скан Google Books, знак сохранён',
     rights: 'approved',
     rightsEvidence: 'https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png',
     pages: [{
       src: '/images/facsimiles/pushkin-ya-vas-lyubil-1830.png',
       printPage: '104',
-      alt: 'Первопечатная страница 104 «Северных цветов» за 1830 год: «Я вас любил…», восемь строк и подпись А. Пушкинъ',
+      alt: 'Первопечатная страница 104 альманаха «Северные цветы на 1830 год» (СПб., 1829): «Я вас любил…», восемь строк и подпись А. Пушкинъ',
       width: 575, height: 835,
       sha256: 'd8ce1c004be00dea5f40ebf4c00904f9382a8c37fc9a6857d4e1a9a3a84a350a',
       originalUrl: 'https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png',

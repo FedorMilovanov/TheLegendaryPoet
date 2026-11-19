@@ -191,7 +191,19 @@ test.describe('poets result status accessibility', () => {
             await expect(page.locator('#poem-' + poemId + ' [data-poem-textual-note] a'))
               .toHaveAttribute('href', 'https://feb-web.ru/feb/pushkin/texts/push17/vol03/y32-b23-.htm?cmd=p');
           }
-          await expect(page.locator('#poem-pushkin-1 [data-poem-textual-note]')).toContainText('30/30');
+          // Independently count the canonical verse lines, not just numbers stated in prose notes.
+          for (const [poemId, expectedLines] of [['pushkin-1', 30], ['pushkin-2', 8], ['pushkin-3', 21]]) {
+            const canonicalText = page.locator('#poem-' + poemId + ' [data-poem-canonical]');
+            await expect.poll(() => canonicalText.evaluate((node) => (node.textContent || '')
+              .split('\n').filter((line) => line.trim()).length)).toBe(expectedLines);
+            await expect(canonicalText).not.toContainText('<...>');
+          }
+          await expect(page.locator('#poem-pushkin-1 [data-poem-canonical]')).toContainText('Глаголом жги сердца людей');
+          await expect(page.locator('#poem-pushkin-2 [data-poem-canonical]')).toContainText('То робостью, то ревностью томим');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).toContainText('Exegi monumentum.');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).toContainText('Александрийского столпа.');
+          await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).not.toContainText('Наполеонова столпа');
+                    await expect(page.locator('#poem-pushkin-1 [data-poem-textual-note]')).toContainText('30/30');
           await expect(page.locator('#poem-pushkin-1 [data-poem-year-note]')).toContainText('1827');
           await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('8/8');
           await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('1832');
@@ -208,7 +220,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('PA37');
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note]')).toContainText('Стихи въ Альбомъ');
           await expect(page.locator('#poem-pushkin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://books.google.ru/books?id=8aFoAAAAcAAJ&pg=PA37');
-          for (const poemId of ['pushkin-4', 'pushkin-9']) {
+          for (const poemId of ['pushkin-1', 'pushkin-2', 'pushkin-3', 'pushkin-4', 'pushkin-9']) {
             const note = page.locator('#poem-' + poemId + ' [data-poem-textual-note]');
             const disclosure = note.locator('details');
             await expect(disclosure).not.toHaveAttribute('open', '');
@@ -327,7 +339,9 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-tyutchev-5 [data-poem-excerpt-notice]')).toHaveCount(0);
           await expect(page.locator('#poem-tyutchev-5 [data-poem-textual-note]')).toContainText('40/40');
           await expect(page.locator('#poem-tyutchev-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-333-.htm?cmd=p');
-          await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-year-label]')).toHaveText('1830-е годы');
+          await expect(page.locator('a[href="#poem-tyutchev-11"] [data-poem-year-label]')).toHaveText('1830-е годы');
+                    await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('ЦГАЛИ (505/19, л. 5)');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('между 1834 годом и апрелем 1836');
           await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('VERIFIED');

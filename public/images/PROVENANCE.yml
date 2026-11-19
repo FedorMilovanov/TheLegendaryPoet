@@ -466,7 +466,8 @@ assets:
     poem_id: pushkin-2
     origin_class: faithful_two_dimensional_public_domain_historical_reproduction
     original_publication: "Северные цветы на 1830 год, с. 104, Пушкин «Я вас любил…»"
-    original_publication_year: 1830
+    original_publication_year: 1829
+    imprint_year: 1830
     source_url: "https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png"
     source_repository: Wikimedia Commons
     source_authority: "Wikimedia Commons imageinfo API: LicenseShortName=Public domain, UsageTerms=Public domain, Copyrighted=False"
@@ -481,4 +482,4 @@ assets:
     review_status: VERIFIED-PUBLIC-DOMAIN
     source_use: primary_publication_facsimile
     alteration: "None; source bytes preserved (no crop, recolor, upscale or watermark removal)"
-    notes: "The Wikimedia-hosted historical page is marked public domain and includes a Google digitization footer. Archive credit preserved. The two other 1825/1829 Google Books scans remain local rights-review only."
+    notes: "Annual volume titled 'Severnye tsvety na 1830 god'; bibliographic imprint is Saint Petersburg, 1829 (FEB Pushkin critical apparatus, vol. 3, pt. 2, p. 1193). Year 1830 names the annual, not the publication year. Wikimedia original is public domain with Google digitization footer; no image bytes changed. Two other Google Books scans remain local rights-review only."

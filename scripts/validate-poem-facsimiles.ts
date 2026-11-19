@@ -12,7 +12,10 @@ let reviewCount = 0;
 
 for (const [id, record] of Object.entries(poemFacsimiles)) {
   if (!knownPoems.has(id) || record.poemId !== id) errors.push(id + ': unknown or mismatched canonical poem id');
-  if (!record.publication || !record.credit || record.publicationYear < 1600) errors.push(id + ': missing historical citation');
+  if (!record.publication || !record.credit || !Number.isInteger(record.publicationYear) || record.publicationYear < 1600) errors.push(id + ': missing historical citation');
+  if (record.imprintYear !== undefined && (!Number.isInteger(record.imprintYear) || record.imprintYear < 1600 || record.imprintYear === record.publicationYear)) {
+    errors.push(id + ': invalid or redundant annual imprint year');
+  }
   if (!record.pages.length) errors.push(id + ': no pages');
   if (record.rights === 'approved') {
     approvedCount += 1;
@@ -53,6 +56,12 @@ for (const [id, record] of Object.entries(poemFacsimiles)) {
       const section = provenance.split('  - path: ' + file + '\n')[1]?.split('\n  - path: ')[0] ?? '';
       if (!section || !section.includes('sha256: ' + page.sha256) || !section.includes('review_status: VERIFIED-PUBLIC-DOMAIN')) {
         errors.push(key + ': approved file has no matching source/rights/hash provenance entry');
+      }
+      if (!section.includes('original_publication_year: ' + record.publicationYear)) {
+        errors.push(key + ': approved provenance does not match bibliographic publication year');
+      }
+      if (record.imprintYear !== undefined && !section.includes('imprint_year: ' + record.imprintYear)) {
+        errors.push(key + ': approved provenance does not preserve distinct almanac imprint year');
       }
       if (!section.includes('accessed_at:') || !section.includes('source_url:') || !section.includes('license:')) {
         errors.push(key + ': approved provenance lacks source, license or access date');

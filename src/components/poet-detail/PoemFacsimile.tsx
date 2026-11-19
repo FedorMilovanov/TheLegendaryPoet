@@ -11,6 +11,9 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
   const [zoomed, setZoomed] = useState(false);
   const page = document.pages[pageIndex];
   const firstPage = document.pages[0];
+  const publicationLabel = document.imprintYear === undefined
+    ? `Первопечатный лист · ${document.publicationYear}`
+    : `Альманах на ${document.imprintYear} год · издан в ${document.publicationYear}`;
 
   useEffect(() => () => {
     if (dialogRef.current?.open) {
@@ -121,7 +124,7 @@ export default function PoemFacsimile({ document }: { document: FacsimileData })
         <div className="flex h-full min-h-0 flex-col">
           <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-luxury-gold-light/75">Первопечатный лист · {document.publicationYear}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-luxury-gold-light/75">{publicationLabel}</p>
               <h3 id={titleId} className="truncate font-serif text-lg text-white sm:text-xl">{document.publication}</h3>
             </div>
             <button type="button" onClick={closeViewer} aria-label="Закрыть оригинал" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"><X size={21} /></button>
