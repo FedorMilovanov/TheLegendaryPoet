@@ -19,6 +19,8 @@ interface PoemCardProps {
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
+  // Keep editorial omissions explicit until the canonical edition is restored.
+  const isMarkedExcerpt = /(?:^|\n)[ \t]*<\.{3}>[ \t]*(?:\n|$)/u.test(poem.text);
   const displayTitle = poem.title.startsWith('«') && poem.title.endsWith('»')
     ? poem.title
     : `«${poem.title}»`;
@@ -92,6 +94,11 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </div>
 
       <InteractivePoemText text={poem.text} />
+      {isMarkedExcerpt && (
+        <p data-poem-excerpt-notice role="note" className="-mt-6 mb-10 border-l-2 border-luxury-gold/40 pl-4 text-sm leading-7 text-luxury-gray-light">
+          Текст приведён с сокращениями: некоторые строфы пропущены. Это не полная редакция стихотворения.
+        </p>
+      )}
       {facsimile && (
         <Suspense fallback={null}>
           <PoemFacsimile document={facsimile} />

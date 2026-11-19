@@ -303,6 +303,9 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('#poem-tyutchev-5 [data-poem-canonical]')).toContainText('<...>');
+          await expect(page.locator('#poem-tyutchev-5 [data-poem-excerpt-notice]')).toContainText('Это не полная редакция стихотворения');
+          await expect(page.locator('[data-poem-excerpt-notice]')).toHaveCount(1);
           await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('ЦГАЛИ (505/19, л. 5)');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('между 1834 годом и апрелем 1836');
