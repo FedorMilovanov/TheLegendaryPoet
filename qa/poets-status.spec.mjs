@@ -156,16 +156,19 @@ test.describe('poets result status accessibility', () => {
     await expect(page.getByText('Показана резервная подборка.')).toBeVisible();
   });
 
-  test('Four expanded classics hydrate full canonical contents on both layouts', async ({ page }, testInfo) => {
-    const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
-    const expandedPoets = [
+  const expandedPoets = [
       ['alexander-pushkin', 10],
       ['mikhail-lermontov', 11],
       ['sergei-yesenin', 10],
       ['fyodor-tyutchev', 11],
     ];
-    for (const [poetId, expectedCount] of expandedPoets) {
-      for (const width of widths) {
+  // Keep every author, viewport, and editorial assertion, but give each
+  // independent visit its own 45-second Playwright budget. In particular,
+  // WebKit must not spend the Pushkin/Lermontov/Yesenin budget before Tyutchev.
+  for (const [poetId, expectedCount] of expandedPoets) {
+    for (const width of [390, 1440]) {
+      test(`Expanded classics preserve full canonical contents: ${poetId} at ${width}px`, async ({ page }, testInfo) => {
+        test.skip(width === 1440 && testInfo.project.name !== 'chromium-core', 'Desktop layout is covered by chromium-core');
         await page.setViewportSize({ width, height: 900 });
         await page.goto(`${BASE_URL}/poets/${poetId}`, { waitUntil: 'domcontentloaded' });
         const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
@@ -203,7 +206,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).toContainText('Exegi monumentum.');
           await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).toContainText('Александрийского столпа.');
           await expect(page.locator('#poem-pushkin-3 [data-poem-canonical]')).not.toContainText('Наполеонова столпа');
-                    await expect(page.locator('#poem-pushkin-1 [data-poem-textual-note]')).toContainText('30/30');
+          await expect(page.locator('#poem-pushkin-1 [data-poem-textual-note]')).toContainText('30/30');
           await expect(page.locator('#poem-pushkin-1 [data-poem-year-note]')).toContainText('1827');
           await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('8/8');
           await expect(page.locator('#poem-pushkin-2 [data-poem-textual-note]')).toContainText('1832');
@@ -341,7 +344,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-tyutchev-5 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-333-.htm?cmd=p');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-year-label]')).toHaveText('1830-е годы');
           await expect(page.locator('a[href="#poem-tyutchev-11"] [data-poem-year-label]')).toHaveText('1830-е годы');
-                    await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
+          await expect(page.locator('#poem-tyutchev-11 [data-poem-year-note]')).toContainText('не позднее апреля 1836');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('ЦГАЛИ (505/19, л. 5)');
           await expect(page.locator('#poem-tyutchev-11 [data-poem-textual-note]')).toContainText('между 1834 годом и апрелем 1836');
           await expect(page.locator('#poem-tyutchev-8 [data-poem-textual-note]')).toContainText('VERIFIED');
@@ -417,9 +420,9 @@ test.describe('poets result status accessibility', () => {
           if (await analysis.count()) await expect(analysis.locator('xpath=..')).toHaveCSS('background-color', 'rgb(244, 236, 219)');
           await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
         }
-      }
+      });
     }
-  });
+  }
 
   test('shared chrome stays accessible after same-page poetry fragment navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
