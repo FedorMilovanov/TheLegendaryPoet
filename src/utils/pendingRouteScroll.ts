@@ -22,7 +22,7 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
   let observer: MutationObserver | undefined;
   let timer = 0, frame = 0;
   const deadline = Date.now() + 15_000;
-  let ownedFocus: HTMLElement | null = null;
+  let ownedFocus: Element | null = null;
   let cancelFocus: (() => void) | undefined;
   // The placed line is defended once: an engine can finish a scroll it already
   // started after the app arrived. This is not a second scroll loop.
@@ -58,17 +58,12 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
       readableAt(placedY) && current() && !hasOpenOverlay();
     const again = replay;
     stop();
-    if (!keep) return;
-    if (again) again();
-    else window.scrollTo({ top: placedY, behavior: 'instant' });
+    if (keep) { if (again) again(); else window.scrollTo(window.scrollX, placedY); }
   };
   const arm = (y: number, again?: () => void) => {
     placedY = y; replay = again;
     if (!readableAt(y)) return;
-    if (!guarding) {
-      guarding = true;
-      document.addEventListener('scrollend', settle, { signal });
-    }
+    if (!guarding) guarding = true, document.addEventListener('scrollend', settle, { signal });
     timer = window.setTimeout(stop, deadline - Date.now());
   };
   const takeOver = (event: Event) => {
@@ -78,13 +73,12 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
     if (!nativeQuote) { yieldToReader(); stop(); return; }
     // A browser can still be animating or retrying its own text match. End
     // that motion here without consuming the reader's key, click or wheel.
-    window.scrollTo({ top: window.scrollY, behavior: 'instant' });
+    window.scrollTo(window.scrollX, window.scrollY);
     yieldToReader();
     stopWaiting();
     cancelAnimationFrame(frame);
     cancelFocus?.();
-    cancelFocus = undefined;
-    ownedFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    ownedFocus = document.activeElement;
     arm(window.scrollY);
   };
   // Observe intent, never cancel input or infer intent from scrollY: image

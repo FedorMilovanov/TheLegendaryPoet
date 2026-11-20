@@ -28,7 +28,10 @@ function coordinator() {
     cancelAnimationFrame(id) { frames.delete(id); },
     setTimeout(fn, ms) { timers.set(++serial, { fn, ms }); return serial; },
     clearTimeout(id) { timers.delete(id); }, matchMedia: () => ({ matches: true }),
-    scrollTo(options) { calls.push(options.top); this.scrollY = options.top; },
+    scrollTo(options, topArg) {
+      const top = typeof options === 'number' ? topArg : options.top;
+      calls.push(top); this.scrollY = top;
+    },
   });
   window.addEventListener('tlp-reveal-chrome', e => events.push(e.type));
   // Node EventTarget has no DOM propagation. Deliver browser input at the
