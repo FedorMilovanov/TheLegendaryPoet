@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
-import path from 'node:path';
 import crypto from 'node:crypto';
+import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { acquireExactOfflineSource } from './download-exact-source.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const acquisitionPath = path.join(root, 'docs/hall-v3/pushkin-acquisition.json');
@@ -14,18 +15,12 @@ const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const sha256 = (bytes) => `sha256:${crypto.createHash('sha256').update(bytes).digest('hex')}`;
 const fail = (message) => { throw new Error(message); };
 
-const downloadExact = async (asset, outputName) => {
-  const url = new URL(asset.originalFileUrl);
-  if (url.protocol !== 'https:' || url.hostname !== 'upload.wikimedia.org') fail(`${asset.assetId}: source host must remain upload.wikimedia.org`);
-  const response = await fetch(url, { redirect: 'follow', headers: { 'user-agent': 'TheLegendaryPoet-HallV3-offline-evidence/1.0' } });
-  if (!response.ok) fail(`${asset.assetId}: source download failed: ${response.status}`);
-  const bytes = Buffer.from(await response.arrayBuffer());
-  const actual = sha256(bytes);
-  if (actual !== asset.sourceFileHash) fail(`${asset.assetId}: source hash mismatch: ${actual} != ${asset.sourceFileHash}`);
-  const output = path.join(outputDir, outputName);
-  fs.writeFileSync(output, bytes);
-  return { assetId: asset.assetId, requestedUrl: url.href, finalUrl: response.url, byteCount: bytes.byteLength, sha256: actual, file: outputName };
-};
+const sourceCacheDir = process.env.HALL_PUSHKIN_SOURCE_CACHE_DIR
+  ? path.resolve(process.env.HALL_PUSHKIN_SOURCE_CACHE_DIR)
+  : undefined;
+const downloadExact = (asset, outputName) => acquireExactOfflineSource({
+  asset, outputName, outputDir, cacheDir: sourceCacheDir,
+});
 
 const pngDimensions = (file) => {
   const bytes = fs.readFileSync(file);
