@@ -360,6 +360,23 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
         }
         if (poetId === 'fyodor-tyutchev') {
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
+          for (const [number, expectedLines, sourceUrl, noteUrl] of [[1,18,"https://rvb.ru/19vek/tyutchev/bp/poems/073.html","https://rvb.ru/19vek/tyutchev/bp/notes/notes.html"],[2,12,"https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-040-.htm?cmd=p","https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-333-.htm?cmd=p"],[3,4,"https://rvb.ru/19vek/tyutchev/bp/poems/292.html","https://rvb.ru/19vek/tyutchev/bp/notes/notes.html"],[4,20,"https://feb-web.ru/feb/tyutchev/texts/pss06/tu2/tu2-219-.htm?cmd=p","https://rvb.ru/19vek/tyutchev/bp/notes/notes.html"]]) {
+            const card = page.locator('#poem-tyutchev-' + number);
+            const canonical = card.locator('[data-poem-canonical]');
+            await expect.poll(() => canonical.evaluate((node) =>
+              (node.textContent || '').split('\n').filter((line) => line.trim()).length
+            )).toBe(expectedLines);
+            await expect(card.locator('[data-poem-year-note]')).toBeVisible();
+            await expect(card.locator('[data-poem-textual-note]')).toContainText(expectedLines + '/' + expectedLines);
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', noteUrl);
+            await expect(card.locator('a[href="' + sourceUrl + '"]')).toHaveCount(1);
+          }
+          await expect(page.locator('#poem-tyutchev-1 [data-poem-year-label]')).toContainText('конец 1820-х');
+          await expect(entries.filter({hasText: 'Silentium!'}).locator('[data-poem-year-label]')).toContainText('конец 1820-х');
+          await expect(page.locator('#poem-tyutchev-4 [data-poem-canonical]')).toContainText('Я встретил вас — и все былое');
+          await expect(page.locator('#poem-tyutchev-4 [data-poem-canonical]')).toContainText('И что-то встрепенется в нас');
+          await expect(page.locator('#poem-tyutchev-4 [data-poem-textual-note]')).toContainText('Клотильду Ботмер');
           const fullTyutchevPoem = page.locator('#poem-tyutchev-5 [data-poem-canonical]');
           await expect.poll(() => fullTyutchevPoem.evaluate((el) => (el.textContent || '').split('\n').filter((line) => line.trim()).length)).toBe(40);
           await expect(fullTyutchevPoem).toContainText('Как в буйной слепоте страстей');
