@@ -285,12 +285,15 @@ jobs:
       - name: Validate optimized GLB with Khronos validator
         run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-gltf --input qa-artifacts/hall-material-spike/material-spike-optimized.glb --output qa-artifacts/hall-material-spike/gltf-optimized-report.json
 
-      - name: Validate regenerated material transport and selected authority
+      - name: Write independent fail-closed GLB structure diagnostics
         env:
           HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
-        run: |
-          npm run validate:hall-material-transport
-          npm run validate:hall-post-material-authority
+        run: node scripts/hall-material/diagnose-structural-drift.mjs
+
+      - name: Validate generated material transport before browser witness
+        env:
+          HALL_MATERIAL_SPIKE_EVIDENCE: qa-artifacts/hall-material-spike
+        run: npm run validate:hall-material-transport
 
       - name: Prepare isolated QA viewer assets
         run: |
