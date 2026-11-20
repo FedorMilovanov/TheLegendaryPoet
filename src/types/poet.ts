@@ -58,6 +58,8 @@ export interface Poem {
   sourceUrl?: string;
   /** Explicit published music release IDs associated with this work; never infer from titles. */
   relatedMusicTrackIds?: readonly string[];
+  /** Quoted epigraph by another author, shown separately from the canonical poem text. */
+  epigraph?: { text: string; attribution: string };
   text: string;
   year?: number;
   analysis?: string;

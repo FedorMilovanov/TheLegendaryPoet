@@ -121,6 +121,19 @@ test.describe('poets result status accessibility', () => {
       await expect(page.locator('#poem-blok-9')).toContainText('В ночь, когда Мамай залег с ордою');
       await expect(page.locator('#poem-blok-10')).toContainText('Опять с вековою тоскою');
       await expect(page.locator('#poem-blok-11')).toContainText('Вл. Соловьев');
+      const finalCard = page.locator('#poem-blok-11');
+      const epigraph = finalCard.locator('[data-poem-epigraph]');
+      await expect(epigraph).toBeVisible();
+      await expect(epigraph).toHaveAttribute('aria-label', 'Эпиграф к стихотворению');
+      await expect(epigraph.locator('blockquote')).toHaveText('И мглою бед неотразимых Грядущий день заволокло.');
+      await expect(epigraph.locator('figcaption')).toContainText('Вл. Соловьев');
+      const canonical = finalCard.locator('[data-poem-canonical]');
+      const canonicalText = await canonical.textContent();
+      expect(canonicalText.split('\n').filter((line) => line.trim().length > 0)).toHaveLength(16);
+      await expect(canonical).not.toContainText('Вл. Соловьев');
+      await expect(canonical).not.toContainText('И мглою бед неотразимых');
+      await expect(canonical).toContainText('Опять над полем Куликовым');
+      expect(await epigraph.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
       await expect(page.locator('#poem-blok-11')).toContainText('Теперь твой час настал. — Молись!');
 
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
