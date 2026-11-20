@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1ffd929d9b863da44277bb8303d87a0adc8a873264e03c45eec33ffbcc97fdbb"
+      "fingerprint": "b1de27e83cd24e6fdb83de915ce0e7a283da9b65649a496092b8dbf2748c737f"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "b7743e314ca99d7be741838f246ac9d009083ccff547d8a79060595300fb10fa"
+      "fingerprint": "906caebe2865e561abd96023b36e3d2607b21106ecf12c1df0adf58f8604c375"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5873b56c5cddca15b269076f653ae03c3969c1d9317be5c2653b359ebd430b61"
+      "fingerprint": "2b63d14a2efd1b6bbca6b542fc4d3b5d2084ae955472c408a4aedba1440bd18e"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -362,7 +362,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "f65cecdc8e19c2cefe516550e650d8a29c748274c23d1383abb389254e262e10"
+      "fingerprint": "5dccd83e7d6250d5b583006d383f125c1188b7902765499bac9fad6464702b6e"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/vladimir-mayakovsky/",
