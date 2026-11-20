@@ -273,11 +273,17 @@ for (const surface of surfaces) {
     const finePointer = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
 
     for (const image of sampledImages) {
-      const { initial, enforceOpacity } = await prepareImageForSampling(image, finePointer);
-      expect(initial.transitionProperty).not.toContain('all');
-      expect(initial.backfaceVisibility).toBe('hidden');
-      const samples = await samplePointerInteraction(page, image, finePointer);
-      assertStableSamples(initial, samples, enforceOpacity);
+      // An archival plate served by another institution is that host's to
+      // deliver. Its compositor protection is still this site's promise, but
+      // its pixels and hover transition are not ours to sample.
+      const own = await image.evaluate((node) => new URL(node.currentSrc || node.src, location.href).origin === location.origin);
+      if (own) {
+        const { initial, enforceOpacity } = await prepareImageForSampling(image, finePointer);
+        expect(initial.transitionProperty).not.toContain('all');
+        expect(initial.backfaceVisibility).toBe('hidden');
+        const samples = await samplePointerInteraction(page, image, finePointer);
+        assertStableSamples(initial, samples, enforceOpacity);
+      }
 
       const compositor = await image.evaluate((node) => {
         const inner = node.closest('.tilt-card-inner');
@@ -290,6 +296,7 @@ for (const surface of surfaces) {
           innerBackface: inner ? getComputedStyle(inner).backfaceVisibility : null,
         };
       });
+      expect(compositor.hasTilt || own, `interactive artwork on ${surface.path} sits in a tilt card`).toBe(true);
 
       if (compositor.hasTilt) {
         expect(compositor.hasStableContentPlane).toBe(true);

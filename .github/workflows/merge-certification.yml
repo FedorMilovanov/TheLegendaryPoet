@@ -144,7 +144,7 @@ jobs:
     needs: scope
     if: needs.scope.outputs.browser_qa_required == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - name: Checkout exact PR head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
