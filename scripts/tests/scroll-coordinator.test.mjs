@@ -422,7 +422,7 @@ test('a native quote keeps its placed line when the engine scrolls the focused b
   assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
 });
 
-test('a takeover ends the arrival: the engine finishing its text match later is never corrected', () => {
+test('a takeover keeps the reader position when the engine finishes its text match later', () => {
   const app = coordinator(); let applied = 0, yielded = 0;
   app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.poem-blok-1.5.1.0.0',
     nativeQuote: true, apply() { applied++; app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
@@ -431,7 +431,7 @@ test('a takeover ends the arrival: the engine finishing its text match later is 
   assert.equal(yielded, 1); assert.equal(app.window.scrollY, 204);
   app.window.scrollTo({ top: 1056 }); // UA centres its delayed native text match
   app.document.dispatchEvent(new Event('scrollend'));
-  assert.equal(app.window.scrollY, 1056); assert.equal(applied, 1);
+  assert.equal(app.window.scrollY, 204); assert.equal(applied, 1);
   assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
 });
 
