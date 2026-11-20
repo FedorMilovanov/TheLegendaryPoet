@@ -87,7 +87,8 @@ assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native sc
 assertContract(!requestAst.hasEventListener('scroll') && requestAst.hasEventListener('wheel', { options: { passive: true } }),
   'a pending request may passively observe wheel intent, not sample document movement');
 assertContract(requestSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');
-assertContract(requestSource.includes('HASH_OBSERVER_TIMEOUT_MS = 15_000'), 'hash observation must have a bounded 15-second lifetime for slow lazy routes');
+assertContract(requestSource.includes('window.setTimeout(() => { stopWaiting(); place(true); }, 15_000)'),
+  'hash observation must stop waiting and attempt the available layout after 15 seconds');
 // The VM below also executes the registration gap, cancellation, listener
 // teardown and timeout paths with the actual two-frame focus helper.
 assertContract(requestAst.hasMethodCallWithBooleanOptions('observe', { childList: true, subtree: true }, 1),

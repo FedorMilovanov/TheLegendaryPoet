@@ -28,8 +28,8 @@ const suites = [
   { id: 'brand-reference-raster', file: 'qa/brand-emblem.spec.mjs' },
   { id: 'brand-reference-comparison', file: 'qa/brand-reference-comparison.spec.mjs' },
   { id: 'compact-touch-surfaces', file: 'qa/hover-surfaces.spec.mjs' },
-  // One launch for every route's stable-hover contract: same file, same
-  // isolation, six fewer browser starts before the job's own timeout.
+  // Run all seven stable-hover contracts in one file-level process, saving
+  // six browser launches; individual tests still get fresh browser contexts.
   {
     id: 'stable-hover-routes',
     file: 'qa/hover-stability.spec.mjs',
