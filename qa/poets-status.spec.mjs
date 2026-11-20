@@ -65,7 +65,7 @@ test.describe('poets result status accessibility', () => {
     await expect(pulse).toBeVisible();
     await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
   });
-  test('Blok contents preserve eight linked works and responsive two-column navigation', async ({ page }, testInfo) => {
+  test('Blok contents preserve eleven works and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -73,10 +73,10 @@ test.describe('poets result status accessibility', () => {
 
       const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
       const cards = page.locator('[id^="poem-blok-"]');
-      await expect(cards).toHaveCount(8);
+      await expect(cards).toHaveCount(11);
       // Both layers must agree on word indices, including NBSP before the
       // dash in «Скифы»; otherwise hover/focus affects the wrong visual word.
-      for (let i = 0; i < 8; i += 1) {
+      for (let i = 0; i < 11; i += 1) {
         const card = cards.nth(i);
         const canonicalWords = await card.locator('[data-poem-canonical-word]').count();
         expect(canonicalWords, `canonical words in Blok poem ${i + 1}`).toBeGreaterThan(0);
@@ -101,18 +101,27 @@ test.describe('poets result status accessibility', () => {
       await expect(page).toHaveURL(/#blok-contents$/);
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
-      await expect(anchors).toHaveCount(8);
+      await expect(anchors).toHaveCount(11);
       await expect(guide).toHaveClass(/poet-reading-index/);
-      await expect(guide.locator('ol > li')).toHaveCount(8);
-      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
+      await expect(guide.locator('ol > li')).toHaveCount(11);
+      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
       await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
-      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(8);
+      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(11);
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
+      // Literary cycle I–V remains consecutive while only two parts have linked music.
+      const kulikovoIds = ['blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11'];
+      for (const [offset, id] of kulikovoIds.entries()) {
+        await expect(anchors.nth(5 + offset)).toHaveAttribute('href', `#poem-${id}`);
+      }
+      await expect(page.locator('#poem-blok-9')).toContainText('В ночь, когда Мамай залег с ордою');
+      await expect(page.locator('#poem-blok-10')).toContainText('Опять с вековою тоскою');
+      await expect(page.locator('#poem-blok-11')).toContainText('Вл. Соловьев');
+      await expect(page.locator('#poem-blok-11')).toContainText('Теперь твой час настал. — Молись!');
 
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,

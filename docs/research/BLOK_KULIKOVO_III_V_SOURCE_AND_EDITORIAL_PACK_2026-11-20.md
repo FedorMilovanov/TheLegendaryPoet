@@ -65,3 +65,8 @@
 **Сделано:** выявлен пробел 3/5 → 5/5, просмотрены три индивидуальные академические страницы плюс I/II, составлен одноиздательский реестр, подготовлены шесть оригинальных редакционных абзацев и строгая схема переноса/QA.
 
 **Не сделано:** полная независимая строковая колляция из отдельных первичных отпечатков; фактический импорт новых `Poem` в runtime, генерация производных и Browser QA. Называть эти три стихотворения опубликованными нельзя.
+
+
+## W69 — Canonical import on feature branch (20.11.2026)
+
+The three absent literary sections have now been staged in the feature branch as `blok-9`, `blok-10`, `blok-11`: 32/28/16 poem lines. The fifth section additionally has a two-line **Vladimir Solovyov** epigraph plus separate printed attribution (19 nonempty rendered lines, only 16 from Blok). This matches the existing site convention used for the epigraph in «Скифы». Existing `blok-1`–`blok-8` and all verified musical references remain unchanged. The full static Blok JSON and seven-author revision were computed using the repository's exact deterministic serialization; previous revision independently verified. Main is still unchanged, and PR #598 is Draft: no public deployment. Pending: exact-head full CI, any discovery/SEO regeneration, full browser QA and independent editorial sign-off. The preceding historical checklist records the earlier W68 source-only state.
