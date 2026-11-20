@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Star, Award, Heart } from 'lucide-react';
+import { Star, Award, Heart, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
+import { visiblePoemFacsimile } from '../../data/poemFacsimiles';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
 import { useFavoritePoem } from '../../hooks/useFavoritePoems';
@@ -9,6 +10,7 @@ import InteractivePoemText from './InteractivePoemText';
 import { toggleFavoritePoem } from '../../utils/myArchiveStore';
 
 const PoemResourceLinks = lazy(() => import('./PoemResourceLinks'));
+const PoemFacsimile = lazy(() => import('./PoemFacsimile'));
 
 interface PoemCardProps {
   poem: Poem;
@@ -16,6 +18,12 @@ interface PoemCardProps {
 
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
+  const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
+  // Keep editorial omissions explicit until the canonical edition is restored.
+  const isMarkedExcerpt = /(?:^|\n)[ \t]*<\.{3}>[ \t]*(?:\n|$)/u.test(poem.text);
+  const displayTitle = poem.title.startsWith('«') && poem.title.endsWith('»')
+    ? poem.title
+    : `«${poem.title}»`;
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
@@ -58,19 +66,20 @@ export default function PoemCard({ poem }: PoemCardProps) {
       <div className="mb-10 flex flex-col justify-between gap-4 border-b border-luxury-gold/20 pb-6 md:flex-row md:items-end">
         <div>
           <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]`}>
-            «{poem.title}»
+            {displayTitle}
           </h3>
-          {poem.year && (
-            <span className="gold-border-glow rounded-full border border-luxury-gold/20 bg-luxury-gold/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold-light/80">
-              {poem.year}&nbsp;год
+          {(poem.year || poem.yearLabel) && (
+            <span data-poem-year-label className="gold-border-glow rounded-full border border-luxury-gold/20 bg-luxury-gold/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold-light/80">
+              {poem.yearLabel ?? `${poem.year} год`}{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}
             </span>
           )}
+          {poem.yearNote && <span data-poem-year-note className="ml-2 inline-block max-w-full text-xs font-medium normal-case tracking-normal text-luxury-gray-light">{poem.yearNote}</span>}
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleFavorite}
-            aria-label={favorite ? `Убрать «${poem.title}» из архива` : `Добавить «${poem.title}» в архив`}
+            aria-label={favorite ? `Убрать ${displayTitle} из архива` : `Добавить ${displayTitle} в архив`}
             aria-pressed={favorite}
             className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/70 ${favorite ? 'bg-luxury-gold/15 text-luxury-gold' : 'border border-luxury-gold/10 bg-[#111] text-luxury-gray-light hover:text-luxury-gold'} ${!favorite ? 'theme-elevated-surface' : ''}`}
           >
@@ -85,12 +94,22 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </div>
 
       <InteractivePoemText text={poem.text} />
+      {isMarkedExcerpt && (
+        <p data-poem-excerpt-notice role="note" className="-mt-6 mb-10 border-l-2 border-luxury-gold/40 pl-4 text-sm leading-7 text-luxury-gray-light">
+          Текст приведён с сокращениями: некоторые строфы пропущены. Это не полная редакция стихотворения.
+        </p>
+      )}
+      {facsimile && (
+        <Suspense fallback={null}>
+          <PoemFacsimile document={facsimile} />
+        </Suspense>
+      )}
       {(poem.sourceUrl || poem.relatedMusicTrackIds?.length) && (
         <Suspense fallback={null}>
           <PoemResourceLinks poem={poem} />
         </Suspense>
       )}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div data-poem-analysis-grid className={`grid grid-cols-1 gap-6 ${poem.analysis && poem.biblicalPerspective ? 'md:grid-cols-2' : ''}`}>
         {poem.analysis && (
           <div className={`rounded-3xl border border-luxury-gold/10 bg-[#0a0a0a] p-8 transition-colors hover:border-luxury-gold/30 theme-elevated-surface`}>
             <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white opacity-70">
@@ -113,6 +132,23 @@ export default function PoemCard({ poem }: PoemCardProps) {
           </div>
         )}
       </div>
+      {poem.textualNote && (
+        <section data-poem-textual-note aria-label="История текста" className="mt-6 min-w-0 rounded-2xl border border-luxury-gold/15 bg-[#0a0a0a] p-5 theme-elevated-surface sm:p-8">
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-luxury-gold-light">История текста и редакции</h4>
+          <details className="group min-w-0">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-medium text-luxury-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold [&::-webkit-details-marker]:hidden">
+              <span>Читать текстологическую справку</span>
+              <ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+            <p className="mt-3 max-w-full whitespace-normal text-sm leading-7 text-luxury-gray-light [overflow-wrap:anywhere]">{poem.textualNote}</p>
+          </details>
+          {poem.textualSourceUrl && (
+            <a href={poem.textualSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 max-w-full items-center rounded-lg text-sm font-medium text-luxury-gold-light underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">
+              Текстологический источник <span aria-hidden="true" className="ml-1">↗</span>
+            </a>
+          )}
+        </section>
+      )}
       <div className="mt-8">
         <CommunityPanel
           compact

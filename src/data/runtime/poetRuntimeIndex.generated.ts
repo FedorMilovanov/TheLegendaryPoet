@@ -1,25 +1,21 @@
 import type { Poet } from '../../types/poet';
 /** Generated from library/index.ts: canonical author order, light data for the web app. */
-import { fyodorTyutchev } from '../library/fyodorTyutchev';
 import { vladimirMayakovsky } from '../library/vladimirMayakovsky';
-import { alexanderPushkin } from '../library/alexanderPushkin';
-import { mikhailLermontov } from '../library/mikhailLermontov';
 import { borisPasternak } from '../library/borisPasternak';
 import { afanasyFet } from '../library/afanasyFet';
 import { nikolayGumilev } from '../library/nikolayGumilev';
-import { sergeiYesenin } from '../library/sergeiYesenin';
 import { annaAkhmatova } from '../library/annaAkhmatova';
 import { supplementaryPoets } from './supplementaryPoets.generated';
 
 export const poets: Poet[] = [
-  fyodorTyutchev,
+  supplementaryPoets[9],
   vladimirMayakovsky,
-  alexanderPushkin,
-  mikhailLermontov,
+  supplementaryPoets[7],
+  supplementaryPoets[8],
   borisPasternak,
   afanasyFet,
   nikolayGumilev,
-  sergeiYesenin,
+  supplementaryPoets[10],
   annaAkhmatova,
   supplementaryPoets[6],
   supplementaryPoets[0],

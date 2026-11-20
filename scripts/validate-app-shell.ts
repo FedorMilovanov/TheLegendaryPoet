@@ -118,7 +118,17 @@ expect(link.includes('viewTransition'), 'site links must preserve View Transitio
 
 expect(!smoothAst.hasModuleImport('lenis'), 'the persistent shell must not load a global JavaScript document scroller');
 expect(!smooth.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native on every pointer class');
-expect(!smoothAst.hasEventListener('wheel'), 'the app shell must not intercept ordinary wheel input');
+// The hash coordinator listens passively for the reader's wheel intent so
+// that late corpus hydration cannot steal the current reading position.
+// It must never cancel or replace the browser's native wheel movement.
+expect(
+  smoothAst.hasEventListener('wheel', { options: { passive: true } }),
+  'hash reader intent must use a passive wheel observer',
+);
+expect(
+  !smoothAst.hasEventListener('wheel', { options: { passive: false } }),
+  'non-passive wheel interception remains forbidden',
+);
 expect(!smoothAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document movement');
 expect(smooth.includes("scrollRestoration = 'manual'"), 'SPA navigation must own scroll restoration');
 expect(smooth.includes("navigationType === 'POP'"), 'back/forward navigation must restore a saved position');
