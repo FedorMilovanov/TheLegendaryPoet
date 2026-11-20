@@ -49,7 +49,7 @@ jobs:
           VITE_BASE: /
         run: |
           set +e
-          { npm run sitemap; npm run build; npm run validate:build-output; } > production-build.log 2>&1
+          { npm run sitemap && npm run build && npm run validate:build-output; } > production-build.log 2>&1
           status=$?
           cat production-build.log
           exit $status

@@ -212,8 +212,10 @@ for (const workflow of ['articles-catalog.yml', 'brand-deep-audit.yml', 'brand-q
   expect(text.includes('./.github/actions/install-build-tools'), `${workflow}: missing shared build-tool setup`);
   expect(!/apt-get install[^\n]*ffmpeg/.test(text), `${workflow}: duplicated FFmpeg installer`);
 }
-const buildToolsTests = spawnSync(process.execPath, ['--test', 'scripts/tests/build-tools-setup.test.mjs'], { stdio: 'inherit' });
-expect(buildToolsTests.status === 0, 'shared build-tools behavior regressions must pass (including failure paths)');
+const workflowTests = spawnSync(process.execPath, ['--test',
+  'scripts/tests/build-tools-setup.test.mjs', 'scripts/tests/manual-browser-build-step.test.mjs',
+], { stdio: 'inherit' });
+expect(workflowTests.status === 0, 'build-tools and browser production build behavior regressions must pass (including failure paths)');
 
 if (failures.length) {
   console.error('workflow consolidation contract: FAILED');
