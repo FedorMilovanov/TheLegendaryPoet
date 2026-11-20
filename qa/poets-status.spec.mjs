@@ -155,6 +155,25 @@ test.describe('poets result status accessibility', () => {
   });
 
 
+  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => window.dispatchEvent(new Event('tlp-open-command-palette')));
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    await expect(input).toBeVisible();
+    for (const [query, title] of [
+      ['В ночь, когда Мамай', 'На поле Куликовом — III'],
+      ['Опять с вековою тоскою', 'На поле Куликовом — IV'],
+      ['Опять над полем Куликовым', 'На поле Куликовом — V'],
+    ]) {
+      await input.fill(query);
+      await expect(page.getByRole('option').filter({ hasText: title })).toBeVisible();
+    }
+    const result = page.getByRole('option').filter({ hasText: 'На поле Куликовом — V' });
+    await result.click();
+    await expect(page).toHaveURL(/\/poets\/alexander-blok#poem-blok-11$/);
+    await expect(page.locator('#poem-blok-11')).toBeVisible();
+  });
+
   test('Pushkin, Lermontov and Yesenin use the shared contents on both layouts', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const poetId of ['alexander-pushkin', 'mikhail-lermontov', 'sergei-yesenin']) {
