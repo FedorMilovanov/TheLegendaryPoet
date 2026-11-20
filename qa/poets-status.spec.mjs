@@ -3,10 +3,11 @@ import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
-// Clean component screenshots suppress only fixed chrome and animated cursor.
-// The real mobile dock is checked separately without screenshot masking.
+// Isolated tall-element screenshots must not composite the live fixed header
+// across the middle of the navigation (its actual viewport position is checked
+// elsewhere). Real mobile-dock interaction remains tested without any masking.
 const READING_INDEX_CAPTURE_STYLE = `
-.mobile-dock, .scroll-top-btn,
+.site-header, .mobile-dock, .scroll-top-btn,
 [data-custom-cursor-dot], [data-custom-cursor-ring], .cursor-trail { visibility: hidden !important; }
 `;
 
