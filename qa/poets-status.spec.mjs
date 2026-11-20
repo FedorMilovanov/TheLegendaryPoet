@@ -272,7 +272,7 @@ test.describe('poets result status accessibility', () => {
             const id = 'lermontov-' + number;
             const canonicalText = page.locator('#poem-' + id + ' [data-poem-canonical]');
             await expect.poll(() => canonicalText.evaluate((node) =>
-              (node.textContent || '').split('\\n').filter((line) => line.trim()).length
+              (node.textContent || '').split('\n').filter((line) => line.trim()).length
             )).toBe(count);
             await expect(canonicalText).toContainText(critical);
             await expect(canonicalText).not.toContainText('<...>');
