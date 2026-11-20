@@ -143,8 +143,29 @@ for (const profile of [
       // Assert the full JSON is committed: the fallback has only three poems.
       // The scroll coordinator must re-anchor after this 3→10 hydration.
       await expect(page.locator('div[id^="poem-yesenin-"]')).toHaveCount(10);
-      await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
-      await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(112);
+      const anchorDiagnostics = () => page.evaluate(() => {
+        const target = document.getElementById('poem-yesenin-3');
+        const rect = target?.getBoundingClientRect();
+        const chrome = document.querySelector('.site-header')?.getBoundingClientRect();
+        return {
+          href: location.href, scrollY: window.scrollY,
+          maxScrollY: document.scrollingElement.scrollHeight - innerHeight,
+          targetTop: rect?.top ?? null, targetBottom: rect?.bottom ?? null,
+          scrollMarginTop: target ? getComputedStyle(target).scrollMarginTop : null,
+          headerBottom: chrome?.bottom ?? null,
+          fontStatus: document.fonts.status,
+          poems: document.querySelectorAll('div[id^="poem-yesenin-"]').length,
+        };
+      });
+      try {
+        await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
+        await expect.poll(async () => poemTarget.evaluate((node) => node.getBoundingClientRect().top), { timeout: 15_000 }).toBeLessThanOrEqual(112);
+      } catch (error) {
+        fs.writeFileSync(path.join(ARTIFACT_DIR, `${profile.name}-yesenin-anchor-diagnostics.json`),
+          JSON.stringify(await anchorDiagnostics(), null, 2));
+        await page.screenshot({ path: path.join(ARTIFACT_DIR, `${profile.name}-yesenin-anchor-failure.png`) });
+        throw error;
+      }
 
       const poemProof = await page.evaluate(() => ({
         href: `${location.pathname}${location.hash}`,

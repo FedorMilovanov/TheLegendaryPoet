@@ -106,8 +106,11 @@ test('late full-corpus hydration corrects a hash without overriding reader scrol
   app.render({ key: 'poet', pathname: '/poets/sergei-yesenin', hash: '#target' }, 'POP');
   app.frame();
   assert.equal(app.window.scrollY, 204);
-  // Full JSON inserts content above the existing fallback anchor.
+  // Full JSON inserts content above the existing fallback anchor. The
+  // browser may scroll automatically to preserve visual position. That must
+  // not count as a user gesture (the old scrollY-delta guard failed here).
   app.setAnchorDocumentY(364);
+  app.window.scrollTo({ top: 244 });
   app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
   app.frame();
   assert.equal(app.window.scrollY, 268);
@@ -116,10 +119,23 @@ test('late full-corpus hydration corrects a hash without overriding reader scrol
   app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'alexander-pushkin' });
   app.frame();
   assert.equal(app.window.scrollY, 268);
-  // The reader takes ownership of scrolling; later hydration cannot hijack it.
+  // The reader takes ownership of scrolling only on actual user input.
+  app.window.emit('wheel');
   app.window.scrollTo({ top: 320 });
   app.setAnchorDocumentY(440);
   app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
   app.frame();
   assert.equal(app.window.scrollY, 320);
+});
+
+test('touch input blocks post-hydration auto-scroll correction', () => {
+  const app = coordinator();
+  app.render({ key: 'touch-poet', pathname: '/poets/sergei-yesenin', hash: '#target' }, 'POP');
+  app.frame();
+  assert.equal(app.window.scrollY, 204);
+  app.window.emit('touchstart');
+  app.setAnchorDocumentY(500);
+  app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
+  app.frame();
+  assert.equal(app.window.scrollY, 204);
 });

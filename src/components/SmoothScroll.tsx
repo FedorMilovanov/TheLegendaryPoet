@@ -72,6 +72,22 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let cancelHashFocus: (() => void) | null = null;
     let hydratedFrame = 0;
     let lastAnchorScrollY: number | null = null;
+    let readerInteractedWithHash = false;
+
+    // Native scroll anchoring and layout shifts may change scrollY without
+    // any reader action. Only genuine input may claim ownership of a hash jump.
+    const onReaderGesture = () => { readerInteractedWithHash = true; };
+    const onReaderKey = (event: KeyboardEvent) => {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) {
+        readerInteractedWithHash = true;
+      }
+    };
+    if (location.hash) {
+      window.addEventListener('wheel', onReaderGesture, { passive: true });
+      window.addEventListener('touchstart', onReaderGesture, { passive: true });
+      window.addEventListener('pointerdown', onReaderGesture, { passive: true });
+      window.addEventListener('keydown', onReaderKey);
+    }
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
@@ -95,19 +111,17 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       return true;
     };
 
-    // A route can render its 3-poem fallback before the async 10-poem JSON
-    // arrives. That expands the contents above the hash target, even though
-    // the address and target ID stay unchanged. Re-anchor only when this route's
-    // complete corpus commits and the reader has not scrolled elsewhere.
+    // A route can render a 3-poem fallback before its full 10-poem corpus
+    // arrives. Automatic scroll anchoring can change scrollY while that DOM
+    // expands; this is NOT a reader gesture and must not suppress re-alignment.
+    // Real wheel/touch/pointer/key interaction keeps native reader ownership.
     const onPoetCorpusHydrated = (event: Event) => {
       const poetId = (event as CustomEvent<{ poetId?: string }>).detail?.poetId;
       if (!location.hash || !poetId || location.pathname !== `/poets/${poetId}`) return;
       if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
       hydratedFrame = requestAnimationFrame(() => {
         hydratedFrame = 0;
-        if (cancelled || lastAnchorScrollY === null) return;
-        // A manual scroll since the first anchor must never be overwritten.
-        if (Math.abs(window.scrollY - lastAnchorScrollY) > 3) return;
+        if (cancelled || readerInteractedWithHash || lastAnchorScrollY === null) return;
         const target = document.getElementById(decodeHash(location.hash));
         if (!target) return;
         const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
@@ -162,6 +176,12 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       cancelHashFocus?.();
       window.removeEventListener('tlp-poet-corpus-hydrated', onPoetCorpusHydrated);
       if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
+      if (location.hash) {
+        window.removeEventListener('wheel', onReaderGesture);
+        window.removeEventListener('touchstart', onReaderGesture);
+        window.removeEventListener('pointerdown', onReaderGesture);
+        window.removeEventListener('keydown', onReaderKey);
+      }
     };
   }, [location.hash, location.key, location.pathname, navigationType]);
 
