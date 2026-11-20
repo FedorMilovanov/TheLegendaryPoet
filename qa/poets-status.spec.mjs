@@ -262,7 +262,35 @@ test.describe('poets result status accessibility', () => {
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
         if (poetId === 'mikhail-lermontov') {
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
+          for (const [number, count, critical] of [
+            [1, 12, 'Теснится ль в сердце грусть:'],
+            [2, 28, 'И правды чистыя ученья:'],
+            [3, 12, 'И мачта гнется и скрыпит...'],
+            [4, 20, 'Ночь тиха. Пустыня внемлет Богу,'],
+          ]) {
+            const id = 'lermontov-' + number;
+            const canonicalText = page.locator('#poem-' + id + ' [data-poem-canonical]');
+            await expect.poll(() => canonicalText.evaluate((node) =>
+              (node.textContent || '').split('\\n').filter((line) => line.trim()).length
+            )).toBe(count);
+            await expect(canonicalText).toContainText(critical);
+            await expect(canonicalText).not.toContainText('<...>');
+            const note = page.locator('#poem-' + id + ' [data-poem-textual-note]');
+            await expect(note).toContainText(count + '/' + count);
+            await expect(page.locator('#poem-' + id + ' [data-poem-year-note]')).toBeVisible();
+            await expect(page.locator('#poem-' + id + ' a[href^="https://rvb.ru/19vek/lermontov/ss4/vol1/poems/"]')).toHaveCount(1);
+            await expect(note.locator('a[href^="https://rvb.ru/19vek/lermontov/ss4/vol1/notes/"]')).toHaveCount(1);
+            const disclosure = note.locator('details');
+            await note.locator('summary').click();
+            await expect(disclosure).toHaveAttribute('open', '');
+            expect(await note.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+            await note.locator('summary').click();
+            await expect(disclosure).not.toHaveAttribute('open', '');
+          }
+          await expect(page.locator('#poem-lermontov-2 [data-poem-textual-note]')).toContainText('чистой правды');
+          await expect(page.locator('#poem-lermontov-3 [data-poem-textual-note]')).toContainText('17 лет');
+          await expect(page.locator('#poem-lermontov-4 [data-poem-canonical]')).toContainText('в сияньи голубом');
           await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('98/98');
           await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('бусурманы');
           await expect(page.locator('#poem-lermontov-5 [data-poem-textual-note]')).toContainText('две разные строки одного стихотворения');
@@ -400,6 +428,10 @@ test.describe('poets result status accessibility', () => {
         expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
         await jump.click();
         await expect(page).toHaveURL(/#poem-contents$/);
+        // Hash navigation moves focus onto the section after two frames.
+        // Verify it settled before explicitly focusing an entry; otherwise
+        // the scheduled focus and this assertion race one another.
+        await expect(nav).toBeFocused();
         await entries.last().focus();
         await expect(entries.last()).toBeFocused();
         if (width < 768) await assertReachableBeyondDock(entries.last());
