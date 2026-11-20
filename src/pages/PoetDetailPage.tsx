@@ -47,6 +47,15 @@ export default function PoetDetailPage() {
     return () => controller.abort();
   }, [id]);
   const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
+  useEffect(() => {
+    if (!id || loadedPoet?.id !== id) return;
+    // Wait until React has committed the full poet content before asking the
+    // single native scroll coordinator to correct an existing hash anchor.
+    const frame = requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent('tlp-poet-corpus-hydrated', { detail: { poetId: id } }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [id, loadedPoet]);
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = [

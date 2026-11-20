@@ -70,6 +70,8 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let observer: MutationObserver | null = null;
     let timeoutId = 0;
     let cancelHashFocus: (() => void) | null = null;
+    let hydratedFrame = 0;
+    let lastAnchorScrollY: number | null = null;
 
     const scrollToNumber = (top: number) => {
       const safeTop = Math.max(0, Number.isFinite(top) ? top : 0);
@@ -79,6 +81,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     const scrollToHashTarget = (target: HTMLElement) => {
       const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
       window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+      lastAnchorScrollY = window.scrollY;
       cancelHashFocus?.();
       cancelHashFocus = scheduleProgrammaticFocus(() => target.isConnected ? target : null);
     };
@@ -91,6 +94,28 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       scrollToHashTarget(target);
       return true;
     };
+
+    // A route can render its 3-poem fallback before the async 10-poem JSON
+    // arrives. That expands the contents above the hash target, even though
+    // the address and target ID stay unchanged. Re-anchor only when this route's
+    // complete corpus commits and the reader has not scrolled elsewhere.
+    const onPoetCorpusHydrated = (event: Event) => {
+      const poetId = (event as CustomEvent<{ poetId?: string }>).detail?.poetId;
+      if (!location.hash || !poetId || location.pathname !== `/poets/${poetId}`) return;
+      if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
+      hydratedFrame = requestAnimationFrame(() => {
+        hydratedFrame = 0;
+        if (cancelled || lastAnchorScrollY === null) return;
+        // A manual scroll since the first anchor must never be overwritten.
+        if (Math.abs(window.scrollY - lastAnchorScrollY) > 3) return;
+        const target = document.getElementById(decodeHash(location.hash));
+        if (!target) return;
+        const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+        lastAnchorScrollY = window.scrollY;
+      });
+    };
+    window.addEventListener('tlp-poet-corpus-hydrated', onPoetCorpusHydrated);
 
     const stopHashObserver = () => {
       observer?.disconnect();
@@ -135,6 +160,8 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       cancelAnimationFrame(frame);
       stopHashObserver();
       cancelHashFocus?.();
+      window.removeEventListener('tlp-poet-corpus-hydrated', onPoetCorpusHydrated);
+      if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
     };
   }, [location.hash, location.key, location.pathname, navigationType]);
 

@@ -12,19 +12,25 @@ const compiled = ts.transpileModule(source, { compilerOptions: {
 // Execute the actual coordinator, retaining hook refs/effect cleanup and an
 // explicitly delayed animation frame. No browser timing or source-string check.
 function coordinator() {
-  const refs = [], effects = [], frames = new Map(), calls = [], events = [];
+  const refs = [], effects = [], frames = new Map(), calls = [], events = [], listeners = new Map();
+  let anchorDocumentY = 300;
   let refIndex = 0, effectIndex = 0, nextFrame = 0;
   let location = { key: 'first', pathname: '/essay', hash: '' }, navigation = 'POP';
   const window = {
     history: { scrollRestoration: 'auto' }, scrollY: 0,
     matchMedia: () => ({ matches: true }),
-    addEventListener() {}, removeEventListener() {},
+    addEventListener(type, callback) {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type).add(callback);
+    },
+    removeEventListener(type, callback) { listeners.get(type)?.delete(callback); },
+    emit(type, detail) { for (const callback of listeners.get(type) ?? []) callback({ type, detail }); },
     dispatchEvent(event) { events.push(event.type); return true; },
     scrollTo(options) { calls.push(options.top); this.scrollY = options.top; },
   };
   const document = {
     documentElement: { classList: { remove() {} } },
-    getElementById: (id) => id === 'target' ? { isConnected: true, getBoundingClientRect: () => ({ top: 300 }) } : null,
+    getElementById: (id) => id === 'target' ? { isConnected: true, getBoundingClientRect: () => ({ top: anchorDocumentY - window.scrollY }) } : null,
   };
   const exports = {};
   vm.runInNewContext(compiled, {
@@ -49,7 +55,7 @@ function coordinator() {
     },
   });
   return {
-    window, calls, events,
+    window, calls, events, setAnchorDocumentY(value) { anchorDocumentY = value; },
     render(nextLocation = location, nextNavigation = navigation) {
       location = nextLocation; navigation = nextNavigation; refIndex = effectIndex = 0;
       exports.default({ children: null });
@@ -93,4 +99,27 @@ test('same-path hash transition requests the universal chrome reveal event', () 
   app.render({ key: 'poem', pathname: '/essay', hash: '#target' }, 'PUSH');
   app.frame();
   assert.equal(app.events.at(-1), 'tlp-reveal-chrome');
+});
+
+test('late full-corpus hydration corrects a hash without overriding reader scroll', () => {
+  const app = coordinator();
+  app.render({ key: 'poet', pathname: '/poets/sergei-yesenin', hash: '#target' }, 'POP');
+  app.frame();
+  assert.equal(app.window.scrollY, 204);
+  // Full JSON inserts content above the existing fallback anchor.
+  app.setAnchorDocumentY(364);
+  app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
+  app.frame();
+  assert.equal(app.window.scrollY, 268);
+  // A different route must not re-anchor this page.
+  app.setAnchorDocumentY(400);
+  app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'alexander-pushkin' });
+  app.frame();
+  assert.equal(app.window.scrollY, 268);
+  // The reader takes ownership of scrolling; later hydration cannot hijack it.
+  app.window.scrollTo({ top: 320 });
+  app.setAnchorDocumentY(440);
+  app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
+  app.frame();
+  assert.equal(app.window.scrollY, 320);
 });
