@@ -135,6 +135,20 @@ test.describe('poets result status accessibility', () => {
       await expect(canonical).not.toContainText('И мглою бед неотразимых');
       await expect(canonical).toContainText('Опять над полем Куликовым');
       expect(await epigraph.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+      if (testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await page.evaluate(() => document.fonts.ready);
+        await epigraph.screenshot({
+          path: `qa-artifacts/blok-epigraph-${width}-dark.png`,
+          style: READING_INDEX_CAPTURE_STYLE,
+        });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await epigraph.screenshot({
+          path: `qa-artifacts/blok-epigraph-${width}-light.png`,
+          style: READING_INDEX_CAPTURE_STYLE,
+        });
+        await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
       await expect(page.locator('#poem-blok-11')).toContainText('Теперь твой час настал. — Молись!');
 
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
