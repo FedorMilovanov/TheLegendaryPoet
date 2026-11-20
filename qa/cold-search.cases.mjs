@@ -80,6 +80,36 @@ export function registerColdSearchCases() {
     for (const legacy of [false, true]) {
       test(`Back dismisses the newer search before the chunk arrives, Forward still lands at the poem (${legacy ? 'History API fallback' : 'native browser'})`, async ({ page }) => {
         if (legacy) await withoutNavigationApi(page);
+        // Test-only witness for the lock/unlock ordering. Keep the real browser
+        // calls and the strict reading assertion; never intercept input.
+        await page.addInitScript(() => {
+          const trace = window.__qaColdTrace = [];
+          const record = (kind, extra = null) => {
+            if (trace.length === 80) trace.shift();
+            const body = document.body, active = document.activeElement, state = history.state;
+            trace.push({ t: Math.round(performance.now()), kind, url: location.href, y: scrollY,
+              body: body && [body.style.position, body.style.top], active: active?.id || active?.tagName,
+              entry: state && [state.idx, state.key, state.tlpScrollEntry], extra });
+          };
+          for (const method of ['scrollTo', 'scrollBy']) {
+            const original = window[method];
+            window[method] = function (...args) {
+              record('before ' + method, { args, stack: new Error().stack?.split('\n').slice(1, 5) });
+              const result = original.apply(this, args);
+              record('after ' + method);
+              return result;
+            };
+          }
+          for (const type of ['popstate', 'resize', 'focusin', 'scrollend', 'tlp-before-app-navigation', 'tlp-overlay-scroll-restored']) {
+            window.addEventListener(type, event => record(type, event.target?.id || event.target?.nodeName), true);
+          }
+          for (const type of ['navigate', 'currententrychange']) {
+            window.navigation?.addEventListener(type, () => record(type));
+          }
+          document.addEventListener('DOMContentLoaded', () => {
+            new MutationObserver(() => record('body style')).observe(document.body, { attributes: true, attributeFilter: ['style'] });
+          }, { once: true });
+        });
         const essay = '/essays/sergei-yesenin-1921-1925';
         await open(page, essay, 390);
         const paragraph = page.locator('.essay-body > :has(h2[id^="sec-америка-"]) + *');
@@ -106,6 +136,7 @@ export function registerColdSearchCases() {
           try { await expectReadingAt(paragraph, part); }
           catch (error) {
             error.message += `\nCold-search geometry: ${JSON.stringify({ departure, pending, searchOpen, resized, returned: await measure() })}`;
+            error.message += `\nCold-search events: ${JSON.stringify(await page.evaluate(() => window.__qaColdTrace))}`;
             throw error;
           }
           await expect(paragraph).toBeFocused();
