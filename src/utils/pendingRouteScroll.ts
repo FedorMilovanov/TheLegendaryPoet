@@ -42,13 +42,17 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
     cancelAnimationFrame(frame);
     cancelFocus?.();
   };
-  // Was the control the reader owns where the app left it? A control below the
-  // placed line means a browser already scrolled to it: not the app's to undo.
+  // A reader-owned control must stay readable at their chosen position. The
+  // app-owned passage can be taller than the viewport: its quoted line, not
+  // the whole paragraph, is the arrival target. Never recover an offscreen control.
   const readableAt = (y: number) => {
     const el = document.activeElement;
     if (!(el instanceof HTMLElement)) return true;
-    const rect = el.getBoundingClientRect(), top = rect.top + window.scrollY - y;
-    return top >= 0 && top + rect.height <= window.innerHeight / 2;
+    const { scrollY, innerHeight: height } = window, rect = el.getBoundingClientRect();
+    const top = rect.top + scrollY - y, bottom = top + rect.height;
+    return el === ownedFocus && replay
+      ? top < height && bottom > 0
+      : top >= 0 && bottom <= height / 2;
   };
   const settle = () => {
     if (!guarding) return;
@@ -62,9 +66,12 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
   };
   const arm = (y: number, again?: () => void) => {
     placedY = y; replay = again;
-    if (!readableAt(y)) return;
-    if (!guarding) guarding = true, document.addEventListener('scrollend', settle, { signal });
-    timer = window.setTimeout(stop, deadline - Date.now());
+    // Before the app's focus handoff, activeElement may still be the entire
+    // document body. The target is checked at settlement, after focus occurs.
+    if (again || readableAt(y)) {
+      if (!guarding) guarding = true, document.addEventListener('scrollend', settle, { signal });
+      timer = window.setTimeout(stop, deadline - Date.now());
+    } else stop();
   };
   const takeOver = (event: Event) => {
     if (released || !event.isTrusted || !current() || hasOpenOverlay()) return;
@@ -113,7 +120,7 @@ export function requestRouteScroll({ current, fragmentId, nativeQuote, apply, yi
       ownedFocus = next;
       // Some engines retry a native text match after the app paints and centre
       // the range; others scroll a block they just focused.
-      if (nativeQuote && next) arm(window.scrollY, () => { if (current() && next.isConnected) apply(true); });
+      if (nativeQuote && next) arm(window.scrollY, () => current() && next.isConnected && apply(true));
       else stop();
       return next;
     });

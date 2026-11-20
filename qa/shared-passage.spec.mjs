@@ -72,18 +72,34 @@ async function recipient(context, href) {
 }
 // A trace for the two order-sensitive arrivals only. Observe unmodified UA
 // events in the recipient; do not instrument scrollTo, timers or focus.
-async function observeArrival(context) {
-  await context.addInitScript(() => {
+async function observeArrival(context, probe = null) {
+  await context.addInitScript(probe => {
     const events = window.__qaPassageEvents = [];
     for (const type of ['load', 'scrollend', 'focusin', 'keydown']) {
       window.addEventListener(type, e => {
         if (events.length === 24) events.shift();
         const el = e.target;
+        let glyph = null, rect = null, disclosure = null;
+        if (probe) {
+          const nodes = [...document.querySelectorAll(probe.selector)];
+          const node = probe.contains ? nodes.find(n => n.textContent?.includes(probe.contains)) : nodes[probe.index ?? 0];
+          const text = node?.firstChild;
+          const at = probe.start ? text?.textContent?.indexOf(probe.start) : 0;
+          if (text?.nodeType === Node.TEXT_NODE && at >= 0 && at < text.length) {
+            const range = document.createRange(); range.setStart(text, at); range.setEnd(text, at + 1);
+            glyph = range.getBoundingClientRect().top;
+          }
+          if (node) {
+            const r = node.getBoundingClientRect(); rect = [r.top, r.bottom, r.height];
+            disclosure = node.closest('details')?.open ?? null;
+          }
+        }
+        const active = document.activeElement;
         events.push([Math.round(performance.now()), type, el?.id || el?.nodeName, scrollY,
-          document.querySelector(':target')?.nodeName]);
+          document.querySelector(':target')?.nodeName, active?.id || active?.nodeName, glyph, rect, disclosure]);
       }, { passive: true, capture: true });
     }
-  });
+  }, probe);
 }
 // Both variants use the *same* copied public address. The plain fragment is
 // an independent control for the app's geometry; it must not replace the
@@ -143,7 +159,7 @@ test.describe('quote in the last visible line of a tall animated block', () => {
       const path = '/essays/yesenin-kutezhi', start = '11:28';
       const tail = p => p.locator('.essay-body aside p').filter({ hasText: 'Апостол Павел различает' });
       await open(page, path, 320); const url = await copy(page, tail(page), path, start);
-      await observeArrival(context);
+      await observeArrival(context, { selector: '.essay-body aside p', contains: 'Апостол Павел различает', start });
       const dest = await recipient(context, arrivalHref(url, native));
       await expect(tail(dest)).toBeFocused(); await atGlyph(tail(dest), start);
     });
@@ -206,6 +222,7 @@ test('a shared entry from the full poet bibliography opens the disclosure that o
   const entry = p => p.locator('[aria-labelledby="poet-sources-heading"] details li a').nth(2);
   await open(page, blok); await page.locator('[aria-labelledby="poet-sources-heading"] summary').click();
   const url = await copy(page, entry(page), blok);
+  await observeArrival(context, { selector: '[aria-labelledby="poet-sources-heading"] details li a', index: 2 });
   const dest = await recipient(context, url);
   await expect(entry(dest)).toBeFocused(); await atGlyph(entry(dest));
 });

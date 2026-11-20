@@ -186,7 +186,8 @@ test('hover outside the chapter list cannot dismiss it or take keyboard focus', 
   await row.focus();
   const r = await link.boundingBox(), box = await menu.boundingBox();
   const x = r.x + r.width / 2, y = r.y + r.height / 2;
-  expect(x < box.x || x > box.x + box.width).toBe(true);
+  expect(x < box.x || x > box.x + box.width,
+    `citation and chapter-menu geometry: ${JSON.stringify({ citation: r, menu: box, x, y })}`).toBe(true);
   expect(y).toBeGreaterThan(0);
   expect(y).toBeLessThan(620);
   await page.mouse.move(x, y); // some engines deliver :hover through ::backdrop

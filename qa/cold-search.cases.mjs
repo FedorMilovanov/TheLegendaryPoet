@@ -84,12 +84,26 @@ export function registerColdSearchCases() {
         await open(page, essay, 390);
         const paragraph = page.locator('.essay-body > :has(h2[id^="sec-америка-"]) + *');
         await readAt(paragraph); const part = await portion(paragraph);
+        // Keep the original assertion. If a browser loses the position, record
+        // the passage and viewport geometry on both sides of the traversal.
+        const measure = () => paragraph.evaluate((n, fraction) => {
+          const r = n.getBoundingClientRect(), active = document.activeElement;
+          return { url: location.href, y: scrollY, viewport: [innerWidth, innerHeight],
+            rect: [r.top, r.bottom, r.height], fraction, bodyPosition: getComputedStyle(document.body).position,
+            active: active?.id || active?.tagName, documentHeight: document.documentElement.scrollHeight };
+        }, part);
+        const departure = await measure();
         await beforePoetPaints(page, async () => {
           await page.keyboard.press('Control+k'); await typeSecondSearch(page);
           await page.setViewportSize({ width: 1200, height: 600 });
           await page.goBack(); await expect(page).toHaveURL(base + essay);
           await expect(search(page)).toBeHidden(); await expect(page.locator('body')).not.toHaveCSS('position', 'fixed');
-          await expectReadingAt(paragraph, part); await expect(paragraph).toBeFocused();
+          try { await expectReadingAt(paragraph, part); }
+          catch (error) {
+            error.message += `\nCold-search geometry: ${JSON.stringify({ departure, returned: await measure() })}`;
+            throw error;
+          }
+          await expect(paragraph).toBeFocused();
         });
         await page.goForward(); await expectFragment(page, blokId);
       });

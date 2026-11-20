@@ -425,6 +425,38 @@ test('a native quote keeps its placed line when the engine scrolls the focused b
   assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
 });
 
+test('a long document and tall quoted passage do not suppress the focus drift guard', () => {
+  for (const height of [40, 800]) {
+    const app = coordinator(); let applied = 0, yielded = 0;
+    // Before focus the active element is the entire body, not the quote.
+    app.document.body.getBoundingClientRect = () => ({ top: -app.window.scrollY, height: 60000 });
+    app.target.getBoundingClientRect = () => ({ top: 300 - app.window.scrollY, height });
+    app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.8.abc.0.1',
+      nativeQuote: true, apply() { applied++; app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+    app.frame(); app.frame(); app.frame();
+    assert.equal(app.document.activeElement, app.target);
+    app.window.scrollTo({ top: 187 }); // engine moves the already-placed quote by 17px
+    app.document.dispatchEvent(new Event('scrollend'));
+    assert.deepEqual(app.calls, [204, 187, 204]); assert.equal(applied, 2); assert.equal(yielded, 0);
+    assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
+    assert.equal(app.timers.size, 0);
+  }
+});
+
+test('reader focus outside the preserved position releases the arrival guard', () => {
+  const app = coordinator(); let yielded = 0;
+  app.document.body.getBoundingClientRect = () => ({ top: -app.window.scrollY, height: 60000 });
+  app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.essay.8.abc.0.1',
+    nativeQuote: true, apply() { app.window.scrollTo({ top: 204 }); return app.target; }, yieldToReader() { yielded++; } });
+  app.frame(); app.frame(); app.frame();
+  app.field.getBoundingClientRect = () => ({ top: 900 - app.window.scrollY, height: 40 });
+  app.field.focus();
+  assert.equal(yielded, 1);
+  assert.equal(app.readerListeners, 0);
+  assert.equal(getEventListeners(app.document, 'scrollend').length, 0);
+  assert.equal(app.timers.size, 0);
+});
+
 test('a takeover keeps the reader position when the engine finishes its text match later', () => {
   const app = coordinator(); let applied = 0, yielded = 0;
   app.load('pendingRouteScroll').requestRouteScroll({ current: () => true, fragmentId: 'read.poem-blok-1.5.1.0.0',
