@@ -329,10 +329,24 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D1%87%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F_%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_%D0%A2%D0%BE%D0%BC_2_1818-1820_1905.pdf');
         }
         if (poetId === 'sergei-yesenin') {
+          for (const [number, expectedLines, critical, sourceUrl, noteUrl] of [[1,20,"Жизнь моя! иль ты приснилась мне?","https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/096.html"],[2,36,"Не волнуй того, что не сбылось,—","https://rvb.ru/20vek/esenin/pss7/vol1/poems/104.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/104.html"],[3,20,"Звонно чахнут тополя.","https://rvb.ru/20vek/esenin/pss7/vol1/poems/028.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/028.html"]]) {
+            const card = page.locator('#poem-yesenin-' + number);
+            const canonical = card.locator('[data-poem-canonical]');
+            await expect.poll(() => canonical.evaluate((node) =>
+              (node.textContent || '').split('\n').filter((line) => line.trim()).length
+            )).toBe(expectedLines);
+            await expect(canonical).toContainText(critical);
+            await expect(card.locator('[data-poem-textual-note]')).toContainText(expectedLines + '/' + expectedLines);
+            await expect(card.locator('[data-poem-year-note]')).toBeVisible();
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', noteUrl);
+            await expect(card.locator('a[href="' + sourceUrl + '"]')).toHaveCount(1);
+          }
+          await expect(page.locator('#poem-yesenin-3 [data-poem-textual-note]')).toContainText('Кротко чахнут тополя');
+          await expect(page.locator('#poem-yesenin-1 [data-poem-textual-note]')).toContainText('Сергею Клычкову');
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
           await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(7);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(10);
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('вернусь!');
@@ -357,7 +371,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('без запятой');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкин');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://sytin-and-esenin.ru/images/blocks/2.23.24.jpg');
-          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(7);
+          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(10);
         }
         if (poetId === 'fyodor-tyutchev') {
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
