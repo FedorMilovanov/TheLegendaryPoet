@@ -183,6 +183,43 @@ test.describe('poets result status accessibility', () => {
   });
 
 
+  test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {
+    // Use one navigation per isolated Playwright page: later visits can reuse
+    // the already-fetched dynamic module and bypass the intentional route gate.
+    const widths = [390];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      let unblockChunk = () => {};
+      const chunkGate = new Promise((resolve) => { unblockChunk = resolve; });
+      let intercepted = 0;
+      await page.route('**/assets/PoemEpigraph-*.js', async (route) => {
+        intercepted += 1;
+        await chunkGate;
+        await route.continue();
+      });
+      try {
+        await page.goto(`${BASE_URL}/poets/alexander-blok#poem-blok-11`, { waitUntil: 'domcontentloaded' });
+        const card = page.locator('#poem-blok-11');
+        const body = card.locator('[data-poem-text]');
+        await expect(body).toBeVisible();
+        await expect.poll(() => intercepted, { timeout: 10_000 }).toBe(1);
+        const relativeTop = () => body.evaluate((node) => {
+          const card = node.closest('#poem-blok-11');
+          return node.getBoundingClientRect().top - card.getBoundingClientRect().top;
+        });
+        const before = await relativeTop();
+        await expect(card.locator('[data-poem-epigraph]')).toHaveCount(0);
+        unblockChunk();
+        await expect(card.locator('[data-poem-epigraph]')).toBeVisible();
+        const after = await relativeTop();
+        expect(Math.abs(after - before), `delayed epigraph shifted Blok verse at ${width}px`).toBeLessThanOrEqual(2);
+      } finally {
+        unblockChunk();
+        await page.unroute('**/assets/PoemEpigraph-*.js');
+      }
+    }
+  });
+
   test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => window.dispatchEvent(new Event('tlp-open-command-palette')));

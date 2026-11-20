@@ -87,7 +87,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </div>
 
       {poem.epigraph && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<div aria-hidden="true" className="mb-8 h-[168px] sm:h-[184px]" />}>
           <PoemEpigraph epigraph={poem.epigraph} />
         </Suspense>
       )}
