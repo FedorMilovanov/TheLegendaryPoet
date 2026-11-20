@@ -59,7 +59,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </AnimatePresence>
       <div className="mb-10 flex flex-col justify-between gap-4 border-b border-luxury-gold/20 pb-6 md:flex-row md:items-end">
         <div>
-          <h3 className={`gold-glow-text mb-3 break-words font-serif font-semibold text-white text-[clamp(1.55rem,3.2vw,2.5rem)] leading-[1.18]`}>
+          <h3 className="gold-glow-text text-white poem-card-title">
             «{poem.title}»
           </h3>
           {poem.year && (
@@ -87,7 +87,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       </div>
 
       {poem.epigraph && (
-        <Suspense fallback={<div aria-hidden="true" className="mb-8 h-[168px] sm:h-[184px]" />}>
+        <Suspense fallback={<div aria-hidden="true" className="ep-wait">{poem.epigraph.text}<span>— {poem.epigraph.attribution}</span></div>}>
           <PoemEpigraph epigraph={poem.epigraph} />
         </Suspense>
       )}
