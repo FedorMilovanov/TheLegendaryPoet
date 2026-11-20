@@ -28,11 +28,13 @@ const suites = [
   { id: 'brand-reference-raster', file: 'qa/brand-emblem.spec.mjs' },
   { id: 'brand-reference-comparison', file: 'qa/brand-reference-comparison.spec.mjs' },
   { id: 'compact-touch-surfaces', file: 'qa/hover-surfaces.spec.mjs' },
-  ...hoverRoutes.map((route) => ({
-    id: `hover-${route}`,
+  // One launch for every route's stable-hover contract: same file, same
+  // isolation, six fewer browser starts before the job's own timeout.
+  {
+    id: 'stable-hover-routes',
     file: 'qa/hover-stability.spec.mjs',
-    grep: `${route} interactive artwork uses the universal stable-hover contract`,
-  })),
+    grep: `(${hoverRoutes.join('|')}) interactive artwork uses the universal stable-hover contract`,
+  },
 ];
 
 // Each bundle is independent. A failed test cannot pass the job, but must
