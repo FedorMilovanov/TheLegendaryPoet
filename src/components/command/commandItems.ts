@@ -1,5 +1,6 @@
 import { musicTracks, poets } from '../../data/poets';
 import routeContract from '../../routes/route-contract.json';
+import { supplementaryPoemSearchIndex, type SupplementaryPoemSearchEntry } from '../../data/runtime/supplementaryPoemSearch.generated';
 
 export interface CommandItem {
   id: string;
@@ -64,6 +65,7 @@ export const commandSectionPresentations = {
 
 export interface CommandSources {
   poets: readonly CommandPoetSource[];
+  supplementaryPoems?: readonly SupplementaryPoemSearchEntry[];
   essays: readonly CommandEssaySource[];
   tracks: readonly CommandTrackSource[];
   routes?: readonly CommandRouteSource[];
@@ -103,6 +105,7 @@ export function buildSectionCommandItems(
 
 export function buildCommandItems({
   poets: poetSources,
+  supplementaryPoems = [],
   essays,
   tracks,
   routes = routeContract.routes,
@@ -125,6 +128,22 @@ export function buildCommandItems({
     path: `/poets/${poet.id}#poem-${encodeURIComponent(poem.id)}`,
     group: 'Стихи',
   })));
+
+  // The app-shell author stubs intentionally contain only Blok's first four
+  // works. Include metadata for the remaining canonical poems without pulling
+  // full biographies/verses into the persistent command palette.
+  const knownPoemIds = new Set(poemItems.map((item) => item.id));
+  const supplementaryPoemItems = supplementaryPoems.map((poem) => ({
+    id: `poem-${poem.poetId}-${poem.id}`,
+    label: poem.title,
+    description: poem.year ? `${poem.poetName} · ${poem.year}` : poem.poetName,
+    path: `/poets/${poem.poetId}#poem-${encodeURIComponent(poem.id)}`,
+    group: 'Стихи',
+  }));
+  for (const item of supplementaryPoemItems) {
+    if (knownPoemIds.has(item.id)) throw new Error('Duplicate command poem item: ' + item.id);
+    knownPoemIds.add(item.id);
+  }
 
   /*
    * Keep the persistent command palette lightweight. Importing the full essay
@@ -156,9 +175,9 @@ export function buildCommandItems({
     group: 'Музыка',
   }));
 
-  return [...sectionItems, ...poetItems, ...poemItems, ...essayItems, ...essaySectionItems, ...trackItems];
+  return [...sectionItems, ...poetItems, ...poemItems, ...supplementaryPoemItems, ...essayItems, ...essaySectionItems, ...trackItems];
 }
 
 export function getCommandItems(essays: readonly CommandEssaySource[]): CommandItem[] {
-  return buildCommandItems({ poets, essays, tracks: musicTracks });
+  return buildCommandItems({ poets, supplementaryPoems: supplementaryPoemSearchIndex, essays, tracks: musicTracks });
 }

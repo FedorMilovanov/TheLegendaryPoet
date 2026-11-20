@@ -3,10 +3,11 @@ import { mkdirSync } from 'node:fs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
-// Clean component screenshots suppress only fixed chrome and animated cursor.
-// The real mobile dock is checked separately without screenshot masking.
+// Isolated tall-element screenshots must not composite the live fixed header
+// across the middle of the navigation (its actual viewport position is checked
+// elsewhere). Real mobile-dock interaction remains tested without any masking.
 const READING_INDEX_CAPTURE_STYLE = `
-.mobile-dock, .scroll-top-btn,
+.site-header, .mobile-dock, .scroll-top-btn,
 [data-custom-cursor-dot], [data-custom-cursor-ring], .cursor-trail { visibility: hidden !important; }
 `;
 
@@ -65,7 +66,7 @@ test.describe('poets result status accessibility', () => {
     await expect(pulse).toBeVisible();
     await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
   });
-  test('Blok contents preserve eight linked works and responsive two-column navigation', async ({ page }, testInfo) => {
+  test('Blok contents preserve eleven works and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -73,10 +74,10 @@ test.describe('poets result status accessibility', () => {
 
       const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
       const cards = page.locator('[id^="poem-blok-"]');
-      await expect(cards).toHaveCount(8);
+      await expect(cards).toHaveCount(11);
       // Both layers must agree on word indices, including NBSP before the
       // dash in «Скифы»; otherwise hover/focus affects the wrong visual word.
-      for (let i = 0; i < 8; i += 1) {
+      for (let i = 0; i < 11; i += 1) {
         const card = cards.nth(i);
         const canonicalWords = await card.locator('[data-poem-canonical-word]').count();
         expect(canonicalWords, `canonical words in Blok poem ${i + 1}`).toBeGreaterThan(0);
@@ -101,18 +102,54 @@ test.describe('poets result status accessibility', () => {
       await expect(page).toHaveURL(/#blok-contents$/);
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
-      await expect(anchors).toHaveCount(8);
+      await expect(anchors).toHaveCount(11);
       await expect(guide).toHaveClass(/poet-reading-index/);
-      await expect(guide.locator('ol > li')).toHaveCount(8);
-      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(7);
+      await expect(guide.locator('ol > li')).toHaveCount(11);
+      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
       await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
-      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(8);
+      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(11);
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
+      // Literary cycle I–V remains consecutive while only two parts have linked music.
+      const kulikovoIds = ['blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11'];
+      for (const [offset, id] of kulikovoIds.entries()) {
+        await expect(anchors.nth(5 + offset)).toHaveAttribute('href', `#poem-${id}`);
+      }
+      await expect(page.locator('#poem-blok-9')).toContainText('В ночь, когда Мамай залег с ордою');
+      await expect(page.locator('#poem-blok-10')).toContainText('Опять с вековою тоскою');
+      await expect(page.locator('#poem-blok-11')).toContainText('Вл. Соловьев');
+      const finalCard = page.locator('#poem-blok-11');
+      const epigraph = finalCard.locator('[data-poem-epigraph]');
+      await expect(epigraph).toBeVisible();
+      await expect(epigraph).toHaveAttribute('aria-label', 'Эпиграф к стихотворению');
+      await expect(epigraph.locator('blockquote')).toHaveText('И мглою бед неотразимых Грядущий день заволокло.');
+      await expect(epigraph.locator('figcaption')).toContainText('Вл. Соловьев');
+      const canonical = finalCard.locator('[data-poem-canonical]');
+      const canonicalText = await canonical.textContent();
+      expect(canonicalText.split('\n').filter((line) => line.trim().length > 0)).toHaveLength(16);
+      await expect(canonical).not.toContainText('Вл. Соловьев');
+      await expect(canonical).not.toContainText('И мглою бед неотразимых');
+      await expect(canonical).toContainText('Опять над полем Куликовым');
+      expect(await epigraph.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+      if (testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await page.evaluate(() => document.fonts.ready);
+        await epigraph.screenshot({
+          path: `qa-artifacts/blok-epigraph-${width}-dark.png`,
+          style: READING_INDEX_CAPTURE_STYLE,
+        });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await epigraph.screenshot({
+          path: `qa-artifacts/blok-epigraph-${width}-light.png`,
+          style: READING_INDEX_CAPTURE_STYLE,
+        });
+        await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
+      await expect(page.locator('#poem-blok-11')).toContainText('Теперь твой час настал. — Молись!');
 
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
@@ -145,6 +182,70 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
+
+  test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {
+    // Use one navigation per isolated Playwright page: later visits can reuse
+    // the already-fetched dynamic module and bypass the intentional route gate.
+    const widths = [390];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      let unblockChunk = () => {};
+      const chunkGate = new Promise((resolve) => { unblockChunk = resolve; });
+      let intercepted = 0;
+      await page.route('**/assets/PoemEpigraph-*.js', async (route) => {
+        intercepted += 1;
+        await chunkGate;
+        await route.continue();
+      });
+      try {
+        await page.goto(`${BASE_URL}/poets/alexander-blok#poem-blok-11`, { waitUntil: 'domcontentloaded' });
+        const card = page.locator('#poem-blok-11');
+        const body = card.locator('[data-poem-text]');
+        await expect(body).toBeVisible();
+        await expect.poll(() => intercepted, { timeout: 10_000 }).toBe(1);
+        const relativeTop = () => body.evaluate((node) => {
+          const card = node.closest('#poem-blok-11');
+          return node.getBoundingClientRect().top - card.getBoundingClientRect().top;
+        });
+        const before = await relativeTop();
+        await expect(card.locator('[data-poem-epigraph]')).toHaveCount(0);
+        unblockChunk();
+        await expect(card.locator('[data-poem-epigraph]')).toBeVisible();
+        const after = await relativeTop();
+        expect(Math.abs(after - before), `delayed epigraph shifted Blok verse at ${width}px`).toBeLessThanOrEqual(2);
+      } finally {
+        unblockChunk();
+        await page.unroute('**/assets/PoemEpigraph-*.js');
+      }
+    }
+  });
+
+  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    // Exercise the real control: a synthetic window event on DOMContentLoaded
+    // can precede CommandPalette's effect subscription in mobile WebKit.
+    const mobileSearch = page.getByRole('button', { name: 'Открыть поиск и все разделы' });
+    const desktopSearch = page.getByRole('button', { name: 'Открыть поиск — Ctrl K' });
+    if (await mobileSearch.isVisible()) {
+      await mobileSearch.click();
+    } else {
+      await desktopSearch.click();
+    }
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    await expect(input).toBeVisible();
+    for (const [query, title] of [
+      ['В ночь, когда Мамай', 'На поле Куликовом — III'],
+      ['Опять с вековою тоскою', 'На поле Куликовом — IV'],
+      ['Опять над полем Куликовым', 'На поле Куликовом — V'],
+    ]) {
+      await input.fill(query);
+      await expect(page.getByRole('option').filter({ hasText: title })).toBeVisible();
+    }
+    const result = page.getByRole('option').filter({ hasText: 'На поле Куликовом — V' });
+    await result.click();
+    await expect(page).toHaveURL(/\/poets\/alexander-blok#poem-blok-11$/);
+    await expect(page.locator('#poem-blok-11')).toBeVisible();
+  });
 
   test('Pushkin, Lermontov and Yesenin use the shared contents on both layouts', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];

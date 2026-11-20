@@ -72,7 +72,7 @@ jobs:
         run: >-
           npx playwright test
           qa/poets-status.spec.mjs
-          --grep "Blok contents preserve eight|Pushkin, Lermontov and Yesenin use"
+          --grep "Blok contents preserve eleven|Pushkin, Lermontov and Yesenin use"
           --config=playwright.config.mjs
           --project=chromium-core
           --workers=1
@@ -93,6 +93,7 @@ jobs:
           qa/manual-e2e.spec.mjs
           qa/shell-noise-singleton.spec.mjs
           qa/poets-status.spec.mjs
+          qa/blok-epigraph-text-zoom.spec.mjs
           qa/rating-urlstate.spec.mjs
           qa/audio-completion.spec.mjs
           qa/audio-cross-tab.spec.mjs
