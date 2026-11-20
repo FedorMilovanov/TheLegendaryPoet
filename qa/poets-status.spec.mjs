@@ -222,7 +222,15 @@ test.describe('poets result status accessibility', () => {
 
   test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.evaluate(() => window.dispatchEvent(new Event('tlp-open-command-palette')));
+    // Exercise the real control: a synthetic window event on DOMContentLoaded
+    // can precede CommandPalette's effect subscription in mobile WebKit.
+    const mobileSearch = page.getByRole('button', { name: 'Открыть поиск и все разделы' });
+    const desktopSearch = page.getByRole('button', { name: 'Открыть поиск — Ctrl K' });
+    if (await mobileSearch.isVisible()) {
+      await mobileSearch.click();
+    } else {
+      await desktopSearch.click();
+    }
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
     await expect(input).toBeVisible();
     for (const [query, title] of [
