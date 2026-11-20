@@ -79,7 +79,7 @@ async function observeArrival(context, probe = null) {
       window.addEventListener(type, e => {
         if (events.length === 24) events.shift();
         const el = e.target;
-        let glyph = null, rect = null, disclosure = null;
+        let glyph = null, rect = null, disclosure = null, layout = null;
         if (probe) {
           const nodes = [...document.querySelectorAll(probe.selector)];
           const node = probe.contains ? nodes.find(n => n.textContent?.includes(probe.contains)) : nodes[probe.index ?? 0];
@@ -92,11 +92,16 @@ async function observeArrival(context, probe = null) {
           if (node) {
             const r = node.getBoundingClientRect(); rect = [r.top, r.bottom, r.height];
             disclosure = node.closest('details')?.open ?? null;
+            const block = node.closest('[data-reading-flow="essay"] > *'), flow = block?.parentElement;
+            layout = { asideY: node.closest('aside')?.scrollTop ?? null,
+              reveal: block?.dataset.revealState ?? null, transform: block ? getComputedStyle(block).transform : null,
+              blockTop: block?.getBoundingClientRect().top ?? null, offsetTop: block?.offsetTop ?? null,
+              flowTop: flow?.getBoundingClientRect().top ?? null, sameOffsetParent: block ? block.offsetParent === flow : null };
           }
         }
         const active = document.activeElement;
         events.push([Math.round(performance.now()), type, el?.id || el?.nodeName, scrollY,
-          document.querySelector(':target')?.nodeName, active?.id || active?.nodeName, glyph, rect, disclosure]);
+          document.querySelector(':target')?.nodeName, active?.id || active?.nodeName, glyph, rect, disclosure, layout]);
       }, { passive: true, capture: true });
     }
   }, probe);
@@ -111,7 +116,9 @@ async function atGlyph(element, start = '') {
     const r = document.createRange(); r.setStart(t, i); r.setEnd(t, i + 1);
     const reveal = el.closest('[data-reveal-state]');
     const top = r.getBoundingClientRect().top, opacity = reveal ? getComputedStyle(reveal).opacity : '1';
-    return opacity === '1' && Math.abs(top - 96) < 2 ? 'placed' : { top, opacity, y: scrollY, target: document.querySelector(':target')?.tagName, fonts: document.fonts.status, events: window.__qaPassageEvents };
+    return opacity === '1' && Math.abs(top - 96) < 2 ? 'placed' : { top, opacity, y: scrollY,
+      transform: reveal ? getComputedStyle(reveal).transform : null, asideY: el.closest('aside')?.scrollTop ?? null,
+      target: document.querySelector(':target')?.tagName, fonts: document.fonts.status, events: window.__qaPassageEvents };
   }, start), { message: 'selected glyph painted at the fixed-header reading edge' }).toBe('placed');
 }
 

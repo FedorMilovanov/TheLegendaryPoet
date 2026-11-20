@@ -184,7 +184,20 @@ test('hover outside the chapter list cannot dismiss it or take keyboard focus', 
   await trigger.click();
   const menu = page.locator('#essay-toc-popover'), row = menu.getByRole('button').nth(1);
   await row.focus();
-  const r = await link.boundingBox(), box = await menu.boundingBox();
+  // Different font metrics can put the first citation beneath the popover.
+  // Pick a real citation outside it, rather than mistaking the precondition
+  // for a hover failure. The same focus, tooltip and dismissal assertions apply.
+  const initialBox = await menu.boundingBox();
+  const candidates = page.locator('.theme-essay-citation');
+  const index = await candidates.evaluateAll((nodes, box) => nodes.findIndex(node => {
+    const r = node.getBoundingClientRect(), x = r.x + r.width / 2;
+    return r.width > 0 && r.height > 0 && x > 2 && x < innerWidth - 2 &&
+      (x < box.x - 8 || x > box.x + box.width + 8);
+  }), initialBox);
+  expect(index, `no citation outside chapter-menu geometry ${JSON.stringify(initialBox)}`).toBeGreaterThanOrEqual(0);
+  const outside = candidates.nth(index);
+  await center(outside); await settleReveal(outside);
+  const r = await outside.boundingBox(), box = await menu.boundingBox();
   const x = r.x + r.width / 2, y = r.y + r.height / 2;
   expect(x < box.x || x > box.x + box.width,
     `citation and chapter-menu geometry: ${JSON.stringify({ citation: r, menu: box, x, y })}`).toBe(true);

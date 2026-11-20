@@ -86,21 +86,26 @@ export function registerColdSearchCases() {
         await readAt(paragraph); const part = await portion(paragraph);
         // Keep the original assertion. If a browser loses the position, record
         // the passage and viewport geometry on both sides of the traversal.
-        const measure = () => paragraph.evaluate((n, fraction) => {
-          const r = n.getBoundingClientRect(), active = document.activeElement;
+        const measure = () => page.evaluate(fraction => {
+          const n = document.querySelector('.essay-body > :has(h2[id^="sec-америка-"]) + *');
+          const r = n?.getBoundingClientRect(), active = document.activeElement, state = history.state;
           return { url: location.href, y: scrollY, viewport: [innerWidth, innerHeight],
-            rect: [r.top, r.bottom, r.height], fraction, bodyPosition: getComputedStyle(document.body).position,
+            rect: r && [r.top, r.bottom, r.height], fraction, bodyPosition: getComputedStyle(document.body).position,
+            bodyTop: document.body.style.top, entry: state && { key: state.key, idx: state.idx, stamped: state.tlpScrollEntry },
             active: active?.id || active?.tagName, documentHeight: document.documentElement.scrollHeight };
         }, part);
         const departure = await measure();
         await beforePoetPaints(page, async () => {
+          const pending = await measure();
           await page.keyboard.press('Control+k'); await typeSecondSearch(page);
+          const searchOpen = await measure();
           await page.setViewportSize({ width: 1200, height: 600 });
+          const resized = await measure();
           await page.goBack(); await expect(page).toHaveURL(base + essay);
           await expect(search(page)).toBeHidden(); await expect(page.locator('body')).not.toHaveCSS('position', 'fixed');
           try { await expectReadingAt(paragraph, part); }
           catch (error) {
-            error.message += `\nCold-search geometry: ${JSON.stringify({ departure, returned: await measure() })}`;
+            error.message += `\nCold-search geometry: ${JSON.stringify({ departure, pending, searchOpen, resized, returned: await measure() })}`;
             throw error;
           }
           await expect(paragraph).toBeFocused();
