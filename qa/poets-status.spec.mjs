@@ -192,6 +192,42 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
+  test('Bryusov 1913 full-text editions preserve 12 and 20 lines without clipping', async ({ page }, testInfo) => {
+    const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(BASE_URL + '/poets/valery-bryusov', { waitUntil: 'domcontentloaded' });
+      const cases = [
+        ['bryusov-yunomu-poetu-fragment', 'Юному поэту', 12, 'Юноша бледный со взором горящим,', 'Зная, что в мире оставлю поэта.'],
+        ['bryusov-tvorchestvo-fragment', 'Творчество', 20, 'Тень несозданных созданий', 'На эмалевой стене.'],
+      ];
+      const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+      await expect(nav.locator('a[href^="#poem-bryusov-"]')).toHaveCount(2);
+      for (const [id, title, lines, first, last] of cases) {
+        const card = page.locator('#poem-' + id);
+        await expect(card).toBeVisible();
+        await expect(card.locator('h3')).toContainText(title);
+        await expect(card.locator('h3')).not.toContainText('фрагмент');
+        const text = await card.locator('[data-poem-canonical]').textContent();
+        const verseLines = text.split('\n').filter((line) => line.trim().length > 0);
+        expect(verseLines).toHaveLength(lines);
+        expect(verseLines[0]).toBe(first);
+        expect(verseLines.at(-1)).toBe(last);
+        await expect(card.locator('a', { hasText: 'Источник текста' })).toHaveAttribute('href', /ru\.wikisource\.org/);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+      if (testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await page.evaluate(() => document.fonts.ready);
+        const card = page.locator('#poem-bryusov-yunomu-poetu-fragment');
+        await card.screenshot({ path: 'qa-artifacts/bryusov-fulltext-' + width + '-dark.png', style: READING_INDEX_CAPTURE_STYLE });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await card.screenshot({ path: 'qa-artifacts/bryusov-fulltext-' + width + '-light.png', style: READING_INDEX_CAPTURE_STYLE });
+        await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+      }
+    }
+  });
+
   test('shared chrome stays accessible after same-page poetry fragment navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
