@@ -21,7 +21,7 @@ const editions = {
   ],
   'nikolay-gumilev': [
     ['gumilev-1', 'https://ru.wikisource.org/wiki/Жираф_(Гумилёв)', false],
-    ['gumilev-2', 'https://ru.wikisource.org/wiki/Капитаны_(Гумилёв)', false],
+    ['gumilev-2', 'https://ru.wikisource.org/wiki/На_полярных_морях_и_на_южных_(Гумилёв)', false],
     ['gumilev-3', 'https://ru.wikisource.org/wiki/Слово_(Гумилёв)', true],
     ['gumilev-4', 'https://ru.wikisource.org/wiki/Шестое_чувство_(Гумилёв)', false],
   ],
