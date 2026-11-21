@@ -37,7 +37,10 @@ test('W85 Bryusov: complete seven-quatrain 1906 text, separately attributed epig
     const lines = await canonicalLines(card);
     expect(lines).toHaveLength(28);
     expect(lines[0]).toBe('Где вы, грядущие гунны,');
-    expect(lines[15]).toBe('Вы во всём неповинны, как дети!');
+    expect(lines[10]).toBe('Всколосите весёлое поле');
+    expect(lines[14]).toBe('Творите мерзость в храме, —');
+    expect(lines[15]).toBe('Вы во всём неповинны как дети!');
+    expect(lines[18]).toBe('Унесём зажжённые светы');
     expect(lines[27]).toBe('Встречаю приветственным гимном.');
     expect(lines.join(' ')).not.toContain('Топчи их рай');
     await expect(card.getByText('Топчи их рай, Аттила.')).toBeVisible();
