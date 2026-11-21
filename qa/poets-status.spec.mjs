@@ -206,8 +206,9 @@ test.describe('poets result status accessibility', () => {
       for (const [id, title, lines, first, last] of cases) {
         const card = page.locator('#poem-' + id);
         await expect(card).toBeVisible();
-        await expect(card.locator('h3')).toContainText(title);
-        await expect(card.locator('h3')).not.toContainText('фрагмент');
+        const poemHeading = card.getByRole('heading', { level: 3, name: `«${title}»`, exact: true });
+        await expect(poemHeading).toBeVisible();
+        await expect(poemHeading).not.toContainText('фрагмент');
         const text = await card.locator('[data-poem-canonical]').textContent();
         const verseLines = text.split('\n').filter((line) => line.trim().length > 0);
         expect(verseLines).toHaveLength(lines);
