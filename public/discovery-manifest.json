@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
+      "fingerprint": "d0b3a91db8b81823473f849300dcd5a9b4d6231e5c7cbee191f2fa7c6ec3378b"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
+      "fingerprint": "4ba108f8d39371d832b0b7364c38615f58ee29ef55ef6677ad41c3dd6d2128b7"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
+      "fingerprint": "e4759da12e0f264313725fcc8d13fa82eda0960ce55bffa65834b10b678410fe"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -482,7 +482,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "05d467513cbde0c8e834865b214ff408efeec91b62d97acaa02ea328a71988e4"
+      "fingerprint": "ad5dfd846c66740a016a4b5411ad8c15d30c686891ddf17b3d93751a6895c986"
     }
   ]
 }
