@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "2f5cc1352eabe7cbb813d001dc8e48e8e6b0a68c373231b7d9e6ac289e1855ff"
+      "fingerprint": "fc6474aba7c8ee32d307238b42063993ad2391238ffaa39c9bfce2aecaf7413d"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "b5f4fa4ab40634b8cd2bc50489ada872a6b30a361a945b21a07c13aa237b73e6"
+      "fingerprint": "526dfe3ecf38eb69382a6680513745ecc2e678d8467eb34e1ad979960fb20f21"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7fee008b1e01814ddf9512d6b9560ba6e6aa280000db9259bd2b8b188a62e45d"
+      "fingerprint": "6d9961f80b45bf46d032833d36556c513dbeffd208d33fcaae31d401112792df"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -458,7 +458,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "7d36f33479c269d17db1858ff861d9c8908526abea76d77561a9d17e1645e2e0"
+      "fingerprint": "5c59b4405c0a04a9ff3717cbeff3d4d5c67fdef72bf0b96c24cbbd2a5139a171"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-nekrasov/",
