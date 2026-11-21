@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
+      "fingerprint": "dc1b75ee85994c3fa64a88cc12cb754204de283596f2f1f79c3b0c55788fe91d"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
+      "fingerprint": "d5712c8c745f5cf36ee1a6ea192b81dd398c2ec6b8e8b395aa2a0b93442ef1cf"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
+      "fingerprint": "6d34ef768ad394652648ef2cdad083f3196ba710fcfae7bf2b47b0da314cb540"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -466,7 +466,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "2d51e865f5b45c300f5b732c380deac1827eb9c6581a99a41d3d87017add696c"
+      "fingerprint": "ae57b06e971b273249f95c7355bb6e282057e14dc2891fd83a8dfe37e27bd255"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/konstantin-simonov/",
