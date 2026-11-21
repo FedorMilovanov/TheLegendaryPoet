@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
+      "fingerprint": "87283f76e780ae3e1b2b1e6a7eca5a2de3d28c1fe7cdb0260157e91fa3d50532"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
+      "fingerprint": "4c27fb198d65ecd91730717592bb8ec86de46fc5b37989b620209ed548c4e259"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
+      "fingerprint": "554387767fac04e5533458f4ec6edb4456f9079b84404340878010fdd99d1820"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -474,7 +474,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "3fffe3b69d27f692abccc1e3d3bfc94a5978b60593ca939f836c22e98f2aa7af"
+      "fingerprint": "27bbb73d55c9df5ef56da4b6aef6e0b9c3fe88bd2fab8d04566b0605e9886ac3"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/aleksey-konstantinovich-tolstoy/",
