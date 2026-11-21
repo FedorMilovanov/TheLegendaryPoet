@@ -159,12 +159,35 @@ function poetArtifactIntegrityPlugin(): Plugin {
 
 // https://vite.dev/config/
 // The production site is served from the root of the custom domain.
+/**
+ * Review-only Google Books facsimiles may live locally in public/ for the
+ * specially selected visual-preview mode. A normal production build must not
+ * copy those local scans into dist, even if the operator has them on disk.
+ */
+function facsimileMediaGate(): Plugin {
+  let mode = '';
+  let outDir = '';
+  return {
+    name: 'facsimile-media-release-gate',
+    apply: 'build',
+    configResolved(config) {
+      mode = config.mode;
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      if (mode !== 'facsimile-preview') {
+        fs.rmSync(path.join(outDir, 'images', 'facsimile-review'), { recursive: true, force: true });
+      }
+    },
+  };
+}
+
 // VITE_BASE remains overridable for previews on another path.
 // NOTE: a normal multi-file build (no vite-plugin-singlefile) is used so that
 // route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
-  plugins: [poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), searchVerificationPlugin(), react(), tailwindcss()],
+  plugins: [poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), facsimileMediaGate(), searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: [
       // Keep Three route-isolated, but expose only the Hall runtime surface to

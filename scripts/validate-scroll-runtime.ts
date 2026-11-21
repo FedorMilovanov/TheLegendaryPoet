@@ -69,7 +69,17 @@ const readingProgressAst = inspectSource(readingProgressSource, 'ReadingProgress
 assertContract(!coordinatorAst.hasModuleImport('lenis'), 'the document scroll coordinator must not load a global JavaScript scroller');
 assertContract(!coordinatorSource.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native');
 assertContract(!coordinatorAst.hasMethodCall('raf'), 'document scrolling must not depend on a perpetual JavaScript animation loop');
-assertContract(!coordinatorAst.hasEventListener('wheel'), 'the app shell must not intercept wheel input');
+// A passive, hash-scoped wheel-intent listener is permitted solely to avoid
+// repositioning a poem after the reader starts scrolling. It never controls,
+// prevents or replaces native wheel movement.
+assertContract(
+  coordinatorAst.hasEventListener('wheel', { options: { passive: true } }),
+  'hash-anchor reader intent must be observed with a passive wheel listener',
+);
+assertContract(
+  !coordinatorAst.hasEventListener('wheel', { options: { passive: false } }),
+  'non-passive wheel interception must remain forbidden',
+);
 assertContract(!coordinatorAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document scrolling');
 assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native scroll coordinator must retain the scroll-to-top command');
 assertContract(coordinatorSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');

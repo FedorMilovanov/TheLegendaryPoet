@@ -71,6 +71,17 @@ try {
     }
 
     if (generated === null || !original.equals(generated)) {
+      // Show the exact delta, not a guessed global reindex; needed for safe deterministic repair.
+      if (artifact.path === 'public/discovery-manifest.json' && generated !== null) {
+        const previous = JSON.parse(original.toString('utf8'));
+        const current = JSON.parse(generated.toString('utf8'));
+        const before = new Map((previous.canonicalUrls || []).map((entry) => [entry.url, entry.fingerprint]));
+        for (const entry of current.canonicalUrls || []) {
+          if (before.get(entry.url) !== entry.fingerprint) {
+            console.error('discovery fingerprint drift: ' + entry.url + ' old=' + (before.get(entry.url) || '<new>') + ' new=' + entry.fingerprint);
+          }
+        }
+      }
       failures.push(`${artifact.path} is stale relative to its canonical source data`);
     }
   }

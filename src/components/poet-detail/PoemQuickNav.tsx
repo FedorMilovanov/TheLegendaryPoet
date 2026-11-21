@@ -9,7 +9,8 @@ function PoemQuickRow({ poem }: { poem: Poem }) {
     <a href={`#poem-${poem.id}`} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
       <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
       <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
-        <span>{poem.year || 'год не указан'}</span>
+        <span data-poem-year-label>{poem.yearLabel ?? (poem.year || 'год не указан')}{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}</span>
+        {poem.yearNote && <span data-poem-year-note className="normal-case tracking-normal">{poem.yearNote}</span>}
         {poem.cycle && <span data-poem-cycle>{poem.cycle}</span>}
         {feedback.ratingCount > 0 && (
           <span className="inline-flex items-center gap-1 text-luxury-gold">

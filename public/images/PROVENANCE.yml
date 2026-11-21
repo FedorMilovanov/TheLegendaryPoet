@@ -459,3 +459,27 @@ assets:
     accessed_at: 2026-11-07
     source_use: not_primary_evidence
     notes: "Editorial graded derivative; the source photograph or portrait remains the primary historical image."
+
+  - path: public/images/facsimiles/pushkin-ya-vas-lyubil-1830.png
+    role: poem_first_print_facsimile
+    poet_id: alexander-pushkin
+    poem_id: pushkin-2
+    origin_class: faithful_two_dimensional_public_domain_historical_reproduction
+    original_publication: "Северные цветы на 1830 год, с. 104, Пушкин «Я вас любил…»"
+    original_publication_year: 1829
+    imprint_year: 1830
+    source_url: "https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png"
+    source_repository: Wikimedia Commons
+    source_authority: "Wikimedia Commons imageinfo API: LicenseShortName=Public domain, UsageTerms=Public domain, Copyrighted=False"
+    license: "Public Domain Mark 1.0"
+    license_url: https://creativecommons.org/publicdomain/mark/1.0/
+    acquisition_path: "upload.wikimedia.org official original file URL returned by Wikimedia Commons imageinfo API"
+    original_scan_provider: "Google Books (credit and footer notice retained on reproduced page)"
+    accessed_at: "2026-11-18"
+    intrinsic: 575x835
+    bytes: 30233
+    sha256: d8ce1c004be00dea5f40ebf4c00904f9382a8c37fc9a6857d4e1a9a3a84a350a
+    review_status: VERIFIED-PUBLIC-DOMAIN
+    source_use: primary_publication_facsimile
+    alteration: "None; source bytes preserved (no crop, recolor, upscale or watermark removal)"
+    notes: "Annual volume titled 'Severnye tsvety na 1830 god'; bibliographic imprint is Saint Petersburg, 1829 (FEB Pushkin critical apparatus, vol. 3, pt. 2, p. 1193). Year 1830 names the annual, not the publication year. Wikimedia original is public domain with Google digitization footer; no image bytes changed. Two other Google Books scans remain local rights-review only."
