@@ -34,6 +34,7 @@ export const nikolayGumilev: Poet = {
       id: 'gumilev-1',
       title: 'Жираф',
       year: 1907,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Жираф_(Гумилёв)',
       text: `Сегодня, я вижу, особенно грустен твой взгляд,
 И руки особенно тонки, колени обняв.
 Послушай: далеко, далеко, на озере Чад
@@ -65,6 +66,7 @@ export const nikolayGumilev: Poet = {
       id: 'gumilev-2',
       title: 'Капитаны (I)',
       year: 1909,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Капитаны_(Гумилёв)',
       text: `На полярных морях и на южных,
 По изгибам зелёных зыбей,
 Меж базальтовых скал и жемчужных
@@ -101,6 +103,7 @@ export const nikolayGumilev: Poet = {
       id: 'gumilev-3',
       title: 'Слово',
       year: 1921,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Слово_(Гумилёв)',
       text: `В оный день, когда над миром новым
 Бог склонял лицо Своё, тогда
 Солнце останавливали словом,
@@ -130,6 +133,7 @@ export const nikolayGumilev: Poet = {
       id: 'gumilev-4',
       title: 'Шестое чувство',
       year: 1920,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Шестое_чувство_(Гумилёв)',
       text: `Прекрасно в нас влюблённое вино
 И добрый хлеб, что в печь для нас садится,
 И женщина, которою дано,

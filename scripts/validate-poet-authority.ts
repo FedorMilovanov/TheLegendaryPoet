@@ -130,6 +130,26 @@ for (const entry of registry.entries) {
   }
 }
 
+// Every published poem must have its own source address. This checks only
+// addressability: neither rights clearance nor textual collation is inferred.
+for (const poet of poets) {
+  for (const poem of poet.poems) {
+    const where = poet.id + '/' + poem.id;
+    if (!poem.sourceUrl) {
+      fail(where + ': item-level source URL is missing');
+      continue;
+    }
+    try {
+      const source = new URL(poem.sourceUrl);
+      if (source.protocol !== 'https:' || !source.hostname || source.username || source.password) {
+        fail(where + ': item-level source URL must use public HTTPS without credentials');
+      }
+    } catch {
+      fail(where + ': item-level source URL is malformed');
+    }
+  }
+}
+
 if (sourcePaths.size !== registry.entries.length) {
   fail('canonical poet source paths must be unique');
 }
